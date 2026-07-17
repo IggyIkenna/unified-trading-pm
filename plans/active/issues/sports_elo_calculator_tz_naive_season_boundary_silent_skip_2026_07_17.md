@@ -173,31 +173,31 @@ follow-up backfill pass — same operational pattern as Todo 2 in the sibling is
       data-correctness HARD RULE's infra-cost-decision requirement. (repo: features-service)
 
       **AUTHORIZED by main via `BLK-a3149ab4` (2026-07-17T13:25Z) — launch spot fleet.** Main's final answer: "A —
-              LAUNCH the gap-fill VM fleet now" — this is routine backfill compute on the already-authorized GCP project
-              `central-element-323112`, within main authority, NOT the operator-reserved spend category (that reservation is
-              wallet keys/trading capital, not backfill compute); the data-pipeline-correctness HARD RULE requires fixing all
-              22,042 affected shards IN FULL. The "did not launch autonomously" / "operator sign-off warranted" language above
-              is now STALE — written before slot-9 saw main's answer and the session died before acting on it. **This todo is
-              NOT operator-gated — do not re-skip it as such.** Proceed straight to launching per main's guardrails: SPOT VMs,
-              reuse the registered `features-` prefix launcher pattern, ~5 VMs sharded by the 1,844 affected dates
-              (`MANIFEST_PER_VM_SHARDS=true`), no fire-and-forget, manifest-verify before flipping the checkbox.
+                  LAUNCH the gap-fill VM fleet now" — this is routine backfill compute on the already-authorized GCP project
+                  `central-element-323112`, within main authority, NOT the operator-reserved spend category (that reservation is
+                  wallet keys/trading capital, not backfill compute); the data-pipeline-correctness HARD RULE requires fixing all
+                  22,042 affected shards IN FULL. The "did not launch autonomously" / "operator sign-off warranted" language above
+                  is now STALE — written before slot-9 saw main's answer and the session died before acting on it. **This todo is
+                  NOT operator-gated — do not re-skip it as such.** Proceed straight to launching per main's guardrails: SPOT VMs,
+                  reuse the registered `features-` prefix launcher pattern, ~5 VMs sharded by the 1,844 affected dates
+                  (`MANIFEST_PER_VM_SHARDS=true`), no fire-and-forget, manifest-verify before flipping the checkbox.
 
-              **CONSOLIDATION DIRECTIVE (main, 2026-07-17T13:4xZ, still `BLK-a3149ab4`-authorized) — merged with the sibling
-              travel gap-fill.** `run_new_calculators` recomputes ALL Phase-4 calculators (elo, travel, manager, formation,
-              european_fatigue, ...) TOGETHER in one pass per (date,league), writing ONE row — so a separate elo-only fleet
-              and a separate travel-only fleet (see
-              `plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` Todo 3) would be
-              REDUNDANT and could RACE on overlapping (date,league) shards (two writers, one row = manifest corruption
-              risk). Both fixes are shipped (elo@04274b6a, travel@6efefde2, plus a deeper travel root-cause fix
-              @9923b0d8). Decision: ONE consolidated fleet fixes BOTH gap-fills. Travel's failure is near-universal
-              (~86-100%, no separate bounded audit CSV exists for it — confirmed via the sibling doc's own Progress Log), so
-              the union of elo-affected (1,844 dates) + travel-affected dates is effectively the FULL 2017-02-02→present
-              captured `derived_features` corpus (~2,667 dates) — matching Todo 1's original `fss-backfill-vm-1..10`
-              footprint. Launching via the EXISTING `launch-features-vm.sh --feature-family sports` (contiguous
-              `--start-date`/`--end-date` + `FORCE=1`), split into 10 contiguous ~345-day sub-ranges spanning
-              2017-02-02→2026-07-17, SPOT, matching Todo 1's precedent exactly — NOT the sparse-date custom launcher
-              floated earlier (discarded, unused, never committed) since the scope is now effectively the full range
-              anyway. This one fleet's completion closes BOTH this todo and the travel doc's Todo 3.
+                  **CONSOLIDATION DIRECTIVE (main, 2026-07-17T13:4xZ, still `BLK-a3149ab4`-authorized) — merged with the sibling
+                  travel gap-fill.** `run_new_calculators` recomputes ALL Phase-4 calculators (elo, travel, manager, formation,
+                  european_fatigue, ...) TOGETHER in one pass per (date,league), writing ONE row — so a separate elo-only fleet
+                  and a separate travel-only fleet (see
+                  `plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` Todo 3) would be
+                  REDUNDANT and could RACE on overlapping (date,league) shards (two writers, one row = manifest corruption
+                  risk). Both fixes are shipped (elo@04274b6a, travel@6efefde2, plus a deeper travel root-cause fix
+                  @9923b0d8). Decision: ONE consolidated fleet fixes BOTH gap-fills. Travel's failure is near-universal
+                  (~86-100%, no separate bounded audit CSV exists for it — confirmed via the sibling doc's own Progress Log), so
+                  the union of elo-affected (1,844 dates) + travel-affected dates is effectively the FULL 2017-02-02→present
+                  captured `derived_features` corpus (~2,667 dates) — matching Todo 1's original `fss-backfill-vm-1..10`
+                  footprint. Launching via the EXISTING `launch-features-vm.sh --feature-family sports` (contiguous
+                  `--start-date`/`--end-date` + `FORCE=1`), split into 10 contiguous ~345-day sub-ranges spanning
+                  2017-02-02→2026-07-17, SPOT, matching Todo 1's precedent exactly — NOT the sparse-date custom launcher
+                  floated earlier (discarded, unused, never committed) since the scope is now effectively the full range
+                  anyway. This one fleet's completion closes BOTH this todo and the travel doc's Todo 3.
 
 - [x] ✅ [VERIFY] P3. **Audit whether other sports calculators build a hand-constructed
       `pd.Timestamp(year=..., month=...,     day=...)` (or similar tz-naive-by-construction Timestamp) that gets
@@ -396,3 +396,44 @@ no-fire-and-forget VM discipline. **Not flipping the gap-fill checkbox** — the
 `/skip-current-task` after this ships (matching the precedent set twice already in this doc's own history: real, durable
 progress — cross-verified scope + concrete cost data + a filed decision point — is the shippable unit this dispatch, not
 a false claim that the gap-fill executed).
+
+### 2026-07-17T14:1xZ — data_engineering slot-5 (Todo P2c dispatch — verified the authorized fleet is live + healthy, no execution needed this dispatch)
+
+Dispatched this issue doc's gap-fill todo (`sports_elo_calculator_tz_naive_season_boundary_silent_skip-004`) after
+`BLK-a3149ab4`'s authorization + the consolidation directive landed in the doc. Before launching anything, checked GCP
+for an existing fleet (avoiding a duplicate-launch risk) via `gcloud compute instances list` (non-snap SDK at
+`/home/ubuntu/google-cloud-sdk/bin` — the snap `gcloud` on `$PATH` is broken in this environment,
+`cap_dac_override`/snap-confine error) and found **the consolidated 10-VM fleet already RUNNING**
+(`features-sports-sports-20260717-135608` … `-135916`, all launched 13:56:08–13:59:16Z, ahead of this dispatch) — not
+launched by this session. Cross-verified per-VM metadata against the consolidation directive's spec: all 10 carry
+`--force`, `--feature-family sports`, contiguous `--start-date`/`--end-date` pairs spanning exactly
+`2017-02-02 → 2026-07-17` with no gaps or overlaps (`2017-02-02→2018-01-13`, `2018-01-14→2018-12-25`, …,
+`2025-08-07→2026-07-17`) — matches the directive's "10 contiguous ~345-day sub-ranges" spec exactly, all `SPOT`
+provisioning, all `RUNNING`.
+
+**Confirmed genuinely healthy, not crash-looping**: tailed each of the 10 VMs' `run.log`
+(`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`, the GCS-tee destination — the app log is NOT in
+the serial console, which only shows the startup script handing off to a detached background PID) — every VM's last log
+line is fresh (within the last ~90s of the check) and shows real per-date compute output
+(`Wrote derived_features league=...`, `Target fixtures on <date>: N`, `PIPELINE_HEARTBEAT` markers), not an
+exception/traceback/stall. Sampled VM `-135608`'s full log in detail: normal calculator warnings (all-zero/all-NaN
+columns from genuinely-missing upstream entities on early-history dates — expected honest-absence behavior, not the bug
+this gap-fill is fixing) with no tz-comparison errors.
+
+**Estimated pace from the sample**: `-135608` reached 2017-02-06 (day 4 of its 345-day range) at ~8.5 min wall-clock
+since its compute process started (13:58:28) — roughly 2 min/date. At that pace each VM's ~345-day range implies **~11+
+hours** to complete (consistent with slot-9's earlier single-shard timing finding that a forced recompute exceeds 180s
+per date — this fleet is doing exactly that, at scale, in parallel across 10 VMs). **Genuinely not done this dispatch**
+— no manifest-verified completion exists yet for any sub-range. Not flipping the checkbox (per this doc's established
+discipline: a verified-healthy in-flight fleet is not a completed gap-fill).
+
+**Did not launch a second fleet** — launching another 10 VMs alongside an already-correctly-scoped, already-healthy
+fleet would race on identical `(date,league)` shards (the exact manifest-corruption risk the consolidation directive
+called out) for zero benefit. This dispatch's shippable unit is the launch-avoidance + health verification itself:
+ruling out a silent duplicate-fleet risk and confirming the authorized launch is proceeding correctly is real, durable
+value for whichever dispatch checks this doc next (self or otherwise) — matching this doc's own precedent of "real
+verification work, not a false completion claim" as the shippable unit when the underlying compute isn't finished yet.
+`/skip-current-task` after this ships; a future dispatch (once ~11+ hours have elapsed) should re-check
+`gcloud compute instances list` for all 10 VMs reaching `TERMINATED`/absent (self-shutdown via
+`VM_SHUTDOWN_ON_COMPLETION=true`) and then manifest-verify (re-run the P2b audit script, expect the affected-shard count
+to drop to ~0 for `home_elo`/`away_elo`) before flipping this checkbox.
