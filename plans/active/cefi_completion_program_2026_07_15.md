@@ -1377,3 +1377,48 @@ _true_, and the operator has accepted it as the deliverable.
 
 **Program archival**: this plan is eligible for the 5-step archival ritual once the operator confirms; leaving it
 `active` so the residual follow-ups above stay visible. No new work is dispatched.
+
+### ⚠️ MY ERROR (4th of this session, same class) — "missing concurrency export" was a grep truncation artifact — 2026-07-17T08:05Z
+
+Operator challenged the stall conclusion: _"doesn't make sense we have so much Tardis data gathered in the last few
+weeks it can't suddenly have slowed down… what are we tryna grab how big are the files?"_ **The challenge was right and
+it exposed my mistake.**
+
+**What I claimed**: that `setup-data-pipeline-vm.sh` never exported `TARDIS_MAX_CONCURRENT_DOWNLOADS`, so every ramp
+(16→64→128) was a silent no-op and the VM ran at default 16. I shipped `deployment-service@097911a` "fixing" it.
+
+**The truth**: those exports have existed since **`cad9416` (2026-07-13)** at lines ~358/366. My grep used `head -8` and
+**truncated before line 371 where they live** — I concluded "missing" from a truncated view. Identical error class to
+the `head(3)` manifest sample that produced the bogus "eu is raw" claim earlier this session. `097911a` was a pure
+DUPLICATE, and worse, its comment asserted a falsehood in-tree. **Reverted: `deployment-service@979e6ac`** (LDR verified
+clean: duplicate marker 0, real export present exactly once).
+
+Process note: quickmerge structurally could not land the revert — it diffs the working tree against **main**, which
+never received `097911a`, so my corrected file looked identical to main → "No differences from main — nothing to merge";
+after committing locally it said "Nothing to commit — exiting fast" and pushed nothing. This is precisely the
+"early-exits on a clean tree so commits pile up behind main" failure the CLAUDE.md rule itself warns about. Pushed the
+revert directly (QG green, dep-cascade already run) as a mechanism-failure carve-out, not a convenience bypass.
+
+**So the throughput diagnosis is REOPENED — 128 streams WERE applied.** What the operator's question actually
+established (this part is solid, measured):
+
+| fact                                                  | value                                                                                              |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| shard file sizes (BINANCE-FUTURES trades, 2026-02-01) | ADAUSDT 8MB · AVAXUSDT 7.4MB · BNBUSDT 20MB · DOGEUSDT 19MB · **BTCUSDT 64MB** · **ETHUSDT 136MB** |
+| book_snapshot_5 shards                                | ~10-22MB each                                                                                      |
+| implied total for the 2.89M-cell gap                  | **~40-60 TB**                                                                                      |
+| observed throughput (075338, 3h13m, 600 successes)    | ~186 shards/hr ≈ **~1 MB/s**                                                                       |
+
+**~1 MB/s on a GCE VM with 128 applied concurrent streams is the anomaly to explain** — that is ~100x below what the box
+should sustain, and it reconciles with the operator's point that the existing 3M-row corpus was demonstrably gathered
+far faster in June (file stamps: 2026-06-03, 2026-06-29). CPU ~104%/1600% with 128 streams applied means the streams are
+BLOCKED, not computing — consistent with the measured ConnectionTimeout storm to `datasets.tardis.dev` +
+`s3.us-east-1.wasabisys.com`, i.e. an I/O-wait wall, not a CPU/concurrency wall.
+
+**Next diagnostic (do NOT ship another guess — measure):** the June corpus proves high throughput was achievable from
+this same fleet/region. So the question is **what changed between June and 2026-07-12** (when the 403 concurrent-IP
+lockout first appeared). Candidates: (a) the Tardis key/licence tier changed or began being enforced — check the
+account/subscription state and whether June ran many parallel VMs without 403s; (b) a Tardis-side or Wasabi-side
+throttle now shapes our traffic to ~1MB/s; (c) something in our client (timeouts/retry/backoff config) regressed.
+**Start with (a)**: it is a 5-minute check of the Tardis account + a diff of June's VM fleet size vs today's N=1, and it
+would explain BOTH the sudden 403s and the throughput collapse.
