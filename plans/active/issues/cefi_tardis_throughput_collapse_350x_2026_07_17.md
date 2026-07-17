@@ -118,3 +118,23 @@ Booted from the verified-current GCS startup script (export present — the earl
   licence / narrow the MVP scope" recommendation built on it. Fresh-VM test today confirms concurrency is applied yet
   throughput is 0.45 MB/s with a ConnectionTimeout storm — an I/O wall, not a concurrency wall. The fleet is left at N=1
   with the cap guard intact (harmless) pending the account check.
+
+- 2026-07-17 (hunt for a hidden Tardis consumer — operator hypothesis, DISPROVEN): operator asked whether an unknown
+  process elsewhere holds the key ("seems very odd… can't we kill all authenticated tardis batch stuff and try again").
+  Swept every surface: **all GCP zones** (only ONE Tardis VM — mine; the rest are DeFi fwd-poll / dex-pools / sports-fss
+  / zombie-watchdog, none Tardis-batch); **AWS** ap-northeast-1 (only the two agent-orchestrator VMs), us-east-1 (0
+  instances), eu-west-1 (1 instance, unrelated); **local processes** (none); **Cloud Run** — found 7
+  `market-tick-cefi-*` jobs (binance-futures/spot, bybit, okx, coinbase, upbit, daily-download) which WOULD be invisible
+  to the VM-based cap guard since Cloud Run egresses from its own IP, but **every one has ZERO executions, ever**;
+  `market-tick-cefi-daily-download` is PAUSED. The two ENABLED T+1 schedules (`cefi-t1` 06:00, `fast-t1` 00:30) fire
+  recon jobs that complete in **~2 minutes** — far too short to span the VM's 53-minute dead window (08:20-09:13).
+  **DECISIVE PROOF (Tardis's own signal, not inference): the current VM logged 0 (ZERO) HTTP 403s across 70+ minutes,
+  alongside 560 ConnectionTimeouts.** Tardis `code=274` fires ONLY when the key is "already active from another IP
+  address" — zero 403s means NO other process holds our key. The hypothesis is disproven, and the operator's proposed
+  "kill everything and retry" experiment has in effect ALREADY run: we are at N=1, uncontended, no 403s — and throughput
+  is STILL ~254/hr at ~0.45 MB/s with a timeout storm. **This materially strengthens the vendor case**: we are
+  demonstrably COMPLIANT with the one-key/one-IP rule (zero 403s prove it), yet throughput is ~350x below June and
+  connections time out continuously against BOTH `datasets.tardis.dev` and `s3.us-east-1.wasabisys.com`. Contention is
+  eliminated as a cause; the remaining candidates are (a) a change to our account/tier limits around the 2026-07-12
+  window (the renewal is a prime suspect) or (b) server-side shaping/throttling of our key. The 403s we saw on 07-13 and
+  07-16 were SELF-inflicted (our own N=6 and N=3 waves), not a third party.
