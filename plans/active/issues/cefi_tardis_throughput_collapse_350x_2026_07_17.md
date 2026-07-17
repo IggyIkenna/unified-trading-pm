@@ -12,8 +12,10 @@ summary:
   explicitly marked the Tardis backfill workstreams plus the timeout diagnosis as "superseded by the accept-decision".
   At June rates the entire 2.89M gap is ~1-2 days of work. The archival premise is void and the timeout diagnosis is the
   actual root cause, not a superseded item.
-status: open
+status: resolved
 resolved_by:
+  - market-tick-data-service@2e7c2b5d (DNS) + @2912b6a9 (finalise-offload) + @c609237a (decoupled) + @a0656508
+    (DataFrame-native finalise) — 0.45 -> ~15 MB/s, ~30x, network-bound in Tokyo (2026-07-17)
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -358,3 +360,58 @@ the slowest venue.
 - [ ] [DOC] P1. Purge the warm-cache numbers from this doc's earlier sections and from `tardis_base_client.py`'s
       comments — anything citing 25.7/32.9/125/223 MB/s as a ceiling is measuring a cache hit. **Never baseline Tardis
       against a re-fetched object or a 1st-of-month URL.**
+
+---
+
+## ✅ RESOLVED — throughput rebuilt ~30-40x (0.45 -> ~15 MB/s), network-bound in Tokyo, zero egress — 2026-07-17T20:40Z
+
+The collapse is fixed. Five stacked code defects, each measured and shipped; the last one uncorked the pipeline.
+**Measured, steady-state (>300s window, VM `cefi-queue-heavy-binancefutu-x17-20260717-203148`, 2026-02-02 authenticated,
+32-wide, cap-1):** 5,589 shards/hr, 17.56 MB/s parquet output, **download rx ~12-16 MB/s**, CPU 5-7 cores, timeouts 0.
+Baselines: the broken VM this morning did 0.45 MB/s / 254 shards/hr; the finalise-capped intermediate did ~2 MB/s. For
+the 15-20 TB gap: ~1 year at 0.45 MB/s -> **~12 days** at ~15 MB/s.
+
+### The five layers (measurement overturned two confident diagnoses)
+
+1. **DNS starvation** — `run_in_executor(None, parse)` parked blocking parses on asyncio's DEFAULT pool, which aiohttp's
+   ThreadedResolver needs for `getaddrinfo`; 16 dl + 4 book = 20 = `min(32, cpu+4)` starved DNS -> 337
+   ConnectionTimeoutError, cpu=0% wedge. Fixed: dedicated `tardis-parse` executor (`market-tick-data-service@2e7c2b5d`).
+   Timeouts 337 -> ~0.
+2. **finalise-offload** — the synchronous GCS finalise ran inline on the event loop, freezing all fetches during each
+   upload. Fixed: dedicated `tardis-finalise` executor (`@2912b6a9`). ~1.2x (NOT the 3.2x I first reported — that was a
+   startup-burst-vs-full-run error).
+3. **decoupled fetch-to-disk** — the per-chunk `asyncio.Queue(8)` + `run_coroutine_threadsafe(queue.get())` bridge did a
+   cross-thread event-loop round-trip PER 4 MiB chunk; 32 streams funnelled through one loop throttled each to ~0.08
+   MB/s. Fixed: stream gz -> local temp file, parse the file (`@c609237a`). Fetch now bursts 13.86 MB/s.
+4. **regex-vectorize** — WRONG TURN, kept for honesty. The parallel investigation (9 agents) + I both fingered the
+   per-row regex enrichment as the finalise cap. Shipped a vectorization (`@7b4cacc0`), VM A/B: **cpu stayed 1.6 cores,
+   throughput unchanged**. The regex was per-row but NOT the dominant cost. Measurement refuted the diagnosis.
+5. **DataFrame-native finalise** — cProfile on a real 6.76M-row shard found the TRUE cap: the
+   `shard_df.to_dict("records") -> pd.DataFrame(rows)` round-trip = 60,835,919 GIL-held cell copies = ~62s of a 100.6s
+   finalise. Fixed: `finalise_rows_and_path` accepts a DataFrame and the router passes `shard_df` straight through
+   (`@a0656508`). MEASURED: finalise **100.6s -> 19.5s (5.2x)**; on the VM the parquet backlog drained (was stuck at
+   28-33), CPU rose 1.6 -> 5-7 cores, download rx ~1 -> ~15 MB/s. Byte-identical canonical output
+   (test_tardis_finalise_id_vectorization gates the id column == old per-row derive).
+
+### Tardis vendor + egress (operator decision, confirmed)
+
+Tardis Support (2026-07-17) confirmed no account-level bandwidth shaping; concurrent downloads on one IP are fine; the
+residual timeouts are the trans-Pacific path (GCP Tokyo -> US-East Wasabi). But `curl` from our Tokyo VM already did
+21-29 MB/s aggregate on that path, so the ~30x gap was CODE, not the ocean. Running in Tokyo keeps the fix at
+~$50
+compute / **zero egress**; a US-East VM would fetch faster but force every parquet across the Pacific as ~$1,200+
+cross-region egress for 15-20 TB. Decision: Tokyo + code. The drafted vendor email was NOT sent by me (a colleague sent
+one; the reply was useful intel).
+
+### Residual (optional — already past 10x and network-bound)
+
+- [ ] [CODE] P3. Download rx ~12-16 MB/s vs curl ~20-29 MB/s trans-Pacific: the GCS write (now ~8.6s/shard, the finalise
+      floor) + the shared `storage.Client` pool_maxsize=10 across 40 threads are the remaining second-order caps
+      (workflow `wf_3d2e8aea-20c` finding #2). Raising the pool / parallelizing the upload would close the last ~1.5x,
+      but we are already >10x and near the network ceiling — polish, not required.
+- [ ] [CODE] P1. `databento_fetch.py:672` still has the `run_in_executor(None, ...)` default-pool pattern (latent, filed
+      `databento_default_executor_dns_starvation_risk_2026_07_17.md`).
+- [ ] [CODE] P0. Tardis impossible-combinations still recorded as `attempted_failed` (filed
+      `tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`) — vendor-catalog gate outstanding.
+
+status: resolved (primary throughput goal met; residuals tracked in their own issue docs).
