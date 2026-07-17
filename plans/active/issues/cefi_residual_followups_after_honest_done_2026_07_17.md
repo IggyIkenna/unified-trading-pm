@@ -225,9 +225,23 @@ pairs stay honest-unresolved (reported, never guessed).
       `raw_data_loader.py:126-179`: inherit the D3 bridge (if it reads via MTDS `reader.py`) or add its own
       `get_cefi_wire_map()` bridge; reconcile the `instrument_id`↔`instrument_key` column-name mismatch. (repo:
       features-service)
-- [ ] [BACKEND] P0. **Enumerate + deploy the reader bridge to ALL narrow-read consumers** (MTDS reader, MDPS,
-      features-service, strategy/ml/batch-live-reconciliation cefi readers) — the D4 GCS cutover cannot run until every
-      one carries the bridge (the drain stops writers only). (repos: multiple — enumerate first)
+- [x] ✅ [BACKEND] P0. **Enumerate the narrow-read consumers** — DONE 2026-07-17 (slot-3), measured. **IN SCOPE (4)**:
+      MTDS `reader.py`; MDPS (`path_parsing.py` / `canonical_writer_shaping.py` / `orchestration_scanner.py` /
+      `data_source.py`); features-service (`raw_data_loader.py` + cross-instrument `batch_handler.py`); **execution-service
+      `algo_library/mtds_book_provider.py`** (narrow `read_shard(instrument_id=)` via `CanonicalParquetReader` → inherits
+      D3, REDEPLOY REQUIRED — not named in the blueprint). **VERIFIED OUT (3)**: ml-service (0 `raw_tick` refs),
+      batch-live-reconciliation-service (0 refs), strategy-service runtime (`asset_group="defi"` hardcoded). Evidence in
+      the Progress Log.
+- [ ] [BACKEND] P0. **DEPLOY the reader bridge to all 4 in-scope consumers** — the D4 GCS cutover cannot run until every
+      one carries it (the drain stops WRITERS only; readers keep running against renamed/rewritten objects). Includes an
+      **execution-service redeploy** even though it needs no code change. (repos: market-tick-data-service,
+      market-data-processing-service, features-service, execution-service)
+- [ ] [SCRIPT] P1. **Fix the one campaign script our rename breaks** —
+      `strategy-service/scripts/trace_arbitrage_price_dispersion.py` matches the filename LEAF (:294) against hardcoded
+      WIRE forms (:273-274) over `asset_group=cefi` → silently mis-matches post-D4-rename. Either make the leaf-match
+      accept both wire + canonical stems, or confirm its `# Delete-when: master_to_live_defi_2026_05_23 Phase D complete`
+      is satisfied and delete it (delete-deprecated-code). `trace_carry_staked_basis.py` is a prefix scan → SAFE, no
+      action. (repo: strategy-service)
 
 ## Phase 1 — Corpus migrations (scripted + dry-run first; `--apply` ONLY behind the Phase-1 drain, snapshot-first)
 
@@ -269,6 +283,43 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-17 (slot-3, orchestrator) — CONSUMER ENUMERATION CLOSED + 2 BLUEPRINT CORRECTIONS.** Measured, not assumed
+  (grep-then-READ).
+  - **Narrow-read consumer set for the raw_tick cutover — IN SCOPE (4)**: (1) MTDS `reader.py`
+    (`CanonicalParquetReader`) → D3; (2) MDPS (`path_parsing.py`, `canonical_writer_shaping.py`,
+    `orchestration_scanner.py`, `data_source.py`) → D3; (3) features-service (`cross_instrument/engine/raw_data_loader.py`
+    + `cross_instrument/cli/handlers/batch_handler.py`) → D-features; (4) **NEW — execution-service
+    `execution_service/algo_library/mtds_book_provider.py`**: does narrow
+    `CanonicalParquetReader.read_shard(venue=, data_type=tbbo, instrument_type=, target_date=, instrument_id=)` per
+    (instrument, day) → **inherits D3 for free BUT MUST BE REDEPLOYED before the cutover**. The blueprint never named it;
+    it is now part of the reader-deploy gate (blueprint open-q #4).
+  - **VERIFIED OUT OF SCOPE (3)**: **ml-service** — ZERO `raw_tick` refs corpus-wide (reads features/candles only);
+    **batch-live-reconciliation-service** — ZERO `raw_tick`/`CanonicalParquetReader` refs; **strategy-service runtime** —
+    `engine/core/canonical_vault_provider.py:126` + `canonical_perp_funding_provider.py:137` are `asset_group="defi"`
+    HARDCODED, so their raw_tick reads never touch cefi. This materially shrinks the cutover blast radius from the
+    blueprint's "strategy/ml/batch-live-recon" hand-wave to a concrete 4.
+  - **NEW FINDING — one campaign script WILL break on the D4 rename**:
+    `strategy-service/scripts/trace_arbitrage_price_dispersion.py` matches on the FILENAME LEAF
+    (`leaf = blob.name.rsplit("/", 1)[-1].upper()`, :294) against hardcoded WIRE forms (`BTCUSDT.parquet`,
+    `PI_BTCUSD.parquet`, `BTCUSD-PERP.parquet`, :273-274) over `asset_group=cefi` → silently mis-matches post-rename.
+    `trace_carry_staked_basis.py` is a plain `.parquet` prefix scan (:206) → SAFE. Both are `# Lifecycle: campaign` /
+    `# Delete-when: master_to_live_defi_2026_05_23 Phase D complete`. Our rename causes the break, so we own it → tracked
+    as its own todo (fix the leaf-match to accept both forms, or confirm the delete-when is satisfied). NOT left silent.
+  - **BLUEPRINT CORRECTION 1 (open-q #3 is partly a SURFACE CONFLATION)**: `chart-candle-delivery-flow.md:274`
+    ("**Filename is the bare symbol**, not the canonical `venue:type:symbol` instrument-key") sits under the
+    **`processed_candles/`** layout block (:264-283) — it documents MDPS candle-output filenames, **NOT `raw_tick_data/`**.
+    It is therefore NOT a contradiction of the raw_tick filename lock and MUST NOT be "corrected" in Phase 2. The
+    blueprint + the original codex audit lens both cited it as the headline stale claim; that was grep-then-conclude.
+  - **BLUEPRINT CORRECTION 2 (the lock is BETTER-supported than stated)**: codex ALREADY documents the raw_tick stem as
+    the FULL instrument_key — `instrument-pipeline-defi.md:177` (`raw_tick_data/.../venue={venue}/{instrument_key}.parquet`)
+    + `:183` (worked example `.../venue=BINANCE-FUTURES/BINANCE-FUTURES:PERPETUAL:ETHUSDT.parquet`). So Phase-0a's
+    "filename stem = FULL `instrument_id`" **corroborates** existing codex rather than contradicting it (note the doc's own
+    example carries the undecomposed `ETHUSDT` payload — shape right, decomposition is exactly what D1 fixes).
+  - **The genuinely stale raw_tick docs for Phase 2 are therefore just two**: `read-time-filter-pushdown.md:69-70` (blesses
+    the SUBSTRING blob gate with the wire example `.../BTCUSDT.parquet` matches `instrument_ids=["BTCUSDT"]` — this IS the
+    D3 break in the MIXED window) and `per-asset-group-bucket-layouts.md:135` (shows CEFI raw_tick as `ticks.parquet` only,
+    missing the per-instrument stem split; reconciled by `pipeline-coverage-matrix.md:360-361`).
 
 - **2026-07-17 (slot-3) — FIX 0 UAC HALF SHIPPED: `CeFiWireCanonicalMap` contract SSOT landed —
   `unified-api-contracts@825878f7`.** T0 lands first, before its MTDS/MDPS consumers (dependency order). NEW
