@@ -376,8 +376,8 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 | 9   | Drain residual `LENDING`                                      | P4-A (A)      | P2  | finish A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.                                              |
 | 10  | Sports TEAMS data-correctness                                 | P8 (B)        | P2  | scoped, not attempted this session — data-correctness items 1-5 in the P8 (B) block.                       |
 | 11  | True-catalogue source                                         | P6 phase-2    | P3  | deployment-api→IS read path OR projection; availability-derived phase-1 shipped @1e3c7b4.                  |
-| 12  | `/prediction-catalogue` ~39s latency                          | P3 perf       | P3  | pagination/caching/projected read (correct, just slow).                                                    |
-| 13  | `/catalogue` unpaginated large-AG cost                        | P6 perf (NEW) | P3  | FIXED@62cc10f but builds all rows (tradfi 1.17M) — push limit/offset into read +/or TTL cache.             |
+| 12  | ~~`/prediction-catalogue` latency~~                           | P3 perf       | P3  | ✅ **DONE 2026-07-17** — real cost ~173s not 39s; paging was re-paying it, now 0.00s @0e39a53.             |
+| 13  | ~~`/catalogue` unpaginated large-AG cost~~                    | P6 perf (NEW) | P3  | ✅ **DONE 2026-07-17** — tradfi 61.3s→14.9s (4.1x), cefi 6.5x, page byte-identical @0e39a53.               |
 
 ### 2026-07-16 — Phase A browser-validation of P5/P7/P4-A/P8 (INCONCLUSIVE — mock-fixture gaps, not code bugs)
 
@@ -935,27 +935,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                                                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                                                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                                                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                                                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                                                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                                                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                                                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                                                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                                                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                                                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                                                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                                                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                                                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                                                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                                                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                                                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                                                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                                                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                                                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                                                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
@@ -1277,14 +1277,53 @@ search):
       cefi/defi/tradfi regression, asset-group-scoped bucket resolution, mvp-column-not-`is_mvp`, search, venue-narrow,
       degrade-to-empty-not-500, CSV parity, raw-parquet schema-aware projection). Shipped via dirty-deps carve-out
       (deployment-service `terraform.tfvars` foreign-live-dirty; strict-quickmerge WARN-only).
-- [ ] [PERF] P3. `/data-status/prediction-catalogue` is correct but ~39s (full 1.3M-row pred `catalog.parquet` read per
-      cache-miss) — add pagination/caching or a projected read so the UI doesn't wait ~39s.
-- [ ] [PERF] P3. _(P6-catalogue follow-up, found 2026-07-17)_ `/data-status/catalogue` correctness is FIXED (@62cc10f)
-      but is now unpaginated at the source: for large AGs it builds EVERY row-dict via `df.iterrows()` before slicing
-      the page (tradfi `prod/catalog.parquet` = 1,173,803 rows, cefi = 424,465) → multi-second cold response + no
-      server-side cache. Same class as the prediction-catalogue perf todo above. Fix: push the `limit`/`offset` (and
-      `search`/`venue`/`instrument_type` narrows) into the read/build so only the requested page is materialised, +/or a
-      TTL cache (mirror `upcoming_fixtures._FIXTURES_CACHE`). Single-walk discipline unaffected (still ONE bounded GET).
+- [x] [PERF] P3. ✅ `/data-status/prediction-catalogue` — **profiled on real GCS BEFORE optimising, which corrected this
+      todo's premise.** Measured cold cost is **~173s, not ~39s**, and it splits ~50/50 into two stages that are BOTH
+      **filter- and page-independent**: the GCS GET of the 184.5 MB pred `catalog.parquet` (**84.5s**) + the ~2.7M-row
+      classification pass in `_build_rows` (**86.0s**); parquet parse is a rounding error (1.8s) and facets 0.35s. So
+      the todo's suggested "pagination/projected read" **would have fixed nothing** — you cannot skip an 84s
+      whole-object download by asking for 50 rows, and the facet counts need the whole corpus by construction. **The
+      actual bug was the cache key**: it included `limit`/`offset`, so every "Next page" click re-paid the entire ~173s.
+      Fixed by re-keying `_CATALOGUE_CACHE` on the FILTER SET only and retaining a **bounded 5,000-row window** (+ the
+      true `total` + facets) per set. **Why bounded and not a corpus/frame cache** (the tempting "obvious" fix): an
+      unfiltered result is ~2.7M rows and the identity frames measure **122–312 MB deep** — caching those would
+      re-create exactly the OOM class this plan's own P1 root-caused on the honest-coverage writer. 5,000 rows = 100
+      pages at the default 50/page; a request past the window logs and falls back to a correct full rebuild rather than
+      silently serving a truncated list. Also pushed the `venue` narrow into the FRAME before classification (pure
+      optimisation — `venue` is a raw column needing no classification, and the caller applied the identical narrow to
+      the built rows immediately after). — deployment-api@0e39a53 + Evidence (**real GCS, shipped code**):
+      `category=crypto` page 1 = 157.18s (total=214,532) → **page 2 = 0.00s**, page 21 = 0.00s, and page1 rows ≠ page2
+      rows (not the cache echoing page 1); `venue=KALSHI` cold **27.88s vs 157.18s unfiltered (5.6x)**, all rows
+      `venues={'KALSHI'}`; `category=sports` correctly rebuilds (157.48s) returning `categories={'sports'}` — proving a
+      different filter set is NOT served from the crypto entry. Unit: `test_prediction_catalogue.py` 9 passed incl. new
+      `TestPagingDoesNotRePayTheCorpusCost` ×5 (second page issues NO second read; paged rows == unpaged ordering; **a
+      different filter set is not served from another set's cache** — the load-bearing risk of dropping limit/offset
+      from the key; `total` is the full count not the window length; venue-pushdown results identical to filtering after
+      build). **Known residual (honest, not deferred silently):** the FIRST request for a new filter set still costs
+      ~157s. That is inherent to reading a 184MB / 2.7M-row corpus per filter set; removing it needs a server-side
+      projection/index rather than a cache — which is precisely the P6 phase-2 "true-catalogue source" item below, where
+      it belongs.
+- [x] [PERF] P3. ✅ _(P6-catalogue follow-up, found 2026-07-17)_ `/data-status/catalogue` — the todo's diagnosis was
+      **confirmed** by profiling here (unlike the prediction one above): download+parse for tradfi is only ~3.3s, so the
+      cost really was building **every** row-dict via `df.iterrows()` before slicing the page. Fixed by splitting the
+      build into `_prepare_catalogue_frame` (vectorised narrow + `is_mvp` tag + order — no dicts) and `_rows_from_frame`
+      (materialises dicts from whatever slice it is handed), so the JSON route (`_build_catalogue_page`) builds only the
+      requested page while `total_count` stays exact via a frame `len()`. The CSV twin keeps the full-list path, and
+      both now share one prepare step so they are **structurally** unable to disagree on rows/order. `is_mvp` is
+      vectorised for the identity catalogues (reads their precomputed `mvp` column — this is what takes tradfi's 1.17M
+      rows off the per-row path); manifest-backed AGs (prediction/sports) keep the per-row predicate, i.e. no regression
+      there. **Operation order preserved exactly** (mvp_only → search-in-frame-order → cap at
+      `MAX_CATALOGUE_SEARCH_RESULTS` → sort): the cap lands BEFORE the sort, so reordering would silently change which
+      rows a capped search returns. Deliberately did **not** add the suggested TTL cache: measured the frames at 311.8
+      MB (tradfi) / 121.7 MB (cefi) deep, and the residual cold time is the transpacific GET (variable), not compute —
+      caching those frames buys little and risks the P1 OOM class. — deployment-api@0e39a53 + Evidence (**real GCS**):
+      tradfi **61.32s → 14.88s (4.1x)** with `total_count=1,173,803`; cefi **18.85s → 2.90s (6.5x)**; **page
+      byte-identical to the old full-build `full[:50]`** for both, plus verified equivalence for `offset=100 limit=20`
+      under `mvp_only=True` (`page == full[100:120]`) and `search=BTC` (`page == full[:10]`, total 500 == 500). All **16
+      pre-existing `test_route_data_status_catalogue.py` specs pass UNCHANGED** (they pin CSV/JSON parity — the
+      refactor's real guard); 25 passed across both perf files. basedpyright A/B'd vs HEAD: I introduced 1 new error (an
+      untyped `.apply` lambda) and **fixed it properly with a typed inner function rather than suppressing it** — back
+      to 4 = HEAD's count; ruff RUF046 likewise fixed, not ignored.
 - [x] ~~[UI] P2. (P6 phase-1 UI — NOT done)~~ ✅ RESOLVED — the P6 phase-1 UI (InstrumentsModalStandard "MVP only"
       toggle + per-row badge + CSV threading + Catalogue Explorer panel) DID land after this note was written — see the
       flipped P6 `[UI] P2 _(phase 1)_` checkbox above (`DataStatusDrilldown.tsx`). This note was stale.
