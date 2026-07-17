@@ -76,7 +76,10 @@ MANIFEST="${_ws}/unified-trading-pm/workspace-manifest.json"
 # SANITY: only re-provenance a commit that is ACTUALLY a bypass right now. Re-provenancing a clean
 # commit is harmless but pointless, and re-provenancing a random sha would be misleading in the log.
 if [ -f "$GUARD" ]; then
-  if python3 "$GUARD" --range "${FULL_SHA}~1..${FULL_SHA}" >/dev/null 2>&1; then
+  # `--block` is REQUIRED: without it the guard WARNs and exits 0 even on a violation, so the sanity
+  # check would always say "nothing to do" (bug, 2026-07-17). With --block: exit 0 = genuinely clean,
+  # exit 1 = a real violation we should re-provenance.
+  if python3 "$GUARD" --range "${FULL_SHA}~1..${FULL_SHA}" --block >/dev/null 2>&1; then
     echo "reprovenance: $FULL_SHA is NOT currently a strict-quickmerge violation — nothing to do." >&2
     echo "  (already provenanced, a carve-out, or already promoted.)" >&2
     exit 0
