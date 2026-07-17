@@ -97,14 +97,17 @@ Booted from the verified-current GCS startup script (export present — the earl
 
 ## Todos
 
-- [ ] [INFRA] P0. **Check the Tardis account/licence/key state FIRST (5 min, highest value).** The
-      `403 code=274 concurrent-IP-lock` FIRST appears 2026-07-12 — the same window as the throughput collapse. June
-      evidently ran many parallel VMs with no lockout. If the key was downgraded/expired into a lower tier (or Tardis
-      began enforcing a limit), that ONE fact explains BOTH the new 403s AND the ~350x collapse, and the "N=1 cap" we
-      hard-coded on 2026-07-16 would be a symptom we institutionalised rather than a law.
-- [ ] [INFRA] P0. **Bisect the MTDS Tardis client for a regression (late-June → 2026-07-12).** If the account is
-      unchanged, diff `market-tick-data-service` Tardis-path commits in that window (timeout / retry / backoff /
-      connection-pool / streaming config) against the June-vs-July throughput cliff.
+- [x] [INFRA] P0. **Check the Tardis account/licence/key state FIRST.** ✅ **Account is HEALTHY — not the cause.**
+      Measured on the VM 2026-07-17 with the real key (`gcloud secrets versions access latest --secret=tardis-api-key`),
+      authenticated, PAID day (Feb 15, not a 1st-of-month free sample): 1 stream **5-7 MB/s**, 8 parallel **25.7 MB/s**,
+      24 parallel **32.9 MB/s** (23/24 HTTP 200). Tardis does NOT cap the account and is nowhere near its documented
+      3,000 req/min. The `403 code=274` co-occurring with 2026-07-12 was the one-IP lock behaving as documented, not a
+      downgrade. **The drafted vendor email must NOT be sent.**
+- [x] [INFRA] P0. **Bisect the MTDS Tardis client for a regression (late-June → 2026-07-12).** ✅ **Found: `eb336036`
+      (2026-06-11)** — _"refactor: split tardis_adapter + solana_defi_handler below 900L"_ — introduced
+      `run_in_executor(None, ...)` for the blocking parse, putting it on the same default pool aiohttp's
+      ThreadedResolver needs for `getaddrinfo`. A refactor, not a feature. Fixed by `market-tick-data-service@2e7c2b5d`
+      (dedicated `tardis-parse` executor) + `deployment-service@c3babd80`. See "✅ ROOT CAUSE (PROVEN)" below.
 - [ ] [DATA] P0. **Re-open or supersede the CeFi Completion Program archival.** Its stated basis ("not closable ≈ 1.8
       years") is void. Either un-archive it or record a correction banner pointing here, so the corpus does not carry
       "CeFi closed at honest-done because the gap is physically unclosable" as settled fact.
@@ -139,7 +142,26 @@ Booted from the verified-current GCS startup script (export present — the earl
   window (the renewal is a prime suspect) or (b) server-side shaping/throttling of our key. The 403s we saw on 07-13 and
   07-16 were SELF-inflicted (our own N=6 and N=3 waves), not a third party.
 
-## 🎯 ROOT CAUSE FOUND — aiohttp connection-pool STARVATION. Tardis is fine (125 MB/s). — 2026-07-17T10:15Z
+## ❌ WRONG — superseded by the real root cause below (kept for the audit trail) — 2026-07-17T10:15Z
+
+> **THIS SECTION IS WRONG. Do not cite its numbers.** Two errors, both mine:
+>
+> 1. **The 38.4 / 125.1 MB/s "local proof" is INVALID.** Both used
+>    `.../binance-futures/trades/**2026-02-01**/BTCUSDT.csv.gz` — the **1st of the month**, which is Tardis's **free
+>    sample**: served unauthenticated and CDN-cached. Re-measured on the VM 2026-07-17T11:0xZ, the same URL returns HTTP
+>    200 at ~200 MB/s **with no key at all**, while a real PAID day (Feb 15) returns **HTTP 401** without auth and **5-7
+>    MB/s** with it. The honest authenticated ceiling is **5-7 MB/s single stream, 25.7 MB/s at 8 parallel, 32.9 MB/s at
+>    24 (plateau)** — not 125, and the real gap was ~23x, not 278x.
+> 2. **Connection-pool starvation was NOT the root cause.** Raising `connection_pool_size` 16 -> 128 and concurrency ->
+>    128 was shipped and VERIFIED live on the VM (`connection_pool_size: int = 128`,
+>    `TARDIS_MAX_CONCURRENT_DOWNLOADS=128` in the process env) and **fixed nothing**: the run still logged 203
+>    `ConnectionTimeoutError` and then froze at cpu=0.0%. Raising concurrency made it strictly WORSE.
+>
+> The real cause is default-executor DNS starvation — see "✅ ROOT CAUSE (PROVEN)" at the end of this doc. Method
+> lesson: never baseline Tardis against a 1st-of-month URL, and `ps` `%CPU` is a **lifetime average**, not instantaneous
+> — "CPU pinned at one core" was an artifact of that too (the box was 100% idle).
+
+## [SUPERSEDED] aiohttp connection-pool starvation hypothesis — 2026-07-17T10:15Z
 
 Operator refused the vendor-throttling story: _"I refuse to believe tardis max throughput is 0.45mb/s… check their docs…
 try locally first stopping vm entirely."_ **They were right on every count.** Killed the VM (zero Tardis consumers
@@ -196,3 +218,84 @@ the issue; I reverted that edit after verifying it was not load-bearing rather t
 **Next**: rebuild the MTDS tarball so VMs boot the fixed client (VMs pull `mtds-code.tar.gz` from GCS — a repo/LDR fix
 alone does NOT reach them, exactly the stale-artifact trap hit earlier today), relaunch ONE VM at
 `TARDIS_MAX_CONCURRENT_DOWNLOADS=128`, and measure MB/s against the 0.45 baseline.
+
+---
+
+## ✅ ROOT CAUSE (PROVEN) — blocking parses starve aiohttp's DNS on the DEFAULT executor — 2026-07-17T11:30Z
+
+**Shipped:** `market-tick-data-service@2e7c2b5d` · `deployment-service@c3babd80` (both LDR, QG-green).
+
+### The mechanism
+
+`tardis_csv_transport` ran the blocking stream->parquet parse on asyncio's **default** ThreadPoolExecutor:
+
+```python
+executor_fut = loop.run_in_executor(None, lambda: stream_bulk_csv_to_parquet(_sync_iter(), ...))
+```
+
+Each in-flight download **parks a default-pool worker for the entire transfer** (the parse blocks pulling chunks off the
+network). But aiohttp's `ThreadedResolver` runs `getaddrinfo` on **that same default pool**. So:
+
+> in-flight parses fill the pool -> DNS cannot resolve -> every new connection dies at the 30s `connect` timeout ->
+> `ConnectionTimeoutError` -> the run freezes at cpu=0%.
+
+Self-strangling, and the defaults were **exactly pathological**: `16` downloads + `4` book-snapshots = **20** =
+`min(32, cpu+4)` on a 16-vCPU box — **zero threads left for DNS**. This is why raising concurrency made it worse (more
+parse jobs queued _ahead_ of every DNS lookup) and why a bigger connection pool changed nothing.
+
+In aiohttp, `connect` covers **DNS + pool acquisition**, not just the TCP handshake — which is why the symptom
+masqueraded as a network/vendor fault.
+
+### Introduced
+
+`eb336036` (2026-06-11) — _"refactor: split tardis_adapter + solana_defi_handler below 900L"_. A refactor, not a
+feature. This is the answer to the operator's challenge (_"it can't suddenly have slowed down"_): **it did, and it was
+ours.**
+
+### The evidence
+
+| evidence                                                                                    | result                                                                                                                                    |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Monitor trace, VM `cefi-queue-heavy-binancefutu-x15-20260717-101033`                        | t2/t3/t4 **byte-identical** (success=95, timeouts=203, total=1361MB) — **45 min of absolute zero at cpu=0.0%**                            |
+| Whole-run effective rate                                                                    | 1948 MB / ~66 min = **0.49 MB/s** — reproduces the "0.45 MB/s baseline", which was never a transfer rate but arithmetic over long freezes |
+| Log error histogram                                                                         | **203 ConnectionTimeoutError** (dominant), 95 HTTP 400, 69 Empty CSV                                                                      |
+| `RESOURCE_SAMPLE` while frozen                                                              | `cpu=0.0% rss=6962MiB fds=41 threads=108`, unchanged 20+ min; `rx=3 KB/s`                                                                 |
+| `curl` on the SAME VM/key/URL, authenticated, PAID day                                      | 1 stream **5-7 MB/s** · 8 parallel **25.7 MB/s** · 24 parallel **32.9 MB/s** (plateau)                                                    |
+| Local repro (`test_blocking_parses_on_default_pool_starve_dns_but_dedicated_pool_does_not`) | default pool: getaddrinfo **starved >8.0s** · dedicated pool: **0.01s**                                                                   |
+
+**Tardis does NOT throttle us.** The account scales to ~33 MB/s. The drafted vendor email must **NOT** be sent — the
+fault was entirely ours.
+
+### The fix
+
+- **Dedicated `tardis-parse` ThreadPoolExecutor**, sized above the download semaphore (`32+8`) so a parse never queues
+  behind a peer and the default pool stays free for DNS. Invariant `semaphore(32) < parse pool(40)` is test-enforced.
+- **Defaults 16/4 -> 32/8** — 32 sits just above the measured plateau. Deliberately NOT 64/128: past ~24 streams there
+  is no throughput left to win, and each extra in-flight download costs a parse thread holding an 8 MiB pyarrow block
+  (the 128-wide run froze at rss=6962MiB).
+- **`_IterReader.readinto`** re-sliced the whole ~4 MiB carry-over per 8 KiB gzip read (quadratic). Offset pointer;
+  byte-identical output, 3.5x isolated (302 -> 1068 MB/s). **Secondary win, NOT the root cause** — the old code still
+  ran 302 MB/s in isolation, which cannot explain a 23x production gap.
+- **Cap-1 guard gaps closed**: `launch-tier3-cefi-backfill.sh` and `launch-targeted-options-chain-backfill.sh` ran
+  authenticated Tardis VMs with **no guard at all**. Both now enforce the cap (and will REFUSE their fan-outs, which is
+  intended) and stamp `VM_TARDIS_CONSUMER=1` so sibling launchers count them.
+
+### Still open
+
+- [ ] [DATA] P0. **Measure the fix on real infra.** The ~70x (0.45 -> ~30 MB/s) is a projection from on-VM `curl`, NOT a
+      measured pipeline result. Blocked: `create-code-tarballs.sh` correctly refuses while dep `unified-api-contracts`
+      carries a live sibling's WIP; `--allow-dirty-tarball` would ship their half-done code to prod. Relaunch on bare
+      defaults (no env override) so the test exercises what every future VM gets.
+- [ ] [DOC] P0. **OPERATOR RULING NEEDED** — `codex/05-infrastructure/vm-launcher-runbook.md` + `CLAUDE.md` still say
+      _"defaults 16/4 leave the box ~93% idle"_ and tell agents to scale those knobs. That advice **caused** the wedge:
+      the box was idle BECAUSE of the deadlock, not from spare headroom. SSOT edits are operator-gated.
+- [ ] [CODE] P1. **`databento_fetch.py:672`** has the identical `run_in_executor(None, _next_dbn_chunk, ...)`
+      blocking-chunk pattern — same latent starvation on the TradFi path.
+- [ ] [INFRA] P2. **Unauthenticated day-1 VM** (operator idea 2026-07-17). `skip_auth = date.day == 1` already sends no
+      key, and a keyless request PROVABLY does not touch the one-IP lock (unauth curl returned HTTP 200 at ~200 MB/s
+      _while_ the authenticated VM was running). A 2nd VM restricted to day-1 runs truly parallel for ~3% of days at
+      ~30x. Fail-safe design: **do not grant it the `tardis-api-key` secret** so it physically cannot become a second
+      authenticated IP.
+- [ ] [PM] P0. **Re-open the CeFi Completion Program archival** —
+      `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` closed on the "N=1 ceiling ≈ 1.8 years" verdict,
+      which is now void.
