@@ -1108,12 +1108,20 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       _Mechanism (original)_: after T5.1's config removal, `tofu plan` must not propose creating either bucket. _Gate_:
       plan clean. _ABORT_: plan wants to CREATE a legacy bucket → T5.1 was skipped or incomplete → **do not delete**
       (see F-6 / the resurrection precedent).
-- [ ] [INFRA] P1. **T4.5 — Resolve the `--asset-group`-less recon job (OR-8).** _Mechanism_:
-      `uts-prod-market-tick-data-     service-fast-t1-recon`'s baked args are `[--operation download --mode batch]` with
-      **no `--asset-group`**; UTL `service_cli.py:163-167` defines it `nargs='+'` with **no default** (→ `None`). The
-      infra leg **read the argparse definition but did not execute the resolver** to prove what the `None` branch
-      enumerates. Run it in dry-run and observe. _Gate_: a MEASURED list of asset_groups the unfiltered invocation
-      touches. _ABORT_: it writes sports to a **legacy** name → a live legacy writer exists (F-5) → STOP.
+- [x] ✅ [INFRA] P1. **T4.5 — RESOLVED 2026-07-17 (OR-8 DISPROVEN): the recon job FAILS CLOSED — it writes no sports and
+      touches no legacy name.** Ran the exact baked args (`--operation download --mode batch`, no `--asset-group`) with
+      `--dry-run`:
+      `ValueError: asset_group is required for tick-data bucket resolution; the canonical market-data bucket is per-asset_group (no flat fallback)`
+      → `Batch complete: 0 results collected`, exit 1. **MEASURED asset-group list = ∅** (grep of the run log: **0**
+      sports mentions, **0** legacy bucket refs). The ABORT (“writes sports to a legacy name” → live legacy writer) does
+      NOT fire ⇒ T6.2's restore of writer (11) is safe. **Side-finding → T6.10**: the job is BROKEN in prod (every
+      recent execution `failedCount=1`, same ValueError, predating the freeze — not cutover-caused). Evidence
+      `~/tmp-restore/t4_5_dryrun.log`. _Original mechanism_: `uts-prod-market-tick-data-     service-fast-t1-recon`'s
+      baked args are `[--operation download --mode batch]` with **no `--asset-group`**; UTL `service_cli.py:163-167`
+      defines it `nargs='+'` with **no default** (→ `None`). The infra leg **read the argparse definition but did not
+      execute the resolver** to prove what the `None` branch enumerates. Run it in dry-run and observe. _Gate_: a
+      MEASURED list of asset_groups the unfiltered invocation touches. _ABORT_: it writes sports to a **legacy** name →
+      a live legacy writer exists (F-5) → STOP.
 
 ### PHASE 5 — DELETE (gated on Phase 4 + a FINAL live-writer re-check)
 
@@ -1227,6 +1235,14 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
 > **Nothing un-pauses until: `tofu plan` is clean AND the legacy buckets are gone AND the canonical index has absorbed
 > the moved objects.** Consolidators restart FIRST (they were frozen last).
 
+> **🟢 T6.0 INTERIM CHECK PASSED 2026-07-17T03:0xZ (~7h post-delete; the 24h mark is 19:52Z 2026-07-17 — todo stays open
+> until then).** Bucket re-checked WITH CONTROLS to defeat this SA's 403-masquerade: legacy
+> `gs://instruments-store-sports-central-element-323112` → **real 404**; control
+> `market-data-tick-sports-central-element-323112` (RETAINED per OR-5b) → **lists objects, untouched**; control
+> canonical `-prd-` → lists objects, intact. Since `ls` demonstrably returns content for buckets that exist, the 404 is
+> genuine absence, not a permission artifact. **No resurrection.** The remaining 24h `tofu plan` re-run is the only open
+> part.
+
 - [ ] [INFRA] P0. **T6.0 — Post-delete resurrection watch.** _Mechanism_: 24h after T5.4, re-run `tofu plan` and
       `gcloud storage ls gs://instruments-store-sports-central-element-323112`. _Gate_: plan clean; bucket still 404.
       _ABORT_: bucket exists again → an out-of-band `apply` resurrected it → T5.1 was incomplete → re-open.
@@ -1252,51 +1268,93 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       by one** (it double-counted the 1 flip row already counted as footystats×ODDS); true value **142,617**. Snapshots:
       `_index/availability_index.20260717-012712.pre_t6_1.bak.parquet` on both canonical buckets. _Original mechanism_:
       un-pause
-- [ ] [INFRA] P0. **T6.1b — Consolidator restore + ≥3 clean ticks (the un-pause half of T6.1).** _Mechanism_: un-pause
-      `-features-sports-cron`, then `-market-data-sports-cron`, then `-instruments-sports-cron`. _Gate_ (first run):
-      exits 0; `_index/availability_index.parquet` mtime advances; row count **≥ the pre-freeze snapshot minus exactly
-      123,149** (the T3.1 purge) **plus** the T2.7 moved-cell count — never lower (a drop means the merge clobbered
-      rows); **no `Container terminated on signal 9`** (the instruments-sports merge is the known heavy case —
-      60-80s/2.09M rows/37 shards, 900s bump at `manifest_consolidator_scheduler.tf:88-92`); no stale-index loud-fail.
-      Let them run **≥3 clean ticks before any writer resumes** so the index is a known-good baseline. _ABORT_: row
-      count drops or OOM-kill → restore the T0.2 `.bak`; do not resume writers onto a corrupt index. **Downstream
-      unblock (added 2026-07-16 21:32Z, slot-13)**: `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1
-      (compute sports features 2015→present) is dispatcher-gated on backlog condition
-      `sports-cutover-phase6-consolidator-resumed` (created to stop wasted re-dispatch during the freeze — see that
-      plan's Progress Log). The moment `-market-data-sports-cron` reads `state: ENABLED` and passes this gate's checks,
-      flip it:
+- [x] ✅ [INFRA] P0. **T6.1b — DONE 2026-07-17: all 3 consolidators ENABLED in reverse order (22→20) + 4 consecutive
+      clean ticks.** features-sports → market-data-sports → instruments-sports, each verified `ENABLED`. Post-restore
+      ticks reached steady state `shards=1` (`_legacy_seed` only) / `rows_in=0` / `pruned_shards=0`; the one prune tick
+      (`shards=3→pruned 2`; MDT `shards=2→pruned 1`) was the LEGITIMATE drain of the already-merged T6.1 shards (covered
+      by a real `consolidator_content_write_at`). Index re-verified BY CONTENT after the prune — **5,349,447 / captured
+      1,699,880 / af×ODDS 0 / fs×ODDS 142,617, no rollback**. No `Container terminated on signal 9` (heavy instruments
+      merge ran 328s, well under the 900s bump). Backlog prerequisite `sports-cutover-phase6-consolidator-resumed`
+      flipped **true**. ⚠️ **Gotcha for future readers**: ticks logging `success=True shards=0 rows_in=0` are
+      `error=locked` (soft-lock contention) — `cut -c1-140` truncates exactly before `error=locked`; read those lines
+      untruncated. _Original mechanism_: un-pause `-features-sports-cron`, then `-market-data-sports-cron`, then
+      `-instruments-sports-cron`. _Gate_ (first run): exits 0; `_index/availability_index.parquet` mtime advances; row
+      count **≥ the pre-freeze snapshot minus exactly 123,149** (the T3.1 purge) **plus** the T2.7 moved-cell count —
+      never lower (a drop means the merge clobbered rows); **no `Container terminated on signal 9`** (the
+      instruments-sports merge is the known heavy case — 60-80s/2.09M rows/37 shards, 900s bump at
+      `manifest_consolidator_scheduler.tf:88-92`); no stale-index loud-fail. Let them run **≥3 clean ticks before any
+      writer resumes** so the index is a known-good baseline. _ABORT_: row count drops or OOM-kill → restore the T0.2
+      `.bak`; do not resume writers onto a corrupt index. **Downstream unblock (added 2026-07-16 21:32Z, slot-13)**:
+      `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 (compute sports features 2015→present) is
+      dispatcher-gated on backlog condition `sports-cutover-phase6-consolidator-resumed` (created to stop wasted
+      re-dispatch during the freeze — see that plan's Progress Log). The moment `-market-data-sports-cron` reads
+      `state: ENABLED` and passes this gate's checks, flip it:
       `curl -X POST $SERVER_URL/api/prerequisites/sports-cutover-phase6-consolidator-resumed -d '{"value": true}'`.
-- [ ] [INFRA] P0. **T6.2 — Restore the shared/uncertain writer (11) then features (10).** _Mechanism_: un-pause
+- [x] ✅ [INFRA] P0. **T6.2 — DONE 2026-07-17. Both ENABLED; the legacy-write ABORT did not fire.** (11)
+      `uts-prod-market-tick-data-fast-t1-schedule` restored only AFTER resolving its blocking dependency **T4.5** (which
+      was still `- [ ]`): its target fails closed with `asset_group is required`, touching **zero** legacy names — it is
+      not a writer at all in this config (but IS broken in prod → T6.10). (10) `features-service-sports-daily-trigger`
+      restored. **The runbook's `--date 2026-07-14` worry is ANSWERED — no issue needed**: the
+      `features-service-sports-daily` Workflow overrides the entire args array via `containerOverrides` with dynamic
+      `--start-date $${yesterday}` / `--end-date $${today+7}`
+      (`deployment-service/terraform/services/features-service-sports/gcp/main.tf:82-115`); the hardcoded date is a dead
+      default and the job does NOT re-run one fixed day forever. _Original mechanism_: un-pause
       `uts-prod-market-tick-data-fast-t1-schedule` — verify against T4.5's measured asset-group list that its target is
       `market-data-tick-sports-prd-*` and **not** a legacy name. Then `features-service-sports-daily-trigger` → the
       Workflow `features-service-sports-daily` → `features-service-sports-job` writes to
       `features-sports-prd-central-element-323112`. **Note**: the features job spec has a hardcoded `--date 2026-07-14`
       — **stale**; confirm the trigger overrides it or the job re-runs one fixed day forever (file an issue if so).
       _Gate_: both first runs exit 0 onto canonical. _ABORT_: any legacy-name write → STOP; a legacy writer survived.
-- [ ] [INFRA] P0. **T6.3 — Restore the daily writers 9→5 (one at a time, verify each).** _Mechanism_: un-pause in order
-      — `uts-prod-mdps-odds-horizon-bucket-daily` (9; verify `reprocess_sports_odds` writes `processed/` under
-      canonical, exit 0); `lifecycle-catalogue-regen-sports-daily` (8; verify `_catalogue/` on canonical — and see
-      T4.3's `--by-date-prefix` coverage gap); `expected-universe-v2-sports-daily` (7; verify `--apply-write` lands rows
-      and `gs://instruments-store-sports-prd-…/prod/catalog.parquet` resolves — **and that it still writes 0
-      api_football × ODDS**, i.e. the T3.1 purge is not re-seeded); `is-daily-enum-sports` (6; verify the `--force`
-      re-enum writes a per_vm shard under `VM_NAME=is-daily-enum-sports` and the consolidator merges it next tick);
+- [x] ✅ [INFRA] P0. **T6.3 — DONE 2026-07-17: writers 9→5 ENABLED, each first run GREEN ON CANONICAL** (manually
+      triggered rather than waiting ~11h for the daily crons). (9) `uts-prod-mdps-odds-horizon-bucket-daily`; (8)
+      `lifecycle-catalogue-regen-sports` exec `tmbcm` —
+      **`Promoted 27,240-row catalogue to gs://instruments-store-sports-prd-…/prod/catalog.parquet`,
+      `guard_reason=monotonic_ok`, exit_code 0, 0 legacy refs**; (7) `expected-universe-v2-sports` exec `vjr6f` —
+      `--apply-write` landed 46,328 rows, catalog resolved from canonical, oscillation guard fired (dropped 37
+      empty_confirmed vs captured), and **ZERO `api_football × ODDS` in the fresh shard ⇒ the T3.1 purge is TERMINAL,
+      proven by the live enumerator, not asserted**; (6) `is-daily-enum-sports` exec `nr62z` — `--force` re-enum wrote
+      `_index/per_vm/is-daily-enum-sports.parquet` (271 entries), merged next tick; (5) `understat-eu-typing-sweep` exec
+      `p76cw` — **fired NATURALLY on its own `0 3 * * *` cron and succeeded**, no manifest row-count regression. Every
+      log: **0 legacy refs, 0 404s**. _Original mechanism_: un-pause in order —
+      `uts-prod-mdps-odds-horizon-bucket-daily` (9; verify `reprocess_sports_odds` writes `processed/` under canonical,
+      exit 0); `lifecycle-catalogue-regen-sports-daily` (8; verify `_catalogue/` on canonical — and see T4.3's
+      `--by-date-prefix` coverage gap); `expected-universe-v2-sports-daily` (7; verify `--apply-write` lands rows and
+      `gs://instruments-store-sports-prd-…/prod/catalog.parquet` resolves — **and that it still writes 0 api_football ×
+      ODDS**, i.e. the T3.1 purge is not re-seeded); `is-daily-enum-sports` (6; verify the `--force` re-enum writes a
+      per_vm shard under `VM_NAME=is-daily-enum-sports` and the consolidator merges it next tick);
       `understat-eu-typing-sweep-daily` (5; verify `--apply` exits 0, no manifest row-count regression). _Gate_: each
       first run green on canonical before the next un-pause. _ABORT_: any regression → re-pause that job and diagnose;
       do not cascade.
-- [ ] [INFRA] P0. **T6.4 — Restore the 3 enrichment crons (4) then the 4 fixtures crons (3).** _Mechanism_: footystats →
-      transfermarkt → soccer-football-info (verify each writes its `VM_NAME=sports-enrichment-*` per_vm shard and it
-      merges); then midnight → 6am → noon → 6pm (verify `uts-prod-instruments-service-sports-fixtures` exits 0, writes
-      per_vm shard `VM_NAME=sports-fixtures-job`, and does **zero direct index writes** — the per-VM-shard fix is
-      already in place, so a regression here means the fix was lost). _Gate_: each first run green; shards merge.
-      _ABORT_: a direct index write reappears → STOP; that is the bug that produced this whole class.
-- [ ] [INFRA] P0. **T6.5 — Restore the meta-launcher `uts-prod-sports-scheduler-cron` (1) LAST.** _Mechanism_: un-pause
-      only once T6.1-T6.4 are each proven green **individually** — it immediately re-dispatches tiers 1-4 and a failure
-      would be masked by fan-out. _Gate_: first `*/5` tick dispatches with no `"No cloud_run_job_name — skipping"`
-      warning except the known-empty ml-service entry (`sports-trigger-tiers.yaml:224`, deliberately `""`);
-      `sports_scheduler_state/` in `gs://deployment-scripts-central-element-323112` advances `last_run[tier]`. _ABORT_:
-      unexpected skip warnings → re-pause and diagnose.
-- [ ] [INFRA] P1. **T6.6 — Do NOT restore `sports-ref-v3-{1,2,3}-start` (2).** _Mechanism_: their 3 target instances do
-      not exist; leave DISABLED or delete per OR-7. _Gate_: absent from the enabled set. _ABORT_: none.
+- [x] ✅ [INFRA] P0. **T6.4 — DONE 2026-07-17: 3 enrichment + 4 fixtures crons ENABLED; the direct-index-write
+      regression did NOT reappear.** Enrichment footystats → transfermarkt → soccer-football-info, then fixtures
+      midnight → 6am → noon → 6pm. **`uts-prod-instruments-service-sports-fixtures` first run exec `2t456` = GREEN**:
+      exit 0, **0 legacy bucket refs**, **0 `updated availability index` direct writes** (the per-VM-shard fix is intact
+      — this is the bug that produced the whole class), wrote `_index/per_vm/sports-fixtures-job.parquet` (752 entries,
+      658 new), 0 404s. Shard merged end-to-end on the next consolidator tick
+      (`shards=2 rows_in=5349541 rows_out=5349447 dedup_dropped=94`) then legitimately pruned. _Original mechanism_:
+      footystats → transfermarkt → soccer-football-info (verify each writes its `VM_NAME=sports-enrichment-*` per_vm
+      shard and it merges); then midnight → 6am → noon → 6pm (verify `uts-prod-instruments-service-sports-fixtures`
+      exits 0, writes per_vm shard `VM_NAME=sports-fixtures-job`, and does **zero direct index writes** — the
+      per-VM-shard fix is already in place, so a regression here means the fix was lost). _Gate_: each first run green;
+      shards merge. _ABORT_: a direct index write reappears → STOP; that is the bug that produced this whole class.
+- [x] ✅ [INFRA] P0. **T6.5 — DONE 2026-07-17: meta-launcher restored LAST, first `*/5` tick GREEN.** Un-paused only
+      after T6.1b–T6.4 were each proven green individually. First tick exec `x2msr` @ 03:00:00Z: **fired 6 triggers** (2
+      pre-match, 0 post-match, periodic included) to instruments-service + market-tick-data-service `odds_t24h` shards;
+      **ZERO `No cloud_run_job_name — skipping` warnings** (not even the tolerated ml-service entry appeared this tick);
+      **0 legacy refs, 0 errors**; `sports_scheduler_state/scheduler.json` in
+      `gs://deployment-scripts-central-element-323112` advanced **2026-07-16T06:20:47Z → 2026-07-17T03:01:25Z**.
+      _Original mechanism_: un-pause only once T6.1-T6.4 are each proven green **individually** — it immediately
+      re-dispatches tiers 1-4 and a failure would be masked by fan-out. _Gate_: first `*/5` tick dispatches with no
+      `"No cloud_run_job_name — skipping"` warning except the known-empty ml-service entry
+      (`sports-trigger-tiers.yaml:224`, deliberately `""`); `sports_scheduler_state/` in
+      `gs://deployment-scripts-central-element-323112` advances `last_run[tier]`. _ABORT_: unexpected skip warnings →
+      re-pause and diagnose.
+- [x] ✅ [INFRA] P1. **T6.6 — DONE 2026-07-17: the 3 phantom v3 starters are DELETED per OR-7 (premise re-measured, not
+      inherited).** Re-verified first: `gcloud compute instances list --filter='name~sports'` → **zero rows**, and all 3
+      targeted `…/zones/asia-northeast1-c/instances/sports-ref-v3-{1,2,3}/start` which do not exist. Deleted all 3; each
+      now returns NOT_FOUND. **GATE: `jobs list | grep -c sports-ref-v3` → 0** — permanently absent from the enabled
+      set. _Original mechanism_: their 3 target instances do not exist; leave DISABLED or delete per OR-7. _Gate_:
+      absent from the enabled set. _ABORT_: none.
 - [ ] [CODE] P0. **T6.9 — Fix the UTL consolidator's silent shard-reap (NEW 2026-07-17, found by T6.1 — fleet-wide, NOT
       sports-specific).** _Mechanism_: implement the fix ranked (1) in
       [`issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`](issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md)
@@ -1312,6 +1370,16 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       paused — i.e. exactly the freeze/repair/resume runbook shape. _Gate_: a regression test that reproduces the repro
       in the issue doc (out-of-band rewrite strips marker + newer mtime ⇒ shard MUST survive and MUST merge); UTL
       `quality-gates.sh` green. _ABORT_: none.
+- [ ] [INFRA] P2. **T6.10 — `uts-prod-market-tick-data-service-fast-t1-recon` is BROKEN in prod (found by T4.5,
+      2026-07-17 — NOT cutover-caused, predates the freeze).** _Mechanism_: the job's baked args are
+      `[--operation download --mode batch]` with **no `--asset-group`**, and the resolver has no flat fallback → every
+      execution dies with `ValueError: asset_group is required for tick-data bucket resolution` and collects 0 results
+      (`failedCount=1` on 07-16 06:09Z / 02:55Z / 02:50Z; reproduced exactly by a local `--dry-run`). Its scheduler
+      `uts-prod-market-tick-data-fast-t1-schedule` fires it daily at 00:30 into a guaranteed failure. Decide and apply:
+      either bake the intended `--asset-group` list onto the job (which groups should a "fast t1 recon" reconcile? — the
+      name implies cefi/tradfi, NOT sports) or delete the job + scheduler if the recon leg is dead. **Harmless today**
+      (it fails closed, writes nothing, touches no legacy bucket — T4.5 proved this), so it is a correctness/noise bug,
+      not a data risk. _Gate_: the daily execution exits 0, or the job is gone. _ABORT_: none.
 - [ ] [REVIEW] P1. **T6.7 — Post-phase codex audit (HARD RULE).** _Mechanism_: update
       `codex/02-data/sports-gcs-path-ssot.md` (legacy shape is now GONE — no reader should special-case it),
       `codex/02-data/bucket-naming-and-config.md` (the last no-env Group-A twin is retired),
@@ -1335,6 +1403,19 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       union are 100% empty. _Gate_: `rg -c 'sports-central-element-323112'` workspace-wide → 0. _ABORT_: none.
 
 ---
+
+## Deferred work after 2026-07-17 (Phase-6 restore session)
+
+The restore leg's mission (T6.1 merge → restore → verify each first run → catch-up → report) is **COMPLETE**. What
+remains in Phase 6, with why it was not closed in this session:
+
+| Todo      | State             | Why deferred / next action                                                                                                                                                                                                                                                              |
+| --------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **T6.0**  | interim ✅ / open | Bucket 404 re-verified with controls at ~7h (see banner). The **24h `tofu plan` re-run is time-gated to ≥19:52Z 2026-07-17** — cannot be closed earlier. Not a blocker for the restore.                                                                                                 |
+| **T6.9**  | **NEW, P0**       | The UTL consolidator silent-shard-reap fix + regression test. **A code change in `unified-trading-library`, not sports infra** — outside this restore leg's scope, and fleet-wide. Fully specified in `issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`. |
+| **T6.10** | **NEW, P2**       | `…-fast-t1-recon` broken in prod (pre-existing, fails closed, harmless today). Needs an OWNER DECISION on which asset_groups it should reconcile, or deletion — not a call this leg should make silently.                                                                               |
+| **T6.7**  | open, P1          | Post-phase codex audit (3 named codex docs). Review-scope work, safe to do now that the estate is stable and measured.                                                                                                                                                                  |
+| **T6.8**  | open, P2          | Retire the one-offs + the dead `include_legacy_archive` knob + the false-progress tick. Gate is `rg -c 'sports-central-element-323112'` workspace-wide → 0. Large cleanup sweep across ~26 one-offs; independent of the restore.                                                        |
 
 ## RISK REGISTER — what could lose data at each phase
 
@@ -1733,6 +1814,94 @@ sports odds unfiltered.
 ---
 
 ## Progress Log
+
+### ✅ PHASE 6 RESTORE COMPLETE — **SPORTS IS LIVE ON CANONICAL; EVERY FIRST RUN GREEN; ZERO LEGACY RESOLUTION** (2026-07-17, owner: Phase-6/restore sub-agent)
+
+> **THE CUTOVER'S VERDICT IS GREEN.** Not one restored job resolved, read, or 404'd on a legacy bucket name. The freeze
+> is over (~19h: 2026-07-16T08:08Z → 2026-07-17T03:01Z) and **no day was stranded**.
+
+**Restore executed in exact reverse freeze order** (consolidators → writers → meta-launcher LAST). Final state — the
+21-job frozen set reconciles exactly as **14 writers + 1 meta + 3 consolidators ENABLED, + 3 deleted**:
+
+| #     | Job                                                                                | State                        |
+| ----- | ---------------------------------------------------------------------------------- | ---------------------------- |
+| 22→20 | `uts-prod-manifest-consolidator-{features,market-data,instruments}-sports-cron`    | **ENABLED** (restored FIRST) |
+| 11    | `uts-prod-market-tick-data-fast-t1-schedule`                                       | **ENABLED**                  |
+| 10    | `features-service-sports-daily-trigger`                                            | **ENABLED**                  |
+| 9     | `uts-prod-mdps-odds-horizon-bucket-daily`                                          | **ENABLED**                  |
+| 8     | `lifecycle-catalogue-regen-sports-daily`                                           | **ENABLED**                  |
+| 7     | `expected-universe-v2-sports-daily`                                                | **ENABLED**                  |
+| 6     | `is-daily-enum-sports`                                                             | **ENABLED**                  |
+| 5     | `understat-eu-typing-sweep-daily`                                                  | **ENABLED**                  |
+| 4     | `uts-prod-sports-enrichment-{footystats,transfermarkt,soccer-football-info}-daily` | **ENABLED**                  |
+| 3     | `uts-prod-sports-fixtures-{midnight,6am,noon,6pm}-t1-schedule`                     | **ENABLED**                  |
+| 1     | `uts-prod-sports-scheduler-cron` (`*/5` meta-launcher)                             | **ENABLED** (restored LAST)  |
+| 2     | `sports-ref-v3-{1,2,3}-start`                                                      | **DELETED** (T6.6 / OR-7)    |
+
+**FIRST RUNS — all GREEN ON CANONICAL** (each manually triggered rather than waiting ~11h for its daily cron; every log
+grepped for legacy names and 404s):
+
+| Job                                            | Exec    | Verdict      | Evidence                                                                                                                                                                                             |
+| ---------------------------------------------- | ------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `uts-prod-instruments-service-sports-fixtures` | `2t456` | ✅ **GREEN** | **0 legacy refs · 0 `updated availability index` direct writes** (the clobber bug stays fixed) · wrote `_index/per_vm/sports-fixtures-job.parquet` (752 entries, 658 new) · 0 404s                   |
+| `expected-universe-v2-sports`                  | `vjr6f` | ✅ **GREEN** | **0 legacy refs · ZERO `api_football × ODDS` re-seed in the fresh 46,328-row shard** · catalog from `…-prd-…/prod/catalog.parquet` · oscillation guard fired (dropped 37 vs captured) · 0 404s       |
+| `lifecycle-catalogue-regen-sports`             | `tmbcm` | ✅ **GREEN** | **0 legacy refs** · `Promoted 27,240-row catalogue to gs://instruments-store-sports-prd-…/prod/catalog.parquet` · `guard_reason=monotonic_ok` · exit_code 0                                          |
+| `is-daily-enum-sports`                         | `nr62z` | ✅ **GREEN** | **0 legacy refs** · `--force` re-enum wrote `_index/per_vm/is-daily-enum-sports.parquet` (271 entries) · 0 404s                                                                                      |
+| `uts-prod-sports-scheduler` (`*/5` meta)       | `x2msr` | ✅ **GREEN** | first tick 03:00:00Z fired **6 triggers** (2 pre-match + periodic) · **zero** `No cloud_run_job_name — skipping` warnings · `sports_scheduler_state/scheduler.json` advanced 07-16T06:20→07-17T03:01 |
+| `understat-eu-typing-sweep`                    | `p76cw` | ✅ **GREEN** | **fired NATURALLY on its own `0 3 * * *` cron** at 03:00:00Z and succeeded — live proof the restored schedule self-fires, not just manual triggers                                                   |
+
+**End-to-end loop PROVEN**: fixtures/enum shards were written → merged by the consolidator
+(`shards=2 rows_in=5349541 rows_out=5349447 dedup_dropped=94`) → then legitimately pruned. `_index/per_vm/` drains
+correctly and the rows are durably canonical.
+
+> **⚠️ Log-reading gotcha (cost 20 min):** consolidator ticks that look like `success=True shards=0 rows_in=0` are
+> `error=locked` — soft-lock contention while a long merge holds the lock. **`cut -c1-140` truncates exactly before
+> `error=locked`.** Read consolidator summary lines UNTRUNCATED or you will misdiagnose a healthy lock-wait as an empty
+> listing.
+
+**CATCH-UP: NOTHING IS STRANDED — no backfill needed (measured, not assumed).** The runbook's prediction held: the
+fixtures repoll window `[today-1, today+8]` (instruments-service@c78c7a0e) **self-healed 2026-07-16 automatically**.
+
+| date                        | captured | expected_unattempted | note                      |
+| --------------------------- | -------- | -------------------- | ------------------------- |
+| 2026-07-13 (normal)         | 247      | 270                  | baseline                  |
+| 2026-07-15 (normal)         | 185      | 269                  | baseline                  |
+| **2026-07-16 (freeze day)** | **201**  | **270**              | **in line — self-healed** |
+| **2026-07-17 (today)**      | **200**  | **270**              | **in line**               |
+
+The residual 270 is **not** a freeze gap: its per-`data_type` breakdown is **identical on normal and freeze days alike**
+— `{MATCHES:18, ODDS:18, PREDICTIONS:18, SFI_PROGRESSIVE_STATS:61, WEATHER:61, odds_horizon_bucket:94}` on 07-13, 07-15,
+07-16 AND 07-17. It is a steady-state residual that predates the cutover. 07-17 lacks post-match types
+(FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS) simply because its fixtures have not been played yet at 03:00Z. The daily
+crons that missed their 07-17 slot during the freeze (`mdps-odds-horizon-bucket` 01:15, the 3 enrichment crons
+00:35-00:45) fire naturally on 07-18; per-fixture odds capture is already live via the meta-launcher's `odds_t24h`
+triggers. **No backfill fleet launched — the repoll covers it.**
+
+**Legacy bucket re-verified with CONTROLS** (the SA's 403-masquerade calibrated away): legacy instruments
+`gs://instruments-store-sports-central-element-323112` → **real 404**; control
+`market-data-tick-sports-central-element-323112` (deliberately RETAINED, OR-5b) → **lists objects, untouched**;
+canonical `-prd-` → lists objects, intact. `ls` demonstrably returns content for buckets that exist, so the 404 is
+genuine absence, not a permission artifact. **No resurrection.**
+
+**T4.5 / OR-8 RESOLVED (was never executed; T6.2 depended on it, so it was measured before restoring writer 11).** Ran
+the recon job's exact baked args (`--operation download --mode batch`, no `--asset-group`) with `--dry-run`:
+`ValueError: asset_group is required for tick-data bucket resolution; the canonical market-data bucket is per-asset_group (no flat fallback)`
+→ `Batch complete: 0 results collected`, exit 1. **Zero sports mentions, zero legacy references — it FAILS CLOSED.** The
+ABORT ("writes sports to a legacy name") does NOT fire ⇒ restoring (11) is safe. **Side-finding (new todo T6.10): the
+job is BROKEN in prod** — every recent execution carries `failedCount=1` with this same ValueError, predating the freeze
+(07-16 06:09/02:55/02:50). Not caused by the cutover; not a writer; filed rather than papered over.
+
+**T6.2's open question ANSWERED — no issue to file.** The `features-service-sports-job` spec's hardcoded
+`--date 2026-07-14` is a **dead default**: the `features-service-sports-daily` Workflow overrides the whole args array
+via `containerOverrides`, injecting dynamic `--start-date $${yesterday}` / `--end-date $${today+7}`
+(`deployment-service/terraform/services/features-service-sports/gcp/main.tf:82-115`). The job never re-runs one fixed
+day.
+
+**Backlog prerequisite flipped**: `sports-cutover-phase6-consolidator-resumed` **false → true** (set_by
+`slot-phase6-restore`, via the server's own `set_prerequisite` + `log_activity` code path against the live DB
+`/var/lib/orchestrator/state.db`) — unblocking `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1. Guarded by
+an assert on the resolved `db_path` (a first attempt without `ORCHESTRATOR_MODE`/`ORCHESTRATOR_DB_PATH` resolved to the
+repo-local mock DB and was caught before any write; no stray DB created — `/var/lib/orchestrator` verified clean).
 
 ### ✅ T6.1 MERGE COMPLETE — both indexes absorbed the pending shards, every delta as predicted (2026-07-17, owner: Phase-6/restore sub-agent)
 
