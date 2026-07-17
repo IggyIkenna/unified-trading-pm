@@ -40,14 +40,40 @@ esac
 : "${REPO:=unified-trading-pm}"
 : "${RUNNER_BASE:=/opt/github-glue-runners}"
 
-# Token with Administration:write on the repo (JIT config / registration token). Prefer the env
-# (systemd EnvironmentFile); optionally fetch from GCP Secret Manager at runtime so no PAT sits on
-# disk. Set GH_TOKEN_SECRET (+ have gcloud ADC on the VM) to use the Secret-Manager path.
-if [ -z "${GH_TOKEN:-}" ] && [ -n "${GH_TOKEN_SECRET:-}" ]; then
-  GH_TOKEN="$(gcloud secrets versions access latest --secret="${GH_TOKEN_SECRET}" \
-    ${GCP_PROJECT:+--project="${GCP_PROJECT}"} 2>/dev/null || true)"
+# ── Token with Administration:write on the repo (JIT config / registration token) ───────────────────
+# Resolution order: env (EnvironmentFile) -> tmpfs cache -> Secret Manager (cold-start only).
+#
+# WHY THE CACHE EXISTS (operator 2026-07-17, after a MEASURED 14,561-error crash-loop in 24h):
+# this wrapper re-execs after EVERY job (the glue pool is JIT-ephemeral) and again on every systemd
+# restart. Calling Secret Manager here put a network dependency on the hot path of the thing that
+# retries every ~6s — a self-amplifying loop: fetch fails -> die -> restart -> fetch. The refresher
+# timer (github-glue-token-refresh.timer) now does ONE fetch per 5 min into tmpfs and, crucially,
+# KEEPS THE LAST GOOD TOKEN on failure, so a GSM blip degrades to a slightly stale (still valid —
+# GH_PAT never expires) credential instead of taking the whole pool offline.
+: "${GH_TOKEN_FILE:=/run/github-glue-runner/gh_token}"
+if [ -z "${GH_TOKEN:-}" ] && [ -s "${GH_TOKEN_FILE}" ]; then
+  GH_TOKEN="$(cat "${GH_TOKEN_FILE}")"
+  # A stale cache is a WARNING, not an error: the token is still valid, but a cache older than a few
+  # intervals means the refresher is dead and a rotation would not propagate. Say so; do not die.
+  token_age=$(( $(date +%s) - $(stat -c %Y "${GH_TOKEN_FILE}") ))
+  if [ "${token_age}" -gt 1800 ]; then
+    echo "WARN: ${GH_TOKEN_FILE} is ${token_age}s old (>30min) — is github-glue-token-refresh.timer running?" >&2
+  fi
 fi
-: "${GH_TOKEN:?GH_TOKEN (Administration:write on ${OWNER}/${REPO}) must be set via EnvironmentFile or GH_TOKEN_SECRET}"
+
+# Cold start only: the cache is tmpfs, so it is empty until the timer's OnBootSec fires. Deliberately
+# NO `2>/dev/null || true` here — that swallow is precisely what turned a readable permission error
+# into a bare "GH_TOKEN must be set", and cost ~16h of a silently bleeding pool on 2026-07-17.
+if [ -z "${GH_TOKEN:-}" ] && [ -n "${GH_TOKEN_SECRET:-}" ]; then
+  echo "token cache ${GH_TOKEN_FILE} absent/empty — falling back to a direct Secret Manager read" >&2
+  GH_TOKEN="$(gcloud secrets versions access latest --secret="${GH_TOKEN_SECRET}" \
+    ${GCP_PROJECT:+--project="${GCP_PROJECT}"})" || {
+    echo "FATAL: Secret Manager read of '${GH_TOKEN_SECRET}' failed (see the gcloud error above)." >&2
+    echo "       project=${GCP_PROJECT:-<unset — gcloud default>} user=$(id -un)" >&2
+    exit 1
+  }
+fi
+: "${GH_TOKEN:?GH_TOKEN (Administration:write on ${OWNER}/${REPO}) must be set via EnvironmentFile, ${GH_TOKEN_FILE}, or GH_TOKEN_SECRET}"
 
 RUNNER_DIR="${RUNNER_BASE}/${INSTANCE}"
 HOST="$(hostname -s)"

@@ -1,0 +1,21 @@
+[Unit]
+Description=Refresh the glue-runner GitHub token cache every 5 minutes
+Documentation=file:///opt/github-glue-runners/refresh-gh-token.sh
+
+[Timer]
+# /run is tmpfs, so the cache is EMPTY after every reboot and nothing can register until this fires.
+# Short OnBootSec keeps the post-reboot dead window to seconds rather than a full interval.
+OnBootSec=10s
+OnUnitActiveSec=5min
+
+# Persistent=true so a VM that was stopped/asleep refreshes IMMEDIATELY on boot instead of waiting out
+# the interval while the pool sits unable to register.
+Persistent=true
+
+# The refresh is a fixed 288 calls/day across the fleet; jitter only avoids colliding with the
+# slot-repo refresh timer on the same box.
+RandomizedDelaySec=15s
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
