@@ -128,12 +128,29 @@ follow-up backfill pass — same operational pattern as Todo 2 in the sibling is
       confirming the pre-fix code raises/silently drops the update and the post-fix code doesn't. (repo:
       features-service) — features-service@04274b6a; QG green (full suite + formula-hash + no-look-ahead gates), shipped
       via quickmerge --agent 2026-07-17.
-- [ ] [DATA] P2. **After `sports_p2_features_history_to_ml_ready_2026_06_27.md` Todo 1 (2015→present compute) reaches
-      completion**, identify date-ranges computed BEFORE this fix landed whose
-      `sports_features/by_date/day=*/     feature_group=derived_features` Elo columns
-      (`home_elo`/`away_elo`/`elo_diff`/`*_elo_expected`/`*_elo_form`/ `elo_form_diff`/`*_elo_rank_league`) are
-      suspiciously flat/near-starting-Elo for teams with substantial fixture history, and gap-fill re-run those with
-      `--force` on the fixed code. (repo: features-service)
+- [x] ✅ [DATA] P2. **SCOPE CORRECTED (2026-07-17, slot-15) — this is NOT a contiguous date-range problem, it's
+      per-(date,league) DATA-DEPENDENT.** Original wording assumed "everything computed before the fix landed" is
+      affected — empirically FALSE. Sampled 7 known-populated `derived_features` dates spanning 2018→2026 directly
+      (`home_elo`/`away_elo` == exactly `1500.0` flat = bug fired for that query's `fixtures_history`): **2018-10-23
+      FLAT, 2019-06-01 FLAT, 2020-01-15 FLAT, 2021-05-22 NOT-flat (1529.04), 2024-06-14 NOT-flat (1504.18), 2025-12-05
+      NOT-flat (1503.57), 2026-06-01 FLAT** — 4/7 affected, scattered across eras with no visible date-range boundary.
+      Root cause is per-call: whether `kickoff_utc` parses tz-aware for that SPECIFIC `fixtures_history` slice (varies
+      by which historical fixtures land in a given team/league/date's lookback), not a global "before vs after a
+      timestamp" split. A raw-source `kickoff_utc` dtype check (attempted this dispatch, `entity=fixtures` parquets) did
+      not resolve which upstream field/format drives the split — needs a deeper source-schema dig, not chased further
+      this dispatch (time-boxed). **Split into 2b/2c below** (audit-scale work, not a quick date-range gap-fill) — this
+      original formulation is superseded, not actionable as written. (repo: features-service)
+- [ ] [DATA] P2. **(audit step) Build a single-walk audit** (following this codebase's phantom-audit pattern — read the
+      availability manifest for `feature_group=derived_features`, NOT a raw whole-corpus GCS walk) that, for each
+      captured (date, league), reads ONLY the `home_elo`/`away_elo` columns and flags exact-`1500.0`-flat rows as
+      bug-affected. Output: a list of affected (date, league) pairs (or a manifest-attached flag) — this is the
+      concrete, cheap identification step the original P2 wording assumed was trivial but isn't. (repo:
+      features-service)
+- [ ] [DATA] P2. **(gap-fill step) Gap-fill re-run** the (date, league) pairs the audit step above identifies with
+      `--force` on the fixed (`elo_calculator.py`@`04274b6a`+) code. Scope depends entirely on the audit step's output —
+      could range from a small targeted set to a large fraction of history; re-estimate cost once the real count is
+      known before launching any multi-VM fleet (this is exactly the kind of infra-cost decision the data-correctness
+      HARD RULE says to surface, not default to a full 10-VM re-run for). (repo: features-service)
 - [ ] [VERIFY] P3. **Audit whether other sports calculators build a hand-constructed
       `pd.Timestamp(year=..., month=...,     day=...)` (or similar tz-naive-by-construction Timestamp) that gets
       compared against a possibly-tz-aware value** — grepped `features_service/sports/calculators/*.py` for
@@ -155,3 +172,31 @@ verified 2 regression tests (confirmed both fail pre-fix via `git stash` of just
 post-fix). QG in progress this dispatch; will ship via quickmerge once green. Not relaunching the live 10-VM fleet — per
 the sibling issue's precedent, treating this as a follow-up gap-fill (Todo 2 above) once Todo 1 completes, not a reason
 to kill healthy in-progress infra work.
+
+### 2026-07-17T12:1xZ — data_engineering slot-15 (Todo 2 dispatch — scope investigation, corrected the date-range assumption, split into P2b/P2c)
+
+Continuation from this same slot's earlier entries (fixed the bug, then monitored+completed the parent plan's Todo 1
+2015→present compute — 4216/4216, 100.0%, `/done`'d that task). Server auto-dispatched this issue doc's Todo 2 next
+(`sports_elo_calculator_tz_naive_season_boundary_silent_skip-001`), now that its `depends_on` prereq (Todo 1) is
+satisfied.
+
+**Investigated before acting** rather than assuming the original wording ("identify date-ranges computed before the
+fix") was correct. Sampled `derived_features` parquets directly across 7 dates spanning 2018→2026 (bounded, targeted
+reads — NOT a whole-corpus GCS walk): confirmed the bug is genuinely real (2018-10-23/2019-06-01/2020-01-15/2026-06-01
+show exact flat `home_elo=away_elo=1500.0`) but **NOT contiguous by date** — 2021-05-22/2024-06-14/2025-12-05 in the
+same sample show real, varying Elo values despite also predating the fix. Attempted to trace this to the raw source
+`kickoff_utc` field's tz-format directly (would have been a cheap, precise diagnostic vs. scanning outputs) but the
+`entity=fixtures` parquets I checked didn't carry a `kickoff_utc` column under the paths I probed — didn't chase this
+further given the time-box on a 1h-estimated task.
+
+**Conclusion: the original P2 wording is not actionable as a "before/after a date" cutoff** — rewrote it as
+COMPLETE-BUT-SUPERSEDED (documents the corrected finding) and split the real remaining work into P2b (build a
+single-walk manifest-driven audit to precisely identify affected (date,league) pairs — the genuinely cheap way to do
+this, not per-file sampling) and P2c (gap-fill whatever P2b finds, cost/scope TBD until P2b runs). This is audit-scale
+follow-up work, not a 1-hour fix — did not attempt to build the P2b audit script in this dispatch (would need real
+design: read the availability manifest for capture status, decide the read strategy for a
+potentially-tens-of-thousands-of-files corpus without blowing the single-walk-discipline budget). Declining to build/run
+P2b/P2c this dispatch; shipping the scope-correction (real, durable progress — corrects a wrong assumption future
+dispatches would otherwise have wasted time on) and returning to the queue. `/skip-current-task` after this ships
+(done_definition — "checkbox flipped + code shipped" — isn't met for the ORIGINAL P2 ask, since gap-filling didn't
+happen; the corrected-scope todo itself is the shippable unit here).
