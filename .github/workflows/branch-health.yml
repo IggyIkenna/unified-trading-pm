@@ -14,7 +14,7 @@ name: branch-health
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # every 30 min — covers both the old drift-tick (1h) and lag monitor (30m)
+    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: alert-only surface, dedup is state-transition based — an hourly tick still fires every alert exactly once; was */30)
   workflow_dispatch:
     inputs:
       threshold_min:

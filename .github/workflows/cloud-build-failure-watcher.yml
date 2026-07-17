@@ -31,7 +31,7 @@ name: cloud-build-failure-watcher
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # every 30 minutes (relaxed */15→*/30 to cut Actions spend 2026-06-11)
+    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17; watcher backstop — was */30, before that */15)
   workflow_dispatch:
 
 permissions:
