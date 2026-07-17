@@ -107,11 +107,10 @@ drift_direction: advance-code
    **re-run `snapshot` whenever an UNFLIPPED workflow is edited** (its baseline goes stale; verify catches it). The
    baseline is `.prettierignore`d ON PURPOSE — prettier rewrote it once and destroyed the byte-exactness that is its
    whole point.
-6. **⏵ NEXT: finish the STEP 2c deletion, then Phase 2 (A2 → A1 → A5), then the amended STEP 2b trim.** STEP 2 is
-   COMPLETE (37/37 movers, zero-billed, verified) and STEP 2c is SHIPPED (@a6057ea36, all 22 callers converted, promoted
-   to main 2026-07-17). The one open 2c item: after ≥2 green `ci-status-update` runs on main post-promote, DELETE
-   `.github/workflows/persist-cicd-event.yml` (until that lands, `git revert a6057ea36` is the one-command rollback).
-   D2/D3/D4 in the Deferred section are operator decisions — do not start their items.
+6. **⏵ NEXT: Phase 2 (A2 → A1 → A5), then the amended STEP 2b trim.** STEP 2 is COMPLETE (37/37 movers, zero-billed,
+   verified) and **STEP 2c is COMPLETE** (@a6057ea36 converted all 22 callers → observed green on main — runs
+   29579499315/29579977224, `billable: {}` — → @0c845f930 deleted the reusable, 2026-07-17). Rollback if ever needed:
+   `git revert 0c845f930 a6057ea36`. D2/D3/D4 in the Deferred section are operator decisions — do not start their items.
 7. **One P0 is open and is NOT blocked on the gate** — see the todos: the **quickmerge `--agent` sentinel race** (its
    own STAGE-0.4 rebase invalidates the sentinel STAGE 3 then checks, so on a busy LDR it can never self-validate;
    workaround = chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
@@ -628,16 +627,18 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       validate against a venue-specific model or the canonical one?). **Ikenna owns the cassette-count verification
       (operator 2026-07-17) — do not duplicate it.** SSOT:
       `plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
-- [ ] [INFRA] P2. **STEP 2c — convert `persist-cicd-event` to a composite action (operator 2026-07-16, option C). ⏳
-      ROLLOUT SHIPPED 2026-07-17 (unified-trading-pm@a6057ea36) — ALL 22 callers converted (21 files this commit + the
-      pilot). The ONLY remaining item is deleting `persist-cicd-event.yml`, deliberately STAGED until real
-      `ci-status-update` runs are observed green on `main`: while the reusable still exists, `git revert a6057ea36` is a
-      complete one-command rollback.** Action at `.github/actions/persist-event/action.yml`; pilot `secret-health-check`
-      (run 29566057979, `billable: {}`, real GCS write). **Prize:
-      ~$117/mo across 22 callers; `ci-status-update` alone
-      14,320 runs/30d ⇒ ~$86/mo.** D1 resolved by operator
-      delegation — see the collision todo below. Conversion facts that matter later: **3 callers reference the action
-      through their subdir checkout** (`cassette-drift-check` → `./unified-trading-pm/…`,
+- [x] [INFRA] P2. ✅ **STEP 2c COMPLETE — converted (unified-trading-pm@a6057ea36) AND deleted
+      (unified-trading-pm@0c845f930), 2026-07-17.** All 22 callers converted; the staged-deletion gate was then
+      satisfied on real production evidence: promote landed on `main` 12:12:56Z; `ci-status-update` runs **29579499315 +
+      29579977224** both success on `writer-2` with a REAL ledger write
+      (`Operation completed over 1 objects/1.9     KiB` →
+      `Persisted event to gs://…/unified-trading-pm/2026-07-17/events.jsonl`) and **`billable: {}` — the 14,320-runs/30d
+      workflow now bills ZERO minutes end-to-end**. Only then was `persist-cicd-event.yml` deleted (+ its baseline copy;
+      snapshot re-run 55/55 verify-OK). Rollback from here = `git revert 0c845f930 a6057ea36`. Action at
+      `.github/actions/persist-event/action.yml`; pilot `secret-health-check` (run 29566057979, `billable: {}`, real GCS
+      write). **Prize: ~$117/mo across 22 callers; `ci-status-update` alone 14,320 runs/30d ⇒ ~$86/mo.** D1 resolved by
+      operator delegation — see the collision todo below. Conversion facts that matter later: **3 callers reference the
+      action through their subdir checkout** (`cassette-drift-check` → `./unified-trading-pm/…`,
       `removed-symbols-workspace-sweep` → `./workspace/unified-trading-pm/…`, `publish-package` → `./pm/…`); 4 jobs with
       no checkout gained a sparse one (`conflict-resolution-merged`, `fix-approval-timeout`,
       `overnight-dead-man-switch`, `overnight-agent-orchestrator`'s notify-summary); hardcoded conclusions KEPT where
@@ -1520,15 +1521,23 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
     touching anything); run 2 failed UAC-importing tests for want of the sibling repo. Run 3 after rebase + symlink:
     **QG_EXIT=0**.
 
+- 2026-07-17 — **STEP 2c CLOSED: the staged deletion landed (@0c845f930) after the observation gate passed on real
+  production runs.** Promote of @a6057ea36 reached `main` 12:12:56Z; the monitor then required ≥2 green
+  `ci-status-update` runs on main — got 29579499315 + 29579977224, both `success` on `writer-2`, each with a REAL ledger
+  write (`Operation completed over 1 objects/1.9 KiB`) and **`billable: {}` for the ENTIRE run** (pre-conversion this
+  run shape billed a 1-min minimum for the persist job even when notify was skipped). Only then was
+  `persist-cicd-event.yml` deleted, with its hosted-baseline copy (snapshot re-run: 55/55, verify OK). QG_EXIT=0 on both
+  shipping commits. Cumulative rollback if ever needed: `git revert 0c845f930 a6057ea36`.
+
 ## Deferred work after 2026-07-17
 
 STEP 2 is **DONE (37/37 movers on the pool, zero-billed, verified)**. Everything below is what remains, why it is not
 done, and what the next session should NOT re-derive.
 
-**STEP 2c is SHIPPED (`a6057ea36`, 2026-07-17): all 22 callers converted.** The only remainder is deleting
-`persist-cicd-event.yml`, STAGED behind observing real `ci-status-update` runs green on `main` — until that deletion
-lands, `git revert a6057ea36` is a complete one-command rollback. Finding ②'s rule still governs any FUTURE edit of
-`action.yml`: _edit the manifest → prove on ONE caller → only then fan out._
+**STEP 2c is COMPLETE (`a6057ea36` converted → observed green on main → `0c845f930` deleted, 2026-07-17).** The persist
+minute-minimum is gone from all 22 callers (~$117/mo); `ci-status-update` measured `billable: {}` end-to-end on main
+(runs 29579499315, 29579977224). Finding ②'s rule still governs any FUTURE edit of `action.yml`: _edit the manifest →
+prove on ONE caller → only then fan out._
 
 ### ⛔ OPERATOR DECISIONS — 4 open, nothing below them moves without these
 
