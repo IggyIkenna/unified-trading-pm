@@ -133,6 +133,34 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-16/17 — P9 round-2 execution complete (TradFi/CeFi/DeFi migrations + UI relabel + perf), fixtures browser in flight
+
+Wraps up the "P9 round-2" thread referenced below. TradFi (Q2), CeFi (Q2), DeFi (Q2) migrations all applied + verified
+on real infra (see their individual checkbox evidence above); sports Q3 root-caused as not-a-bug; Q4 unique-instruments
+relabel shipped. Symbol-search 44s perf item also closed (deployment-api@8e1221b, root-caused to sequential per-venue
+GCS reads, parallelized with ThreadPoolExecutor). Fixtures browser (operator request, item 6) still in flight via
+sub-agent at session-end.
+
+**Two side-discovered bugs found + fixed while validating locally against real GCS** (not pre-existing plan todos,
+captured here per the discovery-capture rule):
+
+1. `unified_api_contracts.canonical.domain.predictions.classifiers` logged `OTHER_BUCKET_MEMBER_ADDED` at INFO on every
+   per-row prediction-market classification — ~1M log lines per catalogue cache-miss sweep, the actual cause of a ~2min
+   local dev-server stall. Downgraded to DEBUG — unified-api-contracts@d4523602.
+2. `deployment_api/services/data_status/coverage.py::_build_breakdowns` crashed the live coverage-summary endpoint with
+   `TypeError: boolean value of NA is ambiguous` whenever a `groupby(...).sum(min_count=1)` group had zero non-NA
+   `instrument_count` values (pandas `pd.NA`, not NaN — its `__bool__` deliberately raises). A bare `if v and v > 0`
+   choked; fixed to `if pd.notna(v) and v > 0`. This was actively 500-ing the exact endpoint used to verify tonight's
+   TradFi/CeFi/DeFi migrations — found because validation kept failing until this shipped. Added a regression test
+   (`test_all_na_instrument_count_group_does_not_crash`) — deployment-api@e754a60.
+
+**Workspace-hygiene note**: this session ran with 4 dispatched sub-agents in the SAME shared checkouts (not isolated
+worktrees) for extended periods (hours). Confirmed multiple times that "no active commits + no active processes" does
+NOT mean stalled — sub-agents idle between their own background-watchdog notifications; direct `SendMessage` check-ins
+were the effective unstick mechanism each time. Also hit: local dev servers (uvicorn/vite) launched via
+`nohup ... & disown` still died unexpectedly more than once over a multi-hour session — relaunched as needed, no root
+cause chased (out of scope for tonight).
+
 ### 2026-07-16 — Continuation session (Phase B: P3, P2 UI, P8 UI-P2, P3 UI, P6 backend+UI, P1 column-prune, P4-B) — `/autonomous` engaged
 
 Second continuation session (distinct from the "P9 round-2" thread above, which is a DIFFERENT concurrent Claude session
@@ -708,27 +736,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                          been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                          date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                          in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                          Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                          truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                          `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                          instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                          guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                          `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                          Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                          `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                          empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                          `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                          `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                          transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                          pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                          `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                          `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                          (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                          carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
