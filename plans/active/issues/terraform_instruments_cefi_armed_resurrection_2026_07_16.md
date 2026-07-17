@@ -46,7 +46,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: [deployment-service@0981c9c]
+resolved_by: [deployment-service@0981c9c, deployment-service@7a22460]
 source: [sports_legacy_bucket_cutover_2026_07_16.md T4.4 gate execution 2026-07-16]
 ---
 
@@ -58,6 +58,15 @@ source: [sports_legacy_bucket_cutover_2026_07_16.md T4.4 gate execution 2026-07-
 > moved). A full prod `tofu apply` can no longer resurrect it. **See the Progress Log for the sweep** — every other
 > Group-A flat twin is verified de-declared AND state-rm'd, but the sweep found a NEW adjacent landmine (8 IAM grants
 > bound to 404 buckets) that is filed as todos below and NOT fixed here.
+>
+> **✅ THE ADJACENT LANDMINE IS ALSO FIXED 2026-07-17 — `deployment-service@7a22460`.** It was **9** grants, not 8 (the
+> sweep's table missed `instrument_catalogue_strategy_store_writer` → `strategy-store-cefi-…`, 404). All 9 are repointed
+> to their live canonical successors; none needed removal. A per-target existence gate inside the verifying plan build
+> (`cloudbuild=15516e55-cc4f-4775-8704-b40b11d3b19f`) proves **no IAM grant targets a dead bucket (9/9 EXIST)**, so the
+> next full prod `tofu apply` no longer errors. **The apply-blocker is gone; both hazard classes in this doc are
+> closed.** The live-P1 branch resolved **latent, not live** (the SAs genuinely held no grant on what they read, but
+> neither job executes today) — the full measurement is in the Progress Log, and the two conditions that keep those jobs
+> from running are filed as new todos below.
 >
 > _(Original framing, retained for provenance: found while running the sports cutover's T4.4 `tofu plan` gate; read-only
 > measurement, NOT fixed by the finding leg — fixing it meant touching another plan's resource
@@ -221,15 +230,92 @@ also needs a runtime measurement this leg did not take: **whether `catalogue-reg
 failing at runtime** — if those jobs resolve canonical `-prd-` buckets via `cloud-providers.yaml` they currently hold
 **no grant at all** on what they actually read, which would be a live P1, not just a plan-time defect.
 
-- [ ] [INFRA] P1. **Repoint the 8 flat-legacy IAM grants to canonical `-prd-` names** in
-      `catalogue_regen_scheduler.tf` + `instrument_catalogue_scheduler.tf` (cefi/defi/tradfi rows only), mirroring
-      `lifecycle_catalogue_scheduler.tf:81-99` and the already-migrated sports/prediction rows in the same blocks.
-      **Measure first** (grep-then-READ): what bucket do the catalogue-regen / instrument-catalogue jobs actually
-      resolve at runtime? If canonical, they are missing their real grant today ⇒ escalate to P0.
-- [ ] [DOCS] P2. `instrument_catalogue_scheduler.tf:54-55` claims _"the legacy no-env `market-data-tick-sports-{pid}`
-      bucket is DELETED at cutover"_ — **measurably false**: that bucket EXISTS (403) and is DELIBERATELY RETAINED
-      (blocked on OR-5b; `main.tf` says so verbatim). The comment conflates it with `instruments-store-sports`, which
-      genuinely was deleted. Correct the comment; the `-prd-` repoint itself is fine.
+- [x] [INFRA] P1. ✅ **Repointed the flat-legacy IAM grants to canonical `-prd-` names** — `deployment-service@7a22460`.
+      **It was 9, not 8**: the sweep's table enumerated only the two `*_reader` for_each blocks and missed
+      `instrument_catalogue_strategy_store_writer` (`instrument_catalogue_scheduler.tf`), which grants objectAdmin on
+      `strategy-store-cefi-central-element-323112` — **also 404** (the documented split-brain drift,
+      [[strategy_store_split_brain_2026_07_13]]) and also `will be created` in the same plan. Repointed to the flat
+      `strategy-store-{pid}` SSOT that `generate_instrument_catalogue.py:565` (`strategy_store_bucket()`) actually
+      writes to. **Measured first, as required** — see the Runtime measurement table below: both jobs resolve buckets
+      via UAC `bucket_name()`, which defaults `env="prd"` and can ONLY emit the `-prd-` form, so the flat grants covered
+      nothing either job touches. **Not escalated to P0**: the grant gap is real (live IAM confirms no other binding
+      covers either SA) but **latent, not live** — neither job executes today.
+      `Evidence: cloudbuild=15516e55-cc4f-4775-8704-b40b11d3b19f` (AFTER plan; gate _"every bucket targeted by an IAM
+      create must EXIST"_ = **PASS 9/9**), baseline `cloudbuild=d67fe1ec-0339-434f-9d7c-a5f5d9756564`.
+- [x] [DOCS] P2. ✅ **Corrected the false sports comment** — `deployment-service@7a22460`. Verified the claim
+      independently before removing it: `market-data-tick-sports-central-element-323112` **EXISTS** and
+      `instruments-store-sports-central-element-323112` is **404**, so the comment did conflate the two exactly as
+      filed. The `-prd-` repoint itself was fine and is unchanged. Also corrected the file-header output path
+      (`gs://strategy-store-cefi-…` → the flat `gs://strategy-store-…`), stale for the same split-brain reason. The
+      sibling `instruments-store-sports-{pid} is DELETED at cutover` notes are **measurably TRUE** and were left alone.
+- [ ] [INFRA] P1. **`catalogue-regen` fires into the void — the Cloud Run job it triggers DOES NOT EXIST.** Measured
+      2026-07-17 (`gcloud run jobs list --region asia-northeast1` has no `catalogue-regen`; only
+      `instrument-catalogue-regen` + the 9 `lifecycle-catalogue-*`). Its scheduler `catalogue-regen-nightly` is ENABLED
+      and has been erroring **`code 7`** every 04:30 UTC (last attempt 2026-07-16T04:31:17).
+      `catalogue_regen_scheduler.tf` says so in its own header — _"The Cloud Run Job declaration is a follow-up"_ —
+      which has never landed. ⇒ the four catalogue artefacts (`envelope.md/.json`, `availability.json`,
+      `strategy_instruments.json`) are **not being regenerated on this path at all**; anything downstream reading them
+      is reading whatever was last written by hand. Either declare the job (the `container-job` module, mirroring
+      `instrument_catalogue_regen_job`) or retire the scheduler — a scheduler with no target is a permanently-red alert
+      source. **Data-freshness question, not IAM** — deliberately NOT bundled into the `@7a22460` repoint. Provenance:
+      measured while answering that repoint's live-P1 question.
+- [ ] [INFRA] P2. **`instrument-catalogue-regen` is PAUSED with a 100%-failure history.** Its scheduler state is PAUSED
+      (so 02:00 UTC never fires) and its ONLY execution ever — `instrument-catalogue-regen-c2cwk`, 2026-06-21 — FAILED
+      (`exit code 2`, container logs past retention, so the cause is no longer recoverable from logs). Unlike its
+      lifecycle siblings it also carries **no `google_cloud_run_v2_job_iam_member` run-invoker grant** — the exact
+      documented `code 7` trap that `lifecycle_catalogue_scheduler.tf:104-113` warns about verbatim, which would reject
+      the trigger even once un-paused. Before un-pausing: add the invoker grant, then re-run and read the failure. The
+      `@7a22460` repoint removes the bucket-403 that would have been its _next_ failure, but does not explain the
+      2026-06-21 one. Provenance: same measurement pass.
+
+**2026-07-17 (b) — the 8 IAM grants are FIXED; it was 9. `deployment-service@7a22460`.** The adjacent landmine above is
+disarmed. The `will be created` list no longer contains a single dead-bucket target.
+
+**The live-P1 question, answered empirically: the SAs ARE ungranted on what they read — but nothing is broken RIGHT NOW,
+because neither job runs today.** Latent, not live. Both halves matter, so both are recorded:
+
+| probe                                                                         | measurement                                                                                                                                                                                                                                                                        | verdict                         |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| What do the jobs resolve at runtime? (grep-then-READ, not grep-then-conclude) | BOTH scripts resolve via UAC `bucket_name()` → `canonical/gcs_paths.py:165`, `env: str = "prd"` default. It **cannot emit the flat form.**                                                                                                                                         | **canonical `-prd-` only**      |
+| Does either SA hold a canonical grant from anywhere else?                     | Elevated `buckets get-iam-policy` on all 6 canonical buckets: only `lifecycle-catalogue-regen` is bound (a THIRD SA). Project-level IAM filter for the catalogue SAs: **empty**. TF grep: no other block.                                                                          | **NO — zero coverage**          |
+| So were they broken?                                                          | `catalogue-regen` **Cloud Run job does not exist** (`run jobs list`); its scheduler is ENABLED and has been erroring `code 7` daily (last 2026-07-16T04:31). `instrument-catalogue-regen` job exists but its scheduler is **PAUSED**; its ONLY execution ever (2026-06-21) FAILED. | **latent, not a live incident** |
+
+⇒ The repoint closes the gap **before** it can bite: the moment either job is created/un-paused it would have hit 403 on
+every cefi/defi/tradfi bucket it reads, plus the artefact bucket it writes. Now it holds the right grants instead.
+
+**The 9th grant** (not in the table above — that table only swept the two `*_reader` for_each blocks):
+`instrument_catalogue_strategy_store_writer` → `strategy-store-cefi-central-element-323112`, **404**, also
+`will be created`. It is the same hazard and the same root cause, so it is fixed in the same commit (findings-triage:
+in-my-file → same commit). Its canonical successor is the FLAT `strategy-store-{pid}` — which the generator itself
+writes to (`generate_instrument_catalogue.py:565`) and which the sibling `catalogue_regen_strategy_store_writer` already
+grants on. **No grant was removed** — every one of the 9 has a live canonical successor.
+
+**Plan-clean proof — apples-to-apples, same executor / same elevated SA:**
+
+```
+before (d67fe1ec-0339-434f-9d7c-a5f5d9756564):  Plan: 1 to import, 19 to add, 51 to change, 1 to destroy.   Errors: 8
+after  (15516e55-cc4f-4775-8704-b40b11d3b19f):  Plan: 1 to import, 19 to add, 51 to change, 1 to destroy.   Errors: 8
+```
+
+**Counts are INTENTIONALLY identical** — this fix does not remove actions, it retargets them: 9 creates against 404
+buckets became 9 creates against live buckets. Counting alone cannot prove it, so the real gate is a per-target
+existence check built into the AFTER build (step #2): _"every bucket targeted by an IAM member create must EXIST"_ →
+**PASS, 9/9**, build exit 0. `google_storage_bucket.* will be created` stays **EMPTY** (no resurrection reintroduced).
+The 8 `Error:` lines are byte-for-byte the pre-existing pubsub/BigQuery 403s the disarm leg documented — unchanged,
+count identical, none from these files. **No `tofu apply` was run** — plan-clean is the gate; the apply belongs to
+whoever owns the prod pipeline with a reviewed plan.
+
+**Two side-observations worth their own eyes (NOT fixed here — out of scope, filed as todos below):**
+
+1. The old dead-keyed grants were **in the prod state** (`Refreshing state... [id=b/instruments-store-cefi-…]`). Refresh
+   404s them → drops them → hence `will be created`. Now that config no longer names those keys they simply vanish on
+   the next refresh; `1 to destroy` is unchanged, so nothing extra is being destroyed. Self-healing, as the orphan note
+   above predicted.
+2. **`catalogue-regen`'s scheduler has been firing into the void, daily, since at least 2026-06.** The job it POSTs
+   never existed — `catalogue_regen_scheduler.tf`'s own header says the job declaration "is a follow-up". So
+   `catalogue-regen-nightly` errors `code 7` every 04:30 UTC and the four catalogue artefacts (envelope / availability /
+   strategy_instruments) are **not being regenerated by it at all**. That is a data-freshness question well beyond an
+   IAM repoint.
 
 **2026-07-16** — Found by the sports cutover's T4.4 gate (Phase-5/delete leg). Measured, not inherited: real `tofu plan`
 via Cloud Build `ea03c145-25a0-4280-acc3-75a99486ed76`; 404 confirmed via elevated SA build
