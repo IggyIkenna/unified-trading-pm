@@ -252,6 +252,34 @@ missing. `/skip-current-task` after this ships — next dispatch should target ~
 `TERMINATED`/absent, then re-run this audit script expecting the post-fix side to show ~0% bug-signature rate before
 flipping Todo 3.
 
+### 2026-07-17T14:37Z — data_engineering slot-11 (Todo 3 re-dispatch — confirmed still no new state; 6th consecutive no-op redispatch on this todo, flagging thrash explicitly for main/operator action)
+
+Re-dispatched this issue doc's Todo 3 four minutes after slot-14's identical check. Queried the fleet directly (Compute
+Engine `aggregated/instances` API, `central-element-323112`, filtered `features-sports-sports-20260717.*` — `gcloud` CLI
+itself is unusable in this slot's sandbox, snap-confine lacks `cap_dac_override`; used `google-auth`+REST via
+`uv run --with google-auth --with requests` against ADC instead): all 10 VMs (`features-sports-sports-20260717-135608` …
+`-135916`) still `RUNNING`, only ~41min elapsed since launch (13:56–13:59Z) against the ~11h ETA — confirms slot-14's
+finding, no new state.
+
+**Not launching a second fleet** (same race/manifest-corruption risk slot-14 flagged). **Not flipping this checkbox** —
+gap-fill has not completed.
+
+**Explicitly flagging the redispatch-thrash pattern for actioning, not just re-noting it**: this is the 6th consecutive
+no-op dispatch across this todo + its sibling elo P2c todo (slot-7 skip, slot-8 skip, slot-4 skip, slot-14 skip, now
+this one) — each one re-derives the identical "fleet still running, ETA ~2026-07-18T01:00Z+" conclusion at real
+worker-dispatch cost. slot-14 already recommended parking both todos behind a fleet-completion prerequisite (`RULES.md`
+§ 4 "Park a task") two dispatches ago; it was not actioned before this redispatch landed. **I could not action the park
+myself**: `data/config/backlog.yaml` is the orchestrator VM's live runtime config (`.gitignore`'d, lives outside any
+slot's git clone — confirmed absent from `.tabs/11/agent-orchestrator`), not reachable from a worker slot's filesystem,
+and there is no `/api/backlog/*` endpoint to set `priority_override`/ `prereqs.prerequisites` remotely (checked
+`agent-orchestrator/dashboard/API_REFERENCE.md` — only `GET /api/backlog`, `GET /api/backlog/{id}/blockers`,
+`DELETE /api/backlog/{id}` exist). This needs main/operator (who has orchestrator-VM filesystem access) to actually set:
+`priority: 999` + `priority_override: true` + a `sports-features-fleet-20260717- complete` prerequisite (seeded `false`
+via `POST /api/prerequisites/...`) on BOTH this todo and the sibling elo P2c todo, then flip the prerequisite `true`
+once the fleet self-terminates (~2026-07-18T01:00Z+, verify via the same `aggregated/instances` query — all 10 named VMs
+`TERMINATED`/absent) and re-verify via real-parquet content sampling before either checkbox is flipped.
+`/skip-current-task` after this.
+
 ### 2026-07-17T14:33Z — data_engineering slot-14 (Todo 3 dispatch — confirmed already covered by the consolidated elo+travel fleet; no new state, skipping)
 
 Dispatched this issue doc's Todo 3 (gap-fill). Per the consolidation directive recorded in the sibling
