@@ -377,7 +377,7 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 | --- | ------------------------------------------------------------- | ------------- | --- | ---------------------------------------------------------------------------------------------------------- |
 | 1   | Enrich `mock-api.ts` IS data-status fixtures                  | P5/P7 mock    | P3  | lets local mock-mode render cefi/tradfi/defi cards; LIVE deploy already exercises P4-A/P5/P7.              |
 | 2   | ~~Canonicalise cefi manifest split rows~~                     | P7 follow-up  | P2  | ✅ **DONE 2026-07-17** — were PHANTOM pointers (0 objects at split venue); 80,615→79,943 @e6c31507.        |
-| 3   | Republish instruments-service tarball                         | P1 follow-up  | P2  | so the nightly writer carries the partial-stamping fix — run from a clean tree (tfvars was dirty).         |
+| 3   | ~~Republish instruments-service tarball~~                     | P1 follow-up  | P2  | ✅ **DONE 2026-07-17** — fleet republished clean @11:00Z; live coverage.json carries `partial`.            |
 | 4   | ~~`resolved_date`/`requested_date` on `get_honest_coverage`~~ | P1 stretch    | P3  | ✅ **DONE 2026-07-17** — deployment-api@4e996f8 (additive fields + 4 new specs).                           |
 | 5   | Distinct `expiry` column in `CATALOG_COLUMNS`                 | P2 clean-LT   | P2  | long-term catalogue schema (expiry currently inferred).                                                    |
 | 6   | ~~New-listings false-positive guard~~                         | P2            | P2  | ✅ **DONE 2026-07-17** — measured 99/439,940 (0.02%, all COINBASE-CDE); provenance flag @a9b6207+@179c7ce. |
@@ -536,12 +536,31 @@ _permanent for the nightly cron_, and (b) defence-in-depth so a future OOM can't
       `--machine-type=e2-highmem-4` (Update Time 2026-07-16T08:36Z); tonight's 00:30 UTC run will use 32GB. Issue doc:
       `plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md`. _(Tarball
       republish for partial-stamping is BLOCKED — see follow-up below; NOT required for a full 5-AG run at 32GB.)_
-- [ ] [INFRA] P2. _(P1 follow-up)_ Republish the instruments-service tarball so the nightly writer carries
-      partial-stamping (`instruments-service@a29e483`) — CURRENTLY BLOCKED: `create-code-tarballs.sh` rebuilds
-      fleet-wide core tarballs (UAC 922M/UTL 1.2G/MTDS 1.3G) and errors on the foreign uncommitted
-      `deployment-service .../features-service-sports/gcp/terraform.tfvars`; do NOT `--allow-dirty-tarball` (ships
-      another worker's WIP fleet-wide). Run from a clean tree. Then reconcile the launcher SSOT drift (publisher writes
-      `code/…/vm/`, cron reads `vm/…`; 4 conflicting launchers). Issue doc has the full list.
+- [x] [INFRA] P2. ✅ _(P1 follow-up)_ Republish the instruments-service tarball so the nightly writer carries
+      partial-stamping — **UNBLOCKED + VERIFIED DONE 2026-07-17; no `--allow-dirty-tarball` was ever used.** Re-checked
+      the blocker as instructed rather than assuming it persisted: the whole CORE fleet was **republished from CLEAN
+      trees at ~10:00–11:00Z today** (`git_status_clean: true` on every manifest) — UAC `@825878f` 10:30:53Z, UTL
+      `@61bf7444` 10:04:17Z, deployment-service `@821250ab` 11:00:55Z, **instruments-service `@e6c31507` 11:00:55Z**.
+      The dirty `terraform.tfvars` that blocked this yesterday was committed/clean during that window, so the republish
+      simply succeeded. (deployment-service is dirty again NOW — 3 foreign files, one touched 9 min before this check —
+      but that is NEW unrelated work and no longer gates this item. Confirmed the constraint was real, not imagined:
+      `deployment-service` is in `CORE_REPOS`, which the script ALWAYS includes, and its dirty check is per-repo
+      `git -C <repo> diff-index --quiet HEAD` — so there is no way to scope it out; waiting was the only correct path,
+      exactly as the todo instructed.) **Evidence — proven by CONTENT and by the live artifact, not by ancestry alone:**
+      (a) `git merge-base --is-ancestor a29e483c e6c31507` → **true**, the published tarball SHA descends from the
+      partial-stamping fix; (b) reading the PUBLISHED SHA's own file,
+      `git show e6c31507:scripts/measure_honest_coverage.py` contains `partial = bool(asset_groups_failed)` +
+      `asset_groups_failed` + `"asset_groups_requested"` (lines ~819-840); (c) **the decisive end-to-end proof** — the
+      LIVE nightly artifact `gs://central-element-323112-honest-coverage/2026-07-17/coverage.json` carries
+      `partial: False`, `asset_groups_failed: []` and `asset_groups_requested` **present**, alongside
+      `asset_groups_measured = ['cefi','defi','tradfi','sports','prediction']` (generated_at 2026-07-17T09:09:21Z).
+      Those three fields can only exist if the writer that produced the file carries `a29e483` — which IS this plan's
+      stated P1 acceptance ("tomorrow's 00:30 UTC file has `asset_groups_measured` = all 5 AND `partial: false`"), now
+      met by the real cron output rather than a manual run. The launcher SSOT drift half was separately resolved earlier
+      today (`deployment-service@6c7a079e1` — Cloud Run job fetch command + the Terraform IaC SSOT both updated; see the
+      2026-07-17 launcher Progress Log entry +
+      `plans/active/issues/honest_coverage_launcher_missing_lib_dependency_2026_07_17.md`), and today's successful 5-AG
+      cron output is the proof it holds.
 - [x] [DATA] P2. ✅ Column-prune the writer read so the read stops scaling toward OOM regardless of VM RAM. **Approach
       taken = metadata-deferred read (Option 2), NOT row-group streaming:** the availability-index parquet already
       stores every `_READ_COLUMNS` column PLAIN_DICTIONARY-encoded per row-group (verified via pyarrow row-group
@@ -805,33 +824,33 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
       for MTDS/MDPS/features — the migration must preserve shard-atom identity across those services, not just IS.
 
       **ROOT-CAUSED 2026-07-17 — the finding reframes this todo; migration IN FLIGHT (dispatched sub-agent).** Measured
-              every asset group's live `_index/availability_index.parquet` against the UAC `InstrumentType` enum (31 values):
-              - **Non-canonical VALUES are already GONE** for cefi / defi / tradfi / prediction — **0** each. This todo's original
-                target (the lowercase/legacy DeFi values) was fully resolved by the P9 round-2 migrations (`@6f87a251` cefi
-                lowercase, `@66258618` tradfi blanks, `@4d63822d` defi data_type). Nothing left to root-cause there.
-              - **The REAL residual is BLANK `instrument_type` on CAPTURED rows** — the `__legacy__` sentinel the P9 table logged
-                as "CEFI `__legacy__` 4.85M / DEFI `__legacy__` 3.85M". Crosstab of `capture_status` × blank on live data:
-                **tradfi 0** ✅ (P9's migration met its stated bar), but **cefi 13,046** and **defi 65,443** captured rows are
-                still blank — **78,489 rows** total. Blank on NON-captured rows (empty_confirmed / expected_unattempted /
-                attempted_failed) is **honest and must stay** (those shards captured zero instruments, so they have no type).
-              - **Root cause = the same bug P9 already documented, with only PART of the fix applied**: the shared cefi/tradfi/defi
-                writer `writers.py::_write_venue` hardcoded `instrument_type=""` on `record_captured(...)`. **The WRITER IS
-                ALREADY FIXED for all three** (`b475ae8e` → `91fc7bd2` `_split_by_instrument_type`, called from `_write_venue`,
-                shared by every AG — verified by reading it at HEAD; **no writer change needed**). But the **backfill migration
-                only ever ran for tradfi** (`canonicalize_tradfi_instrument_type_2026_07_16.py` is hardcoded
-                `asset_group="tradfi"`). So cefi/defi simply never got their history backfilled.
-              - **Remaining work = generalise that migration to cefi + defi** (targeted per-shard object reads re-deriving the
-                type from each shard's own `instruments.parquet`; single-walk discipline; honest-blank when an object is
-                missing). Dispatched to a sub-agent with the full rule set; acceptance = **0 captured blank rows in cefi AND
-                defi**, non-captured blanks preserved, cross-service shard-atom re-confirmed (P9 established MTDS/MDPS/features
-                do NOT read `instrument_type` from this IS manifest for their own shard keys — each stamps its own — so the
-                tradfi migration was safely IS-only; that must be re-confirmed for cefi/defi before applying).
-              - **Also measured (NEW, out of this todo's scope — sports only):** the ONLY remaining non-canonical values anywhere
-                are in the **sports** index: `odds` 561,260 rows (BETFAIR/BETMGM…, 561,099 captured), `prediction_market` 1,709,
-                `prediction` 37, `SPORT` 16 (ODDS_API). Canonical members `EXCHANGE_ODDS` / `FIXED_ODDS` / `PREDICTION_MARKET`
-                exist, so these look mappable — but sports keys on `("data_type","league_id")` (UAC `SHARD_AXIS_MATRIX`), so
-                `instrument_type` is display-only there, a different axis and a different blast radius from this (A) todo.
-                Tracked as its own todo below rather than silently folded in.
+                      every asset group's live `_index/availability_index.parquet` against the UAC `InstrumentType` enum (31 values):
+                      - **Non-canonical VALUES are already GONE** for cefi / defi / tradfi / prediction — **0** each. This todo's original
+                        target (the lowercase/legacy DeFi values) was fully resolved by the P9 round-2 migrations (`@6f87a251` cefi
+                        lowercase, `@66258618` tradfi blanks, `@4d63822d` defi data_type). Nothing left to root-cause there.
+                      - **The REAL residual is BLANK `instrument_type` on CAPTURED rows** — the `__legacy__` sentinel the P9 table logged
+                        as "CEFI `__legacy__` 4.85M / DEFI `__legacy__` 3.85M". Crosstab of `capture_status` × blank on live data:
+                        **tradfi 0** ✅ (P9's migration met its stated bar), but **cefi 13,046** and **defi 65,443** captured rows are
+                        still blank — **78,489 rows** total. Blank on NON-captured rows (empty_confirmed / expected_unattempted /
+                        attempted_failed) is **honest and must stay** (those shards captured zero instruments, so they have no type).
+                      - **Root cause = the same bug P9 already documented, with only PART of the fix applied**: the shared cefi/tradfi/defi
+                        writer `writers.py::_write_venue` hardcoded `instrument_type=""` on `record_captured(...)`. **The WRITER IS
+                        ALREADY FIXED for all three** (`b475ae8e` → `91fc7bd2` `_split_by_instrument_type`, called from `_write_venue`,
+                        shared by every AG — verified by reading it at HEAD; **no writer change needed**). But the **backfill migration
+                        only ever ran for tradfi** (`canonicalize_tradfi_instrument_type_2026_07_16.py` is hardcoded
+                        `asset_group="tradfi"`). So cefi/defi simply never got their history backfilled.
+                      - **Remaining work = generalise that migration to cefi + defi** (targeted per-shard object reads re-deriving the
+                        type from each shard's own `instruments.parquet`; single-walk discipline; honest-blank when an object is
+                        missing). Dispatched to a sub-agent with the full rule set; acceptance = **0 captured blank rows in cefi AND
+                        defi**, non-captured blanks preserved, cross-service shard-atom re-confirmed (P9 established MTDS/MDPS/features
+                        do NOT read `instrument_type` from this IS manifest for their own shard keys — each stamps its own — so the
+                        tradfi migration was safely IS-only; that must be re-confirmed for cefi/defi before applying).
+                      - **Also measured (NEW, out of this todo's scope — sports only):** the ONLY remaining non-canonical values anywhere
+                        are in the **sports** index: `odds` 561,260 rows (BETFAIR/BETMGM…, 561,099 captured), `prediction_market` 1,709,
+                        `prediction` 37, `SPORT` 16 (ODDS_API). Canonical members `EXCHANGE_ODDS` / `FIXED_ODDS` / `PREDICTION_MARKET`
+                        exist, so these look mappable — but sports keys on `("data_type","league_id")` (UAC `SHARD_AXIS_MATRIX`), so
+                        `instrument_type` is display-only there, a different axis and a different blast radius from this (A) todo.
+                        Tracked as its own todo below rather than silently folded in.
 
 - [x] [DATA] P2. ✅ _(A)_ Drained residual `LENDING` — **but NOT by "finishing the split", which would have corrupted
       the catalogue.** `scripts/drain_residual_lending_rows_2026_07_17.py`, **applied + independently verified on real
@@ -1059,27 +1078,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                                                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                                                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                                                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                                                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                                                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                                                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                                                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                                                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                                                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                                                                                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                                                                                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                                                                                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                                                                                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                                                                                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                                                                                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                                                                                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                                                                                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                                                                                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                                                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                                                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                                                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                                                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                                                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                                                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                                                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                                                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                                                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                                                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                                                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                                                                                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                                                                                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                                                                                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                                                                                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                                                                                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                                                                                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                                                                                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                                                                                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                                                                                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                                                                                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                                                                                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
