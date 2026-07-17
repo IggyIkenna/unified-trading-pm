@@ -383,7 +383,7 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 | 6   | ~~New-listings false-positive guard~~                         | P2            | P2  | ✅ **DONE 2026-07-17** — measured 99/439,940 (0.02%, all COINBASE-CDE); provenance flag @a9b6207+@179c7ce. |
 | 7   | Real `question`/`title` column (polymarket/kalshi adapters)   | P3 follow-up  | P3  | upgrade prediction label from slug → human-readable title.                                                 |
 | 8   | Root-cause remaining DeFi legacy `instrument_type`            | P4-A (A)      | P2  | grep IS writer for where legacy values still emit (display alias already in place).                        |
-| 9   | Drain residual `LENDING`                                      | P4-A (A)      | P2  | finish A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.                                              |
+| 9   | ~~Drain residual `LENDING`~~                                  | P4-A (A)      | P2  | ✅ **DONE 2026-07-17** — 893 stale originals DELETED (re-splitting would've made 1,766 dupes) @e4fdd56c.   |
 | 10  | Surface `base_asset_contract_address` in the drilldown        | **P4 (B)**    | P2  | ⚠️ **ROW MISLABELLED before 2026-07-17** — was "Sports TEAMS data-correctness / P8 (B)"; see note below.   |
 | 11  | True-catalogue source                                         | P6 phase-2    | P3  | deployment-api→IS read path OR projection; availability-derived phase-1 shipped @1e3c7b4.                  |
 | 12  | ~~`/prediction-catalogue` latency~~                           | P3 perf       | P3  | ✅ **DONE 2026-07-17** — real cost ~173s not 39s; paging was re-paying it, now 0.00s @0e39a53.             |
@@ -803,7 +803,50 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
       `instrument_type` is stamped; ensure new rows emit `InstrumentType.value` (uppercase); author a one-off legacy-row
       canonicalization migration (pattern `scripts/canonicalize_*_2026_*.py`). NOTE: `instrument_type` is a SHARD axis
       for MTDS/MDPS/features — the migration must preserve shard-atom identity across those services, not just IS.
-- [ ] [DATA] P2. _(A)_ Drain residual `LENDING` — finish the A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.
+- [x] [DATA] P2. ✅ _(A)_ Drained residual `LENDING` — **but NOT by "finishing the split", which would have corrupted
+      the catalogue.** `scripts/drain_residual_lending_rows_2026_07_17.py`, **applied + independently verified on real
+      prod infra**. **Correction to this todo's premise (the important part):** the instruction was to re-run the
+      `canonicalize_defi_lending_atoken_debttoken_catalog_2026_07_13.py` pattern "for the remaining 3". Tested that
+      first by running **that script's own pure `migrate()` over live prod data**: it would have written **1,766
+      duplicate `instrument_id`s** (880 A_TOKEN + 880 DEBT_TOKEN) — it has **no dedup at all**, and the split twins
+      **already exist**. Root cause: the 2026-07-13 run ADDED the A_TOKEN/DEBT_TOKEN rows but never REMOVED its LENDING
+      sources (the plan's own P4-B note corroborates: "+904 rows, 9,456→10,360" is the 1:2 split _output_ with sources
+      kept, not a net +452). So the residual was never "unsplit markets" — it was **already-split markets whose stale
+      original was left behind**, and the correct fix is a guarded DELETE. **Also stale in this todo's wording
+      (measured, not assumed):** residual = **893 rows = MORPHO 861 + COMPOUND_V3 26 + FLUID 6**. COMPOUND_V3 is in the
+      residual (not listed in the todo); **AAVE_PLASMA does not exist as a venue in the catalogue at all** (no
+      AAVE/PLASMA venue match); AAVE_V3 is already fully drained (0 LENDING). All 893 are delisted/aged (**0 active**) —
+      no live row was mislabeled — but `LENDING` is **not a real `InstrumentType` enum member**, so historical-identity
+      consumers (backtests, PnL recon) still hit the crash/mislabel class, and the pair falsely reads as "market
+      delisted 2026-06-24, different one listed" when only our labelling changed. **Safety design — delete ONLY where a
+      twin provably supersedes**: per row the required twin id(s) are derived from the row's OWN key shape
+      (`:LENDING_MARKET:<pair>` → BOTH `:A_TOKEN:A<pair>` AND `:DEBT_TOKEN:DEBT<pair>`; `:SUPPLY:<sym>` →
+      `:A_TOKEN:<sym>`; `:BORROW:<sym>` → `:DEBT_TOKEN:<sym>`) and EACH must exist **and** have `available_from <=` the
+      original's. Anything failing is KEPT + reported — losing real lifecycle history is far worse than a stale label. —
+      instruments-service@e4fdd56c + **Evidence (real infra, independently re-read — not the script's own log)**:
+      pre-flight proof that the twins are complete — **867/867** MORPHO/FLUID and **26/26** COMPOUND_V3 LENDING rows
+      have their twin, and **867/867 + 26/26 twins start EARLIER-OR-EQUAL** (0 start later; byte-identical in practice,
+      e.g. `MORPHO-ETHEREUM:LENDING_MARKET:cbBTC-USDT:0x2b8019` from 2023-12-28 vs its `:A_TOKEN:AcbBTC-USDT:0x2b8019`
+      twin from 2023-12-28). Run: `11,776 → 10,883` rows (−893); guard reported
+      `deletable=893, kept_no_twin=0, kept_twin_starts_later=0, kept_unknown_shape=0`. Post-verify (fresh read):
+      **LENDING = 0**, **zero non-enum instrument_type values remain**, all **9 other instrument_types byte-identical**
+      (delete-only, A_TOKEN stays 1,117 / DEBT_TOKEN 1,060), and **all 893 deleted markets are still fully represented
+      by their twins — 0 orphaned**. Rollback:
+      `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.20260717-111412.lendingdrain.defi.bak.parquet`.
+      Unit: `tests/unit/migrations/test_drain_residual_lending_rows.py` 10 passed — each safety branch pinned
+      individually (deleted-when-twins-complete; **KEPT when a required twin is missing**; **KEPT when a twin starts
+      later (history would be lost)**; kept on unknown key shape; wider twin OK; non-LENDING never touched; idempotent).
+- [ ] [DATA] P3. _(NEW — side-discovery 2026-07-17, found while verifying the LENDING drain)_ **DeFi POOL
+      `instrument_id` is not unique across chains.** The live defi catalogue carries **6 duplicated `instrument_id`s (12
+      rows)** where the SAME pool contract address is deployed on TWO chains and both rows key on
+      `instrument_id == pool_address.lower()`: `0x004c167d…` = CURVE on **AVALANCHE + OPTIMISM**; `0x01abc00e…`,
+      `0x03cd191f…`, `0x06df3b2b…`, `0xc6a5032d…`, `0xfeadd389…` = BALANCER on **ETHEREUM + POLYGON** (deterministic EVM
+      deployment puts the same address on multiple chains). Each pair has a DIFFERENT `available_from`, so they are
+      genuinely distinct instruments colliding on one id. Pre-existing and **out of scope for the LENDING drain (left
+      untouched — verified still exactly 6 before and after)**. Blast radius is small (6 of 10,883) but the CLASS is an
+      identity-uniqueness violation: any consumer keying on `instrument_id` alone silently picks one chain's pool. Fix
+      direction: include `chain` in the DeFi POOL identity (or dedupe key) — needs a shard-atom check across
+      MTDS/MDPS/features before changing, same as any identity migration.
 - [x] **DECIDED (operator 2026-07-16): POPULATE SPOT_ASSET for every distinct token leg** (DeFi + spot-CeFi). Decomposed
       below.
 - [x] [DATA] P1. ✅ _(B, enabler)_ Catalogue regen **completed on real infra**, safely. `--mode full` was evaluated
@@ -974,27 +1017,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                                                                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                                                                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                                                                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                                                                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                                                                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                                                                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                                                                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                                                                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                                                                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                                                                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                                                                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                                                                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                                                                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                                                                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                                                                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                                                                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                                                                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                                                                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                                                                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                                                                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
