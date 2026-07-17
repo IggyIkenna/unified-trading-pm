@@ -133,6 +133,34 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-16/17 — P9 round-2 execution complete (TradFi/CeFi/DeFi migrations + UI relabel + perf), fixtures browser in flight
+
+Wraps up the "P9 round-2" thread referenced below. TradFi (Q2), CeFi (Q2), DeFi (Q2) migrations all applied + verified
+on real infra (see their individual checkbox evidence above); sports Q3 root-caused as not-a-bug; Q4 unique-instruments
+relabel shipped. Symbol-search 44s perf item also closed (deployment-api@8e1221b, root-caused to sequential per-venue
+GCS reads, parallelized with ThreadPoolExecutor). Fixtures browser (operator request, item 6) still in flight via
+sub-agent at session-end.
+
+**Two side-discovered bugs found + fixed while validating locally against real GCS** (not pre-existing plan todos,
+captured here per the discovery-capture rule):
+
+1. `unified_api_contracts.canonical.domain.predictions.classifiers` logged `OTHER_BUCKET_MEMBER_ADDED` at INFO on every
+   per-row prediction-market classification — ~1M log lines per catalogue cache-miss sweep, the actual cause of a ~2min
+   local dev-server stall. Downgraded to DEBUG — unified-api-contracts@d4523602.
+2. `deployment_api/services/data_status/coverage.py::_build_breakdowns` crashed the live coverage-summary endpoint with
+   `TypeError: boolean value of NA is ambiguous` whenever a `groupby(...).sum(min_count=1)` group had zero non-NA
+   `instrument_count` values (pandas `pd.NA`, not NaN — its `__bool__` deliberately raises). A bare `if v and v > 0`
+   choked; fixed to `if pd.notna(v) and v > 0`. This was actively 500-ing the exact endpoint used to verify tonight's
+   TradFi/CeFi/DeFi migrations — found because validation kept failing until this shipped. Added a regression test
+   (`test_all_na_instrument_count_group_does_not_crash`) — deployment-api@e754a60.
+
+**Workspace-hygiene note**: this session ran with 4 dispatched sub-agents in the SAME shared checkouts (not isolated
+worktrees) for extended periods (hours). Confirmed multiple times that "no active commits + no active processes" does
+NOT mean stalled — sub-agents idle between their own background-watchdog notifications; direct `SendMessage` check-ins
+were the effective unstick mechanism each time. Also hit: local dev servers (uvicorn/vite) launched via
+`nohup ... & disown` still died unexpectedly more than once over a multi-hour session — relaunched as needed, no root
+cause chased (out of scope for tonight).
+
 ### 2026-07-16 — Continuation session (Phase B: P3, P2 UI, P8 UI-P2, P3 UI, P6 backend+UI, P1 column-prune, P4-B) — `/autonomous` engaged
 
 Second continuation session (distinct from the "P9 round-2" thread above, which is a DIFFERENT concurrent Claude session
@@ -708,27 +736,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                  been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                  date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                  in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                  Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                  truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                  `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                  instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                  guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                  `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                  Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                  `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                  empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                  `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                  `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                  transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                  pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                  `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                  `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                  (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                  carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
@@ -926,9 +954,29 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       rather than preserving the stale count, logged per-shard as `shard count DRIFT` (net magnitude 391,939) — a
       separate, pre-existing manifest-vs-object staleness bug likely not tradfi-specific, worth its own follow-up
       investigation.
-- [ ] [DATA] P2. _(Q2 — CeFi legacy lowercase dupes)_ Collapse `perpetual`→`PERPETUAL` (1.15M) + `spot`→`SPOT_PAIR`
-      (502k) in the cefi availability index (the P4-A display alias makes them READ canonical, but they remain distinct
-      manifest rows). This IS the P4 DATA P2 legacy-row canonicalization migration — do it for cefi.
+- [x] [DATA] P2. ✅ _(Q2 — CeFi legacy lowercase dupes)_ Collapsed `perpetual`→`PERPETUAL` + `spot`→`SPOT_PAIR` in the
+      cefi availability index. Root cause: historical writer path predating UAC's strict `InstrumentType` enum field
+      (tightened UAC@6f0e0c2e, 2026-04-02) let raw lowercase strings through for the 6 `*-FUTURES` + 7 `*-SPOT`
+      Tardis-blend venues; live-verified CLOSED — fresh captures (2026-07-10 → today) are 100% clean/canonical-cased,
+      and `prod/catalog.parquet` never carried the lowercase values (424,633 rows, all-uppercase types). Added a
+      defensive `_LEGACY_INSTRUMENT_TYPE_ALIASES` normalization guard at the manifest row_key emission site
+      (`_split_by_instrument_type`, `writers.py`) as belt-and-suspenders. Cross-service coordination checked:
+      MTDS/MDPS/features do NOT read `instrument_type` from this IS manifest (each derives it independently from its own
+      captures) — no coordination needed; MTDS separately had its OWN parallel occurrence of this bug class, already
+      independently fixed (`market-tick-data-service/scripts/normalize_instrument_type_casing.py` +
+      `relabel_bybit_spot_perpetual_itype_2026_07_07.py`) — flagged to operator as informational, not actioned here.
+      Migration deduped on the manifest's real composite row-identity
+      (`unified_trading_library.manifest_writer._ROW_KEY_COLUMNS`), last-write-wins by `attempted_at` — 3,377
+      `(date,venue)` PERPETUAL collisions + 10,003 SPOT_PAIR collisions verified and dropped correctly (math
+      cross-checked: 11,582+15,802−3,377=24,007 PERPETUAL; 16,238+14,418−10,003=20,653 SPOT_PAIR). —
+      instruments-service@6f87a251 + Evidence: real-GCS `_index/availability_index.parquet` before=93,958 rows
+      (perpetual=15,802 [`sum(row_count)`=1,152,860, matching the "~1.15M" figure], spot=14,418
+      [`sum(row_count)`=502,714, matching "~502k"]) → after=80,578 rows (perpetual=0, spot=0, PERPETUAL=24,007,
+      SPOT_PAIR=20,653); backup
+      `gs://instruments-store-cefi-prd-central-element-323112/_index/     availability_index.legacyinstrumenttypefix.20260717-005002.bak.parquet`;
+      post-apply re-download verification PASSED (0 residual lowercase rows, row count matches); independently
+      re-verified live via the coverage-summary endpoint post-apply (COMBO/FUTURE/OPTION/`__legacy__` counts
+      byte-identical pre/post, confirming no out-of-scope rows were touched).
 - [x] [DATA] P2. ✅ _(Q2 — DeFi two data_types)_ **DECIDED (operator round-2 2026-07-16): `instruments` is canonical for
       DeFi.** Root cause: the LEGACY `_write_catalogue_record` path
       (`instruments_service/engine/orchestrator/     catalogue.py`) used to stamp `data_type='instrument-catalog'` for
@@ -977,11 +1025,30 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       UI QG green (`tsc`/`eslint`/`vitest` 90 tests/build, 74.91% coverage). `[UI]` — pw:L2 deferred to the plan's final
       local full-stack Playwright validation pass (no dedicated component test scaffold exists for this card — text-only
       JSX change, verified live instead of via a new Vitest spec).
-- [ ] [UI] P2. _(operator request — fixtures browser)_ Add a fixtures browser to the IS data-status summary: render all
-      catalogue fixtures grouped by **league → day** with collapsible dropdowns (same UX as the cefi/defi/tradfi
-      instrument drilldown). The parquet exists (`sports_reference/by_date/day=/entity=fixtures/…`, already read by
-      `upcoming_fixtures.py` + the `fixtures_schedule` split); build a read-only backend list (single-walk discipline) +
-      the grouped UI. `[UI]` + pw:L2.
+- [x] [UI] P2. _(operator request — fixtures browser)_ Added a fixtures browser to the IS data-status summary: renders
+      catalogue fixtures grouped by **league → day** with collapsible `<details>` dropdowns (same accordion primitive
+      `UpcomingFixtures`/`HierarchicalShardDrilldown` already use). Backend:
+      `deployment_api/services/fixtures_browser.py` (`list_fixtures_by_league_and_day`) reuses `upcoming_fixtures.py`'s
+      day-window threaded reader (`_read_frames_for_window`/`_row_to_fixture`/`_sports_bucket`) — same
+      legacy-singleton/`fixtures_schedule`-split fallback + shard-level failure isolation — over a BOUNDED window
+      (`days_back`/`days_forward`, default 7/30, capped 60 each; single-walk discipline: no `list_blobs` over the whole
+      `sports_reference/` prefix). Considered the sports instrument catalogue
+      (`build_sports_fixture_team_player_catalogue`) as a full-history alternative but rejected it — that catalogue is
+      itself windowed (`SPORTS_FTP_WINDOW_DAYS`) AND drops `kickoff_utc`/`status`, which the UI needs. New route
+      `GET /api/fixtures/browse` (`deployment_api/routes/fixtures_browse.py`, mock-mode-aware, mirrors
+      `routes/fixtures.py`); registered in `main.py` beside the existing fixtures router; `fixtures_browser` real-module
+      registered in `tests/unit/conftest.py`'s `_ensure_services_mocked()` allowlist (same pattern
+      `catalogue_lifecycle`/`prediction_catalogue` use). Frontend: `FixturesBrowser.tsx` (nested league→day `<details>`
+      accordion) mounted IS-only in `DataStatusTab.tsx` beside `<UpcomingFixtures/>`; `fetchFixturesBrowse` +
+      `FixtureRow`/`FixturesByLeagueAndDay` types in `client.ts`; mock handler in `mock-api.ts`. —
+      deployment-api@d77c1264fe00d143e1d65995b0b5a0b45c27890b + Evidence: `quality-gates.sh --no-fix` full green (0
+      failed, 4576 passed, 16 skipped, coverage 79.83%; `tests/unit/test_fixtures_browser.py` — grouping shape,
+      empty-day handling, league filter, shard-isolated-failure, window-clamping, all pass).
+      deployment-ui@966a69e224e69d47cf88a675d24d7d42be0e69ab + Evidence: full UI QG green (`tsc`/`eslint`/`vitest` 91
+      test files, build passed); `FixturesBrowser.test.tsx` (5 tests: league/day grouping render, expand/collapse
+      interaction, empty state, refresh refetch, league-filter refetch) all pass. `[UI]` + pw:L2 deferred to the plan's
+      final local full-stack Playwright validation pass (mirrors the P9 Q4 precedent above — no dedicated Playwright
+      spec added this tick, Vitest is the cited evidence).
 
 ### P9 — cross-agent verification (2026-07-16 pm, other agents' P3/P6 work)
 
