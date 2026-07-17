@@ -708,27 +708,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                  been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                  date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                  in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                  Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                  truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                  `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                  instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                  guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                  `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                  Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                  `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                  empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                  `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                  `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                  transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                  pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                  `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                  `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                  (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                  carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
@@ -872,6 +872,25 @@ per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
       Switched to `resolve_bucket_name(kind="instruments-store", …)` (+ prediction's own kind). —
       deployment-api@2cda602 + Evidence: real-GCS `query='BTC-USDT'` → 10 matches (`BINANCE-FUTURES:PERPETUAL:BTC-USDT`
       …); 2 regression tests.
+- [x] [PERF] P1. ✅ _(Q1 follow-up — symbol search now works but takes ~44s per query)_ **Root cause**: the 5-min
+      in-process TTL corpus cache (already present, house convention matching `upcoming_fixtures._FIXTURES_CACHE`) only
+      protects against re-walking on a WARM cache — every cold miss / TTL-expiry still walked
+      `_load_corpus_from_per_venue_parquets` SEQUENTIALLY, one blocking transpacific GCS parquet read per venue
+      (`instrument_availability/by_date/day=.../venue=.../instruments.parquet`); DeFi alone registers 63 venues in
+      `VENUE_TO_ASSET_GROUP`, so a cold cross-category search (walking cefi/defi/prediction/tradfi/sports) paid tens of
+      serial ~1-3s round-trips. **Fix**: parallelised the per-venue reads with a `ThreadPoolExecutor`
+      (`_read_all_venue_parquets` + `_read_venue_parquet_rows`, `_VENUE_READ_MAX_WORKERS=16`) — same pattern already
+      shipped in `upcoming_fixtures._read_frames_for_window` for per-day fixture reads — collapsing N sequential
+      round-trips to ~one round-trip's wall time per batch. 5-min TTL cache left unchanged (already matches house
+      convention; the fix targets the cold-miss cost, not cache freshness). Single-walk discipline preserved — no new
+      whole-corpus GCS walk, only concurrency on the existing one. — deployment-api@8e1221b + Evidence: 2 new test
+      classes in `test_data_query_service.py` — `TestCorpusCacheTTL` (cold miss populates cache / within-TTL call does
+      NOT re-read / post-TTL-expiry re-reads, via a fake monotonic clock) and `TestReadAllVenueParquetsConcurrency`
+      (wall-clock proof: 6 venues × 0.2s mocked read complete in well under the 1.2s sequential cost, plus merge/dedup +
+      empty-input-short-circuits-without-reading coverage); full `quality-gates.sh` green (4576 passed, 0 failed, 16
+      skipped; 2 unrelated `test_route_deployments_inventory*` socket-timeout failures on a prior run confirmed as a
+      host-load flake — cleared on retry, unrelated to this diff). Real-GCS before/after latency not measured
+      (time-boxed under operator urgency) — the concurrency-proof unit test is the verification evidence instead.
 - [x] [DATA] P1. ✅ _(Q2 — TRADFI blank instrument_type)_ — instruments-service@66258618 + Evidence below. **Root
       cause**: the shared cefi/tradfi/defi manifest writer
       (`instruments_service/engine/orchestrator/writers.py::_write_venue`) hardcoded `instrument_type=""` on every
