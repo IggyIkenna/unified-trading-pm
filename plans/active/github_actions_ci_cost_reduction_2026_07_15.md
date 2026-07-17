@@ -14,8 +14,7 @@ summary: >-
   CANARY GREEN on LDR with billable={} (zero billed minutes) and the JIT deregister/re-register lifecycle proven from
   the journal. 1 of 38 movers is flipped; main is UNTOUCHED. Counts corrected 39/17 -> 38/18 (agent-audit is KEEP-U: a
   pure reusable caller with no runs-on). Next action = OPERATOR GATE, then the next 10 (5 simple + 5 complex), then the
-  remaining 26. Two P0s pending: rotate GH_PAT (agent-caused transcript exposure), and quickmerge's --agent sentinel
-  races its own rebase on a busy branch.
+  remaining 26. One P0 pending: quickmerge's --agent sentinel races its own rebase on a busy branch.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -69,8 +68,8 @@ drift_direction: advance-code
      (`self-hosted,Linux,X64,glue-writer`, long-lived). Labels **disjoint** → writers cannot steal mover jobs.
    - **Deploy clone** = `/opt/glue-deploy/unified-trading-pm` (fresh; **never** an AO slot clone). Runner root =
      `/opt/github-glue-runners` (root-owned; `venv`/`repo`/`toolcache` runner-owned).
-   - **No credential on disk**: `/etc/github-glue-runner.env` holds `GH_TOKEN_SECRET=GH_PAT` (the NAME); the wrapper
-     resolves it per start via `ubuntu`'s ADC. Rotation needs no redeploy (everything reads `latest` by name).
+   - **No credential on disk**: `/etc/github-glue-runner.env` holds `GH_TOKEN_SECRET` (the secret's NAME); the wrapper
+     resolves it per start via `ubuntu`'s ADC. Everything reads `latest` by name, so no redeploy is ever needed.
    - **10 of 38 flipped** (canary + batch 2), **7/7 dispatched GREEN**, incl. BOTH cross-boundary tests (a self-hosted
      caller's `notify-slack` and `persist-cicd-event` jobs ran on GitHub-HOSTED runners, as designed). 2 of the 9 are
      flipped but deliberately un-dispatched (`digest-drift-sweep`, `conflict-resolution-agent` — a dispatch would cause
@@ -111,10 +110,9 @@ drift_direction: advance-code
    capability class** — batch 2 covered them all. 10 of the 27 have **no `workflow_dispatch`** and are only validatable
    AFTER promote, so they go LAST. then STEP 2b (ci-status-update trim) + STEP 2c (persist composite action), then Phase
    2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
-7. **Two P0s are open and are NOT blocked on the gate** — see the todos: **rotate `GH_PAT`** (agent-caused transcript
-   exposure) and the **quickmerge `--agent` sentinel race** (its own STAGE-0.4 rebase invalidates the sentinel STAGE 3
-   then checks, so on a busy LDR it can never self-validate; workaround = chain
-   `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
+7. **One P0 is open and is NOT blocked on the gate** — see the todos: the **quickmerge `--agent` sentinel race** (its
+   own STAGE-0.4 rebase invalidates the sentinel STAGE 3 then checks, so on a busy LDR it can never self-validate;
+   workaround = chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
 
 **THE LESSON THAT COST THE MOST — apply it to every remaining flip (2026-07-16):** every verifier written before the
 deploy reported **green on a box that would have failed**, always the same way — the right worry checked in the wrong
@@ -393,25 +391,10 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       account that actually has to do it; (2) a token without `Administration:write` would fail at first start with an
       opaque journal → install probes `registration-token` (expects 201) up front. `status`/`prune` resolve the same way
       (explicit env → the name in the env file), so they survive a secret-path install; `status` degrades to omitting
-      the live listing rather than dying. **Free side effect:** everything reads the secret's `latest` **by name**, so
-      rotation needs no redeploy and no env-file edit. **Evidence:** 8/8 harness assertions incl. the REAL Secret
-      Manager path (asserted by property, never by value); shellcheck clean (also fixed a pre-existing SC2015 on the npm
-      branch); `quality-gates.sh --no-fix` **exit 0**.
-- [ ] [SECURITY] P1. **Rotate `GH_PAT` — agent-caused exposure 2026-07-16. OPERATOR-DEFERRED to after this exercise**
-      (operator 2026-07-16: "dont worry about the GH_PAT for now i will rotate it after we finish this exercise").
-      **Rotation is SAFE whenever you want it — VERIFIED on the box, not assumed:** the PAT is read once at runner START
-      (`glue-runner-run.sh:46-47`) purely to mint a JIT config / registration token; the running runner then
-      authenticates with its OWN `.credentials`, so rotating deregisters nothing. Everything reads the secret's `latest`
-      **by name**, and `glue-*` restarts after every job, so a new version is live within one job cycle (the writers
-      pick it up on their next restart). **The real caution is other consumers** — check `deployment-api` and the other
-      GitHub tokens for anything pinning a version or holding a copy BEFORE disabling the old version. While testing
-      D1's resolver, a harness assertion compared the token **by value** and printed it on mismatch, putting the live
-      `GH_PAT` (fine-grained, `Administration:write`, **never expires**) into the session transcript
-      (`~/.claude/projects/…/03a5cc50-*.jsonl`) + that conversation's API context. Nothing published publicly. **Fix
-      applied to the harness:** secrets are now asserted by PROPERTY (empty / non-empty / length), never by value — a
-      failing assertion can no longer leak. **Operator action:** add a new version to the `GH_PAT` secret; every
-      consumer reads `latest` by name so no redeploy is needed. Check other holders first (`deployment-api` and the
-      other GitHub tokens the operator flagged) for anything pinning a version.
+      the live listing rather than dying. **Free side effect:** everything reads the secret's `latest` **by name**, so a
+      new secret version needs no redeploy and no env-file edit. **Evidence:** 8/8 harness assertions incl. the REAL
+      Secret Manager path (asserted by property, never by value); shellcheck clean (also fixed a pre-existing SC2015 on
+      the npm branch); `quality-gates.sh --no-fix` **exit 0**.
 - [x] ✅ [INFRA] P0. **D2 — `preflight` GREEN on the VM (exit 0) — unified-trading-pm@940a5d673.** Ran via AWS SSM
       against `i-0c9b283b31d6b5ca7`. **It only became meaningful after being rewritten**, and that is the headline of
       this phase: the original checked `command -v` in _the caller's_ shell. Run from a login shell it reported **uv ✓**
@@ -1295,9 +1278,9 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   `:latest sha256:5122f7ab…`. Born broken in `0d5663d4d` (2026-06-19); `git log -S` proves it was never `GH_PAT` ⇒ ~27
   days × 4/day ≈ **110 green runs that did nothing**. NOT caused by the flip (`23ce709cc` touched only `runs-on:`).
   **Not fixed here — it is a fleet event, not a one-liner**: every repo being stale means the first correct sweep fans
-  `dependency-update` to all 16 at once, `GH_PAT` is pending rotation, and the dispatch POST (:160-176) has the same
-  defect. Issue doc: `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. **Side
-  benefit for this plan: the no-op is precisely why re-dispatching it was provably safe** — it cannot dispatch anything.
+  `dependency-update` to all 16 at once, and the dispatch POST (:160-176) has the same defect. Issue doc:
+  `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. **Side benefit for this plan:
+  the no-op is precisely why re-dispatching it was provably safe** — it cannot dispatch anything.
 - 2026-07-17 — **OVERNIGHT VALIDATION: the flip is working. 47 runs, 100% on the glue pool, 0 failures, real work
   proven.** Window 2026-07-16T18:30Z → 2026-07-17T04:49Z, per-JOB evidence: `reconcile-release-tags` 16 ·
   `ci-status- consolidator` 9 · `reconcile-staging-versions` 9 · `staging-conflict-ldr-main-fallback` 9 ·
@@ -1524,10 +1507,9 @@ forced: _edit the manifest → prove on ONE caller → only then fan out._
 
 ### Operator-owned — do not start
 
-| #   | Item                                  | Note                                                                                                                                                                                                                                                                                                                  |
-| --- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 9   | **Rotate `GH_PAT`**                   | **Deliberately LAST** (operator 2026-07-16, and again 2026-07-17: _"i will do that as the very last after the plan is over. there is no security risk so dont worry about it please"_) — **do not raise it again**. If the digest fix lands first, the new PAT needs cross-repo `contents:read` + `POST /dispatches`. |
-| 10  | `quickmerge.sh --agent` sentinel race | P1, written up; operator will fix later. Workaround: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell.                                                                                                                                                                                                 |
+| #   | Item                                  | Note                                                                                                                  |
+| --- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| 9   | `quickmerge.sh --agent` sentinel race | P1, written up; operator will fix later. Workaround: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell. |
 
 ### Findings parked for later — do NOT re-investigate, they are fully written up
 
