@@ -351,8 +351,17 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `classify-glue-workflows.sh`, `README.md` (runbook). Runner pinned **v2.335.1** + sha256; PAT can register (JIT
       verified); all glue is in PM so **repo-scoped runners**, no per-repo fan-out. shellcheck-clean. **Deploy step
       pending operator go** (run `setup-glue-runners.sh install` on the VM with an admin PAT).
-- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **39 MOVE / 17 KEEP** (see pre-flight
-      § + §"MOVE / STAY manifest"). KEEP = the 4 test/PR gates + `KEEP*` builders (`build-smoke-all-repos`/
+- [x] [REVIEW] P1. ✅ **Security gate — CLEARED on evidence 2026-07-17, all three legs measured** (not assumed; this is
+      the gate that should precede any flip, since fork-PR code on a self-hosted runner is THE classic self-hosted
+      vulnerability — arbitrary code on our own VM). (1) `gh api repos/…` → **`private=true`, `visibility=private`** ⇒
+      no anonymous fork PRs. (2) **STRONGEST leg — of the 37 workflows now carrying `runs-on: [self-hosted, …]`, ZERO
+      trigger on `pull_request` or `pull_request_target`** ⇒ even if the repo were public, no self-hosted job would ever
+      execute PR-authored code. (3) `actions/permissions/access` → **`access_level=user`**. **Count correction**: the
+      split below reads "39 MOVE / 17 KEEP" — it is **37 MOVE / 18 KEEP** (37 flippable). `agent-audit` was reclassified
+      **`KEEP-U`** (it has NO `runs-on:` at all — a pure reusable caller; the original profile never asked that
+      question), and `persist-cicd-event` is **`MOVE-C`** (composite-action conversion, STEP 2c — not a flip). Original
+      text retained below. **Security gate:** the `classify-glue-workflows.sh` split is **39 MOVE / 17 KEEP** (see
+      pre-flight § + §"MOVE / STAY manifest"). KEEP = the 4 test/PR gates + `KEEP*` builders (`build-smoke-all-repos`/
       `publish-package`) + `KEEP-T` templates (4) + **`KEEP-R` cross-repo reusable `image-build-validate`** + **`KEEP-M`
       failure-independence monitors (5)** (`overnight-dead-man-switch`, `ci-health`, `cloud-build-failure-watcher`,
       `ldr-ci-monitor`, `branch-health`) + **`KEEP-D` alert carrier `notify-slack`**. Confirm the MOVE set carries no
@@ -1357,3 +1366,11 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   `cassette-drift` label — so when REAL drift lands, nobody looks. **The fix stops the empty issues** (a real report is
   produced now), but per FINDING #4 the report is not yet trustworthy. **Operator asks: (a) close the 52 false issues?
   (b) fix the matching in UAC before the cron opens another?** Issue doc updated.
+- 2026-07-17 — **Security gate CLEARED on measured evidence — and it should have been ticked BEFORE the flip, not
+  after.** Process note worth keeping: STEP 2 was flipped across batches 1-3 while this `[REVIEW] P1` gate sat unticked.
+  It happens to CLEAR cleanly (private repo · **ZERO** of the 37 self-hosted workflows carry a `pull_request` /
+  `pull_request_target` trigger · `access_level=user`), so no exposure was created — but "it cleared" was luck of
+  ordering, not diligence. The strongest leg is the trigger audit, not the private flag: privacy can be changed by a
+  settings toggle, whereas "no self-hosted workflow runs on PR-authored code" is a property of the workflows themselves
+  and survives that toggle. **Re-run the trigger audit before adding a `pull_request` trigger to ANY self-hosted
+  workflow** — that, not repo visibility, is the invariant that keeps arbitrary PR code off the VM.
