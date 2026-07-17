@@ -89,12 +89,29 @@ def main() -> int:
                     "overlap, zero lost CI coverage)"
                 )
 
-    ci_slices = parse_ci_matrix(CI_WORKFLOW.read_text(encoding="utf-8"))
-    if ci_slices != EXPECTED_SLICES:
+    # A5 (2026-07-17): the CI matrix runs TWO legs — `tests` plus a merged `checks` leg that
+    # invokes the typecheck + lint-codex SELECTORS sequentially (one runner, one setup, one
+    # fewer billed job minimum; measured fleet-wide: merged stays under the tests leg on every
+    # slow repo). The base-service.sh selector partition is UNCHANGED, so completeness is now:
+    #   (a) base selectors still partition all 4 phases (checked above),
+    #   (b) CI matrix is exactly {tests, checks},
+    #   (c) the workflow's checks leg literally invokes BOTH non-tests selectors — verified
+    #       against the SELECTORS line so a selector dropped from the merged leg fails HERE
+    #       instead of silently losing typecheck or lint-codex coverage fleet-wide.
+    ci_text = CI_WORKFLOW.read_text(encoding="utf-8")
+    ci_slices = parse_ci_matrix(ci_text)
+    expected_ci = {"tests", "checks"}
+    if ci_slices != expected_ci:
         failures.append(
-            f"CI workflow matrix slices {sorted(ci_slices)} != base-service.sh slices "
-            f"{sorted(EXPECTED_SLICES)} — a leg exists on one side only (silent "
-            "coverage loss or a permanently-missing matrix job)"
+            f"CI workflow matrix slices {sorted(ci_slices)} != expected {sorted(expected_ci)} "
+            "— a leg exists on one side only (silent coverage loss or a permanently-missing "
+            "matrix job)"
+        )
+    if not re.search(r"^\s*SELECTORS=\(typecheck lint-codex\)", ci_text, re.MULTILINE):
+        failures.append(
+            "CI workflow's merged `checks` leg no longer invokes `SELECTORS=(typecheck "
+            "lint-codex)` — the leg merge lost a selector (typecheck or lint-codex would "
+            "silently stop running in CI)"
         )
 
     if failures:
@@ -102,7 +119,10 @@ def main() -> int:
         for f in failures:
             print(f"   - {f}", file=sys.stderr)
         return 1
-    print("✅ qg-slice-completeness: 3 slices partition all 4 phases; CI matrix matches")
+    print(
+        "✅ qg-slice-completeness: 3 base selectors partition all 4 phases; CI matrix "
+        "{tests, checks} with the checks leg invoking both merged selectors"
+    )
     return 0
 
 

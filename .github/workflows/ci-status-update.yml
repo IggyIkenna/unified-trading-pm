@@ -54,10 +54,19 @@ jobs:
       severity_class: ${{ steps.update.outputs.severity_class }}
       sit_pass: ${{ steps.update.outputs.sit_pass }}
     steps:
-      - name: Checkout
+      - name: Checkout (sparse — STEP 2b trim)
+        # STEP 2b (ci-cost plan, 2026-07-17): this job needs exactly TWO paths — the store script
+        # it runs and the persist-event composite it `uses:` — not the whole PM tree. Sparse
+        # checkout keeps the highest-frequency workflow (~13k runs/mo) light on the warm writer
+        # slot. (Literal zero-checkout is off the table per the D1 resolution: `uses: ./…`
+        # resolves against the WORKSPACE, so .github/actions must exist on disk.)
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
+          sparse-checkout: |
+            .github/actions
+            scripts/cicd/ci_status_store.py
+          sparse-checkout-cone-mode: false
 
       - name: Validate payload
         id: validate
@@ -80,12 +89,13 @@ jobs:
           echo "Updating ci_status: $REPO → $STATUS"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-      - name: Authenticate to GCP (Firestore SSOT write)
-        id: gcp_auth
-        if: steps.validate.outputs.skip != 'true'
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      # STEP 2b (2026-07-17): the per-run `google-github-actions/auth@v3` step is DROPPED — this
+      # job runs ONLY on the self-hosted glue-writer pool, where the runner user's ambient ADC
+      # (~ubuntu/.config/gcloud/application_default_credentials.json) satisfies the python
+      # Firestore client. PROBED on the box before dropping (the plan's required probe): `env -i`
+      # + the unit's PATH, venv python → Firestore write+read+delete OK. gcloud-CLI credentials
+      # and the ADC file are DIFFERENT stores; the probe tested ADC specifically. If this job is
+      # ever moved back to hosted runners, restore the auth step (hosted has no ambient ADC).
 
       - name: Write ci_status to the Firestore SSOT + compute Slack notify gating
         id: update
@@ -103,9 +113,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
-          # SSOT write — no longer the best-effort Phase-1 dual-write: the SDK install + Firestore
-          # write must succeed (a failure reddens this run; the next v2 event re-dispatches).
-          python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+          # SSOT write — the Firestore write must succeed (a failure reddens this run; the next
+          # v2 event re-dispatches). STEP 2b: the writer slot's dedicated venv PRE-INSTALLS
+          # google-cloud-firestore (probed on the box), so the per-run pip install is now a
+          # verify-only no-op that self-heals if the venv is ever rebuilt without the lib.
+          python3 -c "import google.cloud.firestore" 2>/dev/null \
+            || python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
           # Resolve the committer date of the tested sha (the stale-write ordering key for the
           # set_status guard) via the API — the consumer sha is NOT in PM's git history, so a local
           # `git show` cannot. Best-effort: an empty value leaves the guard inert for this write

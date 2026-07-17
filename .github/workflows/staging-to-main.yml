@@ -26,7 +26,7 @@ on:
   # same cadence as ldr-to-staging-promote (*/15) / ldr-to-main-promote (*/15) / main-backmerge (*/20).
   # Empty staging_commits → idempotent skip (cheap). Concurrency group below prevents overlap.
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: fleet default is LDR→main DIRECT — staging is bypassed, this path is the kept-for-reversibility fallback; was */15)
   workflow_dispatch:
     inputs:
       reason:
