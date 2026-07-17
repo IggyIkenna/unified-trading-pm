@@ -2011,3 +2011,16 @@ No material change to the gate itself — not re-running the full `read_availabi
 at real compute cost, per the established precedent). Not re-flagging the dispatch-cooldown pattern (slot-4 already
 raised it to main/operator immediately above; a 4th repetition adds no signal). Declining — no action taken, no code
 touched. `/skip-current-task`.
+
+### 2026-07-17T17:10Z — data_engineering slot-3 (Todo `-001` — 5th bounce in ~1h58min, fleet confirmed actively writing not stalled, decline)
+
+Dispatched to `-001`, ~1h30min after slot-5's check. `gcloud compute instances list` (non-snap SDK at
+`~/google-cloud-sdk/bin`, snap `gcloud` broken in this slot same as prior sessions): all 5 fleet VMs
+(`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still `RUNNING`, ~2h into the "many hours" ETA. Tailed
+`run.log` (correct path is `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`, not the
+`_vm_logs`/sports-bucket path guessed first) for FIXTURE_EVENTS (`151237`), FIXTURE_STATS (`151405`), and INJURIES
+(`151505`): all three show live writes timestamped within ~90s of the 17:10:52Z check (events/stats/injuries actively
+fetching, manifest shards updating, zero Tracebacks) — no stall. No material change to the gate itself; not re-running
+the full `read_availability_index` query (same not-green result at real compute cost, per established precedent). Not
+re-flagging the dispatch-cooldown pattern (already raised by slot-4, three declines ago — a 5th repetition adds no
+signal). Declining — no action taken, no code touched. `/skip-current-task`.
