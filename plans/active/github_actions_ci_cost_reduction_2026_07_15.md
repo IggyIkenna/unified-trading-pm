@@ -897,6 +897,23 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
     with A1) the skip must still **post the required check as SUCCESS for the current SHA**, per-branch — a prior green
     on branch X must not leave branch Y's required context absent. Test: change the gate over an identical tree →
     confirm it does NOT skip.
+  - **RECON 2026-07-17 (read before implementing — two findings change the shape of the work):** the KEY already exists
+    and is half-right — `content-gate` computes `qg-green-v1-{repo}-{tree}-{wf_hash}` (python-quality-gates-v2.yml
+    L103-116) and the downstream skip wiring (`qg-slices` gated on `cache_hit`) is already built; ONLY the storage is
+    dead (probe hardcodes `cache-hit=false` at L124 since the 2026-06-26 actions/cache-in-reusable breakage — and note
+    the content-gate JOB still runs on every one of the 44 callers' runs, billing a 1-min minimum to compute a key
+    nobody reads: the dead sentinel is itself part of A3/A5's waste). **Gap ①:** `wf_hash` hashes the CALLER's
+    `quality-gates-v2.yml` template copy only — a change to PM's REUSABLE or the QG base scripts does NOT bump the key.
+    Fix candidates: hash the reusable via `gh api repos/…/contents/....python-quality-gates-v2.yml?ref=main --jq .sha`
+    at probe time (automatic, 1 API call), or a manually-bumped `QG_GATE_VERSION` env in the reusable (needs
+    discipline). Prefer the automatic one. **Gap ② — RESOLVED BY MEASUREMENT (2026-07-17):** the reusable runs on the
+    CALLER repo's hosted runners, so a Firestore probe/save needs GCP creds in every repo's secrets — **measured:
+    `GCP_SA_KEY` present in all 5 sampled fleet repos** (UTL, UAC, MTDS, execution-service, deployment-api; personal
+    account so no org-level secrets — they are seeded per-repo). Firestore it is, as the todo intended. (The
+    zero-credential fallback considered and not needed: a `refs/qg-green/<tree>-<gatever>` git ref marker via the run's
+    own `GITHUB_TOKEN`.) The `sit_validated_tree`/`sit_validated_workspace_digest` fields cited above are SIT-lifecycle
+    fingerprints (ldr_main promote path) — they can seed a hit for the promote-PR case but do NOT cover general
+    per-branch v2 greens.
 - [ ] [INFRA] P2. **A5 — collapse the fan-out (operator: measure-then-collapse).** Confirm the merged
       `typecheck`+`lint-codex` leg stays under the pytest leg on the slowest repo, then merge + fold the sub-minute jobs
       (content-sentinel/Slack/dispatch). Target ~30–40% fewer billed job-minutes/run, no coverage loss.
