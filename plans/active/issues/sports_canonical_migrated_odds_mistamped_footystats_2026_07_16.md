@@ -59,7 +59,7 @@ related:
     ../../epics/sports_master.md,
   ]
 created: 2026-07-16
-last_updated: 2026-07-16
+last_updated: 2026-07-17
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -85,10 +85,21 @@ source:
 
 # The odds raw is already in canonical — under the wrong `pipeline_mode`, behind a false "redundant" skip
 
-> **NOTIFY-OPERATOR (data-correctness · cross-repo · SSOT contradiction · redirects a multi-leg effort).** **Zero
-> mutations were performed by this leg.** No GCS object created, modified or deleted; no manifest shard written; no
-> index touched. This doc exists because the mandated operation would have been a **mass duplication**, and because the
-> real fix is ~4 lines in MDPS rather than a 16,969-object migration or a legacy-bucket recovery.
+> **🔴 READ THE 2026-07-17 PROGRESS-LOG ENTRY FIRST — the "~4 lines in MDPS" framing below is SUPERSEDED by an operator
+> ruling.** Operator, 2026-07-16/17 (verbatim): _"i think footystats is IS odds api is mtds both iodds different
+> places"_ ⇒ **fix (a) is REJECTED** (teaching MDPS to read `batch_footystats` would hard-code the SSOT violation into
+> the consumer); **fix (c) — correct the objects — is THE ruling.** The 2026-07-17 leg then measured that fix (c) is
+> **not a "re-stamp" at all but a read-split-merge** (different venue semantics / league key / instrument_type /
+> data_type / filename), so a size-or-crc-verified copy is impossible by construction. Blast radius is **green** (no
+> consumer reads `batch_footystats` on the MTDS raw-tick surface) and the union arithmetic is **proven** (strict
+> superset of both; an overwrite destroys 184 canonical-only keys/day). See § Progress Log 2026-07-17 for the corrected
+> execution spec.
+>
+> _(Original 2026-07-16 banner, retained for provenance:)_ **NOTIFY-OPERATOR (data-correctness · cross-repo · SSOT
+> contradiction · redirects a multi-leg effort).** **Zero mutations were performed by this leg.** No GCS object created,
+> modified or deleted; no manifest shard written; no index touched. This doc exists because the mandated operation would
+> have been a **mass duplication**, and because the real fix is ~4 lines in MDPS rather than a 16,969-object migration
+> or a legacy-bucket recovery.
 
 ## The finding in one line
 
@@ -272,6 +283,114 @@ twin sit on **23** days, and **22 of those 23 are exactly the gate's gap days** 
       recovery is refused twice and must not be re-proposed.
 
 ## Progress Log
+
+**2026-07-17 — RE-STAMP leg (operator ruling = option B, fix the STAMP not the reader). Blast radius COMPLETE. The
+"re-stamp" is MIS-SPECIFIED: it is a read-split-merge. Zero mutations to GCS/manifest.**
+
+The operator's architecture ruling is CONFIRMED and independently corroborated in code — but the operation it implies is
+**not a re-stamp**, and the dispatch's own acceptance criteria are unachievable as written. Measured, nothing inherited.
+
+### 1. Blast radius — NO consumer depends on the wrong stamp (the re-stamp is reader-safe)
+
+| consumer                                                            | verdict                                                                                                                                                            |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `reprocess_sports_odds.py` (MDPS)                                   | cannot see them (prefix + `_migrated_` filter) — the thing being fixed                                                                                             |
+| `reconcile_phantom_manifest_rows_all.py` `ticks_migrated_` wildcard | **DeFi-ONLY** (`if asset_group == "defi" and venue and chain`) — sports unaffected                                                                                 |
+| `reconcile_phantom_manifest_rows_all.py` `prefix_tpls`              | SSOT-derived post-Axis-10 (probes ALL `batch_*` modes) — moves WITH the rows, no `--apply` hazard                                                                  |
+| `features-service` `_FEATURE_GROUP_TO_PIPELINE_MODE`                | `odds_features → BATCH_ODDS_API`; only `derived_features → BATCH_FOOTYSTATS` (FEATURES tree, not raw) — **independently corroborates the operator's architecture** |
+| `instruments-service` `engine/orchestrator/footystats.py`           | writes `BATCH_FOOTYSTATS` on the INSTRUMENTS (reference) surface — the operator's IS home, untouched                                                               |
+| `wipe_footystats_odds_2026_06_25.py`                                | one-off; explicitly **KEEPs** rows where `source != footystats` — would not have touched these                                                                     |
+
+**⇒ Nothing reads `batch_footystats` on the MTDS raw-tick sports surface. The re-stamp breaks no consumer.**
+
+### 2. Manifest layer — measured on the live index (generation `1784189886055849`, frozen 08:18:06Z)
+
+| measure                                                       | value                                                                                                                                                                                       |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| MTDS sports index total rows                                  | 1,958,498                                                                                                                                                                                   |
+| `batch_footystats` rows                                       | **42,476** — 100% `venue=ODDS_API`, 100% `source=footystats`                                                                                                                                |
+| — capture_status                                              | 42,027 `captured` / 449 `empty_confirmed`                                                                                                                                                   |
+| — date span                                                   | **2020-06-01 … 2026-04-14 — 2,128 distinct days** (not 1,815: that was the OBJECT-day count)                                                                                                |
+| `batch_odds_api` rows (merge target)                          | 362,766                                                                                                                                                                                     |
+| **cell-key collisions `batch_footystats` ∩ `batch_odds_api`** | **0** (and still 0 case-normalised) — the manifest move is a CLEAN move                                                                                                                     |
+| 🔴 `data_type` CASE SPLIT within `batch_footystats`           | `ODDS` 22,145 vs `odds` 20,331 → 42,476 keys collapse to **22,145** case-normalised ⇒ a near-total case-DUPLICATE population (cf. [[mdt_t2_6_league_case_duplicate_population_2026_07_16]]) |
+
+The manifest carries the mis-stamp too: `source=footystats` on `venue=ODDS_API` rows. So the fix must move
+`pipeline_mode` **and** `source` together — the path stamp and the manifest agree with each other and disagree with the
+DATA (whose own `source` column is `ODDS_API`).
+
+### 3. 🔴 THE BLOCKER — this is a read-split-merge, not a re-stamp; a size/crc-verified copy is IMPOSSIBLE
+
+The two populations do not differ by a `pipeline_mode` value. They are **different path shapes with different
+semantics**:
+
+| axis               | migrated (`batch_footystats`)             | canonical (`batch_odds_api`)               |
+| ------------------ | ----------------------------------------- | ------------------------------------------ |
+| `venue=`           | `ODDS_API` — the **VENDOR**               | `BETONLINEAG` — the **BOOKMAKER**          |
+| league key         | `league=2._BUNDESLIGA` (raw, uncanonical) | `league_id=ALLSVENSKAN` (canonical)        |
+| `instrument_type=` | `` (empty)                                | `odds`                                     |
+| `data_type=`       | `odds`                                    | **`trades`**                               |
+| filename           | `ticks_migrated_20260505T160406Z.parquet` | `ticks.parquet`                            |
+| cardinality        | 17 objects/day (all bookmakers bundled)   | 207 objects/day (one per bookmaker×league) |
+
+**⇒ The dispatch's "copy to the correct canonical path, content-verified (size/crc)" cannot be done**: one migrated
+object must be SPLIT into ~N bookmaker objects and MERGED into cells that already hold data, so the bytes necessarily
+change and size/crc equality can never hold. This is precisely the **OR-5b(a) read-split-merge** that fix (c) below
+describes — the dispatch under-specified it as a stamp fix.
+
+### 4. DRY-RUN pilot on `day=2022-04-16` — the arithmetic is PROVEN (read-only, zero writes)
+
+Full read of both populations (`~/tmp-stamp/idx/pilot_dryrun.py`):
+
+| measure                                                | value                                                                                                            |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| migrated objects / rows                                | 17 / **167,464**                                                                                                 |
+| canonical objects / rows                               | 207 / **5,626**                                                                                                  |
+| **derivation map `venue := instrument_id[1].upper()`** | **100.0000% — 167,464/167,464** rows carry 8-segment ids; yields exactly the **16** venues canonical already has |
+| schema diff                                            | `data_source` is the ONLY column canonical has and migrated lacks (22/23) — confirms the prior leg               |
+| migrated distinct tick keys                            | 83,732                                                                                                           |
+| canonical distinct tick keys                           | 5,626                                                                                                            |
+| **UNION**                                              | **83,916 — a STRICT SUPERSET of BOTH** ✅                                                                        |
+| **migrated-ONLY keys (ADDED by the merge)**            | **78,290** ⇒ the merge is genuinely ADDITIVE — this is NOT the duplication that was twice-refused                |
+| 🔴 **canonical-ONLY keys (DESTROYED by an overwrite)** | **184** ⇒ MERGE-never-overwrite is now empirically re-proven on this day                                         |
+
+**Acceptance test is NOT arithmetic-checkable.** The sibling's grid (T-12h=896 · T-6h=898 · T-4h=896 · T-2h=884 ·
+T-1h=270 · T-10m=870 · T-24h=317) are **post-derive READER outputs**, not raw rows — the raw migrated rows in those
+windows are 11,082 / 18,948 / 24,594 / 28,572 / 11,512 / 11,126 / 10,214. Verifying it therefore requires **running the
+MDPS derive** over the merged cells, which cannot precede the merge. The pilot gate must be re-specified as: merge → run
+derive → compare grid.
+
+### Why this leg did NOT execute the mutation
+
+Per the dispatch's own step 1 — _"prove before you mutate … If ANY consumer depends on the current (wrong) stamp, report
+before acting"_ — the proof returned something stronger than a consumer dependency: **the specified operation does not
+match the data**. Executing a 2,128-day / 16,969-object read-split-merge that rewrites 207+ live canonical objects per
+day, where an overwrite is measurably destructive (184 keys/day) and the pilot gate cannot be evaluated without a derive
+run, is not a safe thing to start on a mis-specified mandate. The blast radius is green and the arithmetic is proven —
+what is missing is a correctly-specified execution plan, which is now written below.
+
+**Reader-side cleanup SHIPPED** — `market-data-processing-service@49dbce9`: the false skip comment
+(`reprocess_sports_odds.py:117-120`, _"redundant with the per-bookmaker shape"_) is **retracted in place** with the
+measured refutation (5,626 vs 167,464 rows; 78,290 migrated-only keys) so no future leg re-inherits the lie. The
+`_migrated_` **exclusion itself REMAINS** — removing it is option (a), which the operator explicitly rejected (it would
+hard-code the SSOT violation into the consumer). Behaviour unchanged; the lie is gone.
+
+### Corrected todos for the execution leg (supersede fix (c)'s one-liner)
+
+- [ ] [DATA] P0. **Re-specify the pilot gate**: merge `day=2022-04-16` → **run the MDPS derive** → compare against
+      T-12h=896 · T-6h=898 · T-4h=896 · T-2h=884 · T-1h=270 · T-10m=870 · T-24h=317. The grid is a reader output; it
+      cannot be checked by row arithmetic (proven above).
+- [ ] [DATA] P0. **Execute the read-split-merge** (not a re-stamp): derivation map validated 100.0000%
+      (`venue := instrument_id[1].upper()`, `league_id := instrument_id[3]`); map `data_type odds → trades`,
+      `instrument_type '' → odds`, `league= → league_id=`; **MERGE + de-dup on tick key, NEVER overwrite** (184
+      canonical-only keys/day would be destroyed); union must stay a strict superset of both.
+- [ ] [DATA] P0. **Resolve the `data_type` case-duplicate population FIRST** (`ODDS` 22,145 vs `odds` 20,331 → 22,145
+      case-normalised). Merging before de-casing would carry the duplicate into the canonical cells.
+- [ ] [DATA] P0. **Move the manifest rows WITH the objects** — `pipeline_mode` AND `source` (42,476 rows / 2,128 days);
+      0 cell-key collisions ⇒ a clean move. Snapshot the index first (generation `1784189886055849`); per-VM shard
+      `VM_NAME=odds-restamp-20260717`, explicit `.write()` + `.close()`, read-back verify; **leave the shard
+      unconsolidated** — the consolidator globs `_index/per_vm/*.parquet` with no selector and would absorb T6.1's
+      `cutover-move-20260716.parquet` / `or9-recover-20260716.parquet`.
 
 **2026-07-16 — G1 recovery leg: merge REFUSED on measurement (2nd independent refusal). Zero mutations.** Dispatched to
 execute the legacy→canonical G1 read-split-merge on the premise that the legacy bucket is the only complete raw layer.

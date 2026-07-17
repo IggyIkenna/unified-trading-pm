@@ -1331,10 +1331,49 @@ merely relocates the long haul from download to upload, and bills for it.
 and only pay for a licence upgrade if the must-have set is genuinely large. Do NOT keep burning SPOT VMs against the
 full 2.89M at ~186/hour; that is the definition of a flat metric.
 
-- [ ] [REVIEW] P0. **OPERATOR DECISION: the 2.89M cefi tick gap is not closable at N=1 (~186 cells/hour ≈ 1.8 years).**
-      Choose: (a) upgrade the Tardis licence concurrency (the only lever that raises the ceiling); (b) narrow the MVP
-      tick scope to a must-have venue/instrument set and close THAT; (c) accept + honestly label partial coverage.
-      Engineering inside N=1 is exhausted — bundling, 128 intra-VM streams, correct date targeting, stall/preemption
-      fixes are all shipped and the ceiling stands. Evidence: 075338 = 3h13m uptime → 600 successes (~186/hr) with 0
-      403s; N=3 = ~94% 403s so the cap cannot be lifted by us; US region ruled out on egress (bucket is
-      asia-northeast1).
+- [x] ✅ [REVIEW] P0. **OPERATOR DECISION (2026-07-17): chose (c) — ACCEPT + honestly label partial coverage.** The
+      2.89M cefi tick gap is not closable at N=1 (~186 cells/hour ≈ 1.8 years). Options were: (a) upgrade the Tardis
+      licence concurrency (the only lever that raises the ceiling); (b) narrow the MVP tick scope to a must-have
+      venue/instrument set and close THAT; (c) accept + honestly label partial coverage. Operator selected (c): the
+      honest-coverage number stands as the true number, the gap remains honestly-labelled `expected_unattempted`, no
+      further SPOT VMs are burned against the full 2.89M. Engineering inside N=1 is exhausted — bundling, 128 intra-VM
+      streams, correct date targeting, stall/preemption fixes are all shipped and the ceiling stands. Evidence: 075338 =
+      3h13m uptime → 600 successes (~186/hr) with 0 403s; N=3 = ~94% 403s so the cap cannot be lifted by us; US region
+      ruled out on egress (bucket is asia-northeast1). **This closes the CeFi completion program at honest-done** — see
+      the terminal Progress Log entry below.
+
+### ✅ TERMINAL: CeFi completion program CLOSED at honest-done — operator accepted current coverage — 2026-07-17T (autonomous close-out)
+
+Operator invoked `/autonomous` a final time; on re-entry I found the co-manager had (correctly) **stopped the keeper and
+escalated** the throughput ceiling as an operator decision (the P0 above). Rather than re-launch a tail VM — which would
+have re-hit the identical ConnectionTimeout storm + N=1 ceiling the co-manager already diagnosed — I surfaced the
+`licence vs scope vs accept` decision to the operator, who chose **ACCEPT current coverage**. That resolves the sole
+remaining blocker, so the program terminates here. **No loop re-arm; watcher killed.**
+
+**What actually shipped (rule-9 audit of the whole program):**
+
+| WS   | Deliverable                                                                        | Evidence                                                             | State           |
+| ---- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------- |
+| E    | Liquidations honest-coverage — itype-aware enumerator + both denominator producers | uac@494fd90c, is@92f3ca22, is@8b6bd8f8 (companion), pm@68018d0f; v15 | ✅ shipped      |
+| I    | EXTENDED book5 — already-satisfied via LIVE_ONLY_DATA_TYPES (runtime-resolved)     | plan tick 6                                                          | ✅ verified     |
+| G    | Equity-perp typing — collapsed to PERPETUAL/SPOT_PAIR + durable tracks_equity tags | uac@b44eb28c, is@350f0460, pm@b8600b138 (operator equity-typing rev) | ✅ shipped      |
+| D    | HL/fleet dedup + phantom re-census                                                 | is@559c6920, mtds@57e26c0f                                           | ✅ shipped      |
+| H    | Catalogue apply — dedup 9,177→5,386 perp-family, equity tags, ASTER dating, liq    | prod/catalog.parquet, live-count 9,952→10,122, denominator COMPLETE  | ✅ live in prod |
+| C    | Venue-alias purge (13 venues, −526,104 rows incl. legacy seed) + BYBIT migration   | maint window; durable-verified 3× over ~70min                        | ✅ durable      |
+| C-eu | eu-side residuals (purge 49,732 stale-shape + relabel 2.59M + drop 286k eu)        | **co-manager**; coverage 48.43→50.79%                                | ✅ done         |
+
+**Terminal honest coverage: 50.79%** against a **COMPLETE** denominator — the gap (2,892,108 cells) is honestly labelled
+`expected_unattempted`, NOT hidden as captured/phantom. That is the point of the honest-coverage model: the number is
+_true_, and the operator has accepted it as the deliverable.
+
+**Consciously NOT done (operator-accepted, documented — not silent drops):**
+
+- The full 2026-02..07 tick backfill for all 15 venues (the 2.89M gap) — accepted as `expected_unattempted` per the
+  operator decision; only a Tardis licence upgrade could change the N=1 throughput ceiling.
+- HL phantom re-census (1,277 rows) — needs a 32-64GB box (OOMs on the 15GB VM); cosmetic manifest-labelling, does not
+  affect captured data. Left as a standalone follow-up.
+- Consolidator lost-update-bug redeploy — the maint-window fix held durably; redeploy likely unnecessary, left as a
+  watch item.
+
+**Program archival**: this plan is eligible for the 5-step archival ritual once the operator confirms; leaving it
+`active` so the residual follow-ups above stay visible. No new work is dispatched.
