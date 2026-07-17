@@ -147,3 +147,67 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   ml is executed FIRST as the canary (smallest, batch-only — no live fill/position write path). Tick 1 = a READ-ONLY
   discovery+verification workflow (`wf` below) re-grounding every Fold-B site + bucket-state claim against current code,
   because the design's Fold-B "Data?" column already proved wrong once. No mutation until that returns and I inspect it.
+- **2026-07-17, TICK 1 COMPLETE — verified spec (workflow `wf_917a50e0-66f`, 7/7 agents, 0 errors).** Operator then
+  RE-CONFIRMED **"full send, don't slow down"** AFTER being shown every hazard below — informed authorization; only the
+  correctness gates (parity + redeploy-exercised + zero-reads) stand before deletes. **Verified bucket state
+  (2026-07-17):** only 3 GCP buckets hold data — `ml-models-store` flat (38 obj; prefixes
+  `_index/ model_registry/ models/`), `ml-models-store-prd` (160 obj; `+ legacy_football/`), `ml-training-artifacts`
+  flat (76 obj; `_index/ experiments/`). EMPTY on BOTH clouds: predictions (all tiers), configs (all tiers),
+  ml-artifacts, every AWS ml bucket (both the `ml-*-store-{dev,prd,stg}` scheme AND the legacy `unified-trading-ml-*`
+  scheme). Targets `ml-store-{prd,test}` confirmed ABSENT on both clouds. NOTE: no `ml-training-artifacts-{prd,test}`
+  exists — only the flat bucket (env-split rolled back). **Provisioning verdict:** derived-from-yaml on BOTH paths — TF
+  `deployment-service/terraform/gcp/canonical_buckets.tf` (`for_each` over yamldecode of cloud-providers.yaml, lines
+  28/79-107, `prevent_destroy=true`) AND idempotent `deployment-service/scripts/setup-buckets.py` (gsutil mb, skips
+  existing). **`tofu apply` is UNSAFE here** — TF state not reconciled (`scratchpad/tf_state_surgery.sh` NOT auto-run;
+  drift issue open; both consolidator `.tf` headers note prior changes were done DIRECTLY via gcloud "because apply is
+  not runnable here"). → **provision ml-store via direct `gcloud/aws` create (surgical) matching canonical
+  STANDARD→COLDLINE@60d lifecycle, NOT a blanket apply.** **Consolidator verdict:** only ONE of the 5 ml kinds
+  (`ml-training-artifacts`) has a consolidator today (2 jobs: GCP Cloud Run + AWS Batch). Retarget = 2 one-line TF-local
+  edits (`terraform/gcp/manifest_consolidator_scheduler.tf:223`, `terraform/aws/…:44`) → point to ml-store, then RE-RUN
+  `deployment-api/scripts/gen_consolidator_catalog.py` (do not hand-edit `consolidator_catalog.generated.json`). So it's
+  a **2→1**, not 5→1 (the other 4 never had a consolidator). **HAZARDS + DESIGN GAPS (now the authoritative Fold-B
+  cutover contract — supersedes the design's under-spec):**
+  1. **`_KIND_ALIASES` (map the 5 kinds → `ml-store`) contains blast radius for `resolve_bucket_name` callers, but does
+     NOT cover UTL `config_interface/paths/registry.py` PATH_REGISTRY rows** `ml_models`(:95) `ml_model_metadata`(:102)
+     `ml_predictions`(:109) `ml_training_artifacts`(:118) — those are LITERAL `bucket_template` strings (alias-immune)
+     and MUST be hand-repointed to `ml-store-prd-{pid}` + prefix. **DESIGN GAP: registry.py was not in the design
+     cutover list.**
+  2. **Prefix insertion required at EVERY object-key site** (`resolve_bucket_name` returns only a bucket) — many keys
+     already carry sub-paths (`experiments/…`, `stage1-preselection/…`, `training/grid_configs`); the `{kind}/` prefix
+     goes IN FRONT of the existing key.
+  3. **PREFIX-COLLISION (data-correctness):** `ml/model_registry.py` (ModelRegistry) and
+     `domain_client/artifact_store.py` (CloudModelArtifactStore, `_MODELS_PREFIX="models"`) BOTH write under `models/`.
+     Folding into one bucket → assign DISTINCT prefixes: ModelRegistry → `models/`,
+     CloudModelArtifactStore(ml-artifacts) → `artifacts/`.
+  4. **Security gate:** `model_registry.py:43 _ALLOWED_JOBLIB_PREFIXES` restricts joblib deserialization — the new
+     folded prefix must be added or model loads security-reject (and don't widen it so far untrusted prefixes load).
+  5. **`_OVERRIDE_EXCLUDED_KINDS`** (`bucket_naming.py:461`, checked pre-alias) must retain equivalent behavior for the
+     ml-store kind (synthetic-benchmark bypass).
+  6. **Reader/writer KEY PARITY** in ml-service CLI handlers (stage1→stage2→final handoff) — asymmetric prefix insertion
+     breaks it silently (readers return `[]`).
+  7. **Additional sites beyond the design list:** UTL crosscutting literals (`config_interface/ml_config.py:26`,
+     `core/config.py:309`, `core/cloud_constants.py:140/160/189/470`, `cloud_interface/constants.py:202/215`,
+     `domain/standardized_service.py:227`, `core/seed_writer.py:253`); deployment-service
+     `cli/utils/manifest_reader.py:100`, `cli/utils/data_status_extended.py:194` (PATH_REGISTRY-backed, alias-immune);
+     deployment-api `pipeline_uat.py:195` (dead flat f-string). **strategy-service mounts `ml-predictions-store` as
+     GCS** (`terraform/services/strategy-service/gcp/main.tf:227`) — empty today, but the mount must move to
+     ml-store/predictions/ or drop.
+  8. **Pre-existing inconsistencies to reconcile (not carry forward):** `inference/app/core/dependency_checker.py:33`
+     uses non-existent kind `ml-training-store-{ag}`; `:46-48` per-AG-suffixed prediction maps don't match the flat
+     runtime `predictions_sink_bucket`.
+  9. **Env-tiering:** models/predictions/configs are env-tiered; training-artifacts + artifacts are FLAT (env-split
+     rolled back). A single env-tiered `ml-store` changes training-artifacts' env semantics — accepted (folded target is
+     env-tiered from birth per design ruling). **W2 flat-`ml-models-store` delete:** verified NO live source reader
+     resolves the flat name anymore (all repointed in parent W2 to the canonical env-tiered kind); its delete is gated
+     on deployment-api/deployment-service/ml-service running the post-W2 commits + a zero-reads window — a deploy gate,
+     not a code site. **REVISED EXECUTION SEQUENCE (full-send, correctness-gated):** (A) provision `ml-store-{prd,test}`
+     both clouds via direct gcloud/aws + lifecycle [additive]; (B) server-side migrate the 3 non-empty GCP buckets →
+     `ml-store-prd/{models, training-artifacts}/` + byte-parity [additive]; (C) ATOMIC code cutover in dependency order
+     **UTL first (T0)** — yaml `ml-store` key in ALL 4 copies (deployment-service/UAC/PM/UTL-fixture, GCP+AWS) +
+     `_KIND_ALIASES` + PATH_REGISTRY repoint + prefix-collision-safe prefixes + joblib-gate + override-excluded +
+     crosscutting literals — QG-green + ship; then ml-service (prefix insertion + parity + inconsistency reconcile) +
+     deployment-api/service (prefix-scope readers), each QG-green + quickmerge; (D) redeploy ml-service +
+     verify-exercised (real training+inference under ml-store/) + cite `cloudbuild=<id>`; retarget consolidator 2→1 (2
+     TF lines + gcloud + regen catalog); (E) zero-reads window → delete the 5 source buckets + yaml/TF-key removal. Full
+     per-site file:line spec captured in workflow `wf_917a50e0-66f` output (transcript dir) + summarized above — durable
+     here.
