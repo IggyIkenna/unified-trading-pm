@@ -133,6 +133,35 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-17 — Honest-coverage cron verification uncovered + fixed a FRESH production regression (unrelated to P1's original fix)
+
+Checking this plan's own P1 acceptance criterion ("tomorrow's 00:30 UTC file has `asset_groups_measured` = all 5 AND
+`partial: false`") found the 2026-07-17 00:30 UTC cron had produced **nothing at all** —
+`gs://central-element-323112-honest-coverage/2026-07-17/` didn't exist, and the Cloud Run launcher execution showed
+`STATUS=False` (vs. `STATUS=True` the two nights prior). Root-caused via Cloud Logging:
+`/tmp/launcher.sh: line 50: /tmp/lib/launcher_common.sh: No such file or directory`. Full root-cause + fix +
+blast-radius check: `plans/active/issues/honest_coverage_launcher_missing_lib_dependency_2026_07_17.md`. Short version:
+the `honest-coverage-daily-launcher` Cloud Run Job's container command does a single-file `gsutil cp` of the launcher
+script and runs it — but that script had gained a `source lib/launcher_common.sh` dependency from an unrelated
+fleet-wide rollout (`deployment-service@b5bd336`), and neither the `vm/lib/` directory (never published to GCS) nor the
+Cloud Run job's fetch command (never updated) accounted for it. This regression only manifested tonight because this
+plan's OWN 2026-07-16 P1 fix (`4f10b9b`) did a targeted single-file re-upload of the launcher script (the full tarball
+republish being blocked by an unrelated dirty file) — the 07-16 cron fire happened before that upload, so it ran the old
+script; tonight was the first real run of the newly-uploaded one.
+
+**Fixed and verified end-to-end**: uploaded the two missing `vm/lib/*.sh` files to GCS; updated the Cloud Run job's
+fetch command to also pull `vm/lib/` — both imperatively (`gcloud run jobs update`, so this test would immediately pass)
+and in the Terraform source `terraform/gcp/honest_coverage_scheduler.tf` (the file's own header declares Terraform the
+IaC SSOT for this resource, so an imperative-only fix would silently revert on the next `terraform apply`) —
+`deployment-service@6c7a079e1`. Manually re-triggered the launcher (first retry, GCS-upload-only, still failed
+identically — confirming the Cloud Run job command itself was the real gap, not just a missing file; second retry, after
+the command fix, succeeded in 41s). Confirmed `coverage.json` for 2026-07-17 now shows `asset_groups_measured` = all 5,
+`partial: false`. This plan's original P1 acceptance criterion is now genuinely met.
+
+Checked blast radius on 2 other similar-sounding nightly Cloud Run jobs (`expected-universe-v2-defi`,
+`lifecycle-catalogue-regen-defi`) — both use baked container images, not the fetch-a-script pattern, so unaffected. Not
+an exhaustive fleet audit; flagged as a follow-up in the issue doc.
+
 ### 2026-07-16/17 — P9 round-2 execution complete (TradFi/CeFi/DeFi migrations + UI relabel + perf), fixtures browser in flight
 
 Wraps up the "P9 round-2" thread referenced below. TradFi (Q2), CeFi (Q2), DeFi (Q2) migrations all applied + verified
@@ -606,23 +635,54 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
 - [ ] [DATA] P2. _(A)_ Drain residual `LENDING` — finish the A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.
 - [x] **DECIDED (operator 2026-07-16): POPULATE SPOT_ASSET for every distinct token leg** (DeFi + spot-CeFi). Decomposed
       below.
-- [ ] [DATA] P1. _(B, enabler)_ **CODE SHIPPED; catalogue regen PENDING (real-infra).** Added
-      `base_asset_contract_address` + `quote_asset_contract_address` + `atoken_address` + `debt_token_address` to
-      `CATALOG_COLUMNS` (`pool_address` was already present) + `_extract_meta` reads them + both row-builders (DeFi +
-      prediction) project them. — instruments-service@77f0fdaa + Evidence: `quality-gates.sh --no-fix` green (exit 0;
-      catalogue tests assert `list(df.columns) == CATALOG_COLUMNS`). UAC `InstrumentRecord` carries all four fields
-      (`instrument.py:221/225/235/239`); live source confirmed (`catalog.20260713-…atokendebttoken.bak`). **REMAINING
-      (real-infra):** regen `catalog.parquet` (projection re-roll, NOT a re-fetch) so historical rows populate the new
-      columns — deferred as a tracked run (needs the catalogue-build VM/job on real infra). Every FUTURE build now
-      carries the columns.
-- [ ] [DATA] P1. _(B)_ SPOT_ASSET backfill/migration — with the address columns in place, derive the unique token set
-      (base + quote legs of every SPOT_PAIR/POOL + LST/A_TOKEN/DEBT_TOKEN underlyings) and emit one SPOT_ASSET record
-      per unique (chain, token → contract_address). Reuse LST/A_TOKEN/DEBT_TOKEN addresses (adapters
-      `renzo.py`/`etherfi.py`/ `solend.py` set the LST token address; `curve.py`/`uniswap_v2/v3.py` set base/quote).
-      Idempotent; run on real infra.
-- [ ] [DATA] P1. _(B)_ CeFi-spot leg mapping — a spot-CeFi asset (e.g. ETH on Binance) has no venue contract address;
-      map each CeFi spot leg symbol → native-chain canonical `contract_address` (ETH → WETH/native on ethereum) via a
-      symbol→chain→address registry. Flag any symbol with no canonical on-chain address (honest-absence — don't invent).
+- [x] [DATA] P1. ✅ _(B, enabler)_ Catalogue regen **completed on real infra**, safely. `--mode full` was evaluated
+      first and found to CONFLICT with prior direct-patch migrations: the 2026-07-13 atokendebttoken migration alone
+      added 904 non-reproducible rows (9,456→10,360 rows — MORPHO/FLUID 1:2 splits of already-catalogued historical
+      rows; see `defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` §Stage 4) that a from-scratch raw walk
+      cannot regenerate (they're not derived from repeatable rollup logic). Confirmed via a real `--mode full` attempt
+      that hit `CATALOGUE_SHRINK_BLOCKED` (new=9,461 < current=10,303) — the monotonic guard correctly refused to
+      promote, which would otherwise have SILENTLY REVERTED that completed migration plus other direct-patch fixes
+      (drift/pacifica removal, etc.). Root-caused (not just retried) and switched to `--mode incremental` instead — safe
+      by construction: loads the previous catalogue, re-walks only a bounded recent window (self-widening, 21 days this
+      run), and preserves the frozen historical tail untouched, so it can only ADD the new columns to recently-active
+      rows, never regress prior migrations. — Evidence (real infra, independently re-verified via a fresh
+      `pd.read_parquet` after the fact, not just the run's own log): defi `catalog.parquet` `10303→10387` rows
+      (monotonic ACCEPT), `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet` new GCS
+      generation confirmed via `gcloud storage ls -l`; 24 columns (was 18); non-null counts `pool_address=7175/10387`,
+      `base_asset_contract_address=8534/10387`, `quote_asset_contract_address=8183/10387`, `atoken_address=181/10387`,
+      `debt_token_address=14/10387` (sparse — only Aave populates it, expected). CeFi needed NO regen for this enabler:
+      cefi rows are centralized-exchange listings with no on-chain address of their own, so all 4 new columns are
+      correctly, honestly blank for all 424,670 cefi rows (verified) — not a gap, the accurate state. **Known limitation
+      (documented, not silently dropped):** the incremental window means historical/delisted defi rows OUTSIDE the last
+      ~21 days (1,455 "frozen-tail" rows per the run's own merge log) still lack the new address columns — a full
+      historical column-backfill without disturbing prior migrations would need a dedicated targeted script (read
+      existing row → look up its own historical by_date snapshot → patch just the 4 columns), not a `--mode full`
+      rebuild; tracked as a follow-up, not blocking SPOT_ASSET population (which only derives from rows that DO have
+      addresses — honest-absence for the rest).
+- [x] [DATA] P1. ✅ _(B)_ SPOT_ASSET backfill/migration — `scripts/backfill_spot_asset_population_2026_07_16.py` derives
+      one SPOT_ASSET row per unique `(chain, address)` from the now-regenerated catalogue: DeFi walks SPOT_PAIR/POOL
+      (base+quote legs)/LST/A_TOKEN (underlying + Aave receipt `atoken_address` when populated)/ DEBT_TOKEN rows;
+      quote-leg symbols (no standalone `quote_asset` column in `CATALOG_COLUMNS`) are parsed best-effort from the
+      DEX-pool `glued_pair_id` projection, honest-absence otherwise. Idempotent (dedups against existing
+      `instrument_id`s — verified: re-running post-apply adds 0 rows). — instruments-service@e66a57b6 (shipped via
+      `quickmerge.sh --agent --files`) + **run on real infra, independently verified**: defi `catalog.parquet`
+      `10387→11776` rows (+1,389 SPOT_ASSET, 100% non-blank `base_asset_contract_address`, 0 duplicate `instrument_id`,
+      9 real chains represented ARBITRUM/AVALANCHE/BASE/BSC/ETHEREUM/LINEA/OPTIMISM/POLYGON/SOLANA — Solana addresses
+      independently confirmed correctly base58-formatted, not corrupted EVM hex); pre-existing 10,387 rows byte-for-byte
+      unchanged (instrument_type crosstab sums identically). Backup snapshots:
+      `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.20260717-090927.spotasset.defi.bak.parquet`,
+      `gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.20260717-090945.spotasset.cefi.bak.parquet`.
+- [x] [DATA] P1. ✅ _(B)_ CeFi-spot leg mapping — folded into the same backfill script's `derive_cefi_spot_assets`:
+      every distinct cefi `base_asset` symbol mapped through the Ethereum-mainnet `DEFI_MAJOR_ASSET_ADDRESSES` registry
+      (native ETH/BTC redirected to their canonical wrapped WETH/WBTC form first, matching the plan's "ETH → WETH/native
+      on ethereum" spec and `token_wrapping.py`'s wrap-direction convention); a symbol absent from the registry is
+      skipped + logged, never fabricated. — **run on real infra, independently verified**: cefi `catalog.parquet`
+      `424670→424699` rows (+29 SPOT_ASSET, all ETHEREUM chain, 100% non-blank addresses, 0 duplicates); 3,325 distinct
+      cefi symbols had NO registry entry (mostly tokenized-stock/leveraged/exotic long-tail symbols, e.g.
+      `AAPLX`/`BTC3L`/`1000PEPE` — honestly logged as unresolved, not invented). **Known gap (documented, matches the
+      plan's own "if present — check" framing):** `catalog.parquet` has no standalone `quote_asset` column for cefi rows
+      either, so this covers cefi BASE legs only; quote legs (a handful of majors/stables that mostly already resolve
+      via their OWN base_asset row elsewhere) are a follow-up.
 - [x] [BACKEND] P1. ✅ _(B)_ Make SPOT_ASSET emission normal at token-pair discovery time (future backfills + live) so
       the dump is continuous, not a one-off migration. curve/uniswap_v2/uniswap_v3 (pool base+quote legs) and
       renzo/etherfi/solend (LST/A_TOKEN/DEBT_TOKEN's own receipt-token leg) now emit a SPOT_ASSET sibling
@@ -736,27 +796,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                  been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                  date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                  in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                  Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                  truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                  `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                  instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                  guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                  `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                  Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                  `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                  empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                  `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                  `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                  transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                  pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                  `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                  `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                  (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                  carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
