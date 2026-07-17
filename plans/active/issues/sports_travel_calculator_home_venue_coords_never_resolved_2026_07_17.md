@@ -206,6 +206,31 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
 
 ## Progress Log
 
+### 2026-07-17T14:33Z — data_engineering slot-14 (Todo 3 dispatch — confirmed already covered by the consolidated elo+travel fleet; no new state, skipping)
+
+Dispatched this issue doc's Todo 3 (gap-fill). Per the consolidation directive recorded in the sibling
+`sports_elo_calculator_tz_naive_season_boundary_silent_skip_2026_07_17.md` (main, `BLK-a3149ab4`, 2026-07-17T13:4xZ),
+this todo is **already being executed** by the same 10-VM consolidated fleet launched for that doc —
+`run_new_calculators` computes ALL Phase-4 calculators (elo, travel, manager, formation, european_fatigue, …) together
+in one pass per `(date, league)`, so one fleet fixes both gap-fills; a separate travel-only fleet would race on
+identical shards (manifest-corruption risk).
+
+Checked live fleet state directly
+(`gcloud compute instances list --project=central-element-323112 --filter="name~features-sports-sports-20260717"`): all
+10 VMs (`features-sports-sports-20260717-135608` … `-135916`, zone `asia-northeast1-c`) still `RUNNING`. Current UTC
+time 14:33Z — only ~37min elapsed since launch (13:56–13:59Z) against the ~11h ETA slot-5 measured on the sibling doc.
+No new state to report; matches the redispatch-thrash pattern slot-10/slot-12 already flagged on the sibling doc's twin
+todo (5 consecutive no-op redispatches in ~90min there).
+
+**Not launching a second fleet** (would race on identical `(date,league)` shards for zero benefit — the exact risk the
+consolidation directive called out). **Not flipping this checkbox** — the actual gap-fill has not completed.
+Recommending main/operator park BOTH this todo and the sibling elo doc's P2c todo together (same fleet, same condition:
+fleet completion) so neither burns further worker dispatches before the fleet is actually done — a future dispatch
+(target ~2026-07-18T01:00Z+, per the sibling doc's ETA) should check for all 10 VMs reaching `TERMINATED`/absent
+(self-shutdown via `VM_SHUTDOWN_ON_COMPLETION=true`), then re-verify via the same content-sampling method this doc's own
+Todo 1/2 used (real nonzero travel-distance/cumulative-travel values in a fresh parquet sample) before closing this out.
+`/skip-current-task` after this ships.
+
 ### 2026-07-17T13:5xZ — data_engineering slot-4 (filed this issue doc; found + fixed a SECOND, independent root cause that slot-7/slot-8's team_id fix does not cover; reconciled + shipped alongside their concurrent fix)
 
 Filed this issue doc originally (see `created`/`source` above) while verifying the sibling
