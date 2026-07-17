@@ -54,22 +54,28 @@ on:
         required: false
       GCP_PROJECT_ID:
         required: false
+      # Content-sentinel marker probe/save (A2): the caller repo's GCP SA key. All callers
+      # use `secrets: inherit` so this flows automatically where seeded; absent ⟹ the
+      # sentinel fail-safes to MISS (full gate) and no marker is saved.
+      GCP_SA_KEY:
+        required: false
       SLACK_WEBHOOK_URL:
         required: false
       SLACK_CI_WEBHOOK_URL:
         required: false
 
 jobs:
-  # ── CONTENT-SENTINEL GATE (redundant-rerun short-circuit, 2026-06-10) ─────────
+  # ── CONTENT-SENTINEL GATE (redundant-rerun short-circuit, 2026-06-10; Firestore 2026-07-17) ──
   # v2 fires on BOTH push AND pull_request to main+staging, so ONE change runs the
   # full gate up to 4× on BYTE-IDENTICAL content (PR-v2 then post-merge-push-v2, at
   # each of staging + main — a promote re-SHAs the commit but the TREE content is
   # unchanged). This job computes the git TREE hash (content-addressed → survives
-  # squash/promote re-SHA, unlike the commit SHA) keyed with the workflow file's own
-  # hash, and looks it up in the GHA cache. A HIT ⟹ quality-gates-v2 ALREADY passed
-  # for this exact tree content → short-circuit: the matrix legs skip their gate work
-  # (report GREEN in seconds) and the required context still reports (PR not BLOCKED).
-  # The marker is written by the aggregate job ONLY on a full green (all legs pass).
+  # squash/promote re-SHA, unlike the commit SHA) keyed with the GATE-VERSION
+  # fingerprint, and looks it up in Firestore (`qg_green_markers/{key}`). A HIT ⟹
+  # quality-gates-v2 ALREADY passed for this exact tree content under this exact gate
+  # → short-circuit: the matrix legs skip their gate work (report GREEN in seconds)
+  # and the required context still reports (PR not BLOCKED). The marker is written by
+  # the aggregate job ONLY on a full green (all legs pass).
   #
   # CORRECTNESS BOUND: the key is the repo TREE (which INCLUDES pyproject.toml + uv.lock
   # → the dep RANGE pins). It deliberately does NOT hash the deps' resolved CONTENT, so
@@ -77,51 +83,108 @@ jobs:
   # re-gated across push/PR + staging/main promotions, where the deps at each tier are the
   # same pinned versions. A real code change ⟹ different tree ⟹ MISS ⟹ full run. We never
   # skip when content differs. (A dep bumping WITHIN range is a separate `chore(deps)` commit
-  # that changes uv.lock ⟹ different tree ⟹ MISS.)
+  # that changes uv.lock ⟹ different tree ⟹ MISS.) And "same tree → same verdict" holds only
+  # while the GATE is unchanged, so the key also pins the gate version (see the hash step).
   #
-  # FAIL-SAFE: a cache MISS (incl. GHA's cross-branch cache-scope limits — a cache saved on
-  # `staging` is not always readable from a `main` job, only same-branch + default-branch +
-  # PR-base fallbacks) simply runs the FULL gate. The short-circuit can NEVER produce a false
-  # green or a blocked PR — worst case is "no speedup". The marker saved on the DEFAULT branch
-  # (`main`) is readable fleet-wide, so once a tree is green on main any later run of that exact
-  # tree hits — covering the dominant redundant cases (main re-fires + promotions landing
-  # byte-identical content on main). SSOT: plans/active/cicd_v2_latency_reduction_2026_06_10.md
-  # Phase 3.
+  # FAIL-SAFE: ANY probe problem (no GCP_SA_KEY — e.g. a forked PR, Firestore unreachable,
+  # gate-version fingerprint unresolvable) is a MISS ⟹ the FULL gate runs. The short-circuit
+  # can NEVER produce a false green or a blocked PR — worst case is "no speedup". Firestore
+  # (unlike the GHA cache this replaced — broken for PR/dispatch events in reusable-workflow
+  # context since ~2026-06-26, and branch-scoped even when it worked) has no branch scoping:
+  # once a tree+gate is green ANYWHERE it hits everywhere, which is sound because the key
+  # pins both the exact content and the exact gate. SSOT:
+  # plans/active/cicd_v2_latency_reduction_2026_06_10.md Phase 3 +
+  # plans/active/github_actions_ci_cost_reduction_2026_07_15.md A2.
   content-gate:
     name: content sentinel
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      # 'true' when this exact tree-content already passed v2 (skip the gate work).
+      # 'true' when this exact tree-content already passed v2 under this exact gate version.
       cache_hit: ${{ steps.probe.outputs.cache-hit }}
       cache_key: ${{ steps.hash.outputs.cache_key }}
+      # 'true' only when the gate-version fingerprint fully resolved. When 'false' the key is
+      # incomplete → the probe is forced MISS and the aggregate job MUST NOT save a marker.
+      gate_known: ${{ steps.hash.outputs.gate_known }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Compute content cache key (tree hash + workflow hash)
+      - name: Compute content cache key (tree hash + gate-version fingerprint)
         id: hash
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
         run: |
           set -euo pipefail
           TREE="$(git rev-parse HEAD^{tree})"
-          # Fold the per-repo workflow file hash into the key so that re-rolling the gate
-          # template (a new gate that checks something new) invalidates the green marker →
-          # forces a re-run even on unchanged repo content. (The base scripts live in cloned
-          # PM, not here; the workflow file hash bumps whenever the template is re-rolled.)
+          # GATE-VERSION fingerprint (A2 Gap ① fix, ci-cost plan 2026-07-17): the gate's logic
+          # lives in THREE homes, and any of them changing must rotate the key — otherwise a
+          # byte-identical tree would skip a run the NEW gate could fail:
+          #   (1) the caller's per-repo workflow copy (in this checkout) — WF_HASH;
+          #   (2) PM's reusable python-quality-gates-v2.yml — for PM (local `uses: ./…`) it is
+          #       IN this checkout, so hash the exact executing blob; fleet callers pin
+          #       `@live-defi-rollout`, so its blob sha at that ref via the contents API.
+          #       (A reusable edit landing on LDR in the seconds between run resolution and
+          #       this probe could key a fleet run under the newer sha — accepted: the window
+          #       is seconds and a wrongly-keyed marker still required a real full-gate green.)
+          #   (3) PM's QG base scripts (scripts/quality-gates-base + scripts/quality_gates),
+          #       which every slice clones at live-defi-rollout HEAD — their dir tree shas.
+          # PM itself carries (2)+(3) inside its own TREE, so for PM these lookups only
+          # over-rotate (a lost dedup opportunity) — they can never produce a false skip.
           WF_HASH="$(sha256sum .github/workflows/quality-gates-v2.yml 2>/dev/null | awk '{print $1}' || echo nowf)"
-          KEY="qg-green-v1-${GITHUB_REPOSITORY//\//_}-${TREE}-${WF_HASH}"
+          if git cat-file -e "HEAD:.github/workflows/python-quality-gates-v2.yml" 2>/dev/null; then
+            REUSABLE_REF="local-checkout"
+            REUSABLE_SHA="$(git rev-parse "HEAD:.github/workflows/python-quality-gates-v2.yml")"
+          else
+            REUSABLE_REF="live-defi-rollout"
+            REUSABLE_SHA="$(gh api "repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/contents/.github/workflows/python-quality-gates-v2.yml?ref=${REUSABLE_REF}" --jq .sha 2>/dev/null || echo "")"
+          fi
+          BASE_SHAS="$(gh api "repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/contents/scripts?ref=live-defi-rollout" --jq '[.[] | select(.name=="quality-gates-base" or .name=="quality_gates") | .sha] | sort | join("-")' 2>/dev/null || echo "")"
+          GATE_KNOWN=true
+          if [ -z "${REUSABLE_SHA}" ] || [ -z "${BASE_SHAS}" ]; then
+            GATE_KNOWN=false
+            echo "::warning::gate-version fingerprint incomplete (reusable='${REUSABLE_SHA:-none}' base='${BASE_SHAS:-none}') — dedup disabled this run (fail-safe: full gate, no marker saved)."
+          fi
+          GATE_HASH="$(printf '%s' "${WF_HASH}|${REUSABLE_SHA}|${BASE_SHAS}" | sha256sum | awk '{print $1}' | cut -c1-24)"
+          KEY="qg-green-v2-${GITHUB_REPOSITORY//\//_}-${TREE}-${GATE_HASH}"
           echo "cache_key=${KEY}" >> "$GITHUB_OUTPUT"
-          echo "content cache key: ${KEY}"
-      - name: Probe green marker cache (lookup-only)
+          echo "gate_known=${GATE_KNOWN}" >> "$GITHUB_OUTPUT"
+          echo "content cache key: ${KEY} (reusable@${REUSABLE_REF}=${REUSABLE_SHA:-?} gate_known=${GATE_KNOWN})"
+      - name: Authenticate to GCP (marker probe)
+        # Fails harmlessly when GCP_SA_KEY is absent/invalid (forked PRs, unseeded repos):
+        # continue-on-error → empty token → the probe below treats it as a MISS.
+        id: gcp_auth
+        if: steps.hash.outputs.gate_known == 'true'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          token_format: access_token
+      - name: Probe green marker (Firestore, lookup-only)
         id: probe
         shell: bash
+        env:
+          TOKEN: ${{ steps.gcp_auth.outputs.access_token }}
+          PROJECT: ${{ steps.gcp_auth.outputs.project_id }}
+          KEY: ${{ steps.hash.outputs.cache_key }}
+          GATE_KNOWN: ${{ steps.hash.outputs.gate_known }}
         run: |
-          # actions/cache sub-actions (restore/save) fail at "Set up job" for PR/dispatch
-          # events in reusable workflow context (broken ~2026-06-26 22:30 UTC).  Removed
-          # both sub-action steps; always treat as cache MISS → run the full gate.
-          echo "cache-hit=false" >> "$GITHUB_OUTPUT"
+          # Presence of the doc IS the verdict: markers are only ever written by the aggregate
+          # job on a real full-gate green (see "Save green marker" below), so 200 ⟹ HIT.
+          # Any other outcome (404, auth failure, timeout, unknown gate) ⟹ MISS ⟹ full gate.
+          HIT=false
+          if [ "${GATE_KNOWN}" = "true" ] && [ -n "${TOKEN}" ] && [ -n "${PROJECT}" ]; then
+            CODE="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+              -H "Authorization: Bearer ${TOKEN}" \
+              "https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/qg_green_markers/${KEY}" || echo 000)"
+            [ "${CODE}" = "200" ] && HIT=true
+            echo "marker probe HTTP ${CODE}"
+          else
+            echo "marker probe skipped (gate_known=${GATE_KNOWN}, gcp_creds=$([ -n "${TOKEN}" ] && echo yes || echo no))"
+          fi
+          echo "cache-hit=${HIT}" >> "$GITHUB_OUTPUT"
       - name: Report decision
         shell: bash
         run: |
@@ -634,23 +697,58 @@ jobs:
       # ── Write the green marker so the NEXT byte-identical run (a push/PR re-fire
       # or a staging/main promotion of this same tree) short-circuits to GREEN.
       # ONLY on a real gate-run green (a MISS that actually ran the slices + passed,
-      # and not a metadata-only fast-path) — never re-save on a content HIT (the
-      # marker already exists) so the marker always certifies a real full-gate pass.
-      - name: Create green marker file
+      # not a metadata-only fast-path, and only under a fully-resolved gate version —
+      # gate_known) — never re-save on a content HIT (the marker already exists) so
+      # the marker always certifies a real full-gate pass. BOTH steps best-effort:
+      # a marker-save hiccup must NEVER redden the required quality-gates-v2 context;
+      # the only cost of a failed save is the next identical run paying the full gate.
+      - name: Authenticate to GCP (green-marker save)
+        id: marker_auth
         if:
           needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
-          steps.vcheck.outputs.metadata_only != 'true'
+          needs.content-gate.outputs.gate_known == 'true' && steps.vcheck.outputs.metadata_only != 'true'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          token_format: access_token
+      - name: Save green marker (Firestore)
+        if:
+          needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
+          needs.content-gate.outputs.gate_known == 'true' && steps.vcheck.outputs.metadata_only != 'true'
+        continue-on-error: true
         shell: bash
+        env:
+          TOKEN: ${{ steps.marker_auth.outputs.access_token }}
+          PROJECT: ${{ steps.marker_auth.outputs.project_id }}
+          KEY: ${{ needs.content-gate.outputs.cache_key }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
-          git rev-parse HEAD^{tree} > .qg_ci_green_marker
-          echo "marker: $(cat .qg_ci_green_marker)"
-      - name: Save green marker cache
-        # actions/cache/save sub-action removed (broken for PR/dispatch events in reusable
-        # workflow context ~2026-06-26 22:30 UTC).  Cache saving disabled; gate always runs
-        # the full test matrix (no ghost-cache skip).  Re-enable once GHA sub-action is fixed.
-        if: false
-        shell: bash
-        run: echo "cache save disabled"
+          if [ -z "${TOKEN}" ] || [ -z "${PROJECT}" ] || [ -z "${KEY}" ]; then
+            echo "no GCP credentials / key — marker not saved (next identical run pays the full gate; correctness unaffected)."
+            exit 0
+          fi
+          NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # expires_at drives the Firestore TTL policy on qg_green_markers (60d): markers for
+          # long-dead trees self-clean; an expired marker just means one redundant full gate.
+          EXPIRES="$(date -u -d '+60 days' +%Y-%m-%dT%H:%M:%SZ)"
+          CODE="$(curl -s -o /tmp/marker-save.json -w '%{http_code}' --max-time 15 -X PATCH \
+            -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/json" \
+            "https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/qg_green_markers/${KEY}" \
+            -d "{\"fields\": {
+                  \"repo\": {\"stringValue\": \"${GITHUB_REPOSITORY}\"},
+                  \"branch\": {\"stringValue\": \"${BRANCH}\"},
+                  \"commit_sha\": {\"stringValue\": \"${GITHUB_SHA}\"},
+                  \"run_id\": {\"stringValue\": \"${GITHUB_RUN_ID}\"},
+                  \"saved_at\": {\"timestampValue\": \"${NOW}\"},
+                  \"expires_at\": {\"timestampValue\": \"${EXPIRES}\"}
+                }}" || echo 000)"
+          if [ "${CODE}" = "200" ]; then
+            echo "green marker saved: ${KEY}"
+          else
+            echo "::warning::green-marker save failed (HTTP ${CODE}) — best-effort, gate verdict unaffected."
+            cat /tmp/marker-save.json 2>/dev/null || true
+          fi
 
       # ── CODEBASE-HEALTH (Repo-CI Cov% / QG-reason / File-debt columns) ───────────
       # Compute per-repo metrics on the agg-job checkout + the tests-slice coverage artifact,

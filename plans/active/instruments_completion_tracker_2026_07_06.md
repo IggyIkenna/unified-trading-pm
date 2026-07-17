@@ -86,7 +86,7 @@ source:
 > **🤖 DISPATCHED TO AGENT-ORCHESTRATOR (2026-07-06) — Stages 1-6 carved into 6 role-homogeneous AO plans, all
 > `assigned_vm: planning`.** **Tiering (2026-07-07): ALL 6 plans = Sonnet/high.** _(Plan 1 was Opus/max for the C2
 > `_row_data_types` fix; that shipped `is@2170d9a3`, and the all-Opus spawn was thrashing the credit-limited accounts —
-> a fleet-stall root cause, see `issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md`. Retiered to
+> a fleet-stall root cause, see `../archive/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md`. Retiered to
 > Sonnet/high 2026-07-07.)_ Note: AO's effort vocabulary has **no `xhigh`**, and **`max` requires Opus** (Sonnet+`max`
 > HARD-STOPs the worker self-check), so Sonnet's valid ceiling is `high`. This tracker stays the operator-owned
 > coordinator (`assigned_vm: NA`); the engineering now runs on AO. Each plan carries per-task `Gate:`, `PREREQ:`

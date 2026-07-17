@@ -48,6 +48,20 @@ depends_on: []
 priority: P2
 ---
 
+> **✅ ACKED-INTO-CODE 2026-07-17 — fixed at `agent-orchestrator@962e676`, and NOT the way this doc asked. Archived.**
+> Absorbed as **R6** by [`ao_dispatch_hardening_2026_07_16`](../../active/ao_dispatch_hardening_2026_07_16.md), whose
+> Phase 3 runtime gate has since passed on the live dispatch rate.
+>
+> **Read this before trusting this doc's remedy**: the fix proposed below ("add a `slot_role`-based filter") was
+> **verified dangerous and deliberately not implemented**. `slot_role` is a CRAFT tag (`data_engineering`, `infra`…)
+> populated only inside `render_worker()` — it is `None` for review/main slots AND for most ordinary generic workers, so
+> refusing dispatch on a falsy `slot_role` would have broken the majority of normal worker dispatch fleet-wide. Two
+> independent verification agents reached that from different angles. The shipped gate keys off the explicit
+> `config.review_slot_ids()` list instead, as one row in the shared `_FILTERS` table so it lands in both the dispatcher
+> and the spawn budget by construction. It also covers **three** `pick_next_task` call sites, not the two this doc named
+> — `/done` (`slots_worker.py:991`) was missed here. `resolved_by` carries the full evidence, including a negative
+> control proving a `slot_role=None` generic worker still gets dispatched.
+
 ## What happened
 
 Slot 1 is running the `review` role. Four times in one session, a plain `POST /api/slots/1/heartbeat` call caused the

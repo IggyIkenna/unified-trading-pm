@@ -1025,7 +1025,14 @@ if $PYTHON_CMD -c "import bandit" 2>/dev/null; then
     else
         # -c pyproject.toml: honor [tool.bandit] (single config home). Audited safe 2026-06-17
         # (UTL/UAC carry no non-empty skips); bandit tolerates -c with no [tool.bandit] section.
-        _bandit_out=$(run_timeout 30 $PYTHON_CMD -m bandit -c pyproject.toml -r "$SOURCE_DIR/" -ll 2>&1) \
+        # Timeout 30 → 180 (2026-07-17): 30s was under the real cost on the larger libraries, and
+        # the failure is SILENTLY MISLEADING — run_timeout kills bandit, the non-zero exit falls
+        # into the `||` branch, and the gate prints "bandit issues" + V++ as though a SECURITY
+        # finding was detected. Measured on UTL: a full scan takes ~52s (clean: Medium 0 / High 0,
+        # exit 0), so any cache-miss run on a loaded host failed the repo for a nonexistent
+        # vulnerability. Raising the ceiling only grants time — a genuinely hung bandit still gets
+        # killed, just at a bound above the honest worst case.
+        _bandit_out=$(run_timeout 180 $PYTHON_CMD -m bandit -c pyproject.toml -r "$SOURCE_DIR/" -ll 2>&1) \
             && qg_cache_store bandit_content_hash "$_bandit_key" \
             || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
     fi

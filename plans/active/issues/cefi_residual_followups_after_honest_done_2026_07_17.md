@@ -181,9 +181,13 @@ pairs stay honest-unresolved (reported, never guessed).
       the orchestrator**: run the prod rebuild (command in the Progress Log), then re-run the gate; the two REMEASURE
       sub-items below are carried forward as their own todos since they need the rebuilt catalogue. (repo:
       instruments-service)
-- [ ] [SCRIPT] P0. **Re-measure the single honest-unresolved number off the REBUILT catalogue** (pinned 3-tuple
-      `(venue, instrument_type, raw_symbol)`; pre-rebuild measurement = **439**) + record it as the ONE number used
-      everywhere (blueprint open-q #7). Blocked only on the prod rebuild landing. (repo: instruments-service)
+- [x] ✅ [SCRIPT] P0. **Re-measure the single honest-unresolved number off the REBUILT catalogue** — DONE 2026-07-17
+      (slot-3). **The ONE number is `439`** (pinned 3-tuple `(venue, instrument_type, raw_symbol)`), measured on the
+      REBUILT live `prod/catalog.parquet` (425,161 rows, promoted 13:17:59Z) — **unchanged from the pre-rebuild 439**,
+      which is the correct outcome: the 9 `:PERP:` rows were delisted perps, not ambiguous keys, so fixing them cannot
+      move the ambiguity count. Independently corroborated from two different code paths (orchestrator pandas cross-tab
+      AND the shipped `cefi_wire_bridge.get_cefi_wire_map()` → "439 ambiguous excluded"). Supersedes the divergent
+      297/777/781 figures everywhere (blueprint open-q #7 CLOSED). (repo: instruments-service)
 - [ ] [SCRIPT] P1. **Sample OPTION / dated-FUTURE `raw_symbol` coverage on the REBUILT catalogue** (blueprint open-q #14
       — the "decompose ALL types" claim is still unproven for per-option / per-expiry chains). (repo:
       instruments-service)
@@ -368,6 +372,62 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-17 (slot-3) — ✅ PHASE -1 GATE IS GREEN. The catalogue is rebuilt and live; the Phase-0 DEPLOY is
+  UNBLOCKED.** Corrected rebuild (`DEPLOYMENT_ENV=prod`, `--mode full`, 53,116 by_date parquets, workers=16, ~38 min)
+  promoted **425,161 rows** to the LIVE `gs://instruments-store-cefi-prd-central-element-323112/**prod**/catalog.parquet`
+  at **13:17:59Z** (8,688,906 B; was 8,666,228 B @ 09:09:54Z — genuinely rewritten, verified on the GCS object, not the
+  log). **The monotonic guard is the proof it hit the right path this time**: `new=425161 current=424699 decision=ACCEPT
+  (monotonic_ok)` — contrast the failed run's `current=None … (no_prior_catalogue)`, which was the tell that it was
+  writing to the dead `prd/` prefix.
+  - **GATE 1 — `:PERP:` ids: 9 → `0` ✅ PASS**
+  - **GATE 2 — `instrument_id != canonical_instrument_id`: 511 → `0` ✅ PASS**
+  - **GATE 3 — honest-unresolved (3-tuple ambiguous): `439`** (unchanged; correct — the 9 fixed rows were delisted
+    perps, not ambiguous keys). **This is now THE single number** (open-q #7 CLOSED), corroborated from two independent
+    code paths.
+  - **Regression guard still holds on the rebuilt catalogue**: `(BYBIT, SPOT_PAIR, BTCUSDT)` → `BYBIT:SPOT_PAIR:BTC-USDT`
+    and `(BYBIT, PERPETUAL, BTCUSDT)` → `BYBIT:PERPETUAL:BTC-USDT@LIN` — the 3-tuple still disambiguates the marquee
+    majors after the rebuild.
+  - **Verification method that mattered**: the gate was measured against the DOWNLOADED live object, never against the
+    rebuild's own log. The first rebuild proved why — it reported `exit_code=0` + `CATALOGUE_PROMOTED` while changing
+    nothing a consumer reads.
+  - **Next**: stray `prd/catalog.parquet` cleanup (now safe — `prod/` is verified green); D3 MTDS reader half (agent
+    resumed, QG slot freed); then D-features → consumer deploy → migration dry-runs → drain.
+
+- **2026-07-17 (slot-3) — ⚠️ GOTCHA #4: `DEPLOYMENT_ENV=prd` writes the catalogue to a DEAD `prd/` prefix while
+  reporting full success. The rebuild command recorded in this plan was WRONG; corrected to `DEPLOYMENT_ENV=prod`.**
+  The Phase -1 rebuild ran to `exit_code=0` and logged `CATALOGUE_PROMOTED` + `Promoted 425161-row catalogue to
+  gs://instruments-store-cefi-prd-central-element-323112/**prd**/catalog.parquet` — but the LIVE object every consumer
+  reads is `**prod**/catalog.parquet`, which was left untouched at its 09:09:54Z baseline. **The gate stayed RED behind a
+  green exit code.** Confirmed empirically: `prod/catalog.parquet` = 8,666,228 B @ 09:09:54Z (unchanged) vs
+  `prd/catalog.parquet` = 8,688,924 B @ 12:37:16Z (new, stray).
+  - **Why it is a trap**: the BUCKET name legitimately contains `prd`
+    (`instruments-store-**prd**-central-element-323112`), so `DEPLOYMENT_ENV=prd` looks right and `resolve_bucket_name`
+    resolves happily — but the OBJECT PREFIX comes from the same env var and becomes `prd/`. The shipped reader only
+    probes `prod/` → `staging/` → `dev/` (`cefi_catalog_reader.py:191-195`), so `prd/` is unreachable by design.
+  - **The signal I nearly missed**: the run logged `Monotonic guard: new=425161 current=None decision=ACCEPT
+    (no_prior_catalogue)`. `current=None` on a bucket that demonstrably HAS a 424,699-row catalogue is a loud "you are
+    writing somewhere new" tell. The guard did its job; the operator-agent (me) had to read it. **A monotonic guard that
+    reports `no_prior_catalogue` against a populated bucket should be treated as a hard STOP, not an ACCEPT.**
+  - **Corroborating evidence available before the fact**: a concurrent session running the sports rollup used
+    `DEPLOYMENT_ENV=prod`; I observed the divergence from my `prd`, reasoned "the bucket says prd", and dismissed it.
+    That dismissal cost a ~70-minute rebuild. **Convention: `DEPLOYMENT_ENV=prod` (+ `CLOUD_PROVIDER=gcp`,
+    `CLOUD_MOCK_MODE=false`), never `prd`.**
+  - **CORRECTED COMMAND (supersedes the one recorded from `instruments-service@517b817b`'s report):**
+    ```bash
+    cd instruments-service && GCP_PROJECT_ID=central-element-323112 CLOUD_PROVIDER=gcp DEPLOYMENT_ENV=prod \
+      CLOUD_MOCK_MODE=false .venv/bin/python scripts/build_instrument_catalogue.py --asset-group cefi --mode full
+    ```
+    (The other two gotchas from that report STAND: there is **no `--apply`** — it writes by default, `--dry-run` is the
+    opt-in; and **`--mode full` is mandatory** because `--mode incremental` carries the frozen tail through unchanged and
+    every defect row is delisted *in that tail*.) Rebuild takes ~70 min (53,116 by_date parquets, workers=16).
+  - **Cleanup owed**: `gs://instruments-store-cefi-prd-central-element-323112/prd/catalog.parquet` is a stray 425,161-row
+    object nothing reads. Verified unread (no code references a `prd/` prefix; the guard proved no prior writer). DELETE
+    it once the `prod/` rebuild verifies green — retained until then as the only rebuilt-with-fixes catalogue in
+    existence.
+  - **Also invalidates**: the pre-rebuild prod bridge measurement (439 ambiguous / 424,699 rows) was read from the OLD
+    `prod/` object and therefore still stands as the pre-rebuild baseline — but it must be re-measured once the corrected
+    rebuild lands (the roll-up produced 425,161 rows, +462 vs the live 424,699).
 
 - **2026-07-17 (slot-3, orchestrator) — PROD VERIFICATION of the wire bridge: closes BOTH bridge agents' biggest
   self-declared gap + resolves blueprint open-qs #7, #14, #15.** Both `market-tick-data-service@d302f07a` and

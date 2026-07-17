@@ -216,6 +216,71 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       post-deploy audit — a single dispatch can't observe 24h of live traffic. (repo: agent-orchestrator) —
       agent-orchestrator@86b8b8b, backend_engineer slot-13, 2026-07-17.
 
+- [x] ✅ [INFRA] P1. **The gate is fixed; the ALREADY-POISONED rows are not. Two are still live.** Independently
+      verified 2026-07-17 (operator session) against authoritative sources on BOTH sides — DB read live from planning-vm
+      `/var/lib/orchestrator/state.db` via SSM, plan checkboxes read at `origin/live-defi-rollout` (NOT a local checkout
+      — see the trap note below): **`l2_book_microstructure_capture-005` (`done_sha=6edc83254`) and `-007` (`1e1c2bda8`)
+      are STILL `status=done` while their todos are STILL `- [ ]`.** `@86b8b8b`/`@d716fd0` stop NEW false-`done`s at
+      `/done`-time; a gate cannot repair a row already written. These two are exactly the rows Todo 3 reopened at 19:41Z
+      that fell back by 19:59Z — the difference now is that **a reopen will finally STICK**, because the mechanism that
+      re-poisoned them is closed. Reopen via `POST /api/backlog/{id}/reopen`. **Operator-gated**: reopening requeues
+      them for dispatch (correct — the work genuinely is not done), so it is a live state change, not a bookkeeping
+      edit. **Reopened 2026-07-17, infra slot-2**: re-verified ground truth first (fresh-pulled to LDR HEAD
+      `dc038c764e7f`, `l2_book_microstructure_capture_2026_07_13.md:173`/`:213` both still `- [ ]`, `GET /api/backlog`
+      confirmed both rows still `status=done` with the exact cited `done_sha`s), then called
+      `POST /api/backlog/l2_book_microstructure_capture-005/reopen` and `-007/reopen` — both returned
+      `{"ok": true, "prior_status": "done", "new_status": "queued"}` with `done_sha` cleared. Verified it STUCK (not
+      just a 200): re-fetched both task ids individually (`status: queued`, `done_sha: None`) and re-ran
+      `GET /api/backlog?status=done`, confirming zero non-orphan `done` tasks carry a `plan_ref` fleet-wide. Both are
+      back in the queue for genuine re-dispatch, now protected by the file-touch-vs-checkbox-flip gate (`@86b8b8b`/
+      `@d716fd0`) so this exact re-poisoning mechanism cannot recur. (repo: agent-orchestrator, DB-only mutation, no
+      code change) — infra slot-2, 2026-07-17.
+- [x] ✅ [INFRA] P2. **58 of 64 `done` rows are UNAUDITABLE, which is not the same as clean.** `tasks.brief_hash` is
+      NULL on every row predating that column, so there is no way to map those tasks back to a specific todo and check
+      it. The corollary above ("no periodic sweep needed") is sound **for new rows via this defect class** but says
+      nothing about this historical tail: we do not know whether they are honest, and `gate_on_depends` trusts them.
+      Either backfill `brief_hash` for historical rows (making them auditable) or explicitly rule the tail out of scope
+      and record WHY. Tool: `agent-orchestrator/scripts/orchestrator/audit_false_done.py` (promoted 2026-07-17,
+      `agent-orchestrator@3f265cc`) — reports `UNAUDITABLE` separately from `honest` precisely so this tail cannot be
+      silently counted as clean. **Re-run it; its answer has a date on it.** — **RESOLVED 2026-07-17, infra slot-6:
+      ruled out of scope for retroactive backfill, WHY recorded.** Re-ran the tool live (this slot runs directly on the
+      orchestrator VM — `hostname`/`workspace_root` match, so `/var/lib/orchestrator/state.db` and the PM sibling clone
+      are local, no SSM needed): **at ref `06fab4d08` (2026-07-17), of 68 `done` rows carrying a `plan_ref`: 0
+      false_done, 12 honest, 56 UNAUDITABLE, 0 unresolved** (up from 58/64 at filing — the tail grows with fleet
+      throughput, as expected for a frozen historical bucket). Cross-checked all 56 unauditable task ids against live
+      `GET /api/backlog`: **all 56 are orphaned** (`title` = the synthetic "(orphan — no longer in backlog.yaml)"
+      placeholder) — none are still-open todos, so none would self-heal via the existing
+      `sync_backlog_to_db`/`bootstrap.py:352` backfill-on-regen path (that path only fires for a `task.id` still present
+      in the live-derived `backlog.tasks` list; a pruned id is never visited). Checked every other durable source for
+      the lost plaintext: `data/config/backlog.yaml` is gitignored (`# Live backlog + archives are runtime artifacts`) —
+      no VCS history to recover a pruned entry's `brief` from; the referenced `backlog_archive_*.yaml` pattern is also
+      gitignored but **no writer for it exists anywhere in the repo** (grepped, zero hits) — it's a dead/aspirational
+      ignore-rule, not a live snapshot mechanism; `activity_log.details_json` (checked directly against the live DB for
+      several orphaned ids, e.g. `l2_book_microstructure_capture-001`) never stores `brief`/`title` — only dispatch
+      `reason`/`trigger` metadata. **The plaintext needed to compute a matching `brief_hash` is not persisted anywhere
+      still reachable for these 56 rows.** One theoretical path remains: `TaskRow.plan_ref` + `done_sha` + `done_at` DO
+      survive pruning (checked directly — e.g. `l2_book_microstructure_capture-001` still carries
+      `plan_ref=plans/active/l2_book_microstructure_capture_2026_07_13.md`, `done_at=2026-07-13 19:19:25`), which in
+      principle narrows a search of the PM plan file's own (git-tracked) history for the flip commit near `done_at`.
+      **Deliberately NOT attempting this per-row reconstruction**: a plan file can have many todos flip over its
+      lifetime, so a time-window search has no way to disambiguate WHICH removed `- [ ] ...` line belongs to THIS
+      task_id without the original brief text to match against (the exact ambiguity `_diff_flips_checkbox` was built to
+      resolve using a KNOWN brief — here the brief is precisely what's missing). A wrong heuristic match would silently
+      produce a **false** `brief_hash` — manufacturing false confidence, which is strictly worse than an honest
+      `UNAUDITABLE` label. Not worth the risk for a single P2 dispatch; if ever revisited, it needs a human/reviewer
+      sign-off per reconstructed row, not an automated guess. **Ruling**: the 56-row historical tail (every `done` row
+      whose checkbox flip predates the `brief_hash` column AND has since been pruned from `backlog.yaml`) is
+      **permanently unauditable by exact todo identity and out of scope for retroactive backfill** — not because no one
+      looked, but because the source text is genuinely gone and no safe reconstruction exists. This bucket is **frozen,
+      not growing**: every row inserted after `brief_hash` shipped gets one at creation (`bootstrap.py:393`), and every
+      row still open in `backlog.yaml` self-heals on its next regen tick (`bootstrap.py:352`) — confirmed empirically
+      today (`false_done: 0`, `unresolved: 0`). Residual risk: `gate_on_depends` still can't distinguish an "unauditable
+      but actually honest" row from an "unauditable and silently wrong" one within these 56 — recommending (not
+      building, out of this task's single-unit scope) a follow-on to surface an explicit `UNAUDITABLE` provenance flag
+      on `GET /api/backlog` responses so a downstream gate/operator can at least SEE which dependency is trusted without
+      proof, rather than it reading identically to a verified-honest `done`. (repo: agent-orchestrator, no code change —
+      investigation + doc-only ruling) — infra slot-6, 2026-07-17.
+
 ## Progress Log
 
 ### 2026-07-16T18:2xZ UTC — data_engineering slot-13 (finding filed)
@@ -621,3 +686,61 @@ whole doc's incident is about, now hitting my own fix. Renamed `_pm_log_touches_
 `test_done_accepts_cross_repo_flip_followed_by_a_trailing_prose_only_commit` reproducing this exact self-block. Full
 `quality-gates.sh` green (1366 passed, 1 skipped). Shipped via `quickmerge --agent --files`:
 `agent-orchestrator@d716fd0`. Calling `/done` now.
+
+### 2026-07-17T UTC — infra slot-2 (Todo "ALREADY-POISONED rows" — reopened, sticks this time)
+
+Dispatched `backlog_task_done_status_diverges_from_plan_checkbox-001` (the P1 `[INFRA]` todo added by the operator's
+2026-07-17 independent audit, which found `l2_book_microstructure_capture-005`/`-007` still `status=done` post-fix).
+Fresh-pulled every repo in the slot to LDR HEAD `dc038c764e7f` before touching anything. Re-verified both authoritative
+sources independently rather than trusting the doc's dated snapshot: `GET /api/backlog?status=done` still showed both
+rows with the exact cited `done_sha`s (`6edc83254`, `1e1c2bda8`);
+`grep -n "^- \[" l2_book_microstructure_capture_2026_07_13.md` confirmed lines 173 and 213 both still `- [ ]`.
+
+Called `POST /api/backlog/l2_book_microstructure_capture-005/reopen` and `.../-007/reopen` — both returned
+`{"ok": true, "prior_status": "done", "new_status": "queued"}` with `done_sha` cleared. Re-fetched both task ids from
+live `GET /api/backlog` to confirm the reopen actually stuck (not just a 200 with no real effect): both read
+`status: queued`, `done_sha: null`. Re-ran `GET /api/backlog?status=done` fleet-wide: zero non-orphan `done` tasks now
+carry a `plan_ref` — the doc's earlier Todo 3 sweep is back to its clean state, and this time the recurrence is
+structurally prevented because `@86b8b8b`/`@d716fd0` (the file-touch-vs-checkbox-flip fix) now hard-blocks the exact
+`/done`-time mechanism that re-poisoned these two rows between 19:41Z and 19:59Z on 2026-07-16.
+
+No code change — this is a pure orchestrator DB-state mutation via the existing `/reopen` endpoint, so there is nothing
+to ship via quickmerge for this repo. Flipped the todo `[x]` in this same turn with full evidence inline. Shipping this
+plan-flip via a direct push (PM `docs(plans):` commit, per the carve-out for plan-flip commits) and calling `/done`.
+
+### 2026-07-17T UTC — infra slot-6 (final Todo — UNAUDITABLE tail ruled out of scope for backfill, all todos now closed)
+
+Dispatched `backlog_task_done_status_diverges_from_plan_checkbox-002` (the last open `[INFRA]` P2 todo). This slot runs
+directly ON the orchestrator VM (`workspace_root` from `GET /api/mode` matched this session's own worktree, no SSM
+needed for a live read — see finding below), so I re-ran `audit_false_done.py` against the genuinely live
+`/var/lib/orchestrator/state.db` and the local PM sibling clone at `origin/live-defi-rollout`.
+
+**Fresh dated answer (ref `06fab4d08`, 2026-07-17)**: 68 `done` rows carry a `plan_ref` (up from 64 at filing) — 0
+`false_done`, 12 `honest`, 56 `UNAUDITABLE`, 0 `unresolved`. Cross-checked all 56 unauditable ids against live
+`GET /api/backlog`: 100% are orphaned (`title` = the synthetic "(orphan — no longer in backlog.yaml)" placeholder), so
+none would self-heal via the existing regen backfill path (`bootstrap.py::sync_backlog_to_db`, line ~352 — only fires
+for a `task.id` still present in the live-derived task list).
+
+Investigated whether the lost `brief` text is recoverable from ANY other durable source before ruling it out:
+`data/config/backlog.yaml` is gitignored (no VCS history); the `backlog_archive_*.yaml` gitignore pattern has **no
+writer anywhere in the repo** (grepped, zero hits — it's a dead ignore rule, not a live snapshot); `activity_log`'s
+`details_json` (checked directly against several orphaned ids' rows) never stores `brief`/`title`, only dispatch
+reason/trigger. The one surviving lead — `TaskRow.plan_ref`/`done_sha`/`done_at` persist past pruning, which narrows a
+search of the (git-tracked) plan file's history for the flip commit — is NOT safely exploitable: multiple todos flip in
+the same plan file over its lifetime, and without the original brief text there's no way to disambiguate which removed
+`- [ ] ...` line belongs to which task_id. A wrong heuristic match would manufacture a false `brief_hash` — silent false
+confidence, strictly worse than an honest `UNAUDITABLE` label. Declined to attempt it.
+
+**Ruling recorded on the todo itself**: the 56-row tail is permanently unauditable by exact todo identity and out of
+scope for retroactive backfill — the source text is genuinely gone, not merely un-looked-for. The bucket is frozen, not
+growing (every row created after the `brief_hash` column shipped gets one at insert; every still-open row self-heals on
+its next regen tick — confirmed by today's `false_done: 0`). Left one follow-on recommendation inline (not built, out of
+this single-task's scope): surface an explicit `UNAUDITABLE` provenance flag on `GET /api/backlog` so a downstream
+`gate_on_depends` consumer or operator can see which completions are trusted without proof.
+
+No code change — investigation + doc-only ruling, nothing to ship via quickmerge for `agent-orchestrator`. Flipped the
+todo `[x]` in this same turn with full evidence inline. All todos in this doc are now checked; per this doc's own
+established precedent (it was previously REOPENED from a self-declared "corrected" claim that turned out wrong), leaving
+`status: open` / `resolved_by:` empty for an independent skeptical audit rather than self-declaring resolution. Shipping
+this plan-flip via a direct push (PM `docs(plans):` commit, per the carve-out for plan-flip commits) and calling
+`/done`.

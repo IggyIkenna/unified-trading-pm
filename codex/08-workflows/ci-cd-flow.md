@@ -735,7 +735,7 @@ CI runs the SAME `bash scripts/quality-gates.sh --no-fix` script as local, split
 | QG_SLICE "zero lost coverage" partition was prose, not enforced (2026-06-10 typecheck false-green class)                                                        | **CLOSED** — `check_qg_slice_completeness.py` (PM gate, blocking) asserts each of the 4 phase flags is enabled in exactly one slice AND the CI matrix matches base-service.sh                                 |
 | `workspace-manifest.json` cosmetic churn (consolidator wrote ascii-escaped/no-newline vs everyone else)                                                         | **CLOSED** — all writers emit the canonical `json.dumps(indent=2, ensure_ascii=False)+"\n"`; `check_workspace_manifest_canonical.py` (PM gate, blocking) rejects non-canonical writes                         |
 | Platform: bare `python` in quickmerge (breaks stock macOS + Ubuntu 24.04 no-venv path); `sha256sum` sentinel dead on macOS; `date +%s.%N` malformed on BSD date | **CLOSED** — `python3` everywhere; sentinel hash via the portable `_qg_hash` (sha256sum-or-shasum); `${EPOCHREALTIME}` timestamps. Local gate now behaves identically on Linux x86 / Ubuntu 24.04 / macOS ARM |
-| CI-only green paths: metadata-only fast-path (`chore(release)`/`chore(deps)` push) + content-gate cache (currently disabled)                                    | **SANCTIONED** — skip-toward-green only for version-bump commits; no local equivalent needed                                                                                                                  |
+| CI-only green paths: metadata-only fast-path (`chore(release)`/`chore(deps)` push) + content-gate Firestore markers (re-enabled 2026-07-17, A2)                 | **SANCTIONED** — skip-toward-green only for version-bump commits / trees already proven green under the same gate; no local equivalent needed                                                                 |
 | Tool pins: ruff/basedpyright resolve from the repo `.venv` (uv.lock) on BOTH sides; version drift warns locally                                                 | **SANCTIONED** — the lock is the pin; the local warn (expected 0.15.0/1.38.2) is the drift signal                                                                                                             |
 | Fix-mode (`--fix`) can green + write the sentinel while auto-fixed files sit uncommitted                                                                        | **SANCTIONED-KNOWN** — default is `--no-fix` (2026-06-10); quickmerge stages by `--files`, so own-file fixes ship with the commit                                                                             |
 
@@ -969,14 +969,15 @@ into a `strategy.matrix.slice: [tests, typecheck, lint-codex]` job (`QG slice (.
 exactly `Quality Gates (<repo>) / quality-gates-v2` (= caller job name `/` reusable job display name)
 green-iff-all-legs-pass. **The aggregation job's `name:` is load-bearing**: a friendly label (e.g. `aggregate`) emits
 `… / aggregate` instead → the required context never reports → every PR permanently BLOCKED (caught live by the PM
-canary). Wall-time → `max(slice)` not `sum`. A `content-gate` job (git-tree-hash GHA cache) short-circuits redundant
-byte-identical re-runs to GREEN (fail-safe: a miss runs the full gate; never false-greens). Coverage + the required
-check are unchanged; only the within-repo wall-time drops (cross-repo was already parallel). SSOT: `quality-gates.md` §
-"CI parallel slice jobs + `QG_SLICE`" + `plans/archive/2026_06/cicd_v2_latency_reduction_2026_06_10.md`. **Gotcha
-(incident, 2026-06-10):** the slice early-exit `_qg_slice_done` must be PHASE-aware — the first shipped cut exited the
-`typecheck` slice green at the post-TESTS call site BEFORE basedpyright ran, making every repo's CI typecheck leg a
-silent no-op (fleet-wide false-green; fixed PM@71a2e103b, main via PR #204). Detail: `quality-gates.md` § "CI parallel
-slice jobs + `QG_SLICE`".
+canary). Wall-time → `max(slice)` not `sum`. A `content-gate` job (git-tree-hash + gate-version fingerprint, stored in
+Firestore `qg_green_markers` since 2026-07-17 — see `quality-gates.md` § "Content-sentinel CI short-circuit")
+short-circuits redundant byte-identical re-runs to GREEN and SKIPS the slice runners entirely (fail-safe: a miss runs
+the full gate; never false-greens). Coverage + the required check are unchanged; only the within-repo wall-time drops
+(cross-repo was already parallel). SSOT: `quality-gates.md` § "CI parallel slice jobs + `QG_SLICE`" +
+`plans/archive/2026_06/cicd_v2_latency_reduction_2026_06_10.md`. **Gotcha (incident, 2026-06-10):** the slice early-exit
+`_qg_slice_done` must be PHASE-aware — the first shipped cut exited the `typecheck` slice green at the post-TESTS call
+site BEFORE basedpyright ran, making every repo's CI typecheck leg a silent no-op (fleet-wide false-green; fixed
+PM@71a2e103b, main via PR #204). Detail: `quality-gates.md` § "CI parallel slice jobs + `QG_SLICE`".
 
 **Status across workspace** (per `codex/06-coding-standards/feature-branch-workflow.md` § "Per-repo required-check
 matrix"):

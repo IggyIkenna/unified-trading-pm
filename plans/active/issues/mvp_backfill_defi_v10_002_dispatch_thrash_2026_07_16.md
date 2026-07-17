@@ -21,7 +21,7 @@ related:
   [
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/data_completion_defi_2026_07_15.md,
-    plans/active/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
+    plans/archive/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
     plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
   ]
 created: 2026-07-16

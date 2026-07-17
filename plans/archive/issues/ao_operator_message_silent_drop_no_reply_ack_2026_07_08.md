@@ -73,6 +73,20 @@ locked_since:
 
 # Operator→agent chat: silent message drop (no reply-ack, no redelivery)
 
+> **✅ ACKED-INTO-CODE 2026-07-17 — all todos closed; archived.** The `agent_messages` channel fix shipped at
+> `agent-orchestrator@8076257`; the last two boxes (a superseded alternative and the `needs_operator_count` badge,
+> `@fa73b5d`) were flipped 2026-07-17. `resolved_by` carries the SHAs + an independent audit that RAN the suites at
+> HEAD.
+>
+> **The finding this doc did not know it had.** Fixing the `agent_messages` channel fixed it only for main/review/custom
+> CHAT agents. The parallel `SlotMessageRow` channel that **craft task workers** use carried the identical bug and was
+> never touched — surfaced by the 2026-07-16 sweep and fixed under
+> [`ao_dispatch_hardening_2026_07_16`](../../active/ao_dispatch_hardening_2026_07_16.md) Phase 2b (`@d90f0f5`), which
+> deliberately did **not** port this doc's redeliver-until-`/reply` design: task workers have no reply endpoint, so
+> "unanswered" is unobservable for them and redelivering until an ack that can never arrive would risk duplicate
+> ACTIONS. Delivery there is session-scoped instead. If you are reading this doc for the messaging contract, read that
+> plan too — this one describes only half the system.
+
 ## Symptom (operator-reported, 2026-07-08)
 
 The **main agent never answers** in the dashboard chat; the operator asked "a couple of questions" and got no reply. The
@@ -169,11 +183,21 @@ can ship first, A can supersede.)
 - [x] [BACKEND] P2. Redelivery cap: after `agent_message_max_redeliveries` (default 30) unanswered → stops redelivering,
       surfaced via `count_needs_operator_to_agent` + `AgentView.needs_operator_count`. Config knob. (Option A) —
       ao@8076257
-- [~] [BACKEND] P2. (Alt / mitigation-first) Redeliver-unanswered reconcile loop. **SUPERSEDED by Option A** —
-  redelivery is now inline in `drain_agent_pending`, so a separate background loop is unnecessary. Not shipping.
-- [~] [UI] P2. Dashboard: surface unanswered operator questions. **Backend surfacing shipped** (ao@8076257):
-  `pending_count` is now unanswered (sticky, not undelivered) + new `needs_operator_count`. **Remaining**: render a Vite
-  badge for `needs_operator_count` in the dashboard Agents panel (small `[UI]` follow-up; pw gate).
+- [x] [BACKEND] P2. ✅ **WON'T-DO 2026-07-17 — decided, not deferred.** (Alt / mitigation-first) Redeliver-unanswered
+      reconcile loop. **SUPERSEDED by Option A** — redelivery is now inline in `drain_agent_pending`
+      (`routes/agents.py:704`), so a separate background loop is unnecessary and would be a second mechanism racing the
+      first. Not shipping, and nothing is left open by that: the `[~]` only ever meant "an alternative we did not take".
+- [x] [UI] P2. ✅ **DONE — shipped `agent-orchestrator@fa73b5d` under the sibling
+      [`ao_dispatch_hardening_2026_07_16`](../ao_dispatch_hardening_2026_07_16.md) Phase 2b; flipped here 2026-07-17.**
+      The box stayed `[~]` for a day AFTER the work landed — this doc's own `resolved_by` already recorded the sha while
+      the checkbox still said "Remaining", which is the half-1-without-half-2 failure the commit-push-flip rule names.
+      **Re-verified at HEAD (not trusted from the plan's claim)**: `deliveryChip` takes `needsOperatorCount` and renders
+      the red "needs operator N" chip at `dashboard/src/layout.tsx:2469-2474`, wired at `:2538`/`:2588`; the
+      `needs_operator_count` field is declared on `AgentView` at `dashboard/src/types.ts:447` — it had been **absent
+      from the TS type entirely**, so the UI was structurally blind to a field the API already served. The
+      `needsOperatorCount > 0` branch deliberately OUTRANKS "queued": in the realistic stuck case both counts are
+      non-zero, so a `pendingCount`-first check would render the benign amber chip and the operator would never learn
+      the agent had stopped answering. ~~**Remaining**: render a Vite badge for `needs_operator_count`.~~
 - [x] [DOCS] P2. Harden `agents/main.md` loop: persist drained-unanswered messages to a scratch file before processing;
       add a "drained-but-unanswered → retry next tick" step (survive `/compact`). — ao@8076257 (`agents/main.md`)
 - [x] [BACKEND] P3. Fix the `last_msg` field misuse (main.md now says status STRING, NOT a message-id). — ao@8076257

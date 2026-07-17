@@ -897,6 +897,23 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
     with A1) the skip must still **post the required check as SUCCESS for the current SHA**, per-branch — a prior green
     on branch X must not leave branch Y's required context absent. Test: change the gate over an identical tree →
     confirm it does NOT skip.
+  - **RECON 2026-07-17 (read before implementing — two findings change the shape of the work):** the KEY already exists
+    and is half-right — `content-gate` computes `qg-green-v1-{repo}-{tree}-{wf_hash}` (python-quality-gates-v2.yml
+    L103-116) and the downstream skip wiring (`qg-slices` gated on `cache_hit`) is already built; ONLY the storage is
+    dead (probe hardcodes `cache-hit=false` at L124 since the 2026-06-26 actions/cache-in-reusable breakage — and note
+    the content-gate JOB still runs on every one of the 44 callers' runs, billing a 1-min minimum to compute a key
+    nobody reads: the dead sentinel is itself part of A3/A5's waste). **Gap ①:** `wf_hash` hashes the CALLER's
+    `quality-gates-v2.yml` template copy only — a change to PM's REUSABLE or the QG base scripts does NOT bump the key.
+    Fix candidates: hash the reusable via `gh api repos/…/contents/....python-quality-gates-v2.yml?ref=main --jq .sha`
+    at probe time (automatic, 1 API call), or a manually-bumped `QG_GATE_VERSION` env in the reusable (needs
+    discipline). Prefer the automatic one. **Gap ② — RESOLVED BY MEASUREMENT (2026-07-17):** the reusable runs on the
+    CALLER repo's hosted runners, so a Firestore probe/save needs GCP creds in every repo's secrets — **measured:
+    `GCP_SA_KEY` present in all 5 sampled fleet repos** (UTL, UAC, MTDS, execution-service, deployment-api; personal
+    account so no org-level secrets — they are seeded per-repo). Firestore it is, as the todo intended. (The
+    zero-credential fallback considered and not needed: a `refs/qg-green/<tree>-<gatever>` git ref marker via the run's
+    own `GITHUB_TOKEN`.) The `sit_validated_tree`/`sit_validated_workspace_digest` fields cited above are SIT-lifecycle
+    fingerprints (ldr_main promote path) — they can seed a hit for the promote-PR case but do NOT cover general
+    per-branch v2 greens.
 - [ ] [INFRA] P2. **A5 — collapse the fan-out (operator: measure-then-collapse).** Confirm the merged
       `typecheck`+`lint-codex` leg stays under the pytest leg on the slowest repo, then merge + fold the sub-minute jobs
       (content-sentinel/Slack/dispatch). Target ~30–40% fewer billed job-minutes/run, no coverage loss.
@@ -1528,6 +1545,24 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   run shape billed a 1-min minimum for the persist job even when notify was skipped). Only then was
   `persist-cicd-event.yml` deleted, with its hosted-baseline copy (snapshot re-run: 55/55, verify OK). QG_EXIT=0 on both
   shipping commits. Cumulative rollback if ever needed: `git revert 0c845f930 a6057ea36`.
+- 2026-07-17 — **POST-ROLLOUT REGRESSION SWEEP (operator-requested): CLEAN on all four surfaces, plus one D2
+  measurement.** (1) **Converted workflows on natural triggers**: within ~30 min of the merge, 6+ fired on their own
+  cron/push/dispatch and ALL succeeded — `fix-approval-timeout` (schedule — proves the new sparse-checkout + guarded
+  persist live), `plan-notification`, `rules-alignment-agent`, `sit-unlock`, `staging-to-main`, `cloud-build-router-aws`
+  (route skipped ⇒ correctly wrote NO row — the deliberate delta behaving). Not yet exercised post-merge
+  (dormant/not-due, mechanism identical to the proven ones): `cascade-qg-ordering`, `sit-gate`, `update-repo-version`,
+  `publish-package`, `semver-agent`, the overnight pair, `removed-symbols` — re-check with
+  `gh run list --workflow=<wf>.yml --limit 1` after their next natural fire. (2) **Ledger continuity**: 14 rows appended
+  to PM's `events.jsonl` in the first 26 min post-merge, incl. 3 writers within 9s all surviving; 68 repo dirs written
+  today. (3) **Pool**: 8/8 online, labels correct, idle. (4) **Queue**: empty except 4 `queued` zombies from 2026-05-15
+  (pre-date this epic by two months; GitHub's own cancel API 500s on them — display artifacts, not load). **D2 datapoint
+  (recorded in the issue doc)**: PM's shared ledger file held ONE row for the whole pre-merge day despite ~145 old-path
+  persist jobs (sit-debounce alone persists every 5 min) — the old reusable path was either losing nearly everything to
+  the read-modify-write race or failing silently; the composite path demonstrably accumulates. Slack triage (24h of
+  #ci-failures via `SLACK_ALERTS_READER_BOT_TOKEN`): nothing broken traces to this migration; parked with the operator
+  ("later"): MTDS promote PR #601 blocked on a real QG failure · recurring `deployment-api` Cloud Build failures ·
+  `branch-health` PROMOTION-LAG re-fires every 25-60 min (~24/79 messages, hiding a genuinely stuck
+  `system-integration-tests` LDR→main, ~4 days) — that last one folds into the Phase-3 cadence/alert-tuning todo.
 
 ## Deferred work after 2026-07-17
 
@@ -1550,13 +1585,13 @@ prove on ONE caller → only then fan out._
 
 ### Not done — blocked on nobody, real work
 
-| #   | Item                                                       | State                                                                                                                                            |
-| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | **A2 — content-gate dedup** (byte-identical-tree skip)     | **RECOMMENDED NEXT.** P1, largest remaining saving, fleet-wide (44 callers / ~25 repos), blocked on nothing. Guards are in the todo — read them. |
-| 2   | **A1 — docs-only fast-path**                               | P1, natural follow-on: **same load-bearing mechanism as A2** — a _green_ skip that still POSTS the required check. Build it once, use twice.     |
-| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                       |
-| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                         |
-| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                  |
+| #   | Item                                                       | State                                                                                                                                                                                                                                        |
+| --- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **A2 — content-gate dedup** (byte-identical-tree skip)     | **RECOMMENDED NEXT — recon DONE 2026-07-17, implementation-ready.** Key + skip wiring already exist; only storage is dead. Read the RECON block in the A2 todo (gate-version gap + Firestore creds measured fleet-wide) before writing code. |
+| 2   | **A1 — docs-only fast-path**                               | P1, natural follow-on: **same load-bearing mechanism as A2** — a _green_ skip that still POSTS the required check. Build it once, use twice.                                                                                                 |
+| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                                                                                                                   |
+| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                                                                                                                     |
+| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                                                                                                              |
 
 ### Cannot be done yet — waiting, NOT neglected
 
@@ -1568,9 +1603,12 @@ prove on ONE caller → only then fan out._
 
 ### Operator-owned — do not start
 
-| #   | Item                                  | Note                                                                                                                  |
-| --- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| 9   | `quickmerge.sh --agent` sentinel race | P1, written up; operator will fix later. Workaround: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell. |
+| #   | Item                                       | Note                                                                                                                                                                                          |
+| --- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 9   | `quickmerge.sh --agent` sentinel race      | P1, written up; operator will fix later. Workaround: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell.                                                                         |
+| 10  | MTDS promote PR #601 blocked on QG failure | From the 2026-07-17 #ci-failures triage (operator: "we will take care of the … repos later"). Real, current, NOT this plan's: market-tick-data-service's own QG fails on its promote path.    |
+| 11  | `deployment-api` Cloud Builds failing      | Same triage: 3+ failures/24h (e.g. build `8b581721` at `deployment-api@8c7811f`). Recurring, outside this plan.                                                                               |
+| 12  | `branch-health` PROMOTION-LAG alert noise  | ~24 of 79 #ci-failures messages/24h are this one warning re-firing; a genuinely stuck `system-integration-tests` LDR→main (~4 days) hides inside it. Overlaps the Phase-3 cadence/alert todo. |
 
 ### Findings parked for later — do NOT re-investigate, they are fully written up
 
@@ -1621,3 +1659,12 @@ prove on ONE caller → only then fan out._
     to `^\s*runs-on:` or you are measuring your own prose.
   - **A hand-wavy doc summary is an INFERENCE.** When you ask for a verbatim quote and get prose ("X appears in multiple
     keys that…"), you did not get an answer. **Search the error string first** — it is faster and it is ground truth.
+- **Reading Slack directly**: `scripts/dev/slack-read-channel.py [channel] [hours]` (operator-directed 2026-07-17; auth
+  = Secret Manager `SLACK_ALERTS_READER_BOT_TOKEN`, resolved in-process, never on disk). Trap it encodes: carrier posts
+  keep the real content in Block Kit `blocks` — the `text` field is only the ":x: CRITICAL — <workflow>" headline, so
+  grepping `text` tells you nothing about WHAT failed.
+- **Session working-state (2026-07-17, slot 1)**: STEP 2c/2b work was done in a git WORKTREE of the slot-1 clone at the
+  session scratchpad (`git worktree list` in `.tabs/1/unified-trading-pm` shows it; local branch `tmp/step2c-rollout`,
+  fully pushed). If the scratchpad is gone, clean the stale registration with `git worktree prune` +
+  `git branch -D tmp/step2c-rollout` — everything it held is on `origin/live-defi-rollout`. The worktree pattern itself
+  is the documented way to work while the slot clone carries someone's live WIP.
