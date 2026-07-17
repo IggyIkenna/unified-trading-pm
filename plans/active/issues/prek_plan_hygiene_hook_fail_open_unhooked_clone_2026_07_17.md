@@ -75,8 +75,49 @@ locked_since:
   doc-touching LDR push, self-hosted glue ($0), pages ONCE (dedup `ldr-docs-gate-red`, 60m) with the offending commit +
   author + remedy. Detection gap closed: a bypassed hook now surfaces in minutes on the offending push, not as
   fleet-wide red gates an hour later.
-- Still open: fix 3 (checker exit-code honesty) and fix 4 (which bypass actually happened per machine — needs the
-  laptop; note the 3rd doc came from `main·planning`, so hook-install state must be checked there too).
+- **Fix 4 RESOLVED 2026-07-17** — live repro on slot-3·laptop (the exact machine that authored `4a7816269`); see "##
+  Root cause CONFIRMED on slot-3·laptop" below. The bypass was `git commit --no-verify` (or `-n`) — NOT a missing/broken
+  hook and NOT the path fail-open. `main·planning`'s hook-install state is a separate hygiene check (still worth doing),
+  not this commit's cause.
+- **Fix 3 is a NON-BUG** in the current checker (re-verified 2026-07-17): `check_frontmatter_schema.py` returns exit 1
+  on real violations in BOTH `--quiet` and non-quiet mode. The "prints ❌ but exits 0" reading in footgun 5a was
+  actually footgun 5b — an out-of-scope / `_`-prefixed / out-of-repo path is silently skipped
+  (`doc_type_for_path → None` or `is_exempt`), which prints "✅ 0 docs" and exits 0. That skip is by design and does NOT
+  weaken the real gate (the pre-commit hook feeds it real in-repo staged paths); it only misleads ad-hoc CLI testing. No
+  code fix required.
+
+## Root cause CONFIRMED on slot-3·laptop (2026-07-17, live repro)
+
+Re-run on `Mac.mynet` = `ikennaigboaka [slot-3·laptop]` (git `user.name`), the exact identity that authored `4a7816269`.
+Every link in the commit-time defense is present and working here:
+
+1. **prek pre-commit hook installed** — `.git/hooks/pre-commit` is the prek-generated shim, mtime 2026-07-08 — present a
+   full 9 days BEFORE the 2026-07-17 incident. `core.hooksPath` unset.
+2. **FF-cron hook-heal alive on this laptop** — `crontab` runs `slot-cron-ff-pull.sh --all-slots` every 5 min;
+   `/tmp/slot-cron-ff-pull.log` fresh. Its "install prek on every clone missing the marker" block (2026-07-06) keeps the
+   hook installed; the unchanged 07-08 mtime confirms it hasn't needed to re-install since.
+3. **The sweep path resolves** — with `WORKSPACE_ROOT` unset the hook falls to the
+   `$(git toplevel)/../unified-trading-pm/…` derivation, which resolves to an existing `run_hygiene_sweep.sh` on this
+   `.tabs/3` layout. So even the _incident-time_ fail-open (`[ -f "$SWEEP" ] || exit 0`, config at `4a7816269^`) would
+   NOT have short-circuited here.
+4. **No persistent bypass env** — `SKIP` / `PREK_SKIP` unset; no `git` commit alias injecting `--no-verify`; nothing in
+   the shell rc / `.envrc`.
+5. **The gate CATCHES the exact broken content** — restoring `4a7816269`'s broken blob to a realistically-named in-repo
+   path and running BOTH the raw checker AND the full `prek run plan-hygiene` returns exit 1 with the YAML parser error
+   (`expected <block end>, but found '<scalar>'`). (A first repro falsely "passed" only because the temp file was named
+   `__hooktest…` → `_`-prefixed → `is_exempt` → skipped; renamed without the underscore it fails loudly — footgun 5b in
+   the flesh.)
+
+**Conclusion:** hooks were installed and functional on slot-3·laptop; the sweep resolved; the checker catches the
+content. The only remaining path by which `4a7816269` reached LDR is an explicit commit-time bypass —
+`git commit --no-verify` / `-n`. No install-checker (FF-cron heal, `check-slot-commit-identity.sh`,
+`verify-slot-host-symmetry.sh`) can catch `--no-verify`; the correct and sufficient defense for that class is the
+post-push corpus gate (Fix 2, `ldr-docs-gate.yml`), which is shipped. Fix-direction 2's clone-setup half is also now in
+place — `setup-tab-worktrees.sh` (≈L388) installs the prek pre-commit hook per clone (not just the pre-push guard).
+
+**Recommendation:** all four fix-directions are addressed (Fix 1 fail-closed + Fix 2 post-push gate shipped; fix 3 a
+non-bug; fix 4 diagnosed). Recommend CLOSE. Residual independent follow-up: verify `main·planning`'s hook-install state
+for the 3rd doc — a hygiene check, not a blocker on this issue.
 
 ## Fix directions (operator to rank)
 
