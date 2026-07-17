@@ -8,6 +8,8 @@ summary:
   mtime — which advances the prune cutoff PAST pending per-VM shards. The next consolidator run deletes those shards
   without merging them and reports success=True / exit(0) / rows_in=0. Fired for real on 2026-07-17 and destroyed 7,185
   sports manifest rows (recovered in-band from a pre-merge download). Affects EVERY asset_group, not just sports.
+# open, NOT resolved: the code fix is shipped (UTL@1e995f75) but the DEPLOYED consolidator still runs the pre-fix
+# MTDS image, and instruments-store-cefi-prd is armed until it ships. Flip to resolved only after § Rollout step 6.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -38,6 +40,9 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  code fix shipped unified-trading-library@1e995f75 (2026-07-17) + regression tests measured
+  failing-before/passing-after; NOT yet live in prod — gated on the MTDS BASE_IMAGE_DIGEST bump + rebuild (see §
+  Rollout). Residual live exposure — instruments-store-cefi-prd is armed until the image ships.
 source:
   [
     sports legacy bucket cutover Phase 6 / T6.1 execution 2026-07-17,
@@ -138,9 +143,50 @@ this MORE likely, not less.**
 Sports MDT was spared only by luck of ordering: its canonical still held a genuine marker (`2026-07-15T22:51:06Z`) and
 was never rewritten out-of-band, so its shard (07-16 12:54:13Z) sat NEWER than the cutoff.
 
-## Recommended fix (not yet implemented — this issue doc is the deliverable)
+## ✅ FIX SHIPPED — `unified-trading-library@1e995f75` (2026-07-17)
 
-Ordered by strength; (1) is the minimum.
+**Reproduced FIRST, then fixed** (the report was CONFIRMED, not falsified). Option (1) below implemented, hardened by a
+second hole found while fixing.
+
+- **Reproduction**:
+  `tests/unit/test_manifest_consolidator.py::test_out_of_band_index_rewrite_stripping_marker_does_not_reap_pending_shard`
+  — end-to-end `consolidate()` with the REAL `_get_content_write_mtime` + `_list_per_vm_shards_with_mtime` +
+  `_prune_consolidated_shards` (nothing about the bug stubbed). A new `_MarkerStrip*` stub family models the two GCS
+  properties the bug turns on: custom metadata is REPLACED by each write (a plain rewrite strips it) and `updated` is
+  bumped. **Measured FAILING on pre-fix code** with the incident's exact signature —
+  `pruned 1 consolidated per-VM shard(s) (cutoff=<rewrite − 5s>, 1 eligible)`, shard deleted unmerged, `success=True` —
+  and passing after. Verified by materialising the pre-fix module from git and re-running (both new tests fail before /
+  pass after); all 98 tests green.
+- **SECOND HOLE FOUND (not in the original report)**: `consolidator_run_at` is _also_ a fatal fallback. It is the
+  FRESHNESS marker that the idle `_touch_canonical_mtime` re-stamps to `now()` **every cycle** (`:1499`), so once a
+  strip removes both markers the very next idle touch re-creates `run_at` at now and **re-arms the identical reap
+  through the second fallback**. Fixing only `blob.updated` would have left the trap live. Pinned by
+  `::test_get_content_write_mtime_never_falls_back_to_run_at_or_blob_updated`.
+- **The fix (fail CLOSED)**: `_get_content_write_mtime` reads `consolidator_content_write_at` and **nothing else** — no
+  fallback chain. `None` now means **"the cutoff is UNPROVABLE"**, not "everything is settled"; `consolidate()` responds
+  by treating every shard as changed (**merge** — idempotent) and pruning **NOTHING** (both prune sites are already
+  gated on `content_write_mtime is not None`). The merge re-stamps a genuine marker → normal incremental+prune resumes
+  next cycle: **self-healing, one merge of cost, never a silent drop.** The recovery merge EXCLUDES the legacy seed, or
+  it would resurrect rows the out-of-band purge legitimately deleted (the 2026-07-15 deletion-resurrection gap — and a
+  purge is exactly the writer that strips the marker).
+- **The 2026-07-13 prune-race fix is PRESERVED** (marker = the merge's shard-LISTING time): its regression test
+  `::test_shard_written_between_listing_and_canonical_write_survives_next_cycle` still passes, and case (d) of the new
+  fallback test asserts a genuine marker still drives the cutoff.
+- **Why NOT fix the ~15 out-of-band writers instead**: measured —
+  `backfill_remove_unknown_league_phantom_2026_07_09.py:168`, `flip_b1_thin_payload_to_reattempt.py:288`,
+  `dedup_defi_manifest_status_priority_2026_06_24.py:113`, `delete_aster_overseeded_capability_rows.py:130`,
+  `populate_is_index_v9_2026_06_19.py:172`, `reconcile_defi_lending_manifest_canonical_2026_06_24.py:172`,
+  `dedup_phantom_after_recovery.py:249`, `backfill_cefi_blank_instruments_data_type_2026_07_06.py:141`,
+  `rebuild_sports_manifest.py:260`, +others all rewrite the canonical via a plain metadata-less `upload_bytes`. One
+  consolidator fix covers all of them **plus every future one-off nobody remembers** — the class of assumption that
+  produced this incident. (Grep-then-READ correction: of the four scripts named in the dispatch, only
+  `backfill_remove_unknown_league_phantom` actually rewrites the canonical; `gw_false_empty_repair` +
+  `recency_masked_adjudication` only read/snapshot, and `fixtures_eu_truthset_flip` writes a sanctioned per-VM shard.) A
+  marker strip is now **COST** (one full merge), never **LOSS**.
+
+## Original recommended fix (as filed)
+
+Ordered by strength; (1) is the minimum — (1) is what shipped.
 
 1. **Never prune on a fallback marker.** If `consolidator_content_write_at` (and `consolidator_run_at`) are absent,
    `_get_content_write_mtime` should signal "unknown" for PRUNE purposes and `_prune_consolidated_shards` must **prune
@@ -164,6 +210,65 @@ Ordered by strength; (1) is the minimum.
 3. Run the consolidator.
 4. Observe: `rows_in=0 rows_out=0 pruned_shards=N`, `success=True`, `exit(0)`; the shard is gone; its rows never landed.
 
+## Blast-radius sweep — MEASURED 2026-07-17 (read-only)
+
+### What IS checkable: the ARMING condition (an index with no marker)
+
+Probe (note **`custom_fields`**, not `metadata`, in current gcloud — the first attempt at this sweep used `metadata` and
+returned a false "all 10 MISSING"; always sanity-check against a raw `describe`):
+
+```bash
+gcloud storage objects describe gs://<bucket>/_index/availability_index.parquet \
+  --format="value(custom_fields.consolidator_content_write_at,update_time)"
+```
+
+**Result across all 10 GCP prd consolidator buckets: 9 carry a genuine marker; 1 does NOT.**
+
+| bucket                                              | `consolidator_content_write_at` | state               |
+| --------------------------------------------------- | ------------------------------- | ------------------- |
+| **instruments-store-cefi-prd**                      | **ABSENT (no custom_fields)**   | 🔴 **REAPER ARMED** |
+| instruments-store-{tradfi,defi,sports,pred}-prd     | present (genuine)               | healthy             |
+| market-data-tick-{cefi,tradfi,defi,sports,pred}-prd | present (genuine)               | healthy             |
+
+**🔴 `instruments-store-cefi-prd-central-element-323112` is armed RIGHT NOW** (on the pre-fix image still deployed). Its
+canonical has **no custom metadata at all** — neither marker — while the `*/1` cron's idle `_touch` bumps `update_time`
+every minute. So the fabricated cutoff (`blob.updated − 5s`) **tracks ~now permanently**: this is not a one-shot trap
+but a **continuously re-armed** one. It has not destroyed anything yet only because its `_index/per_vm/` currently holds
+**nothing but `_legacy_seed.parquet`** (`shards=1`, prune-exempt) — there is simply nothing to reap. The moment a cefi
+instruments shard lands and is not merged before the next cycle's cutoff overtakes it (the ~9-14s cycle-latency window
+each minute, or **any** freeze/repair/resume where shards pile up), it is deleted unmerged. Sports was spared the same
+fate in June only by ordering luck.
+
+### What is NOT checkable: past firings
+
+**The `rows_in=0 … pruned_shards=N>0` tell proposed above does NOT work — measured false-positive.** It fires on normal
+steady state, because the design merges at cycle N and prunes at cycle N+1. Live instruments-cefi, 2026-07-16:
+
+```
+13:33:39  shards=2 rows_in=93995 rows_out=93958 pruned_shards=0   ← real merge; rows LANDED
+13:34:43  shards=2 rows_in=0     rows_out=0     pruned_shards=1   ← no-op + prune  ← the "tell", but CORRECT
+13:35:49  shards=2 rows_in=93995 rows_out=93958 pruned_shards=0   ← writer re-wrote it; merged again
+13:36:42  shards=2 rows_in=0     rows_out=0     pruned_shards=1   ← pruned again, again correctly
+```
+
+Proving a firing requires knowing the pruned shard's rows **never merged** — but the shard is gone and **GCS retained no
+noncurrent versions of per_vm objects** (verified on sports during the incident). So:
+
+- **Past firings are generally UNPROVABLE after the fact.** No claim is made here that there were none — the mechanism
+  is asset-group-agnostic, has been live since the prune was introduced, and the freeze→repair→resume runbook shape
+  (which the workspace prescribes) is exactly when it fires. It has very plausibly fired before, silently.
+- **Equally, no specific past loss is claimed** beyond the one directly observed and recovered (sports T6.1, 7,185
+  rows).
+- The one surviving forensic handle is a **pre-event copy** of a shard (a backup, a local download) — which is why the
+  sports rows were recoverable at all.
+
+### Not checkable from this host: the AWS mirrors
+
+`aws s3api head-object` on the AWS mirror buckets returns **403 Forbidden** under `uts-orchestrator-epic-role` (the same
+IAM gap documented in the prune-race issue doc's rollout note — the role lacks `s3:ListBucket`/GetObject there). The 26
+Batch-Fargate consolidators' marker state is therefore **UNVERIFIED from here**; confirm from an S3-read-capable role.
+The code fix reaches them via the same ECR `:latest` image sync.
+
 ## Verification / recovery recipe (if this already fired somewhere)
 
 - Detect: consolidator log line with `rows_in=0` and `pruned_shards>0`; or an index whose row count did not move across
@@ -174,6 +279,41 @@ Ordered by strength; (1) is the minimum.
   `_index/per_vm/` so its mtime is NEWER than the canonical's `updated`, then run the consolidator immediately (with the
   writer schedulers paused, so nothing re-advances the cutoff). Verify `rows_in > 0` and re-read the index BY CONTENT.
 - **Never** re-upload a shard while its bucket's canonical is still being rewritten out-of-band — the race re-arms.
+
+## Rollout — ⚠️ the fix is NOT LIVE in prod yet (code-shipped ≠ operationally-shipped)
+
+The deployed consolidators are Cloud Run Jobs (`uts-prod-manifest-consolidator-*`, ~20) + 26 AWS Batch-Fargate mirrors,
+all running the **`market-tick-data-service:latest` image with UTL installed as a dep**. Per the image deploy-hygiene
+rule (`codex/08-workflows/ci-cd-flow.md`), **a UTL fix does NOT reach them until the MTDS `BASE_IMAGE_DIGEST` is bumped
+and MTDS is rebuilt.** Exact chain (mirrors the 2026-07-13 prune-race rollout precedent: UTL@97212d3b → MTDS@b11199cb):
+
+| #   | Step                                                                                 | State (2026-07-17 03:35Z)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | UTL fix on LDR                                                                       | ✅ `unified-trading-library@1e995f75`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 2   | UTL promote PR LDR→main, v2-gated auto-merge                                         | ✅ **DONE — PR #586 MERGED 2026-07-17T03:40:09Z** (fleet promoter manually triggered, run 29552660105). **Verified by CONTENT** — not squash-inflated `ahead_by`: `gh api …/compare/main...live-defi-rollout` → **`files: 0`**, and `manifest_consolidator.py@main` carries the `UNPROVABLE` contract (4 hits). Only these 2 files rode along.                                                                                                                                                                                                        |
+| 3   | UTL base image republished from a build whose commit contains the fix → new digest   | ⬜ **REQUIRES AN EXPLICIT BUILD — it is NOT automatic.** Measured 2026-07-17: **zero** Cloud Builds fired after the 03:40Z merge (most recent was 01:13Z), and no UTL push-trigger is listed. `image-build-gate.yml` is a **PR gate** (calls PM's reusable `image-build-validate.yml`) — a validator, **not a publisher**. Run UTL's `cloudbuild.yaml` from `main` (it publishes the base image to `asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-library/unified-trading-library`); ancestry-verify the build's commit carries the fix. |
+| 4   | MTDS `Dockerfile` `ARG BASE_IMAGE_DIGEST` bump → quickmerge to LDR → promote to main | ⬜ pending (3). Currently pinned at **`sha256:d15fb29b17abac54f6224f275de237557bc2b5f0acc921059f9ec363fab8e3c4`** (`market-tick-data-service/Dockerfile:115`). Precedent: MTDS@b11199cb.                                                                                                                                                                                                                                                                                                                                                              |
+| 5   | MTDS image rebuilt; `:latest` → new digest                                           | ⬜ pending (4). Cite `Evidence: cloudbuild=<id>` resolving SUCCESS.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 6   | GCP Cloud Run jobs re-resolve `:latest`                                              | ⬜ automatic — the `*/1` cron pulls on each execution start. Verify an execution's image digest + `succeededCount=1`.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 7   | AWS ECR `market-tick-data-service:latest` rebuilt + pushed                           | ⬜ Batch job defs reference `:latest` by TAG → Fargate pulls at each per-minute task start (automatic pickup). Note the 2026-07-13 finding that ECR had gone **6 weeks stale** — verify the push explicitly, don't assume.                                                                                                                                                                                                                                                                                                                            |
+
+**Until step 6, the pre-fix reaper is still deployed fleet-wide**, and 🔴 `instruments-store-cefi-prd` is armed (see the
+sweep above). **Interim mitigations** (in priority order):
+
+- **(A) RECOMMENDED — disarm cefi by re-stamping a genuine, deliberately-OLD marker.** Setting
+  `consolidator_content_write_at` to a timestamp just AFTER the legacy seed's mtime (seed = `2026-05-12T17:06:19Z`, so
+  e.g. `2026-05-12T18:00:00Z`) makes the cutoff go **backward**, which is the safe direction: any future shard
+  (`mtime > cutoff`) is classified CHANGED → merges → re-stamps a real marker; the prune cutoff (`2026-05-12T17:59:55Z`)
+  covers nothing but the prune-exempt seed, so `pruned=0`. It does NOT re-merge the seed (its mtime sorts below the
+  cutoff → "unchanged"), so there is no deletion-resurrection risk. **NOT DONE — deliberately**: the dispatch for this
+  session says _"you may ship CODE but do NOT pause/mutate the running fleet"_, and this is a prod-fleet mutation.
+  Operator decision.
+- **(B) Do nothing until the image ships.** Tolerable _only_ while cefi's `per_vm/` stays empty of real shards — i.e. do
+  NOT run the cefi instruments enumerator, and do NOT freeze/repair/resume ANY bucket, until step 6 lands.
+- **(C) Rush steps 3-5** (manual UTL base-image republish + MTDS pin bump + rebuild) to close it in ~1h.
+
+**Do NOT rewrite any bucket's `_index/availability_index.parquet` out-of-band until step 6 lands** — that is the action
+that arms the trap, and the runbooks' freeze→repair→resume shape is exactly its trigger.
 
 ## Provenance
 
