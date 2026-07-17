@@ -140,17 +140,24 @@ follow-up backfill pass — same operational pattern as Todo 2 in the sibling is
       not resolve which upstream field/format drives the split — needs a deeper source-schema dig, not chased further
       this dispatch (time-boxed). **Split into 2b/2c below** (audit-scale work, not a quick date-range gap-fill) — this
       original formulation is superseded, not actionable as written. (repo: features-service)
-- [ ] [DATA] P2. **(audit step) Build a single-walk audit** (following this codebase's phantom-audit pattern — read the
-      availability manifest for `feature_group=derived_features`, NOT a raw whole-corpus GCS walk) that, for each
+- [x] ✅ [DATA] P2. **(audit step) Build a single-walk audit** (following this codebase's phantom-audit pattern — read
+      the availability manifest for `feature_group=derived_features`, NOT a raw whole-corpus GCS walk) that, for each
       captured (date, league), reads ONLY the `home_elo`/`away_elo` columns and flags exact-`1500.0`-flat rows as
       bug-affected. Output: a list of affected (date, league) pairs (or a manifest-attached flag) — this is the
       concrete, cheap identification step the original P2 wording assumed was trivial but isn't. (repo:
-      features-service)
+      features-service) — features-service `scripts/sports/audit_elo_flat_1500_2026_07_17.py`; QG green; run over the
+      FULL captured corpus (not just a sample): **22,042 of 43,183 discovered derived_features shards flagged
+      bug-affected (2,667 captured dates, 2017-02-02→2026-07-17)**. Output CSV:
+      `gs://features-sports-prd-central-element-323112/_audits/elo_flat_1500_affected_20260717-125526.csv`. See Progress
+      Log for the scale finding + a real correctness bug found and fixed IN this audit script itself.
 - [ ] [DATA] P2. **(gap-fill step) Gap-fill re-run** the (date, league) pairs the audit step above identifies with
-      `--force` on the fixed (`elo_calculator.py`@`04274b6a`+) code. Scope depends entirely on the audit step's output —
-      could range from a small targeted set to a large fraction of history; re-estimate cost once the real count is
-      known before launching any multi-VM fleet (this is exactly the kind of infra-cost decision the data-correctness
-      HARD RULE says to surface, not default to a full 10-VM re-run for). (repo: features-service)
+      `--force` on the fixed (`elo_calculator.py`@`04274b6a`+) code. **Real count now known (2026-07-17 audit run):
+      22,042 of 43,183 discovered shards affected (55.3% of readable history, 2017-02-02→2026-07-17)** — CSV at
+      `gs://features-sports-prd-central-element-323112/_audits/elo_flat_1500_affected_20260717-125526.csv`. This is a
+      LARGE fraction of history, not a small targeted set — re-estimate infra cost/scope explicitly before launching any
+      multi-VM fleet (this is exactly the kind of infra-cost decision the data-correctness HARD RULE says to surface,
+      not default to a full re-run for) and consider whether operator sign-off is warranted given the scale. (repo:
+      features-service)
 - [ ] [VERIFY] P3. **Audit whether other sports calculators build a hand-constructed
       `pd.Timestamp(year=..., month=...,     day=...)` (or similar tz-naive-by-construction Timestamp) that gets
       compared against a possibly-tz-aware value** — grepped `features_service/sports/calculators/*.py` for
@@ -200,3 +207,53 @@ P2b/P2c this dispatch; shipping the scope-correction (real, durable progress —
 dispatches would otherwise have wasted time on) and returning to the queue. `/skip-current-task` after this ships
 (done_definition — "checkbox flipped + code shipped" — isn't met for the ORIGINAL P2 ask, since gap-filling didn't
 happen; the corrected-scope todo itself is the shippable unit here).
+
+### 2026-07-17T12:3x-12:55Z — data_engineering slot-2 (Todo P2b — built + ran the single-walk audit; BIG FINDING: 51% of readable history affected)
+
+Built `features-service/scripts/sports/audit_elo_flat_1500_2026_07_17.py`, modeled on this codebase's phantom-audit
+precedent (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`'s single-walk predicate style +
+`features-service/scripts/sports/purge_stale_daylevel_failed_rows_2026_07_14.py`'s `resolve_bucket`/
+`read_availability_index` plumbing).
+
+**Real correctness bug found and fixed IN the audit tool itself before trusting its output** (validated, not assumed):
+first draft reconstructed each shard's GCS path from the manifest's `league_id` column
+(`sports_features/by_date/day={date}/league={league_id}/feature_group=derived_features/features.parquet`) — this 404'd
+on every shard for 2 of the 7 known ground-truth dates from this doc's own Todo-2 sample (2019-06-01, 2020-01-15 both
+silently read as "0 affected", contradicting the manually-confirmed FLAT finding above). Root-caused: **the manifest's
+`league_id` is CANONICALIZED (`_canonical_league_id`, `batch_handler.py:92-111`) but the GCS shard path is written under
+the RAW pre-canonicalization identifier (`lid_raw` — numeric api-football id for unmigrated history, canonical for newer
+data) — `batch_handler.py:317-322` writes the file at `league=104`, `league=113`, etc. while the manifest row for the
+same shard reports `league_id="MLS"`, `"BRASILEIRAO"`.** This is exactly the "read failure disguised as not-affected"
+class the craft's north-star #1 bans, and it would have silently under-counted the very audit meant to catch silent
+under-counting. Fixed by NOT resolving paths from the manifest's `league_id` at all — the manifest is used ONLY to find
+which DATES have captured `derived_features` rows (the single manifest read = the single walk), then one bounded
+`list_blobs` prefix listing per already-known-captured date (`sports_features/by_date/day={date}/`) discovers the REAL
+shard paths directly. Re-validated against all 7 dates from the Todo-2 sample above post-fix — every one now matches
+(2018-10-23/2019-06-01/2020-01-15/2026-06-01 show 100% or majority flat rows across their captured leagues;
+2021-05-22/2024-06-14/2025-12-05 show 0 or a minority flat, consistent with "NOT-flat" being a single-match sample, not
+every league on that date). Also independently caught (and correctly separated, not silently miscounted) a second real
+class: **3,299 shards are LISTED by GCS but fail to download/read the `home_elo`/`away_elo` columns** — these are
+genuinely-older parquets predating the Elo columns being added to the schema (`KeyError` on column selection), tracked
+as `unreadable` in both the script's output and this doc, never folded into "not affected".
+
+**Ran the audit over the FULL captured corpus** (not a sample) —
+`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python scripts/sports/audit_elo_flat_1500_2026_07_17.py --upload`:
+
+| Metric                                                 | Count                                            |
+| ------------------------------------------------------ | ------------------------------------------------ |
+| Captured `derived_features` dates (manifest)           | 2,667 (2017-02-02 → 2026-07-17)                  |
+| Shards discovered (per-date `list_blobs`)              | 43,183                                           |
+| Unreadable (pre-Elo-column schema, tracked separately) | 3,299                                            |
+| **Affected (>=1 exact-`1500.0`-flat row)**             | **22,042** (55.3% of the 39,884 readable shards) |
+
+Output CSV (one row per affected (date, `league_raw`) shard + `flat_rows`/`total_rows`/`flat_fraction`):
+`gs://features-sports-prd-central-element-323112/_audits/elo_flat_1500_affected_20260717-125526.csv`. `league_raw` is
+the RAW GCS path-segment identifier (numeric for unmigrated history, canonical for migrated data) — the identifier a
+re-run/gap-fill needs to hit the same shard, not necessarily the canonical UAC league_id shown in dashboards.
+
+**This is a bigger finding than the issue doc's Todo-2 scope-correction anticipated** — over HALF of all readable
+`derived_features` history since 2017 carries silently-wrong (not NaN) Elo columns. Flagging this as the BIG FINDING the
+data-correctness HARD RULE requires surfacing, not quietly absorbing into a routine gap-fill estimate: the P2c gap-fill
+Todo below should NOT default to a full 22k-shard recompute without an explicit cost/scope decision (this recomputes
+`derived_features` for ~55% of 9+ years of sports history — a real infra-cost decision, not a "just rerun it" call). QG
+green on the audit script; shipped via quickmerge.
