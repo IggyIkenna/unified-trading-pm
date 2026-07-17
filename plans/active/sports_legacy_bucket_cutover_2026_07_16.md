@@ -96,8 +96,14 @@ everything so sports is in canonical buckets and paths."_
 > pending**: the post-delete `tofu plan` (**`97baca1b`**) is the same shape as pre-delete and carries **ZERO actions
 > referencing the deleted bucket**.
 >
-> **⚠️ `market-data-tick-sports-central-element-323112` is NOT deleted and MUST NOT be — still blocked on OR-5b.** Its
-> terraform block (`main.tf:345`) + import block (`_imports_reconcile.tf:74-77`) are deliberately RETAINED.
+> **✅ `market-data-tick-sports-central-element-323112` is DELETED — 2026-07-17T~16:50Z (slot-3). OR-5b RESOLVED.** The
+> 32-day / 549,392-key recovery landed into canonical (content-verified `legacy_only==0` on every gap day, zero loss);
+> non-raw prefixes preserved 1:1 to canonical `_legacy_migrated_*` (`processed/` 109,312, `scripts/` 3, `_vm_staging/`
+> 51); T2.10 seed phantoms purged (`odds_api` intact). Delete removed 342,629 objects/versions; bucket `describe` ⇒
+> **404**. **Resurrection prevented (`deployment-service@1116901`)**: the `google_storage_bucket.market_data_sports`
+> resource block + its `_imports_reconcile.tf` import were removed and the prod state entry was `state rm`'d; a fresh
+> `ENV=prod tofu.sh plan` proves **zero actions reference the flat legacy bucket** (deterministic no-resurrection proof,
+> same gate as T6.0's instruments half). _Prior banner (retained for provenance): was "NOT deleted, blocked on OR-5b"._
 >
 > **🔴 DO NOT run a full `tofu apply` on prod** — it would resurrect `instruments-store-cefi-…` (404 but still
 > declared + in state) and make 71 unaudited changes →

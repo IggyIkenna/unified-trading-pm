@@ -95,8 +95,11 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
 
 ## Todos — DeFi-playbook order (provision → verify → cutover → redeploy → delete)
 
-- [ ] [DATA] P0. **Provision + yaml scaffold** — add the folded `ml-store` key to `cloud-providers.yaml` (all 3 copies:
-      deployment-service authoring + UAC packaged + PM mirror), env-tiered
+- [x] ✅ [DATA] P0. **Provision + yaml scaffold** — DONE 2026-07-17: buckets provisioned (Phase A) + `ml-store` key
+      shipped to the 3 authoritative copies (UAC@553aebc9, deployment-service@f920ceb) + UTL fixture (utl@96269655); PM
+      mirror DEFERRED (non-runtime; blocked by unrelated fleet dep-drift — see P3 todo + Progress Log). Provisioned via
+      direct gcloud/aws NOT tofu apply (unsafe state). — add the folded `ml-store` key to `cloud-providers.yaml` (all 3
+      copies: deployment-service authoring + UAC packaged + PM mirror), env-tiered
       `ml-store-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}` / `-${AWS_ACCOUNT_ID}`; add `_KIND_ALIASES` (UTL
       `bucket_naming.py`) entries mapping all 5 retired kinds
       (`ml-models-store`/`ml-predictions-store`/`ml-configs-store`/`ml-training-artifacts`/`ml-artifacts`) → `ml-store`
@@ -136,6 +139,11 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       consumer. Mirror `ModelRegistry._deserialize_model`: enforce keys start with `artifacts/` + optional sha256. NOTE:
       `artifacts/` is EMPTY today (ml-artifacts was empty) so no live exposure yet — but close before anything writes
       there. Not a blocker for the UTL scaffold ship (orthogonal to bucket naming).
+- [ ] [DATA] P3. **PM `cloud-providers.yaml` mirror re-sync** — add the `ml-store` key to the non-authoritative PM
+      mirror (deferred 2026-07-17: PM quickmerge STAGE 1.5 dependency-alignment gate fails on an UNRELATED fleet drift —
+      `ibkr-gateway-infra` pins `cryptography>=46,<47` vs canonical `>=47,<50`, which blocks ALL PM config quickmerges).
+      The mirror is non-runtime (deployment-service authoring + UAC packaged are the read copies, both shipped). Re-sync
+      when the ibkr drift clears, or bundle into the closeout copy-reconcile. FLEET FINDING flagged to operator.
 - [ ] [CODE] P3. **Alias sunset** — after the reader-fallback window closes and the 5 legacy kinds are grep-clean of any
       resolver caller, hard-remove the `_KIND_ALIASES` entries + retired yaml keys ("no double SSOT"); `terraform plan`
       stays green. (Deferred to the closeout plan if the window is still open when the other folds land.) ALSO drop the
@@ -260,3 +268,16 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   - **CONCERN 4 → new P1 SECURITY todo above:** `CloudModelArtifactStore.load_model` ungated pickle deserialization,
     amplified by the shared bucket (artifacts/ empty today; NOT a ship-blocker). After remediation re-greens UTL, SHIP
     UTL + 3 external yaml copies (quickmerge ×4), then Stage 2 (ml-service ∥ deployment ∥ UAC code).
+
+- **2026-07-17, TICK 4 — remediation DONE + Stage 1 SHIPPED.** Remediation agent applied FIX 1 (env short-form scoped to
+  ml → `ml-store-prd`, phantom `-prod-` test corrected), FIX 2 (`core/cloud_constants.py` ml BUCKET_PREFIXES → ml-store
+  both clouds + test), FIX 3 (confirmed LIVE reader `MLModelsDomainClient.get_model/get_metadata` via `build_path` →
+  fixed `training-period=`→`-` hyphen + parity test), FIX 4 (fixture already in sync — no change). **UTL QG GREEN
+  (162s).** Spot-checked aliases/FIX-1/FIX-3/yaml hunks — correct. SHIPPED in dep order: **UAC@553aebc9 → UTL@96269655 →
+  deployment-service@f920ceb** (all landed LDR; Tier-C drain → staging, v2-gated). **PM mirror DEFERRED** (P3): PM
+  quickmerge STAGE 1.5 fails on UNRELATED fleet drift (`ibkr-gateway-infra` `cryptography<47` vs canonical `>=47` blocks
+  ALL PM config quickmerges); mirror is non-runtime (2 read copies shipped); tree restored clean. **FLEET FINDING
+  (operator):** that ibkr crypto pin gates every PM config quickmerge — pre-existing, not fixed here. Stage-2 residuals
+  to reconcile: deployment-service `ml_experiments.py:83 get_bucket_name("ml_artifacts")` (ml_artifacts absent from
+  BUCKET_PREFIXES → malformed); core/cloud_constants AWS ml fallback env-less (`ml-store-{pid}`, no `-prd-`; AWS ml
+  empty → latent). NEXT: Phase C Stage 2.

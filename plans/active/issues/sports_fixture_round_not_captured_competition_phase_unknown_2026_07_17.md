@@ -79,12 +79,27 @@ confirm no api-football VM is running: the launcher will `ERROR: API-Football VM
 
 **Steps (from a slot checkout with ADC):**
 
+> **⚠️ PULL FIRST — the freshness gate does NOT protect you here.** `create-code-tarballs.sh` tars the **LOCAL working
+> tree** (`tar czf … -C "$repo_path" .`), and `lc_verify_tarball_freshness` runs with `LC_TARBALL_FRESHNESS_FETCH=false`
+> by default, so it only checks _tarball-sha == your LOCAL HEAD_ — it does **NOT** check local-vs-origin. A checkout
+> that hasn't pulled @19ae5890 will build a stale tarball that **silently passes** the gate and re-captures `round=""`
+> again. So you MUST pull and VERIFY the fix is in local HEAD before building — pushing it to origin (done) is not
+> enough on another machine.
+
 ```bash
-# 1. Bake the writer fix into the VM's code tarball. The launcher verifies the tarball SHA against
-#    origin/live-defi-rollout HEAD and ABORTS if stale — this is what puts @19ae5890 on the VM.
+# 0. PULL the writer fix into each tarball repo's local checkout, then PROVE it is present.
+for r in instruments-service unified-api-contracts unified-trading-library deployment-service; do
+  git -C "$r" pull --ff-only origin live-defi-rollout
+done
+# HARD GATE — abort if the fix is not in instruments-service local HEAD (the freshness check won't catch this):
+git -C instruments-service merge-base --is-ancestor 19ae5890 HEAD \
+  && echo "OK: writer fix @19ae5890 present" \
+  || { echo "ABORT: instruments-service HEAD lacks @19ae5890 — pull/rebase before building the tarball"; exit 1; }
+
+# 1. Build the tarball FROM the now-current local tree (records local HEAD in the manifest).
 bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS
 
-# 2. Launch the round backfill. entity=FIXTURES is REQUIRED — that is the schedule grain that carries league.round.
+# 2. Launch. entity=FIXTURES is REQUIRED — the schedule grain that carries league.round.
 #    (FIXTURE_EVENTS, what your VM did, is a different grain and does NOT carry round.) SPOT is the default.
 bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2019-01-01 2026-07-17
 ```
@@ -243,3 +258,24 @@ already present, never recover history never rolled up. Raw is complete 2019→2
 `--since` (instruments-service@4a795c24); full-history rollup (~375k blobs, ~3h, target ~136k rows) run 2026-07-17.
 Per-league counts verified correct within the window (EPL=380, LA_LIGA=380, SERIE_A=380, BUNDESLIGA=308≈306,
 ENG_CHAMPIONSHIP=558≈552) — the capture was never missing fixtures, the roll-up was just windowed.
+
+## Handoff ACCEPTED — round-backfill queued behind the api-football fleet (2026-07-17)
+
+- 2026-07-17 ~17:00Z: the **odds/MDPS lane** (non-fixtures; running the collapse recompute `reprocess_sports_odds`,
+  which uses NO api-football key) has ACCEPTED the ⏭️ HANDOFF and OWNS the launch timing — safe precisely because it is
+  not otherwise contending for fixtures or the shared key. Trigger = the api-football fleet DRAINS.
+- State at acceptance: **5 api-football VMs RUNNING** (`af-backfill-20260717-{151237,151335,151405,151433,151505}`,
+  launched 15:12–15:15Z, entity-sharded 6-year re-capture on the shared KEY). The launcher refuses a concurrent VM
+  ("API-Football VM already running") + two VMs on one key thrash on 429s → corrupted `attempted_failed` rows (the
+  2026-04-19 SFI incident). So the round-FIXTURES backfill CANNOT launch until every af-backfill VM has STOPPED.
+- QUEUED ACTION (fires when 0 api-football VMs running; entity=FIXTURES is REQUIRED — the schedule grain carries
+  `league.round`, FIXTURE_EVENTS does not):
+  1. `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS` (bakes the writer fix
+     instruments-service@19ae5890 into the tarball; launcher aborts if stale vs origin/live-defi-rollout HEAD).
+  2. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2019-01-01 2026-07-17`.
+  3. No fire-and-forget: STARTED <60s; T+10min tail run.log + read a sampled 2019/2020 entity=fixtures parquet — `round`
+     must be populated ("Regular Season - N" / "Quarter-finals").
+  4. After the VM completes: rebuild catalogue (`build_instrument_catalogue.py --asset-group sports --since 2019-01-01`
+     or the weekly `lifecycle-catalogue-full-sports` job, deployment-service@b48f6a4); verify `competition_phase` stops
+     being ~100% UNKNOWN and `is_promotion_relegation` becomes a real signal (todo 5).
+  - Do NOT `--force` a concurrent VM. If the operator wants round PRIORITISED, they stop the running fleet first.
