@@ -153,3 +153,16 @@ what's missing.
   `vol_dvol_backtestable_engines-003`) that the entry still carries no `prereqs`/`conditions` field — slot-13's
   suggested fix was never applied. This is now a 2-slot repeat; whoever resolves `BLK-011c84cb` should also add the
   `prereqs.conditions` gate at the same time so a 3rd slot doesn't burn a dispatch on this.
+- 2026-07-17 (slot-7): **3rd repeat-dispatch** — `vol_dvol_backtestable_engines-001` dispatched to slot-7, still no
+  operator-go (OPERATOR P1 todo remains `[ ]`; last plan edit is slot-14's note above, no DVOL history pulled), and
+  `GET /api/backlog` still shows `-001..-004` with `prereqs: null` — the gate slots 13 & 14 both asked for was never
+  added. `BLK-011c84cb` remains the standing operator decision, so I did not file a duplicate. Instead, escalated the
+  **gate-add** to main as a separate, immediately-actionable fix (independent of the operator's timing) so a 4th slot
+  doesn't burn on this. **Gate-add recipe for main** (per `agents/RULES.md` §4.3, yaml-only — regen does NOT derive
+  per-task prereqs from plan todos, and `sequential: true` alone provably does not gate independent dispatch): (1)
+  `POST /api/prerequisites/dvol-historical-pull-approved {value:false, set_by:"main"}`; (2) add
+  `prereqs.prerequisites: [dvol-historical-pull-approved]` to `-001`, `-002`, `-003`, `-004` in
+  `data/config/backlog.yaml`, then `POST /api/backlog/reload`; (3) re-verify it survives a `PlanRegenLoop` tick (the
+  `backlog_regen_drops_handtuned_prereqs` bug class); (4) when the operator answers `BLK-011c84cb`, flip the condition
+  true. Then `/skip-current-task` (blocked-operator + ungated — not doable from a worker slot; worker cannot hand-edit
+  `backlog.yaml` per the HARD RULE, so the gate is main's to add).

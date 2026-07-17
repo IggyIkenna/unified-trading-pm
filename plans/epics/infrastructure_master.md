@@ -541,10 +541,12 @@ data source to canonical 100%
 **status**: active · **estimate**: 7.2 cal AI-days (class: refactor) **title**: UTL/UAC reuse consolidation — kill local
 reimplementations, strongest-combination merge
 
-### [`ao_host_disk_pressure_2026_07_16`](../active/ao_host_disk_pressure_2026_07_16.md)
+### [`ao_host_disk_pressure_2026_07_16`](../archive/2026_07/ao_host_disk_pressure_2026_07_16.md)
 
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: AO central-orchestrator host root-disk
-pressure (65→95% cycle) killing worker pytest/QG mid-task
+**status**: complete (archived 2026-07-17) · **estimate**: 1.6 cal AI-days (class: infra) **title**: AO
+central-orchestrator host root-disk pressure (65→95% cycle) killing worker pytest/QG mid-task — all levers shipped +
+measured (prune cron `pm@88310f87a`, guard 2h cadence proven on a live 83%→51% excursion, AutoSpawn disk backstop
+`ao@e7f70c8`, cross-host uv-cache env `pm@86dea79d5`)
 
 ## P2 — useful; opportunistic
 

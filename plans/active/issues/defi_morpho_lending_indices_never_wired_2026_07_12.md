@@ -932,3 +932,74 @@ visible in the launcher's gcloud invocation, only resolved via gcloud CLI defaul
 verification-only scope; flagging as the concrete next action rather than hand-rolling it under time pressure. A session
 with a working `gcloud` (or willing to replicate the Python `compute_v1` call precedent) can run the command above
 directly.
+
+### Re-check #14 — continuation VM confirmed COMPLETE + consolidator confirmed fresh (this doc's own scope now closed); G2 gate re-run still fails, but for an unrelated, already-tracked reason — 2026-07-17T15:0xZ (data_engineering slot-6)
+
+Dispatched to `defi_morpho_lending_indices_never_wired-001` (the `[SCRIPT] P2. Re-run G2 gate` todo). Fresh-pulled all
+24 slot repos clean. Picked up where the 2026-07-15T11:34Z entry (slot-12) left off — that entry launched
+`mtds-lending-indices-20260715-113442` for the `--lending-protocols morpho 2026-03-26 2026-07-15` continuation window
+and explicitly left the gate-recheck unstruck pending completion.
+
+**1) VM completion — confirmed, not assumed.** `~/google-cloud-sdk/bin/gcloud compute instances list` shows zero
+`mtds-lending-indices-*` instances running (self-deleted). Read the VM's full `run.log` via `gcloud storage cat` (the
+working Cloud SDK binary at `~/google-cloud-sdk/bin/gcloud`, confirming yet again the `/snap/bin/gcloud`
+`snap-confine`/`cap_dac_override` failure other sessions hit is environment-specific, not fleet-wide): the run reached
+`date=2026-07-13`/`2026-07-15` (both ETHEREUM+BASE chains), wrote real rows
+(`Wrote 896 rows to .../day=2026-07-13/.../venue=MORPHO/chain=BASE/.../lending_indices/...parquet`), completed the batch
+cleanly, and exited `rc=0` → `DEPLOYMENT_COMPLETED ... exit_code=0` → self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`.
+**The 111-day Morpho gap (2026-03-26→2026-07-15) this doc's 2026-07-15 entry flagged is now closed.**
+
+**2) Consolidator staleness — confirmed RESOLVED**, not just cross-referenced.
+`defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`'s own tail already records a 2026-07-14/15 fix
+(`unified-trading-library@9358fb0b` env-tunable lock TTL + `deployment-service@fe67a53` Terraform override) with zero
+SIGKILLs since. Verified independently rather than trusting the cross-reference: `gcloud storage objects describe` on
+`gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` →
+`updateTime: 2026-07-17T14:52:16Z` — **fresh as of today**, not the `2026-07-10T21:42:30Z` value every one of re-checks
+#4-#13 saw. **Flipped `morpho_vm_complete_and_consolidator_fresh` (the condition main created 2026-07-12T12:23Z
+specifically for this precondition) → `true`** via `POST /api/prerequisites/...` — it was still sitting `false` from
+creation despite both halves now genuinely being true.
+
+**3) Ran the ACTUAL G2 gate command** (`instruments-service/scripts/measure_honest_coverage.py --asset-group defi`, via
+`uv run`, 15:03-15:04Z; manifest confirmed fresh at read time). Aggregated `lending_indices` across every venue from the
+output JSON:
+
+```
+lending_indices (ALL venues): captured=146,577  attempted_failed=1,033  expected_unattempted=593,045
+  MORPHO      : captured= 12,874  attempted_failed=    6  expected_unattempted=404,427  (dominant single contributor)
+  KAMINO      : captured=     32  attempted_failed=    1  expected_unattempted=105,043
+  AAVE_V3     : captured=112,695  attempted_failed=  978  expected_unattempted= 44,733
+  COMPOUND_V3 : captured= 13,524  attempted_failed=   24  expected_unattempted= 21,251
+  SPARK       : captured=  7,405  attempted_failed=    6  expected_unattempted=  6,993
+  (+ smaller residue: FLUID/LIDO/ETHERFI/MARGINFI/EULER_V2/SOLEND expected_unattempted, all pre-existing)
+```
+
+**Gate NOT met** (`attempted_failed=1,033≠0`, `expected_unattempted=593,045≠0`) — essentially byte-identical to slot-2's
+2026-07-16T19:47Z reading (`captured=146,569, attempted_failed=1,014, expected_unattempted=593,045`) from **before**
+today's VM-completion/consolidator confirmations, i.e. **zero net movement in ~19h despite the Morpho backfill VM
+completing cleanly in that window.**
+
+**Why the Morpho fix didn't move the number**: MORPHO's own `expected_unattempted=404,427` is not a calendar-window gap
+(that's exactly what today's VM completion closed) — it is the same **expected-universe-v2 instrument-grain backlog**
+already root-caused and tracked in `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` (`lending_indices` alone:
+3.75M rows of a 64.39M-row DeFi-wide backlog) and owned by `plans/active/data_completion_defi_2026_07_15.md`. This is
+the **identical** root cause the sibling `mvp_backfill_defi_onchain_v10-001` task (this plan's all-6-data_types gate)
+was already parked for by slot-3 on 2026-07-16T20:2x-20:3xZ via the
+`defi_onchain_v10_universe_v2_seed_or_backfill_progressed` prerequisite — confirmed via `GET /api/state` that condition
+is still `false`. **This doc's own scope (the Morpho adapter wiring + its calendar-window backfill) is now genuinely
+complete; the remaining gap is entirely someone else's already-tracked work, not a Morpho-specific defect.**
+
+**Action taken (mirroring the -001/`mvp_backfill_defi_onchain_v10` parking precedent, to stop this exact todo from
+re-bouncing the way it did for 13 dispatches on 2026-07-12)**: edited this task's own
+`agent-orchestrator/data/config/backlog.yaml` entry (`defi_morpho_lending_indices_never_wired-001`) —
+`priority: 50→999`, `priority_override: false→true`,
+`prereqs.prerequisites: []→[defi_onchain_v10_universe_v2_seed_or_backfill_progressed]` (reusing the same condition
+already gating the sibling task, rather than creating a duplicate) — then `POST /api/backlog/reload` (`ok:true`) and
+verified live via `GET /api/backlog` that `priority: 999` stuck. This should stop the dispatcher offering this task_id
+to idle `data_engineering` slots until the seed-chain/backfill work that condition tracks actually lands.
+
+**Checkbox NOT flipped** — the G2 gate genuinely does not pass; flipping would be false progress (same discipline every
+prior re-check in this doc applied). **`/skip-current-task`'d** — no further `data_engineering`-craft lever exists on
+this todo (the fix is entirely in `data_completion_defi_2026_07_15.md`'s expected-universe-v2 seed chain, which is
+explicitly infra/operator-scoped per that plan's own text). Whoever next has visibility into that seed chain's progress
+should flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed→true` once a chunk materially closes the DeFi
+`expected_unattempted` mass — at that point (and only then) does re-running this todo's G2 gate become useful again.

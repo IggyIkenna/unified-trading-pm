@@ -715,6 +715,30 @@ which already excludes gitignored content, so on-demand artifacts don't trigger 
 `.agent-claim` ownership file lives at `.tabs/<N>/.agent-claim` (slot root, above repos), never conflicts with per-repo
 build dirs.
 
+## Shared uv cache — one per-host cache, hardlinked venvs (codified 2026-07-17)
+
+**Rule**: `UV_CACHE_DIR = <workspace-root>/.uv-cache` + `UV_LINK_MODE=hardlink`, where `<workspace-root>` is the
+directory holding all repo clones (parent of `unified-trading-pm`). Derived, never a hardcoded home path — the cache
+MUST sit on the same filesystem as the venvs it links into, or hardlinks silently degrade to copies (failure mode B2 in
+`plans/active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`; the fleet-wide dedup fix shipped 2026-06-29,
+measured proof: shared `.so` inodes at `links=81`, ~21 GB reclaimed).
+
+Three layers export the same derivation and all respect a pre-set value (`${VAR:-...}`), so whichever layer runs first
+wins consistently:
+
+1. **QG runs** — `scripts/quality-gates-base/base-service.sh` (every `quality-gates.sh` invocation, all hosts).
+2. **AO slot spawns** — `agent-orchestrator/server/tmux_spawn.py` (worker shells on the planning VM).
+3. **Interactive shells** — `scripts/dev/install-uv-cache-shell-env.sh` writes a managed block into the operator's
+   `~/.bashrc`/`~/.zshrc`. Run ONCE per host (installed 2026-07-17 on the planning VM + hk dev host); without it,
+   hand-run `uv` falls back to `~/.cache/uv`, which on split-filesystem hosts is cross-fs → silent copies + a second
+   cache on the wrong partition. Verify: interactive `uv cache dir` prints `<workspace-root>/.uv-cache`.
+
+**Growth is bounded by two crons on the planning VM** (`i-0c9b283b31d6b5ca7`): `vm-disk-guard.sh` (threshold 80%,
+cadence `0 */2` since 2026-07-17 — 6h let the host climb +19 points blind between firings) and
+`install-prune-uv-cache-cron.sh`'s `uv cache prune` job (`0 */6`; the prune script resolves `uv` by absolute path —
+cron's PATH excludes `~/.local/bin`, a silent-failure bug fixed 2026-07-16, `pm@88310f87a`). Execution history + all
+measurements: `plans/archive/2026_07/ao_host_disk_pressure_2026_07_16.md`.
+
 ## Pre-spawn branch-state + liveness-gated dirty resolution (Phase 4, 2026-06-01)
 
 The orchestrator's spawn paths (`server.py::spawn_slot`, `autospawn._do_spawn`,

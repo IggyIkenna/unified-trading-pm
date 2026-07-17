@@ -410,6 +410,35 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-17 (slot-3) — 🔴 DEPLOY BLOCKER: 4 of the program's 5 ships are PROVENANCE-BLOCKED (un-promotable), not just
+  lagging.** Determined by trailer scan (`git log -1 --format=%B <sha> | grep '^Quickmerge:'`), the method in
+  `promotion_lag_alert_hides_provenance_block_2026_07_17.md`:
+  | ship | `Quickmerge:` trailer | promote status |
+  | --- | --- | --- |
+  | `unified-api-contracts@825878f7` | ✅ present | LAG only — will self-promote |
+  | `instruments-service@517b817b` | ✗ | **PROVENANCE-BLOCKED** |
+  | `market-tick-data-service@d302f07a` | ✗ | **PROVENANCE-BLOCKED** |
+  | `market-data-processing-service@0035f79` | ✗ | **PROVENANCE-BLOCKED** |
+  | `features-service@efd3e038` | ✗ | **PROVENANCE-BLOCKED** |
+  - **Causal chain**: another session's uncommitted `unified_api_contracts/registry/market_data_categories.py`
+    (sports/`trades_inplay`) → failed quickmerge's STAGE 1 dep-cleanliness audit for every downstream repo → forced 4 of
+    this program's agents onto the **dirty-deps carve-out #1 (direct push)** → a direct push carries no `Quickmerge:`
+    trailer → the LDR→main provenance gate correctly refuses to promote. **The carve-out is a trap: it unblocks the PUSH
+    and strands the PROMOTE.** UAC escaped because its agent shipped via real quickmerge before the dirty file appeared.
+  - **Self-correction**: an earlier entry/report said "all 5 stranded" — WRONG. It measured "not on main", which conflates
+    promotion LAG with a provenance BLOCK — the exact conflation that issue doc exists to fix. It is 4 blocked + 1 lagging.
+  - **`promotion_lag_alert_hides_provenance_block_2026_07_17.md` lists only 2 current blocks (mtds + deployment-ui); there
+    are 5** — this program's IS/MDPS/features strands landed after that doc was written. Not appended to that
+    cross-session doc from here to avoid a PM merge tangle; flagged here for the code-owner.
+  - **Impact on THIS program**: the Phase-0 code cannot DEPLOY to the writers while stranded (a stranded commit builds no
+    tarball), and deploy gates the corpus cutover. So the drain is blocked on a promotion-provenance fix, not on more
+    engineering.
+  - **Sanctioned remedy** (per the issue doc, owner-of-the-bypassed-code action — NOT this session hand-arming
+    anything): re-ship each via `quickmerge --agent --files '<paths>'` (the blocking dirty UAC file has since LANDED, so
+    deps are now clean) **or** revert-on-LDR + re-ship. **Do NOT hand-arm auto-merge** — that promotes bypassed code AND
+    moves the provenance baseline. Left for the operator / a fresh-context session: reverting + re-shipping 4 repos'
+    code with correct provenance is delicate cross-repo work, deliberately not rushed under a spent context.
+
 - **2026-07-17 (slot-3) — FIX D-features SHIPPED + open-q #9 RESOLVED — `features-service@efd3e038`.** Full
   `bash scripts/quality-gates.sh --no-fix` GREEN **at the commit SHA**: exit 0, **ZERO red (❌) in the output** (read
   the output, not the exit code — this gate prints ❌ while still exiting 0), 179s, **17665 passed**, coverage 83.55%,

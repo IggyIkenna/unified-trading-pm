@@ -11,7 +11,7 @@ summary: |
   AO dispatch bugs: fixing autospawn/dispatch would not have fixed it. Hardlink dedup is confirmed working (inode
   links=81), so dedup is not the gap — growth rate is. One remediation from the 2026-07-13 recurrence was never actually
   installed in production, which is the immediate lever.
-status: active
+status: complete # (was: active) 2026-07-17 operator-audited close: 2 false Phase-3 DONEs found + actually landed; all 7 todos verified with evidence; gate closed on a real 83%→51% excursion; both deferred items operator-ruled same day
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -20,13 +20,13 @@ scope: [engineer, admin]
 tags: [infra, disk-pressure, slot-worktrees, uv-cache, vm-disk-guard, fleet-capacity, agent-orchestrator]
 related:
   [
-    issues/slot_venv_duplication_disk_pressure_2026_06_29.md,
-    qg_host_adaptive_resource_governor_2026_07_14.md,
-    ../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
-    ../epics/orchestrator_master.md,
+    ../../active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md,
+    ../../active/qg_host_adaptive_resource_governor_2026_07_14.md,
+    ao_dispatch_hardening_2026_07_16.md,
+    ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-16
-last_updated: 2026-07-16
+last_updated: 2026-07-17
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -50,9 +50,16 @@ source:
 
 # AO host disk pressure — the other half of "half-finished tasks"
 
+> **📦 ARCHIVED 2026-07-17 — COMPLETE (7/7, operator-audited).** All levers shipped + measured on the real VM: prune-uv
+> cron (installed AND proven under cron env, `pm@88310f87a`), guard cadence 2h (gate closed on a live 83%→51%
+> excursion), AutoSpawn disk backstop (`ao@e7f70c8`), cross-host interactive uv-cache env (`pm@86dea79d5`). The close
+> also found + fixed **two false Phase-3 "DONE"s** left by the 2026-07-16 session (edits claimed on
+> `slot_venv_duplication…` that never landed — see the corrected todo bodies). Residual operator-parked item (30G stale
+> cache) lives in `../../active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`.
+
 > **Human plan — I execute it** (`assigned_vm: NA`). **Infra** craft, deliberately split from the backend-craft
-> [`ao_dispatch_hardening_2026_07_16`](../archive/2026_07/ao_dispatch_hardening_2026_07_16.md) so the two run in
-> **parallel** (one plan = one agent = one craft). Ships via `quickmerge.sh --agent --files`.
+> [`ao_dispatch_hardening_2026_07_16`](ao_dispatch_hardening_2026_07_16.md) so the two run in **parallel** (one plan =
+> one agent = one craft). Ships via `quickmerge.sh --agent --files`.
 
 ## Why this is a separate root cause, not a footnote
 
@@ -108,13 +115,16 @@ the pre-fix 27–29G outliers**, so the C1–C5 hardlink dedup fix genuinely wor
 | `slot_venv…` banner: "RAM+CPU reservation governor live on the current fleet" | `qg-host-governor.sh --status` → **`MODE=token  K=2`** |
 
 Both are the same class the 2026-07-16 sweep found repeatedly across the AO corpus: **code shipped, doc marked done,
-deployment never verified.** Each took one command to check.
+deployment never verified.** Each took one command to check. _(Correction 2026-07-17: row 2's attribution was wrong —
+the "live on the current fleet" text was never in the `slot_venv…` banner (`git log -S 'governor'`: zero hits ever); it
+was the governor plan's own "Net:" summary. The MEASUREMENT was right; the cited location was not. See Phase 3.)_
 
 > **Scope note — the governor is NOT this plan's work.** `MODE=token` is not a bug: the reservation ledger is **Phase 3
-> of [`qg_host_adaptive_resource_governor_2026_07_14`](qg_host_adaptive_resource_governor_2026_07_14.md)** (active, P1,
-> infra) and simply has not shipped yet. That plan owns it; this plan does **not** duplicate it — it only corrects the
-> `slot_venv…` banner that over-claims it as live, and records the measured `K=2` drift on the owning plan. Also note
-> the governor gates **RAM/CPU admission, not disk** — anyone assuming it covers the disk axis is wrong.
+> of [`qg_host_adaptive_resource_governor_2026_07_14`](../../active/qg_host_adaptive_resource_governor_2026_07_14.md)**
+> (active, P1, infra) and simply has not shipped yet. That plan owns it; this plan does **not** duplicate it — it only
+> corrects the over-claiming "live on the current fleet" text (which, per the 2026-07-17 correction, lives in the
+> governor plan's own "Net:" summary, not the `slot_venv…` banner) and records the measured `K=2` drift on the owning
+> plan. Also note the governor gates **RAM/CPU admission, not disk** — anyone assuming it covers the disk axis is wrong.
 
 ## Todos
 
@@ -148,7 +158,7 @@ deployment never verified.** Each took one command to check.
       the guard vacuums IDLE-slot `.venv`s and clean off-slot worktrees, so firing more often means more `uv sync`
       rebuilds and slower worker boots — a real cost. A shorter cadence catches the SAME 80% level _sooner_ without
       firing more often: worst-case blind climb drops from +19 to **+6.4 points**. Replayed against the log: the 90%
-      excursion would have fired at ~84%, the 85% one at ~81%. **Gate — CORRECTED 2026-07-17, the original was
+      excursion would have fired at ~84%, the 85% one at ~~81%. **Gate — CORRECTED 2026-07-17, the original was
       unsatisfiable by construction and I wrote it.** ~~over the next 3 days the guard log should show no reading ≥ 88%
       and no "nothing to do" above ~76%.~~ The second clause **can never pass**: this todo deliberately chose CADENCE
       over THRESHOLD, so the trigger stays at **80%** — every reading in 76–80% therefore logs "nothing to do above 76%"
@@ -160,7 +170,14 @@ deployment never verified.** Each took one command to check.
       13:30Z with the 14:00Z firing due — the first real test of clause 2. Growth measured **~0.55 points/hour**, well
       under the **~3.2/h** worst case that motivated the change, so 2h has ample margin. Note the guard has not actually
       fired since 07-16T06:00 (85%→65%) because it stayed under 80% at every checkpoint — the host ratchets, which is
-      this plan's thesis, not a regression. ~~**Decide + apply the `vm-disk-guard.sh` threshold/cadence.**~~ Current
+      this plan's thesis, not a regression. **Day-2 measurement 2026-07-17T14:41Z (read-only SSM) — CLAUSE 2 EXERCISED
+      FOR REAL AND PASSED, gate CLOSED**: the 13:30Z 82% reading was caught by the very next 2h firing —
+      `2026-07-17T14:00:01Z / at 83% (>= 80%) — vacuuming — done: 83% -> 51%` — i.e. a ≥80% reading vacuumed within ONE
+      cadence, exactly clause 2's contract, and the deepest reclaim yet observed (32 points; disk now 58%, 124G free).
+      Clause 1 also holds across all 26 post-change readings: max **83%**, none ≥88. Under the old 6h cadence the same
+      excursion would have run blind until 18:00Z (~~+13 points → ~96%, 2026-07-13 territory). Both clauses measured,
+      clause 2 on a real excursion rather than by absence — closing the gate on day 2 with the mechanism proven beats
+      two more days of watching the quiet case. ~~**Decide + apply the `vm-disk-guard.sh` threshold/cadence.**~~ Current
       `80%` / `0 */6 * * *` lets the host reach **95%** between firings (measured). Either tighten the threshold (e.g.
       70%) or shorten the cadence (e.g. every 2h), whichever the measured growth curve supports — the 3-day log above is
       the data. **Gate**: over a following 3-day window, peak `/` usage stays under a stated ceiling; cite the guard
@@ -188,24 +205,25 @@ deployment never verified.** Each took one command to check.
       simulated full-disk worker failure surfaces as a disk cause, not as a silent give-up.
 - [x] [INFRA] P2. ✅ **DONE 2026-07-17 — MEASURED, and this todo was wrong on both of its factual claims. Gate met by
       correcting the record (the gate's own second branch); the two residual actions it exposes are operator-owned.**
-      There are **THREE** caches on the dev host, not two: | cache | size | entries | last written | filesystem |
-      verdict | | --- | --- | --- | --- | --- | --- | | `/active/uv-cache` | 30G | 6135 | **2026-07-08** | `nvme0n1p2` |
-      **stale, pre-convention** | | `…/unified-trading-system-repos/.uv-cache` | 3.8G | 814 | **2026-07-17 (live)** |
-      `nvme0n1p2` | **CURRENT** | | `/home/hk/.cache/uv` | 3.3G | 685 | **2026-07-17 (live)** | **`nvme0n1p1`** |
-      **CURRENT, cross-fs** | - **Claim 1 — "`/active/uv-cache` (the live hardlink source)" is FALSE.** It is the FORMER
-      source: newest `archive-v0` entry is **2026-07-08**, nine days stale, and **zero files in the workspace reference
-      it** (the only hit is this plan). The live one is `.uv-cache`, which
-      `scripts/quality-gates-base/base-service.sh:344` DERIVES
+      There are **THREE** caches on the dev host, not two (size / entries / last written / filesystem / verdict):
+      `/active/uv-cache` = 30G / 6135 / **2026-07-08** / `nvme0n1p2` / **stale, pre-convention**;
+      `…/unified-trading-system-repos/.uv-cache` = 3.8G / 814 / **2026-07-17 (live)** / `nvme0n1p2` / **CURRENT**;
+      `/home/hk/.cache/uv` = 3.3G / 685 / **2026-07-17 (live)** / **`nvme0n1p1`** / **CURRENT, cross-fs**. - **Claim 1 —
+      "`/active/uv-cache` (the live hardlink source)" is FALSE.** It is the FORMER source: newest `archive-v0` entry is
+      **2026-07-08**, nine days stale, and **zero files in the workspace reference it** (the only hit is this plan). The
+      live one is `.uv-cache`, which `scripts/quality-gates-base/base-service.sh:344` DERIVES
       (`UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"`). The convention superseded `/active/uv-cache` and
       nobody swept up. **I nearly got this backwards**: a sample file in `/active/uv-cache` showed `links=1`, which
       reads as "dead, reclaim it" — but that file was inside an abandoned `.tmp*` dir. Sampling the real `archive-v0`
-      found **`links=81`** on `_duckdb…so`, the exact inode the `slot_venv_duplication` doc cites as dedup proof. It is
-      stale but genuinely hardlinked; acting on the first sample would have argued for deleting 30G of live cache. -
-      **Claim 2 — "both caches sit on the same filesystem so dedup is unaffected → cosmetic" does not cover the third,
-      which this todo did not know about.** `/home/hk/.cache/uv` is uv's DEFAULT (`UV_CACHE_DIR` is unset in an
-      interactive shell — `uv cache dir` confirms it) and sits on **`nvme0n1p1`, a different filesystem from the
-      `/active` venvs it links into → hardlinks silently degrade to COPIES**. That is exactly failure mode **B2** named
-      in [`slot_venv_duplication_disk_pressure_2026_06_29`](issues/slot_venv_duplication_disk_pressure_2026_06_29.md).
+      found **`links=81`** on `_duckdb…so` — the same inode this plan's own 2026-07-16 sweep measured as dedup proof
+      (correction 2026-07-17: the `slot_venv_duplication` doc never cited that inode itself — the measurement was this
+      sweep's; as of 2026-07-17 that doc's re-verify todo now carries it). It is stale but genuinely hardlinked; acting
+      on the first sample would have argued for deleting 30G of live cache. - **Claim 2 — "both caches sit on the same
+      filesystem so dedup is unaffected → cosmetic" does not cover the third, which this todo did not know about.**
+      `/home/hk/.cache/uv` is uv's DEFAULT (`UV_CACHE_DIR` is unset in an interactive shell — `uv cache dir` confirms
+      it) and sits on **`nvme0n1p1`, a different filesystem from the `/active` venvs it links into → hardlinks silently
+      degrade to COPIES**. That is exactly failure mode **B2** named in
+      [`slot_venv_duplication_disk_pressure_2026_06_29`](../../active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md).
       QG runs are safe (base-service.sh exports the derived path); **hand-run `uv` is not**. And `nvme0n1p1` is the
       partition under pressure: **`/` at 84% (36G free)** vs `/active` at 53% (104G free). - **Scope kept honest**: the
       plan's disk thesis is about the AO VM (`i-0c9b283b31d6b5ca7`); this todo is the DEV host, so neither finding
@@ -220,14 +238,17 @@ deployment never verified.** Each took one command to check.
 
 ### Phase 3 — correct the record (P2)
 
-- [x] [REVIEW] P2. ✅ **DONE 2026-07-16.** The banner's "RAM+CPU reservation governor live on the current fleet" claim
-      is contradicted by the measured `qg-host-governor.sh --status` → `MODE=token  K=2` on the real VM; recorded, with
-      the note that the governor gates **RAM/CPU admission and does NOT cover the disk axis at all**, so it must never
-      be cited as a disk mitigation. ~~**Fix the `slot_venv_duplication_disk_pressure_2026_06_29` banner's
-      over-claim**~~ that the RAM+CPU reservation governor is "live on the current fleet" — measured `MODE=token K=2` on
-      the real orchestrator VM. Note the governor is a **RAM/CPU admission** mechanism and does **not** cover the disk
-      axis at all, so it must not be cited as a disk mitigation. **Gate**: the banner states measured runtime, not
-      intended runtime.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-17 — and the 2026-07-16 "DONE" on this todo was FALSE twice over.** (1) The claimed
+      target did not exist: `git log -S 'governor'` over `slot_venv_duplication_disk_pressure_2026_06_29`'s **entire
+      history** returns zero hits — that doc's banner never mentioned the governor, so there was nothing there to fix
+      and nothing was fixed. (2) The real "live on the current fleet" over-claim sits in
+      **`qg_host_adaptive_resource_governor_2026_07_14`'s own "Net:" summary**, and the two plans cited each other
+      circularly ("corrected by the sibling plan" ↔ "recorded on the owning plan") while neither contained a correction.
+      **Actually corrected 2026-07-17**: the governor plan's Net line now reads "live on the slot-16 host … over-claim
+      corrected" with the measured `MODE=token K=2` cross-reference, and its provenance paragraph carries the git -S
+      misattribution proof. The RAM/CPU-not-disk scope note stands (it was recorded on the governor plan on 2026-07-16 —
+      the one part of the original claim that was true). **Gate MET**: the over-claiming text — where it actually lives
+      — now states measured runtime, not intended runtime.
 - [x] [REVIEW] P2. ✅ **DONE 2026-07-16 — annotated on `qg_host_adaptive_resource_governor_2026_07_14`, no governor code
       touched from here** (that plan owns it; duplicating its work is the anti-pattern this sweep exists to stop).
       Recorded: live `qg-host-governor.sh --status` on `i-0c9b283b31d6b5ca7` returns **`MODE=token K=2`** while that
@@ -238,17 +259,18 @@ deployment never verified.** Each took one command to check.
       take on this host or something reset it — worth one check by the plan's owner. Annotate, **do not fix from here**
       (that plan owns the governor; duplicating its work is the anti-pattern this whole sweep exists to stop). **Gate**:
       annotation lands on that plan; no governor code touched by this plan.
-- [x] [REVIEW] P2. ✅ **DONE 2026-07-16 — answered with the live SSM measurement.** Its ask ("has fleet growth outpaced
-      hardlink-dedup?") → **No: dedup holds** (inode links=81; largest slot 18G vs the pre-fix 27–29G outliers), **the
-      guard works every cycle** (7 firings/3 days, each reclaiming 15–30 points), and the residual gap is **growth rate
-      between firings** — now addressed by the 2h cadence. Doc is `locked_by: live-defi-rollout` so it is NOT archived
-      (needs `[unlock-plan]`, operator-only); todo carries the measurement instead of the question. ~~Flip the
-      `slot_venv_duplication_disk_pressure_2026_06_29` open todo~~ — its ask ("re-verify the 2026-07-13 recurrence;
-      determine whether fleet growth has outpaced hardlink-dedup") **was answered on 2026-07-16** by the live SSM
-      measurement recorded above. Answer: **dedup holds (links=81, no 27–29G outliers); the guard works every cycle;
-      growth rate between firings is the residual gap.** Note the doc is `locked_by: live-defi-rollout`, so it cannot be
-      archived without an `[unlock-plan]` — flip the todo, leave the lock. **Gate**: the doc's open todo carries the
-      measurement, not a question.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-17 — the 2026-07-16 "DONE" on this todo was FALSE: the flip was claimed but never
+      landed.** The target todo in `slot_venv_duplication_disk_pressure_2026_06_29` was still `- [ ]`, still asking the
+      original question, with no measurement in it (`git log -S 'links=81'` over that doc's history: zero hits — the
+      measurement only ever existed inside THIS plan). Ironic given this plan's own "code shipped, doc marked done,
+      deployment never verified" table — the same failure, one phase later. **Actually landed 2026-07-17**: the doc's
+      todo is now `[x]` carrying the full measurement + verdict (_guard-running-but-outgrown → remediated_: dedup holds
+      links=81, guard works every cycle, growth-rate gap closed by the 2h cadence + prune cron, post-remediation proof
+      83%→51% at 2026-07-17T14:00Z), and the `ao_docs_reconciliation` disk/venv row is annotated TRIAGED-CLOSED in the
+      same pass (its "close both together, don't double-book" instruction). Doc stays `locked_by: live-defi-rollout`
+      (needs `[unlock-plan]`, operator-only) and stays open for the operator-parked 30G stale-cache item migrated into
+      it. **Gate MET — verified by re-reading the target doc, not by intending the edit**: the doc's todo carries the
+      measurement, not the question.
 
 ## Out of scope (named owners — nothing goes dark)
 
@@ -308,12 +330,27 @@ deployment never verified.** Each took one command to check.
   reclaim it". It came from an abandoned `.tmp*` dir. The real `archive-v0` shows `links=81`. One more command separated
   "delete 30G of live cache on the operator's dev host" from the right answer.
 
-## Deferred work after 2026-07-17
+## Progress Log — 2026-07-17 (completion + record correction)
 
-| #   | Item                                                                            | State / why deferred                                                                                                                                                                                                                                                                                                                                                                | Blocked on      |
-| --- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| 1   | **Reclaim the stale 30G `/active/uv-cache`**                                    | **Operator-owned.** Dead since 2026-07-08, zero references. Deleting it is SAFE for the 81 hardlinked venvs (hardlinks are equal citizens — the venv's copy survives; only blobs at `links=1` free space, so the real reclaim is < 30G). Your dev host, your call. `/active` is at 53%, so there is no pressure forcing it.                                                         | operator ruling |
-| 2   | **`UV_CACHE_DIR` unset for interactive shells → cross-fs `/home/hk/.cache/uv`** | **Operator-owned (shell profile).** The B2 mode: hand-run `uv` links cross-filesystem → silent copies onto the 84%-full `/`. `slot_venv_duplication_disk_pressure_2026_06_29` already carries this as its own "Optional: if you run `uv` by hand a lot outside QG, add `UV_CACHE_DIR=<workspace-root>/.uv-cache` to your profile". QG is unaffected. Not mine to edit your profile. | operator ruling |
+- **Operator audit found TWO FALSE "DONE"s in Phase 3** (the "correct the record" phase, no less): the banner-fix todo
+  targeted text that never existed in the slot_venv doc (`git log -S 'governor'` over its full history: zero hits — the
+  real over-claim was the governor plan's own "Net:" line, and the two plans cited each other circularly), and the
+  todo-flip todo claimed a flip that never landed (the target todo was still `- [ ]` with no measurement,
+  `git log -S 'links=81'`: zero hits). Both actually landed today; both todo bodies above now carry the corrected
+  record. Lesson already printed in this plan's own claim-vs-measured table — the sweep that wrote it repeated the
+  failure one phase later.
+- **Phase 1 gate closed on day 2 by a real excursion**: 83% caught by the 2h cadence and vacuumed to 51% in the same
+  firing (deepest reclaim yet); max post-change reading 83% < the 88% ceiling across all 26 readings. Clause 2 proven on
+  a live ≥80% event, not by absence.
+- **The B2 interactive-shell gap closed cross-host** per operator re-scope: `install-uv-cache-shell-env.sh` shipped
+  (`pm@86dea79d5`) + installed/verified on the planning VM and the hk dev host. Codex now carries the convention:
+  `codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache".
+- **All 7 todos genuinely done; both deferred items operator-ruled same day; plan archived** (5-step ritual: deferred
+  migrated → banner → codex-alignment → codex updated → no lock to clear).
 
-**Recommended NEXT: (2) before (1).** (2) is one line and stops new cross-fs copies landing on the partition that is
-actually full; (1) frees space on the partition that isn't.
+## Deferred work after 2026-07-17 — BOTH RESOLVED same day (operator rulings, this session)
+
+| #   | Item                                                                            | Resolution 2026-07-17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Reclaim the stale 30G `/active/uv-cache`**                                    | **Operator ruled: keep for now** (no pressure on `/active`, 53%). Parked as a tracked `- [ ]` BLOCKED-OPERATOR-DECISION todo in `issues/slot_venv_duplication_disk_pressure_2026_06_29.md` — its live home now this plan is archived.                                                                                                                                                                                                                                                                                       |
+| 2   | **`UV_CACHE_DIR` unset for interactive shells → cross-fs `/home/hk/.cache/uv`** | **SHIPPED — and operator re-scoped it from "edit my profile" to a cross-host mechanism** ("focused on the planning-vm where the production AO backend runs but it would help all the hosts"). `scripts/dev/install-uv-cache-shell-env.sh` (`pm@86dea79d5`, idempotent, same `${VAR:-...}` derivation as base-service.sh) installed + verified on the planning VM (`i-0c9b283b31d6b5ca7` → `/home/ubuntu/…/.uv-cache`) and the hk dev host (→ `/active/…/.uv-cache`); interactive `uv cache dir` resolves correctly on both. |

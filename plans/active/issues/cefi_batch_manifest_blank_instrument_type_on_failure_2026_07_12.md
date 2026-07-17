@@ -365,3 +365,24 @@ shipped. Filed a blocked-question (see below) about the missing outer-gate wirin
 distinct from the already-fixed Defect-A condition-wiring bug (that bug is confirmed resolved: the condition is now
 being read and used correctly; the gap is that only one of two required gates has a condition at all).
 `skip-current-task`'d.
+
+### 2026-07-17T15:1xZ — data_engineering slot-9 (outer-gate wiring gap fixed — same Defect-A pattern, applied to the sweep condition)
+
+Re-dispatched (12th time). `GET /api/state` confirmed a `cefi-recapture-sweep-complete` prerequisite now exists
+(`value: false`, `set_by: main`, `set_at: 2026-07-12T15:24:38Z` — created shortly after slot-2's 11th-dispatch
+blocked-question above), but `gates_queued: 0` and this task's `agent-orchestrator/data/config/backlog.yaml` entry still
+had `prereqs.prerequisites: []` — the exact Defect-A wiring gap slot-10 already fixed once for the inner
+`tardis-concurrent-ip-lock-fix-landed` condition had recurred for the NEW outer condition (main created the condition
+but the attach-to-task half of the recipe hadn't landed yet). Fixed in place: added
+`prereqs.prerequisites: [cefi-recapture-sweep-complete]`, set `priority: 999` + `priority_override: true` (the RULES.md
+§4 park recipe) so this stops re-dispatching until the sweep genuinely completes. `POST /api/backlog/reload`
+(`ok: true`), then confirmed the fix holds by re-checking `gates_queued` after requeuing this task via
+`skip-current-task`: `0` while `dispatched` to this slot → **`1`** once returned to `status: queued` — the dispatcher
+now correctly recognizes this task as gated by the still-false sweep condition and should stop offering it.
+Independently reconfirmed the sweep substance is still incomplete (no relaunch/backfill-orchestration commit on
+`market-tick-data-service` or `deployment-service` beyond the already-landed lease/instrument_type fixes; sibling
+`tardis_concurrent_ip_lockout_2026_07_12.md` `[INFRA] P2` "harden + enable" still `- [ ]`). Did not run the Layer-1
+audit; no code shipped. This should end the thrash on this task — next dispatch should only occur once main flips
+`cefi-recapture-sweep-complete` true (the same evidence-verified pattern used for the sibling elo/travel gap-fill
+conditions), at which point the actual audit + conditional reconciler work (this doc's P3 todo) becomes real in-craft
+work.
