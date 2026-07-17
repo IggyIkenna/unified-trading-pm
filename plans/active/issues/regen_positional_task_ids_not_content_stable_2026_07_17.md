@@ -60,6 +60,11 @@ source:
   - "Code re-verified at agent-orchestrator@3f265cc, 2026-07-17 (this doc's mechanism section cites file:line)."
 ---
 
+> **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
+> [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
+> (operator-session local plan; verified-live classification table there). Do NOT start work from this doc alone — flip
+> items in the plan and mirror them here. This doc stays the detail/evidence record.
+
 # Regen task ids are positional, not content-stable (R7's surviving half)
 
 > **Why this doc exists.** R7 lived only in `ao_dispatch_residuals_2026_07_15`, a tracking INDEX with no todos of its
