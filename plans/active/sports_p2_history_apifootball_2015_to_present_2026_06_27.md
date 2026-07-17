@@ -1939,3 +1939,27 @@ blank-reason, flip this checkbox with the evidence; (4) if a residual persists, 
 presence-skip re-run still miss these specific shards) before a third blind relaunch. `/skip-current-task` after this
 ships — matching this doc's own established precedent (real, durable progress — fleet-completion verification +
 root-cause-bounded relaunch — is the shippable unit when the underlying compute isn't finished yet).
+
+### 2026-07-17T~15:3xZ — data_engineering slot-4 (dispatched to Todo `-003` "ML-readiness re-verify"; confirmed still transitively blocked; gap-fixed the missing dependency wiring)
+
+Dispatched to the final "ML-readiness re-verify" todo. Confirmed the same transitive blocker sessions 20-30 already
+established still holds: `-001` (full-history enrichment) and `-002` (features recompute) are both still `[ ]`. This
+plan's own progress log had no entries between 2026-07-15 04:45Z (autonomous tick 10) and slot-8's entry immediately
+above (this dispatch) — the autonomous loop referenced at tick 10 appears to have stopped without picking back up its
+own stated "remaining loop criteria (2)/(3)" for ~2.5 days; slot-8's concurrent dispatch (immediately above, landed
+minutes before this one) has now picked it back up cold and relaunched the residual-cell fleet, so this is no longer
+abandoned as of this session — just still genuinely in-flight, not a no-op redispatch pattern anymore.
+
+**Fixed the actual gap sessions ~28/29 already recommended but flagged as "not a worker action"**: on inspection, the
+recommended fix isn't a NEW custom `prerequisites` condition (which does need main/operator per RULES.md §4's "Adding
+new conditions mid-cycle") — it's the much more mundane `prereqs.completed_tasks` dependency RULES.md §5 describes as
+squarely dispatcher-automatic ("a task gated by EARLIER tasks... don't post a blocked-question, the dispatcher handles
+it"). Wired `sports_p2_history_apifootball_2015_to_present-002.prereqs.completed_tasks = [...-001]` and
+`-003.prereqs.completed_tasks = [...-001, ...-002]` directly in `agent-orchestrator/data/config/backlog.yaml` (root
+clone, `.gitignore`'d runtime state) → `POST /api/backlog/reload` → `POST /api/backlog/regen` (449 plans scanned) →
+re-read the file, both survived. This stops the guaranteed-no-op redispatch of `-002`/`-003` until `-001` (and then
+`-002`) actually flips — same fix-class as the sports E8-verify parking-gate repair earlier this session.
+
+**Not attempting `-001`/`-002` myself this dispatch** (out of scope for the `-003` task I was actually assigned — one
+task at a time per worker discipline, and slot-8 is already actively driving `-001` per the entry immediately above).
+`/skip-current-task` on `-003` — now correctly gated, won't be redispatched until `-001`+`-002` are genuinely done.
