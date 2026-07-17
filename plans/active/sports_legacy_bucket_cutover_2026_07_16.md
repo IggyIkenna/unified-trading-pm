@@ -1448,8 +1448,26 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       paused — i.e. exactly the freeze/repair/resume runbook shape. _Gate_: a regression test that reproduces the repro
       in the issue doc (out-of-band rewrite strips marker + newer mtime ⇒ shard MUST survive and MUST merge); UTL
       `quality-gates.sh` green. _ABORT_: none.
-- [ ] [INFRA] P2. **T6.10 — `uts-prod-market-tick-data-service-fast-t1-recon` is BROKEN in prod (found by T4.5,
-      2026-07-17 — NOT cutover-caused, predates the freeze).** _Mechanism_: the job's baked args are
+- [x] ✅ [INFRA] P2. **T6.10 — FIXED + VERIFIED 2026-07-17 — `deployment-service@cf49de42`. The job now exits 0.** _Gate
+      MET by RUNNING it, not reading it_: execution `…-vs2bd` **succeededCount=1, completionTime 2026-07-17T10:37:49Z**
+      (the prior `…-lx64t` is the failing control). Applied surgically via
+      `ENV=prod tofu.sh apply -target=module.mtds_fast_t1_recon_job` ⇒ **`Plan: 0 to add, 1 to change, 0 to destroy`**
+      (none of the 19-add/52-change pre-existing drift was touched); live args re-read from the API =
+      `--operation download --mode batch --asset-group SPORTS PREDICTION`. **🔴 THE PLAN'S PREMISE WAS WRONG ON BOTH
+      COUNTS — corrected by measurement:** (a) _"the name implies cefi/tradfi, NOT sports"_ is **false** — the
+      scheduler's own description is _"MTDS T+1 FAST — Sports odds, DeFi on-chain, Prediction, TradFi"_ and the job
+      module's comment scopes it to **Sports odds, Prediction, TradFi** (cefi is the separate `mtds_cefi_t1_recon_job`;
+      defi is the 11 per-operation jobs). (b) Baking `--asset-group` was **NOT sufficient** — it only exposed the REAL
+      blocker: adding `TRADFI` raises
+      `ValueError: --source databento|massive is REQUIRED for a TradFi OHLCV download (no SOURCE_PRIORITY[0] default —     the stamp must reflect the ACTUAL fetcher's vendor)`
+      (measured, execution `…-lx64t` failedCount=1). `--source` is **one per-invocation vendor value**, so any choice
+      would MIS-STAMP the sports/prediction legs ⇒ **TradFi cannot share this invocation** and is deliberately excluded.
+      UTL `--asset-group` is `nargs="+"` with `choices=STANDARD_CATEGORIES` (uppercase accepted). **🔴 NEW FINDING (own
+      issue doc, P1): TradFi T+1 tick collection has NO working MTDS job.** The full Cloud Run job list carries only
+      `…-cefi-t1-recon`, `…-fast-t1-recon` and the 11 `…-mtds-collect-*` DeFi jobs — nothing source-scoped for TradFi.
+      `fast-t1-recon` was the only job nominally covering TradFi and it has **never** succeeded, so TradFi T+1 needs its
+      own `--source=databento` (CFE/CME-1s) and/or `--source=massive` (equities/CME-1m) job(s). SSOT:
+      `codex/02-data/tradfi-databento-sourcing-ssot.md`. _Original mechanism_: the job's baked args are
       `[--operation download --mode batch]` with **no `--asset-group`**, and the resolver has no flat fallback → every
       execution dies with `ValueError: asset_group is required for tick-data bucket resolution` and collects 0 results
       (`failedCount=1` on 07-16 06:09Z / 02:55Z / 02:50Z; reproduced exactly by a local `--dry-run`). Its scheduler
