@@ -202,7 +202,9 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 - [x] [OPERATOR] P0. Audit both clouds + 4 codebase audits (pipeline / deployment-api / deployment-ui / tarball lane) —
       all complete; findings captured above.
 - [x] [OPERATOR] P0. Mock-first standalone HTML with REAL probed data (5 views: running / deploy-timeline / pipeline /
-      artifacts / health) — `scratchpad/artifact-pipeline-mock.html`. Iterating with operator.
+      artifacts / health) — shipped at `deployment-ui/public/design-mocks/artifact-pipeline.html`
+      (deployment-ui@479f8c2), viewable at `/design-mocks/artifact-pipeline.html`. **Temporary — delete the folder when
+      the real page ships.** Iterating with operator.
 - [ ] [OPERATOR] P0. Lock the shape with the operator (default tab, which views ship v1 vs later, any cuts).
 
 ### Phase 1 — backend read + snapshot layer (deployment-api)
@@ -260,7 +262,8 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 
 - **2026-07-17** — Audit + mock complete. Both clouds probed live; 4 code audits done. Operator decisions captured:
   scope = images + tarballs (artifact pipeline); absorb+retire CloudBuildsTab; page-first (bugs → issue doc); human
-  plan. Mock at `scratchpad/artifact-pipeline-mock.html` (real probed data; 2 fabricated attributions caught + fixed;
-  bug #2 demoted to UNVERIFIED). Deploy-timeline view + churn/rollback/failed-deploy signals added after the feasibility
-  grill confirmed Cloud Run revisions are a free 72-day per-deploy history. Feasibility verdict: producible + cheap
-  (cents/yr) + ~60–72d already retained. **Shape not yet locked; no page code started.**
+  plan. Mock shipped to `deployment-ui/public/design-mocks/artifact-pipeline.html` (deployment-ui@479f8c2, viewable at
+  `/design-mocks/artifact-pipeline.html`; temporary, delete-when the real page ships) — real probed data; 2 fabricated
+  attributions caught + fixed; bug #2 demoted to UNVERIFIED. Deploy-timeline view + churn/rollback/failed-deploy signals
+  added after the feasibility grill confirmed Cloud Run revisions are a free 72-day per-deploy history. Feasibility
+  verdict: producible + cheap (cents/yr) + ~60–72d already retained. **Shape not yet locked; no page code started.**
