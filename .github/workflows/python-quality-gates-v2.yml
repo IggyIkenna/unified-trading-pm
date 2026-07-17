@@ -5,7 +5,8 @@ name: python-quality-gates-v2
 #
 # ── PARALLEL SLICING (latency reduction 2026-06-10) ──────────────────────────
 # The ONE monolithic ~12-min serial `quality-gates.sh` step is fanned into a
-# MATRIX of parallel slice legs (tests / typecheck / lint-codex), each invoking
+# MATRIX of parallel slice legs (tests + the merged `checks` leg — A5 2026-07-17:
+# typecheck + lint-codex selectors run sequentially on ONE runner), each invoking
 # `quality-gates.sh --no-fix` with QG_SLICE=<leg>. Wall-time → max(slice) not
 # sum(slices); since pytest (~715s) dominates, the gate drops to ~the pytest leg.
 # The base scripts (base-service.sh / base-library.sh) partition the gate with
@@ -208,7 +209,7 @@ jobs:
     name: QG slice
     needs: content-gate
     # SPEND: on a content-sentinel HIT, SKIP the slice jobs entirely (no runners allocated) —
-    # this exact tree already passed v2, so re-running the gate work is wasted. Saves ~3
+    # this exact tree already passed v2, so re-running the gate work is wasted. Saves ~2
     # runner-starts per redundant v2 (push+PR×main/staging fire v2 up to 4× per change, most
     # byte-identical). The aggregate + ci-status steps below treat the resulting 'skipped' as
     # GREEN when cache_hit=true. A MISS (real change) runs every slice as before. metadata_only
@@ -217,7 +218,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        slice: [tests, typecheck, lint-codex]
+        # A5 (2026-07-17): typecheck + lint-codex MERGED into one `checks` leg — one runner +
+        # one ~50s setup instead of two, and one fewer 1-min billed job minimum per full run.
+        # Measured fleet-wide before collapsing (23 repos): merged checks duration stays UNDER
+        # the tests leg on every slow repo (features-service 213s vs 460s tests; UTL 162s vs
+        # 353s), so the wall-time long pole is unchanged where it matters; small repos trade
+        # ~20-30s wall for the billed saving. The base-script QG_SLICE partition is UNCHANGED —
+        # the checks leg runs the SAME two selectors sequentially (see the gate step), so
+        # local↔CI slice parity (check_qg_slice_completeness.py) still covers all 4 phases.
+        slice: [tests, checks]
     runs-on: ubuntu-latest
     # 135m covers the slowest repo's tests leg + margin; the non-tests legs finish
     # far sooner. A hung/runaway leg is killed cleanly (failure()||cancelled() notify fires).
@@ -295,11 +304,12 @@ jobs:
           if [ -n "$(printf '%s' "${CHANGED}" | tr -d '[:space:]')" ] && [ -z "${NONDOC}" ]; then
             DOCS_ONLY=true
           fi
-          # Consolidated per-slice verdict: metadata-only skips EVERY slice; docs-only skips only
-          # the code slices (tests / typecheck) — lint-codex always runs.
+          # Consolidated per-leg verdict: metadata-only skips EVERY leg; docs-only skips only
+          # the tests leg — the checks leg still runs (its typecheck selector is skipped
+          # INSIDE the gate step; lint-codex always runs).
           SKIP=false
           [ "${META}" = true ] && SKIP=true
-          [ "${DOCS_ONLY}" = true ] && [ "${SLICE}" != "lint-codex" ] && SKIP=true
+          [ "${DOCS_ONLY}" = true ] && [ "${SLICE}" = "tests" ] && SKIP=true
           {
             echo "metadata_only=${META}"
             echo "docs_only=${DOCS_ONLY}"
@@ -620,11 +630,13 @@ jobs:
             uv pip show "$dep" >/dev/null 2>&1 || echo "::warning::workspace dep '$dep' not resolved in .venv after install — basedpyright may Unknown-cascade (check .venv targeting, base-service.sh:316-327)."
           done
 
-      - name: Run quality gates (slice ${{ matrix.slice }})
+      - name: Run quality gates (leg ${{ matrix.slice }})
+        id: gate
         if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
         shell: bash
         env:
-          QG_SLICE: ${{ matrix.slice }}
+          LEG: ${{ matrix.slice }}
+          DOCS_ONLY: ${{ steps.vcheck.outputs.docs_only }}
         run: |
           export PATH="$(pwd)/.venv/bin:$PATH"
           set -o pipefail
@@ -636,8 +648,32 @@ jobs:
             [ -f "$_cp_yaml" ] && export UNIFIED_TRADING_CLOUD_PROVIDERS_YAML="$_cp_yaml" \
               && echo "ci: UNIFIED_TRADING_CLOUD_PROVIDERS_YAML -> $_cp_yaml (PM CI test SSOT)"
           fi
-          echo "── QG_SLICE=${QG_SLICE} ──"
-          bash scripts/quality-gates.sh --no-fix 2>&1 | tee /tmp/qg_output.log
+          # A5: the `checks` leg runs the typecheck + lint-codex SELECTORS sequentially (same
+          # base-script partition, one runner). Both selectors run even if the first fails, so a
+          # red PR still shows both verdicts (parity with the old parallel legs). A1: docs-only
+          # runs ONLY the lint-codex selector — a doc change cannot affect typecheck, and
+          # lint-codex is the slice that validates the docs themselves.
+          if [ "${LEG}" = "checks" ]; then
+            SELECTORS=(typecheck lint-codex)
+            [ "${DOCS_ONLY}" = "true" ] && SELECTORS=(lint-codex)
+          else
+            SELECTORS=("${LEG}")
+          fi
+          FAILED=""
+          for QG_SLICE in "${SELECTORS[@]}"; do
+            export QG_SLICE
+            echo "── QG_SLICE=${QG_SLICE} ──"
+            if ! bash scripts/quality-gates.sh --no-fix 2>&1 | tee -a /tmp/qg_output.log; then
+              FAILED="${FAILED:+${FAILED} }${QG_SLICE}"
+              echo "::error::QG selector '${QG_SLICE}' FAILED (leg=${LEG})"
+            fi
+          done
+          if [ -n "${FAILED}" ]; then
+            # First failed selector names the marker artifact → the aggregate's qg_red_reason
+            # maps it to pytest/basedpyright/ruff exactly as before the merge.
+            echo "failed_selector=${FAILED%% *}" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
 
       - name: Upload coverage.xml for codebase-health (tests slice; best-effort)
         # The aggregation job parses this into the deployment-ui Repo-CI Cov% column. ALWAYS
@@ -654,17 +690,19 @@ jobs:
       - name: Create slice-failed marker (best-effort, non-fatal)
         # Allows the agg-job to surface the specific failing step (pytest / basedpyright / ruff)
         # in qg_red_reason rather than the generic "qg". continue-on-error keeps it non-fatal.
+        # A5: the marker carries the failed SELECTOR (typecheck / lint-codex), not the merged
+        # leg name, so the aggregate's reason mapping is unchanged by the leg merge.
         if: failure()
         continue-on-error: true
         shell: bash
-        run: echo "${{ matrix.slice }} failed" > /tmp/qg-slice-failed.txt
+        run: echo "${{ steps.gate.outputs.failed_selector || matrix.slice }} failed" > /tmp/qg-slice-failed.txt
 
       - name: Upload slice-failed marker (best-effort, non-fatal)
         if: failure()
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: qg-slice-failed-${{ matrix.slice }}
+          name: qg-slice-failed-${{ steps.gate.outputs.failed_selector || matrix.slice }}
           path: /tmp/qg-slice-failed.txt
           retention-days: 1
 

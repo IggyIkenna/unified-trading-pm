@@ -17,7 +17,7 @@ name: ci-health
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # every 15 minutes
+    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: the ci-failure-alert repository_dispatch wakes this within seconds of a real failure — the cron is a pure backstop, so */15 idle ticks bought nothing)
   # Event-driven path (plan L1555): service repos dispatch `ci-failure-alert` when
   # quality-gates-v2 fails (via the notify-ci-watcher job in quality-gates-v2.yml).
   # This lets the watcher surface failures in seconds rather than up to 15 min. The
