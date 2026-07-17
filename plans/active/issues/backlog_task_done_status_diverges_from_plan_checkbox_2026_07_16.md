@@ -216,6 +216,25 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       post-deploy audit — a single dispatch can't observe 24h of live traffic. (repo: agent-orchestrator) —
       agent-orchestrator@86b8b8b, backend_engineer slot-13, 2026-07-17.
 
+- [ ] [INFRA] P1. **The gate is fixed; the ALREADY-POISONED rows are not. Two are still live.** Independently verified
+      2026-07-17 (operator session) against authoritative sources on BOTH sides — DB read live from planning-vm
+      `/var/lib/orchestrator/state.db` via SSM, plan checkboxes read at `origin/live-defi-rollout` (NOT a local checkout
+      — see the trap note below): **`l2_book_microstructure_capture-005` (`done_sha=6edc83254`) and `-007` (`1e1c2bda8`)
+      are STILL `status=done` while their todos are STILL `- [ ]`.** `@86b8b8b`/`@d716fd0` stop NEW false-`done`s at
+      `/done`-time; a gate cannot repair a row already written. These two are exactly the rows Todo 3 reopened at 19:41Z
+      that fell back by 19:59Z — the difference now is that **a reopen will finally STICK**, because the mechanism that
+      re-poisoned them is closed. Reopen via `POST /api/backlog/{id}/reopen`. **Operator-gated**: reopening requeues
+      them for dispatch (correct — the work genuinely is not done), so it is a live state change, not a bookkeeping
+      edit.
+- [ ] [INFRA] P2. **58 of 64 `done` rows are UNAUDITABLE, which is not the same as clean.** `tasks.brief_hash` is NULL
+      on every row predating that column, so there is no way to map those tasks back to a specific todo and check it.
+      The corollary above ("no periodic sweep needed") is sound **for new rows via this defect class** but says nothing
+      about this historical tail: we do not know whether they are honest, and `gate_on_depends` trusts them. Either
+      backfill `brief_hash` for historical rows (making them auditable) or explicitly rule the tail out of scope and
+      record WHY. Tool: `agent-orchestrator/scripts/orchestrator/audit_false_done.py` (promoted 2026-07-17,
+      `agent-orchestrator@3f265cc`) — reports `UNAUDITABLE` separately from `honest` precisely so this tail cannot be
+      silently counted as clean. **Re-run it; its answer has a date on it.**
+
 ## Progress Log
 
 ### 2026-07-16T18:2xZ UTC — data_engineering slot-13 (finding filed)

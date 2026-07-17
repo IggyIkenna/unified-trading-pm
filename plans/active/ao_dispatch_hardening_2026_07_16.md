@@ -549,3 +549,54 @@ happen in this session. Read this + the Progress Log to resume losslessly.
 | 6   | **Prove the deep `plan-reconciler`**                    | `issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10` (3 open)        | The keystone: its proving dispatch was due **2026-06-17** and is ~1 month overdue; it gates the RULE-11 retire of 3 overlapping hygiene runtimes. It runs AS an AO worker, so it was correctly gated behind AO dispatch correctness — **which is now shipped**, so it is unblocked. NB its 2026-06-12 audit findings are STALE (the daily Haiku GHA is 10/10 green, the Cloud Run sweep 8/8).                                                                                                                                                                                                                                                                                                                  |
 | 7   | **capability_wizard reconciliation**                    | `issues/capability_wizard_{analysis_findings,gap_discovery}_2026_06_11` (41 open) | **Verified OUT of AO scope** — 1 of 41 todos touches agent-orchestrator and it is already fixed. The wizard is alive and shipping; ~25 of 41 todos are already done and never checked off. Needs its own reconciliation pass before anyone dispatches against it.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | 8   | **uv-cache dual-path reconcile**                        | `ao_host_disk_pressure_2026_07_16` (1 open, P2)                                   | Cosmetic: both caches sit on the same filesystem so dedup is unaffected. Documentation-vs-reality drift, not a disk-pressure driver.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+
+## Deferred work after 2026-07-17
+
+Session scope was AO correctness: the backlog prune, the Details-tab/DB divergence, the P0 runtime verdict, and a
+skeptical audit of five "done-but-still-open" issue docs. Separating the KINDS of not-done, because they need different
+responses:
+
+| #   | Item                                                                    | State / why deferred                                                                                                                                                                 | Blocked on            |
+| --- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
+| 1   | **Reopen the 2 confirmed false-`done` rows** (`l2_book…-005`, `-007`)   | **Operator-owned.** Verified live (VM db + LDR). Reopening requeues them for dispatch — a live state change, not bookkeeping. The gate fix means a reopen now STICKS.                | operator ruling       |
+| 2   | **58 unauditable `done` rows** (`brief_hash` NULL)                      | **Not done.** Unknown ≠ clean; `gate_on_depends` trusts them. Backfill `brief_hash` or rule the tail out of scope with a recorded WHY.                                               | nobody — pick it up   |
+| 3   | **Durable park for the sports chain** (P1 above)                        | **Operator-owned (Ikenna).** Root cause found: the recipe DOES stick (`mvp_backfill_defi_onchain_v10-002` proves it); `-002` was never parked, `-001`'s flag was flipped TRUE early. | sports Phase-6 freeze |
+| 4   | **`escalation_pipeline_mvp` — un-pause?**                               | **Operator-owned.** Paused by YOUR 2026-06-26 epic-level ruling. Its `depends_on` is STALE (the broker was archived as NOT-REQUIRED) so it is not actually blocked.                  | operator ruling       |
+| 5   | **`/api/escalate` vs proposed `/api/escalation/{id}` name collision**   | **Not done.** Two unrelated concepts one character apart (CI-wall judgment dispatch vs operator escalation). Resolve BEFORE writing escalation code.                                 | (4)                   |
+| 6   | **Backlog-relations UI**                                                | **Cannot be done yet.** Brief + real data + a 100-task synthetic fixture handed to the design agent; implementation waits on a design.                                               | design agent output   |
+| 7   | **`ORCHESTRATOR_DB_PATH` is in the systemd unit but NOT `.env.local`**  | **Not done.** Shell-run tooling therefore resolves `config.db_path()` to the EMPTY in-repo db. Same footgun family as the incident below — it bit me twice while diagnosing it.      | nobody — pick it up   |
+| 8   | **07-12 degradation onset** (`worker_polling_dead` 0→587; 0.6:1 → 44:1) | **Not done.** Never root-caused. The churn is fixed, but WHY it started that day is unexplained — a repeat is undetected until it hurts.                                             | nobody — pick it up   |
+
+**Recommended NEXT: (1) then (2).** Item 1 is two API calls and it makes the ledger honest for the first time — and it
+is only worth doing NOW, because before today's gate fix a reopen decayed within minutes. Item 2 is the same question
+for the other 58 rows and is the last place a false `done` can still hide.
+
+## Lessons — carry these, they cost real time
+
+- **A downloaded snapshot is stale the instant it lands.** Used for history, never for "is it working now". I answered a
+  live question from an 18h-old db copy and got corrected. Worse: my false-`done` audit read plan checkboxes from a
+  LOCAL checkout that was **3 commits behind LDR** — a todo flipped upstream would have been FALSELY accused. Always
+  read plans at `origin/live-defi-rollout` (the ref the regen itself uses). The promoted `audit_false_done.py` encodes
+  this as trap 1.
+- **"Zero errors" in an IDLE window proves nothing.** db-locks looked fixed at 0/30min while the fleet was doing
+  nothing. The real proof needed a BUSY window — and the honest finding was that locks cluster at **deploys**, not load:
+  15/18/19h (my push windows) had 22/44/102 locks; 16/17h were equally busy with 0. Pick the window by the MECHANISM,
+  not by convenience.
+- **Raw counts mislead; ratios don't.** The 20:00 hour fired 17 spawns and looks like churn — until you see 19
+  dispatches. Churn is spawns DECOUPLED from dispatches. Pre-fix 87 spawns/0 dispatches; post-fix 31/37.
+- **The exit code is not the tail.** `bash gate.sh | tail` shows the tail's status, not the gate's. Read `$?` from the
+  gate. This bit three times in one session.
+- **A test can pin the bug.** `assert loop2._db_path is None` guarded "prune nothing", two lines under a comment saying
+  the server "prunes zombies by default". A green suite is not evidence the contract is right. Bug-inject to prove a
+  test is load-bearing — three of mine passed with the fix deleted.
+- **Loud ≠ read.** The prune screamed `no such table: tasks` **393 times in 7 days** and reported `RegenSummary(...)` as
+  success on the same tick. A WARNING inside a loop that then logs success is functionally silent. If a failure can
+  never self-heal, it is an ERROR that names the fix.
+- **Two names for one concept WILL drift.** `ORCHESTRATOR_DB_PATH` (systemd) vs `ORCHESTRATOR_REGEN_DB_PATH`
+  (.env.local) diverged when the db moved, and the second only existed to paper over a bad default. The durable fix was
+  DELETING the second, not correcting it.
+- **My own correction**: I twice told the operator a wrong story about the 250→84 drop — first "a graveyard of the AO's
+  completed work" (wrong), then a self-contradiction (claiming ticking `[x]` deletes rows while also saying `done` rows
+  are kept forever). The truth: the prune only ever deletes `queued`/`blocked`; **all 145 queued rows had
+  `dispatched_to=NULL` — never handed to a worker**. The work was done AROUND the AO, and its rows went stale. If that
+  number resurfaces, this is the correct account.
