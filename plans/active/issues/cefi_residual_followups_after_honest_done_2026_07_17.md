@@ -388,13 +388,17 @@ pairs stay honest-unresolved (reported, never guessed).
       `5eb274fa` triggered to confirm). Adjacent: the UAC Artifact-Registry wheel is frozen at 0.72.0 (2026-06-27) —
       irrelevant to these source/base-image consumers but a fleet-hygiene item for AR-wheel UAC consumers. (repo:
       features-service)
-- [ ] [SCRIPT] P1. **Fix the one campaign script our rename breaks** —
-      `strategy-service/scripts/trace_arbitrage_price_dispersion.py` matches the filename LEAF (:294) against hardcoded
-      WIRE forms (:273-274) over `asset_group=cefi` → silently mis-matches post-D4-rename. Either make the leaf-match
-      accept both wire + canonical stems, or confirm its
-      `# Delete-when: master_to_live_defi_2026_05_23 Phase D complete` is satisfied and delete it
-      (delete-deprecated-code). `trace_carry_staked_basis.py` is a prefix scan → SAFE, no action. (repo:
-      strategy-service)
+- [x] ✅ [SCRIPT] P1. **Fix the one campaign script our rename breaks** — **`strategy-service@26b99c69`** (2026-07-18).
+      NEW pure helper `_leaf_matches_asset(leaf, asset_upper)` accepts BOTH the pre-migration wire stem
+      (`BTCUSDT.parquet` / `PI_BTCUSD.parquet`) AND the post-D4-rename canonical stem
+      (`VENUE:TYPE:BASE-QUOTE[@MARKER].parquet`, comparing the `-`-stripped BASE-QUOTE to the wire ticker), replacing
+      the hardcoded wire-only leaf-match at `_load_tardis_day`. **Chose FIX not DELETE**: the Delete-when
+      (`master_to_live_defi_2026_05_23 Phase D complete — live dispersion archetype running ≥7 days`) is NOT satisfied
+      (that plan is still in `plans/active/`). Evidence: repo's own test file passes 12/12 incl. the new
+      `test_leaf_matches_asset_accepts_wire_and_canonical_stems` (wire + canonical + non-match cases); ruff green;
+      `scripts/` excluded from basedpyright; full QG exit 0 (its lone failure is the pre-existing, unrelated
+      `test_golden_pre_trade_check_phase0_risk_eval` risk-eval fixture — NOT this change). `trace_carry_staked_basis.py`
+      is a prefix scan → SAFE, no action. (repo: strategy-service)
 
 ## Phase 1 — Corpus migrations (scripted + dry-run first; `--apply` ONLY behind the Phase-1 drain, snapshot-first)
 
