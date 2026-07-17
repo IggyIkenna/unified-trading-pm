@@ -4197,3 +4197,14 @@ it's new adapter work, not a data-audit residual).
   an execution error on this dispatch's part. Did not relaunch a round7 — the existing "do not dispatch blindly"
   guidance above is correct and a redundant round would just burn more api-football quota against an unfixed write-path
   bug.
+
+> **⛔ MAIN RULING (2026-07-17 ~15:27Z, agt-46dce4) — the live-cron VERIFY P0 is TIME-GATED to 07-18; DO NOT re-block on
+> the redispatch.** The post-restore UNATTENDED scheduler self-fire has not occurred yet (07-17's 00:35-01:15Z window was
+> consumed by the 07-16 bucket-cutover freeze; schedulers were re-enabled 07-17 AFTER their windows). Next unattended
+> self-fire: **07-18 00:35-01:15Z**. If re-dispatched this task before then: record the state + `skip-current-task` fast;
+> do NOT file a /blocked asking for a dispatch gate (main already ruled B on BLK-626f4f64 + BLK-8c64f6d4 — a backlog.yaml
+> gate is banned + non-durable vs regen). Do NOT flip the VERIFY checkbox on a MANUAL run — that is the
+> manual-run-declare-fine anti-pattern this todo forbids; the flip requires observing the UNATTENDED self-fire. After
+> 07-18 ~01:30Z: verify the scheduler self-fired cleanly (per this doc's interim-status recipe) and THEN flip with that
+> evidence. Self-resolving, no operator dependency. Systemic fix filed:
+> plans/active/issues/orchestrator_concurrent_qg_saturation_and_dispatch_divergence_2026_07_17.md.
