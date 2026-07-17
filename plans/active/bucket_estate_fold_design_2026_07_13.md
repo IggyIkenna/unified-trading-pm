@@ -326,10 +326,13 @@ lifecycle'd" claim per the parent Wave-0 todo.
 > removal in the SAME change. These are the sequencing skeleton for the successor split plans, not dispatchable todos on
 > this draft doc.
 
-- [ ] [INFRA] P0. **Split-plan authoring + destination gate** — author the 3–4 successor execution plans (ml / features
-      / execution+strategy / portfolio-state), one per agent for parallelism (`task_template.md` §4); ASK the operator
+- [x] ✅ [INFRA] P0. **Split-plan authoring + destination gate** — author the successor execution plans (ml / features /
+      execution+strategy / portfolio-state), one per agent for parallelism (`task_template.md` §4); ASK the operator
       AO-vs-human destination per the plan-destination HARD RULE before flipping any to `active`. Each carries the
-      DeFi-playbook shape below.
+      DeFi-playbook shape below. — DONE 2026-07-17: operator ruled **all 5 folds, HUMAN plans** (`assigned_vm: NA`).
+      Authored 5 successor plans: [[bucket_fold_ml_2026_07_17]], [[bucket_fold_features_2026_07_17]],
+      [[bucket_fold_execution_strategy_2026_07_17]], [[bucket_fold_portfolio_state_2026_07_17]] +
+      [[bucket_fold_closeout_2026_07_17]] (cross-cutting, `depends_on` all four).
 - [ ] [INFRA] P0. **Alias + yaml scaffold (shared prerequisite)** — add the folded keys to `cloud-providers.yaml` (all 3
       copies) + `_KIND_ALIASES` entries for every retired kind (§2.D soft-transition); no bucket deletes yet. Verify
       `terraform plan` (derived-from-yaml) shows the new folded buckets as the only creates.
@@ -443,4 +446,14 @@ Structured per the escalation rule (options + recommendation):
   [[bucket_estate_consolidation_to_sub100_2026_07_13]]. Cutover sites enumerated by workspace `rg` over each fold's
   `resolve_bucket_name` callers + the hardcoded-name sweeps in the three audit issue docs (file:line inline in §1). No
   code changed — this is the design that spawns the successor split execution plans (§3 todo 1, gated on the §5 Q1
-  operator destination ruling). </content> </invoke>
+  operator destination ruling).
+- **2026-07-17, §3 todo 1 executed — successor plans authored.** Operator ruled §5 **Q1 = A (all 5 folds as HUMAN plans,
+  `assigned_vm: NA`)**. Five successor plans created in `plans/active/`: `bucket_fold_ml_2026_07_17`,
+  `bucket_fold_features_2026_07_17`, `bucket_fold_execution_strategy_2026_07_17` (Folds C+D bundled — same services),
+  `bucket_fold_portfolio_state_2026_07_17` (LAST, live-trading-adjacent, delete operator-gated per Q2-A), and
+  `bucket_fold_closeout_2026_07_17` (`depends_on` all four — codex audit, estate recount, alias sunset, parent-plan
+  flip). **Correction baked into the ml plan**: re-measured object counts this session show `ml-predictions-store` +
+  `ml-configs-store` (all tiers) + `ml-artifacts` are EMPTY — the Fold B "Data?" column mislabeled predictions/configs
+  as "live"; only `ml-models-store-prd` (160 obj), `ml-training-artifacts` flat (76 obj), and legacy `ml-models-store`
+  flat (38 obj) hold data. Q3 (lifecycle STANDARD→COLDLINE@60d) carried into each fold as authored; portfolio-state
+  flagged confirm-retention-before-COLDLINE. This design stays LOCAL/`draft` (never ingested). </content> </invoke>
