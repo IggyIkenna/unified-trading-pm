@@ -158,12 +158,23 @@ follow-up backfill pass — same operational pattern as Todo 2 in the sibling is
       multi-VM fleet (this is exactly the kind of infra-cost decision the data-correctness HARD RULE says to surface,
       not default to a full re-run for) and consider whether operator sign-off is warranted given the scale. (repo:
       features-service)
-- [ ] [VERIFY] P3. **Audit whether other sports calculators build a hand-constructed
+- [x] ✅ [VERIFY] P3. **Audit whether other sports calculators build a hand-constructed
       `pd.Timestamp(year=..., month=...,     day=...)` (or similar tz-naive-by-construction Timestamp) that gets
       compared against a possibly-tz-aware value** — grepped `features_service/sports/calculators/*.py` for
       `pd.Timestamp(year=` this dispatch and found only `elo_calculator.py`'s one site (now fixed), but a full audit of
       naive-vs-aware _comparison_ sites (not just re-parse sites, which the sibling issue's P3 already covered) hasn't
-      been done. (repo: features-service)
+      been done. (repo: features-service) — features-service@2dc643bf; full audit of all 43 calculator files' timestamp
+      construction/parse/comparison sites (not just `pd.Timestamp(year=` sites). Found + fixed 2 active production bugs
+      of the same class + hardened 1 dormant risk: `manager_calculator.py` (highest severity — matches the elo bug's
+      exact shape: caught TypeError silently fell back to `_defaults()` = all-ZERO manager features, indistinguishable
+      from a genuinely brand-new manager), `season_context.py` (fell back to honest `None`/NaN but lost computable
+      regime-feature signal), `team_form.py` (`_team_form_rest_congestion` has the same risk but is currently
+      unreachable in production — no caller passes `target_date` — hardened anyway as a public-API function). Confirmed
+      SAFE (already defended) after direct read: `elo_calculator.py`, `european_fatigue_calculator.py`,
+      `travel_calculator.py`, `transfer_window_calculator.py`, `h2h_calculator.py`,
+      `promoted_team_features_calculator.py`, and all remaining calculator files with no timestamp-comparison logic.
+      Regression tests added for all 3 fixed/hardened files; QG green (17638 passed, 0 failed, formula-hash +
+      no-look-ahead gates); shipped via `quickmerge --agent` 2026-07-17.
 
 ## Progress Log
 
@@ -257,3 +268,47 @@ data-correctness HARD RULE requires surfacing, not quietly absorbing into a rout
 Todo below should NOT default to a full 22k-shard recompute without an explicit cost/scope decision (this recomputes
 `derived_features` for ~55% of 9+ years of sports history — a real infra-cost decision, not a "just rerun it" call). QG
 green on the audit script; shipped via quickmerge.
+
+### 2026-07-17T13:0xZ — data_engineering slot-7 (Todo P3 — full audit of the naive-vs-aware comparison sites)
+
+Dispatched the outstanding P3 todo. Read every one of the 43 files in `features_service/sports/calculators/*.py` (not
+just a grep for `pd.Timestamp(year=`) for any Timestamp construction/parse site whose result later gets
+compared/subtracted against a value that could carry different tz-awareness, then traced each candidate to its actual
+production call path and exception-handling fallback to judge real severity (not just "could theoretically raise").
+
+Found + fixed 2 active bugs of the same class as the elo fix, plus hardened 1 dormant one:
+
+- **`manager_calculator.py` — highest severity, matches the elo bug's exact shape.** `home_coach_start`/
+  `away_coach_start` (`pd.Timestamp(start_raw)`, naive unless the source string carries an offset) and `kickoff`
+  (`pd.Timestamp(kickoff_raw)`, same) were compared/subtracted against `kickoff_utc` columns parsed via
+  `pd.to_datetime(..., errors="coerce")` (no `utc=True`) in `_filter_after_date`, `_compute_style_shift_attack`,
+  `_compute_style_shift_defense`, and directly via `(kickoff_utc - home_coach_start).days`. The caught `TypeError` fell
+  back to `_defaults()` = **all-ZERO** manager features (tenure/win_rate/ppg/games_in_charge) — worse than NaN because
+  it's indistinguishable from a genuinely brand-new manager with zero games. Fixed by normalizing every Timestamp
+  construction site with a `tz_localize("UTC")` guard and adding `utc=True` to every `kickoff_utc` column parse compared
+  against them — applied at the point of use in each helper (defense-in-depth), not just the caller, since two existing
+  unit tests called the private helpers directly with tz-naive Timestamps and would otherwise still break.
+- **`season_context.py` — same root cause, lower severity.** `_count_team_matches_in_season`'s `dt_col` (no `utc=True`)
+  compared against `before_kickoff` (`pd.Timestamp(kickoff_raw)`, no explicit tz) in `_regime_row_from_history`. The
+  caught `TypeError` fell back to `None` (honest-absence, correct shape) but silently dropped all regime-feature columns
+  (`matches_played_current_season_*`, `season_start_flag_*`, `history_depth_*`, `prior_blend_weight_*`) for affected
+  fixtures — lost computable signal, not a wrong-value bug. Same `utc=True` + `tz_localize("UTC")` fix.
+- **`team_form.py` — dormant, hardened anyway.** `_team_form_rest_congestion` has the identical risk shape
+  (`dates = pd.to_datetime(...)` no `utc=True`, compared against `target_date`), but traced every production caller
+  (`compute_team_form_batch` → `compute_team_form_for_fixture` → `compute_team_form`, and both
+  `promoted_team_features_calculator.py` call sites) and confirmed NONE currently pass `target_date` — the function
+  early-returns before reaching the risky code, so this is presently unreachable in production. Hardened anyway since
+  it's a public API exercised directly by tests and could gain a caller.
+
+Confirmed SAFE after direct read (no fix needed): `elo_calculator.py` (already fixed by Todo 1, rest of the file derives
+all dates from one consistently-parsed column), `european_fatigue_calculator.py` and `travel_calculator.py` (both force
+`utc=True` on every `kickoff_utc` parse — the sibling issue's fix), `transfer_window_calculator.py` (explicit
+`tzinfo is None` → `tz_localize` guard already present), `h2h_calculator.py` (explicit `last_date.tzinfo is not None`
+guard before subtracting), `promoted_team_features_calculator.py` (its `to_datetime` calls only feed `sort_values` on
+the same column, never a cross-comparison against an externally-constructed Timestamp). All remaining calculator files
+have no timestamp-comparison logic at all.
+
+Added regression tests for all 3 files reproducing the exact mismatched-tz scenario (tz-aware kickoff vs tz-naive
+coach/history dates and vice versa) — each confirmed to compute the correct value post-fix. Full QG green: 17638 passed
+/ 0 failed / 209 skipped (2 more passing tests than the prior baseline, from the new regression tests), formula-hash
+drift gate clean, no-look-ahead gate clean. Shipped via `quickmerge --agent` — features-service@2dc643bf.
