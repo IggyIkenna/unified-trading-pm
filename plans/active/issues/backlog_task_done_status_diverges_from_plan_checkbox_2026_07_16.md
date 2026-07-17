@@ -216,8 +216,8 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       post-deploy audit — a single dispatch can't observe 24h of live traffic. (repo: agent-orchestrator) —
       agent-orchestrator@86b8b8b, backend_engineer slot-13, 2026-07-17.
 
-- [ ] [INFRA] P1. **The gate is fixed; the ALREADY-POISONED rows are not. Two are still live.** Independently verified
-      2026-07-17 (operator session) against authoritative sources on BOTH sides — DB read live from planning-vm
+- [x] ✅ [INFRA] P1. **The gate is fixed; the ALREADY-POISONED rows are not. Two are still live.** Independently
+      verified 2026-07-17 (operator session) against authoritative sources on BOTH sides — DB read live from planning-vm
       `/var/lib/orchestrator/state.db` via SSM, plan checkboxes read at `origin/live-defi-rollout` (NOT a local checkout
       — see the trap note below): **`l2_book_microstructure_capture-005` (`done_sha=6edc83254`) and `-007` (`1e1c2bda8`)
       are STILL `status=done` while their todos are STILL `- [ ]`.** `@86b8b8b`/`@d716fd0` stop NEW false-`done`s at
@@ -225,7 +225,16 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       that fell back by 19:59Z — the difference now is that **a reopen will finally STICK**, because the mechanism that
       re-poisoned them is closed. Reopen via `POST /api/backlog/{id}/reopen`. **Operator-gated**: reopening requeues
       them for dispatch (correct — the work genuinely is not done), so it is a live state change, not a bookkeeping
-      edit.
+      edit. **Reopened 2026-07-17, infra slot-2**: re-verified ground truth first (fresh-pulled to LDR HEAD
+      `dc038c764e7f`, `l2_book_microstructure_capture_2026_07_13.md:173`/`:213` both still `- [ ]`, `GET /api/backlog`
+      confirmed both rows still `status=done` with the exact cited `done_sha`s), then called
+      `POST /api/backlog/l2_book_microstructure_capture-005/reopen` and `-007/reopen` — both returned
+      `{"ok": true, "prior_status": "done", "new_status": "queued"}` with `done_sha` cleared. Verified it STUCK (not
+      just a 200): re-fetched both task ids individually (`status: queued`, `done_sha: None`) and re-ran
+      `GET /api/backlog?status=done`, confirming zero non-orphan `done` tasks carry a `plan_ref` fleet-wide. Both are
+      back in the queue for genuine re-dispatch, now protected by the file-touch-vs-checkbox-flip gate (`@86b8b8b`/
+      `@d716fd0`) so this exact re-poisoning mechanism cannot recur. (repo: agent-orchestrator, DB-only mutation, no
+      code change) — infra slot-2, 2026-07-17.
 - [ ] [INFRA] P2. **58 of 64 `done` rows are UNAUDITABLE, which is not the same as clean.** `tasks.brief_hash` is NULL
       on every row predating that column, so there is no way to map those tasks back to a specific todo and check it.
       The corollary above ("no periodic sweep needed") is sound **for new rows via this defect class** but says nothing
@@ -640,3 +649,24 @@ whole doc's incident is about, now hitting my own fix. Renamed `_pm_log_touches_
 `test_done_accepts_cross_repo_flip_followed_by_a_trailing_prose_only_commit` reproducing this exact self-block. Full
 `quality-gates.sh` green (1366 passed, 1 skipped). Shipped via `quickmerge --agent --files`:
 `agent-orchestrator@d716fd0`. Calling `/done` now.
+
+### 2026-07-17T UTC — infra slot-2 (Todo "ALREADY-POISONED rows" — reopened, sticks this time)
+
+Dispatched `backlog_task_done_status_diverges_from_plan_checkbox-001` (the P1 `[INFRA]` todo added by the operator's
+2026-07-17 independent audit, which found `l2_book_microstructure_capture-005`/`-007` still `status=done` post-fix).
+Fresh-pulled every repo in the slot to LDR HEAD `dc038c764e7f` before touching anything. Re-verified both authoritative
+sources independently rather than trusting the doc's dated snapshot: `GET /api/backlog?status=done` still showed both
+rows with the exact cited `done_sha`s (`6edc83254`, `1e1c2bda8`);
+`grep -n "^- \[" l2_book_microstructure_capture_2026_07_13.md` confirmed lines 173 and 213 both still `- [ ]`.
+
+Called `POST /api/backlog/l2_book_microstructure_capture-005/reopen` and `.../-007/reopen` — both returned
+`{"ok": true, "prior_status": "done", "new_status": "queued"}` with `done_sha` cleared. Re-fetched both task ids from
+live `GET /api/backlog` to confirm the reopen actually stuck (not just a 200 with no real effect): both read
+`status: queued`, `done_sha: null`. Re-ran `GET /api/backlog?status=done` fleet-wide: zero non-orphan `done` tasks now
+carry a `plan_ref` — the doc's earlier Todo 3 sweep is back to its clean state, and this time the recurrence is
+structurally prevented because `@86b8b8b`/`@d716fd0` (the file-touch-vs-checkbox-flip fix) now hard-blocks the exact
+`/done`-time mechanism that re-poisoned these two rows between 19:41Z and 19:59Z on 2026-07-16.
+
+No code change — this is a pure orchestrator DB-state mutation via the existing `/reopen` endpoint, so there is nothing
+to ship via quickmerge for this repo. Flipped the todo `[x]` in this same turn with full evidence inline. Shipping this
+plan-flip via a direct push (PM `docs(plans):` commit, per the carve-out for plan-flip commits) and calling `/done`.
