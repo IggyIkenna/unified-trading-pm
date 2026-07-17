@@ -1229,3 +1229,51 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   `dependency-update` to all 16 at once, `GH_PAT` is pending rotation, and the dispatch POST (:160-176) has the same
   defect. Issue doc: `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. **Side
   benefit for this plan: the no-op is precisely why re-dispatching it was provably safe** — it cannot dispatch anything.
+- 2026-07-17 — **OVERNIGHT VALIDATION: the flip is working. 47 runs, 100% on the glue pool, 0 failures, real work
+  proven.** Window 2026-07-16T18:30Z → 2026-07-17T04:49Z, per-JOB evidence: `reconcile-release-tags` 16 ·
+  `ci-status- consolidator` 9 · `reconcile-staging-versions` 9 · `staging-conflict-ldr-main-fallback` 9 ·
+  `workspace-quickmerge- validation` 2 · `digest-drift-sweep` 1 · `readiness-verifier` 1. Every glue job `billable: {}`
+  = **zero hosted minutes**. **`readiness-verifier` fired its own 03:00 daily cron** (previously only ever manually
+  dispatched) ⇒ the autonomous path is proven for it too. **Cron delivery measured at ~80-90%**, NOT the ~37% in
+  CLAUDE.md's throttle note (hourly crons landed 9/10; `*/30` landed 16/20) — worth re-checking that figure before any
+  cooldown is tuned to it. **REAL WORK confirmed, not just green**: `ci-status-consolidator` logged `DRY_RUN: false` →
+  `CHANGED deployment-ui.ci_status: SIT_VALIDATED -> FEATURE_GREEN` → `wrote 1 change(s) to workspace-manifest.json`,
+  and its log confirms the pre-seeding works: _"No pip install: google-cloud-firestore is pre-seeded in the runner's
+  slot venv"_.
+- 2026-07-17 — **HONEST CORRECTION: `readiness-verifier` is NOT zero-billed, and yesterday's "every one is" was too
+  broad.** Its own `verify-readiness` job IS on glue-3, but `send-notification` + `persist-event` remain HOSTED **by
+  design** (KEEP-D / MOVE-C) ⇒ `billable: {"UBUNTU": {jobs: 2, total_ms: 0}}`. **`total_ms: 0` is a trap**: the timing
+  API under-reports, but GitHub bills a **1-minute minimum PER JOB**, so those 2 jobs cost ~2 billed minutes despite the
+  API's zero. This is exactly why `scripts/cicd/measure-billed-notify-cost.sh` counts JOBS, not ms — do NOT re-measure
+  this epic's savings off `/timing.total_ms`. Correct claim: **the moved job bills zero; a KEEP-D/MOVE-C reusable still
+  bills 1 min/job** until STEP 2c / A3-A5 land. `readiness-verifier` went 3 hosted jobs → 2.
+- 2026-07-17 — **Two measurement bugs of my own, same class as the ones this epic keeps finding.** (1)
+  `gh api --paginate --jq '[...]'` emits **one array PER PAGE**, so `jq length` counted only the first ⇒ I
+  under-reported 5 runs as 3. (2) `gh api` has **no `--arg` flag**; passing one made every query error out, and my
+  blanket `2>/dev/null` swallowed the error and rendered it as a clean `0 run(s) overnight` — **the literal
+  `curl -sf || echo ""` bug I wrote the digest-drift-sweep issue doc about, committed by me, one day later.** Rule for
+  this epic's evidence: never `2>/dev/null` a measurement command, and never report a count without an independent
+  cross-check.
+- 2026-07-17 — **FINDING #2 (P1, SSOT contradiction, pre-existing): `reconcile-release-tags` has created ZERO tags since
+  the D13 migration.** `created 0 tag(s); 24 repo(s) had no main version` on **20/20 last runs, byte-identical**. Cause
+  is dated: `f4a3865e` (2026-06-27) _"migrate to version_source=git-tag (Phase-2/D13 fleet rollout)"_ removed the static
+  `version = "X.Y.Z"` from pyproject.toml in favour of `dynamic = ["version"]` + hatch-vcs — but `_main_version()`
+  (reconcile_release_tags.py:73-93) still regex-matches that deleted field. **Not a regex bug — a circularity**: D13
+  made the TAG authoritative and the version DERIVED; the reconciler reads the derived value to create the tag. Verified
+  fleet-wide (6/6 sampled repos `dynamic=1 hatch.version=1 static_version=0`). **Auth is NOT the cause here** — it
+  correctly uses `secrets.GH_PAT` and the fetch returns 200, so it is NOT the digest-drift-sweep bug despite looking
+  identical from outside. Impact bounded: the PRIMARY path (`update-repo-version.yml`) still tags correctly (manifest
+  `execution-service=0.38.1`, tag `v0.38.1` present) — what is gone is the RECOVERY net that the 2026-06-09/06-11
+  incidents motivated. Fix is a source swap, not a redesign: the manifest's `versions` map is authoritative and
+  `_manifest_repos` (:154) already reads that file. Issue doc:
+  `plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md`.
+- 2026-07-17 — **PATTERN (the real lesson of this epic so far): 2 of the 10 audited workflows were long-dead silent
+  no-ops, and BOTH are BACKSTOPS.** `digest-drift-sweep` (digest-drift net, dead since birth 2026-06-19) and
+  `reconcile-release-tags` (missed-tag net, dead since 2026-06-27). Neither was caused by the flip — the flip is simply
+  the first time anyone READ their logs. The shared shape: **a safety net's healthy output and its dead output are the
+  same string** (`Dispatched: 0` / `created 0 tag(s)`), so nothing but a human going looking will ever notice. Both want
+  the same remedy: assert that "I did nothing" and "I could not look" are DIFFERENT states (if every repo lands in the
+  fallback bucket, exit non-zero). This generalises `codex/02-data/honest-absence-downstream-handling.md` from data to
+  automation and is worth a codex note. **Cost angle for this plan: the cheapest workflow is one that does not run** —
+  `reconcile-release-tags` alone burns ~48 no-op runs/day; auditing WHAT the glue workflows do (not just where they run)
+  is a second, larger saving than moving them.
