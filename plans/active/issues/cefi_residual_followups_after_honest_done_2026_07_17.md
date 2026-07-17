@@ -388,13 +388,17 @@ pairs stay honest-unresolved (reported, never guessed).
       `5eb274fa` triggered to confirm). Adjacent: the UAC Artifact-Registry wheel is frozen at 0.72.0 (2026-06-27) —
       irrelevant to these source/base-image consumers but a fleet-hygiene item for AR-wheel UAC consumers. (repo:
       features-service)
-- [ ] [SCRIPT] P1. **Fix the one campaign script our rename breaks** —
-      `strategy-service/scripts/trace_arbitrage_price_dispersion.py` matches the filename LEAF (:294) against hardcoded
-      WIRE forms (:273-274) over `asset_group=cefi` → silently mis-matches post-D4-rename. Either make the leaf-match
-      accept both wire + canonical stems, or confirm its
-      `# Delete-when: master_to_live_defi_2026_05_23 Phase D complete` is satisfied and delete it
-      (delete-deprecated-code). `trace_carry_staked_basis.py` is a prefix scan → SAFE, no action. (repo:
-      strategy-service)
+- [x] ✅ [SCRIPT] P1. **Fix the one campaign script our rename breaks** — **`strategy-service@26b99c69`** (2026-07-18).
+      NEW pure helper `_leaf_matches_asset(leaf, asset_upper)` accepts BOTH the pre-migration wire stem
+      (`BTCUSDT.parquet` / `PI_BTCUSD.parquet`) AND the post-D4-rename canonical stem
+      (`VENUE:TYPE:BASE-QUOTE[@MARKER].parquet`, comparing the `-`-stripped BASE-QUOTE to the wire ticker), replacing
+      the hardcoded wire-only leaf-match at `_load_tardis_day`. **Chose FIX not DELETE**: the Delete-when
+      (`master_to_live_defi_2026_05_23 Phase D complete — live dispersion archetype running ≥7 days`) is NOT satisfied
+      (that plan is still in `plans/active/`). Evidence: repo's own test file passes 12/12 incl. the new
+      `test_leaf_matches_asset_accepts_wire_and_canonical_stems` (wire + canonical + non-match cases); ruff green;
+      `scripts/` excluded from basedpyright; full QG exit 0 (its lone failure is the pre-existing, unrelated
+      `test_golden_pre_trade_check_phase0_risk_eval` risk-eval fixture — NOT this change). `trace_carry_staked_basis.py`
+      is a prefix scan → SAFE, no action. (repo: strategy-service)
 
 ## Phase 1 — Corpus migrations (scripted + dry-run first; `--apply` ONLY behind the Phase-1 drain, snapshot-first)
 
@@ -436,6 +440,39 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-18 (slot-3, /autonomous) — PHASE C: all 4 migration scripts WRITTEN + committed + pushed; dry-runs in
+  progress (2 of 4 complete, both clean + within STOP-ON-SURPRISE bounds).** Scripts (all under `scripts/`, direct-push
+  carve-out; dry-run default, `--apply` operator-gated behind a Phase-−1 catalogue gate that I confirmed GREEN live:
+  `:PERP:`=0, `instrument_id!=canonical`=0):
+  - **SCRIPT 1** content backfill — `market-tick-data-service@ec04e8f5` (610 L, forked
+    `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`). Two-stage per-row resolve of the frozen `instrument_id`
+    column (stage-1 3-tuple `get_cefi_wire_map().canonical_for`; stage-2 on-chain `canonical_instrument_id` fallback),
+    honest fallthrough, backup-first, single-walk discovery from the manifest index. **Dry-run (`--sample-days 12`)
+    RUNNING** (~47% at last check; interim would_patch_a≈2947 margin / would_patch_b≈1573 non-margin / read_errors 0;
+    throttled by a size-10 conn pool — a tuning note, not correctness).
+  - **SCRIPT 2** filename rename — `market-tick-data-service@549babf7` (544 L, forked
+    `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`). **Dry-run DONE, CLEAN**: 12,662 objects / 12 sampled days
+    → **10,308 planned renames** (wire→FULL canonical id, byte-matching `_file_stem_for`), 1,782 unresolved-wire
+    (honest), 543 already-canonical, 29 chain-bundles skipped, **0 STOP-ON-SURPRISE collisions**. Sample renames all
+    correct (`ADAUSDT→BINANCE-FUTURES:PERPETUAL:ADA-USDT@LIN`, `BTC-PERPETUAL→DERIBIT:PERPETUAL:BTC-USD@INV`). Paired
+    manifest rewrite relabels the raw-wire keys (758) + leaves wrapped-forms to Script 3 (redundant-but-safe).
+  - **SCRIPT 3** manifest completion + de-dup — `instruments-service@04ca7813` (540 L, forked
+    `relabel_cefi_tardis_raw_symbol_to_canonical_2026_07_15.py`). 3-path `_normalize_id` (forward wire → marker-base →
+    wrapped-wire peel), dedup on the pinned 6-col atom (best-status wins), retained eu-reconcile, post-apply verify
+    gate. **Dry-run RUNNING** — and the program's #1 regression guard is **PROVEN on the live rebuilt catalogue**:
+    catalogue gate `GREEN=True`, and **all 6 majors RESOLVE** — `(BYBIT,SPOT_PAIR,BTCUSDT)→BYBIT:SPOT_PAIR:BTC-USDT`,
+    `(BYBIT,PERPETUAL,BTCUSDT)→BYBIT:PERPETUAL:BTC-USDT@LIN`, +ETHUSDT + BINANCE-FUTURES BTC/ETH — the exact majors the
+    2-tuple relabel left raw. Manifest counts pending.
+  - **SCRIPT 4** eu-twin drop — `instruments-service@b61f9bdd` (189 L). **Dry-run DONE, within band**: **9,850 eu-twin
+    drops** [8000,15000] — EXTENDED-STARKNET 9,817 + DERIBIT 24 + OKX-FUTURES 9 (exact-match 5-col join excluding
+    pipeline_mode; the honest measured number, vs the blueprint's ~10,368 estimate — no PACIFICA twins present live).
+  - **Ship note**: two background opus sub-agents authored these (one per repo, no collision). The MTDS agent
+    backgrounded its full Script-1 dry-run; the IS agent died on a mid-response API error AFTER committing+pushing both
+    its scripts (verified: working tree clean, both on origin/LDR) but BEFORE dry-running them, so I ran the IS dry-runs
+    myself. All 4 scripts reviewed by me line-by-line for prod-mutation correctness before trusting any count (GOTCHA
+    #10).
+  - **NO `--apply` run** — that is the Phase-D/E operator-gated cutover. Counts above are read-only dry-run evidence.
 
 - **2026-07-18 (slot-3, /autonomous) — PHASE B (deploy) CHARACTERIZED: the cutover-critical consumers are UAC-fresh +
   deploy-ready; writers relaunch on a fresh tarball; ONE non-blocking features-service build bug found + tracked.**
