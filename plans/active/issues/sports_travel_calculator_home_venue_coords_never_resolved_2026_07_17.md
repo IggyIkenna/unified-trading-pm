@@ -431,3 +431,11 @@ gap-fill has not happened.
 > auth-expiry false-complete) at fleet completion, which un-gates this task for its final verification + checkbox-flip.
 > Just skip-fast until then. Systemic fix filed:
 > `plans/active/issues/orchestrator_concurrent_qg_saturation_and_dispatch_divergence_2026_07_17.md`.
+
+### 2026-07-17T~15:2xZ — data_engineering slot-4 (re-dispatched Todo 3; per main's standing ruling, one cheap fleet check, skip-fast)
+
+Re-dispatched. Per main's ruling immediately above: did ONE cheap fleet-status check (Compute Engine
+`aggregated/instances` REST via `google-auth`+`requests`, `gcloud` CLI unusable in this sandbox) — all 10
+`features-sports-sports-20260717-*` VMs still `RUNNING` (zone `asia-northeast1-c`). DB-verified
+`sports-gap-fill-fleet-20260717-complete` still `false`. No new state. Not filing `/blocked`, not re-auditing.
+`/skip-current-task` per the standing instruction.
