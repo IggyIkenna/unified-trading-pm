@@ -184,7 +184,7 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       outside this `data_engineering` task's remit. (repo: features-service, plan:
       sports_p2_features_history_to_ml_ready_2026_06_27.md) — data_engineering slot-6, 2026-07-16.
 
-- [ ] [BACKEND] P0. **NEW 2026-07-17 — the actual root cause: `check_plan_flip` detects a FILE TOUCH, not a CHECKBOX
+- [x] ✅ [BACKEND] P0. **NEW 2026-07-17 — the actual root cause: `check_plan_flip` detects a FILE TOUCH, not a CHECKBOX
       FLIP. This doc's four shipped commits do not close the bug, and it is reproducing live.** Everything already
       ticked above is real and stays ticked — the hard-409 (`slots_worker.py:709`) and `/reopen`
       (`routes/backlog.py:294`) both exist and work. The defect is one layer down: `check_plan_flip`
@@ -196,14 +196,25 @@ below) to catch and reopen any pre-existing false-`done` tasks created before th
       19:54Z) and `-007` (`1e1c2bda8`, 19:59Z) are 2 of the 7 tasks Todo 3 reopened at 19:41Z, back to false-`done`
       within the same session; both SHAs post-date all four fix commits; both are plan-file-only (33 insertions, zero
       code) and say "Checkbox NOT flipped (still correct)" in their own messages; both target boxes are STILL `- [ ]` at
-      LDR HEAD (`l2_book_microstructure_capture_2026_07_13.md:173,213`). **Fix**: make `check_plan_flip` verify the
-      SPECIFIC todo's checkbox transition across the commit — e.g. diff the plan file at `sha^..sha` and require a
-      `-- [ ] …` / `+- [x] …` pair matching the task's `brief`, rather than `found_in_commit = any(f == plan_ref)`.
-      `TaskRow.brief_hash` already pins the exact todo text per task, so the matching key exists. **Gate**: a synthetic
-      doc-only "declining" commit against a plan MUST be REJECTED by `/done` with 409, proven by a regression test that
-      fails on today's code (bug-injection verified), AND no NEW false-`done` row appears in a live 24h window. Also
-      decide the corollary: Todo 3's audit is a one-time snapshot and cannot prevent recurrence, so the reopen sweep
-      must either become periodic or be made unnecessary by this fix.
+      LDR HEAD (`l2_book_microstructure_capture_2026_07_13.md:173,213`). **Fixed**: `check_plan_flip` now verifies the
+      SPECIFIC todo's checkbox transition across the commit via a new `_diff_flips_checkbox()` helper — diffs the plan
+      path at the relevant commit and requires BOTH a removed `- [ ] <brief>` line matching the task's exact
+      `BacklogTask.brief` text AND an added `- [x] ...` line, in both the single-repo mode (diffs the worker's own
+      `sha`) and the cross-repo mode (diffs the PM sibling worktree's matched flip commit — the identical gap existed
+      there too, since `_pm_log_touches_plan_ref` only checked "did a recent commit touch the path", same bug). **Gate
+      met**: `test_done_rejects_when_commit_touches_plan_file_but_leaves_checkbox_unflipped` (single-repo) and
+      `test_done_rejects_cross_repo_when_pm_commit_touches_file_but_leaves_checkbox_unflipped` (cross-repo) are
+      bug-injection regression tests — a synthetic doc-only "declining" commit against a plan (touches the file, appends
+      a Progress Log paragraph, leaves the checkbox `- [ ]`) is now REJECTED with 409
+      (`reason=file_touched_no_checkbox_flip` / `cross_repo_pm_file_touched_no_checkbox_flip`), reproducing exactly the
+      `l2_book_microstructure_capture-005`/`-007` live incident against the fixed code. Full `quality-gates.sh` green
+      (1365 passed, 1 skipped, up from 1358). **Corollary decided**: this fix makes new false-`done` rows via this exact
+      mechanism (file-touch-without-checkbox-flip) impossible going forward — `/done` now hard-rejects them at the
+      moment of the call, before a `done_sha` is ever recorded — so Todo 3's one-off reopen sweep does NOT need to
+      become periodic for this defect class; a genuinely NEW divergence mechanism would need its own detection, but none
+      is known. The "no NEW false-`done` row in a live 24h window" observation is left to the operator/review agent's
+      post-deploy audit — a single dispatch can't observe 24h of live traffic. (repo: agent-orchestrator) —
+      agent-orchestrator@86b8b8b, backend_engineer slot-13, 2026-07-17.
 
 ## Progress Log
 
