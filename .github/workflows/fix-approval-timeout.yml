@@ -256,20 +256,33 @@ jobs:
             echo "alert_message=" >> "$GITHUB_OUTPUT"
           fi
 
-  persist:
-    name: Persist — Fix Approval Timeout Event
-    needs: [check-stale-fixes]
-    if: always() && needs.check-stale-fixes.outputs.has_alerts == 'true'
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: "failure"
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"event": "fix-approval-timeout-detected"}'
+      - name: Check out the persist-event composite action
+        # CI-cost STEP 2c: `uses: ./…` resolves against the WORKSPACE, so the local composite
+        # action must be on disk — this job had no checkout, hence sparse (~1s on our own runner).
+        if: always() && steps.scan.outputs.has_alerts == 'true'
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
+
+      - name: Persist CI/CD event
+        # Was the separate 1-billed-minute-minimum `persist:` job. Same guard as before (only when
+        # the scan found alerts), and the hardcoded `conclusion: failure` is kept — the ledger
+        # records the CONDITION (stale fixes detected), not this job's mechanical result, which is
+        # `success` even when it finds stale fixes. secrets/vars passed explicitly.
+        if: always() && steps.scan.outputs.has_alerts == 'true'
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: "failure"
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "fix-approval-timeout-detected"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
 
   # ── NOTIFY summary via carrier (alert_quality_audit_2026_06_18 Phase 6) ──────────────────────
   # Routes the standing-condition summary through notify-slack.yml so it gains ledger dedup.

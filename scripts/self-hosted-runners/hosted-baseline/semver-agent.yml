@@ -583,6 +583,29 @@ jobs:
             exit 1
           fi
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable. `if: always()` + `job.status` reproduces the old
+        # `conclusion: needs.semver.result`; the hardcoded `branch: staging` and the workflow_run
+        # head-sha fallback are kept verbatim. NOTE: this persist block is a PM-LOCAL addition —
+        # the fleet template (scripts/workflow-templates/semver-agent.yml.tmpl) never carried it,
+        # and the rollout script explicitly skips unified-trading-pm, so this edit cannot be wiped
+        # by a template rollout. This workflow is KEEP-T (hosted); the steps ride inside the
+        # already-billed job. secrets/vars passed explicitly.
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: "unified-trading-pm"
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: staging
+          commit_sha: ${{ github.event.workflow_run.head_sha || github.sha }}
+          details_json: '{"event": "semver-agent"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── SLACK NOTIFY — CRITICAL failures (circuit-breaker / dispatch-fail) ─────
   # Routed through notify-slack.yml (alert_quality_audit_2026_06_18 item 015):
   # gains content dedup (same critical_dedup_key within cooldown_min suppressed),
@@ -615,18 +638,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Semver Agent Event
-    needs: [semver, notify]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: "unified-trading-pm"
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.semver.result }}
-      branch: staging
-      commit_sha: ${{ github.event.workflow_run.head_sha || github.sha }}
-      details_json: '{"event": "semver-agent"}'

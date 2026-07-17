@@ -182,8 +182,13 @@ jobs:
             # PR read as v2-never-reported → spurious close+reopen churn. The Actions API works
             # with the PAT ("Actions" permission), and "a v2 RUN exists for this head SHA" is the
             # same signal. ERR ≠ 0: on query failure we fail-SAFE (leave the PR alone).
+            # Exclude action_required/cancelled (mirrors fleet + staging): an App/bot-actor push to
+            # LDR (e.g. the main-backmerge merge commit) lands the pull_request v2 run in
+            # `action_required` (held for approval, 0s, never executes) — counting it as "present"
+            # made this recovery conclude "genuine gate fail" and leave the PR deadlocked forever
+            # (PR #1117, 2026-07-17). A held/cancelled run is NOT a report.
             HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
-              --json headSha --jq "[.[]|select(.headSha==\"$HEAD_SHA\")]|length" 2>/dev/null || echo "ERR")
+              --json headSha,conclusion --jq "[.[]|select(.headSha==\"$HEAD_SHA\" and .conclusion!=\"action_required\" and .conclusion!=\"cancelled\")]|length" 2>/dev/null || echo "ERR")
             if [ "$HAS_V2" = "ERR" ]; then
               echo "  WARN: statusCheckRollup query failed for PR #$PR_NUM — leaving it (no blind recovery)"
             fi

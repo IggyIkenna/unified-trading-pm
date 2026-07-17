@@ -204,6 +204,28 @@ jobs:
               ;;
           esac
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c, THE PRIZE CALLER (~14.3k runs/30d ⇒ the old separate `persist:` job alone
+        # billed ~$86/mo at GitHub's 1-minute-per-job minimum). As the LAST step it is free on this
+        # writer runner. Same skip-guard as the old job (`steps.validate.outputs.skip` is what the
+        # job output `skip` maps from); `job.status` reproduces `conclusion:
+        # needs.update-ci-status.result`. This job's existing full checkout satisfies the local
+        # `uses: ./…` resolution — the STEP 2b slim-down (sparse checkout etc.) is a separate,
+        # later change so this conversion stays one variable. secrets/vars passed explicitly.
+        if: always() && steps.validate.outputs.skip != 'true'
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: ${{ github.event.client_payload.repo }}
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.event.client_payload.sha }}
+          details_json: '{"status": "${{ github.event.client_payload.status }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── BUILD MESSAGE BODY (decodes optional failure excerpt) ────────────────────
   build-message:
     name: Build notification message
@@ -330,18 +352,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — CI Status Event
-    needs: [update-ci-status, notify]
-    if: always() && needs.update-ci-status.outputs.skip != 'true'
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: ${{ github.event.client_payload.repo }}
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.update-ci-status.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.event.client_payload.sha }}
-      details_json: '{"status": "${{ github.event.client_payload.status }}"}'

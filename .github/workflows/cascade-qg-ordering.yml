@@ -445,6 +445,30 @@ jobs:
             "cascade-qg-ordering" \
             "source=${{ steps.run.outputs.result || 'unknown' }} affected=${{ steps.run.outputs.total_affected || '0' }} levels=${{ steps.run.outputs.levels_processed || '0' }}"
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable; as the LAST step it is free and runs on this job's runner.
+        # `if: always()` + `job.status` reproduces the old `conclusion: needs.cascade.result`; the
+        # old `needs.cascade.outputs.*` details are this job's own `steps.run.outputs.*`.
+        # secrets/vars do not reach a composite action — passed explicitly (was `secrets: inherit`).
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json:
+            '{"source_repo": "${{ github.event.client_payload.source_repo || inputs.source_repo }}", "source_version":
+            "${{ github.event.client_payload.source_version || inputs.source_version }}", "total_affected": "${{
+            steps.run.outputs.total_affected }}", "levels_processed": "${{ steps.run.outputs.levels_processed }}",
+            "failed_repos": "${{ steps.run.outputs.failed_repos }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── PHASE 3 ESCALATION — vm-planning ONLY IF the cascade FAILED ──────────────
   # Operator model (dependency_promotion_…_2026_06_09): a GREEN cascade auto-promotes with NO
   # human/orchestrator involvement (this job is skipped). Only a FAILED cascade — a dependent's
@@ -536,22 +560,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Cascade QG Event
-    needs: [cascade, notify-success, notify-failure, notify-no-affected]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.cascade.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json:
-        '{"source_repo": "${{ github.event.client_payload.source_repo || inputs.source_repo }}", "source_version": "${{
-        github.event.client_payload.source_version || inputs.source_version }}", "total_affected": "${{
-        needs.cascade.outputs.total_affected }}", "levels_processed": "${{ needs.cascade.outputs.levels_processed }}",
-        "failed_repos": "${{ needs.cascade.outputs.failed_repos }}"}'

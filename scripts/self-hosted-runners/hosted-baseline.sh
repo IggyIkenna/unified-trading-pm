@@ -46,9 +46,15 @@ warn() { printf '\033[33m[hosted-baseline] WARN:\033[0m %s\n' "$*" >&2; }
 die() { printf '\033[31m[hosted-baseline] ERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 
 # The commit that FIRST introduced the flip marker to a file, or "" if never flipped.
-# --reverse + head -1 = oldest such commit; -S counts occurrences, so this is the flip itself.
+# --reverse = oldest such commit first; -S counts occurrences, so this is the flip itself.
+# NOT `git log | head -1`: under this script's `set -o pipefail`, a file whose marker history
+# outgrows head's buffer gets git SIGPIPE'd -> pipeline exit 141 -> `set -e` kills the WHOLE
+# script mid-snapshot, leaving a silently TRUNCATED MANIFEST (measured 2026-07-17: died at 43
+# of 56 rows, no error printed). Capture everything, then take the first line in-shell.
 first_flip_commit() {
-  git -C "${REPO_ROOT}" log --reverse --format=%H -S"${FLIP_MARKER}" -- "$1" 2>/dev/null | head -1
+  local all
+  all="$(git -C "${REPO_ROOT}" log --reverse --format=%H -S"${FLIP_MARKER}" -- "$1" 2>/dev/null || true)"
+  printf '%s' "${all%%$'\n'*}"
 }
 
 cmd_snapshot() {
