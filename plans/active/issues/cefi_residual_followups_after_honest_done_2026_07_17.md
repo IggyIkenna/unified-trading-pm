@@ -427,6 +427,40 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-18 (slot-3, /autonomous resume) — ✅ PHASE A IS ALREADY DONE: all 6 program commits' Phase-0 code is on
+  `origin/main`. The "4 provenance strands" self-resolved; NO revert-on-LDR / re-ship / shared-history surgery is needed
+  (and doing it now would be harmful — a `git revert` of a source-changing commit is itself a trailerless source commit
+  = a fresh violation).** Verified against the REAL artifact (`git ls-tree`/`show`/`diff` on `origin/main` after a fresh
+  fetch), NOT the stale log or the checker's ✅ alone (both mislead — see the trap below):
+
+  | repo (commit)                              | proof on `origin/main`                                                                                                                  |
+  | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+  | unified-api-contracts@825878f7             | `unified_api_contracts/canonical/domain/cefi_wire_canonical.py` present                                                                 |
+  | instruments-service@517b817b               | `_canonicalize_cefi_perp_id`/`_future_id`/`_rollup_id` all present (2/2/3 hits)                                                         |
+  | market-tick-data-service@d302f07a (write)  | `engine/cefi_wire_bridge.py` + `adapters/cefi/catalog_id_resolver.py` present; program files **byte-identical** main==LDR               |
+  | market-tick-data-service@0388e1a9 (reader) | `reader.py` D3 symbols (`_cefi_candidate_stems`/`_NO_SYMBOL_PUSHDOWN_ASSET_GROUPS`/`_normalize_cefi_instrument_id`) = 8 hits, main==LDR |
+  | market-data-processing-service@0035f79     | `app/utils/cefi_wire_bridge.py` + renamed `_renormalize_legacy_instrument_ids` present; program files identical main==LDR               |
+  | features-service@efd3e038                  | `cross_instrument/engine/cefi_wire_bridge.py` present; program files identical main==LDR                                                |
+  - **HOW it cleared**: subsequent **Option-B direct** promote PRs (e.g. UAC PR#634 head `825878f71`, merged 11:01Z)
+    squash-merged each repo's LDR→main, advancing the per-repo provenance **marker** (= `headRefOid` of the last merged
+    `chore(promote)` PR, per `promote_provenance_range.py`) PAST our commits. A squash never lands the LDR SHA on main
+    (so `<sha> on origin/main = no`), but it DOES carry the content — proven by file/symbol/diff parity above.
+  - **TRAP that nearly mislead me (recorded for the next agent)**: the strict-quickmerge checker run over
+    `marker..origin/live-defi-rollout` reports ✅ CLEAN for MTDS/MDPS/features/UAC — but ✅ there means "out of range"
+    (marker advanced past it), which is INDISTINGUISHABLE from "genuinely promoted" without a **content** check on
+    `origin/main`. And my first content probe returned false-ABSENT (ran on a stale `origin/main` ref before a fresh
+    fetch, + two wrong paths: MDPS is `market_data_processing_service/app/core/…` and the MTDS reader is
+    `market_tick_data_service/reader.py`, NOT `engine/reader.py`). Only the third pass — fresh fetch + `ls-tree` +
+    per-file `diff origin/main origin/live-defi-rollout` — is authoritative. "Run it, don't read it," applied to git
+    refs.
+  - **Adjacent finding (NOT ours, NOT touched — collision risk, another workstream owns it)**: instruments-service has a
+    LIVE provenance block — open promote PR#828 (mergeState=CLEAN, auto-merge NOT armed), offender `19ae5890`
+    `fix(sports): capture fixture round…` (real sports source, no trailer). It holds back LATER IS work (A2 expiry
+    column, question-sourcing — the 36-line `build_instrument_catalogue.py` main..LDR delta) but does **not** touch our
+    already-promoted cefi catalogue content. The sports agent owns clearing it; flagged, not fixed.
+  - **Net**: Phase A → DONE. Proceed to Phase B (deploy) with the code confirmed live on `main`. The migration scripts
+    (Phase C) live under `scripts/**` (carve-out) so they never need a promote.
+
 - **2026-07-17 (slot-3) — 🔴 DEPLOY BLOCKER: 4 of the program's 5 ships are PROVENANCE-BLOCKED (un-promotable), not just
   lagging.** Determined by trailer scan (`git log -1 --format=%B <sha> | grep '^Quickmerge:'`), the method in
   `promotion_lag_alert_hides_provenance_block_2026_07_17.md`:
