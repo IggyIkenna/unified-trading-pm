@@ -309,10 +309,47 @@ pairs stay honest-unresolved (reported, never guessed).
     polled ~17 min, metric flat → their work left untouched). ⬜ **MTDS reader half still OPEN** — parallel agent's
     scope (`reader.py` candidate-stems, the `symbol` pushdown drop, normalize-on-read); do not tick this box until it
     lands.
-- [ ] [BACKEND] P0. **FIX D-features — narrow cefi reads (REQUIRED before cutover, not optional).** features
-      `raw_data_loader.py:126-179`: inherit the D3 bridge (if it reads via MTDS `reader.py`) or add its own
+- [x] ✅ [BACKEND] P0. **FIX D-features — cefi reads (REQUIRED before cutover, not optional).** features
+      `raw_data_loader.py`: inherit the D3 bridge (if it reads via MTDS `reader.py`) or add its own
       `get_cefi_wire_map()` bridge; reconcile the `instrument_id`↔`instrument_key` column-name mismatch. (repo:
-      features-service)
+      features-service) — **`features-service@efd3e038`**. **open-q #9 RESOLVED: features-service needs its OWN bridge —
+      it does NOT read via MTDS `CanonicalParquetReader`** (measured: ZERO imports of it corpus-wide;
+      `raw_data_loader.py` resolves a bucket via `resolve_bucket` and lists/downloads parquets itself). The onchain
+      `adapters/mtds_canonical_reader.py` is `build_defi_partition_path`/`asset_group=defi` HARDCODED → never touches
+      cefi. **But the change is NOT the blueprint's shape**: features does **no narrow per-instrument cefi reads** — its
+      cefi read is a BULK day scan — so **candidate-stem matching is moot** (the D2/D4 rename cannot break a
+      filename-agnostic scan). The real exposure is the **COLUMN**. NEW `cross_instrument/engine/cefi_wire_bridge.py`
+      (catalogue as parquet DATA → UAC `from_rows`; fail-SOFT to `None` per the read-side asymmetry; process-cached
+      loaded-flag; **no `PLC0415` noqa — features' ruff `select` has no `PL` family, so RUF100 would reject it**, unlike
+      MDPS). `instrument_id` → `instrument_key` reconciled + cefi canonicalized via the forward 3-tuple map, keyed on
+      venue/instrument_type from the **PATH** (the real trades schema carries `exchange`, no `instrument_type` column —
+      content-only keying is impossible). Unresolved/ambiguous → on-disk id kept verbatim (honest); `map=None` →
+      identical pre-bridge behaviour. **Evidence**: full `quality-gates.sh --no-fix` GREEN at the commit SHA (exit 0,
+      **ZERO ❌ in the output**, 179s, 17665 passed, coverage 83.55%, `.qg_last_passed_sha` == HEAD); 30 new tests incl.
+      the BYBIT 3-tuple majors guard (SPOT_PAIR vs PERPETUAL resolve to their correctly-typed ids and do not
+      cross-match), a wire-filename fixture asserting **non-empty** rows + canonical join key end-to-end, and the
+      `map=None` fallback. Shipped via the **dirty-deps carve-out direct push** (UAC + PM carried foreign WIP; UAC dep
+      `825878f7` verified an ancestor of origin).
+- [ ] [BACKEND] P1. **features raw feature groups cannot consume the REAL raw_tick schema (found 2026-07-17 during FIX
+      D-features; NOT caused by this program, and NOT fixed by `features-service@efd3e038`).** The 5 raw groups
+      (`book_depth_bands`, `liquidity_walls`, `liquidation_clusters`, `composite_sr`, `flow_interaction`) declare
+      `required_columns = [timestamp, instrument_key, bids, asks, mid_price]` / `[…, side, quote_volume]`, and
+      `base_calculator.validate_input` **raises `ValueError: Missing required columns`** on a miss. The real MTDS
+      schema, measured on live prod objects (2025-06-15), carries **none of `bids` / `asks` / `mid_price` /
+      `quote_volume`**: book is FLAT L5 (`bid_px_00..04`, `bid_sz_00..04`, `ask_px_00..04`, `ask_sz_00..04`, 29 cols)
+      and trades carry `price` + `amount` (10 cols). The mock frames (`_make_mock_book_df`) were written to the
+      CALCULATOR's contract, not to the writer's — so these groups have **never run against real data** and every
+      existing test passes on mocks. `efd3e038` closes the join-key half (`instrument_key` now exists + is canonical);
+      the shaping half needs a real decision, so it is NOT silently invented here: derive `mid_price` from
+      `(bid_px_00+ask_px_00)/2`? nest the L5 columns into `bids`/`asks` list-of-[px,sz]? `quote_volume = price*amount`?
+      Each is a feature-definition change (formula-hash / `codex/02-data/feature-formula-versioning.md`), not a loader
+      tweak. **Blast radius**: these 5 groups produce nothing today regardless of this program. (repo: features-service)
+- [ ] [BACKEND] P2. **features raw cefi day-scan is unbounded (found 2026-07-17, `features-service@efd3e038`).** With
+      the prefix fixed the loader now downloads EVERY matching parquet for a day and concatenates in memory; one
+      HYPERLIQUID `book_snapshot_5` shard alone is 8.4 MB / 156,677 rows, so a whole cefi day across all venues is a
+      plausible OOM. This was latent before (the broken prefix matched 0 objects, so it never downloaded anything).
+      Bound the read by venue/instrument list or stream per-shard before these groups run for real. Sequenced AFTER the
+      schema-gap todo above — the groups cannot consume the data until that lands. (repo: features-service)
 - [x] ✅ [BACKEND] P0. **Enumerate the narrow-read consumers** — DONE 2026-07-17 (slot-3), measured. **IN SCOPE (4)**:
       MTDS `reader.py`; MDPS (`path_parsing.py` / `canonical_writer_shaping.py` / `orchestration_scanner.py` /
       `data_source.py`); features-service (`raw_data_loader.py` + cross-instrument `batch_handler.py`);
@@ -373,21 +410,85 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-17 (slot-3) — FIX D-features SHIPPED + open-q #9 RESOLVED — `features-service@efd3e038`.** Full
+  `bash scripts/quality-gates.sh --no-fix` GREEN **at the commit SHA**: exit 0, **ZERO red (❌) in the output** (read
+  the output, not the exit code — this gate prints ❌ while still exiting 0), 179s, **17665 passed**, coverage 83.55%,
+  `.qg_last_passed_sha` == HEAD. 30 new tests across 2 files.
+  - **open-q #9 ANSWERED — features needs its OWN bridge; it does NOT inherit D3.** Measured, not assumed: **ZERO**
+    `CanonicalParquetReader` / `market_tick_data_service` imports corpus-wide. `raw_data_loader.py` resolves a bucket
+    via `resolve_bucket` and lists/downloads parquets itself. The one look-alike, onchain
+    `adapters/mtds_canonical_reader.py`, is `build_defi_partition_path` / `asset_group=defi` **HARDCODED** → it never
+    touches cefi (same class as the strategy-service providers already ruled out).
+  - **…but the change is NOT the shape the blueprint specified, and the difference matters.** features does **no narrow
+    per-instrument cefi reads** — the cefi read is a BULK day scan, so it is **filename-agnostic** and the D2/D4 rename
+    **cannot** break it. **Candidate-stem matching is therefore moot here** (the blueprint's D-features spec assumed the
+    D3 reader's shape). The real exposure is the **COLUMN**, and it is REAL: measured on live prod objects (2025-06-15),
+    wire-named `…/venue=BYBIT/instrument_type=perpetual/data_type=trades/ADAUSDT.parquet` carries
+    `instrument_id='BYBIT:PERPETUAL:ADAUSDT'` (wrapped-wire) and HYPERLIQUID book carries `'BTC-PERP'` (bare on-chain).
+    Neither joins against the canonical id. Normalize-on-read closes exactly that.
+  - **Keyed off the PATH, not the content — forced by the real schema.** The trades parquet has **no `venue` column**
+    (it carries `exchange`) and **no `instrument_type` column at all**, so the 3-tuple key is impossible to build from
+    content. `venue=` / `instrument_type=` are parsed from the blob path (always present, authoritative). The book
+    parquet happens to carry both columns — the schemas are **not uniform across data_types**, so the path is the only
+    reliable axis source.
+  - **TRAP CONFIRMED + AVOIDED (the noqa is NOT portable).** features-service ruff `select` =
+    `["E","F","W","I","N","UP","B","C4","SIM","RUF","G","C90"]` — **no `PL` family**, so `PLC0415` is not enabled and
+    `RUF100` would REJECT MDPS's `# noqa: PLC0415`. features behaves like MTDS here. No noqa was needed at all: the
+    bridge's imports (`features_service.common` → UTL, `cross_instrument.config` → UTL) form no cycle, verified by
+    import at runtime.
+  - **NEW FINDING (P0-severity, filed as todos above, NOT silently fixed) — the features raw read path was returning
+    EMPTY for EVERY asset_group, silently.** The loader probed
+    `…/day={D}/pipeline_mode={PM}/asset_group={AG}/data_type={DT}/`, but the writer
+    (`tardis_shared.build_partition_path`) puts **`venue=` and `instrument_type=` BETWEEN** `asset_group=` and
+    `data_type=`. Proven against prod:
+    `…/day=2025-06-15/pipeline_mode=batch_hyperliquid/asset_group=cefi/venue=HYPERLIQUID/instrument_type=perpetual/data_type=book_snapshot_5/HYPERLIQUID:PERPETUAL:BTC-USD@LIN.parquet`.
+    That prefix matches **zero** objects — cefi AND tradfi alike (tradfi verified: `…/asset_group=tradfi/venue=FX/…`).
+    Second defect: `pipeline_mode` is **per-VENUE** (one day carries `batch_tardis` + `batch_hyperliquid` +
+    `batch_aster`), so the loader's single `derive_pipeline_mode_for_row("", …)`-derived prefix could never cover the
+    day even with the axes fixed. **Fixed in-commit** (it is my file and the reconciliation is vacuous without it): ONE
+    day-level list + segment filter, which also matches canonical + legacy shapes in a single walk, preferring canonical
+    so a canonical/legacy twin is never double-counted. The old `_candidate_day_prefixes` two-probe +
+    `derive_pipeline_mode_for_row` guessing are DELETED (no shim); the 3 tests pinning that (wrong) invariant were
+    re-pointed at the real one. **This is why the D-features tests assert NON-EMPTY rows** — the old tests only ever
+    asserted `is_empty()`, so they passed for the wrong reason and hid this for the whole life of the module.
+  - **HONEST GAP — the 5 raw groups STILL cannot consume real data, and `efd3e038` does not change that** (filed as its
+    own P1 todo). They require `bids`/`asks`/`mid_price`/`quote_volume`; the real schema has flat `bid_px_00..04` /
+    `price`+`amount` and none of those four. The mocks were written to the calculator's contract, not the writer's.
+    `efd3e038` closes the **join-key** half only; the shaping half is a feature-definition decision (formula-hash), so I
+    did **not** invent a `mid_price` formula to make it look done.
+  - **Multi-agent note — the task brief's "you are the ONLY agent in features-service" was STALE.** Another agent had
+    **18 files STAGED** in the index (an asset-group parity sweep + a new
+    `scripts/quality_gates/check_asset_group_parity.py`
+    - a `scripts/quality-gates.sh` edit). quickmerge stages `--files` then runs a **plain `git commit`**
+      (`quickmerge.sh:1513`), which commits the WHOLE INDEX — it would have swept all 18 into my commit. Shipped with
+      `git commit --only <my 4 paths>` instead, which leaves foreign index entries untouched. Their work was verified
+      intact afterwards (17 files + `smoke_matrix.py` = the original 18; 245+3 = 248 insertions).
+      **`git show --stat HEAD` confirms exactly 4 cross_instrument files landed.**
+  - **PRE-EXISTING repo finding (not mine, not fixed on LDR):** `scripts/volatility/smoke_matrix.py` carries a
+    **131-char line on `origin/live-defi-rollout` itself** (line 292) → the repo's `--no-fix` gate is **red for
+    everyone**; ship-mode's formatter silently wraps it, which is how it landed. I applied the formatter's exact 4-line
+    wrap **in the working tree only, unstaged** so my gate could run — I did NOT stage it, because the file also holds
+    the other agent's 3 staged comment lines and `git add` would have stolen them. The volatility agent owns that file
+    and will pick the fix up.
+  - **Next**: D-features is closed for the cutover gate. The reader-deploy gate still needs features-service +
+    execution-service REDEPLOYED (the bridge must be live on every narrow-read consumer before D4 scripts 1/2
+    `--apply`).
+
 - **2026-07-17 (slot-3) — ✅ PHASE -1 GATE IS GREEN. The catalogue is rebuilt and live; the Phase-0 DEPLOY is
   UNBLOCKED.** Corrected rebuild (`DEPLOYMENT_ENV=prod`, `--mode full`, 53,116 by_date parquets, workers=16, ~38 min)
-  promoted **425,161 rows** to the LIVE `gs://instruments-store-cefi-prd-central-element-323112/**prod**/catalog.parquet`
-  at **13:17:59Z** (8,688,906 B; was 8,666,228 B @ 09:09:54Z — genuinely rewritten, verified on the GCS object, not the
-  log). **The monotonic guard is the proof it hit the right path this time**: `new=425161 current=424699 decision=ACCEPT
-  (monotonic_ok)` — contrast the failed run's `current=None … (no_prior_catalogue)`, which was the tell that it was
-  writing to the dead `prd/` prefix.
+  promoted **425,161 rows** to the LIVE
+  `gs://instruments-store-cefi-prd-central-element-323112/**prod**/catalog.parquet` at **13:17:59Z** (8,688,906 B; was
+  8,666,228 B @ 09:09:54Z — genuinely rewritten, verified on the GCS object, not the log). **The monotonic guard is the
+  proof it hit the right path this time**: `new=425161 current=424699 decision=ACCEPT (monotonic_ok)` — contrast the
+  failed run's `current=None … (no_prior_catalogue)`, which was the tell that it was writing to the dead `prd/` prefix.
   - **GATE 1 — `:PERP:` ids: 9 → `0` ✅ PASS**
   - **GATE 2 — `instrument_id != canonical_instrument_id`: 511 → `0` ✅ PASS**
   - **GATE 3 — honest-unresolved (3-tuple ambiguous): `439`** (unchanged; correct — the 9 fixed rows were delisted
     perps, not ambiguous keys). **This is now THE single number** (open-q #7 CLOSED), corroborated from two independent
     code paths.
-  - **Regression guard still holds on the rebuilt catalogue**: `(BYBIT, SPOT_PAIR, BTCUSDT)` → `BYBIT:SPOT_PAIR:BTC-USDT`
-    and `(BYBIT, PERPETUAL, BTCUSDT)` → `BYBIT:PERPETUAL:BTC-USDT@LIN` — the 3-tuple still disambiguates the marquee
-    majors after the rebuild.
+  - **Regression guard still holds on the rebuilt catalogue**: `(BYBIT, SPOT_PAIR, BTCUSDT)` →
+    `BYBIT:SPOT_PAIR:BTC-USDT` and `(BYBIT, PERPETUAL, BTCUSDT)` → `BYBIT:PERPETUAL:BTC-USDT@LIN` — the 3-tuple still
+    disambiguates the marquee majors after the rebuild.
   - **Verification method that mattered**: the gate was measured against the DOWNLOADED live object, never against the
     rebuild's own log. The first rebuild proved why — it reported `exit_code=0` + `CATALOGUE_PROMOTED` while changing
     nothing a consumer reads.
@@ -395,20 +496,21 @@ pairs stay honest-unresolved (reported, never guessed).
     resumed, QG slot freed); then D-features → consumer deploy → migration dry-runs → drain.
 
 - **2026-07-17 (slot-3) — ⚠️ GOTCHA #4: `DEPLOYMENT_ENV=prd` writes the catalogue to a DEAD `prd/` prefix while
-  reporting full success. The rebuild command recorded in this plan was WRONG; corrected to `DEPLOYMENT_ENV=prod`.**
-  The Phase -1 rebuild ran to `exit_code=0` and logged `CATALOGUE_PROMOTED` + `Promoted 425161-row catalogue to
-  gs://instruments-store-cefi-prd-central-element-323112/**prd**/catalog.parquet` — but the LIVE object every consumer
-  reads is `**prod**/catalog.parquet`, which was left untouched at its 09:09:54Z baseline. **The gate stayed RED behind a
-  green exit code.** Confirmed empirically: `prod/catalog.parquet` = 8,666,228 B @ 09:09:54Z (unchanged) vs
-  `prd/catalog.parquet` = 8,688,924 B @ 12:37:16Z (new, stray).
+  reporting full success. The rebuild command recorded in this plan was WRONG; corrected to `DEPLOYMENT_ENV=prod`.** The
+  Phase -1 rebuild ran to `exit_code=0` and logged `CATALOGUE_PROMOTED` +
+  `Promoted 425161-row catalogue to gs://instruments-store-cefi-prd-central-element-323112/**prd**/catalog.parquet` —
+  but the LIVE object every consumer reads is `**prod**/catalog.parquet`, which was left untouched at its 09:09:54Z
+  baseline. **The gate stayed RED behind a green exit code.** Confirmed empirically: `prod/catalog.parquet` = 8,666,228
+  B @ 09:09:54Z (unchanged) vs `prd/catalog.parquet` = 8,688,924 B @ 12:37:16Z (new, stray).
   - **Why it is a trap**: the BUCKET name legitimately contains `prd`
     (`instruments-store-**prd**-central-element-323112`), so `DEPLOYMENT_ENV=prd` looks right and `resolve_bucket_name`
     resolves happily — but the OBJECT PREFIX comes from the same env var and becomes `prd/`. The shipped reader only
     probes `prod/` → `staging/` → `dev/` (`cefi_catalog_reader.py:191-195`), so `prd/` is unreachable by design.
-  - **The signal I nearly missed**: the run logged `Monotonic guard: new=425161 current=None decision=ACCEPT
-    (no_prior_catalogue)`. `current=None` on a bucket that demonstrably HAS a 424,699-row catalogue is a loud "you are
-    writing somewhere new" tell. The guard did its job; the operator-agent (me) had to read it. **A monotonic guard that
-    reports `no_prior_catalogue` against a populated bucket should be treated as a hard STOP, not an ACCEPT.**
+  - **The signal I nearly missed**: the run logged
+    `Monotonic guard: new=425161 current=None decision=ACCEPT (no_prior_catalogue)`. `current=None` on a bucket that
+    demonstrably HAS a 424,699-row catalogue is a loud "you are writing somewhere new" tell. The guard did its job; the
+    operator-agent (me) had to read it. **A monotonic guard that reports `no_prior_catalogue` against a populated bucket
+    should be treated as a hard STOP, not an ACCEPT.**
   - **Corroborating evidence available before the fact**: a concurrent session running the sports rollup used
     `DEPLOYMENT_ENV=prod`; I observed the divergence from my `prd`, reasoned "the bucket says prd", and dismissed it.
     That dismissal cost a ~70-minute rebuild. **Convention: `DEPLOYMENT_ENV=prod` (+ `CLOUD_PROVIDER=gcp`,
@@ -419,22 +521,23 @@ pairs stay honest-unresolved (reported, never guessed).
       CLOUD_MOCK_MODE=false .venv/bin/python scripts/build_instrument_catalogue.py --asset-group cefi --mode full
     ```
     (The other two gotchas from that report STAND: there is **no `--apply`** — it writes by default, `--dry-run` is the
-    opt-in; and **`--mode full` is mandatory** because `--mode incremental` carries the frozen tail through unchanged and
-    every defect row is delisted *in that tail*.) Rebuild takes ~70 min (53,116 by_date parquets, workers=16).
-  - **Cleanup owed**: `gs://instruments-store-cefi-prd-central-element-323112/prd/catalog.parquet` is a stray 425,161-row
-    object nothing reads. Verified unread (no code references a `prd/` prefix; the guard proved no prior writer). DELETE
-    it once the `prod/` rebuild verifies green — retained until then as the only rebuilt-with-fixes catalogue in
-    existence.
+    opt-in; and **`--mode full` is mandatory** because `--mode incremental` carries the frozen tail through unchanged
+    and every defect row is delisted _in that tail_.) Rebuild takes ~70 min (53,116 by_date parquets, workers=16).
+  - **Cleanup owed**: `gs://instruments-store-cefi-prd-central-element-323112/prd/catalog.parquet` is a stray
+    425,161-row object nothing reads. Verified unread (no code references a `prd/` prefix; the guard proved no prior
+    writer). DELETE it once the `prod/` rebuild verifies green — retained until then as the only rebuilt-with-fixes
+    catalogue in existence.
   - **Also invalidates**: the pre-rebuild prod bridge measurement (439 ambiguous / 424,699 rows) was read from the OLD
-    `prod/` object and therefore still stands as the pre-rebuild baseline — but it must be re-measured once the corrected
-    rebuild lands (the roll-up produced 425,161 rows, +462 vs the live 424,699).
+    `prod/` object and therefore still stands as the pre-rebuild baseline — but it must be re-measured once the
+    corrected rebuild lands (the roll-up produced 425,161 rows, +462 vs the live 424,699).
 
 - **2026-07-17 (slot-3, orchestrator) — PROD VERIFICATION of the wire bridge: closes BOTH bridge agents' biggest
   self-declared gap + resolves blueprint open-qs #7, #14, #15.** Both `market-tick-data-service@d302f07a` and
   `market-data-processing-service@0035f79` shipped with the same honest caveat — "the real GCS catalogue read was never
-  executed against live prod; all tests monkeypatch the map". Closed by running the **actually-shipped code** against the
-  **live prod catalogue** with ADC (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd CLOUD_PROVIDER=gcp
-  CLOUD_MOCK_MODE=false`, `market_tick_data_service.engine.cefi_wire_bridge.get_cefi_wire_map()`):
+  executed against live prod; all tests monkeypatch the map". Closed by running the **actually-shipped code** against
+  the **live prod catalogue** with ADC
+  (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd CLOUD_PROVIDER=gcp CLOUD_MOCK_MODE=false`,
+  `market_tick_data_service.engine.cefi_wire_bridge.get_cefi_wire_map()`):
   - **The bridge WORKS end-to-end**: `resolve_bucket_name(kind="instruments-store", asset_group="cefi")` resolved →
     `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`; **424,699 rows loaded**; map built:
     **423,596 forward keys / 424,465 reverse keys / 439 ambiguous excluded**. So the bucket-resolution + column contract
@@ -454,25 +557,25 @@ pairs stay honest-unresolved (reported, never guessed).
     `canonical_for(BYBIT, SPOT_PAIR, BTCUSDT)` → `BYBIT:SPOT_PAIR:BTC-USDT` and
     `canonical_for(BYBIT, PERPETUAL, BTCUSDT)` → `BYBIT:PERPETUAL:BTC-USDT@LIN`. The 3-tuple genuinely disambiguates the
     marquee majors that a 2-tuple would have silently excluded → wrapped-wire → non-joining.
-  - **The operator's originating example resolves**:
-    `canonical_for(BITFINEX-FUTURES, PERPETUAL, ADAF0:USTF0)` → **`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`**.
+  - **The operator's originating example resolves**: `canonical_for(BITFINEX-FUTURES, PERPETUAL, ADAF0:USTF0)` →
+    **`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`**.
   - **The UAC agent's case-preservation decision is VINDICATED by prod data** (it was a judgement call at the time):
     `raw_symbol_for(BINANCE-FUTURES, BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN)` → **`'btcusdt'` (LOWERCASE)**, while the
-    on-disk object is `BTCUSDT.parquet` (uppercase); `raw_symbol_for(BITFINEX-FUTURES, …:ADA-USDT@LIN)` → `'ADAF0:USTF0'`
-    (matches its on-disk stem exactly). Had the reverse map upper-cased, D3's candidate-stem lookup would have **silently
-    missed every BINANCE object**. This is precisely why the D3 stem set must try BOTH the reverse value AND its
-    `.upper()` — now empirically justified, not just specified.
-  - **Still NOT closed**: this ran against the PRE-rebuild catalogue (the `--mode full` rebuild is still running, ~64 min
-    elapsed, CPU climbing) — re-run after it lands. And it proves the MTDS bridge only; the MDPS bridge is a separate
-    module (same shape, same UAC map) whose live read is still unproven.
+    on-disk object is `BTCUSDT.parquet` (uppercase); `raw_symbol_for(BITFINEX-FUTURES, …:ADA-USDT@LIN)` →
+    `'ADAF0:USTF0'` (matches its on-disk stem exactly). Had the reverse map upper-cased, D3's candidate-stem lookup
+    would have **silently missed every BINANCE object**. This is precisely why the D3 stem set must try BOTH the reverse
+    value AND its `.upper()` — now empirically justified, not just specified.
+  - **Still NOT closed**: this ran against the PRE-rebuild catalogue (the `--mode full` rebuild is still running, ~64
+    min elapsed, CPU climbing) — re-run after it lands. And it proves the MTDS bridge only; the MDPS bridge is a
+    separate module (same shape, same UAC map) whose live read is still unproven.
 
 - **2026-07-17 (slot-3) — HOST SATURATION WARNING (self-inflicted, recorded so it isn't re-learned).** Fanning out
   concurrent sub-agents drove the shared host to **load average 293 with ~10 concurrent QG runs**. Two agents reported
   **load-induced false ❌s** (bandit 24.7s vs a 30s limit with 0 findings; a 658s-vs-600s wall-clock budget; a 60s test
   timeout in a file provably untouched by the change) — all clean when re-run unloaded. The workspace's "shared-host ≤2
-  full QGs" cap is real and I breached it in effect. Mitigation adopted: **one implementation agent at a time** from here.
-  Corollary for anyone reading a QG summary: a red ❌ under load is not necessarily yours — re-run the specific check
-  unloaded before concluding.
+  full QGs" cap is real and I breached it in effect. Mitigation adopted: **one implementation agent at a time** from
+  here. Corollary for anyone reading a QG summary: a red ❌ under load is not necessarily yours — re-run the specific
+  check unloaded before concluding.
 
 - **2026-07-17 (slot-3) — FIX D3 MDPS HALF SHIPPED: the audited cefi silent data-loss is CLOSED on the MDPS side —
   `market-data-processing-service@0035f79`.** Full `bash scripts/quality-gates.sh` GREEN **at the commit SHA**: "ALL
