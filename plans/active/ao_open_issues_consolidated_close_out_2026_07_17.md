@@ -297,6 +297,56 @@ NOT AO and are deliberately out of scope here.
       flows PubSub→producer→alerting-service→DART with the mock feed retired; codex Layer-1 banner replaced with the
       live description.
 
+### Phase 7 — INDEPENDENT AGENT-AUDIT FINDINGS (Claude, 2026-07-17) — ⚠️ NOT from the issue docs
+
+> **These are MY OWN findings** from a fresh pass over the AO codebase, the live DB/activity-log, and the codex AO docs
+> — kept deliberately SEPARATE from Phases 0–6 (which trace to issue docs or operator reports) so the operator can
+> review them on their own merits. **None of these todos is ratified until the operator reviews them** — treat each as a
+> proposal with evidence, not settled work. Scope honesty: codex claims were SPOT-checked (alerting, governor, paused
+> semantics, recovery Layer-1 — the last two via Phases 0–6 work), not exhaustively diffed; the deep codex↔code diff
+> belongs to the Phase-5 `ao_docs_reconciliation` close-out. One false lead corrected along the way: an early probe
+> reported `qg-host-governor.sh` missing from the VM — wrong path (it lives in `scripts/quality-gates-base/`, not
+> `scripts/dev/`); at the real path it answers `MODE=token K=2` (drift already recorded on the governor plan, no new
+> item).
+
+- [ ] [BACKEND] P1. **(AF-1) CI-wall escalator burn: 189 dispatches / 7d for 50 escalations, 83 UNRESOLVED (43%).**
+      Measured from `activity_log` (7d, wall_type=`ldr_qg_failure`): `escalation_queued=50`, `escalation_dispatched=189`
+      (≈3.8 dispatches per escalation — redispatch churn), `escalation_resolved=108`, `escalation_unresolved=83`. Every
+      dispatch is a full cicd agent session; nothing in any open issue doc tracks escalator EFFICACY — the alerting
+      codex governs how escalations PAGE, not whether they WORK. Proposal: (a) an unresolved-escalation triage pass
+      (what are the 83 — one recurring wall or many?); (b) a redispatch cap + backoff per escalation_id (same family as
+      the Phase-6 blocked-task cooldown); (c) a resolved:dispatched efficacy KPI in the daily digest. **Gate**: the 83
+      are explained; redispatch per escalation capped; KPI visible.
+- [ ] [INFRA] P2. **(AF-2) plan_health true daily volume is 55 dispatches/24h — 13 of which produced NO result.**
+      `plan_health_dispatched=55`, `plan_health_result=42`, `plan_health_dispatch_failed=4` in the last 24h — worse than
+      the 5.5h sample in Phase 6, and each run is a sonnet worker digesting ~449 plans (real daily token spend). The 13
+      result-less dispatches are pure waste (superseded/died mid-run). This is EVIDENCE strengthening the Phase-6
+      cooldown item, plus one addition: the cooldown gate should also require the PREVIOUS dispatch to have posted its
+      result (or timed out) before a new one spawns. **Gate**: folded into the Phase-6 plan_health item's acceptance.
+- [ ] [BACKEND] P3. **(AF-3) `activity_log` has NO retention policy — unbounded growth on the hot DB.** 83,813 rows
+      spanning 20 days (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC;
+      `activity_log` has nothing (grepped `state_store/` — no delete/prune path). Fine today, but it is silent unbounded
+      growth on the dispatch-hot SQLite file, and the log IS the fleet's audit stream. Proposal: age-based retention
+      (e.g. 90d) with optional archive-to-S3 via the existing snapshot loop before delete. **Gate**: a retention
+      decision recorded + implemented or explicitly declined with WHY.
+- [ ] [INFRA] P2. **(AF-4) Disaster-recovery snapshots are wired but their RECENCY is unverified — silent-by-absence
+      risk.** `gcs_sync.SnapshotLoop` runs and `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set
+      (systemd env; GCS unset by design on the AWS host). But no local `state.json` was found at the expected path
+      during the probe, and NOTHING asserts snapshot age — a broken snapshot loop would look exactly like a working one
+      until the day state.db is lost (same class as the reconciler timer that silently vanished, Phase 6). Proposal: (a)
+      verify the S3 object's last-modified NOW; (b) add a snapshot-age assertion (digest line or health endpoint: last
+      successful snapshot < N hours, alert on breach); (c) one documented restore drill. **Gate**: measured snapshot age
+      recorded; the age assertion alerts when the loop is deliberately stopped in a test.
+- [ ] [BACKEND] P2. **(AF-5) Dispatch→done conversion is ~18% and NO surfaced metric tracks fleet efficiency.** 24h: 310
+      boots / 154 dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task even with the spawn budget
+      fixed (the leaks are 117 skips + 96 session-losses, i.e. Phases 2/3/6 mechanics). The OBSERVABILITY gap is
+      separate and unowned: no dashboard/digest KPI exposes boots-per-done or dispatch→done conversion, so the fleet
+      "looks busy" while ~4 of 5 dispatches produce no completion, and nobody sees a regression until an operator
+      manually reads the activity log (how every incident in this plan was found). Proposal: daily-digest + dashboard
+      KPIs (spawns, dispatches, done, conversion %, boots-per-done, top skip reasons) with a wow-level alert on sharp
+      regression. **Gate**: the KPIs render; the 2026-07-12-class degradation (spawn:dispatch 0.6:1→44:1) would have
+      been visible within one digest cycle.
+
 ## Externally blocked (tracked, not actionable here)
 
 - `/api/escalate` vs `/api/escalation/{id}` collision — **blocked on `escalation_pipeline_mvp` un-pausing** (operator
@@ -316,6 +366,11 @@ NOT AO and are deliberately out of scope here.
 
 ## Progress Log
 
+- **2026-07-17 (final)** — Phase 7 added: five INDEPENDENT agent-audit findings (AF-1..AF-5) from a fresh pass over the
+  AO code, live DB/activity-log, and codex spot-checks — kept separate from the issue-doc-derived phases per operator
+  instruction, pending operator review. Headlines: 189 CI-escalator dispatches/7d with 83 unresolved (43%); plan_health
+  at 55 dispatches/24h with 13 result-less; no activity_log retention; DR snapshot recency unverified; dispatch→done
+  conversion ~18% with no surfaced efficiency KPI. One false lead corrected (governor script path).
 - **2026-07-17 (later)** — Phase 6 added: four operator-reported dispatch-policy items, each verified against code + the
   live VM before writing (paused-slot semantics CORRECT in code; plan_health measured at 21 dispatches/5.5h with
   overlaps, root cause = per-promotion backmerge ping with no server cooldown; blocked-task redispatch cooldown policy
