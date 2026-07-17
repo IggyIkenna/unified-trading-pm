@@ -1481,7 +1481,11 @@ if command -v bandit &>/dev/null; then
         # only mtds + strategy carry non-empty skips and both are MOOT within SOURCE_DIR (0 findings
         # for the skipped codes); bandit tolerates -c even with no [tool.bandit] section. The cache key
         # already hashes pyproject.toml, so a skips change busts it. SSOT: qg_config_ssot_matrix_2026_06_09.md.
-        _bandit_out=$(run_timeout 30 bandit -c pyproject.toml -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
+        # Timeout 30 → 180 (2026-07-17): mirrors the base-library.sh bump — see that comment. A
+        # run_timeout kill lands in the `||` branch and is reported as "bandit issues", i.e. a
+        # timeout is indistinguishable from a real security finding in the gate output. Measured
+        # ~52s for a full clean scan of a large source tree; 30s failed repos spuriously under load.
+        _bandit_out=$(run_timeout 180 bandit -c pyproject.toml -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
             && qg_cache_store bandit_content_hash "$_bandit_key" \
             || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
     fi
