@@ -11,10 +11,25 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [epic-execution, sub-agents, audit-lifecycle, plan-hygiene, orchestrator]
-related: [../../plans/epics/README.md, ../../plans/epics/orchestrator_master.md, active-plan-inventory-tracker.md, issue-doc-lifecycle.md, ../08-workflows/estimation-calibration.md, ../../plans/audit/README.md]
+related:
+  [
+    ../../plans/epics/README.md,
+    ../../plans/epics/orchestrator_master.md,
+    active-plan-inventory-tracker.md,
+    issue-doc-lifecycle.md,
+    ../08-workflows/estimation-calibration.md,
+    ../../plans/audit/README.md,
+  ]
 created: 2026-03-27
 authoritative_for: [epic-execution codex quick-reference]
-referenced_by: [codex/11-project-management/README.md, codex/11-project-management/audit-lifecycle.md, codex/12-agent-workflow/orchestrator-multi-vm-topology.md, plans/epics/README.md, plans/epics/client_isolation_and_governance_master.md, plans/epics/strategy_master.md]
+referenced_by:
+  [
+    codex/11-project-management/README.md,
+    codex/11-project-management/audit-lifecycle.md,
+    plans/epics/README.md,
+    plans/epics/client_isolation_and_governance_master.md,
+    plans/epics/strategy_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-22
 code_refs:

@@ -1,923 +1,310 @@
 ---
 doc_type: codex-ssot
-title: agent-orchestrator — architecture overview
+title: agent-orchestrator — service-implementation reference
 summary:
-  agent-orchestrator service architecture — FastAPI + Vite dashboard coordinating parallel Claude Code workers (SQLite
-  state, ES256 internal / HS256 dashboard auth, central API proxy over private VPC to 10 epic VMs); explicitly NOT a
-  trading service (no asset_group / kill-switch / event-bus).
+  Service-implementation reference for agent-orchestrator — tech stack, auth model (ES256 internal / HS256 dashboard),
+  the centralized-API connectivity model, secrets/buckets, state persistence, dashboard, local dev, deploy scripts, the
+  AgentKeeper + agent-type oversight surfaces, and the service-vs-trading boundary. The architecture & operating model
+  (topology, the two worker classes, worker/task lifecycle, dispatch, regen) lives in the single-VM SSOT; this doc is
+  the implementation layer under it. Explicitly NOT a trading service.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-service, deployment-ui, features-service]
+repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui]
 scope: [engineer]
-tags: [orchestrator, infrastructure, self-healing, role-registry, model-tier, observability]
+tags: [orchestrator, infrastructure, auth, connectivity, secrets, dashboard, agentkeeper, service-reference]
 related:
   [
+    ../12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator-autospawn.md,
-    agent-orchestrator-host-offline-failover.md,
     agent-orchestrator-worker-liveness.md,
     agent-orchestrator-backlog-state-alignment.md,
-    runtime-deployment-topology.md,
+    agent-orchestrator-host-offline-failover.md,
+    ../05-infrastructure/agent-orchestrator-deploy.md,
+    ../05-infrastructure/agent-orchestrator-api-host.md,
   ]
 created: 2026-05-19
-authoritative_for: [agent-orchestrator service architecture overview]
+authoritative_for: [agent-orchestrator service-implementation reference, agent-orchestrator auth + connectivity model]
 referenced_by:
   [
     codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md,
     codex/04-architecture/agent-orchestrator-autospawn.md,
     codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
-    codex/04-architecture/agent-orchestrator-host-offline-failover.md,
     codex/04-architecture/agent-orchestrator-worker-liveness.md,
     codex/05-infrastructure/agent-orchestrator-api-host.md,
     codex/05-infrastructure/agent-orchestrator-deploy.md,
   ]
 owner:
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-18
 code_refs:
-author: ikenna-claude-subagent
+author:
 ---
 
-# agent-orchestrator — architecture overview
+# agent-orchestrator — service-implementation reference
 
-**Repo**: `IggyIkenna/agent-orchestrator` (renamed from `orchestrator-service` 2026-05-19)
+**Repo**: `IggyIkenna/agent-orchestrator`.
 
-**What it is**: Operator tooling for parallel Claude Code worker agents. A FastAPI + Vite-dashboard HTTP server that
-replaces file-based orchestration (LEDGER.md + ping files + manual dispatch). Worker agents call `/boot`, `/progress`,
-`/done`, `/blocked`, `/heartbeat` instead of reading/writing markdown files. State persists in SQLite
-(`data/state/state.db`). Config (backlog, accounts, backends) is YAML/JSON under `data/config/`.
+**What it is**: operator tooling for the Claude Code worker fleet — a FastAPI + Vite-dashboard HTTP server. Workers call
+`/boot`, `/progress`, `/done`, `/blocked`, `/heartbeat` instead of the retired file-based orchestration (LEDGER.md +
+ping files + manual dispatch). State persists in SQLite (`data/state/state.db`); config (backlog, accounts, backends) is
+YAML/JSON under `data/config/`.
 
-**NOT a trading service.** No asset_group, no batch/live modes, no kill-switch surface, no event-bus emission to UTL.
-See § "Difference vs trading services" below.
+**Architecture & operating model live in the SSOT**:
+[`../12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
+— topology (one central VM, N in-process slots), the two worker classes (plan-driven backlog workers vs standing/
+event-driven agents), and the four behaviour domains (worker lifecycle, task lifecycle, dispatch, regen). **This doc is
+the implementation layer under it**: stack, auth, connectivity, secrets, state, dashboard, deploy, keeper.
 
-**Repo map pointer**: events → UTL · schemas → UAC · **orchestration → agent-orchestrator** (see
-`cursor-configs/CLAUDE.md` § "System-First Architecture" —
-`port 8765 locally; agent-orchestrator.odum-research.com prod`).
+**NOT a trading service** — see § "Difference vs trading services".
 
-Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`; infra/deploy reference
-→ `codex/05-infrastructure/agent-orchestrator-deploy.md`; **central API host** (instance, ports, watchdog, auto-reboot,
-resource limits, root-cause history) → `codex/05-infrastructure/agent-orchestrator-api-host.md`.
+Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`; deploy/infra →
+[`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md); central API
+host (instance, ports, watchdog, auto-reboot) →
+[`../05-infrastructure/agent-orchestrator-api-host.md`](../05-infrastructure/agent-orchestrator-api-host.md).
 
 ---
 
 ## Tech stack
 
-| Layer    | Technology                                                                                                                                                                                                                                                                                                                                                              |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                                                                                                                                                                                                                                             |
-| Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                                                                                                                                                                                                                                                        |
-| Auth     | ES256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`). Internal proxy token: ES256 asymmetric, **HS256 retired 2026-06-01** (all 11 VMs sign ES256; private key distributed to every VM via the restricted creds bucket — central-only abandoned). Operator dashboard login JWT: HS256 (`ORCHESTRATOR_JWT_SECRET`, central-only — unaffected).       |
-| Workers  | EC2 VMs (10 epic, AWS ap-northeast-1), 8 slots each on epic VMs = 80 worker slots; 1 central/orchestrator VM (id `planning`, `i-0c9b283b`, `13.113.200.22`) + 1 human planning VM (id `human-planning`, `i-0dd9812a`, `35.76.120.160`, 2 interactive slots) — human/central SPLIT 2026-06-12, see `orchestrator_human_central_vm_split_2026_06_12.md`. Total: 82 slots. |
-| State    | SQLite (runtime) + `data/state/state.json` snapshot. See § "State persistence" below for cloud-backup specifics.                                                                                                                                                                                                                                                        |
-| Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                                                                                                                                                                                                                                           |
-| QG       | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                                                                                                                                                                                                                                                          |
+| Layer    | Technology                                                                                                                                                                                |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                                                               |
+| Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                                                                          |
+| Auth     | ES256 JWT for internal proxy tokens; HS256 for the operator dashboard login JWT (`ORCHESTRATOR_JWT_SECRET`, central-only). See § "Auth model".                                            |
+| Host     | ONE central orchestrator VM (id `planning`, EC2 `13.113.200.22`, ap-northeast-1) running the backend + N slot workers as in-process tmux sessions. Topology SSOT: single-VM architecture. |
+| State    | SQLite (runtime) + `data/state/state.json` snapshot, mirrored to S3/GCS by `SnapshotLoop`. See § "State persistence".                                                                     |
+| Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                                                             |
+| QG       | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc (operator-tooling exemption from the standard `quality-gates.sh`)                                                          |
 
----
+## Deployment shape
 
-## Deployment shape (refreshed 2026-05-28)
-
-Current production shape — Firebase Hosting SPA + central API VM + private-VPC proxy to fleet:
+Firebase Hosting SPA + one central API VM:
 
 ```
-                        Firebase Hosting
-                        agent-orchestrator.odum-research.com   (dashboard SPA)
-                                │ HTTPS
-                                ▼
-                        api.agent-orchestrator.odum-research.com   (HTTPS, nginx :443)
-                        Central API VM (EC2 13.113.200.22, ap-northeast-1)
-                        nginx → orchestrator backend :8765
-                                │ private VPC (172.31.x.x)
-                                │ ORCHESTRATOR_USE_PRIVATE_URLS=true
-                                ▼
-                        ┌──────────────────────────────────────────┐
-                        │  10 epic EC2 VMs, all :8765              │
-                        │  vm-defi / vm-cefi / vm-tradfi / ...     │
-                        │  (orchestrator backend per VM)           │
-                        └──────────────────────────────────────────┘
+        Firebase Hosting  →  agent-orchestrator.odum-research.com          (dashboard SPA)
+                                        │ HTTPS
+        api.agent-orchestrator.odum-research.com  (nginx :443 → backend :8765, EC2 13.113.200.22)
+                                        │  in-process
+                              N slot workers (tmux orch-slot-N)
 ```
 
-The browser **never** reaches the epic VMs directly — only the central API has a public TLS endpoint. Per-VM ports
-(:8765) are open to 0.0.0.0/0 in the security group as a fallback, but day-to-day traffic flows through the central
-proxy. See § "Connectivity model — centralized API router" below.
-
-Historical Cloud Run shape (`agent-orchestrator-{staging|prod}.run.app`, europe-west4) is documented in
-[`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md) § "Cloud Run
-service shape (HISTORICAL)" — not running, kept as cloud-agnostic fallback reference.
-
-**Local dev** (port 8765): see § "Local dev" below.
-
----
+The browser reaches only the central API's public TLS endpoint; slots are in-process tmux sessions on the same VM, not
+separate hosts. The `/api/vms/<id>/*` proxy + `/api/fleet/summary` fan-out endpoints remain in the code as a single-node
+degenerate case — they were the multi-VM router; there is no fleet to fan out to today. The historical Cloud Run shape
+is documented in
+[`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md) as
+cloud-agnostic fallback reference — not running.
 
 ## Service bootstrap exemptions
 
-Two QG steps are exempted (operator decision 2026-05-19):
+Two QG steps are exempted (operator tooling, not a trading service):
 
-- **QG STEP 5.61 (ServiceBootstrap)** — orchestrator has no `--asset-group`/`--mode` trading CLI; uvicorn-only startup.
-  Source comment in `client-reporting-api` confirms the bootstrap is a token gesture; exempt here.
-- **QG STEP 5.34 (typed config_reloaders.py)** — `server/config.py` is module-level env-driven functions; full
-  compliance requires a config-class refactor deferred post-cutover.
+- **STEP 5.61 (ServiceBootstrap)** — no `--asset-group`/`--mode` trading CLI; uvicorn-only startup.
+- **STEP 5.34 (typed config_reloaders)** — `server/config.py` is module-level env-driven functions.
 
-`/health` + `/readiness` endpoints (QG STEP 5.62) are registered via UTL `make_health_router` with `data_freshness`
-callback (state.json mtime + DB/backlog checks) — `agent-orchestrator@8e5a7e2`.
+`/health` + `/readiness` (STEP 5.62) ARE registered via UTL `make_health_router` with a `data_freshness` callback
+(state.json mtime + DB/backlog checks).
 
----
+## Auth model
 
-## Secrets + buckets (refreshed 2026-05-28)
+Two independent secrets/keys, deliberately separated so an upstream compromise cannot impersonate the operator:
 
-Three categories of secret / cloud-state surface. AWS is the primary cloud (per § "Fleet topology"); the GCP-side
-equivalents are kept in sync for cloud-agnostic re-spin.
+- **`ORCHESTRATOR_JWT_SECRET`** (HS256) — operator dashboard login JWT only, validated at the public edge. Central-only,
+  never wired into a worker.
+- **ES256 asymmetric key pair** (`ORCHESTRATOR_INTERNAL_ALG=ES256`) — internal proxy auth. HS256 was retired 2026-06-01;
+  `decode_token()` and `_issue_internal_token()` are ES256-only. Private key via the restricted creds bucket
+  (`ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS`), public key via `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS`. The raw
+  `ORCHESTRATOR_INTERNAL_SECRET` is RETAINED as the pre-shared key for `verify_internal_secret()` → `POST /api/escalate`
+  (the GHA→orchestrator CI-wall dispatch) — do not delete it.
 
-| Surface                                      | AWS path                                                                   | GCP path                                                                            | Used for                                                                     |
-| -------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Per-VM env (JWT, Telegram, …)                | AWS Secrets Manager `ORCHESTRATOR_ENV_LOCAL`                               | GCP Secret Manager `ORCHESTRATOR_ENV_LOCAL`                                         | `bootstrap_vm.sh` writes `.env.local` on first boot                          |
-| Per-account setup-token env files            | `s3://uts-orchestrator-creds-<account>/accounts/<id>.env`                  | `gs://central-element-323112-orchestrator-creds/accounts/<id>.env`                  | `CredsEnvPoller` syncs to local `~/.claude-accounts/` every 5 min            |
-| VM lifecycle events (STARTED/STOPPED/FAILED) | `s3://uts-orchestrator-events-<account>/orchestrator/<role>/<vm>/STARTED`  | `gs://<project>-events/orchestrator/<role>/<vm>/STARTED`                            | `bootstrap_vm.sh` emits STARTED; STOPPED/FAILED deferred to SSH-spawn work   |
-| State snapshot (state.json + SQLite)         | `s3://<bucket>/` controlled by `ORCHESTRATOR_S3_BUCKET` env (code shipped) | `gs://agent-orchestrator-state-prod/` (controlled by `ORCHESTRATOR_GCS_BUCKET` env) | `SnapshotLoop` in `server/gcs_sync.py` — 30-min auto + shutdown; both clouds |
+**Current posture**: `auth.ALLOW_ANONYMOUS=True` (permissive, operator decision at launch; the `:8765` port has no
+public inbound rule, so reads come from localhost or the dashboard proxy). Strict-auth flip recipe (provision the
+operator JWT secret + argon2 user list, flip `ALLOW_ANONYMOUS=False`, 3-curl smoke test) and the full endpoint
+inventory: `agent-orchestrator/docs/AUTH_INVENTORY.md`.
 
-Local dev: all of the above are no-ops when the corresponding env var is unset; state.json persists to local disk and
-creds env files are operator-managed manually.
+### Auth flip rationale
 
-> **AWS↔S3 snapshot (code shipped 2026-06-01, agent-orchestrator@57dc8c2)**: `server/gcs_sync.py` now has
-> `upload_state_to_s3` + `backup_sqlite_to_s3`, mirroring the GCS path and gated on `ORCHESTRATOR_S3_BUCKET` (no-op when
-> unset, never-raise). When both `ORCHESTRATOR_GCS_BUCKET` and `ORCHESTRATOR_S3_BUCKET` are set the snapshot lands in
-> both clouds. **Remaining operator step**: provision the S3 state bucket + set `ORCHESTRATOR_S3_BUCKET` on the 11 AWS
-> VMs so the disaster-recovery loop is live (until then AWS hosts without a reachable GCS bucket still keep state on
-> local disk). Tracked: `plans/active/orchestrator_autonomy_audit_remediation_2026_06_01.md` Phase 1.
+The flip is deferred by operator decision (permissive trades auth for iteration speed while the API is not publicly
+reachable). When ready: provision `ORCHESTRATOR_JWT_SECRET` on the central VM only, keep the ES256 pair for internal
+tokens, replace `validate_credentials` with the argon2 user list, flip `ALLOW_ANONYMOUS=False`, and smoke-test (valid
+creds → 200, wrong password → 401, anonymous → 401).
 
-> **Cloud I/O via UTL, not raw SDK (code shipped 2026-06-22, agent-orchestrator@62894565,
-> `utl_reuse_phase5_deployment_api_cloud_sdk_2026_07_13`)**: `server/gcs_sync.py`'s dual-cloud mirror above goes through
-> UTL `get_storage_client(provider="gcp"|"aws")` (`upload_bytes`/`upload_file`) — the direct `boto3` +
-> `google.cloud.storage` client construction it used to do is gone. `server/auth.py`'s `_load_gcs_secret` (the per-VM
-> setup-token env fetch) is the same: `get_storage_client(provider="gcp", project_id=…).download_bytes()` instead of a
-> raw `gs://` blob fetch — auth-fetch only, HS256/ES256 JWT signing itself is untouched. Do not reintroduce a direct
-> `boto3`/`google.cloud.storage` import here — extend UTL's `get_storage_client` if a new cloud I/O capability is
-> needed.
+## Connectivity model — centralized API router
 
----
+The dashboard talks to ONE backend (the central API), which owns per-slot control server-side. Slots need no public IP,
+no per-VM TLS, no DNS. Auth flow: the operator hits central with their HS256 JWT; central validates it at the perimeter,
+terminates it, then mints a short-lived (5 min, role=worker) ES256-signed internal token for any upstream call
+(`server/server.py::proxy_to_vm` + `auth.get_internal_service_token()`). Registry: `data/config/backends.json` (static
+`url` + `private_url`) merged with the dynamic `fleet_registry.json`. This model was designed for a multi-node fleet;
+with the single-VM topology it degenerates to local calls, but the auth separation is kept as the security boundary.
 
-## Auth flip rationale
+## Secrets + buckets
 
-`server/auth.py::validate_credentials` is currently permissive (`ALLOW_ANONYMOUS=True`) — by operator decision at
-launch, trading permissive auth for faster iteration. Strict auth flip recipe (whenever the project is ready):
+AWS is primary; GCP paths kept in sync for cloud-agnostic re-spin. All are no-ops when the corresponding env var is
+unset (local dev keeps state on local disk).
 
-- Provision `ORCHESTRATOR_JWT_SECRET` (HS256 32-byte random) on the central VM only (operator JWT — never wire to
-  workers).
-- Provision the ES256 asymmetric key pair for internal proxy tokens (shipped 2026-06-01 via
-  `orchestrator_asymmetric_auth`): private key stored in GCP Secret Manager; public key published to GCS
-  `gs://central-element-323112-orchestrator-creds/orchestrator/internal-public.pem`. Workers set
-  `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=gs://…/internal-public.pem` in `.env.local`. **Every** orchestrator VM also sets
-  `ORCHESTRATOR_INTERNAL_ALG=ES256` + `ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS=gs://…/internal-private.pem` (all VMs sign,
-  so all hold the private key — central-only abandoned 2026-06-01). **HS256 was RETIRED 2026-06-01** (agent-orchestrator
-  @f44b948) once all 11 VMs verified ES256-signing — `decode_token` is ES256-only. (The 48h soak was superseded: the
-  real gate is "all-ES256," reached minutes after the last signer flips given the 5-min internal-token TTL.)
-- Replace `validate_credentials` with argon2-hashed user list (schema from `scripts/manage_users.py`)
-- Flip `auth.ALLOW_ANONYMOUS=False`
-- Smoke test: 3-curl sequence (valid creds → 200, wrong password → 401, anonymous → 401)
+| Surface                          | AWS path                                                  | GCP path                                      | Used for                                                           |
+| -------------------------------- | --------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------ |
+| Per-VM env (JWT, Telegram, …)    | Secrets Manager `ORCHESTRATOR_ENV_LOCAL`                  | Secret Manager `ORCHESTRATOR_ENV_LOCAL`       | `bootstrap_vm.sh` writes `.env.local` on first boot                |
+| Per-account setup-token env      | `s3://uts-orchestrator-creds-<account>/accounts/<id>.env` | `gs://…-orchestrator-creds/accounts/<id>.env` | `CredsEnvPoller` syncs to `~/.claude-accounts/` every 5 min        |
+| State snapshot (state.json + DB) | `s3://<ORCHESTRATOR_S3_BUCKET>/`                          | `gs://<ORCHESTRATOR_GCS_BUCKET>/`             | `SnapshotLoop` in `server/gcs_sync.py` (default 30-min + shutdown) |
 
-**AUTH_INVENTORY.md** in the repo has the full flip-day checklist.
-
----
+Cloud I/O goes through UTL `get_storage_client(provider=…)` — never a raw `boto3`/`google.cloud.storage` import; extend
+UTL if a new capability is needed.
 
 ## State persistence
 
-Runtime state lives in SQLite at `data/state/state.db`. Periodic snapshots (`state.json` mirror + SQLite hot-copy) fire
-from `SnapshotLoop` in `server/gcs_sync.py` — environment-controlled cadence (default 30 min auto + shutdown; override
-via `ORCHESTRATOR_SNAPSHOT_INTERVAL_SECONDS`). Snapshots are uploaded to GCS when `ORCHESTRATOR_GCS_BUCKET` is set;
-otherwise local-only.
+Runtime state is SQLite at `data/state/state.db`. `SnapshotLoop` (`server/gcs_sync.py`) writes a `state.json` mirror +
+SQLite hot-copy on a cadence (`ORCHESTRATOR_SNAPSHOT_INTERVAL_SECONDS`, default 30 min + shutdown), uploaded to S3/GCS
+when the bucket env is set. On the AWS host, `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is the
+disaster-recovery target (a VM restart otherwise loses `state.db`). Snapshot _recency_ is not currently asserted — a
+broken loop looks like a working one until state is lost (tracked in the AO close-out plan).
 
-See the "Secrets + buckets" table above for the current cloud bucket layout + the AWS↔S3 known-gap on state snapshots.
+## Auth — long-lived setup-tokens
 
----
+Every account in `data/config/accounts.json` authenticates via an `oauth_token_env_file` (`~/.claude-accounts/<id>.env`
+with `CLAUDE_CODE_OAUTH_TOKEN=…` + `unset ANTHROPIC_API_KEY`). Every spawn path sources the env file before
+`exec claude` and refuses HTTP 400 when it is missing. Only `creds_env_poller` (5-min cross-cloud bucket sync) remains
+of the legacy auth machinery. Model SSOT:
+[`../12-agent-workflow/claude-cli-multi-account-headless-auth.md`](../12-agent-workflow/claude-cli-multi-account-headless-auth.md);
+rate-limit/auth failover:
+[`../12-agent-workflow/orchestrator-safety-mechanisms.md`](../12-agent-workflow/orchestrator-safety-mechanisms.md) § B +
+[`agent-orchestrator-worker-liveness.md`](agent-orchestrator-worker-liveness.md) § "Account auth-failure eviction".
+
+## AgentKeeper + agent-type oversight
+
+`server/main_agent_keeper.py` (`AgentKeeper`) is the single daemon that guarantees the mandatory Class-B agents every
+tick: the singleton **main** (`orch-agent-main`) and the **review** agent(s) (`ORCHESTRATOR_REVIEW_SLOTS`) —
+`autospawn.ensure_review_agents()` brings review up even when AutoSpawn is off. AutoSpawn handles only Class-A task
+workers + escalation drains.
+
+- **Two-axis agent classification** (`AgentRow`, set at spawn) — the implementation of the two worker classes (single-VM
+  SSOT § "The two worker classes"): `agent_kind`
+  (main/review/cicd/conflict_resolver/data_pipeline_failure/plan_health/plan_reconciler/monitor/worker) carries
+  identity; `lifecycle` (persistent | one_shot | scheduled) tells the reaper/watchdog that a one_shot/scheduled session
+  ending is EXPECTED, not a stale-agent incident; `role` stays the chat/promote lane (main/review/custom).
+- **Fleet vs AGENT TYPES — two dashboard surfaces**: the **Fleet** shows `SlotRow`s (worker slots); the **AGENT TYPES**
+  panel shows `AgentRow`s grouped by kind. A plain task worker has a `SlotRow` and no `AgentRow`; a typed Class-B agent
+  registers an `AgentRow` and may BORROW a free slot while it runs (no dedicated cicd/plan_health slot). Each keeper
+  tick reconciles rows against tmux reality: ghost-reap of a typed agent whose slot a worker reused, account backfill,
+  and slot-takeover (re-queues a displaced worker's task).
+- **Fleet-worker cap**: `ORCHESTRATOR_FLEET_WORKER_CAP` (default 10) bounds concurrent on-demand workers; main+review
+  are not counted against it.
+- **Role-dispatch**: a dispatched task's `assigned_role` → `prompts.render_worker` prepends `agents/<role>.md` to
+  `worker.md` and reads the role file's model/thinking as the task tier (explicit plan `model_tier` wins; fail-soft to
+  the generic worker when the role is unset/missing).
+- **Show log** reads Claude's durable transcript JSONL (`server/transcript_log.py`) by the stored `claude_session_id` —
+  the full respawn-proof conversation, not the ~24-line tmux frame. Repo-local detail: `docs/SLOTS_AGENTS_AND_FLEET.md`.
+- **Recovery-audit note**: the `recovery_audit` agent-kind was removed from the AO roster, but the Layer-1
+  recovery-audit-signoff FUNCTION is not retired — its consuming half is live but producer-less/mock-fed, producer
+  rewire DEFERRED (operator 2026-07-16). See `recovery-defence-in-depth-layers.md` § Layer 1 +
+  `plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`.
+
+## Blocked-questions, authority, and prerequisites
+
+Three concepts kept apart in the model (agents conflating them is a recurring bug):
+
+- **Blocked-question** (`BlockedRow` / `blocked_queue`): an agent needs a human/main answer to proceed. Carries an
+  `authority` field (`main_agent` | `operator`). The main agent auto-answers only `authority=main_agent`; an
+  `authority=operator` row is a hard-stop that must reach a human (rich Slack payload on creation).
+- **Prerequisite** (`PrerequisiteRow` / task `prereqs`): a task gated by EARLIER tasks WAITS — it does not escalate.
+- The `condition`→`prerequisite` rename (agent-orchestrator@9758270) is end-to-end across ORM/API/dashboard; English
+  prose ("race condition") is preserved.
+
+Task-state + dispatch consequences: single-VM SSOT § "Task lifecycle".
 
 ## Dashboard URLs
 
-| Environment    | URL                                                            | Notes                                                                |
-| -------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Production SPA | https://agent-orchestrator.odum-research.com                   | Firebase Hosting; talks to central API below                         |
-| Central API    | https://api.agent-orchestrator.odum-research.com               | EC2 VM `13.113.200.22`, nginx → app :8765 (verified live 2026-05-28) |
-| Local dev      | http://localhost:5173 (Vite) + http://localhost:8765 (backend) | see § "Local dev"                                                    |
+| Environment    | URL                                                            |
+| -------------- | -------------------------------------------------------------- |
+| Production SPA | https://agent-orchestrator.odum-research.com                   |
+| Central API    | https://api.agent-orchestrator.odum-research.com               |
+| Local dev      | http://localhost:5173 (Vite) + http://localhost:8765 (backend) |
 
----
+## Fleet git-health page
 
-## Fleet git-health page (shipped 2026-06-10)
+`GET /api/fleet/git-health?scope=fleet|local` aggregates each slot's stored `SlotGitStatus` into a hosts→slots→repos
+surface (`reporter_stale` / `ff_cron_stale` / `drift_violation` / dirty / behind badges). Dashboard route `/fleet-git`
+(`dashboard/src/FleetGit.tsx`). The PRIMARY operator view is mirrored into **deployment-ui** (`/fleet` tab via
+deployment-api); this orchestrator page stays for worker-ops. Division-of-surfaces SSOT:
+`codex/03-observability/monitoring-control-plane.md`.
 
-`GET /api/fleet/git-health?scope=fleet|local` (`server/server.py`) aggregates every slot's stored `SlotGitStatus`
-(`POST/GET /api/slots/{id}/git-status`) into a hosts → slots → repos surface. `scope=fleet` (default) merges this host's
-local view with every registered VM's `scope=local` view via the existing `/api/vms/<id>/*` proxy fan-out (the
-`/api/fleet/summary` pattern); `scope=local` is the per-VM leaf (no recursion). Derivations beyond the per-slot badge:
+## Host-offline failover (dormant on single-VM)
 
-- `reporter_stale` — `reported_at` older than 10 min (a dead `slot-git-status-report.sh` cron is a first-class red
-  state, not a silent gap).
-- `ff_cron_stale` — `git_status_ff_pull_last_run` older than 15 min, **only when attested** (the reporter posts
-  `ff_pull_last_run`/`ff_pull_last_result` from the host-global result file `slot-cron-ff-pull.sh` writes each sweep);
-  un-attested = honest-unknown, never falsely "dead".
-- `drift_violation` — per repo, state `ahead`/`diverged` vs `origin/live-defi-rollout` (the Path-B invariant from
-  `scripts/cicd/slot_drift_check.py`); rolled up to `drift_violations[]`.
-- `vm_errors[]` — honest per-VM proxy failure (unreachable/bad-payload), never a fabricated row.
-
-Dashboard: the `/fleet-git` SPA route (`dashboard/src/FleetGit.tsx`) — summary chips + per-host slot rows with
-worst-first badges (reporter-dead / ff-pull-dead / drift / dirty / behind) + expandable per-repo detail. Per operator
-decision v2 (2026-06-10) the PRIMARY operator view is mirrored into **deployment-ui** (`/fleet` tab, via deployment-api
-`GET /api/repo-ci/fleet-git-health` proxying this endpoint with the SM `ORCHESTRATOR_API_TOKEN`); this orchestrator page
-stays for worker-ops use. Plan: `fleet_git_health_orchestrator_2026_06_10.md`; full division-of-surfaces + click-through
-contract: `codex/03-observability/monitoring-control-plane.md`.
-
----
+`FailoverLoop` (`server/failover.py`) re-homes soft-pinned queued tasks off a host that has gone silent >10 min. It was
+built for the multi-host era (e.g. an operator laptop going offline); with one central VM there is no second host to
+fail over to, so it is effectively dormant. `failover_allowed: false` on a task opts it out permanently. Full contract:
+[`agent-orchestrator-host-offline-failover.md`](agent-orchestrator-host-offline-failover.md).
 
 ## Local dev — port 8765
 
-Port 8765 is registered in `unified-trading-pm/scripts/dev/ui-api-mapping.json`.
-
 ```bash
 cd agent-orchestrator
-
-# One-time setup
 uv venv && uv sync
 .venv/bin/pre-commit install --install-hooks
 cd dashboard && npm install && cd ..
-
-# Boot everything (backend :8765 + Vite dashboard :5173)
-scripts/dev.sh          # live mode
+scripts/dev.sh          # live mode (backend :8765 + Vite :5173)
 scripts/dev.sh --mock   # demo mode
 ```
 
-Note: the central API VM listens on `127.0.0.1:8765` behind nginx (TLS terminated at :443). Fleet VMs listen on
-`0.0.0.0:8765` directly (no nginx, no per-VM TLS — the central API proxies to them over the private VPC). Local dev uses
-:8765 per the workspace port registry. Vite dev server is always `:5173` locally.
-
-**Quality gates**: `bash scripts/check.sh` (ruff + basedpyright + prettier + tsc). No standard `quality-gates.sh`
-integration — operator tooling exemption.
-
----
+Quality gates: `bash scripts/check.sh` (ruff + basedpyright + prettier + tsc). No standard `quality-gates.sh`
+integration — operator-tooling exemption.
 
 ## Slack notifications
 
-Block Kit push notifications to `#agent-orchestrator-alerts` via incoming webhook. Shipped at
-`agent-orchestrator@cd04fc2` (Block Kit + retry + `blocked_id` dashboard link).
+Block Kit push to `#agent-orchestrator-alerts` via incoming webhook (`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` from
+`.env.local`; `_post()` no-ops when empty). The channel is **actionable-only** — automatic lifecycle events log + feed
+the daily digest, they never page; a standing condition pages once on the false→true transition with a RESOLVED bookend
+(persisted dedup, `server/dedup_state.py`). SSOT:
+[`../05-infrastructure/agent-orchestrator-slack-notifications.md`](../05-infrastructure/agent-orchestrator-slack-notifications.md)
 
-`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is loaded from the per-VM `.env.local` (provisioned via the `ORCHESTRATOR_ENV_LOCAL`
-secret). `_post()` no-ops when the webhook URL is empty so local dev / mock runs don't require Slack credentials.
-async→sync httpx conversion was applied 2026-05-21 to fix an asyncio.run-in-sync-endpoint bug that was silently
-suppressing all calls.
-
-**SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event table, payload shape, retry logic,
-secret inventory, V2 out-of-scope).
-
----
+- alerting policy [`agent-orchestrator-alerting.md`](agent-orchestrator-alerting.md).
 
 ## Deployment scripts
 
-Two paths today (AWS is primary; GCP retained for cloud-agnostic re-spin):
+| Target                   | Script                                                              |
+| ------------------------ | ------------------------------------------------------------------- |
+| Central VM bootstrap     | `agent-orchestrator/scripts/bootstrap_vm.sh` (CLOUD_PROVIDER aware) |
+| Central VM systemd unit  | `agent-orchestrator/scripts/install-orchestrator-service.sh`        |
+| Continuous deploy (code) | `agent-orchestrator/scripts/ao-self-pull.sh` (root cron `*/15`)     |
 
-| Target                                                 | Script                                                                  | Cloud                   |
-| ------------------------------------------------------ | ----------------------------------------------------------------------- | ----------------------- |
-| Epic VM launch                                         | `deployment-service/scripts/vm/launch-epic-vm-aws.sh`                   | AWS                     |
-| Epic VM launch                                         | `deployment-service/scripts/vm/launch-epic-vm.sh`                       | GCP                     |
-| Per-VM bootstrap                                       | `agent-orchestrator/scripts/bootstrap_vm.sh` (CLOUD_PROVIDER aware)     | both                    |
-| Central API VM systemd unit                            | `agent-orchestrator/scripts/install-orchestrator-service.sh`            | AWS (EC2 13.113.200.22) |
-| **Continuous deploy (code updates, added 2026-07-12)** | `agent-orchestrator/scripts/ao-self-pull.sh` (root cron `*/15 * * * *`) | both                    |
+**Deploy currency**: `ao-self-pull.sh` FF-pulls `origin/live-defi-rollout` (ff-only) and `systemctl restart`s the
+orchestrator only when HEAD moved, or when the running process predates the checkout HEAD. A deduped Slack
+`_alert_wedge` fires when the pull is wedged (dirty/diverged) AND the clone is `≥AO_DRIFT_ALERT_COMMITS` (10) behind.
+**Open hardening gap**: the wedge alert fires on checkout-behind, NOT on a current-checkout-but-stale-running-process —
+tracked in the AO close-out plan. The `launch-epic-vm*.sh` + historical Cloud Run deploy scripts are retained for
+cloud-agnostic re-spin optionality only; no epic VMs run.
 
-**Production deploy mechanism (added 2026-07-12)**: once a VM is bootstrapped, `scripts/ao-self-pull.sh` is what keeps
-its running checkout current — a root cron every ~15 min FF-pulls the systemd-run orchestrator checkout from
-`origin/live-defi-rollout` and `systemctl restart orchestrator` only when HEAD moves (closing the deploy-currency gap: a
-VM could otherwise silently run stale server code). Shipped `agent-orchestrator@589b711`; hardened `@d16d737` (restarts
-when the running process predates the checkout HEAD — stale-process self-heal) + `@5462959` (deduped Slack wedge alert
-when the self-pull is dirty/diverged AND drifted, so a silent deploy-currency wedge can't hide). Full SSOT:
-[`../12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../12-agent-workflow/agent-orchestrator-single-vm-architecture.md).
+## Branch model — LDR → main (direct)
 
-Historical Cloud Run deploy script `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` is retained in
-the repo (referenced in `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers") for re-spin
-optionality; the Cloud Run shape is **not currently deployed** — see
-[`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md) § "Cloud Run
-service shape (HISTORICAL)".
-
----
+`agent-orchestrator` ships via `quickmerge --agent --files` onto `live-defi-rollout` like every repo. Promotion is **LDR
+→ `main` DIRECT** (the fleet-default `ldr_main` toggle; `staging` is bypassed unless a breaking bump routes a repo
+through it). Slot clones are Path-B reference-clones on `live-defi-rollout`; `main`-behind-LDR is normal promotion lag,
+not drift. The gate on the promotion PR is `quality-gates-v2`. CI/CD SSOT: `codex/08-workflows/ci-cd-flow.md`.
 
 ## Difference vs trading services
 
-| Axis                      | Trading service (e.g. MTDS, features-service) | agent-orchestrator                            |
-| ------------------------- | --------------------------------------------- | --------------------------------------------- |
-| Purpose                   | Produce market data / signals / fills         | Coordinate Claude Code workers                |
-| Asset group               | Required (`cefi`/`defi`/`tradfi`/…)           | None — operator tooling only                  |
-| Batch/live modes          | Identical code path, env toggles              | Not applicable                                |
-| Kill-switch surface       | UTL kill-switch bus checked at each tick      | None                                          |
-| Event-bus emission        | `log_event()` to GCS + PubSub on every action | None (activity stored in SQLite)              |
-| ServiceBootstrap (5.61)   | Required — handles STARTED/STOPPED/FAILED     | Exempt — operator decision 2026-05-19         |
-| config_reloaders (5.34)   | Required — typed config class                 | Exempt — env-driven functions                 |
-| make_health_router (5.62) | Required                                      | Applied — see §"Service bootstrap exemptions" |
-| Schema provenance (UAC)   | All domain types from UAC                     | `server/models.py` local (operator tooling)   |
-
-Consequence: Do NOT add `--asset-group` flags, backtest modes, or emit STARTED/STOPPED events to this service. Do NOT
-add it to the trading-pipeline DAG (instruments-service → MTDS → features → strategy → execution). It is purely an
-operator coordination surface.
-
----
-
-## Worker task lifecycle — done-gate, resume-on-death, preserve-on-handoff (reworked 2026-07-09)
-
-Shipped by `plans/active/ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md`
-(`agent-orchestrator@5b07bd3` + `@16faa7e`). The lifecycle contract around dirty WIP:
-
-- **Done-gate (`/done`)**: a task is NOT done while ANY repo in the slot dir carries uncommitted WIP. `done_slot` runs
-  `check_slot_clean` (after generated-artifact auto-restore) and rejects with a structured 409
-  (`required_action: "quickmerge-or-stash"`); the task stays `dispatched`, the retry is idempotent. Worker options:
-  important WIP → QG + quickmerge push; unimportant → slot-tagged stash reported in the retry's `stashed` field (every
-  stash logs `slot_stash_on_done` + Slack-alerts — steady-state target is zero). Emergency off-switch:
-  `ORCHESTRATOR_DONE_REQUIRE_CLEAN=false`.
-- **Dead worker + in-flight task + dirty WIP → RESUME, not requeue** (`server/resume_lifecycle.py`
-  `classify_dead_worker`, consulted by TmuxPruner, the watchdog's exited-slot reclaim, and kick-escalation): the task
-  stays `dispatched_to` the slot, the dead session id freezes on `SlotRow.resume_pending_session_id`, and AutoSpawn's
-  `_resume_pass` respawns `claude --resume <sid>` in the same cwd — the WIP is the resumed agent's working context, so
-  the resume path NEVER runs dirty resolution (read-only FM5/FM7 diagnostics only). Bounded:
-  `ORCHESTRATOR_RESUME_MAX_ATTEMPTS` (default 2) per task-assignment episode → exhaustion falls back to requeue +
-  preserve. Dead + CLEAN keeps the legacy requeue/fresh path.
-- **Preserve-on-handoff is the ONLY auto-commit point**: pre-spawn `resolve_dirty_state` runs ONLY when the slot has no
-  in-flight task (done→new-work handoff). The orphan-WIP commit carries the SLOT'S OWN `[slot-N·host]` identity +
-  `--no-verify` (the old distinct author was hook-rejected → permanent quarantine → dispatch starvation, 7/17 slots).
-  Quarantine `detail` now surfaces the first real per-repo error.
-- **Wedged-ALIVE workers**: dispatch-ACK reconciler (`ORCHESTRATOR_DISPATCH_ACK_TIMEOUT_SECONDS`, default 30 min — a
-  `dispatched` task with no task-scoped worker signal and no active pane returns to `queued` pinned to the slot);
-  kick-failure escalation (`ORCHESTRATOR_KICK_ESCALATION_THRESHOLD` consecutive verified-failed kicks → kill+resume,
-  bypassing the last_ping gate); ALL pane injections go through the verified-submit helper (`tmux_spawn.submit_to_pane`
-  — send-keys -l → C-m → verify the input box cleared); spawn success requires the boot prompt SUBMITTED, not merely
-  delivered; `last_ping` accepts worker-originated signals + genuine spinner observations only (dispatch/respawn no
-  longer fake it).
-- **Context lifecycle for main/review** (`server/context_lifecycle.py`, keeper-driven): outbox compact-guidance at ~50%
-  context; agent self-injects via `scripts/agent/self-compact.sh` (own-pane only, hard `$TMUX` guard); FORCED `/compact`
-  only past ~45 min unacked AND a measured multi-signal idle verdict; checkpoint-recycle (agent exits itself, keeper
-  respawns fresh) after 2 compactions / 24 h / thrashing.
-
----
-
-## Backlog auto-generation from plans (Phase 6 — shipped 2026-05-28)
-
-`data/config/backlog.yaml` is **derived from `plans/active/*.md` `- [ ]` checkboxes**, not hand-edited. Source module:
-`server/regen_backlog_from_plan.py`. Background `PlanRegenLoop` fires 60s after server boot, then every 30 min
-(`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` default 1800, 0 disables). A complementary `pm-pull.timer` systemd unit
-FF-pulls `unified-trading-pm` from LDR every 5 min, so the effective push-to-pickup latency is ≤35 min. Manual immediate
-trigger: `POST /api/backlog/regen`.
-
-Idempotency is content-based (dedup by `BacklogTask.brief == raw todo line`); editing a todo's wording creates a new
-task, flipping to `- [x]` simply stops the regen from seeing it (existing BacklogTask state in SQLite is preserved via
-`dispatched_to`, `done_sha`, etc.). Hand-tuning derived tasks' `priority` / `repos` / `target_slot` / `collision_group`
-post-regen is supported; the dedup key is the brief, not the tuning fields.
-
-**`execution_scope` frontmatter (codified 2026-06-02)** gates ingestion at the plan level. A plan with
-`execution_scope: local-only` is skipped entirely by `regen_backlog_from_plan.py` (regardless of `assigned_vm`) — use it
-for coordination / design / operator-driven plans whose work is done + verified locally, not dispatched to a worker. The
-field is optional; absent ⇒ `orchestrator-agent` (ingested as normal, so no backfill of existing plans). It is a closed
-set of two — there is no `hybrid`. Enforced by `_parse_frontmatter_execution_scope`. SSOT: `plans/PLAN_FORMAT.md` §
-"YAML Frontmatter Schema".
-
-CLAUDE.md HARD RULE "Agent-orchestrator backlog is plan-driven" (added 2026-05-28) is the workspace contract. SSOTs:
-[`../12-agent-workflow/orchestrator-multi-vm-topology.md`](../12-agent-workflow/orchestrator-multi-vm-topology.md) §
-"Backlog auto-generation per VM"; `server/regen_backlog_from_plan.py` + `tests/test_regen_backlog_from_plan.py` (29-test
-suite).
-
-### Blocked-questions, `authority`, and the `condition`→`prerequisite` rename (legibility, 2026-06-26)
-
-Three distinct concepts that agents kept conflating — now kept apart in the model:
-
-- **Blocked-question** (`blocked_queue` / `BlockedRow`): an agent needs a human/main-agent answer to proceed. The row
-  carries a structured **`authority`** field (`main_agent` | `operator`, `_add_missing_columns` migration). The main
-  agent auto-answers only `authority=main_agent`; an `authority=operator` row is a hard-stop that **must** reach a human
-  (Harsh / Ikenna). On creation, an `authority=operator` block posts a rich Slack payload
-  (`notify_operator_gated_blocked` → raising agent/slot + role · question · options · recommendation · task/plan
-  context). The `question` text is now a **clean short prompt** — the raw `[OPERATOR-GATED plan todo …]` brief prefix is
-  no longer dumped into it (`sync_backlog_to_db` sets `question=task.brief[:600]`; the gating signal lives in
-  `authority`, not the text).
-- **Prerequisite / dependency** (`prerequisites` table / `PrerequisiteRow`, task `prereqs`): a task gated by EARLIER
-  tasks (6–10 need 1–5 done) is NOT a blocked-question — the agent **waits** on the prereq, it does not escalate to the
-  operator. `agents/RULES.md` §5 ("Prerequisites vs blocked-questions — do NOT conflate them") states the distinction
-  for the boot prompts.
-- **The `condition`→`prerequisite` rename** (operator-chosen term, agent-orchestrator@9758270): end-to-end —
-  `ConditionRow`→`PrerequisiteRow`, `conditions` table → `prerequisites` (guarded ALTER-TABLE migration,
-  pre-`create_all`, zero data loss), `ConditionView`/`ConditionSetRequest`→`Prerequisite*`,
-  `/api/conditions`→`/api/prerequisites`, `set_condition`→`set_prerequisite`,
-  `StateResponse.conditions`/`TaskPrereqs.conditions`→`prerequisites`, the `condition_set` activity event + gcs-sync
-  key, and the full dashboard panel/types/api/tests. English prose ("race condition", standing alert "condition") is
-  deliberately preserved. SSOT: `plans/archive/2026_06/ao_blocked_questions_backend_2026_06_26.md`.
-
----
-
-## Auth — long-lived setup-tokens (Phase 4b-cleanup, shipped 2026-05-28)
-
-Every account in `data/config/accounts.json` authenticates via an `oauth_token_env_file` (`~/.claude-accounts/<id>.env`,
-containing `CLAUDE_CODE_OAUTH_TOKEN=<sk-ant-oat01-...>` + `unset ANTHROPIC_API_KEY`). Spawn paths (workers, agents,
-`/usage` probes) all source the env file before `exec claude` and refuse with HTTP 400 when the env file is missing.
-Legacy `.credentials.json` swap path + `oauth_refresh` module + `gcs_creds_poller` are gone; only `creds_env_poller`
-(5-min cross-cloud bucket sync) remains.
-
-SSOTs:
-[`../12-agent-workflow/claude-cli-multi-account-headless-auth.md`](../12-agent-workflow/claude-cli-multi-account-headless-auth.md)
-(the auth model) +
-[`../12-agent-workflow/orchestrator-safety-mechanisms.md`](../12-agent-workflow/orchestrator-safety-mechanisms.md) § B
-(rate-limit failover — slot respawn with new env file, not mid-session token swap).
-
----
-
-## Reliability layer (shipped 2026-05-20)
-
-Five mitigations added to close gaps in the multi-agent loop. All live on the Ikenna VM backend.
-
-| #   | Mitigation                          | Mechanism                                                                                  | Failure mode it closes                                                                       |
-| --- | ----------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| 1   | Mirror-failure → orchestrator alert | `tab-mirror-to-ldr.yml` POSTs every outcome to `/api/mirror-events`                        | Push to tab branch silently fails to cascade to LDR; downstream agents read stale plan state |
-| 2   | Pre-spawn dirty-state gate          | `spawn_slot()` runs `worktree_clean_check.py` first; HTTP 409 + per-repo manifest on dirty | New agent silently inherits another agent's WIP                                              |
-| 3   | Per-agent `.agent-claim` file       | `.tabs/<N>/.agent-claim` JSON written on spawn, refreshed by heartbeat                     | Context-reset agent can't tell own predecessor's WIP from foreign WIP                        |
-| 4   | Heartbeat in-flight files           | `HeartbeatRequest.in_flight_files` persisted to `SlotRow.in_flight_files_json`             | Successor agent into a dead slot has no record of WIP file list                              |
-| 5   | On-demand artifact pattern          | Worktrees code-only; venvs / node_modules built on first need                              | ~160G of duplicated venvs across 12 slots; SSD bloat                                         |
-
-Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer" in
-the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
-
-## Fleet topology (refreshed 2026-06-01; SPLIT 2026-06-12)
-
-Current state: **1 central/orchestrator VM (id `planning`, `i-0c9b283b`) + 1 human planning VM (id `human-planning`,
-`i-0dd9812a`) + 10 epic VMs**, all on AWS EC2 `ap-northeast-1`, all running orchestrator v0.6.0+ (human/central SPLIT
-2026-06-12 — see `orchestrator_human_central_vm_split_2026_06_12.md`; supersedes the prior merged "central API/planning
-VM"). The GCP fleet that was commissioned 2026-05-21 was decommissioned during the 2026-05-22→23 AWS migration; no GCP
-VMs are running today.
-
-Current per-VM addresses + slot counts: see
-[`../05-infrastructure/agent-orchestrator-worker-topology.md`](../05-infrastructure/agent-orchestrator-worker-topology.md)
-§ "Current fleet — AWS EC2 ap-northeast-1" — that doc is the authoritative IP / instance-id table and the only place
-these numbers should live (avoid duplicating here so the two don't drift). Live runtime backends + account mapping live
-in `agent-orchestrator/data/config/backends.json`.
-
-Total worker capacity: 2 (human-planning VM interactive slots) + 80 (10 epic VMs × 8) = **82 slots**. (Since the
-2026-06-12 split the central / orchestrator VM (id `planning`) serves the central API/routing + orchestrator roles with
-no human daily work; the 2 interactive slots counted above live on the separate `human-planning` VM.) Registry SSOT:
-`unified-trading-pm/orchestrator_vm_registry.yaml`.
-
-**Cloud-agnostic posture**: AWS is the current and only running cloud. The bootstrap (`bootstrap_vm.sh`), launchers
-(`launch-epic-vm-aws.sh` / `launch-epic-vm.sh`), and secrets / event-bus code all support a `CLOUD_PROVIDER=aws|gcp`
-toggle — the GCP path is fully maintained so the fleet can be re-spun on GCE if AWS ever becomes unavailable or pricing
-changes the calculus, but **there is no plan to switch back**. New work targets AWS by default.
-
-## Connectivity model — centralized API router (2026-05-22)
-
-The dashboard talks to **one** backend: the central API (`api.agent-orchestrator.odum-research.com`), which **proxies to
-every worker VM server-side over the private VPC**. The browser never reaches a worker VM directly — so workers need
-**no public IP, no per-VM TLS, no DNS**; only the central API has a public HTTPS endpoint. Same shape as
-unified-trading-system (one API fronts the UI; services isolated behind it). The central API is a **router, not a wall**
-— full per-VM control is preserved via the proxy.
-
-- **Fleet view**: `GET /api/fleet/summary` fans out to each backend's `/api/vm/summary` server-side (httpx, parallel).
-- **Per-VM control**: `<central>/api/vms/<id>/<path>` → forwarded to that VM's `private_url` over the VPC (spawn / kill
-  / pause / message / state / logs). The dashboard sets `baseUrl = <central>/api/vms/<id>` so existing `/api/*` calls
-  route through unchanged.
-- **Auth (asymmetric model, codified 2026-06-01)**: the central API uses two independent secrets/keys:
-  - `ORCHESTRATOR_JWT_SECRET` — operator dashboard login JWT only. **Central-only** (never wired into worker
-    `.env.local`). HS256. Validates the Bearer token on every authed request that enters at the public edge.
-  - **ES256 asymmetric key pair** (`ORCHESTRATOR_INTERNAL_ALG=ES256`) — central↔worker proxy auth. **HS256 RETIRED
-    2026-06-01** (agent-orchestrator@f44b948): `decode_token()` accepts ES256-only and `_issue_internal_token()` signs
-    ES256-only (raises without a private key — no HS256 fallback). Verified across all 11 orchestrator VMs (each
-    `INTERNAL_ALG=ES256`, private key resolvable, orchestrator active). **Key distribution changed (central-only
-    abandoned, operator decision 2026-06-01):** because every orchestrator VM proxies to its own slots and therefore
-    signs, the private key is distributed to ALL VMs via the restricted creds bucket
-    (`ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS=gs://central-element-323112-orchestrator-creds/orchestrator/internal-private.pem`)
-    - public key via `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=.../internal-public.pem`. NB: the raw
-      `ORCHESTRATOR_INTERNAL_SECRET` object is RETAINED (NOT deleted) — it is the pre-shared key for
-      `verify_internal_secret()` → `POST /api/escalate` (GHA→orchestrator dispatch); only the HS256 _JWT_ accept/sign
-      paths were retired.
-  - **Flow**: operator hits central with their JWT. The central validates against `ORCHESTRATOR_JWT_SECRET` at the
-    perimeter, terminates that token, then mints a fresh short-lived (5 min, role=worker, machine=central-proxy) JWT
-    signed with the ES256 private key and forwards THAT in the upstream `Authorization` header. Workers validate against
-    their copy of the public key only — they never see the operator secret. (`server/server.py::proxy_to_vm`;
-    `auth.get_internal_service_token()`.)
-  - Operator-credential exposure is bounded to the central VM. An upstream VM compromise can't impersonate the operator.
-- **Routing**: `ORCHESTRATOR_USE_PRIVATE_URLS=true` on the central API makes the proxy target each backend's
-  `private_url` (`172.31.x.x`, all VMs in `vpc-6ee70e08`/`subnet-fc09eca6`, ap-northeast-1).
-- **Registry**: `data/config/backends.json` (static, with `url` + `private_url`) merged with `fleet_registry.json`
-  (dynamic). VMs **self-register** on boot via outbound `POST /api/vms/register` (`bootstrap_vm.sh` step 10).
-
-**Registry/worker drift resolved**: the earlier `orchestrator_vm_registry.yaml` per-VM-FQDN model (browser→each-VM) is
-**superseded** by this centralized model — workers do NOT get per-VM FQDNs; the central API reaches them by private IP.
-`worker.md`'s outbound-POST mental model is the correct one. Plan shipped under archived
-`plans/archive/2026_05/multi_backend_fleet_connectivity_2026_05_22.md`.
-
-Cross-side coordination:
-
-- `unified-trading-pm/plans/active/_agent_pings.md` (workspace-shared cross-side log)
-- Daily work-split files `plans/active/work_split_<date>_<operator>.md`
-- Git: all slot clones are Path-B reference-clones on `live-defi-rollout` (tab branches + `tab-mirror-to-ldr.yml` are
-  RETIRED — see § "Branch model — STANDARD (LDR → staging → main)" below)
-
-## Branch model — STANDARD LDR → staging → main (migration COMPLETE, verified 2026-06-19)
-
-`agent-orchestrator` follows the **same** `live-defi-rollout` → `staging` → SIT → `main` flow as every other service
-repo in the workspace. The 2026-06-02 "TRANSITIONAL / mid-migration" state is **RETIRED**.
-
-### What changed
-
-- **The former `agent-orchestrator`→`main` base override is REMOVED** — do NOT re-add it in `workspace-manifest.json`,
-  `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`. That override caused every AO slot to read
-  as diverged against `main` instead of `live-defi-rollout`.
-- **`staging` branch + `scripts/quickmerge.sh` + `quality-gates-v2` / `semver-agent` + staging-lock/backmerge promotion
-  workflows are all LIVE and green.**
-- **The old G6 blocker ("creating staging fires a fleet restart") has been crossed.** Its tracking plan
-  (`agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md`) is **archived/retired**.
-
-### How to ship
-
-Ship via `quickmerge --agent --files '<paths>'` like any repo. Slot clones are Path-B on `live-defi-rollout` (LDR is the
-live tip); `main`-behind-LDR is normal promotion lag, not drift. `tab-mirror-to-ldr.yml` is DELETED fleet-wide
-(template + all per-repo copies removed) — the old tab-branch rebase/upstream-self-heal paths are gone.
-
-### Key invariants
-
-| Invariant               | Rule                                                                                                            |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Integration axis        | `live-defi-rollout` (LDR)                                                                                       |
-| Promotion flow          | LDR → staging (Tier-C drain, every 15 min) → SIT → main                                                         |
-| Slot clone base         | `live-defi-rollout` (Path-B reference-clone; `git pull --ff-only origin live-defi-rollout` to stay current)     |
-| `main`-behind-LDR       | Expected (promotion lag) — not drift; diagnose only when `main` is AHEAD of LDR                                 |
-| Former override         | REMOVED from `workspace-manifest.json` / `setup-tab-worktrees.sh` / `worktree_clean_check.base_branch_for_repo` |
-| Tab-branch / tab-mirror | RETIRED — `tab-mirror-to-ldr.yml` deleted; no tab branches on any AO slot                                       |
-
-SSOT: `cursor-configs/CLAUDE.md` § "agent-orchestrator branch model"; parent epic
-`codex/04-architecture/agent-orchestrator-overview.md`.
-
----
-
-## Auto-spawn lifecycle (AutoSpawnLoop — shipped 2026-05-30)
-
-`server/autospawn.py` — `AutoSpawnLoop` — periodic background thread (default 60 s tick) that wakes a worker on idle
-slots so the fleet self-heals without operator intervention.
-
-### Trigger contract (all 5 must be true to spawn)
-
-| #   | Gate                 | Implementation                                                                                                                                                                      |
-| --- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Queue not empty**  | `SELECT task_id FROM tasks WHERE status='queued' AND dispatched_to IS NULL LIMIT 1` → non-empty                                                                                     |
-| 2   | **No active worker** | `tmux has-session orch-slot-N` returns false                                                                                                                                        |
-| 3   | **Account headroom** | At least one usable account: `five_hour_pct < 95` AND `weekly_pct < 95` (ceilings raised 50/80 → 95/95, operator 2026-06-17). Null pct treated as 0 (fresh account assumed healthy) |
-| 4   | **Slot configured**  | `slots` table has `worktree` + `branch` + `operator` set                                                                                                                            |
-| 5   | **Not in cooldown**  | Last autospawn attempt for this slot was > 5 min ago (`ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`, default 300)                                                                       |
-
-### Account-pick rotation
-
-`_pick_headroom_account()` — scans `accounts.json`, filters by `account_is_usable()` + headroom gates, sorts by
-`(five_hour_pct ASC, weekly_pct ASC)`. First account in the sorted list wins. Spreads load across the rotation pool;
-skips any account that is rate-limited or beyond the ceiling thresholds.
-
-### Spawn execution
-
-`_do_spawn()` calls `prompts.render("worker", ...)` to get the boot prompt (same template as the manual
-`/api/slots/<id>/spawn` endpoint), then `tmux_spawn.spawn()` — same in-process path used by the manual API.
-`account_id` + `tmux_session` are persisted onto the `SlotRow` **at spawn** (deterministic, never optional — so the
-Fleet ACCOUNT/SESSION columns render immediately rather than waiting on the first `/heartbeat`; the detached-snapshot
-spawn paths each copy both back, 2026-06-27). Slot **registration** is seeded at startup:
-`seed_worker_slots_from_tabs()` (`server.lifespan`, before the first tick) makes every on-disk `.tabs/<N>` a configured
-`SlotRow`, so gate 4 is satisfied and the pool can grow even after a DB reset — idempotent, skips slot 0 + review slots.
-
-### Anti-flap / Slack alert
-
-After 3 consecutive successful spawns on the same slot within 10 min (`DEFAULT_FLAP_THRESHOLD=3`,
-`DEFAULT_FLAP_WINDOW_SECONDS=600`) without a task claim — `notify_autospawn_flap()` fires a Slack alert and the slot
-enters a 1-hour backoff (`_flap_backoff_until[slot_id]`). A mixed success/failure sequence resets the streak.
-
-### Spawn-time auth-fail → drop-from-rotation (rotate, don't retry — 2026-06-25)
-
-A spawn that fails because **claude EXITS at startup** ("session not alive at paste time") on a **dead/expired
-setup-token** is the SAME signal a poller HTTP 401 carries — but the spawn path previously never fed it into account
-health, so a low-usage dead-token account stayed `account_status='healthy'` and `_pick_headroom_account` RE-PICKED it
-every tick, funnelling all spawns onto the dead token forever (incident 2026-06-25: `sub-a-ikenna`'s ~34-day-old token
-killed slots 1/4/5/6). The fix is ROTATION, not recovery: `_do_spawn()` classifies an **auth-shaped** failure
-(`tmux_spawn` `remain-on-exit on` preserves the dead pane → its tail is matched against `/login` / `Invalid API key` /
-`setup-token` / `unauthorized` / … via `_spawn_failure_is_auth_shaped`) and calls `mark_account_auth_failed()` so the
-existing auth-failed-cooldown machinery DROPS the account from rotation (`account_is_usable()=False`); the next pick
-lands on a HEALTHY account, and the account auto-re-probes after the exponential backoff. A **generic** (non-auth) tmux
-throw does NOT drop the account (operator caveat 2026-06-22 — never presume an account fault on weak evidence).
-
-**Alerts (reframed 2026-06-25):** (1) WARNING **drop-from-rotation** when an account dies on a spawn —
-`usage_poller.alert_account_dropped_from_rotation()` (the shared deduped `notify_account_auth_failed`, one page per
-account-drop episode, re-armed by the recovery bookend); the operator re-auths on THEIR schedule, the orchestrator does
-NOT wait. (2) CRITICAL **rotation-exhausted** when a slot wants a spawn but no account has headroom —
-`escalation.maybe_alert_pool_exhaustion()` (shared dedup so autospawn + escalation page ONCE). (3)
-`notify_spawn_failed()` (GCS-persisted, pane-tail) is reserved for a genuinely SLOT-specific NON-auth failure — NOT per
-doomed retry of a dead slot. SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
-
-### Failure modes and logging
-
-| Failure                                      | How handled                                                                                                                                                                                                                     |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Boot-prompt render failed                    | `_do_spawn()` returns `(False, error_str)`; logged as `autospawn_failed` activity event                                                                                                                                         |
-| Spawn HTTP 4xx (via tmux)                    | `tmux_spawn.spawn()` raises; caught → `spawn_failures` counter incremented, cooldown set                                                                                                                                        |
-| tmux create failed                           | Same as above                                                                                                                                                                                                                   |
-| claude exits at startup (dead/expired token) | Auth-shaped → `mark_account_auth_failed()` DROPS the account from rotation (next pick = healthy); `spawn_auth_fail_account_dropped` event + WARNING drop-from-rotation page (see § "Spawn-time auth-fail → drop-from-rotation") |
-| All accounts at ceiling                      | Gate 3 blocks; tick skips with `no_account_headroom` reason; CRITICAL rotation-exhausted page when a slot wanted a spawn                                                                                                        |
-| Slot not configured                          | Gate 4 blocks; tick skips with `slot_not_configured` reason                                                                                                                                                                     |
-
-Every spawn attempt logs to `log_activity` with `autospawn_succeeded` or `autospawn_failed` event type.
-
-### Environment variables
-
-| Variable                                       | Default | Purpose                                     |
-| ---------------------------------------------- | ------- | ------------------------------------------- |
-| `ORCHESTRATOR_AUTOSPAWN_ENABLED`               | `false` | Master on/off switch                        |
-| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS`      | `60`    | Tick cadence                                |
-| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`      | `300`   | Per-slot retry gap                          |
-| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_PCT_CEILING` | `95`    | Max 5h usage % before skipping (was 50)     |
-| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_PCT_CEILING`    | `95`    | Max weekly usage % before skipping (was 80) |
-
-Enable via systemd drop-in: `Environment=ORCHESTRATOR_AUTOSPAWN_ENABLED=true` in
-`/etc/systemd/system/orchestrator.service.d/autospawn.conf` — one VM at a time. Rollout script:
-`unified-trading-pm/scripts/orchestrator/enable_autospawn.sh`.
-
-SSOT: `server/autospawn.py` + `plans/active/autospawn_idle_vms_2026_05_30.md`.
-
-### AutoSpawnLoop — extended failure modes
-
-The table above lists 5 failure modes. A 6th is handled by the watchdog layer (see § below):
-
-| Failure                                  | How handled                                                                                                            |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| tmux alive but stuck/silent/context-full | **Handled by WorkerLivenessWatchdog** — watchdog kills tmux; AutoSpawnLoop respawns on next tick (60–180 s round trip) |
-
-## Worker liveness watchdog (WorkerLivenessWatchdog — shipped 2026-06-01)
-
-`server/worker_liveness_watchdog.py` — daemon thread (60s tick) that **kills** tmux sessions invisible to
-`AutoSpawnLoop` (which only checks `tmux has-session`). After kill, AutoSpawnLoop respawns within 60s.
-
-### Three trigger contracts
-
-| Pattern              | Signal                                                                                      | Threshold              |
-| -------------------- | ------------------------------------------------------------------------------------------- | ---------------------- |
-| **Stuck-at-prompt**  | Pane has non-empty text after `❯` AND pane content unchanged across 3 consecutive ticks     | **180s** (3 × 60s)     |
-| **Heartbeat-silent** | `slot.last_heartbeat_at` older than threshold AND tmux alive AND `slot.status != 'blocked'` | **>900s** (15 min)     |
-| **Context-full**     | Pane matches `/clear to save .{1,10}k tokens/i`                                             | **Immediate** (1 tick) |
-
-### Trigger 1.4 — usage-cap account failover (resume-respawn, shipped 2026-06-17)
-
-A real usage cap (CLI usage-limit modal — `_USAGE_CAP_RE`, distinct from a recoverable transient that the `continue`
-nudge resumes) cannot be unstuck on the same account; the only recovery is a fresh account. The watchdog's usage-cap
-trigger does a **context-preserving** failover (`_handle_usage_cap`) rather than a fresh kill+reboot:
-
-- **95% is a SPAWN GATE ONLY** — it decides which account a _new_ agent may start on; it NEVER preempts a running agent.
-  A working agent consumes its account to 100% (killing it at 95% would forfeit the last 5% of every account's quota
-  every cycle). Failover fires only on the actual stuck modal.
-- **Headroom + stored `claude_session_id`** → kill the wedged session and `claude --resume <id>` the slot on the
-  headroom account, so the worker continues with its conversation intact (only the wall-blocked turn is lost). The boot
-  prompt is NOT re-pasted; a `continue` nudge unblocks the resumed turn. The new account's `oauth_token_env_file` is
-  sourced, so the continued agent authenticates as the headroom account (the transcript carries no account identity —
-  account lives only in `CLAUDE_CODE_OAUTH_TOKEN`, which the per-session config dir + env file fully control).
-- **Headroom but NO stored session id** (worker predates the feature) → `_kill_slot` → AutoSpawn fresh-respawns it.
-- **NO headroom anywhere → WAIT, do NOT kill** (decision B). Leaving it frozen on the modal is harmless (inactive); the
-  pool-exhaustion page nags the operator to add an account / wait for the nearest reset. The slot shows a capped marker
-  (`slot.last_msg`) so it never reads as healthy, and the trigger re-checks every tick → it resumes the instant headroom
-  appears. A per-slot frozen-page dedup (`_cap_frozen_paged`) fires the page once per frozen episode.
-
-**Self-healing hardening (2026-06-21)** — five further closures keep the fleet recovering "for any other reason": a
-failed account-rotation respawn now deterministically releases the task + recovers the slot; `stale`-lingering live
-sessions are reclaimed (not only `idle`); a provably-dead branch-quarantined slot auto-heals (preserve→`checkout -B`
-realign); the orphan-wip inherit realigns via `checkout` not `reset --hard` (no audit-reflog page); a `LoopSupervisor`
-revives any dead daemon-loop thread without a backend restart; and the heartbeat-silence anchor is clamped to the live
-tmux session's age (no "idle for 5711min"). Full trigger contracts:
-[`agent-orchestrator-worker-liveness.md` § "Self-healing hardening"](agent-orchestrator-worker-liveness.md).
-
-**Account auth-failure eviction (2026-06-22)** — a disabled/token-rejected account is detected ONLY by the
-`usage_poller`'s classified HTTP 401/403 (never by a missing heartbeat — Claude outages must not sideline a good
-account), which then both excludes it from new spawns AND diverts the agents already on it: workers via
-`rotate_all_slots_off_account(reason=auth_failed)`, the main agent via `main_agent_keeper._handle_auth_failed_account`.
-The spawn-heartbeat watchdog no longer presumes auth on a timeout (retries same account / defers to the poller). All
-paths are global-outage-safe (no usable account → leave in place, never churn) and auto-recover when the poller clears
-the flag on the next good probe. Full flow:
-[`agent-orchestrator-worker-liveness.md` § "Account auth-failure eviction"](agent-orchestrator-worker-liveness.md).
-
-The deterministic session id is generated at spawn (`tmux_spawn.new_session_id()` → `claude --session-id <uuid>`) and
-persisted on `SlotRow.claude_session_id` (workers) / `AgentRow.claude_session_id` (main agent) — owned from t=0, no
-transcript-filename scraping. The unified `AgentKeeper` (formerly `MainAgentKeeper`; now also keeps the review agent(s)
-— see § "Unified AgentKeeper" below) applies the identical headroom-gated resume logic to the singleton main agent
-(`_handle_rate_limit_modal` → `resumed` / `killed_fresh` / `frozen_no_headroom`), with a failover cooldown so a
-lingering modal in the pane scrollback doesn't re-failover every tick. SSOT:
-`plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
-
-### Anti-thrash gates
-
-- Per-slot 5-min kill cooldown (the usage-cap resume path stamps it too, so a stale modal line in scrollback can't
-  re-trigger).
-- Per-VM daily cap of 20 kills → Slack alert + watchdog dormancy until operator reset. The usage-cap RESUME path does
-  NOT count against this destructive cap (it is a 1:1 context-preserving recovery, not a kill).
-
-### Debounce vs WorkerLivenessKicker
-
-`WorkerLivenessKicker` (`server/worker_liveness.py`) **nudges** via keystroke injection first; the watchdog **kills**
-directly on independent thresholds. The two compose: kicker for shallow freezes; watchdog for deeper stuck/silent/full
-patterns. If `WorkerLivenessKicker` kicked within the debounce window, the watchdog skips that slot.
-
-### Environment variables
-
-| Variable                               | Code default | Systemd-deployed default        |
-| -------------------------------------- | ------------ | ------------------------------- |
-| `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED` | `false`      | `true` on 10/11 VMs (see below) |
-
-**Known gap**: `vm-ml` has a broken SSM path — watchdog not yet installed there. All other 10 VMs have the systemd
-drop-in enabled. Track: `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`.
-
-SSOT: `codex/04-architecture/agent-orchestrator-worker-liveness.md` (full trigger contracts, anti-thrash, kill
-execution, interaction with AutoSpawnLoop).
-
-## Unified AgentKeeper + agent-type oversight (Phase 6 + Plan B — shipped 2026-06-19)
-
-`server/main_agent_keeper.py` — class **`AgentKeeper`** (renamed from `MainAgentKeeper`) — the ONE keeper that
-guarantees the MANDATORY agents on EVERY VM: the singleton **main** (`orch-agent-main`) AND the slot-bound **review**
-agent(s) (`ORCHESTRATOR_REVIEW_SLOTS`). Review-ensure was merged out of `AutoSpawnLoop` into the public free function
-`autospawn.ensure_review_agents(...)` that the keeper calls each tick — so **review comes up even when AutoSpawn is
-OFF** (the dev-box gap where review rode AutoSpawn and never spawned). AutoSpawn now handles ONLY on-demand task
-workers + the escalation drains.
-
-- **Env-configurable /loop cadences**: `ORCHESTRATOR_MAIN_LOOP_SECONDS` (default 60) /
-  `ORCHESTRATOR_REVIEW_LOOP_SECONDS` (default 900 = 15 min) — `prompts.render` fills `<LOOP_SECONDS>` per role
-  (safety-default so a missed call site never ships a literal placeholder).
-- **Wake-on-message nudge**: `POST /api/agents/{id}/nudge` → `tmux_spawn.nudge()` (best-effort send-keys), AND
-  auto-fired on a by-role message — so a long idle loop is responsive to a UI message WITHOUT fast polling.
-- **Fleet-worker cap**: `config.fleet_worker_cap()` bounds CONCURRENT on-demand workers; the mandatory main+review are
-  NOT counted against it. **One knob — `ORCHESTRATOR_FLEET_WORKER_CAP`** (>0; ≤0/unset → `DEFAULT_FLEET_WORKER_CAP` = 10
-  for every VM, including planning — the per-VM-role override was removed 2026-06-27).
-- **`backup` role DEPRECATED**: removed from `AgentRole`/`AgentKind` (server + dashboard), `ROLES_ORDER`,
-  `AGENT_KIND_LABEL`, `_default_kind_lifecycle`, and the spawn modal; `promote_agent` demotes the displaced holder to
-  `custom` (was `backup`); `agents/backup.md` deleted. The keeper auto-respawns main/review, so a manual
-  promote-from-backup spare is redundant — keep the generic promote (role-swap).
-- **Reviewed-ledger** (advisory): `server/reviewed_ledger.py` + `POST/GET /api/agents/reviewed` — review records the
-  sha/task/event_id it reviewed (+ verdict) to skip redundant ISOLATED re-review; NOT a gate (the agent owns
-  what/how-much to review).
-
-### Agent-type oversight — every live type registers an AgentRow
-
-Two-axis classification (`AgentKind` × `AgentLifecycle`) on `AgentRow`, set at spawn: `role` stays the chat/promote lane
-(main/review/custom); `agent_kind` carries the real identity and `lifecycle` (persistent | one_shot | scheduled) tells
-the reaper/watchdog that a one_shot/scheduled session ending is EXPECTED, not a stale-agent incident.
-`cicd`/`conflict_resolver` (`escalation.py`) + `plan_health`/`plan_reconciler` (`plan_health.py`) now `register_agent`
-at dispatch (role=custom + their kind + lifecycle), persisting `claude_session_id`/`tmux_session` back to the live
-`SlotRow` — so every live type is health/reaper/UI-covered (no bespoke-only types). The `escalate` kind was **renamed →
-`cicd`** (charter: resolves `#ci-failures` Slack alerts); the `recovery_audit` kind was **removed end-to-end from this
-AO fleet roster** (`agents/recovery-audit.md` deleted, `NEVER_LAUNCH=frozenset()`, no `agent_kind` refs) — **scoped to
-AO plumbing only: the Layer-1 recovery-audit-signoff FUNCTION is NOT retired** (its consuming half — alerting-service
-signoff ingest + DISPUTE→SAFE_MODE, strategy-service, DART verdict feed — is live but producer-less/mock-fed since this
-deletion; the producer is to be re-homed as a standalone agent, DEFERRED per operator 2026-07-16; see
-`recovery-defence-in-depth-layers.md` § Layer 1 + `plans/active/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`);
-`usage_reporter` is deleted (usage stays on the httpx `UsagePoller`); `monitor` is the manual external-watch
-(custom-role) pattern. `health.py`'s reaper is lifecycle-aware. SSOT:
-`plans/active/orchestrator_consolidated_remaining_2026_06_25.md`,
-`plans/archive/2026_06/ao_agent_legibility_backend_2026_06_26.md` (kind roster · per-kind source/task/role contract ·
-`plan_ref` field · activity noise-set · `assigned_role`→boot-prompt+model role-dispatch).
-
-**Per-kind `source`/`task`/`role` + `plan_ref` (legibility-backend, 2026-06-26).** Every fleet agent exposes a
-`current_task`/`source`/`role` via the agents API (`_agent_to_view`): `cicd`→repo/`repo#pr` · `data_pipeline_failure`→
-alert/asset-group · `plan_health`→"plan health"/finding · `worker`→plan/`task_id`. `role` carries the craft role for
-workers (from the plan's `assigned_role`) and the kind for the rest. The slot/`TaskRow` gained a `plan_ref` column
-(idempotent `_add_missing_columns` migration; populated by `sync_backlog_to_db`). The full-log endpoints default
-`history_lines=10000` (complete capture for any running/stale/killed state, not just the boot-prompt chunk). The
-activity query (`list_activity`/`get_activity`) accepts `since`/`until`/`exclude_types` with `limit` default 100 and a
-`before_id` cursor; the maintained **noise set** =
-`agent_replied`/`agent_message_sent`/`tmux_session_lost`/`session_checkpoint`/`agent_registered`/`agentkeeper_*`.
-
-**Role-dispatch (`assigned_role` → boot prompt + model, the keystone).** When a dispatched task's plan carries
-`assigned_role`, `prompts.render_worker(assigned_role)` prepends `agents/<role>.md` to `worker.md` so the worker boots
-its craft role, and `_role_tier()` reads the role file's `model`/`thinking` frontmatter as the task tier (an explicit
-plan `model_tier`/`thinking_tier` still wins). Fail-soft: `assigned_role` unset / role file missing → today's generic
-worker boot + default tier (no regression). The operational roles `main.md`/`review.md` carry `agent-role` frontmatter
-(`role`/`model`/`thinking`/`lifecycle`/`does`/`does_not`/`triggers`) so they render their role in the fleet/tabs UI.
-
-### Fleet vs Agents — two surfaces, kept honest with tmux (2026-06-27)
-
-The dashboard shows running work in two surfaces backed by two tables: the **Fleet** (`SlotRow`s — worker slots) and the
-**AGENT TYPES** panel (`AgentRow`s — typed agents, grouped by `agent_kind`). A plain task worker has a `SlotRow` and NO
-`AgentRow` (Fleet only); a typed agent (main/review/cicd/plan_health/…) registers an `AgentRow` and may also BORROW a
-worker slot while it runs (`escalation`/`plan_health` pick the lowest free slot — there is no dedicated cicd/plan_health
-slot). `SlotView.kind` (`main` = slot 0, `review` = `review_slot_ids()`, else `worker`) lets the dashboard show
-**workers only** in the Fleet — main/review live in AGENT TYPES (fail-safe: an unknown kind stays visible). Each keeper
-tick reconciles the rows against tmux reality:
-
-- **Ghost reap** — `reap_orphan_agents` archives a typed agent whose `orch-slot-N` session was **(re)created after it
-  last acted** (a finished one-shot whose slot a plain worker reused — the "ghost in `orch-slot-N`"). The signal is
-  `tmux_spawn.session_created_at`, now a `list-sessions` exact-match — the old `display-message -t '=name'` returned
-  empty, silently disabling this AND the heartbeat-silence clamp.
-- **Account backfill** — `backfill_agent_accounts_from_slots` mirrors `SlotRow.account_id → AgentRow.account_id` for any
-  live slot-bound agent missing it; typed agents also set `account_id` at registration, so AGENT TYPES shows the account
-  (fixes the blank-ACCOUNT column).
-- **Slot takeover** — `claim_slot_for_typed_agent` resets a borrowed `SlotRow` to its new occupant (re-queues the dead
-  prior worker's orphan task, clears `current_task`, descriptor → `last_msg`), so the Fleet shows what is actually
-  running, not the predecessor.
-
-**Show log** reads Claude's durable transcript JSONL (`server/transcript_log.py`), resolved by the stored
-`claude_session_id` — the full conversation, respawn-proof — NOT the ~24-line tmux frame (Claude's full-screen TUI on
-the alternate screen keeps no scrollback). Repo-local detail: AO `docs/SLOTS_AGENTS_AND_FLEET.md`.
-
-### Dashboard monitoring (Plan B)
-
-- **Agent retention**: a terminal agent is RETAINED (soft-delete to status `finished` + `finished_at`/`exit_reason`, or
-  archived by the reaper which stamps the same) so the dashboard shows past escalate/plan_health runs;
-  `DELETE /api/agents/{id}` soft-deletes; `prune_finished_agents` (keep last N per kind, 7d) runs each keeper tick.
-- **Filterable `GET /api/agents`**: `status`/`kind`/`lifecycle`/`include_finished`/`limit` (SQL `WHERE`/`LIMIT`);
-  default excludes terminal records so the live roster stays clean.
-- **Activity backend**: `list_activity` filters (slot/event_type/event_types) in SQL BEFORE the limit + a `before_id`
-  cursor; `activity_rollup` denoise (`GROUP BY event_type[,slot]` → counts). `/api/activity` gained
-  `types`/`before_id`/per-row `id`; new `/api/activity/rollup`. The `AgentTypesPanel` + activity-frontend (load-older,
-  denoise badges, failure-reason render), conditions-collapse, and message-delivery chip render this on the dashboard.
-  SSOT: `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
-
-### Alert message standard (error-pointer + persisted dedup, 2026-06-19)
-
-Every central-VM Slack alert is an **error pointer**, not an audit: header = WHAT broke + a number; body carries exactly
-ONE correct deep-link to the authoritative surface (AO dashboard `/fleet-git?slot=N`, a GitHub PR/run URL), any CLI hint
-demoted to secondary. A standing condition pages ONCE on the false→true transition and emits a matching **RESOLVED
-bookend** on true→false (`notify_slot_recovered` / `notify_git_staleness_resolved` / `notify_account_auth_recovered`) —
-never every tick. The dedup that makes "once" hold is **persisted to disk** (`server/dedup_state.py` under `STATE_DIR`:
-seen-key sets, bool sentinels, cooldown dicts), so a central-VM restart inherits "already alerted at T" instead of
-re-firing every still-true alert. The new slot-quarantine page (`notify_slot_quarantined`) names the specific repo +
-cause + queued-wall count when a quarantine starves dispatch. SSOT: `plans/active/alert_quality_overhaul_2026_06_18.md`.
-
-## Host-offline failover lifecycle (FailoverLoop — design 2026-05-30)
-
-Addresses the case where a host (e.g. harsh-pc) goes offline and its soft-pinned tasks would otherwise sit indefinitely.
-The `FailoverLoop` runs in `server/failover.py` on vm-orchestrator only (single decision source; per-VM enables would
-race).
-
-### Trigger contract
-
-| Gate                | Condition                                                                                                               |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Host offline        | `last_heartbeat_age > 600s` (10 min) for the source host — conservative threshold for laptop sleep / brief network gaps |
-| Task soft-pinned    | `target_slot IS NULL` OR `target_slot.failover_allowed = true`                                                          |
-| Task not dispatched | `dispatched_to IS NULL` AND `status = 'queued'`                                                                         |
-| Fleet VM available  | At least one fleet VM passes affinity-match AND account-headroom check (re-uses AutoSpawnLoop § 3 contract)             |
-
-### Affinity-matching algorithm
-
-For each eligible task, pick the best fleet VM by priority:
-
-1. **Repo overlap**: `task.repos` ⊆ `vm.master_plans` entries (per `orchestrator_vm_registry.yaml`)
-2. **Asset group**: `task.asset_group` matches `vm.asset_group`
-3. **Collision group**: `task.collision_group` not already active on the target
-4. **Least loaded**: fewest `status='queued'` tasks in target VM's `state.db`
-
-First VM that passes all applicable filters wins. On tie, random among finalists.
-
-### Soft vs hard pin distinction
-
-- **Soft pin** (`failover_allowed: true`, default for all tasks): eligible for failover.
-- **Hard pin** (`failover_allowed: false`): NEVER failovered — operator may have explicit reasons (debug, audit, manual
-  run). Hard pins are opt-in, set via `failover_allowed: false` in the source plan task YAML.
-
-Re-assignment writes `task.target_slot = <fleet_vm_slot_id>` + `task.failover_origin = "<offline_host>"` for audit.
-
-### Rollback on heartbeat-return
-
-When the offline host's heartbeat returns:
-
-- For each failovered task with `failover_origin = <host>` AND `dispatched_to IS NULL` (still unclaimed on fleet
-  target): restore `target_slot` to original harsh-pc value + clear `failover_origin`.
-- Already-claimed or already-done tasks stay where they ran — no rollback.
-- Rollback fires within one `FailoverLoop` tick (default 60s) of heartbeat resuming.
-
-### Audit trail
-
-`task.failover_origin` persists the source host name. The cached last heartbeat snapshot from the offline host is
-**never deleted** on failover — it remains visible in `/api/fleet/summary` as audit evidence of what was stranded.
-
-### Env vars
-
-| Variable                                            | Default | Effect                             |
-| --------------------------------------------------- | ------- | ---------------------------------- |
-| `ORCHESTRATOR_FAILOVER_ENABLED`                     | `false` | Must be `true` to arm FailoverLoop |
-| `ORCHESTRATOR_FAILOVER_INTERVAL_SECONDS`            | `60`    | Tick interval                      |
-| `ORCHESTRATOR_FAILOVER_HEARTBEAT_THRESHOLD_SECONDS` | `600`   | Offline threshold (10 min)         |
-
-Enable via drop-in: `/etc/systemd/system/orchestrator.service.d/failover.conf` on vm-orchestrator only. Rollout script:
-`unified-trading-pm/scripts/orchestrator/enable_failover.sh` (Phase 4).
-
-### Anti-patterns
-
-- **Never failover hard-pinned tasks** (`failover_allowed: false`)
-- **Never failover dispatched tasks** (`dispatched_to IS NOT NULL`) — steal-attempt = race + duplicate work
-- **Never failover api-host queue** — planning VM, not worker-dispatched
-- **Never delete the cached heartbeat snapshot** on failover
-
-SSOT: `server/failover.py` (Phase 3) + `plans/active/harsh_pc_dispatch_failover_2026_05_30.md`.
+| Axis                    | Trading service (MTDS, features-service)  | agent-orchestrator                          |
+| ----------------------- | ----------------------------------------- | ------------------------------------------- |
+| Purpose                 | Produce market data / signals / fills     | Coordinate Claude Code workers              |
+| Asset group             | Required (`cefi`/`defi`/`tradfi`/…)       | None — operator tooling only                |
+| Batch/live modes        | Identical code path, env toggles          | Not applicable                              |
+| Kill-switch surface     | UTL kill-switch bus checked each tick     | None                                        |
+| Event-bus emission      | `log_event()` to GCS + PubSub each action | None (activity stored in SQLite)            |
+| ServiceBootstrap (5.61) | Required                                  | Exempt                                      |
+| Schema provenance (UAC) | All domain types from UAC                 | `server/models.py` local (operator tooling) |
+
+Consequence: do NOT add `--asset-group` flags, backtest modes, or STARTED/STOPPED events; do NOT add it to the
+trading-pipeline DAG. It is purely an operator coordination surface.
 
 ## Plan reference
 
-Full deployment plan (P0–P6): `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` (P5 cutover
-re-targeted from Cloud Run to dedicated EC2 VM 2026-05-19; see `docs/ikenna-vm-setup.md` for VM provisioning log).
-
-Active successor plans:
-
-- `plans/active/agent_reliability_mitigations_2026_05_20.md` — the 5-mitigation reliability layer (Phases 1-5 shipped;
-  auto `uv sync` hook deferred)
-- `plans/active/agent_orchestrator_slack_notifications_2026_05_19.md` — Slack push notifications (P1 + P2 shipped)
-- `plans/active/aws_epic_vm_fleet_2026_05_22.md` — AWS EC2 fleet (CLOUD_PROVIDER toggle; GCP working, AWS in progress)
-- `plans/epics/orchestrator_master.md` — multi-VM topology epic (SSH-spawn, DNS, preflight deferred items)
-
-Archived plans:
-
-- `plans/archive/epic_vm_fleet_commissioning_2026_05_21.plan.md` — GCP fleet commissioning (DONE 2026-05-22)
-- `plans/archive/agent_orchestrator_workers_on_vms_2026_05_19.plan.md` — old asymmetric model (superseded)
-
-Resolved/closed issues:
-
-- `plans/archive/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md` (RESOLVED 2026-05-20 — spawn endpoint tmux
-  daemon silent-fail + workspace-trust prompt unhandled; fix shipped at `agent-orchestrator@e975f19` +
-  `scripts/install-orchestrator-service.sh` at `agent-orchestrator@dc535b2` to prevent recurrence)
+Architecture & operating model SSOT:
+[`../12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../12-agent-workflow/agent-orchestrator-single-vm-architecture.md).
+Behaviour-domain docs: [`agent-orchestrator-autospawn.md`](agent-orchestrator-autospawn.md) (spawn) ·
+[`agent-orchestrator-worker-liveness.md`](agent-orchestrator-worker-liveness.md) (liveness + account failover) ·
+[`agent-orchestrator-backlog-state-alignment.md`](agent-orchestrator-backlog-state-alignment.md) (dispatch + regen +
+task state) · [`agent-orchestrator-host-offline-failover.md`](agent-orchestrator-host-offline-failover.md). In-flight
+remediation of the open items: `plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`. Epic:
+`plans/epics/orchestrator_master.md`.

@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Orchestrator Safety Mechanisms (SSOT)
 summary:
-  SSOT for the orchestrator's per-slot safety mechanisms — stuck-agent detection (3 signals) plus
-  auto-respawn with exemptions, per-spawn account auth-failover (_pick_next_account, no mid-session token
-  swap), the Telegram/Slack alert inventory, git-staleness ping, and liveness-gated fresh-spawn
-  dirty-state resolution (inherit dead-predecessor WIP / protect live peer / quarantine wiped index).
+  SSOT for the orchestrator's per-slot safety mechanisms — stuck-agent detection (3 signals) plus auto-respawn with
+  exemptions, per-spawn account auth-failover (_pick_next_account, no mid-session token swap), the Telegram/Slack alert
+  inventory, git-staleness ping, and liveness-gated fresh-spawn dirty-state resolution (inherit dead-predecessor WIP /
+  protect live peer / quarantine wiped index).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,11 +14,26 @@ repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, slack, monitoring, escalation]
 related:
-  [codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md, codex/05-infrastructure/agent-orchestrator-slack-notifications.md, codex/05-infrastructure/per-tab-worktrees.md]
+  [
+    codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
+    codex/05-infrastructure/per-tab-worktrees.md,
+  ]
 created: 2026-05-21
 authoritative_for:
-  [orchestrator stuck-agent detection and respawn, orchestrator per-spawn account auth-failover, fresh-spawn dirty-state resolution]
-referenced_by: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/agent-orchestrator-slack-notifications.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md, codex/12-agent-workflow/orchestrator-multi-vm-topology.md, plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/epics/orchestrator_master.md]
+  [
+    orchestrator stuck-agent detection and respawn,
+    orchestrator per-spawn account auth-failover,
+    fresh-spawn dirty-state resolution,
+  ]
+referenced_by:
+  [
+    codex/04-architecture/agent-orchestrator-overview.md,
+    codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
+    codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+    plans/epics/orchestrator_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-28
 code_refs:
@@ -34,7 +49,8 @@ code_refs:
 > [`../../plans/epics/orchestrator_master.md`](../../plans/epics/orchestrator_master.md)). Implementation phases live in
 > active plans under `parent_epic: orchestrator_master`.
 >
-> Composes with: [`orchestrator-multi-vm-topology.md`](orchestrator-multi-vm-topology.md) (where these mechanisms run);
+> Composes with: [`agent-orchestrator-single-vm-architecture.md`](agent-orchestrator-single-vm-architecture.md) (the
+> topology these mechanisms run on);
 > [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md) (auth model the failover
 > mechanism switches between).
 
@@ -179,7 +195,8 @@ preserves the invariant for concurrent active slots.
 
 ## Composes with
 
-- [`orchestrator-multi-vm-topology.md`](orchestrator-multi-vm-topology.md) — the topology these mechanisms run on
+- [`agent-orchestrator-single-vm-architecture.md`](agent-orchestrator-single-vm-architecture.md) — the topology these
+  mechanisms run on
 - [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md) — auth model the failover
   mechanism switches between (long-lived setup-token via `CLAUDE_CODE_OAUTH_TOKEN`)
 - [`../../plans/epics/orchestrator_master.md`](../../plans/epics/orchestrator_master.md) — the L5 epic; this file is

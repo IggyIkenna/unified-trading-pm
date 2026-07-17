@@ -586,12 +586,13 @@ SSOT for the deploy build context details: `deployment-api/cloudbuild.yaml` step
 (`<project-number>@cloudbuild.gserviceaccount.com`) has `roles/run.admin` + `serviceAccountUser` on the runtime SA.
 
 **agent-orchestrator — self-pull deploy (added 2026-07-12)**: unlike the Cloud-Build-triggered services above,
-agent-orchestrator's central + epic VMs are long-lived systemd services (not container-redeployed on push). Currency is
-kept by `scripts/ao-self-pull.sh`, a root cron every ~15 min that FF-pulls the running checkout from
-`origin/live-defi-rollout` and `systemctl restart orchestrator` only when HEAD moves (or when the running process
-predates HEAD — stale-process self-heal). Shipped `agent-orchestrator@589b711`; hardened `@d16d737` + `@5462959` (wedge
-alert on a silently-drifted deploy). Full SSOT: `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`;
-service overview: `codex/04-architecture/agent-orchestrator-overview.md`.
+agent-orchestrator's single central VM is a long-lived systemd service (not container-redeployed on push; there are no
+epic VMs — that fleet was retired 2026-06-27). Currency is kept by `scripts/ao-self-pull.sh`, a root cron every ~15 min
+that FF-pulls the running checkout from `origin/live-defi-rollout` and `systemctl restart orchestrator` only when HEAD
+moves (or when the running process predates HEAD — stale-process self-heal). Shipped `agent-orchestrator@589b711`;
+hardened `@d16d737` + `@5462959` (wedge alert on a silently-drifted deploy). Full SSOT:
+`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; service overview:
+`codex/04-architecture/agent-orchestrator-overview.md`.
 
 ---
 
