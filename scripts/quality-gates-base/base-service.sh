@@ -335,7 +335,7 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     # /root/.cache/uv, so this lives inside the no-CI guard. Respect a pre-set value (spawn env) so
     # every layer agrees. UV_LINK_MODE=hardlink makes any residual cross-device mismatch warn loudly +
     # fall back visibly instead of silently copying. SSOT:
-    # plans/active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md.
+    # plans/archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md.
     _uv_repo_root="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
     case "${_uv_repo_root}" in
         */.tabs/*) _uv_ws_common="${_uv_repo_root%%/.tabs/*}" ;;

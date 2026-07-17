@@ -6,7 +6,7 @@
 # operator's INTERACTIVE shells (bash/zsh), per host.
 #
 # Closes the B2 gap named in
-# plans/active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md: QG runs
+# plans/archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md: QG runs
 # (base-service.sh) and AO slot spawns (tmux_spawn.py) already derive
 #   UV_CACHE_DIR=<workspace-root>/.uv-cache  +  UV_LINK_MODE=hardlink
 # but a HAND-RUN `uv` in a plain shell falls back to uv's default (~/.cache/uv),
