@@ -55,25 +55,39 @@ a human `league_name` alongside the id — league data is UAC data, the UI must 
 renders the name (id as a subtitle/tooltip). Honest-absence: an id with no registry entry shows the raw id, never a
 fabricated name.
 
-### F2 — New listings + Upcoming expiries + Prediction catalogue: "Unknown error" — `- [ ]` OPEN (deploy/latency, not a code bug)
+### F2 — New listings + Upcoming expiries + Prediction catalogue: "Unknown error" — `- [x]` FIXED (OOM), pending deploy-verify
 
-All three panels render a red "Unknown error" alongside their empty-state text. **Root cause is NOT a code bug** —
-verified 2026-07-17 against real prod GCS in the current LDR checkout:
+**CORRECTED diagnosis (2026-07-17 pm): the root cause is a container OOM, NOT deploy-lag/latency and NOT a code-logic
+bug.** My first pass said "deploy-lag" — that was wrong; I confirmed it by reading the LIVE Cloud Run logs (ground
+truth), not by inference. The service code is correct (all three service functions return data against real GCS:
+`list_new_listings(30)` → 440,433 rows, `list_upcoming_expiries(7)` → 6,180 rows, `read_prediction_catalogue(50)` →
+total 2,673,118, all OK with the A4 `question` `_READ_COLUMNS` addition). But the DEPLOYED revision (`00195-jr9`,
+deployed 17:01, only ~30 min old — so promotion was NOT the issue) logged:
 
-- `list_new_listings(max_age_days=30)` → **440,433 rows OK**
-- `list_upcoming_expiries(within_days=7)` → **6,180 rows OK**
-- `read_prediction_catalogue(limit=50)` → **total=2,673,118 OK** (works WITH the A4 `question` `_READ_COLUMNS` addition
-  — schema-aware, so the not-yet-present column degrades gracefully; A4 did not break it). So the three endpoints' code
-  is correct. The live "Unknown error" is a **client-side fetch failure**, almost certainly a **timeout on a slow cold
-  read against a DEPLOYED backend that predates this session's A5 perf fix** — measured: `/prediction-catalogue` cold =
-  ~157s (deployment-api@0e39a53 collapses the per-page re-pay to ~0s, but only once deployed);
-  `list_new_listings`/`list_upcoming_expiries` read all five per-AG `prod/catalog.parquet` objects (tradfi 1.17M rows /
-  prediction 184 MB) so are also multi-second cold. If the browser/gateway timeout is < the cold read, the UI shows
-  "Unknown error". **Fix = confirm deployment-api is promoted+deployed at ≥@0e39a53** (see the promotion-lag issue
-  `promotion_lag_alert_hides_provenance_block_2026_07_17.md` — MTDS + deployment-ui were sitting un-promoted; check
-  deployment-api too). Secondary hardening (if the cold read still exceeds the client timeout even paginated): the
-  new-listings/upcoming-expiries reads are per-AG shard-isolated + TTL-cached but pay a cold multi-AG cost; consider a
-  warm-on-boot or a narrower default. Verify against the DEPLOYED endpoint, not local.
+```
+Memory limit of 8192 MiB exceeded with 8585 MiB used.  (2026-07-17T17:21:30Z)
+… /api/data-status/prediction-catalogue         → 500
+… /api/instruments/new-listings                 → 500
+… /api/instruments/upcoming-expiries            → 500
+… /api/data-status/coverage-summary (×2 svc)    → 500
+… /api/capabilities/service-asset-groups        → 500   (all 500 at the SAME 17:21:14 timestamp)
+```
+
+The data-status page **mounts several heavy catalogue-reading panels simultaneously** on tab open (New listings +
+Upcoming expiries read all five per-AG `prod/catalog.parquet` objects; Prediction catalogue reads the 184 MB / 2.67M-row
+prediction catalogue, now 25 cols after this session's `question` backfill — so my A4 work slightly _increased_ the
+footprint; coverage-summary / drilldown read the availability index). Under Cloud Run `concurrency=80`, a cold
+first-mount burst packs all of them onto ONE 8 GiB instance → 8585 MiB > 8192 → the container is **killed**, taking
+every in-flight request with it → the UI renders "Unknown error" on ALL panels at once (exactly the operator's
+screenshot). Intermittent (1 OOM / 6h) because a warm 5-min TTL cache hit avoids the cold burst — hence "sometimes
+works, sometimes Unknown error". This is the SECOND OOM on this service (the first,
+`deployment_ui_data_status_drilldown_oom_and_leaf_schema_2026_07_15`, bumped it 8Gi; the page has grown since).
+
+**Fix SHIPPED — `deployment-api@18a362ec` (`cloudbuild.yaml`): `--memory 8Gi → 16Gi`** (2× over the failing 8585,
+matching the dedicated rollup service's 16Gi). Reads are already column-pruned + TTL-cached, so headroom is the right
+lever for a cold burst; a code-level fix (an in-container `asyncio.Semaphore` capping concurrent heavy catalogue loads,
+modelled on `_deploy_turbo._drilldown_build_semaphore`) is the documented follow-up if it recurs at 16Gi. **Pending:
+verify the promoted revision reaches 16Gi + no further OOM against the DEPLOYED endpoint.**
 
 ### F3 — Catalogue Explorer: venue / data_type / instrument_type should be dropdowns, not free-text — `- [ ]` OPEN
 
@@ -86,8 +100,8 @@ the chosen asset_group, with an "all/any" default. `[UI]` + pw:L2.
 
 ## Fix status
 
-| #   | Finding                      | Repo(s)                                            | Status                             |
-| --- | ---------------------------- | -------------------------------------------------- | ---------------------------------- |
-| F1  | Fixtures league human names  | deployment-api + deployment-ui                     | OPEN                               |
-| F2  | 3 panels "Unknown error"     | (deploy/promote — verify deployment-api ≥@0e39a53) | OPEN — likely deploy-lag, not code |
-| F3  | Catalogue Explorer dropdowns | deployment-api + deployment-ui                     | OPEN                               |
+| #   | Finding                      | Repo(s)                        | Status                                                               |
+| --- | ---------------------------- | ------------------------------ | -------------------------------------------------------------------- |
+| F1  | Fixtures league human names  | deployment-api + deployment-ui | OPEN                                                                 |
+| F2  | 3 panels "Unknown error"     | deployment-api (`cloudbuild`)  | ✅ FIXED (OOM, not deploy-lag) — mem 8→16Gi @18a362ec; verify deploy |
+| F3  | Catalogue Explorer dropdowns | deployment-api + deployment-ui | OPEN                                                                 |
