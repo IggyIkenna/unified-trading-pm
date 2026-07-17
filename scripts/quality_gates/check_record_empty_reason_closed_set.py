@@ -63,6 +63,10 @@ KNOWN_REASONS: Final[frozenset[str]] = frozenset(
         "EXPECTED_PAUSED_LEAGUE",
         "EXPECTED_PRE_SOURCE_COVERAGE_START",
         "EXPECTED_PAST_SOURCE_COVERAGE_END",
+        # Registry-derived ONLY (canonical.coverage_exclusions) — a hand-stamped literal at a
+        # record_empty callsite would be an unevidenced out-of-bounds claim, which is
+        # review-blocking. Listed here to mirror the enum, not to license direct use.
+        "EXPECTED_UPSTREAM_OUT_OF_BOUNDS",
         "EXPECTED_SOURCE_DELIVERY_LAG",
         "EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE",
         "EXPECTED_CHAIN_AGGREGATE",

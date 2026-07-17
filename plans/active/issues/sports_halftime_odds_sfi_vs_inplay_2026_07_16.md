@@ -899,15 +899,42 @@ it would be unchanged by construction. Reporting it as an "after" would be a fal
 
 ## Todos (opened 2026-07-16 by the T-0 recompute leg)
 
-- [ ] [DATA] P0. **Recompute `ODDS_FEATURES` (1,812 shards) behind a PER-DATE loss guard.** Blocked on the guard, not on
-      the fix: features-service@bf6fc2f4 + @c57cc753 are live and correct, but a blind recompute drops fixtures on ~13%
-      of dates (measured 4/31 sample; day=2024-01-01 13 → 1). Guard = compare `event_id` count in the existing
-      `odds_features` shard vs fixtures reachable from MDPS bucketed for that date; recompute where `>=`, SKIP + report
-      where it would lose fixtures. Then re-run `verify_ml_readiness.py` and report before/after honestly (a DROP is
-      correct — removing leaked columns removes fake signal). Requires `MANIFEST_CONSOLIDATED_STALENESS_SEC` raised for
-      the run (sports is frozen → its consolidators are deliberately paused → the `assert_upstream_manifest_healthy`
-      startup gate fails closed; the read path lists GCS directly and does not consult the index, and the per-VM merge
-      is only 2 shards / 43 MiB so there is no OOM exposure).
+- [x] [DATA] P0. ✅ **Recompute `ODDS_FEATURES` behind a PER-DATE loss guard — DONE 2026-07-17.** Guard shipped
+      **features-service@3c15f3ff** (`data/loss_guard.py` pure core + `cli/handlers/_loss_guard_gate.py` wiring, 15 unit
+      tests); recompute EXECUTED over the **full re-verified census of 1,861 dates** (not 1,812 — see § below), 4-way
+      parallel through the production CLI: **1,524 written · 337 guard-ABORTED (18.1%) · 0 failures (rc=0 on
+      1,861/1,861)**. Two-sided verification on the 1,524 written dates, full census (not sampled): `clv_home` **21,922
+      → 0** · `odds_movement_home` 21,922 → 0 · `sharp_clv_home` 18,508 → 0 · `clv_direction_home` 21,922 → 0 ·
+      `velocity_home_1h_to_0` 19,969 → 0; **`opening_home_odds` SURVIVED 31,539 → 31,545** (not over-gated) ·
+      **`steam_detected_home`@T-1h SURVIVED 26,904 → 26,904 unchanged**, gated out at T-24h 26,359 → 0 (its
+      `min_horizon` is T-1h) · `bookmaker_count_total`@T-24h pooled-signature dates **1,364 → 0**, median-of-max **145 →
+      19** (the predicted ~21 genuine count) · HT rows **1,467 → 0** dates (honest absence). **Zero non-HT fixture
+      losses** on written dates; the 134 net fixture-slot drop is entirely HT-only fixtures vanishing with HT. Residual
+      leak is a **strict subset of the 337 aborted dates** (`clv_home` dirty-after = 329, `subset_of_blocked=True`, **0
+      on written dates**) and all 337 aborted shards are **byte-intact** (row counts unchanged). ML-readiness re-run:
+      see § "ODDS_FEATURES recompute EXECUTED" below — **1,021 → 177 passed / 94.0% → 80.0%, a CORRECT drop** (removing
+      fabricated signal), gate NO both sides. The `MANIFEST_CONSOLIDATED_STALENESS_SEC` concern did not materialise —
+      sports was RESTORED live 2026-07-17 (consolidators `*/1`), so the startup gate passed unmodified.
+- [ ] [DATA] P0. **Diagnose the upstream thinning on the 337 guard-aborted dates, then re-run the recompute on them.**
+      They are the ONLY dates still carrying the closing-line leak. They are **not scattered — 49 contiguous windows
+      with a hard WINTER signature**: `2021-01-01..2021-02-20` (49d) · `2022-01-01..2022-03-05` (60d) ·
+      `2022-12-23..2023-02-27` (61d) · `2024-01-01..2024-02-02` (31d) · `2024-02-09..2024-02-23` (14d) ·
+      `2025-02-02..2025-02-15` (14d), by year 2021:49 · 2022:147 · 2023:78 · 2024:45 · 2025:17 · 2026:1. On those dates
+      the corpus holds **10,642 fixtures** and the re-derive reaches only **9,842** → the guard protected **800
+      fixtures** from deletion. Note the era overlaps the 199-day `batch_footystats` merge window
+      (`market-tick-data-service@75f226e8`, 2022:112 · 2023:48 · 2024:34) — so that merge fixed a _neighbouring_ slice
+      but NOT these; a second, distinct starvation mechanism is live and unidentified. This is exactly the "nothing yet
+      proves they cannot starve by another [mechanism]" caveat in
+      `./sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`. Do NOT lower the guard to force these
+      through — fix the upstream, then re-run `drive.sh`-equivalent on the 337.
+- [ ] [DATA] P1. **Re-calibrate the `verify_ml_readiness.py` 95% non-NULL threshold against the HONEST matrix.** The
+      gate now fails 1,683/1,860 dates at ~69-80% non-NULL — **not a regression**: the threshold was calibrated when the
+      closing line was broadcast into every T-24h row, i.e. against a leaking matrix, so 95% was only ever reachable
+      _because_ of the leak. Post-purge, a T-24h row legitimately carries NULL for every closing-derived column
+      (`clv_*`/`odds_movement_*`/`velocity_*_1h_to_0`/`steam_*`, ~27+ columns), so the gate is now structurally
+      unmeetable at 95% and measures the wrong thing. Re-base it per-horizon on the columns each horizon can honestly
+      know (`FEATURE_HORIZONS[h]` / the `min_horizon` registry) rather than on a flat cell-count. **Deliberately NOT
+      tuned in this leg** — lowering a number to make a gate green is the anti-pattern.
 - [ ] [DATA] P1. **Reconcile the market-data-sports manifest for the 2,436 deleted T-0 shards.** They still read as
       `captured` in the availability index; they should be `empty_confirmed` (honest absence). NOT done here: the
       operator scoped this session's manifest work to the FEATURES surface only, and the market-data-sports consolidator
@@ -915,3 +942,114 @@ it would be unchanged by construction. Reporting it as an "after" would be a fal
       not be merged by anyone else).
 - [ ] [ML] P2. **Retrain the CLV models after the ODDS_FEATURES recompute.** The 3 quarantined artifacts stay in place
       as the reference for what the leak produced. Do not promote or cite them.
+
+---
+
+## ODDS_FEATURES recompute EXECUTED — the leak is purged on 1,524/1,861 dates (2026-07-17)
+
+> **Shipped**: features-service@3c15f3ff (the per-date loss guard). **No code change to the exporter** — the leak fixes
+> (@bf6fc2f4 / @c57cc753) were already live and correct; this leg is the DATA purge they were waiting on.
+
+### 1. Scope RE-VERIFIED — the doc's own number was stale by +49
+
+Single cached walk of `gs://features-sports-prd-central-element-323112/sports_features/by_date/**` (248,813 objects):
+
+| claim                            | doc (2026-07-16)      | measured 2026-07-17                       | verdict                  |
+| -------------------------------- | --------------------- | ----------------------------------------- | ------------------------ |
+| `ODDS_FEATURES` shards           | 1,812                 | **1,861**                                 | ⚠️ +49 — explained below |
+| date range                       | 2020-06-07→2026-06-20 | **2020-06-06→2026-06-20**                 | ⚠️ +1 day earlier        |
+| layout                           | day-level             | **day-level (1,861/1,861; 0 per-league)** | ✅                       |
+| `DERIVED_FEATURES` odds-derived? | no                    | **no** — re-confirmed                     | ✅ correctly excluded    |
+
+**The +49 is real and benign.** A **10-VM parallel gap-fill campaign** (`fss-backfill-vm-1..10`, launched 02:18Z
+2026-07-17 by another lane, `--skip-existing`, ranges spanning 2015-01-01→2026-07-17) filled **49 previously-MISSING
+odds_features dates** while this leg was starting. Independently cross-checked: `verify_ml_readiness` missing went **393
+→ 345 = 48**, +1 for `2020-06-06` (outside the doc's start) = **49** ✅. Those 49 were written by the FIXED code and are
+already clean (probed `day=2020-10-02` / `2020-09-30`: `clv_*` 0 at every horizon, no HT, `opening_*` present, `steam_*`
+at T-1h only). **`--skip-existing` means that campaign never touched the 1,812 leaked shards — the `--force` purge below
+is exactly the piece it could not do.** No collision: the only two VMs still alive (vm-3 `2017-04-22.. 2018-06-16`, vm-4
+`2018-06-17..2019-08-11`) sit entirely **before** odds_features exists (2020-06-06).
+
+`DERIVED_FEATURES` / `FIXTURE_FEATURES` full-corpus counts are **42,965 / 72,347** — the doc's 15,415 / 26,942 were the
+_affected-dates subset_, not the corpus; not a contradiction.
+
+### 2. The guard (fix (c)) — features-service@3c15f3ff
+
+Pure decision core `features_service/sports/data/loss_guard.py` (`evaluate_loss_guard`, no I/O) + wiring
+`cli/handlers/_loss_guard_gate.py`, called in `_run_feature_group` **after** the emission policy and **before** any
+write reaches GCS. **Fixture-SET containment per horizon**, not row-count: the grain is one row per (fixture × horizon),
+so the HT honest-absence drop legitimately removes rows on every date — a row-count guard would abort 100% of dates on a
+correct fix. Horizons in `EXACT_SNAPSHOT_HORIZONS` (today: `HT`) are exempt, **sourced from the exporter** so the
+exemption dissolves by itself when a genuine in-play population lands. Fails **CLOSED**: an unreadable existing shard
+blocks the write. Also guards the **empty-derive → `record_empty`** path, which would otherwise stamp `empty_confirmed`
+on a date whose shard still holds fixtures (a manifest that contradicts the data).
+
+15 unit tests (`tests/sports/unit/test_loss_guard.py`) pin both sides — including the measured `day=2024-01-01`
+52-rows→3 regression, the HT-only-fixture justified drop, a same-count fixture SWAP (which a count-based guard would
+wave through), and an int-vs-str id dtype mismatch (which would otherwise fabricate total loss and abort every date). QG
+green: **17,632 passed, 209 skipped**.
+
+**Proven in the real production path before the run**: `--date 2024-01-01 --tables odds_features --force` →
+`LOSS_GUARD_BLOCKED ... fixtures 13 -> 1 ... Date SKIPPED; existing shard left intact`, and the shard's GCS update time
+stayed `2026-07-16T19:10:29Z` (untouched).
+
+### 3. The run — 1,861 dates, 4-way parallel, resumable
+
+`1,524 written · 337 guard-ABORTED (18.1%) · 0 failed`; **rc=0 on 1,861/1,861**. Every date appends one JSON verdict
+line, so the run resumes losslessly from any kill.
+
+### 4. Two-sided verification — FULL census, not sampled
+
+Measured over all 1,861 shards before and after (`census_before/after.jsonl`), restricted to the 1,524 **written**
+dates:
+
+| column                          | T-24h before                               | T-24h after                               | verdict                             |
+| ------------------------------- | ------------------------------------------ | ----------------------------------------- | ----------------------------------- |
+| `clv_home`                      | 21,922                                     | **0**                                     | ✅ purged                           |
+| `odds_movement_home`            | 21,922                                     | **0**                                     | ✅ purged (identical count = alias) |
+| `sharp_clv_home`                | 18,508                                     | **0**                                     | ✅ purged                           |
+| `clv_direction_home`            | 21,922                                     | **0**                                     | ✅ purged                           |
+| `velocity_home_1h_to_0`         | 19,969                                     | **0**                                     | ✅ purged                           |
+| **`opening_home_odds`**         | 31,539                                     | **31,545**                                | ✅ **SURVIVED** — not over-gated    |
+| **`steam_detected_home` @T-1h** | 26,904                                     | **26,904**                                | ✅ **SURVIVED** — unchanged         |
+| `steam_detected_home` @T-24h    | 26,359                                     | **0**                                     | ✅ gated (`min_horizon` = T-1h)     |
+| `bookmaker_count_total` @T-24h  | pooled 1,364 dates / median-of-max **145** | **0 dates** pooled / median-of-max **19** | ✅ genuine count (predicted ~21)    |
+| HT rows                         | 1,467 dates                                | **0**                                     | ✅ honest absence                   |
+
+- **Residual leak lives ONLY on the aborted dates**: `clv_home` dirty-after = 329 dates, `subset_of_blocked = True`, **0
+  leaked cells on any written date** (all five markers).
+- **Zero non-HT fixture losses** across 1,524 written dates. Net fixture-slot delta −134 = HT-only fixtures vanishing
+  with the HT horizon (the justified class the guard's own test pins).
+- **All 337 aborted shards intact** — row counts identical before/after.
+
+### 5. ML-readiness — the number DROPPED, and that is the correct result
+
+`verify_ml_readiness.py --start-date 2020-06-07 --end-date 2026-06-20`:
+
+| metric        | BEFORE (doc, 2026-07-16) | AFTER (measured 2026-07-17) |
+| ------------- | ------------------------ | --------------------------- |
+| dates checked | 2,205                    | 2,205                       |
+| passed        | **1,021**                | **177**                     |
+| failed        | 791                      | 1,683                       |
+| missing       | 393                      | 345                         |
+| avg non-NULL  | **94.0%**                | **80.0%**                   |
+| gate met      | NO                       | NO                          |
+
+**This is the leak leaving, not a regression.** Failures read `non-NULL at target horizons 77.0% < 95%` — i.e. the T-24h
+rows now honestly carry NULL where the closing line used to be broadcast in. Internally consistent: before 1,021+791 =
+**1,812** = the doc's census; after 177+1,683 = **1,860** = my 1,861 minus `2020-06-06` (outside the range); missing
+393→345 = the 48 in-range gap-fill dates. **Nothing was tuned to improve this number** — the 95% threshold was
+calibrated against a leaking matrix and is now structurally unmeetable; re-basing it is filed as a P1 todo above.
+
+### 6. Honest limits of this leg
+
+- **337 dates (18.1%) still carry the leak** — the guard refused to purge them because doing so would delete 800
+  fixtures. They are 49 contiguous winter-clustered windows: a second, distinct upstream starvation mechanism that the
+  `batch_footystats` merge did not address. P0 todo above.
+- **Fix (b) — the `reprocess_sports_odds.py` (MDPS) guard — remains OPEN**, tracked in
+  `./sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`. This leg shipped fix **(c)** (the features
+  guard), which is what gates the features re-derive actually run here. Anyone running the MDPS tool historically is
+  still unprotected.
+- **`fss-backfill-vm-3` died without its EXIT trap firing** (SPOT preemption): its `EXIT_STATUS` still reads `RUNNING`
+  while the instance is gone, so its chunk `2017-04-22..2018-06-16` is silently incomplete. Not this leg's lane —
+  flagged for the campaign owner.

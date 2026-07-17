@@ -9,12 +9,14 @@ summary: >-
   the switchboard+crons (39 MOVE: 38 runs-on flips + 1 composite-action conversion), collapse the quality-gates job
   fan-out that pays a 1-min minimum per sub-second job, and fix cron cadence; 17 workflows stay hosted (test gates,
   fleet templates, a cross-repo reusable, the failure-independence monitors + their alert carrier). ALL decisions closed
-  2026-07-15/16. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). **DEPLOYED 2026-07-16: D1-D6 ALL
-  DONE.** 8 runners live on the orchestrator VM (5 JIT-ephemeral glue + 3 long-lived glue-writer, disjoint labels);
-  CANARY GREEN on LDR with billable={} (zero billed minutes) and the JIT deregister/re-register lifecycle proven from
-  the journal. 1 of 38 movers is flipped; main is UNTOUCHED. Counts corrected 39/17 -> 38/18 (agent-audit is KEEP-U: a
-  pure reusable caller with no runs-on). Next action = OPERATOR GATE, then the next 10 (5 simple + 5 complex), then the
-  remaining 26. One P0 pending: quickmerge's --agent sentinel races its own rebase on a busy branch.
+  2026-07-15/16. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). 8 runners live on the orchestrator
+  VM (5 JIT-ephemeral glue + 3 long-lived glue-writer, disjoint labels). **STEP 2 COMPLETE 2026-07-17: 37/37 movers
+  self-hosted, zero-billed, verified on real runs.** **STEP 2c SHIPPED 2026-07-17 (@a6057ea36, promoted to main same
+  day): all 22 persist-cicd-event callers converted to the composite action (~$117/mo of 1-min-minimum persist jobs
+  removed); the old reusable's DELETION is staged behind observing green ci-status-update runs on main — until it lands,
+  `git revert a6057ea36` is a one-command rollback.** D1 (2b↔2c checkout collision) RESOLVED by operator delegation —
+  checkout kept, @main pin rejected. Next = Phase 2 (A2 → A1 → A5) + the amended STEP 2b trim; D2-D4 are open operator
+  decisions. One P0 pending: quickmerge's --agent sentinel races its own rebase on a busy branch.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -26,7 +28,7 @@ related:
   - github_billing_dashboard_access_2026_07_09.md
   - cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 created: 2026-07-15
-last_updated: 2026-07-16
+last_updated: 2026-07-17
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -105,11 +107,11 @@ drift_direction: advance-code
    **re-run `snapshot` whenever an UNFLIPPED workflow is edited** (its baseline goes stale; verify catches it). The
    baseline is `.prettierignore`d ON PURPOSE — prettier rewrote it once and destroyed the byte-exactness that is its
    whole point.
-6. **⏵ NEXT: the OPERATOR GATE.** Batch 2 is green; next is the **remaining 27** (the delta from
-   `classify-glue-workflows.sh` vs `git grep -l 'self-hosted, glue' .github/workflows/`). The tail carries **no new
-   capability class** — batch 2 covered them all. 10 of the 27 have **no `workflow_dispatch`** and are only validatable
-   AFTER promote, so they go LAST. then STEP 2b (ci-status-update trim) + STEP 2c (persist composite action), then Phase
-   2 (A1/A2/A5) and Phase 3 (A6/A7/A8).
+6. **⏵ NEXT: finish the STEP 2c deletion, then Phase 2 (A2 → A1 → A5), then the amended STEP 2b trim.** STEP 2 is
+   COMPLETE (37/37 movers, zero-billed, verified) and STEP 2c is SHIPPED (@a6057ea36, all 22 callers converted, promoted
+   to main 2026-07-17). The one open 2c item: after ≥2 green `ci-status-update` runs on main post-promote, DELETE
+   `.github/workflows/persist-cicd-event.yml` (until that lands, `git revert a6057ea36` is the one-command rollback).
+   D2/D3/D4 in the Deferred section are operator decisions — do not start their items.
 7. **One P0 is open and is NOT blocked on the gate** — see the todos: the **quickmerge `--agent` sentinel race** (its
    own STAGE-0.4 rebase invalidates the sentinel STAGE 3 then checks, so on a busy LDR it can never self-validate;
    workaround = chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
