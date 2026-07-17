@@ -113,7 +113,13 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       `ml-models-store-prd`; the parent-plan W2 already treats flat `ml-models-store` as legacy-to-delete). Byte-count
       parity via `gcloud storage du -s` both sides. Assert `ml-predictions-store` / `ml-configs-store` / `ml-artifacts`
       EMPTY (0 obj) — no copy, record the assertion in the Progress Log.
-- [ ] [CODE] P0. **Atomic writer/reader cutover** — repoint every Fold B site (design §1) from the 5 kinds to
+- [x] ✅ [CODE] P0. **Atomic writer/reader cutover** — DONE 2026-07-17 (Stage 2). SHIPPED: ml-service@92bd534d
+      (training-artifacts/ + configs/ prefixes, byte-identical stage-handoff key parity [verify PASS], inconsistencies
+      reconciled, QG 1841+ tests green), deployment-service@f127671b (readers scoped + ml_experiments malformed-name
+      fix + shard_builder, QG 2664 tests green), CI-test fixture ml-store key utl-pm@37747c9e1 (FLEET QG unblock — 5th
+      yaml copy tick-1 missed). **deployment-api DEFERRED** (P2 below): 4 display-only files blocked by foreign
+      uncommitted `terraform.tfvars` in the deployment-service dep (dep-cleanliness gate; not mine to commit) —
+      non-runtime-critical, ships when that clears. — repoint every Fold B site (design §1) from the 5 kinds to
       `kind="ml-store"` + a `{models|predictions|configs|training-artifacts|artifacts}/` path prefix (NOT a bare
       resolver swap — `resolve_bucket_name` returns no path, the prefix insertion is a code change per site). Ship
       per-repo QG-green: ml-service, UTL, deployment-api, deployment-service, UAC. Aliases catch any missed caller
@@ -139,6 +145,14 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       consumer. Mirror `ModelRegistry._deserialize_model`: enforce keys start with `artifacts/` + optional sha256. NOTE:
       `artifacts/` is EMPTY today (ml-artifacts was empty) so no live exposure yet — but close before anything writes
       there. Not a blocker for the UTL scaffold ship (orthogonal to bucket naming).
+- [ ] [CODE] P2. **Ship deployment-api ml-store display cutover** (4 files: `commentary/pipeline_uat.py`,
+      `deployment_api_config.py`, `routes/services.py`, `services/data_status_drilldown/_core.py`) — implemented +
+      QG-verified 2026-07-17 (display-only: data-status drilldown + config-buckets scope to ml-store prefixes;
+      pipeline_uat dead f-string repointed). Currently UNCOMMITTED in the deployment-api tree — BLOCKED by foreign
+      uncommitted `terraform.tfvars` (features-service-sports docker repin) in the deployment-service DEP (quickmerge
+      dep-cleanliness gate; not mine to commit). Ship once that foreign WIP clears. Non-runtime-critical (the
+      availability-index readers already discriminate ml via the `service_name==ml-service` filter, so no conflation
+      without this).
 - [ ] [DATA] P3. **PM `cloud-providers.yaml` mirror re-sync** — add the `ml-store` key to the non-authoritative PM
       mirror (deferred 2026-07-17: PM quickmerge STAGE 1.5 dependency-alignment gate fails on an UNRELATED fleet drift —
       `ibkr-gateway-infra` pins `cryptography>=46,<47` vs canonical `>=47,<50`, which blocks ALL PM config quickmerges).
@@ -281,3 +295,21 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   to reconcile: deployment-service `ml_experiments.py:83 get_bucket_name("ml_artifacts")` (ml_artifacts absent from
   BUCKET_PREFIXES → malformed); core/cloud_constants AWS ml fallback env-less (`ml-store-{pid}`, no `-prd-`; AWS ml
   empty → latent). NEXT: Phase C Stage 2.
+
+- **2026-07-17, TICK 5 — Phase C Stage 2 SHIPPED (code cutover done).** Workflow `wf_70ccdc96-7ce` (2 impl + 2 verify, 0
+  errors): ml-service verify **PASS** (byte-identical stage-handoff key parity confirmed, QG 1841+ tests green — agent
+  also fixed a stale `@patch` cascading 186 test failures); deployment verify **CONCERN** (code correct; surfaced the
+  fleet gap below). SHIPPED in dep order: **CI-test fixture `unified-trading-pm@37747c9e1`** (direct push, scripts/**
+  carve-out) → **ml-service@92bd534d** → **deployment-service@f127671b** (hit a transient self-`index.lock` race mid-PR;
+  my changes were auto-stashed, I popped + retried clean). **FLEET FINDING resolved:** tick-1 discovery missed a 5TH
+  cloud-providers.yaml — `scripts/quality-gates-base/ci-test-cloud-providers.yaml` (base-service.sh exports it as
+  UNIFIED_TRADING_CLOUD_PROVIDERS_YAML for EVERY repo's QG). My Stage-1 UTL alias ship made any repo that eagerly
+  resolves a folded ml kind (deployment-api `settings.py:179`) raise BucketNamingError under this fixture → fleet QG
+  breakage. Adding ml-store there fixed it. Full yaml-copy census now: 5 real copies —
+  deployment-service/UAC/UTL-fixture/ci-test-fixture ALL carry ml-store; PM `configs/` mirror is the only holdout (P3,
+  non-runtime). **deployment-api DEFERRED** (P2 todo) — 4 display-only files blocked by foreign uncommitted
+  terraform.tfvars in the deployment-service dep; uncommitted in tree, tracked. **Runtime-critical cutover COMPLETE**
+  (UTL + ml-service + deployment-service + all resolver yaml copies). NEXT: Phase D — ml-service promotes to main
+  (v2-gated drain) + deploys, THEN verify-exercised (real training+inference under ml-store/) + consolidator 2→1
+  retarget. Phase E (delete 5 sources) is gated on verify-exercised + a multi-day zero-reads audit window — inherently
+  NOT completable in one session (rule-1 legitimate time-gate); sources stay (additive/reversible) until then.

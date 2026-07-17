@@ -518,8 +518,10 @@ def main() -> int:
                 if blocked:
                     findings.append(
                         f"{repo} {label}: ⛔ BLOCKED by the provenance gate — non-quickmerge CODE on LDR "
-                        f"({n} change(s), oldest {int(age // 60)}m). NOT a stuck pipeline: re-ship via "
-                        f"`quickmerge --agent --files` or revert on live-defi-rollout. Do NOT hand-arm auto-merge."
+                        f"({n} change(s), oldest {int(age // 60)}m). NOT a stuck pipeline. If the bypass is the "
+                        f"LDR tip: `quickmerge --agent --files` it. If it is MID-HISTORY (a later commit landed on "
+                        f"top): `scripts/cicd/reprovenance_bypass.sh <sha> --push` (re-ship/revert canNOT clear a "
+                        f"mid-history bypass — the sha stays in-range). Do NOT hand-arm auto-merge."
                     )
                 else:
                     findings.append(f'{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — "{omsg[:60]}"')

@@ -272,21 +272,27 @@ NOT AO and are deliberately out of scope here.
       operator 2026-07-17 + doc #5's fleet-wide-cooldown gap. **Gate**: regression tests (skip-blocked → no cross-slot
       redispatch inside base cooldown; prereq flip → immediate re-eligibility; no change → 1h; ETA honoured); measured
       redispatch-of-declined-task rate drops to the policy curve on the live VM.
-- [ ] [INFRA] P1. **plan_reconciler daily 01:00 UTC is NOT RUNNING — the systemd timer is ABSENT from the VM.** Measured
-      2026-07-17: `systemctl list-timers | grep reconcil` → nothing; `journalctl -u 'plan-reconciler*'` last 14 days →
-      empty; the agents table holds exactly ONE `plan_reconciler` run EVER (`agt-2d8441`, 2026-07-15 01:05Z, exit
-      `lifecycle-complete`); yet `/usr/local/bin/plan-reconciler-dispatch.sh` EXISTS on the box — so
-      `install-plan-reconciler-timer.sh` was run at least once and the timer units have since gone missing (never
-      `systemctl enable`d and lost on a reboot, or removed by a host rebuild — diagnose which). Fix to implement: (a)
-      diagnose + reinstall the timer (`agent-orchestrator/scripts/install-plan-reconciler-timer.sh`, fire-time 01:00
-      UTC), verify the unit is ENABLED (survives reboot) and fires on the next window; (b) add absence-visibility — a
-      daily liveness assertion (digest line or guard-cron check: `systemctl is-enabled plan-reconciler*` AND last
-      successful dispatch < 26h) so a missing timer alerts instead of silently not-running (the exact "silent by
-      absence" class this plan keeps finding); (c) audit whether the one 2026-07-15 run COMPLETED its work product
-      (operator suspects not): pull that dispatch's `plan_health_result`/`reconciler_candidate` events + any PM commits
-      it made, and record the verdict — if it stalled mid-work, capture why (context? account? interrupted?) before
-      re-arming the schedule. **Gate**: timer enabled + next-day 01:00 run visible in the journal AND a completed result
-      event; liveness check alerts when the timer is deliberately stopped in a test.
+- [ ] [INFRA] P1. **plan_reconciler daily 01:00 UTC was NOT RUNNING — part (a) DONE 2026-07-18 window armed; (b)/(c) +
+      two NEW defects remain.** **(a) ✅ RE-ENABLED 2026-07-17T18:03Z (operator request, this session)**: ran
+      `install-plan-reconciler-timer.sh --operator ubuntu --time 01:00` via SSM; verified `is-enabled=enabled`,
+      `NextElapseUSecRealtime=Sat 2026-07-18 01:04:12 UTC`, unit files on disk. The Persistent catch-up fired
+      immediately and **actually dispatched `agt-55b581`** (plan_reconciler, live on `orch-slot-2` at 18:04:25Z) — a
+      bonus run the operator can inspect today alongside tomorrow's. **Diagnosis CORRECTED by the pre-install
+      forensic**: the units were NOT absent — they existed since Jul 14 15:23 and were `enabled`; the timer was
+      evidently INACTIVE (stopped), which `is-enabled` does not detect and `list-timers` omits (no next-elapse) — that's
+      why it fired 07-15 then silently never again, and why yesterday's probe saw nothing. Journal history was
+      unrecoverable (vacuumed), so WHAT stopped it is unknowable now; the liveness check below is the durable answer.
+      **Two NEW defects found by the re-enable, to fix in code**: (1) the dispatch script's `curl --max-time 30` is
+      shorter than the endpoint's real latency (measured 56s: initiated 18:03:29 → dispatched 18:04:25), so EVERY timer
+      run logs `HTTP 000 / FAILURE` even when the dispatch succeeds — a false-failure that would mask real ones; bump to
+      ≥120s or make the endpoint return 202 immediately. (2) `systemctl enable` alone doesn't guarantee a scheduled
+      timer — the liveness assertion must check **`is-active` + a computed next-elapse**, not `is-enabled`. Remaining:
+      **(b)** the daily liveness assertion (digest line or guard-cron: timer `is-active` AND next-elapse exists AND last
+      successful dispatch < 26h → alert on breach); **(c)** audit whether the 2026-07-15 run (`agt-2d8441`) AND today's
+      `agt-55b581` COMPLETED their work product (operator suspects the 07-15 one did not): pull their
+      `plan_health_result`/`reconciler_candidate` events + any PM commits, record the verdict. **Gate**: the 2026-07-18
+      01:04 UTC run visible in the journal AND a completed result event; false-failure curl fixed; liveness check alerts
+      when the timer is deliberately stopped in a test.
 
 ### Phase LAST — operator-sequenced
 
@@ -366,6 +372,11 @@ NOT AO and are deliberately out of scope here.
 
 ## Progress Log
 
+- **2026-07-17T18:05Z** — Reconciler timer RE-ENABLED per operator request (Phase-6 item, part (a)): installed via SSM,
+  `enabled` + armed for 2026-07-18 01:04:12 UTC; the Persistent catch-up dispatched `agt-55b581` (live now on slot-2)
+  despite the dispatch script logging a FALSE failure (curl 30s < endpoint's measured 56s — new defect recorded on the
+  todo). Pre-install forensics corrected the diagnosis: units existed + enabled since Jul 14 but the timer was INACTIVE
+  — `is-enabled` can't see that; the liveness check must assert `is-active` + next-elapse.
 - **2026-07-17 (final)** — Phase 7 added: five INDEPENDENT agent-audit findings (AF-1..AF-5) from a fresh pass over the
   AO code, live DB/activity-log, and codex spot-checks — kept separate from the issue-doc-derived phases per operator
   instruction, pending operator review. Headlines: 189 CI-escalator dispatches/7d with 83 unresolved (43%); plan_health

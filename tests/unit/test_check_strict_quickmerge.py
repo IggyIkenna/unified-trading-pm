@@ -143,3 +143,82 @@ def test_bypass_not_reachable_from_promoted_tip_still_flagged(repo: Path):
     bad, why = csq.commit_violates(bypass)
     assert bad is True
     assert "source changed without quickmerge" in why
+
+
+# ── Re-provenance: the self-service remedy for a MID-HISTORY bypass (2026-07-17) ──────────────────
+# A trailer-less source commit that is not the branch tip cannot get a `Quickmerge:` trailer without
+# rewriting shared history, and it deadlocks the promote it would ride. A later PROVENANCED commit
+# that names it in a `Reprovenance: <sha>` trailer forgives it (created by reprovenance_bypass.sh
+# after the dep-alignment gate). A bare (non-provenanced) Reprovenance commit must NOT forgive.
+
+
+def _empty_commit(repo: Path, message: str, author: str | None = None) -> str:
+    env = {"PATH": _path(), **_ENV}
+    if author:
+        env["GIT_AUTHOR_NAME"] = author
+        env["GIT_COMMITTER_NAME"] = author
+    subprocess.run(
+        ["git", "commit", "-q", "--allow-empty", "-m", message], cwd=repo, env=env, check=True, capture_output=True
+    )
+    out = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, env={"PATH": _path()}, check=True, capture_output=True, text=True
+    )
+    return out.stdout.strip()
+
+
+def _rng_shas(repo: Path, since: str) -> list[str]:
+    out = subprocess.run(
+        ["git", "rev-list", f"{since}..HEAD"],
+        cwd=repo,
+        env={"PATH": _path()},
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return [s for s in out.stdout.splitlines() if s.strip()]
+
+
+def test_reprovenance_by_quickmerge_commit_forgives_midhistory_bypass(repo: Path):
+    base = _commit(repo, "README.md", "# base\n", "chore: base")
+    bypass = _commit(repo, "src/bus.py", "x = 1\n", "fix: direct-pushed sports fix")  # the bypass
+    _commit(repo, "src/other.py", "y = 1\n", "feat: later\n\nQuickmerge: agent")  # unrelated later commit
+    # Without a re-provenance commit, the bypass is flagged even though it is mid-history.
+    reprov = csq._collect_reprovenanced(_rng_shas(repo, base))
+    assert csq.commit_violates(bypass, reprov)[0] is True
+    # A later PROVENANCED (Quickmerge:) commit that names the bypass forgives it.
+    _empty_commit(repo, f"chore(provenance): re-provenance\n\nReprovenance: {bypass}\nQuickmerge: agent")
+    reprov = csq._collect_reprovenanced(_rng_shas(repo, base))
+    assert bypass in reprov
+    bad, why = csq.commit_violates(bypass, reprov)
+    assert bad is False
+    assert "re-provenanced" in why
+
+
+def test_reprovenance_matches_short_sha_prefix(repo: Path):
+    base = _commit(repo, "README.md", "# base\n", "chore: base")
+    bypass = _commit(repo, "src/bus.py", "x = 2\n", "fix: direct push")
+    _empty_commit(repo, f"chore(provenance): bless\n\nReprovenance: {bypass[:8]}\nQuickmerge: agent")
+    reprov = csq._collect_reprovenanced(_rng_shas(repo, base))
+    assert bypass in reprov  # short-sha in the trailer still forgives the full-sha bypass
+
+
+def test_bare_reprovenance_commit_cannot_self_forgive(repo: Path):
+    # SECURITY: only a PROVENANCED commit may bless. A non-provenanced commit carrying a
+    # Reprovenance: trailer must NOT forgive — else a bypasser could self-clear with an empty commit.
+    base = _commit(repo, "README.md", "# base\n", "chore: base")
+    bypass = _commit(repo, "src/bus.py", "x = 3\n", "fix: direct push")
+    _empty_commit(repo, f"chore: sneaky self-forgive\n\nReprovenance: {bypass}")  # NO Quickmerge trailer
+    reprov = csq._collect_reprovenanced(_rng_shas(repo, base))
+    assert bypass not in reprov
+    assert csq.commit_violates(bypass, reprov)[0] is True
+
+
+def test_reprovenance_only_forgives_the_named_sha(repo: Path):
+    # A blessing for sha A must not forgive an UNRELATED bypass B.
+    base = _commit(repo, "README.md", "# base\n", "chore: base")
+    bypass_a = _commit(repo, "src/a.py", "a = 1\n", "fix: A direct push")
+    bypass_b = _commit(repo, "src/b.py", "b = 1\n", "fix: B direct push")
+    _empty_commit(repo, f"chore(provenance): bless only A\n\nReprovenance: {bypass_a}\nQuickmerge: agent")
+    reprov = csq._collect_reprovenanced(_rng_shas(repo, base))
+    assert csq.commit_violates(bypass_a, reprov)[0] is False  # A forgiven
+    assert csq.commit_violates(bypass_b, reprov)[0] is True  # B still flagged
