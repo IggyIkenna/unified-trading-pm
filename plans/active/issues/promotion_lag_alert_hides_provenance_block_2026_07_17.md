@@ -38,6 +38,9 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
 assigned_role: devops
 drift_direction: none
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # "PROMOTION LAG" hides the provenance block
