@@ -13,7 +13,7 @@ status: open
 nature: notes
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, unified-trading-library]
+repos: [deployment-service, deployment-api, unified-trading-library]
 scope: [engineer, admin]
 tags: [ci, regression, bucket-naming, quality-gates, repo-blocker]
 related: []
@@ -81,6 +81,12 @@ not something I should absorb into an unrelated sports gap-fill dispatch.
 - [ ] [BACKEND] P1. Decide + implement (a) or (b) above for the `features-onchain`/`cefi` bucket-naming gap `c8f96e6`
       introduced, then confirm `bash scripts/quality-gates.sh` is green on `deployment-service` HEAD. (repo:
       deployment-service, unified-trading-library)
+- [ ] [BACKEND] P1. Same root cause also breaks `deployment-api` — `deployment_api/routes/batch_config_utils.py:61`
+      calls `resolve_bucket_name(cloud="gcp", kind="features-onchain", asset_group="cefi")`, which now raises
+      `BucketNamingError` (collection errors in `test_batch_config_utils.py` / `test_batch_query_engine.py` /
+      `test_batch_result_processor.py` + 1 failure in `test_data_status_hierarchical.py`). Apply the SAME decision
+      (a)/(b) to this callsite too, then confirm `bash scripts/quality-gates.sh` is green on `deployment-api` HEAD.
+      (repo: deployment-api)
 
 ## Progress Log
 
@@ -91,3 +97,12 @@ fixing this myself (outside my dispatched task's scope — sports elo gap-fill).
 (`sports_elo_calculator_tz_naive_season_boundary_silent_skip-004`), which does not require `deployment-service`'s QG to
 be green — the VM-fleet launch itself runs my new script directly (not shipped through the quickmerge pipeline); I'll
 ship the script once this repo goes green again.
+
+### 2026-07-17T14:20Z — data_engineering slot-3 (found while shipping sports_manifest_canonicalisation-002)
+
+Confirmed the SAME root cause (`c8f96e6`'s `cloud-providers.yaml` change) also reds `deployment-api`'s full QG —
+verified pre-existing by reproducing byte-identically on a clean tree at my own committed HEAD (my diff touched only
+`deployment_api/routes/data_status/_downloads.py` + `deployment_api/services/data_status/sports_helpers.py`, neither of
+which references bucket-naming). Not fixing here (outside my dispatched task's scope — sports `KNOWN_COVERAGE_GAPS`
+deletion). My sports commit (`4f4a4fd`) stays local until `deployment-api` goes green again; continuing to ship the
+remaining unaffected repos in my task.
