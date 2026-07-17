@@ -206,6 +206,80 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
 
 ## Progress Log
 
+### 2026-07-17T15:0xZ — data_engineering slot-9 (Todo 3 dispatch — built + ran the single-walk affected-date audit; NOT re-checking fleet state, per the already-flagged redispatch-thrash pattern)
+
+Dispatched this issue doc's Todo 3. Main's coordination message (delivered on this slot's `/progress` heartbeat)
+confirmed the same facts slot-14 documented below: this gap-fill is AUTHORIZED (`BLK-a3149ab4`) and CONSOLIDATED into
+slot-6's already-running 10-VM fleet — my job was specifically to build the travel-affected-date audit (single-walk) and
+hand the list to bound/confirm the fleet's scope, not to launch or re-verify the fleet itself.
+
+**Built `scripts/sports/audit_travel_zero_cumulative_2026_07_17.py`** (features-service@2686f169), modeled on the
+sibling elo issue's `audit_elo_flat_1500_2026_07_17.py` single-walk pattern (manifest-driven DATE discovery, never a raw
+whole-corpus GCS walk). Unlike the elo bug, this defect is NOT per-(date,league) data-dependent — the
+`int()`-vs-stringified-id comparison fails unconditionally on any pre-fix `compute_travel_batch` call, so "affected"
+reduces to "written before the fix" (`features-service@6efefde2`, 2026-07-17T13:19:14Z), a fact already recorded
+per-shard in the availability manifest's `written_at` column — no per-shard content walk needed to build the
+affected-date list itself. Still ran a bounded content-sample validation (never trust the written_at-based inference
+blind, per the craft's north-star #1) before trusting it.
+
+**Real result, run against production data**
+(`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python scripts/sports/audit_travel_zero_cumulative_2026_07_17.py --upload`):
+
+| Metric                                                    | Count                                                                                                                                                                                                 |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Captured `derived_features` dates (manifest, single walk) | 2,667                                                                                                                                                                                                 |
+| Dates with >=1 shard written BEFORE the fix (affected)    | **2,667 (100%)**                                                                                                                                                                                      |
+| Dates entirely written AFTER the fix                      | 0                                                                                                                                                                                                     |
+| Content-sample validation (481 shards, real GCS reads)    | 1,640/1,640 rows (100.0%) match the pre-fix bug signature (`home_travel_distance_km` NaN + all 5 cumulative columns exactly `0.0`), 5 unreadable (tracked separately, not folded into "not affected") |
+
+**Confirms the bounding question directly**: the affected set is the FULL captured historical corpus, not a narrower
+trailing window — there is no smaller `--start` the consolidated fleet could use instead. This matches slot-8's
+consolidation finding and this doc's own Todo 3 wording ("the full 2015→present"). No post-fix comparison sample was
+available yet (0 dates written after 13:19:14Z at audit time) — expected, since the gap-fill fleet had not yet started
+writing when this ran; a future re-run of this script once the fleet completes should show the post-fix side's
+bug-signature rate drop to ~0%, which is the actual closing verification this doc's Todo 3 still needs. Output CSV:
+`gs://features-sports-prd-central-element-323112/_audits/travel_prefix_affected_20260717-135052.csv`.
+
+**Deliberately did NOT re-check `gcloud compute instances list` for the fleet** — slot-14's entry immediately below
+already did that (6th+ consecutive no-op check across this doc + its elo sibling in under 2 hours, already flagged by
+slot-10/slot-12/slot-13 as the "over-watching / no-sawtooth" async-wait anti-pattern, with a park recommendation already
+filed). Adding another identical check here would repeat the same waste this audit was supposed to avoid. **Not flipping
+this checkbox** — the actual gap-fill compute has not completed; that verification (re-run this audit
+post-fleet-completion, expect ~0% bug-signature rate) is still owed. **Endorsing the park recommendation** (park both
+this todo and the sibling elo P2c todo together, condition: fleet completion, no earlier than ~2026-07-18T01:00Z) — this
+audit's own output is now the concrete "confirms full-corpus, not a narrower window" evidence that recommendation was
+missing. `/skip-current-task` after this ships — next dispatch should target ~2026-07-18T01:00Z+, check the fleet for
+`TERMINATED`/absent, then re-run this audit script expecting the post-fix side to show ~0% bug-signature rate before
+flipping Todo 3.
+
+### 2026-07-17T14:37Z — data_engineering slot-11 (Todo 3 re-dispatch — confirmed still no new state; 6th consecutive no-op redispatch on this todo, flagging thrash explicitly for main/operator action)
+
+Re-dispatched this issue doc's Todo 3 four minutes after slot-14's identical check. Queried the fleet directly (Compute
+Engine `aggregated/instances` API, `central-element-323112`, filtered `features-sports-sports-20260717.*` — `gcloud` CLI
+itself is unusable in this slot's sandbox, snap-confine lacks `cap_dac_override`; used `google-auth`+REST via
+`uv run --with google-auth --with requests` against ADC instead): all 10 VMs (`features-sports-sports-20260717-135608` …
+`-135916`) still `RUNNING`, only ~41min elapsed since launch (13:56–13:59Z) against the ~11h ETA — confirms slot-14's
+finding, no new state.
+
+**Not launching a second fleet** (same race/manifest-corruption risk slot-14 flagged). **Not flipping this checkbox** —
+gap-fill has not completed.
+
+**Explicitly flagging the redispatch-thrash pattern for actioning, not just re-noting it**: this is the 6th consecutive
+no-op dispatch across this todo + its sibling elo P2c todo (slot-7 skip, slot-8 skip, slot-4 skip, slot-14 skip, now
+this one) — each one re-derives the identical "fleet still running, ETA ~2026-07-18T01:00Z+" conclusion at real
+worker-dispatch cost. slot-14 already recommended parking both todos behind a fleet-completion prerequisite (`RULES.md`
+§ 4 "Park a task") two dispatches ago; it was not actioned before this redispatch landed. **I could not action the park
+myself**: `data/config/backlog.yaml` is the orchestrator VM's live runtime config (`.gitignore`'d, lives outside any
+slot's git clone — confirmed absent from `.tabs/11/agent-orchestrator`), not reachable from a worker slot's filesystem,
+and there is no `/api/backlog/*` endpoint to set `priority_override`/ `prereqs.prerequisites` remotely (checked
+`agent-orchestrator/dashboard/API_REFERENCE.md` — only `GET /api/backlog`, `GET /api/backlog/{id}/blockers`,
+`DELETE /api/backlog/{id}` exist). This needs main/operator (who has orchestrator-VM filesystem access) to actually set:
+`priority: 999` + `priority_override: true` + a `sports-features-fleet-20260717- complete` prerequisite (seeded `false`
+via `POST /api/prerequisites/...`) on BOTH this todo and the sibling elo P2c todo, then flip the prerequisite `true`
+once the fleet self-terminates (~2026-07-18T01:00Z+, verify via the same `aggregated/instances` query — all 10 named VMs
+`TERMINATED`/absent) and re-verify via real-parquet content sampling before either checkbox is flipped.
+`/skip-current-task` after this.
+
 ### 2026-07-17T14:33Z — data_engineering slot-14 (Todo 3 dispatch — confirmed already covered by the consolidated elo+travel fleet; no new state, skipping)
 
 Dispatched this issue doc's Todo 3 (gap-fill). Per the consolidation directive recorded in the sibling
@@ -347,13 +421,13 @@ sign-off request is already open from the elo issue doc's own gap-fill dispatch)
 consolidation insight to this doc instead, and `/skip-current-task`'d. **Todo 3 checkbox NOT flipped** — the actual
 gap-fill has not happened.
 
-> **⛔ MAIN RULING (2026-07-17 ~14:33Z, agt-46dce4) — fleet-wait: DO NOT re-block on the redispatch cadence.** This gap-fill is
-> covered by the AUTHORIZED consolidated 10-VM full-corpus fleet (`features-sports-*`, launched 13:56-13:59Z, ~11h ETA to
-> ~2026-07-18T01:00Z, SPOT, `launch-features-vm.sh`). If you are re-dispatched this task before the fleet completes: do ONE cheap
-> `gcloud compute instances list | grep features-sports` (or /api state) fleet-status check → if RUNNING, `skip-current-task` fast.
-> **Do NOT file a /blocked question about the redispatch cadence** — main has already ruled it accepted/harmless (BLK-ab91ffa0,
-> BLK-e1428c18) and OWNS flipping `sports-gap-fill-fleet-20260717-complete=true` (EVIDENCE-VERIFIED: manifest coverage on affected
-> dates, ruling out an auth-expiry false-complete) at fleet completion, which un-gates this task for its final verification +
-> checkbox-flip. Just skip-fast until then. Systemic fix filed:
+> **⛔ MAIN RULING (2026-07-17 ~14:33Z, agt-46dce4) — fleet-wait: DO NOT re-block on the redispatch cadence.** This
+> gap-fill is covered by the AUTHORIZED consolidated 10-VM full-corpus fleet (`features-sports-*`, launched
+> 13:56-13:59Z, ~11h ETA to ~2026-07-18T01:00Z, SPOT, `launch-features-vm.sh`). If you are re-dispatched this task
+> before the fleet completes: do ONE cheap `gcloud compute instances list | grep features-sports` (or /api state)
+> fleet-status check → if RUNNING, `skip-current-task` fast. **Do NOT file a /blocked question about the redispatch
+> cadence** — main has already ruled it accepted/harmless (BLK-ab91ffa0, BLK-e1428c18) and OWNS flipping
+> `sports-gap-fill-fleet-20260717-complete=true` (EVIDENCE-VERIFIED: manifest coverage on affected dates, ruling out an
+> auth-expiry false-complete) at fleet completion, which un-gates this task for its final verification + checkbox-flip.
+> Just skip-fast until then. Systemic fix filed:
 > `plans/active/issues/orchestrator_concurrent_qg_saturation_and_dispatch_divergence_2026_07_17.md`.
-

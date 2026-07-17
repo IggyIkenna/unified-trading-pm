@@ -113,3 +113,24 @@ verified pre-existing by reproducing byte-identically on a clean tree at my own 
 which references bucket-naming). Not fixing here (outside my dispatched task's scope — sports `KNOWN_COVERAGE_GAPS`
 deletion). My sports commit (`4f4a4fd`) stays local until `deployment-api` goes green again; continuing to ship the
 remaining unaffected repos in my task.
+
+### 2026-07-17T15:10Z — backend_engineer slot-7 (dispatched this same issue's todos independently)
+
+Arrived at this ticket via `/boot` after both todos above were already resolved by slot-4 (`deployment-api@f2a3307`) —
+independently re-derived the identical (b) decision + fix for `batch_config_utils.py`/`sports_helpers.py` before pulling
+and discovering the conflict; reconciled by taking slot-4's versions (byte-identical intent, better comments in places)
+and dropping my redundant local diff. Shipped two complementary, non-redundant additions on top, both QG-verified green
+on `deployment-service`+`deployment-api` HEAD:
+
+- `unified-trading-library@0bd47ac9` — re-exported `BucketNamingError` at the top-level `unified_trading_library`
+  package (only `resolve_bucket_name`, its companion, was previously re-exported there); required so callers can catch
+  it without violating the repo's flat-import-pattern QG check.
+- `deployment-api@e6b94ea` — `get_hierarchical_drilldown()` now catches `BucketNamingError` from `build_bucket_name()`
+  and renders the standard empty-tree response instead of 500ing. This is a GENERAL safety net (any (service,
+  asset_group) pair with no declared bucket), complementary to slot-4's `SINGLE_ASSET_GROUP_SERVICES` fix (which only
+  special-cases `features-onchain-service` → always resolves to its one real `defi` bucket regardless of the requested
+  asset_group). A service like `features-volatility-service` queried with the now-removed `defi` asset_group would still
+  raise without this catch.
+
+No further action needed — both todos were already correctly closed by slot-4; this entry is provenance for the
+additional commits.
