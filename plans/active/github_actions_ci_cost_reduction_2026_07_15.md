@@ -685,25 +685,30 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       re-derive it, the analysis is complete.** STEP 2c reproduces the behaviour faithfully and deliberately (fixing it
       inside a cost refactor would bundle a silent behaviour change into a diff 22 workflows depend on). SSOT:
       `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.
-- [ ] [INFRA] P2. **STEP 2b — `ci-status-update` warm-VM trim (do it PROPERLY, operator 2026-07-15).** Confirmed
-      structure: `ci-status-update.yml` `update-ci-status` job does `actions/checkout@v5` (L54) +
-      `google-github-actions/auth@v3` (L82) + `pip install google-cloud-firestore` (L104) — ~15s on a warm VM for a
-      1-row write. A plain `runs-on` flip keeps all three (the runner executes the YAML steps in an isolated `_work`,
-      not the VM's warm state). Trim so it uses the warm state: **(1)** the lib is **pre-installed in the runner slot's
-      dedicated venv** (see runner-isolation decision below) — no per-run `pip install`; **(2)** drop the `auth` step —
-      the Firestore client uses the runner user's ADC; **(3)** avoid a fresh clone. Note `ci_status_store.py` only
-      writes one Firestore row from the dispatch payload, so the cleanest form is **pre-stage the script in the runner
-      slot and do NO checkout at all** (lighter than a `git fetch`, and it sidesteps any clone-freshness question).
-      Result: **~2-5s, near-zero boot churn**. Guard the trimmed steps to self-hosted only. Highest-frequency mover
-      (~13k/mo); apply the same pattern to other high-freq movers with redundant setup. **⚠️ AMENDED by the D1
-      resolution (2026-07-17): clause (3) is now "a SPARSE checkout of `.github/actions` + either
-      `scripts/cicd/ci_status_store.py` in the same sparse set or the slot-pre-staged copy"** — the persist composite
-      step resolves `uses: ./…` against the WORKSPACE, so literal zero-checkout is off the table; everything else
-      stands. The 2c conversion (@a6057ea36) deliberately did NOT fold this trim in — one variable at a time on the
-      promote critical path; do the trim as its own small change with its own observation window. Before dropping the
-      `auth` step, PROBE on the box that the ubuntu user's ADC satisfies the python Firestore client in the runner's
-      real environment (`env -i` + unit PATH — gcloud CLI credentials and the ADC file are DIFFERENT stores; the
-      wrapper's Secret-Manager reads prove gcloud, not ADC).
+- [x] ✅ [INFRA] P2. **STEP 2b — DONE (2026-07-17, `unified-trading-pm@1bb13bfb2` → PR #1126 merged).** The required ADC
+      probe ran FIRST, on the box, in the runner's real environment: `env -i HOME=/home/ubuntu` + the unit's PATH,
+      writer-venv python → Firestore write+read+delete OK (and `google-cloud-firestore` confirmed PRE-INSTALLED in
+      `/opt/github-glue-runners/venv`). Trim shipped: (1) per-run `pip install` → an import-check that self-heals if the
+      venv is rebuilt; (2) `google-github-actions/auth@v3` step REMOVED (ambient ADC; restore it if the job ever moves
+      back to hosted); (3) full checkout → sparse (`.github/actions` + `scripts/cicd/ci_status_store.py` only, per the
+      D1 amendment). Original spec below for provenance. Confirmed structure: `ci-status-update.yml` `update-ci-status`
+      job does `actions/checkout@v5` (L54) + `google-github-actions/auth@v3` (L82) +
+      `pip install google-cloud-firestore` (L104) — ~15s on a warm VM for a 1-row write. A plain `runs-on` flip keeps
+      all three (the runner executes the YAML steps in an isolated `_work`, not the VM's warm state). Trim so it uses
+      the warm state: **(1)** the lib is **pre-installed in the runner slot's dedicated venv** (see runner-isolation
+      decision below) — no per-run `pip install`; **(2)** drop the `auth` step — the Firestore client uses the runner
+      user's ADC; **(3)** avoid a fresh clone. Note `ci_status_store.py` only writes one Firestore row from the dispatch
+      payload, so the cleanest form is **pre-stage the script in the runner slot and do NO checkout at all** (lighter
+      than a `git fetch`, and it sidesteps any clone-freshness question). Result: **~2-5s, near-zero boot churn**. Guard
+      the trimmed steps to self-hosted only. Highest-frequency mover (~13k/mo); apply the same pattern to other
+      high-freq movers with redundant setup. **⚠️ AMENDED by the D1 resolution (2026-07-17): clause (3) is now "a SPARSE
+      checkout of `.github/actions` + either `scripts/cicd/ci_status_store.py` in the same sparse set or the
+      slot-pre-staged copy"** — the persist composite step resolves `uses: ./…` against the WORKSPACE, so literal
+      zero-checkout is off the table; everything else stands. The 2c conversion (@a6057ea36) deliberately did NOT fold
+      this trim in — one variable at a time on the promote critical path; do the trim as its own small change with its
+      own observation window. Before dropping the `auth` step, PROBE on the box that the ubuntu user's ADC satisfies the
+      python Firestore client in the runner's real environment (`env -i` + unit PATH — gcloud CLI credentials and the
+      ADC file are DIFFERENT stores; the wrapper's Secret-Manager reads prove gcloud, not ADC).
 - [x] [INFRA] P1. ✅ **Runner-slot design — DONE** (unified-trading-pm@c44ca1bd4). Two-pool design implemented across
       `setup-glue-runners.sh` (slot: `${RUNNER_BASE}/{repo,venv,toolcache}`; `GLUE_COUNT=5`/`WRITER_COUNT=3`; new
       `preflight`), `glue-runner-run.sh` (forks on the `<pool>-<idx>` systemd instance name), and
@@ -828,44 +833,55 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       slice, refresh timer) is UNTESTED end-to-end** · actual runner registration against GitHub. **Do NOT tick this off
       the container pass**; it closes only when a real bare VM runs it. The upcoming planning-VM deploy proves the
       systemd/registration legs; the bare-VM leg stays open until we genuinely rebuild a host.
-- [ ] [INFRA] P2. **Toolchain parity with `ubuntu-latest` (gap found 2026-07-16 — the real migration risk, not
-      isolation).** ⏳ **PARTIAL** (unified-trading-pm@c44ca1bd4): the inventory is measured and
-      `setup-glue-runners.sh preflight` is written (checks `gh`/`jq`/`python3`/`uv`/`aws`/`gcloud`/`git` fatally, `npm`
-      advisory), and the shared `RUNNER_TOOL_CACHE=${RUNNER_BASE}/toolcache` is wired into the wrapper so
-      `actions/setup-python` pays the download cost ONCE across all runners instead of per job. **Still open: run
-      `preflight` ON the box** — nothing here is verified against the real VM yet, so `jq`/`npm` presence remains
-      unknown. Do this at deploy, BEFORE any flip. Hosted images pre-seed a large toolchain; the VM has
-      gcloud/gh/python/uv. MOVE-set inventory: `gh` 181 · `jq` 111 · `python3` 105 · `uv` 32 · `aws` 22 · `gcloud` 16 ·
-      `pip` 15 · `npm` 1. **`docker` = FALSE ALARM** (all 21 hits are a step _named_ `docker-build` that only dispatches
-      to Cloud Build, plus the Artifact Registry hostname in `gcloud artifacts docker images describe`) — nothing
-      invokes the daemon, which independently confirms the classifier's heavy-detection. **Verify `jq` + `npm` on the
-      box at deploy.** Real friction = **`actions/setup-python@v6` on 5 movers** (`cassette-drift-check`,
-      `readiness-verifier`, `reconcile-release-tags`, `removed-symbols-workspace-sweep`, `ruleset-drift-alert`): hosted
-      pre-seeds the tool cache, self-hosted resolves against `RUNNER_TOOL_CACHE` and on a miss downloads/builds a Python
-      **per job** — won't break, but turns a ~5s job slow. Pre-seed the tool cache once at install.
+- [x] ✅ [INFRA] P2. **Toolchain parity — CLOSED on the box (2026-07-17).** `setup-glue-runners.sh preflight` run ON the
+      VM (via SSM): **10/10 tools resolve** in the runner's real PATH — incl. the two unknowns, `jq` (/usr/bin/jq) and
+      `npm` (/usr/bin/npm); py-ver 3.13.13 satisfies the workspace pin. Tool-cache: the shipped wrapper uses
+      **per-slot** `${RUNNER_DIR}/toolcache` (NOTE: this plan's earlier text said shared `${RUNNER_BASE}/toolcache` —
+      the CODE is per-slot; plan text was the drift). Seeding is lazy-per-slot and already working (glue-1's toolcache
+      exists from a natural setup-python run); a stray base-level dir created during verification was removed. Original
+      spec below for provenance. (gap found 2026-07-16 — the real migration risk, not isolation).** ⏳ **PARTIAL**
+      (unified-trading-pm@c44ca1bd4): the inventory is measured and `setup-glue-runners.sh preflight` is written (checks
+      `gh`/`jq`/`python3`/`uv`/`aws`/`gcloud`/`git` fatally, `npm` advisory), and the shared
+      `RUNNER_TOOL_CACHE=${RUNNER_BASE}/toolcache` is wired into the wrapper so `actions/setup-python` pays the download
+      cost ONCE across all runners instead of per job. **Still open: run `preflight` ON the box** — nothing here is
+      verified against the real VM yet, so `jq`/`npm` presence remains unknown. Do this at deploy, BEFORE any flip.
+      Hosted images pre-seed a large toolchain; the VM has gcloud/gh/python/uv. MOVE-set inventory: `gh` 181 · `jq` 111
+      · `python3` 105 · `uv` 32 · `aws` 22 · `gcloud` 16 · `pip` 15 · `npm` 1. **`docker` = FALSE ALARM** (all 21 hits
+      are a step _named_ `docker-build` that only dispatches to Cloud Build, plus the Artifact Registry hostname in
+      `gcloud artifacts docker images describe`) — nothing invokes the daemon, which independently confirms the
+      classifier's heavy-detection. **Verify `jq` + `npm` on the box at deploy.** Real friction =
+      **`actions/setup-python@v6` on 5 movers** (`cassette-drift-check`, `readiness-verifier`, `reconcile-release-tags`,
+      `removed-symbols-workspace-sweep`, `ruleset-drift-alert`): hosted pre-seeds the tool cache, self-hosted resolves
+      against `RUNNER_TOOL_CACHE` and on a miss downloads/builds a Python **per job\*\* — won't break, but turns a ~5s
+      job slow. Pre-seed the tool cache once at install.
 - [ ] [VERIFY] P1. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it is
       what produced this plan's notify-slack numbers, and the measurement took THREE attempts to get right: skipped jobs
       are not billed, and a throttled API call silently counts as 0). After 3–5 days, re-measure PM's billed minutes
       (ledger); confirm the moved workflows bill ~$0 and the VM absorbed the load without contention (slice
       `MemoryCurrent` < 8G, orchestrator load unaffected).
-- [ ] [DOCS] P2. **Codex: write down the self-hosted-glue security posture (operator 2026-07-16 — important, not
-      blocking).** On self-hosted runners the runner user carries the VM's **ambient cloud identity** (ADC + AWS-WIF) —
-      STEP 2b drops the per-job `auth` step _precisely because_ of this — so every glue job runs with the runner slot's
-      cloud creds, a wider blast radius than GitHub-hosted's scoped short-lived tokens. Mitigation posture to record: a
-      **dedicated low-privilege runner user + scoped service account** (separate from the orchestrator SA), the runner
-      in its own isolated slot (already decided); and **if the exposure ever becomes a real concern, move the runners to
-      a dedicated VM** (operator's stated fallback). Update `codex/05-infrastructure/` (runner conventions) +
-      `codex/07-security/`. Reduced severity given the slot-isolation; documented so the posture is explicit. **Two
-      facts MEASURED on the box at D4/D6 (2026-07-16) that this doc must record, because both correct a claim the design
-      comments currently make:** (1) **the JIT config is passed as a COMMAND-LINE ARG**
-      (`run.sh --jitconfig     <base64>`), so the blob — which decodes to `.credentials` incl. the auth URL and RSA
-      params — is visible in `ps` to any local user. Single-use and auto-deregistered, and the box is effectively
-      single-tenant (`ubuntu` + root, and the AO already runs as `ubuntu`), so this is consistent with the accepted
-      isolation scope — but it is NOT the "no credential exposure" the JIT-vs-long-lived framing implies. (2) **the
-      ephemeral pool DOES write `.credentials` / `.credentials_rsaparams` / `.runner` to disk**, contradicting the
-      letter of `glue-runner-run.sh`'s "No long-lived `.credentials` on disk". The spirit holds — they are single-use,
-      replaced each cycle, and belong to an already-deregistered runner — but the wrapper wipes only `_work`/`_diag`, so
-      a stale (useless) credential file persists between cycles. Fix the comment, and decide whether to wipe them too.
+- [x] ✅ [DOCS] P2. **DONE (2026-07-17, `unified-trading-pm@1bb13bfb2`):
+      `codex/07-security/self-hosted-runner-security-posture.md`** — ambient-identity posture, BOTH measured
+      JIT/credential facts (recorded verbatim as corrections to the design comments), the mitigation ladder, and the
+      hosted↔self-hosted auth-model rules (incl. the STEP 2b probe requirement). The `glue-runner-run.sh` comment
+      correction is DEFERRED deliberately — that file carries the operator's live token-refresh WIP (slot 1); editing it
+      now risks a mid-flight collision. Original spec: (operator 2026-07-16 — important, not blocking).** On self-hosted
+      runners the runner user carries the VM's **ambient cloud identity** (ADC + AWS-WIF) — STEP 2b drops the per-job
+      `auth` step _precisely because_ of this — so every glue job runs with the runner slot's cloud creds, a wider blast
+      radius than GitHub-hosted's scoped short-lived tokens. Mitigation posture to record: a **dedicated low-privilege
+      runner user + scoped service account** (separate from the orchestrator SA), the runner in its own isolated slot
+      (already decided); and **if the exposure ever becomes a real concern, move the runners to a dedicated VM**
+      (operator's stated fallback). Update `codex/05-infrastructure/` (runner conventions) + `codex/07-security/`.
+      Reduced severity given the slot-isolation; documented so the posture is explicit. **Two facts MEASURED on the box
+      at D4/D6 (2026-07-16) that this doc must record, because both correct a claim the design comments currently
+      make:** (1) **the JIT config is passed as a COMMAND-LINE ARG** (`run.sh --jitconfig     <base64>`), so the blob —
+      which decodes to `.credentials` incl. the auth URL and RSA params — is visible in `ps` to any local user.
+      Single-use and auto-deregistered, and the box is effectively single-tenant (`ubuntu` + root, and the AO already
+      runs as `ubuntu`), so this is consistent with the accepted isolation scope — but it is NOT the "no credential
+      exposure" the JIT-vs-long-lived framing implies. (2) **the ephemeral pool DOES write `.credentials` /
+      `.credentials_rsaparams` / `.runner` to disk\*\*, contradicting the letter of `glue-runner-run.sh`'s "No
+      long-lived `.credentials` on disk". The spirit holds — they are single-use, replaced each cycle, and belong to an
+      already-deregistered runner — but the wrapper wipes only `_work`/`_diag`, so a stale (useless) credential file
+      persists between cycles. Fix the comment, and decide whether to wipe them too.
 - [x] ✅ [OPERATOR-DECISION] P2. **Failure-independence RESOLVED (operator 2026-07-16 — the review's #2).** The 4
       CI-health watchers (`ci-health`, `cloud-build-failure-watcher`, `ldr-ci-monitor`, `branch-health`) **STAY HOSTED**
       (`KEEP-M`) alongside `overnight-dead-man-switch` — GitHub-hosted is the right home for light monitors whose value
@@ -894,10 +910,14 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       job's roll-up logic is untouched (slices report job-success), so the required `quality-gates-v2` context posts
       SUCCESS — the same battle-tested wiring A2's proof exercised. **docs_only runs do NOT save A2 green markers** (a
       marker must certify a real full-gate pass). `docs_only` exposed as a caller output; `dispatch-cloud-build` gated
-      on it in the PM caller + the canonical template (fleet template ROLLOUT DEFERRED — batch with A5's template edits;
-      ~24 full gate runs to deliver a 1-min/docs-push saving is a bad trade standalone; fleet copies' behavior meanwhile
-      unchanged). Fail-safe: API error / no diff base / empty changeset ⟹ docs_only=false ⟹ full gate. Live proof of the
-      docs-only path = the very next docs-only PR (this flip commit): evidence appended below on landing.
+      on it in the PM caller + the canonical template. **Fleet caller-copy rollout: DEFERRED INDEFINITELY (measured
+      verdict 2026-07-17)** — A5 made no template edits so the planned batching evaporated, and a standalone rollout is
+      a bad trade: docs corpora live in PM (service repos' docs-only main-pushes are rare ⟹ near-zero benefit), while
+      the rollout itself would cost ~22 full gate runs PLUS ~22 spurious image rebuilds (each caller-copy commit is a
+      code push to main that fires the very dispatch being gated). The canonical template carries the gate, so the next
+      REAL template rollout inherits it for free. Fail-safe: API error / no diff base / empty changeset ⟹
+      docs_only=false ⟹ full gate. Live proof of the docs-only path = the very next docs-only PR (this flip commit):
+      evidence appended below on landing.
 - [x] ✅ [INFRA] P1. **A2 — SHIPPED + PROVEN LIVE (2026-07-17).** `unified-trading-pm@c535ec087` (PR #1122 merged → main
       run 29584743727 green → backmerged; **fleet-live: LDR reusable blob `625ba14e9`**). Rebuilt the
       byte-identical-tree skip on **Firestore `qg_green_markers/{key}`** (probe in `content-gate`, green-only save in
@@ -937,9 +957,19 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
     own `GITHUB_TOKEN`.) The `sit_validated_tree`/`sit_validated_workspace_digest` fields cited above are SIT-lifecycle
     fingerprints (ldr_main promote path) — they can seed a hit for the promote-PR case but do NOT cover general
     per-branch v2 greens.
-- [ ] [INFRA] P2. **A5 — collapse the fan-out (operator: measure-then-collapse).** Confirm the merged
-      `typecheck`+`lint-codex` leg stays under the pytest leg on the slowest repo, then merge + fold the sub-minute jobs
-      (content-sentinel/Slack/dispatch). Target ~30–40% fewer billed job-minutes/run, no coverage loss.
+- [x] ✅ [INFRA] P2. **A5 — MEASURED then COLLAPSED (2026-07-17, `unified-trading-pm@1bb13bfb2` → PR #1126).** **Measure
+      (23 repos, real run timings via the jobs API):** merged typecheck+lint stays UNDER the tests leg on every slow
+      repo (features-service 213s vs 460s; UTL 162s vs 353s; UAC 163s vs 273s); on small repos it exceeds tests by
+      ~20-30s wall — accepted for ~1 setup (~50s) + 1 billed job-minimum saved on EVERY full run fleet-wide.
+      **Collapse:** matrix `[tests, typecheck, lint-codex]` → `[tests, checks]`; the checks leg runs BOTH selectors
+      sequentially (both run even if the first fails — verdict parity), failure markers carry the SELECTOR name so the
+      aggregate's qg_red_reason mapping is unchanged; `check_qg_slice_completeness.py` now asserts the merged-leg
+      SELECTORS line so a dropped selector fails the gate instead of silently losing coverage. A1 interplay: docs_only
+      skips the tests leg at job level and the typecheck selector INSIDE checks. **Live proof:** PR #1126's own run —
+      exactly 2 slice jobs, tests=113s checks=130s, aggregate green. **Sub-minute jobs verdict (measured, NOT folded):**
+      content-gate stays (it is A2's probe and pays for itself on every HIT — organic hits already observed, e.g. UTL
+      14:34Z same-day); Slack/supersede/dispatch jobs run only on failure/conditional paths (skipped jobs bill $0).
+      Slice count per full run: 5 jobs → 4.
 - [ ] [VERIFY] P2. Re-measure a representative QG run's billed job-minutes + the docs-PR / identical-tree skip rates
       before/after (ledger + run counts).
 
@@ -949,12 +979,19 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       Re-inspection: `ldr-to-main-promote` is **PM-only** and `ldr-to-main-promote-fleet` serves the **23 `ldr_main`
       repos** (PM excluded, `promotion_model` unset) — disjoint scopes, complementary, NOT duplicates. Optional future
       consolidation only (moot once self-hosted at $0).
-- [ ] [INFRA] P2. Slow promotion/health crons from `*/15` toward **hourly** (or purely event-driven off the promotion PR
-      event) during freeze; keep the event path for real-time needs. Lower priority once these are on self-hosted, but
-      fewer idle boots is cleaner regardless.
-- [ ] [INFRA] P3. **Debounce `ci-status-update`** — coalesce multiple repo reports arriving within a short window into
-      one write instead of N runner boots (careful to preserve the CAS + stale-write ordering the Firestore store relies
-      on).
+- [x] ✅ [INFRA] P2. **Cron cadence DONE (2026-07-17, `unified-trading-pm@1bb13bfb2`).** Slowed to hourly: `ci-health`
+      (_/15→1h — the `ci-failure-alert` dispatch wakes it in seconds on real failures; cron is pure backstop),
+      `branch-health` (_/30→1h, state-transition dedup means no alert is lost), `cloud-build-failure-watcher` (_/30→1h),
+      `freeze-deferred-build-replay` (_/30→1h), `staging-to-main` (\*/15→1h — staging is the bypassed fallback path
+      fleet-wide). **Three of these are the deliberately-HOSTED watchers, so this cuts real billed boots, not just VM
+      churn.** Deliberately NOT slowed: `ldr-to-main-promote` + the fleet promote (SLA-bearing, $0 on glue) and
+      `reconcile-release-tags` (pending the operator's D3 deletion verdict).
+- [x] ✅ [INFRA] P3. **Debounce `ci-status-update` — CLOSED AS NOT-WORTH-IT (measured verdict, 2026-07-17).** The
+      premise ("N runner boots") predates STEP 2/2b: the job now runs on a WARM writer slot in ~2-5s at $0, so a
+      debounce saves nothing measurable — while the coalescing logic would sit exactly on the CAS + `is_stale_write`
+      ordering that keeps `ci_status` honest, and this workflow's own header records the last time batching-style
+      cleverness here dropped transitions (the `manifest-update` concurrency-group cancellation class). Zero benefit,
+      real risk: closed. Reopen only if the writer pool ever shows contention.
 
 ### Phase 4 — Serverless (B2) — DROPPED (operator 2026-07-15)
 
@@ -1003,6 +1040,15 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   overlaps)
 
 ## Progress Log
+
+- 2026-07-17 (PM, evening) — **Plan-completion sweep (operator: "complete it fully except the billing measurement")**:
+  A5 measured-then-collapsed, STEP 2b probed-then-trimmed, toolchain parity closed on the box, 5 crons slowed, debounce
+  closed as not-worth-it, security codex SSOT written — all in `1bb13bfb2` (PR #1126, merged; evidence in each ✅ todo).
+  Verdicts that reversed under measurement, recorded so they aren't re-litigated: (1) the fleet caller-template rollout
+  was DROPPED (near-zero benefit — docs corpora live in PM — vs ~22 gate runs + ~22 spurious image rebuilds); (2)
+  content-gate is NOT folded (it is A2's probe; organic HITs observed same-day); (3) the ci-status debounce died on its
+  own premise (warm writer slot ≈ $0). VM facts measured via SSM this pass: preflight 10/10, ADC-for-python-Firestore
+  proven under `env -i`, per-slot toolcache lazy-seeding already working (glue-1).
 
 - 2026-07-17 (PM, later) — **A1 shipped** (`e5b22fddc`, PR #1124; evidence in the ✅ A1 todo). Session context worth
   keeping:
@@ -1650,13 +1696,13 @@ prove on ONE caller → only then fan out._
 
 ### Not done — blocked on nobody, real work
 
-| #   | Item                                                       | State                                                                                                                                                      |
-| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | ~~A2 — content-gate dedup~~                                | ✅ **SHIPPED + PROVEN 2026-07-17** — see the A2 todo's evidence block (c535ec087; alerting-service runs 29584946980 MISS+save / 29585163847 22s HIT+skip). |
-| 2   | ~~A1 — docs-only fast-path~~                               | ✅ **SHIPPED 2026-07-17** — see the A1 todo's evidence block (e5b22fddc, PR #1124; fleet template rollout deferred to batch with A5).                      |
-| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                                 |
-| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                                   |
-| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                            |
+| #   | Item                             | State                                                                                                                                                      |
+| --- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ~~A2 — content-gate dedup~~      | ✅ **SHIPPED + PROVEN 2026-07-17** — see the A2 todo's evidence block (c535ec087; alerting-service runs 29584946980 MISS+save / 29585163847 22s HIT+skip). |
+| 2   | ~~A1 — docs-only fast-path~~     | ✅ **SHIPPED 2026-07-17** — see the A1 todo's evidence block (e5b22fddc, PR #1124; fleet template rollout deferred to batch with A5).                      |
+| 3   | ~~A5 — collapse the QG fan-out~~ | ✅ **DONE 2026-07-17** — measured 23 repos then collapsed to `[tests, checks]` (1bb13bfb2, PR #1126; live proof in its own run).                           |
+| 4   | ~~Security-posture codex doc~~   | ✅ **DONE 2026-07-17** — `codex/07-security/self-hosted-runner-security-posture.md`.                                                                       |
+| 5   | ~~Cron cadence · debounce~~      | ✅ **DONE 2026-07-17** — 5 health/backstop crons hourly (3 are HOSTED watchers = real $); debounce CLOSED not-worth-it (warm slot ~2-5s @ $0; CAS risk).   |
 
 ### Cannot be done yet — waiting, NOT neglected
 
