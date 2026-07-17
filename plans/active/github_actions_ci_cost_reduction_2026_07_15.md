@@ -351,8 +351,17 @@ though we still keep heavy test jobs on hosted runners to avoid loading our own 
       `classify-glue-workflows.sh`, `README.md` (runbook). Runner pinned **v2.335.1** + sha256; PAT can register (JIT
       verified); all glue is in PM so **repo-scoped runners**, no per-repo fan-out. shellcheck-clean. **Deploy step
       pending operator go** (run `setup-glue-runners.sh install` on the VM with an admin PAT).
-- [ ] [REVIEW] P1. **Security gate:** the `classify-glue-workflows.sh` split is **39 MOVE / 17 KEEP** (see pre-flight
-      § + §"MOVE / STAY manifest"). KEEP = the 4 test/PR gates + `KEEP*` builders (`build-smoke-all-repos`/
+- [x] [REVIEW] P1. ✅ **Security gate — CLEARED on evidence 2026-07-17, all three legs measured** (not assumed; this is
+      the gate that should precede any flip, since fork-PR code on a self-hosted runner is THE classic self-hosted
+      vulnerability — arbitrary code on our own VM). (1) `gh api repos/…` → **`private=true`, `visibility=private`** ⇒
+      no anonymous fork PRs. (2) **STRONGEST leg — of the 37 workflows now carrying `runs-on: [self-hosted, …]`, ZERO
+      trigger on `pull_request` or `pull_request_target`** ⇒ even if the repo were public, no self-hosted job would ever
+      execute PR-authored code. (3) `actions/permissions/access` → **`access_level=user`**. **Count correction**: the
+      split below reads "39 MOVE / 17 KEEP" — it is **37 MOVE / 18 KEEP** (37 flippable). `agent-audit` was reclassified
+      **`KEEP-U`** (it has NO `runs-on:` at all — a pure reusable caller; the original profile never asked that
+      question), and `persist-cicd-event` is **`MOVE-C`** (composite-action conversion, STEP 2c — not a flip). Original
+      text retained below. **Security gate:** the `classify-glue-workflows.sh` split is **39 MOVE / 17 KEEP** (see
+      pre-flight § + §"MOVE / STAY manifest"). KEEP = the 4 test/PR gates + `KEEP*` builders (`build-smoke-all-repos`/
       `publish-package`) + `KEEP-T` templates (4) + **`KEEP-R` cross-repo reusable `image-build-validate`** + **`KEEP-M`
       failure-independence monitors (5)** (`overnight-dead-man-switch`, `ci-health`, `cloud-build-failure-watcher`,
       `ldr-ci-monitor`, `branch-health`) + **`KEEP-D` alert carrier `notify-slack`**. Confirm the MOVE set carries no
@@ -608,6 +617,32 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       still caught off-box. **1 of 37 DELIBERATELY NOT FLIPPED — `cassette-drift-check`**: flipping it would ACTIVATE a
       bug its own breakage was masking (see the finding below + issue doc). Remaining: STEP 2b trim · STEP 2c convert.
       (Takes effect on push — do NOT push until the runners are live, else those workflows queue with no runner.)
+- [ ] [INFRA] P2. **STEP 2d — assert-not-decorative on the mover set (NEW, from this plan's own audit 2026-07-17).** **3
+      of the 37 movers were long-dead silent no-ops** — `digest-drift-sweep` (never worked), `reconcile-release-tags`
+      (dead since D13), `cassette-drift-check` (dead ~4 months, 52 false issues). **~8% of the audited surface was
+      decorative, and NONE of it was caused by the flip** — the flip is simply what made someone read the logs. All
+      three are BACKSTOPS whose healthy output and dead output are the SAME STRING (`Dispatched: 0` / `created 0 tag(s)`
+      / a green job that never ran its check). **The cheapest workflow is one that does not run**:
+      `reconcile-release-tags` alone burns ~48 no-op runs/day, so deleting dead glue beats moving it. Deliverable: a
+      cheap recurring check that a mover's "did work" counter is not 0 on EVERY run for N days (and that "I did nothing"
+      and "I could not look" are DIFFERENT exit states — the one-line assertion that would have caught all three on day
+      one). Generalises `codex/02-data/honest-absence-downstream-handling.md` from data to automation.
+- [ ] [INFRA] P2. **DELETE `reconcile-release-tags` (verdict reached 2026-07-17; saves ~48 no-op runs/day).** NOT a fix
+      — a deletion. It is impossible as written (reads the static pyproject version D13 deleted), redundant with
+      `assert_version_coherence.py` (which WAS migrated and already emits the `tag-ok`/`tag-MISS` check), and its remedy
+      INVERTS D13 (minting a release tag because a JSON cache said so would invent a release that never happened).
+      Measured: every repo is `tag-ok`; exactly 1 of 24 (PM) is manifest-ahead, and per D13 that is a cache split, not a
+      missing tag. **Confirm nothing dispatches it first** (it has a `repository_dispatch: [reconcile-release-tags]`
+      trigger). SSOT: `plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md`.
+- [ ] [REVIEW] P2. **OPERATOR DECISIONS on cassette-drift-check (fixed + flipped 2026-07-17, but two calls are yours).**
+      (a) **Close the 52 open false `[Cassette Drift]` issues** in `unified-api-contracts` (each self-refuting: "Total
+      cassettes checked: 0 / Drifted: 0 / No report file found" under a "Drift Detected" title). (b) **The 02:00 cron
+      now opens a REAL 28-item issue** — but per FINDING #4 the detector's cassette→model matching is a lottery
+      (filename stem only, venue discarded, substring match over 2172 models; 15 of the 28 are generic stems), so the
+      report is part real drift, part artifact. Fixing it is a UAC change + a design call (should `bitget/ticker.yaml`
+      validate against a venue-specific model or the canonical one?). **Ikenna owns the cassette-count verification
+      (operator 2026-07-17) — do not duplicate it.** SSOT:
+      `plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
 - [ ] [INFRA] P2. **STEP 2c — convert `persist-cicd-event` to a composite action (operator 2026-07-16, option C).**
       Rewrite the reusable workflow as `.github/actions/persist-event/action.yml` (a composite action wrapping the same
       build-JSON + GCS/S3/log-only write steps), then change all **22 callers** (5 KEEP + 17 MOVE) from
@@ -1357,3 +1392,58 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   `cassette-drift` label — so when REAL drift lands, nobody looks. **The fix stops the empty issues** (a real report is
   produced now), but per FINDING #4 the report is not yet trustworthy. **Operator asks: (a) close the 52 false issues?
   (b) fix the matching in UAC before the cron opens another?** Issue doc updated.
+- 2026-07-17 — **Security gate CLEARED on measured evidence — and it should have been ticked BEFORE the flip, not
+  after.** Process note worth keeping: STEP 2 was flipped across batches 1-3 while this `[REVIEW] P1` gate sat unticked.
+  It happens to CLEAR cleanly (private repo · **ZERO** of the 37 self-hosted workflows carry a `pull_request` /
+  `pull_request_target` trigger · `access_level=user`), so no exposure was created — but "it cleared" was luck of
+  ordering, not diligence. The strongest leg is the trigger audit, not the private flag: privacy can be changed by a
+  settings toggle, whereas "no self-hosted workflow runs on PR-authored code" is a property of the workflows themselves
+  and survives that toggle. **Re-run the trigger audit before adding a `pull_request` trigger to ANY self-hosted
+  workflow** — that, not repo visibility, is the invariant that keeps arbitrary PR code off the VM.
+
+## Deferred work after 2026-07-17
+
+STEP 2 is **DONE (37/37 movers on the pool, zero-billed, verified)**. Everything below is what remains, why it is not
+done, and what the next session should NOT re-derive.
+
+| #   | Item                                                                   | State / why deferred                                                                                                                                                                                                               | Blocked on           |
+| --- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| 1   | **A2 — content-gate dedup** (byte-identical-tree skip)                 | **RECOMMENDED NEXT.** P1, the largest remaining real saving, and the only P1 blocked on nothing — not on elapsed time, not on the operator.                                                                                        | nobody — just do it  |
+| 2   | **A1 — docs-only fast-path**                                           | P1, natural follow-on to A2 (same committed-diff machinery).                                                                                                                                                                       | nobody               |
+| 3   | **STEP 2c — `persist-cicd-event` → composite action**                  | P2. This is what finally kills the 1-min-minimum tax on the reusables we watched stay hosted all day. Do NOT flip its `runs-on` (5 KEEP hosted callers would hang).                                                                | nobody               |
+| 4   | **STEP 2b — `ci-status-update` warm-VM trim**                          | P2. Already on `glue-writer`; the trim is the optimisation, not a prerequisite.                                                                                                                                                    | nobody               |
+| 5   | **STEP 2d — assert-not-decorative** (NEW)                              | P2. Born from this plan's audit: 3 of 37 movers were dead. Cheaper than the flip and finds more.                                                                                                                                   | nobody               |
+| 6   | **DELETE `reconcile-release-tags`** (NEW)                              | P2, verdict reached + evidenced. ~48 no-op runs/day. Check nothing dispatches it first.                                                                                                                                            | nobody               |
+| 7   | Re-measure billed minutes (`measure-billed-notify-cost.sh`)            | P1 but **needs 3-5 days of elapsed data**. The flip landed 2026-07-17 — there is nothing to measure yet. Not work; waiting.                                                                                                        | the calendar         |
+| 8   | Two-week billing-ledger comparison vs the Phase-0 baseline             | P3, same reason. Earliest ~2026-07-31.                                                                                                                                                                                             | the calendar         |
+| 9   | **Bootstrap on a bare host** (`PARTIAL`)                               | P1. Container leg passes; systemd / IMDS / GCP ADC / runner registration **structurally cannot** be exercised in a container. Only closes on a real host rebuild.                                                                  | a genuine VM rebuild |
+| 10  | **Rotate `GH_PAT`**                                                    | P1. **Operator-owned and deliberately LAST** (operator 2026-07-16: after the plan completes; assessed as no security risk). If the digest fix lands first, the new PAT must carry cross-repo `contents:read` + `POST /dispatches`. | operator             |
+| 11  | Cassette operator decisions (close 52 false issues / fix UAC matching) | P2. **Ikenna owns cassette-count verification** (operator 2026-07-17) — do not duplicate.                                                                                                                                          | operator / Ikenna    |
+| 12  | Security-posture codex doc                                             | P2 docs.                                                                                                                                                                                                                           | nobody               |
+| 13  | Cron cadence `*/15` → hourly · `ci-status-update` debounce             | P2 / P3, small.                                                                                                                                                                                                                    | nobody               |
+| 14  | `quickmerge.sh --agent` sentinel race                                  | P1, **written up; operator will fix later** (operator 2026-07-16). Workaround in use: chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell.                                                                             | operator             |
+
+### Findings parked for later — do NOT re-investigate, they are fully written up
+
+| Issue doc                                                              | One-line verdict                                                                                                                                                                                                                                                     |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `digest_drift_sweep_silent_noop_github_token_scope_2026_07_16`         | Never worked (PM-scoped token). Fixing it dispatches to **15 of 16 repos** — measured, re-runnable via `scripts/propagation/simulate-digest-drift-sweep.sh`. **The 15 is a SYMPTOM: the primary cascade has also been dormant since 2026-06-28.** Answer that first. |
+| `reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17`   | **DELETE, do not fix.** The earlier "re-source from the manifest" idea was wrong and would have made it confidently wrong instead of harmlessly dead.                                                                                                                |
+| `d13_orphaned_version_readers_and_manifest_drift_2026_07_17`           | D13 migrated SOME version-readers. `sync-manifest-versions.py` still reads the deleted field; `versions{}` lags the tags for 9/24 repos; `assert_version_coherence.py` exits 1 with 24 violations while QG passes EXIT=0.                                            |
+| `cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17` | **FIXED + FLIPPED.** Residual: the UAC detector's model-matching is a lottery (finding #4) + 52 false issues to close (finding #5).                                                                                                                                  |
+
+### Hard-won context the next session should inherit rather than rediscover
+
+- **Evidence shape**: a run-level `runner_name` is MEANINGLESS for a cross-boundary workflow — a glue job + a hosted
+  KEEP-D/MOVE-C job in one run is BY DESIGN. **Always read per-JOB.** (I truncated that column once and was ~1 minute
+  from reporting "5 workflows silently failed to move".)
+- **Billing**: `/timing.billable.total_ms` **UNDER-REPORTS — it returns 0 for jobs that plainly ran.** GitHub bills a
+  **1-minute minimum PER JOB**, so COUNT JOBS, never ms. `billable: {}` (no UBUNTU key at all) is the real zero.
+- **Never `2>/dev/null` a measurement.** `gh api` has no `--arg` flag; swallowing that error rendered a broken query as
+  a clean "0 runs overnight" — the literal `curl -sf || echo ""` bug this plan documented, committed by me a day later.
+  Also: `gh api --paginate --jq '[...]'` emits **one array PER PAGE**, so `jq length` counts only the first.
+- **Cron delivery measured ~80-90%**, NOT the ~37% in CLAUDE.md's throttle note (hourly crons landed 9/10; `*/30` landed
+  16/20). Re-check that figure before tuning any cooldown to it.
+- **The security invariant is the TRIGGER AUDIT, not the private flag** — visibility is a settings toggle; "no
+  self-hosted workflow carries a `pull_request` trigger" is a property of the workflows and survives it. Re-run it
+  before adding such a trigger to any self-hosted workflow.
