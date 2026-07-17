@@ -9,7 +9,7 @@ summary: >
   no entry for asset_group='cefi'`. This is pre-existing relative to my diff (a single untracked bash script pytest
   never touches) — confirmed by reading the failing assertion trace directly to `c8f96e6`'s own commit message, which
   explicitly says it dropped asset-group keys from the bucket-naming config.
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -31,7 +31,7 @@ depends_on: []
 gate_on_depends: false
 last_updated: 2026-07-17
 locked_by:
-resolved_by:
+resolved_by: backend_engineer slot-4 (deployment-api@f2a3307)
 ---
 
 # deployment-service QG RED — bucket-naming regression from c8f96e6
@@ -78,15 +78,22 @@ not something I should absorb into an unrelated sports gap-fill dispatch.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Decide + implement (a) or (b) above for the `features-onchain`/`cefi` bucket-naming gap `c8f96e6`
+- [x] [BACKEND] P1. Decide + implement (a) or (b) above for the `features-onchain`/`cefi` bucket-naming gap `c8f96e6`
       introduced, then confirm `bash scripts/quality-gates.sh` is green on `deployment-service` HEAD. (repo:
-      deployment-service, unified-trading-library)
-- [ ] [BACKEND] P1. Same root cause also breaks `deployment-api` — `deployment_api/routes/batch_config_utils.py:61`
+      deployment-service, unified-trading-library) — ✅ deployment-service@4bd3a46 (unchanged; bug lived entirely in
+      deployment-api's peer-dep code). `bash scripts/quality-gates.sh` full run: ALL QUALITY GATES PASSED, sentinel
+      written for 4bd3a46.
+- [x] [BACKEND] P1. Same root cause also breaks `deployment-api` — `deployment_api/routes/batch_config_utils.py:61`
       calls `resolve_bucket_name(cloud="gcp", kind="features-onchain", asset_group="cefi")`, which now raises
       `BucketNamingError` (collection errors in `test_batch_config_utils.py` / `test_batch_query_engine.py` /
       `test_batch_result_processor.py` + 1 failure in `test_data_status_hierarchical.py`). Apply the SAME decision
       (a)/(b) to this callsite too, then confirm `bash scripts/quality-gates.sh` is green on `deployment-api` HEAD.
-      (repo: deployment-api)
+      (repo: deployment-api) — ✅ deployment-api@f2a3307 (option (b): dropped the invalid features-onchain/CEFI +
+      features-volatility/DEFI bucket entries, aligned `_SERVICE_CATEGORY_RESTRICTIONS` + its mock mirror, made
+      `build_bucket_name()` service-keyed for single-asset-group services, dropped the dead `is_in_known_gap` import).
+      This commit was pushed by a concurrent slot (slot-2) mid-investigation — I independently re-derived the identical
+      fix, discarded my redundant local diff, fast-forwarded to their commit, and confirmed
+      `bash scripts/quality-gates.sh` full run: ALL QUALITY GATES PASSED (134s), sentinel written for f2a3307.
 
 ## Progress Log
 
