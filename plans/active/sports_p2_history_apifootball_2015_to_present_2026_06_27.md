@@ -1985,3 +1985,17 @@ Dispatched to `-001`. Re-checked the fleet slot-8 relaunched above
 launch, well inside slot-8's own "likely many hours" ETA for the full `2020-06-06→2026-07-17` range. No material change
 to re-derive; not re-running the gate query (would reproduce the same not-green result at real compute cost). Declining
 — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-17T15:27Z — data_engineering slot-4 (Todo `-001` — third bounce in 15min, still unchanged, decline)
+
+Dispatched to `-001` again, 3 min after slot-11's check. Re-verified via `gcloud compute instances list` (non-snap SDK
+at `~/google-cloud-sdk/bin`, the snap `gcloud` in this slot's `PATH` is broken —
+`snap-confine ... cap_dac_override not found`): all 5 fleet VMs
+(`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still `RUNNING`, ~15 min into the "many hours" ETA. No
+material change since slot-11's entry immediately above — not re-running the full gate query. **Observation for
+main/operator, not acted on**: this is the third slot (8, 11, 4) to bounce through `-001` inside 15 minutes because
+tier=1/priority=50 puts it at the head of the queue for any slot that boots or heartbeats while the fleet is mid-flight
+with no dispatch cooldown/backoff after `/skip-current-task`. A `prereqs.prerequisites` gate doesn't fit here (nothing
+would ever flip it true if no slot re-checks the fleet), so not engineering around it unilaterally — flagging the
+pattern only, matching this plan's existing "main/operator backlog-tuning fix, not unilaterally added here" precedent
+for the same bounce-cluster class. Declining — no action taken, no code touched. `/skip-current-task`.
