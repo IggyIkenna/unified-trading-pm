@@ -684,7 +684,11 @@ done
 if [[ -z "${_prek_bin}" ]]; then
     log "[hook-heal:WARN] prek not found (PATH / ~/.local/bin / .venv-workspace/bin / PM .venv/bin) — pre-commit hooks NOT installed this tick; install with 'uv tool install prek'"
 fi
-_pp_guard="${_ws_root}/unified-trading-pm/scripts/dev/hooks/pre-push-strict-quickmerge.sh"
+# The ONE canonical pre-push source (strict-quickmerge + dep-alignment, chained). Must match
+# install-hooks.sh's HOOK_SOURCE and setup-tab-worktrees.sh — three installers previously raced over
+# this same destination with two different sources, and the loser (dep-align-only) won in all 25
+# clones, so nothing was enforced off staging (2026-07-17).
+_pp_guard="${_ws_root}/unified-trading-pm/scripts/hooks/pre-push"
 for _clone in "${_ws_root}"/*/ "${_ws_root}"/.tabs/*/*/; do
     _clone="${_clone%/}"
     [[ -e "${_clone}/.git" && -f "${_clone}/.pre-commit-config.yaml" ]] || continue
@@ -705,7 +709,13 @@ for _clone in "${_ws_root}"/*/ "${_ws_root}"/.tabs/*/*/; do
             fi
         fi
     fi
-    if [[ ! -f "${_pp_hook}" && -f "${_pp_guard}" ]]; then
+    # CONTENT-gated, not existence-gated. The old `! -f "${_pp_hook}"` test could NEVER fire: a
+    # pre-push file always already existed (install-hooks.sh copies one into every clone), so this
+    # "self-heal" spent months re-affirming a hook that enforced nothing off staging. Re-copy
+    # whenever the installed hook lacks the strict guard, so every clone converges within one 5-min
+    # sweep instead of only at clone time — main-workspace clones were never covered by
+    # setup-tab-worktrees.sh at all, and that is where all 33 bypassed commits came from.
+    if [[ -f "${_pp_guard}" ]] && ! grep -q 'check_strict_quickmerge' "${_pp_hook}" 2>/dev/null; then
         cp "${_pp_guard}" "${_pp_hook}" 2>/dev/null \
             && chmod +x "${_pp_hook}" || true
     fi
