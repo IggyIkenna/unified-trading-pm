@@ -191,6 +191,20 @@ pairs stay honest-unresolved (reported, never guessed).
       `instrument_id` NOT `canonical_instrument_id`, excludes ambiguous, fail-loud on empty) + UAC
       `CeFiWireCanonicalMap` (pure, fwd + reverse maps). Single source everything else consumes. (repos:
       market-tick-data-service, unified-api-contracts)
+  - ✅ **UAC half DONE — `unified-api-contracts@825878f7`.** NEW pure/pandas-free/no-I/O
+    `unified_api_contracts/canonical/domain/cefi_wire_canonical.py`; exported from the package root `__all__` (the
+    public surface — deep paths are UAC-internal). API: `CeFiWireCanonicalMap.from_rows(rows)` (constructor named
+    **`from_rows`**, NOT the blueprint's provisional `from_triples` — the KEY is a 3-tuple but each input row is a
+    4-quad `(venue, instrument_type, raw_symbol, instrument_key)`, so `from_triples` misnames the input; blueprint § 2
+    FIX 0 explicitly delegated this naming choice) + `canonical_for(venue, instrument_type, raw_symbol) -> str | None`
+    - `raw_symbol_for(venue, instrument_key) -> str | None` + public fields `canonical_by_wire` (fwd) /
+      `wire_by_canonical` (rev) / `ambiguous_wire_keys`. **Evidence**: full `bash scripts/quality-gates.sh` GREEN (exit
+      0, 342s, `.qg_last_passed_sha` written) — 21/21 new tests pass, basedpyright 0 errors/0 warnings, no
+      `Any`/`# type: ignore`/`os.getenv`. Regression guard for the WHOLE program is asserted
+      (`test_both_bybit_rows_resolve_neither_excluded`): BOTH BYBIT `BTCUSDT` rows resolve by `instrument_type`, NEITHER
+      excluded. **MTDS half (`build_raw_symbol_map()`) still OPEN** — parallel agent; do not tick this box until it
+      lands.
+  - ⬜ **MTDS half OPEN** — `CeFiCatalogReader.build_raw_symbol_map()` (repo: market-tick-data-service).
 - [ ] [BACKEND] P0. **FIX D1 — Writer decompose ALL venues (3-tuple).** One insertion point in
       `derive_row_instrument_id` (`tardis_shared.py:455`) resolving via FIX-0; covers the Tardis parquet column AND
       manifest key (both flow through it — zero change to cap-critical `venue_fetch.py`). Miss → honest fallthrough.
@@ -255,6 +269,43 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-17 (slot-3) — FIX 0 UAC HALF SHIPPED: `CeFiWireCanonicalMap` contract SSOT landed —
+  `unified-api-contracts@825878f7`.** T0 lands first, before its MTDS/MDPS consumers (dependency order). NEW
+  `unified_api_contracts/canonical/domain/cefi_wire_canonical.py` (203 L) + `tests/unit/test_cefi_wire_canonical_map.py`
+  (253 L, 21 tests) + root `__all__` export. **Full `quality-gates.sh` GREEN (exit 0, 342s)**; basedpyright 0 errors/0
+  warnings; pure — pandas-free, I/O-free (both MTDS and MDPS depend on UAC, never on each other, so each supplies its
+  own thin catalogue loader and feeds `from_rows()`).
+  - **Decisions made + documented (no operator round-trip needed):**
+    1. **Constructor named `from_rows`**, not the blueprint's provisional `from_triples` — the blueprint (§ 2 FIX 0)
+       flagged the arity mismatch and explicitly delegated the choice ("pick one and export it"). The KEY is a 3-tuple
+       but each input ROW is a 4-quad, so `from_triples` misnames the input. Exported + internally consistent.
+    2. **Map fields are PUBLIC** (`canonical_by_wire` / `wire_by_canonical` / `ambiguous_wire_keys`) vs the blueprint's
+       underscore-prefixed sketch (`_canonical_by_wire`). Rationale: the D1 resolver's **fail-loud-on-empty-map** check
+       and the writer/reader honest-unresolved WARNING both need to read map size + the ambiguous set from outside the
+       class. Underscored fields would force private access at every consumer.
+    3. **Reverse map preserves `raw_symbol` case verbatim** (not uppercased) and is built from ALL valid rows —
+       **including forward-ambiguous ones**. Reverse is keyed on `instrument_key`, which stays unique even when the wire
+       symbol collides, so it is still injective and must keep working for candidate-stem recovery. Case is preserved
+       because the D3 reader rebuilds on-disk filename stems from this value and the wire spelling is what is actually
+       on the object (BINANCE writes lowercase `btcusdt`) — this is also why the reader's candidate list can
+       meaningfully carry both the reverse value AND its `.upper()`.
+    4. **Fail-loud on an empty catalogue stays the CALLER's job**, not this pure contract's: `from_rows([])`
+       legitimately returns an empty map (a valid pure value). The blueprint's fail-loud rule (blocking-risk #4) binds
+       the _registered prod resolver_ — "disabled-by-default for tests is achieved by NOT registering a builder".
+       Raising here would make the empty case unrepresentable and break that design. Asserted in
+       `test_from_rows_empty_builds_empty_map`.
+  - **Regression guard for the whole program is live**: `test_both_bybit_rows_resolve_neither_excluded` asserts BOTH
+    `(BYBIT, SPOT_PAIR, BTCUSDT)` → `BYBIT:SPOT_PAIR:BTC-USDT` and `(BYBIT, PERPETUAL, BTCUSDT)` →
+    `BYBIT:PERPETUAL:BTC-USDT@LIN` resolve and NEITHER is excluded — a regression to a 2-tuple key fails this test
+    loudly. Also covered: `BITFINEX-FUTURES/PERPETUAL/ADAF0:USTF0` wrapped-wire quad, a synthetic genuinely-ambiguous
+    3-tuple (`canonical_for(...) is None` AND present in `ambiguous_wire_keys`), reverse round-trip, case-insensitivity
+    on both build and lookup, and blank-field skipping.
+  - **Finding (in-file, fixed same commit):** QG flagged `from_rows()` at 51 L over the function-size limit; extracted a
+    module-level `_iter_normalized()` row-normalizer. Note the size check printed a red ❌ while the run still exited 0
+    — it did not fail the gate; caught by reading the output rather than trusting the summary line.
+  - **Next**: MTDS half (`CeFiCatalogReader.build_raw_symbol_map()`) — parallel agent; then D1/D1-live/D2/D3 consume
+    this contract. The FIX 0 box stays UNTICKED until the MTDS half lands.
 
 - **2026-07-17 (slot-3) — PHASE -1 GATE MEASURED: RED (2 narrow defects) + 3-TUPLE DESIGN EMPIRICALLY CONFIRMED.**
   Measured directly against the live catalogue
