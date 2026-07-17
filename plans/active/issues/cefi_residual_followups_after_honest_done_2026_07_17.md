@@ -172,12 +172,26 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Phase -1 — Catalogue rebuild + verify gate (prerequisite of Phase-0 DEPLOY; everything keys off it)
 
-- [ ] [SCRIPT] P0. **Rebuild + verify the cefi reference catalogue.** Re-run `build_instrument_catalogue.py` after the
-      shipped adapter canonicalization fixes; HARD verify gate: `0` cefi `instrument_id` containing `:PERP:`; `0` cefi
-      rows where `instrument_id != canonical_instrument_id`; re-measure the honest-unresolved (ambiguous 3-tuple) count
-      ONCE off the pinned key + record it as the single number used everywhere. Also confirm HL/ASTER refresh to
-      `PERPETUAL@LIN` (blueprint open-q #10) + sample OPTION/dated-FUTURE `raw_symbol` coverage (open-q #14). (repo:
+- [x] ✅ [SCRIPT] P0. **Rebuild + verify the cefi reference catalogue — CODE FIX LANDED; prod rebuild is the
+      orchestrator's next step.** — instruments-service@517b817b + evidence. Both gate defects diagnosed to `file:line`
+      and FIXED at the true source, with the fix proven against REAL live data (909 legacy `by_date` rows → GATE 1 = 0
+      `:PERP:`, GATE 2 = 0 drift, both PASS) + 16 new unit tests end-to-end through `build_catalogue_dataframe` carrying
+      the exact live defect rows as fixtures. QG green (4417 passed, coverage 88.97%). **GATE 1 root cause was on-disk
+      LEGACY data, NOT the adapter** — so a plain rebuild would NOT have fixed it (see Progress Log). **Remaining for
+      the orchestrator**: run the prod rebuild (command in the Progress Log), then re-run the gate; the two REMEASURE
+      sub-items below are carried forward as their own todos since they need the rebuilt catalogue. (repo:
       instruments-service)
+- [ ] [SCRIPT] P0. **Re-measure the single honest-unresolved number off the REBUILT catalogue** (pinned 3-tuple
+      `(venue, instrument_type, raw_symbol)`; pre-rebuild measurement = **439**) + record it as the ONE number used
+      everywhere (blueprint open-q #7). Blocked only on the prod rebuild landing. (repo: instruments-service)
+- [ ] [SCRIPT] P1. **Sample OPTION / dated-FUTURE `raw_symbol` coverage on the REBUILT catalogue** (blueprint open-q #14
+      — the "decompose ALL types" claim is still unproven for per-option / per-expiry chains). (repo:
+      instruments-service)
+- [ ] [SCRIPT] P2. **586 marker-less `VENUE:PERPETUAL:BASE-QUOTE` catalogue rows** (blueprint open-q #19, measured
+      2026-07-17: BITGET-FUTURES 275 / BINANCE-FUTURES 153 / COINBASE-FUTURES 107 / BINANCE-DELIVERY 27 /
+      BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3 — NOT just the 16 BITFINEX rows the blueprint recorded). Deliberately
+      OUT of scope of the Phase -1 fix (the gate is `0` `:PERP:`, not `0` marker-less) — rewriting them is a 586-row
+      blast radius that needs its own decision + drain. (repo: instruments-service)
 
 ## Phase 0a — Contract locks (design lock, before any code)
 
@@ -227,11 +241,11 @@ pairs stay honest-unresolved (reported, never guessed).
       features-service)
 - [x] ✅ [BACKEND] P0. **Enumerate the narrow-read consumers** — DONE 2026-07-17 (slot-3), measured. **IN SCOPE (4)**:
       MTDS `reader.py`; MDPS (`path_parsing.py` / `canonical_writer_shaping.py` / `orchestration_scanner.py` /
-      `data_source.py`); features-service (`raw_data_loader.py` + cross-instrument `batch_handler.py`); **execution-service
-      `algo_library/mtds_book_provider.py`** (narrow `read_shard(instrument_id=)` via `CanonicalParquetReader` → inherits
-      D3, REDEPLOY REQUIRED — not named in the blueprint). **VERIFIED OUT (3)**: ml-service (0 `raw_tick` refs),
-      batch-live-reconciliation-service (0 refs), strategy-service runtime (`asset_group="defi"` hardcoded). Evidence in
-      the Progress Log.
+      `data_source.py`); features-service (`raw_data_loader.py` + cross-instrument `batch_handler.py`);
+      **execution-service `algo_library/mtds_book_provider.py`** (narrow `read_shard(instrument_id=)` via
+      `CanonicalParquetReader` → inherits D3, REDEPLOY REQUIRED — not named in the blueprint). **VERIFIED OUT (3)**:
+      ml-service (0 `raw_tick` refs), batch-live-reconciliation-service (0 refs), strategy-service runtime
+      (`asset_group="defi"` hardcoded). Evidence in the Progress Log.
 - [ ] [BACKEND] P0. **DEPLOY the reader bridge to all 4 in-scope consumers** — the D4 GCS cutover cannot run until every
       one carries it (the drain stops WRITERS only; readers keep running against renamed/rewritten objects). Includes an
       **execution-service redeploy** even though it needs no code change. (repos: market-tick-data-service,
@@ -239,9 +253,10 @@ pairs stay honest-unresolved (reported, never guessed).
 - [ ] [SCRIPT] P1. **Fix the one campaign script our rename breaks** —
       `strategy-service/scripts/trace_arbitrage_price_dispersion.py` matches the filename LEAF (:294) against hardcoded
       WIRE forms (:273-274) over `asset_group=cefi` → silently mis-matches post-D4-rename. Either make the leaf-match
-      accept both wire + canonical stems, or confirm its `# Delete-when: master_to_live_defi_2026_05_23 Phase D complete`
-      is satisfied and delete it (delete-deprecated-code). `trace_carry_staked_basis.py` is a prefix scan → SAFE, no
-      action. (repo: strategy-service)
+      accept both wire + canonical stems, or confirm its
+      `# Delete-when: master_to_live_defi_2026_05_23 Phase D complete` is satisfied and delete it
+      (delete-deprecated-code). `trace_carry_staked_basis.py` is a prefix scan → SAFE, no action. (repo:
+      strategy-service)
 
 ## Phase 1 — Corpus migrations (scripted + dry-run first; `--apply` ONLY behind the Phase-1 drain, snapshot-first)
 
@@ -284,19 +299,85 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-17 (slot-3) — PHASE -1 GATE: BOTH DEFECTS FIXED AT SOURCE + PROVEN ON LIVE DATA →
+  `instruments-service@517b817b`.** Both halves closed in `scripts/build_instrument_catalogue.py`. QG green (4417
+  passed, coverage 88.97%).
+
+  - **GATE 1 root cause — `build_instrument_catalogue.py:1113` (the emit) — LEGACY ON-DISK DATA, _not_ the adapter. A
+    plain rebuild alone would NOT have fixed it.** The 9 `:PERP:` rows are all `instrument_type=PERPETUAL`,
+    `margin_type=linear`, and all **DELISTED** (`available_to` 2026-02-28…2026-06-28). Measured why: on 2026-06-28 the
+    on-chain adapter still emitted `:PERP:` for EVERY row (EXTENDED-STARKNET 101/101, LIGHTER-ZKSYNC 213/213,
+    HYPERLIQUID 176/176, ASTER 484/484); the id-format fix landed later. A perp still LIVE after the fix collapses onto
+    its canonical form via `_cefi_perp_lineage_key` (the lineage key is stable across the churn) — but one delisted
+    BEFORE the fix has no post-fix snapshot at all, so its most-recent `by_date` row carries the legacy id and the
+    roll-up passed it straight through. **Exactly the class `79d4dbcb` hit for dated FUTUREs**, so fixed the same way,
+    in the same place: new `_canonicalize_cefi_perp_id()` rebuilding at roll-up time via the SAME shared UAC
+    `build_instrument_id`. Pre-verified against the live `by_date` corpus that the rebuild HAS its inputs — the legacy
+    rows DO carry `base_asset` + `quote_asset` (HL/EXTENDED `USD`, ASTER `USDT`, LIGHTER `USDC`) + `margin_type=linear`
+    — and the rebuilds byte-match their live canonical siblings (`HYPERLIQUID:PERPETUAL:ARK-USD@LIN`,
+    `ASTER:PERPETUAL:IP-USDT@LIN`, `EXTENDED-STARKNET:PERPETUAL:IP-USD@LIN`, `LIGHTER-ZKSYNC:PERPETUAL:IP-USDC@LIN`).
+    Missing-field rows degrade unchanged (never guess).
+  - **GATE 2 root cause — `build_instrument_catalogue.py:1140-1142` (the mirror).** All 511 drift rows are
+    `instrument_type=FUTURE` — exactly the rows `_canonicalize_cefi_future_id` rewrites. `79d4dbcb` rebuilt the emitted
+    `instrument_id` but the mirror kept sourcing `agg.meta["canonical_instrument_id"] or meta["instrument_key"]` (the
+    STALE raw-glued value), so the two drifted. **This confirms the earlier "`canonical_instrument_id` is
+    stale/vestigial → delete it" read was WRONG** — the column is live-consumed (`enumerate_expected_universe.py`,
+    `backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`, `backfill_spot_asset_population_2026_07_16.py:324`
+    which itself writes `canonical_instrument_id := instrument_id`, + MTDS `migrate_onchain_perp_*`). Fix = repair the
+    mirror: BOTH surfaces now run through ONE shared `_canonicalize_cefi_rollup_id()` chain so they cannot drift again.
+    The mirror **SOURCE** is canonicalized rather than blanket-copied from the emitted id — deliberate, so the DeFi POOL
+    contract survives (there `instrument_id` is re-keyed to `pool_address` while `canonical_instrument_id` mirrors the
+    glued `instrument_key`, pinned by
+    `test_rollup_defi_pool_row_backfills_canonical_instrument_id_from_instrument_key`).
+  - **Evidence (runtime-verified, "run it don't read it")**: the FIXED `build_catalogue_dataframe` run against 909 REAL
+    live legacy `by_date` rows (HL + ASTER 2026-05-22, EXTENDED-STARKNET + LIGHTER-ZKSYNC 2026-06-28) → **GATE 1 = 0
+    `:PERP:` ids, GATE 2 = 0 drift, both PASS**. Plus 16 new unit tests end-to-end through `build_catalogue_dataframe`
+    (not the helper in isolation) carrying the exact live defect rows as fixtures; test execution proven by
+    falsification (deliberately broken assert → RED, then reverted), so they are not silently uncollected.
+  - **⚠️ REBUILD COMMAND — `--mode full` IS MANDATORY (a default `incremental` run leaves the gate RED)**:
+    ```bash
+    cd instruments-service && GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prd \
+      .venv/bin/python scripts/build_instrument_catalogue.py --asset-group cefi --mode full
+    ```
+    Three verified gotchas: (1) **there is NO `--apply`** — the script WRITES by default, `--dry-run` is the opt-in
+    flag; (2) `--mode` defaults to **`incremental`**, which only re-reads a self-widening trailing window and leaves the
+    frozen tail untouched — every one of the 9 `:PERP:` rows (and most of the 511) is DELISTED and sits in that frozen
+    tail, so an incremental run would NOT re-roll them; (3) `GCP_PROJECT_ID` + `DEPLOYMENT_ENV` must be in the env or
+    `resolve_bucket_name` fail-loud raises `BucketNamingError`. Add `--allow-catalogue-shrink` ONLY if the monotonic
+    guard trips (it should not — this renames ids, it does not drop rows).
+  - **Scope decision (decide-and-document)**: fixed the legacy `PERP`-token defect ONLY. Measured a wider population
+    while diagnosing — **595** PERPETUAL rows carry NO `@marker`, of which only 9 are the `:PERP:` defect and **586**
+    already carry the correct `PERPETUAL` token and merely lack the marker (BITGET-FUTURES 275 / BINANCE-FUTURES 153 /
+    COINBASE-FUTURES 107 / BINANCE-DELIVERY 27 / BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3 — **materially bigger than
+    blueprint open-q #19's "16 BITFINEX rows"**, corrected + filed as its own P2 todo above). Rewriting those 586 is a
+    silent blast-radius expansion beyond the documented gate (`0` `:PERP:`, not `0` marker-less), so it is pinned OUT of
+    scope by a regression test rather than done quietly.
+  - **⚠️ SSOT CONTRADICTION FOR THE OPERATOR (not blocking, not fixed here)**:
+    `backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`'s docstring asserts
+    "`catalog.instrument_id == canonical_instrument_id` holds for every row, **pool or not**", but
+    `test_rollup_defi_pool_row_backfills_canonical_instrument_id_from_instrument_key` pins the OPPOSITE for POOL rows
+    ("per the operator-approved policy"). Both cannot be true. The cefi gate is unaffected (cefi has no POOL rows); the
+    DeFi catalogue needs an operator ruling on which is canonical.
+  - **Multi-agent note**: shipped under the closed **dirty-deps** carve-out (quickmerge pre-flight blocked on live
+    uncommitted WIP in UTL + UAC, mtime <120s → PROTECT). A concurrent agent's in-flight sports work
+    (`extra_attrs`/`fixture_attrs`) was uncommitted in the SAME two files; staged by **filtered hunk** rather than by
+    file so none of it landed in this commit — verified 0 foreign markers staged, and their WIP left intact in the
+    working tree.
+
 - **2026-07-17 (slot-3, orchestrator) — CONSUMER ENUMERATION CLOSED + 2 BLUEPRINT CORRECTIONS.** Measured, not assumed
   (grep-then-READ).
   - **Narrow-read consumer set for the raw_tick cutover — IN SCOPE (4)**: (1) MTDS `reader.py`
     (`CanonicalParquetReader`) → D3; (2) MDPS (`path_parsing.py`, `canonical_writer_shaping.py`,
-    `orchestration_scanner.py`, `data_source.py`) → D3; (3) features-service (`cross_instrument/engine/raw_data_loader.py`
-    + `cross_instrument/cli/handlers/batch_handler.py`) → D-features; (4) **NEW — execution-service
-    `execution_service/algo_library/mtds_book_provider.py`**: does narrow
-    `CanonicalParquetReader.read_shard(venue=, data_type=tbbo, instrument_type=, target_date=, instrument_id=)` per
-    (instrument, day) → **inherits D3 for free BUT MUST BE REDEPLOYED before the cutover**. The blueprint never named it;
-    it is now part of the reader-deploy gate (blueprint open-q #4).
+    `orchestration_scanner.py`, `data_source.py`) → D3; (3) features-service
+    (`cross_instrument/engine/raw_data_loader.py`
+    - `cross_instrument/cli/handlers/batch_handler.py`) → D-features; (4) **NEW — execution-service
+      `execution_service/algo_library/mtds_book_provider.py`**: does narrow
+      `CanonicalParquetReader.read_shard(venue=, data_type=tbbo, instrument_type=, target_date=, instrument_id=)` per
+      (instrument, day) → **inherits D3 for free BUT MUST BE REDEPLOYED before the cutover**. The blueprint never named
+      it; it is now part of the reader-deploy gate (blueprint open-q #4).
   - **VERIFIED OUT OF SCOPE (3)**: **ml-service** — ZERO `raw_tick` refs corpus-wide (reads features/candles only);
-    **batch-live-reconciliation-service** — ZERO `raw_tick`/`CanonicalParquetReader` refs; **strategy-service runtime** —
-    `engine/core/canonical_vault_provider.py:126` + `canonical_perp_funding_provider.py:137` are `asset_group="defi"`
+    **batch-live-reconciliation-service** — ZERO `raw_tick`/`CanonicalParquetReader` refs; **strategy-service runtime**
+    — `engine/core/canonical_vault_provider.py:126` + `canonical_perp_funding_provider.py:137` are `asset_group="defi"`
     HARDCODED, so their raw_tick reads never touch cefi. This materially shrinks the cutover blast radius from the
     blueprint's "strategy/ml/batch-live-recon" hand-wave to a concrete 4.
   - **NEW FINDING — one campaign script WILL break on the D4 rename**:
@@ -304,22 +385,26 @@ pairs stay honest-unresolved (reported, never guessed).
     (`leaf = blob.name.rsplit("/", 1)[-1].upper()`, :294) against hardcoded WIRE forms (`BTCUSDT.parquet`,
     `PI_BTCUSD.parquet`, `BTCUSD-PERP.parquet`, :273-274) over `asset_group=cefi` → silently mis-matches post-rename.
     `trace_carry_staked_basis.py` is a plain `.parquet` prefix scan (:206) → SAFE. Both are `# Lifecycle: campaign` /
-    `# Delete-when: master_to_live_defi_2026_05_23 Phase D complete`. Our rename causes the break, so we own it → tracked
-    as its own todo (fix the leaf-match to accept both forms, or confirm the delete-when is satisfied). NOT left silent.
+    `# Delete-when: master_to_live_defi_2026_05_23 Phase D complete`. Our rename causes the break, so we own it →
+    tracked as its own todo (fix the leaf-match to accept both forms, or confirm the delete-when is satisfied). NOT left
+    silent.
   - **BLUEPRINT CORRECTION 1 (open-q #3 is partly a SURFACE CONFLATION)**: `chart-candle-delivery-flow.md:274`
     ("**Filename is the bare symbol**, not the canonical `venue:type:symbol` instrument-key") sits under the
-    **`processed_candles/`** layout block (:264-283) — it documents MDPS candle-output filenames, **NOT `raw_tick_data/`**.
-    It is therefore NOT a contradiction of the raw_tick filename lock and MUST NOT be "corrected" in Phase 2. The
-    blueprint + the original codex audit lens both cited it as the headline stale claim; that was grep-then-conclude.
+    **`processed_candles/`** layout block (:264-283) — it documents MDPS candle-output filenames, **NOT
+    `raw_tick_data/`**. It is therefore NOT a contradiction of the raw_tick filename lock and MUST NOT be "corrected" in
+    Phase 2. The blueprint + the original codex audit lens both cited it as the headline stale claim; that was
+    grep-then-conclude.
   - **BLUEPRINT CORRECTION 2 (the lock is BETTER-supported than stated)**: codex ALREADY documents the raw_tick stem as
-    the FULL instrument_key — `instrument-pipeline-defi.md:177` (`raw_tick_data/.../venue={venue}/{instrument_key}.parquet`)
-    + `:183` (worked example `.../venue=BINANCE-FUTURES/BINANCE-FUTURES:PERPETUAL:ETHUSDT.parquet`). So Phase-0a's
-    "filename stem = FULL `instrument_id`" **corroborates** existing codex rather than contradicting it (note the doc's own
-    example carries the undecomposed `ETHUSDT` payload — shape right, decomposition is exactly what D1 fixes).
-  - **The genuinely stale raw_tick docs for Phase 2 are therefore just two**: `read-time-filter-pushdown.md:69-70` (blesses
-    the SUBSTRING blob gate with the wire example `.../BTCUSDT.parquet` matches `instrument_ids=["BTCUSDT"]` — this IS the
-    D3 break in the MIXED window) and `per-asset-group-bucket-layouts.md:135` (shows CEFI raw_tick as `ticks.parquet` only,
-    missing the per-instrument stem split; reconciled by `pipeline-coverage-matrix.md:360-361`).
+    the FULL instrument_key — `instrument-pipeline-defi.md:177`
+    (`raw_tick_data/.../venue={venue}/{instrument_key}.parquet`)
+    - `:183` (worked example `.../venue=BINANCE-FUTURES/BINANCE-FUTURES:PERPETUAL:ETHUSDT.parquet`). So Phase-0a's
+      "filename stem = FULL `instrument_id`" **corroborates** existing codex rather than contradicting it (note the
+      doc's own example carries the undecomposed `ETHUSDT` payload — shape right, decomposition is exactly what D1
+      fixes).
+  - **The genuinely stale raw_tick docs for Phase 2 are therefore just two**: `read-time-filter-pushdown.md:69-70`
+    (blesses the SUBSTRING blob gate with the wire example `.../BTCUSDT.parquet` matches `instrument_ids=["BTCUSDT"]` —
+    this IS the D3 break in the MIXED window) and `per-asset-group-bucket-layouts.md:135` (shows CEFI raw_tick as
+    `ticks.parquet` only, missing the per-instrument stem split; reconciled by `pipeline-coverage-matrix.md:360-361`).
 
 - **2026-07-17 (slot-3) — FIX 0 UAC HALF SHIPPED: `CeFiWireCanonicalMap` contract SSOT landed —
   `unified-api-contracts@825878f7`.** T0 lands first, before its MTDS/MDPS consumers (dependency order). NEW
