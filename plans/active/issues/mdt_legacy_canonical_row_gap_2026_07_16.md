@@ -577,3 +577,13 @@ objects are the master superset and their recovery covers **99.98%** of the gap,
 **3,816 derivable / 0 park-only** — `league_id := instrument_id[3]` at **100.0000%** against known ground truth,
 `venue := instrument_id[1].upper()` at **100.0000%** over 1,065,227 rows; the runbook's "fabrication-required" premise
 is disproven (the path's `source=` is the vendor; the venue is in the rows). Zero mutations; scratch data deleted.
+
+**2026-07-17 — OR-5b(c) RULED by operator (via `[slot-3·laptop]` takeover): RECOVER IN-PLAY INTO A DISTINCT POPULATION
+(B-REFINED).** Operator ruling 2026-07-17: the 25,576 in-play keys are recovered (not excluded) into a population
+quarantined from the pre-match T-0 path. **Quarantine mechanism (as the runbook's own correction mandates —
+`_is_consumable_trades_blob` matches on filename `ticks.parquet` only): a non-`ticks.parquet` filename AND a distinct
+`data_type=`, with `pipeline_mode` staying `batch_odds_api` (closed UAC enum).** The pre-match 524,486 keys recover into
+the canonical odds path. Delete gate remains the day-scoped 32-day recovery + T4.1 object-layer unique==0. **Execution
+owner: `[slot-3·laptop]` (reassigned by operator 2026-07-17; `[main·laptop]` idle 5h, confirmed off).** No tooling was
+inherited (the `~/tmp-or5b/` scripts live on another host) → recovery is being rebuilt from spec, re-measuring the 32
+gap days independently before any write (standing "never inherit a classification" rule).
