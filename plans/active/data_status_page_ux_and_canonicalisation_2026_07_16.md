@@ -362,6 +362,16 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 > migrations, sports-source root-cause, unique-instruments relabel, fixtures browser, and the P6-catalogue-empty bug
 > @62cc10f) is **shipped + flipped**. What remains is 13 lower-priority (P2/P3) follow-ups — none block the page. Rows
 > below map 1:1 onto the open checkboxes above so nothing is lost.
+>
+> **Row-10 correction (2026-07-17) — there is NO outstanding sports TEAMS work.** Row 10 previously read "Sports TEAMS
+> data-correctness | P8 (B) | scoped, not attempted this session — data-correctness items 1-5 in the P8 (B) block". That
+> row was a **mislabel, and the work behind it does not exist**: (a) the P8 section contains five todos and **all five
+> are `- [x]`** — there is no "P8 (B) block" and no "items 1-5" in it (P8's TEAMS→per-league reclassification shipped at
+> deployment-api@fb0eec8); (b) walking the 13 rows against the 13 real open checkboxes, row 10 lands on the **P4-B UI**
+> todo, whose own text reads "_(B)_ … (data-correctness items 1-5 above, the actual substance of **P4-B**, took priority
+> and are done+verified)". So the original author read that todo's `_(B)_` as **P8(B)** instead of **P4(B)**, and read
+> P4-B's already-completed SPOT_ASSET items 1-5 as sports items. Row 10 now names the todo it actually maps to, keeping
+> the table honestly 1:1. Verified by grep before relabelling, not assumed.
 
 | #   | Remaining item (open `- [ ]` todo)                            | Point         | Pri | Why deferred / next step                                                                                   |
 | --- | ------------------------------------------------------------- | ------------- | --- | ---------------------------------------------------------------------------------------------------------- |
@@ -374,7 +384,7 @@ merge) — re-scoped in-place with the correct fix (streaming/metadata-deferred 
 | 7   | Real `question`/`title` column (polymarket/kalshi adapters)   | P3 follow-up  | P3  | upgrade prediction label from slug → human-readable title.                                                 |
 | 8   | Root-cause remaining DeFi legacy `instrument_type`            | P4-A (A)      | P2  | grep IS writer for where legacy values still emit (display alias already in place).                        |
 | 9   | Drain residual `LENDING`                                      | P4-A (A)      | P2  | finish A_TOKEN/DEBT_TOKEN split for MORPHO/FLUID/AAVE_PLASMA.                                              |
-| 10  | Sports TEAMS data-correctness                                 | P8 (B)        | P2  | scoped, not attempted this session — data-correctness items 1-5 in the P8 (B) block.                       |
+| 10  | Surface `base_asset_contract_address` in the drilldown        | **P4 (B)**    | P2  | ⚠️ **ROW MISLABELLED before 2026-07-17** — was "Sports TEAMS data-correctness / P8 (B)"; see note below.   |
 | 11  | True-catalogue source                                         | P6 phase-2    | P3  | deployment-api→IS read path OR projection; availability-derived phase-1 shipped @1e3c7b4.                  |
 | 12  | ~~`/prediction-catalogue` latency~~                           | P3 perf       | P3  | ✅ **DONE 2026-07-17** — real cost ~173s not 39s; paging was re-paying it, now 0.00s @0e39a53.             |
 | 13  | ~~`/catalogue` unpaginated large-AG cost~~                    | P6 perf (NEW) | P3  | ✅ **DONE 2026-07-17** — tradfi 61.3s→14.9s (4.1x), cefi 6.5x, page byte-identical @0e39a53.               |
@@ -935,27 +945,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                                                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                                                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                                                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                                                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                                                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                                                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                                                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                                                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                                                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                                                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                                                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                                                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                                                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                                                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                                                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                                                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                                                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                                                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                                                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                                                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
