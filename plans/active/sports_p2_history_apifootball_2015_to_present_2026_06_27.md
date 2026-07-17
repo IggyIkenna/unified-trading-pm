@@ -2041,3 +2041,39 @@ query (same not-green result at real compute cost, per established precedent —
 cost of the launch itself for no new signal). Not re-flagging the dispatch-cooldown pattern (already raised by slot-4,
 four declines ago — a 6th repetition adds no signal). Declining — no action taken, no code touched.
 `/skip-current-task`.
+
+### 2026-07-17T17:22Z — data_engineering slot-13 (Todo `-001` — 7th bounce in ~2h11min, fleet confirmed still RUNNING, decline)
+
+Dispatched to `-001`. `gcloud compute instances list` (non-snap SDK at `~/google-cloud-sdk/bin`, snap `gcloud` broken
+same as prior sessions): all 5 fleet VMs (`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still
+`RUNNING`, ~2h11min into the "many hours" ETA — consistent with slot-10's check 13 min prior. Attempted a `run.log` tail
+via `gsutil cat` for cross-check but this slot's `gsutil` ADC is stale (`Your credentials are invalid`) — not worth
+fixing for a cheap confirm-and-skip (the `gcloud compute instances list` RUNNING read is the established sufficient
+signal per main's ruling: "one status check confirming ... RUNNING -> skip, no deep re-investigation"). No material
+change to the gate; not re-running `read_availability_index` (same not-green result at real compute cost). Main agent
+owns the resolution — flips `sports-gap-fill-fleet-20260717-complete` when the fleet actually completes
+(~2026-07-18T01:00Z+, evidence-verified). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-17T17:26Z — data_engineering slot-14 (Todo `-001` — 8th bounce in ~2h14min, fleet confirmed still RUNNING, decline)
+
+Dispatched to `-001`, 4 min after slot-13's check. `gcloud compute instances list` (non-snap SDK at
+`~/google-cloud-sdk/bin`): all 5 fleet VMs (`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still
+`RUNNING`, ~2h14min into the "many hours" ETA — no material change since slot-13's check. Not re-running the full
+`read_availability_index` gate query (same not-green result at real compute cost, per established precedent) and not
+re-flagging the dispatch-cooldown pattern (already raised by slot-4, five declines ago). Main agent owns the resolution
+— flips `sports-gap-fill-fleet-20260717-complete` when the fleet actually completes (~2026-07-18T01:00Z+,
+evidence-verified). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-17T17:31Z — data_engineering slot-16 (Todo `-001` — 9th bounce in ~2h19min, fleet confirmed still RUNNING, decline)
+
+Dispatched to `-001`, 5 min after slot-14's check. `gcloud compute instances list` (non-snap SDK at
+`~/google-cloud-sdk/bin`): all 5 fleet VMs (`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still
+`RUNNING`, ~2h19min into the "many hours" ETA — no material change since slot-14's check. Confirmed this task's own
+backlog entry carries no `prereqs` (`agent-orchestrator/data/config/backlog.yaml`,
+`sports_p2_history_apifootball_2015_to_present-001`: `completed_tasks: []`, `prerequisites: []`) — it cannot be
+self-gated on the fleet it is the direct consumer of, so tier=1/priority=50 will keep routing any idle slot here until
+main/operator wires the `sports-gap-fill-fleet-20260717-complete` condition as an actual dispatch prereq or the fleet
+genuinely completes and someone flips the checkbox. Not re-running the full `read_availability_index` gate query (same
+not-green result at real compute cost, per established precedent) and not re-flagging the dispatch-cooldown pattern
+(already raised by slot-4, six declines ago — this entry only adds the concrete backlog-YAML confirmation of why the
+bounce keeps recurring). Declining — no action taken, no code touched. `/skip-current-task`.
