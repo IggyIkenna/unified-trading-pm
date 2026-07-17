@@ -29,13 +29,17 @@ description: >
 # │   with an explicit `timeout` on every network call.                                                   │
 # │ * The `secrets` context is NOT available to composite actions -> cloud creds MUST arrive as inputs.  │
 # │   This is why callers pass `${{ secrets.GCP_SA_KEY }}` explicitly instead of `secrets: inherit`.     │
-# │ * `vars` inside a composite action is READ HERE rather than making 22 callers pass it — but treat    │
-# │   that as MEASURED, not documented. GitHub's docs imply it resolves; the Actions YAML schema flags   │
-# │   `vars` as unrecognised in an action.yml. The two disagree, so it was settled empirically on the    │
-# │   secret-health-check pilot run (see the plan's Progress Log for the run id). If `vars` ever stops   │
-# │   resolving, the loud-empty guard below turns that into a visible warning instead of a repo-wide     │
-# │   silent downgrade to log-only — which is the whole reason the guard exists. Do not "simplify" it    │
-# │   back to `${{ vars.CLOUD_PROVIDER || 'local' }}`: that default is what makes the failure silent.    │
+# │ * The `vars` context is NOT available to a composite action either — MEASURED, and it cost a run.    │
+# │   GitHub's docs imply it resolves; they are wrong. The runner rejects the MANIFEST outright:         │
+# │   "Unrecognized named-value: 'vars'" -> TemplateValidationException -> Failed to load action.yml     │
+# │   (run 29565881093, 2026-07-17). So CLOUD_PROVIDER / CICD_EVENTS_BUCKET / AWS_REGION must be read    │
+# │   by the CALLER (where `vars` does resolve) and passed in as inputs. Do not "tidy" them back to      │
+# │   `${{ vars.X }}` in here — it does not fail at that step, it fails the WHOLE CALLING JOB.           │
+# │ * THE CONSEQUENCE OF THAT, which outranks every guard below: a manifest error is caught at LOAD      │
+# │   time, BEFORE any step executes, so `continue-on-error` CANNOT contain it. Every per-step guard in  │
+# │   this file is powerless against a bad expression in this file. With 22 callers that means one typo  │
+# │   here fails all of them at once, ci-status-update (the promote critical path) included. Treat any   │
+# │   edit to this manifest as fleet-wide: change it, then prove it on ONE caller before it spreads.     │
 # └───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 inputs:
@@ -71,6 +75,23 @@ inputs:
     description: Arbitrary JSON payload for extra context
     required: false
     default: "{}"
+  cloud_provider:
+    description: >
+      Where to persist: gcp, aws, or anything else for log-only. The CALLER must pass the CLOUD_PROVIDER repo variable —
+      the vars context does not reach a composite action (measured: it fails manifest validation, not just the
+      expression). Deliberately has NO default: an empty value is reported loudly rather than silently degrading every
+      caller to log-only.
+    required: true
+  events_bucket:
+    description: >
+      Bucket for the JSONL event ledger. Caller passes the CICD_EVENTS_BUCKET repo variable; falls back to
+      unified-trading-cicd-events when the caller passes an empty string.
+    required: false
+    default: ""
+  aws_region:
+    description: AWS region for CLOUD_PROVIDER=aws. Caller passes the AWS_REGION repo variable.
+    required: false
+    default: "ap-northeast-1"
   gcp_sa_key:
     description: >
       GCP service-account key JSON, required for CLOUD_PROVIDER=gcp on GitHub-hosted runners. The caller must pass the
@@ -96,11 +117,12 @@ runs:
       shell: bash
       continue-on-error: true
       env:
-        # `vars` reaches a composite action, but a silently-empty value here would degrade to
-        # log-only — i.e. exactly the "green run that persists nothing" failure this epic keeps
-        # finding. So resolve RAW (no `|| 'local'` default) and let the guard below say so out loud.
-        RAW_CLOUD_PROVIDER: ${{ vars.CLOUD_PROVIDER }}
-        RAW_EVENTS_BUCKET: ${{ vars.CICD_EVENTS_BUCKET }}
+        # Passed in by the caller, NOT read from `vars` here — `vars` is unavailable to a composite
+        # action and fails the whole manifest (measured, run 29565881093). Resolved RAW with no
+        # `|| 'local'` default, so an empty value is announced by the guard below rather than
+        # silently degrading to log-only — the "green run that persists nothing" failure class.
+        RAW_CLOUD_PROVIDER: ${{ inputs.cloud_provider }}
+        RAW_EVENTS_BUCKET: ${{ inputs.events_bucket }}
         INPUT_REPO_NAME: ${{ inputs.repo_name }}
         INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
         INPUT_RUN_ID: ${{ inputs.run_id }}
@@ -213,7 +235,7 @@ runs:
       with:
         aws-access-key-id: ${{ inputs.aws_access_key_id }}
         aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
-        aws-region: ${{ vars.AWS_REGION || 'ap-northeast-1' }}
+        aws-region: ${{ inputs.aws_region }}
 
     - name: Persist event to S3
       if: steps.build-event.outputs.cloud_provider == 'aws' && steps.build-event.outputs.event_json != ''
