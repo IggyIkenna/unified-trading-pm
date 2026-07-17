@@ -1381,10 +1381,22 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       and is CONTINUOUSLY ARMED on the still-deployed pre-fix image** (its `*/1` idle touch bumps `blob.updated` every
       minute so the fabricated cutoff tracks ~now; no loss yet only because its `per_vm/` holds nothing but the
       prune-exempt `_legacy_seed.parquet`). Past firings are **UNPROVABLE** (no GCS versioning on per_vm; the proposed
-      tell is unreliable) — no claim made either way. AWS mirrors **unverified** (403 under
-      `uts-orchestrator-epic-role`). **NOT LIVE IN PROD YET** — see the rollout note in the issue doc: the deployed
-      consolidator is the MTDS image, so this needs UTL→main (PR #586, auto-merge armed) → UTL base-image republish →
-      MTDS `BASE_IMAGE_DIGEST` bump → MTDS rebuild. _Original spec below._ _Mechanism_: implement the fix ranked (1) in
+      tell is unreliable) — no claim made either way. **✅ ROLLOUT COMPLETE 2026-07-17 04:30Z — THE FIX IS LIVE IN PROD
+      ON GCP** (supersedes the "NOT LIVE IN PROD YET" note that stood here): UTL base image `sha256:61445152`
+      (`Evidence: cloudbuild=74a5e3df`, from `61bf7444` ⊇ `1e995f75`) → MTDS pin bump
+      `market-tick-data-service@22cb4d5f` → MTDS image `sha256:57fc72e1` (`Evidence: cloudbuild=f54235dc`, source
+      revision == the bump commit) → promote PR #598 merged 04:27:08Z → **24/24 `uts-prod-manifest-consolidator-*` jobs
+      verified running `sha256:57fc72e1`**, with the fixed `_get_content_write_mtime` proven by executing python INSIDE
+      that image (no `run_at`/`blob.updated` fallback). Fleet healthy: 0 failed cycles, and `pruned_shards=1` still
+      fires on a genuine marker (prune not over-broken). 🔴 **cefi DISARMED 03:54:34Z** ahead of the image via the
+      option-A marker re-stamp — 3 cycles `pruned=0`, rows 80,578→80,578; all 10 GCP prd buckets now carry a marker, 0
+      armed. **AWS**: ECR `:latest` mirrored to the identical `sha256:57fc72e1` (04:29:43Z; was stale at `4e60180c`
+      since 2026-07-13) — Batch-Fargate pickup structurally certain (TF references `:latest` by TAG) but **UNOBSERVED**
+      from this host (`batch:*`/`events:*`/`s3:GetObject` all denied under `uts-orchestrator-epic-role`). Two false
+      probes corrected in the issue doc: `gcloud builds` is **REGIONAL** (the republish WAS automatic, on an **LDR**
+      trigger), and `gcloud storage ls -l` prints **`creation_time`** not `blob.updated` (a COLDLINE lifecycle
+      transition had moved the seed's real mtime, making option A's literal stamp value data-loss-grade wrong).
+      _Original spec below._ _Mechanism_: implement the fix ranked (1) in
       [`issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md`](issues/consolidator_content_write_marker_strip_silent_shard_reap_2026_07_17.md)
       — `unified_trading_library/manifest_consolidator.py`: when `_get_content_write_mtime` resolves via the
       **`blob.updated` fallback** (i.e. neither `consolidator_content_write_at` nor `consolidator_run_at` is present),
