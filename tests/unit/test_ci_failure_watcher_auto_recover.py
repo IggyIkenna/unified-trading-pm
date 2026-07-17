@@ -209,12 +209,56 @@ class TestAutoRecoverMechanism:
         assert calls == []
 
     def test_normal_head_still_close_reopen(self, monkeypatch) -> None:
+        # close+reopen MUST be followed by an auto-merge RE-ARM: closing a PR disarms auto-merge and
+        # reopening does not restore it (measured 2026-07-16 on unified-trading-library#583 +
+        # instruments-service#812 — both armed before, unarmed after, then sat CLEAN and never
+        # merged). Without the re-arm this "recovery" only converts BLOCKED → CLEAN-but-inert, which
+        # no detector looks for (_STUCK_STATES has no CLEAN) — a worse deadlock than the original.
         calls = self._capture_gh_calls(
             monkeypatch,
             [_pr(9, state="BLOCKED", failed_check=False, v2_present=False, head_message="feat: a real commit")],
         )
-        assert [c[:3] for c in calls] == [["gh", "pr", "close"], ["gh", "pr", "reopen"]]
+        assert [c[:3] for c in calls] == [
+            ["gh", "pr", "close"],
+            ["gh", "pr", "reopen"],
+            ["gh", "pr", "merge"],
+        ]
         assert not any("workflow" in c for c in calls)
+        # SQUASH, mirroring the fleet promote bot (LDR carries backmerge merge commits → rebase is
+        # structurally impossible).
+        assert "--auto" in calls[-1] and "--squash" in calls[-1]
+
+    def test_stale_failure_is_recovered_when_same_sha_already_passed(self, monkeypatch) -> None:
+        """Signature (3) — the poison-window (measured 2026-07-16, 3.5h fleet stall).
+
+        A transient DEPENDENCY breakage (PM commit 2eb232971 broke a plan cross-reference and the
+        fatal, non-slice-gated run_validators check red-lined lint-codex in EVERY repo) failed the
+        promote PR's pull_request v2. The dep was fixed ~17min later and the identical head passed
+        v2 on a dispatch — but a dispatch green does NOT satisfy the PR's required context, and
+        auto_recover skipped the PR because it had a failed_check. Nothing self-healed.
+        """
+        monkeypatch.setattr(MOD, "_v2_failure_is_stale", lambda _r, _s: True)
+        calls = self._capture_gh_calls(
+            monkeypatch,
+            [_pr(21, state="BLOCKED", failed_check=True, v2_present=True, head_message="feat: real change")],
+        )
+        verbs = [c[:3] for c in calls]
+        assert ["gh", "pr", "close"] in verbs and ["gh", "pr", "reopen"] in verbs
+        assert ["gh", "pr", "merge"] in verbs  # auto-merge re-armed, else it lands CLEAN+inert
+        assert not any("workflow" in c for c in calls)  # never the empty-commit supersede
+
+    def test_genuinely_failing_pr_is_never_refired(self, monkeypatch) -> None:
+        """The safety property of signature (3): a REAL red must still go to the escalate path.
+
+        Same shape as the stale case, but no later green on the head sha (instruments-service's
+        66258618 had a real import-patterns violation and never passed). Re-firing it would loop.
+        """
+        monkeypatch.setattr(MOD, "_v2_failure_is_stale", lambda _r, _s: False)
+        calls = self._capture_gh_calls(
+            monkeypatch,
+            [_pr(22, state="BLOCKED", failed_check=True, v2_present=True, head_message="feat: genuinely broken")],
+        )
+        assert calls == []
 
     def test_action_required_head_close_reopen_and_marker(self, monkeypatch) -> None:
         # v2=action_required (present, not failed) → close+reopen to re-fire pull_request AND post the

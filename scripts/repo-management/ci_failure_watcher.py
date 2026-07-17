@@ -1508,7 +1508,18 @@ def _refire_v2_with_empty_commit(repo: str, branch: str, head_sha: str) -> bool:
 
 def _close_reopen_pr(repo: str, number: int) -> bool:
     """Close then reopen a PR to re-fire its ``pull_request`` event (the v2 re-trigger). Returns
-    True only if BOTH succeeded."""
+    True only if BOTH succeeded.
+
+    RE-ARMS auto-merge afterwards. **Closing a PR DISARMS auto-merge and reopening does NOT restore
+    it** (measured 2026-07-16: unified-trading-library#583 and instruments-service#812 both read
+    ``autoMerge=true`` before a close+reopen and ``autoMerge=false`` after; both then sat CLEAN —
+    every check green, nothing to do — and simply never merged until auto-merge was re-armed by
+    hand). Without this, EVERY recovery signature below "succeeds" into a green PR that never
+    merges: the deadlock changes shape from BLOCKED to CLEAN-but-inert and stops being detected at
+    all (``_STUCK_STATES`` has no CLEAN), which is strictly worse than not recovering. The fleet
+    promote bot does not save us either — it only arms inside its ``gh pr create`` branch, so an
+    already-open PR is never re-armed.
+    """
     closed = (
         subprocess.run(
             ["gh", "pr", "close", str(number), "--repo", f"{ORG}/{repo}"], capture_output=True, text=True
@@ -1521,7 +1532,90 @@ def _close_reopen_pr(repo: str, number: int) -> bool:
         ).returncode
         == 0
     )
+    if closed and reopened:
+        # SQUASH + delete-branch mirrors the fleet promote bot's own arm (LDR carries backmerge
+        # merge commits, so rebase-merge is structurally impossible). Best-effort + LOUD: a failed
+        # re-arm leaves a recoverable CLEAN PR rather than a silent inert one.
+        _arm = subprocess.run(
+            [
+                "gh",
+                "pr",
+                "merge",
+                str(number),
+                "--repo",
+                f"{ORG}/{repo}",
+                "--auto",
+                "--squash",
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if _arm.returncode != 0:
+            print(
+                f"  ! {repo}#{number}: close+reopen OK but auto-merge RE-ARM failed "
+                f"({(_arm.stderr or '').strip()[:120]}) — merge manually or the PR sits CLEAN+inert",
+                file=sys.stderr,
+            )
     return closed and reopened
+
+
+def _v2_failure_is_stale(repo: str, head_oid: str) -> bool:
+    """True when the PR's FAILED ``quality-gates-v2`` has since been disproved on the SAME head sha.
+
+    The poison-window deadlock (measured 2026-07-16). A transient breakage in a DEPENDENCY reds
+    every repo's gate for a few minutes; any promote PR whose ``pull_request`` v2 happens to run
+    inside that window concludes FAILURE and is then stranded FOREVER:
+
+      * the dep breakage is fixed minutes later, so the content is green again;
+      * ``workflow_dispatch`` re-runs on the exact head DO conclude success, but a dispatch run's
+        check suite is not associated with the PR, so the required context keeps the stale FAILURE
+        (already documented for the ``[skip ci]`` path above — same root, different trigger);
+      * ``auto_recover_stuck_prs`` skips any PR with a ``failed_check`` (left for the escalate
+        path, correctly — a genuinely-red PR must not be re-fired in a loop);
+      * so nothing self-heals and the repo silently stops promoting.
+
+    Real trace: PM commit 2eb232971 (12:43) broke a plan cross-reference → the fatal, non-slice-gated
+    ``run_validators`` check failed lint-codex in EVERY repo that cloned PM's LDR. The fleet promote
+    bot's 12:45 PRs (unified-trading-library#583, instruments-service#812) ran v2 inside that window
+    → FAILURE. slot-6 fixed the ref by ~13:00 and a 13:00 dispatch on the identical head concluded
+    success — yet both PRs sat BLOCKED with auto-merge armed for 3.5h, surfacing only as anonymous
+    "PROMOTION LAG". 17 minutes of breakage cost hours of fleet-wide stall.
+
+    The discriminator is content, not time: ask whether a LATER v2 run on this exact head sha
+    concluded success. If yes the tree is proven green and only the PR-context check is stale →
+    deterministically recoverable by re-firing ``pull_request`` (close+reopen). If no such run
+    exists we return False and the PR stays on the escalate path, so a genuinely-failing PR is
+    never re-fired. Same-sha comparison means this cannot mistake a later FIX-commit's green for
+    this head's.
+    """
+    if not head_oid:
+        return False
+    runs = gh_json(
+        [
+            "run",
+            "list",
+            "--repo",
+            f"{ORG}/{repo}",
+            "--workflow",
+            "quality-gates-v2.yml",
+            "--limit",
+            "40",
+            "--json",
+            "headSha,status,conclusion",
+        ]
+    )
+    if not isinstance(runs, list):
+        return False
+    for r in runs:
+        if not isinstance(r, dict):
+            continue
+        if str(r.get("headSha") or "") != head_oid:
+            continue
+        if str(r.get("status") or "") != "completed":
+            continue
+        if str(r.get("conclusion") or "").lower() == "success":
+            return True  # this exact tree passed v2 → the PR's failed check is stale
+    return False
 
 
 def _recently_action_recovered(repo: str, number: int, *, now: _dt.datetime | None = None) -> bool:
@@ -1546,12 +1640,13 @@ def _recently_action_recovered(repo: str, number: int, *, now: _dt.datetime | No
 
 
 def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[dict]:
-    """Deterministically recover two non-failing promotion-PR deadlocks (no worker needed).
+    """Deterministically recover three promotion-PR deadlocks (no worker needed).
 
     A promotion PR sits BLOCKED with auto-merge armed but unable to fire when the required
-    quality-gates-v2 check is non-green for a reason that is NOT a content failure. TWO such
-    signatures (both gated to BLOCKED + no FAILED check, so a genuinely-failing PR is left for
-    the escalate path):
+    quality-gates-v2 check is non-green for a reason that is NOT a live content failure. THREE such
+    signatures (all gated to BLOCKED; a genuinely-failing PR is still left for the escalate path —
+    signature (3) is the only one that touches a failed_check, and only after PROVING the failure
+    has been disproved on the identical head sha):
 
       (1) v2 NEVER reported (``v2_present`` False) — the v2-never-fired deadlock (head pushed by
           a token that suppresses the pull_request event). Deterministic → recover.
@@ -1579,15 +1674,35 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
         in-flight/green (no loop); a head already carrying our recovery marker is never
         stacked with a second recovery commit. (A ``v2_action_required`` head ran v2 → it is
         never CI-suppressed, so it always takes the close+reopen path.)
+      - STALE-failure head (signature 3) → close+reopen; the re-fired pull_request concludes
+        success (the dep breakage is gone), which clears failed_check so the next tick skips it.
+
+    EVERY path re-arms auto-merge — see ``_close_reopen_pr``: closing DISARMS auto-merge and
+    reopening does NOT restore it, so an un-re-armed "recovery" merely converts BLOCKED into
+    CLEAN-but-inert — which no detector looks for (``_STUCK_STATES`` has no CLEAN).
     """
     recovered: list[dict] = []
     for s in stuck:
         v2_action_required = bool(s.get("v2_action_required"))
-        if s.get("state") != "BLOCKED" or s.get("failed_check"):
+        if s.get("state") != "BLOCKED":
             continue
-        # v2 PRESENT + NOT action_required → in-flight / genuinely green-pending; recovering would
-        # loop. v2 ABSENT (never-reported) OR v2 present-but-action_required → recoverable.
-        if s.get("v2_present") and not v2_action_required:
+        # Signature (3) — STALE failure (poison-window). A failed_check normally means "genuinely
+        # red → escalate path owns it", and that stays true. The ONE exception is a failure the
+        # same head sha has since DISPROVED with a green v2: the content is proven fine and only
+        # the PR-context check is stale, so re-firing is deterministic, not a retry-loop. Checked
+        # BEFORE the failed_check bail-out, and only for promotion heads, so it can never re-fire
+        # a genuinely-failing PR. See _v2_failure_is_stale for the measured 3.5h trace.
+        stale_failure = False
+        if s.get("failed_check"):
+            if s.get("head") not in _PROMOTION_HEADS:
+                continue
+            if not _v2_failure_is_stale(s["repo"], s.get("head_oid") or ""):
+                continue  # genuinely red → leave it for escalation (unchanged behaviour)
+            stale_failure = True
+        # v2 PRESENT + NOT action_required + NOT a stale failure → in-flight / genuinely
+        # green-pending; recovering would loop. v2 ABSENT, action_required, or stale-failed →
+        # recoverable.
+        if s.get("v2_present") and not v2_action_required and not stale_failure:
             continue
         if s.get("head") not in _PROMOTION_HEADS:
             continue
@@ -1630,6 +1745,36 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
                 print(
                     f"  auto-recovered {repo}#{number}: close+reopen → fresh pull_request v2 "
                     "(v2 concluded action_required; bounded)"
+                )
+                recovered.append(s)
+            continue
+        if stale_failure and not skip_ci_head:
+            # Signature (3): the identical head already passed v2 — only the PR-context check is
+            # stale. close+reopen re-fires `pull_request`; it concludes success (the dep breakage
+            # that caused the original red is long gone) and the re-armed auto-merge then fires.
+            # Cannot loop: a re-fired green makes failed_check falsy, so the next tick skips it.
+            if _close_reopen_pr(repo, number):
+                subprocess.run(
+                    [
+                        "gh",
+                        "pr",
+                        "comment",
+                        str(number),
+                        "--repo",
+                        f"{ORG}/{repo}",
+                        "--body",
+                        "♻️ ci-failure-watcher: `quality-gates-v2` FAILED on this head, but a later v2 run on the "
+                        "**same head SHA** concluded `success` — a transient DEPENDENCY breakage red-lined the "
+                        "original `pull_request` run and the content has been green since. A `workflow_dispatch` "
+                        "green does not satisfy the PR's required context, so close+reopen re-fires it "
+                        "(auto-merge re-armed).",
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                print(
+                    f"  auto-recovered {repo}#{number}: close+reopen → fresh pull_request v2 "
+                    "(STALE failure — same head sha already passed v2)"
                 )
                 recovered.append(s)
             continue

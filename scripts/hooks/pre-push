@@ -1,27 +1,106 @@
 #!/usr/bin/env bash
-# Blocks git push to staging when direct deps are out of alignment.
-# Delegates to check-dep-alignment.py (same logic as quickmerge Stage 0).
-# Only fires when pushing to staging branch — no-op for feat/* pushes.
+# Epic: infrastructure_master
+# Lifecycle: permanent
+# Delete-when: NA
+#
+# pre-push — TWO chained guards. This file IS the installed hook (install-hooks.sh copies it to
+# every repo's .git/hooks/pre-push), so it must carry both.
+#
+#   [1] strict-quickmerge (BLOCKS) — CODE reaching live-defi-rollout/staging/main must have gone
+#       through quickmerge (`Quickmerge:` trailer) or be a carve-out.
+#   [2] dep-alignment (staging only) — this hook's original behaviour, unchanged.
+#
+# WHY [1] IS HERE NOW (2026-07-17). Guard [1] already existed at
+# scripts/dev/hooks/pre-push-strict-quickmerge.sh but was installed in ZERO of 25 clones:
+# install-hooks.sh copies THIS path, which only ever held guard [2] — and guard [2] returns 0 for
+# every non-staging push. The fleet default is LDR→main DIRECT with staging BYPASSED, so no push
+# ever matched and nothing was enforced. Measured: market-tick-data-service accumulated 26 and
+# deployment-api 7 non-quickmerge CODE commits; the LDR→main bot's D1 provenance gate then
+# correctly refused to promote them, surfacing only as anonymous "PROMOTION LAG" (~23h for mtds).
+#
+# SCOPE (operator ruling 2026-07-17): "outside pm repo block anything that's not quickmerge".
+# unified-trading-pm is EXEMPT from [1] — its scripts/** + .github/** direct pushes are the
+# sanctioned carve-out that unblocks the pipeline (gating a PM pipeline-fix behind a promote PR
+# that is itself broken is a deadlock). PM still runs [2].
+#
+# Carve-outs are the guard's own closed set (check_strict_quickmerge.py:105-123): merge/reconcile
+# commits, already-promoted commits, bot/[skip ci] authors, and any commit touching NO source
+# (docs/plans/codex/scripts/.github, *.md/*.yaml/... via CARVE_PREFIX/CARVE_EXT). A docs or plan
+# push is therefore unaffected in every repo.
+#
+# ESCAPE HATCH: `git push --no-verify` skips this hook. It is the local floor, NOT the backstop —
+# the LDR→main provenance gate still refuses to promote a bypassed commit, so --no-verify buys a
+# push, never a promotion. Use quickmerge.
+#
+# stdin: <local_ref> <local_sha> <remote_ref> <remote_sha>  (one line per pushed ref)
 
-set -euo pipefail
+set -uo pipefail
 
-REMOTE="$1"
+REMOTE="${1:-origin}"
+
+# stdin is consumable ONCE — capture it and replay to BOTH guards below.
+STDIN_DATA="$(cat)"
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+REPO_NAME="$(basename "$REPO_ROOT")"
+
+# Resolve the workspace root (the dir holding unified-trading-pm) by walking up. The old
+# "two levels up" assumption below was also wrong for main-workspace clones (one level up).
+_ws="${UNIFIED_TRADING_WORKSPACE_ROOT:-}"
+if [ -z "$_ws" ]; then
+  _d="$REPO_ROOT"
+  while [ "$_d" != "/" ] && [ ! -d "$_d/unified-trading-pm/scripts/cicd" ]; do _d="$(dirname "$_d")"; done
+  _ws="$_d"
+fi
+
+# ── [1] strict-quickmerge guard (BLOCKS) ──────────────────────────────────────────────────────
+_guard="${_ws}/unified-trading-pm/scripts/cicd/check_strict_quickmerge.py"
+if [ "$REPO_NAME" = "unified-trading-pm" ]; then
+  : # PM exempt — sanctioned carve-out path (see SCOPE above).
+elif [ ! -f "$_guard" ]; then
+  # Guard missing → no-op. NEVER block a push on a missing tool: a broken workspace checkout must
+  # not become an unpushable one. The server-side provenance gate still backstops promotion.
+  echo "pre-push: strict-quickmerge guard not found at ${_guard} — skipping (server gate still applies)"
+else
+  _protected="refs/heads/live-defi-rollout refs/heads/staging refs/heads/main"
+  _rc=0
+  while read -r _lref _lsha _rref _rsha; do
+    [ -z "${_rref:-}" ] && continue
+    case " $_protected " in *" $_rref "*) : ;; *) continue ;; esac
+    [ "${_lsha:-}" = "0000000000000000000000000000000000000000" ] && continue # branch delete
+    if [ "${_rsha:-}" = "0000000000000000000000000000000000000000" ]; then
+      _range="$_lsha" # new ref — the guard bounds its own rev-list
+    else
+      _range="${_rsha}..${_lsha}"
+    fi
+    python3 "$_guard" --range "$_range" --block || _rc=$?
+  done <<<"$STDIN_DATA"
+  if [ "${_rc:-0}" -ne 0 ]; then
+    echo ""
+    echo "  ⛔ pre-push BLOCKED — CODE on a protected branch must go through quickmerge."
+    echo "     Ship it:  bash scripts/quickmerge.sh \"<msg>\" --agent --files '<paths>'"
+    echo "     CLAUDE.md HARD RULE. The LDR→main provenance gate refuses to PROMOTE bypassed"
+    echo "     commits, so a direct push strands the repo (mtds: 26 commits, ~23h) — it saves"
+    echo "     nothing. Deps dirty? quickmerge STAGE 0.4/1 is exactly what reconciles them."
+    exit "$_rc"
+  fi
+fi
+
+# ── [2] dep-alignment guard (staging only) — original behaviour, unchanged ─────────────────────
+# Delegates to check-dep-alignment.py (same logic as quickmerge Stage 0). No-op off staging.
+# KEPT because the ldr_main (staging-bypassed) toggle is documented as REVERSIBLE — a breaking
+# bump or an operator decision routes a repo back through staging, and this must still fire then.
 PUSHING_TO_STAGING=false
-
 while IFS=' ' read -r local_ref local_sha remote_ref remote_sha; do
-  if echo "$remote_ref" | grep -q "refs/heads/staging"; then
+  if echo "${remote_ref:-}" | grep -q "refs/heads/staging"; then
     PUSHING_TO_STAGING=true
   fi
-done
+done <<<"$STDIN_DATA"
 
 if [ "$PUSHING_TO_STAGING" = false ]; then exit 0; fi
 
-# Navigate to workspace root (two levels up from repo root)
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-WORKSPACE_ROOT="${REPO_ROOT}/../../"
-MANIFEST="${WORKSPACE_ROOT}unified-trading-pm/workspace-manifest.json"
-REPO_NAME=$(basename "$REPO_ROOT")
-CHECK_SCRIPT="${WORKSPACE_ROOT}unified-trading-pm/scripts/repo-management/check-dep-alignment.py"
+MANIFEST="${_ws}/unified-trading-pm/workspace-manifest.json"
+CHECK_SCRIPT="${_ws}/unified-trading-pm/scripts/repo-management/check-dep-alignment.py"
 
 # If no manifest or script found, skip check (graceful degradation)
 if [ ! -f "$MANIFEST" ] || [ ! -f "$CHECK_SCRIPT" ]; then

@@ -3,18 +3,18 @@ name: git-commit
 description:
   Create a focused commit + push (and optional plan-checkbox flip) for the current session's changes. Stages only files
   touched during the agent session, runs the mandatory pre-commit safety check (`git diff --cached --stat` with no path
-  arg), drafts a conventional-commit title with `Co-Authored-By` footer, commits, and pushes directly to the working
-  branch — quickmerge is intentionally NOT in the flow because parallel agents make dep repos dirty almost continuously,
-  and quickmerging with dirty deps lies to CI. If the work shipped a plan todo, also covers the 4-step
-  plan-checkbox-flip protocol. Trigger on /git-commit, "commit this", "ship this", "push the change", or any time you're
-  about to call git commit / git push.
+  arg), drafts a conventional-commit title with `Co-Authored-By` footer, then routes by WHAT changed — CODE ships via
+  `quickmerge.sh --agent --files` (mandatory outside unified-trading-pm; the pre-push hook BLOCKS a direct code push),
+  docs/plans/scripts/.github push directly. If the work shipped a plan todo, also covers the 4-step plan-checkbox-flip
+  protocol. Trigger on /git-commit, "commit this", "ship this", "push the change", or any time you're about to call git
+  commit / git push.
 ---
 
 # Git Commit
 
 Creates a focused commit + push from the current agent session — scoped to touched files, with a clear title, the
-mandatory pre-commit safety check, and (when applicable) the same-logical-unit plan-checkbox flip. **Default direct
-push; do not reach for quickmerge.**
+mandatory pre-commit safety check, and (when applicable) the same-logical-unit plan-checkbox flip. **CODE ships via
+quickmerge; docs/plans push directly — the path is decided by WHAT you touched, not by preference (§ 6).**
 
 ## TL;DR — the dance-free default flow
 
@@ -24,8 +24,13 @@ When you're committing one or two files and concurrent agents may be active in t
 ```bash
 git add -- path/to/my/file              # stage by path; never `git add .`
 git commit -m "..."                     # HEREDOC message; never --no-verify
-git push origin live-defi-rollout       # direct; never quickmerge by default
+git push origin live-defi-rollout       # DOCS/PLANS ONLY — see § 6. CODE ships via quickmerge.
 ```
+
+> **CODE does not go out this way.** Outside `unified-trading-pm`, a `*.py` / `*.ts` / `*.tsx` change reaching
+> `live-defi-rollout` MUST go through `scripts/quickmerge.sh` (operator ruling 2026-07-17) and the pre-push hook now
+> BLOCKS it otherwise. The three-command path above remains correct for docs / plans / codex / scripts / `.github` and
+> for anything in PM. See **§ 6. Push** for why direct-pushing code does not actually save you anything.
 
 If foreign work is already in the staged set (a concurrent agent landed something between your `git add` and your
 `git commit`), use the **pathspec commit form** to bypass the index entirely:
@@ -165,23 +170,46 @@ EOF
 
 This creates a commit from only those paths' worktree state and leaves the rest of the index untouched.
 
-### 6. Push (default direct push — do NOT quickmerge)
+### 6. Push — CODE via quickmerge; docs/plans direct
+
+**The rule (operator ruling 2026-07-17, enforced by the pre-push hook):** outside `unified-trading-pm`, block anything
+that is not quickmerge. Which path you take is decided by WHAT you touched, never by preference:
 
 ```bash
-git push origin <branch>          # default branch: live-defi-rollout (per workspace-manifest.json)
+# CODE (*.py / *.ts / *.tsx outside scripts|tests|.github), any repo except PM:
+bash scripts/quickmerge.sh "<msg>" --agent --files 'path/a.py path/b.py'
+
+# DOCS / PLANS / CODEX / scripts / .github — and ANYTHING in unified-trading-pm:
+git push origin live-defi-rollout
 ```
 
-**Why not quickmerge:** parallel agents (Harsh + Ikenna, multiple Cursor + Claude Code sessions) make upstream dep repos
-(UAC / UTL / UCI / UEI / MTDS / URDI / instruments-service / etc.) dirty almost continuously. Quickmerging a downstream
-consumer with dirty upstream deps is misleading — the consumer's local `uv pip install -e ../<dep>` resolves to the
-dirty tree, but the pushed branch links to `origin/<dep>` which lacks those edits → CI green locally, red remotely, the
-PR is a lie. Plus quickmerge's stash + auto-staging behaviour has been the root cause of multiple foreign-file-bundling
-incidents. **In practice, default to direct push and don't reach for quickmerge.** The legitimate exception
-(verified-clean-dep-graph finished feature being landed) is rare enough to ask the user before invoking
-`scripts/quickmerge.sh`.
+`scripts/hooks/pre-push` runs `check_strict_quickmerge.py --block` on pushes to `live-defi-rollout` / `staging` /
+`main`. A code commit without a `Quickmerge:` trailer is REJECTED. PM is exempt (its `scripts/**` + `.github/**` pushes
+are the carve-out that unblocks the pipeline). Carve-outs are automatic and file-based — a docs/plan push never trips
+it, in any repo.
+
+**This section used to say the opposite ("never quickmerge by default"). Here is why that changed** — the two concerns
+behind it were real, but direct-pushing did not solve either; it only moved the failure somewhere with a worse blast
+radius:
+
+- **"Dirty upstream deps make a quickmerged PR a lie."** True — and quickmerge STAGE 0.4 (not-behind gate) + STAGE 1
+  (dependency validation vs the workspace-manifest SSOT) exist to catch exactly that, loudly, at push time. Direct push
+  does not make the dep problem go away; it ships the code with the problem unexamined, and the LDR→main bot's D1
+  provenance gate then refuses to PROMOTE the commit. **Measured 2026-07-16:** market-tick-data-service accumulated 26
+  such commits and deployment-api 7; mtds's promotion sat blocked ~23h and surfaced only as an anonymous "PROMOTION LAG"
+  alert. A direct push buys a green local push and an un-promotable branch. That is strictly worse than a quickmerge
+  that tells you the deps are dirty.
+- **"Quickmerge's stash + auto-staging bundled foreign files."** That is what `--files 'a.py b.py'` is for — it scopes
+  the commit by name. Always pass `--agent --files`, never bare `quickmerge.sh "<msg>"`. If it still tries to bundle
+  work that is not yours, that is a bug worth an issue doc, not a reason to bypass the gate.
+
+**If quickmerge blocks you, it has found something — read it.** Behind-remote → `git pull --rebase --autostash` (STAGE
+0.4 auto-reconciles). Genuine conflict → `rebase --abort` + the structured `QUICKMERGE_BLOCKED` recovery. Dirty deps →
+that dep must land first; that ordering IS the point, not an obstacle. `git push --no-verify` skips the local hook but
+NOT the server provenance gate, so it strands the repo rather than shipping it.
 
 **`live-defi-rollout` is the working branch.** VMs pull from it; CI runs against it. Rapid iteration doesn't need a
-quickmerge → main promotion.
+quickmerge → main promotion — but it does need the code to have arrived via quickmerge.
 
 **Two-pass model becomes:** Pass 1 = `bash scripts/quality-gates.sh` (full — tests + lint + format + typecheck + codex).
 Pass 2 = `git push` (no separate re-run; QG already covered everything).
@@ -254,8 +282,12 @@ Run `git status` and `git log -1 --format='%h %s'` after pushing to confirm. Sho
   repo are almost always another agent's WIP — tell the user instead.
 - **Never bump versions manually** — not in `pyproject.toml`, not in `workspace-manifest.json`, not in floor
   constraints. The semver-agent handles bumps on merge to main.
-- **Never quickmerge by default** — direct push to `live-defi-rollout` is the rule. Quickmerge is an exception for
-  landing a finished feature with a verified-clean dep graph; ask the user before invoking it.
+- **CODE goes through quickmerge — always, outside `unified-trading-pm`** (operator ruling 2026-07-17; reversed the
+  2026-05-07 "default direct push"). `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'`. The pre-push hook
+  BLOCKS a direct code push to `live-defi-rollout`/`staging`/`main`, and the LDR→main provenance gate refuses to PROMOTE
+  a bypassed commit — so a direct push strands the branch instead of shipping it (mtds: 26 commits, ~23h un-promotable).
+  Docs/plans/codex/scripts/`.github` and everything in PM still push directly; the carve-out is automatic and
+  file-based, so you never have to decide. See § 6.
 - **Cadence is per shippable unit, not per session.** Five shippable units = five commit+push cycles. Pushed = real;
   local-only commits are invisible to other agents, CI, and VMs that pull from `live-defi-rollout`.
 - Staged files must reflect session work only — not unrelated pre-existing changes, not foreign agents' WIP.
@@ -407,5 +439,7 @@ do NOT use it outside foot-gun #4 conditions.
 - `.claude/CLAUDE.md` § _Two teammates × multiple parallel agents — don't edit unfamiliar files_ — file-ownership
   discipline.
 - `.claude/CLAUDE.md` § _DO NOT quickmerge when dep repos are dirty_ — original 2026-05-06 dirty-deps rule (refined
-  2026-05-07 to "default direct push, don't reach for quickmerge").
+  2026-05-07 to "default direct push, don't reach for quickmerge"). **SUPERSEDED 2026-07-17** (operator ruling): CODE
+  goes via quickmerge outside PM, enforced by the pre-push hook. Dirty deps are a reason to FIX the dep order, not to
+  bypass — the direct-push era left 33 un-promotable commits across mtds + deployment-api. See § 6.
 - `unified-trading-pm/plans/PLAN_FORMAT.md` § _Cursor-Friendly Todo Checkboxes_ — `- [x]` / `- [ ]` rendering rule.

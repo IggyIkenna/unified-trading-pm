@@ -374,7 +374,11 @@ slot_identity_email() {
 # Install the strict-quickmerge pre-push hook into a Path-B clone's own .git/hooks.
 install_strict_quickmerge_hook() {
     local clone_dir="$1"
-    local hook_src="${WORKSPACE_ROOT}/unified-trading-pm/scripts/dev/hooks/pre-push-strict-quickmerge.sh"
+    # The ONE canonical pre-push (strict-quickmerge + dep-alignment, chained) — same source as
+    # install-hooks.sh + slot-cron-ff-pull.sh. Was scripts/dev/hooks/pre-push-strict-quickmerge.sh,
+    # which installed the strict guard WITHOUT dep-alignment and only ever reached .tabs/ clones;
+    # main-workspace clones got install-hooks.sh's dep-align-only hook and enforced nothing.
+    local hook_src="${WORKSPACE_ROOT}/unified-trading-pm/scripts/hooks/pre-push"
     local hook_dst="${clone_dir}/.git/hooks/pre-push"
     if [[ -f "${hook_src}" && -d "${clone_dir}/.git/hooks" ]]; then
         cp "${hook_src}" "${hook_dst}" && chmod +x "${hook_dst}"
