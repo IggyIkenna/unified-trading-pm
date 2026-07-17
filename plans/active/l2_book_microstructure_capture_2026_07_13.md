@@ -170,12 +170,13 @@ sequential: true
       `l2_book_microstructure_capture-008` (this todo) marked `done` with `done_sha=019276470203` — that SHA is actually
       todo 3's commit (the compute function only); no handler file existed in the repo before this dispatch. This plan
       doc's checkbox (the real SSOT) was correctly still unchecked; only the backlog DB row had drifted.
-- [ ] [SCRIPT] P2. Extend `features-service/.../book_microstructure_feature_extractor.py`
-      (`extract_book_microstructure_feature_dict`) to surface `queue_position_bid`/`queue_position_ask`/
-      `book_depth_levels` when present — the honest-absence behavior for capped venues must be preserved exactly as
-      today. `formula_version=1` on any new derived keys. Repo: features-service. **Blocked on the new handler-wiring
-      todo above** — until it lands, `queue_position`/`depth_levels_*` are honest-absent from every captured row, so
-      there is nothing new for this extractor to surface yet. **PREMISE CORRECTION (2026-07-14, slot-11,
+- [ ] [SCRIPT] P2. **BLOCKED-OPERATOR-DECISION** — Extend
+      `features-service/.../book_microstructure_feature_extractor.py` (`extract_book_microstructure_feature_dict`) to
+      surface `queue_position_bid`/`queue_position_ask`/ `book_depth_levels` when present — the honest-absence behavior
+      for capped venues must be preserved exactly as today. `formula_version=1` on any new derived keys. Repo:
+      features-service. **Blocked on the new handler-wiring todo above** — until it lands,
+      `queue_position`/`depth_levels_*` are honest-absent from every captured row, so there is nothing new for this
+      extractor to surface yet. **PREMISE CORRECTION (2026-07-14, slot-11,
       `plans/active/issues/l2_book_microstructure_features_extractor_snapshot_path_retired_2026_07_14.md`):** the
       handler-wiring todo above IS now done, but this todo's target — `extract_book_microstructure_feature_dict` reading
       raw `CanonicalBookMicrostructure` snapshot rows — no longer exists. It was DELETED as "no-tech-debt" by
@@ -210,14 +211,14 @@ sequential: true
       passed** (captured_depth=20 for every venue; sample: BINANCE-FUTURES imbalance=0.55/queue_position bid=7.012
       ask=2.083, DERIBIT bid=2510.0 ask=146280.0, etc. — full per-venue output in the session transcript). Exit 0.
       `quality-gates.sh` green (147s, sentinel-verified at the shipped SHA).
-- [ ] [SCRIPT] P2. Do NOT flip `MarketMakingQueueMicrostructureEngine`'s registration here — that stays in the parent
-      plan's Phase E1, gated on this data landing AND a passing `GroupBRunner` backtest (which needs historical
-      deeper-book replay, still no backfill authorised). This todo is DONE when the feed is honestly live for the
-      capable venues, not when the engine registers. **BLOCKED-DATA-CORRECTNESS (2026-07-14, slot-11):** verified the
-      done-condition before flipping — it is NOT true. Manifest check found `depth_of_book_10` has 0 rows ever captured,
-      AND — much bigger — the entire CeFi live WS tick-capture pipeline (every `live_*` pipeline_mode, every data_type,
-      every venue) has produced no manifest rows since 2026-06-29 (15 days stale); no running compute instance in the
-      project looks like a persistent live-WS process. Filed
+- [ ] [SCRIPT] P2. **BLOCKED-DATA-CORRECTNESS** — Do NOT flip `MarketMakingQueueMicrostructureEngine`'s registration
+      here — that stays in the parent plan's Phase E1, gated on this data landing AND a passing `GroupBRunner` backtest
+      (which needs historical deeper-book replay, still no backfill authorised). This todo is DONE when the feed is
+      honestly live for the capable venues, not when the engine registers. **BLOCKED-DATA-CORRECTNESS (2026-07-14,
+      slot-11):** verified the done-condition before flipping — it is NOT true. Manifest check found `depth_of_book_10`
+      has 0 rows ever captured, AND — much bigger — the entire CeFi live WS tick-capture pipeline (every `live_*`
+      pipeline_mode, every data_type, every venue) has produced no manifest rows since 2026-06-29 (15 days stale); no
+      running compute instance in the project looks like a persistent live-WS process. Filed
       [`issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md`](issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md)
       (P1, NOTIFY-OPERATOR class per the data-pipeline-correctness HARD RULE) — did NOT attempt to relaunch anything
       myself (needs operator context on the correct deployment target + whether this is an intentional pause).
@@ -234,6 +235,38 @@ sequential: true
       (still correct). No infra touched (read-only check).
 
 ## Progress Log
+
+### 2026-07-17 — slot 10 (Todo 5 re-dispatched a third time — root-caused + fixed the repeat-dispatch bug)
+
+Dispatched `l2_book_microstructure_capture-005` (todo 5) again — third occurrence (slot-11 2026-07-14, slot-7
+2026-07-16, now slot-10). Re-verified the 2026-07-14 Option-C resolution before touching anything: read
+`features-service/features_service/cefi/book_microstructure_feature_extractor.py` directly — still only exports
+`extract_book_microstructure_from_candle_columns` (`formula_version=2`), no `queue_position_bid`/`queue_position_ask`/
+`depth_levels_*` fields, docstring still states it "Replaces the retired snapshot path". Also grepped for any new
+MDPS-scoped follow-up plan authorizing Option A — none exists (only the issue doc referencing it as future work).
+Nothing has drifted; the decision is still Option C, still correctly deferred, checkbox correctly stays unflipped.
+
+**Root-caused the actual repeat-dispatch bug** (both slot-11 and slot-7 flagged this as a backlog-hygiene gap needing
+main/operator + orchestrator-VM `backlog.yaml` access — that's true for a _priority/prereq_ park, but there's a
+mechanism that's fully in a worker's reach): read `agent-orchestrator/server/regen_backlog_from_plan.py`
+`_parse_open_todos()` — it iterates the plan file **one raw line at a time** and `_UNCHECKED_RE` /
+`_NON_DISPATCHABLE_RE` (the `BLOCKED-[A-Z]` / stretch-optional marker convention) only ever sees that **first physical
+line** of a multi-line checkbox item; anything on a wrapped/indented continuation line is invisible to the parser. Todo
+7 already had a `**BLOCKED-DATA-CORRECTNESS**` marker in its body (added 2026-07-14) — but it was 4 lines down from the
+checkbox, not on the first line, so it never actually suppressed dispatch (confirmed via `task_still_dispatchable()`,
+which keys off the exact same `_parse_open_todos()` output). Todo 5 had no marker at all.
+
+**Fix applied (this dispatch, plan-doc edit only — no `backlog.yaml`/orchestrator-VM access needed):** moved a
+`**BLOCKED-DATA-CORRECTNESS**` prefix onto todo 7's first checkbox line (same classification it already carried in-body,
+just relocated to where the parser reads it), and added a new `**BLOCKED-OPERATOR-DECISION**` prefix onto todo 5's first
+checkbox line (matches the taxonomy: it is genuinely waiting on a future operator authorization event — Option A being
+picked up when the `MarketMakingQueueMicrostructureEngine` backtest gate is worked). Both todos stay fully visible in
+the plan; `regen_backlog_from_plan.py`'s next tick should now exclude both from the dispatchable backlog
+(`_parse_open_todos` skip + `task_still_dispatchable` no longer finding the brief among current open+dispatchable todos
+prunes the existing queued rows too) instead of re-dispatching them to another slot.
+
+Checkbox states unchanged (todo 5 still `[ ]`, correctly deferred-not-done; todo 7 still `[ ]`, correctly
+blocked-not-done). This is a docs-only fix, ships via the `docs(plans):` carve-out (no code in this commit).
 
 ### 2026-07-14 — slot 11 (Todo 7 — verified done-condition false, filed a bigger NOTIFY-OPERATOR finding)
 
