@@ -1211,9 +1211,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 24,
-        "coverage_pct": 96.27,
         "warn_file_count": 31
       }
     },
@@ -1263,8 +1263,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "coverage_pct": 87.86,
+        "coverage_pct": 87.88,
+        "qg_red_reason": "pytest",
         "large_file_count": 6,
         "warn_file_count": 21
       }
@@ -1399,7 +1399,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
