@@ -3503,6 +3503,19 @@ it's new adapter work, not a data-audit residual).
     fixture-proximate trigger fires around a real 07-18 kickoff). Re-escalated to main via a slot-6 `/blocked` for the
     `sports-cron-overnight-2026-07-18-observable` dispatch gate (or park) — **6th slot now burned pre-gate
     (5→7→4→3→5→6); the gate is the only thing that stops a 7th.**
+  - **INTERIM STATUS 2026-07-17 16:13 UTC (slot-8, data_engineering — the 7th pre-gate dispatch slot-6 predicted;
+    checkbox STILL NOT flipped).** Redispatched again ~7 min after slot-6 (16:06 → 16:13 UTC). **Deliberately did NOT
+    re-run the REST/duckdb sweep** — no daily-cron self-fire can occur before the **2026-07-18 00:35–01:15 UTC** windows
+    (~8.4 h out), and slot-5 confirmed all 5 daily schedulers `ENABLED` + armed with correct crons only 16 min earlier
+    (15:57 UTC); a re-sweep would re-confirm that reading for zero new signal (same reasoning slot-3/4/5/6 applied).
+    **DISPOSITION UNCHANGED — todo stays OPEN on the time-gate; re-check after 2026-07-18 ~01:30 UTC per slot-7's
+    checklist** (5 run jobs each showing a NEW cron-triggered — not manual — exec at their exact cron minute for 07-18
+    with `succ=1`; fresh `captured` rows for 07-17/18 per source; footystats+transfermarkt do NOT re-fail at
+    `instruments_handler.py:310` on the restored config; Tier-3/4 fixture-proximate trigger fires around a real 07-18
+    kickoff). Re-escalated to main via a slot-8 `/blocked` for the `sports-cron-overnight-2026-07-18-observable`
+    dispatch gate (or park: `priority: 999` + `priority_override: true` + a false prereq) — **7th slot now burned
+    pre-gate (5→7→4→3→5→6→8); the gate/park is the ONLY thing that stops an 8th, and a worker cannot add it
+    (backlog.yaml HARD RULE) — this is main's to action.**
 
 - **2026-07-14 (slot-5, data_engineering) — 8,766 NON-IS ROWS VERIFY (todo "resolve the 8,766 non-instruments-service
   rows").** Live single-parquet read of `instruments-store-sports-prd` `_index/availability_index.parquet`, api_football
