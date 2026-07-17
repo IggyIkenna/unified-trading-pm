@@ -1,0 +1,79 @@
+name: ldr-docs-gate
+
+# ── WHY THIS EXISTS (2026-07-17) ──────────────────────────────────────────────
+# Docs (`plans/**`, `codex/**`) are a quickmerge carve-out (direct push to LDR is legal) and
+# LDR runs no server QG by design — so the ONLY defense against broken doc frontmatter is the
+# local prek hook, which was bypassed on TWO different hosts on 2026-07-17 (3 broken docs →
+# the lint-codex slice went RED on EVERY PR into PM main for ~1h, plus a false MAIN-RED on
+# UTL, ~12 CRITICAL alerts). This backstop closes the detection gap: it validates the doc
+# corpus ON the integration branch minutes after any doc-touching push and pages ONCE with
+# the offending commit — instead of the breakage surfacing as fleet-wide red gates.
+# Runs on the self-hosted glue pool: $0, warm checkout, sub-minute.
+# SSOT: plans/active/issues/prek_plan_hygiene_hook_fail_open_unhooked_clone_2026_07_17.md
+# (fix direction 2) + codex/11-project-management/doc-frontmatter-schema.md.
+
+on:
+  push:
+    branches: [live-defi-rollout]
+    paths:
+      - "plans/**"
+      - "codex/**"
+
+concurrency:
+  # Newest push wins — an outdated corpus verdict is worthless.
+  group: ldr-docs-gate
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  frontmatter-gate:
+    name: Doc frontmatter gate (LDR)
+    runs-on: [self-hosted, Linux, X64, glue]
+    timeout-minutes: 5
+    outputs:
+      verdict: ${{ steps.gate.outputs.verdict }}
+      excerpt: ${{ steps.gate.outputs.excerpt }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Corpus frontmatter check
+        id: gate
+        shell: bash
+        run: |
+          set -uo pipefail
+          # The glue slot's venv python (unit PATH) carries the PM deps the checker needs.
+          OUT="$(python3 scripts/plan-hygiene/check_frontmatter_schema.py --quiet 2>&1)"
+          RC=$?
+          echo "$OUT"
+          {
+            echo "verdict=$([ $RC -eq 0 ] && echo green || echo red)"
+            echo "excerpt<<__EOX__"
+            echo "$OUT" | head -12
+            echo "__EOX__"
+          } >> "$GITHUB_OUTPUT"
+          exit $RC
+
+  notify-broken-docs:
+    needs: frontmatter-gate
+    if: always() && needs.frontmatter-gate.outputs.verdict == 'red'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ":page_facing_up: *BROKEN DOC FRONTMATTER ON live-defi-rollout* — pushed by `${{
+        github.event.head_commit.author.name }}` in `${{ github.event.head_commit.id }}` (`${{
+        github.event.head_commit.message }}`). Every PM-corpus lint-codex slice fleet-wide goes RED until this is
+        repaired — fix the frontmatter NOW (remedy: `python3 scripts/docs/seed_frontmatter.py --apply <path>`, schema:
+        codex/11-project-management/doc-frontmatter-schema.md). Violations:\n${{ needs.frontmatter-gate.outputs.excerpt
+        }}"
+      severity: "CRITICAL"
+      workflow_name: "ldr-docs-gate"
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # One page per breakage episode, not per subsequent doc push while red.
+      dedup_key: "ldr-docs-gate-red"
+      cooldown_min: 60
+    secrets: inherit

@@ -236,8 +236,10 @@ asynchronously; the worker proceeds with everything else and applies the ruled i
 ## Phase 5 — apply + commit
 
 - PM-repo doc edits only; stage by name; mandatory pre-commit check `git status && git diff --cached --stat` (no path
-  arg); pure doc/plan changes = prek-only (no full QG needed); commit prefix `docs(plans):`; push per the `git-commit`
-  skill. Batch related fixes into coherent commits (one commit per class or per plan, not one mega-commit).
+  arg); pure doc/plan changes = prek-only (no full QG needed); commit prefix `docs(plans):`; ship per CLAUDE.md's
+  git-discipline section (CODE via `quickmerge.sh --agent --files`; the `git-commit` skill was REMOVED 2026-07-17 — it
+  predated quickmerge and taught direct code pushes). Batch related fixes into coherent commits (one commit per class or
+  per plan, not one mega-commit).
 - Big findings (data-correctness, May-23 critical path, cross-repo, SSOT contradiction) additionally follow the triage
   HARD RULE: **notify the operator + file `plans/active/issues/<slug>_<YYYY_MM_DD>.md`**. In autonomous mode the issue
   doc also carries every parked `BLOCKED-OPERATOR-DECISION` with its options block.
