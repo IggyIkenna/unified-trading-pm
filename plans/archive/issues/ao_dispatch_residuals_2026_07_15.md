@@ -12,7 +12,7 @@ summary: |
   (`ao_dispatch_correctness_regen_reconcile` — it already owns `dispatch.py` + `autospawn.py` tier logic + the
   `slot_skips` table). It does NOT duplicate the source docs; it makes them collectively visible. Read-only; no code
   changed.
-status: open
+status: resolved # ACKED — R1/R2/R5/R6 shipped, R3/R4 shipped as prompt guards, R7 re-homed (see superseded_by)
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -38,21 +38,47 @@ source:
 assigned_vm: NA
 execution_scope: local-only
 resolved_by:
+  - "R1 — agent-orchestrator@7baeedc (eligibility-aware budget) + @bf9a61b (_FILTERS scope table) + @6c778e6 (candidate
+    set gated on slot_is_spawnable) + @f8ace1f (slot_has_claimable_task). Proven on the LIVE rate, not on tests: pre-fix
+    15:00-17:00 = 87 spawns / 0 dispatches; post-fix 19:00-21:00 = 31 spawns / 37 dispatches."
+  - "R2 — agent-orchestrator@6ae43b5 (_spawn_param_plan, per-slot tier/role; _top_queued_task_params DELETED)"
+  - "R3/R4 — unified-trading-pm@5a79c4c23 (agents/main.md STEP 2.4/2.6 + monitor.md prompt guards)"
+  - "R5 — agent-orchestrator@860eaf7 (liveness-aware high-affinity spill, 600s threshold)"
+  - "R6 — agent-orchestrator@962e676 (review_slot SLOT-scope filter; deliberately NOT the slot_role fix this index's
+    source doc recommended — that variant would have broken worker dispatch fleet-wide)"
+  - "R7 — dangerous half fixed at agent-orchestrator@4695db6 (TaskRow.brief_hash + reset-on-mismatch); surviving half
+    re-homed to regen_positional_task_ids_not_content_stable_2026_07_17 (see superseded_by)"
 locked_by:
 locked_since:
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
 supersedes:
-superseded_by:
+superseded_by: regen_positional_task_ids_not_content_stable_2026_07_17.md # R7's surviving half ONLY; R1-R6 are shipped
 depends_on:
 assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
-> **Tracking index — not a duplicate.** Each residual has a canonical source doc; this collects the orphans so they're
-> visible to active execution. Suggested resolution: fold these into `ao_dispatch_correctness_regen_reconcile` as todos
-> (it owns the code), OR execute as one small batch. Nothing here is fixed yet; all read-only-verified.
+> **✅ ACKED 2026-07-17 — this index did its job; every residual now has a home. Archived.**
+> [`ao_dispatch_hardening_2026_07_16`](../../active/ao_dispatch_hardening_2026_07_16.md) absorbed and SHIPPED R1, R2,
+> R5, R6 (code) and R3, R4 (prompt guards) — and R1 was closed on the **live dispatch rate**, not on a green suite. R7's
+> dangerous half was already fixed at `agent-orchestrator@4695db6`; its **surviving half is re-homed to
+> [`regen_positional_task_ids_not_content_stable_2026_07_17`](regen_positional_task_ids_not_content_stable_2026_07_17.md)**,
+> which also corrects R7's wording below (see that doc — the one-line framing in the table is imprecise). Per-residual
+> SHAs are in `resolved_by`.
+>
+> **Why the re-home rather than archiving R7 with the rest**: this index was the ONLY doc carrying R7, and its own
+> suggested owner (`ao_dispatch_correctness_regen_reconcile_2026_07_07`) is itself archived. Archiving with a live
+> residual and no `superseded_by` is exactly what
+> [`ao_autospawn_role_blind_dispatch_starvation_2026_07_14`](ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md)
+> did on 2026-07-14 — its banner records that it orphaned two live bugs for two days until a later plan rediscovered
+> them. Not repeating that.
+
+> **Historical — the index as filed 2026-07-15.** Tracking index, not a duplicate. Each residual has a canonical source
+> doc; this collects the orphans so they're visible to active execution. Suggested resolution: fold these into
+> `ao_dispatch_correctness_regen_reconcile` as todos (it owns the code), OR execute as one small batch. Nothing here is
+> fixed yet; all read-only-verified.
 
 ## The residuals (all code-confirmed open; none tracked in an in-flight plan)
 

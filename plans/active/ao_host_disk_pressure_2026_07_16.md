@@ -175,11 +175,37 @@ deployment never verified.** Each took one command to check.
       pre-flight `df` check at boot/heartbeat that flags the slot, or classify the `could not create numbered dir` /
       `No space left on device` signature into a distinct terminal reason rather than a generic failure). **Gate**: a
       simulated full-disk worker failure surfaces as a disk cause, not as a silent give-up.
-- [ ] [INFRA] P2. **Reconcile the two coexisting uv caches.** The dev host runs BOTH `/active/uv-cache` (the live
-      hardlink source) and `/active/unified-trading-system-repos/.uv-cache` — a drift from the documented single-cache
-      convention. Harmless for dedup today (same filesystem, so hardlinks still work) but it means the documented SSOT
-      path is not the one actually in use, which will mislead the next person who reasons about cache size. **Gate**:
-      one cache, or the convention doc updated to match reality — not both claiming to be the source.
+- [x] [INFRA] P2. ✅ **DONE 2026-07-17 — MEASURED, and this todo was wrong on both of its factual claims. Gate met by
+      correcting the record (the gate's own second branch); the two residual actions it exposes are operator-owned.**
+      There are **THREE** caches on the dev host, not two: | cache | size | entries | last written | filesystem |
+      verdict | | --- | --- | --- | --- | --- | --- | | `/active/uv-cache` | 30G | 6135 | **2026-07-08** | `nvme0n1p2` |
+      **stale, pre-convention** | | `…/unified-trading-system-repos/.uv-cache` | 3.8G | 814 | **2026-07-17 (live)** |
+      `nvme0n1p2` | **CURRENT** | | `/home/hk/.cache/uv` | 3.3G | 685 | **2026-07-17 (live)** | **`nvme0n1p1`** |
+      **CURRENT, cross-fs** | - **Claim 1 — "`/active/uv-cache` (the live hardlink source)" is FALSE.** It is the FORMER
+      source: newest `archive-v0` entry is **2026-07-08**, nine days stale, and **zero files in the workspace reference
+      it** (the only hit is this plan). The live one is `.uv-cache`, which
+      `scripts/quality-gates-base/base-service.sh:344` DERIVES
+      (`UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"`). The convention superseded `/active/uv-cache` and
+      nobody swept up. **I nearly got this backwards**: a sample file in `/active/uv-cache` showed `links=1`, which
+      reads as "dead, reclaim it" — but that file was inside an abandoned `.tmp*` dir. Sampling the real `archive-v0`
+      found **`links=81`** on `_duckdb…so`, the exact inode the `slot_venv_duplication` doc cites as dedup proof. It is
+      stale but genuinely hardlinked; acting on the first sample would have argued for deleting 30G of live cache. -
+      **Claim 2 — "both caches sit on the same filesystem so dedup is unaffected → cosmetic" does not cover the third,
+      which this todo did not know about.** `/home/hk/.cache/uv` is uv's DEFAULT (`UV_CACHE_DIR` is unset in an
+      interactive shell — `uv cache dir` confirms it) and sits on **`nvme0n1p1`, a different filesystem from the
+      `/active` venvs it links into → hardlinks silently degrade to COPIES**. That is exactly failure mode **B2** named
+      in [`slot_venv_duplication_disk_pressure_2026_06_29`](issues/slot_venv_duplication_disk_pressure_2026_06_29.md).
+      QG runs are safe (base-service.sh exports the derived path); **hand-run `uv` is not**. And `nvme0n1p1` is the
+      partition under pressure: **`/` at 84% (36G free)** vs `/active` at 53% (104G free). - **Scope kept honest**: the
+      plan's disk thesis is about the AO VM (`i-0c9b283b31d6b5ca7`); this todo is the DEV host, so neither finding
+      changes the VM verdict. **Deliberately took no destructive action** — 30G on the operator's own dev host, and
+      CLAUDE.md's rule is that when the target contradicts its description you SURFACE it rather than proceed. Both
+      follow-ups are recorded as operator-owned in `## Deferred work after 2026-07-17`. ~~**Reconcile the two coexisting
+      uv caches.** The dev host runs BOTH `/active/uv-cache` (the live hardlink source) and
+      `/active/unified-trading-system-repos/.uv-cache` — a drift from the documented single-cache convention. Harmless
+      for dedup today (same filesystem, so hardlinks still work) but it means the documented SSOT path is not the one
+      actually in use, which will mislead the next person who reasons about cache size.~~ **Gate**: one cache, or the
+      convention doc updated to match reality — not both claiming to be the source.
 
 ### Phase 3 — correct the record (P2)
 
@@ -254,5 +280,29 @@ deployment never verified.** Each took one command to check.
   idle-slot venvs more often (slower boots) for the same protection; a shorter cadence catches the same 80% level sooner
   and cuts worst-case blind climb to **+6.4 points**.
 - **Phase 2 — the disk backstop** (`ao@e7f70c8`), above.
-- **Not done, deliberately**: the uv-cache dual-path reconcile (P2, cosmetic — both caches are on the same filesystem so
-  dedup is unaffected; it is a documentation-vs-reality drift, not a disk-pressure driver).
+- ~~**Not done, deliberately**: the uv-cache dual-path reconcile (P2, cosmetic — both caches are on the same filesystem
+  so dedup is unaffected; it is a documentation-vs-reality drift, not a disk-pressure driver).~~ **Superseded 2026-07-17
+  — that framing was wrong on the facts** (see the Phase 2 todo). It was called cosmetic on the reasoning that "both
+  caches are on the same filesystem"; measurement found a **third** cache, `/home/hk/.cache/uv`, on a **different**
+  filesystem from the venvs it links into, on the partition that is actually full (`/` at 84% vs `/active` at 53%).
+  Calling something cosmetic because two of three cases are benign is the failure this plan's own "what the docs claim
+  vs what the VM says" table exists to catch — I did it to myself, one todo below that table.
+
+## Progress Log — 2026-07-17
+
+- **Phase 2 P2 (uv caches) — closed by measurement, and the todo was wrong twice.** Both of its factual claims failed:
+  `/active/uv-cache` is **not** "the live hardlink source" (last written 2026-07-08, referenced by zero files) and the
+  "same filesystem so it's cosmetic" reasoning did not cover the third, cross-filesystem cache it did not know existed.
+  **Near-miss worth recording**: the first evidence I gathered — `links=1` on a sample file — pointed at "30G orphan,
+  reclaim it". It came from an abandoned `.tmp*` dir. The real `archive-v0` shows `links=81`. One more command separated
+  "delete 30G of live cache on the operator's dev host" from the right answer.
+
+## Deferred work after 2026-07-17
+
+| #   | Item                                                                            | State / why deferred                                                                                                                                                                                                                                                                                                                                                                | Blocked on      |
+| --- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| 1   | **Reclaim the stale 30G `/active/uv-cache`**                                    | **Operator-owned.** Dead since 2026-07-08, zero references. Deleting it is SAFE for the 81 hardlinked venvs (hardlinks are equal citizens — the venv's copy survives; only blobs at `links=1` free space, so the real reclaim is < 30G). Your dev host, your call. `/active` is at 53%, so there is no pressure forcing it.                                                         | operator ruling |
+| 2   | **`UV_CACHE_DIR` unset for interactive shells → cross-fs `/home/hk/.cache/uv`** | **Operator-owned (shell profile).** The B2 mode: hand-run `uv` links cross-filesystem → silent copies onto the 84%-full `/`. `slot_venv_duplication_disk_pressure_2026_06_29` already carries this as its own "Optional: if you run `uv` by hand a lot outside QG, add `UV_CACHE_DIR=<workspace-root>/.uv-cache` to your profile". QG is unaffected. Not mine to edit your profile. | operator ruling |
+
+**Recommended NEXT: (2) before (1).** (2) is one line and stops new cross-fs copies landing on the partition that is
+actually full; (1) frees space on the partition that isn't.

@@ -61,9 +61,21 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
-> **NOTIFY-OPERATOR incident (fleet availability).** 2026-07-07: the AO fleet went idle overnight with ~30 ready tasks
-> queued. Investigated live (SSH + `state.db` + `/api/*`). NOT a crash — a compounded dispatch stall. This doc is the
-> root-cause + prevention record.
+> **✅ ACKED-INTO-CODE 2026-07-17 — all 6 todos closed; archived.** R2 (mixed-tier spawn) shipped at
+> `agent-orchestrator@6ae43b5`; R3/R4 (the monitor/main prompt guards) at `unified-trading-pm@5a79c4c23`. Absorbed by
+> [`ao_dispatch_hardening_2026_07_16`](../../active/ao_dispatch_hardening_2026_07_16.md), whose Phase 3 gate has since
+> passed **on the live dispatch rate** — the bar this doc's incident deserved: spawns now TRACK dispatches (last 12h 3/3
+> = 1.00:1) against the 44:1 baseline that produced this stall. `resolved_by` carries all 5 SHAs + an independent
+> 2026-07-17 audit confirming each is present at HEAD and not reverted by later refactors.
+>
+> **The correction worth carrying**: this doc's root cause blamed `_top_queued_task_params` picking the top task's tier
+> — true, and R2 DELETED that function. But the fleet-stall class survived R2 and took two more fixes to actually kill
+> (`@6c778e6`, `@f8ace1f`), because the spawn budget is a COUNT and could be satisfied by a slot that was not the slot
+> being spawned. If you are here to understand why the fleet stalled, the full arc is in that plan's Phase 3, not here.
+
+> **Historical — the incident as filed.** **NOTIFY-OPERATOR incident (fleet availability).** 2026-07-07: the AO fleet
+> went idle overnight with ~30 ready tasks queued. Investigated live (SSH + `state.db` + `/api/*`). NOT a crash — a
+> compounded dispatch stall. This doc is the root-cause + prevention record.
 
 ## Symptom
 
