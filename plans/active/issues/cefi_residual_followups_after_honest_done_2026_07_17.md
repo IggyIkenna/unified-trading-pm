@@ -159,26 +159,61 @@ and manifest all key off the catalogue's proven map (the same mechanism the 2026
 reads the catalogue as DATA via `CeFiCatalogReader` (no service↔service import). The 297 ambiguous `(venue, raw_symbol)`
 pairs stay honest-unresolved (reported, never guessed).
 
-## Phase 0 — Code fixes (MUST land + deploy before any corpus rewrite, or in-flight writes re-corrupt)
+> **⚠️ REDESIGN (2026-07-17, blueprint workflow).** The adversarial design review returned `NEEDS-REDESIGN` and caught
+> **5 data-corruption risks** in the naive plan — chiefly that a 2-tuple `(venue, raw_symbol)` key silently
+> under-resolves the BYBIT/OKX/BINANCE-FUTURES majors (spot vs perp wire clash) into NON-JOINING ids. The corrected,
+> apply-ready blueprint is `_cefi_canonical_blueprint_2026_07_17.md`. **Binding contract changes on every todo below:**
+> (1) ONE **3-tuple** key `(venue, instrument_type, raw_symbol)→instrument_id` via ONE shared builder; (2) filename stem
+> = the FULL canonical `instrument_id` (matches on-chain precedent — NOT the bare symbol; codex "bare symbol" docs are
+> stale → Phase 2); (3) shard atom = `[date, venue, data_type, instrument_type, instrument_id, pipeline_mode]`; (4)
+> **fail-loud** on empty/unreachable catalogue (never silently disable decomposition); (5) the D3 reader bridge must
+> deploy to EVERY narrow-read consumer before the D4 GCS cutover. Do NOT run any `--apply` until blocker open-questions
+> #1–#5 + the Phase -1 catalogue gate are green (blueprint §4).
 
-- [ ] [BACKEND] P0. **Writer: decompose ALL cefi venues.** Replace the `MARGIN_MARKER_VENUES`-only branch in
-      `derive_row_instrument_id` (`tardis_shared.py:567-576`) with a catalogue-backed
-      `(venue, raw_symbol)→instrument_key` resolution (via `CeFiCatalogReader`), so new Tardis writes for
-      BITFINEX-FUTURES etc. stamp the fully-decomposed canonical id in the parquet column + manifest. Degrade to honest
-      wire-wrapped only for the 297 ambiguous pairs. (repos: market-tick-data-service, unified-api-contracts)
-- [ ] [BACKEND] P0. **Writer: canonical FILENAME stem.** Change `_file_stem_for` (`tardis_shared.py:704-715`) /
-      `partitioned_writer.py:158-161` so new single-instrument writes name the object by the canonical symbol segment
-      (per the 2026-07-08 raw-tick relaxation: symbol portion canonical), not the raw wire `symbol`. Keep chain-bundle
-      `underlying`/`ticks.parquet` behavior. (repo: market-tick-data-service)
-- [ ] [BACKEND] P0. **Reader wire→canonical bridge (fixes silent data-loss).** Add a cefi resolution path so a canonical
-      id resolves to the on-disk wire filename/column via the catalogue `raw_symbol` map: MTDS `reader.py:341` (path
-      build assumes `filename==instrument_id`) + `reader.py:388` (`("symbol","==",id)` pushdown against the wire
-      column); MDPS `path_parsing.py:178-210` `blob_matches_canonical_instrument_id` (wire filename silently dropped);
-      add a cefi branch to the TRADFI-only renormalizer `canonical_writer_shaping.py:259`. (repos:
-      market-tick-data-service, market-data-processing-service)
-- [ ] [BACKEND] P1. **features-service cross-instrument loader** — resolve the latent `instrument_id` (raw_tick) vs
-      `instrument_key` (loader) column-name mismatch + confirm wire→canonical join on the real (non-mock) read path
-      (`raw_data_loader.py:126-179`). (repo: features-service)
+## Phase -1 — Catalogue rebuild + verify gate (prerequisite of Phase-0 DEPLOY; everything keys off it)
+
+- [ ] [SCRIPT] P0. **Rebuild + verify the cefi reference catalogue.** Re-run `build_instrument_catalogue.py` after the
+      shipped adapter canonicalization fixes; HARD verify gate: `0` cefi `instrument_id` containing `:PERP:`; `0` cefi
+      rows where `instrument_id != canonical_instrument_id`; re-measure the honest-unresolved (ambiguous 3-tuple) count
+      ONCE off the pinned key + record it as the single number used everywhere. Also confirm HL/ASTER refresh to
+      `PERPETUAL@LIN` (blueprint open-q #10) + sample OPTION/dated-FUTURE `raw_symbol` coverage (open-q #14). (repo:
+      instruments-service)
+
+## Phase 0a — Contract locks (design lock, before any code)
+
+- [ ] [DOCS] P0. **Lock the two contracts**: single-instrument cefi filename stem = FULL `instrument_id`; shard atom
+      WITH `pipeline_mode`. The contradicting codex docs get corrected in Phase 2, but the form is byte-locked now so
+      writer/migration/reader agree. (repo: unified-trading-pm)
+
+## Phase 0b — Code fixes (MUST land + DEPLOY to every writer AND every narrow-read consumer before any corpus rewrite)
+
+- [ ] [BACKEND] P0. **FIX 0 — ONE shared 3-tuple builder** `CeFiCatalogReader.build_raw_symbol_map()` (3-tuple, reads
+      `instrument_id` NOT `canonical_instrument_id`, excludes ambiguous, fail-loud on empty) + UAC
+      `CeFiWireCanonicalMap` (pure, fwd + reverse maps). Single source everything else consumes. (repos:
+      market-tick-data-service, unified-api-contracts)
+- [ ] [BACKEND] P0. **FIX D1 — Writer decompose ALL venues (3-tuple).** One insertion point in
+      `derive_row_instrument_id` (`tardis_shared.py:455`) resolving via FIX-0; covers the Tardis parquet column AND
+      manifest key (both flow through it — zero change to cap-critical `venue_fetch.py`). Miss → honest fallthrough.
+      (repo: market-tick-data-service)
+- [ ] [BACKEND] P0. **FIX D1-live — Live/on-chain COLUMN decomposition** in `PartitionedTickWriter.write_chunk` (the
+      live consolidated + on-chain lanes never call `derive_row_instrument_id`; without this, live cefi columns stay
+      non-canonical → batch≠live, ε=0 spine broken). Same shared map. (repo: market-tick-data-service)
+- [ ] [BACKEND] P0. **FIX D2 — Canonical FILENAME stem = full `instrument_id`.** `_file_stem_for` (cefi branch) +
+      `partitioned_writer._resolve_file_symbol` (extend the prediction-only override to cefi). Reuses the column
+      D1/D1-live made canonical; writer KEY/bookkeeping stay on bare symbol → shard atom unchanged. Chain bundles
+      untouched. (repo: market-tick-data-service)
+- [ ] [BACKEND] P0. **FIX D3 — Reader wire↔canonical bridge (3-tuple; fixes audited silent data-loss).** Candidate-stems
+      (canonical + reverse-map wire) in MTDS `reader.py:341`; drop the wire `("symbol","==",id)` pushdown (`:388`);
+      normalize-on-read the column via the forward 3-tuple map; MDPS `path_parsing.py` accept both stems; rename + widen
+      the TRADFI-only `canonical_writer_shaping.py:259` renormalizer to cover cefi. Handles the MIXED-corpus interim.
+      (repos: market-tick-data-service, market-data-processing-service, unified-api-contracts)
+- [ ] [BACKEND] P0. **FIX D-features — narrow cefi reads (REQUIRED before cutover, not optional).** features
+      `raw_data_loader.py:126-179`: inherit the D3 bridge (if it reads via MTDS `reader.py`) or add its own
+      `get_cefi_wire_map()` bridge; reconcile the `instrument_id`↔`instrument_key` column-name mismatch. (repo:
+      features-service)
+- [ ] [BACKEND] P0. **Enumerate + deploy the reader bridge to ALL narrow-read consumers** (MTDS reader, MDPS,
+      features-service, strategy/ml/batch-live-reconciliation cefi readers) — the D4 GCS cutover cannot run until every
+      one carries the bridge (the drain stops writers only). (repos: multiple — enumerate first)
 
 ## Phase 1 — Corpus migrations (scripted + dry-run first; `--apply` ONLY behind the Phase-1 drain, snapshot-first)
 
@@ -221,8 +256,18 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
-- **2026-07-17 (slot-3)**: Program opened. Two audit workflows (filename + three-questions) completed, adversarially
-  verified: Q1 reader-path = PARTIAL, Q2 every-parquet = PARTIAL, Q3 manifest-everywhere = NO. Operator recorded 4
-  decisions (execution in-session/this-doc; autonomous prod mutations; migrate filenames; decompose all venues). Phased
-  todos above authored. Next: implementation blueprint workflow (design specs + migration-script designs, no heavy QG),
+- **2026-07-17 (slot-3)**: **Blueprint workflow complete → `_cefi_canonical_blueprint_2026_07_17.md`.** Adversarial
+  design review verdict `NEEDS-REDESIGN`; the blueprint IS the redesign. Caught 5 data-corruption risks in the naive
+  plan: (1) 2-tuple key under-resolves the BYBIT/OKX/BINANCE-FUTURES majors into non-joining ids → mandated ONE 3-tuple
+  key + ONE shared builder; (2) re-enabling writers post-migration re-corrupts unless the 3-tuple code is deployed
+  first; (3) live/on-chain write paths bypass `derive_row_instrument_id` → NEW FIX D1-live for the
+  `PartitionedTickWriter` column; (4) silent corpus-wide degrade on empty catalogue → fail-loud; (5) reader
+  normalize-on-read left ambiguous majors non-canonical → 3-tuple forward map. Also: filename stem locked to FULL
+  `instrument_id`; shard atom WITH `pipeline_mode`; D3 reader bridge must deploy to ALL narrow-read consumers before the
+  D4 cutover; Phase -1 catalogue rebuild is a hard prerequisite. Todos above rewritten to the redesign. Next: verify
+  Phase -1 catalogue state + implement FIX 0 (the foundational shared builder), which is decision-independent.
+- **2026-07-17 (slot-3, earlier)**: Program opened. Two audit workflows (filename + three-questions) completed,
+  adversarially verified: Q1 reader-path = PARTIAL, Q2 every-parquet = PARTIAL, Q3 manifest-everywhere = NO. Operator
+  recorded 4 decisions (execution in-session/this-doc; autonomous prod mutations; migrate filenames; decompose all
+  venues). Phased todos authored. Then: implementation blueprint workflow (design specs + migration-script designs),
   then Phase-0 code fixes.
