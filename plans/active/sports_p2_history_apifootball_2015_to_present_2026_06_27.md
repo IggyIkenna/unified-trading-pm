@@ -1940,6 +1940,20 @@ presence-skip re-run still miss these specific shards) before a third blind rela
 ships — matching this doc's own established precedent (real, durable progress — fleet-completion verification +
 root-cause-bounded relaunch — is the shippable unit when the underlying compute isn't finished yet).
 
+### 2026-07-17T15:17Z — data_engineering slot-11 (Features recompute for enriched dates — re-check, still transitively gated, decline)
+
+Dispatched to "Features recompute for enriched dates" (`-002`), a few minutes after slot-8's relaunch above.
+Fresh-pulled all 24 slot repos clean. GW piece already confirmed complete (2026-07-14, `fss-backfill-vm-1/2/3` — see
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` entries around 19:03-20:22Z). This todo's remaining scope
+explicitly repeats after the "Full-history enrichment phase" (prior todo, still `[ ]`) — independently verified via VM
+metadata (`VM_START_DATE`/`VM_END_DATE`/`VM_SPORTS_ENTITY`) and live `run.log` tails that slot-8's
+`af-backfill-20260717-151237..151505` relaunch is genuinely healthy and progressing (real per-fixture/per-date fetch
+activity, zero Tracebacks, rate-budget 240 req/min). Recompute cannot run against an incomplete enrichment window.
+Declining — no action taken, no code touched, no launch (a competing/duplicate features-recompute launch now would run
+against partial data). Matches the established sessions-20-30 bounce-cluster precedent (session 28's meta-observation:
+no wired dispatch gate exists between the enrichment fleet and this todo cluster — a main/operator backlog-tuning fix,
+not unilaterally added here). `/skip-current-task`.
+
 ### 2026-07-17T~15:3xZ — data_engineering slot-4 (dispatched to Todo `-003` "ML-readiness re-verify"; confirmed still transitively blocked; gap-fixed the missing dependency wiring)
 
 Dispatched to the final "ML-readiness re-verify" todo. Confirmed the same transitive blocker sessions 20-30 already
