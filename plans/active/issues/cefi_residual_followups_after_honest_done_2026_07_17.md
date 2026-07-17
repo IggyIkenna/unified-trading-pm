@@ -268,11 +268,12 @@ pairs stay honest-unresolved (reported, never guessed).
       symbol (`test_shard_atom_unchanged_writer_key_stays_on_the_bare_symbol`). **Evidence**: 10 stem tests + 4 updated
       pre-existing path assertions (the OLD bare-symbol filename contract → the LOCKED full-id contract; these 4 are the
       intended contract change, not a regression).
-- [ ] [BACKEND] P0. **FIX D3 — Reader wire↔canonical bridge (3-tuple; fixes audited silent data-loss).** Candidate-stems
-      (canonical + reverse-map wire) in MTDS `reader.py:341`; drop the wire `("symbol","==",id)` pushdown (`:388`);
-      normalize-on-read the column via the forward 3-tuple map; MDPS `path_parsing.py` accept both stems; rename + widen
-      the TRADFI-only `canonical_writer_shaping.py:259` renormalizer to cover cefi. Handles the MIXED-corpus interim.
-      (repos: market-tick-data-service, market-data-processing-service, unified-api-contracts)
+- [x] ✅ [BACKEND] P0. **FIX D3 — Reader wire↔canonical bridge (3-tuple; fixes audited silent data-loss).**
+      Candidate-stems (canonical + reverse-map wire) in MTDS `reader.py:341`; drop the wire `("symbol","==",id)`
+      pushdown (`:388`); normalize-on-read the column via the forward 3-tuple map; MDPS `path_parsing.py` accept both
+      stems; rename + widen the TRADFI-only `canonical_writer_shaping.py:259` renormalizer to cover cefi. Handles the
+      MIXED-corpus interim. (repos: market-tick-data-service, market-data-processing-service, unified-api-contracts) —
+      **BOTH halves shipped: MDPS `market-data-processing-service@0035f79` + MTDS `market-tick-data-service@0388e1a9`.**
   - ✅ **MDPS half DONE — `market-data-processing-service@0035f79`.** NEW `app/utils/cefi_wire_bridge.py`: module-level
     `get_cefi_wire_map() -> CeFiWireCanonicalMap | None`, process-cached with a loaded-flag (a `None` is never
     re-probed); bucket via `resolve_bucket_name(kind="instruments-store", asset_group="cefi")` mirroring
@@ -306,9 +307,25 @@ pairs stay honest-unresolved (reported, never guessed).
     wrong-venue/wrong-itype → False, and the **3-tuple majors** (BYBIT `BTCUSDT` SPOT_PAIR vs PERPETUAL) resolve to
     their correctly-typed ids AND do not cross-match. **Shipped via a dirty-deps carve-out direct push** — quickmerge
     pre-flight blocked on live foreign WIP in `unified-trading-library` + `unified-api-contracts` (other agents active;
-    polled ~17 min, metric flat → their work left untouched). ⬜ **MTDS reader half still OPEN** — parallel agent's
-    scope (`reader.py` candidate-stems, the `symbol` pushdown drop, normalize-on-read); do not tick this box until it
-    lands.
+    polled ~17 min, metric flat → their work left untouched).
+  - ✅ **MTDS reader half DONE — `market-tick-data-service@0388e1a9`.** `reader.py` candidate-stems
+    (`_cefi_candidate_stems`: canonical segment + reverse-map wire, both cases), the `symbol==id` pushdown dropped for
+    cefi/prediction (`_NO_SYMBOL_PUSHDOWN_ASSET_GROUPS`), and normalize-on-read the `instrument_id` column via UAC
+    `get_cefi_wire_map()`'s forward 3-tuple map (`_normalize_cefi_instrument_id`); fail-SOFT to `None` on absent
+    catalogue, mirroring the MDPS read-side asymmetry. **Inherited under the liveness rule** — the originating agent
+    went idle ~1.7h mid-final-run (no process, no QG, dead claim), its WIP was complete + passing its own 47 reader
+    tests, so this slot inherited + landed it. **Also closed the two ungated-family blockers that gated the cutover**
+    (the D3 work exposed `tests/market_interface/` was never collected): (1) bisected the 2
+    `test_tardis_canonical_output.py` canonical-output failures to **PRE-EXISTING, not d302f07a** (identical at
+    `d302f07a` vs `d302f07a^` in isolated PYTHONPATH-overridden worktrees) and fixed both against the prod contract (a
+    stale Kraken `PF_XBTUSD`→`@INV` expectation vs the real linear marker; an inert bucket-resolver patch on a call site
+    abandoned 2026-07-10 → rewritten to exercise the real `IS_TEST_RUN`-aware resolver) + 3 `download_batch`
+    config-singleton isolation bugs; (2) gated the 3 cefi write-side files d302f07a shipped-but-never-ran in
+    `scripts/quality-gates.sh` `PYTEST_UNIT_DIR`. **Evidence**: full `bash scripts/quality-gates.sh` GREEN (exit 0, ZERO
+    ❌, **6162 passed** — up from the 6046 baseline that never moved despite 17 new D3 tests, which WAS the bug;
+    `.qg_last_passed_sha` == HEAD). Shipped via **quickmerge** (deps clean; carries the `Quickmerge:` trailer →
+    promotable, unlike the earlier carve-out ships). See `mtds_ungated_test_families_2026_07_17.md` for the residual 38
+    whole-tree failures still tracked.
 - [x] ✅ [BACKEND] P0. **FIX D-features — cefi reads (REQUIRED before cutover, not optional).** features
       `raw_data_loader.py`: inherit the D3 bridge (if it reads via MTDS `reader.py`) or add its own
       `get_cefi_wire_map()` bridge; reconcile the `instrument_id`↔`instrument_key` column-name mismatch. (repo:
@@ -413,25 +430,27 @@ pairs stay honest-unresolved (reported, never guessed).
 - **2026-07-17 (slot-3) — 🔴 DEPLOY BLOCKER: 4 of the program's 5 ships are PROVENANCE-BLOCKED (un-promotable), not just
   lagging.** Determined by trailer scan (`git log -1 --format=%B <sha> | grep '^Quickmerge:'`), the method in
   `promotion_lag_alert_hides_provenance_block_2026_07_17.md`:
-  | ship | `Quickmerge:` trailer | promote status |
-  | --- | --- | --- |
-  | `unified-api-contracts@825878f7` | ✅ present | LAG only — will self-promote |
-  | `instruments-service@517b817b` | ✗ | **PROVENANCE-BLOCKED** |
-  | `market-tick-data-service@d302f07a` | ✗ | **PROVENANCE-BLOCKED** |
-  | `market-data-processing-service@0035f79` | ✗ | **PROVENANCE-BLOCKED** |
-  | `features-service@efd3e038` | ✗ | **PROVENANCE-BLOCKED** |
+
+  | ship                                     | `Quickmerge:` trailer | promote status               |
+  | ---------------------------------------- | --------------------- | ---------------------------- |
+  | `unified-api-contracts@825878f7`         | ✅ present            | LAG only — will self-promote |
+  | `instruments-service@517b817b`           | ✗                     | **PROVENANCE-BLOCKED**       |
+  | `market-tick-data-service@d302f07a`      | ✗                     | **PROVENANCE-BLOCKED**       |
+  | `market-data-processing-service@0035f79` | ✗                     | **PROVENANCE-BLOCKED**       |
+  | `features-service@efd3e038`              | ✗                     | **PROVENANCE-BLOCKED**       |
   - **Causal chain**: another session's uncommitted `unified_api_contracts/registry/market_data_categories.py`
     (sports/`trades_inplay`) → failed quickmerge's STAGE 1 dep-cleanliness audit for every downstream repo → forced 4 of
     this program's agents onto the **dirty-deps carve-out #1 (direct push)** → a direct push carries no `Quickmerge:`
     trailer → the LDR→main provenance gate correctly refuses to promote. **The carve-out is a trap: it unblocks the PUSH
     and strands the PROMOTE.** UAC escaped because its agent shipped via real quickmerge before the dirty file appeared.
-  - **Self-correction**: an earlier entry/report said "all 5 stranded" — WRONG. It measured "not on main", which conflates
-    promotion LAG with a provenance BLOCK — the exact conflation that issue doc exists to fix. It is 4 blocked + 1 lagging.
-  - **`promotion_lag_alert_hides_provenance_block_2026_07_17.md` lists only 2 current blocks (mtds + deployment-ui); there
-    are 5** — this program's IS/MDPS/features strands landed after that doc was written. Not appended to that
+  - **Self-correction**: an earlier entry/report said "all 5 stranded" — WRONG. It measured "not on main", which
+    conflates promotion LAG with a provenance BLOCK — the exact conflation that issue doc exists to fix. It is 4
+    blocked + 1 lagging.
+  - **`promotion_lag_alert_hides_provenance_block_2026_07_17.md` lists only 2 current blocks (mtds + deployment-ui);
+    there are 5** — this program's IS/MDPS/features strands landed after that doc was written. Not appended to that
     cross-session doc from here to avoid a PM merge tangle; flagged here for the code-owner.
-  - **Impact on THIS program**: the Phase-0 code cannot DEPLOY to the writers while stranded (a stranded commit builds no
-    tarball), and deploy gates the corpus cutover. So the drain is blocked on a promotion-provenance fix, not on more
+  - **Impact on THIS program**: the Phase-0 code cannot DEPLOY to the writers while stranded (a stranded commit builds
+    no tarball), and deploy gates the corpus cutover. So the drain is blocked on a promotion-provenance fix, not on more
     engineering.
   - **Sanctioned remedy** (per the issue doc, owner-of-the-bypassed-code action — NOT this session hand-arming
     anything): re-ship each via `quickmerge --agent --files '<paths>'` (the blocking dirty UAC file has since LANDED, so

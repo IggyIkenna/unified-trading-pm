@@ -1940,6 +1940,20 @@ presence-skip re-run still miss these specific shards) before a third blind rela
 ships — matching this doc's own established precedent (real, durable progress — fleet-completion verification +
 root-cause-bounded relaunch — is the shippable unit when the underlying compute isn't finished yet).
 
+### 2026-07-17T15:17Z — data_engineering slot-11 (Features recompute for enriched dates — re-check, still transitively gated, decline)
+
+Dispatched to "Features recompute for enriched dates" (`-002`), a few minutes after slot-8's relaunch above.
+Fresh-pulled all 24 slot repos clean. GW piece already confirmed complete (2026-07-14, `fss-backfill-vm-1/2/3` — see
+`sports_p2_features_history_to_ml_ready_2026_06_27.md` entries around 19:03-20:22Z). This todo's remaining scope
+explicitly repeats after the "Full-history enrichment phase" (prior todo, still `[ ]`) — independently verified via VM
+metadata (`VM_START_DATE`/`VM_END_DATE`/`VM_SPORTS_ENTITY`) and live `run.log` tails that slot-8's
+`af-backfill-20260717-151237..151505` relaunch is genuinely healthy and progressing (real per-fixture/per-date fetch
+activity, zero Tracebacks, rate-budget 240 req/min). Recompute cannot run against an incomplete enrichment window.
+Declining — no action taken, no code touched, no launch (a competing/duplicate features-recompute launch now would run
+against partial data). Matches the established sessions-20-30 bounce-cluster precedent (session 28's meta-observation:
+no wired dispatch gate exists between the enrichment fleet and this todo cluster — a main/operator backlog-tuning fix,
+not unilaterally added here). `/skip-current-task`.
+
 ### 2026-07-17T~15:3xZ — data_engineering slot-4 (dispatched to Todo `-003` "ML-readiness re-verify"; confirmed still transitively blocked; gap-fixed the missing dependency wiring)
 
 Dispatched to the final "ML-readiness re-verify" todo. Confirmed the same transitive blocker sessions 20-30 already
@@ -1963,3 +1977,37 @@ re-read the file, both survived. This stops the guaranteed-no-op redispatch of `
 **Not attempting `-001`/`-002` myself this dispatch** (out of scope for the `-003` task I was actually assigned — one
 task at a time per worker discipline, and slot-8 is already actively driving `-001` per the entry immediately above).
 `/skip-current-task` on `-003` — now correctly gated, won't be redispatched until `-001`+`-002` are genuinely done.
+
+### 2026-07-17T15:24Z — data_engineering slot-11 (Todo `-001` "Full-history enrichment phase" — cheap re-check, unchanged since slot-8's relaunch 9 min ago, decline)
+
+Dispatched to `-001`. Re-checked the fleet slot-8 relaunched above
+(`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) — all 5 still `RUNNING`, only ~9 min elapsed since
+launch, well inside slot-8's own "likely many hours" ETA for the full `2020-06-06→2026-07-17` range. No material change
+to re-derive; not re-running the gate query (would reproduce the same not-green result at real compute cost). Declining
+— no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-17T15:27Z — data_engineering slot-4 (Todo `-001` — third bounce in 15min, still unchanged, decline)
+
+Dispatched to `-001` again, 3 min after slot-11's check. Re-verified via `gcloud compute instances list` (non-snap SDK
+at `~/google-cloud-sdk/bin`, the snap `gcloud` in this slot's `PATH` is broken —
+`snap-confine ... cap_dac_override not found`): all 5 fleet VMs
+(`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still `RUNNING`, ~15 min into the "many hours" ETA. No
+material change since slot-11's entry immediately above — not re-running the full gate query. **Observation for
+main/operator, not acted on**: this is the third slot (8, 11, 4) to bounce through `-001` inside 15 minutes because
+tier=1/priority=50 puts it at the head of the queue for any slot that boots or heartbeats while the fleet is mid-flight
+with no dispatch cooldown/backoff after `/skip-current-task`. A `prereqs.prerequisites` gate doesn't fit here (nothing
+would ever flip it true if no slot re-checks the fleet), so not engineering around it unilaterally — flagging the
+pattern only, matching this plan's existing "main/operator backlog-tuning fix, not unilaterally added here" precedent
+for the same bounce-cluster class. Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-17T15:40Z — data_engineering slot-5 (Todo `-001` — 4th bounce in ~28min, fleet confirmed actively writing not stalled, decline)
+
+Dispatched to `-001`, 13 min after slot-4's check. `gcloud compute instances list` (non-snap SDK): all 5 fleet VMs
+(`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still `RUNNING`, ~28 min into the "many hours" ETA. Went
+one step further than the prior two declines: tailed `run.log` for the EVENTS (`151237`) and INJURIES (`151505`) VMs
+directly from GCS rather than trusting instance status alone — both show live writes timestamped within the last ~90s of
+the check (event/injury rows actively fetching, zero Tracebacks), ruling out a silent stall at this elapsed-time mark.
+No material change to the gate itself — not re-running the full `read_availability_index` query (same not-green result
+at real compute cost, per the established precedent). Not re-flagging the dispatch-cooldown pattern (slot-4 already
+raised it to main/operator immediately above; a 4th repetition adds no signal). Declining — no action taken, no code
+touched. `/skip-current-task`.

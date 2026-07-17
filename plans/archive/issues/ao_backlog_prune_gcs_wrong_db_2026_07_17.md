@@ -71,6 +71,15 @@ source:
 
 # The regen prune GC'd the wrong database for 7 days
 
+> **📦 ARCHIVED 2026-07-17 (operator session) — resolution INDEPENDENTLY RE-VERIFIED live before archival, not taken on
+> report.** Measured via read-only SSM at ~15:45 UTC, ~10h after the fix: `acc112f` is an ancestor of the service
+> clone's HEAD (`a682545`); `ORCHESTRATOR_REGEN_DB_PATH` absent from `.env.local`; **zero** `not an orchestrator DB` /
+> `GC failed` errors since 06:30 UTC (the 05:57 ERROR was the single documented pre-fix firing); GC actively working
+> (`pruned_db=1` at 15:33); and modal vs KPI **exactly reconciled** — queued 13/13, dispatched 1/1, done 64/64,
+> cancelled 0/0, with the 62 by-design `done` orphans carrying `orphan=true`. The § Follow-up below is NOT lost: it is
+> tracked as the `- [ ]` `ORCHESTRATOR_DB_PATH`-into-`.env.local` todo in
+> [`ao_residuals_after_dispatch_hardening_2026_07_17`](../../active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md).
+
 ## What the operator saw
 
 Backlog tab → **Details**: `17` queued. Backlog header KPI: `145` in queue. Same page, same moment.
@@ -140,10 +149,13 @@ queued 145 -> 17     modal vs KPI: queued 17/17, dispatched 1/1, done 64/64, can
 62 `done` orphans remain by design, now flagged.   0 GC errors since.   DB backed up pre-GC.
 ```
 
-## Follow-up (not fixed here)
+## Follow-up (not fixed here — TRACKED, not lost)
 
 `ORCHESTRATOR_DB_PATH` lives ONLY in the systemd unit, not `.env.local`. Any tooling run from the shell
 (`python -m server.regen_backlog_from_plan --prune-stale`, ad-hoc probes) therefore resolves `config.db_path()` to the
 empty in-repo `data/state/state.db` — the same family of footgun that caused this incident, and it bit twice while
 diagnosing it. Consider having bootstrap write `ORCHESTRATOR_DB_PATH` into `.env.local` too so the service and the shell
-agree.
+agree. **Tracked 2026-07-17 as the `- [ ]` `[BACKEND] P2` todo in
+[`ao_residuals_after_dispatch_hardening_2026_07_17`](../../active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md)**
+(with a runtime gate: `config.db_path()` from a plain ubuntu shell must print the live DB path) — this archived doc is
+not its home.

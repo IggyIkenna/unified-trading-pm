@@ -6,7 +6,7 @@ title:
 summary:
   A full root disk truncated several per-slot `.claude.json` files mid-write, which crash-looped the main orchestrator
   agent + the Opus-pinned worker slots. The **acute trigger** was a single orphane...
-status: open
+status: resolved # (was: open) 2026-07-17 — C1–C5 shipped+live since 2026-06-29 (links=81 re-proof); recurrence re-verify measured + remediated (guard 2h cadence, prune cron); B2 interactive-shell gap closed cross-host (pm@86dea79d5); stale 30G pre-convention cache deleted (18G freed, measured)
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,15 +20,26 @@ priority: P2
 source: [disk-full incident 2026-06-29, agent-orchestrator@7c72580]
 assigned_vm: NA
 resolved_by:
-locked_by: live-defi-rollout
+  "operator-audited close 2026-07-17 (hk session) — final flips + evidence in
+  plans/archive/2026_07/ao_host_disk_pressure_2026_07_16.md; convention codified in
+  codex/05-infrastructure/per-tab-worktrees.md § Shared uv cache"
+locked_by: # cleared 2026-07-17 — operator granted [unlock-plan] explicitly (AskUserQuestion ruling, same session as the 30G deletion)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-17
-locked_since: 2026-05-21
+locked_since: # cleared 2026-07-17 with the [unlock-plan] grant (was 2026-05-21)
 ---
 
 # Per-slot venv duplication → chronic disk pressure
+
+> **📦 RESOLVED + ARCHIVED 2026-07-17 (operator-audited, `[unlock-plan]` granted).** Everything this doc tracked is
+> closed with measured evidence: the C1–C5 hardlink-dedup fix live since 2026-06-29 (re-proven on the real VM,
+> links=81); the 2026-07-13 recurrence re-verified + remediated (verdict _guard-running-but-outgrown_ → guard cadence
+> `0 */2` + prune cron, executed by `../2026_07/ao_host_disk_pressure_2026_07_16.md`); the B2 interactive-shell gap
+> closed cross-host via `scripts/dev/install-uv-cache-shell-env.sh` (`pm@86dea79d5`, planning VM + hk dev host); and the
+> stale 30G pre-convention `/active/uv-cache` deleted (18G measured freed — hardlinked venvs unharmed, as predicted).
+> Durable convention: `codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache".
 
 > **✅ SHIPPED + ROLLED OUT 2026-06-29** (claude-opus-4-8, interactive): the corrected C1–C4 are LIVE —
 > `agent-orchestrator@e168f1a` (tmux_spawn spawn env + vm-disk-guard fix) + `unified-trading-pm@257c1413b`
@@ -510,10 +521,11 @@ slots × more materialised venvs) past what the 2026-06-29 hardlink-dedup fix al
       Closed together with the `ao_docs_reconciliation_2026_07_15.md` disk/venv row (annotated there — no double-book).
       Provenance: this doc's 2026-07-13 entry; execution + evidence in
       `../../archive/2026_07/ao_host_disk_pressure_2026_07_16.md`.
-- [ ] [INFRA] P3. **Reclaim the stale 30G `/active/uv-cache` on the hk dev host** (operator ruling 2026-07-17: **keep
-      for now** — parked, not forgotten; migrated here from `ao_host_disk_pressure_2026_07_16`'s Deferred table on its
-      archival). It is the FORMER pre-convention cache: dead since 2026-07-08, zero references (QG derives
-      `<workspace-root>/.uv-cache` instead). Deletion is safe for the 81 hardlinked venvs — hardlinks are equal
-      citizens, the venv's copy survives; only `links=1` blobs actually free space, so real reclaim < 30G. `/active` is
-      at 53% (104G free), so nothing forces it. **Gate**: operator says go → `rm -rf /active/uv-cache` + note the
-      measured freed GB here. BLOCKED-OPERATOR-DECISION.
+- [x] [INFRA] P3. ✅ **DONE 2026-07-17 — operator reversed the same-day "keep for now" to "delete it now" and it is
+      GONE, with the hardlink prediction confirmed by measurement.** `rm -rf /active/uv-cache` executed (contents as
+      `hk`; the empty root-owned-parent husk needed one `sudo rmdir`): `/active` free space **104G → 122G = 18G actually
+      freed** of the 30G `du` size — the ~12G delta is exactly the hardlinked blobs (links≥2) whose venv-side copies
+      survive, i.e. the "real reclaim < 30G, venvs unharmed" call made when this was parked. Path verified absent
+      post-delete. (History: FORMER pre-convention cache, dead since 2026-07-08, zero references; migrated here from
+      `ao_host_disk_pressure_2026_07_16`'s Deferred table on its archival earlier the same day.) **Gate MET**: measured
+      freed GB recorded; nothing references the path.

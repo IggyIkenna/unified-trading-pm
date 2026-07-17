@@ -720,7 +720,7 @@ build dirs.
 **Rule**: `UV_CACHE_DIR = <workspace-root>/.uv-cache` + `UV_LINK_MODE=hardlink`, where `<workspace-root>` is the
 directory holding all repo clones (parent of `unified-trading-pm`). Derived, never a hardcoded home path — the cache
 MUST sit on the same filesystem as the venvs it links into, or hardlinks silently degrade to copies (failure mode B2 in
-`plans/active/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`; the fleet-wide dedup fix shipped 2026-06-29,
+`plans/archive/issues/slot_venv_duplication_disk_pressure_2026_06_29.md`; the fleet-wide dedup fix shipped 2026-06-29,
 measured proof: shared `.so` inodes at `links=81`, ~21 GB reclaimed).
 
 Three layers export the same derivation and all respect a pre-set value (`${VAR:-...}`), so whichever layer runs first

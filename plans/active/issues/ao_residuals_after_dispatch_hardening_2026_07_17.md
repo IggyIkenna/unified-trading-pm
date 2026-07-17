@@ -24,7 +24,7 @@ related:
     ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
     backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
     regen_positional_task_ids_not_content_stable_2026_07_17.md,
-    ao_backlog_prune_gcs_wrong_db_2026_07_17.md,
+    ../../archive/issues/ao_backlog_prune_gcs_wrong_db_2026_07_17.md,
     ../escalation_pipeline_mvp_2026_06_25.md,
     ../../epics/orchestrator_master.md,
   ]
@@ -88,9 +88,9 @@ source:
       `/var/lib/orchestrator/state.db` — a probe reports zeroes and looks like a healthy answer. This bit the 2026-07-17
       session **twice** while diagnosing the prune bug, and it is the same one-concept-two-places family as the
       `ORCHESTRATOR_DB_PATH`/`ORCHESTRATOR_REGEN_DB_PATH` drift that CAUSED that bug
-      ([`ao_backlog_prune_gcs_wrong_db_2026_07_17`](ao_backlog_prune_gcs_wrong_db_2026_07_17.md)). **Gate**: a plain
-      `.venv/bin/python -c "from server import config; print(config.db_path())"` on the VM, run as `ubuntu` with no env
-      overrides, prints the live DB path.
+      ([`ao_backlog_prune_gcs_wrong_db_2026_07_17`](../../archive/issues/ao_backlog_prune_gcs_wrong_db_2026_07_17.md)).
+      **Gate**: a plain `.venv/bin/python -c "from server import config; print(config.db_path())"` on the VM, run as
+      `ubuntu` with no env overrides, prints the live DB path.
 - [ ] [BACKEND] P3. **Root-cause the 2026-07-12 degradation onset.** `worker_polling_dead` went **0 → 587** and the
       spawn:dispatch ratio **0.6:1 → 44:1** on that date. The churn itself is fixed (`f8ace1f`, proven on the live
       rate), but **why it started that day was never explained** — so a recurrence is invisible until it costs again.

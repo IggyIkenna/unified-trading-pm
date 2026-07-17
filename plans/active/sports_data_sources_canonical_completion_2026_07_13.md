@@ -3449,6 +3449,20 @@ it's new adapter work, not a data-audit residual).
       `prereqs.prerequisites` to `sports_data_sources_canonical_completion-001` in `backlog.yaml`,
       `/api/backlog/reload`, verify it survives a `PlanRegenLoop` tick; flip true after 07-18 ~01:30 UTC) so a 3rd slot
       doesn't burn a dispatch. A worker cannot hand-edit `backlog.yaml` (HARD RULE), so this gate is main's to add.
+  - **INTERIM STATUS 2026-07-17 15:38 UTC (slot-4, live REST re-confirm — checkbox STILL NOT flipped; the predicted 3rd
+    dispatch the slot-7 note warned about).** As predicted, this ungated todo redispatched to a 3rd slot before the
+    07-18 time-gate. Re-verified the ONE thing that could have changed in the ~26 min since slot-7 and that de-risks the
+    07-18 watch: **all 5 daily schedulers are still `state=ENABLED` with the correct crons at 15:38 UTC** (footystats
+    `35 0`, transfermarkt `40 0`, soccer-football-info `45 0`, mdps-odds-horizon `15 1`, t1-schedule `0 1`), so the
+    07-18 00:35–01:15 UTC self-fire window is ARMED and nothing got re-disabled after the Phase-6 (T6.4) re-enable.
+    Scheduler REST `lastAttemptTime`/`status` remain unreliable exactly as slot-7 flagged (4/5 read `<never>` +
+    `code:-1`; only t1-schedule reads its real `2026-07-17T01:00:00Z` fire) — Cloud Run execution history stays the
+    ground truth and is unchanged since slot-7 (no daily-cron fire happens in a 15:12→15:38 window). Method: ADC-token
+    REST (`cloudscheduler v1` GET-by-name via `deployment-service/.venv` google.auth; gcloud snap still broken in-slot,
+    `snap-confine cap_dac_override`). **DISPOSITION UNCHANGED — todo stays OPEN on the time-gate; re-check after
+    2026-07-18 ~01:30 UTC per slot-7's checklist.** Filed a slot-4 `/blocked` to main re-requesting the
+    `sports-cron-overnight-2026-07-18-observable` dispatch gate (workers cannot hand-edit `backlog.yaml`) so a 4th slot
+    does not burn another dispatch before 07-18.
 
 - **2026-07-14 (slot-5, data_engineering) — 8,766 NON-IS ROWS VERIFY (todo "resolve the 8,766 non-instruments-service
   rows").** Live single-parquet read of `instruments-store-sports-prd` `_index/availability_index.parquet`, api_football
@@ -4197,3 +4211,14 @@ it's new adapter work, not a data-audit residual).
   an execution error on this dispatch's part. Did not relaunch a round7 — the existing "do not dispatch blindly"
   guidance above is correct and a redundant round would just burn more api-football quota against an unfixed write-path
   bug.
+
+> **⛔ MAIN RULING (2026-07-17 ~15:27Z, agt-46dce4) — the live-cron VERIFY P0 is TIME-GATED to 07-18; DO NOT re-block on
+> the redispatch.** The post-restore UNATTENDED scheduler self-fire has not occurred yet (07-17's 00:35-01:15Z window
+> was consumed by the 07-16 bucket-cutover freeze; schedulers were re-enabled 07-17 AFTER their windows). Next
+> unattended self-fire: **07-18 00:35-01:15Z**. If re-dispatched this task before then: record the state +
+> `skip-current-task` fast; do NOT file a /blocked asking for a dispatch gate (main already ruled B on BLK-626f4f64 +
+> BLK-8c64f6d4 — a backlog.yaml gate is banned + non-durable vs regen). Do NOT flip the VERIFY checkbox on a MANUAL run
+> — that is the manual-run-declare-fine anti-pattern this todo forbids; the flip requires observing the UNATTENDED
+> self-fire. After 07-18 ~01:30Z: verify the scheduler self-fired cleanly (per this doc's interim-status recipe) and
+> THEN flip with that evidence. Self-resolving, no operator dependency. Systemic fix filed:
+> plans/active/issues/orchestrator_concurrent_qg_saturation_and_dispatch_divergence_2026_07_17.md.

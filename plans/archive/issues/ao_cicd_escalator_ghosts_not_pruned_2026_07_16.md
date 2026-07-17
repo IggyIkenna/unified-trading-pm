@@ -38,7 +38,7 @@ related:
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-16
-last_updated: 2026-07-16
+last_updated: 2026-07-17
 parent_epic: orchestrator_master
 priority: P1
 assigned_vm: NA
@@ -63,6 +63,12 @@ source:
 ---
 
 # Dead cicd escalator agents are not pruned — they linger "active" for up to 6h
+
+> **📦 ARCHIVED 2026-07-17 (operator session) — resolution INDEPENDENTLY RE-VERIFIED live ~24h on before archival**: the
+> doc's own runtime-verdict query re-run via read-only SSM at ~15:45 UTC returned **`sessionless_terminal_ghosts=0`**
+> (held since the 16:03 UTC drain), and both fix commits (`a21ccba`, `a22c0d7`) verified as ancestors of
+> `origin/live-defi-rollout`. The one open P3 (docstring reword) closed at archival time — `ao@6a30e45`, full QG green.
+> Zero open todos remain.
 
 > **✅ RESOLVED 2026-07-16 — in TWO parts (`a21ccba` + `a22c0d7`), the second VERIFIED LIVE at 16:03:20 UTC: sessionless
 > ghost count on the central VM went `11 → 0`, 13 rows archived `lifecycle-complete`, no hand DB edit.** `a21ccba` alone
@@ -254,12 +260,12 @@ under the old semantics and dies under the new.
       finished normally). Deploy needed no human step: the `slot-cron-ff-pull` (5-min cadence) pulled LDR and the
       service's `--reload --reload-dir server` restarted uvicorn on its own — the same path that carried `a21ccba`.
       **The backend drained them; no row was touched by hand.**
-- [ ] [BACKEND] P3. **Optional cleanup — retire the misleading "stays active" assertion.**
-      `test_multi_instance_cicd_not_deduped_as_singleton` still documents the pre-fix end-state in its docstring. Its
-      PRIMARY assertion (`not superseded-cicd`) is a real reaper contract and must stay; only the incidental "stays
-      active via the stale_grace fallback" wording now describes a state the pruner no longer allows end-to-end. Left as
-      a follow-up so the fix ships without touching an otherwise-green reaper test. **Gate**: docstring reworded, test
-      still green.
+- [x] [BACKEND] P3. ✅ **DONE 2026-07-17 — `agent-orchestrator@6a30e45` (quickmerge, full AO QG green).** Docstring now
+      states the post-`a22c0d7` semantics: the 6-min-old sessionless cicd survives the tick only because it is inside
+      the 15-min `one_shot_stale_grace_minutes` terminal grace — past it, reaped `lifecycle-complete`, never via the 6h
+      persistent `stale_grace` it used to ride. The PRIMARY `not superseded-cicd` assertion untouched. **Gate MET**:
+      reword shipped; test file green (59 passed) inside the full QG. ~~**Optional cleanup — retire the misleading
+      "stays active" assertion**~~ in `test_multi_instance_cicd_not_deduped_as_singleton`.
 
 ## Progress Log
 
