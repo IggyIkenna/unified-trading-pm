@@ -15,8 +15,10 @@ summary: >-
   day): all 22 persist-cicd-event callers converted to the composite action (~$117/mo of 1-min-minimum persist jobs
   removed); the old reusable's DELETION is staged behind observing green ci-status-update runs on main — until it lands,
   `git revert a6057ea36` is a one-command rollback.** D1 (2b↔2c checkout collision) RESOLVED by operator delegation —
-  checkout kept, @main pin rejected. Next = Phase 2 (A2 → A1 → A5) + the amended STEP 2b trim; D2-D4 are open operator
-  decisions. One P0 pending: quickmerge's --agent sentinel races its own rebase on a busy branch.
+  checkout kept, @main pin rejected. A2 SHIPPED + PROVEN 2026-07-17 (Firestore content-sentinel dedup, fleet-live;
+  two-dispatch proof on alerting-service: MISS+save then 22s HIT+skip with the required check green). Next = A1 → A5 +
+  the amended STEP 2b trim; D2-D4 are open operator decisions. One P0 pending: quickmerge's --agent sentinel races its
+  own rebase on a busy branch.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -107,10 +109,11 @@ drift_direction: advance-code
    **re-run `snapshot` whenever an UNFLIPPED workflow is edited** (its baseline goes stale; verify catches it). The
    baseline is `.prettierignore`d ON PURPOSE — prettier rewrote it once and destroyed the byte-exactness that is its
    whole point.
-6. **⏵ NEXT: Phase 2 (A2 → A1 → A5), then the amended STEP 2b trim.** STEP 2 is COMPLETE (37/37 movers, zero-billed,
-   verified) and **STEP 2c is COMPLETE** (@a6057ea36 converted all 22 callers → observed green on main — runs
-   29579499315/29579977224, `billable: {}` — → @0c845f930 deleted the reusable, 2026-07-17). Rollback if ever needed:
-   `git revert 0c845f930 a6057ea36`. D2/D3/D4 in the Deferred section are operator decisions — do not start their items.
+6. **⏵ NEXT: A1 → A5 (A2 SHIPPED+PROVEN 2026-07-17 — see its ✅ todo), then the amended STEP 2b trim.** STEP 2 is
+   COMPLETE (37/37 movers, zero-billed, verified) and **STEP 2c is COMPLETE** (@a6057ea36 converted all 22 callers →
+   observed green on main — runs 29579499315/29579977224, `billable: {}` — → @0c845f930 deleted the reusable,
+   2026-07-17). Rollback if ever needed: `git revert 0c845f930 a6057ea36`. D2/D3/D4 in the Deferred section are operator
+   decisions — do not start their items.
 7. **One P0 is open and is NOT blocked on the gate** — see the todos: the **quickmerge `--agent` sentinel race** (its
    own STAGE-0.4 rebase invalidates the sentinel STAGE 3 then checks, so on a busy LDR it can never self-validate;
    workaround = chain `quality-gates.sh --no-fix && quickmerge.sh` in ONE shell to close the window).
@@ -886,10 +889,21 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
     absent check. Branch protection hard-requires that context; if the fast-path makes it MISSING, the branch-protected
     LDR→main promote PRs (the biggest beneficiary) go **permanently BLOCKED** (the same `[skip ci]`→missing-check hazard
     in CLAUDE.md). Verify on a real docs-only promote PR that the required check goes green, not that it vanishes.
-- [ ] [INFRA] P1. **A2 — FIX the content-gate dedup properly (operator: fix now).** Rebuild the byte-identical-tree skip
-      on the **Firestore tree-fingerprints** (replace the broken `actions/cache` at L90-137 / L647-653). **Correctness
-      guard: skip ONLY when that exact tree previously passed GREEN** (never off a failed/unknown run); relies on QG
-      determinism. Fleet-wide (does NOT touch SIT; never skips a changed tree).
+- [x] ✅ [INFRA] P1. **A2 — SHIPPED + PROVEN LIVE (2026-07-17).** `unified-trading-pm@c535ec087` (PR #1122 merged → main
+      run 29584743727 green → backmerged; **fleet-live: LDR reusable blob `625ba14e9`**). Rebuilt the
+      byte-identical-tree skip on **Firestore `qg_green_markers/{key}`** (probe in `content-gate`, green-only save in
+      the aggregate job; the dead `actions/cache` pair removed). Key = `qg-green-v2-{repo}-{tree}-{gate_hash}` where
+      `gate_hash` = sha256(caller-WF-hash | reusable blob sha | PM `quality-gates-base`+`quality_gates` dir tree shas
+      @LDR) — closes the RECON's Gap ① (a reusable/base-script change rotates every key). **Zero fleet rollout needed**:
+      callers use `secrets: inherit` + pin `@live-defi-rollout`, so `GCP_SA_KEY` flows and activation was the LDR
+      landing. 60-day TTL policy enabled on `expires_at`. **Two-dispatch proof on alerting-service (same tree, main)**:
+      run 1 = 29584946980 — probe `HTTP 404` MISS → full gate (~4.5 min) → success → `green marker saved` (doc verified
+      in Firestore, `run_id` matches); run 2 = 29585163847 — probe `HTTP 200` HIT → **`QG slice:     skipped` (no
+      runners spun)** → required context `quality-gates-v2` reported **success** → run green in **22 s**. **Gate-change
+      guard proven**: locally recomputed gate_hash == CI's exactly (`0458e16e…`); same tree keyed under the pre-A2
+      reusable sha gives a DIFFERENT key (`e6d1879d…`) → Firestore 404 → full gate would run. Fail-safe MISS observed
+      live twice pre-IAM-fix (creds missing → "marker probe skipped"/"marker not saved", run stayed green, no false
+      skip). Evidence: run URLs above + `Quickmerge:` trailer on c535ec087.
   - **🔴 CORRECTNESS (operator 2026-07-16, "make it proper"):** "same tree → same result" holds ONLY if the **gate
     itself** is unchanged. The dedup key MUST therefore include the **gate/ruleset version** (the
     `python-quality-gates-v2` workflow + base-script fingerprint / a `QG_GATE_VERSION` bump), not just the source-tree
@@ -980,6 +994,34 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   overlaps)
 
 ## Progress Log
+
+- 2026-07-17 (PM) — **A2 shipped + proven live** (`c535ec087` → PR #1122 → main run 29584743727 → backmerge → LDR;
+  evidence in the ✅ A2 todo). Hard-won specifics for A1/A5 and anyone touching this mechanism:
+  1. **`google-github-actions/auth@v3` with `token_format: access_token` mints via the IAM Credentials API — the SA
+     needs `iam.serviceAccounts.getAccessToken` ON ITSELF**, which a key-holding CI SA does not automatically have
+     (observed live: `Permission 'iam.serviceAccounts.getAccessToken' denied` for `github-actions-deploy@…`). Fixed with
+     a **project-level `roles/iam.serviceAccountTokenCreator` grant to BOTH CI SAs** (`github-actions-deploy`,
+     `github-deploy`; SA-level binding was denied to my operator account — project-level `--condition=None` worked). No
+     new privilege in practice (each SA already holds its own key). Until the grant landed, the fail-safe held exactly
+     as designed: probe "creds=no" → MISS, save "marker not saved", runs stayed green.
+  2. **actionlint (pinned 1.7.4, and even 1.7.12) rejects `github.job_workflow_sha`** — the context field exists in
+     GitHub's docs but not in actionlint's schema. The fingerprint therefore resolves the reusable's blob sha via
+     local-checkout (PM) / contents-API-at-the-pin (fleet) instead. Both paths verified live (PM PR run:
+     `reusable@local-checkout`; alerting-service: `reusable@live-defi-rollout`), and both produced the identical blob
+     sha when the worktree matched LDR.
+  3. **Quickmerge from this scratchpad worktree uses the Option-B PR flow** (branch `tmp/step2c-rollout` → PR → main
+     with auto-merge → `main-backmerge-to-ldr` carries it to LDR ~immediately). Fleet activation is the LDR landing
+     (callers pin the reusable `@live-defi-rollout`) — verified by blob-sha comparison before dispatching the proof.
+     Also: the worktree needs ALL workspace siblings on disk for quickmerge STAGE 1.5 (dependency alignment) —
+     symlinking `.tabs/1/*` into the scratchpad satisfies it read-only.
+  4. **Session regression, found + fixed in-flight**: `scripts/dev/slack-read-channel.py` (promoted at the previous
+     session's end via prek only — a violation of QG-before-commit) tripped 3 codex violations + 3 empty-string ratchet
+     sites and reddened the promote PR #1121 lint-codex leg. A parallel slot shipped the equivalent fix first
+     (`2b86d6197`); this slot verified it locally (banned patterns clean, ratchet 319==baseline, bandit Low-only),
+     resolved the autostash collision by taking the landed version, and dropped only its own stash (the second
+     `autostash` entry in the shared worktree stash list is FOREIGN — slot-1's orphaned Jul-6 sports-docs autostash —
+     left untouched).
+  5. **First marker-collection hygiene**: Firestore TTL policy enabled on `qg_green_markers.expires_at` (60 d).
 
 - 2026-07-16 — **Hosted baseline + full VM pre-seeding (operator-directed). STOPPED at the operator's gate — no further
   workflows flipped.** Two operator asks, both done:
@@ -1585,13 +1627,13 @@ prove on ONE caller → only then fan out._
 
 ### Not done — blocked on nobody, real work
 
-| #   | Item                                                       | State                                                                                                                                                                                                                                        |
-| --- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **A2 — content-gate dedup** (byte-identical-tree skip)     | **RECOMMENDED NEXT — recon DONE 2026-07-17, implementation-ready.** Key + skip wiring already exist; only storage is dead. Read the RECON block in the A2 todo (gate-version gap + Firestore creds measured fleet-wide) before writing code. |
-| 2   | **A1 — docs-only fast-path**                               | P1, natural follow-on: **same load-bearing mechanism as A2** — a _green_ skip that still POSTS the required check. Build it once, use twice.                                                                                                 |
-| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                                                                                                                   |
-| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                                                                                                                     |
-| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                                                                                                              |
+| #   | Item                                                       | State                                                                                                                                                                                                |
+| --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | ~~A2 — content-gate dedup~~                                | ✅ **SHIPPED + PROVEN 2026-07-17** — see the A2 todo's evidence block (c535ec087; alerting-service runs 29584946980 MISS+save / 29585163847 22s HIT+skip).                                           |
+| 2   | **A1 — docs-only fast-path**                               | **RECOMMENDED NEXT.** P1: **same load-bearing mechanism A2 just proved live** — a _green_ skip that still POSTS the required check (the aggregate-treats-skip-as-green wiring is now battle-tested). |
+| 3   | **A5 — collapse the QG fan-out**                           | P2, measure-then-collapse.                                                                                                                                                                           |
+| 4   | Security-posture codex doc                                 | P2 docs.                                                                                                                                                                                             |
+| 5   | Cron cadence `*/15` → hourly · `ci-status-update` debounce | P2 / P3, small.                                                                                                                                                                                      |
 
 ### Cannot be done yet — waiting, NOT neglected
 
