@@ -40,7 +40,7 @@ related:
   [
     ../../codex/04-architecture/agent-orchestrator-overview.md,
     ../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    ../ao_dispatch_hardening_2026_07_16.md,
+    ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-17

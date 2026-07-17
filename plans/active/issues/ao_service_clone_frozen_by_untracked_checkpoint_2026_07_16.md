@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, deployment, ff-pull, stale-clone, fleet-capacity, infrastructure, operator-action]
 related:
   [
-    ao_dispatch_hardening_2026_07_16.md,
+    ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
     ../../codex/05-infrastructure/per-tab-worktrees.md,
     ../../epics/orchestrator_master.md,
   ]
@@ -135,21 +135,21 @@ frozen clone among healthy ones is invisible to the alarm that exists to catch e
       the one untracked file, so this is a plain FF — no WIP at risk. Recovery, on `i-0c9b283b31d6b5ca7`:
 
       ```bash
-                  cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
-                  sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
-                  sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
-                  sudo -u ubuntu git fetch origin live-defi-rollout
-                  sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
-                  sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
-                  grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
-                  sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
-                  systemctl is-active orchestrator.service
-                  ```
+                      cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+                      sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
+                      sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
+                      sudo -u ubuntu git fetch origin live-defi-rollout
+                      sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
+                      sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
+                      grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
+                      sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
+                      systemctl is-active orchestrator.service
+                      ```
 
-                  **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
-                  `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
-                  commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
-                  session that found this.
+                      **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
+                      `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
+                      commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
+                      session that found this.
 
 - [x] [INFRA] P1. ✅ **RAN 2026-07-16 17:35Z — and it FAILED, which is exactly why it was worth running.** Unblocked by
       this doc's fix (the code was finally live, so there was something real to measure). Result: **R1 did NOT reduce
