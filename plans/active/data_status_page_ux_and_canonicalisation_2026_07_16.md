@@ -133,6 +133,43 @@ source: operator request 2026-07-16 (data-status page review) + multi-agent audi
 
 ## Progress Log
 
+### 2026-07-17 — Playwright re-verification found + fixed a month-old mock-api.ts bug shadowing every /api/data-status/* endpoint
+
+Doing a fresh Playwright pass (mock mode, `VITE_MOCK_API=true`, port 5199) against everything shipped this plan found a
+crash in `CatalogueExplorer` (`TypeError: Cannot read properties of undefined (reading 'length')`) on first render, and
+found the Prediction Catalogue silently showing "No prediction markets match the current filters" despite the mock
+having representative rows for every category. Root cause (traced via `page.evaluate` calling `fetch(...)` directly in
+the live page, NOT assumption): `src/lib/mock-api.ts` has had a catch-all
+`if (path.match(/^\/api\/data-status/)) { return json(MOCK_DATA_STATUS); }` sitting near the top of the ~2,700-line
+`handleRoute` function since `deployment-ui@687d4ce` (2026-06-16) — **every** more-specific
+`/api/data-status/<endpoint>` handler added to this file AFTER that date and BEFORE this catch-all's position in file
+order (honest-coverage, turbo/manifest, venue-filters, list-files, instruments-for-shard, download-catalogue-csv,
+catalogue, instruments, instrument-availability, prediction-catalogue — essentially every data-status mock endpoint
+shipped over the past month, including this session's own P2/P3/P6 UI work) was silently shadowed, always receiving the
+generic turbo coverage-summary payload instead of its own real response shape. This is exactly why so many earlier
+verification passes this session (Phase A, the P3/P6 real-data checks) kept coming back INCONCLUSIVE/empty against mock
+mode — the mock layer itself was broken the whole time, independent of whether the actual shipped code was correct.
+
+**Fixed**: moved the catch-all to be the true last-resort fallback (immediately before the function's existing
+`404 "Mock: no handler"` response), so every specific handler gets first crack at matching. Also added defensive
+`?? []`/`?? 0` fallbacks in `CatalogueExplorer.tsx` for `data.instruments`/`data.total_count` so a future malformed
+response degrades gracefully instead of crashing. Verified end-to-end via Playwright:
+`fetch('/api/data-status/ catalogue?...')` now returns the correct
+`{instruments: [...4 rows], total_count: 4, label: "captured instruments (availability-derived)"}` shape (previously
+returned the turbo coverage payload with no `instruments` key at all); `/api/data-status/prediction-catalogue` now
+returns 8 rows across all 7 categories. Full-page screenshot confirms both panels render real mock data with correct
+capture_status/MVP badges. Full Vitest suite re-run clean (93 files, 990 tests, 0 regressions) — the routing reorder
+didn't change behavior for any OTHER endpoint, confirming nothing else in the codebase was relying on the old (buggy)
+shadowing behavior. — `deployment-ui@0c817d2`.
+
+**Why this wasn't caught by any of this plan's own Vitest specs**: every affected component's own test file mocks
+`fetchInstrumentCatalogue`/`fetchPredictionCatalogue` etc. directly (jest/vitest `vi.mock`), never actually routing
+through the real `mock-api.ts` `handleRoute` dispatcher — so unit tests stayed green throughout the entire month this
+bug existed. Only a REAL browser hitting the REAL mock server (i.e. what `pw:L2` is supposed to be, not just "Vitest
+passed") would ever have caught it. Worth flagging as a broader lesson for this workspace's `[UI] + pw:L2` gate: a
+Vitest pass proves the component logic is correct GIVEN its mocked inputs, not that the actual mock-server wiring
+delivers those inputs in the browser.
+
 ### 2026-07-17 — Honest-coverage cron verification uncovered + fixed a FRESH production regression (unrelated to P1's original fix)
 
 Checking this plan's own P1 acceptance criterion ("tomorrow's 00:30 UTC file has `asset_groups_measured` = all 5 AND
@@ -803,27 +840,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                          been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                          date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                          in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                          Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                          truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                          `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                          instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                          guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                          `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                          Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                          `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                          empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                          `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                          `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                          transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                          pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                          `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                          `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                          (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                          carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
