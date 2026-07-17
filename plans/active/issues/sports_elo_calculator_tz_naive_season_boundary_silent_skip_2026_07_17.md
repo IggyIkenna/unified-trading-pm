@@ -157,7 +157,20 @@ follow-up backfill pass — same operational pattern as Todo 2 in the sibling is
       LARGE fraction of history, not a small targeted set — re-estimate infra cost/scope explicitly before launching any
       multi-VM fleet (this is exactly the kind of infra-cost decision the data-correctness HARD RULE says to surface,
       not default to a full re-run for) and consider whether operator sign-off is warranted given the scale. (repo:
-      features-service)
+      features-service) — **CONFIRMED VM-FLEET SCALE (2026-07-17, slot-9)**: the 22,042 affected shards span **1,844
+      distinct dates** (per the CSV's `date` column, `df['date'].nunique()`). Measured cost directly: a single forced
+      recompute
+      (`python3 -m features_service.sports --operation compute --mode batch --asset-group SPORTS --date     2018-03-18 --league COPA_ARGENTINA --force`)
+      did **NOT complete within a 180s timeout** — one (date, league) shard alone exceeds 3 minutes, so a naive
+      per-shard loop over 22,042 shards is infeasible from a single worker session (>18 hours even at a
+      wildly-optimistic 3s/shard). Recompute is per-DATE (rebuilds Elo from all history up to that date), so the
+      realistic unit is the **1,844 distinct dates**, still large enough that this needs a dedicated VM-fleet launch
+      matching Todo 1's original `fss-backfill-vm-1..10` precedent (per
+      `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`'s launcher guidance — prefer
+      `launch-features-vm.sh --feature-family sports` over the parallel-backfill script's `--vms 1` naming-collision
+      trap), not something this dispatch can execute directly. **NOT flipping this checkbox — genuinely not done.**
+      Filed as a `/blocked` operator decision (VM-fleet launch sign-off) rather than launching autonomously, per the
+      data-correctness HARD RULE's infra-cost-decision requirement. (repo: features-service)
 - [x] ✅ [VERIFY] P3. **Audit whether other sports calculators build a hand-constructed
       `pd.Timestamp(year=..., month=...,     day=...)` (or similar tz-naive-by-construction Timestamp) that gets
       compared against a possibly-tz-aware value** — grepped `features_service/sports/calculators/*.py` for
@@ -312,3 +325,46 @@ Added regression tests for all 3 files reproducing the exact mismatched-tz scena
 coach/history dates and vice versa) — each confirmed to compute the correct value post-fix. Full QG green: 17638 passed
 / 0 failed / 209 skipped (2 more passing tests than the prior baseline, from the new regression tests), formula-hash
 drift gate clean, no-look-ahead gate clean. Shipped via `quickmerge --agent` — features-service@2dc643bf.
+
+### 2026-07-17T13:1xZ — data_engineering slot-9 (Todo P2c dispatch — cross-verified scope, confirmed VM-fleet-scale, no execution this dispatch)
+
+Dispatched this issue doc's gap-fill todo (`sports_elo_calculator_tz_naive_season_boundary_silent_skip-004`). Started
+building an independent single-walk audit script before discovering (via `git fetch` on features-service mid-dispatch —
+my clone was 1 commit behind `origin/live-defi-rollout`) that **slot-2 had already built and shipped a materially more
+rigorous audit** (`scripts/sports/audit_elo_flat_1500_2026_07_17.py`, features-service@df7090f1) while I was working in
+parallel. Their approach (manifest-driven DATE discovery + per-date `list_blobs` to find the REAL shard paths) sidesteps
+a path-reconstruction pitfall my own draft shared (guessing the GCS `league=` path segment from the manifest's
+canonicalized `league_id` via a UAC api_football_id reverse-lookup) — they proved this guess-based approach silently
+404s/under-counts on at least 2 known-affected dates (2019-06-01, 2020-01-15) where the manifest reports a canonical
+league_id but the actual GCS shard is partitioned by a different raw numeric id. **Discarded my own draft audit script
+entirely rather than ship a second, unvalidated, numerically-inconsistent audit alongside the authoritative one** — my
+own run had reported 16,677/40,344 affected (vs. their 22,042/43,183), a discrepancy consistent with exactly this
+under-counting risk, not a real second measurement worth reconciling.
+
+Downloaded and cross-checked slot-2's authoritative CSV directly
+(`gs://features-sports-prd-central-element-323112/_audits/elo_flat_1500_affected_20260717-125526.csv`, 22,042 rows,
+columns `date/league_raw/flat_rows/total_rows/flat_fraction`) — confirms **1,844 distinct affected dates**.
+
+**Measured the actual gap-fill cost before deciding execution strategy** (rather than assuming feasibility): ran a
+single forced recompute for one known-affected shard —
+
+```
+GCP_PROJECT_ID=central-element-323112 python3 -m features_service.sports --operation compute --mode batch \
+  --asset-group SPORTS --date 2018-03-18 --league COPA_ARGENTINA --force
+```
+
+— under a 180s timeout. **It did not complete** (`Terminated`, exit 143). Recompute rebuilds Elo ratings from ALL
+`fixtures_history` up to the target date each call (`compute_elo_batch`'s documented design), so cost scales with corpus
+depth, not shard count within a date — meaning the real unit of work is the **1,844 distinct dates**, each apparently
+costing well over 3 minutes. This conclusively confirms the gap-fill is genuinely VM-fleet-scale (comparable to Todo 1's
+original 10-VM `fss-backfill-vm-1..10` launch, which covered the full 2015→present corpus), not something a single
+worker dispatch can execute inline — matching what slot-2 already flagged ("consider whether operator sign-off is
+warranted given the scale") but now with concrete per-call cost evidence backing the call.
+
+**Did not launch a VM fleet autonomously** — filed a `/blocked` decision request to the operator/main (VM-fleet launch
+sign-off, with a sizing recommendation) rather than unilaterally spinning up compute for a mid-audit-discovered
+large-scale finding, per the data-correctness HARD RULE's infra-cost-decision requirement and this workspace's
+no-fire-and-forget VM discipline. **Not flipping the gap-fill checkbox** — the actual re-run has not happened.
+`/skip-current-task` after this ships (matching the precedent set twice already in this doc's own history: real, durable
+progress — cross-verified scope + concrete cost data + a filed decision point — is the shippable unit this dispatch, not
+a false claim that the gap-fill executed).
