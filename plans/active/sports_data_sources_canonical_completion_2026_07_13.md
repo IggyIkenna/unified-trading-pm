@@ -3490,6 +3490,19 @@ it's new adapter work, not a data-audit residual).
     re-requesting the `sports-cron-overnight-2026-07-18-observable` dispatch gate (or a park: `priority: 999` +
     `priority_override: true` + a false prereq) — **5 slots now burned pre-gate (5→7→4→3→5); the gate/park is the only
     thing that stops a 6th.**
+  - **INTERIM STATUS 2026-07-17 16:06 UTC (slot-6, data_engineering — the 6th pre-gate dispatch slot-5 predicted;
+    checkbox STILL NOT flipped).** As warned, redispatched again ~9 min after slot-5 (15:57 → 16:06 UTC). **Deliberately
+    did NOT re-run the REST/duckdb sweep** — no daily-cron self-fire can occur before the **2026-07-18 00:35–01:15 UTC**
+    windows (~8.5 h out), so a re-sweep would only re-confirm slot-4/5's already-current "all 5 daily schedulers
+    ENABLED + armed with correct crons, Cloud Run exec history unchanged" reading for zero new signal (same reasoning
+    slot-3/4/5 applied). The DoD (unattended self-fire on the RESTORED post-cutover config) remains physically
+    unreachable until 07-18 ~01:30 UTC. **DISPOSITION UNCHANGED — todo stays OPEN on the time-gate; re-check after
+    2026-07-18 ~01:30 UTC per slot-7's checklist** (5 run jobs each showing a NEW cron-triggered — not manual — exec at
+    their exact cron minute for 07-18 with `succ=1`; fresh `captured` rows for 07-17/18 per source;
+    footystats+transfermarkt do NOT re-fail at `instruments_handler.py:310` on the restored config; Tier-3/4
+    fixture-proximate trigger fires around a real 07-18 kickoff). Re-escalated to main via a slot-6 `/blocked` for the
+    `sports-cron-overnight-2026-07-18-observable` dispatch gate (or park) — **6th slot now burned pre-gate
+    (5→7→4→3→5→6); the gate is the only thing that stops a 7th.**
 
 - **2026-07-14 (slot-5, data_engineering) — 8,766 NON-IS ROWS VERIFY (todo "resolve the 8,766 non-instruments-service
   rows").** Live single-parquet read of `instruments-store-sports-prd` `_index/availability_index.parquet`, api_football
