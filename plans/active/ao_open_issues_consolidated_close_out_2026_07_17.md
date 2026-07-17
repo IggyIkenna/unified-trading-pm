@@ -226,6 +226,68 @@ NOT AO and are deliberately out of scope here.
       (`last_updated: 2026-06-27` predating `created`; stray `locked_by: live-defi-rollout`) — repair at archival.
       **Gate**: `plans/active/issues/` contains no resolved-but-unarchived AO doc; inventory regenerated.
 
+### Phase 6 — operator-reported dispatch-policy gaps (2026-07-17, verified this session before writing)
+
+> Reported verbally by the operator 2026-07-17; each item below was VERIFIED against code + the live VM before being
+> written down. Per the operator's instruction these are RECORDED, not fixed, in this session.
+
+- [ ] [BACKEND] P2. **Paused-slot semantics — verified CORRECT in code; pin it with tests + close the one unchecked
+      path.** Findings (2026-07-17): `dispatch.pick_next_task` excludes paused via `_slot_configured` (`dispatch.py:186`
+      — "paused: an explicit operator 'do not use this slot'"); AutoSpawn excludes paused (`autospawn.py:631`
+      spawnability + `:2031` review/paused guard); `plan_health._pick_free_slot` and `escalation._pick_free_slot` both
+      skip `paused`/`killed`; a paused slot's `/heartbeat` only refreshes ping + drains messages, never dispatches
+      (`slots_worker.py:316`); the TmuxPruner never overwrites `paused` and never releases a paused slot's task
+      (operator intent preserved). So the operator's expectation — no new task, no new work on a paused slot — HOLDS in
+      code today. Remaining: (a) one regression test pinning "a paused slot receives no task from ANY path" (dispatch,
+      autospawn, plan_health, escalation, AND the dead-slot failover/spill path — the spill path was NOT verified this
+      session); (b) verify the dashboard renders paused distinctly so an operator-paused slot is never mistaken for a
+      stuck one. **Gate**: the all-paths test exists + bug-injection proves it bites; spill-path verdict recorded.
+- [ ] [BACKEND] P1. **plan_health cadence — MEASURED 21 dispatches in 5.5h (11:02→16:30Z), overlapping instances
+      confirmed (`superseded-plan_health` exit reasons + one ACTIVE at probe time).** Operator policy: once per 4–8h
+      unless CI-triggered — NOT every 15–30 min. Root cause found: `main-backmerge-to-ldr.yml` § "Ping plan-health
+      agent" POSTs `/api/plan-health/dispatch` on EVERY LDR→main promotion that lands PM content (fleet promote runs
+      `*/15`, PM is busy — today's session alone drove ~10 promotions), and the server endpoint has NO cooldown, NO
+      already-running coalesce (only the failure-page cooldown is deduped; the singleton reaper kills stragglers after
+      the fact, which is where the `superseded-plan_health` churn comes from). Fix to implement: (a) server-side
+      min-interval gate on `/api/plan-health/dispatch` (default 4h, `mode=reconcile` exempt, explicit `force=true` for
+      operator/CI-emergency use) + at-most-one-live coalesce (a dispatch while one is active returns the active
+      dispatch_id, HTTP 200, no spawn); (b) keep the promotion ping as a TRIGGER but let the server gate absorb the
+      frequency (trigger-rich, execution-throttled); (c) operator to ratify the interval (4h vs 8h). Also noted: every
+      plan_health boot logs `boot_read_unconfirmed` for `agents/worker.md` (the file exists — the worker just never
+      confirms it), a per-boot noise line worth one look while in the file. **Gate**: measured dispatch rate ≤ 1 per
+      interval over a 24h window with promotions still flowing; zero `superseded-plan_health` exits in that window.
+- [ ] [BACKEND] P1. **Blocked-task redispatch cooldown + change-triggered re-eligibility + worker ETA (operator policy,
+      new mechanism).** Today a skip-as-blocked only blocks the SKIPPING slot (24h slot-scoped TTL); any other idle
+      same-role slot re-claims the task within ~minutes (measured: 117 `slot_task_skipped`/24h; the mvp thrash doc
+      recorded 3 re-derivations of the same verdict in ~35 min). Operator policy to implement, verbatim: (1) when a
+      worker declines a task as BLOCKED after reading the plan, the task is not re-dispatchable to ANY slot for a base
+      cooldown of 10–15 min; (2) within/after that window, re-dispatch EARLY only if something RELEVANT changed — a
+      prerequisite flip, a plan-todo/regen change on that task, a park/priority change — i.e. change-triggered
+      re-eligibility, else (3) no change → next attempt no sooner than 1h; (4) the worker MAY supply an estimated
+      unblock time on skip (e.g. "VM finishes in ~15 min") — extend the `/skip-current-task` payload with
+      `estimated_unblock_minutes`, and the cooldown becomes that estimate (+small buffer) instead of the defaults.
+      Design note: this is the missing middle layer between the existing slot-scoped skip TTL and Phase-3's auto-park
+      (park = the ≥N-skips escalation of the same mechanism; the cooldown handles the 1st–Nth skip window). Implement
+      fleet-scoped cooldown state keyed by task_id + the change-listeners on prerequisite/regen/park events. Sources:
+      operator 2026-07-17 + doc #5's fleet-wide-cooldown gap. **Gate**: regression tests (skip-blocked → no cross-slot
+      redispatch inside base cooldown; prereq flip → immediate re-eligibility; no change → 1h; ETA honoured); measured
+      redispatch-of-declined-task rate drops to the policy curve on the live VM.
+- [ ] [INFRA] P1. **plan_reconciler daily 01:00 UTC is NOT RUNNING — the systemd timer is ABSENT from the VM.** Measured
+      2026-07-17: `systemctl list-timers | grep reconcil` → nothing; `journalctl -u 'plan-reconciler*'` last 14 days →
+      empty; the agents table holds exactly ONE `plan_reconciler` run EVER (`agt-2d8441`, 2026-07-15 01:05Z, exit
+      `lifecycle-complete`); yet `/usr/local/bin/plan-reconciler-dispatch.sh` EXISTS on the box — so
+      `install-plan-reconciler-timer.sh` was run at least once and the timer units have since gone missing (never
+      `systemctl enable`d and lost on a reboot, or removed by a host rebuild — diagnose which). Fix to implement: (a)
+      diagnose + reinstall the timer (`agent-orchestrator/scripts/install-plan-reconciler-timer.sh`, fire-time 01:00
+      UTC), verify the unit is ENABLED (survives reboot) and fires on the next window; (b) add absence-visibility — a
+      daily liveness assertion (digest line or guard-cron check: `systemctl is-enabled plan-reconciler*` AND last
+      successful dispatch < 26h) so a missing timer alerts instead of silently not-running (the exact "silent by
+      absence" class this plan keeps finding); (c) audit whether the one 2026-07-15 run COMPLETED its work product
+      (operator suspects not): pull that dispatch's `plan_health_result`/`reconciler_candidate` events + any PM commits
+      it made, and record the verdict — if it stalled mid-work, capture why (context? account? interrupted?) before
+      re-arming the schedule. **Gate**: timer enabled + next-day 01:00 run visible in the journal AND a completed result
+      event; liveness check alerts when the timer is deliberately stopped in a test.
+
 ### Phase LAST — operator-sequenced
 
 - [ ] [BACKEND] P2. **Recovery-audit Layer-1 producer rewire (operator ruling B, "do it at last").** Stand up the
@@ -254,6 +316,11 @@ NOT AO and are deliberately out of scope here.
 
 ## Progress Log
 
+- **2026-07-17 (later)** — Phase 6 added: four operator-reported dispatch-policy items, each verified against code + the
+  live VM before writing (paused-slot semantics CORRECT in code; plan_health measured at 21 dispatches/5.5h with
+  overlaps, root cause = per-promotion backmerge ping with no server cooldown; blocked-task redispatch cooldown policy
+  captured verbatim incl. change-triggered re-eligibility + worker ETA; plan_reconciler timer ABSENT from the VM — one
+  run ever, 2026-07-15). Recorded, not fixed, per operator instruction.
 - **2026-07-17** — Plan authored from the operator-requested verification sweep of all 10 open AO issue docs. Every
   doc's claims re-checked against code (`agent-orchestrator@6a30e45`) and the live VM (read-only SSM: state.db,
   activity_log 24h, ps/tmux, clone freshness, `audit_false_done.py`). Two NEW findings from the sweep itself: (1) 2 live
