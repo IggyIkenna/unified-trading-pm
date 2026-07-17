@@ -4539,26 +4539,73 @@ were.
       declared window. The oracle-consulting handlers (lending_indices, risk_params) already inherit the skip via
       `expected_coverage()`. Either route the venue pre-skip through the oracle or add a bounded check alongside the
       floor. Provenance: coverage-exclusions consumer study 2026-07-17.
-- [x] ✅ [AUDIT] P2. Reconcile the THREE parallel coverage-floor registries that do not propagate to each other: UAC
-      `canonical/coverage_starts.py` (`{CEFI,DEFI,TRADFI,PREDICTION,SPORTS}_SOURCE_COVERAGE_START` → catalogue
-      denominator + `expected_coverage()` oracle), `registry/venue_mapping.py` (`venue_start_dates` /
-      `source_data_start_dates` → the MTDS orchestrator pre-skip that actually gates fetching), and
-      `canonical/domain/sports/league_data.py` (`SOURCE_COVERAGE_START`/`DATA_TYPE_COVERAGE_START` → the ManifestWriter
-      pre-launch drop-guard). A floor amended in one does NOT reach the others — so the c280e1ff amendment to measured
-      reality may not have propagated to the surfaces that gate fetching + writing. Directly relevant to the floors'
-      failure class. Provenance: coverage-exclusions consumer study 2026-07-17. — **RECONCILED 2026-07-17**: registries
-      1 (`coverage_starts.py`) and 3 (`league_data.py`) are import-linked (ONE SSOT for sports; c280e1ff propagated
-      automatically). Registry 2 (`venue_mapping.py`) is genuinely unlinked — every overlapping CeFi venue disagrees,
-      mostly by years (BITFINEX/KRAKEN/COINBASE-SPOT/DERIBIT/OKX/BINANCE/BYBIT/HYPERLIQUID), plus CME (~10yr) and
-      POLYMARKET (~2.3yr); DeFi shows small 1-21 day drifts + an AAVE_V3 chain-axis gap. Findings + 6 fix todos filed:
-      `plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md` — unified-trading-pm@(flip
-      commit).
+- [x] ✅ [AUDIT] P2. Reconcile the THREE parallel coverage-floor registries that do not propagate to each other —
+      **PREMISE LARGELY FALSIFIED; registry 2 IS genuinely unlinked but is a DIFFERENT CONCEPT; the one real sports
+      duplicate is FIXED.** — unified-api-contracts@02ddf697. Two agents audited this independently (slot-9
+      data_engineering + this slot) and AGREE on the core; merged findings:
+      1. **Registries (1) and (3) are ONE registry, not two — c280e1ff reached the oracle BY CONSTRUCTION.**
+         `coverage_starts.py` does not hardcode sports floors; it re-exports them
+         (`SPORTS_SOURCE_COVERAGE_START = dict(_SPORTS_SOURCE_COVERAGE_START)` imported from `league_data.py`). Runtime
+         identity proof: `SPORTS_SOURCE_COVERAGE_START == SOURCE_COVERAGE_START` → **True**. c280e1ff's real diff = 2
+         files (`league_data.py` + its test), confirmed by reading the diff. Nothing to sync. [both agents]
+      2. **c280e1ff DID reach the WRITE-guard.** ManifestWriter's guard is `is_pre_launch_date` →
+         `get_source_coverage_start` → `DATA_TYPE_COVERAGE_START`/`SOURCE_COVERAGE_START` — i.e. `league_data.py`, the
+         amended file itself. Composed against the real registry: `is_pre_launch_date('MATCHES', '2018-06-15')` =
+         **False** (accepted) for every footystats data_type; **15/17** sports data_types accepted at 2018-06-15. This
+         RECONCILES the 31,301 re-emitted rows — they were writable *because* the amendment reached the guard.
+      3. **c280e1ff DID reach the FETCH-gates.** The sports fetch pre-skip is NOT `venue_start_dates`: every IS sports
+         fetcher (`orchestrator/{footystats,understat,sfi,weather}.py`) gates on `get_source_coverage_start(...)`, the
+         amended registry. `clip_dates_to_source_coverage(src, 2018-01-01..2018-12-31)` now **fetches** the full window
+         for api_football / footystats / transfermarkt / open_meteo / understat.
+      4. **c280e1ff DID reach the ENUMERATOR.** `enumerate_expected_universe.py::_yield_v2_sports_pre_source_coverage_rows`
+         calls `get_source_coverage_start(source, dt)` → the amended floor. (The separate "enumerator never calls the
+         oracle" finding is real but concerns the `expected_coverage()` **wrapper** — it reads the same amended SSOT.)
+      5. **Registry (2) never gated ANY amended sports source.** Measured: `get_venue_start_date()` returns **None** for
+         api_football / footystats / transfermarkt / open_meteo / understat / soccer_football_info (→
+         `is_venue_available_on_date` returns True, "assume always available"). Its ONLY sports key is `ODDS_API`, and
+         MTDS's only sports venue is `ODDS_API` (`get_venues_for_asset_groups`: sports → `["ODDS_API"]`) — a source
+         c280e1ff did not amend. So the sports fetch/write path was never at risk from registry 2.
+      6. **Registry (2) IS genuinely unlinked from (1), and disagrees by YEARS outside sports** — but note the two encode
+         DIFFERENT CONCEPTS: `coverage_starts` CeFi = **venue launch date**, `venue_start_dates` = **earliest manifest /
+         archive data** ("Start dates = earliest manifest data, NOT exchange founding dates"). So DERIBIT 2016-06-13 vs
+         2019-03-30 is launch-vs-archive, both true, not a typo. It is still a REAL honesty question (the oracle expects
+         a window the fetcher can never serve), so it is NOT dismissed: filed with 6 fix todos in
+         `plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md` (P1) — BITFINEX / KRAKEN /
+         COINBASE-SPOT / DERIBIT / OKX / BINANCE / BYBIT / HYPERLIQUID, CME (~10yr), POLYMARKET (~2.3yr), DeFi 1-21 day
+         drifts + an AAVE_V3 chain-axis gap. **Whoever takes that issue must first settle concept-vs-drift per venue
+         (launch ≠ archive floor) rather than blind-syncing the two dicts.** [slot-9]
+      **The one GENUINE sports defect — found by both, FIXED here**: `source_data_start_dates['ODDS_API']` and
+      `SOURCE_COVERAGE_START['odds_api']` are the SAME FACT (odds-api vendor floor) hand-typed twice, gating DIFFERENT
+      surfaces (MTDS FETCH pre-skip vs oracle / IS guards / writer WRITE-guard). They agreed (both 2020-06-06) but
+      nothing pinned them — slot-9 called it "unenforced coincidence"; the drift is silent in the dangerous direction
+      (lower the sports SSOT on new evidence → the hand-typed fetch floor keeps pre-skipping the dates the oracle now
+      expects → backfill no-ops while coverage calls the days missing). Fixed **derive-not-duplicate**: the fetch side
+      now reads the sports SSOT (`_build_source_data_start_dates`). Behaviour-preserving — derived dict byte-identical
+      to the old literal (`{'ODDS_API': '2020-06-06'}`), so no adapter attempts a range it previously skipped and no
+      denominator moves. Falsifier `TestOddsApiFloorDerivesFromSportsSsot::test_amending_the_sports_ssot_moves_the_fetch_preskip`
+      amends ONLY the SSOT and requires the pre-skip to follow; **mutation-tested** — re-hardcoding the floor FAILS it
+      while the plain equality assertion still PASSES (so equality alone would have been a false guard). This closes the
+      issue doc's ODDS_API/falsifier todo.
+      Evidence: no import cycle (both orders probed); UAC QG green (**sentinel==HEAD `d8060c93`**, not merely exit-0);
+      consumers green against this tree — MTDS 100 passed, deployment-api 325 passed, UAC venue_mapping +
+      expected_coverage 102 passed.
+      **Residual (legitimate, NOT stale)**: only 2 (source, data_type) remain clipped at 2018-06-15 —
+      `SFI_PROGRESSIVE_STATS` @ 2020-01-01 (probed: SFI returns empty for every match before 2020-01-01; earliest real
+      object measured EXACTLY 2020-01-01) and `ODDS_HORIZON_BUCKET` @ 2020-06-06 (odds_api vendor 401 floor). Both are
+      evidenced floors, not amendment misses.
+      Provenance: coverage-exclusions consumer study 2026-07-17; slot-9 registry reconciliation audit; verified by
+      runtime proof 2026-07-17.
 - [ ] [CODE] P2. The ManifestWriter pre-launch guard DROPS below-floor writes SILENTLY (`logger.debug` + bare `return`,
       no row, no exception): UTL `manifest_writer/_writer_ingest.py:232-244` + `_writer_record.py:681-693` via
       `is_pre_launch_date`. This is the mechanism by which a wrong floor becomes invisible — a genuinely-fetched row
       inside a too-late floor is discarded with only a debug breadcrumb, quota already spent, and nothing written that
       any audit could detect. Make it loud (record a typed row or raise) rather than silent. NOTE `record_captured()`
-      has no such guard at all (asymmetry). Provenance: coverage-exclusions consumer study 2026-07-17.
+      has no such guard at all (asymmetry). Provenance: coverage-exclusions consumer study 2026-07-17. **Measured scope
+      2026-07-17** (runtime-composed against the real registry, see the AUDIT todo above): the guard is real and still
+      silent, but post-c280e1ff it clips only **2/17** sports data_types at a 2018 probe date — `SFI_PROGRESSIVE_STATS`
+      (2020-01-01) and `ODDS_HORIZON_BUCKET` (2020-06-06), both evidenced floors. So this is a
+      latent-correctness/observability fix (the next wrong floor becomes invisible again), NOT a live data-loss bug — it
+      is not currently dropping any row we have evidence we should be keeping. Priority P2 stands.
 - [ ] [UI] P2. deployment-ui typed-reason taxonomy has drifted from deployment-api AND **its parity test cannot detect
       it**. `TypedReasonBadges.tsx` `EMPTY_REASON_KEYS` is a stale 13-member list vs deployment-api's 38-member
       `EMPTY_REASON_KEYS` (`services/data_status/coverage_metrics.py`, re-exported as `_EMPTY_REASON_KEYS`) — ~24
