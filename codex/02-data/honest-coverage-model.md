@@ -13,7 +13,18 @@ asset_group: [meta]
 stage: [meta]
 repos: [deployment-api, deployment-ui, instruments-service]
 scope: [engineer, admin]
-tags: [honest-coverage, manifest, data-correctness, data-status, uac, instruments, verification]
+tags:
+  [
+    honest-coverage,
+    manifest,
+    data-correctness,
+    data-status,
+    uac,
+    instruments,
+    verification,
+    coverage-exclusions,
+    out-of-bounds,
+  ]
 related:
   [
     availability-manifest-and-data-status.md,
@@ -28,6 +39,8 @@ authoritative_for:
     Honest Coverage v2 model (two-layer / two-view / instrument-gates-download),
     coverage.json v2 schema,
     Layer-1 enumeration-completeness matrix,
+    Bounded coverage exclusions (out-of-bounds ranges),
+    Coverage-exclusion evidence + falsifier rule,
   ]
 referenced_by:
   [
@@ -224,6 +237,115 @@ interpretable steady-state. Same precedent as TradFi T+1 vendor lags (NASDAQ/NYS
 
 > Compare to v1 formula: `coverage = (captured + empty_confirmed) / expected_universe` — this mixed legitimate-absence
 > into the numerator, masking real holes.
+
+---
+
+## Bounded coverage exclusions — out-of-bounds ranges (evidence-gated)
+
+**SSOT: `unified_api_contracts.canonical.coverage_exclusions`** (UAC). Shipped 2026-07-17
+(`unified-api-contracts@a1284b3d`) per operator proposal: _"for a genuine bounded upstream capture outage sounds like
+something to put in UAC as out of bounds so doesn't affect honest coverage denominator and adaptors don't try those
+ranges"_.
+
+### The construct
+
+`SOURCE_COVERAGE_START` expresses a **floor** ("nothing before X"). `COVERAGE_EXCLUSIONS` expresses the **bounded**
+sibling — a closed mid-history interval that was genuinely never capturable, keyed `(asset_group, source, data_type)` →
+closed `(start, end)` intervals. A declared range is **OUT OF MODEL**: neither `captured` nor `missing`. The oracle
+emits `EXPECTED_UPSTREAM_OUT_OF_BOUNDS`, a member of `OUT_OF_COVERAGE_WINDOW_REASONS`, so it is clipped from **both**
+numerator and denominator — while keeping its **own visible reported line** (deployment-api `EMPTY_REASON_KEYS` + the UI
+reason badge). An out-of-model range that is invisible is indistinguishable from data we lost.
+
+**The registry ships EMPTY, and empty is the correct state** until a range is PROVEN — the same stance
+`PROTOCOL_PAUSE_WINDOWS` takes ("don't encode pauses we can't prove from data").
+
+### WHY EVIDENCE IS MANDATORY — the floors' cautionary history
+
+**Read this before adding any entry. This mechanism is a loaded gun and the workspace has already shot itself with it.**
+
+`SOURCE_COVERAGE_START` **is** this pattern without an evidence requirement, and **it was WRONG for months**. Its sports
+floors were justified by the claim _"our backfill never captured 2018-2020 dates"_ — **factually false**. We held that
+data the whole time; the floors made it **invisible by declaration**, clipping the canonical index and hiding 2018–2020
+from coverage and from ML. They were amended to measured reality only on 2026-07-16 (`unified-api-contracts@c280e1ff`),
+after someone finally probed the buckets and found ~22,327 real objects — including 20/30/98-row `fixture_events`
+parquets at `day=2018-01-01` — sitting under floors that declared them impossible. The earlier api_football 2015→2018
+move (`@d858f67d`) is the same class of error.
+
+A **bounded** registry can repeat that at greater scale: a floor is at least visible as one cliff at the start of
+history; a mid-history interval hides a hole in the middle of a corpus where nobody thinks to look. Hence:
+
+1. **Evidence is mandatory + validated at construction.** `CoverageExclusion` requires a typed `ExclusionReason`, a
+   machine-checkable `evidence_uri` (`_audits/` / `audit://` / `https://`), a re-runnable `evidence_probe`,
+   `verified_at`, `verified_by` — `__post_init__` raises `CoverageExclusionError` otherwise. An unevidenced range is
+   **unconstructible**, not merely discouraged.
+2. **Every declaration is continuously falsifiable** (see below).
+3. **Declarations go stale.** `verified_at` older than `EVIDENCE_MAX_AGE_DAYS` (365) FAILS — upstreams backfill their
+   own history; "it was true once" is not a licence to stay excluded.
+
+### The falsifier — `unified-api-contracts/scripts/check_coverage_exclusions.py`
+
+**This is the guard the floors never had, and why they stayed wrong for months.** A declaration is a standing, testable
+claim about the world — not a one-time assertion.
+
+- **Structural layer** (runs in QG via `tests/unit/test_coverage_exclusions.py`, so every declaration is re-falsified on
+  every gate run fleet-wide): evidence currency/staleness, redundancy against a `SOURCE_COVERAGE_START` floor, overlaps.
+- **Data layer** (`--index <availability_index.parquet>`): probes real manifest rows inside each declared window. **If
+  real data exists, the declaration is WRONG and the check FAILS.** Takes an explicit index path because UAC is T0 and
+  may not import UTL / cloud-interface.
+
+**The asymmetry of proof (do not "fix" the sensitivity):** declaring HIDES data → HIGH bar (positive proof of absence;
+per `@c280e1ff`, object existence alone is NOT evidence — the corpus replicates present-day reference data under
+historical partitions, so real data means a parquet that PARSES, carries ≥1 row, and is HISTORICALLY COHERENT with its
+partition). Falsifying UN-HIDES data → LOW bar (any hint of real data). A false FAIL refuses an exclusion (safe, honest-
+down); a false PASS hides a corpus (the floors' failure mode). **When in doubt, the range stays IN the model.**
+
+### What does NOT belong here
+
+| Case                                     | Correct home                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------- |
+| **We hold the data** (capture gap)       | **RECOVER it.** Never declare — see the MDT counter-example below.              |
+| Recurring closure (weekend/holiday)      | `venue_trading_calendar` + `EXPECTED_WEEKEND` / `EXPECTED_HOLIDAY`              |
+| Before the archive begins                | `SOURCE_COVERAGE_START` (a floor)                                               |
+| DeFi protocol pause                      | `registry.protocol_pause_windows` (detector-populated from on-chain governance) |
+| Rolling vendor publish lag               | `EXPECTED_SOURCE_DELIVERY_LAG`, **within-window** — see the ruling below        |
+| Purchasable data we lack entitlement for | A credential ask (`external-data-always-available-rule.md`), NOT an exclusion   |
+| Sparse-but-not-empty window              | Still expected, just under-captured                                             |
+
+`MARKET_CLOSED` is deliberately **not** an `ExclusionReason` (the operator's proposal listed it illustratively):
+encoding it would duplicate a live primitive and let a recurring schedule masquerade as a one-off outage.
+
+**Worked counter-example — the 32-day MDT window (`2022-09-07..2022-10-01`, 550,062 keys) is NOT a candidate.** The
+legacy `market-data-tick-sports` bucket HOLDS those keys (verified two independent ways: the gate's gap days + 213/3,816
+G1 objects with no canonical twin on 23 days, 22 matching exactly). Data in hand ⇒ a canonical capture gap to
+**RECOVER**, not a range to declare. A tripwire test asserts it is never declared.
+
+### Relationship to the delivery-lag ruling (2026-07-14)
+
+That ruling **rejected** an out-of-window mechanism for `EXPECTED_SOURCE_DELIVERY_LAG` because it would make a
+genuinely-stuck capture inside the lag band invisible. That reasoning stands and is **not** contradicted here — the two
+cases differ on exactly the property that mattered: a lag band **self-heals** (the idempotent backfill flips rows to
+`captured` once the lag elapses), so out-of-window would hide a real failure; a proven-uncapturable range **never
+heals**, and the invisibility risk that argued against out-of-window there is answered here by the falsifier + the
+mandatory visible reported line. **Absent the falsifier, the delivery-lag ruling's logic would forbid this construct
+too** — the falsifier is what earns the out-of-window treatment.
+
+### Related registries (do not add a fourth)
+
+Bounded intervals already existed, fragmented and unevidenced. Consolidated 2026-07-17:
+
+- `PREDICTION_KNOWN_COVERAGE_GAPS` — **DELETED**: never exported, zero importers (dead code asserting an effect it did
+  not have), and redundant (ended one day below the POLYMARKET floor).
+- sports `KNOWN_COVERAGE_GAPS` — **FROZEN EMPTY** (test-enforced): the unevidenced ancestor, accepting bare
+  `(start, end)` tuples with no reason/evidence/falsifier. The cross-asset evidenced gate covers sports. Migrating its
+  remaining MTDS classifier callsites and deleting it outright is a filed follow-up.
+- `PROTOCOL_PAUSE_WINDOWS` — **KEPT**: detector-populated, therefore evidence-gated by construction. The exemplar this
+  construct follows.
+
+`EXPECTED_KNOWN_SOURCE_GAP` is **NOT** reused for this: it has live hand-stamped callsites (PYTH pre-archive, VIX 15m)
+and stays **within-window**; widening its semantics would have silently moved live coverage numbers.
+
+**`EXPECTED_UPSTREAM_OUT_OF_BOUNDS` is registry-derived ONLY** — hand-stamping it at a `record_empty` callsite asserts
+an unevidenced, unfalsifiable exclusion and is review-blocking.
 
 ---
 
