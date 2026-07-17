@@ -627,30 +627,37 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       (operator 2026-07-17) — do not duplicate it.** SSOT:
       `plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
 - [ ] [INFRA] P2. **STEP 2c — convert `persist-cicd-event` to a composite action (operator 2026-07-16, option C). ⏳
-      PILOT PROVEN 2026-07-17 (unified-trading-pm@d0e25fcb6 + @1aa26232c) — 1 of 22 callers converted; 21 to go, then
-      delete the old workflow.** Action authored at `.github/actions/persist-event/action.yml`; `secret-health-check`
-      converted as the pilot. **Evidence (run 29566057979):** `check-secrets` → success on `glue-2`; the workflow went
-      **3 jobs → 2** (the `persist` job is gone); **`billable: {}`** = zero billed minutes; and the write is REAL, not a
-      log-only no-op — `cloud_provider: gcp` → `Operation completed over 1 objects/339.0 B` to GCS from the self-hosted
-      runner. **Prize re-measured: `ci-status-update` alone is 14,320 runs/30d ⇒ ~$86/mo; ~$117/mo across all 22.**
-      **The tail is NOT mechanical — read the four findings in the Progress Log before touching the other 21**, in
-      particular: a manifest error fails at LOAD time so `continue-on-error` cannot contain it (one typo here fails all
-      22 callers' REAL jobs at once, incl. `ci-status-update` on the promote critical path) ⇒ change the action, prove
-      on ONE caller, only then fan out. Remaining work: 21 callers (2 need a sparse checkout added —
-      `conflict-resolution-merged`, and `secret-health-check` already has one; 4 pass a hardcoded conclusion and need
-      individual judgment: `fix-approval-timeout`, `overnight-agent-orchestrator`, `overnight-dead-man-switch`,
-      `plan-notification`), then delete `persist-cicd-event.yml`. **⚠️ Resolve the STEP 2b collision first** (below).
-      Supersedes options-doc A3 (and the persist half of A4).
-- [ ] [INFRA] P2. **STEP 2b ↔ STEP 2c COLLISION — needs an operator call (found 2026-07-17).** STEP 2b says trim
-      `ci-status-update` to "pre-stage the script in the runner slot and do **NO checkout at all**". STEP 2c makes it
-      **require** a checkout, because `uses: ./…` resolves a local composite action against the WORKSPACE (a reusable
-      workflow did not — GitHub resolved it from the ref). Both are todos in this plan and they contradict. Options: (a)
-      keep a **sparse checkout** (`sparse-checkout: .github/actions`, ~1s on our own runner) — recommended, keeps the
-      LDR-proves-before-main pattern intact; (b) reference the action as
-      `IggyIkenna/unified-trading-pm/.github/actions/persist-event@main`, which needs no checkout but pins to `main` —
-      **that breaks this plan's whole canary model**, since an action change on LDR would be inert until promoted and
-      could not be proven pre-merge. Decide before converting `ci-status-update` (the 14.3k/mo caller = the bulk of the
-      STEP 2c prize).
+      ROLLOUT SHIPPED 2026-07-17 (unified-trading-pm@a6057ea36) — ALL 22 callers converted (21 files this commit + the
+      pilot). The ONLY remaining item is deleting `persist-cicd-event.yml`, deliberately STAGED until real
+      `ci-status-update` runs are observed green on `main`: while the reusable still exists, `git revert a6057ea36` is a
+      complete one-command rollback.** Action at `.github/actions/persist-event/action.yml`; pilot `secret-health-check`
+      (run 29566057979, `billable: {}`, real GCS write). **Prize:
+      ~$117/mo across 22 callers; `ci-status-update` alone
+      14,320 runs/30d ⇒ ~$86/mo.** D1 resolved by operator
+      delegation — see the collision todo below. Conversion facts that matter later: **3 callers reference the action
+      through their subdir checkout** (`cassette-drift-check` → `./unified-trading-pm/…`,
+      `removed-symbols-workspace-sweep` → `./workspace/unified-trading-pm/…`, `publish-package` → `./pm/…`); 4 jobs with
+      no checkout gained a sparse one (`conflict-resolution-merged`, `fix-approval-timeout`,
+      `overnight-dead-man-switch`, `overnight-agent-orchestrator`'s notify-summary); hardcoded conclusions KEPT where
+      the ledger records a CONDITION, not the job result (fix-approval-timeout, dead-man-switch, t0-escalation,
+      sit-starvation, plan-notification); the overnight summary persist records the COMPUTED conclusion
+      (`steps.conclusion.outputs.conclusion`), not `job.status`. **Deliberate deltas (operator-approved test-in-prod
+      2026-07-17):** skipped-job rows are no longer written (the old `always()` persist wrote
+      `conclusion: skipped, repo: unknown` — the disabled AWS router wrote one per green CI dispatch = ledger
+      pollution); the write no longer waits for notify jobs (ordering-only `needs`, finding ④); `plan-notification`
+      persists per event path (push + approval), still one row per run. Supersedes options-doc A3 (and the persist half
+      of A4).
+- [x] [INFRA] P2. ✅ **STEP 2b ↔ STEP 2c COLLISION — RESOLVED 2026-07-17 (operator delegated the call: "can you decide
+      it yourself and make the choise that works properly and saves us on cost"). Decision: keep a CHECKOUT (option a);
+      the `@main` action pin (option b) is REJECTED.** Both options save the identical
+      ~$117/mo — money never
+      differentiated them. The pin was rejected because finding ② makes pre-main testability of this blast-radius-22
+      file non-negotiable: a bad manifest fails all 22 callers' REAL jobs at load time, and an `@main` ref makes an
+      LDR-side change inert until promoted — untestable by construction. Cost of the decision: ~1s of sparse checkout
+      per run on hardware we own = $0.
+      Consequences, both landed in @a6057ea36: `ci-status-update` needed NO new checkout (its existing full checkout
+      satisfies `uses: ./…`); STEP 2b's "NO checkout at all" clause is AMENDED to "a sparse checkout" (see the amended
+      STEP 2b todo below) — its spirit (no full clone, no auth step, no per-run pip) survives intact.
   - **⚠️ Canary caveat for dispatch-only movers (`repository_dispatch`/`schedule`, NO `workflow_dispatch`):**
     `ci-status-update`, `cloud-build-router*`, `sit-gate`, `sit-unlock`, `hotfix-mode`, `update-repo-version` **cannot
     be canaried on LDR** — `gh workflow run --ref` needs a `workflow_dispatch` trigger, and dispatch/schedule workflows
@@ -681,7 +688,15 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       writes one Firestore row from the dispatch payload, so the cleanest form is **pre-stage the script in the runner
       slot and do NO checkout at all** (lighter than a `git fetch`, and it sidesteps any clone-freshness question).
       Result: **~2-5s, near-zero boot churn**. Guard the trimmed steps to self-hosted only. Highest-frequency mover
-      (~13k/mo); apply the same pattern to other high-freq movers with redundant setup.
+      (~13k/mo); apply the same pattern to other high-freq movers with redundant setup. **⚠️ AMENDED by the D1
+      resolution (2026-07-17): clause (3) is now "a SPARSE checkout of `.github/actions` + either
+      `scripts/cicd/ci_status_store.py` in the same sparse set or the slot-pre-staged copy"** — the persist composite
+      step resolves `uses: ./…` against the WORKSPACE, so literal zero-checkout is off the table; everything else
+      stands. The 2c conversion (@a6057ea36) deliberately did NOT fold this trim in — one variable at a time on the
+      promote critical path; do the trim as its own small change with its own observation window. Before dropping the
+      `auth` step, PROBE on the box that the ubuntu user's ADC satisfies the python Firestore client in the runner's
+      real environment (`env -i` + unit PATH — gcloud CLI credentials and the ADC file are DIFFERENT stores; the
+      wrapper's Secret-Manager reads prove gcloud, not ADC).
 - [x] [INFRA] P1. ✅ **Runner-slot design — DONE** (unified-trading-pm@c44ca1bd4). Two-pool design implemented across
       `setup-glue-runners.sh` (slot: `${RUNNER_BASE}/{repo,venv,toolcache}`; `GLUE_COUNT=5`/`WRITER_COUNT=3`; new
       `preflight`), `glue-runner-run.sh` (forks on the `<pool>-<idx>` systemd instance name), and
@@ -1469,23 +1484,58 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
     deliberately — fixing it inside a cost refactor would bundle a silent behaviour change into a diff 22 workflows
     depend on. SSOT: `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.
 
+- 2026-07-17 — **STEP 2c ROLLOUT SHIPPED: all 22 callers converted in one arc after the operator delegated D1**
+  (@a6057ea36; operator: _"can you decide it yourself and make the choise that works properly and saves us on cost"_ +
+  _"dont be afraid of doing some breaking changes … do it in live prod and have a safety net so that you can revert"_).
+  Decision record: checkout KEPT (~1s sparse on our own runner, $0), `@main` pin REJECTED — identical savings either
+  way, but the pin would make this blast-radius-22 file untestable pre-main (finding ②). Mechanics worth keeping:
+  - **Worked from a side worktree of origin/LDR, not the slot clone** — the slot had someone's LIVE token-refresh WIP
+    (mtime <10 min) on the runner scripts AND the incoming LDR commits touched the same file, so any pull/stash in place
+    risked dumping conflict markers into a file mid-edit. A `git worktree add` from the origin tip isolates completely.
+    Two worktree gotchas now known: the slot-identity hook re-derives a worktree-scoped author on the first commit (just
+    re-run the commit, as its message says), and **QG derives sibling-repo paths from the checkout's PARENT directory —
+    a PM worktree must be NAMED `unified-trading-pm` and needs a sibling `unified-api-contracts` (symlink suffices), or
+    base-service.sh/UAC tests fail spuriously.**
+  - **Safety net = STAGED deletion**: the conversions commit RETAINS `persist-cicd-event.yml` (now uncalled); the
+    deletion pushes only after real `ci-status-update` runs are observed green on `main`. Until then
+    `git revert a6057ea36` is a complete one-command rollback. The ~8 dispatch-only callers are structurally untestable
+    pre-main (`repository_dispatch`/`schedule` execute from the default branch), so the revert net, the ~2-3 min
+    `ci-status-update` cadence, and the hosted KEEP-M watchers are the bleeding stops — accepted explicitly by the
+    operator's test-in-prod directive.
+  - **Verified on the LDR ref before promote, one dispatch per path class**: `readiness-verifier` run 29578660992
+    (root-path class) — `verify-readiness` on glue-1, persist step SUCCESS, wrote
+    `gs://unified-trading-cicd-events/cicd/events/unified-trading-pm/2026-07-17/events.jsonl`; `cassette-drift-check`
+    run 29578662682 (SUBDIR-path class, `./unified-trading-pm/…`) — glue-3, persist SUCCESS, wrote
+    `…/unified-api-contracts/2026-07-17/events.jsonl`. **Billing shape after conversion: each run bills exactly ONE
+    hosted job (the KEEP-D Slack carrier); the persist job's 1-minute minimum is GONE.**
+  - **Found + fixed a latent tooling bug the rollout tripped**: `hosted-baseline.sh first_flip_commit()` was
+    `git log | head -1` under `set -euo pipefail` — batch 3 grew the marker histories enough for git to take SIGPIPE, so
+    `snapshot` DIED SILENTLY at 43/56 MANIFEST rows (worse: the baselines had never been re-snapshotted after batch 3 at
+    all, so `restore` would have used stale provenance). Fixed by capturing then taking the first line in-shell;
+    snapshot now 56/56, `verify OK`, all 6 edited KEEP baselines refreshed.
+  - **Two QG false alarms, both worktree-environment, neither the change**: run 1 failed manifest-canonical because the
+    worktree BASE was 9 commits stale (upstream had already re-canonicalized — verified origin's copy canonical before
+    touching anything); run 2 failed UAC-importing tests for want of the sibling repo. Run 3 after rebase + symlink:
+    **QG_EXIT=0**.
+
 ## Deferred work after 2026-07-17
 
 STEP 2 is **DONE (37/37 movers on the pool, zero-billed, verified)**. Everything below is what remains, why it is not
 done, and what the next session should NOT re-derive.
 
-**STEP 2c is HALF DONE: the action exists and the pilot is PROVEN (`d0e25fcb6` + fix `1aa26232c`, run 29566057979); the
-remaining 21 callers are deliberately NOT converted** — they are gated on **D1** below, and on the rule finding ②
-forced: _edit the manifest → prove on ONE caller → only then fan out._
+**STEP 2c is SHIPPED (`a6057ea36`, 2026-07-17): all 22 callers converted.** The only remainder is deleting
+`persist-cicd-event.yml`, STAGED behind observing real `ci-status-update` runs green on `main` — until that deletion
+lands, `git revert a6057ea36` is a complete one-command rollback. Finding ②'s rule still governs any FUTURE edit of
+`action.yml`: _edit the manifest → prove on ONE caller → only then fan out._
 
 ### ⛔ OPERATOR DECISIONS — 4 open, nothing below them moves without these
 
-| ID     | Decision                                                                | Recommendation + why                                                                                                                                                                                                                                                                                        |
-| ------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **D1** | **STEP 2b ↔ STEP 2c checkout collision** — _blocks the STEP 2c rollout_ | **Sparse checkout** (not the `@main` pin). Finding ② is the reason: one bad manifest fails all 22 callers' REAL jobs, so "prove on LDR before main" stops being a nicety — and an `@main` action ref makes that impossible by construction. The collision then mostly dissolves (see the STEP 2b/2c todos). |
-| **D2** | **Event ledger loses rows** — fix vs accept                             | **Find the consumer first**, then one-object-per-event. Raised twice in-session, unanswered. Full analysis filed; do NOT re-derive. SSOT: `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.                                                                             |
-| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)  | **HELD, nothing done**: delete `reconcile-release-tags`, fix `digest-drift-sweep`, and **STEP 2d is held too** (its design depends on what you decide about those three).                                                                                                                                   |
-| **D4** | **Cassette follow-ups** — close 52 false issues? fix the UAC matching?  | **Ikenna owns the 179/28 count verification** (operator 2026-07-17) — do not duplicate. The workflow itself is already fixed + flipped.                                                                                                                                                                     |
+| ID     | Decision                                                                            | Recommendation + why                                                                                                                                                                                                            |
+| ------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D1** | ✅ **DECIDED 2026-07-17** — operator delegated; checkout kept, `@main` pin rejected | Finding ② made pre-main testability non-negotiable; ~1s sparse checkout on our own runner = $0. Rollout executed same day (`a6057ea36`); STEP 2b's no-checkout clause amended to sparse-checkout.                               |
+| **D2** | **Event ledger loses rows** — fix vs accept                                         | **Find the consumer first**, then one-object-per-event. Raised twice in-session, unanswered. Full analysis filed; do NOT re-derive. SSOT: `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`. |
+| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)              | **HELD, nothing done**: delete `reconcile-release-tags`, fix `digest-drift-sweep`, and **STEP 2d is held too** (its design depends on what you decide about those three).                                                       |
+| **D4** | **Cassette follow-ups** — close 52 false issues? fix the UAC matching?              | **Ikenna owns the 179/28 count verification** (operator 2026-07-17) — do not duplicate. The workflow itself is already fixed + flipped.                                                                                         |
 
 ### Not done — blocked on nobody, real work
 
