@@ -803,6 +803,36 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
       `instrument_type` is stamped; ensure new rows emit `InstrumentType.value` (uppercase); author a one-off legacy-row
       canonicalization migration (pattern `scripts/canonicalize_*_2026_*.py`). NOTE: `instrument_type` is a SHARD axis
       for MTDS/MDPS/features — the migration must preserve shard-atom identity across those services, not just IS.
+
+      **ROOT-CAUSED 2026-07-17 — the finding reframes this todo; migration IN FLIGHT (dispatched sub-agent).** Measured
+              every asset group's live `_index/availability_index.parquet` against the UAC `InstrumentType` enum (31 values):
+              - **Non-canonical VALUES are already GONE** for cefi / defi / tradfi / prediction — **0** each. This todo's original
+                target (the lowercase/legacy DeFi values) was fully resolved by the P9 round-2 migrations (`@6f87a251` cefi
+                lowercase, `@66258618` tradfi blanks, `@4d63822d` defi data_type). Nothing left to root-cause there.
+              - **The REAL residual is BLANK `instrument_type` on CAPTURED rows** — the `__legacy__` sentinel the P9 table logged
+                as "CEFI `__legacy__` 4.85M / DEFI `__legacy__` 3.85M". Crosstab of `capture_status` × blank on live data:
+                **tradfi 0** ✅ (P9's migration met its stated bar), but **cefi 13,046** and **defi 65,443** captured rows are
+                still blank — **78,489 rows** total. Blank on NON-captured rows (empty_confirmed / expected_unattempted /
+                attempted_failed) is **honest and must stay** (those shards captured zero instruments, so they have no type).
+              - **Root cause = the same bug P9 already documented, with only PART of the fix applied**: the shared cefi/tradfi/defi
+                writer `writers.py::_write_venue` hardcoded `instrument_type=""` on `record_captured(...)`. **The WRITER IS
+                ALREADY FIXED for all three** (`b475ae8e` → `91fc7bd2` `_split_by_instrument_type`, called from `_write_venue`,
+                shared by every AG — verified by reading it at HEAD; **no writer change needed**). But the **backfill migration
+                only ever ran for tradfi** (`canonicalize_tradfi_instrument_type_2026_07_16.py` is hardcoded
+                `asset_group="tradfi"`). So cefi/defi simply never got their history backfilled.
+              - **Remaining work = generalise that migration to cefi + defi** (targeted per-shard object reads re-deriving the
+                type from each shard's own `instruments.parquet`; single-walk discipline; honest-blank when an object is
+                missing). Dispatched to a sub-agent with the full rule set; acceptance = **0 captured blank rows in cefi AND
+                defi**, non-captured blanks preserved, cross-service shard-atom re-confirmed (P9 established MTDS/MDPS/features
+                do NOT read `instrument_type` from this IS manifest for their own shard keys — each stamps its own — so the
+                tradfi migration was safely IS-only; that must be re-confirmed for cefi/defi before applying).
+              - **Also measured (NEW, out of this todo's scope — sports only):** the ONLY remaining non-canonical values anywhere
+                are in the **sports** index: `odds` 561,260 rows (BETFAIR/BETMGM…, 561,099 captured), `prediction_market` 1,709,
+                `prediction` 37, `SPORT` 16 (ODDS_API). Canonical members `EXCHANGE_ODDS` / `FIXED_ODDS` / `PREDICTION_MARKET`
+                exist, so these look mappable — but sports keys on `("data_type","league_id")` (UAC `SHARD_AXIS_MATRIX`), so
+                `instrument_type` is display-only there, a different axis and a different blast radius from this (A) todo.
+                Tracked as its own todo below rather than silently folded in.
+
 - [x] [DATA] P2. ✅ _(A)_ Drained residual `LENDING` — **but NOT by "finishing the split", which would have corrupted
       the catalogue.** `scripts/drain_residual_lending_rows_2026_07_17.py`, **applied + independently verified on real
       prod infra**. **Correction to this todo's premise (the important part):** the instruction was to re-run the
@@ -836,6 +866,18 @@ AND quote leg of a SPOT_PAIR/POOL (and LST/A_TOKEN/DEBT_TOKEN underlyings) resol
       Unit: `tests/unit/migrations/test_drain_residual_lending_rows.py` 10 passed — each safety branch pinned
       individually (deleted-when-twins-complete; **KEPT when a required twin is missing**; **KEPT when a twin starts
       later (history would be lost)**; kept on unknown key shape; wider twin OK; non-LENDING never touched; idempotent).
+- [ ] [DATA] P3. _(NEW — side-discovery 2026-07-17, measured while root-causing the (A) legacy-values todo above)_
+      **Sports is the last asset group carrying non-canonical `instrument_type` values.** Live sports
+      `_index/availability_index.parquet` (5,353,331 rows) holds `odds` **561,260** rows (BETFAIR / BETFAIR_EX_EU /
+      BETFAIR_EX_UK / BETFAIR_SB_UK / BETMGM …; 561,099 of them `captured`), `prediction_market` **1,709**
+      (KALSHI/POLYMARKET), `prediction` **37**, `SPORT` **16** (ODDS_API) — none are UAC `InstrumentType` members, while
+      plausible canonical targets DO exist (`EXCHANGE_ODDS` / `FIXED_ODDS` for exchange-vs-sportsbook venues,
+      `PREDICTION_MARKET`). cefi/defi/tradfi/prediction are all **0** non-canonical, so sports is the only remainder.
+      **Deliberately NOT folded into the (A) todo**: sports keys on `("data_type","league_id")` (UAC
+      `SHARD_AXIS_MATRIX`), so `instrument_type` is a DISPLAY axis there rather than a shard axis — different blast
+      radius, and the `odds` → `EXCHANGE_ODDS` vs `FIXED_ODDS` split is a real per-venue semantic decision (Betfair
+      EXCHANGE vs sportsbook), not a mechanical uppercase. Needs a root-cause of the sports writer's stamping site + an
+      operator-confirmable mapping before any migration.
 - [ ] [DATA] P3. _(NEW — side-discovery 2026-07-17, found while verifying the LENDING drain)_ **DeFi POOL
       `instrument_id` is not unique across chains.** The live defi catalogue carries **6 duplicated `instrument_id`s (12
       rows)** where the SAME pool contract address is deployed on TWO chains and both rows key on
@@ -1017,27 +1059,27 @@ drilldown for prediction (`DataStatusTab.tsx:4111`) + MTDS/features/sports.
       never touched).
 
       **Separately-surfaced + fixed same session**: `InstrumentsModalStandard` (via exported `InstrumentsModal`) had
-                                                                                                      been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
-                                                                                                      date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
-                                                                                                      in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
-                                                                                                      Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
-                                                                                                      truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
-                                                                                                      `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
-                                                                                                      instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
-                                                                                                      guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
-                                                                                                      `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
+                                                                                                              been UNREACHABLE from the live UI since `f4a8e4e` (2026-04-24) rerouted its only opener (CeFi per-data-type
+                                                                                                              date-chip clicks) to `ShardDetailModal` without deleting the now-dead `instrumentsModal` state/import/render call
+                                                                                                              in `DataStatusTab.tsx` — today's MVP-toggle work was code-correct but invisible to any user until fixed.
+                                                                                                              Confirmed `ShardDetailModal` is NOT a superset (its payload tab is a read-only non-searchable non-paginated
+                                                                                                              truncated table; download tab is one combined parquet/CSV, no per-instrument multi-select) — so nested
+                                                                                                              `InstrumentsModal` inside `ShardDetailModal`'s `grouped`-shard_class payload tab via a new "Browse & search all
+                                                                                                              instruments →" trigger (uses `detail.coord` — the server-resolved axes, not the caller's possibly-`"AUTO"`
+                                                                                                              guess), mirroring the existing `schemaOpen` nested-modal pattern in `DataStatusDrilldown.tsx`. Deleted the dead
+                                                                                                              `instrumentsModal` state/import/render call (no shim). — deployment-ui@8958345.
 
-                                                                                                      Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
-                                                                                                      `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
-                                                                                                      empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
-                                                                                                      `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
-                                                                                                      `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
-                                                                                                      transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
-                                                                                                      pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
-                                                                                                      `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
-                                                                                                      `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
-                                                                                                      (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
-                                                                                                      carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
+                                                                                                              Evidence: `DataStatusDrilldown.test.tsx` +3 specs (MVP toggle → `mvp_only=true` refetch; badge only on
+                                                                                                              `is_mvp:true` rows; CSV URL threads `mvp_only`); new `CatalogueExplorer.test.tsx` (8 specs: initial render+label,
+                                                                                                              empty state, MVP badge, MVP toggle refetch, debounced search, pagination, CSV/on-screen filter parity, refresh);
+                                                                                                              `ShardDetailModal.test.tsx` +1 spec (nested-modal reachability, asserts the resolved coord reaches
+                                                                                                              `fetchInstrumentsForShard`). Full `quality-gates.sh` green ×3 (one per shipped commit, 90-227s) — host hit severe
+                                                                                                              transient multi-agent contention mid-unit (load avg peaked ~82-90/10 cores), flaking 3 DIFFERENT unrelated
+                                                                                                              pre-existing tests across retries (`capability-verdict-matrix-loader`, `DeploymentsList`, `DeployMissingButton`/
+                                                                                                              `MlExperiments`), each confirmed zero diff-overlap + passing in isolation; final runs green once load eased.
+                                                                                                              `[UI]` — pw:L2 NOT run: `.playwright-mcp`'s shared profile was actively driven by another concurrent agent
+                                                                                                              (sustained 130-145% CPU Chrome renderer, confirmed via `ps aux` at both start and end of this unit) — same
+                                                                                                              carve-out as this session's P2/P3 UI units; code+mock+Vitest evidence stands in.
 
 - [x] **DECIDED (operator 2026-07-16): BOTH, phased.** Phase 1 above; Phase 2 below.
 - [ ] [BACKEND] P3. _(phase 2)_ True-catalogue source — add a deployment-api→instruments-service read path OR a
