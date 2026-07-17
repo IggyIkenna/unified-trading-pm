@@ -1999,3 +1999,15 @@ with no dispatch cooldown/backoff after `/skip-current-task`. A `prereqs.prerequ
 would ever flip it true if no slot re-checks the fleet), so not engineering around it unilaterally — flagging the
 pattern only, matching this plan's existing "main/operator backlog-tuning fix, not unilaterally added here" precedent
 for the same bounce-cluster class. Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-17T15:40Z — data_engineering slot-5 (Todo `-001` — 4th bounce in ~28min, fleet confirmed actively writing not stalled, decline)
+
+Dispatched to `-001`, 13 min after slot-4's check. `gcloud compute instances list` (non-snap SDK): all 5 fleet VMs
+(`af-backfill-20260717-151237/-151335/-151405/-151433/-151505`) still `RUNNING`, ~28 min into the "many hours" ETA. Went
+one step further than the prior two declines: tailed `run.log` for the EVENTS (`151237`) and INJURIES (`151505`) VMs
+directly from GCS rather than trusting instance status alone — both show live writes timestamped within the last ~90s of
+the check (event/injury rows actively fetching, zero Tracebacks), ruling out a silent stall at this elapsed-time mark.
+No material change to the gate itself — not re-running the full `read_availability_index` query (same not-green result
+at real compute cost, per the established precedent). Not re-flagging the dispatch-cooldown pattern (slot-4 already
+raised it to main/operator immediately above; a 4th repetition adds no signal). Declining — no action taken, no code
+touched. `/skip-current-task`.
