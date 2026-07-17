@@ -594,13 +594,19 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
 
 ### Then the phased flip (operator pacing 2026-07-16: 1 → 10 → remainder)
 
-- [ ] [INFRA] P1. **STEP 2 — flip `runs-on`** on the **38 flip-MOVE (PM-local direct) workflows only** (`ubuntu-latest`
-      → `[self-hosted, glue]`), editing PM's `.github/workflows/*.yml` **directly** (these are NOT templated — do NOT
-      touch `scripts/workflow-templates/`; the `KEEP-T`/`KEEP-R`/`KEEP-M`/`KEEP-D` set stays hosted;
-      **`persist-cicd-event` is `MOVE-C` — converted in STEP 2c, NOT flipped**; **`ci-status-update` takes
-      `[self-hosted, glue-writer]`, NOT `glue` — the one exception to the uniform recipe**). **Pace (operator
-      2026-07-16): D6 canary (1) → verify → next 10 → verify → remaining ~27.** Each batch: flip on LDR, promote,
-      confirm green + billed-$0 on the moved set, and confirm the queue watchdog stayed quiet before the next batch.
+- [x] [INFRA] P1. ✅ **STEP 2 — flip `runs-on`: 36 of 37 flippable DONE** — canary `workspace-quickmerge-validation`
+      (unified-trading-pm@—) → batch 2 (9, @23ce709cc) → **batch 3 (26, @513f16773)**. Final state **35
+      `[self-hosted,     glue]` + 1 `[self-hosted, Linux, X64, glue-writer]`** (`ci-status-update`, the one exception —
+      plan L496). `persist-cicd-event` correctly NOT flipped (`MOVE-C` → STEP 2c); `agent-audit` reclassified `KEEP-U`
+      (no `runs-on`) ⇒ 37 flippable, not 38. **Evidence:** `actionlint` exit=0 across all workflows;
+      `quality-gates.sh     --no-fix` EXIT=0; live proof on the LDR ref — `secret-health-check` run 29556783346
+      `check-secrets` → **`glue-ip-172-31-5-118-1` success** (its Slack job SKIPPED = dedup working = unbilled;
+      `persist-event` hosted by MOVE-C design). Preconditions checked before flipping the promote critical path:
+      watchdog LIVE on `main` (13/13 tests green) · pool 8/8 online · no docker/services/container/dynamic runners in
+      the set · `agent-runner` safe (its ONLY caller `conflict-resolution-agent` is already glue — it is NOT the
+      `persist-cicd-event` straddle) · `overnight-dead-man-switch` stays hosted (KEEP-M) so a VM-down orchestrator is
+      still caught off-box. **1 of 37 DELIBERATELY NOT FLIPPED — `cassette-drift-check`**: flipping it would ACTIVATE a
+      bug its own breakage was masking (see the finding below + issue doc). Remaining: STEP 2b trim · STEP 2c convert.
       (Takes effect on push — do NOT push until the runners are live, else those workflows queue with no runner.)
 - [ ] [INFRA] P2. **STEP 2c — convert `persist-cicd-event` to a composite action (operator 2026-07-16, option C).**
       Rewrite the reusable workflow as `.github/actions/persist-event/action.yml` (a composite action wrapping the same
@@ -1277,3 +1283,38 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   automation and is worth a codex note. **Cost angle for this plan: the cheapest workflow is one that does not run** —
   `reconcile-release-tags` alone burns ~48 no-op runs/day; auditing WHAT the glue workflows do (not just where they run)
   is a second, larger saving than moving them.
+- 2026-07-17 — **STEP 2 COMPLETE: batch 3 shipped, 36/37 flippable now on the pool** (unified-trading-pm@513f16773; 26
+  workflows / 38 `runs-on` lines). Final: **35 `[self-hosted, glue]` + 1 `[self-hosted, Linux, X64, glue-writer]`**.
+  Verified by a live run on the LDR ref BEFORE `main` inherited it — `secret-health-check` 29556783346 `check-secrets` →
+  **glue-1 success**, its Slack job **SKIPPED** (dedup working ⇒ unbilled), `persist-event` hosted per MOVE-C. **Timing
+  subtlety worth keeping**: `schedule`/`repository_dispatch` fire ONLY from the DEFAULT branch, so none of the batch-3
+  movers exercise glue until the promote lands — `workflow_dispatch --ref live-defi-rollout` is the only pre-promote
+  proof, which is exactly why the plan required all-dispatchable batches earlier. The 10 non-dispatchable ones
+  (`ci-status-update`, `sit-gate`, `cloud-build-router`, …) are provable only post-promote; the watchdog is live for
+  that window.
+- 2026-07-17 — **FINDING #3 (P1, pre-existing + a flip TRAP): `cassette-drift-check` — DELIBERATELY NOT FLIPPED (1 of
+  37).** Two independent defects. (a) It runs `python unified-trading-pm/scripts/dev/detect_cassette_drift.py`, but that
+  file was DELETED from PM by `c2e58f200` ("relocate mock infrastructure scripts to UIC/UAC packages", -293 lines) and
+  now lives at `unified-api-contracts/unified_api_contracts/testing/`. python fails every run, but
+  `|| { echo drift_detected=true; }` makes the STEP exit 0 ⇒ **job GREEN**; absent on both main and LDR; last 3 runs all
+  `success`. So the nightly check has not checked anything since the relocation — and it renders the error as a POSITIVE
+  detection (`drift_detected=true` is what the create-issue step keys on), which is worse than silence. (b) **The stale
+  `python-version: "3.12"` pin is load-bearing BY ACCIDENT**: UAC needs `>=3.13`, so `uv pip install -e . --system` has
+  ALWAYS failed into the `|| uv pip install pydantic pyyaml` fallback (proven in the 03:10 log). On glue, python3 IS the
+  **shared slot venv on 3.13**, so `-e . --system` would **SUCCEED** and install an EDITABLE UAC into shared state
+  pointing at a `_work` dir the JIT runner DELETES — poisoning every later job on that runner. **Flipping it would
+  ACTIVATE a bug the breakage was masking.** Fix = repoint + isolate the venv + stop swallowing the exit code, together.
+  Issue doc: `plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
+- 2026-07-17 — **INDEPENDENT CONFIRMATION of the digest-drift-sweep finding, from a detector I did not write.** The
+  batch-3 `quality-gates.sh` run emitted: _"Fleet digest INCONSISTENT — 5 distinct pins across 16 repos (missed fan-out
+  from update-dependency-version.yml?)"_ + 15 stale repos + _"fleet pin … is BEHIND :latest"_. That is precisely the
+  drift the dead sweep exists to prevent, measured by PM's own `check_base_image_digest_drift`. **The signal was there
+  all along — it is `warn-only, non-blocking`**, so it scrolled past every QG run for ~27 days. Two independent
+  detectors agreeing raises confidence the sweep fix is worth sequencing; it also suggests the QG warn should become an
+  assertion once the sweep works (otherwise we keep a detector nobody acts on).
+- 2026-07-17 — **Running tally of the audit's real yield: 3 of 37 movers were already broken, all "green", none caused
+  by the flip** — `digest-drift-sweep` (dead since birth 2026-06-19, token scope), `reconcile-release-tags` (dead since
+  2026-06-27, D13 SSOT contradiction), `cassette-drift-check` (dead since the script relocation, swallowed exit code).
+  **~8% of the audited surface was decorative.** The flip's real value is turning out to be that it forced someone to
+  read 37 workflow logs for the first time. Recommend a STEP 2d: assert-not-decorative on the remaining movers (if a
+  workflow's "did work" counter is 0 on EVERY run for N days, page) — cheaper than the flip and finds more.
