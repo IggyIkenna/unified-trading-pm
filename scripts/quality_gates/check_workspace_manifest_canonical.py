@@ -10,7 +10,21 @@ CANONICAL FORM (the ONE serialization every writer must emit):
 
 Why this exists (local<->CI parity, cicd_mvp_ldr_to_main_pipeline_2026_06_30 Phase-2):
 the manifest is written by ~17 code paths (update-repo-version / staging-to-main /
-sit-unlock / merge-driver / consolidator / monitors) plus prettier on local commits.
+sit-unlock / merge-driver / consolidator / monitors), all of which emit the canonical
+form via `json.dump(..., indent=2, ensure_ascii=False)` + an explicit trailing newline.
+
+PRETTIER IS **NOT** ONE OF THEM — this line used to say "plus prettier on local commits",
+and that was FALSE. Canonical always explodes every array element onto its own line;
+prettier (printWidth=120) COLLAPSES any array that fits. They can never agree. Because
+the `prettier-autostage` hook matched `json` and the file was not in `.prettierignore`,
+every local commit that STAGED the manifest silently reformatted + RE-STAGED it into the
+non-canonical form — AFTER the author's quality-gates.sh run had already gone green, so
+no local verification could catch it. Measured 2026-07-17: 73c4449ae intended a one-line
+edit and landed 95 insertions / 431 deletions, reding PM's LDR (runs 29576851453 /
+29576964765 / 29577081402) until a monitor's canonical write incidentally healed it.
+FIXED by adding `workspace-manifest.json` to `.prettierignore` — do not remove that rule
+believing prettier is canonical here; it is not (verify: prettier --ignore-path /dev/null
+--list-different workspace-manifest.json lists it).
 When ONE writer disagrees on cosmetics (ascii-escaping, trailing newline), every
 alternation between writers re-emits the SAME content as DIFFERENT bytes -> phantom
 diffs, spurious quickmerge conflicts, and an hourly cosmetic-churn commit loop (the

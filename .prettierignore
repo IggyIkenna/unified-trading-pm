@@ -20,3 +20,26 @@ docs/repo-management/CICD-WORKFLOW-CATALOG.md
 # rewrite them once (2026-07-16, long `description:` rewrapped) — the live workflows are only
 # formatted when staged, so the copies drifted from their own source the moment they were committed.
 scripts/self-hosted-runners/hosted-baseline/*.yml
+
+# workspace-manifest.json has a BYTE-CANONICAL contract that prettier CANNOT satisfy, and a QG
+# check (scripts/quality_gates/check_workspace_manifest_canonical.py:38) that hard-fails on any
+# deviation. Canonical == `json.dumps(obj, indent=2, ensure_ascii=False) + "\n"`, which ALWAYS
+# explodes every array element onto its own line. Prettier (printWidth=120) COLLAPSES any array
+# that fits in 120 cols onto one line. The two can never agree, so every local commit that STAGED
+# this file was silently reformatted into the non-canonical form by the `prettier-autostage` hook
+# (.pre-commit-config.yaml:79-85 — `types_or` includes `json`) and RE-STAGED, i.e. AFTER the author
+# had already run quality-gates.sh green. The author's verification could not see it.
+#
+# Measured 2026-07-17: 73c4449ae ("opt system-integration-tests into ldr_main") intended a ONE-LINE
+# promotion_model edit and landed `1 file changed, 95 insertions(+), 431 deletions(-)` — prettier
+# collapsing the whole file. That red-lined unified-trading-pm's LDR QG (runs 29576851453 /
+# 29576964765 / 29577081402) until the LDR-CI-red monitor INCIDENTALLY healed it: its writer
+# (ldr_ci_monitor.py:466-467) is canonical, so persisting one unrelated ldr_ci_status change
+# re-exploded the file. That heal only fires when a level actually changes — otherwise PM stays
+# RED indefinitely. This is a human-collapses / bot-explodes ping-pong going back to at least
+# 2026-06-17 (3f2c6bc89, 06-30, was the exact same edit class).
+#
+# NOTE: check_workspace_manifest_canonical.py:13 and ci_status_consolidator.py:110-112 both claim
+# prettier emits the canonical form. It does not — verified by running prettier on a canonical copy
+# and re-checking. That false belief is why this hole stayed open. Fix the docstrings, not this rule.
+workspace-manifest.json
