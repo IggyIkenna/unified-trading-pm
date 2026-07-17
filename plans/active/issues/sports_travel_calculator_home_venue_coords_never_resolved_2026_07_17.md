@@ -179,3 +179,44 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
       this doc's sibling issue doc originally anticipated) and re-verify via the same content-sampling method used here
       (sample real parquet rows for nonzero cumulative-travel values, not just NaN-absence) that the fix actually
       produces real, varying travel data before closing this out. (repo: features-service)
+
+## Progress Log
+
+### 2026-07-17T13:2xZ — data_engineering slot-7 (dispatched Todo 3 gap-fill; found the fix already shipped by a peer)
+
+Dispatched this issue doc's Todo 3 (gap-fill), but its own wording ("after the fix ships") meant Todo 1/Todo 2 were the
+real blocking prerequisites, and both were still `- [ ]` at dispatch time. Rather than gap-fill against still-broken
+code, root-caused the bug myself first (matching the craft's data-correctness north-star): confirmed via direct repro
+that `compute_travel_batch` casts `home_team_id`/`away_team_id` to `int()`, but `fixtures_history`'s
+`home_team_id`/`away_team_id` columns are string dtype in production (`gcs_normalizers._stringify_id_columns`/
+`_to_str_id`) — `int == str` is always `False` in pandas, so `_get_team_home_venue_coords`'s team-fixture lookup failed
+almost universally, and `_compute_cumulative_travel`'s `(0.0, …)` fallback made this look like a plausible constant-zero
+feature instead of an honest absence. Verified with a direct repro (`team_id=int(12345)` → `None`,
+`team_id=str('12345')` → resolves correctly) and wrote regression tests, 2 of which were confirmed to fail against the
+pre-fix source via `git stash` isolation. Committed a fix (`features-service@d57c4165`, local only) and ran it through
+full `quality-gates.sh` (17,642 passed, 0 failed) — but on `quickmerge --agent`, hit `BEHIND_DIVERGED_CONFLICT`: slot-8
+had independently root-caused and fixed the **exact same bug** in parallel (`features-service@6efefde2`, already
+shipped + this doc's Todo 2 already flipped by that slot).
+
+**Compared the two fixes rather than forcing a merge**: slot-8's version is a strict superset of mine — same core
+str-normalization + drop-the-`int()`-cast fix, PLUS a correctness improvement I missed: `_compute_cumulative_travel`
+returning `(0.0, len(recent))` when games happened but the team's home venue still can't be resolved is ITSELF a silent
+non-honest-absence case (a real games-happened-but-unresolvable-venue stretch should read as NaN, not 0.0, per
+`codex/02-data/honest-absence-downstream-handling.md` — the same north-star violation this whole issue doc is about).
+Discarded my redundant local commit (`git reset --keep origin/live-defi-rollout` — safe, working tree was clean, no
+foreign WIP at risk) and adopted slot-8's shipped fix instead of shipping a competing/lesser version. Confirmed
+`features-service@6efefde2` passes the full `tests/sports/unit/calculators/test_travel_calculator.py` suite (43 passed)
+in my own worktree post-pull.
+
+**Todo 1 left untouched** — slot-8's own Progress Log entry notes it was dispatched separately to slot-4 and left for
+that slot's thread to close; not mine to flip.
+
+**Todo 3 (gap-fill) NOT attempted this dispatch.** It's now genuinely unblocked (the fix has shipped), but re-running
+the full 2015→present `derived_features` history with `--force` is a significant infra-cost decision — same magnitude as
+the sibling elo issue doc's gap-fill, which needed its own audit-then-cost-estimate split (P2b/P2c) rather than a blind
+full re-run, per the data-correctness HARD RULE's "surface the cost decision, don't default to a full re-run" guidance.
+Recommend the same pattern here: a cheap single-walk audit sampling real `derived_features` parquets post-`6efefde2` for
+genuinely-nonzero travel columns (confirming the fix's real-world effect) BEFORE committing to a multi-VM 2015→present
+recompute — not attempted this dispatch (out of scope for a single 1h-estimated task). `/skip-current-task` after this —
+the assigned Todo 3 checkbox cannot be honestly flipped without doing the actual gap-fill, and Todo 2 (what I actually
+worked) was already closed by slot-8 first.
