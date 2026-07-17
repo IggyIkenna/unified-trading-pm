@@ -79,12 +79,27 @@ confirm no api-football VM is running: the launcher will `ERROR: API-Football VM
 
 **Steps (from a slot checkout with ADC):**
 
+> **⚠️ PULL FIRST — the freshness gate does NOT protect you here.** `create-code-tarballs.sh` tars the **LOCAL working
+> tree** (`tar czf … -C "$repo_path" .`), and `lc_verify_tarball_freshness` runs with `LC_TARBALL_FRESHNESS_FETCH=false`
+> by default, so it only checks _tarball-sha == your LOCAL HEAD_ — it does **NOT** check local-vs-origin. A checkout
+> that hasn't pulled @19ae5890 will build a stale tarball that **silently passes** the gate and re-captures `round=""`
+> again. So you MUST pull and VERIFY the fix is in local HEAD before building — pushing it to origin (done) is not
+> enough on another machine.
+
 ```bash
-# 1. Bake the writer fix into the VM's code tarball. The launcher verifies the tarball SHA against
-#    origin/live-defi-rollout HEAD and ABORTS if stale — this is what puts @19ae5890 on the VM.
+# 0. PULL the writer fix into each tarball repo's local checkout, then PROVE it is present.
+for r in instruments-service unified-api-contracts unified-trading-library deployment-service; do
+  git -C "$r" pull --ff-only origin live-defi-rollout
+done
+# HARD GATE — abort if the fix is not in instruments-service local HEAD (the freshness check won't catch this):
+git -C instruments-service merge-base --is-ancestor 19ae5890 HEAD \
+  && echo "OK: writer fix @19ae5890 present" \
+  || { echo "ABORT: instruments-service HEAD lacks @19ae5890 — pull/rebase before building the tarball"; exit 1; }
+
+# 1. Build the tarball FROM the now-current local tree (records local HEAD in the manifest).
 bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS
 
-# 2. Launch the round backfill. entity=FIXTURES is REQUIRED — that is the schedule grain that carries league.round.
+# 2. Launch. entity=FIXTURES is REQUIRED — the schedule grain that carries league.round.
 #    (FIXTURE_EVENTS, what your VM did, is a different grain and does NOT carry round.) SPOT is the default.
 bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --entity FIXTURES 2019-01-01 2026-07-17
 ```
