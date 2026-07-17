@@ -100,9 +100,10 @@ everything so sports is in canonical buckets and paths."_
 > 32-day / 549,392-key recovery landed into canonical (content-verified `legacy_only==0` on every gap day, zero loss);
 > non-raw prefixes preserved 1:1 to canonical `_legacy_migrated_*` (`processed/` 109,312, `scripts/` 3, `_vm_staging/`
 > 51); T2.10 seed phantoms purged (`odds_api` intact). Delete removed 342,629 objects/versions; bucket `describe` ⇒
-> **404**. **Terraform still declares the bucket** (`main.tf:345` + `_imports_reconcile.tf:74-77`) — those need removing
-> to prevent a resurrection on the next apply (same pattern as the instruments half's ds@4637aed); a follow-up, tracked
-> below. _Prior banner (retained for provenance): was "NOT deleted, blocked on OR-5b"._
+> **404**. **Resurrection prevented (`deployment-service@1116901`)**: the `google_storage_bucket.market_data_sports`
+> resource block + its `_imports_reconcile.tf` import were removed and the prod state entry was `state rm`'d; a fresh
+> `ENV=prod tofu.sh plan` proves **zero actions reference the flat legacy bucket** (deterministic no-resurrection proof,
+> same gate as T6.0's instruments half). _Prior banner (retained for provenance): was "NOT deleted, blocked on OR-5b"._
 >
 > **🔴 DO NOT run a full `tofu apply` on prod** — it would resurrect `instruments-store-cefi-…` (404 but still
 > declared + in state) and make 71 unaudited changes →
