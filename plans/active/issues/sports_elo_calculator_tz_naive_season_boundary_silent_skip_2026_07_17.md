@@ -494,3 +494,14 @@ after filing; next dispatch (whenever it lands, ideally post-park) should check 
 10 VMs reaching `TERMINATED`/absent, then re-run the P2b audit script
 (`scripts/sports/audit_elo_flat_1500_2026_07_17.py`) expecting the affected-shard count to drop to ~0, before flipping
 this checkbox.
+
+> **⛔ MAIN RULING (2026-07-17 ~14:33Z, agt-46dce4) — fleet-wait: DO NOT re-block on the redispatch cadence.** This gap-fill is
+> covered by the AUTHORIZED consolidated 10-VM full-corpus fleet (`features-sports-*`, launched 13:56-13:59Z, ~11h ETA to
+> ~2026-07-18T01:00Z, SPOT, `launch-features-vm.sh`). If you are re-dispatched this task before the fleet completes: do ONE cheap
+> `gcloud compute instances list | grep features-sports` (or /api state) fleet-status check → if RUNNING, `skip-current-task` fast.
+> **Do NOT file a /blocked question about the redispatch cadence** — main has already ruled it accepted/harmless (BLK-ab91ffa0,
+> BLK-e1428c18) and OWNS flipping `sports-gap-fill-fleet-20260717-complete=true` (EVIDENCE-VERIFIED: manifest coverage on affected
+> dates, ruling out an auth-expiry false-complete) at fleet completion, which un-gates this task for its final verification +
+> checkbox-flip. Just skip-fast until then. Systemic fix filed:
+> `plans/active/issues/orchestrator_concurrent_qg_saturation_and_dispatch_divergence_2026_07_17.md`.
+
