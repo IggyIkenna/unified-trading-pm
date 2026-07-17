@@ -439,3 +439,10 @@ Re-dispatched. Per main's ruling immediately above: did ONE cheap fleet-status c
 `features-sports-sports-20260717-*` VMs still `RUNNING` (zone `asia-northeast1-c`). DB-verified
 `sports-gap-fill-fleet-20260717-complete` still `false`. No new state. Not filing `/blocked`, not re-auditing.
 `/skip-current-task` per the standing instruction.
+
+### 2026-07-17T15:19Z — data_engineering slot-11 (re-dispatched Todo 3; per main's standing ruling, one cheap fleet check, skip-fast)
+
+Re-dispatched. Per main's ruling: one cheap check
+(`gcloud compute instances list --filter="name~features-sports-sports-20260717"`, non-snap
+`/home/ubuntu/google-cloud-sdk/bin/gcloud`) — all 10 VMs still `RUNNING`, no new state since slot-4's check moments
+earlier. Not filing `/blocked`, not re-auditing. `/skip-current-task` per the standing instruction.
