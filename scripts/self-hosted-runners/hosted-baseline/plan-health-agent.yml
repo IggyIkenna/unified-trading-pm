@@ -376,6 +376,27 @@ jobs:
           done
           echo "agentic-resolution dispatch complete."
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable. The old job's non-PR scoping is inherited structurally:
+        # this whole job carries `if: github.event_name != 'pull_request'`, so on a PR no step here
+        # runs — which is exactly what the old persist guard existed to ensure. `job.status`
+        # reproduces `conclusion: needs.plan-health.result`. This workflow is a KEEP (hosted); the
+        # steps ride inside the already-billed job. secrets/vars passed explicitly.
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "plan-health-check"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
     name: Slack — Plan Health Agent
@@ -395,27 +416,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Plan Health Event
-    needs: [plan-health, notify]
-    # Daily/dispatch only — on a PR the `plan-health`/`notify` jobs are skipped (the
-    # hard gate surfaces its own result on the PR check), so persisting a "skipped"
-    # plan-health conclusion would (a) be meaningless and (b) mark the whole PR run
-    # `failure` even though the gate passed. Scope persist to non-PR events, like notify.
-    if: always() && github.event_name != 'pull_request'
-    # Best-effort event-logging (GCS/S3) — a cloud-auth/persist hiccup must NOT redden the
-    # plan-health badge. Tolerance lives INSIDE persist-cicd-event.yml (unique concurrency
-    # group + a job-level guard), NOT on this caller job: per the GitHub Actions schema a
-    # reusable-workflow caller allows only name/uses/with/secrets/needs/if/permissions, so
-    # error-toleration here is invalid and broke the whole workflow at startup (2026-06-08).
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.plan-health.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"event": "plan-health-check"}'

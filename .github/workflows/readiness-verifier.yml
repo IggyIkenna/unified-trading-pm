@@ -98,6 +98,25 @@ jobs:
           cat readiness-report.txt >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable; as the LAST step it is free and runs on this job's runner.
+        # `if: always()` + `job.status` reproduces the old `conclusion: needs.verify-readiness.result`.
+        # secrets/vars do not reach a composite action — passed explicitly (was `secrets: inherit`).
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"tier": "${{ github.event.inputs.tier || ''all'' }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
     name: Slack — Readiness Verifier
@@ -111,18 +130,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Readiness Verifier Event
-    needs: [verify-readiness, notify]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.verify-readiness.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"tier": "${{ github.event.inputs.tier || ''all'' }}"}'

@@ -159,6 +159,26 @@ jobs:
             git push origin main
           fi
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable; as the LAST step it rides inside this already-billed
+        # hosted job (KEEP — heavy wheel build stays on GitHub-hosted). PM is checked out at
+        # `path: pm`, so the local action path carries that prefix. `if: always()` + `job.status`
+        # reproduces the old `conclusion: needs.publish.result`. secrets/vars passed explicitly.
+        if: always()
+        uses: ./pm/.github/actions/persist-event
+        with:
+          repo_name: ${{ github.event.client_payload.repo }}
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: main
+          commit_sha: ${{ github.event.client_payload.commit_sha }}
+          details_json: '{"version": "${{ github.event.client_payload.version }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
     name: Slack — Publish Package
@@ -174,18 +194,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Publish Package Event
-    needs: [publish, notify]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: ${{ github.event.client_payload.repo }}
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.publish.result }}
-      branch: main
-      commit_sha: ${{ github.event.client_payload.commit_sha }}
-      details_json: '{"version": "${{ github.event.client_payload.version }}"}'

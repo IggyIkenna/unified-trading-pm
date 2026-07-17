@@ -1562,6 +1562,28 @@ jobs:
           fi
           echo "Dispatched staging-unlocked to all repos"
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable; as the LAST step it is free and runs on this job's runner.
+        # `if: always()` + `job.status` reproduces `conclusion: needs.promote-staging-to-main.result`;
+        # the old `needs.…outputs.*` details are this job's own `steps.promote.outputs.*`.
+        # secrets/vars do not reach a composite action — passed explicitly (was `secrets: inherit`).
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json:
+            '{"promoted": "${{ steps.promote.outputs.promoted_count }}", "failed": "${{
+            steps.promote.outputs.failed_count }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify-partial-failure:
@@ -1642,20 +1664,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Staging Promotion Event
-    needs: [promote-staging-to-main, notify-partial-failure, notify-quarantine, notify-promotion-complete]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.promote-staging-to-main.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json:
-        '{"promoted": "${{ needs.promote-staging-to-main.outputs.promoted_count }}", "failed": "${{
-        needs.promote-staging-to-main.outputs.failed_count }}"}'

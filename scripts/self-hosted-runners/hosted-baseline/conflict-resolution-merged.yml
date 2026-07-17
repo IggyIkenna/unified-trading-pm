@@ -65,6 +65,33 @@ jobs:
             && echo "✓ staging-validated dispatched" \
             || echo "⚠ dispatch failed (non-fatal — human can manually re-trigger staging-to-main)"
 
+      - name: Check out the persist-event composite action
+        # CI-cost STEP 2c: `uses: ./…` resolves against the WORKSPACE, so the local composite
+        # action must be on disk — this job had no checkout, hence sparse. Default `if:` (success)
+        # on both steps mirrors the old persist job's `needs.retry-promotion.result == 'success'`
+        # guard. This workflow is a KEEP (pull_request bot, hosted) — the steps ride inside the
+        # already-billed job.
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
+
+      - name: Persist CI/CD event
+        # Was the separate 1-billed-minute-minimum `persist:` job. `job.status` here is always
+        # `success` (default step condition), matching the old success-only guard + conclusion.
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"pr_number": "${{ github.event.pull_request.number }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
     name: Slack — Conflict Resolution Merged
@@ -77,22 +104,7 @@ jobs:
         github.event.pull_request.title }} | ${{ github.event.pull_request.html_url }}"
       severity: "INFO"
       conclusion: ${{ needs.retry-promotion.result }}
-      recovery: true  # genuine recovery — a blocking promotion conflict was resolved (keep; message says "resolved" lowercase, no marker)
+      recovery: true # genuine recovery — a blocking promotion conflict was resolved (keep; message says "resolved" lowercase, no marker)
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Conflict Resolution Merged Event
-    needs: [retry-promotion, notify]
-    if: always() && needs.retry-promotion.result == 'success'
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.retry-promotion.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"pr_number": "${{ github.event.pull_request.number }}"}'

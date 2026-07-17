@@ -731,6 +731,27 @@ jobs:
             -d "{\"event_type\": \"cascade-qg-trigger\", \"client_payload\": {\"source_repo\": \"${SRC_REPO}\", \"source_version\": \"${SRC_VER}\"}}")
           if [ "$HTTP" = "204" ]; then echo "  ✅ cascade-qg-trigger dispatched"; else echo "  ⚠️  HTTP $HTTP dispatching cascade-qg-trigger"; fi
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable; as the LAST step it is free and runs on this job's runner.
+        # Same skip-guard as the old job (`steps.update.outputs.skip` was the job output it read);
+        # `job.status` reproduces `conclusion: needs.update-manifest.result`. secrets/vars are
+        # passed explicitly (composite actions get neither ambiently).
+        if: always() && steps.update.outputs.skip != 'true'
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: ${{ steps.update.outputs.repo || 'unified-trading-pm' }}
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json:
+            '{"version": "${{ steps.update.outputs.version }}", "bump_type": "${{ steps.update.outputs.bump_type }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify:
@@ -786,20 +807,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Version Update Event
-    needs: [update-manifest, notify]
-    if: always() && needs.update-manifest.outputs.skip != 'true'
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: ${{ needs.update-manifest.outputs.repo || 'unified-trading-pm' }}
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.update-manifest.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json:
-        '{"version": "${{ needs.update-manifest.outputs.version }}", "bump_type": "${{
-        needs.update-manifest.outputs.bump_type }}"}'

@@ -177,6 +177,26 @@ jobs:
           # Fail tier if any repo failed
           echo "$RESULTS" | grep -q ":failure\|:timeout" && { echo "T0 FAILED: $RESULTS"; exit 1; } || echo "T0 PASSED"
 
+      - name: Persist CI/CD event (T0 escalation)
+        # CI-cost STEP 2c: was the separate `t0-escalation-persist:` job (1-billed-minute minimum).
+        # `if: failure()` mirrors its `needs.t0.result == 'failure'` guard — the ledger only records
+        # a T0 FAILURE, with the hardcoded `conclusion: failure` kept. `steps.poll.outputs.results`
+        # is what the old job read as `needs.t0.outputs.results` (the poll step emits `results`
+        # BEFORE its exit 1, so it is populated on the failure path). secrets/vars passed explicitly.
+        if: failure()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: "failure"
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "t0_escalation", "t0_results": "${{ steps.poll.outputs.results }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── T0 ESCALATION: Fire immediately if T0 fails ────────────────────────────
   t0-escalation-notify:
     name: T0 Failure Escalation — Slack #ci-failures
@@ -193,21 +213,6 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
-
-  t0-escalation-persist:
-    name: T0 Failure Escalation — Persist
-    needs: [t0, t0-escalation-notify]
-    if: always() && needs.t0.result == 'failure'
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: "failure"
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"event": "t0_escalation", "t0_results": "${{ needs.t0.outputs.results }}"}'
 
   t0-escalation-issue:
     name: T0 Failure Escalation — GH Issue
@@ -279,6 +284,34 @@ jobs:
           echo "conclusion=$CONCLUSION" >> "$GITHUB_OUTPUT"
           echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
 
+      - name: Check out the persist-event composite action
+        # CI-cost STEP 2c: `uses: ./…` resolves against the WORKSPACE, so the local composite
+        # action must be on disk — this job had no checkout, hence sparse (~1s on our own runner).
+        if: always()
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions
+          sparse-checkout-cone-mode: false
+
+      - name: Persist CI/CD event (morning summary)
+        # Was the separate `notify-persist:` job (1-billed-minute minimum). It recorded the COMPUTED
+        # overall conclusion (`needs.notify-summary.outputs.overall_conclusion`) — inside the job
+        # that is this step's own `steps.conclusion.outputs.conclusion`, not job.status.
+        # secrets/vars passed explicitly (composite actions get neither ambiently).
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ steps.conclusion.outputs.conclusion }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"t0": "${{ needs.t0.result }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   notify-slack-summary:
     name: Slack Morning Summary — Send
     needs: [t0, notify-summary]
@@ -292,18 +325,3 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
-
-  notify-persist:
-    name: Slack Morning Summary — Persist
-    needs: [t0, notify-summary, notify-slack-summary]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.notify-summary.outputs.overall_conclusion }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"t0": "${{ needs.t0.result }}"}'
