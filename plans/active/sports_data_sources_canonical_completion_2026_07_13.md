@@ -3476,6 +3476,20 @@ it's new adapter work, not a data-audit residual).
     fixture-proximate trigger fires around a real 07-18 kickoff). Re-escalated to main via a slot-3 `/blocked`
     re-requesting the `sports-cron-overnight-2026-07-18-observable` dispatch gate — this is now the **4th** slot burned
     pre-gate (5→7→4→3); the gate is the only thing that stops a 5th.
+  - **INTERIM STATUS 2026-07-17 15:57 UTC (slot-5, data_engineering — the predicted 5th pre-gate dispatch; checkbox
+    STILL NOT flipped).** The ungated todo redispatched a 5th time (5→7→4→3→5), exactly as slot-4/slot-3 warned.
+    **Deliberately did NOT re-run the REST/duckdb sweep** — slot-4 confirmed all 5 daily schedulers `ENABLED` + armed
+    with correct crons only 19 min earlier (15:38 UTC) and no daily-cron self-fire can occur in a 15:38→15:57 window, so
+    a re-sweep would re-confirm slot-4's already-current reading and burn API calls for zero new signal (same reasoning
+    slot-3 applied at 15:49). The DoD (unattended self-fire on the RESTORED post-cutover config) remains physically
+    unreachable until the **2026-07-18 00:35–01:15 UTC** cron windows (~8.5 h out). **DISPOSITION UNCHANGED — todo stays
+    OPEN on the time-gate; re-check after 2026-07-18 ~01:30 UTC per slot-7's checklist** (5 run jobs each showing a NEW
+    cron-triggered — not manual — exec at their exact cron minute for 07-18 with `succ=1`; fresh `captured` rows for
+    07-17/18 per source; footystats+transfermarkt do NOT re-fail at `instruments_handler.py:310` on the restored config;
+    Tier-3/4 fixture-proximate trigger fires around a real 07-18 kickoff). Re-escalated to main via a slot-5 `/blocked`
+    re-requesting the `sports-cron-overnight-2026-07-18-observable` dispatch gate (or a park: `priority: 999` +
+    `priority_override: true` + a false prereq) — **5 slots now burned pre-gate (5→7→4→3→5); the gate/park is the only
+    thing that stops a 6th.**
 
 - **2026-07-14 (slot-5, data_engineering) — 8,766 NON-IS ROWS VERIFY (todo "resolve the 8,766 non-instruments-service
   rows").** Live single-parquet read of `instruments-store-sports-prd` `_index/availability_index.parquet`, api_football
