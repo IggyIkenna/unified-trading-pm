@@ -256,6 +256,31 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-17 (slot-3) — PHASE -1 GATE MEASURED: RED (2 narrow defects) + 3-TUPLE DESIGN EMPIRICALLY CONFIRMED.**
+  Measured directly against the live catalogue
+  (`gs://instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`, 8.26 MiB, written
+  2026-07-17T09:09:54Z, 424,699 rows; single-object read, no walk):
+  - **GATE 1 FAIL — 9 rows carry a `:PERP:` id**: HYPERLIQUID 5 (`HYPERLIQUID:PERP:ARK`, `…:DOOD`, `…:FTT`, `…:MATIC`),
+    EXTENDED-STARKNET 2, ASTER 1 (`ASTER:PERP:IPUSDT`), LIGHTER-ZKSYNC 1. Confirms blueprint open-q #10 (the on-chain
+    venues were never refreshed to `PERPETUAL@LIN`). Narrow + tractable.
+  - **GATE 2 FAIL — 511 rows where `instrument_id != canonical_instrument_id`** (BINANCE-DELIVERY 177, OKX-FUTURES 140,
+    COINBASE-CDE 99, BINANCE-FUTURES 48, DERIBIT 47). **NEW FINDING — the direction matters and vindicates the
+    blueprint's "read `instrument_id`, NEVER `canonical_instrument_id`" rule**: `instrument_id` holds the CORRECT
+    canonical form (`BINANCE-DELIVERY:FUTURE:ADA-USD@INV-20200926`) while `canonical_instrument_id` still holds the
+    STALE raw-glued form (`…:ADAUSD_200925`). So `instruments-service@79d4dbcb`'s `_canonicalize_cefi_future_id()`
+    roll-up fix updated `instrument_id` but NOT `canonical_instrument_id` — the latter is a stale/vestigial column. Gate
+    2 as originally worded is therefore the WRONG gate: the fix is to canonicalize (or delete — delete-deprecated-code)
+    the `canonical_instrument_id` column, not to "correct" `instrument_id`.
+  - **3-TUPLE CLAIM CONFIRMED (blueprint blocking-risk #1)**: 2-tuple `(venue, raw_symbol)` → 423,691 keys, **781
+    ambiguous**; 3-tuple `(venue, instrument_type, raw_symbol)` → 424,035 keys, **439 ambiguous** — the 3-tuple rescues
+    **342 keys** from honest-unresolved. The reviewer's marquee example reproduces exactly: `(BYBIT, BTCUSDT)` maps to
+    BOTH `BYBIT:SPOT_PAIR:BTC-USDT` AND `BYBIT:PERPETUAL:BTC-USDT@LIN` → the 2-tuple would have EXCLUDED it → writer
+    falls through to wrapped-wire → non-joining against the migration's decomposed id. The 3-tuple resolves each to
+    exactly 1 id. **The single honest-unresolved number is 439** (pinned 3-tuple, this catalogue) — supersedes the
+    divergent 297/777/781 figures (blueprint open-q #7); re-measure after the Phase -1 rebuild.
+  - **Next**: fix the 2 catalogue defects (9 `:PERP:` + 511 stale `canonical_instrument_id`) → re-run the gate → then
+    FIX 0 (shared 3-tuple builder), which is decision-independent and can be written in parallel.
+
 - **2026-07-17 (slot-3)**: **Blueprint workflow complete → `_cefi_canonical_blueprint_2026_07_17.md`.** Adversarial
   design review verdict `NEEDS-REDESIGN`; the blueprint IS the redesign. Caught 5 data-corruption risks in the naive
   plan: (1) 2-tuple key under-resolves the BYBIT/OKX/BINANCE-FUTURES majors into non-joining ids → mandated ONE 3-tuple
