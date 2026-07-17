@@ -850,6 +850,21 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       written disposition for all 47,253. _ABORT_: purging without the `source` filter → destroys the real `odds_api`
       population → STOP.
 
+> **🔬 SLOT-3 FINDING 2026-07-17 — T2.10 is NOT a T3.1-style merged-index purge; the seed re-introduces the phantoms.
+> STILL BLOCKED (entangled with `_legacy_seed`/OR-4/OR-5b).** Measured directly with DuckDB over fresh downloads of BOTH
+> `market-data-tick-sports-prd` `_index` objects: the phantom `api_football × trades`
+> captured+nonzero-`instrument_count` rows live in the **live `_index/per_vm/_legacy_seed.parquet` shard** (SEED =
+> **37,114**; MERGED-INDEX = **38,329**), and the consolidator re-merges that seed EVERY cycle (index generation was
+> seconds-fresh at measurement). ⇒ a merged-index-only rewrite (T3.1's mechanism, which the todo above says to "mirror")
+> is **NOT durable** here — the next consolidator cycle re-adds the 37,114 from the seed. This is exactly why T3.1's
+> ODDS purge held (`api_football × ODDS` is **0** in BOTH the seed and the merged index — nothing to re-introduce) but a
+> trades purge would **silently regress**. The consolidators are ENABLED (Phase 6 done), so there is no QUIET window now
+> either. **Durable fix must strip the 37,114 phantom captured-trades rows from the SEED itself** (source filter
+> MANDATORY — the seed also holds **211,313** real `odds_api × trades` that must survive), then let the consolidator
+> re-merge — i.e. it must be done as part of the `_legacy_seed.parquet` / R-8 / OR-4 resolution, which is the live OR-5b
+> investigation and gates the MDT-bucket delete. A merged-index purge alone is a **false-progress trap**. _(Not executed
+> — read-only measurement; zero objects mutated.)_
+
 ### PHASE 3 — CLEAN (the index is QUIET — the ONLY safe window)
 
 - [x] ✅ [DATA] P0. **T3.1 — Purge the bogus `api_football × ODDS` rows — DONE 2026-07-16T13:09Z. RE-MEASURED FIRST: the
