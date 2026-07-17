@@ -114,6 +114,16 @@ Three independent reasons, and they compound:
   healthier accumulation does NOT close this issue — the read-modify-write is unchanged, only the write reliability
   improved.
 
+**SECOND MEASURED DATAPOINT (2026-07-17 evening — a DIFFERENT consumer of the same primitive):** the alert ledger
+(`cicd/alerts/{date}/alerts.jsonl`, written by `notify-slack.yml` with the identical cp-down→append→cp-up) held **21
+rows for the whole day with ZERO `promotion-lag` rows**, despite branch-health posting ~11 promotion-lag alerts — every
+one of its persists was clobbered by the top-of-hour write burst. Consequence was not just data loss: the carrier's
+read-back dedup found no row → fail-opened → **the race directly caused the noisiest alert class in #ci-failures
+(re-page every tick)**. Fixed for DEDUP only (`unified-trading-pm@0383b5df7`): per-key marker objects
+(`cicd/alerts/dedup/<key>.json`, atomic overwrite, no shared object) — i.e. this issue's **Option 1 applied to the dedup
+axis**, working evidence for the same shape on the events ledger. The history append (both ledgers) remains lossy and
+remains THIS issue's open operator decision.
+
 **Do not quote the estimate as a finding.** How to actually measure it going forward, cheaply: count `events.jsonl` rows
 for a day and compare against `gh api` run counts for the same workflows/day; the delta is the floor of the loss.
 Alternatively, emit a per-writer sequence number and look for gaps.

@@ -67,6 +67,17 @@ locked_since:
 5. Checker footguns confirmed while testing: (a) without `--quiet` it prints violations but **exits 0** (interactive
    mode); (b) paths outside the repo are silently skipped (exit 0) — do not "test" the hook with copies in /tmp.
 
+## Fixes shipped 2026-07-17 (operator directive: "fix the root cause so that alerts eventually drop")
+
+- **Fix 1 SHIPPED** (`unified-trading-pm@0383b5df7`): the hook entry now FAILS LOUD when the sweep script is
+  unresolvable (config + `scripts/pre-commit-templates/docs.pre-commit-config.yaml` so a rollout cannot revert it).
+- **Fix 2 SHIPPED** (same commit): `.github/workflows/ldr-docs-gate.yml` — corpus frontmatter check on every
+  doc-touching LDR push, self-hosted glue ($0), pages ONCE (dedup `ldr-docs-gate-red`, 60m) with the offending commit +
+  author + remedy. Detection gap closed: a bypassed hook now surfaces in minutes on the offending push, not as
+  fleet-wide red gates an hour later.
+- Still open: fix 3 (checker exit-code honesty) and fix 4 (which bypass actually happened per machine — needs the
+  laptop; note the 3rd doc came from `main·planning`, so hook-install state must be checked there too).
+
 ## Fix directions (operator to rank)
 
 1. **[INFRA] P1 — close the fail-open.**
