@@ -1318,3 +1318,42 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   **~8% of the audited surface was decorative.** The flip's real value is turning out to be that it forced someone to
   read 37 workflow logs for the first time. Recommend a STEP 2d: assert-not-decorative on the remaining movers (if a
   workflow's "did work" counter is 0 on EVERY run for N days, page) — cheaper than the flip and finds more.
+- 2026-07-17 — **`cassette-drift-check` FIXED then FLIPPED (operator-directed two-step) — STEP 2 is now 37/37.**
+  Operator: _"fix that workflow and then update it so that it runs properly. if possible trigger it once to run on
+  github so we can check it and then move it to vm"_ — one variable at a time, and it paid for itself. **(1) Fix on
+  hosted** (@f339ce5e8, `runs-on: ubuntu-latest` untouched): repoint to the relocated module
+  (`python -m unified_api_contracts.testing.detect_cassette_drift`); honour the tri-state the script ALREADY exposes
+  (`main()` → 0 no-drift / 1 drift / **2 tool error**) instead of `|| drift_detected=true`; 3.12→3.13; editable install
+  REQUIRED + fallback DELETED; venv in `${RUNNER_TEMP}`, never `--system`. **(2) Prove on GitHub** (run 29557701289,
+  `dry_run=true` so it could not open an issue): `Loaded 2172 Pydantic models` → `Checking 179 cassette files` →
+  `28 of 179 … drift`. **(3) Flip** (@e9d02e5d6) — drops setup-python + `pip install uv`. **(4) Prove on the VM** (run
+  29557934472): `glue-4`, `Using CPython 3.13.13`, venv at `_work/_temp/uac`, **0 setup-python/uv-download lines**, and
+  **179 checked / 28 drifted — IDENTICAL to hosted and to local**. Three-way agreement (local ≡ hosted ≡ VM) is what
+  makes this a proven move rather than a hopeful one.
+- 2026-07-17 — **Two empirical calls that changed the fix (neither was reasoned — both measured).** (a) **Scope**:
+  `--cassette-dir` pointed at the repo ROOT. Measured root ⇒ **188 checked / 29 drifted incl. a site-packages false
+  positive** (`.venv/…/markdown_it/port.yaml`), because the detector does `cassette_dir.rglob("*.yaml")`; package dir ⇒
+  **179 / 28, all real cassettes**. Narrowed to `unified-api-contracts/unified_api_contracts`. (b) **Venv location**:
+  that same rglob is exactly why the venv MUST live in `${RUNNER_TEMP}` and not in the checkout — a venv under the
+  cassette dir is scanned AS cassettes. The rglob made two independent decisions for us.
+- 2026-07-17 — **FINDING #4 (P1, UAC): the drift detector's cassette→model matching is a LOTTERY — its output is not yet
+  trustworthy, so do NOT let the 02:00 cron open issues.** `_cassette_name_hint()` = the **filename stem only** (the
+  venue is DISCARDED), and matching is `if key in hint or hint in key` + `break` on the first dict-order hit over a
+  **2172-model** registry. Measured: `bitget/mocks/ticker.yaml` → hint `"ticker"` → **34 candidates** (incl.
+  venue-specific `binanceticker`/`bitfinexticker`) → picks **`canonicalticker`**, a NORMALIZED model that a raw bitget
+  envelope (`code`/`msg`/`requestTime`/`data`) can never satisfy; `kalshi/mocks/markets.yaml` → 9 candidates → picks
+  `canonicalmarketstateevent`; `balancer/pools.yaml` picks `balancerpoolsresponse` **by luck of dict order**. **15 of
+  the 28 flagged are generic stems** (8 `ticker.yaml` · 4 `markets.yaml` · 3 `pools.yaml`). So the 28 is a mix of real
+  drift and matching artifacts. The fix lives in **unified-api-contracts** (use the venue from the path; require a
+  confident match; SKIP when ambiguous rather than validating against an arbitrary model) and needs a design call on
+  what each cassette SHOULD validate against — raw venue model vs canonical. **Not done here: it is a UAC change + a
+  design decision, not a mechanical fix.**
+- 2026-07-17 — **FINDING #5 (P1, alarm fatigue — the worst of the four): `cassette-drift-check` was not merely dead, it
+  was an ACTIVE FALSE-ALARM GENERATOR.** **52 OPEN** `[Cassette Drift] Schema changes detected` issues in
+  `unified-api-contracts`, one per night. Each is **self-refuting** — #633 (last night) reads _"**Total cassettes
+  checked:** 0 · **Drifted:** 0 · Summary: **No report file found**"_ under a "Drift Detected" title, because the
+  missing script produced no report and the github-script `catch` substituted an empty one. This corrects the earlier
+  write-up: the bug did not just fail silently, it manufactured 52 content-free issues that train everyone to ignore the
+  `cassette-drift` label — so when REAL drift lands, nobody looks. **The fix stops the empty issues** (a real report is
+  produced now), but per FINDING #4 the report is not yet trustworthy. **Operator asks: (a) close the 52 false issues?
+  (b) fix the matching in UAC before the cron opens another?** Issue doc updated.
