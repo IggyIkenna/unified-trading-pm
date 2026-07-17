@@ -367,13 +367,20 @@ shared-host OOM risk). LOCAL stays `-n 1` (the OOM-safe default for the shared d
 overrides both.
 
 **Content-sentinel CI short-circuit.** A `content-gate` job computes the git **TREE hash** (`git rev-parse HEAD^{tree}`
-— content-addressed, survives squash/promote re-SHA) folded with the per-repo workflow-file hash, and probes the GHA
-cache. A HIT ⟹ every leg skips its work (reports GREEN in seconds); the aggregate still reports the required context (PR
-not BLOCKED). The green marker is SAVED only on a real full-green miss (never on a hit / metadata-only). **FAIL-SAFE**:
-a miss (incl. GHA cross-branch cache-scope limits) just runs the full gate — it can NEVER false-green or block a PR;
-worst case is "no speedup". This kills the redundant byte-identical re-runs (v2 fires on push AND PR to main+staging).
-The local `.qg_content_sentinel` / `.qg_last_passed_sha` quickmerge fast-path is UNAFFECTED (CI never reads them; sliced
-runs are partial → never write them). SSOT: `plans/archive/2026_06/cicd_v2_latency_reduction_2026_06_10.md`.
+— content-addressed, survives squash/promote re-SHA) folded with the **gate-version fingerprint** (per-repo
+workflow-file hash + PM's reusable-workflow blob sha + PM's `scripts/quality-gates-base` / `scripts/quality_gates` dir
+tree shas at LDR — "same tree ⟹ same verdict" holds only while the GATE is unchanged, so a gate edit rotates every key),
+and probes **Firestore `qg_green_markers/{key}`** (project of the caller's `GCP_SA_KEY`; replaced the GHA cache
+2026-07-17 — the cache sub-actions broke in reusable-workflow context 2026-06-26 and were branch-scoped anyway;
+Firestore markers hit cross-branch, soundly, because the key pins exact content + exact gate). A HIT ⟹ every slice job
+is SKIPPED (no runners spun); the aggregate still reports the required context GREEN (PR not BLOCKED). The green marker
+is SAVED only on a real full-green miss (never on a hit / metadata-only / unresolved gate fingerprint), TTL 60d via
+`expires_at`. **FAIL-SAFE**: any probe problem (no creds, Firestore down, fingerprint unresolvable) is a MISS ⟹ full
+gate — it can NEVER false-green or block a PR; worst case is "no speedup". This kills the redundant byte-identical
+re-runs (v2 fires on push AND PR to main+staging). The local `.qg_content_sentinel` / `.qg_last_passed_sha` quickmerge
+fast-path is UNAFFECTED (CI never reads them; sliced runs are partial → never write them). SSOT:
+`plans/archive/2026_06/cicd_v2_latency_reduction_2026_06_10.md` +
+`plans/active/github_actions_ci_cost_reduction_2026_07_15.md` A2.
 
 ---
 
