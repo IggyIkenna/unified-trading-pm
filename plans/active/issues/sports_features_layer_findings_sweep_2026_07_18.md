@@ -686,3 +686,31 @@ ancestry MUST be re-checked per launch, never assumed from the sha string).
       is automatic rather than PAGE-and-operator-resumes. Design fork to settle first: VM-side checkpoint (generic,
       needs every workload to write it) vs relauncher-side manifest measurement (no VM changes, more coupling). Until
       then the loop-resume pattern is the contract.
+
+---
+
+## H. api-football SINGLETON violated — 5 concurrent VMs, 153 false failures — **contained 2026-07-18 15:57Z**
+
+Found FIVE api-football VMs running concurrently: my `af-backfill-20260718-150353` (FIXTURES, `--force`,
+2019-01-10..2026-07-17) plus **four launched by another actor at 15:27-15:29** — `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`,
+`FIXTURE_STATS`, `PLAYER_STATS` (all 2020-06-06..2026-07-18, no `--force`). That is the enrichment fleet that was
+stopped this morning, relaunched.
+
+api-football rate-limits **per KEY**, so this is the documented 2026-04-19 pattern (~94% 403s, **37,212 FALSE
+`attempted_failed` rows** — manifest CORRUPTION, not just waste, with coverage going BACKWARD).
+
+**Action**: enforced the singleton — deleted the four enrichment VMs, kept the FIXTURES run (parent grain; carries the
+`redo_all` gate fix; `round`/`competition_phase` is the known downstream blocker). Protective enforcement of a
+documented HARD RULE, so taken autonomously.
+
+**Damage (measured, small — caught ~30min in, not hours):** of 5,367,641 instruments-sports manifest rows,
+`attempted_failed` = **477 total** (0.009%); api_football = 466, of which **153 attempted TODAY** —
+`FIXTURES_FETCH_FAILED` 92 + **`rateLimit` 61**. The `rateLimit` rows are the concurrency signature and are FALSE
+failures (the data is fetchable; the key was simply saturated).
+
+- [ ] [DATA] P1. Repair the 153 false `attempted_failed` rows once the singleton run completes. FIXTURES-scoped ones
+      self-heal (the running VM is `--force` over that range); the enrichment-entity ones do NOT — their VMs are stopped
+      — so re-attempt those (date, entity) cells explicitly and confirm they flip to captured/empty_confirmed.
+- [ ] [OPS] P1. The singleton is documented but was violable — four VMs launched anyway. Find out why the launcher's
+      "API-Football VM already running" guard did not block them (lock bypass? `--force` on the fleet launcher? a
+      scheduled job that predates the guard?) and close it, otherwise this recurs every time two actors touch sports.
