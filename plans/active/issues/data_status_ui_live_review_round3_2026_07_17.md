@@ -233,5 +233,12 @@ deployment-api display fix. Grounded facts + the expanded scope:
 - [ ] [BACKEND] P2. **Removed-venue guard (F7 durable)** — once venue naming is canonical, add the general active-venue
       filter to the drilldown (honor `VENUES_BY_ASSET_GROUP`) so ANY future removed venue auto-hides, superseding the P1
       interim's hardcoded exclusion list.
-- [ ] [DATA] P3. **`from 2020-01` floor-date smell** on Solana protocols — verify whether the DeFi listing floor date is
-      a real venue-launch date or a default floor (Solana DeFi didn't exist Jan 2020); fix if a floor bug.
+- [ ] [DATA] P3. **`from 2020-01` floor-date smell** on Solana protocols — CONFIRMED a real (minor) bug (investigated
+      2026-07-18). The correct launch dates EXIST in `unified_api_contracts.registry.venue_launch_dates`
+      (`KAMINO-SOLANA` 2022-08-24, `JITO-SOLANA` 2022-08-16, etc.), but the drilldown shows a generic **2020-01** floor
+      — instruments-service has a `_DEFAULT_TRADFI_FLOOR = datetime(2020, 1, …)` + a "generic 2020-01 floor when neither
+      layer has the pair" fallback (`reference_data/utils/evm_creation_resolver.py`,
+      `reference_data/adapters/tradfi/databento/`). So the DeFi listing-date derivation is falling back to the default
+      floor instead of consulting `venue_launch_dates` for the protocol's real launch. **Fix direction:** thread
+      `venue_launch_dates` into the DeFi `available_from` derivation (use the real launch date; the 2020-01 floor only
+      when truly unknown). Low-priority display accuracy — does not block the F5/F6/F7 sweep.
