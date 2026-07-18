@@ -23,7 +23,8 @@ priority: P2
 source: [instruments-service PIECE P3 — Solana DeFi available_from floor fix, 2026-07-18]
 assigned_vm: NA
 resolved_by:
-  "unified-api-contracts@f849a238 — AAVE-ETH + 6 on-chain-verified corrections; see On-chain verification section"
+  "unified-api-contracts@f849a238 (AAVE-ETH + 6 on-chain-verified corrections) + @a6933ef3 (≤4d tail fully reconciled,
+  ETHEREUM re-verified, drift-guard allowlist emptied → 0 drift); see On-chain verification + Final resolution sections"
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
@@ -184,3 +185,34 @@ credits) to settle. Kept the audited 2022-08-13 as the conservative default.
 
 **Lesson:** a documented subgraph audit outranks a governance/announcement/contract-creation date; do NOT override it on
 lower-authority evidence. The drift-ratchet guard + the downstream evm_creation_resolver test together caught it.
+
+## Final resolution 2026-07-18 (`unified-api-contracts@a6933ef3`) — 0 drift, allowlist emptied
+
+Closed the last two open items. **Registries are now FULLY reconciled — the drift-ratchet allowlist is empty and the
+guard asserts zero drift as the standing contract.**
+
+**1. ETHEREUM contract-creation-vs-subgraph conflict → RESOLVED (no code change; the audited 2022-08-13 is correct).**
+The residual flag above worried that the Etherscan contract-creation `2022-08-26` predated the Tab-14 first-event
+`2022-08-13` (impossible — a market event cannot precede deployment). Re-verified against the canonical Compound III
+`cUSDCv3` Comet contract `0xc3d688B66703497DAA19211EEdff47f25384cdc3`: Etherscan reports its creation as **"3 yrs 339
+days ago"** (from 2026-07-18 ≈ **2022-08-13**), tx `0xfe8e6819…3cc83cc0` — i.e. deployment ≈ the same day as the first
+subgraph event. A web search confirmed the **August 26, 2022** figure my earlier agent used was the public
+**announcement/blog** date, NOT the on-chain deployment. So there was no real conflict: `2022-08-13` (subgraph
+first-event ≈ contract creation) is correct; `2022-08-26` was an announcement. Both registries already held `2022-08-13`
+— confirmed, not changed.
+
+**2. ≤4d tail (13 pairs) → RECONCILED.** With ETHEREUM confirming chain_env's Tab-14 subgraph dates are the day-precise
+authority, the 11 EVM tail pairs (AAVE_V3-POLYGON/AVALANCHE/OPTIMISM, COMPOUND_V3-SCROLL, UNISWAP_V2-ETHEREUM,
+UNISWAP_V3-ETHEREUM/POLYGON, ROCKETPOOL-ETHEREUM, ETHENA-ETHEREUM, ETHERFI-ETHEREUM, GMX-AVALANCHE) were aligned
+`venue_launch_dates → chain_env` (venue's "prefer later" bias was systematically +1d; chain_env's subgraph first-event
+is exact). The **2 Solana pairs (KAMINO-SOLANA, JITO-SOLANA) were reconciled the OTHER way** — chain_env aligned to the
+P3-verified `venue_launch_dates` values (2022-08-24 / 2022-08-16) — because Solana has no Graph subgraph, so the Tab-14
+EVM-subgraph audit never covered it and the P3 agent's mainnet-launch verification is the better authority there.
+
+**Guard:** `test_venue_launch_dates_no_new_drift_vs_chain_env` now asserts `not drifts` (full reconciliation), the
+`known_drifts_pending_audit` allowlist is `set()`, and all 20 reconciled pairs (6 ≥7d + 11 EVM tail + AAVE-ETH + 2
+Solana) are locked by explicit membership + value assertions, so any revert fails CI.
+
+**Lesson (extends the one above):** authority is domain-specific — an EVM subgraph audit is authoritative for EVM
+chains, but on Solana (no equivalent subgraph) a first-party mainnet-launch verification wins. Reconcile toward the
+higher-authority source _for that chain_, not blanket-toward one registry.
