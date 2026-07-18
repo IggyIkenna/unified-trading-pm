@@ -583,3 +583,23 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     `git status --porcelain`) — filed as a Phase-B-adjacent tooling todo.
   - **NEXT:** catalogue `--apply` (safe) → verify → then build the manifest pause+CAS path → manifest `--apply` →
     verify-gate 0 raw → re-measure the live metric (the climb).
+
+- **2026-07-18 (slot-1, tick 5) — 🎯 CATALOGUE SURFACE MIGRATED — metric climbed 0.0000% → 99.8556% (VERIFIED LIVE).**
+  Ran `canonicalize_tradfi_catalogue_usd_lin_2026_07_18.py --apply --full-sweep` against prod
+  (`GCP_PROJECT_ID=central-element-323112`; the prod-op must run backgrounded — the harness 2-min foreground cap killed
+  the first attempt AFTER the backup but BEFORE the write, so the original was intact + safe). Result: **1,109,717 rows
+  migrated**, `prod/catalog.parquet` rewritten 11.3MB→16.0MB, backup
+  `prod/backups/catalog.parquet.pre_usd_lin_*.bak.parquet`
+  - quarantine sidecar written. **INDEPENDENT live re-measure (own tool, not the script)**: catalogue `instrument_id`
+    **1,109,717/1,111,322 = 99.8556%** canonical `-USD@LIN`; `canonical_instrument_id` same (byte-equal; the old
+    all-empty additive col is gone). Only 1,605 non-canonical remain = the quarantined 338 combo + 204 negative-strike +
+    1,063 ICE-qualifier. The deployment-api "Upcoming expiries" widget now renders `CME:OPTION:SP500-USD@LIN-...` not
+    `E3AN6 C7960`.
+  * **TWO follow-ups found (both minor, tracked):** (1) **catalogue combo re-stamp gap** — 338 CME combo-strips
+    (`CME:FUTURE:CL:SA 03M V7`) are stored `instrument_type=FUTURE` but classifier-derive as COMBO; the migration
+    quarantined them (left raw + FUTURE), so the post-apply verify flagged 25 as "unexpected violations" (it judges by
+    the DECLARED type). FIX = re-stamp quarantined-combo catalogue rows FUTURE→COMBO (per operator UPPERCASE +
+    classifier semantic type) AND/OR refine `assert_tradfi_derivative_ids_canonical` to classify by BODY not declared
+    type (scope_B.md §7). (2) **Durability NOT yet done** — only `--full-sweep` (prod/n) ran; the per-day
+    `instrument_availability/by_date/` corpus still needs `--by-day --apply` or the next `build_instrument_catalogue.py`
+    rebuild reverts prod/n. NEXT: run `--by-day`, then manifest pause+CAS.
