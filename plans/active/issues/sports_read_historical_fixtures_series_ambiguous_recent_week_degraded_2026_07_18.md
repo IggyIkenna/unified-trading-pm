@@ -140,9 +140,10 @@ fixed from a log trace alone.
       (`recovery=fail_fast`, correlation ids `4fd0d41b` and similar) — find the bare-Series boolean-context site and use
       `.empty`/`.any()`/`.all()` explicitly. Add a regression test reproducing the exact failure mode. (repo:
       features-service) — features-service@538c233e
-- [ ] [DATA] P2. Decide whether `batch_feature_quality_gate`'s `recovery=skip` path should BLOCK the write (like
+- [x] ✅ [DATA] P2. Decide whether `batch_feature_quality_gate`'s `recovery=skip` path should BLOCK the write (like
       `FeatureWriteGate REJECTED shard` does for `fixture_player_stats`) instead of writing a >85%-all-NaN shard through
-      — this is a data-correctness policy decision, not just a bug fix. (repo: features-service)
+      — this is a data-correctness policy decision, not just a bug fix. (repo: features-service) —
+      features-service@4be73e2a
 - [ ] [DATA] P2. Once the above is fixed, gap-fill the CORRECTED affected-date set (~521 dates, not 7): 2019-01-20
       through 2019-12-06 (intermittent, ~244 dates), 2019-12-12 through 2020-03-03 (intermittent, ~52 dates), and
       2025-12-04 through the corpus's live edge (contiguous, 225+ dates and growing daily until the fix ships) — the
@@ -251,3 +252,42 @@ operator/main sign-off via `/blocked`, do not self-authorize. Filing `/blocked` 
 2-4-VM SPOT fleet scoped exactly to the 521 dates via `launch-features-vm.sh`, ~10-20 VM-hours wall-clock depending on
 fleet size, `--force` on `features-service@538c233e`+). Not idling on the answer — resuming the `/boot` loop for other
 dispatchable work per worker doctrine.
+
+### 2026-07-18T08:5xZ — data_engineering slot-3 — todo 2 decided + shipped
+
+**Decision: YES, block the write.** Read both gates in full before deciding:
+
+- `FeatureWriteGate` (`unified-trading-library/unified_trading_library/feature_service_base/write_gate.py`), already
+  wired into every sports table via `write_sports_table` (`features-service/features_service/sports/data/writer.py`)
+  with `nan_threshold=0.85`, DOES block — but its `_check_nan` explicitly EXCLUDES any column matching a
+  `sparse_columns` prefix from the ratio check (`WRITE_GATE_CONFIG.sparse_columns["derived_features"]` lists exactly the
+  prefixes this bug's cascade hits: `travel_distance`/`cumulative_travel`, `home_league_position`, `matchday`,
+  `home_xg_`, `ht_`, `squad_value`, etc.) — that allowlist exists for LEGITIMATE per-column honest-absence (XG missing
+  pre-season, travel geodata missing for some venues), so it correctly does NOT fire here, but that is exactly why it
+  missed this incident: `read_historical_fixtures` failing zeros 8 ENTIRE calculator groups at once, and every one of
+  those groups' columns happens to already be sparse-allowlisted.
+- `batch_feature_quality_gate` (`_validate_feature_quality` in
+  `features-service/features_service/sports/cli/handlers/batch_handler.py`, called only for `derived_features`) was the
+  OTHER check — it already computed the exact all-NaN-column count/ratio and emitted a HIGH `DATA_QUALITY` structured
+  error, but its docstring said "Does NOT block the write" verbatim.
+
+Made `_validate_feature_quality` raise `WriteGateRejectedError` when the all-NaN fraction — computed WITHOUT the
+sparse-columns exemption, since this gate's whole purpose is to catch the cross-cutting collapse the exemption is
+designed to let through — reaches 0.85 (same threshold `WRITE_GATE_CONFIG.nan_threshold` already uses for this service,
+for consistency). Reused the EXISTING `WriteGateRejectedError` →
+`record_empty(reason= EmptyConfirmedReason.EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` handling already wired at the
+`_run_feature_group` call site (`_produce_derived_features` runs inside that function's try block) — no new exception
+type or manifest plumbing needed, this is the identical honest-absence pattern `fixture_player_stats` already gets from
+`FeatureWriteGate` itself.
+
+Added 2 regression tests in `tests/sports/unit/test_batch_handler.py`
+(`test_validate_feature_quality_blocks_at_85pct_all_nan`, `test_validate_feature_quality_allows_below_threshold`)
+proving the new block fires at ≥85% all-NaN and stays silent for ordinary low-single-digit sparse columns. Full sports
+suite + full `quality-gates.sh` green (ran twice — once pre-commit, re-ran post-commit so the `.qg_last_passed_sha`
+sentinel matched the shipped SHA before quickmerge, per the canonical commit→QG→quickmerge order in
+`unified-trading-pm/agents/worker.md`).
+
+**Shipped**: features-service@4be73e2a. Todo 3 (the gap-fill) still depends on slot-4's operator sign-off for the
+VM-fleet launch (unrelated to this todo) and now additionally needs `--force` re-run against this commit too, since any
+date in the gap-fill list that would have hit ≥85% all-NaN under the old code will now be correctly recorded as
+`empty_confirmed(EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` instead of a degraded `captured` write once re-run.
