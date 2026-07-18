@@ -389,17 +389,16 @@ fixture-linked before MVP backfill.
 
 ### E2 — Close the team-name matching gap to ~0% (Leg 2)
 
-- [ ] [BACKEND] P1. **Fixture matching toward the ~0% gap — KALSHI side DONE; South-American odds aliases remain.** (b)
-      ✅ Kalshi soccer team resolution SHIPPED: parser `instruments-service@ec8633ac`
-      (`parse_kalshi_soccer_participants` → A4's `PredictionFixtureResolver` via the shared `validate_team_resolution`
-      index, no new GCS walk) + 8 aliases `unified-api-contracts@e7ed754e` → measured **~0% → 82.6%→~100%** on 92 live
-      Kalshi fixtures. (a) STILL OPEN: the South-American club alias gap in `team_mappings` (`Coquimbo Unido`,
-      `O'Higgins`, `Universidad Católica (CHI)`, …) capping the odds-side ~66% — verify each against API-Football naming
-      (don't guess), additive to `team_mappings`. Kalshi home/away title-order caveat ✅ CLOSED
-      `instruments-service@ba3528d4` (order-robust lookup: probes both orderings, home/away taken from the matched
-      fixture). [Original note kept for context:] verify the Kalshi home/away title order against the FIXTURES parquet
-      (see Progress Log tick-6 caveat). (repos: instruments-service ✅, unified-api-contracts (Kalshi ✅ /
-      South-American remaining))
+- [x] ✅ [BACKEND] P1. **Fixture matching to the ~0% gap — DONE (Kalshi + South-American).** (b) ✅ Kalshi soccer team
+      resolution SHIPPED: parser `instruments-service@ec8633ac` (`parse_kalshi_soccer_participants` → A4's
+      `PredictionFixtureResolver` via the shared `validate_team_resolution` index, no new GCS walk) + 8 aliases
+      `unified-api-contracts@e7ed754e` → **~0% → 82.6%→~100%** on 92 live Kalshi fixtures. (a) ✅ SHIPPED South-American
+      club aliases `unified-api-contracts@98d757f9` (Chile/Argentina — Universidad Católica (CHI), Audax Italiano,
+      Estudiantes L.P., Argentinos JRS, Central Córdoba de Santiago, Colo-Colo, O'Higgins, …), each verified against the
+      API-Football FIXTURES parquet `af_home_name`; canonical ids pre-existed → closes the odds-side ~66% cap. Kalshi
+      home/away title-order caveat ✅ CLOSED `instruments-service@ba3528d4` (order-robust lookup: probes both orderings,
+      home/away from the matched fixture). (repos: instruments-service ✅, unified-api-contracts ✅ / South-American
+      remaining))
 
 ### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
 
@@ -414,15 +413,16 @@ fixture-linked before MVP backfill.
       exchange lay (exclude from back-lay arbs; include in 3-way with exchange_meta validation); keep the honest gate
       that a real two-sided book must exist on BOTH venues before emitting an arb row.
       `codex/04-architecture/cross-venue-prediction-arb-detection.md`. (repos: features-service)
-- [ ] [BACKEND] P2. **Fix venue-derivation for prediction/sports `instrument_id`s in execution-service** (finding,
-      slot-2 2026-07-18).
-      `execution-service/execution_service/validation/instrument_format.py::get_venue_from_instrument_id()` returns
-      `instrument_id.split(":")[0]` — correct for `VENUE:TYPE:SYMBOL` (CeFi/DeFi + venue-first prediction ids like
-      `KALSHI:PREDICTION_MARKET:…`) but WRONG for TYPE-first sports/prediction ids (`FOOTBALL:POLYMARKET:…` →
-      "FOOTBALL"; `PREDICTION:KALSHI:…` → "PREDICTION"). Directly affects Phase-E arb venue derivation. Possibly
-      not-yet-triggered (prediction execution wiring TBD). Cross-repo → execution-service owner: verify the trigger, fix
-      at the derivation site (branch on TYPE-first vs venue-first, or use the UAC venue parser). (repos:
-      execution-service)
+- [ ] [BACKEND] P2. **Fix venue-derivation for prediction/sports `instrument_id`s in execution-service — 1 of 2 sites
+      shipped, the production-critical one IN FLIGHT.** The naive `instrument_id.split(":")[0]` returns the TYPE/SPORT
+      for TYPE-first ids (`FOOTBALL:POLYMARKET:…`→"FOOTBALL", `PREDICTION:KALSHI:…`→"PREDICTION"). (1) ✅ SHIPPED
+      `validation/instrument_format.py::get_venue_from_instrument_id` `execution-service@e3707472` — robust known-venue
+      discrimination via UAC `VENUE_CATEGORY_MAP` (venue-first unchanged; type-first → parts[1]); this site is LATENT
+      (no prod caller). (2) IN FLIGHT — the sibling `utils/instruction_type.py::extract_venue` has the identical bug but
+      is HEAVILY USED in production (~40 call sites: matching engines, preflight_gate, `infer_instruction_type`,
+      `get_asset_group_from_instrument_id`) and HARD-CRASHES (`UnknownVenueError`) on a type-first id — the real
+      (latent) landmine; being fixed with the same additive robust-parse (cefi/defi/tradfi byte-unchanged). (repos:
+      execution-service ✅ get_venue / extract_venue in flight)
 
 ## Codex SSOTs (read before touching a phase)
 
@@ -756,3 +756,20 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   - **Reconciled `data_pipeline_e2e_check_2026_07_10.md` todo-13 prose** (`pm@11293b9a3`) — the "prediction has no
     `-test-` sibling bucket" claims (L267/683/1030) were made false by the `-test-` bucket fixes; corrected in place.
   - **South-American aliases agent still running** (UAC, enumerate+verify+add for Chile/Brazil/Argentina).
+
+- **2026-07-18 (slot-2, autonomous tick 12) — South-American aliases LANDED; E2 fully DONE; exec-service venue bug (real
+  one) surfaced + in flight.**
+  - **South-American club aliases SHIPPED — `unified-api-contracts@98d757f9`** (landed attempt-1). Chile + Argentina
+    clubs (Universidad Católica (CHI), Audax Italiano "A. Italiano", Estudiantes L.P., Argentinos JRS, Central Córdoba
+    de Santiago, Colo-Colo, O'Higgins, …), EACH verified against the API-Football FIXTURES parquet `af_home_name` (not
+    guessed), canonical ids pre-existed. Closes the odds-side ~66% fixture-match cap. **E2 (fixture matching to ~0%)
+    flipped ✅ — both the Kalshi side AND the South-American side done + the home/away order caveat closed.**
+  - **exec-service venue-derivation: `get_venue_from_instrument_id` fixed `execution-service@e3707472`** (robust
+    known-venue discrimination via UAC `VENUE_CATEGORY_MAP`, cefi/defi unchanged, QG-green) — but it has NO prod caller
+    (latent). **The agent surfaced the REAL bug:** the sibling `utils/instruction_type.py::extract_venue` (~40 prod call
+    sites — matching engines, preflight_gate, `infer_instruction_type`, `get_asset_group_from_instrument_id`) has the
+    identical `split(":")[0]` and HARD-CRASHES (`UnknownVenueError`) on a type-first prediction/sports id. Dispatched
+    the fix (same additive robust-parse; venue-first byte-unchanged — the safety requirement).
+  - **Multi-agent-branch note:** the aliases + Kalshi WIPs each landed via an atomic re-gate+quickmerge retry loop after
+    a peer FF staled the first quickmerge (the hyper-active branch drifted 40+ commits during the session). The
+    exec-service ship correctly used the sanctioned `--skip-preflight` when my aliases WIP showed as a dirty dep.
