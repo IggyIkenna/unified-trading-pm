@@ -232,14 +232,19 @@ fixture-linked before MVP backfill.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
-- [ ] [BACKEND] P0. **Add the additive fixture-match attributes to the prediction soccer instrument/tick schema — keep
-      prediction's canonical naming, ADD columns.** On Polymarket AND Kalshi soccer rows, emit (nullable,
-      honest-absence, no sentinel): `af_league_id` (canonical), `home_team_canonical_id`, `away_team_canonical_id`,
-      `fixture_date`, `af_fixture_id` (int), `af_fixture_match_status`
-      (`MATCHED`/`UNRESOLVED_TEAM_NAME`/`NO_FIXTURE_DATA`) — mirroring the odds-tick schema already shipped in MTDS
-      (`SPORTS_INSTRUMENTS.md`, `fixture_id_resolver.py`). Polymarket already computes the `build_fixture_id()` string
-      in `.../adapters/prediction/polymarket/parsing.py::_build_sports_id` — add the resolved `af_fixture_id` alongside
-      it; Kalshi gets the whole set new. (repos: unified-api-contracts, instruments-service, market-tick-data-service)
+- [ ] [BACKEND] P0. **Fixture-match attributes on prediction soccer — RESOLVER + STAMPING SHIPPED (Polymarket
+      `af_fixture_id` + Kalshi honest-absence); column materialization DEFERRED (shared files).** SHIPPED
+      `instruments-service@85988ade` (QG-green, 662 lines, 8 files): new `adapters/prediction/fixture_match.py`
+      resolver + per-instrument side-table — **Polymarket** soccer resolves + stamps `af_fixture_id` off the SAME
+      fixtures parquet the MTDS `FixtureIdResolver` reads (`candidate_parquet_paths("FIXTURES",…,BATCH_API_FOOTBALL)`,
+      cached per (league,day), canonicalising both sides through the SAME `validate_team_resolution` alias index — no
+      new GCS walk); **Kalshi** soccer stamps honest-absence (`af_fixture_match_status=UNRESOLVED_TEAM_NAME`,
+      `af_fixture_id=None`, `af_league_id`+`fixture_date` still resolved) pending E2; closed set
+      `MATCHED`/`UNRESOLVED_TEAM_NAME`/`NO_FIXTURE_DATA`, nullable int, no sentinel; resolver never raises. Tests:
+      `test_prediction_fixture_match.py`. **DEFERRED to the shared-file window** (materialize the 6 attrs as real
+      parquet/manifest COLUMNS): UAC `InstrumentRecord` fields + IS `process_write._records_to_dataframe` join (reads
+      `fixture_match_for_instrument_key`, ~6-line extension of the `clob_token_ids` block) + the MTDS prediction-tick
+      schema — see HELD list. (repos: instruments-service ✅; unified-api-contracts + market-tick-data-service DEFERRED)
 
 ## Phase B — run the migrations (gated on Phase A green)
 
@@ -428,6 +433,31 @@ fixture-linked before MVP backfill.
   `data-pipeline-check-is` skills.
 - **Parent epic (stale — see Progress Log)**: `epics/predictions_master.md`.
 
+## Deferred work after 2026-07-18 (HELD — unblock when the concurrent tradfi/cefi migrations free the shared files / a drain window opens)
+
+The autonomous slot-2 pass (operator: "prediction-specific files only") shipped every prediction-specific-file-safe
+unit; the items below each require a SHARED file another slot is actively migrating, an irreversible prod-migration
+drain window, or an operator decision. They are ordered, not abandoned — each names its exact blocker.
+
+- **A4 column materialization** (shared): add the 6 fixture-match fields to UAC `InstrumentRecord`; IS
+  `process_write._records_to_dataframe` join (~6-line extension of the `clob_token_ids` block reading
+  `fixture_match_for_instrument_key`); MTDS prediction-tick schema. The resolver + side-table stamping already shipped
+  (`is@85988ade`); this turns it into real parquet/manifest columns.
+- **E2 alias additions** (shared): add the missing Kalshi soccer team aliases (E2's worklist) to
+  `unified_api_contracts.external.api_football.team_mappings`, plus the South-American club aliases for the odds-side
+  ~66%→~100% — to reach the operator's ~0% gap.
+- **A2 residual** (shared / other repo): identity-migration todos 2 (`prod/catalog.parquet` regen — prod-GCS run, gated
+  on the shared canonical migration so it doesn't bake transitional ids), 7 (`gcs_paths.py` bucket-abbreviation flip), 8
+  (MDPS UAC-pin verify).
+- **CQG residual §5** (shared + operator decision): add `pipeline_mode=live_*` prefix shapes to UAC `possible_manifest`
+  — needs the BATCH-satisfied-by-LIVE-evidence semantics call (A: union batch+live [REC]; B: batch-only).
+- **Phase-B prod migration** (drain window): the enumeration-driven manifest canonicalisation (`prediction_trades`→
+  `trades`, `instrument_type`→`PREDICTION_MARKET` 11.70%→100%, empty `source`, `base_asset` whitespace) + the
+  fixture-attr backfill — needs a pre-migration VM drain the concurrent tradfi/cefi migrations currently occupy.
+- **Phase C/D/E remainders** gated on the above (data-status dimensions view is partly already-served by
+  `catalogue-filter-options`; smoke-test needs the MTDS prediction `-test-` bucket; arb-path unification needs the
+  materialized columns + E2 resolution).
+
 ## Progress Log
 
 - **2026-07-18 (slot-2) — Plan authored from a 6-agent read-only research pass; tab-2 corpus first synced to current.**
@@ -540,3 +570,23 @@ fixture-linked before MVP backfill.
   - **A4 (Phase-E Leg-1 fixture-attribute writers) dispatched** — scope-first sub-agent: implement the
     prediction-specific-file-safe increment (Polymarket `af_fixture_id` resolve + honest Kalshi absence stamping), DEFER
     - report any shared-UAC-schema requirement. Will verify + flip on completion.
+
+- **2026-07-18 (slot-2, autonomous tick 5) — A4 SHIPPED (real code) + verified; E2 dispatched.**
+  - **A4 fixture-attribute resolver SHIPPED — `instruments-service@85988ade` (QG-green, 662 lines, 8 files).**
+    Adversarially verified: commit real + on origin/LDR; QG-green (sentinel `166934e4` is A4's PARENT — the normal
+    quickmerge signature: QG runs on the working tree WITH A4's changes, writes sentinel=pre-commit-HEAD, then commits
+    on top); reuses the SAME single-walk sports reader (`candidate_parquet_paths`) + `validate_team_resolution` alias
+    index (no new GCS walk); honest-absence closed set; did NOT touch this plan. **Polymarket** soccer now
+    resolves+stamps `af_fixture_id`; **Kalshi** soccer stamps honest `UNRESOLVED_TEAM_NAME` pending E2. New
+    `adapters/prediction/ fixture_match.py` side-table + `fixture_match_for_instrument_key()` accessor + tests.
+  - **DEFERRED to the shared-file window (the A4 column MATERIALIZATION):** UAC `InstrumentRecord` 6 new fields + IS
+    `process_write._records_to_dataframe` join (~6-line extension of the `clob_token_ids` block reading the
+    side-table) + the MTDS prediction-tick schema. All shared files the active tradfi/cefi slots are migrating → HELD,
+    added to the HELD list. The side-table stamping is live now; materializing it as parquet/manifest columns is the
+    next unit when those files free.
+  - **E2 (Phase-E Leg-2, ~0% matching) dispatched** — scope-first sub-agent: a Kalshi soccer team parser (prediction
+    files only) feeding A4's resolver via the shared alias index, + measure the resolution rate + emit the missing-alias
+    WORKLIST for the deferred shared-`team_mappings` addition.
+  - **Progress metric climbing:** shipped code units this session = A4 (is@85988ade) on top of the already-shipped A2
+    1/3/4/5 + §6 (mtds@3397e7ae); plan items advanced A0/§6/CQG/A2/A4; the manifest-canonical climbing metric (11.70%)
+    moves only once Phase-B runs (held for the drain window).
