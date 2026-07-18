@@ -671,5 +671,18 @@ Applied: relaunched `af-backfill-20260718-150353` from **2019-01-10** (gate fix 
 `c810f194`, `7d49d096` ancestor-proven, `if redo_all:` present — the sha moves every rebuild as peers land commits, so
 ancestry MUST be re-checked per launch, never assumed from the sha string).
 
-- [ ] [OPS] P1. Consider making `redo_all` resume-aware in code (skip days whose `round` is already populated), so the
-      operator/loop isn't the resume mechanism. Until then, the loop-resume pattern above is the contract.
+- [x] [OPS] P1. Make the SPOT preemption path safe for `--force` runs — **DONE, fleet-wide, not sports-only** (operator
+      2026-07-18: "all spot preemptive vms need this recovery ... should be hard rule if they are launched from
+      deployment service scripts"). Codified as a HARD RULE in `codex/05-infrastructure/spot-vms-for-backfill.md` §
+      "Preemption recovery MUST resume from PROGRESS, never replay START_DATE" + a CLAUDE.md one-liner, and ENFORCED in
+      code: `RelaunchPreemptedVm` now refuses to replay a run whose captured env has `VM_FORCE=true`, returning
+      `status=PAGE reason=force_run_not_replayable` with a CRITICAL `DP_VM_PREEMPTED_NO_RELAUNCH`, instead of looping
+      silently. deployment-service@1fcccad0, QG green (2,513 passed), 2 regression tests (force refused + launcher NOT
+      invoked; non-force still replays). **Scope note**: the existing recovery actuator was already wired fleet-wide
+      (every SPOT launcher sources `launcher_common.sh`), so this defect was live for EVERY `--force` SPOT backfill, not
+      just sports.
+- [ ] [OPS] P2. DURABLE fix still open — a **checkpoint contract**: the VM periodically writes `last_completed_unit` to
+      `vm-logs/{vm_name}/PROGRESS`, and `RelaunchPreemptedVm` reads it to override `START_DATE` on replay. Then recovery
+      is automatic rather than PAGE-and-operator-resumes. Design fork to settle first: VM-side checkpoint (generic,
+      needs every workload to write it) vs relauncher-side manifest measurement (no VM changes, more coupling). Until
+      then the loop-resume pattern is the contract.
