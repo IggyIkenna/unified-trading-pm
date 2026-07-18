@@ -257,12 +257,18 @@ config-tuning gap.
 
 **Recommended decision (supersedes the daemon-relaunch action item above)**:
 
-- [ ] [INFRA] P1. **Harden `launch-api-football-backfill-vm.sh`'s singleton-lock refusal message** — remove the raw
+- [x] ✅ [INFRA] P1. **Harden `launch-api-football-backfill-vm.sh`'s singleton-lock refusal message** — remove the raw
       copy-pasteable `Stop: gcloud compute instances delete $EXISTING ...` suggestion, or at minimum gate it behind an
-      explicit warning ("only run this after confirming via Inspect/Tail that $EXISTING is genuinely stale — deleting a
+      explicit warning ("only run this after confirming via Inspect/Tail that
+      $EXISTING is genuinely stale — deleting a
       live entity-fleet VM destroys hours of in-progress work") — the same pattern used elsewhere for destructive
       suggestions. Apply the same audit to any other launcher script in `scripts/vm/` that prints a raw delete command
-      in its refusal/error path. (repo: deployment-service)
+      in its refusal/error path. (repo: deployment-service) — **deployment-service@de24324**: gated the raw
+      copy-pasteable `Stop: gcloud compute instances delete $EXISTING`line behind an explicit CAUTION block     (requires confirming via Inspect/Tail first) in`launch-api-football-backfill-vm.sh`'s singleton-lock refusal     path, and in the shared `lc_singleton_check()`helper in`scripts/vm/lib/launcher_common.sh`(used by 5 other     launchers). Audited every launcher in`scripts/vm/`for the same inline-duplicated refusal-path pattern     (grepped for`Stop:.*gcloud
+      compute instances
+      delete`against an "already running"/EXISTING-class variable, as     opposed to the benign end-of-script`$VM_NAME` self-cleanup convention which was left untouched) and applied
+      the identical fix to all of them — 58 files total, incl. `launch-sports-manifest-rescan-vm.sh` (the `$BLOCKER`    var from the exact VM-name-collision incident referenced elsewhere in this doc),`launch-sfi-backfill-vm.sh`     (`$NAME`), and `launch-tradfi-backfill-vm.sh` (`$existing`). Verified `bash
+      -n`clean on all 58 + full    `quality-gates.sh` green on the shipped SHA.
 - [x] ✅ [PROCESS] P1. **Add an explicit guardrail to `unified-trading-pm/agents/data_engineering.md` (or `RULES.md`)**:
       never run `gcloud compute instances delete` against a VM this task's OWN fleet (or a sibling entity/asset_group's
       fleet) without first confirming genuine staleness via heartbeat blob + run.log tail + manifest shard mtime — a
