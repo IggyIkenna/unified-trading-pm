@@ -275,7 +275,20 @@ fixture-linked before MVP backfill.
       CQG/underlying, NOT trusting the column; (c) stamp empty `source=''` from the writer's `default_source`; (d)
       catalogue `base_asset` whitespace-strip + dedupe (leading-space title variants). Additive per-VM-shard write
       (race-free vs the ~10-min consolidator). Fold: the prediction slice of `data_completion_prediction_2026_07_15.md`
-      (23 open). (repos: market-tick-data-service, instruments-service, unified-trading-library)
+      (23 open). (repos: market-tick-data-service, instruments-service, unified-trading-library) **SCRIPT WRITTEN +
+      dry-run measured — `market-tick-data-service@5392b20b`**
+      (`scripts/canonicalize_prediction_manifest_2026_07_18.py`, `--dry-run` DEFAULT, `--apply` behind
+      `--confirm-prod-write`; prod RUN HELD per operator). Live dry-run (756,817 rows): #1 `prediction_trades`→`trades`
+      3,385 rows (99.55%→100%); #2 per-CID `instrument_type`→`PREDICTION_MARKET` 648,616 rows (per-CID 4.16%→100%,
+      all-rows 11.70%→**97.40%**); #3 `source` 2 empty→`polymarket_clob`. **TWO FINDINGS FOR THE HELD RUN
+      (operator-decision, revises decision-2):** (i) the CQG bundle is NOT null-by-design in practice — 80,068 rows =
+      60,427 `PREDICTION_MARKET` + 17,361 lowercase `prediction` + only 2,280 null; keeping it unstamped caps all-rows
+      at 97.40%, and its 17,361 lowercase `prediction` are themselves non-canonical → decide: normalize the bundle to
+      `PREDICTION_MARKET` too (→~100%) vs enforce SSOT "bundle null" (un-stamps 77,788) vs leave inconsistent. (ii)
+      `instrument_type`/`data_type` are consolidator DEDUP-KEY columns → the additive shard adds the corrected rows but
+      leaves ~652k OLD rows as stragglers (doubling); reaching the target % needs an old-row sweep = the "naive direct
+      `_index` rewrite" that resurrects on `--force` rebuild → the run needs a tombstone/removal strategy. Both
+      documented in the script docstring + printed by dry-run.
 - [ ] [DATA] P0. **Backfill the fixture-match attributes (A4 columns) across historical Polymarket + Kalshi soccer** —
       resolve `af_fixture_id` per market from the fixtures parquet (canonical `home_id`/`away_id` + `af_league_id` +
       `fixture_date`) OR by parsing the human-readable canonical name, stamping `af_fixture_match_status`. Honest nulls
@@ -659,3 +672,26 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     SCRIPT, dry-run) still running; round-2b (MTDS prediction-tick schema) waits for it (same repo). Every sub-agent
     ship adversarially verified before flipping (2 sub-agents flaked this session — an API death + a 0-tool-use dud —
     neither trusted).
+
+- **2026-07-18 (slot-2, autonomous tick 8) — Phase-B migration SCRIPT written + dry-run measured; 2 findings for the
+  held run; round-2b re-scoped optional.**
+  - **`market-tick-data-service@5392b20b` SHIPPED + verified** (QG-green 238s; 554-line script + 260-line test, 22 pure
+    transform tests). `--dry-run` DEFAULT; `--apply` behind `--confirm-prod-write` + a loud guard; prod RUN HELD per
+    operator. Additive per-VM-shard write, `resolve_bucket_name`, UTL GCS helpers, single-object `_index` read.
+  - **Live dry-run split-confirmation** (756,817 rows): matches A0 — `prediction_trades`→`trades` 3,385; per-CID
+    `instrument_type`→`PREDICTION_MARKET` 648,616 (640,701 null + 7,007 lowercase `prediction_market` + 908 leakage);
+    `source` 2 empty. Per-CID 4.16%→100%; **all-rows 11.70%→97.40%** (bundle held back).
+  - **FINDING (i) — decision-2 was premised on a wrong assumption.** The CQG bundle instrument_type is NOT uniformly
+    null: 80,068 = 60,427 `PREDICTION_MARKET` + 17,361 lowercase `prediction` + 2,280 null. So the bundle is
+    inconsistent (and its 17,361 lowercase `prediction` are non-canonical). Keeping it unstamped caps all-rows at
+    97.40%. **Operator re-decision needed** (annotated on the Phase-B item): normalize bundle→PREDICTION_MARKET (→~100%)
+    / enforce SSOT bundle-null (un-stamp 77,788) / leave inconsistent.
+  - **FINDING (ii) — additive-shard straggler problem.** `instrument_type`/`data_type` are consolidator dedup-key cols;
+    the additive shard adds corrected rows but leaves ~652k OLD rows (doubling). The target-% needs an old-row sweep =
+    the "naive direct `_index` rewrite" that resurrects on `--force` rebuild → the held run needs a tombstone/removal
+    strategy. Script reports the residual counts; does NOT auto-delete.
+  - **Round-2b (MTDS prediction-tick schema) RE-SCOPED to OPTIONAL/DEFERRED** — the ESSENTIAL A4 materialization is
+    instrument-level (round-2a, IS `process_write`, in flight); the fixture attrs live on the instrument catalogue, so
+    prediction consumers can join by `instrument_id` without a tick-grain denormalization. Adding 6 columns to the
+    shared MTDS prediction-tick schema is only warranted if the Phase-E arb path needs tick-grain fixture attrs (like
+    the odds-tick side does) — deferred pending that call, to avoid a shared-schema change of uncertain necessity.
