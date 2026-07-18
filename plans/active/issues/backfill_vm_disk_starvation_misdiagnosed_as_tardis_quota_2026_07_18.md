@@ -204,6 +204,39 @@ MB/s of writes).
 amortises per-request latency. Tardis's datasets API is per-symbol-per-day for trades/book_snapshot_5, so the bulk path
 we already use for options_chain/futures_chain has no equivalent here.
 
+### Full concurrency sweep — five arms, and a 16-socket ceiling we did NOT break
+
+| Arm | downloads/book | pool | steady MB/s      | sockets                         |
+| --- | -------------- | ---- | ---------------- | ------------------------------- |
+| A   | 32 / 16        | 16   | 11.09            | 16                              |
+| B   | 32 / 24        | 16   | 11.75            | 16                              |
+| C   | 64 / 32        | 16   | **13.47**        | 12-16 (+162 ConnectionTimeouts) |
+| D   | 192 / 96       | 16   | 9.72 (degrading) | 16 (CPU 0.6%, disk idle)        |
+| E   | 32 / 16        | 128  | ~7 (early)       | 17                              |
+
+**Sockets to Cloudflare pinned at 16-17 in every arm** — across a 6x range of download semaphore (32 -> 192) and an 8x
+range of connection pool (16 -> 128). Nothing local ever saturated: at arm D the box sat at **0.6% CPU with ~0% disk
+util**, i.e. pure idle waiting.
+
+**A real bug was found and fixed on the way**: `tardis_connection_pool_size` defaulted to **16** while the
+`TardisClientConfig` dataclass it feeds declares **128** with a comment demanding "keep it >=
+tardis_max_concurrent_downloads or the surplus tasks wait for a slot and die at connect_timeout" — precisely the 162
+ConnectionTimeouts arm C produced. The config field was silently overriding the documented default. Shipped as 128.
+**Honest result: it did NOT raise the socket count** (17 vs 16), so it was not the ceiling — but it was wrong on its own
+terms and the next person raising concurrency would have hit it.
+
+**What the ceiling is — attributed, NOT proven.** The most consistent explanation for 16-17 sockets under every client
+setting is a **server-side per-IP concurrent-connection limit**. It fits the zero 403s/429s (Tardis throttles by delay,
+not rejection), the flat throughput, and the cap-1 single-IP rule. It is NOT proven: the decisive test (32 parallel
+authenticated curls from the VM, counting sockets and aggregate MB/s) was blocked because the API key is not readable
+from the SSH context, and the repo's own curl baseline (24 streams -> 32.9 MB/s) argues the opposite. **Treat 30 MB/s as
+open, not refuted.** The one measurement that would settle it is that parallel-curl run with the key.
+
+**Best measured config = 64/32** (13.47 MB/s, 1.21x over the 32/16 baseline). The overnight backfill runs there.
+Defaults in service_config are deliberately unchanged: arm C also produced connection timeouts, and arm D shows the
+curve turns DOWN past ~64, so 64/32 is an operator-set launch env, not a new default, until someone reproduces it across
+a longer run.
+
 ## Original (WRONG) analysis — kept as a record
 
 # Tardis account-level volume quota — ~7-8 GB, then ~2 MB/s
