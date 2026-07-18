@@ -609,4 +609,14 @@ in 2019 and check whether `entity=fixtures` is written there.
 3. Watchdog on the ARTIFACT, not log lines: `entity=fixtures` objects created today must climb within ~15 min.
 4. Then: catalogue rollup `--since 2019-01-01` and verify `competition_phase` is no longer ~100% UNKNOWN.
 
-- [ ] [OPS] P0. Execute the 4 steps above once `market-tick-data-service` is clean.
+- [x] [OPS] P0. Execute the 4 steps above once `market-tick-data-service` is clean. — **Steps 1-3 DONE 2026-07-18
+      14:16Z.** Peer landed their MTDS WIP (`687abd54`) so the tarball rebuilt clean. Tarball carries the fix: built sha
+      `650dd4b7` with `7d49d096` PROVEN an ancestor, and the built tree contains both halves (`if redo_all:` override +
+      `_old_blob.exists() and not redo_all` bypass). Relaunched `af-backfill-20260718-141638` (SPOT,
+      `--force --entity FIXTURES 2019-01-01..2026-07-17`), freshness gate green on all 4 tarballs, quota 150,888
+      remaining, 258 req/min, 1 VM. Watchdog v3 armed on the ARTIFACT (`entity=fixtures` objects created today across
+      2019-01-01..20), alerting at 20min if still zero. Step 4 (catalogue rollup + competition_phase verification)
+      pending the run.
+- [ ] [OPS] P0. Step 4 — after the backfill completes:
+      `build_instrument_catalogue.py --asset-group sports     --since 2019-01-01`, then verify `competition_phase` is no
+      longer ~100% UNKNOWN and `is_promotion_relegation` is a real signal rather than a constant False.
