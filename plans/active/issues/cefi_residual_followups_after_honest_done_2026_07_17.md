@@ -188,9 +188,12 @@ pairs stay honest-unresolved (reported, never guessed).
       move the ambiguity count. Independently corroborated from two different code paths (orchestrator pandas cross-tab
       AND the shipped `cefi_wire_bridge.get_cefi_wire_map()` → "439 ambiguous excluded"). Supersedes the divergent
       297/777/781 figures everywhere (blueprint open-q #7 CLOSED). (repo: instruments-service)
-- [ ] [SCRIPT] P1. **Sample OPTION / dated-FUTURE `raw_symbol` coverage on the REBUILT catalogue** (blueprint open-q #14
-      — the "decompose ALL types" claim is still unproven for per-option / per-expiry chains). (repo:
-      instruments-service)
+- [x] ✅ [SCRIPT] P1. **Sample OPTION / dated-FUTURE `raw_symbol` coverage on the REBUILT catalogue** — DONE via the
+      Phase-−1 gate (`instruments-service@scripts/gate_cefi_catalogue_canonical_phase_minus1_2026_07_18.py`, ran GREEN
+      2026-07-18 on the rebuilt 425,573-row `prod/catalog.parquet`). Open-q #14 ("decompose ALL types") PROVEN: OPTION
+      **264,122** rows decompose per-strike/per-expiry (`BTC-5APR19-3250-C` → `DERIBIT:OPTION:BTC-USD@INV-20190405-3250-C`),
+      dated-FUTURE **9,091** decompose per-expiry (`adausd_200925` → `BINANCE-DELIVERY:FUTURE:ADA-USD@INV-20200926`);
+      PERPETUAL 5,411 / SPOT_PAIR 8,405. All quote-bearing (gate's 0-missing-quote assertion). (repo: instruments-service)
 - [ ] [SCRIPT] P2. **586 marker-less `VENUE:PERPETUAL:BASE-QUOTE` catalogue rows** (blueprint open-q #19, measured
       2026-07-17: BITGET-FUTURES 275 / BINANCE-FUTURES 153 / COINBASE-FUTURES 107 / BINANCE-DELIVERY 27 /
       BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3 — NOT just the 16 BITFINEX rows the blueprint recorded). Deliberately
@@ -457,6 +460,18 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-18 (slot-3, /autonomous) — CUTOVER STEP 1+2 DONE: catalogue rebuilt + Phase-−1 gate GREEN (surface D is
+  canonical-clean).** Rebuilt `prod/catalog.parquet` with the DERIBIT-quote fix (`instruments-service@d72edcf7`) +
+  equity-perp widen (`unified-api-contracts@172e8cdb` + `instruments-service@ff6d9750`): **425,573 rows** (monotonic
+  guard ACCEPT, new=425573 vs current=425160; `CATALOGUE_PROMOTED` event, exit 0), **802 flagged `is_equity_perp`** (the
+  widened Binance universe landed). Ran the NEW Phase-−1 gate
+  (`instruments-service@scripts/gate_cefi_catalogue_canonical_phase_minus1_2026_07_18.py`) live — **GREEN**: `:PERP:`=0,
+  `instrument_id!=canonical_instrument_id`=0, **missing-quote=0** (the DERIBIT `AVAX@LIN`→`AVAX-USDC@LIN` class is GONE
+  from the catalogue — the rollup RE-DERIVES `instrument_id` from `raw_symbol` via the fixed builder, so pre-fix by_date
+  parquets don't leak). Coverage sample proves per-strike/per-expiry decomposition (OPTION 264,122; dated-FUTURE 9,091;
+  PERPETUAL 5,411; SPOT_PAIR 8,405). **The wire-map the apply scripts build from this catalogue is now clean** → the
+  cutover (drain + Scripts 2/3/4 `--apply` + Script-1 content) can proceed against a canonical foundation.
 
 - **2026-07-18 (slot-3, /autonomous) — PHASE C COMPLETE: all 4 migration-script dry-runs done + validated against live
   prod; the cutover is fully staged behind the Phase-D operator drain gate. Measured evidence (read-only, NO
