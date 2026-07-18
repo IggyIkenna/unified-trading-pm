@@ -314,29 +314,38 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       none today. 4. **DERIBIT:COMBO is CANONICAL** (catalogue has `instrument_type=COMBO` 138,544 + venue
       `DERIBIT-COMBO` 69,272) — my audit's canonical-set was missing COMBO; combos get MIGRATED, not excluded.
       `COINBASE-CDE` (99 in catalogue) legit.
-- [x] ✅ [SCRIPT] P0. **instrument_type column normalization** — DONE `instruments-service@9bb339f9` (QG green; DRY-RUN
-      validated live on the **11,185,557-row** cefi manifest; `--apply` DRAIN-GATED under the Track-1 cutover, NOT run).
-      Built as the itype leg of the SHARED `resolve_canonical(venue, raw_itype, id_or_symbol, data_type)` resolver in
-      Script 3 (`complete_cefi_manifest_canonical_dedup_2026_07_17.py`): casing/alias (`SWAP`→PERPETUAL,
-      `SPOT`→SPOT_PAIR, `FUTURES`→FUTURE, `OPTIONS`→OPTION, lowercase→UPPER), data_type-leak
-      (`FUTURES_CHAIN`/`OPTIONS_CHAIN` in the itype column → FUTURE/OPTION), blank/`None`/unknown → **INFER** (catalogue
-      2-tuple `(venue,raw_symbol)`→itype, else chain-`data_type` hint, else venue-suffix `-SPOT`→SPOT_PAIR /
-      `-FUTURES`/`-SWAP`/`-PERP`→FUTURE-if-dated-else-PERPETUAL; bare BYBIT/OKX → None). Dry-run measured: **3,639,041
-      itype rows changed (3,110,955 blank/unknown → inferred)** — the ROOT fix that also unblocks **346,719 captured
-      bare-wire relabels**; captured-venue-prefixed canonical-fraction **83.15% → 94.86%**. (repo: instruments-service)
+- [x] ✅ [SCRIPT] P0. **instrument_type column normalization** — DONE `instruments-service@a63a0556` (supersedes
+      `@9bb339f9`; QG green; DRY-RUN validated live on the **11,185,557-row** cefi manifest; `--apply` DRAIN-GATED under
+      the Track-1 cutover, NOT run). Built as the itype leg of the SHARED
+      `resolve_canonical(venue, raw_itype, id_or_symbol, data_type, underlying, …)` resolver in Script 3
+      (`complete_cefi_manifest_canonical_dedup_2026_07_17.py`): casing/alias (`SWAP`→PERPETUAL, `SPOT`→SPOT_PAIR,
+      `FUTURES`→FUTURE, `OPTIONS`→OPTION, lowercase→UPPER), data_type-leak (`FUTURES_CHAIN`/`OPTIONS_CHAIN` in the itype
+      column → FUTURE/OPTION), blank/`None`/unknown → **INFER** (catalogue 2-tuple `(venue,raw_symbol)`→itype, else
+      chain-`data_type` hint, else venue-suffix `-SPOT`→SPOT_PAIR / `-FUTURES`/`-SWAP`/`-PERP`→FUTURE-if-dated-else-
+      PERPETUAL; bare BYBIT/OKX → None). Dry-run measured: **3,705,164 itype rows changed (3,142,784 blank/unknown →
+      inferred)** — the ROOT fix that also unblocks **349,056 captured bare-wire relabels**; canonical-fraction
+      (adjusted, excl. canonically-null bundle/blank shards) **84.98% → 95.75%** (raw 83.15% → 93.90%). (repo:
+      instruments-service)
 - [ ] [SCRIPT] P0. **`:PERP:` → `:PERPETUAL:` rewrite** (374,272 manifest rows + any on-disk content) with symbol
       decompose (`ASTER:PERP:CLUSDT` → `ASTER:PERPETUAL:CL-USDT@LIN`). Extends Script 2/3. (repos:
       market-tick-data-service, instruments-service) — **MANIFEST SIDE SHIPPED** in Script 3
-      `instruments-service@9bb339f9`: `resolve_canonical` decomposes `VENUE:PERP:SYM` + forces `PERPETUAL`; dry-run
+      `instruments-service@a63a0556`: `resolve_canonical` decomposes `VENUE:PERP:SYM` + forces `PERPETUAL`; dry-run
       rewrote **374,227** manifest rows (matches the audit's 374,272). REMAINING before this ticks: on-disk GCS content
       rename + the MTDS writer-side fix.
-- [ ] [SCRIPT] P1. **missing-quote + nc:other decompose** (`ETHUSDT_210326`, `PAXG_USDC-27JUN25`) via the catalogue —
-      extract the raw symbol tail, resolve to canonical dated-future/option. (repo: instruments-service) — **SCOPED +
-      GATES the cutover `--apply` (Script-3 dry-run, 2026-07-18):** these are the **41,889 captured-with-data rows**
-      Script 3 deliberately **PROTECTS** from the orphan-drop (kept honest-unresolved) — bare underlyings
-      (`DERIBIT:ETH`), Kraken slash-wires (`XBT/USDT`), BITGET letter-month futures (`BTCUSDH`), dated `ETHUSDT_210326`
-      — carrying **~7.27B ticks that MUST NOT be dropped** (data-correctness HARD RULE). This P1 decompose recovers them
-      to canonical before any drop is reconsidered.
+- [~] [SCRIPT] P1. **bare-wire / missing-quote recovery** — PARTIALLY SHIPPED `instruments-service@a63a0556` (base-quote
+  SSOT map + Kraken/underscore reconstruct). **AUTHORITATIVE RE-MEASURE 2026-07-18 supersedes the earlier "420k clean
+  dashed" model** — that model was WRONG. The catalogue is complete (holds delisted instruments); the bare-wire misses
+  are a key-form mismatch, so Script 3 now resolves the dashed value against a SECOND catalogue map keyed on each id's
+  `BASE-QUOTE` segment (undated perp/spot) + reconstructs Kraken-slash/underscore. **But that recovers only ~2,737
+  rows** — because the real unresolved-captured population (172,721 rows / **48.3B ticks**) is: - **dated_contract
+  115,251 rows / 41.0B ticks** (`OKX-FUTURES:…:LTC-USD-210625`, DERIBIT options) — DATED, OUT OF SCOPE for the undated
+  base-quote map. ROOT: the itype COLUMN is mis-set to `PERPETUAL` on a dated wire → the 3-tuple wire-map misses (needs
+  FUTURE/OPTION). **A dated-wire itype-fix (dated wire ⇒ FUTURE ⇒ wire-map) is the real lever to ~100% — the next
+  follow-up.** - **null-id bundle + roadmap blank 34,596 rows** — now KEPT (canonically null; see corrections below). -
+  **undashed bare underlyings 18,687 rows / 7.0B ticks** (`DERIBIT`/`BTC`, no quote → ambiguous). - **OKX 3-seg
+  `TRX-USD-SWAP` 2,525** (perps keyed on USDT not USD → most miss) · **renames `MATIC-BTC`→POL 1,157** · junk 384 ·
+  underscore 120. All captured-with-data rows are PROTECTED (0 dropped; the 48.3B ticks preserved). (repo:
+  instruments-service)
 - [ ] [BACKEND] P0. **POST-CUTOVER: flip the smoke-check + downloader to canonical instrument ids** — MUST land with (or
       immediately after) the cutover `--apply`, else targeted re-fetch silently breaks fleet-wide. Today the
       downloader's `--instrument-ids` matches **RAW venue-native symbols EXACTLY** (no substring/underlying expansion,
@@ -357,50 +366,50 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       (repos: deployment-api, deployment-ui) — investigate the removal commit first.
 
       **INVESTIGATED 2026-07-18 (slot-3) — no single removal commit exists; the capability eroded across several
-                  legitimate "fix" commits, not one deletion.** `git log -S"distinct"/-S"enumerate"` + `--grep` across the full
-                  deployment-api/deployment-ui history found no commit that deletes a raw-enumeration feature. What actually
-                  happened: (1) `BreakdownsAccordion`/`coverage.py:_build_breakdowns` (the "Instrument Coverage Summary") still
-                  groups by the RAW manifest string per axis (venue/chain/instrument_type/data_type via
-                  `SHARD_AXIS_MATRIX`-derived `BREAKDOWN_AXES`) and never canonicalises the query key — only its P4-A DISPLAY
-                  label went canonical-friendly (`deployment-ui@7853409`, raw value still on hover) — so this surface never
-                  literally lost the raw-value signal. (2) The NEWER hierarchical drilldown (`data_status_hierarchical.py`)
-                  picked up a same-day (2026-07-18 08:14, `deployment-api@512180b`) DISPLAY canonicalisation that MERGES
-                  instrument_type/venue duplicate rows into one tree node for correct completion-percentage rollups — this is
-                  the closest thing to an actual regression of the "spot the dupe" signal, and its own commit message documents
-                  the exact kind of raw diversity the operator described (`COINBASE-SPOT instrument_types = ['', 'SPOT_PAIR',
-                  'spot', 'spot_pair']`). (3) A DIFFERENT, adjacent feature — the Catalogue Explorer's
-                  `/catalogue-filter-options` (`deployment-api@2fc46eb`, shipped 2026-07-17) — already returns raw distinct
-                  venue/instrument_type/data_type values, but reads the per-instrument IDENTITY catalogue
-                  (`prod/catalog.parquet`) for cefi/defi/tradfi, NOT the raw manifest, and has NO `chain` axis at all — so it
-                  only partially covers the ask. **Restoration shipped as a NEW, dedicated, read-only endpoint** (the operator's
-                  own suggested shape) rather than un-doing 512180b's legitimate math fix or bolting onto the filter-dropdown
-                  endpoint: `GET /api/data-status/axis-value-census` (`deployment_api/routes/data_status/_axis_census.py`) reads
-                  `read_availability_index(bucket, columns=[venue, chain, instrument_type, data_type])` directly (single bounded
-                  slim read) and returns every distinct RAW value + row count per axis, honest-absence per axis (chain omitted
-                  entirely outside DeFi rather than a fabricated `[]`). UI: `AxisValueCensus.tsx` (new panel, IS-only phase-1 —
-                  mirrors `CatalogueExplorer`'s scope decision) flags raw `instrument_type` values that fold to the same
-                  canonical label via the existing `canonicalInstrumentTypeLabel` alias map (reuses P4-A's table; other axes
-                  list raw values unflagged — no registry exists to safely fold venue/chain without false-positiving two
-                  genuinely different venues together).
+                          legitimate "fix" commits, not one deletion.** `git log -S"distinct"/-S"enumerate"` + `--grep` across the full
+                          deployment-api/deployment-ui history found no commit that deletes a raw-enumeration feature. What actually
+                          happened: (1) `BreakdownsAccordion`/`coverage.py:_build_breakdowns` (the "Instrument Coverage Summary") still
+                          groups by the RAW manifest string per axis (venue/chain/instrument_type/data_type via
+                          `SHARD_AXIS_MATRIX`-derived `BREAKDOWN_AXES`) and never canonicalises the query key — only its P4-A DISPLAY
+                          label went canonical-friendly (`deployment-ui@7853409`, raw value still on hover) — so this surface never
+                          literally lost the raw-value signal. (2) The NEWER hierarchical drilldown (`data_status_hierarchical.py`)
+                          picked up a same-day (2026-07-18 08:14, `deployment-api@512180b`) DISPLAY canonicalisation that MERGES
+                          instrument_type/venue duplicate rows into one tree node for correct completion-percentage rollups — this is
+                          the closest thing to an actual regression of the "spot the dupe" signal, and its own commit message documents
+                          the exact kind of raw diversity the operator described (`COINBASE-SPOT instrument_types = ['', 'SPOT_PAIR',
+                          'spot', 'spot_pair']`). (3) A DIFFERENT, adjacent feature — the Catalogue Explorer's
+                          `/catalogue-filter-options` (`deployment-api@2fc46eb`, shipped 2026-07-17) — already returns raw distinct
+                          venue/instrument_type/data_type values, but reads the per-instrument IDENTITY catalogue
+                          (`prod/catalog.parquet`) for cefi/defi/tradfi, NOT the raw manifest, and has NO `chain` axis at all — so it
+                          only partially covers the ask. **Restoration shipped as a NEW, dedicated, read-only endpoint** (the operator's
+                          own suggested shape) rather than un-doing 512180b's legitimate math fix or bolting onto the filter-dropdown
+                          endpoint: `GET /api/data-status/axis-value-census` (`deployment_api/routes/data_status/_axis_census.py`) reads
+                          `read_availability_index(bucket, columns=[venue, chain, instrument_type, data_type])` directly (single bounded
+                          slim read) and returns every distinct RAW value + row count per axis, honest-absence per axis (chain omitted
+                          entirely outside DeFi rather than a fabricated `[]`). UI: `AxisValueCensus.tsx` (new panel, IS-only phase-1 —
+                          mirrors `CatalogueExplorer`'s scope decision) flags raw `instrument_type` values that fold to the same
+                          canonical label via the existing `canonicalInstrumentTypeLabel` alias map (reuses P4-A's table; other axes
+                          list raw values unflagged — no registry exists to safely fold venue/chain without false-positiving two
+                          genuinely different venues together).
 
-                  **Shipped: deployment-ui@3fb6779** (full `[UI]` gate green — tsc/eslint/vitest 1007 passed/build; `pw:L2 ✓`
-                  `tests/e2e/data-status-axis-value-census.spec.ts`). **deployment-api: code complete, tests green, full
-                  `quality-gates.sh` PASSED** (`.qg_last_passed_sha` written at HEAD `e765660`) — includes a real, unrelated
-                  pre-existing-bug fix found+fixed while chasing a false-positive test failure:
-                  `_has_active_migration_vm` (`services/data_status/manifest.py`) leaked a raw `ValueError` from
-                  `get_compute_engine_client` on any non-GCP `CLOUD_PROVIDER` (the unit-test-default `local` —
-                  `tests/unit/conftest.py:429`) straight through a helper whose own docstring promises "failures return False,
-                  never a gate" — `ValueError` was simply missing from its except tuple; proven pre-existing + zero-overlap via
-                  a stash/baseline re-run on the clean tree before diagnosing it. **NOT YET QUICKMERGED** — blocked at STAGE 2
-                  Pre-Flight by 3 DIRTY sibling deps (`unified-trading-library`, `unified-api-contracts`, `deployment-service`,
-                  all carrying an unrelated in-flight "features FOLD A" / `fold_a_cutover_spec` cross-repo bucket-naming
-                  migration, stale mtime but substantial/multi-file — not a small drive-by dep edit safe to inherit-commit under
-                  the dirty-deps carve-out without its author's context). **Next step once those clear (no code change
-                  needed):** `cd deployment-api && bash scripts/quickmerge.sh "feat(data-status): restore raw manifest
-                  axis-value census — non-canonical-naming / duplication detector (Track-6)" --agent --files
-                  'deployment_api/routes/data_status/__init__.py deployment_api/routes/data_status/_axis_census.py
-                  tests/unit/test_route_data_status_axis_census.py deployment_api/services/data_status/manifest.py'` (working
-                  tree already has all 4 files + the green sentinel; re-verify sentinel still matches HEAD before re-running).
+                          **Shipped: deployment-ui@3fb6779** (full `[UI]` gate green — tsc/eslint/vitest 1007 passed/build; `pw:L2 ✓`
+                          `tests/e2e/data-status-axis-value-census.spec.ts`). **deployment-api: code complete, tests green, full
+                          `quality-gates.sh` PASSED** (`.qg_last_passed_sha` written at HEAD `e765660`) — includes a real, unrelated
+                          pre-existing-bug fix found+fixed while chasing a false-positive test failure:
+                          `_has_active_migration_vm` (`services/data_status/manifest.py`) leaked a raw `ValueError` from
+                          `get_compute_engine_client` on any non-GCP `CLOUD_PROVIDER` (the unit-test-default `local` —
+                          `tests/unit/conftest.py:429`) straight through a helper whose own docstring promises "failures return False,
+                          never a gate" — `ValueError` was simply missing from its except tuple; proven pre-existing + zero-overlap via
+                          a stash/baseline re-run on the clean tree before diagnosing it. **NOT YET QUICKMERGED** — blocked at STAGE 2
+                          Pre-Flight by 3 DIRTY sibling deps (`unified-trading-library`, `unified-api-contracts`, `deployment-service`,
+                          all carrying an unrelated in-flight "features FOLD A" / `fold_a_cutover_spec` cross-repo bucket-naming
+                          migration, stale mtime but substantial/multi-file — not a small drive-by dep edit safe to inherit-commit under
+                          the dirty-deps carve-out without its author's context). **Next step once those clear (no code change
+                          needed):** `cd deployment-api && bash scripts/quickmerge.sh "feat(data-status): restore raw manifest
+                          axis-value census — non-canonical-naming / duplication detector (Track-6)" --agent --files
+                          'deployment_api/routes/data_status/__init__.py deployment_api/routes/data_status/_axis_census.py
+                          tests/unit/test_route_data_status_axis_census.py deployment_api/services/data_status/manifest.py'` (working
+                          tree already has all 4 files + the green sentinel; re-verify sentinel still matches HEAD before re-running).
 
 ## Pass-through from the 2026-07-18 consolidated canonicalisation audit (slot-4) — decisions + measured worklist
 
@@ -459,9 +468,9 @@ Flat-per-contract shards key on `instrument_id` (filename == column == manifest 
 **Representative canonical ids (cefi)**: `BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN` · `BINANCE-SPOT:SPOT_PAIR:BTC-USDT`
 (no margin on spot) · `BYBIT:FUTURE:BTC-USD@INV-20231201` (per-contract, not a bundle) ·
 `DERIBIT:OPTION:BTC-USD@INV-20260401-3250-C` (options_chain bundle, **quote ALWAYS**) ·
-`DERIBIT:FUTURE:AVAX-USDC@LIN-20260401` (futures_chain bundle; USDC=linear) · `OKX-SWAP:PERPETUAL:BTC-USD@INV`
-(folds to OKX in Layer-1) · `HYPERLIQUID:PERPETUAL:BTC-USDC@LIN` (USDC-margined) ·
-`ASTER:PERPETUAL:BTC-USDT@LIN` (USDT corrected). Margin: quote∈{USDT,USDC,…}→`@LIN`, quote==USD→`@INV`; SPOT no marker.
+`DERIBIT:FUTURE:AVAX-USDC@LIN-20260401` (futures_chain bundle; USDC=linear) · `OKX-SWAP:PERPETUAL:BTC-USD@INV` (folds to
+OKX in Layer-1) · `HYPERLIQUID:PERPETUAL:BTC-USDC@LIN` (USDC-margined) · `ASTER:PERPETUAL:BTC-USDT@LIN` (USDT
+corrected). Margin: quote∈{USDT,USDC,…}→`@LIN`, quote==USD→`@INV`; SPOT no marker.
 
 **Drop venues (cefi purge, remove entirely, snapshot-first)**: BINANCE-DELIVERY (COIN-M, non-MVP);
 BITSTAMP/HUOBI/GEMINI/PHEMEX (defunct); Solana-perp cull DRIFT/PACIFICA/MANGO/ZETA/FLASH/SOLAYER/PICASSO/CAMBRIAN.
@@ -477,6 +486,24 @@ bundle keys on `underlying` (NOT a synthesized `VENUE:BASE` id).
 (Tardis cap + the throughput-fix ruling), `codex/06-coding-standards/read-time-filter-pushdown.md`.
 
 ## Progress Log
+
+- **2026-07-18 (slot-3) — Track-6 follow-up: base-quote SSOT map + Kraken/underscore reconstruct + operator CORRECTIONS
+  SHIPPED (`instruments-service@a63a0556`; supersedes `@9bb339f9`).** Extended Script 3's `resolve_canonical` with a
+  SECOND catalogue map keyed on each id's `BASE-QUOTE` segment (undated perp/spot) — resolves the dashed manifest value
+  to the EXACT catalogue id (the catalogue IS complete, incl. delisted; the bare-wire miss was a key-form mismatch, not
+  a delisting gap) — plus a narrow Kraken-slash/underscore reconstruct. Applied the operator CORRECTIONS:
+  **KALSHI-PERP/POLYMARKET-PERP KEPT** (roadmap venues, removed from the drop set); **bundle rows
+  (`futures_chain`/`options_chain`) KEPT untouched with NO id synthesis** (null id valid, keyed on `underlying`); KEEP-
+  trend (only genuine catalogue-orphans drop, non-captured only; captured-with-data ALWAYS protected — invariant held,
+  **0 captured-with-data dropped**); per-VM shard load made race-tolerant (a live-VM shard consolidated mid-run → skip).
+  **KEY FINDING (authoritative re-measure — the "420k clean dashed" model was WRONG):** the base-quote map recovers only
+  **~2,737 rows**, because the unresolved-captured population (172,721 rows / **48.3B ticks**) is dominated by
+  **dated_contract 115,251 rows / 41.0B ticks** (`OKX-FUTURES` dated futures + DERIBIT options — DATED, out of scope for
+  the undated base-quote map; ROOT = itype mis-set to PERPETUAL on a dated wire so the wire-map misses; the real lever
+  to ~100% is a **dated-wire itype-fix**, next follow-up), null-id bundle/blank 34,596 (KEPT), undashed bare underlyings
+  18,687 / 7.0B ticks, OKX 3-seg 2,525, MATIC→POL renames 1,157. Canonical-fraction: raw **83.15%→93.90%**, adjusted
+  (excl. the 63,776 canonically-null bundle/blank captured shards) **84.98%→95.75%**. DRY-RUN only; `--apply` NOT run.
+  Surfaced to the coordinator with the dated-wire itype-fix as the recommended next step.
 
 - **2026-07-18 (slot-3) — Track-6 `[SCRIPT] P0` instrument_type-column normalization SHIPPED + DRY-RUN validated
   (`instruments-service@9bb339f9`).** Extended Script 3 (`complete_cefi_manifest_canonical_dedup_2026_07_17.py`) with a
