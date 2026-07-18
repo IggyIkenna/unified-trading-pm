@@ -312,3 +312,46 @@ Per-group materialized coverage is ~100% everywhere except **`fixture_stats` 83.
 34, `fixture_events` 17, `fixture_features` 1.
 
 - [ ] [DIAG] P2. Root-cause the 708 `fixture_stats` failures; they dominate the entire sports failure budget.
+
+---
+
+## D. Junk-symbol guard deletes real non-ASCII sports fixtures — **P1, cross-asset-group**
+
+`instruments-service/instruments_service/engine/orchestrator/venue_core.py:408` rejects any instrument whose
+`base_asset` / `raw_symbol` / `instrument_key` contains a non-ASCII character:
+
+```python
+if field and not field.isascii():
+    return True, f"non-ascii ({field!r})"
+```
+
+The rule is **crypto-motivated** — its own docstring cites the 2026-06-24 audit finding CJK/meme test bases
+(龙虾 / 币安人生 / 我踏马来了) on BINANCE/BITGET/ASTER. But `reject_junk_instruments` is **"Applied to EVERY asset group
+right after the date filter, so junk symbols never reach `by_date/` (and therefore never reach the catalogue roll-up /
+coverage / MTDS)"**. In SPORTS, non-ASCII is not junk — it is ordinary Latin-script team naming.
+
+Measured live in the round-FIXTURES backfill run (`af-backfill-20260718-092543`, day=2021-11-26):
+
+```
+Junk-symbol guard 2021-11-26: 225 -> 203 instruments (rejected 22)   # ~9.8% of the date's universe
+  BOLIVIA_PRIMERA_DIVISION:NACIONAL_POTOSI_v_SAN_JOSE        — non-ascii ('Nacional Potosí vs San José')
+  BOLIVIA_NACIONAL_B:UNIVERSITARIO_DE_VINTO_v_VACA_DIEZ      — non-ascii ('Universitario de Vinto vs Vaca Díez')
+  PORTUGAL_LIGA_3:UNIAO_DE_LEIRIA_v_UNIAO_SANTAREM           — non-ascii ('União de Leiria vs União Santarém')
+  SPAIN_PRIMERA_DIVISION_RFEF_GROUP_1:UD_LOGRONES_v_…        — non-ascii ('UD Logroñés vs Real Valladolid II')
+  SPAIN_PRIMERA_DIVISION_RFEF_GROUP_2:SANLUQUENO_v_ALBACETE  — non-ascii ('Sanluqueño vs Albacete')
+  MEXICO_LIGA_PREMIER_SERIE_A:DEPORTIVO_ZAP_v_CANONEROS_…    — non-ascii ('Deportivo Zap vs Cañoneros Marina')
+```
+
+These are **real fixtures**. The loss is systematic and biased by geography (Iberian + Latin American leagues), it
+happens at CAPTURE time so the rows never exist downstream, and it is invisible in coverage because the rejected
+instruments never enter the denominator either — the date simply looks smaller.
+
+**Fix direction**: the junk test must not be "any non-ASCII". Narrow it to the actual junk classes (CJK / emoji / symbol
+ranges), or make the ASCII rule crypto-only and exempt sports. Latin-1/Latin-Extended accented characters are legitimate
+identity, not noise.
+
+- [ ] [CODE] P1. Narrow `_is_junk_instrument` so accented Latin characters are NOT rejected (target CJK/emoji ranges, or
+      scope the ASCII rule to crypto asset groups); add a regression test pinning `Sanluqueño` / `União` / `Potosí` as
+      KEPT and `龙虾` / `币安人生` as REJECTED.
+- [ ] [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
+      date/league range once the guard is narrowed.
