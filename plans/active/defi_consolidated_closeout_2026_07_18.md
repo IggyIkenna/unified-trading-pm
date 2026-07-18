@@ -453,7 +453,33 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
-- **2026-07-18 (slot-4) — Plan authored from a 6-agent audit + live GCS/manifest reads + operator rulings.** Aggregates
+- **2026-07-18 (slot-4, /autonomous) — Canonical-target audit → doc reconciliation → SSOT reference SHIPPED; migrations
+  PARKED.** Handoff record (rule 6 — resume losslessly from here):
+  - **Committed this session**: DeFi plan + cefi/tradfi pass-through (`unified-trading-pm@58a6a54ed`); the
+    contradiction-resolution track + 2 decisions + prediction correction (`@6d60e6199`); the **58 doc-contradiction
+    fixes** across 4 repos (UAC `@faca792e` · IS `@198addd1` · MTDS `@5f498858` · PM codex/plans `@709274a5c`); the
+    **cross-asset canonical target SSOT** codex doc `codex/02-data/cross-asset-canonical-target-ssot.md` (`@61095c4cd`)
+    — the durable SSOT home the operator asked for.
+  - **Operator decisions (all in the SSOT doc §11 + here)**: POOL key = 3-seg fee-in-symbol · defi two-id kept (Option
+    A, no mass rewrite) · retire legacy LENDING→A_TOKEN/DEBT_TOKEN · itype lowercase in path/column / UPPER in id ·
+    ASTER = **per-symbol real quote** (NOT hardcoded USDT) · BINANCE-DELIVERY = **keep registered, non-MVP** (NOT
+    purged) · culled-venue purge dead-only + snapshot-first + keep LIGHTER/EXTENDED/KALSHI-PERP/POLYMARKET-PERP · combos
+    leg-aware signed-weight · equity `-USD` all four · tradfi daily `ohlcv_24h` · hyphen venue · DERIBIT quote gated ·
+    SPOT_PAIR misuse → fix (EIGEN/ETHFI→SPOT_ASSET, AMM→POOL/DEX_POOL) + hard-enforce validator · prediction =
+    shard-grain #3 (CQG bundle). The 4 Q&A the operator ruled: purge dead-only+keep LIGHTER/EXTENDED · POOL 3-seg ·
+    combos leg-aware · ASTER per-symbol · BINANCE-DELIVERY keep-non-MVP.
+  - **PARKED for the operator's return (NOT executed — the migration phase)**: the **17 CODE fixes** incl. the **P0
+    7-lending-adapter silent-`[]` bug** (Track-1), the POOL 3-seg glued-key convergence, the SPOT_PAIR reclassify +
+    validator, retire-LENDING-from-builder; and the operator-gated DATA ops (63.9M `expected_unattempted` seed after the
+    phantom+duplicate purge; the snapshot-first GCS deletes of the Shape-B prefixes + culled-venue data; the historical
+    reclass migrations). These are code+data changes the operator sequenced AFTER the SSOT — see the tracks above + the
+    consolidated questions doc `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`.
+  - **/plan-reconcile (autonomous) IN FLIGHT**: Phase 0 done — corpus mechanically GREEN (`run_hygiene_sweep.sh --ci`: 0
+    hard failures; 1 soft = 17 plans >1000L, splitting operator-gated). Phase-0 flags: 9 unlocked terminal-superseded
+    docs = archival candidates (mostly DRIFT-cull issues), 1 locked (`gcs_hive_partition_malformed_paths_remediation`,
+    PARK), 4 fully-done candidates to verify+archive. Phase-1 contradiction sweep dispatched (`wf_9458e3be`). Findings →
+    the open-questions issue doc.
+
   the 7 active defi plans + ~35 issues into 8 tracks. Ground truth: the DeFi foundational migration already ran (v9 +
   asset_group + pipeline_mode + source; dedicated→shared bucket done), so the remaining work is a residual canon walk
   (C2–C12), a now-RESOLVED POOL-id policy (Option A, 3-segment key), a culled-venue purge (dead-only, snapshot-first,
