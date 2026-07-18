@@ -43,9 +43,17 @@ status; updated as they land.
 
 ## Findings
 
-### F1 — Fixtures browser: leagues shown as raw API-Football numeric IDs, not human names — `- [ ]` OPEN
+### F1 — Fixtures browser: leagues shown as raw API-Football numeric IDs, not human names — `- [x]` FIXED
 
-The Fixtures browser groups by `league_id` and renders the raw API-Football numeric id as the group header (`103`,
+**SHIPPED — backend `deployment-api@7a7b608f` + UI `deployment-ui@1dbc25d` + L2 spec `deployment-ui@e67fac7` (pw:L2 ✓, 4
+specs green).** Backend `fixtures_browser.py` resolves each catalogue `league_id` → human `display_name` via UAC
+(`get_league_by_api_football_id` for the numeric AF id — 2 → "UEFA Champions League", 103 → "Eliteserien" — then
+`get_league` for a canonical string id), returned as a `league_names` map alongside `leagues`; unresolved ids are
+OMITTED (honest-absence). The UI (`FixturesBrowser.tsx`) renders the name as the group header with the raw id as a muted
+subtitle; an unmapped id shows the raw id alone. 26 vitest component tests + a playwright L2 regression spec
+(`fixtures-browser-league-name-103` == "Eliteserien").
+
+The Fixtures browser grouped by `league_id` and rendered the raw API-Football numeric id as the group header (`103`,
 `104`, `113`, `129`, `2`, `253`, …). Operator wants the **human canonical league name** (e.g. 103 → Eliteserien, 2 →
 UEFA Champions League). **These league IDs ARE resolvable** — UAC carries
 `canonical.domain.sports.league_registry.LEAGUE_REGISTRY` (keyed by canonical league_id) + a reverse
@@ -83,25 +91,101 @@ screenshot). Intermittent (1 OOM / 6h) because a warm 5-min TTL cache hit avoids
 works, sometimes Unknown error". This is the SECOND OOM on this service (the first,
 `deployment_ui_data_status_drilldown_oom_and_leaf_schema_2026_07_15`, bumped it 8Gi; the page has grown since).
 
-**Fix SHIPPED — `deployment-api@18a362ec` (`cloudbuild.yaml`): `--memory 8Gi → 16Gi`** (2× over the failing 8585,
-matching the dedicated rollup service's 16Gi). Reads are already column-pruned + TTL-cached, so headroom is the right
-lever for a cold burst; a code-level fix (an in-container `asyncio.Semaphore` capping concurrent heavy catalogue loads,
-modelled on `_deploy_turbo._drilldown_build_semaphore`) is the documented follow-up if it recurs at 16Gi. **Pending:
-verify the promoted revision reaches 16Gi + no further OOM against the DEPLOYED endpoint.**
+**Fix SHIPPED (two commits) — `deployment-api@18a362ec` then `@861c29894` (`cloudbuild.yaml`): `--memory 8Gi → 16Gi`
 
-### F3 — Catalogue Explorer: venue / data_type / instrument_type should be dropdowns, not free-text — `- [ ]` OPEN
+- `--cpu 2 → 4`.** The first commit set `--memory 16Gi` ALONE and the deploy was REJECTED (cloudbuild `16da79db`
+  FAILED): Cloud Run gen2 caps memory at 8Gi for 2 CPU — 16Gi requires ≥4 CPU
+  (`"For 2.0 CPU, memory must be between 128Mi and 8Gi"`). The follow-up added `--cpu 4` (which also shortens the
+  concurrent-heavy-read overlap window — parquet decompress + pandas are CPU-bound, itself part of the OOM cause). Reads
+  are already column-pruned + TTL-cached, so headroom is the right lever for a cold burst; a code-level in-container
+  `asyncio.Semaphore` capping concurrent heavy catalogue loads (modelled on `_deploy_turbo._drilldown_build_semaphore`)
+  remains the documented follow-up if it recurs at 16Gi/4CPU. **Pending: verify the promoted revision reaches
+  16Gi/4CPU + no further OOM against the DEPLOYED endpoint (the 18:03 promote's deploy FAILED on the CPU/mem mismatch —
+  the `@861c29894` fix must promote before it deploys).**
 
-The Catalogue Explorer's VENUE / INSTRUMENT TYPE / DATA TYPE filters are free-text `optional` inputs. Operator wants
-**dropdowns of the real distinct values** for the selected asset_group (typing a venue exactly is error-prone). Fix
-direction: a small backend endpoint (or reuse an existing one) returning the distinct venue / instrument_type /
-data_type values present in the selected `(service, asset_group)` catalogue — the `_catalogue.py` read already loads the
-frame, so distinct-values is cheap and single-walk-safe — then the UI renders `<select>`s populated from it, scoped to
-the chosen asset_group, with an "all/any" default. `[UI]` + pw:L2.
+### F3 — Catalogue Explorer: venue / data_type / instrument_type should be dropdowns, not free-text — `- [x]` FIXED
+
+**SHIPPED — backend `deployment-api@2fc46ebc` + UI `deployment-ui@1dbc25d` + robustness `deployment-ui@9f88629` + L2
+`deployment-ui@e67fac7` (pw:L2 ✓).** New backend endpoint `GET /data-status/catalogue-filter-options` returns the sorted
+distinct non-blank `venues` / `instrument_types` / `data_types` for a `(service, asset_group)` (single-walk: reuses the
+same column-pruned `prod/catalog.parquet` read `/catalogue` does, de-duped to latest-per-instrument; honest-absence — an
+absent/all-blank axis returns `[]`). The UI (`CatalogueExplorer.tsx`) replaced the free-text inputs with `<select>`s
+populated from it (default "Any", reset + refetch on asset-group change). Robustness follow-up (`@9f88629`): guarded the
+consumption with `?? []` so a malformed response can't crash the `.map`, and added the two missing `mock-api.ts`
+handlers (`league_names` in `/fixtures/browse`, a dedicated `catalogue-filter-options` handler — the L2 agent found the
+latter fell through to the catalogue-rows prefix and CRASHED the widget in mock/dev mode).
+
+The Catalogue Explorer's VENUE / INSTRUMENT TYPE / DATA TYPE filters were free-text `optional` inputs. Operator wanted
+**dropdowns of the real distinct values** for the selected asset_group (typing a venue exactly is error-prone). Fix: a
+small backend endpoint returning the distinct venue / instrument_type / data_type values present in the selected
+`(service, asset_group)` catalogue — the `_catalogue.py` read already loads the frame, so distinct-values is cheap and
+single-walk-safe — then the UI renders `<select>`s populated from it, scoped to the chosen asset_group, with an
+"all/any" default. `[UI]` + pw:L2.
+
+### F4 — mock/dev-mode robustness for F1+F3 (found by the L2 playwright agent) — `- [x]` FIXED
+
+Surfaced while writing the F1/F3 L2 spec: the app's dev/preview runs `VITE_MOCK_API=true`, whose `src/lib/mock-api.ts`
+monkey-patches `window.fetch` (so Playwright `page.route()` mocks are inert — the L2 spec now injects a `window.fetch`
+wrapper instead). Two real gaps in that mock: (1) `/api/fixtures/browse` never returned `league_names` (F1 could never
+show a name in mock mode); (2) there was NO `/api/data-status/catalogue-filter-options` handler, so it fell through to
+the `/api/data-status/catalogue` prefix and returned the rows shape (no `venues` array) → `CatalogueExplorer` CRASHED on
+`.map`. **Fixed `deployment-ui@9f88629`**: added both mock handlers + hardened the real component's consumption with
+`?? []` so ANY malformed response degrades to empty dropdowns instead of throwing.
+
+### F5 — instrument_type axis carries NON-CANONICAL spellings → same type splits into multiple drilldown rows — `- [ ]` OPEN (data-correctness, filed)
+
+**Operator (2026-07-17): "bybit spot appearing in two places as instrument type in the drilldown".** MEASURED against
+the live cefi availability indexes (read-only, 2026-07-18):
+
+- `COINBASE-SPOT` instrument_types = `['', 'SPOT_PAIR', 'spot', 'spot_pair']` — **three spellings of spot** + a blank.
+- `BYBIT` = `['', 'FUTURE', 'PERPETUAL', 'SPOT_PAIR', 'futures_chain', 'perpetual']` — `PERPETUAL`+`perpetual`,
+  `FUTURE`+`future`(via COINBASE-CDE)+`futures_chain`.
+- Literal string `'None'` appears as an instrument_type value in several venues (e.g. BYBIT-SPOT, COINBASE-CDE) — a
+  honest-absence violation (the string "None", not absence).
+
+The data-status drilldown groups by the RAW `instrument_type` value, so one real type (spot) fans out into `SPOT_PAIR` /
+`spot` / `spot_pair` rows — exactly the operator's "two places". **Root cause: the instrument_type is not canonicalised
+to the UAC uppercase vocabulary at the writer** (mixed casing + legacy spellings + literal `None`/blank persisted in the
+availability index / IS catalogue). **Fix direction (bigger — its own plan):** canonicalise `instrument_type` at the
+WRITE path (IS rollup / MTDS manifest) to the UAC canonical set, and/or canonicalise in the drilldown group-by as an
+interim; treat `''`/`'None'` as honest-absence (a single "unknown" bucket, never fabricated). Cross-venue (not just
+bybit/coinbase) — a data-correctness sweep. **NOTIFIED operator.**
+
+### F6 — redundant legacy `COINBASE` venue (blank types) in the IS index — `- [ ]` OPEN (data-correctness, filed)
+
+**Operator (2026-07-17): "coinbase … has so many venues which actually have data — are any redundant".** MEASURED: the
+three registry venues are legitimately distinct — `COINBASE-SPOT` (spot), `COINBASE-FUTURES` (intl perps),
+`COINBASE-CDE` (US Advanced-Trade derivatives, `venue_adapter_keys.py:106/108/120`). BUT the **instruments-service**
+cefi index ALSO carries a bare legacy `COINBASE` venue whose only instrument_type is `['']` (blank) — a redundant alias
+of `COINBASE-SPOT` with no real typed data, not present in MTDS. Secondary smell: `COINBASE-FUTURES` shows a `SPOT_PAIR`
+instrument_type (a futures venue carrying spot pairs — likely miscategorised rows). **Fix direction:** drop /
+consolidate the bare `COINBASE` alias into `COINBASE-SPOT` in the IS catalogue (and audit the `COINBASE-FUTURES`
+SPOT_PAIR rows). Overlaps F5 (both are IS-catalogue venue/type canonicalisation). **NOTIFIED operator.**
+
+### F7 — DRIFT (removed 2026-07-16) still shows in the DeFi drilldown — 3,556 stale IS rows — `- [ ]` OPEN (data-correctness, filed)
+
+**Operator (2026-07-17): "i thought we got rid of some of these dsol venues like DRIFT as they got hacked".** CONFIRMED:
+DRIFT was removed from the venue registry 2026-07-16 (operator ruling — hacked ~$280M, rebranded Velocity DEX; all
+Solana perp DEXes dropped; `venue_adapter_keys.py:196`, SSOT `codex/04-architecture/solana-defi-coverage.md`). Of the 8
+Solana protocols the operator saw (DRIFT, JITO, KAMINO, MARGINFI, MARINADE, ORCA, RAYDIUM, SOLEND), **only DRIFT is
+removed-but-still-showing** — the other 7 are in the ACTIVE registry (staking/lending/AMM, not perp DEXes) and are
+legitimately kept. MEASURED (2026-07-18): DRIFT = **0 rows in the MTDS defi index** but **3,556 rows in the
+instruments-service defi index** (`instrument_type ['', 'PERPETUAL', 'SPOT_PAIR']`) — the drilldown reads the IS index,
+which was never purged of DRIFT's historical rows when the adapter mapping was removed. **Fix direction (options, needs
+operator decision):** (A) filter the data-status drilldown to honor the UAC active-venue set (`VENUES_BY_ASSET_GROUP`)
+so any registry-removed venue is auto-excluded from the monitoring view — general, no data loss, deployment-api code
+only [RECOMMENDED]; (B) purge DRIFT's 3,556 rows from the IS defi catalogue/index (real-infra cleanup, matches the
+"removed" intent but loses audit history); (C) both. The "from 2020-01" floor date on these Solana protocols is a
+secondary date-floor smell (Solana DeFi didn't exist Jan 2020). **NOTIFIED operator.**
 
 ## Fix status
 
-| #   | Finding                      | Repo(s)                        | Status                                                               |
-| --- | ---------------------------- | ------------------------------ | -------------------------------------------------------------------- |
-| F1  | Fixtures league human names  | deployment-api + deployment-ui | OPEN                                                                 |
-| F2  | 3 panels "Unknown error"     | deployment-api (`cloudbuild`)  | ✅ FIXED (OOM, not deploy-lag) — mem 8→16Gi @18a362ec; verify deploy |
-| F3  | Catalogue Explorer dropdowns | deployment-api + deployment-ui | OPEN                                                                 |
+| #   | Finding                                 | Repo(s)                         | Status                                                                            |
+| --- | --------------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- |
+| F1  | Fixtures league human names             | deployment-api + deployment-ui  | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)               |
+| F2  | 3 panels "Unknown error" (OOM)          | deployment-api (`cloudbuild`)   | ✅ FIXED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; verify deploy           |
+| F3  | Catalogue Explorer dropdowns            | deployment-api + deployment-ui  | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`              |
+| F4  | mock/dev robustness (F1/F3)             | deployment-ui                   | ✅ FIXED — `@9f88629`                                                             |
+| F5  | non-canonical instrument_type spellings | instruments-service (writer)    | OPEN — filed, data-correctness sweep (its own plan); operator notified            |
+| F6  | redundant legacy COINBASE venue         | instruments-service (catalogue) | OPEN — filed, overlaps F5; operator notified                                      |
+| F7  | DRIFT (removed) still in DeFi drilldown | deployment-api and/or IS data   | OPEN — filed; recommend drilldown active-venue filter; operator decision on purge |
