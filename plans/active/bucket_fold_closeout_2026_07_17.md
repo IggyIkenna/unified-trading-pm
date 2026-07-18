@@ -83,9 +83,12 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       `manifest-consolidator-ssot.md` (target set — the collapsed job counts); `gcs-lifecycle-policies.md` (supersede
       the "intentionally NOT lifecycle'd" claim with the STANDARD→COLDLINE@60d + prefix exceptions actually applied).
       Add SUPERSEDED banners where the folds invalidated prior contracts.
-- [ ] [DATA] P3. **Final estate recount** — recount live buckets (GCP + AWS) vs the design §4 target (~100 total / ~80
-      non-GCP-system). Record the actual number in this Progress Log; if it overshoots, diagnose which folds
-      under-deleted.
+- [x] ✅ [DATA] P3. **Final estate recount** — **DONE 2026-07-19: GCP = 114 total buckets** (down from ~140+ pre-fold;
+      ~30 source buckets removed by the 5 folds). NO folded source bucket lingers (grep clean: execution-store-{ag},
+      features-{delta-one,volatility,onchain,xinstrument,mtf}-*, positions-store, pnl-attribution-store, archetype-state,
+      position-store-sports, strategy-store-flat all gone). The 114-vs-59-TF-tracked gap is PRE-EXISTING estate drift
+      (market-data/billing buckets not in canonical TF) — separate from the folds, operator-aware. AWS recount deferred
+      (operator deprioritized AWS; GCP is where the real data is).
 - [ ] [DOCS] P3. **Parent-plan + issue-doc bookkeeping** — flip [[bucket_estate_consolidation_to_sub100_2026_07_13]]'s
       W3 execute todo to done (cite this plan + the four fold plans); flip [[bucket_estate_fold_design_2026_07_13]] §3
       remaining todos; close the three audit issue docs (terraform drift / recon / strategy-store split-brain) if the
@@ -95,3 +98,18 @@ can only land once they're all done. Kept as a separate gated plan so no single 
 
 - **2026-07-17, authored** as the closeout successor of [[bucket_estate_fold_design_2026_07_13]] §3 trailing
   cross-cutting todos. Gated on all four fold plans. Nothing executed yet.
+- **2026-07-19, `/autonomous` — ALL 5 WAVE-3 FOLDS COMPLETE; closeout STARTED.** Folds shipped: Fold-A (features, incl.
+  BQ re-mount 766k rows + N→5 consolidator), ml Fold-B, Folds C+D (execution/strategy, execution 3→1 single-root
+  consolidator), Fold-E (portfolio-state). Each: code cutover (multi-agent implement→adversarial-verify→fix — the
+  adversarial passes caught a silent-P&L reader bug in C+D + the stale-PM-yaml UTL-CI break) → migration parity →
+  consolidator retarget via direct gcloud → source delete → TF import folded + state-rm sources. Plus keystone unblock
+  (UAC -USD contract drift misdiagnosis corrected) + 2 operator-flagged flakes fixed (VaR golden cents-quantize; UTL CI
+  stale-PM-yaml). **Estate recount DONE (114 GCP, ~30 removed); parent W3 plan flipped.** DEFERRED (this Progress Log):
+  (1) **_KIND_ALIASES sunset** — soft window NOT closed (services still promoting→cloudbuild with the folded kinds; the
+  aliases + retained yaml keys must stay until every consumer redeploys + is grep-clean). (2) **Codex audit** —
+  bucket-isolation-model.md / manifest-consolidator-ssot.md / gcs-lifecycle-policies.md folded-shape updates. (3)
+  **Issue-doc close + hygiene sweep**. (4) **Loose ends**: execution-service `tenderly_budget.py` archetype-state root
+  prefix (empty bucket, internally symmetric); deployment-api C+D display + Fold-B ml-store + data_status axis-census +
+  Fold-A batch_config (tangled tree, scoped commits); UAC replay/source-capability WIP (~8 files stashed, finish/revert);
+  UTL/UAC dormant un-tiered id_conventions helpers; consolidator job renames (uts-…-execution-cefi→execution, feature
+  per-kind→per-AG); AWS consolidator 404 cleanup + AWS bucket recount.
