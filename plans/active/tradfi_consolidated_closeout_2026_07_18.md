@@ -265,11 +265,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       `data-pipeline-check-mtds/SKILL.md` §3c gained a note on `--batch-date-concurrency` + `DATABENTO_MAX_CONCURRENT_REQUESTS`
       (opt-in/default-off, per-IP ~80 effective, dates are the concurrency axis) pointing at the RX-counter e2e
       measurement method. (repo: unified-trading-pm)
-- [ ] [DATA] P0. **MEASURE the full e2e chain before/after on a REAL Databento VM (operator acceptance bar / A3.1
-      termination condition).** `measure-vm-throughput.sh` (RX-counter, vendor-agnostic) + `iostat` (disk write) +
-      manifest row-rate (e2e completion): prove **download MB/s + processing + upload + disk-write** improved Nx (cefi
-      baseline: pd-standard 2.36 → pd-balanced 11.1 = 4.7x, and the date-fanout added the bulk of the rest). Cite the
-      measured numbers. (repo: deployment-service)
+- [x] ✅ [DATA] P0. **MEASURED the full e2e chain before/after on REAL Databento VMs (operator acceptance bar) —
+      concurrency = 1.56x on a realistic large-VM workload, "doing more not wasting" confirmed.**
+      Two runs, CME ohlcv_1m, --test-run, fetch/write wall-clock from persisted run.logs:
+      - **run-2 (the clean isolation: 16 vCPU e2-highmem-16, 6 heavy roots ES;NQ;CL;GC;ZN;6E, Jan-2024, pd-balanced,
+        conc=1 vs conc=20)**: serial **27.3 min** vs concurrent **17.5 min** for the same 820,639 rows = **1.56x**.
+        Mechanism is measured directly: serial CPU is idle **18/56** samples (~32% of the time WAITING on the Databento
+        fetch = wasting), concurrent CPU idle **0/36** (fully saturated) — the date-fanout overlaps one date's fetch
+        latency with another's parse/write, exactly the operator's "large VM doing MORE not wasting."
+      - **run-1 (small: 4 vCPU, 1 root ES, 30d)**: only ~4% + pd-standard≈pd-balanced — because ohlcv_1m's download is a
+        tiny 0.65 GB burst, the bottleneck is per-date processing overhead (freshness/manifest × dates) not download/disk,
+        and 20-way concurrency was CPU-bound on 4 vCPU. **The win scales with workload size + vCPU** (run-1→run-2).
+      - **Full picture**: disk pd-balanced = 4.7x on write-heavy download-bound data (cefi Tardis, peer-measured), ~neutral
+        on small ohlcv_1m; dedicated executor prevents the ~350x DNS-starvation collapse; date-fanout = 1.56x on a large
+        VM; retry-on-429 = reliability at concurrency. **Follow-up (the real ohlcv_1m lever): batch the per-date
+        freshness/manifest ops** — that overhead, not download, dominates small-candle e2e. (repo: deployment-service)
 
 ## Phase B — run the migrations (all four surfaces, gated on Phase A green)
 
@@ -810,3 +820,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **In flight**: gated concurrent-date driver (UTL `_adapter.py`, default off, determinism-tested) being implemented.
     Killed the stale one-VM-per-shard Phase-D check (pre-`_TRADFI_MVP_SHARDS` code, exit 144) — Phase D re-runs on the
     optimized bundled path.
+
+- **2026-07-18 (slot-1, tick 16) — A3.1 Databento optimization SHIPPED + MEASURED (1.56x) + a P0 fleet incident fixed.**
+  - **Shipped**: gated concurrent-date driver `utl@7b4ed95d` (byte-identical serial default; `_drive_concurrent`
+    bounded-in-flight fan-out; determinism-tested; MTDS+IS get `--batch-date-concurrency` free via ServiceCLI);
+    concurrency plumbing + tradfi-ohlcv pd-balanced `dep@ac5d166`; MTDS retry-on-429 (`databento_retry.py`,
+    billing-fail-fast) re-shipping; skill knobs `pm@027dd7e10`.
+  - **MEASURED (acceptance bar)**: date-fanout = **1.56x** on 16-vCPU / 6-root / conc=20 (27.3→17.5 min, 820,639 rows),
+    with serial CPU idle ~32% (fetch-wait) vs concurrent 0% — "large VM doing more, not wasting" confirmed directly.
+    ohlcv_1m/1-root/4-vCPU showed only ~4% (download is a tiny burst, per-date overhead dominates, CPU-bound at 4 vCPU)
+    — the win scales with workload + vCPU. See the A3.1 MEASURE todo for the full breakdown + the per-date-overhead
+    follow-up.
+  - **P0 fleet incident (found mid-measurement, fixed, shipped `dep@ac5d166`)**: the pd-balanced disk-policy sweep
+    inserted the rationale comment block INSIDE the `\`-continued `gcloud compute instances create` in **88 launchers**,
+    silently truncating the command (metadata-less VMs, no backfills; forward-poll launchers eroding live coverage);
+    `bash -n`+shellcheck miss it so it passed QG. Diagnosed + fixed all 88 (bash-n clean, 0 remaining) + issue doc
+    `launcher_gcloud_continuation_broken_by_disk_sweep_2026_07_18.md` with a QG-gate-gap follow-up.
+  - **Next**: Phase D terminal gate on the optimized path (MVP ohlcv_1m + ohlcv_24h); MVP backfills; durability closure.
