@@ -221,6 +221,27 @@ Two secondary findings:
       `batch_tardis`-mislabeled rows (attended real-infra — read each row's true source/path segment first). The "native
       ohlcv_1m stopped after 2026-05-05" investigation also folds into (c). The `_VENUE_OVERRIDES` "Solana perp" comment
       was removed with the dead key.
+- [x] [FIX] P1. ✅ **DEFERRED (a)+(b)+(c) NOW ALL DONE (2026-07-18, attended).** (a) Positive `BATCH_LIGHTER_API` stamp
+      SHIPPED — `unified-api-contracts@81bf5e17` (`BATCH_LIGHTER_API` PipelineMode member + `_LIGHTER` SourceCapability
+      with the real REST base_url `https://mainnet.zkln.elliot.ai/api/v1` + `SOURCE_PRIORITY`/`SOURCE_MODE_CAPABILITY`/
+      emission-latency closed-set entries + 6 tests); the closed-set cascade was resolved fully, not guessed. Lock test
+      `unified-trading-library@83350199` asserts
+      `derive_pipeline_mode_for_row("LIGHTER-ZKSYNC","cefi","ohlcv_1m",     source="lighter_api") is BATCH_LIGHTER_API`.
+      (c) The `--force` re-stamp is DONE as a **re-path + manifest backfill** migration
+      `market-tick-data-service@c1da2200` (`scripts/restamp_lighter_ohlcv_batch_tardis_to_lighter_api_2026_07_18.py`,
+      DRY-RUN→canary→full apply on real infra): scope measured = **475 objects** (5 instruments
+      BTC/ETH/HYPE/SOL/TON-USDC@LIN, days 2026-02-01..2026-05-06, 95×5), NOT the earlier 375-est — the mislabel extends
+      20 days PAST the 2026-04-17 Tardis-coverage boundary because Tardis emits NO LIGHTER ohlcv_1m at all (its LIGHTER
+      manifest = trades/book/derivative_ticker only). Provenance confirmed native by inspecting pre- and post-04-17
+      samples (identical 15-col native candle schema, no source col, 1440 rows/day). All 475 GCS objects moved
+      `pipeline_mode=batch_tardis`→`batch_lighter_api` (crc32c-verified copy→delete, idempotent) + 475 captured rows
+      backfilled via `ManifestWriter(per_vm_shards=True)` with EXPLICIT `source=lighter_api` (cefi ohlcv_1m is
+      multi-source so a blank source raises). **VERIFIED on real infra:** cefi canonical `_index` now carries 475
+      `LIGHTER-ZKSYNC ohlcv_1m` rows = `batch_lighter_api`/`lighter_api`/`captured` (95 days 2026-02-01→2026-05-06), and
+      **0** `batch_tardis` LIGHTER ohlcv_1m objects remain. The "native ohlcv_1m stopped after 2026-05-06" observation
+      is confirmed (no LIGHTER ohlcv_1m objects at either path after 2026-05-06 in the 2026-02..2026-07 scan) — folded
+      into (c), no further action. (b) source-threading is satisfied: the CORE fix keeps the source-blind path honest
+      (`None`), and this migration is the explicit-source producer for the historical rows.
 - [x] [FIX] P1. ✅ **FIXED — `market-tick-data-service@55dac12a`** (the CORRECT honest fix, NOT the naive one). The
       `/orderbook` endpoint is CURRENT-only (no historical params), so a naive "use the target date" would FABRICATE a
       timestamp on a past partition (data-correctness violation). Instead `fetch_extended_rest` now gates the book leg
