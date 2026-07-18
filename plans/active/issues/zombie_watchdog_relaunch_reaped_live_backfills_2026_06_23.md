@@ -131,13 +131,19 @@ residual. Mitigated this dispatch by relaunching the 4 residual entities
 
 **Updated recommended decision — add to §3's scope**:
 
-- [ ] [INFRA] P1. **Give `af-backfill-*` (and any other high-latency-per-call prefix) a widened `PREFIX_IDLE_THRESHOLDS`
-      entry, or the campaign-mode/lifecycle-class exemption from §3, in
+- [x] ✅ [INFRA] P1. **Give `af-backfill-*` (and any other high-latency-per-call prefix) a widened
+      `PREFIX_IDLE_THRESHOLDS` entry, or the campaign-mode/lifecycle-class exemption from §3, in
       `deployment-service/scripts/vm/vm_zombie_watchdog.py`** — the current `(10.0, 60.0)` pair is tighter than the
       15/120 global default and actively worse than the class of bug this issue already documents. At minimum restore it
       to ≥ the global default, or (preferred, per §3) key the threshold off the launcher's declared
       `SPORTS_ADAPTER_RATE_RPM`/expected inter-write cadence so genuinely slow-but-alive VMs aren't misclassified.
-      (repo: deployment-service)
+      (repo: deployment-service) — **deployment-service@5a5a504**: `af-backfill-`/`af-audit-`/`af-recover-` widened from
+      `(10.0, 60.0)` to `(15.0, 180.0)` — heartbeat now matches the 15min global default (sidecar writes every 60s
+      independent of API rate limiting, so it's still a fast true-zombie catch), shard widened to 180min (above the
+      120min global default) for headroom on the documented sparse-fixture-day >60min gap. Updated
+      `test_vm_zombie_watchdog.py::TestPerPrefixIdleThresholds::test_backfill_prefix_gets_widened_threshold` to match;
+      219/219 unit tests + full `quality-gates.sh` green on the shipped SHA. Full campaign-mode/RPM-keyed dynamic
+      threshold (the "preferred" alternative) is NOT done — left to §3 / P2 below if the widened static pair recurs.
 - [ ] [INFRA] P2. **Add a heartbeat-sidecar reliability check** — cross-reference whether the killed VMs' heartbeat
       blobs were genuinely stale for >10min or whether the sidecar (`setup-data-pipeline-vm.sh` lines 816-833) is itself
       intermittently failing to start/write; the 2026-07-18 heartbeat blob for `af-backfill-20260717-151237` shows a
