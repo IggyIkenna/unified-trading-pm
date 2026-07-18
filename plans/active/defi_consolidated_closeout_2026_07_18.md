@@ -110,12 +110,14 @@ source:
 
 ## Per-instrument re-architecture (operator 2026-07-18 — SUPERSEDES the batch-model tracks; DeFi capture STOPPED)
 
-> **🟡 In-flight refactor + capture halted.** All DeFi capture was STOPPED 2026-07-18 (2 GCP forward-poll VMs
-> `defi-fwd-{dex-pools,oracle-prices}-poll` + 5 `uts-prod-mtds-collect-*defi*` / `defi-fwd-oracle-prices-prd` schedulers
-> paused; AWS clear; **IS enum/catalogue crons LEFT RUNNING** — IS remains the availability source). DeFi is being
-> re-architected to shard-write ONE parquet per instrument (like cefi/tradfi), collapsing SSOT §1 pattern #4 → pattern
-> #1. This is the target; the batch-model column/path framing in the tracks below is superseded. Grounded in code
-> (workflow `wf_20749dad`).
+> **🟡 In-flight refactor + capture halted (re-armed 2026-07-18).** All DeFi capture is STOPPED — GCP forward-poll VMs
+> `defi-fwd-dex-pools-poll` + `defi-fwd-dex-swaps-poll` stopped and their schedulers
+> `defi-fwd-{dex-pools,dex-swaps, oracle-prices}-prd` + `uts-prod-mtds-collect-{evm,solana}-defi-cron` PAUSED (they had
+> respawned once on the old batch-writer — re-armed by pausing the schedulers first, so no further respawn); AWS both
+> regions clear; **IS enum/catalogue/consolidator crons LEFT RUNNING** — IS remains the availability source. DeFi is
+> being re-architected to shard-write ONE parquet per instrument (like cefi/tradfi), collapsing SSOT §1 pattern #4 →
+> pattern #1. This is the target; the batch-model column/path framing in the tracks below is superseded. Grounded in
+> code (workflow `wf_20749dad`).
 
 **Why**: MTDS wrote an arbitrary bunch of instruments per capture into one `{venue}_{chain}_{capture_ts}.parquet` batch,
 blank manifest `instrument_id`, multiple batch files per shard-day — the root cause of the manifest/data-status pain +
