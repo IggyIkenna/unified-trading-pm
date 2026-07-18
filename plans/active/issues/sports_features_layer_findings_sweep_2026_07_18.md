@@ -903,3 +903,25 @@ re-verified aboard (features-service `47acb31f`, `cf10b931` ancestor-proven, fla
 **Note on the 356 "fresh" lineup shards**: they were written 06:42Z by a PRE-fix run, not by my VM — which is why they
 show `coach 0/40` (the old normalizer never emitted coach) despite having 40 rows (legacy nested shape parsed fine).
 They are exactly what the `--redo-all` pass now replaces.
+
+### L-VERIFIED (2026-07-18 19:10Z) — the lineups re-derive WORKS end-to-end
+
+`fts-backfill-20260718-184352` (with `--redo-all`) measured on shards it wrote after 18:43Z:
+
+- **0 `SKIP fixture_lineups` lines** (was: every date) and **131 `Wrote fixture_lineups` lines** — the launcher gap is
+  genuinely closed.
+- **168 shards** written by this run so far. Sampled 4:
+
+| day        | rows | coach_name | coach_id | starters |
+| ---------- | ---- | ---------- | -------- | -------- |
+| 2020-07-13 | 830  | 803/830    | 825/830  | 440      |
+| 2020-07-14 | 677  | 674/677    | 674/677  | 396      |
+| 2020-07-15 | 927  | 911/927    | 911/927  | 550      |
+| 2020-07-16 | 697  | 690/697    | 690/697  | 374      |
+
+**coach_name populated 3,078/3,131 = 98.3%** (pre-fix: **0/40**); rows/day jumped from 40 to 700-900. The residual ~1.7%
+nulls are fixtures that genuinely carry no coach upstream — honest absence, not a defect.
+
+This closes the A1 chain end-to-end: normalizer flat-shape fix (features-service@cf10b931) + dedupe + coach emission,
+delivered over history by the `--redo-all` launcher gap fix. **Zero api-football calls** — the entire restoration came
+from raw already on disk.
