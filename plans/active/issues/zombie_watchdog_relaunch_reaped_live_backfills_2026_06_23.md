@@ -402,3 +402,104 @@ full triage of the remaining prefixes is a separate, larger scope than this P2 t
       is a legitimate short-lived consolidator job pattern (delete-after-completion, benign) or another instance of the
       Incident-2/3 mid-run-kill signature — check `run.log` for a clean `EXIT_STATUS`/`VM_SHUTDOWN_ON_COMPLETION` marker
       on a sample of the 41. (repo: deployment-service, market-tick-data-service)
+
+## Correction to the struck-through P0 above (line ~186) — the relaunch WAS executed by a different dispatch, and it surfaced a THIRD, genuinely distinct mechanism
+
+The struck-through item above ("SUPERSEDED... this daemon is not, and never was, deleting anything") was written by one
+dispatch reading serial-console evidence current as of ~15:55Z. **A separate, concurrent dispatch
+(`zombie_watchdog_relaunch_reaped_live_backfills-003`) had already started executing the ORIGINAL (pre-strikethrough)
+recipe at 16:02Z, before that correction landed** — a genuine cross-slot race, not defiance of the correction. That
+relaunch surfaced a real, DIFFERENT bug (not the June-23 daemon being falsely blamed, and not the agent-manual-delete
+pattern of Incident 2/3/4 either) — see **Incident 5** immediately below. Both corrections stand simultaneously: (1) the
+June-23 daemon (`vm-zombie-watchdog-20260623-171612`) really was harmlessly `--dry-run`-only, as documented above, AND
+(2) relaunching a FRESH daemon with the default `dry_run=false` (per this item's own literal recipe) hit a genuine,
+previously-latent code bug that really did delete live VMs. The recipe text above was not wrong to have existed — it was
+incomplete: nobody had exercised the actual real-mode code path recently enough to know it was broken.
+
+## Incident 5 — 2026-07-18T16:02-16:16Z, relaunch surfaced a UNIVERSAL false-positive bug in `_blob_age_minutes()` — 3 live VMs really killed by the daemon itself (fixed + shipped)
+
+Dispatched to `zombie_watchdog_relaunch_reaped_live_backfills-003`, executing the (at-the-time not-yet-superseded) P0
+recipe: delete the stale daemon, relaunch fresh. Distinct from Incidents 2-4 above (which trace real deletes to AGENTS
+running manual `gcloud compute instances delete`) — this incident's actor is confirmed to be the **daemon itself**, via
+its own default compute service account, not an `agent-name/claude_code` UA.
+
+**Timeline**:
+
+- 16:00:47/16:01:39 — deleted `vm-zombie-watchdog-20260623-171612` (the harmless dry-run daemon documented in "Incident
+  2 correction" above) per the recipe.
+- 16:02:39 — launched fresh daemon `vm-zombie-watchdog-20260718-160239` via `launch-vm-zombie-watchdog.sh`, default
+  `dry_run=false` (no `--dry-run` flag — matches the item's own literal recipe text).
+- 16:04:37 — the daemon's automated boot-time install crashed:
+  `ModuleNotFoundError: No module named 'unified_api_contracts'`. Root cause: `unified-api-contracts` and
+  `unified-trading-library` both moved to `[tool.hatch.version] source = "vcs"` (git-derived dynamic versioning) at some
+  point after the June-23 daemon last booted successfully; the code tarball at
+  `gs://deployment-scripts-{pid}/code/*-code.tar.gz` has no `.git` metadata, so `setuptools-scm` cannot resolve a
+  version and `pip install` fails at metadata-generation
+  (`LookupError: ... setuptools-scm was unable to detect version`). The daemon's `while true` LOOP_CMD only reruns the
+  Python script on each 5-min retry — never the one-time install block — so **every watchdog VM launched via this script
+  since that versioning change had been permanently crash-looping and doing nothing**, until diagnosed here. A second,
+  independent crash cause was layered on top: the launcher's own comment claims `deployment_service` no longer needs to
+  be pip-installed (citing a 2026-07-13 `VM_PREFIX_TO_BUCKET` move), but `vm_zombie_watchdog.py` line 110 still does
+  `from deployment_service.vm_prefix_registry import VM_PREFIX_TO_BUCKET` directly and the launcher never installs it.
+- Diagnosed live via SSH (`gcloud compute ssh <vm> --zone asia-northeast1-c` — NOT `--tunnel-through-iap`, which gets
+  `[4033: not authorized]` in this environment) and manually fixed the running venv
+  (`SETUPTOOLS_SCM_PRETEND_VERSION=<real-git-tag> pip install /tmp/{uac,utl,dep}-src`, using real tags `v0.72.0`/
+  `v0.55.0`/`v0.105.0` — a pretend `0.0.0` fails UTL's own `unified-api-contracts<1.0.0,>=0.33.0` pin and pip then
+  tries, and fails, to fetch a real UAC from PyPI).
+- After the imports worked, a manual `--dry-run` run (16:11:38Z) completed a full poll cycle but flagged
+  `af-backfill-20260718-150353` (age=67min, a genuinely live, actively-heartbeating VM) `zombie_no_heartbeat`. **Root
+  cause (the real bug)**: `_evaluate_vm()` used UTL's `get_storage_client()` wrapper (`GCSBucketHandle`/`GCSBlobHandle`,
+  `unified_trading_library/cloud_interface/providers/gcp.py`), which only implements `.exists()`/`.size`/`.download_*` —
+  **no `.reload()`, no `.updated`**. `_blob_age_minutes()` called both unconditionally; the resulting `AttributeError`
+  was silently swallowed by a bare `except Exception: return None`, so **heartbeat/shard age ALWAYS returned `None`
+  regardless of real freshness** — every known-prefix VM older than 30min was unconditionally `zombie_no_heartbeat`.
+  Confirmed directly: the raw `google.cloud.storage` client found the same blob fine (`exists=True`, real `updated`
+  timestamp) — the bug was specific to the UTL wrapper, not GCS access.
+- **Real damage** — confirmed via `gcloud logging read` on `v1.compute.instances.delete` from
+  `1060025368044-compute@developer.gserviceaccount.com` (the daemon's own default compute SA, NOT an
+  `agent-name/claude_code` UA): between the live-venv fix and catching it, the automated (non-dry-run) loop really
+  deleted `footystats-fwd-20260718-170002` (16:12:00Z, 16:14:11Z), `af-backfill-20260718-150353` (16:14:51Z, 16:15:50Z),
+  and `mtds-dex-pools-backfill` (16:15:52Z, 16:16:47Z — age ~4553min / ~3.16 days, a long-lived backfill, not a fresh
+  campaign VM).
+- **Contained**: deleted `vm-zombie-watchdog-20260718-160239` at 16:16:09Z. Fleet had ZERO watchdog coverage from 16:16Z
+  onward — an intentional, operator-confirmed safe state (a broken daemon that deletes live VMs is worse than no
+  daemon).
+- **Escalated**: filed `BLK-b5b76074`; main answered **B — fix the root cause in full (raw client, remove the bare
+  except, fail-safe classification, regression tests), ship via quickmerge, THEN relaunch dry-run-only; real-mode
+  relaunch is a separate operator-gated decision, not part of this task.**
+
+**Fix shipped — `deployment-service@e9e8cc8`**: rewrote `_blob_age_minutes()` to use the raw `google.cloud.storage`
+client already embedded in UTL's `StorageClient` (`storage_client._client` — the same private-attribute access pattern
+already used by the existing `_bump_pool_size(storage_client._client._http)` call in `main()`), removed the bare
+`except Exception` so real check failures now propagate, and added `_safe_blob_age_minutes()` so `_evaluate_vm` can
+distinguish "check failed" (undetermined → never zombie) from "genuinely missing" (a real signal) — fail-safe instead of
+fail-silent. 7 new regression tests (`TestBlobAgeMinutes`, `TestSafeBlobAgeMinutes`,
+`TestEvaluateVmFailSafeOnUndeterminedAge` in `tests/unit/test_vm_zombie_watchdog.py`) prove: a fresh blob yields a real
+age (not `None`), unexpected errors propagate instead of being swallowed, and an undetermined heartbeat check never
+yields a zombie/delete verdict even on a VM old enough to trip the previous unconditional path. Full `quality-gates.sh`
+green on the shipped SHA (226 tests, incl. the 7 new ones).
+
+- [x] ✅ [INFRA] P0. **Fix `GCSBlobHandle` (missing `.reload()`/`.updated`) or rewrite `_blob_age_minutes()` in
+      `vm_zombie_watchdog.py` to not depend on those.** — **deployment-service@e9e8cc8**, per the writeup above. Uses
+      the raw native client already embedded in UTL's `StorageClient` rather than adding `.reload()`/`.updated` to the
+      UTL wrapper itself (main's explicit call — narrower blast radius, doesn't risk changing behavior for every other
+      `GCSBlobHandle` caller in the codebase). (repo: deployment-service)
+- [ ] [INFRA] P1. **Fix the launcher's stale comment + missing `deployment_service` pip-install** in
+      `launch-vm-zombie-watchdog.sh` — pip-install `/tmp/dep-src` (like UAC/UTL) or correct the comment + import if
+      `deployment_service` truly shouldn't be needed. NOT fixed in this dispatch (out of the operator-gated scope of
+      `BLK-b5b76074`'s answer, which was specifically about the `_blob_age_minutes` bug) — the daemon cannot boot
+      cleanly without this fix either, so any future relaunch attempt will hit it again. (repo: deployment-service)
+- [ ] [INFRA] P1. **Fix the code-tarball build pipeline for hatch-vcs dynamic-version packages** —
+      `unified-api-contracts` and `unified-trading-library` (and likely others using
+      `[tool.hatch.version] source = "vcs"`) cannot be `pip install`-ed from the `code/*-code.tar.gz` artifacts used by
+      VM launchers (no `.git` metadata → `setuptools-scm` version-detection failure). Systemic across EVERY launcher
+      that installs these tarballs this way, not just the zombie watchdog — audit `scripts/vm/launch-*.sh` fleet-wide
+      for the same silent-crash-loop exposure. Either bake `SETUPTOOLS_SCM_PRETEND_VERSION=<tag>` into the tarball-build
+      step (stamp the real git tag at build time) or ensure enough `.git` metadata survives into the tarball for
+      `setuptools-scm` to resolve a real version. NOT fixed in this dispatch (same reason as the item above). (repo:
+      deployment-service, fleet-wide audit)
+- [ ] [INFRA] P0-when-picked-up. **Relaunch `vm-zombie-watchdog` in `--dry-run` ONLY, verify a clean poll cycle against
+      currently-live VMs (no false zombies), before EVER proposing `dry_run=false` again** — per main's `BLK-b5b76074`
+      answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo. Blocked on the
+      two P1 items above landing first (the daemon cannot boot cleanly without them). Until then the fleet has ZERO
+      watchdog coverage — accepted as the safe state. (repo: deployment-service)
