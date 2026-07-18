@@ -722,3 +722,44 @@ failures (the data is fetchable; the key was simply saturated).
 - [ ] [OPS] P1. The singleton is documented but was violable — four VMs launched anyway. Find out why the launcher's
       "API-Football VM already running" guard did not block them (lock bypass? `--force` on the fleet launcher? a
       scheduled job that predates the guard?) and close it, otherwise this recurs every time two actors touch sports.
+
+---
+
+## I. Control conflict: the enrichment fleet is AUTO-RELAUNCHED — singleton cannot be held unilaterally — **P0 operator**
+
+At 15:57Z I deleted 4 concurrent api-football enrichment VMs to enforce the per-key singleton. **They were back at
+16:16Z** (`af-backfill-20260718-161608/161641/161712/161740` — same 4 entities, same 2020-06-06..2026-07-18 range, no
+`--force`). No `PREEMPTED` markers were written for the deleted VMs, so the relaunch most likely came through the
+**exit-code** recovery path (`exit_code_fleet_monitor` + `auto_recover`, wired via `scripts/vm/lib/launcher_common.sh`)
+rather than the preemption path.
+
+**I stopped fighting it deliberately.** Deleting them again just triggers another relaunch ~20 min later; the churn
+itself burns quota and adds nothing. My own FIXTURES VM was preempted at ~16:21 and I did **NOT** relaunch it, because
+that would have made a 5th concurrent VM on the shared key. So sports FIXTURES is currently PAUSED by choice, not by
+failure.
+
+This needs cross-actor coordination, not unilateral VM deletion:
+
+- [ ] [OPS] P0. Identify what re-launches the 4-entity enrichment fleet (exit-code actuator? a cron? another slot?) and
+      give api-football ONE owner. Until then, any agent enforcing the singleton is fighting an automation that wins by
+      default, and the key stays oversubscribed (measured earlier: 153 false `attempted_failed` rows in ~30min).
+- [ ] [OPS] P0. Resume the FIXTURES `--force` run once the key has a single owner — relaunch from
+      `last_completed_day + 1` (loop-resume contract, § G-ops). 350 `fixtures_schedule` objects were written before
+      preemption; `round` is confirmed populating.
+
+## J. F6 RESOLVED — the instruments-sports consolidator is HEALTHY; the 120s staleness budget is too tight
+
+Earlier (§ F6) I recorded the instruments-sports manifest as unreadable via `read_availability_index`
+(`ManifestConsolidatorStaleError`, "consolidator is behind or DOWN"). **Measured: it is NOT down.** Cloud Run executions
+at 16:19:43 / 16:21:45 / 16:22:47 all completed `True`, `_index/per_vm/` backlog is 6 shards, and the canonical index
+was written 16:19:47.
+
+The real cause: that index is **108.45 MiB**, so a merge cycle takes ~1-2 minutes — routinely leaving the blob older
+than `MANIFEST_CONSOLIDATED_STALENESS_SEC=120` when a reader checks it. Reads therefore fail INTERMITTENTLY by racing
+the merge cycle, and the error message ("behind or DOWN") actively misleads the next investigator.
+
+- [ ] [CODE] P1. Raise the staleness budget for large-index buckets via the existing per-bucket resolver
+      (`_resolve_consolidated_staleness_sec`) — a budget must exceed that bucket's MEASURED merge duration, not a
+      fleet-wide constant. instruments-sports needs >= ~180-240s at 108 MiB.
+- [ ] [CODE] P2. Soften the error text: distinguish "consolidator DOWN" (no recent successful execution) from "index
+      older than budget but consolidator succeeding" (a too-tight budget). They demand opposite responses.

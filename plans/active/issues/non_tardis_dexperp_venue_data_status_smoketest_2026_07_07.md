@@ -275,3 +275,24 @@ Two secondary findings:
   backoff schedule or an inter-coin delay) IS available if the operator decides this venue stays in scope, but was not
   attempted here (would need proving against Pacifica's real, undocumented rate-limit policy, itself another real-VM
   round-trip, and is downstream of the MVP-status decision anyway).
+
+- **2026-07-18 (autonomous session) — MVP DECISION recorded + confirmed-bug assessment.** Operator ruled 2026-07-18:
+  **keep PACIFICA-SOLANA + LIGHTER-ZKSYNC MVP + BLOCKED-CREDENTIALS scaffold** (recorded in the [DECISION] todo above),
+  which UNBLOCKS the FIX/VERIFY todos. Assessed each confirmed bug for safe unattended execution and DECLINED to rush
+  any — all are subtle venue-pipeline / data-correctness fixes the codebase itself flags for careful design, and a naive
+  fix would violate a HARD RULE:
+  - **LIGHTER `_VENUE_OVERRIDES` key** (`pipeline_mode_resolver.py:74`): the code comment already documents this DEAD
+    key + warns a "blind key rename to LIGHTER_ZKSYNC would be WRONG for manifest-rebuild call sites reading
+    pre-2026-04-17 native-REST rows … needs a date-aware or source-aware fix, not a rename; left as-is per operator
+    triage." A rushed rename would mis-stamp legacy native-REST rows as batch_tardis.
+  - **EXTENDED book_snapshot_5 date** (`_umi_extended.py:449`): `ts_ms = datetime.now()` + the day-window filter
+    (`if ts_ms < start_ms or ts_ms >= end_ms: return`) correctly rejects past-day backfills BECAUSE the
+    `/info/markets/{symbol}/orderbook` endpoint returns the CURRENT book (no historical). The naive "use the target
+    date" fix would FABRICATE a timestamp (claim a live snapshot happened on a past day) — a data-correctness /
+    honest-absence violation. The real fix is a venue-semantics decision (is EXTENDED book_snapshot live-only? honest
+    no-attempt for past days) requiring investigation of whether EXTENDED exposes a historical orderbook endpoint.
+  - EXTENDED override-not-applying, HYPERLIQUID 373/540 phantom false-negative, PACIFICA duplicate-source + live_capable
+    honesty flip — each a real fix but each needs venue-specific verification + a real-VM round-trip; not safe to land
+    blind unattended. **Net:** the MVP decision is resolved; these FIX/VERIFY todos remain open as tracked,
+    careful-design work (the safe outcome per the autonomous safety rules — no fabricated timestamps, no
+    manifest-rebuild breakage for a checkbox).

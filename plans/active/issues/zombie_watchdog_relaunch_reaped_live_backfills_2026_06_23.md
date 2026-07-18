@@ -171,7 +171,7 @@ relaunch (`af-backfill-20260718-15{2725,2753,2818,2852}`, launched ~15:27-15:29Z
 (2026-07-18T15:43:37Z). Per the launcher's own SSOT comment (`launch-vm-zombie-watchdog.sh` lines 27-33): the daemon
 uploads `vm_zombie_watchdog.py` to `gs://deployment-scripts-{pid}/scripts/vm_zombie_watchdog.py` **once, at launch
 time**, and "the running watchdog never re-fetches mid-loop." So the currently-running daemon is still enforcing the OLD
-`(10.0, 60.0)` af-backfill-* pair regardless of the merged code fix — the fix is real but dormant until the daemon
+`(10.0, 60.0)` af-backfill-\* pair regardless of the merged code fix — the fix is real but dormant until the daemon
 process itself is killed and relaunched.
 
 **Consequence**: the current 4-VM relaunch is still at risk of being wrongly reaped again at its ~60-min mark
@@ -257,12 +257,17 @@ config-tuning gap.
 
 **Recommended decision (supersedes the daemon-relaunch action item above)**:
 
-- [ ] [INFRA] P1. **Harden `launch-api-football-backfill-vm.sh`'s singleton-lock refusal message** — remove the raw
+- [x] ✅ [INFRA] P1. **Harden `launch-api-football-backfill-vm.sh`'s singleton-lock refusal message** — remove the raw
       copy-pasteable `Stop: gcloud compute instances delete $EXISTING ...` suggestion, or at minimum gate it behind an
-      explicit warning ("only run this after confirming via Inspect/Tail that $EXISTING is genuinely stale — deleting a
+      explicit warning ("only run this after confirming via Inspect/Tail that
+      $EXISTING is genuinely stale — deleting a
       live entity-fleet VM destroys hours of in-progress work") — the same pattern used elsewhere for destructive
       suggestions. Apply the same audit to any other launcher script in `scripts/vm/` that prints a raw delete command
-      in its refusal/error path. (repo: deployment-service)
+      in its refusal/error path. (repo: deployment-service) — **deployment-service@de24324**: gated the raw
+      copy-pasteable `Stop: gcloud compute instances delete $EXISTING`line behind an explicit CAUTION block     (requires confirming via Inspect/Tail first) in`launch-api-football-backfill-vm.sh`'s singleton-lock refusal     path, and in the shared `lc_singleton_check()`helper in`scripts/vm/lib/launcher_common.sh`(used by 5 other     launchers). Audited every launcher in`scripts/vm/`for the same inline-duplicated refusal-path pattern     (grepped for`Stop:.*gcloud
+      compute instances
+      delete`against an "already running"/EXISTING-class variable, as     opposed to the benign end-of-script`$VM_NAME`self-cleanup convention which was left untouched) and applied     the identical fix to all of them — 58 files total, incl.`launch-sports-manifest-rescan-vm.sh`(the`$BLOCKER`    var from the exact VM-name-collision incident referenced elsewhere in this doc),`launch-sfi-backfill-vm.sh`     (`$NAME`), and `launch-tradfi-backfill-vm.sh` (`$existing`). Verified `bash
+      -n`clean on all 58 + full    `quality-gates.sh` green on the shipped SHA.
 - [x] ✅ [PROCESS] P1. **Add an explicit guardrail to `unified-trading-pm/agents/data_engineering.md` (or `RULES.md`)**:
       never run `gcloud compute instances delete` against a VM this task's OWN fleet (or a sibling entity/asset_group's
       fleet) without first confirming genuine staleness via heartbeat blob + run.log tail + manifest shard mtime — a
@@ -318,14 +323,227 @@ launcher's lock-refusal or a mis-scoped cleanup), or (b) `tardis-concurrency-gua
 launch — plausible given the sequential x15/x17 relaunch cadence, but not verified against the guard's actual logic or
 concurrent-VM state at each kill time.
 
-- [ ] [INFRA] P1. **Root-cause the `cefi-queue-heavy-binancefutu-x15`/`-x17` mid-stream kills** — determine whether the
-      actor is `tardis-concurrency-guard.sh` (concurrency-cap enforcement — if so, verify it's choosing the right VM to
-      kill and not discarding in-progress work needlessly) or an agent manually invoking
+- [x] ✅ [INFRA] P1. **Root-cause the `cefi-queue-heavy-binancefutu-x15`/`-x17` mid-stream kills** — determine whether
+      the actor is `tardis-concurrency-guard.sh` (concurrency-cap enforcement — if so, verify it's choosing the right VM
+      to kill and not discarding in-progress work needlessly) or an agent manually invoking
       `gcloud compute instances     delete` (the Incident-2 pattern recurring on a new launcher). Check
       `tardis-concurrency-guard.sh`'s own invocation logs/audit trail for the same timestamps, and audit-log
       `protoPayload.authenticationInfo` for whether the guard runs under `unified-trading-sa` directly (matches) or a
-      distinct identity. (repo: deployment-service)
-- [ ] [DATA] P2. **Re-run this audit past the 500-row cap** — the `gcloud logging read --limit=500` sweep above returned
-      exactly 500/500 rows for the 30-day window, meaning the true count of `agent-name/claude_code` `instances.delete`
-      calls may exceed what was sampled; a paginated or narrower-windowed re-run would confirm completeness before
-      treating the Incident-3 finding as the full extent of the pattern. (repo: deployment-service)
+      distinct identity. (repo: deployment-service) — **RESOLVED 2026-07-18, root-caused via code read +
+      `gcloud logging read` (`central-element-323112`, `--freshness=30d`)**: 1. **`tardis-concurrency-guard.sh` is ruled
+      out categorically** — read the full script (`deployment-service/scripts/vm/tardis-concurrency-guard.sh`):
+      `tardis_concurrency_guard()` only counts existing VMs and either `return 0`/warns or prints a refusal + `return 1`
+      (`exit 1` in every caller). It contains **zero** `gcloud … delete`/`instances delete` calls anywhere in the file,
+      and its refusal message (unlike `launch-api-football-backfill-vm.sh`'s pre-fix singleton-lock message) never even
+      suggests a raw `Stop:` delete command — it only offers `Inspect`/`Wait`/`FORCE=1`. A guard with no delete code
+      path cannot be the actor that deletes VMs, so no invocation-log correlation was needed to rule it out. 2. **The
+      actor IS an agent manually running `gcloud compute instances delete`** — pulled full `protoPayload` for every
+      `v1.compute.instances.delete` against `cefi-queue-heavy-binancefutu-x15`/`-x17` in the 30-day window (27 unique
+      VM-name delete events). 17 of the 27 carry `principalEmail: unified-trading-sa@central-element-323112…` +
+      `callerSuppliedUserAgent` containing `agent-name/claude_code` (spot-verified full example:
+      `cefi-queue-heavy-binancefutu-x17-20260717-173330`, deleted 19:50:38Z with active per-symbol streaming logged
+      seconds before) — the **exact same signature** Incident 2 used to identify its actor, and each of the 17 carries a
+      **distinct `invocation-id`** (17 separate agent dispatches across 2026-07-15T21:54Z→2026-07-18T16:20Z, not one
+      recurring daemon). This is confirmed to be the SAME agent-behavior class as Incident 2, recurring on a different
+      VM family (Tardis cefi-queue workers instead of `af-backfill`), not a new/different bug mechanism. 3. **New
+      sub-finding — a concurrent double-launch preceded at least one kill, explaining agent motive**:
+      `cefi-queue-heavy-binancefutu-x15-20260716-075253` (launched 07:52:53) was still RUNNING when
+      `cefi-queue-heavy-binancefutu-x15-20260716-075338` launched 45s later (07:53:38) — both matching the same
+      `TARDIS_VM_NAME_PATTERN`, i.e. a real violation of the operator's 1-concurrent-Tardis-VM HARD RULE. `-075253` was
+      then deleted by the `agent-name/claude_code` UA at 08:00:03. Plausible mechanism: an agent noticed 2 same-family
+      VMs running (cap violation, real or self-caused by a race past the guard) and "fixed" it by manually deleting the
+      actively-progressing one instead of respecting the guard's `Inspect`/`Wait` path or escalating — same
+      self-inflicted-harm shape as Incident 2's singleton-lock-message hypothesis, just without a copy-pasteable command
+      to blame this time. 4. **A separate, distinct, and NOT-an-incident sub-family was also present in the same sweep
+      and is explicitly ruled OUT here to avoid double-counting**: 8 of the 27 delete events (`x15-20260716-11{3400}`
+      through `x15-20260716-153514`, ~07-16 11:41Z→19:29Z) carry
+      `principalEmail:        1060025368044-compute@developer.gserviceaccount.com` (the GCE **default compute SA**, i.e.
+      the VM's own instance identity) with **no** `agent-name` UA tag and `client-os-ver 6.17.0-1020-gcp` (a GCP VM
+      calling `gcloud` against itself, not the AWS-hosted agent session host `-1019-aws` seen on every
+      `claude_code`-tagged event) — consistent with `VM_SHUTDOWN_ON_COMPLETION` self-deletes, not an external kill.
+      (Their unusually short ~7-30min runtimes are themselves odd and may warrant a separate look, but that is a
+      different question than "mid-stream external kill" and out of this todo's scope.) 5. **Fix shipped**: since the
+      root cause is agent behavior (not a `deployment-service` code defect — `tardis-concurrency-guard.sh` has no delete
+      capability to fix), added the equivalent of Incident 2's `data_engineering.md` STEP 0.55 VM-delete guardrail to
+      `unified-trading-pm/agents/infra.md` (the craft actually dispatched to launch/manage this VM family) —
+      **unified-trading-pm@4697e2b6a**: new STEP 0.65 requiring heartbeat-blob-age + run.log-tail + manifest-shard-mtime
+      confirmation before any `gcloud compute instances delete` against a fleet VM, citing this issue doc's Incident 3
+      resolution as the evidence trail.
+- [x] ✅ [DATA] P2. **Re-run this audit past the 500-row cap** — the `gcloud logging read --limit=500` sweep above
+      returned exactly 500/500 rows for the 30-day window, meaning the true count of `agent-name/claude_code`
+      `instances.delete` calls may exceed what was sampled; a paginated or narrower-windowed re-run would confirm
+      completeness before treating the Incident-3 finding as the full extent of the pattern. (repo: deployment-service)
+      — see "Incident 4" below: re-ran paginated (timestamp-cursor + `--order=asc`, deduped by `insertId`) across the
+      full 30-day window. **The cap was hiding the majority of the population**: 2,703 unique delete events vs. the 500
+      originally sampled (the capped audit saw ~18.5% of the true count). Confirms completeness was NOT safe to assume
+      from the capped sample; two new findings below.
+
+## Incident 4 — 2026-07-18T16:2x-16:3xZ, paginated re-audit past the 500-row cap (confirms the P2 audit-completeness concern was justified)
+
+Dispatched to `zombie_watchdog_relaunch_reaped_live_backfills-008`. Re-ran the `v1.compute.instances.delete` +
+`agent-name/claude_code` UA sweep from the same 30-day window (`2026-06-18T16:23:47Z` → `2026-07-18T16:23:47Z`,
+`central-element-323112`), this time paginated: `--order=asc --limit=500` per page, cursor advanced to the max
+`timestamp` seen each page, re-queried with `timestamp>=cursor`, deduped globally by `insertId` (handles same-timestamp
+ties safely). 6 pages, terminated on a <500-row final page (no artificial cap). Full unique-record dump:
+`audit_results.jsonl` (2,703 rows) — not committed (scratch artifact); re-derivable from the query above.
+
+**Headline: the original single-page 500-row sample covered only entries newer than ~2026-06-30T06:53Z — 12 days of the
+30-day window were entirely invisible to it.** True unique-event count: **2,703** (vs 500 sampled, ~18.5% coverage).
+Every VM-delete appears as exactly 2 log entries (a few seconds to ~2min apart, distinct `insertId`s) — consistent with
+GCP's request-received + operation-completed audit pairing for one logical delete call, not a double-delete bug; divide
+event-counts by ~2 to estimate unique deletion actions.
+
+**Re-checked the two families this issue already flags**, to see whether the cap was concealing more of the SAME
+incidents or the picture was already complete:
+
+- `cefi-queue-heavy-binancefutu-x15`/`-x17` (Incident 3): extended audit finds **18 unique VM names / 36 delete events**
+  (vs. the 12 VMs spot-checked in Incident 3), but **zero of them fall outside the original sample's time coverage** —
+  the cap wasn't hiding anything new here, just under-enumerating the same ongoing pattern. Strengthens Incident 3's
+  evidence base (more instances of the same signature) without changing its "not yet root-caused" status.
+- `af-backfill-*` (Incident 2): extended audit finds **22 unique VM names / 44 delete events** (vs. the 3 documented
+  2026-07-17/18 incidents) — **and 12 of those VM names (24 events) are a previously-undocumented cluster from
+  2026-06-24**, entirely outside the original 500-row sample's time coverage. Detail: all by `ikenna@odum-research.com`.
+  Two distinct timing sub-patterns within the cluster: 7 VMs deleted 2-4min after their own launch timestamp (embedded
+  in the VM name) — matches this doc's already-documented "manual dev/test launch-then-verify-then-delete" pattern (see
+  the `cefi-<venue>-<year>*` exclusion above) and is likely benign; but 5 VMs
+  (`af-backfill-20260624-04{2653,2731,2751,2815,2834}`) were deleted **~80-82min after their own launch** — inconsistent
+  with a quick dev/test cycle, NOT yet confirmed via run.log whether this was a genuine mid-run kill of progressing work
+  or an extended manual debug session. Flagged as a new todo below rather than root-caused inline
+  (infra/deployment-service craft, out of `data_engineering` scope).
+
+**New candidate cluster surfaced by the full-window audit (not previously flagged anywhere in this doc)**:
+`mtds-lending-indices` is the **single largest family by volume** — 41 unique VM names / 82 delete events, more than
+either `af-backfill` or `cefi-queue-heavy-binancefutu`. Unlike the already-ruled-out fixed-pool families
+(`mtds-gas-fees` uses static year-keyed names `2020`-`2026`; `fss-backfill-vm-1..10` /
+`mtds-{dex-swaps,perp-funding,solana-drift}-backfill` are fixed pool-worker names where each `delete` is immediately
+followed by a same-name `insert`), `mtds-lending-indices` VM names are **timestamped/ephemeral**
+(`mtds-lending-indices-YYYYMMDD-HHMMSS`), matching the ephemeral-campaign-VM shape of the families that DO turn out to
+be incidents. Spot-check: deletes lag each VM's own launch timestamp by ~40-45min (not an immediate dev-test cycle).
+Principals: `harshkantariya@odum-research.com` (60 events), `ikenna@odum-research.com` (22 events), both under the
+`agent-name/claude_code` UA. **Not root-caused** — out of `data_engineering` craft scope; flagging as a new candidate
+for the same INFRA investigation as Incident 3/the 2026-06-24 af-backfill subcluster.
+
+**Scope note**: only the two already-flagged families plus the top-2-by-volume prefixes (`mtds-lending-indices`,
+`mtds-gas-fees`) were spot-checked in detail; the remaining ~35 distinct VM-name prefixes in the 2,703-row dataset
+(`prediction-live-*`, `cefi-bitget-futures-*`, `sports-enrich-*`, `tradfi-bf-*`, etc.) were NOT individually triaged —
+this was an audit-completeness re-run (confirm the sample wasn't truncated), not a full re-triage of every family. A
+full triage of the remaining prefixes is a separate, larger scope than this P2 todo covered.
+
+- [ ] [INFRA] P2. **Root-cause the 2026-06-24 `af-backfill-*` 5-VM subcluster**
+      (`af-backfill-20260624-04{2653,2731,2751,2815,2834}`, deleted by `ikenna@odum-research.com` ~80-82min after each
+      VM's own launch — NOT the quick 2-4min dev-test pattern the other 7 VMs in the same cluster show) — pull `run.log`
+      for at least one of the 5 to confirm active-vs-idle at kill time, same method as Incident 2/3. (repo:
+      deployment-service)
+- [ ] [INFRA] P2. **Root-cause the `mtds-lending-indices` delete pattern** — 41 unique ephemeral-named VMs / 82 delete
+      events across the 30-day window (the single largest family in the audit, larger than either `af-backfill` or
+      `cefi-queue-heavy-binancefutu`), deletes lag each VM's own launch timestamp by ~40-45min. Determine whether this
+      is a legitimate short-lived consolidator job pattern (delete-after-completion, benign) or another instance of the
+      Incident-2/3 mid-run-kill signature — check `run.log` for a clean `EXIT_STATUS`/`VM_SHUTDOWN_ON_COMPLETION` marker
+      on a sample of the 41. (repo: deployment-service, market-tick-data-service)
+
+## Correction to the struck-through P0 above (line ~186) — the relaunch WAS executed by a different dispatch, and it surfaced a THIRD, genuinely distinct mechanism
+
+The struck-through item above ("SUPERSEDED... this daemon is not, and never was, deleting anything") was written by one
+dispatch reading serial-console evidence current as of ~15:55Z. **A separate, concurrent dispatch
+(`zombie_watchdog_relaunch_reaped_live_backfills-003`) had already started executing the ORIGINAL (pre-strikethrough)
+recipe at 16:02Z, before that correction landed** — a genuine cross-slot race, not defiance of the correction. That
+relaunch surfaced a real, DIFFERENT bug (not the June-23 daemon being falsely blamed, and not the agent-manual-delete
+pattern of Incident 2/3/4 either) — see **Incident 5** immediately below. Both corrections stand simultaneously: (1) the
+June-23 daemon (`vm-zombie-watchdog-20260623-171612`) really was harmlessly `--dry-run`-only, as documented above, AND
+(2) relaunching a FRESH daemon with the default `dry_run=false` (per this item's own literal recipe) hit a genuine,
+previously-latent code bug that really did delete live VMs. The recipe text above was not wrong to have existed — it was
+incomplete: nobody had exercised the actual real-mode code path recently enough to know it was broken.
+
+## Incident 5 — 2026-07-18T16:02-16:16Z, relaunch surfaced a UNIVERSAL false-positive bug in `_blob_age_minutes()` — 3 live VMs really killed by the daemon itself (fixed + shipped)
+
+Dispatched to `zombie_watchdog_relaunch_reaped_live_backfills-003`, executing the (at-the-time not-yet-superseded) P0
+recipe: delete the stale daemon, relaunch fresh. Distinct from Incidents 2-4 above (which trace real deletes to AGENTS
+running manual `gcloud compute instances delete`) — this incident's actor is confirmed to be the **daemon itself**, via
+its own default compute service account, not an `agent-name/claude_code` UA.
+
+**Timeline**:
+
+- 16:00:47/16:01:39 — deleted `vm-zombie-watchdog-20260623-171612` (the harmless dry-run daemon documented in "Incident
+  2 correction" above) per the recipe.
+- 16:02:39 — launched fresh daemon `vm-zombie-watchdog-20260718-160239` via `launch-vm-zombie-watchdog.sh`, default
+  `dry_run=false` (no `--dry-run` flag — matches the item's own literal recipe text).
+- 16:04:37 — the daemon's automated boot-time install crashed:
+  `ModuleNotFoundError: No module named 'unified_api_contracts'`. Root cause: `unified-api-contracts` and
+  `unified-trading-library` both moved to `[tool.hatch.version] source = "vcs"` (git-derived dynamic versioning) at some
+  point after the June-23 daemon last booted successfully; the code tarball at
+  `gs://deployment-scripts-{pid}/code/*-code.tar.gz` has no `.git` metadata, so `setuptools-scm` cannot resolve a
+  version and `pip install` fails at metadata-generation
+  (`LookupError: ... setuptools-scm was unable to detect version`). The daemon's `while true` LOOP_CMD only reruns the
+  Python script on each 5-min retry — never the one-time install block — so **every watchdog VM launched via this script
+  since that versioning change had been permanently crash-looping and doing nothing**, until diagnosed here. A second,
+  independent crash cause was layered on top: the launcher's own comment claims `deployment_service` no longer needs to
+  be pip-installed (citing a 2026-07-13 `VM_PREFIX_TO_BUCKET` move), but `vm_zombie_watchdog.py` line 110 still does
+  `from deployment_service.vm_prefix_registry import VM_PREFIX_TO_BUCKET` directly and the launcher never installs it.
+- Diagnosed live via SSH (`gcloud compute ssh <vm> --zone asia-northeast1-c` — NOT `--tunnel-through-iap`, which gets
+  `[4033: not authorized]` in this environment) and manually fixed the running venv
+  (`SETUPTOOLS_SCM_PRETEND_VERSION=<real-git-tag> pip install /tmp/{uac,utl,dep}-src`, using real tags `v0.72.0`/
+  `v0.55.0`/`v0.105.0` — a pretend `0.0.0` fails UTL's own `unified-api-contracts<1.0.0,>=0.33.0` pin and pip then
+  tries, and fails, to fetch a real UAC from PyPI).
+- After the imports worked, a manual `--dry-run` run (16:11:38Z) completed a full poll cycle but flagged
+  `af-backfill-20260718-150353` (age=67min, a genuinely live, actively-heartbeating VM) `zombie_no_heartbeat`. **Root
+  cause (the real bug)**: `_evaluate_vm()` used UTL's `get_storage_client()` wrapper (`GCSBucketHandle`/`GCSBlobHandle`,
+  `unified_trading_library/cloud_interface/providers/gcp.py`), which only implements `.exists()`/`.size`/`.download_*` —
+  **no `.reload()`, no `.updated`**. `_blob_age_minutes()` called both unconditionally; the resulting `AttributeError`
+  was silently swallowed by a bare `except Exception: return None`, so **heartbeat/shard age ALWAYS returned `None`
+  regardless of real freshness** — every known-prefix VM older than 30min was unconditionally `zombie_no_heartbeat`.
+  Confirmed directly: the raw `google.cloud.storage` client found the same blob fine (`exists=True`, real `updated`
+  timestamp) — the bug was specific to the UTL wrapper, not GCS access.
+- **Real damage** — confirmed via `gcloud logging read` on `v1.compute.instances.delete` from
+  `1060025368044-compute@developer.gserviceaccount.com` (the daemon's own default compute SA, NOT an
+  `agent-name/claude_code` UA): between the live-venv fix and catching it, the automated (non-dry-run) loop really
+  deleted `footystats-fwd-20260718-170002` (16:12:00Z, 16:14:11Z), `af-backfill-20260718-150353` (16:14:51Z, 16:15:50Z),
+  and `mtds-dex-pools-backfill` (16:15:52Z, 16:16:47Z — age ~4553min / ~3.16 days, a long-lived backfill, not a fresh
+  campaign VM).
+- **Contained**: deleted `vm-zombie-watchdog-20260718-160239` at 16:16:09Z. Fleet had ZERO watchdog coverage from 16:16Z
+  onward — an intentional, operator-confirmed safe state (a broken daemon that deletes live VMs is worse than no
+  daemon).
+- **Escalated**: filed `BLK-b5b76074`; main answered **B — fix the root cause in full (raw client, remove the bare
+  except, fail-safe classification, regression tests), ship via quickmerge, THEN relaunch dry-run-only; real-mode
+  relaunch is a separate operator-gated decision, not part of this task.**
+
+**Fix shipped — `deployment-service@e9e8cc8`**: rewrote `_blob_age_minutes()` to use the raw `google.cloud.storage`
+client already embedded in UTL's `StorageClient` (`storage_client._client` — the same private-attribute access pattern
+already used by the existing `_bump_pool_size(storage_client._client._http)` call in `main()`), removed the bare
+`except Exception` so real check failures now propagate, and added `_safe_blob_age_minutes()` so `_evaluate_vm` can
+distinguish "check failed" (undetermined → never zombie) from "genuinely missing" (a real signal) — fail-safe instead of
+fail-silent. 7 new regression tests (`TestBlobAgeMinutes`, `TestSafeBlobAgeMinutes`,
+`TestEvaluateVmFailSafeOnUndeterminedAge` in `tests/unit/test_vm_zombie_watchdog.py`) prove: a fresh blob yields a real
+age (not `None`), unexpected errors propagate instead of being swallowed, and an undetermined heartbeat check never
+yields a zombie/delete verdict even on a VM old enough to trip the previous unconditional path. Full `quality-gates.sh`
+green on the shipped SHA (226 tests, incl. the 7 new ones).
+
+- [x] ✅ [INFRA] P0. **Fix `GCSBlobHandle` (missing `.reload()`/`.updated`) or rewrite `_blob_age_minutes()` in
+      `vm_zombie_watchdog.py` to not depend on those.** — **deployment-service@e9e8cc8**, per the writeup above. Uses
+      the raw native client already embedded in UTL's `StorageClient` rather than adding `.reload()`/`.updated` to the
+      UTL wrapper itself (main's explicit call — narrower blast radius, doesn't risk changing behavior for every other
+      `GCSBlobHandle` caller in the codebase). (repo: deployment-service)
+- [x] ✅ [INFRA] P1. **Fix the launcher's stale comment + missing `deployment_service` pip-install** in
+      `launch-vm-zombie-watchdog.sh` — pip-install `/tmp/dep-src` (like UAC/UTL) or correct the comment + import if
+      `deployment_service` truly shouldn't be needed. — **deployment-service@6ea3f24**: added
+      `pip install --quiet --no-deps /tmp/dep-src` after the tarball extraction (the watchdog's module-level
+      `from deployment_service.vm_prefix_registry import VM_PREFIX_TO_BUCKET` was never satisfied; the prior comment
+      conflated the `_backup_vm_logs_before_kill` registry-path helpers moving to UTL with this unrelated top-level
+      import, which never moved). `--no-deps` skips deployment-service's heavy
+      fastapi/uvicorn/botocore/web3/pytest-family deps, which the watchdog never touches — mirrors the same route
+      `setup-data-pipeline-vm.sh` already uses for this exact package. `bash -n` clean + full `quality-gates.sh` green
+      on the shipped SHA. (repo: deployment-service)
+- [x] ✅ [INFRA] P1. **Fix the code-tarball build pipeline for hatch-vcs dynamic-version packages** —
+      `unified-api-contracts` and `unified-trading-library` (and likely others using
+      `[tool.hatch.version] source = "vcs"`) cannot be `pip install`-ed from the `code/*-code.tar.gz` artifacts used by
+      VM launchers (no `.git` metadata → `setuptools-scm` version-detection failure). — **deployment-service@6ea3f24**:
+      exported `SETUPTOOLS_SCM_PRETEND_VERSION="0.99.0"` before the UAC/UTL tarball pip-installs in
+      `launch-vm-zombie-watchdog.sh`, matching the value + rationale already established in
+      `setup-data-pipeline-vm.sh`/`setup-cefi-live-consolidated-vm.sh`/`setup-prediction-live-consolidated-vm.sh`
+      (0.99.0 satisfies every cross-package `<1.0.0` ceiling + `>=0.13.0`/`>=0.33.0` floor pair). Scoped to the
+      zombie-watchdog launcher only — a fleet-wide audit of every OTHER `scripts/vm/launch-*.sh` for the same exposure
+      is still open, not done here. (repo: deployment-service, fleet-wide audit still open)
+- [ ] [INFRA] P0-when-picked-up. **Relaunch `vm-zombie-watchdog` in `--dry-run` ONLY, verify a clean poll cycle against
+      currently-live VMs (no false zombies), before EVER proposing `dry_run=false` again** — per main's `BLK-b5b76074`
+      answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo. Blocked on the
+      two P1 items above landing first (the daemon cannot boot cleanly without them). Until then the fleet has ZERO
+      watchdog coverage — accepted as the safe state. (repo: deployment-service)

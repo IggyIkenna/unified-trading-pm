@@ -555,10 +555,13 @@ Phase C — verification + guardrails:
 
 - [ ] [BACKEND] P1. Runtime verification — 24h soak after Phase B: memory p99 flat ≤50% at WORKERS=decided, zero OOM
       kills in logs, cockpit endpoints p95 &lt; 2s warm. Evidence — monitoring queries + log counts cited here.
-      **EXPLICITLY NOT ATTEMPTED this session** — operator directed dropping this from scope (2026-07-14); Phase B code
-      has landed on `live-defi-rollout` but has not yet promoted to `main`/redeployed, so there is no live window to
-      soak yet regardless. Remains open for whoever picks this plan up next, once Phase B is actually running in prod
-      for 24h.
+      **PARTIAL SOAK SIGNAL 2026-07-18 (autonomous):** deployment-api is live at **rev `00205-n42` @ 16Gi/4CPU**, and a
+      `gcloud logging read … "Memory limit"/"exceeded" --freshness=24h` returns **only the original 2026-07-17T17:21:30
+      OOM (the 8Gi pre-fix F2 incident) — ZERO OOM across the ~7 revisions since the 16Gi deploy**. So the container is
+      stable in prod (no OOM kills), which is the soak's primary red-flag check. The FULL 24h-continuous memory-p99 +
+      warm-p95 soak still wants a dedicated monitoring window and is wall-clock-bound (a 24h wait) — left open for an
+      attended pickup. Operator dropped it from the original scope (2026-07-14); recorded here as GREEN-so-far, not
+      falsely closed.
 - [x] ✅ [INFRA] P2. D6 alerting — Cloud Monitoring alert on memory utilization &gt;85% (5 min) for
       uts-shared-deployment-api; wire to existing alerting channel. **Resolved** —
       `google_monitoring_alert_policy.deployment_api_memory_high` (`>85%` sustained 300s,

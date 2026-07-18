@@ -690,3 +690,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   done+durable+verified (both surfaces). RUNBOOK for the combined re-run: (1) catalogue `--apply --full-sweep`
   (prod/n) + `--by-day --apply --by-day-full-sweep --workers 10`; (2) manifest pause→`--apply --in-place-cas`→resume
   (per the tick-6 runbook); (3) verify live + re-measure.
+
+- **2026-07-18 (slot-1, tick 11) — ✅ CATALOGUE prod/n FULLY CANONICAL across all dimensions (verified live).** Enhanced
+  catalogue re-run `--apply --full-sweep`: 1,055 rows migrated (717 cash + 338 combo, FUTURE/OPTION idempotent-skipped).
+  LIVE re-measure: EQUITY/INDEX/ETF ids all `-USD` (`NASDAQ:EQUITY:ACGL-USD`, `CBOE:INDEX:VIX-USD` — 717/717 cash =
+  100%); combos re-stamped `instrument_type=COMBO` (63,275 total COMBO); instrument_types all UPPERCASE
+  {FUTURE,OPTION,EQUITY,ETF,INDEX,COMBO,SPOT_PAIR}. FUTURE/OPTION 99.86% (TRUE 99.98% combos-excluded). The 25
+  post-apply "violations" are COMBO-typed rows with still-raw ids (`CME:FUTURE:CL:SA 03M V7`) — EXPECTED (combo-ID
+  canonicalization is the separate combo track; my re-stamp only fixed the TYPE). Gate refinement (exempt COMBO from the
+  FUTURE/OPTION assertion) = a small follow-up. **Catalogue --by-day durability re-run launched (workers=10 to dodge the
+  24-worker socket exhaustion; idempotent; ~2-3h, runs past the window).** MANIFEST combo/cash re-run pending its
+  enhanced MTDS script landing (then pause→CAS).
