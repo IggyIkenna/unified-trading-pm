@@ -171,8 +171,8 @@ the rebuild writer (`market_tick_data_service/scripts/rebuild_prediction_manifes
 **Remediation for the new finding (not executed — out of scope for a residual-cleanup pass, requires the same rule-11
 cross-AG regression rigor as the original bundle-atom fix)**:
 
-5. **[CODE, P1] Add `pipeline_mode=live_kalshi` / `live_polymarket_clob` / `live_polymarket_gamma_api` prefix shapes**
-   to the prediction entries in `unified_api_contracts.registry.possible_manifest` (CF-15 SSOT,
+5. ✅ **[CODE, P1] Add `pipeline_mode=live_kalshi` / `live_polymarket_clob` / `live_polymarket_gamma_api` prefix
+   shapes** to the prediction entries in `unified_api_contracts.registry.possible_manifest` (CF-15 SSOT,
    `canonical_path_templates`) so the phantom-audit's `--unphantom-only` pass can actually distinguish
    genuinely-batch-absent from batch-absent-but-live-captured. **HARD (rule 11, same as remediation step 1)**: verify
    this does not weaken phantom detection for other AGs before shipping (the registry is shared cross-AG); confirm
@@ -181,6 +181,21 @@ cross-AG regression rigor as the original bundle-atom fix)**:
    per-se, even though CF-12 batch=live symmetry says the CELL has data either way). Re-run `--unphantom-only --apply`
    after landing; whatever remains attempted_failed AFTER that is the first defensible "genuine honest-absence" number
    for Class B.
+   - ✅ **CODE-RESOLVED — `unified-api-contracts@e7ed754e`** ("feat(prediction): af_fixture_id InstrumentRecord fields +
+     8 Kalshi aliases + live-mode path-templates (union)"). **Operator decided UNION (2026-07-18)**: a BATCH prediction
+     manifest row IS legitimately satisfied by LIVE-only object evidence (CF-12 batch=live cell symmetry), so all three
+     `live_*` shapes are now enumerated for prediction. Implemented as a PREDICTION-SCOPED extra live-probe
+     (`possible_manifest._EXTRA_LIVE_PROBE_SOURCES_BY_AG`): `live_kalshi` / `live_polymarket_clob` were ALREADY emitted
+     by the capability-derived batch+live loop (both LIVE-capable); `live_polymarket_gamma_api` is added as a probe
+     prefix **without** claiming gamma_api is live-capable — `SOURCE_MODE_CAPABILITY` keeps it BATCH-only ("market
+     metadata; not a tick series"), so the shared `PipelineMode` enum + capability matrix stay honest (no
+     `LIVE_POLYMARKET_GAMMA_API` member fabricated). **RULE 11 VERIFIED cross-AG**: cefi/tradfi/defi/sports
+     pipeline_mode template counts are byte-for-byte unchanged (16/6/15/0) and `live_polymarket_gamma_api` appears ONLY
+     in prediction; regression tests `tests/unit/test_possible_manifest.py`
+     (`test_prediction_union_live_prefixes_enumerated`, `test_prediction_live_union_is_prediction_scoped_only`,
+     `test_prediction_templates_have_no_duplicate_prefixes`). Per the module's own invariant, adding a probe prefix can
+     only REDUCE false-demotion, never introduce one. The `--unphantom-only --apply` re-run against the live prediction
+     corpus is the held Phase-B DATA re-emit (a data op, not a UAC code task).
 6. **[CODE, P2] Root-cause the KALSHI→`batch_polymarket_clob`/`polymarket_clob` provenance mislabel** in
    `rebuild_prediction_manifest.py`'s writer (a stale/carried-over loop variable is the leading hypothesis given the
    clustered `written_at`); fix at the write site, not via a manifest patch.

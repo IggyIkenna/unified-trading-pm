@@ -49,6 +49,14 @@ source:
 
 ## A. Migration-phase go-aheads (decided in shape — gated on "start the migrations")
 
+> **⚠ RESHAPED 2026-07-18 — DeFi migration is now PER-INSTRUMENT (R1–R4 in the DeFi close-out).** The operator directed
+> DeFi to shard-write one parquet per instrument (flat pattern #1) instead of the capture-batch model; DeFi capture is
+> STOPPED. The A-items below still apply but FOLD into R1–R4: A1 (lending-guard bug) → R1/R2; A2/A3/A4 (POOL 3-seg /
+> SPOT_PAIR / retire-LENDING) → resolved BEFORE grouping in R1 + in the R3 union migration; A5 (63.9M seed) → R2's IS
+> `available_from/to` denominator; A6 (GCS deletes) → still snapshot-first, now alongside the R3 batch→per-instrument
+> rewrite. The batch-model dedup rationale for A5's purge dissolves (per-instrument overwrite). See
+> `defi_consolidated_closeout_2026_07_18.md` § Per-instrument re-architecture.
+
 The operator sequenced code+data changes AFTER the SSOT. These are ready; each needs the go-ahead (some are irreversible
 → snapshot-first). Full detail in the four close-out plans' tracks.
 

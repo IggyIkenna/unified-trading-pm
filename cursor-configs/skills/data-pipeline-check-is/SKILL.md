@@ -93,8 +93,12 @@ For each MVP `(asset_group, venue)` cell for `--day` (MVP scope from
 
 ```bash
 cd instruments-service && python3 scripts/pipeline_e2e_check.py \
-  --asset-group <AG> --venues <VENUE> --day <DAY> --legs force,skip
+  --asset-group <AG> --venue <VENUE> --day <DAY> --legs force,skip
 ```
+
+> **Doc-fix (2026-07-18): the checker's own flag is `--venue` (singular), never `--venues`.** `--venues` is the
+> LAUNCHER's flag (`launch-instruments-backfill-vm.sh`) — passing it to `scripts/pipeline_e2e_check.py` itself errors
+> `unrecognized arguments`.
 
 This sequences, per shard, via the shared `unified_trading_library.pipeline_e2e_check` engine:
 
@@ -107,6 +111,39 @@ This sequences, per shard, via the shared `unified_trading_library.pipeline_e2e_
    self-contained — `IS_TEST_RUN=true` routes **both** the freshness read and the write to the same `-test-` bucket, so
    a force-run-then-skip-run pair on one shard is a genuine, complete proof (no PROD pre-check needed here, unlike
    MTDS).
+
+### 3a. TradFi-only, ALL shards — Phase D terminal gate (added 2026-07-18)
+
+Per `tradfi_consolidated_closeout_2026_07_18.md` Phase D — the plan's **terminal gate**, run together with
+`data-pipeline-check-mtds`'s own tradfi-only sweep (§3c there): post-migration, prove force-refetch + skip-if-fresh
+across **every** tradfi shard before any real MVP backfill runs.
+
+**IS's tradfi shard atom is just `(venue, day)`** — all 7 tradfi venues (`NASDAQ`, `NYSE`, `CME`, `ICE`, `CBOE`, `KRX`,
+`FX`), no `data_type` axis (IS has none). Run one shard per venue for the same `--day`:
+
+```bash
+cd instruments-service && python3 scripts/pipeline_e2e_check.py \
+  --asset-group TRADFI --day <DAY> --legs force,skip
+```
+
+Repeat with `--venue <V>` for each of the 7 venues (or omit `--venue` to enumerate all of them in one run, per
+`enumerate_cells()`'s existing TRADFI coverage).
+
+**Known gap (2026-07-18, code-confirmed, out of this skill's own scope to fix):** unlike the MTDS engine, IS's
+`scripts/pipeline_e2e_check.py` does **not yet** support `--require-captured`/`--auto-day`/`--mvp-only` — it always
+force-checks the literal `--day` you pass, on every enumerated venue, with no "skip an unprovable cell" safety net.
+Reference-data catalogue snapshots are largely day-insensitive, so this is usually fine, but if a specific venue was
+genuinely never captured on `--day` you will see a real `no_matching_row`/`manifest_status_invalid` failure rather than
+an honest `skipped`. Either pick a `--day` known to have IS coverage for all 7 tradfi venues, or read the VM `run.log`
+(§ "Read the VM run.log as ground truth" above) before treating a failure as real. Adding `--require-captured`/
+`--auto-day` parity to the IS engine is a tracked follow-up (`tradfi_consolidated_closeout_2026_07_18.md` Phase D), not
+yet shipped as of this doc revision.
+
+**Green definition (the plan's Phase D exit criterion, IS half):** every one of the 7 tradfi venues carries a `passed`
+force + skip verdict for `--day`. Combined with `data-pipeline-check-mtds`'s green tradfi-only, all-shards run
+(including its `canonical` leg — IS has no canonical-shape leg of its own; the shape assertion runs against the MTDS
+manifest + the IS catalogue is covered by the plan's separate Phase B catalogue-migration self-verify, not this
+checker), that is what "tradfi is code-complete, migrated, honestly-covered, and verified" means.
 
 ## 4. Phase 2 — live leg (MVP-scoped)
 

@@ -232,19 +232,22 @@ fixture-linked before MVP backfill.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
-- [ ] [BACKEND] P0. **Fixture-match attributes on prediction soccer — RESOLVER + STAMPING SHIPPED (Polymarket
-      `af_fixture_id` + Kalshi honest-absence); column materialization DEFERRED (shared files).** SHIPPED
-      `instruments-service@85988ade` (QG-green, 662 lines, 8 files): new `adapters/prediction/fixture_match.py`
+- [ ] [BACKEND] P0. **Fixture-match attributes on prediction soccer — RESOLVER + SCHEMA SHIPPED; materialization join IN
+      FLIGHT (round-2a).** UAC `InstrumentRecord` + `INSTRUMENTS_PARQUET_SCHEMA` 6 fields shipped
+      `unified-api-contracts@e7ed754e` (additive nullable, rule-11 cross-AG round-trip verified); IS
+      `process_write._records_to_dataframe` join + MTDS prediction-tick schema dispatched (round-2). Resolver increment
+      SHIPPED `instruments-service@85988ade` (QG-green, 662 lines, 8 files): new `adapters/prediction/fixture_match.py`
       resolver + per-instrument side-table — **Polymarket** soccer resolves + stamps `af_fixture_id` off the SAME
       fixtures parquet the MTDS `FixtureIdResolver` reads (`candidate_parquet_paths("FIXTURES",…,BATCH_API_FOOTBALL)`,
       cached per (league,day), canonicalising both sides through the SAME `validate_team_resolution` alias index — no
       new GCS walk); **Kalshi** soccer stamps honest-absence (`af_fixture_match_status=UNRESOLVED_TEAM_NAME`,
       `af_fixture_id=None`, `af_league_id`+`fixture_date` still resolved) pending E2; closed set
       `MATCHED`/`UNRESOLVED_TEAM_NAME`/`NO_FIXTURE_DATA`, nullable int, no sentinel; resolver never raises. Tests:
-      `test_prediction_fixture_match.py`. **DEFERRED to the shared-file window** (materialize the 6 attrs as real
-      parquet/manifest COLUMNS): UAC `InstrumentRecord` fields + IS `process_write._records_to_dataframe` join (reads
-      `fixture_match_for_instrument_key`, ~6-line extension of the `clob_token_ids` block) + the MTDS prediction-tick
-      schema — see HELD list. (repos: instruments-service ✅; unified-api-contracts + market-tick-data-service DEFERRED)
+      `test_prediction_fixture_match.py`. **NOW SHIPPING (round-2, constraint lifted)** — materialize the 6 attrs as
+      real parquet/manifest COLUMNS: UAC `InstrumentRecord` ✅ e7ed754e + IS `process_write._records_to_dataframe` join
+      (reads `fixture_match_for_instrument_key`, ~6-line extension of the `clob_token_ids` block) + the MTDS
+      prediction-tick schema — see HELD list. (repos: instruments-service ✅; unified-api-contracts +
+      market-tick-data-service DEFERRED)
 
 ## Phase B — run the migrations (gated on Phase A green)
 
@@ -256,15 +259,14 @@ fixture-linked before MVP backfill.
       and the rebuild restored the CQG cluster rows; A0 live read confirms **17,352 captured**
       `prediction_canonical_question_group` rows (was "ZERO"). Original P0 closed —
       `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` steps 1-4 landed.
-- [ ] [BACKEND] P1. **Close the CQG-issue RESIDUALS (steps 5-6, still open).** (5) Add `pipeline_mode=live_kalshi` /
-      `live_polymarket_clob` / `live_polymarket_gamma_api` prefix shapes to UAC `possible_manifest` /
-      `canonical_path_templates('prediction')` so the phantom-audit can distinguish genuinely-batch-absent from
-      batch-absent-but-live-captured (13,292 phantom rows currently indeterminate) — rule-11 cross-AG regression + a
-      BATCH-satisfied-by-LIVE-evidence SEMANTICS call (may be BLOCKED-OPERATOR-DECISION). (6) Root-cause the KALSHI →
-      `batch_polymarket_clob` / `source=polymarket_clob` provenance mislabel (11,988 rows) in
-      `market_tick_data_service/scripts/rebuild_prediction_manifest.py`'s writer — this is what skews A0's `source`
-      counts (KALSHI undercounted). `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` §5-6 +
-      `issues/phantom_captures_prediction_2026_06_28.md`. (repos: unified-api-contracts, market-tick-data-service)
+- [x] ✅ [BACKEND] P1. **CQG-issue residuals 5-6 — DONE (2026-07-18).** (5) `pipeline_mode=live_*` prefixes shipped —
+      `unified-api-contracts@e7ed754e` (operator DECIDED union batch+live): `live_kalshi`/`live_polymarket_clob` were
+      already emitted (2026-07-11); added the missing `live_polymarket_gamma_api` via a prediction-scoped
+      `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` probe (did NOT fabricate a `LIVE_POLYMARKET_GAMMA_API` enum member — that source
+      is batch-only by design); rule-11 verified cefi/tradfi/defi/sports template counts byte-unchanged. (6) KALSHI
+      provenance mislabel already fixed `market-tick-data-service@3397e7ae` (see §6).
+      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` §5 flipped `pm@4436e59f0`. (repos:
+      unified-api-contracts ✅, market-tick-data-service ✅)
 - [ ] [DATA] P0. **Enumeration-driven canonical/dedupe migration of the prediction manifest (A0-driven, single source of
       truth, operator 2026-07-18)** — CONCRETE A0 targets, catalogue is SSOT: (a) `data_type` `prediction_trades` →
       `trades`; (b) `instrument_type` → `PREDICTION_MARKET` — fold lowercase `prediction`/`prediction_market`, and
@@ -273,7 +275,20 @@ fixture-linked before MVP backfill.
       CQG/underlying, NOT trusting the column; (c) stamp empty `source=''` from the writer's `default_source`; (d)
       catalogue `base_asset` whitespace-strip + dedupe (leading-space title variants). Additive per-VM-shard write
       (race-free vs the ~10-min consolidator). Fold: the prediction slice of `data_completion_prediction_2026_07_15.md`
-      (23 open). (repos: market-tick-data-service, instruments-service, unified-trading-library)
+      (23 open). (repos: market-tick-data-service, instruments-service, unified-trading-library) **SCRIPT WRITTEN +
+      dry-run measured — `market-tick-data-service@5392b20b`**
+      (`scripts/canonicalize_prediction_manifest_2026_07_18.py`, `--dry-run` DEFAULT, `--apply` behind
+      `--confirm-prod-write`; prod RUN HELD per operator). Live dry-run (756,817 rows): #1 `prediction_trades`→`trades`
+      3,385 rows (99.55%→100%); #2 per-CID `instrument_type`→`PREDICTION_MARKET` 648,616 rows (per-CID 4.16%→100%,
+      all-rows 11.70%→**97.40%**); #3 `source` 2 empty→`polymarket_clob`. **TWO FINDINGS FOR THE HELD RUN
+      (operator-decision, revises decision-2):** (i) the CQG bundle is NOT null-by-design in practice — 80,068 rows =
+      60,427 `PREDICTION_MARKET` + 17,361 lowercase `prediction` + only 2,280 null; keeping it unstamped caps all-rows
+      at 97.40%, and its 17,361 lowercase `prediction` are themselves non-canonical → decide: normalize the bundle to
+      `PREDICTION_MARKET` too (→~100%) vs enforce SSOT "bundle null" (un-stamps 77,788) vs leave inconsistent. (ii)
+      `instrument_type`/`data_type` are consolidator DEDUP-KEY columns → the additive shard adds the corrected rows but
+      leaves ~652k OLD rows as stragglers (doubling); reaching the target % needs an old-row sweep = the "naive direct
+      `_index` rewrite" that resurrects on `--force` rebuild → the run needs a tombstone/removal strategy. Both
+      documented in the script docstring + printed by dry-run.
 - [ ] [DATA] P0. **Backfill the fixture-match attributes (A4 columns) across historical Polymarket + Kalshi soccer** —
       resolve `af_fixture_id` per market from the fixtures parquet (canonical `home_id`/`away_id` + `af_league_id` +
       `fixture_date`) OR by parsing the human-readable canonical name, stamping `af_fixture_match_status`. Honest nulls
@@ -365,14 +380,15 @@ fixture-linked before MVP backfill.
 
 ### E2 — Close the team-name matching gap to ~0% (Leg 2)
 
-- [ ] [BACKEND] P1. **Robust/logical fixture matching to a ~0% team-name gap.** Drive the join off the fixtures parquet
-      (canonical `home_id`/`away_id` + `af_league_id` + `fixture_date`) OR by parsing the human canonical name; add the
-      missing aliases so the ~66% odds-side match rate climbs toward 100%. Two known holes: (a) the South-American club
-      alias gap in `unified_api_contracts.external.api_football.team_mappings` (e.g. `Coquimbo Unido`, `O'Higgins`,
-      `Universidad Católica (CHI)`) — verify each against API-Football's own naming, don't guess; (b) **build a Kalshi
-      soccer team registry** — Kalshi titles are city-level with no team-name-to-canonical mapping today. Log the
-      per-day match rate so the gap is visible in monitoring. (repos: unified-api-contracts, instruments-service,
-      market-tick-data-service)
+- [ ] [BACKEND] P1. **Fixture matching toward the ~0% gap — KALSHI side DONE; South-American odds aliases remain.** (b)
+      ✅ Kalshi soccer team resolution SHIPPED: parser `instruments-service@ec8633ac`
+      (`parse_kalshi_soccer_participants` → A4's `PredictionFixtureResolver` via the shared `validate_team_resolution`
+      index, no new GCS walk) + 8 aliases `unified-api-contracts@e7ed754e` → measured **~0% → 82.6%→~100%** on 92 live
+      Kalshi fixtures. (a) STILL OPEN: the South-American club alias gap in `team_mappings` (`Coquimbo Unido`,
+      `O'Higgins`, `Universidad Católica (CHI)`, …) capping the odds-side ~66% — verify each against API-Football naming
+      (don't guess), additive to `team_mappings`. Also verify the Kalshi home/away title order against the FIXTURES
+      parquet (see Progress Log tick-6 caveat). (repos: instruments-service ✅, unified-api-contracts (Kalshi ✅ /
+      South-American remaining))
 
 ### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
 
@@ -631,3 +647,51 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     answer §5 (BATCH-satisfied-by-LIVE? A=union [REC] / B=batch-only); (3) authorize the Phase-B prediction prod
     migration in its own drain window (the 11.70%→100% manifest canonicalization). Loop stopped (stall-safety: metric
     can't climb under the current constraint); resumes on any of the above.
+
+- **2026-07-18 (slot-2, autonomous tick 7) — operator answered all 4 decisions; loop RESUMED; shared-file round-1
+  landed.**
+  - **Operator decisions (2026-07-18):** §5 = **union batch+live**; Phase-B instrument_type = **stamp
+    PREDICTION_MARKET** (per-CID; bundle null); **proceed on shared files = YES** (constraint lifted); Phase-B prod
+    **RUN = HOLD** (code-ready only, awaits drain-window authorization). Pre-flight confirmed the target shared files
+    were quiet (UAC 0 commits/15m, `InstrumentRecord` 27h, `process_write` 4d).
+  - **UAC base-tier SHIPPED + verified — `unified-api-contracts@e7ed754e` (QG-green 399s, 7 files).** (1) 6 additive
+    nullable `af_fixture_id` fields on `InstrumentRecord` + `INSTRUMENTS_PARQUET_SCHEMA` (model↔schema 1:1 kept); (2)
+    E2's 8 Kalshi aliases in `team_mappings` (+ a PSG-non-collision guard); (3) §5 union —
+    `live_kalshi`/`live_polymarket_clob` were already emitted (2026-07-11), added the missing
+    `live_polymarket_gamma_api` via a prediction-scoped `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` probe (correctly did NOT
+    fabricate a `LIVE_POLYMARKET_GAMMA_API` enum member — that source is batch-only). **Rule-11 PASS:**
+    cefi/tradfi/defi/sports pipeline_mode template counts byte-for-byte unchanged (16/6/15/0), prediction 5→6. §5
+    flipped `pm@4436e59f0`. Flipped in this plan: §5 residuals 5-6 DONE; E2 Kalshi side DONE; A4 header → schema-done +
+    materialization-in-flight.
+  - **Type-boundary note (carried into round-2a):** the IS side-table `FixtureMatchAttributes` types `af_league_id` int
+    / `fixture_date` str, but the operator-decided `InstrumentRecord` fields are str / date — the round-2a
+    materialization join converts (`str(af_league_id)`, `date.fromisoformat(fixture_date)`, honest-absence on bad
+    values), does NOT re-edit the shipped UAC schema.
+  - **Round-2a DISPATCHED** — IS `process_write._records_to_dataframe` join (reads `fixture_match_for_instrument_key` →
+    emits the 6 columns; non-prediction rows None; rule-11 cross-AG round-trip verify). Round-1b (MTDS Phase-B migration
+    SCRIPT, dry-run) still running; round-2b (MTDS prediction-tick schema) waits for it (same repo). Every sub-agent
+    ship adversarially verified before flipping (2 sub-agents flaked this session — an API death + a 0-tool-use dud —
+    neither trusted).
+
+- **2026-07-18 (slot-2, autonomous tick 8) — Phase-B migration SCRIPT written + dry-run measured; 2 findings for the
+  held run; round-2b re-scoped optional.**
+  - **`market-tick-data-service@5392b20b` SHIPPED + verified** (QG-green 238s; 554-line script + 260-line test, 22 pure
+    transform tests). `--dry-run` DEFAULT; `--apply` behind `--confirm-prod-write` + a loud guard; prod RUN HELD per
+    operator. Additive per-VM-shard write, `resolve_bucket_name`, UTL GCS helpers, single-object `_index` read.
+  - **Live dry-run split-confirmation** (756,817 rows): matches A0 — `prediction_trades`→`trades` 3,385; per-CID
+    `instrument_type`→`PREDICTION_MARKET` 648,616 (640,701 null + 7,007 lowercase `prediction_market` + 908 leakage);
+    `source` 2 empty. Per-CID 4.16%→100%; **all-rows 11.70%→97.40%** (bundle held back).
+  - **FINDING (i) — decision-2 was premised on a wrong assumption.** The CQG bundle instrument_type is NOT uniformly
+    null: 80,068 = 60,427 `PREDICTION_MARKET` + 17,361 lowercase `prediction` + 2,280 null. So the bundle is
+    inconsistent (and its 17,361 lowercase `prediction` are non-canonical). Keeping it unstamped caps all-rows at
+    97.40%. **Operator re-decision needed** (annotated on the Phase-B item): normalize bundle→PREDICTION_MARKET (→~100%)
+    / enforce SSOT bundle-null (un-stamp 77,788) / leave inconsistent.
+  - **FINDING (ii) — additive-shard straggler problem.** `instrument_type`/`data_type` are consolidator dedup-key cols;
+    the additive shard adds corrected rows but leaves ~652k OLD rows (doubling). The target-% needs an old-row sweep =
+    the "naive direct `_index` rewrite" that resurrects on `--force` rebuild → the held run needs a tombstone/removal
+    strategy. Script reports the residual counts; does NOT auto-delete.
+  - **Round-2b (MTDS prediction-tick schema) RE-SCOPED to OPTIONAL/DEFERRED** — the ESSENTIAL A4 materialization is
+    instrument-level (round-2a, IS `process_write`, in flight); the fixture attrs live on the instrument catalogue, so
+    prediction consumers can join by `instrument_id` without a tick-grain denormalization. Adding 6 columns to the
+    shared MTDS prediction-tick schema is only warranted if the Phase-E arb path needs tick-grain fixture attrs (like
+    the odds-tick side does) — deferred pending that call, to avoid a shared-schema change of uncertain necessity.

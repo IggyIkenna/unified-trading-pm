@@ -108,12 +108,86 @@ source:
   subgraph); (5) restoring the removed data-status "what exists" enumeration view. DeFi's biggest open track is
   **coverage**, not id-canonicalisation.
 
+## Per-instrument re-architecture (operator 2026-07-18 — SUPERSEDES the batch-model tracks; DeFi capture STOPPED)
+
+> **🟡 In-flight refactor + capture halted.** All DeFi capture was STOPPED 2026-07-18 (2 GCP forward-poll VMs
+> `defi-fwd-{dex-pools,oracle-prices}-poll` + 5 `uts-prod-mtds-collect-*defi*` / `defi-fwd-oracle-prices-prd` schedulers
+> paused; AWS clear; **IS enum/catalogue crons LEFT RUNNING** — IS remains the availability source). DeFi is being
+> re-architected to shard-write ONE parquet per instrument (like cefi/tradfi), collapsing SSOT §1 pattern #4 → pattern
+> #1. This is the target; the batch-model column/path framing in the tracks below is superseded. Grounded in code
+> (workflow `wf_20749dad`).
+
+**Why**: MTDS wrote an arbitrary bunch of instruments per capture into one `{venue}_{chain}_{capture_ts}.parquet` batch,
+blank manifest `instrument_id`, multiple batch files per shard-day — the root cause of the manifest/data-status pain +
+the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id is already stamped on every row).
+
+**Confirmed decisions (operator 2026-07-18)**: (1) shard key = the **symbolic `canonical_instrument_id`**
+(human-readable filename `AAVE_V3-ETHEREUM:A_TOKEN:aUSDC.parquet`; address = a content column + IS-def/join key); (2)
+**per-(instrument, day)** granularity, matching cefi/tradfi; (3) IS owns availability with **`available_from`**
+(on-chain genesis) + **`available_to`** (TVL-drop delist) → out-of-window = out-of-scope, in-window + 0 rows =
+`empty_confirmed`.
+
+### R1 — Writer: per-instrument fan-out (forward-write) · P0
+
+- [ ] [BACKEND] P0. **`write_defi_rows` (`market_interface/adapters/defi/canonical_write.py:103-296`) fans out**: after
+      per-row `instrument_id` enrichment, `df.groupby("instrument_id")` → return a LIST of `(group_df, path)`, each leaf
+      `{sanitized_symbol}.parquet` via `build_defi_partition_path(..., file_name=…)` (already accepts `file_name`, no
+      builder change). `_write_and_upload` (`cli/handlers/evm_defi_collectors.py:36-68`) loops the upload. **6/7
+      handlers already emit per-instrument manifest rows** (dex_pools / dex_swaps / oracle_prices / risk_params /
+      lending_indices / lst_rates) — only **`evm_defi`** (bundle-on-both-axes, blank `instrument_id`) needs its single
+      bundle `record_captured` replaced with a per-`instrument_id` loop. Resolve `lending`→`A_TOKEN`/`DEBT_TOKEN` BEFORE
+      grouping. The sanitizer `[/\\:\s]→_` MUST match R3's so migrated + live objects collide on one key. (repo:
+      market-tick-data-service)
+
+### R2 — IS: the honest per-(venue,chain) availability denominator · P0
+
+- [ ] [BACKEND] P0. **IS is structurally already the denominator** (`enumerate_expected_universe.py::_enumerate_v2_defi`
+      seeds `expected` per `(venue,chain,itype,instrument_id,data_type,day)`; `available_from` STRONG via real on-chain
+      genesis `eth_getCode` binary-search). Close the gaps: **(a) honest `available_to`** — record per-instrument
+      TVL-over-time as a first-class attribute + derive `EXPECTED_INSTRUMENT_DELISTED` from a real threshold-crossing
+      date (decouple from the top-6000 fetch-ranking) and **relax the `min_ratio=1.0` monotonicity guard**
+      (`defi.py:190-214`) so real delistings aren't suppressed; **(b) add `force_include=true`** (TVL-exempt) so
+      EIGEN/ETHFI/governance carry honestly vs coincidental liquidity; **(c) extend the catalogue-residual
+      empty-reconciliation** (`dex_pools_handler.py:750+` `record_catalogue_residual_empty`) to
+      evm_defi/lending/oracle/lst so an IS-listed-but-unfetched instrument becomes a per-instrument
+      `EXPECTED_*`/`empty_confirmed`, never a dangling `expected_unattempted`. Keep the per-protocol data_type narrowing
+      (stops over-seeding). (repo: instruments-service)
+
+### R3 — Historical migration: batch → per-instrument, column+row UNION · P0 (gated on R1+R2)
+
+- [ ] [DATA] P0. **Fork `migrate_defi_full_v9_canonical`** — cell grain `(venue,chain,day)` → `(instrument_id,day)` and
+      **replace winner-pick with column+row UNION** (a sparse RPC-fallback batch may hold columns a fat batch lacks;
+      max-rows-wins silently drops schema — THIS is why target=UNION, not winner-pick). Reuse verbatim: single-walk
+      `_list_objects`, footer-only `discover_union` + baked `_CANONICAL_UNION`, the LOUD-FAIL `_conform` guard.
+      Per-column canonical resolution (coalesce name-drift old→new; `resolve_pool_symbol` 3-tier id;
+      venue/chain/instrument_type). Dedupe rows on the natural event key (swaps `tx_hash`; state `block_number`; oracle
+      `round_id`), keep the most-populated/canonical. Unresolvable → `_needs_attribution/` (never drop). DRY-RUN
+      default. Write `{sanitized_symbol}.parquet` into the same `day=…/data_type=…` partition; then
+      `rebuild_defi_manifest` re-derives `instrument_id=stem` via `parse_hive_path` → per-instrument manifest by
+      construction. (repo: market-tick-data-service)
+
+### R4 — Coverage against the IS denominator · P1 (gated on R1+R2+R3) → then RESUME capture
+
+- [ ] [DATA] P1. **Score coverage per-instrument** against the IS `available_from/to` window; the ~1.04M stuck
+      `expected_unattempted` / false `EXPECTED_INSTRUMENT_DELISTED` rows resolve once the seed (R2) + migrated
+      per-instrument manifest (R3) exist with byte-matching keys. A RED DeFi data audit here FREEZES downstream
+      (foundation-gate). Then **RESUME the stopped DeFi capture VMs/crons** on the corrected writer.
+
+**Sequencing**: R1+R2 (ship together — new days land per-instrument + reconcile) → R3 (migrate history to the identical
+layout) → R4 (coverage) → resume capture. **This SUPERSEDES the batch-model column/path work in the tracks below** — the
+column migrations (id/address/lending-split, case, venue-spelling) still happen, but folded into R1/R3, not a separate
+cell-grain rewrite. `consolidate_multi_parquet_per_day` winner-pick is RETIRED for DeFi. **Small-files**:
+per-(instrument, day) for low-freq DeFi (≈1 row/day) → many KB objects (one lending protocol ≈300k) — accepted (matches
+cefi/tradfi); a per-instrument-MONTH compaction is a recommended SEPARATE follow-up (keeps the shared `day=` hive).
+
 ## Canonical target (operator-decided 2026-07-18 — the thing we converge all four surfaces on)
 
 The four surfaces that must agree post-migration: **(1) GCS parquet path**, **(2) parquet
 `instrument_id`/`canonical_instrument_id` columns**, **(3) manifest `_index` key**, **(4) data-status render**. For DeFi
-the leaf file is a multi-instrument capture batch (`{venue}_{CHAIN}_{capture_ts}.parquet`), so the DeFi canonical
-identity is **column-level, not filename-level** — DeFi does not use the cefi "filename==id" verify gate.
+**TARGET (operator 2026-07-18): DeFi is FLAT-PER-INSTRUMENT** — one parquet per instrument, filename = the symbolic
+canonical id (`filename == instrument_id == manifest key`), exactly like cefi/tradfi. The old multi-instrument
+capture-batch (`{venue}_{CHAIN}_{capture_ts}.parquet`) model is **RETIRED** — see the "Per-instrument re-architecture"
+section above. The address stays a content column + the IS-definition/join key.
 
 ### Path template (operator-locked; forward writer already emits it)
 

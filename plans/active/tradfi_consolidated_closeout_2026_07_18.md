@@ -202,10 +202,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ### A3 — Download / backfill THROUGHPUT (so Phase-D re-backfill is fast + reliable)
 
-- [ ] [BACKEND] P0. **Databento DNS-starvation executor risk** — `databento_fetch.py:672` uses
-      `run_in_executor(None, …)` (default pool, shared with aiohttp's `getaddrinfo`) — the SAME mechanism that wedged
-      the CeFi Tardis backfill ~350x. Dedicated executor.
-      `databento_default_executor_dns_starvation_risk_2026_07_17.md`. (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P0. **Databento DNS-starvation executor risk — FIXED (mtds@ac857, `databento_fetch_executor.py`).**
+      The 3 `databento_fetch` call sites + the `_next_dbn_chunk` DBN decode now run on a dedicated
+      `ThreadPoolExecutor(thread_name_prefix="databento-fetch")` sized `databento_max_concurrent_requests+8` (=108) —
+      never the asyncio default pool (which aiohttp's `getaddrinfo` needs), the exact anti-pattern that wedged the CeFi
+      Tardis backfill ~350x. Helper split to a new `databento_fetch_executor.py` (databento_fetch.py 887<900). Confirmed
+      live 2026-07-18 (research: 3 wired sites). Tracking issue
+      `databento_default_executor_dns_starvation_risk_2026_07_17.md` is now STALE (fix landed) → doc-hygiene flip
+      pending. (repo: market-tick-data-service)
 - [ ] [INFRA] P1. **Backfill-VM startup OOM rc137** (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, open) + **OOM
       remediation baked default** (`tradfi_backfill_oom_remediation_2026_06_24.md`, e2-highmem-4, verify) +
       **consolidator throughput/backlog monitor** (`consolidator_throughput_backlog_monitor_2026_07_09.md`). (repos:
@@ -216,6 +220,53 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - [ ] [BACKEND] P1. **Massive dual-source shape parity + consolidator dedup-key omits `source`**
       (`tradfi_massive_dual_source_2026_05_28.md` Phase 4b — a silent last-write-wins loss risk the moment a cell goes
       dual-source). (repos: unified-trading-library, market-tick-data-service)
+
+#### A3.1 — Databento e2e throughput optimization (operator 2026-07-18: "optimize like cefi/tardis — large VM doing MORE not wasting; MEASURE the full e2e chain: download + processing + upload + disk-write")
+
+> Two research agents mapped (a) the full CeFi/Tardis throughput playbook (20 hacks: disk, SINGLE_VM_QUEUE bundling,
+> TARDIS_MAX_CONCURRENT semaphores, dedicated executors, DataFrame-native finalise, the date-serial barrier, rotation,
+> stall-regex, 429-retry, machine-sizing) and (b) the Databento current-state + exact change surface. **Key facts:**
+> Databento limits are **per-IP not per-key** (100 concurrent conn / 100 req/s timeseries × 0.8 target-util ≈ **80
+> effective**). Current tradfi path = **one VM per (venue,root,year)** (~350+ VMs for a full CME backfill), each doing
+> ONE root over a **sequential subprocess-per-7day-chunk** loop, with the shared orchestrator processing dates
+> **serially** → each VM uses ~1 of the 80 budget. The concurrency axis for tradfi ohlcv is **DATES** (one
+> server-batched `download_batch(symbols=[...])` per date). Disk (pd-balanced 250GB) + dedicated executor are already
+> done.
+
+- [ ] [BACKEND] P0. **Gated concurrent-date driver (UTL — the saturation lever).**
+      `service_framework/_adapter.py     run()` drives dates serially (`async for _payload in io.input`). Add
+      `batch_date_concurrency` (default **1** = byte-identical serial). When >1, bounded-in-flight fan-out
+      (semaphore-gated task creation) runs ~N dates concurrently, all funnelling through the **process-global Databento
+      semaphore** (correctly bounded to ~80). Determinism-safe: each date is independent (own per-date `process_ticks`
+      state, own partition). MANDATORY determinism test (concurrent == serial results + counts). Default-off ⇒ zero
+      change for CeFi/sports/defi. NOTE: same GOAL as the CeFi-P0 orchestrator date-barrier todo but at the driver layer
+      (gated) — coordinate, no collision (different file/layer). (repo: unified-trading-library)
+- [ ] [BACKEND] P0. **Concurrency knob plumbing (metadata → env → CLI).** `setup-data-pipeline-vm.sh`: add a named
+      passthrough for `DATABENTO_MAX_CONCURRENT_REQUESTS` + `BATCH_DATE_CONCURRENCY` (+ optionally
+      `DATABENTO_RATE_LIMIT_TARGET_UTILIZATION`), mirroring the `TARDIS_MAX_CONCURRENT_DOWNLOADS` block (~L355-369). Add
+      `--max-concurrent-dates` / `--databento-max-concurrent` flags to the MTDS CLI (`cli/main.py`) + IS CLI
+      (`instruments_service/cli/main.py`). (repos: deployment-service, market-tick-data-service, instruments-service)
+- [ ] [INFRA] P0. **Collapse `mtds_chunk_loop.sh` subprocess-per-7day → one long-lived process.**
+      `setup-data-pipeline-vm.sh` (~L1298-1327) re-forks Python + reloads the ~1.6M-row catalog + re-warms the Databento
+      client **per 7-day chunk** (45+ cold-starts for a multi-year backfill, defeating `_DATABENTO_CLIENT_CACHE`). Make
+      single-process-over-full-window the mode (e.g. `VM_CHUNK_DAYS=0`), so catalog + client load ONCE. Verify no OOM
+      (DateRangeInput iterates dates internally, memory bounded). (repo: deployment-service)
+- [ ] [INFRA] P1. **Bundle roots into fewer larger VMs.** `_tradfi-ohlcv-launcher-lib.sh` spawns one VM per
+      (venue,root,year); accumulate multiple roots' symbol-sets into one VM's `VM_INSTRUMENT_IDS` per year-shard
+      (SINGLE_VM_QUEUE-analog). Fewer, saturated VMs. Also folds the pd-balanced 250GB / `TRADFI_OHLCV_BOOT_TYPE` disk
+      default (staged locally 2026-07-18). (repo: deployment-service)
+- [ ] [BACKEND] P1. **Real retry-on-429 in the Databento fetch path.** `databento_fetch.py:598-629` records any
+      exception (incl. `RATE_LIMIT`/429) as a per-schema failure with **no retry** (config
+      `max_retries`/`backoff_factor` exist but are log-only — `databento_base_client.py:270-272`). Wire a real backoff
+      loop (mirror `tardis_base_client`) BEFORE raising bundled concurrency. (repo: market-tick-data-service)
+- [ ] [BACKEND] P1. **TradFi data-pipeline skill accepts + passes the concurrency config** (operator explicit ask).
+      `cursor-configs/skills/data-pipeline-check-{mtds,is}` invoke the generic launcher with no concurrency args —
+      thread the new knobs through. (repo: unified-trading-pm)
+- [ ] [DATA] P0. **MEASURE the full e2e chain before/after on a REAL Databento VM (operator acceptance bar / A3.1
+      termination condition).** `measure-vm-throughput.sh` (RX-counter, vendor-agnostic) + `iostat` (disk write) +
+      manifest row-rate (e2e completion): prove **download MB/s + processing + upload + disk-write** improved Nx (cefi
+      baseline: pd-standard 2.36 → pd-balanced 11.1 = 4.7x, and the date-fanout added the bulk of the rest). Cite the
+      measured numbers. (repo: deployment-service)
 
 ## Phase B — run the migrations (all four surfaces, gated on Phase A green)
 
@@ -734,3 +785,25 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **BOTH green across all tradfi shards (force+skip+canonical) = the plan's terminal gate.** Then MVP backfills (SPOT
     VMs, ohlcv_1m Databento + Yahoo daily). New follow-up: IS pipeline_e2e_check `--auto-day`/`--mvp-only` parity;
     Massive-normalizer builder routing; writer-itype UPPERCASE convergence; gate exempt-COMBO.
+
+- **2026-07-18 (slot-1, tick 14) — operator pivot to Databento e2e throughput optimization; disk fix; research.**
+  Operator asked (mid-session) to (1) fix the backfill-VM boot disk (cefi write-slowdown), (2) port the full CeFi/Tardis
+  throughput playbook to Databento ("large VM doing MORE not wasting"), (3) make the tradfi data-pipeline skill + MTDS
+  and IS CLIs accept the concurrency config, and (4) MEASURE the full e2e chain (download+processing+upload+disk) like
+  cefi did. New A3.1 section captures the design.
+  - **Disk fix**: confirmed live the tradfi/mtds backfill VMs ran `pd-standard` 50GB (GCP default when
+    `--boot-disk-type` omitted). A peer independently shipped the identical fix + a QG gate
+    (`check_tardis_vm_disk_provisioning.py` → generalized to `check_backfill_vm_disk_provisioning.py`:
+    Tardis/Databento/`*backfill*`/`*forward-poll*` launchers must be non-pd-standard ≥250GB; measured cefi 2.36→11.1
+    MB/s = 4.7x) and fleet-swept ~57 launchers. Resolved the resulting merge conflicts (took peer's canonical version
+    for the shared launchers). My **net-new** contribution: the pd-balanced 250GB default on
+    `_tradfi-ohlcv-launcher-lib.sh` (the tradfi OHLCV MVP launcher — a gate blind-spot, lib-sourced so the gate's
+    inline-`--boot-disk-size` glob skips it) — folding into the A3.1 lib rewrite. Dropped a redundant `lc_gcloud_create`
+    wrapper edit (peer's active disk-policy workstream; the ~80-wrapper-user blind-spot flagged for them).
+  - **Research (2 agents)**: full CeFi playbook (20 hacks) + Databento current-state/change-surface — see the A3.1
+    header. Databento per-IP ~80 effective; tradfi = one-VM-per-(venue,root,year) with serial dates → ~1/80 utilized.
+    Databento dedicated executor + disk already done; the lever is date-concurrency (gated UTL driver) + plumbing +
+    chunk-loop collapse + 429-retry, then a measured before/after.
+  - **In flight**: gated concurrent-date driver (UTL `_adapter.py`, default off, determinism-tested) being implemented.
+    Killed the stale one-VM-per-shard Phase-D check (pre-`_TRADFI_MVP_SHARDS` code, exit 144) — Phase D re-runs on the
+    optimized bundled path.
