@@ -657,3 +657,22 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   (vs a naive 100%) is entirely the quarantined combos (`UD_1V__VT_`) sitting in the FUTURE/OPTION denominator — the
   combo re-stamp (FUTURE→COMBO) P0 follow-up removes them from the denominator and lifts the TRUE non-combo
   FUTURE/OPTION canonical toward ~100%.
+
+- **2026-07-18 (slot-1, tick 9) — Phase-A refinements landing (throttled by multi-slot QG contention, 4-5 concurrent).**
+  - **[cash-type -USD] SHIPPED `unified-api-contracts@33e3f369`** — `_build_tradfi_cash` now suffixes `-USD` for
+    EQUITY/CURRENCY/ETF/BOND/COMMODITY (was INDEX-only; CDS bare by design) → `NASDAQ:EQUITY:AAPL-USD`,
+    `FX:CURRENCY:KRW-USD`. 6 tests updated to `-USD`. So the WRITER now emits `-USD` on cash types; the historical
+    catalogue/manifest cash rows still need the **cash-type migration** (add `-USD` to equity/currency/etf/index/bond
+    ids) — fold into the combo re-stamp re-run.
+  - **[A3 Databento executor] edits complete, ship pending QG-cap** — dedicated `_get_dbn_fetch_executor()` routes all
+    databento_fetch + databento_batch_jobs fetch/decode off the default pool (DNS-starvation fix); waiting on a gate
+    slot.
+  - **NEW FINDING (follow-up todo): Massive normalizers bypass the shared builder** —
+    `unified-api-contracts/unified_api_contracts/external/massive/normalize.py`
+    (`normalize_massive_equity`/`_futures`/…) build `instrument_key` via raw f-strings
+    (`f"{venue}:{itype.value}:{ticker}"`), so Massive-sourced tradfi ids are bare (`NASDAQ:EQUITY:AAPL`, no `-USD`) and
+    won't get the cash `-USD` or the FUTURE `-USD@LIN` shape. Route the Massive normalizers through
+    `build_instrument_id`. (repo: unified-api-contracts) — P1, matters for the Massive dual-source MVP cells.
+  - **Remaining to the terminal gate:** per-day sweep (~68%) → combo re-stamp + cash-type migration (1 catalogue pass +
+    1 manifest pause→CAS) → Barchart purge → Phase D (adapt data-pipeline-check-is/-mtds to tradfi-only all-shards, both
+    green on `-test-`, then MVP backfills — the wall-clock-bound long pole).

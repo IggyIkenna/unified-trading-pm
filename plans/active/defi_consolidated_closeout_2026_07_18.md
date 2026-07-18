@@ -365,6 +365,84 @@ Discriminator = **does a manifest row exist**.
       reconciliation** — the forward writer is already canonical (Half-A done); the open work is Half-B (migrate the
       historical corpus) then resume forward. (repos: deployment-service, market-tick-data-service)
 
+## Contradiction resolution (pre-SSOT) — from the 2026-07-18 canonical-target audit (75 findings)
+
+> Operator flow (2026-07-18): fix contradictions to the target BEFORE consolidating the SSOT reference, then migrate. A
+> 6-agent audit (slot-4) scanned code + IS/MTDS docs + codex + plans/issues vs the 11-point target ideology and found
+> **75 contradictions** (1 blocking · 35 high · 31 medium · 8 low; **53 doc · 17 code · 5 plan**). Most are docs stating
+> a now-reversed decision, or docs accurately describing pre-migration code. DOC = align now; CODE = migration (Track
+> 1).
+
+### P0 — a real live bug the audit caught (not a doc issue)
+
+- [ ] [BACKEND] P0. **7 lending adapters silently return `[]`** —
+      `euler_v2`/`venus`/`solend`/`radiant`/`benqi`/`marginfi`/`fluid` carry a stale type-guard
+      `if instrument_type not in (None, LENDING)` but now MINT `A_TOKEN`/`DEBT_TOKEN` → a caller passing the real type
+      gets ZERO instruments (a capture gap masquerading as empty). Fix = guard on `(None, A_TOKEN,     DEBT_TOKEN)`,
+      mirroring `morpho.py:93`. (repo: instruments-service)
+
+### Blocker + codex-SSOT / UAC-contract doc fixes (must clear BEFORE the SSOT reference — an agent following them mints wrong ids)
+
+- [ ] [DOCS] P0. **Fix the codex/UAC SSOT-source contradictions**: `mvp-scope-canonical.md:56` PACIFICA-as-MVP
+      (**BLOCKING**) + `:69` LENDING→A_TOKEN/DEBT_TOKEN; `defi-canonical-naming-ssot.md:72/82/106` `lending` canonical +
+      PACIFICA/DRIFT live; `availability-manifest-and-data-status.md:739/666/398` GMX/DRIFT under the cefi axis +
+      LENDING + PROTOCOL-CHAIN venue; `per-asset-group-bucket-layouts.md:137` + `defi-data-type-taxonomy.md:197`
+      chain-before-venue + combined venue; `unified-api-contracts/docs/canonical-instrument-ids.md:68/70/72` underscore
+      venue + DERIBIT-no-quote + LENDING row + tradfi-no-`-USD`; `shard-granularity-cefi.md:106/207` ASTER=USDC + legacy
+      DERIBIT grammar. (repos: unified-trading-pm, unified-api-contracts)
+
+### CODE (migration — folds into Track 1)
+
+- [ ] [BACKEND] P0. **POOL glued-key 3-segment convergence** —
+      `unified-api-contracts/.../canonical/crosscutting/defi.py:313` `glued_pair_id` emits 4-segment
+      `…:POOL:AAVE-USDC:100`, diverging from the MTDS 3-segment producer → **live data-join breakage**; converge to
+      `…:POOL:BASE-QUOTE-FEE_BPS` + fix `parse_glued_pool_id`; confirm `defi.py:300` writes the SYMBOLIC 3-seg key into
+      `canonical_instrument_id` (address stays in the machine `instrument_id`). (repo: unified-api-contracts)
+- [ ] [BACKEND] P1. **SPOT taxonomy hard-enforce + reclassify** (the SPOT_PAIR-misuse fix, operator-agreed) — single
+      tokens EIGEN/ETHFI (`eigenlayer.py`/`ethfi.py`) mint SPOT_PAIR → **SPOT_ASSET**; Solana AMM pools (`meteora.py`/
+      `lifinity.py`) mint SPOT_PAIR → **DEX_POOL/SOLANA_AMM_POOL**; route all through `build_canonical_instrument_id`;
+      fix the `:SPOT:`/`:PERP:`/`:STAKE:` shorthand-vs-enum key mismatches (`pyth.py`/`phoenix.py`/`marinade.py`). **ADD
+      a validator**: for defi, `SPOT_PAIR` REQUIRES a two-token `BASE-QUOTE` symbol (single token → SPOT_ASSET; AMM →
+      POOL). Data reclass migration for the affected rows. (repos: instruments-service, unified-api-contracts)
+- [ ] [BACKEND] P1. **Lending type-guard + retire LENDING from the builder** — the 7-adapter guard bug above; plus
+      `canonical_id_builder.py:84/146/194/967` drop/UNSUPPORTED-mark the `LENDING` example + type-set entries
+      (A_TOKEN/DEBT_TOKEN only); GMX typed `perpetual` (not POOL/lending). (repo: unified-api-contracts)
+
+### DOC-alignment sweep (IS + MTDS docs, ~33 rows)
+
+- [ ] [DOCS] P1. **Align the IS + MTDS docs to the target** — {DEFI,CEFI,TRADFI}_INSTRUMENTS.md (Deribit-drops-quote →
+      keep quote; tradfi FUTURE/EQUITY → `-USD`; EIGEN/ETHFI SPOT_PAIR → SPOT_ASSET; LENDING emitted-list;
+      PACIFICA/DRIFT/`pacifica.py`/`drift.py` listed), ADAPTER_ARCHITECTURE.md, GCS_PATHS.md / DEFI_DOWNLOAD_STRATEGY.md
+      / DEPLOYMENT_GUIDE.md (Shape-B path order + HYPERLIQUID/ASTER-as-defi), the DATABENTO_* / OPTIONS_CHAIN id
+      examples. (repos: instruments-service, market-tick-data-service)
+
+### PLAN/ISSUE stale-claim fixes
+
+- [ ] [PM] P2. **SUPERSEDED banners** — `gcs_hive_partition_malformed_paths_remediation_2026_06_01.md:145` (inverted
+      path as "SSOT"), `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` (DRIFT-is-MVP),
+      `instruments_foundation_completeness_2026_06_24.md:1254` (PACIFICA active), + the two MTDS
+      DEFI-ASTER/HYPERLIQUID-LOG-REVIEW `category=DEFI` labels. (repo: unified-trading-pm)
+
+### Operator decisions applied (2026-07-18)
+
+- **ASTER = per-symbol REAL quote** (predominantly USDT; the tail keeps its real USD1/USDC — `aster.py` already embeds
+  it). NOT hardcoded USDT. Fix `shard-granularity-cefi.md:106` (USDC) + the DEFI_DOWNLOAD docs.
+- **BINANCE-DELIVERY = keep registered, mark non-MVP** (live COIN-M product; descope from the MVP backfill, keep the UAC
+  scaffold — NOT purged; overrides the earlier "purge" framing). Only the DEAD venues are purged (Track 7).
+
+### Cross-AG — PREDICTION canonicalisation also needs work (own close-out)
+
+- [ ] [DATA] P1. **Prediction is a THIRD shard-atom grain** (operator 2026-07-18, per
+      `availability-manifest-and-data-status.md:57-60`): the manifest grain is a **CQG bundle** keyed on
+      `canonical_question_group` (`data_type=prediction_canonical_question_group`, e.g. `SPORTS_EPL_MATCH` /
+      `BTC_UP_DOWN_DAILY`), with per-CID raw objects (Polymarket `condition_id` / Kalshi ticker) as row-level detail;
+      `underlying` is DISPLAY-ONLY, not a key; IS side = `venue → dates` (no data_type axis,
+      `VENUE_REFERENCE_DATA_CAPABILITIES={}`); MTDS drilldown is CQG-**above**-data_type
+      (`data-status-drilldown-hierarchy.md:42`). The phantom reconciler **WIPES the CQG rows** because it mis-keys
+      prediction on per-object `instrument_id` instead of the `(canonical_question_group,     day)` bundle — a P0 the
+      SSOT vindicates. **Prediction warrants its own consolidated close-out** (a 4th, alongside cefi/tradfi/defi); this
+      row is the pointer so it isn't lost. (repos: market-tick-data-service, deployment-api)
+
 ## Codex SSOTs (read before touching a track)
 
 `codex/02-data/defi-canonical-naming-ssot.md`, `codex/02-data/defi-data-pipeline.md`,

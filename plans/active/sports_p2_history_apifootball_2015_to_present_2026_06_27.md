@@ -2077,3 +2077,117 @@ genuinely completes and someone flips the checkbox. Not re-running the full `rea
 not-green result at real compute cost, per established precedent) and not re-flagging the dispatch-cooldown pattern
 (already raised by slot-4, six declines ago — this entry only adds the concrete backlog-YAML confirmation of why the
 bounce keeps recurring). Declining — no action taken, no code touched. `/skip-current-task`.
+
+### 2026-07-18T15:2xZ — data_engineering slot-8 (Todo `-001` — 10th+ bounce, ROOT CAUSE FOUND: fleet was force-killed by vm_zombie_watchdog, not preempted/completed; residual fleet relaunched)
+
+Dispatched to `-001`. Fresh-pulled all slot repos clean, no dirty state inherited. Departed from the established "cheap
+re-check, decline" pattern of the last 9 bounces because the situation materially changed since slot-16's check (~22h
+ago): `gcloud compute instances list --filter="name~af-backfill-20260717"` returned **zero** matches — the 07-17T15:12Z
+5-VM fleet is gone, but investigation showed this was NOT the expected clean completion.
+
+**Termination forensics**: 4/5 VMs (`-151237` EVENTS, `-151335` LINEUPS, `-151405` STATS, `-151433` PLAYER_STATS) have
+NO `EXIT_STATUS`/`DEPLOYMENT_COMPLETED`/`PREEMPTED` marker in GCS; their `run.log` tails show live per-fixture fetch
+activity (events/lineups/stats/player-stats rows being written, zero Tracebacks) at 2026-07-18T09:17-09:19Z. GCP audit
+log (`gcloud logging read ... protoPayload.methodName="v1.compute.instances.delete"`) shows all 4 were deleted at
+09:18:53-09:19:45Z by `unified-trading-sa` — an automated actor, not a human, not a self-delete. Only `-151505`
+(INJURIES, smaller window) self-completed cleanly (`EXIT_STATUS=0`).
+
+**Root cause**: `deployment-service/scripts/vm/vm_zombie_watchdog.py`'s `PREFIX_IDLE_THRESHOLDS` sets a tightened
+`(10.0, 60.0)` minute heartbeat/shard-staleness pair specifically for the `af-backfill-` prefix (tighter than the 15/120
+global default) — a false-positive-prone threshold given API-Football's real rate-limit pacing (54s inter-call sleeps
+observed live). This is a RECURRENCE of `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md` (same defect
+class, same root layer, 25 days later, on the exact `af-backfill-*` prefix that issue's §3 "campaign-mode exemption"
+recommendation was meant to cover but never shipped) — updated that issue doc with this incident + two new actionable
+P1/P2 todos (repo: deployment-service) rather than filing a duplicate. This is very likely the primary reason this todo
+has bounced through 9+ slots without the gate going green: each relaunch makes real partial progress before getting
+reaped again.
+
+**Re-ran the gate query** (single `read_availability_index` read, `source==api_football`, same 5 data_types + coverage
+windows as the 07-17T15:1x session):
+
+| data_type       | pending_fetch (07-17T15:12Z, pre-relaunch) | pending_fetch (07-18T~15:20Z, this check) |
+| --------------- | -----------------------------------------: | ----------------------------------------: |
+| FIXTURE_EVENTS  |                                      1,972 |                                     1,935 |
+| FIXTURE_LINEUPS |                                      2,219 |                                     1,925 |
+| FIXTURE_STATS   |                                      2,864 |                                     1,893 |
+| PLAYER_STATS    |                                      1,232 |                                     1,172 |
+| INJURIES        |                                        558 |                                         0 |
+
+Real progress (INJURIES fully closed; the other 4 reduced by 2-34%) but nowhere near gate (0 pending). Pending
+FIXTURE_EVENTS breaks down heavily toward the recent tail (2026-06/07: 1,534 of 1,935 = 79%) plus older clusters
+(2024-12: 188, 2025-12: 94) — consistent with genuinely-pending shards, not a stuck/structural blocker; a normal
+gap-fill continuation, not a new big finding beyond the watchdog issue already filed.
+
+**Relaunched the 4 residual entities** (INJURIES excluded — already 0 pending) via
+`deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity <ENTITY> 2020-06-06 2026-07-18`:
+`af-backfill-20260718-152725` FIXTURE_EVENTS · `-152753` FIXTURE_LINEUPS · `-152818` FIXTURE_STATS · `-152852`
+PLAYER_STATS. No `--force` (presence-skip only re-attempts genuinely-pending cells). All 4 verified `RUNNING` within
+~3min of launch (no fire-and-forget). Tarball-freshness check false-negative again (this slot's snap `gcloud`/`gsutil`
+has a broken credential store — `snap-confine ... cap_dac_override not found` — the FIRST launch attempt actually
+silently failed to create any VMs for this exact reason, caught + retried with the non-snap SDK prepended to PATH);
+cross-verified manifests independently via `gcloud storage cat`: UAC/UTL/ deployment-service tarballs match local HEAD
+exactly; instruments-service tarball is 1 commit behind local HEAD (`a63a0556`, a CEFI-only
+`feat(cefi): Script 3 base-quote SSOT map...` commit, unrelated to sports/api_football code paths) — safe to proceed on.
+
+**Not flipping this checkbox** — gate still requires 0 pending across all 5 (now 4, since INJURIES cleared) data_types.
+Given the watchdog root cause is now understood and filed as an actionable infra todo, the next dispatch to this todo
+should: (1) check whether the infra fix (issue doc's two new P1/P2 todos) has landed — if so, the current relaunch has a
+real chance to run to completion this time; (2) if the watchdog is still killing runs, treat that as the blocking issue
+(not another blind relaunch) and escalate the infra todo's priority / ping main-agent directly rather than re-diagnosing
+from scratch; (3) once genuinely 0 pending (excluding TEAMS, out of this todo's scope per its own text, and STANDINGS'
+pre-existing smaller `attempted_failed` issue, not chased this dispatch), flip this checkbox with per-entity evidence.
+`/skip-current-task` after shipping — matching this doc's established precedent (real progress + root-cause-bounded
+relaunch is the shippable unit when the underlying compute isn't finished yet).
+
+### 2026-07-18T15:4xZ — data_engineering slot-4 (Todo `-001` — 11th bounce, cheap re-check, decline: relaunch too fresh + fix already in flight)
+
+Dispatched (resumed) onto `-001`. Fresh-pulled all slot repos clean. Checked the two things slot-8's note asked the next
+dispatch to check, rather than blind-repeating the full diagnosis:
+
+1. **Infra fix status** — `zombie_watchdog_relaunch_reaped_live_backfills-001` (the `[INFRA] P1` widened
+   `PREFIX_IDLE_THRESHOLDS` todo from the issue doc) is confirmed **already `dispatched` to slot 3** in the live backlog
+   (`GET /api/backlog`, priority 20) — not sitting unpicked, so no escalation/priority-bump needed right now.
+2. **Fleet survival** — `gcloud compute instances list --filter="name~af-backfill-20260718"` (non-snap SDK at
+   `~/google-cloud-sdk/bin`; this slot's snap `gcloud` still hits the same `cap_dac_override` credential-store bug noted
+   last session) shows all 4 relaunched entity VMs (`-152725` EVENTS / `-152753` LINEUPS / `-152818` STATS / `-152852`
+   PLAYER_STATS) still `RUNNING`, ~15-18 min old — the watchdog has not reaped this relaunch (yet; it's inside the 60min
+   shard-staleness window either way, too early to call it survived).
+
+Also noted an unrelated 5th `af-backfill-20260718-150353` VM (`VM_SPORTS_ENTITY=FIXTURES`, `VM_FORCE=true`,
+2019-01-10→2026-07-17) — a separate FIXTURES force-backfill from a different task, out of this todo's enrichment scope
+(FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES/STANDINGS/TEAMS only); not investigated further here.
+
+**Decline, no new diagnosis run**: re-running the full `read_availability_index` gate query now (~15-18 min after the
+last measurement) would almost certainly reproduce the same pending counts session-8 already logged — that exact
+"re-check nothing changed, decline" pattern is what bounces 2-9 already did on this todo. With the fix in flight
+elsewhere and the fleet still alive, there's nothing new this dispatch can add. Not flipping the checkbox.
+`/skip-current-task` — resume this todo once (a) slot 3's watchdog-threshold fix ships (check
+`zombie_watchdog_relaunch_reaped_live_backfills-001` status) or (b) enough wall-clock has passed for a genuinely fresh
+gate re-read to be informative, whichever comes first.
+
+### 2026-07-18T15:43Z — data_engineering slot-5 (Todo `-001` — 12th bounce, cheap re-check ~3min after slot-4's, both preconditions still unmet)
+
+Dispatched (resumed) onto `-001`. Fresh-pulled all slot repos clean, no dirty state inherited.
+
+**Checked both of slot-8's stated resume preconditions**: (1) infra fix
+`zombie_watchdog_relaunch_reaped_live_backfills-001` — `GET /api/backlog` still shows
+`status: dispatched, dispatched_to: 3`, no `done_sha` — not shipped yet. (2) wall-clock since the last gate read
+(slot-8, ~15:20Z) is only ~23 min, and slot-4 already checked ~3 min before this dispatch at essentially the same clock
+distance — re-running `read_availability_index` now would not be a "genuinely fresh" read by the bar slot-8 set.
+
+**Fleet-liveness spot-check only** (cheaper than the full gate query, still useful signal):
+`gcloud compute instances list --filter="name~af-backfill-20260718"` — all 4 relaunched entity VMs (`-152725` EVENTS /
+`-152753` LINEUPS / `-152818` STATS / `-152852` PLAYER_STATS) still `RUNNING`, ~15-17 min old, i.e. survived past the
+watchdog's tightened 10-min heartbeat threshold (though still inside its 60-min shard-staleness window, so not yet a
+clean bill of health). `run.log` tails (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`) confirm
+all 4 are actively writing rows with fresh `PIPELINE_HEARTBEAT` timestamps 15:42-15:44Z, zero Tracebacks — genuinely
+progressing, not stalled. (Noted the unrelated 5th `af-backfill-20260718-150353` FIXTURES force-backfill VM again, still
+out of this todo's enrichment scope, not investigated.)
+
+**Decline again, no new diagnosis run**: both of slot-8's resume conditions remain unmet by design (infra fix not
+shipped; not enough new wall-clock for a fresh gate read). The fleet-liveness check is genuinely new information
+(confirms the relaunch has now outlived the watchdog's 10-min heartbeat threshold without being reaped, one data point
+toward "this relaunch may survive") but does not itself move the gate. Not flipping the checkbox. `/skip-current-task` —
+same resume criteria as slot-4's entry: (a) `zombie_watchdog_relaunch_reaped_live_backfills-001` ships, or (b) the fleet
+has been running long enough (past the 60-min shard-staleness window, i.e. VMs older than ~16:27-16:29Z) for a fresh
+`read_availability_index` gate read to be informative.

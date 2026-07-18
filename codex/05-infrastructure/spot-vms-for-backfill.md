@@ -133,6 +133,39 @@ deliberately (`sports_p0_spot_vm_launchers`, shipped) — its idempotent re-poll
 named carve-out, not a general licence for pollers; any OTHER forward/cron/poll launcher still defaults on-demand per
 the classification above unless it earns its own named exception here.
 
+## Preemption recovery MUST resume from PROGRESS, never replay START_DATE (HARD RULE, codified 2026-07-18)
+
+Every SPOT VM launched from `deployment-service/scripts/vm/` is preemption-recovered by
+`scripts/recovery/relaunch_backfill_vm.py` (`RelaunchPreemptedVm`), triggered by the `PREEMPTED` signal blob and wired
+fleet-wide via `scripts/vm/lib/launcher_common.sh`. That relauncher **replays the ORIGINAL launch params — including
+`START_DATE`** (its own docstring: _"the SAME venues/START_DATE/concurrency/lease the preempted VM was"_ launched with).
+
+**That is correct ONLY for a skip-enabled backfill**, where presence-skip absorbs the redo and the run resumes
+naturally. **It is BROKEN for any `--force` / `redo_all` run**, because force disables the very skip the resume depends
+on. Replaying `START_DATE` then restarts the run at day one — forever. The job makes no net progress and burns quota on
+every cycle.
+
+Measured 2026-07-18 (sports round-FIXTURES, but the defect is asset-group agnostic): a `--force` backfill over
+2019-01-01..2026-07-17 (2,390 days) ran at ~54 days/hour ⇒ ~44h of runtime, while SPOT preempted it after ~10 minutes of
+real work. Replay-from-START_DATE would have re-done 2019-01-01..07 on every cycle indefinitely.
+
+**Rules:**
+
+1. A SPOT VM whose run is NOT idempotent-by-skip (i.e. any `--force`/`redo_all` run) MUST resume from **measured
+   progress**, not from the original `START_DATE`.
+2. Progress is measured the same way a backfill monitor measures it — a count/max of the **target artifact** actually
+   created, entity-scoped (see `codex/12-agent-workflow/async-wait-and-poll-discipline.md`). Never a log or heartbeat.
+3. Until the relauncher is progress-aware, a `--force` SPOT run MUST be driven as repeated bounded relaunches from
+   `last_completed_unit + 1` (an operator loop or an explicit chunk schedule) — and that requirement belongs in the
+   launch plan, not in someone's head.
+4. `--on-demand` is NOT the fix. It hides the gap for one job while leaving every other SPOT `--force` run broken, and
+   it forfeits the 60-91% cost saving the SPOT default exists for.
+
+**Open implementation gap** — the durable fix is a CHECKPOINT CONTRACT: the VM periodically writes its
+`last_completed_unit` to a known blob (e.g. `vm-logs/{vm_name}/PROGRESS`), and `RelaunchPreemptedVm` reads it and
+overrides `START_DATE` on replay. That is data-type agnostic (the VM knows its own units) and fixes every launcher at
+once. Tracked in `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` § G-ops.
+
 ## Coverage (2026-06-27 fleet-wide conversion)
 
 All GCP backfill launchers in `deployment-service/scripts/vm/` provision Spot by default: ~50 direct-`gcloud` launchers
