@@ -413,16 +413,15 @@ fixture-linked before MVP backfill.
       exchange lay (exclude from back-lay arbs; include in 3-way with exchange_meta validation); keep the honest gate
       that a real two-sided book must exist on BOTH venues before emitting an arb row.
       `codex/04-architecture/cross-venue-prediction-arb-detection.md`. (repos: features-service)
-- [ ] [BACKEND] P2. **Fix venue-derivation for prediction/sports `instrument_id`s in execution-service — 1 of 2 sites
-      shipped, the production-critical one IN FLIGHT.** The naive `instrument_id.split(":")[0]` returns the TYPE/SPORT
-      for TYPE-first ids (`FOOTBALL:POLYMARKET:…`→"FOOTBALL", `PREDICTION:KALSHI:…`→"PREDICTION"). (1) ✅ SHIPPED
-      `validation/instrument_format.py::get_venue_from_instrument_id` `execution-service@e3707472` — robust known-venue
-      discrimination via UAC `VENUE_CATEGORY_MAP` (venue-first unchanged; type-first → parts[1]); this site is LATENT
-      (no prod caller). (2) IN FLIGHT — the sibling `utils/instruction_type.py::extract_venue` has the identical bug but
-      is HEAVILY USED in production (~40 call sites: matching engines, preflight_gate, `infer_instruction_type`,
-      `get_asset_group_from_instrument_id`) and HARD-CRASHES (`UnknownVenueError`) on a type-first id — the real
-      (latent) landmine; being fixed with the same additive robust-parse (cefi/defi/tradfi byte-unchanged). (repos:
-      execution-service ✅ get_venue / extract_venue in flight)
+- [x] ✅ [BACKEND] P2. **Venue-derivation for prediction/sports `instrument_id`s in execution-service — BOTH sites FIXED
+      (2026-07-18).** The naive `split(":")[0]` returned the TYPE/SPORT for TYPE-first ids. (1) ✅
+      `validation/instrument_format.py::get_venue_from_instrument_id` `execution-service@e3707472` (latent, no prod
+      caller). (2) ✅ the production-critical sibling `utils/instruction_type.py::extract_venue`
+      `execution-service@730fcd1c0` — it had the identical bug but is HEAVILY USED (~40 call sites: matching engines,
+      preflight_gate, `infer_instruction_type`, `get_asset_group_from_instrument_id`) and HARD-CRASHED
+      (`UnknownVenueError`) on a type-first id. Both use the SAME additive robust-parse via UAC `VENUE_CATEGORY_MAP`
+      (venue-first byte-unchanged for cefi/defi/tradfi; type-first → `parts[1]`); QG-green, tests cover both. (repos:
+      execution-service ✅)
 
 ## Codex SSOTs (read before touching a phase)
 
@@ -773,3 +772,31 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   - **Multi-agent-branch note:** the aliases + Kalshi WIPs each landed via an atomic re-gate+quickmerge retry loop after
     a peer FF staled the first quickmerge (the hyper-active branch drifted 40+ commits during the session). The
     exec-service ship correctly used the sanctioned `--skip-preflight` when my aliases WIP showed as a dirty dep.
+
+- **2026-07-18 (slot-2) — AUTONOMOUS WINDOW FINAL REPORT (rule 9): all prediction close-out CODE SHIPPED + verified.**
+  The operator's originating question — _do we have canonical football fixture ids linking sports→prediction so we can
+  arb live-odds vs Polymarket vs Kalshi?_ — is now answered IN CODE, not just in the plan. Every implementable unit is
+  shipped, QG-green, on `origin/live-defi-rollout`, and adversarially verified (git + code read) — 3 sub-agents flaked
+  on API/session-limit errors and NONE was trusted; each ship was re-verified.
+  - **Fixture-id threading (the ask):** Polymarket + Kalshi soccer resolve `af_fixture_id` (resolver `is@85988ade`,
+    Kalshi parser `is@ec8633ac`, order-robust `is@ba3528d4`), materialized as real instrument-parquet columns (UAC
+    schema `uac@e7ed754e` + IS `process_write` join `is@e3ffc613`). Reuses the SAME single-walk fixtures reader +
+    `validate_team_resolution` index the odds side uses — so a Polymarket, a Kalshi, and a bookmaker-odds row for the
+    same match now share one `af_fixture_id`.
+  - **Matching to ~0% gap:** Kalshi ~0% → 82.6% → ~100% (8 Kalshi aliases `uac@e7ed754e`); South-American odds gap
+    closed (`uac@98d757f9`, each alias verified vs the API-Football FIXTURES `af_home_name`); home/away order-robust.
+  - **Canonical/dedupe audit + migration:** A0 live baseline (manifest `instrument_type` 11.70% canonical) → Phase-B
+    dry-run migration script `mtds@5392b20b` (measured 11.70%→97.40%); §5 union path-templates `uac@e7ed754e`; §6
+    provenance `mtds@3397e7ae`; A2 identity 5/8.
+  - **Phase-D smoke isolation:** the prediction `-test-` bucket now used by verify-read + batch-write + live-write
+    (`mtds@b06d1e6b/2e50851d/86d70de9`), cross-AG byte-unchanged.
+  - **Bonus data-correctness:** execution-service venue-derivation fixed at BOTH sites (`exs@e3707472` + the
+    production-critical `exs@730fcd1c0` — `extract_venue` hard-crashed on type-first ids); + a `data_pipeline` prose
+    reconcile.
+  - **HELD — needs the operator (NOT abandoned; each is one decision/authorization away):** (1) the Phase-B prod
+    migration RUN (dry-run script ready; operator chose code-ready-only) + its TWO findings that revise the plan — the
+    CQG bundle `instrument_type` is inconsistent not null-by-design (normalize it → ~100% vs 97.40%?), and the
+    additive-shard leaves ~652k dedup-key stragglers needing a removal strategy; (2) the Phase-D smoke RUN needs an
+    operator-given `--day`; (3) minor follow-ups: UTL `get_write_bucket_name` prediction-PROD-only non-tick path,
+    `book_snapshot_5` prediction-MVP-rule reconcile, and the A2 residuals (catalog regen / gcs_paths.py / MDPS). Loop
+    stopped — the metric can't climb further without an operator decision/authorization; resumes on any of them.
