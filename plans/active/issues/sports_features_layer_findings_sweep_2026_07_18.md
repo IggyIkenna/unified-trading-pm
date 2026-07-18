@@ -822,3 +822,44 @@ Measured drift in `market-data-tick-sports-prd` (1,974,679 rows): `ODDS`/`odds` 
 - [ ] [DATA] P1. Re-run the § F distinct-value audit and show ZERO case-duplicates, no vendor in `venue`, and
       `instrument_type` within vocabulary. Restore the data-status distinct-values listing (§ F, [CODE] P1) so this is
       visible in the UI instead of needing an ad-hoc query.
+
+### K0-CORRECTION (operator challenge: "data_type is lowercase for sports or for all AGs? its uppercase for tradfi so thats weird")
+
+**RETRACTED (mine)**: K0 said "`data_type` canonical = lower-case", generalising CF-7. CF-7's claim is scoped to the
+**MDPS odds** data_types only, and I wrongly promoted it to a sports-wide rule. Measured reality:
+
+| bucket                 | distinct | UPPER | lower         |
+| ---------------------- | -------- | ----- | ------------- |
+| market-data **tradfi** | 12       | **0** | 12            |
+| market-data **cefi**   | 9        | **0** | 9             |
+| market-data **defi**   | 6        | **0** | 6             |
+| instruments **tradfi** | 1        | **0** | `instruments` |
+| instruments **cefi**   | 1        | **0** | `instruments` |
+| instruments **sports** | 9        | **9** | 0             | ← FIXTURES, FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, MATCHES, PLAYER_STATS, PREDICTIONS, WEATHER |
+| features **sports**    | 4        | **4** | 0             | ← DERIVED_FEATURES, FIXTURE_FEATURES, ODDS_FEATURES, SFI_PROGRESSIVE_FEATURES                           |
+| market-data **sports** | 13       | 4     | 9             | ← the ONLY mixed bucket in the fleet                                                                    |
+
+**The operator's premise is inverted, and the conclusion is stronger: tradfi is lower-case; SPORTS is the outlier.**
+Sports is the only asset group using UPPERCASE `data_type` anywhere. UAC agrees — `("tradfi","trades")` /
+`("tradfi","ohlcv_1m")` are lower-case while `("sports","FIXTURES")` / `("sports","PLAYER_STATS")` are UPPER, with an
+explicit comment that _"The canonical data_type name is PLAYER_STATS"_.
+
+**Deeper than casing — a STRUCTURAL divergence.** instruments-tradfi/cefi carry a single `data_type='instruments'`;
+instruments-**sports** carries 9 entity-like values. Sports is using `data_type` as an ENTITY axis where no other asset
+group does. Any "make sports canonical" effort must decide that, not just the case.
+
+**Three targets, NOT equivalent — needs an operator decision before ANY row is rewritten:**
+
+- **(a) MDPS → lower only** (what K2 assumed): fixes the one mixed bucket, sports stays internally split (UPPER
+  reference + UPPER features + lower MDPS). Cheapest; leaves sports non-canonical fleet-wide.
+- **(b) sports → UPPER everywhere**: sports becomes internally uniform, but permanently diverges from tradfi/cefi/defi
+  and from UAC's lower-case convention for those AGs. Entrenches the outlier.
+- **(c) sports → lower everywhere** (TRUE fleet-canonical): aligns sports with every other AG. Largest — ~5.4M
+  instruments-sports rows + the features layer + every UAC `("sports", …)` SOURCE_PRIORITY key + the
+  `canonical_writer_stamping` bridge + downstream readers that filter on these literals. Also forces the structural
+  question (is `data_type` an entity axis for sports, or should entity live on its own axis as it does elsewhere?).
+
+- [ ] [ASK] P0. Operator decision on (a)/(b)/(c) before K1/K2 execute. **K2 is BLOCKED on this** — normalising 2M MDPS
+      rows to lower-case under (a) would be actively wrong if the answer is (b), and would be only ~5% of the work under
+      (c). Recommendation: **(c)**, because it is the only option that makes "sports is canonical" true rather than
+      "sports is self-consistent"; but it is a multi-week programme, not a migration script.
