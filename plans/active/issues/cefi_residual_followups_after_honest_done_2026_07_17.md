@@ -461,6 +461,26 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Progress Log
 
+- **2026-07-18 (slot-3, /autonomous) — CUTOVER STAGED; drain+`--apply`+content GATED on a QUIET cefi fleet (a
+  concurrent pipeline-check sweep is active).** Everything reversible is done + verified; only the irreversible core
+  remains, and it needs a writer-free window.
+  - **Reader-bridge (377) VERIFIED READY**: the D3 `CeFiWireCanonicalMap` bridge is on current `origin/main` for BOTH
+    MTDS (`engine/cefi_wire_bridge.py`, `cefi_catalog_reader.py`, `partitioned_writer.py`,
+    `market_interface/adapters/cefi/catalog_id_resolver.py`) and MDPS (`app/utils/cefi_wire_bridge.py`,
+    `canonical_writer_shaping.py`, `path_parsing.py`). Consumers are batch/job workloads (pick up the image at next
+    invocation, which is post-re-enable); features' read is filename-agnostic (rename can't break it); execution-service
+    needs only a redeploy (non-trading → low risk). So readers survive the rename/rewrite.
+  - **DRAIN BLOCKER (measured)**: `gcloud compute instances list … name~cefi status=RUNNING` = **2 VMs**, both from a
+    concurrent PIPELINE-CHECK sweep — `instr-backfill-cefi-pchk-0718120011-f-<venue>` + `mtds-backfill-cefi-pipelinecheck-
+    <ts>` (a fresh mtds-backfill launched every ~4 min; venue cycles okx-spot→deribit→…). AWS cefi = 0. The STANDING
+    capture writers (Tardis `cefi-queue-*` / on-chain `cefi-*`) are already quiet — it is ONLY this concurrent sweep
+    (another session running the `data-pipeline-check-mtds` skill) that is live. Draining it would be (a) interfering
+    (not my operation) and (b) INEFFECTIVE — the controller relaunches per-venue writers that would then RACE my
+    rename/content `--apply` (the exact hazard the drain exists to prevent). Per the drain HARD RULE ("no GCS cutover
+    with writers live") the cutover WAITS for the sweep to finish (a fleet-quiet watcher is armed), then executes
+    drain→snapshot→Scripts 2/3/4 `--apply`→re-enable→Script-1 content on a VM. **This is a fleet-coordination gate, not a
+    code/data problem** — surfaced to the operator.
+
 - **2026-07-18 (slot-3, /autonomous) — CUTOVER STEP 1+2 DONE: catalogue rebuilt + Phase-−1 gate GREEN (surface D is
   canonical-clean).** Rebuilt `prod/catalog.parquet` with the DERIBIT-quote fix (`instruments-service@d72edcf7`) +
   equity-perp widen (`unified-api-contracts@172e8cdb` + `instruments-service@ff6d9750`): **425,573 rows** (monotonic
