@@ -74,7 +74,12 @@ jobs:
       - name: Sweep stale repos and dispatch digest refresh
         if: steps.current-digest.outputs.digest != ''
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Cross-repo Contents-API reads + repository_dispatch REQUIRE a full-repo PAT — the
+          # ambient repo-scoped ${{ secrets.GITHUB_TOKEN }} cannot read another repo's contents,
+          # so every IMAGE_REPO silently hit "Dockerfile not found" and the sweep NEVER dispatched
+          # (fleet stayed stale-pinned; see issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md).
+          # GH_PAT is the same cross-repo token update-repo-version.yml / UTL clone-pm-scripts use.
+          GH_PAT: ${{ secrets.GH_PAT }}
           CURRENT_DIGEST: ${{ steps.current-digest.outputs.digest }}
           FORCE_ALL: ${{ inputs.force_all || 'false' }}
           OWNER: ${{ github.repository_owner }}
@@ -114,7 +119,7 @@ jobs:
           echo "UTL version for dispatch payload: $UTL_VERSION"
           echo "Current digest: $CURRENT_DIGEST"
 
-          TOKEN="${GITHUB_TOKEN}"
+          TOKEN="${GH_PAT}"
           DISPATCHED=0
           ALREADY_FRESH=0
           SKIPPED_NO_ARG=0
