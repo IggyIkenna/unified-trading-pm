@@ -880,10 +880,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.27,
         "large_file_count": 0,
+        "warn_file_count": 37,
         "qg_red_reason": null,
-        "warn_file_count": 37
+        "coverage_pct": null
       }
     },
     "ml-service": {
@@ -1263,10 +1263,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 87.9,
         "large_file_count": 6,
+        "warn_file_count": 21,
         "qg_red_reason": null,
-        "warn_file_count": 21
+        "coverage_pct": null
       }
     },
     "unified-trading-pm": {
@@ -1399,7 +1399,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
