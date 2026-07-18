@@ -111,6 +111,12 @@ despite the migration scripts existing and a VM run being logged — the run eit
 surface, and the live manifest/catalogue never converged. The four surfaces (GCS filename / parquet `instrument_id`
 column / manifest key / reader) are the CeFi model; tradfi is done on filenames only.
 
+**Live confirmation (operator, 2026-07-18, the deployment-api instruments data-status "Upcoming expiries" widget)**:
+real catalogue rows render as `CME:OPTION:E3AN6 C7960` / `E3AN6 C7975` / `E3AN6 C8000` — raw weekly-option product code
+(`E3AN6`), a **literal SPACE** as sub-delimiter (the banned-whitespace class), no `@LIN`, no `-USD`, no `YYYYMMDD`,
+strike glued as `C7960`. Target for this exact row: `CME:OPTION:SP500-USD@LIN-<expiry>-7960-C`. This IS the catalogue
+surface — Phase A1 (writer) → B (migrate `prod/catalog.parquet`) → C (widget renders canonical) fix it end to end.
+
 ## MVP universe (operator-defined 2026-07-18 — the Phase-D readiness target)
 
 - **S&P index futures** (ES) + **S&P index options**.
@@ -127,7 +133,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > Nothing migrates until every WRITER emits the canonical shape and the migration scripts actually apply. Includes the
 > tradfi download-throughput work so the re-backfill in Phase D runs fast.
 
-### A1 — Converge every id WRITER to the canonical `PRODUCT_ROOT[-QUOTE]@LIN-YYYYMMDD[-STRIKE-C|P]` shape
+### A1 — Converge every id WRITER to the canonical `PRODUCT_ROOT-USD@LIN-YYYYMMDD[-STRIKE-C|P]` shape
+
+> **DECIDED 2026-07-18 (operator)**: TradFi FUTURE/OPTION canonical ids carry an **explicit `-USD` quote** —
+> `CME:FUTURE:SP500-USD@LIN-20300621`, `CME:OPTION:SP500-USD@LIN-20251017-5000-C`, `CBOE:FUTURE:VIX-USD@LIN-20260722`
+> (equities already `NASDAQ:EQUITY:AAPL-USD`). Chosen over the bare-product-root form so "same pattern regardless of
+> asset class" is literally true and consistent with the 2026-07-18 DERIBIT quote ruling. Every A1 writer + every
+> Phase-B migration emits this shape; the Phase-B/D verify gate asserts the `-USD@LIN` shape (not just presence of
+> `@LIN`).
 
 - [ ] [BACKEND] P0. **IS catalogue adapter emits raw + a non-matching third shape.**
       `instruments-service/.../reference_data/adapters/tradfi/databento/adapter.py:880` writes primary
@@ -144,11 +157,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - [ ] [BACKEND] P0. **Verify + converge the tick parquet CONTENT** (`instrument_key`/`symbol` columns) — confirm
       forward-written rows carry the canonical id; if `symbol` (raw) is what flows into the manifest, that is the leak.
       (repo: market-tick-data-service)
-- [ ] [OPERATOR] P0. **TradFi quote/margin ruling** — `@LIN` ids are bare product roots
-      (`CME:FUTURE:GOLD@LIN-20260821`). All tradfi here is USD-settled (no inverse), so `@LIN` is invariant. DECIDE:
-      keep bare `PRODUCT_ROOT@LIN-YYYYMMDD`, or carry explicit `-USD` (`CME:FUTURE:GOLD-USD@LIN-20260821`) to match the
-      uniform cross-AG `BASE-QUOTE@MARGIN` pattern. Recommendation: **explicit `-USD`** (non-ambiguous, consistent with
-      the 2026-07-18 DERIBIT ruling). Every A1 writer emits the chosen shape. (decision)
+- [x] ✅ [OPERATOR] P0. **TradFi quote/margin ruling — DECIDED 2026-07-18: explicit `-USD`** (see the A1 banner above).
+      All tradfi is USD-settled (no inverse), but the quote is carried anyway for cross-asset-class uniformity +
+      non-ambiguity, consistent with the DERIBIT ruling. Target =
+      `VENUE:TYPE:PRODUCT_ROOT-USD@LIN-YYYYMMDD[-STRIKE-C|P]`.
 - [ ] [BACKEND] P1. **Route the tradfi writers through the shared `build_canonical_instrument_id`** (re-drift
       prevention) + a QG that fails a raw-shaped tradfi `instrument_key` on write — else new writes re-drift.
       `canonical_id_builder_retrofit_checklist_2026_07_08.md`. (repos: instruments-service, market-tick-data-service,
