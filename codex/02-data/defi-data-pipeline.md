@@ -107,7 +107,9 @@ DeFi raw data is **split across several dedicated buckets by data_type**, not al
 Inside `market-data-tick-defi-prd-…`:
 
 ```
-raw_tick_data/by_date/day=YYYY-MM-DD/asset_group=defi/venue=<V>/chain=<C>/instrument_type=<T>/data_type=<D>/*.parquet
+raw_tick_data/by_date/day=YYYY-MM-DD/pipeline_mode={mode}_{source}/asset_group=defi/venue=<V>/chain=<C>/instrument_type=<T>/data_type=<D>/*.parquet
+        (migration pending: this doc predates the pipeline_mode partition; the {mode}_{source} segment lands after day=;
+         venue-before-chain ordering is correct)
         D ∈ { dex_swaps, dex_pool_state, dex_pool_swaps, oracle_prices, rate_indices, rewards,
               risk_params, utilization, vault_share_price, eigenlayer_rewards, ... }
 processed_candles/by_date/day=YYYY-MM-DD/timeframe={15s|1m|5m|15m|1h|4h|24h}/data_type=dex_swaps/...   ← MDPS output

@@ -1230,9 +1230,11 @@ the _process_, those for the _AG-specific execution_.
     `run_rollup("cefi", --allow-catalogue-shrink --dry-run)` to validate the corrected catalogue before the real write
     (full 2,647-day by*date walk, ~25min, RSS-bounded ~700MB). **POST-REGEN AUDIT will additionally verify
     EXTENDED-STARKNET/PACIFICA-SOLANA/LIGHTER-ZKSYNC show a SANE active count** (coordinator flag: EXTENDED appeared
-    defunct at 14/103 active — the false-delist class; they're live cefi perp-DEXs, must not be mass-delisted). Report
+    defunct at 14/103 active — the false-delist class; EXTENDED-STARKNET and LIGHTER-ZKSYNC are live/KEPT cefi
+    perp-DEXs, must not be mass-delisted). **(2026-07-16: PACIFICA-SOLANA was CULLED/purged — it is NOT a kept venue;
+    disregard the PACIFICA references in this audit intent, only EXTENDED-STARKNET/LIGHTER-ZKSYNC remain.)** Report
     their active counts in the final validation. NB the \_real* by_date universe for these is genuinely SMALL (06-26:
-    EXTENDED-STARKNET 14, PACIFICA-SOLANA 4 instruments listed) — so a low active count may be CORRECT, not a
+    EXTENDED-STARKNET 14, PACIFICA-SOLANA 4 instruments listed — pre-cull) — so a low active count may be CORRECT, not a
     false-delist; the test is whether the EXTENDED rows currently stamped `available_to` are genuine churn vs the
     thin-day false-delist my G1.1 fix un-delists.
   - **GATE-BOUNDARY HOLD 2026-06-27 — a coordinator relayed an operator "greenlight" for the cefi 8-venue
@@ -1251,15 +1253,17 @@ the _process_, those for the _AG-specific execution_.
     BINANCE-DELIVERY +684 captured) and regenned the catalogue. **G1.1/G1.4 PROD VERDICTS (re-audited live
     prod/catalog.parquet 2026-06-27):** ✅ the 8,520-instrument available_to=2026-06-25 false-delist cluster GONE
     (8,520→**302**); ✅ per-venue active ≈ real (BINANCE-FUTURES **47→671**, total active **4,410→9,025**); ✅ **0
-    non-ASCII/CJK** instrument_ids (G1.4 purge held); ✅ EXTENDED 103/103 · PACIFICA 10/10 · LIGHTER 213/213 active (the
-    on-chain perp-DEXs NOT mass-delisted — the false-delist class resolved). **BUT that backfill REGRESSED the cefi
-    `_index`** (its regen merged an OLD pre-prune baseline → the 21,952 stale schema_version=4 blank-capture_status rows
-    came BACK; `_index` 83,646→108,878). **FIXED (independently verified + re-pruned, snapshot-first
-    `_index/snapshots/pre_g13b_reprune_2026_06_27.parquet`):** dropped exactly the 21,952 stale rows (dd17ce23 predicate
-    = capture_status ∉ the 4 valid states, == sv=4 == blank-ag, all three sets identical — fail-closed verified) while
-    PRESERVING all v9 incl. the new backfill (LIGHTER 888 / PACIFICA 782 / BINANCE-DELIVERY 2,171 captured). **LIVE
-    `_index` now 86,926 rows, 100% schema_version=9, 100% asset_group=cefi, 0 blank/invalid capture_status.** Catalogue
-    stays 9,025 active (the prune is `_index`-only).
+    non-ASCII/CJK** instrument_ids (G1.4 purge held); ✅ EXTENDED 103/103 · ~~PACIFICA 10/10~~ · LIGHTER 213/213 active
+    (the KEPT on-chain perp-DEXs EXTENDED-STARKNET/LIGHTER-ZKSYNC NOT mass-delisted — the false-delist class resolved).
+    **NOTE (2026-07-16): PACIFICA-SOLANA was subsequently CULLED/purged from the registry — the "10/10 active" above is
+    a stale-as-of-2026-06-27 count; the target-state count is 0 (removed), NOT a kept/active venue.** **BUT that
+    backfill REGRESSED the cefi `_index`** (its regen merged an OLD pre-prune baseline → the 21,952 stale
+    schema_version=4 blank-capture_status rows came BACK; `_index` 83,646→108,878). **FIXED (independently verified +
+    re-pruned, snapshot-first `_index/snapshots/pre_g13b_reprune_2026_06_27.parquet`):** dropped exactly the 21,952
+    stale rows (dd17ce23 predicate = capture_status ∉ the 4 valid states, == sv=4 == blank-ag, all three sets identical
+    — fail-closed verified) while PRESERVING all v9 incl. the new backfill (LIGHTER 888 / PACIFICA 782 /
+    BINANCE-DELIVERY 2,171 captured). **LIVE `_index` now 86,926 rows, 100% schema_version=9, 100% asset_group=cefi, 0
+    blank/invalid capture_status.** Catalogue stays 9,025 active (the prune is `_index`-only).
   - [ ] [INFRA] P2. **FINDING — `MANIFEST_ALLOW_STALE_FALLBACK=true` baked into
         `deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh:138` (+ the GCS-uploaded
         `setup-data-pipeline-vm.sh`) by the backfill agent — REVERT once the consolidator is healthy, NOT permanent.**

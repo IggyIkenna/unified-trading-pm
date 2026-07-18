@@ -4,8 +4,8 @@ title: DeFi Execution Overview
 summary:
   "SSOT for DeFi execution: strategy→execution manifest handoff (3-state emission), operation routing
   (TRADE/LEND/BORROW/SWAP/STAKE/FLASH_* + Phase-4 LST/restaking/yield/Solana connectors), credential fetch,
-  DefiErrorCode (35 codes), cost models (gas/slippage/flash), wrap preprocessor, and the DeFi-long+CeFi-short
-  hybrid model."
+  DefiErrorCode (35 codes), cost models (gas/slippage/flash), wrap preprocessor, and the DeFi-long+CeFi-short hybrid
+  model."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,7 +16,17 @@ tags: [defi, execution, connectors, cost, mev, aave, uniswap]
 related: [mev-protection.md, interface-credential-convention.md, custody-providers.md]
 created: 2026-03-27
 authoritative_for: [DeFi execution overview and strategy-to-execution operation routing]
-referenced_by: [codex/02-data/carry-venue-live-integration-reference.md, codex/02-data/defi-data-pipeline.md, codex/04-architecture/chain-environment-resolution.md, codex/04-architecture/interface-credential-convention.md, codex/04-architecture/mev-protection.md, codex/04-architecture/research-service-and-dart-integration.md, codex/04-architecture/solana-defi-coverage.md, codex/04-architecture/strategy-ensemble-topology.md]
+referenced_by:
+  [
+    codex/02-data/carry-venue-live-integration-reference.md,
+    codex/02-data/defi-data-pipeline.md,
+    codex/04-architecture/chain-environment-resolution.md,
+    codex/04-architecture/interface-credential-convention.md,
+    codex/04-architecture/mev-protection.md,
+    codex/04-architecture/research-service-and-dart-integration.md,
+    codex/04-architecture/solana-defi-coverage.md,
+    codex/04-architecture/strategy-ensemble-topology.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -340,10 +350,10 @@ DeFi strategy = on-chain long (LST staking / Aave lending / AMM LP)
 
 ALL CeFi perp venues are candidates for the short leg. Eligibility is archetype-specific:
 
-| Archetype                    | Margin mode   | Eligible CeFi venues                                                             |
-| ---------------------------- | ------------- | -------------------------------------------------------------------------------- |
-| `carry_staked_basis`         | LST_AS_MARGIN | Bybit UTA (stETH/METH/USDe), Deribit (stETH), OKX (wstETH), DRIFT (JitoSOL/mSOL) |
-| `arbitrage_price_dispersion` | USDC          | All venues: Binance, Bybit, OKX, Deribit, Kraken, Hyperliquid, Aster, DRIFT      |
+| Archetype                    | Margin mode   | Eligible CeFi venues                                                 |
+| ---------------------------- | ------------- | -------------------------------------------------------------------- |
+| `carry_staked_basis`         | LST_AS_MARGIN | Bybit UTA (stETH/METH/USDe), Deribit (stETH), OKX (wstETH)           |
+| `arbitrage_price_dispersion` | USDC          | All venues: Binance, Bybit, OKX, Deribit, Kraken, Hyperliquid, Aster |
 
 The venue-collateral matrix in UAC + per-archetype docs is the authoritative eligibility gate. Preflight rejects venues
 that fail the margin-mode check at strategy runtime — no hardcoded allowlist in code.

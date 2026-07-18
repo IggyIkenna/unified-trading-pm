@@ -6,7 +6,7 @@ summary:
   yet the v10 backfill plan launched two perp_funding backfill VMs as MVP work and the honest-coverage denominator
   counts 424 DRIFT perp_funding cells as reachable. Three SSOTs disagree about whether DeFi perp_funding is in MVP
   scope. Blocks resolution of the P0 AO item on the Solana-drift backfill stall.
-status: open
+status: resolved
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -25,6 +25,8 @@ source:
   ]
 assigned_vm: NA
 resolved_by:
+  DRIFT/PACIFICA culled 2026-07-16 (solana_perp_dex_cull_drift_pacifica_2026_07_16.md) — the perp_funding MVP-scope
+  contradiction is moot; superseded 2026-07-18 by defi_consolidated_closeout_2026_07_18.md
 locked_by: live-defi-rollout
 drift_direction: advance-code
 execution_scope: orchestrator-agent
@@ -36,6 +38,16 @@ locked_since: 2026-05-21
 ---
 
 # DeFi perp_funding MVP-scope contradiction (2026-06-29)
+
+> **🔴 SUPERSEDED / CLOSED 2026-07-16 — DRIFT-SOLANA was culled workspace-wide; this entire issue is moot.** The Solana
+> perp-DEX cull (`plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`) purged DRIFT (and PACIFICA)
+> from the workspace ENTIRELY — adapters, instruments, the capability/coverage registries, the availability manifest,
+> and all GCS data. There are no DRIFT instruments left, so DRIFT is **not in any MVP list** and DRIFT `perp_funding` is
+> **not MVP** — "no instruments, no MVP, nothing." Everything below is retained only as history and must be read through
+> this banner: the "Option 2 — DRIFT-SOLANA `PERPETUAL` `perp_funding` IS MVP now" resolution and the "DRIFT-SOLANA the
+> venue IS in the defi MVP list" TL;DR were both true only in the pre-cull world; the three-way contradiction and the
+> Helius sig-index / DRIFT backfill todos are all dead. **The cull doc is the authority; no further action on this
+> issue.**
 
 > **🟡 2026-07-09: the "Resolution status" / "Recommendation" sections below (provisional Option 1, "out of MVP scope")
 > are SUPERSEDED.** A broader operator ruling on DeFi MVP framing (`MVP_SCOPE["defi"]` v13,
