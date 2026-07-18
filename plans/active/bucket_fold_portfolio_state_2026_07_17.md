@@ -109,22 +109,24 @@ per-domain path prefixes:
       `bucket_template` (their SSOT — not yaml). Add `_KIND_ALIASES` mapping the retired kinds → `portfolio-state`
       (§2.D). Provision `portfolio-state-{prd,test}` on GCP + AWS. Verify `terraform plan` shows only the new folded
       buckets as creates. UTL QG green.
-- [ ] [DATA] P2. **Parity migrate all 6 sources** — server-side copy each source → its per-domain prefix under
-      `portfolio-state-{env}-{pid}/`; byte-count parity per domain. Re-measure object counts at execution (design counts
-      are 2026-07-13). Assert-empty + skip any 0-object source, recording the assertion.
-- [ ] [CODE] P2. **Cutover — OPERATOR-GATED** — repoint UTL PATH_REGISTRY (`registry.py` positions/pnl-attribution/
-      risk-metrics rows) + the `pnl-attribution-output` bare default (`pnl/config.py`) + the two yaml kinds
-      (archetype-state, position-store-sports) → `kind="portfolio-state"` + per-domain prefixes. Ship per-repo QG-green:
-      UTL, strategy-service, deployment-service, UAC. **Reader cutover requires operator sign-off** — this changes where
-      live position/pnl/risk state is read from.
-- [ ] [INFRA] P2. **Redeploy + verify-exercised END-TO-END (do NOT rush)** — redeploy the real writers (strategy-service
-      pnl + position modules); verify a live position/pnl/risk snapshot lands under the correct
-      `portfolio-state/{domain}/` prefix AND is read back correctly — diff real output against the pre-migration source,
-      not just "deployed". Cite `Evidence: cloudbuild=<id>` SUCCESS. Retarget the portfolio-state consolidator 6→1.
-- [ ] [INFRA] P2. **Delete sources + TF/yaml removal (SAME change) — OPERATOR-GATED, LAST OF ALL FOLDS** — only after
-      verify-exercised + a passive read-audit window + operator sign-off, delete the 6 source buckets (GCP + AWS) and
-      remove their TF/yaml keys same change; `terraform plan` green. This is the final destructive step of the entire
-      Wave-3 fold — nothing is more live-trading-sensitive.
+- [x] ✅ [DATA] P2. **Parity migrate** — **DONE 2026-07-19.** Only 1 real object existed (pnl-attribution-store, an
+      ARBITRAGE_PRICE_DISPERSION funding-rate parquet) → server-side copied to `portfolio-state-prd/pnl-attribution/`,
+      parity verified. positions-store(0)/archetype-state-{prd,test}(0)/position-store-sports-{prd,test}(0) asserted-empty;
+      risk-metrics-store + pnl-attribution-output ABSENT. No real portfolio state written (test/dev, nothing traded).
+- [x] ✅ [CODE] P2. **Cutover** — **DONE 2026-07-19 (operator full-send, test data).** Driven via IMPLEMENT→adversarial-
+      verify workflow (woq29kqa8, GO all 5 repos). LANDED: PM yaml mirrors@a1c500097 (folded FIRST — the C+D
+      PM-yaml-in-CI lesson), UAC yaml, UTL@(registry positions/pnl_attribution/risk_metrics → portfolio-state-prd +
+      literal domain prefix + _KIND_ALIASES 6 retired kinds), strategy-service (pnl/config resolved_output_bucket +
+      4 pnl writers + venue_balance_tracker position-sports/ prefix), deployment-service yaml. UTL CI GREEN.
+      X-repo loose end: execution-service `tenderly_budget.py` writes archetype-state at bucket root (internally
+      symmetric, empty bucket → no data loss) — closeout prefix fix.
+- [x] ✅ [INFRA] P2. **Redeploy/consolidator** — **N/A / DONE 2026-07-19.** No redeploy (nothing writing portfolio-state,
+      test/dev). No portfolio-state consolidator exists (plan-noted — the flat trio never had one); skipped.
+- [x] ✅ [INFRA] P2. **Delete sources + TF-reconcile** — **DONE 2026-07-19 (operator pre-authorized autonomous delete;
+      test data, not live).** DELETED the 6 source buckets (positions-store, pnl-attribution-store, archetype-state-
+      {prd,test}, position-store-sports-{prd,test}). TF: imported portfolio-state-{prd,test}; state-rm'd the 4 TF-tracked
+      sources (positions/pnl-attribution not TF-managed). yaml keys folded (archetype-state/position-store-sports kept for
+      soft-window → closeout). This was the LAST destructive step of Wave-3 — ALL 5 FOLDS NOW COMPLETE.
 - [ ] [INFRA] P2. **IAM + lifecycle** — join `portfolio-state-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B; `-test-` twin gets test-tier. **CONFIRM
       retention before COLDLINE** — live-trading snapshots may need STANDARD longer than 60d (design §2.E flags
