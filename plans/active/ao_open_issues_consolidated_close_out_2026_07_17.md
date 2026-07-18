@@ -352,6 +352,15 @@ NOT AO and are deliberately out of scope here.
       KPIs (spawns, dispatches, done, conversion %, boots-per-done, top skip reasons) with a wow-level alert on sharp
       regression. **Gate**: the KPIs render; the 2026-07-12-class degradation (spawn:dispatch 0.6:1→44:1) would have
       been visible within one digest cycle.
+- [ ] [REVIEW] P3. **(AF-6) `agent-orchestrator/docs/ENV_VARS.md` residual multi-VM framing — OPERATOR-DECISION
+      pending.** Found during the 2026-07-18 AO stale-reference sweep (which fixed everything else — 0 dead links, 0
+      deleted-doc refs, 0 misleading-as-live markers across the AO codex + repo docs). ENV_VARS still carries
+      `ORCHESTRATOR_OPERATOR ... branch operator (tab/<vm_id>/<slot>)` (the RETIRED tab-branch model) and a "Fleet VM
+      (epic worker)" section header (no epic VMs since 2026-06-27). Left deliberately: it is a legitimately-used
+      per-host config reference that still correctly documents the laptop/vm_id/`STANDALONE` model, so the framing is
+      low-severity, not a dead link. Operator was asked 2026-07-18 whether to do a focused ENV_VARS pass; **awaiting
+      that yes/no** — do NOT start without it. **Gate**: operator rules fix-or-leave; if fix, drop the `tab/` branch
+      example + rename the "epic worker" framing to "fleet/central VM", verify against `server/config.py`.
 
 ## Externally blocked (tracked, not actionable here)
 
@@ -377,6 +386,15 @@ NOT AO and are deliberately out of scope here.
   despite the dispatch script logging a FALSE failure (curl 30s < endpoint's measured 56s — new defect recorded on the
   todo). Pre-install forensics corrected the diagnosis: units existed + enabled since Jul 14 but the timer was INACTIVE
   — `is-enabled` can't see that; the liveness check must assert `is-active` + next-elapse.
+- **2026-07-18** — AO documentation stale-reference sweep (operator-directed, separate from the issue-doc work above):
+  deleted `host-offline-failover.md` (codex) + `OPERATIONS.md` (repo) per operator ruling; purged
+  OPERATIONS/tab-mirror/_agent_pings/vm-orchestrator/:8026/post-P5/Cloud-Run-as-live refs across the AO codex + repo doc
+  set; made the codex e2e-operator-runbook self-contained (was an OPERATIONS.md wrapper). Shipped pm@20f06b2b7 +
+  pm@e0c796e3c + pm@071652432 (codex), ao@3d2c0e6 + ao@63d8284 (repo). Final state: 0 dead links, 0 refs to any of the
+  12 deleted AO docs, 0 misleading-as-live markers. NB: the earlier 3 "harshkantariya [main·harsh_pc]" AO-doc-cleanup
+  commits (13c25d2e5/fca8d2643/19766e7) were from a SECOND Claude process bound to this same session on the office VS
+  Code — verified correct + complete, then that duplicate process was terminated. AF-6 (ENV_VARS residual) is the only
+  open item from this sweep, operator-decision-pending.
 - **2026-07-17 (final)** — Phase 7 added: five INDEPENDENT agent-audit findings (AF-1..AF-5) from a fresh pass over the
   AO code, live DB/activity-log, and codex spot-checks — kept separate from the issue-doc-derived phases per operator
   instruction, pending operator review. Headlines: 189 CI-escalator dispatches/7d with 83 unresolved (43%); plan_health
