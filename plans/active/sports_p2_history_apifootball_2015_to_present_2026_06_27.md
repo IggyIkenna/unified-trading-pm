@@ -2269,3 +2269,57 @@ fleet that would have made progress toward it was just deleted a 4th time. `/ski
 new todos above land, and (b) a fresh relaunch survives long enough for a genuine gate re-read. Given the severity
 (real-time destructive agent action, 4 recurrences in ~7h, cross-cutting to any task using this launcher pattern), this
 is a big finding — escalated via `BLK-a75d72cc` in addition to the issue-doc todos.
+
+### 2026-07-18T16:20Z — data_engineering slot-9 (Todo `-001` — 14th+ bounce, confirmed BLK-a75d72cc resolved, found real progress was hidden in unconsolidated per-VM shards, relaunched with `--skip-lock`)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean, no dirty state inherited (also recovered/verified a
+stranded QG-passed commit from an earlier killed session on this slot's `features-service` — already independently
+shipped to LDR at `2686f169`, nothing further needed there).
+
+**Checked `BLK-a75d72cc` status first** (slot-7's live-4th-kill escalation): `blocked_answered` — main messaged slot-5
+to stop before any further live (non-dry-run) zombie-watchdog testing;
+`zombie_watchdog_relaunch_reaped_live_backfills-003` (the superseded "relaunch the daemon" todo slot-5 was on) now shows
+`status: cancelled` in the live backlog. The immediate live threat is resolved. Of the 3 new Incident-2-correction
+todos: `-005` (data_engineering.md/RULES.md guardrail) `dispatched` to slot 2 (in progress); `-004` (harden launcher's
+Stop-suggestion) and `-006` (audit other bounced tasks) still `queued`, not yet picked up.
+
+**Confirmed the 4th kill slot-7 found is still the current state** — `gcloud compute instances list` (non-snap SDK):
+zero `af-backfill-20260718-152*` VMs remain (only the unrelated `af-backfill-20260718-150353` FIXTURES force-backfill
+VM, out of this todo's scope). No new (5th) kill happened between slot-7's check and this one.
+
+**New finding: re-ran the gate query and got numbers IDENTICAL to slot-8's PRE-relaunch read (15:20Z)** — FIXTURE_EVENTS
+1935, FIXTURE_LINEUPS 1925, FIXTURE_STATS 1893, PLAYER_STATS 1172, INJURIES 0 pending. At first glance this reads as
+"the killed 15:27-15:58 relaunch made zero progress" — but that's wrong. Read the 4 killed VMs' own per-VM manifest
+shards directly (`_index/per_vm/af-backfill-20260718-15{2725,2753,2818,2852}.parquet` via `gcsfs`, bypassing the
+consolidated index): each contains hundreds of REAL rows written during their ~31min of life before the kill — EVENTS
+2603 rows (176 `captured` + 2427 `empty_confirmed`), LINEUPS 2862 (191 + 2671), STATS 2659 (94 + 2565), PLAYER_STATS
+3010 (84 + 2926). This is genuine work product sitting in per-VM shards awaiting the manifest consolidator's next merge
+cycle — `read_availability_index` reads the CONSOLIDATED index only, so a kill mid-run doesn't erase progress, it just
+delays when that progress becomes visible in the gate query. Worth flagging for future dispatches on this todo: an
+unchanged gate reading after a relaunch does NOT by itself mean "zero progress, wasted compute" — check the per-VM
+shards before concluding that.
+
+**Independently verified tarball freshness** (this slot's `gsutil` has the same known-broken credential store as prior
+sessions — `Your credentials are invalid` even on the non-snap SDK): `gcloud storage cat` on
+`code/{repo}-code.manifest.json` for all 4 relevant repos (instruments-service, unified-api-contracts,
+unified-trading-library, deployment-service) — all 4 tarballs were refreshed 16:14-16:15Z (minutes before this check,
+likely a routine cron or a sibling slot's push) and their `commit_sha` matches this slot's local `git rev-parse HEAD`
+exactly for all 4 repos. Safe to launch on.
+
+**Relaunched the 4 residual entities** via
+`deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity <ENTITY> 2020-06-06 2026-07-18`
+— deliberately used `--skip-lock` from the start (not `--force`, no `redo_all`) specifically so the launch NEVER hits
+the singleton-lock refusal path at all (the pre-existing unrelated `af-backfill-20260718-150353` FIXTURES VM would
+otherwise trigger that refusal and print the raw `Stop: gcloud compute instances delete ...` suggestion slot-7's
+investigation identified as the likely self-inflicted-harm vector — avoided entirely by not going down that code path in
+the first place, not by exercising restraint after seeing the message). New fleet: `af-backfill-20260718-161608`
+FIXTURE_EVENTS · `-161641` FIXTURE_LINEUPS · `-161712` FIXTURE_STATS · `-161740` PLAYER_STATS, all
+`2020-06-06..2026-07-18`. All 4 verified `RUNNING` ~10s after the last launch (no fire-and-forget). Did NOT
+touch/inspect/delete any other VM in the fleet (the unrelated FIXTURES VM `-150353` was left alone, per craft-scope +
+the guardrail this incident is in the process of formalizing).
+
+**Not flipping this checkbox** — gate still far from met even accounting for the unconsolidated per-VM progress (rough
+order of magnitude: a few thousand rows against ~6,925 total pending across the 4 entities). `/skip-current-task` after
+this ships. Resume-criteria unchanged from slot-7's note: (a) the 2 remaining Incident-2 todos (`-004`, `-006`) land,
+and (b) this relaunch survives long enough (or the manifest consolidator runs) for a genuinely informative gate re-read
+— check per-VM shards too, not just the consolidated index, per the finding above.
