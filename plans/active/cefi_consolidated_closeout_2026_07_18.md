@@ -190,21 +190,31 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       verify gate** to also assert ZERO missing-quote ids (the current gate — 0 `:PERP:`, `instrument_id==canonical_instrument_id`
       — let this class through). This GATES the Track-1 migration (else it bakes the quote-less form into all four surfaces).
       (repo: instruments-service; found 2026-07-18 by the operator spotting `DERIBIT:FUTURE:AVAX@LIN-20260718`.)
-- [ ] [BACKEND] P0. **Remove the UAC-seed catalogue fallback EVERYWHERE — catalogues must FAIL LOUD if unavailable.**
-      The `_load_sentinel_catalogs` "catalog read failed → fall back to UAC seed instruments" path is a bad fallback:
-      the catalogues (sports=fixtures, cefi/defi/tradfi=instrument catalogue; verify prediction) should ALWAYS be
-      present post-consolidation, so a read failure is a real bug to surface, not to paper over. Make every catalogue
-      read fail-loud; update tests to mock the catalogue rather than rely on the seed. **Also verify the catalogue
-      readers resolve the RIGHT (post-bucket-consolidation) buckets.** (repos: market-tick-data-service + check
-      instruments-service)
-- [ ] [BACKEND] P0. **Gate Tardis cefi requests on the vendor catalogue + stop recording structurally-impossible/absent
-      combinations as `attempted_failed`.** Fixes BOTH `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (the
-      `futures_chain` retry path re-attempting a channel no cefi Tardis venue exposes → 112,727 false
-      `attempted_failed`, LIVE + growing) AND
-      `issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`. Code fix + a DRY-RUN
-      assessment of purging the false rows (do NOT blind-purge prod). **Migration-critical**: needed so the
-      backfill/manifest is honest before the cutover. Do NOT touch the cap-critical `venue_fetch.py` hot path unless
-      verified safe. (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P0. **Remove the UAC-seed catalogue fallback — catalogues FAIL LOUD** — DONE `market-tick-data-service@3253cae3`
+      (QG green, 6183 passed). New `InstrumentCatalogUnavailableError(RuntimeError)` (NOT `ValueError`, so the
+      manifest/canonicalise `except ValueError` can't swallow it; added to the manifest-write re-raise allowlist).
+      cefi/defi/tradfi `list_instruments` + `_load_sentinel_catalogs` + sports sentinel path now RAISE on
+      absent/empty/schema-drift; only `KeyError` (no reader registered = out of job scope) tolerated; off-season empty
+      sports stays honest. Verified buckets are the consolidated shape (`instruments-store-{cefi,defi,tradfi,sports}-prd-central-element-323112`).
+      Prediction has NO separate catalogue (rides sports fixtures). Tests mock the catalogue read (sanctioned). (repo:
+      market-tick-data-service)
+- [x] ✅ [BACKEND] P0. **Gate Tardis cefi on the vendor response + stop false `attempted_failed`** — DONE
+      `market-tick-data-service@a7569298` (QG green, 6187 passed; `venue_fetch.py` UNTOUCHED). Tardis HTTP-400
+      `code=300`(invalid-symbol)/`code=140`(date-not-available) now classified `is_structural_absence` → recorded
+      `empty_confirmed`/skipped like a 404, NEVER `attempted_failed`; error code logged; 5xx/429/403/non-structural-400
+      still raise. **Remediation DRY-RUN measured (operator-gated `--apply`, NOT run):** futures_chain false-af =
+      **122,585** (DERIBIT 112,700 · BYBIT 5,250 · BINANCE-FUTURES 4,635) via the existing
+      `reclass_cefi_futures_chain_no_tardis_source.py`; impossible-combo 400s = **24,410** (needs a mirror reclass, not
+      yet built); ~955k residual is genuine transient 403 IP-lock (correctly af). (repo: market-tick-data-service)
+- [ ] [BACKEND] P1. **UAC per-venue seed fallback (surfaced by the fail-loud work) — decide + remove if catalogues are
+      the sole source.** Distinct from the wholesale absent-catalogue fallback just removed in MTDS:
+      `unified_api_contracts.registry.market_data_categories.get_expected_instruments_for_venue` STILL falls back to the
+      per-venue MVP seed when `instruments_provider` is None / a PRESENT catalogue lacks a specific venue
+      (`market_data_categories.py:2250` + `registry/defi_prediction_instrument_seeds.py`). Per the operator's "catalogues
+      should be the sole source" ruling this should also fail-loud / be removed — but it's a UAC change with fleet blast
+      radius, so scope it deliberately. Also here: register Tardis error codes in `classify_venue_error` + the
+      REQUEST-side vendor-catalogue gating (preflight shouldn't generate cefi `futures_chain` shards →
+      `expected_unattempted`) belong in the in-flight UAC `coverage_exclusions` work. (repo: unified-api-contracts)
 - [x] ✅ [DOCS] P1. **Upgrade the `data-pipeline-check-mtds` skill** — DONE `unified-trading-pm@ca3aebfc7`. §3a
       DERIBIT/BINANCE-FUTURES regression cells incl. a NEGATIVE check (DERIBIT `futures_chain` → 0 `attempted_failed`, the
       structurally-absent channel the MVP loop can't reach = the 112k-regression blind spot) + a two-force-runs diff for
