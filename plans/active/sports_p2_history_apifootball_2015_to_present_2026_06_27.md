@@ -2323,3 +2323,32 @@ order of magnitude: a few thousand rows against ~6,925 total pending across the 
 this ships. Resume-criteria unchanged from slot-7's note: (a) the 2 remaining Incident-2 todos (`-004`, `-006`) land,
 and (b) this relaunch survives long enough (or the manifest consolidator runs) for a genuinely informative gate re-read
 — check per-VM shards too, not just the consolidated index, per the finding above.
+
+### 2026-07-18T16:22Z — data_engineering slot-2 (Todo `-001` — 15th+ bounce, precondition (b) [-006] now met by this same dispatch, precondition (a) [-004] still open, fleet too fresh to re-read)
+
+Dispatched onto `-001` immediately after completing `zombie_watchdog_relaunch_reaped_live_backfills-005` (the
+`data_engineering.md` VM-delete guardrail, shipped `unified-trading-pm@aec9053e6`) and `-006` (the fleet-wide
+agent-deleted-own-VM audit) in this same session. Fresh-pulled all 24 slot repos clean.
+
+**Precondition (a) — `-004` (harden the launcher's raw `Stop:` suggestion)**: `GET /api/backlog` shows
+`status: dispatched, dispatched_to: 3`, no `done_sha` yet — still open, not blocking further progress on this todo (the
+guardrail I shipped in `-005` covers the same risk at the process layer regardless of whether `-004`'s code-level fix
+has landed).
+
+**Precondition (b) — `-006` (audit for other bounced tasks with the same signature)**: now `done`
+(`unified-trading-pm@45759bf2e`, this same session) — confirms the 4 af-backfill kills on THIS todo (documented above)
+are the only recurrence of the original singleton-lock-Stop-command signature fleet-wide in the last 30d (capped at 500
+audit-log rows); surfaced a separate, unrelated finding (`cefi-queue-heavy-binancefutu` SINGLE_VM_QUEUE Tardis workers
+killed mid-stream — filed as Incident 3 in the issue doc, out of this todo's scope).
+
+**Fleet-liveness check**: `gcloud compute instances list --filter="name~af-backfill-20260718"` (non-snap SDK) — all 4 of
+slot-9's relaunch (`af-backfill-20260718-16{1608,1641,1712,1740}`) still `RUNNING`, only ~5-6min old at this check
+(launched ~16:16-16:18Z, checked 16:22:15Z) — genuinely too fresh for either a heartbeat-threshold survival read (15min
+mark) or an informative `read_availability_index` gate re-read; re-running either now would reproduce slot-9's numbers
+with zero new signal, the same low-value re-check pattern flagged in slot-4/slot-5's entries above.
+
+**Not flipping this checkbox, no new diagnosis run.** `/skip-current-task` — resume once (a) `-004` ships
+(belt-and-braces code fix, not release-blocking for this todo given `-005`'s guardrail is already live), or (b) the
+fleet has run long enough past ~16:31-16:34Z (15min heartbeat mark) for a preliminary liveness read, or past
+~19:16-19:18Z (180min shard mark, post `-004`'s widened threshold if that daemon is ever relaunched — though per
+slot-7's finding the daemon was never the actual actor) for a genuinely informative gate re-read.
