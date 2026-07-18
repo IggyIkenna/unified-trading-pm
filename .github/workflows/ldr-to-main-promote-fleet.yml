@@ -38,7 +38,14 @@ name: ldr-to-main-promote-fleet
 
 on:
   schedule:
-    - cron: "8,23,38,53 * * * *" # every 15 min, staggered from ldr-to-staging (2,17,32,47)
+    # OVER-DECLARED to ~every 5 min (2026-07-18). GitHub silently DROPS most scheduled runs under
+    # load — measured ~37% delivery on this fleet — so a declared */15 was DELIVERING ~every 45 min
+    # (runs at 05:42/06:31/07:14/08:04 on 2026-07-18). That, times a 2-3 round SIT-validate cycle,
+    # is what pushed agent-orchestrator's promote to ~156 min. Declaring */5 means the surviving ~1/3
+    # of ticks still land ~every 15 min. Cheap: a sweep is ~37s on the free self-hosted glue pool, and
+    # the `ldr-to-main-promote-fleet` concurrency group (cancel-in-progress:false) serialises overlaps.
+    # every 5 min; the /5 minutes never collide with ldr-to-staging's 2/17/32/47 slots.
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
