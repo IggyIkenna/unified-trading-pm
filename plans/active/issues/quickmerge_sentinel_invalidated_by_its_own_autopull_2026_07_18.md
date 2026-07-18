@@ -36,6 +36,7 @@ assigned_role: devops
 drift_direction: none
 locked_by:
 source: measured during the 2026-07-18 CI-failure sweep while shipping 7e364ab9e
+depends_on: []
 ---
 
 # quickmerge sentinel vs its own auto-pull
