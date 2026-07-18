@@ -298,6 +298,30 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **2026-07-18 (slot-1) — Autonomous close-out loop STARTED; baseline re-measured live + core shape problem
+  pinpointed.** Re-verified the climbing metric directly against live prod GCS (not docs), confirming the plan's ground
+  truth:
+  - Catalogue `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet` (1,175,390 rows; 1,111,322
+    FUTURE/OPTION): `instrument_id` col **0.0% canonical** (0 in `-USD@LIN`; 997,973 carry whitespace; samples
+    `CBOE:FUTURE:VX/F1`); `canonical_instrument_id` col mostly empty strings, **0.0%**.
+  - Manifest `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (5,553,510
+    rows; written 2026-07-18T11:21Z so consolidator is LIVE): derivative `instrument_id` **0.0% canonical** (0 of
+    989,722; samples `EW1H0_P2785`, `UD_1V__VT_...`). `instrument_type` itself is non-canonical (mixed case
+    `FUTURE`/`future`, `options_chain`/`futures_chain`).
+  - **CLIMBING METRIC baseline = 0% canonical across both id-column surfaces.** Filenames/parquet-content = TBD (A1).
+  - **Core shape finding (drives A1+B+QG):** BOTH the MTDS "target" writer
+    (`tradfi_shared.py::derive_tradfi_row_instrument_id`) and the IS adapter currently emit `@LIN` **without** the
+    operator-decided `-USD` quote — MTDS builds `build_instrument_id(venue, FUTURE, product_root, margin_marker="LIN")`
+    → `CME:FUTURE:SP500@LIN-...` (no `-USD`). The shared UAC builder
+    (`unified_api_contracts/internal/reference/canonical_id_builder.py::_build_with_margin_marker`) rides `@marker` on
+    the symbol segment; the existing CeFi convention bakes the quote INTO the symbol (`BTC-USDT@LIN`). So `-USD@LIN`
+    requires the symbol segment to carry `PRODUCT_ROOT-USD`. Decision: extend the shared builder to compose
+    `{SYM}-{QUOTE}@{marker}[-expiry...]` when a `quote_asset` is supplied alongside `margin_marker` (additive, opt-in,
+    default `""` keeps every existing caller byte-identical), then route both tradfi writers through it with
+    `quote_asset="USD"`; migration + QG + verify-gate all assert the `-USD@LIN` body. Coordinated with the parallel
+    `cefi_consolidated_closeout_2026_07_18.md` (same shared builder, same DERIBIT quote ruling).
+  - Env verified: 8 target repos present in slot-1; gcloud `central-element-323112` ADC; AWS `427895769566`.
+
 - **2026-07-18 (slot-3) — Plan authored, then GROUND-TRUTH-CORRECTED against live prod GCS.** First draft (from a
   3-agent doc audit) claimed the tradfi tick surfaces + v9 schema were "largely DONE, VM-applied." Operator pushed back
   (raw symbols visible in parquet names, manifest, and the instruments data-status/catalogue). Direct live reads
