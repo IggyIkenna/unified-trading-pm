@@ -12,9 +12,10 @@ summary: |
   (2026-07-18): make the split explicit — an env-reading class for the operator surface, and an env-FREE nested
   TuningDefaults(BaseModel) for the code-default knobs, merged into the one get_config() singleton. Verified
   empirically: a nested BaseModel field on a BaseSettings is NOT env-populated by any spelling (bare / __-delimited /
-  ORCHESTRATOR_-prefixed) yet still bounds-validates. Also cleans two DEAD env vars still written by bootstrap +
-  the live VM (REGEN_DB_PATH deleted 2026-07-17, REGEN_REQUIRE_VM_MATCH retired 2026-06-25) and folds in the AF-6
-  ENV_VARS.md residual (retired tab/<vm_id>/<slot> + "Fleet VM (epic worker)" framing). LOCAL track —
+  ORCHESTRATOR_-prefixed) yet still bounds-validates. Also cleans the retired REGEN_REQUIRE_VM_MATCH still live on the
+  planning VM (bootstrap already purged REGEN_DB_PATH 2026-07-17; now purges REQUIRE_VM_MATCH too, retired 2026-06-25)
+  and folds in the AF-6 ENV_VARS.md residual (retired tab/<vm_id>/<slot> + "Fleet VM (epic worker)" framing). LOCAL
+  track —
   operator-driven, executed interactively, never dispatched.
 status: active
 nature: process
@@ -66,8 +67,9 @@ source:
 
 `server/config.py` = one `OrchestratorConfig(UnifiedCloudConfig)` with **143 aliased fields**. You cannot tell from the
 class which settings an operator actually populates versus which are code-default escape hatches — the operator surface
-and the tuning surface are visually identical, and the sprawl hides real drift (dead vars still written by bootstrap +
-the live VM; several VM vars just re-stating the code default).
+and the tuning surface are visually identical, and the sprawl hides real drift (an inert retired var
+`REGEN_REQUIRE_VM_MATCH=true` still live on the planning VM that no re-bootstrap cleared; several VM vars just
+re-stating the code default).
 
 **Audit result (this session):**
 
@@ -112,14 +114,18 @@ class OrchestratorConfig(UnifiedCloudConfig):   # BaseSettings — THE .env surf
 
 ## Phase 0 — dead-var cleanup (zero code risk; independently valuable)
 
-- [ ] [SCRIPT] P1. **Drop `ORCHESTRATOR_REGEN_DB_PATH` + `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` from `bootstrap_vm.sh`**
-      — REGEN_DB_PATH was deleted 2026-07-17 (one-DB invariant), REQUIRE_VM_MATCH retired 2026-06-25 (strict-VM is the
-      only mode); bootstrap still writes both into every host `.env.local`. Evidence:
-      `grep -n REGEN_DB_PATH\|REQUIRE_VM_MATCH scripts/bootstrap_vm.sh`.
-- [ ] [SCRIPT] P2. **Remove the same two dead vars from the live planning-VM `.env.local`** —
-      `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` is live on the VM (confirmed via SSM) but the field no longer exists
-      (silently ignored). Operator-gated: touches prod env; do via SSM `sed -i` backup-first, then verify orchestrator
-      restart is clean. **BLOCKED-OPERATOR-DECISION until the code phases land** (no rush — it is an inert no-op today).
+- [x] [SCRIPT] P1. ✅ **Purge retired `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` on re-bootstrap** —
+      agent-orchestrator@5ad97b9. CORRECTION to the original framing: on READING `bootstrap_vm.sh` (not just grepping),
+      it already `_remove_env`s `REGEN_DB_PATH` (line 722, since 2026-07-17) and `REQUIRE_VM_MATCH` appeared only in
+      COMMENTS — so bootstrap did not "write both." The real gap: no matching purge for `REQUIRE_VM_MATCH`, so a
+      re-bootstrap never cleared the live VM's inert `REGEN_REQUIRE_VM_MATCH=true` (retired 2026-06-25, D8). Fix: added
+      `_remove_env     ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` beside the DB_PATH purge + dropped two stale comments
+      (retired `tab/<VM_ID>/<slot>` framing; the `REQUIRE_VM_MATCH=true` EXTRA_ENV example). `bash -n` clean.
+- [ ] [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM `.env.local`**
+      — live on the VM (confirmed via SSM) but the field no longer exists (silently ignored via config
+      `extra="ignore"`). Two ways: a re-bootstrap now purges it (agent-orchestrator@5ad97b9), OR an SSM `sed -i`
+      backup-first + clean restart. Operator-gated: touches prod env. **BLOCKED-OPERATOR-DECISION** (no rush — inert
+      no-op today).
 - [ ] [DOC] P2. **Trim redundant-to-default VM vars** — note (do not necessarily delete) `WATCHDOG_DAILY_CAP=50`,
       `SNAPSHOT_INTERVAL_SECONDS=1800`, `WORKER_HOST=local`, `REGEN_PRUNE_STALE=true` on the VM just re-state code
       defaults. Record in ENV_VARS.md "redundant, safe to remove" rather than silently changing prod.
