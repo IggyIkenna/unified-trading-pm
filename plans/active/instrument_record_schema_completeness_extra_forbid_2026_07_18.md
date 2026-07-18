@@ -104,3 +104,20 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
 - **2026-07-18** — Authored after the operator chose schema-completeness (not minimal-remove) for the InstrumentRecord
   silent-drop hardening. Human plan (operator-driven). The concrete prediction-title data-loss is ALREADY fixed (A4
   `question=`); this plan closes the systemic class + makes the contract fail-loud.
+
+- **2026-07-18 (autonomous) — TODO-2 disposition PRE-ANALYSIS for the 4 confirmed kwargs** (applying the operator's
+  code-usage + business-reason + not-already-exists test; read-only, no code shipped). Confirmed on real code: NONE of
+  `is_active`/`updated_at`/`min_order_size`/`symbol` are in `INSTRUMENTS_PARQUET_SCHEMA` (so they are never persisted →
+  no downstream reader can consume them — code-usage = ZERO by construction), and a workspace grep for `.is_active`
+  attribute reads found only unrelated account/client/subscription domain objects (their OWN `is_active`), never an
+  instrument record. Pre-verdicts:
+  - **`is_active` → REMOVE** — zero usage + already covered by the declared `status` (InstrumentStatus ACTIVE/DELISTED).
+  - **`symbol` → REMOVE** — zero usage + already covered by the declared `raw_symbol`.
+  - **`updated_at` → REMOVE** — zero usage; a per-capture metadata timestamp with no consumer + no business reason.
+  - **`min_order_size` → OPERATOR JUDGMENT** — zero usage today, BUT semantically distinct from the declared `min_size`
+    (minimum instrument/lot size) — it is the minimum ORDER size, which execution sizing could legitimately want. ADD
+    (as an additive optional field + parquet column) only if execution needs the order-minimum; else REMOVE. This is the
+    one field where the business-reason test is not obviously "no". TODO-1's full-suite `extra='forbid'` run still owns
+    the AUTHORITATIVE complete list (the static scan flagged further defi/deribit candidates —
+    `spot_asset`/`debt_symbol`/`onchain_symbol`/etc. — to be confirmed real-vs-parse-artifact and dispositioned the same
+    way).
