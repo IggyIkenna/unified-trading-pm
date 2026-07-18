@@ -393,9 +393,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 2,
-        "coverage_pct": null,
-        "warn_file_count": 10,
-        "qg_red_reason": null
+        "coverage_pct": 72.95,
+        "qg_red_reason": null,
+        "warn_file_count": 11
       }
     },
     "execution-service": {
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.23,
-        "warn_file_count": 7,
         "large_file_count": 7,
-        "qg_red_reason": null
+        "coverage_pct": null,
+        "qg_red_reason": null,
+        "warn_file_count": 7
       }
     },
     "market-data-processing-service": {
@@ -880,10 +880,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": null,
         "large_file_count": 0,
-        "warn_file_count": 37
+        "coverage_pct": 83.25,
+        "qg_red_reason": null,
+        "warn_file_count": 38
       }
     },
     "ml-service": {
@@ -1399,7 +1399,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
