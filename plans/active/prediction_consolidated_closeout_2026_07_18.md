@@ -242,12 +242,20 @@ fixture-linked before MVP backfill.
 > Pre-migration drain per the VM runbook; direct manifest mutation MUST use the additive per-VM-shard write (race-free
 > vs the ~10-min consolidator) — do NOT do a naive `_index`-only rewrite.
 
-- [ ] [DATA] P0. **Fix the CQG-bundle-atom wipe, THEN backfill the CQG cluster rows into the manifest** — the phantom
-      reconciler must treat the v9 bundle atom (synthetic CQG-label `instrument_id`) as a bundle, not a per-object
-      row-key, so it stops wiping `data_type=prediction_canonical_question_group` at `captured`. Then re-materialise the
-      CQG cluster rows so honest-coverage can see them.
-      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` +
-      `issues/phantom_captures_prediction_2026_06_28.md`. (repos: market-tick-data-service, unified-trading-library)
+- [x] ✅ [DATA] P0. **CQG-bundle-atom wipe FIXED (verified 2026-07-18, slot-2 A0).** The phantom-reconciler bundle-atom
+      exemption (`MANIFEST_ONLY_BUNDLE_DATA_TYPES` in `unified_trading_library/reconcile/manifest.py`) landed 2026-07-11
+      and the rebuild restored the CQG cluster rows; A0 live read confirms **17,352 captured**
+      `prediction_canonical_question_group` rows (was "ZERO"). Original P0 closed —
+      `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` steps 1-4 landed.
+- [ ] [BACKEND] P1. **Close the CQG-issue RESIDUALS (steps 5-6, still open).** (5) Add `pipeline_mode=live_kalshi` /
+      `live_polymarket_clob` / `live_polymarket_gamma_api` prefix shapes to UAC `possible_manifest` /
+      `canonical_path_templates('prediction')` so the phantom-audit can distinguish genuinely-batch-absent from
+      batch-absent-but-live-captured (13,292 phantom rows currently indeterminate) — rule-11 cross-AG regression + a
+      BATCH-satisfied-by-LIVE-evidence SEMANTICS call (may be BLOCKED-OPERATOR-DECISION). (6) Root-cause the KALSHI →
+      `batch_polymarket_clob` / `source=polymarket_clob` provenance mislabel (11,988 rows) in
+      `market_tick_data_service/scripts/rebuild_prediction_manifest.py`'s writer — this is what skews A0's `source`
+      counts (KALSHI undercounted). `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` §5-6 +
+      `issues/phantom_captures_prediction_2026_06_28.md`. (repos: unified-api-contracts, market-tick-data-service)
 - [ ] [DATA] P0. **Enumeration-driven canonical/dedupe migration of the prediction manifest (A0-driven, single source of
       truth, operator 2026-07-18)** — CONCRETE A0 targets, catalogue is SSOT: (a) `data_type` `prediction_trades` →
       `trades`; (b) `instrument_type` → `PREDICTION_MARKET` — fold lowercase `prediction`/`prediction_market`, and
@@ -458,3 +466,29 @@ fixture-linked before MVP backfill.
     intermittent; Ground-truth row updated, Phase-B item downgraded to verify-not-fix.
   - **Env:** 9 target repos present on `live-defi-rollout`; ADC `central-element-323112`; other slots mid-migration
     (HEAD = tradfi Phase B) → prediction work scoped to prediction-specific files, no VM drain.
+
+- **2026-07-18 (slot-2, autonomous tick 2) — CQG-wipe VERIFIED-FIXED + reframed; Kalshi creds confirmed present; honest
+  execution-gate status.**
+  - **CQG-wipe (the plan's headline "biggest gap") is ALREADY FIXED** —
+    `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` §Update-2026-07-11 confirms the
+    `MANIFEST_ONLY_BUNDLE_DATA_TYPES` reconciler exemption landed + rebuild restored the CQG rows; A0 corroborates
+    (17,352 captured). Flipped the Phase-B P0 to done; opened a P1 for the issue's REAL open residuals — (5) UAC
+    `possible_manifest` missing `live_*` path-template prefixes (13,292 phantom rows indeterminate; BATCH-vs-LIVE
+    semantics = operator call) and (6) the KALSHI→`polymarket_clob` provenance mislabel (11,988 rows) in
+    `rebuild_prediction_manifest.py` — (6) is the cause of A0's skewed `source` counts (KALSHI undercounted).
+  - **Kalshi is NOT credential-blocked** — Secret Manager has `kalshi-api-credentials` (`gcloud secrets list`,
+    names-only). Per autonomous rule 1 the creds exist, so Kalshi capture / soccer-team-registry / arb work is
+    executable, not deferrable as BLOCKED-CREDENTIALS (the codex "pending" framing is stale for the secret's existence;
+    runtime validity TBD when the adapter runs).
+  - **EXECUTION GATE (honest, per rule 12e stall-diagnosis).** The shared branch is under heavy concurrent slot activity
+    (rebased across +44 then +6 commits mid-session; HEAD = tradfi/cefi Phase B). The remaining prediction CODE units
+    (A2 identity, A4 fixture writers, CQG residual §5-6, Phase-C UI, Phase-E arb) live in repos those slots are ACTIVELY
+    editing (UAC / MTDS / IS / features-service), and the irreversible Phase-B prod migration needs a pre-migration VM
+    drain that would kill their live migrations. Per rule 5 (never two agents on the same repo/file) + no-drain-while-
+    others-migrate, these are **SEQUENCED behind the concurrent tradfi/cefi migrations**, not abandoned. Safe unblocked
+    work done this window: plan authored + committed, A0 baseline, CQG-verify, residual reframing — all committed.
+  - **NEXT actionable tick (resume conditions):** when the concurrent tradfi/cefi migrations clear the shared repos +
+    free the prod-migration infra, resume dependency-ordered A2/A4 (prediction-scoped files, per-repo sub-agents,
+    QG-green + quickmerge) → then Phase-B prediction migration (own drain window) → C/D/E. Operator-decision to unblock
+    §5: does a BATCH manifest row count as satisfied by LIVE-only object evidence? (A: yes, union batch+live for the
+    cell [REC — CF-12 batch=live symmetry]; B: no, BATCH tracks batch-path completeness only; Other).
