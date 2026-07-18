@@ -136,10 +136,10 @@ fixed from a log trace alone.
 
 ## Todos
 
-- [ ] [DATA] P1. Root-cause + fix the `read_historical_fixtures` "truth value of a Series is ambiguous" error
+- [x] ✅ [DATA] P1. Root-cause + fix the `read_historical_fixtures` "truth value of a Series is ambiguous" error
       (`recovery=fail_fast`, correlation ids `4fd0d41b` and similar) — find the bare-Series boolean-context site and use
       `.empty`/`.any()`/`.all()` explicitly. Add a regression test reproducing the exact failure mode. (repo:
-      features-service)
+      features-service) — features-service@538c233e
 - [ ] [DATA] P2. Decide whether `batch_feature_quality_gate`'s `recovery=skip` path should BLOCK the write (like
       `FeatureWriteGate REJECTED shard` does for `fixture_player_stats`) instead of writing a >85%-all-NaN shard through
       — this is a data-correctness policy decision, not just a bug fix. (repo: features-service)
@@ -164,6 +164,43 @@ failing, not from either of those two already-fixed bugs). Not fixing this mysel
 elo/travel gap-fill task to verify its actual completion coverage (3,452/3,453 corpus dates — every VM finished 0-exit
 except this one date on this one VM) before flipping its checkboxes.
 
+### 2026-07-18T08:16Z — data_engineering slot-2 — todo 1 fixed
+
+**Root cause (confirmed by direct repro, not guesswork)**: the bare-Series boolean-context site is
+`features_service/sports/data/gcs_normalizers.py::_build_canonical_fixture_ids` line 153
+(`if r.get("home_name") and r.get("away_name")` inside `df.apply(..., axis=1)`) — but the Series only appears there as a
+_symptom_. The actual defect is upstream in `normalize_fixtures`: its rename step
+(`rename = {k: v for k, v in _FIXTURE_COL_MAP.items() if k in df.columns}; df = df.rename(columns=rename)`) blindly
+renamed e.g. `af_home_name` → `home_name` even when `home_name` already existed on `df` (created a few lines earlier by
+`_flatten_canonical_fixture_objects` from a nested `home_team` dict). A plain `.rename()` does not merge in that case —
+it produces a SECOND column with the same label `home_name`. `read_historical_fixtures`'s 400-day lookback window
+concatenates fixture snapshots from BOTH schema generations (canonical nested `home_team`/`away_team` dicts, and legacy
+flat `af_home_name`/`af_away_name`) — confirmed via direct repro (`pd.concat` of one canonical-shaped row + one
+legacy-shaped row through `normalize_fixtures` reproduces the exact `ValueError` at the exact line). Once the target
+date's lookback window started spanning both generations (recent dates, following the canonical backfill campaign
+documented in `sports_legacy_canonical_row_gap_2026_07_16.md`), every historical-fixtures read hit the duplicate-column
+collision → `row.get("home_name")` returned a Series instead of a scalar → boolean-context `ValueError` →
+`recovery=fail_fast` → empty Team history → every history-dependent calculator degraded for that date. This is NOT
+confined to a "recency" data-freshness issue as originally hypothesized — it recurs for ANY target date whose lookback
+window spans the schema-transition period, which now includes dates going forward too.
+
+**Fix**: added `_rename_coalescing_collisions()` in `gcs_normalizers.py` — for each `_FIXTURE_COL_MAP` rename, if the
+target column already exists, coalesce (`target.combine_first(source)`, preferring the existing/flattened value, filling
+from the raw column only where missing) instead of blindly renaming into a duplicate. Applies to ALL `_FIXTURE_COL_MAP`
+mappings generically (not just home_name/away_name — home_team_id/away_team_id/league_id/winner_id/fixture_id were
+exposed to the identical collision mechanism). No data is silently dropped — honest-absence preserved (a cell is only
+empty when BOTH the canonical and legacy sides are null).
+
+**Regression test**:
+`tests/sports/unit/test_gcs_normalizers.py::TestNormalizeFixtures::test_mixed_canonical_and_legacy_rows_do_not_duplicate_columns`
+— constructs the exact mixed-schema `pd.concat` scenario, verified it raises the exact reported `ValueError` against the
+pre-fix code (reverted via `git stash` to confirm), then passes with the fix. Full sports suite (3000 tests) + full
+`quality-gates.sh` green.
+
+**Shipped**: features-service@538c233e. Todo 1 only — todos 2 (quality-gate `recovery=skip` policy decision) and 3
+(gap-fill 2026-07-11→07-17, and possibly wider given the "recurs going forward" finding above) are separate P2 items,
+left for a follow-up dispatch.
+
 ### 2026-07-18T08:2xZ — data_engineering slot-4 (dispatched to Todo-3 gap-fill; found scope was wrong before starting)
 
 Dispatched `-003` (the gap-fill todo). `-001` (root-cause fix, slot 2) and `-002` (quality-gate policy decision, slot 3)
@@ -179,3 +216,10 @@ that I'm flagging it rather than silently absorbing it. Filing `/blocked` next t
 widened scope so `-001`'s regression test and `-002`'s policy decision account for the real window, not just last week,
 and (b) the cross-cutting risk that the just-completed elo+travel gap-fill's "verified via parquet sampling" claim may
 not have covered these same ~521 dates. Continuing to wait on `-001`/`-002` before I can actually run the gap-fill.
+
+**2026-07-18T08:18Z addendum (slot-2, todo-1)** — slot-4's widened-scope finding (~521 dates, not ~7, spanning
+2019-01→2020-03 intermittent + 2025-12-04→open-ended) is consistent with this fix's root cause: the bug is driven by
+whether a target date's 400-day lookback window straddles the canonical/legacy schema-mix, not by simple "recency", so a
+bimodal/non-contiguous affected-date set is exactly what's expected. Todo 1's regression test covers the mechanism
+itself (schema-mix duplicate-column collision), not a specific date range, so it does not need updating for the wider
+window. Todo 3 (gap-fill) should use slot-4's corrected date list once dispatched.
