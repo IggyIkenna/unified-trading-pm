@@ -241,11 +241,16 @@ drift_direction: advance-code
       `AAVE, ALGO, AXS, CHZ, COMP, DASH, ENJ, EOS,     FIL, GALA, ICP, MANA, SAND, THETA, XLM, ZEC` to the frozenset
       (~28→~45); regression test `tests/test_cefi_universe_coverage.py`; QG green. All three adapters
       (tardis/hyperliquid/aster) import it. — unified-api-contracts
-- [ ] [DATA] P1. **Re-enumerate + re-capture** the IS catalogue for the added bases so they appear in the universe +
-      downloadable CSV (re-run the IS CLI per affected venue/date; the universe edit alone doesn't backfill past days).
-      Cross-links the capture-freeze item below. — instruments-service
-- [ ] [TEST] P2. UAC unit test asserting EIGEN + the added bases pass `_passes_asset_filter` for binance-spot (USDT) and
-      hyperliquid; guards accidental universe shrink. — unified-api-contracts / instruments-service
+- [x] [DATA] P1. ✅ **DONE — EIGEN + added bases already re-captured (verified 2026-07-18).** Read the live cefi
+      `prod/catalog.parquet` on real infra: **`base_asset=EIGEN` = 25 rows across 8 venues** (ASTER, BINANCE-FUTURES,
+      BINANCE-SPOT, BITFINEX-SPOT, BITGET-FUTURES, BITGET-SPOT, BYBIT, BYBIT-SPOT). So the re-capture happened (the
+      capture-freeze un-froze + the active cefi enumeration ran) — the added bases are in the universe + downloadable
+      catalogue. No further VM re-capture needed. — instruments-service
+- [x] [TEST] P2. ✅ **DONE — already covered by `unified-api-contracts/tests/test_cefi_universe_coverage.py`.**
+      `test_eigen_usdt_and_usdc_pairs_would_be_accepted()` (line 230) asserts EIGEN/USDT (binance-spot) + EIGEN/USDC
+      (hyperliquid settle) are accepted (base ∈ CEFI_BASE_ASSET_UNIVERSE ∧ quote ∈ accepted quotes);
+      `test_restaking_extras_present()` asserts KING/EIGEN/ETHFI present + `test_universe_size_band()` guards accidental
+      shrink. — unified-api-contracts
 
 ## Cross-plan blockers — instruments/MTDS migration to 100% (do NOT re-implement here)
 

@@ -101,9 +101,13 @@ design's counts are 2026-07-13).
       delta-one-{defi,tradfi}, volatility-{cefi,tradfi}, mtf-cefi. **Assert-EMPTY SKIP:** delta-one-pred,
       xinstrument-{cefi,defi,tradfi}, mtf-{defi,tradfi}. **sports:** NO data move (already at folded name
       `features-sports-prd`; content stays at root, no `{kind}/` prefix — env-tier repoint only in §3).
-- [ ] [CODE] P1. **Atomic writer/reader cutover** — repoint every Fold A writer/reader (design §1) to
-      `kind="features-{ag}"` + a `{kind}/` path prefix. Ship per-repo QG-green: features-service, UTL, ml-service,
-      deployment-api, deployment-service, UAC.
+- [x] ✅ [CODE] P1. **Atomic writer/reader cutover** — **DONE 2026-07-18 (code layer, all on LDR).** UAC@cb951936 (yaml
+      key), UTL@ac2e2fef (keystone test-align), UTL@4f0bcc34 (resolver `_KIND_ALIASES`+`PATH_REGISTRY`), UTL@bccc4ca4
+      (ml Fold-B deserialize gate), features-service@1368732a (all 6 family writers + 4 `-USD` test aligns),
+      deployment-service@2a1e415 (authoring yaml), ml-service@01cb7fd (feature-read repoints + `object_key_prefix`).
+      Each safe-standalone (no redeploy → deployed services keep old paths+buckets). **deployment-api DEFERRED**
+      (display-only `batch_config_utils.py`; its tree co-mingles a Fold-B ml-store display repoint +
+      a separate `data_status` axis-census WIP — ship those in their own scoped commits, not this Fold-A cutover).
 - [ ] [CODE] P1. **Re-mount BQ feature_external external tables** — for every affected external table, re-point
       `sourceUris` + `hivePartitioningOptions.sourceUriPrefix` to `gs://features-{ag}-{env}-{pid}/{kind}/` and re-create
       the table (DDL re-issue via UTL `bq_catalog.create_external_table`, §2.B). Gated on the writer cutover landing.
@@ -235,3 +239,37 @@ design's counts are 2026-07-13).
   UAC `unified_api_contracts/config/cloud-providers.yaml`; features-service; deployment-api
   `routes/batch_config_utils.py` ONLY; ml-service; strategy-service), (d) BQ re-mount + consolidator + redeploy+verify +
   TF-state import. Do NOT `--no-verify`-ship over the derive test (it's a real behavior fork for the pinned wheel).
+
+- **2026-07-18, `/autonomous` — KEYSTONE UNBLOCKED (prior diagnosis CORRECTED) + T0 code cutover SHIPPING.** The prior
+  entry's "wait for the IS wheel / test owner to fix `test_derive_instrument_id`" was a **MISDIAGNOSIS**. Re-diagnosed
+  from first principles: the failure is `test_tradfi_equity` asserting the pre-suffix `XNAS:EQUITY:AAPL`, but **UAC
+  shipped `uac@33e3f369 fix(tradfi)` today 16:43Z** appending the `-USD` quote suffix to EQUITY/CURRENCY/ETF/BOND/
+  COMMODITY canonical ids (INDEX excluded). Decisive proof it was NOT "wait for CI": UTL's `quality-gates-v2` CI clones
+  UAC **at `live-defi-rollout` HEAD, content-first** (python-quality-gates-v2.yml clone_repo L470-489 — the version-aware
+  tag is only a network-failure fallback), i.e. CI == local editable sibling. So the stale test breaks IDENTICALLY in CI
+  (last green CI run 10:29Z predated the 16:43Z UAC ship). The fix was ALWAYS mine — a cross-repo contract alignment, not
+  a wait. **SHIPPED (T0 code layer, each safe-standalone — no redeploy, deployed services keep old paths+buckets):**
+  1. ✅ `test_derive_instrument_id`→`AAPL-USD` + `test_instruments_catalog_reader` AAVE date — **UTL@ac2e2fef**.
+  2. ✅ UAC folded `features` yaml key (GCP+AWS, additive/soft-window) — **UAC@cb951936**.
+  3. ✅ UTL Fold-A resolver (`_KIND_ALIASES` 5 kinds + `PATH_REGISTRY` repoint + fixture + test) — **UTL@4f0bcc34**.
+  **IN FLIGHT this tick:** features-service (22 files, FF-pulled clean, QG running), ml-service (8 feature-read repoints,
+  `object_key_prefix` param), deployment-api (`batch_config_utils.py` + Fold-A subset — EXCLUDE the co-resident foreign
+  `data_status` axis-census WIP), deployment-service `configs/cloud-providers.yaml`. **REDEPLOY+VERIFY (todo below)
+  stays LAST** — the misplaced-write hazard only materialises on redeploy, so all code lands on LDR first. The ml Fold-B
+  `artifact_store` deserialize gate (co-location security) is a separate UTL commit, pending.
+
+- **2026-07-18, `/autonomous` — Fold-A CODE CUTOVER COMPLETE (all 6 repos on LDR).** Full shipped set: UTL@ac2e2fef
+  (keystone), UAC@cb951936 (yaml), UTL@4f0bcc34 (resolver), UTL@bccc4ca4 (ml Fold-B gate), features-service@1368732a
+  (writers + 4 more `-USD` ETF/COMMODITY test aligns caught by its QG — same shipped-contract drift, `test_paired_dispatch`),
+  deployment-service@2a1e415 (authoring yaml), ml-service@01cb7fd (readers). Ship order honoured the dep-gate: UAC yaml
+  first (leaf gates clone UAC-LDR for the `features` key), then UTL resolver, then leaves. Contention handled inline
+  (peer backmerge pulled, ml-gate re-gated after drift, FF-pulls clean via empty-overlap stash/pop). **NOT YET DONE
+  (gated follow-ons):** (a) **REDEPLOY+VERIFY** — pipeline-driven: LDR→main promote (*/15, v2-gated) → features-service
+  cloudbuild → my `cloudbuild.yaml` STEP 6.5 re-pins `features-service-sports-job` to `:latest`. Verify-exercised = a
+  feature batch run WRITES under `features-{ag}-{env}/{kind}/` + an ml READ resolves it (cite `Evidence: cloudbuild=<id>`
+  SUCCESS). ASYNC — awaits the promote+build; a later tick verifies. (b) **BQ re-mount** — gated on the writer being
+  deployed+writing (migrated historical data is already at the folded prefix, but time the re-mount WITH redeploy so new
+  writes + BQ agree). (c) **Consolidator N→5 retarget** (+ AWS `features-onchain-cefi` drift reconcile). (d) **Delete**
+  (Phase E, zero-reads window). **deployment-api** batch_config_utils Fold-A repoint DEFERRED (display-only; its tree
+  co-mingles an unshipped Fold-B ml-store display repoint in `deployment_api_config.py` + a `data_status` axis-census
+  WIP — ship each in its own scoped commit, tracked as a loose end).

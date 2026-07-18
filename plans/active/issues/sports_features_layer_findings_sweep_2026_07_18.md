@@ -763,3 +763,103 @@ the merge cycle, and the error message ("behind or DOWN") actively misleads the 
       fleet-wide constant. instruments-sports needs >= ~180-240s at 108 MiB.
 - [ ] [CODE] P2. Soften the error text: distinguish "consolidator DOWN" (no recent successful execution) from "index
       older than budget but consolidator succeeding" (a too-tight budget). They demand opposite responses.
+
+---
+
+## K. Canonical migration — PHASED EXECUTION PLAN (operator: "multi day is fine do it properly")
+
+### K0. The canonical direction is ALREADY DECIDED — reuse it, don't re-litigate
+
+`market-tick-data-service/.../scripts/migrate_sports_canonical_v9.py` (CF-7) states it outright:
+
+- **`data_type` canonical = lower-case** — _"Canonical is the lower-case form the live writers emit via the UAC
+  data_type vocabulary"_ (`ODDS`→`odds`, `ODDS_SNAPSHOT`→`odds_snapshot`, `ODDS_MOVEMENT`→`odds_movement`,
+  `ODDS_HORIZON_BUCKET`→`odds_horizon_bucket`, `ARBITRAGE_OPPORTUNITY`→`arbitrage_opportunity`, `TRADES`→`trades`).
+- **`venue` canonical = the BOOKMAKER** — _"for MDPS odds ticks the only valid venue is the bookmaker (per
+  bookmaker_key)"_. This independently confirms § F2/F4 and the shard-atom analysis: `ODDS_API` is a SOURCE, not a
+  venue.
+
+**NOT a live contradiction**: `market_data_processing_service/app/core/canonical_writer_stamping.py` maps lower→UPPER,
+but only to build **SOURCE_PRIORITY lookup keys** (its own comment: _"SOURCE_PRIORITY uses UPPERCASE keys for sports;
+MDPS source_data_type strings are lowercase — this bridge normalises the case mismatch"_). Different namespace,
+legitimate. Do NOT "fix" it.
+
+**That migrator is STALE — do not run it.** Its lifecycle marker: _"Delete-when: after E8 legacy-sports-bucket deletion
+… this migrator reads/writes those LEGACY buckets directly, so post-E8 it references nonexistent infra"_. E8 completed
+this session (legacy IS bucket deleted), so it now targets partly-nonexistent infra. The remaining drift lives in the
+**-prd-** buckets.
+
+### K1. Phase 1 — WRITERS FIRST (else the drift returns)
+
+Migrating rows without fixing writers guarantees regression on the next capture. Fix emission, then migrate.
+
+- [ ] [CODE] P1. Make every sports writer emit the CF-7 canonical `data_type` (lower-case) — audit each
+      `record_captured/record_empty/record_failed` sports call-site for upper-case literals.
+- [ ] [CODE] P1. Make MDPS odds writers stamp `venue = <bookmaker_key>` and `source = odds_api`, instead of
+      `venue=ODDS_API`. `_SPORTS_VENUES = frozenset({"ODDS_API"})`
+      (`market_tick_data_service/adapters/umi_tick_provider.py:110`) is the declaration to change.
+- [ ] [CODE] P1. Stop writing bookmakers + `odds` into `instrument_type`; introduce the sports instrument_type
+      vocabulary (betting market: match_odds / over_under / btts / spread). NOTE `canonical_writer_shaping.py:218`
+      asserts _"the correct instrument_type IS 'odds'"_ — that claim must be reconciled against the shard atom
+      (`instrument_type` is an INSTRUMENT axis, and `odds` is a data_type) BEFORE changing it. Read it in full first.
+- [ ] [CODE] P1. QG assertion: sports `data_type` ∈ the UAC lower-case vocabulary, `venue` ∉ {vendor names}, and
+      `instrument_type` ∈ the declared sports vocabulary — so this class cannot silently return.
+
+### K2. Phase 2 — MIGRATE the -prd- rows (only after K1 ships)
+
+Measured drift in `market-data-tick-sports-prd` (1,974,679 rows): `ODDS`/`odds` 22,145+20,331; `ODDS_SNAPSHOT`/
+`odds_snapshot` 4+4; `ODDS_MOVEMENT`/`odds_movement` 4+4; `venue=ODDS_API` 306,416; `venue=FOOTBALL` 1,337;
+`instrument_type='odds'` 1,806,527 + ~1,321 bookmaker rows + `PADDYPOWER`/`paddypower`, `PINNACLE`/`pinnacle`.
+
+- [ ] [DATA] P1. New migrator targeting the **-prd-** buckets (the CF-7 script is legacy-only). DRY-RUN default,
+      backup-before-write, per-batch verification. Reuse CF-7's `_CF7_DATA_TYPE_NORMALISE` decisions verbatim.
+- [ ] [DATA] P2. The 1,337-row legacy cohort (`odds_horizon_bucket_{15m,1h,4h,1d}` + `venue=FOOTBALL`, same rows) —
+      superseded horizon naming with NO live writer; re-stamp to canonical or drop. One pass (operator-approved).
+- [ ] [CLEANUP] P2. Delete `migrate_sports_canonical_v9.py` per its own Delete-when marker (E8 is complete).
+
+### K3. Phase 3 — prove it
+
+- [ ] [DATA] P1. Re-run the § F distinct-value audit and show ZERO case-duplicates, no vendor in `venue`, and
+      `instrument_type` within vocabulary. Restore the data-status distinct-values listing (§ F, [CODE] P1) so this is
+      visible in the UI instead of needing an ad-hoc query.
+
+### K0-CORRECTION (operator challenge: "data_type is lowercase for sports or for all AGs? its uppercase for tradfi so thats weird")
+
+**RETRACTED (mine)**: K0 said "`data_type` canonical = lower-case", generalising CF-7. CF-7's claim is scoped to the
+**MDPS odds** data_types only, and I wrongly promoted it to a sports-wide rule. Measured reality:
+
+| bucket                 | distinct | UPPER | lower         |
+| ---------------------- | -------- | ----- | ------------- |
+| market-data **tradfi** | 12       | **0** | 12            |
+| market-data **cefi**   | 9        | **0** | 9             |
+| market-data **defi**   | 6        | **0** | 6             |
+| instruments **tradfi** | 1        | **0** | `instruments` |
+| instruments **cefi**   | 1        | **0** | `instruments` |
+| instruments **sports** | 9        | **9** | 0             | ← FIXTURES, FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, MATCHES, PLAYER_STATS, PREDICTIONS, WEATHER |
+| features **sports**    | 4        | **4** | 0             | ← DERIVED_FEATURES, FIXTURE_FEATURES, ODDS_FEATURES, SFI_PROGRESSIVE_FEATURES                           |
+| market-data **sports** | 13       | 4     | 9             | ← the ONLY mixed bucket in the fleet                                                                    |
+
+**The operator's premise is inverted, and the conclusion is stronger: tradfi is lower-case; SPORTS is the outlier.**
+Sports is the only asset group using UPPERCASE `data_type` anywhere. UAC agrees — `("tradfi","trades")` /
+`("tradfi","ohlcv_1m")` are lower-case while `("sports","FIXTURES")` / `("sports","PLAYER_STATS")` are UPPER, with an
+explicit comment that _"The canonical data_type name is PLAYER_STATS"_.
+
+**Deeper than casing — a STRUCTURAL divergence.** instruments-tradfi/cefi carry a single `data_type='instruments'`;
+instruments-**sports** carries 9 entity-like values. Sports is using `data_type` as an ENTITY axis where no other asset
+group does. Any "make sports canonical" effort must decide that, not just the case.
+
+**Three targets, NOT equivalent — needs an operator decision before ANY row is rewritten:**
+
+- **(a) MDPS → lower only** (what K2 assumed): fixes the one mixed bucket, sports stays internally split (UPPER
+  reference + UPPER features + lower MDPS). Cheapest; leaves sports non-canonical fleet-wide.
+- **(b) sports → UPPER everywhere**: sports becomes internally uniform, but permanently diverges from tradfi/cefi/defi
+  and from UAC's lower-case convention for those AGs. Entrenches the outlier.
+- **(c) sports → lower everywhere** (TRUE fleet-canonical): aligns sports with every other AG. Largest — ~5.4M
+  instruments-sports rows + the features layer + every UAC `("sports", …)` SOURCE_PRIORITY key + the
+  `canonical_writer_stamping` bridge + downstream readers that filter on these literals. Also forces the structural
+  question (is `data_type` an entity axis for sports, or should entity live on its own axis as it does elsewhere?).
+
+- [ ] [ASK] P0. Operator decision on (a)/(b)/(c) before K1/K2 execute. **K2 is BLOCKED on this** — normalising 2M MDPS
+      rows to lower-case under (a) would be actively wrong if the answer is (b), and would be only ~5% of the work under
+      (c). Recommendation: **(c)**, because it is the only option that makes "sports is canonical" true rather than
+      "sports is self-consistent"; but it is a multi-week programme, not a migration script.

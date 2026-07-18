@@ -573,7 +573,7 @@ shape for a READER (which needs to return DATA, unlike a preflight check that ca
 suppressing the error, which would otherwise fall through to the OOM-risk per-VM merge this whole guard exists to
 prevent. That needs deliberate design + tests, not a same-touch patch under an unrelated todo's time pressure.
 
-- [ ] [DATA] P2. **Wire a bounded wait-and-retry into `read_availability_index`'s `_read_slow_path`
+- [x] ✅ [DATA] P2. **Wire a bounded wait-and-retry into `read_availability_index`'s `_read_slow_path`
       (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:141-155`) for the
       legitimate-in-flight-merge case** — when `_consolidated_blob_age_sec(...)` exceeds the staleness budget AND
       `consolidator_cycle_in_flight(client, bucket)` is true (mirror the check already proven safe in
@@ -581,7 +581,16 @@ prevent. That needs deliberate design + tests, not a same-touch patch under an u
       `consolidator_inflight_horizon_for_bucket(bucket)`) and re-check blob freshness once, rather than raising
       `ManifestConsolidatorStaleError` immediately. Only raise if still stale after the in-flight cycle genuinely
       completes (or the horizon is exceeded — a real down/stuck case). Add a regression test mirroring the existing
-      `consolidator_cycle_in_flight` boundary tests. (repo: unified-trading-library)
+      `consolidator_cycle_in_flight` boundary tests. (repo: unified-trading-library) —
+      `unified-trading-library@ca0d612e`. Added `_wait_for_in_flight_cycle_then_reread` (deadline =
+      `consolidator_inflight_horizon_for_bucket(bucket)` from the moment the wait starts, polls every 5s, re-checks
+      `_read_consolidated_if_fresh` exactly once after the wait ends); wired into `_read_slow_path` guarded by
+      `not fail_fast_legacy and shards_exist` so the legacy `MANIFEST_FAIL_ON_STALE_FALLBACK` mode still fails fast
+      unconditionally. 3 new regression tests: wait pays off and returns fresh data, wait exceeds the horizon and still
+      raises (genuine down/stuck case), legacy fail-fast flag skips the wait entirely. Full `quality-gates.sh` green
+      (147s/128s runs; also picked up one adjacent pre-existing fixture-date fix in `test_instruments_catalog_reader.py`
+      and the already-in-flight `unified-api-contracts@33e3f369` EQUITY `-USD` test alignment from
+      `unified-trading-library@ac2e2fef`, both unrelated to this todo).
 
 Status left `resolved` for the original (writer-path) finding — this addendum tracks a distinct, narrower residual on
 the reader path, not a regression of the fixed issue.

@@ -139,31 +139,53 @@ The fresh VM immediately regained full throughput. **The quota therefore attache
 account**, which means it IS addressable on our side — contrary to this doc's original "commercial, not technical"
 conclusion, which is hereby corrected.
 
-### What rotation buys (arithmetic from the measured numbers)
+### What rotation buys (MEASURED, not estimated)
 
-| Strategy                     | Behaviour                                     | Effective sustained rate |
-| ---------------------------- | --------------------------------------------- | ------------------------ |
-| One long-running VM (today)  | ~12 MB/s for ~7 GB, then ~2 MB/s indefinitely | **~2-2.7 MB/s**          |
-| Rotate every ~7 GB (~16 min) | ~7 GB per ~20 min cycle incl. ~3-4 min boot   | **~5.8 MB/s**            |
+Per-minute RX over the rotation VM's full life (n=24):
 
-That is roughly a **2.5-3x improvement** on the long-run rate, using only scheduling — no extra VMs, no cap-1 violation,
-no code change to the fetch path.
+| Phase                  | n   | Mean          | Volume   |
+| ---------------------- | --- | ------------- | -------- |
+| Pre-cliff (min 0-15)   | 16  | 7.60 MB/s     | 7.52 GB  |
+| Post-cliff (min 16-23) | 8   | **2.36 MB/s** | +0.91 GB |
 
-**It does NOT reach 15 MB/s.** The pre-cliff ceiling is ~12-13 MB/s and is only available for the first ~7 GB, so ~5.8
-MB/s is the realistic ceiling for a rotation strategy. Reaching a sustained 15 MB/s would still require better account
-terms.
+Peak 13.30 MB/s at min 3. The pre-cliff mean is dragged down by the boot ramp and two zero-sample gaps, so the true
+steady pre-cliff rate is higher than 7.60.
 
-### Implementation shape
+| Strategy                    | Behaviour                                         | Effective sustained rate |
+| --------------------------- | ------------------------------------------------- | ------------------------ |
+| One long-running VM (today) | 7.52 GB, then 2.36 MB/s indefinitely              | **2.36 MB/s**            |
+| Rotate at ~6.5 GB           | 7.52 GB per 20 min cycle (16 productive + 4 boot) | **6.26 MB/s**            |
 
-A supervisor that watches the VM's cumulative RX (or simply elapsed ~15 min / ~7 GB) and, on reaching the threshold,
-deletes and relaunches — reusing `tardis-concurrency-guard.sh` so only one VM is ever live. Boot is ~3-4 min, so the
-duty cycle is ~80% productive. Shorter boots (pre-baked image) would raise the ceiling toward ~7 MB/s.
+**2.65x**, using only scheduling — no extra VMs, no cap-1 violation, no change to the fetch path. The cliff is at **7.52
+GB / 16 min**, so the shipped `--rotate-gb 6.5` default fires just before it.
+
+**It does NOT reach 15 MB/s.** The pre-cliff peak is ~13 MB/s and only for the first ~7.5 GB, so ~6.3 MB/s is the
+realistic ceiling for rotation. A sustained 15 MB/s still requires better account terms.
+
+### Implementation — SHIPPED
+
+`deployment-service/scripts/vm/rotate-cefi-backfill-vm.sh` (deployment-service@cb347ac, fixes @1f483b5). Supervises the
+single live VM and rotates on EITHER trigger: cumulative RX >= `--rotate-gb` (default 6.5) or sustained rx <
+`--floor-mbps` (default 4) for 3 ticks, so it still fires if the threshold moves. Also relaunches on SPOT preemption. It
+replays the rotated VM's own `VM_START_DATE`/`VM_VENUE`/`VM_YEARS` rather than hardcoding them, and enforces its
+`--cycles` budget BEFORE the delete so it can never exit between delete and relaunch and strand the backfill.
+
+**NOT yet armed on live infra** — it deletes and relaunches VMs unattended, so it wants an operator go-ahead:
+
+```
+cd deployment-service && ./scripts/vm/rotate-cefi-backfill-vm.sh --cycles 6   # ~2h, leaves a VM running
+```
+
+A mid-shard rotation is equivalent to a SPOT preemption, which the idempotent shard design already handles, so no data
+is lost. Boot is ~4 min of each 20 min cycle (20% overhead); a pre-baked image would push the effective rate toward ~7
+MB/s.
 
 ## Recommended next steps
 
-- **Commercial, not technical**: confirm the account's rate/volume terms with Tardis Support. No client-side change
-  (concurrency, faster gzip, Rust, more VMs) can exceed an account quota, and more VMs additionally violate the cap-1
-  rule.
+- **Implement VM rotation** — the measured 2.65x, cap-1-safe. Script shipped above; needs arming.
+- **Still worth raising with Tardis Support**: the throttle is invisible (connection starvation, no 429), and confirming
+  the per-session allowance would let the rotation threshold be set precisely rather than empirically. A better account
+  tier remains the only route to a sustained 15 MB/s.
 - Instrument every backfill VM with the RX counter (`deployment-service/scripts/vm/measure-vm-throughput.sh`) so the
   cliff is visible in normal operation rather than rediscovered.
 - Re-baseline the CeFi backfill ETA off the post-cliff rate until the quota question is answered.

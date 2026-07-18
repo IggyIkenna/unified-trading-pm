@@ -853,7 +853,7 @@ infra dispatch.
 Nothing shipped in a service repo this touch (no code change); the DB read was read-only (`mode=ro` URI); the
 `backlog.yaml` edit is live server config, not a git commit. This plan-doc edit ships via the `docs(plans):` carve-out.
 
-- [ ] [BACKEND] P1. Make backlog parking gates (`prereqs.prerequisites` / `priority_override`) survive plan-checkbox
+- [x] ✅ [BACKEND] P1. Make backlog parking gates (`prereqs.prerequisites` / `priority_override`) survive plan-checkbox
       reordering, not just regen ticks on a stable ID. `regen_backlog_from_plan.py` derives each task's numeric ID
       suffix from checkbox position within its `plan_ref`; inserting/removing/reordering checkboxes above a parked item
       renumbers it and silently orphans any hand-tuned field attached to the old ID (distinct from — and not fixed by —
@@ -863,4 +863,27 @@ Nothing shipped in a service repo this touch (no code change); the DB read was r
       previously-parked condition name has no current task referencing it. Evidence: this touch re-derived and
       re-applied the gate for `sports_manifest_canonicalisation-001` / `sports_cf8_available_at_backfill_regression-001`
       after finding both silently unparked despite slot-12's 2026-07-14 session recording the gate as applied. (repo:
-      agent-orchestrator)
+      agent-orchestrator) — agent-orchestrator@22738f6
+
+**Shipped the parking-state-migration fix — 2026-07-18 (slot-8, backend_engineer)**: root cause was narrower than the
+todo's own "positional suffix" framing — `_make_task_id` derives new ids from an incrementing per-slug counter, not
+checkbox position, and the RECONCILE path (`plan_tasks_by_brief`) already matches on exact single-line brief text
+regardless of reordering. The actual trigger is that this workspace hard-wraps plan markdown and `_parse_open_todos`
+captures only the FIRST line of a multi-line todo as its `brief`: editing LATER words in the same paragraph (not the
+todo's intent) can shift the line-1/line-2 word boundary, changing the captured brief even though nothing about the
+todo's meaning changed. `_prune_stale` treats that shifted brief as a genuine orphan (byte-exact set match) and drops
+it; the next regen ingests the new wording as a brand-new task via the existing, deliberate A2 remove+add design
+(`test_text_edit_is_remove_and_add_not_in_place` — a reworded todo getting a fresh id is correct behavior, not the bug)
+— but the OLD task's hand-tuned `priority`/`priority_override`/`prereqs.prerequisites` died with it, silently.
+
+Implemented `_migrate_parking_state()` in `agent-orchestrator/server/regen_backlog_from_plan.py`, called from
+`_prune_stale` right before an orphan is deleted: for every orphan carrying parking state, it searches the SAME
+`plan_ref`'s other current tasks for a same-`[TAG] P<N>.`-prefix, high-text-similarity match (`SequenceMatcher` ratio ≥
+0.6 — empirically a rewrap/light-reword of the same todo scores 0.85-0.95, an unrelated same-tag todo scores ~0.4) with
+no parking state of its own, and copies `priority`/`priority_override`/`prereqs.prerequisites` onto it, logging a
+WARNING naming both task ids for auditability. `RegenSummary.migrated_parking` surfaces the count. Deliberately does NOT
+touch the A2 id-churn design itself (a genuine rewording still gets a fresh id) — only rescues the parking gate attached
+to it. Added `test_parking_state_migrates_to_wrap_shifted_successor` (positive case) and
+`test_parking_state_does_not_migrate_to_unrelated_todo` (guards against leaking a gate onto an unrelated same-tag todo)
+to `tests/test_regen_reconcile.py`. Full `quality-gates.sh` green (ruff/basedpyright clean, 1368 passed, 1 skipped).
+Shipped via quickmerge: `agent-orchestrator@22738f6` on `live-defi-rollout`.

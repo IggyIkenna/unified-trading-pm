@@ -2463,3 +2463,126 @@ narrow-window relaunch is real, scoped work better done as its own dispatch (per
 the tail of an already-long investigation. `/skip-current-task` — resume once the P1 mitigation (narrow relaunch) or the
 P2 systemic fix lands; a plain "relaunch and wait" dispatch on this todo will keep reproducing the same zero-progress
 result until one of those lands.
+
+### 2026-07-18T17:31Z — data_engineering slot-6 (Todo `-001` — checked coordination state, deliberately did NOT re-run gate/touch fleet, skipping to avoid duplicating slot-3's in-flight P1 mitigation)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean, no dirty state inherited; both repos this slot's prior
+session had flagged AHEAD=1 (`unified-trading-library`, `unified-trading-pm`) were already clean/in-sync at pickup
+(ahead=0/behind=0 on both) — that GIT STATUS RED nudge was stale by the time this session started, no action needed.
+
+**Checked collision state before touching anything.** `gcloud compute instances list` (non-snap SDK at
+`/home/ubuntu/google-cloud-sdk/bin/gcloud` — the snap binary is broken in this environment,
+`cap_dac_override not found`): the same 4 VMs from slot-9's 16:16-18Z relaunch
+(`af-backfill-20260718-16{1608,1641,1712,1740}`) are still `RUNNING`, now ~75 min old — no 5th kill. Checked the live
+backlog (`GET /api/backlog`) for the sibling issue-doc todos filed by slot-15
+(`api_football_backfill_chronological_scan_never_reaches_pending_tail-{001,002,003}`): `-001` (the P1
+immediate-mitigation "narrow pending-cluster relaunch" todo — the exact next step this plan's todo needs) is
+**`dispatched` to slot 3**, `task_dispatched` at 17:22:24Z, already posting `slot_progress` at 17:24:19Z ("read issue
+doc + plan; confirmed 4 wide-window af-backfill VMs still RUNNING; researching gate-query + launcher tooling for narrow
+pending-cluster relaunch") — i.e. someone is actively on the actual fix, started ~9 min before this check. `-002`
+(systemic manifest-aware date-jump fix, instruments-service) and `-003` (cross-backfill audit) are still `queued`, not
+yet picked up.
+
+**Deliberately did NOT re-run the `read_availability_index` gate query** — slot-15's read was only 17 min old (17:14Z
+vs. this check at 17:31Z) and slot-3 hasn't relaunched anything yet (still in the research phase), so a re-read now
+would reproduce the identical byte-for-byte numbers already recorded 3 times in this log (the exact low-value re-check
+pattern flagged by slot-2's and slot-11's entries above) — zero new signal for real cost (a manifest read + the risk of
+hitting the consolidator mid-merge). **Deliberately did NOT touch the 4 running VMs** — they are healthy and, per
+slot-15's finding, will make effectively zero further gate-relevant progress before slot-3's narrow-window relaunch
+supersedes them; killing or relaunching anything in this fleet right now would directly collide with slot-3's in-flight
+work on the sibling issue-doc todo (same VM fleet, same shared `api_football` rate budget — the exact over-subscription
+risk slot-15's writeup called out).
+
+**Not flipping this checkbox, no new diagnosis run, no fleet action.** `/skip-current-task` — resume once (a) slot-3's
+P1 mitigation (`api_football_backfill_chronological_scan_never_reaches_pending_tail-001`) ships and a narrow-window
+fleet is running (then a gate re-read is genuinely informative), or (b) the P2 systemic fix (`-002`, instruments-service
+manifest-aware date-jump) lands, whichever comes first.
+
+### 2026-07-18T17:47Z — data_engineering slot-13 (Todo `-001` — precondition (a) just landed; filed + self-resolved a safety concern about slot-3's wording, gate re-read still too soon to be informative)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean, no dirty state inherited.
+
+**Safety check before proceeding**: slot-3's 17:36:35Z progress message on the sibling P1 todo
+(`api_football_backfill_chronological_scan_never_reaches_pending_tail-001`) read "Operator said proceed now — executing
+Option A: terminating the 4 wide af-backfill VMs" — but the only `blocked_answered` event on that task at that point
+(`BLK-99f50b65`, 17:35:38Z) explicitly said the opposite ("do NOT autonomously delete the 4 wide VMs... I am NOT
+authorizing it autonomously... PREFERRED NON-DESTRUCTIVE PATH: redirect in place"), and I could find no second
+authorization event in the activity log. Since this is the same fleet this todo depends on, filed `BLK-30f1b6ce`
+flagging the discrepancy (VMs still `RUNNING`, not yet deleted, at the time — still preventable) rather than guess.
+**Self-resolved before an answer came back**: re-read the sibling issue doc
+(`plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`, pushed
+17:43:35Z) — slot-3's _actual_ executed action was `gcloud compute instances add-metadata` (narrow
+`VM_START_DATE=2026-02-21`/`VM_END_DATE=2026-07-14`) + `gcloud compute instances reset` (hard reboot), **not** a delete;
+"terminating" in its chat message was just imprecise wording, not an unauthorized destructive act. Confirmed via
+`gcloud compute instances list` throughout (all 4 VMs `RUNNING` continuously, never deleted). Posted the correction back
+via `/progress` so main doesn't spend time chasing a resolved false alarm.
+
+**Precondition (a) has now landed**: the P1 mitigation todo is `[x]` with evidence — all 4 VMs redirected + reset at
+~17:39:48-17:40:07Z with the narrow window, and slot-3's own evidence shows real net-new progress within ~2 min of
+restart (one VM's per-VM shard max-date jumped `2020-10-10` → `2026-03-13`, 1,540 rows in-window, 15 newly `captured`).
+This is the first relaunch in this todo's 2-day, 15-20+-bounce history with confirmed non-redundant writes.
+
+**Deliberately did NOT re-run the consolidated gate query** — the redirect landed only ~7 min before this check (17:40Z
+→ 17:47Z), well short of the ~15-20 min checkpoint this same bounce cluster has repeatedly found necessary for a
+genuinely informative read (slot-9/11/15 entries above); re-reading now would either hit a stale pre-merge index or
+reproduce a still-mostly-unchanged count for zero signal, the exact low-value re-check pattern already flagged multiple
+times in this log. **Did not touch the fleet** — it is healthy and actively productive post-redirect, exactly the state
+this todo has been waiting for; touching it now would only risk colliding with its first genuinely-productive run.
+
+**Not flipping this checkbox.** `/skip-current-task` — resume once the redirected fleet has had a realistic runway
+(≥15-20 min post-17:40Z, i.e. ~17:55-18:00Z or later) for a `read_availability_index` re-read to actually reflect the
+narrow-window progress; expect the 83.3%-of-pending-mass window to close most of the gap if the ~1,540-rows/2-min early
+rate holds, with the residual ~16.7% (scattered 2020/2021/2024-12/2025-12 dates) still open pending the P2 systemic fix
+or a small targeted follow-up.
+
+### 2026-07-18T17:58Z — data_engineering slot-14 (Todo `-001` — hit slot-13's own ≥15-20min checkpoint, gate still not green, but confirmed the narrow-window redirect IS converging fast — new quantified rate + ETA)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean, no dirty state inherited. `uv sync` in instruments-service
+(no `.venv` existed in this slot's clone).
+
+**Checked in-flight sibling work first** (backlog, not re-derived from scratch):
+`api_football_backfill_chronological_scan_never_reaches_pending_tail-002` (P2 systemic manifest-aware date-jump fix,
+instruments-service) `dispatched` to slot 7, not yet `done`; `-004` (harden launcher Stop-suggestion) `dispatched` to
+slot 3. Not duplicating either.
+
+**Ran the consolidated gate query** (`read_availability_index`, `source==api_football`, the 4 remaining entities'
+2020-06-06→2026-07-18 windows) at 17:55:54Z, ~15-16 min post slot-13's 17:40Z redirect — squarely in the checkpoint
+window slot-13 itself flagged as informative:
+
+| data_type       | in-window rows | pending_fetch | captured | empty_confirmed |
+| --------------- | -------------: | ------------: | -------: | --------------: |
+| FIXTURE_EVENTS  |        212,164 |         1,935 |   37,934 |         172,293 |
+| FIXTURE_LINEUPS |        212,136 |         1,925 |   37,541 |         172,670 |
+| FIXTURE_STATS   |        212,233 |         1,893 |   27,887 |         182,452 |
+| PLAYER_STATS    |        219,046 |         1,172 |   24,996 |         192,878 |
+| INJURIES        |        194,004 |             0 |   10,476 |         183,528 |
+
+Byte-for-byte identical to slot-8's 07-17T15:20Z baseline and slot-11's 07-18T16:36Z read — the consolidated index
+itself still shows zero net movement (consistent with the ~15-16min elapsed being too early for real pending-cell
+resolutions to have landed + consolidated, not evidence the redirect isn't working).
+
+**Read the 4 redirected VMs' per-VM manifest shards directly** (bypassing the consolidated index, same technique
+slot-9/slot-13 used) to check actual redirect progress:
+
+| VM (entity)                 |   rows | min_date   | max_date   | captured |  empty |
+| --------------------------- | -----: | ---------- | ---------- | -------: | -----: |
+| `-161608` (FIXTURE_EVENTS)  | 16,751 | 2020-06-06 | 2026-04-13 |    1,111 | 15,640 |
+| `-161641` (FIXTURE_LINEUPS) | 15,229 | 2020-06-06 | 2026-04-13 |      793 | 14,436 |
+| `-161712` (FIXTURE_STATS)   | 12,516 | 2020-06-06 | 2026-03-26 |      349 | 12,167 |
+| `-161740` (PLAYER_STATS)    | 12,887 | 2020-06-06 | 2026-03-28 |      335 | 12,552 |
+
+`max_date` is already at 2026-03-26→04-13 — the redirect (`VM_START_DATE=2026-02-21`/`VM_END_DATE=2026-07-14` metadata,
+slot-3's fix) has advanced ~51-52 calendar days into the narrow window within ~18 min of runtime (~2.8-2.9 days/min),
+noticeably faster than slot-15's measured ~2.2 dates/min baseline for the old full-coverage-floor chronological scan.
+Per slot-8's original breakdown, ~79% of FIXTURE_EVENTS' pending mass sits in 2026-06/07 — at the observed rate the
+fleet needs roughly another ~25-30 min of comparable throughput to reach that window (2026-04-13 → ~2026-06-15 ≈ 63 days
+÷ ~2.8 days/min), though throughput will very likely slow once it starts hitting genuinely-pending cells (real API
+fetches, not presence-skip re-confirmation — the 0 new resolutions so far in the 02-21→04-13 span, all rows here already
+carried their current `capture_status`, is consistent with this still being the cheap warm-up stretch).
+
+**Not flipping this checkbox** — gate unchanged. **Not touching the fleet** — healthy, converging, and any
+relaunch/interruption right now would only cost the progress made since 17:40Z for no gain; also avoids colliding with
+slot-7's in-flight `-002` systemic fix. `/skip-current-task` — sharper resume criterion than the prior entry: check
+again once a `gcloud compute instances list` + per-VM shard read shows `max_date` for the 4 VMs has reached ~2026-06-01
+or later (est. ~18:20-18:30Z at the observed rate) — that is the point a consolidated `read_availability_index` re-read
+has a real chance of showing genuine pending_fetch movement, not another zero-signal repeat of this same check.

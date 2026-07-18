@@ -760,15 +760,24 @@ latent reliability gap for long/full-history `mtds-lending-indices` runs.
       lending-indices, so not the OOM's likely primary cause and not safe to patch under this narrow todo's scope. Filed
       as its own follow-up below rather than silently dropped.
 
-- [ ] [DATA] P3. **Defense-in-depth: bound or periodically clear `StorageOutput._results` in the UTL batch framework**
-      (`unified-trading-library/unified_trading_library/service_framework/io_batch.py:69-74`) — found while
+- [x] ✅ [DATA] P3. **Defense-in-depth: bound or periodically clear `StorageOutput._results` in the UTL batch
+      framework** (`unified-trading-library/unified_trading_library/service_framework/io_batch.py:69-74`) — found while
       investigating the `mtds-lending-indices` OOM above (Incident 7 follow-up). `StorageOutput.write()` appends every
       per-day process-result summary to an in-memory list for the lifetime of a multi-year batch run and never clears
       it; each entry is a small `{"records": {...}, "total": N}` dict (not raw rows), so this is unlikely to be the sole
       cause of a 16GB OOM on its own, but it is a genuine unbounded-for-the-whole-run accumulation shared by EVERY
       batch-mode service (not just lending-indices) — worth fixing as defense-in-depth (e.g. drop/summarize instead of
       keep-forever, or cap+ring-buffer) once someone scopes the change against its full blast radius (used broadly
-      across UTL's `service_framework`, not a single-repo change). (repo: unified-trading-library)
+      across UTL's `service_framework`, not a single-repo change). (repo: unified-trading-library) —
+      **unified-trading-library@94a6c14b**: scoped the blast radius first — `io.output.results` is never read downstream
+      (`_adapter.py`'s `run()` only returns `{status, processed, failed}` counts) and had zero existing test coverage,
+      confirming the cap+ring-buffer option was safe. Shipped: `_results` is now a `deque(maxlen=1000)` (ring-buffer,
+      most-recent-retained) instead of an unbounded list; a separate `_total_written` counter keeps `flush()`'s log line
+      accurate once the cap is hit; `results` property still returns `list[object]` (unchanged shape for any future
+      consumer). New unit suite
+      `unified-trading-library/tests/unit/service_framework/test_storage_output_bounded_results.py` (4 tests: capped
+      length, ring-buffer retains most-recent entries, below-cap behavior unchanged, `flush()` logs true total not
+      capped length). QG green (126s).
 
 - [x] ✅ [INFRA] P2. **Verify (or fix) the 2 launchers the hatch-vcs fleet-wide audit above could not confirm**: (1)
       `launch-ec2-vm.sh` — installs its target `${SERVICE}` via `uv pip install -e "."` from within the service's own

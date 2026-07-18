@@ -590,3 +590,44 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   - **Progress metric climbing:** shipped code units this session = A4 (is@85988ade) on top of the already-shipped A2
     1/3/4/5 + §6 (mtds@3397e7ae); plan items advanced A0/§6/CQG/A2/A4; the manifest-canonical climbing metric (11.70%)
     moves only once Phase-B runs (held for the drain window).
+
+- **2026-07-18 (slot-2, autonomous tick 6) — E2 SHIPPED + verified; Kalshi creds confirmed LIVE; window-boundary
+  reached.**
+  - **E2 (Phase-E Leg-2, Kalshi soccer → af_fixture_id) SHIPPED — `instruments-service@ec8633ac` (QG-green, 187 lines, 3
+    files).** Verified: real commit on origin/LDR, working tree clean, reuses A4's `PredictionFixtureResolver` +
+    `validate_team_resolution` (no new GCS walk), didn't touch this plan. New `parse_kalshi_soccer_participants(title)`
+    - kalshi.py wiring feeds the pair into A4's resolver → Kalshi soccer now resolves `af_fixture_id` (was ~0%).
+  - **Live-measured resolution: 82.6% (76/92 real Kalshi soccer fixtures) both clubs already alias-resolvable** (pulled
+    92 live from `api.elections.kalshi.com` — **this also CONFIRMS Kalshi creds are LIVE/valid**, not just present).
+    100% parsed; 16/92 have exactly one club missing.
+  - **MISSING-ALIAS WORKLIST (8 → ~100%, DEFERRED to the shared `team_mappings.py`):** `Bilbao`→`ATHLETIC_CLUB`,
+    `Vallecano`→`RAYO_VALLECANO`, `Atletico`→`ATLETICO_MADRID`, `Nottingham`→`NOTTM_FOREST`, `Parma Calcio`→`PARMA`,
+    `Stade Brest`→`BREST`, `Paris`→`PARIS_FC` (⚠ NOT PSG — Kalshi renders PSG as `PSG`), `M´gladbach`→`MGLADBACH`
+    (U+00B4 acute → normalizer collapses to a space; alias must carry the exact Kalshi rendering).
+  - **CAVEAT (real, tracked):** the af_fixture_id join is an exact `(home_cid, away_cid)` lookup; E2 stamps title order
+    as home-first (soccer convention). If Kalshi soccer is "Away vs Home" (US convention per UAC `fixture_parsing.py`),
+    an alias-resolvable fixture degrades to honest `UNRESOLVED_TEAM_NAME` until order is verified against the FIXTURES
+    parquet or the lookup is made order-robust. The 82.6% alias-resolution win is order-independent.
+
+- **2026-07-18 (slot-2) — AUTONOMOUS WINDOW FINAL REPORT (rule 9).** Operator directed `/autonomous`
+  "prediction-specific files only" for ~2h while away. **Verdict: every prediction-specific-file-safe, in-order unit is
+  DONE; all remaining work is genuinely blocked** (shared UAC/IS files the concurrent tradfi/cefi Phase-B migrations are
+  actively editing, an irreversible prod-migration drain window those migrations occupy, or an operator decision) —
+  documented in the Deferred ledger above, not abandoned. No `DEFERRED`-without-reason, no fabricated completion.
+  - **SHIPPED (real code, QG-green, on origin/LDR):** A4 fixture-attribute resolver `is@85988ade` (Polymarket
+    `af_fixture_id` + Kalshi honest-absence, new `fixture_match.py`); E2 Kalshi resolution `is@ec8633ac` (82.6%
+    resolvable, was ~0%). Plus verified-already-shipped: §6 provenance fix `mtds@3397e7ae`, A2 identity 1/3/4/5
+    `is@0d0c3742` + todo-6 `pm@16272205a`.
+  - **AUDIT/CORRECTIONS (evidence-backed, committed):** A0 live baseline (manifest `instrument_type` 11.70% canonical,
+    `data_type` 99.55%, CQG clean 81 values) + concrete dedupe worklist; corrected the Ground-truth CQG row (present at
+    captured 17,352, not ZERO); verified the CQG-wipe + §6 were already fixed; captured the execution-service
+    venue-derivation finding (Phase-E P2). Kalshi confirmed live-credentialed.
+  - **HELD (see Deferred ledger, each with its exact blocker):** A4 column materialization (UAC `InstrumentRecord` + IS
+    `process_write` + MTDS tick schema); E2's 8 alias additions; A2 todos 2/7/8; §5 `possible_manifest` live-mode
+    prefixes (+ BATCH-vs-LIVE semantics decision, REC = union); Phase-B prod migration (drain window); Phase C/D/E
+    remainders.
+  - **OPERATOR ON RETURN — 3 unblocks:** (1) confirm the concurrent tradfi/cefi migrations are done / lift the
+    "prediction-specific files only" constraint → I ship the A4 materialization + E2 aliases + §5 immediately; (2)
+    answer §5 (BATCH-satisfied-by-LIVE? A=union [REC] / B=batch-only); (3) authorize the Phase-B prediction prod
+    migration in its own drain window (the 11.70%→100% manifest canonicalization). Loop stopped (stall-safety: metric
+    can't climb under the current constraint); resumes on any of the above.
