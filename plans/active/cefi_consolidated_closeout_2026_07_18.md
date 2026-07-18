@@ -248,8 +248,15 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       returns `None`; QG green; `instruments-service@ee19f6f3` hardens the catalogue build against re-mint). Checkbox
       flipped `unified-trading-pm@710190b23`. P2 confirmation-catalogue `--apply` (prod 0-diff) left open, non-blocking.
       (repo: deployment-service)
-- [ ] [BACKEND] P2. **`issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`** — MTDS `_L5_VENUES` read
-      from `VENUE_DATA_TYPE_CAPABILITIES` (11 missing cefi venues). (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P2. **`issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md` — `_L5_VENUES`
+      RESOLVED-BY-DELETION** (2026-07-18). The hardcoded `_L5_VENUES` tuple (finding 4, missing 11 cefi venues) no
+      longer exists: it was added by `market-tick-data-service@0908bda7` (the order_flow_imbalance L2 feature) and
+      **removed entirely by `market-tick-data-service@a4fb3d13`**, which retired order_flow_imbalance ("zero real
+      consumers, zero production rows ever captured; duplicated MDPS's live implementation"). `grep -rn _L5_VENUES
+      market_tick_data_service/` = 0 hits; `preflight()` in `book_microstructure_handler.py` only resolves the output
+      bucket now (no hardcoded venue list). The issue's two *onchain* sub-audits (`_SOURCE_COVERAGE_START`,
+      `_PROTOCOL_TO_DATA_TYPE`/kamino-split) are DeFi, NOT cefi — they stay open in the issue, outside this cefi
+      close-out. (repo: market-tick-data-service)
 - [ ] [BACKEND] P1. **`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`** — operator wants this done before
       the migration even though it's not a blocker. **SCOPE UNCLEAR — it's a multi-phase strategy/universe plan; confirm
       which phases are the pre-migration ask (likely the instrument-typing/catalogue portion, not the live-strategy
