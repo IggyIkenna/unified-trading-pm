@@ -449,6 +449,27 @@ map these (measured via the distinct-values audit; counts approximate):
 **Enumeration-restore (cross-AG, owned by the DeFi plan Track 6)**: a raw un-canonicalised distinct-values audit panel
 per asset_group (the view removed on `deployment-api@512180be`) is being restored so this worklist stays live-visible.
 
+## CEFI CANONICAL SPEC (operator-authoritative, 2026-07-18 — the migration target)
+
+**Shard atom** (identical across writer/manifest/status/gate/UI):
+`pipeline_mode({mode}_{source}) · date · asset_group · venue · [chain] · instrument_type · data_type · (instrument_id OR underlying) · [quote · margin] · source`.
+Flat-per-contract shards key on `instrument_id` (filename == column == manifest key). **BUNDLE shards
+(`options_chain`/`futures_chain`) key on `underlying`; per-row `instrument_id` MAY BE NULL by design.**
+
+**Representative canonical ids (cefi)**: `BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN` · `BINANCE-SPOT:SPOT_PAIR:BTC-USDT`
+(no margin on spot) · `BYBIT:FUTURE:BTC-USD@INV-20231201` (per-contract, not a bundle) ·
+`DERIBIT:OPTION:BTC-USD@INV-20260401-3250-C` (options_chain bundle, **quote ALWAYS**) ·
+`DERIBIT:FUTURE:AVAX-USDC@LIN-20260401` (futures_chain bundle; USDC=linear) · `OKX-SWAP:PERPETUAL:BTC-USD@INV`
+(folds to OKX in Layer-1) · `HYPERLIQUID:PERPETUAL:BTC-USDC@LIN` (USDC-margined) ·
+`ASTER:PERPETUAL:BTC-USDT@LIN` (USDT corrected). Margin: quote∈{USDT,USDC,…}→`@LIN`, quote==USD→`@INV`; SPOT no marker.
+
+**Drop venues (cefi purge, remove entirely, snapshot-first)**: BINANCE-DELIVERY (COIN-M, non-MVP);
+BITSTAMP/HUOBI/GEMINI/PHEMEX (defunct); Solana-perp cull DRIFT/PACIFICA/MANGO/ZETA/FLASH/SOLAYER/PICASSO/CAMBRIAN.
+**KEPT**: KALSHI-PERP + POLYMARKET-PERP (roadmap — do NOT drop despite being empty), LIGHTER-ZKSYNC (blocked-scaffold),
+EXTENDED-STARKNET (MVP). — **⏳ drop-venue cull PENDING operator confirm** (it overrides the captured-data-safe
+invariant for BINANCE-DELIVERY's real COIN-M data; snapshot-first). Corrections sent to agent A: keep KALSHI/POLYMARKET,
+bundle keys on `underlying` (NOT a synthesized `VENUE:BASE` id).
+
 ## Codex SSOTs (read before touching a track)
 
 `codex/02-data/availability-manifest-and-data-status.md`, `…/pipeline-mode-partition.md`,
