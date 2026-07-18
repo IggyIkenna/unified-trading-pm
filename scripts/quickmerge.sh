@@ -1233,11 +1233,27 @@ if [ -f "scripts/quality-gates.sh" ]; then
     # at Pass-1 QG time. A bare SHA==HEAD check loses the race vs concurrent LDR writers —
     # an UNRELATED fast-forward (CI machinery / peer agents) advances HEAD and stales a
     # still-valid green QG, even though nothing in the files being shipped changed.
-    # Content-scoped fallback: if HEAD only FAST-FORWARDED past the sentinel commit and the
-    # --files being shipped are BYTE-IDENTICAL between the sentinel and HEAD, the Pass-1 QG
-    # still covers exactly those files → accept (re-verify by content, not by parent commit).
-    # Safety: requires sentinel to be an ANCESTOR of HEAD (forward-only; rejects divergence/
-    # rewind) AND zero diff on the --files set; ANY change to a shipped file → re-run QG.
+    # Content fallback: if HEAD only FAST-FORWARDED past the sentinel commit and the TREE is
+    # byte-identical between them, the Pass-1 QG still covers exactly what is being pushed →
+    # accept (re-verify by content, not by parent commit).
+    #
+    # TREE-scoped, NOT --files-scoped (2026-07-18). This check used to diff only `-- $FILES_ARG`,
+    # i.e. "the files I am shipping have not changed since my green QG". That does NOT imply the
+    # TREE passes QG, and quickmerge pushes the WHOLE TREE. Typecheck/test gates are WHOLE-PROGRAM:
+    # a peer's edit to file A breaks file B that I never listed. Measured on deployment-ui
+    # 2026-07-18: e643a5c changed `getUpcomingFixtures` to return `UpcomingFixturesResult` in
+    # src/api/client.ts (touching only client.ts + LifecycleCards* + mock-api.ts) and broke
+    # src/components/UpcomingFixtures.tsx + .test.tsx — files that commit NEVER TOUCHED. The
+    # --files sentinel was satisfied, Pass 2 was skipped, and a tsc-red tree landed on LDR
+    # (ci-status: deployment-ui SIT_VALIDATED → FAILING). Dozens of foreign files had changed
+    # between that sentinel and HEAD, none of them QG-verified.
+    #
+    # Safety now: sentinel must be an ANCESTOR of HEAD (forward-only; rejects divergence/rewind)
+    # AND the full tree must be unchanged. The fast-path therefore still covers the case the
+    # content fallback was written for — a HEAD advance that changes NOTHING (an empty commit, a
+    # no-op merge/backmerge, a revert-and-reapply) — but any real content movement, by me or a
+    # peer, now correctly forces a Pass-2 QG re-run. On a busy shared branch that means more
+    # re-runs; that is the honest cost of "what you push is what QG validated".
     _SENTINEL=".qg_last_passed_sha"
     _CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
     _SENTINEL_SHA=""
@@ -1248,15 +1264,24 @@ if [ -f "scripts/quality-gates.sh" ]; then
     fi
     if [ "$_SENTINEL_SHA" = "$_CURRENT_SHA" ]; then
       echo "[$REPO_NAME] ✅ SHA sentinel verified — skipping Pass 2 QG re-runs (already verified in Pass 1)"
-    elif [ -n "$FILES_ARG" ] \
-         && git cat-file -e "${_SENTINEL_SHA}^{commit}" 2>/dev/null \
+    elif git cat-file -e "${_SENTINEL_SHA}^{commit}" 2>/dev/null \
          && git merge-base --is-ancestor "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null \
-         && git diff --quiet "$_SENTINEL_SHA" "$_CURRENT_SHA" -- $FILES_ARG 2>/dev/null; then
-      echo "[$REPO_NAME] ✅ CONTENT sentinel verified — HEAD fast-forwarded ${_SENTINEL_SHA:0:9}→${_CURRENT_SHA:0:9} but the --files set is byte-identical between them, so Pass-1 QG still covers exactly these files (content-scoped per Rec #1). Skipping Pass 2 QG re-runs."
+         && git diff --quiet "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null; then
+      echo "[$REPO_NAME] ✅ CONTENT sentinel verified — HEAD fast-forwarded ${_SENTINEL_SHA:0:9}→${_CURRENT_SHA:0:9} but the TREE is byte-identical between them (empty/no-op commit), so Pass-1 QG covers exactly what is being pushed. Skipping Pass 2 QG re-runs."
     else
       echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel invalid for current state."
       echo "  Sentinel: ${_SENTINEL_SHA:-<missing>}  HEAD: ${_CURRENT_SHA}"
-      echo "  (HEAD moved AND a --files path changed since the sentinel — or sentinel is not an ancestor of HEAD.)"
+      echo "  (The TREE changed since the sentinel — or the sentinel is not an ancestor of HEAD.)"
+      # Name what moved. A whole-program gate (tsc/pytest) can break on a file you never touched,
+      # so "but I didn't edit that" is not a reason to skip — show the evidence.
+      _QM_TREE_DELTA=$(git diff --name-only "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null | head -8)
+      if [ -n "$_QM_TREE_DELTA" ]; then
+        _QM_DELTA_N=$(git diff --name-only "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null | wc -l | tr -d ' ')
+        echo "  Changed since the sentinel (${_QM_DELTA_N} file(s), first 8):"
+        printf '    %s\n' $_QM_TREE_DELTA
+        echo "  NOTE: typecheck/tests are WHOLE-PROGRAM — a peer's edit can break a file you never"
+        echo "        touched, so these must be re-validated together even if none are yours."
+      fi
       echo "  Run: bash scripts/quality-gates.sh"
       exit 1
     fi
