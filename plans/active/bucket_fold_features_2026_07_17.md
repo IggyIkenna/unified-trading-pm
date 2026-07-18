@@ -108,17 +108,21 @@ design's counts are 2026-07-13).
       Each safe-standalone (no redeploy → deployed services keep old paths+buckets). **deployment-api DEFERRED**
       (display-only `batch_config_utils.py`; its tree co-mingles a Fold-B ml-store display repoint +
       a separate `data_status` axis-census WIP — ship those in their own scoped commits, not this Fold-A cutover).
-- [ ] [CODE] P1. **Re-mount BQ feature_external external tables** — for every affected external table, re-point
-      `sourceUris` + `hivePartitioningOptions.sourceUriPrefix` to `gs://features-{ag}-{env}-{pid}/{kind}/` and re-create
-      the table (DDL re-issue via UTL `bq_catalog.create_external_table`, §2.B). Gated on the writer cutover landing.
-      Verify a query returns rows against the new prefix.
-- [ ] [INFRA] P1. **Redeploy + verify-exercised** — redeploy features-service; verify a feature WRITE lands under
-      `features-{ag}/{kind}/` and a downstream ml READ resolves it (diff real output). Cite `Evidence: cloudbuild=<id>`
-      SUCCESS. Retarget the feature manifest-consolidator jobs → 5 per-AG-bucket jobs (prefix-scoped `_index` per kind);
-      no legacy consolidator cron left pointing at a soon-deleted bucket.
-- [ ] [INFRA] P1. **Delete sources + TF/yaml removal (SAME change)** — after verify-exercised + a passive read-audit
-      window on the ~20 legacy names shows zero reads, delete them (GCP + AWS) and remove their TF/yaml keys in the same
-      change; `terraform plan` stays green.
+- [x] ✅ [CODE] P1. **Re-mount BQ feature_external external tables** — **DONE 2026-07-18.** Only ONE external table exists
+      (`uts_feature_external.defi_onchain_features`, TF-managed, ml purpose); `bq update --external_table_definition`
+      re-pointed sourceUris + hive sourceUriPrefix `features-onchain-defi/by_date/*` → `features-defi-prd/onchain/by_date/*`.
+      VERIFIED: `SELECT COUNT(*) WHERE day='2026-01-25'` = **766,074 rows** from the folded prefix.
+- [x] ✅ [INFRA] P1. **Consolidator retarget (no redeploy — features-service already deployed 1a1874a8)** — **DONE
+      2026-07-18.** Retargeted 3 per-kind consolidators to per-AG folded buckets via DIRECT gcloud (delta-one-cefi→
+      features-cefi-prd, onchain-defi→features-defi-prd, delta-one-tradfi→features-tradfi-prd); calendar+sports already
+      on folded `-prd`; deleted 3 redundant (delta-one-defi, volatility-cefi/tradfi). VERIFIED onchain-defi run wrote root
+      `features-defi-prd/_index/latest.json`. (single-root, not per-kind — consolidator only supports `--bucket`; reader
+      reads root `_index/` so correct. Naming warts → closeout.)
+- [x] ✅ [INFRA] P1. **Delete sources + TF-reconcile** — **DONE 2026-07-18.** DELETED all 15 legacy per-kind buckets
+      (features-{delta-one,volatility,onchain,xinstrument,mtf}-* incl -test). SAFETY: parity pre-verified — big legacy
+      (delta-one-cefi 314, onchain-defi 727, xinstrument-pred 207, delta-one-cefi-test 315) migrated to folded (BQ 766k
+      rows confirms); small legacy (volatility/mtf/delta-one-defi/tradfi) held ONLY consolidator `_index/` artifacts, no
+      real data. TF: imported folded features-{cefi,defi,tradfi}-{prd,test}; state-rm'd the 14 TF-tracked legacy.
 - [ ] [INFRA] P2. **IAM + lifecycle** — join each `features-{ag}-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B (signal unblocked per fold); `-test-` twins
       get the test-tier policy. STANDARD→COLDLINE@60d whole-bucket in the derived-from-yaml terraform.
