@@ -2463,3 +2463,37 @@ narrow-window relaunch is real, scoped work better done as its own dispatch (per
 the tail of an already-long investigation. `/skip-current-task` — resume once the P1 mitigation (narrow relaunch) or the
 P2 systemic fix lands; a plain "relaunch and wait" dispatch on this todo will keep reproducing the same zero-progress
 result until one of those lands.
+
+### 2026-07-18T17:31Z — data_engineering slot-6 (Todo `-001` — checked coordination state, deliberately did NOT re-run gate/touch fleet, skipping to avoid duplicating slot-3's in-flight P1 mitigation)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean, no dirty state inherited; both repos this slot's prior
+session had flagged AHEAD=1 (`unified-trading-library`, `unified-trading-pm`) were already clean/in-sync at pickup
+(ahead=0/behind=0 on both) — that GIT STATUS RED nudge was stale by the time this session started, no action needed.
+
+**Checked collision state before touching anything.** `gcloud compute instances list` (non-snap SDK at
+`/home/ubuntu/google-cloud-sdk/bin/gcloud` — the snap binary is broken in this environment,
+`cap_dac_override not found`): the same 4 VMs from slot-9's 16:16-18Z relaunch
+(`af-backfill-20260718-16{1608,1641,1712,1740}`) are still `RUNNING`, now ~75 min old — no 5th kill. Checked the live
+backlog (`GET /api/backlog`) for the sibling issue-doc todos filed by slot-15
+(`api_football_backfill_chronological_scan_never_reaches_pending_tail-{001,002,003}`): `-001` (the P1
+immediate-mitigation "narrow pending-cluster relaunch" todo — the exact next step this plan's todo needs) is
+**`dispatched` to slot 3**, `task_dispatched` at 17:22:24Z, already posting `slot_progress` at 17:24:19Z ("read issue
+doc + plan; confirmed 4 wide-window af-backfill VMs still RUNNING; researching gate-query + launcher tooling for narrow
+pending-cluster relaunch") — i.e. someone is actively on the actual fix, started ~9 min before this check. `-002`
+(systemic manifest-aware date-jump fix, instruments-service) and `-003` (cross-backfill audit) are still `queued`, not
+yet picked up.
+
+**Deliberately did NOT re-run the `read_availability_index` gate query** — slot-15's read was only 17 min old (17:14Z
+vs. this check at 17:31Z) and slot-3 hasn't relaunched anything yet (still in the research phase), so a re-read now
+would reproduce the identical byte-for-byte numbers already recorded 3 times in this log (the exact low-value re-check
+pattern flagged by slot-2's and slot-11's entries above) — zero new signal for real cost (a manifest read + the risk of
+hitting the consolidator mid-merge). **Deliberately did NOT touch the 4 running VMs** — they are healthy and, per
+slot-15's finding, will make effectively zero further gate-relevant progress before slot-3's narrow-window relaunch
+supersedes them; killing or relaunching anything in this fleet right now would directly collide with slot-3's in-flight
+work on the sibling issue-doc todo (same VM fleet, same shared `api_football` rate budget — the exact over-subscription
+risk slot-15's writeup called out).
+
+**Not flipping this checkbox, no new diagnosis run, no fleet action.** `/skip-current-task` — resume once (a) slot-3's
+P1 mitigation (`api_football_backfill_chronological_scan_never_reaches_pending_tail-001`) ships and a narrow-window
+fleet is running (then a gate re-read is genuinely informative), or (b) the P2 systemic fix (`-002`, instruments-service
+manifest-aware date-jump) lands, whichever comes first.
