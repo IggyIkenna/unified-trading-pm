@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 15,
+        "warn_file_count": 16,
         "large_file_count": 4,
-        "coverage_pct": null
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -1511,10 +1511,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
         "coverage_pct": null,
-        "large_file_count": 9,
-        "warn_file_count": 7
+        "large_file_count": 8,
+        "warn_file_count": 8,
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN"
     }
