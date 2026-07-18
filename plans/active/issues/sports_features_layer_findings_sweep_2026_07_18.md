@@ -1180,3 +1180,42 @@ rather than days" is conservative; this is minutes of API time.
 - [ ] [CODE] P1. Cross-file sibling grouping: the script groups per PARQUET. If a (league, day)'s populated rows and
       blanks live in different files, siblings are invisible and blanks are mis-counted as "no sibling". If the full-run
       no-sibling count exceeds the ~8% predicted by § P-SIZING, group by (league, day) ACROSS the day's files.
+
+## Q. Round derivation SHIPPED + APPLYING — 89.2% of the gap closed with ZERO api-football calls
+
+`instruments-service@e63049e7` — `scripts/derive_sports_fixture_round_2026_07_18.py`. QG green (4,579 passed).
+
+**Measured on real data (populated eras, 5 matchdays):**
+
+| metric              | value                                    |
+| ------------------- | ---------------------------------------- |
+| rows / blank        | 2,513 / 1,294                            |
+| **DERIVED**         | **1,154 = 89.2% of blanks, 0 API calls** |
+| ambiguous (refused) | 42 (3.2%) — multi-round matchdays        |
+| no-sibling (API)    | 98 (7.6%)                                |
+
+Matches the § P-SIZING prediction (92% mixed-league x 97% unanimity ~= 89%) almost exactly.
+
+**Design decisions that made it safe:**
+
+- **Unanimity, never inference.** `round` is NOT chronological position — a postponed `Regular Season - 12` can be
+  played after round 15 — so date ORDERING is never used to invent a number. A (league, day) whose known values disagree
+  is REFUSED. That self-handles the 3% rescheduled matchdays with no whitelist to maintain.
+- **Provenance stamped.** Fills carry `round_provenance='derived'` (captured rows `'captured'`). A derived value
+  indistinguishable from a fetched one is the banned silent placeholder.
+- **Two-pass per day.** A day carries BOTH a bare multi-league parquet AND per-league parquets, so a league's populated
+  rows and its blanks can sit in different files. Pass 1 pools known values across ALL the day's files; pass 2 fills.
+  The first cut grouped PER PARQUET and reported **0% filled** — the fix took it to 89.2%.
+- Snapshots each parquet to `*.pre_round_derive.bak`; idempotent; single-walk; targets `entity=fixtures_schedule` (the
+  LIVE entity — the older surgical script targets the stale `entity=fixtures`).
+
+**Full-corpus `--apply` RUNNING** over 3,989 days (PID 2138671, watchdog armed on the filled-count progress metric).
+
+**Revised total api-football spend for the whole `round` gap: ~100 bulk calls** (early-2019 era, one
+`GET /fixtures?league&season` per league) versus **~1,260,000** for the rejected `--force` corpus refetch.
+
+- [ ] [DATA] P1. After the apply completes: re-measure round population per era, then fetch the early-2019 residual (~89
+      league-season bulk calls) and the ~8% no-sibling remainder.
+- [ ] [DATA] P1. Then rebuild the catalogue (`build_instrument_catalogue.py --asset-group sports --since 2019-01-01`)
+      and verify `competition_phase` is no longer ~100% UNKNOWN — the § O hypothesis is that the rollup, not capture,
+      was the 3.2%.
