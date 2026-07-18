@@ -83,16 +83,24 @@ design's counts are 2026-07-13).
 
 ## Todos — DeFi-playbook order
 
-- [ ] [DATA] P1. **Provision + yaml scaffold** — add the 5 folded `features-{cefi,defi,tradfi,sports,pred}` keys to
-      `cloud-providers.yaml` (all 3 copies), env-tiered; add `_KIND_ALIASES` entries mapping every retired per-kind key
-      → its per-AG folded key (extend the existing xinstrument/mtf aliases, §2.D). Provision `features-{ag}-{prd,test}`
-      on GCP + AWS via the derived-from-yaml `for_each` (no dev/stg). Verify `terraform plan` shows only the new folded
-      buckets as creates. UTL QG green.
-- [ ] [DATA] P1. **Reconcile the features-onchain-defi twin THEN parity migrate** — first reconcile
-      flat(~712)-vs-prd(~76) per the hazard note (re-measure counts; copy flat objects absent from prd only). Then
-      server-side copy each source kind-bucket → `features-{ag}-{env}-{pid}/{kind}/`; byte-count parity both sides per
-      (ag, kind). Assert-empty any source with 0 objects (re-measure at execution — several per-AG/kind slots may be
-      empty residue) and skip its copy, recording the assertion.
+- [~] [DATA] P1. **Provision + yaml scaffold** — **BUCKETS PROVISIONED 2026-07-18** (direct gcloud/aws NOT tofu, per the
+  unsafe-state gotcha): GCP `features-{cefi,defi,tradfi}-{prd,test}-central-element-323112` (6; ASIA-NORTHEAST1, UBLA,
+  STANDARD→COLDLINE@60d) — pred/sports folded targets ALREADY EXIST (they ARE flat
+  `features-prediction`/`features-sports`; name-collision RESOLVED, no new pred/sports GCP provision); AWS
+  `features-{cefi,defi,tradfi}-{prd,test}` + `features-{pred,sports}-test` (8; ap-northeast-1, public-blocked). **yaml
+  scaffold + `_KIND_ALIASES` DEFERRED to the atomic T0 cutover** (below) per the ml-fold pattern — key+aliases+code ship
+  together, no orphan-key window (buckets exist so resolution works the instant the key lands). Adopting **shape (b)**:
+  ONE folded per-AG dict key `features` + aliases from all 5 retired kinds → `features` (synthesis rec; the ONLY shape
+  the alias soft-window is expressible in — resolver does a single asset-group-blind `_KIND_ALIASES.get(kind)`).
+- [x] ✅ [DATA] P1. **Reconcile the features-onchain-defi twin THEN parity migrate** — **DONE 2026-07-18.** Twin
+      reconcile = NO-OP (RESOLVED): only flat `features-onchain-defi` (727) exists; no `-onchain-defi-prd-*` on either
+      cloud — the design's flat-712-vs-prd-76 hazard is STALE. **4 real server-side copies (byte-parity ✓):**
+      delta-one-cefi(314, 477MB)→ `features-cefi-prd/delta_one/` ✓, delta-one-cefi-test(315,
+      493MB)→`features-cefi-test/delta_one/` ✓, onchain-defi(727, 977MB)→`features-defi-prd/onchain/`,
+      xinstrument-pred(207, 2MB)→`features-pred-prd/xinstrument/`. **Index-only SKIP (assert `_index/`-only):**
+      delta-one-{defi,tradfi}, volatility-{cefi,tradfi}, mtf-cefi. **Assert-EMPTY SKIP:** delta-one-pred,
+      xinstrument-{cefi,defi,tradfi}, mtf-{defi,tradfi}. **sports:** NO data move (already at folded name
+      `features-sports-prd`; content stays at root, no `{kind}/` prefix — env-tier repoint only in §3).
 - [ ] [CODE] P1. **Atomic writer/reader cutover** — repoint every Fold A writer/reader (design §1) to
       `kind="features-{ag}"` + a `{kind}/` path prefix. Ship per-repo QG-green: features-service, UTL, ml-service,
       deployment-api, deployment-service, UAC.
@@ -151,3 +159,32 @@ design's counts are 2026-07-13).
   execution is the biggest fold (BQ re-mount) — run as its own focused cutover pass (provision+migrate → UTL/yaml+alias
   T0 → features-service+consumers prefix cutover → BQ re-mount → redeploy+verify → consolidator N→5 → zero-reads
   delete), same implement-then-adversarially-verify shape as ml.
+
+- **2026-07-18, `/autonomous` EXECUTION — discovery re-ground + PROVISION + MIGRATE done.** Re-ground via read-only
+  discovery workflow `wf_15449018-090` (5 agents, 0 errors — full spec in that transcript). Fresh counts: 5 data-bearing
+  GCP buckets (delta-one-cefi 314 +test 315, onchain-defi 727, xinstrument-pred 207, sports-prd thousands); rest
+  index-only/empty. **PROVISIONED** 6 GCP + 8 AWS folded buckets (see the flipped todo). **MIGRATED** the 4 real copies,
+  byte-parity ✓. **Shape (b)** adopted (one folded `features` per-AG dict + aliases). NEXT = the code cutover (T0
+  UTL/yaml → T1 features-service → T2 consumers → BQ re-mount → redeploy+verify → consolidator), then Phase-E delete
+  (time-gated). **TWO BIG FINDINGS surfaced by discovery (operator-notified):**
+  1. **DESIGN GAP (data-correctness):** the design's Fold-A cutover list MISSED 4 alias-immune literal `bucket_template`
+     PATH_REGISTRY rows — `delta_one_features`(registry.py L48), `onchain_features`(L62), `lst_seasonal_rewards`(L69),
+     `volatility_features`(L76) (+ path ref L306). Un-repointed, they keep resolving the soon-deleted buckets → silent
+     read/write breakage post-delete. MUST be in the T0 cut (recurrence of the ml-fold "registry.py not in the design
+     list" lesson). Also the byte-parity hazard: `delta_one_features` registry path ≠ FeatureWriter inline key — the
+     `delta_one/` prefix must be applied symmetrically to writer + `check_exists` twin + reader.
+  2. **LATENT BUG (data-correctness, adjacent):** `features_service/onchain/engine/feature_observation_writer.py:61-65`
+     calls `resolve_bucket_name(data_type=…, asset_group=…, project_id=…)` — INVALID kwargs (real sig is
+     `(cloud, kind, asset_group, deployment_env)`) → `TypeError` swallowed by the `except Exception` at L90 → onchain
+     `feature_observation_snapshot` writes have been silently NO-OP'ing. Fix in the onchain cutover (correct signature +
+     fold repoint: `kind="features-onchain", asset_group="defi"` → aliases to `features` → `features-defi`; blob under
+     `onchain/`).
+- **2026-07-18, OPERATOR DIRECTIVE (mid-session):** "AWS isn't too important — GCP is where the real data is. Terraform
+  needs to AGREE with the canonicalised reduced buckets WITHOUT EXCEPTION — audit the 100+ GCP buckets vs Terraform to
+  ensure NO REGRESSION on `terraform apply`." → Launched a read-only TF-vs-estate reconciliation audit (agent
+  `a240ee56`) enumerating all live GCP buckets vs the derived-from-yaml `canonical_buckets.tf` `for_each` + the
+  hardcoded consolidator/BQ TF buckets, categorizing each + assessing apply-regression risk. The fold's yaml changes ARE
+  the reconciliation mechanism (TF derives from `cloud-providers.yaml`); the audit establishes the baseline + any
+  pre-existing drift. Also fixed the related fleet blocker per operator: `digest-drift-sweep.yml` GITHUB_TOKEN→GH_PAT
+  (unified-trading-pm@f6e98bbdd) so the fleet auto-re-pins to the fresh base image (unblocks execution/strategy Phase-D
+  builds). **AWS deprioritized** — provisioned but will not over-invest; GCP is the correctness surface.
