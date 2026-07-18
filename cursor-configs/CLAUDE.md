@@ -317,10 +317,12 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
 - **AO alerts / Slack notifications?** The `agent-orchestrator-alerts` channel is **actionable-only** — automatic
   lifecycle events (dispatches / respawns / recoveries) log + feed the daily digest, they NEVER page; failures + worker
   BLOCKED questions page; standing conditions dedup by state-transition (fire on change / RESOLVED / re-remind), never
-  every tick. SSOT: `codex/04-architecture/agent-orchestrator-alerting.md`. **CI alerts (`ci-failures` channel)** route
-  through the reusable `notify-slack.yml` carrier (read-back dedup: `dedup_key`+`cooldown_min`, `recovery`-gated
-  all-clears, fail-open); cooldowns track a condition's MEASURED cadence, not its declared cron (GH throttles
-  `schedule:` ≈37%). SSOT: `codex/04-architecture/ci-alerting.md`.
+  every tick. **Every actionable alert that paged an OPEN gets a ✅ CLOSE bookend in-channel** (BLOCKED answered/auto-
+  resolved · git RECOVERED · escalation resolved-if-it-paged; webhook-only correlation via opened-at ts, no threading).
+  SSOT: `codex/04-architecture/agent-orchestrator-alerting.md`. **CI alerts (`ci-failures` channel)** route through the
+  reusable `notify-slack.yml` carrier (read-back dedup: `dedup_key`+`cooldown_min`, `recovery`-gated all-clears,
+  fail-open); cooldowns track a condition's MEASURED cadence, not its declared cron (GH throttles `schedule:` ≈37%).
+  SSOT: `codex/04-architecture/ci-alerting.md`.
 - **Runbooks**: declare `owner`/`cadence`/`verifier`/`last_executed` (missing = review-blocking). **Cross-plan
   banners**: launching a VM / in-flight refactor → add `> **🟢/🟡 …**` to every affected plan.
 
