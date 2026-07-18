@@ -669,21 +669,55 @@ jobs:
               fi
             fi
 
-            # ── Runaway breaker (max 12 LDR→main PRs merged in 6h — tighter than staging's 30) ──
+            # ── Runaway breaker — CADENCE-AWARE, and gated on the EMPTY-PROMOTE signature ─────────
             # Filter by the stable promote TITLE, not --head: under frozen-head the merged PR head is
             # `promote/<repo>` (not live-defi-rollout), so a head filter would always count 0 and the
             # breaker would never trip. The "chore(promote)" title catches every promote PR (legacy
             # live-branch head OR frozen ref).
+            #
+            # WHY THIS CHANGED (2026-07-18). The cap was 12 merges/6h, set 2026-06-25 (32e1eb199) when
+            # this bot ran `8,23,38,53 * * * *` = 4 ticks/hour. On 2026-07-18 (42ba7b823) the cron
+            # became `*/5` = 12 ticks/hour to beat GitHub's schedule throttling. Tripling the tick rate
+            # does NOT mean the bot malfunctions — it means the same day's work is promoted in smaller,
+            # more frequent batches, so the MERGE COUNT alone rises ~3x on any actively-developed repo.
+            # It duly tripped: deployment-service was REFUSED promotion at 21:07 with 12/6h, and
+            # market-tick-data-service + instruments-service were both at 10/6h and about to follow.
+            # Measured on all 14 of deployment-service's promote PRs: changed_files ran 1..105 and NOT
+            # ONE was empty — i.e. every promote carried real content. That is healthy throughput being
+            # mislabelled "malfunctioning", which is a false CRITICAL page AND a self-inflicted
+            # promotion freeze.
+            #
+            # A genuine runaway has a distinct signature: the bot re-promotes NOTHING, over and over
+            # (an empty-promote loop — the failure ldr-to-staging hit at 375 empty promotes/day). So
+            # count is the cheap trigger, EMPTINESS is the verdict:
+            #   * cap raised 12 -> 36, tracking the 3x cadence change (still well under staging's 30/2h-equivalent)
+            #   * on exceeding it, spend the (now rare) extra API calls to ask how many of those promotes
+            #     changed ZERO files. Block + page ONLY if that is >= EMPTY_RUNAWAY_MIN.
+            #   * high throughput with real content is NOT blocked and NOT paged — just logged.
+            # Keeping the count check first means the expensive per-PR lookup runs ~never in steady state.
+            RUNAWAY_CAP=36
+            EMPTY_RUNAWAY_MIN=3
             MERGED_6H=$(gh pr list --repo "$OWNER/$REPO" --base main \
               --state merged --limit 50 --json mergedAt,title \
               --jq '[.[] | select(.title | startswith("chore(promote)")) | select(.mergedAt > (now - 21600 | strftime("%Y-%m-%dT%H:%M:%SZ")))] | length' 2>/dev/null || echo "0")
-            if [ "${MERGED_6H:-0}" -ge 12 ]; then
-              echo "⛔ RUNAWAY BREAKER $REPO: ${MERGED_6H} LDR→main promote PRs merged in 6h (cap 12) — refusing; page CRITICAL"
-              if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ] && [ "$DRY_RUN" != "true" ]; then
-                curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
-                  -d "{\"text\":\":rotating_light: *RUNAWAY LDR→MAIN BREAKER* — \`$REPO\` had ${MERGED_6H} LDR→main promote merges in 6h (cap 12). ldr-to-main-promote-fleet is malfunctioning on this repo. Repo promotion REFUSED until the count ages out or the cause is fixed.\"}" >/dev/null 2>&1 || true
+            if [ "${MERGED_6H:-0}" -ge "$RUNAWAY_CAP" ]; then
+              # Confirm the malfunction signature before refusing anything.
+              EMPTY_6H=0
+              for _pn in $(gh pr list --repo "$OWNER/$REPO" --base main --state merged --limit 50 \
+                  --json number,mergedAt,title \
+                  --jq '.[] | select(.title | startswith("chore(promote)")) | select(.mergedAt > (now - 21600 | strftime("%Y-%m-%dT%H:%M:%SZ"))) | .number' 2>/dev/null); do
+                _cf=$(gh api "repos/$OWNER/$REPO/pulls/$_pn" --jq '.changed_files' 2>/dev/null || echo "1")
+                [ "${_cf:-1}" -eq 0 ] && EMPTY_6H=$((EMPTY_6H + 1))
+              done
+              if [ "$EMPTY_6H" -ge "$EMPTY_RUNAWAY_MIN" ]; then
+                echo "⛔ RUNAWAY BREAKER $REPO: ${MERGED_6H} promote PRs merged in 6h and ${EMPTY_6H} of them changed ZERO files — empty-promote loop; refusing; page CRITICAL"
+                if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ] && [ "$DRY_RUN" != "true" ]; then
+                  curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                    -d "{\"text\":\":rotating_light: *RUNAWAY LDR→MAIN BREAKER* — \`$REPO\` had ${MERGED_6H} LDR→main promote merges in 6h, ${EMPTY_6H} of them EMPTY (zero changed files). That is an empty-promote loop, not throughput — ldr-to-main-promote-fleet is malfunctioning on this repo. Repo promotion REFUSED until the count ages out or the cause is fixed.\"}" >/dev/null 2>&1 || true
+                fi
+                _done BLOCKED; return 0
               fi
-              _done BLOCKED; return 0
+              echo "NOTE $REPO: ${MERGED_6H} promote merges in 6h (>= cap ${RUNAWAY_CAP}) but only ${EMPTY_6H} empty — real content every time, so this is THROUGHPUT, not a runaway. Not blocking."
             fi
 
             if [ "$DRY_RUN" = "true" ]; then

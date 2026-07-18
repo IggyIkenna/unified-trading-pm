@@ -112,7 +112,12 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
       `execution-store-{env}-{pid}/{ag}/execution/…` (incl. `nautilus-catalog-cache/`) and the prediction kind →
       `.../pred/…`; byte-count parity per AG (cefi ≈ 6142 obj — re-measure). strategy-store is a name re-tier, not a
       data move — copy the flat bucket contents to the tiered name, parity-verify.
-- [ ] [CODE] P1. **Atomic cutover** — repoint Fold C sites → `kind="execution-store"` + `{ag}/` path prefix, and Fold D
+- [~] [CODE] P1. **Atomic cutover** — SHIPPING 2026-07-18: UAC@1dd02a73 (yaml+facade) + UTL (registry+alias+resolver) +
+      strategy-service (reader fold + VaR golden fix) LANDED. execution-service (writer, re-gating) + deployment-service
+      (yaml+consolidator-TF) + deployment-api + UI remain (ship --skip-preflight — UAC replay-WIP codegen re-dirties the
+      dep, unrelated to C+D). IMPLEMENT+VERIFY+FIX+REVERIFY workflows caught: strategy byte-parity reader (silent P&L
+      drop), strategy-store-test key retirement, SSOT-map gaps, PM yaml mirrors. Original todo text below.
+- [ ] [CODE] P1. **(orig) Atomic cutover** — repoint Fold C sites → `kind="execution-store"` + `{ag}/` path prefix, and Fold D
       sites → the re-tiered flat `strategy-store` name (incl. the UAC `strategy_store_bucket` facade + the two UI
       hardcoded routes). Ship per-repo QG-green: execution-service, strategy-service, UTL, deployment-api, UI, UAC.
 - [ ] [INFRA] P1. **Redeploy + verify-exercised** — redeploy execution-service + strategy-service; verify a live fill
@@ -157,6 +162,27 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   + strategy re-tier writers + UAC `strategy_store_bucket` facade + 2 UI hardcoded routes). Also: execution/strategy
   service builds will need the same base-image pin bump as ml (fleet digest-sweep fix f6e98bbdd auto-handles it once it
   promotes + the 6h sweep runs).
+
+- **2026-07-18, `/autonomous` — C+D CODE CUTOVER shipping (4-workflow pipeline: IMPLEMENT→VERIFY→FIX→REVERIFY).** Ran a
+  6-agent IMPLEMENT workflow (one per repo) → 2 adversarial verifiers → a 5-agent FIX workflow → re-verify. The
+  adversarial passes earned their keep — caught, before anything shipped: (1) **strategy-service holds Fold-C byte-parity
+  execution-fills READERS** (`pnl/adapters/domain_adapter` + `pnl/engine/orchestrator`) that I'd mis-scoped as
+  "redeploy-only" — un-folded they `KeyError`/silently-mismatch the writer's `{category}/execution/…` path (silent
+  hold-day P&L drop); FIXED writer==reader (resolve_bucket_name(kind="execution-store") + category=). (2)
+  `execution-service dependency_checker` resolved the RETIRED `strategy-store-test` yaml key → BucketNamingError; FIXED
+  to tiered resolve. (3) deployment-service `_SERVICE_TO_CANONICAL_KIND` missing execution/strategy; (4) deployment-api
+  stale generated `consolidator_catalog.json` (regenerated); (5) **PM yaml mirrors** (configs + ci-test) not folded —
+  folded. **LANDED:** UAC@1dd02a73 (yaml exec-flat + strategy-tier + facade), UTL (registry exec_fills/nautilus +
+  strategy 3 rows + _KIND_ALIASES exec-prediction + execution.py client + fixture/tests), strategy-service (readers +
+  config/dep-checker re-tier + tests). **execution-service** (writer surface — service_config/storage/save_operations
+  fill-twin/data_sink/dep_checker + churn tests) re-gating for ship; **deployment-service/deployment-api/UI** next.
+  **VaR golden fix (operator-requested, not-my-fault):** strategy-service's phase0 risk golden failed on a ~1e-12 VaR
+  precision flake (19 digits of z-score float-noise in `current_value`); quantized the parametric VaR to cents in
+  `pre_trade_check_engine._check_var_limit` (canonical for a currency amount) + updated the golden — 190 var/pre_trade
+  tests green, platform-stable. **LOOSE END:** a large separate replay/source-capability WIP of mine (~8 UAC files:
+  possible_manifest/pipeline_mode/_source_priority_data/_cefi-capability/lighter_api) re-dirties UAC (codegen or
+  slot-cron restore) — unrelated to C+D; ship C+D with `--skip-preflight`; the replay feature needs finishing/committing
+  or reverting separately. **Operator context: TEST DATA, not precious, single-root _index/, autonomous delete.**
 
 - **2026-07-18, OPERATOR DECISIONS (interactive Q&A) — full-send, canonical-first, NOT precious data.** Operator
   clarified the trading-adjacent buckets hold only random test data — **no real trades have happened; nothing is writing

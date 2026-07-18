@@ -141,6 +141,19 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 
 ### R2 — IS: the honest per-(venue,chain) availability denominator · P0
 
+- [ ] [BACKEND] P0. **WIRE THE MISSING STAKING/RESTAKING/VAULT VENUES INTO `_DEFI_VENUES` (the denominator is missing
+      ~15 protocols).** Measured 2026-07-18 (operator caught it): the enumerated `_DEFI_VENUES` = 63 venues but only
+      **Lido / etherfi / Ethena / Jito / Marinade** cover the LST/restaking/vault space — the catalogue has just **7**
+      LST/STAKING/YIELD_BEARING instruments. **15 adapters exist + are registered in `factory.py::_ADAPTERS` + have
+      POPULATED registries + whitelisted tokens (`DEFI_MAJOR_ASSET_SYMBOLS`) + genesis dates in `chain_env.py` — but are
+      NOT in `_DEFI_VENUES`, so the enumeration never calls them**: `rocket_pool` (rETH), `renzo` (ezETH), `kelpdao`
+      (rsETH), `puffer` (pufETH), `karak`, `symbiotic`, `jito_restaking`, `sanctum`, `solblaze` (bSOL),
+      `solana_native_staking`, `yearn`, `beefy`, `pendle` (PT/YT), `convex`, `idle`. **Fix**: add them to
+      `engine/orchestrator/defi.py`'s venue list (same class as the 7-lending-guard bug — built-but-not-firing). **ALSO
+      write missing adapters**: **cbETH (Coinbase)** + **wBETH (Binance)** LSTs have no adapter at all (tokens ARE
+      whitelisted). Then re-measure the universe (currently 11,724; this materially grows the LST/restaking/vault
+      count). A too-small denominator makes per-instrument coverage lie. (repo: instruments-service)
+
 - [ ] [BACKEND] P0. **IS is structurally already the denominator** (`enumerate_expected_universe.py::_enumerate_v2_defi`
       seeds `expected` per `(venue,chain,itype,instrument_id,data_type,day)`; `available_from` STRONG via real on-chain
       genesis `eth_getCode` binary-search). Close the gaps: **(a) honest `available_to`** — record per-instrument
@@ -532,6 +545,21 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-18 (slot-4, /autonomous — R-phase implementation START).** Operator (away 4h) directed: quantify → R2+R1 →
+  R3 → IS+MTDS backfills/rollup, no stopping.
+  - **Phase 0 quantify DONE (read-only):** the 15 unwired staking/restaking/vault adapters would add **~85 real
+    instruments** (raw ~150 inflated by a multi-chain-default bug in rocket_pool/kelpdao/puffer/convex/symbiotic).
+    Biggest: **pendle 30 · beefy 16 · yearn 6 · symbiotic 4 · renzo 4 · karak 3 · sanctum 3 · jito_restaking 3 · idle
+    3**; the rest 1 each; `solana_native_staking` 0. Universe **11,724 → ~11,800** — small numeric add but completes the
+    restaking/vault category (was ~7). Real chains taken from `chain_env.PROTOCOL_LAUNCH_DATES` (authoritative — avoids
+    phantom chains): beefy ×6, yearn ×3(ETH/ARB/OPT), idle ×3(ETH/ARB/POLYGON), renzo/karak/pendle ×2(ETH/ARB), the rest
+    ETH-only, sanctum/jito_restaking/solblaze SOLANA.
+  - **R2+R1 implementation DISPATCHED (`wf_6c04b662`):** IS agent = wire the 15 into `_STATIC_/_SOLANA_DEFI_VENUES` +
+    UAC `VENUE_TO_ADAPTER_KEY` mappings + write cbETH (Coinbase) + wBETH (Binance) adapters; MTDS agent =
+    `write_defi_rows` `groupby(instrument_id)` per-instrument fan-out + `evm_defi` per-instrument manifest loop. Both
+    QG-green + runtime-verified + ship via quickmerge. Then R2c (honest `available_to` TVL-timeseries +
+    `force_include`), R3 (union batch→per-instrument migration), IS+MTDS backfills/rollup, R4 coverage.
 
 - **2026-07-18 (slot-4, /autonomous) — Canonical-target audit → doc reconciliation → SSOT reference SHIPPED; migrations
   PARKED.** Handoff record (rule 6 — resume losslessly from here):

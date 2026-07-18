@@ -1109,3 +1109,113 @@ derivation covers far less of them. This MUST be measured before sizing the API 
       — never write a derived value indistinguishable from a fetched one.
 - [ ] [DATA] P1. API-fetch only the residual: non-whitelisted leagues + cup competitions + any league-season with no
       populated fixtures to score against. Size the run from THAT count, not the whole corpus.
+
+### P-SIZING (2026-07-18) — the blank half IS exchangeable; ~89% derivable, API residual is TINY
+
+The § P caveat ("blanks may be disproportionately cups, so the ground-truth set may not transfer") is **measured and
+REFUTED**. Same 6-matchday sample (3,234 fixtures, 1,672 blank = 51.7%):
+
+| bucket                                                             | leagues | blank fixtures  |
+| ------------------------------------------------------------------ | ------- | --------------- |
+| leagues with BOTH populated + blank (derivable target)             | **50**  | **1,539 (92%)** |
+| blank-ONLY leagues (never any round — cups/friendlies/unsupported) | **7**   | 133 (8%)        |
+
+**92% of blanks live in leagues that ALREADY have round data**, so the populated fixtures are valid ground truth for
+exactly the leagues we need to fill. Combined with the § P ceiling (97% of `(league, day)` groups carry exactly one
+round), **~89% of blanks are derivable with ZERO api-football calls**.
+
+**Revised sizing — the operator's "couple hours rather than days" is conservative:**
+
+| path                                     | api-football calls                                                                                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| full `--force` corpus refetch (rejected) | ~1,260,000                                                                                                                                    |
+| surgical whole-corpus script             | ~600-700                                                                                                                                      |
+| **derive-then-fetch (this plan)**        | **~1 bulk call per residual (league, season)** — the 7 blank-only leagues + leagues with multi-round matchdays. Tens of calls, not thousands. |
+
+The residual is bounded by DISTINCT (league, season) pairs needing a fetch, NOT by fixture or date count — one
+`GET /fixtures?league&season` returns the whole season (measured: 242 fixtures in one call).
+
+- [ ] [CODE] P0. Implement derive-then-fetch: (1) score date→round per (league, season) against populated fixtures; (2)
+      derive blanks for leagues scoring 100%, stamped as DERIVED provenance; (3) enumerate the residual (blank-only
+      leagues + non-perfect scorers) and bulk-fetch ONLY those (league, season) pairs.
+- [ ] [DIAG] P2. Classify the 7 blank-only leagues: genuine honest absence (a cup tie has no `Regular Season - N`) vs a
+      real capture gap. Do not fetch what has no round concept — that is honest absence and should be recorded as such,
+      not chased.
+
+### P-ERA (2026-07-18) — `round` capture STARTS mid-2019; the underivable residual is one bounded era
+
+First dry-run of `instruments-service/scripts/derive_sports_fixture_round_2026_07_18.py` returned **0 filled / 2,390
+blank / 2,390 no-sibling**. That was MY sampling error, not a script failure: `--max-days 40` takes the FIRST 40 sorted
+days = earliest 2019, and round population there is **0%** — no populated siblings exist to propagate from. (Third time
+this session a small unrepresentative sample produced a confident wrong read; the fix is the same each time — sample
+across the range, or measure the whole corpus.)
+
+Measured population by era (one sampled matchday per year, `entity=fixtures_schedule`):
+
+| matchday   | rows | populated | %        |
+| ---------- | ---- | --------- | -------- |
+| 2019-02-09 | 575  | 0         | **0.0%** |
+| 2019-08-17 | 362  | 238       | 65.7%    |
+| 2020-09-19 | 289  | 171       | 59.2%    |
+| 2021-03-13 | 284  | 166       | 58.5%    |
+| 2022-10-05 | 88   | 44        | 50.0%    |
+| 2023-08-19 | 666  | 334       | 50.2%    |
+| 2024-04-06 | 394  | 187       | 47.5%    |
+| 2025-11-08 | 404  | 195       | 48.3%    |
+| 2026-03-14 | 354  | 142       | 40.1%    |
+
+**`round` capture begins around mid-2019** and holds 40-66% thereafter. So the work splits cleanly:
+
+- **2019-08 → 2026**: siblings exist → DERIVE (zero API calls), bounded by the § P 97% unanimity ceiling.
+- **early 2019 (Jan → ~Aug)**: 0% populated → nothing to derive from → API fetch. **Bounded by (league, season) pairs,
+  NOT days**: season 2019 across ~89 leagues ≈ **~89 bulk calls**, since one `GET /fixtures?league&season` returns the
+  whole season (measured: 242 fixtures in one call).
+
+Total projected api-football spend for the entire `round` gap: **~100 calls**, versus the ~1,260,000 of the rejected
+`--force` corpus refetch — and versus ~600-700 for the whole-corpus surgical script. The operator's "a couple of hours
+rather than days" is conservative; this is minutes of API time.
+
+- [ ] [DIAG] P0. Full-corpus dry-run running (no `--max-days`) — read fill / ambiguous / no-sibling corpus-wide before
+      `--apply`. Confirms the era split and gives the exact residual.
+- [ ] [CODE] P1. Cross-file sibling grouping: the script groups per PARQUET. If a (league, day)'s populated rows and
+      blanks live in different files, siblings are invisible and blanks are mis-counted as "no sibling". If the full-run
+      no-sibling count exceeds the ~8% predicted by § P-SIZING, group by (league, day) ACROSS the day's files.
+
+## Q. Round derivation SHIPPED + APPLYING — 89.2% of the gap closed with ZERO api-football calls
+
+`instruments-service@e63049e7` — `scripts/derive_sports_fixture_round_2026_07_18.py`. QG green (4,579 passed).
+
+**Measured on real data (populated eras, 5 matchdays):**
+
+| metric              | value                                    |
+| ------------------- | ---------------------------------------- |
+| rows / blank        | 2,513 / 1,294                            |
+| **DERIVED**         | **1,154 = 89.2% of blanks, 0 API calls** |
+| ambiguous (refused) | 42 (3.2%) — multi-round matchdays        |
+| no-sibling (API)    | 98 (7.6%)                                |
+
+Matches the § P-SIZING prediction (92% mixed-league x 97% unanimity ~= 89%) almost exactly.
+
+**Design decisions that made it safe:**
+
+- **Unanimity, never inference.** `round` is NOT chronological position — a postponed `Regular Season - 12` can be
+  played after round 15 — so date ORDERING is never used to invent a number. A (league, day) whose known values disagree
+  is REFUSED. That self-handles the 3% rescheduled matchdays with no whitelist to maintain.
+- **Provenance stamped.** Fills carry `round_provenance='derived'` (captured rows `'captured'`). A derived value
+  indistinguishable from a fetched one is the banned silent placeholder.
+- **Two-pass per day.** A day carries BOTH a bare multi-league parquet AND per-league parquets, so a league's populated
+  rows and its blanks can sit in different files. Pass 1 pools known values across ALL the day's files; pass 2 fills.
+  The first cut grouped PER PARQUET and reported **0% filled** — the fix took it to 89.2%.
+- Snapshots each parquet to `*.pre_round_derive.bak`; idempotent; single-walk; targets `entity=fixtures_schedule` (the
+  LIVE entity — the older surgical script targets the stale `entity=fixtures`).
+
+**Full-corpus `--apply` RUNNING** over 3,989 days (PID 2138671, watchdog armed on the filled-count progress metric).
+
+**Revised total api-football spend for the whole `round` gap: ~100 bulk calls** (early-2019 era, one
+`GET /fixtures?league&season` per league) versus **~1,260,000** for the rejected `--force` corpus refetch.
+
+- [ ] [DATA] P1. After the apply completes: re-measure round population per era, then fetch the early-2019 residual (~89
+      league-season bulk calls) and the ~8% no-sibling remainder.
+- [ ] [DATA] P1. Then rebuild the catalogue (`build_instrument_catalogue.py --asset-group sports --since 2019-01-01`)
+      and verify `competition_phase` is no longer ~100% UNKNOWN — the § O hypothesis is that the rollup, not capture,
+      was the 3.2%.

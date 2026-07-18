@@ -488,6 +488,27 @@ id.)
 
 ## Progress Log
 
+- **2026-07-18 (slot-3, /autonomous) — CUTOVER STATUS: surface C DONE+durable; surfaces A/B staged + BRIDGED; both
+  sub-agents died on a session limit (resets 21:40 Europe/London).** The reader-bridge (D3) resolves wire→canonical at
+  read time, so the system reads canonical NOW even before A/B physically complete.
+  - **Surface C (manifest) — ✅ APPLIED + DURABLE** (see entry below): 16.67%→1.59% non-canonical, gate passed, survived
+    consolidator re-enable. `is@555ddf1c`.
+  - **Surface A (rename, Script 2) — BLOCKED on a bounded, verified data issue**: 12-day dry-run clean (11,141
+    would-rename) EXCEPT **15 DERIBIT USDC dual-name collisions**. VERIFIED (read both parquets, day=2023-11-21):
+    `BTC_USDC-PERPETUAL.parquet` (symbol=`BTC_USDC-PERPETUAL`, id=`DERIBIT:PERPETUAL:BTC_USDC-PERPETUAL`, 1,090,049 rows)
+    and `BTC_USDC.parquet` (symbol=`BTC_USDC`, id=`DERIBIT:PERPETUAL:BTC_USDC`, 449,580 rows) are the SAME DERIBIT USDC
+    perp under two Tardis symbol aliases, overlapping timestamps — both → canonical `DERIBIT:PERPETUAL:BTC-USDC@LIN`
+    (same for ETH_USDC etc.). Script 3 ALREADY deduped these to ONE manifest row; the two PHYSICAL files collide on
+    rename. **HANDLING (for the resume): MERGE** the two objects into the canonical stem (concatenate + de-dup book rows
+    by timestamp) OR keep the manifest-retained one; keep STOP-ON-SURPRISE for any non-same-instrument collision. Row-count
+    asymmetry (2.4×) means dedup-by-timestamp, not blind concat. Script 2 + shared module are staged (dirty) in MTDS.
+  - **Surface B (content, Script 1) — NOT STARTED**: to run on a SPOT cefi-migration VM via dirty tarball
+    (`create-code-tarballs.sh --allow-dirty-tarball` → `launch-cefi-migration-vm.sh` with `VM_MIGRATION_CMD`→Script 1,
+    DRY-RUN first). Agent hadn't packaged the tarball before the session limit.
+  - **RESUME PLAN** (when the session limit lifts / sub-agents available): (1) B finishes the Script 2 merge + re-dry-run
+    → I run rename `--apply --stamp <ts>`; (2) content-VM agent packages the tarball + dry-runs Script 1 on a VM → I
+    review → `--apply` on the VM (~day). Then verify `ADAF0:USTF0` + `DERIBIT AVAX-USDC@LIN` on all 4 surfaces.
+
 - **2026-07-18 (slot-3, /autonomous) — ✅ MIGRATION 1/3 APPLIED + DURABLE: the manifest (surface C) is canonicalized on
   the LIVE cefi tick manifest and it STUCK.** Sequence: (1) first `--apply` of Script 3 canonicalized the index but its
   post-verify gate caught 42,915 eu/captured 5-col collisions the eu-reconcile missed (cross-`pipeline_mode`: a
