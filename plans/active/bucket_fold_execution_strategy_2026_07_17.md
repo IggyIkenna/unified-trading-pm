@@ -112,11 +112,16 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
       `execution-store-{env}-{pid}/{ag}/execution/…` (incl. `nautilus-catalog-cache/`) and the prediction kind →
       `.../pred/…`; byte-count parity per AG (cefi ≈ 6142 obj — re-measure). strategy-store is a name re-tier, not a
       data move — copy the flat bucket contents to the tiered name, parity-verify.
-- [~] [CODE] P1. **Atomic cutover** — SHIPPING 2026-07-18: UAC@1dd02a73 (yaml+facade) + UTL (registry+alias+resolver) +
-      strategy-service (reader fold + VaR golden fix) LANDED. execution-service (writer, re-gating) + deployment-service
-      (yaml+consolidator-TF) + deployment-api + UI remain (ship --skip-preflight — UAC replay-WIP codegen re-dirties the
-      dep, unrelated to C+D). IMPLEMENT+VERIFY+FIX+REVERIFY workflows caught: strategy byte-parity reader (silent P&L
-      drop), strategy-store-test key retirement, SSOT-map gaps, PM yaml mirrors. Original todo text below.
+- [x] ✅ [CODE] P1. **Atomic cutover** — **CODE LAYER DONE 2026-07-18 (6/7 repos, UTL CI GREEN).** LANDED:
+      UAC@1dd02a73 (yaml exec-flat+strategy-tier+facade), UTL@d822bab5 (registry exec_fills/nautilus + strategy 3 rows +
+      _KIND_ALIASES exec-prediction + execution.py client), strategy-service@c425d5b5 (reader fold + VaR golden fix),
+      execution-service@6af18c2e (writer surface + fill-twin), deployment-service@9f3f43b (yaml + single-root
+      consolidator-TF + canonical-kind maps), UI@8075d6d7 (2 catalogue routes), PM@34125fac3 (yaml mirrors).
+      **deployment-api DEFERRED** (display-only, tree tangled with unrelated Fold-B/data_status WIP). **UTL CI break
+      root-caused + fixed:** the resolver's workspace-yaml discovery finds unified-trading-pm/configs/cloud-providers.yaml
+      in CI (deployment-service not a UTL dep); its stale-on-LDR per-AG execution-store failed UTL's folded-resolution
+      tests even with a good UAC clone — the FIX-workflow PM agent folded it but hit the usage limit before committing;
+      folded + pushed, qg-v2 re-triggered GREEN. Original todo text below.
 - [ ] [CODE] P1. **(orig) Atomic cutover** — repoint Fold C sites → `kind="execution-store"` + `{ag}/` path prefix, and Fold D
       sites → the re-tiered flat `strategy-store` name (incl. the UAC `strategy_store_bucket` facade + the two UI
       hardcoded routes). Ship per-repo QG-green: execution-service, strategy-service, UTL, deployment-api, UI, UAC.
