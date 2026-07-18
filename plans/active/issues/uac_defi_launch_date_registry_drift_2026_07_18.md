@@ -100,3 +100,41 @@ hardcoded dict) and deliberately did **not** touch `evm_creation_resolver.get_pr
   `get_protocol_floor_date` (now consults `venue_launch_dates` — the only one of the two Solana adapters previously had
   access to; `chain_env`'s Solana entries were never wired to any instruments-service caller either, a second small gap
   worth noting for the audit above).
+
+## Progress 2026-07-18 (partial fix + full drift catalogue)
+
+**Measured the FULL overlap: 34 pairs overlap, 19 DISAGREE** (not just AAVE-ETHEREUM). Full catalogue by delta:
+
+| Pair                 | venue_launch | chain_env  | delta |
+| -------------------- | ------------ | ---------- | ----- |
+| AAVE_V3-BSC          | 2023-04-06   | 2024-01-23 | 292d  |
+| AAVE_V3-LINEA        | 2024-09-26   | 2025-02-11 | 138d  |
+| COMPOUND_V3-OPTIMISM | 2024-02-16   | 2024-04-06 | 50d   |
+| COMPOUND_V3-ARBITRUM | 2023-04-14   | 2023-05-04 | 20d   |
+| COMPOUND_V3-ETHEREUM | 2022-08-26   | 2022-08-13 | 13d   |
+| COMPOUND_V3-BASE     | 2023-08-11   | 2023-08-04 | 7d    |
+| AAVE_V3-POLYGON      | 2022-03-16   | 2022-03-12 | 4d    |
+| AAVE_V3-AVALANCHE    | 2022-03-16   | 2022-03-12 | 4d    |
+| AAVE_V3-OPTIMISM     | 2022-03-16   | 2022-03-15 | 1d    |
+| + 10 more @ 1d       | …            | …          | 1d    |
+
+(the ≤1d tail: COMPOUND_V3-SCROLL, UNISWAP_V2-ETHEREUM, UNISWAP_V3-ETHEREUM, UNISWAP_V3-POLYGON, ROCKETPOOL-ETHEREUM,
+ETHENA-ETHEREUM, ETHERFI-ETHEREUM, KAMINO-SOLANA, JITO-SOLANA, GMX-AVALANCHE)
+
+**DONE 2026-07-18 (`unified-api-contracts`):**
+
+- ✅ Corrected the ONE proven-wrong value: `venue_launch_dates.DEFI_VENUE_LAUNCH_DATES["AAVE_V3-ETHEREUM"]`
+  `2022-03-16 → 2023-01-27` (chain_env's own inline comment documents the subgraph-audit debunking; also aligns with
+  this registry's "prefer LATER when uncertain" principle). This was the only drift with documented subgraph proof.
+- ✅ Added a **drift-ratchet guard** —
+  `tests/unit/test_protocol_launch_dates.py::test_venue_launch_dates_no_new_drift_vs_chain_env` allowlists the 19 known
+  drifts (deltas commented) and FAILS on any NEW divergence; resolving one = removing it.
+
+**STILL OPEN (needs operator decision — data-correctness, affects the data-status expected-window denominator):** the
+other 18 drifts are NOT safely bulk-fixable — chain_env is subgraph-audited but not every one of its 111 pairs was
+re-verified, and the divergences run BOTH directions (venue earlier in some, later in others), so I will NOT blind-defer
+`venue_launch_dates` to `chain_env` wholesale. **Options:** (A) treat `chain_env` as the SSOT for overlapping pairs and
+have `venue_launch_dates` overlay/import it (fast, but trusts chain_env for all 18 incl. the 292d/138d ones without
+per-pair re-verification); (B) per-pair on-chain re-verify each ≥7d drift (AAVE_V3-BSC/LINEA, COMPOUND_V3-\*) against
+mainnet first-tx / subgraph, accept the ≤1d tail as noise; (C) leave as-is + rely on the ratchet. **Recommend (B)** for
+the ≥7d drifts (6 pairs) since a 292d error materially mis-classifies the expected window; the ≤1d tail is low-impact.

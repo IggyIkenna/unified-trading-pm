@@ -63,7 +63,10 @@ a human `league_name` alongside the id — league data is UAC data, the UI must 
 renders the name (id as a subtitle/tooltip). Honest-absence: an id with no registry entry shows the raw id, never a
 fabricated name.
 
-### F2 — New listings + Upcoming expiries + Prediction catalogue: "Unknown error" — `- [x]` FIXED (OOM), pending deploy-verify
+### F2 — New listings + Upcoming expiries + Prediction catalogue: "Unknown error" — `- [x]` FIXED + VERIFIED (OOM)
+
+> **VERIFIED 2026-07-18:** live revision `00198-tkc` = 16Gi/4CPU, **0 OOM** since the deploy. (Note: a SEPARATE latency
+> issue on New Listings / Upcoming Expiries — 35s cold read, not OOM — was later reported + is tracked as F10.)
 
 **CORRECTED diagnosis (2026-07-17 pm): the root cause is a container OOM, NOT deploy-lag/latency and NOT a code-logic
 bug.** My first pass said "deploy-lag" — that was wrong; I confirmed it by reading the LIVE Cloud Run logs (ground
