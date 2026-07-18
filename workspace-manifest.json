@@ -392,8 +392,8 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 72.97,
         "warn_file_count": 11,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "large_file_count": 2
       }
@@ -457,7 +457,7 @@
       "codebase_health": {
         "coverage_pct": 84.38,
         "warn_file_count": 19,
-        "qg_red_reason": "pytest",
+        "qg_red_reason": null,
         "large_file_count": 0
       }
     },
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.16,
-        "large_file_count": 7,
-        "qg_red_reason": null,
-        "warn_file_count": 7
+        "warn_file_count": 7,
+        "coverage_pct": 90.9,
+        "qg_red_reason": "ruff",
+        "large_file_count": 7
       }
     },
     "market-data-processing-service": {
@@ -880,7 +880,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 83.22,
         "warn_file_count": 38,
         "qg_red_reason": null,
         "large_file_count": 0
@@ -1263,10 +1263,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "large_file_count": 6,
+        "coverage_pct": 87.93,
+        "warn_file_count": 21,
         "qg_red_reason": null,
-        "warn_file_count": 21
+        "large_file_count": 6
       }
     },
     "unified-trading-pm": {
@@ -1299,9 +1299,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 75.84,
         "warn_file_count": 0,
-        "qg_red_reason": "ruff",
+        "coverage_pct": null,
+        "qg_red_reason": null,
         "large_file_count": 0
       }
     },
@@ -1365,7 +1365,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1385,10 +1385,10 @@
         "standard"
       ],
       "codebase_health": {
-        "coverage_pct": 50.9,
+        "warn_file_count": 38,
+        "coverage_pct": 50.91,
         "qg_red_reason": null,
-        "large_file_count": 33,
-        "warn_file_count": 38
+        "large_file_count": 33
       },
       "ldr_ci_status": "GREEN"
     },
