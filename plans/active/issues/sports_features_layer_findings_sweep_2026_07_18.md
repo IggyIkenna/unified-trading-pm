@@ -498,3 +498,53 @@ read is a coverage blind spot.
 - [ ] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
       leagues and fixtures and betting market canonicals are relevant too") and fold the result into the migration so
       everything lands on one SSOT.
+
+---
+
+## G. Round-FIXTURES backfill writes NOTHING — two failed launches, root cause still open — **P0**
+
+**RETRACTED (mine, twice)**: I reported the round backfill as "healthy and progressing" for 3.5h on log-line growth
+alone. It was writing ZERO `entity=fixtures`. Progress logs are NOT a write metric.
+
+**Launch 1** — `af-backfill-20260718-092543`, `--entity FIXTURES 2019-01-01 2026-07-17`, NO `--force` (per the handoff's
+"don't --force"). Ran 3.5h, reached 2024-02. Measured across 8 already-passed dates: **202 objects created that day, of
+which `entity=fixtures` = 0** (fixture_lineups 72, fixture_stats 61, fixture_events 50, player_stats 19). Fixtures
+parquets for 2019-08-10 / 2021-05-15 / 2023-03-04 / 2024-01-15 were last written **2026-06-24..29**, untouched.
+Diagnosis at the time: presence-skip, since `--force` = `VM_FORCE=true` (redo_all). NOTE the handoff's "don't --force"
+warning is about bypassing the singleton LOCK on a FLEET launch (429 thrash) — for a SINGLE VM needing redo_all it is
+the required flag.
+
+**Launch 2** — `af-backfill-20260718-124341`, same range **WITH `--force`**. Confirmed doing real work (285 fixtures x 4
+entities = 1,126 calls queued per date, so ~12 dates in 22 min vs the skip-run's ~5 years in 3.5h). **Still zero
+`entity=fixtures` written** on dates it has fully processed (2019-01-02 / 05 / 08 / 11 all `written_TODAY=0`).
+
+**So presence-skip was NOT the (only) root cause.** The live log points elsewhere:
+
+```
+FIXTURE_STATS  date=2019-01-11: 12 per-fixture rows are out-of-universe
+  (fixture league not in the canonical write universe) - skipping.
+  Not a capture gap; genuine in-universe gaps surface on the FIXTURES shard.
+FIXTURE_EVENTS date=2019-01-11: 118 out-of-universe ... FIXTURE_LINEUPS: 428 ... PLAYER_STATS: 111
+Fixture mapping: no API_FOOTBALL instruments parquet for 2019-01-11 - skipping
+  (no upstream availability rollup written)
+```
+
+Fixtures ARE fetched (285 for 2019-01-12) but nothing lands, apparently because the leagues are filtered as
+out-of-canonical-write-universe. Candidate causes, NOT yet distinguished:
+
+1. The canonical write universe (94 leagues after the 24-league de-registration) legitimately excludes most 2019
+   fixtures — in which case the round backfill will only write once it reaches in-universe league/date combinations, and
+   the early-2019 zero is expected rather than a bug.
+2. The universe filter is season/coverage-gated in a way that excludes 2019 entirely, despite
+   `SOURCE_COVERAGE_START[api_football] = 2018-01-01`.
+3. `entity=fixtures` writing is gated behind the "no API_FOOTBALL instruments parquet / no upstream availability rollup"
+   precondition, so the FIXTURES shard can never be written for a date whose instruments rollup is absent — a
+   chicken-and-egg that `--force` does not break.
+
+- [ ] [DIAG] P0. Distinguish 1/2/3 above. Concretely: take ONE date with a known in-universe league (e.g. an EPL
+      matchday in 2019) and trace whether `entity=fixtures` is written; if not, find the exact gate that drops it.
+- [ ] [DIAG] P0. Verify whether the round writer fix (instruments-service@19ae5890) is even reachable — it is in the
+      tarball (@d9ca1c0c, freshness-gate verified), but if the FIXTURES shard never writes, `round` can never populate
+      regardless of the writer being correct.
+- [ ] [PROCESS] P1. Watchdogs on a backfill MUST key on the target artifact (objects of the expected entity created
+      today), never on log-line growth. Both failures here were invisible to a log-line watchdog for hours.
