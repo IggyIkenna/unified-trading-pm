@@ -27,6 +27,9 @@ resolved_by: >-
   command) + the gate that closes the gap: scripts/quality_gates/check_no_comment_in_line_continuation.py, wired into
   quality-gates.sh, verified green on the fixed tree AND red on the re-injected shape that bash -n calls valid.
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # P0 — disk-policy sweep broke the `gcloud` line-continuation across 88 VM launchers
