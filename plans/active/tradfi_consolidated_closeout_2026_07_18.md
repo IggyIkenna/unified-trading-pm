@@ -715,3 +715,22 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   code fix on the tardis/per-contract manifest write paths, not another migration. Both surfaces now: catalogue prod/n
   fully canonical (99.98% true) + manifest 94.78% FUTURE/OPTION + 99.9% cash. NEXT: writer-itype convergence, catalogue
   --by-day durability (running), Phase D.
+
+- **2026-07-18 (slot-1, tick 13) — Databento executor + Phase-D skills code-complete (shipping); TERMINAL-GATE
+  COMMANDS.** Databento executor (ac857): 3 databento_fetch sites + databento_batch_jobs converted to a dedicated
+  ThreadPoolExecutor (sized `databento_max_concurrent_requests+8`=108), helper split to a new
+  `databento_fetch_executor.py` module (databento_fetch.py 887<900). Phase-D (af733317): `pipeline_e2e_check.py` gains
+  TRADFI shard enumeration + `_TRADFI_MVP_SHARDS` + a new `canonical` leg (`_run_canonical_leg` reusing
+  `assert_tradfi_derivative_ids_canonical`); both SKILL.md updated. Shipping both units via ship_exec_phd.sh. **PHASE-D
+  TERMINAL-GATE RUNBOOK (the completion proof):**
+  - MTDS 12 cells (NASDAQ/NYSE/CME/CBOE ohlcv_1s+1m, CBOE/ICE/KRX/FX ohlcv_24h):
+    `cd market-tick-data-service && .venv/bin/python scripts/pipeline_e2e_check.py --asset-group TRADFI --legs force,skip,canonical --auto-day`
+    (MVP-first: add `--mvp-only` = CME/NASDAQ/NYSE ohlcv_1m + CBOE/FX ohlcv_24h). `--auto-day` = sanctioned autonomous
+    day-picker (derives a captured day, does NOT invent — satisfies the skill's no-invent-day rule).
+  - IS 7 venues (NASDAQ/NYSE/CME/ICE/CBOE/KRX/FX):
+    `cd instruments-service && .venv/bin/python scripts/pipeline_e2e_check.py --asset-group TRADFI --day <DAY> --legs force,skip`
+    — IS engine lacks `--auto-day`/`--require-captured`/`--mvp-only` (parity gap, follow-up); pick a recent captured
+    day.
+  - **BOTH green across all tradfi shards (force+skip+canonical) = the plan's terminal gate.** Then MVP backfills (SPOT
+    VMs, ohlcv_1m Databento + Yahoo daily). New follow-up: IS pipeline_e2e_check `--auto-day`/`--mvp-only` parity;
+    Massive-normalizer builder routing; writer-itype UPPERCASE convergence; gate exempt-COMBO.
