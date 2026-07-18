@@ -982,3 +982,46 @@ launch.
       doing the real work and every bypass path is a live oversubscription risk.
 - [ ] [CODE] P1. `RelaunchPreemptedVm` should RE-DERIVE the rate budget on replay rather than replaying the original
       per-VM share — same root cause as § G-ops (replaying stale launch params).
+
+## N. Why sports downloads take "way too long" — we were using a SLEDGEHAMMER (~1,800x waste)
+
+Operator: _"lets optimise the downloads for sports fully its taking way too looong"_. Measured root cause — it is **call
+VOLUME**, not rate governance:
+
+| approach                                               | api-football calls                                                  |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| full `--force --entity FIXTURES` backfill              | **527 calls/date (measured mean) x 2,390 dates ~= 1,260,000**       |
+| surgical `backfill_sports_fixture_round_2026_07_17.py` | **~600-700 TOTAL** (one bulk `GET /fixtures?league&season`, cached) |
+
+**~1,800x reduction.** At the 450,000/day key quota the full re-fetch needs **~2.8 days of pure quota** (~76h at the
+paced rate) — to populate **ONE field**. No amount of rate tuning or extra VMs can fix a 1,800x volume problem; the
+per-key daily quota is a hard ceiling that MORE VMS CANNOT RAISE.
+
+Pilot confirms the shape: `Fetched 242 season fixtures for league=113 season=2019` — **one call returned 242 fixtures**,
+vs 527 calls per DATE in the full path. The script is round-only (touches blank `round` cells), SINGLE-WALK (one corpus
+listing, not per-league re-walks), snapshots each parquet to `*.pre_round_backfill.bak`, and is idempotent.
+
+- [x] [OPS] P0. STOP using the full `--force` FIXTURES backfill to fix `round`. Use the surgical script. (The `--force`
+      VM was already preempted and NOT relaunched, so nothing to unwind.) Pilot running:
+      `--max-leagues 1 --seasons 2019 --apply`.
+- [ ] [OPS] P0. After the pilot verifies, run the full surgical backfill (all leagues x 2019-2026) in the background.
+- [ ] [PROCESS] P1. Generalise: before launching a `--force` whole-corpus refetch to fix ONE column, check whether a
+      surgical column-filler exists. The blast radius / quota cost differ by orders of magnitude, and `--force` also
+      forfeits presence-skip resume (§ G-ops).
+
+## M-FIXED. Both rate-governance gaps CLOSED (operator: "donot just file them fix them")
+
+1. **Divisor from MEASURED concurrency** — `FLEET_VMS` defaulted to 1 (every VM assumed it was alone); the singleton
+   count ran only inside `if ! $FORCE && ! $SKIP_LOCK`, i.e. NOT on the paths that create concurrency. Now the launcher
+   counts running `af-backfill-*`/`af-audit-*` VMs and derives `count + 1` when `--fleet-vms` is not explicit, logging
+   the derivation. Explicit still wins.
+2. **Re-derive on preemption replay** — deployment-service@cb499b7: `RelaunchPreemptedVm` now STRIPS
+   `SPORTS_ADAPTER_RATE_RPM` / `SPORTS_ADAPTER_CONCURRENCY` / `FLEET_VMS` / `REMAINING_DAILY_QUOTA` from the replayed
+   env so the launcher re-derives them. A VM preempted while ALONE no longer re-applies a full-key budget when
+   relaunched into a crowded fleet. QG green (2,543 passed), regression-pinned (non-rate params still replay verbatim).
+   This path could NOT be fixed by operator discipline — nothing passed at first launch survives correctly into an
+   automated relaunch.
+
+**Still partial, stated not hidden**: already-running VMs keep the budget they computed at their own launch, so the key
+stays oversubscribed until they drain. Launch-time division cannot fix a fleet that grows after launch — the remaining
+fix is runtime re-division / leasing shares from a central budget (§ M todo).
