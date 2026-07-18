@@ -163,31 +163,47 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       count). A too-small denominator makes per-instrument coverage lie. **CHAIN CONSTRAINT (operator 2026-07-18): new
       venue chains ⊆ the EXISTING canonical DeFi chain set (ETH/ARB/BASE/OPT/POLYGON/AVAX/BSC/LINEA/SOLANA) — do NOT add
       a new chain.** (repo: instruments-service, unified-api-contracts)
-- [ ] [BACKEND] P0. **E2E ACQUISITION (operator 2026-07-18): adding a yield-bearing/staking VENUE must be done
-      end-to-end — IS enumeration is NOT enough; MTDS must actually ACQUIRE the data or the instrument is permanently
-      `empty` (dishonest coverage).** MTDS `cli/handlers/lst_rates_handler.py` acquires rates **per-token config** (each
-      token → `{contract, method(exchangeRate|convertToAssets|getRate), selector}` via Alchemy RPC at historical
-      blocks); Solana LSTs via `solana_lst_archival.fetch_solana_lst_rates`. **Gaps to close for e2e**: (a) add the
-      rate-fetch config for each newly-wired LST/LRT — rocket_pool(rETH `getExchangeRate`), kelpdao(rsETH),
-      puffer(pufETH), karak, symbiotic, cbETH(`exchangeRate`), wBETH — contracts are in `DEFI_MAJOR_ASSET_ADDRESSES`;
-      (b) **implement renzo/ezETH** — the known-unimplemented multicall (`RestakeManager.calculateTVLs()` → derive
-      rate); (c) Solana sanctum/solblaze/solana_native via the `solana_lst_archival` path; (d) **vaults
-      (yearn/beefy/idle) have NO acquisition** — they are ERC-4626 so the existing `convertToAssets` config path applies
-      (add each vault's contract), pendle(PT/YT) + convex need their own; decide the vault data_type (reuse `lst_rates`
-      share-price vs a new `vault_rates`). Each addition VERIFIED by an actual RPC returning a plausible rate ("run it,
-      don't read it"). (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P0. **SHIPPED `market-tick-data-service@8746708c` (QG green, 6330 tests; EVERY token runtime-verified
+      via a live Alchemy RPC fetch through the shipped code path — not read).** E2E acquisition for the new
+      staking/restaking/vault venues so they write real rows instead of sitting permanently `empty`. **19 EVM extended
+      rate configs** (new `_lst_extended_rates.py`, DI'd query fn = no import cycle) + Solana **jupSOL** (new
+      `_solana_jupsol.py`, on-chain pool_mint-verified). Verified rates (monotone-up over 90d): wBETH 1.1024 ETH
+      (`exchangeRate()`, ETH+BSC) · rsETH 1.0761 (KelpDAO LRTOracle `rsETHPrice()`) · **ezETH 1.0818 — resolves the
+      KNOWN-UNIMPLEMENTED multicall via rate-provider `getRate()`, proven mathematically identical to
+      `RestakeManager.calculateTVLs()` totalTVL/totalSupply (exact match)** · yearn_v3 YV{WETH,DAI,USDC,WBTC}
+      (`pricePerShare()`, per-vault decimals; `convertToAssets` reverts on 0.3.x/0.4.x) · beefy ×3
+      (`getPricePerFullShare()`) · idle IDLE{DAI,USDC,USDT} (`tokenPrice()`) · pendle SY wstETH/weETH/weETHs/sUSDe/USDe
+      (`exchangeRate()`) · jupSOL 1.1990 SOL. **Vault data_type = reused `lst_rates`** (share/exchange rate).
+      **Honest-empty w/ typed reason (probed, NOT fabricated — in `_EVM_HONEST_EMPTY_VENUES`)**: KARAK (IS vault addrs
+      have no on-chain code) · SYMBIOTIC (revert on activeBalanceOf/totalStake) · CONVEX (governance ERC-20,
+      market-priced) · PENDLE PT/YT (oracle-quoted; only SY has a single-call rate) · Solana INF/laineSOL
+      (non-standard/mint-mismatch) · JITORESTAKING VRTs (need vault-PDA decode) · SOLANA-NATIVE (APY not exchange-rate —
+      separate handler). **DEFERRED follow-up (honest-completion, NOT the handler's scope — picked up next as R2d)**:
+      the new venues aren't yet in UAC `expected_coverage.py::_DEFI` for `lst_rates`, so acquired rows land
+      **captured-but-unexpected** until registered; agent deliberately left the coverage machinery untouched rather than
+      ship an under-verified change. (repo: market-tick-data-service)
 
-- [ ] [BACKEND] P0. **IS is structurally already the denominator** (`enumerate_expected_universe.py::_enumerate_v2_defi`
-      seeds `expected` per `(venue,chain,itype,instrument_id,data_type,day)`; `available_from` STRONG via real on-chain
-      genesis `eth_getCode` binary-search). Close the gaps: **(a) honest `available_to`** — record per-instrument
-      TVL-over-time as a first-class attribute + derive `EXPECTED_INSTRUMENT_DELISTED` from a real threshold-crossing
-      date (decouple from the top-6000 fetch-ranking) and **relax the `min_ratio=1.0` monotonicity guard**
-      (`defi.py:190-214`) so real delistings aren't suppressed; **(b) add `force_include=true`** (TVL-exempt) so
-      EIGEN/ETHFI/governance carry honestly vs coincidental liquidity; **(c) extend the catalogue-residual
-      empty-reconciliation** (`dex_pools_handler.py:750+` `record_catalogue_residual_empty`) to
-      evm_defi/lending/oracle/lst so an IS-listed-but-unfetched instrument becomes a per-instrument
-      `EXPECTED_*`/`empty_confirmed`, never a dangling `expected_unattempted`. Keep the per-protocol data_type narrowing
-      (stops over-seeding). (repo: instruments-service)
+- [x] ✅ [BACKEND] P0 (R2c). **SHIPPED `instruments-service@155c8239` + `unified-api-contracts@07b291a2` (QG green both
+      repos; runtime-verified by catalogue enumeration + manifest-seeding — no on-chain fetch in this item).** **(a)
+      honest `available_to` (first cut)** — `_enforce_defi_monotonicity` relaxed `min_ratio=1.0` →
+      `_CEFI_TRADFI_THIN_COLLAPSE_RATIO` (0.5) with `block_on_regression=True` KEPT, so a real per-instrument count
+      regression (= a real delist) is no longer SUPPRESSED (full per-instrument TVL-time-series remains the documented
+      R2c follow-up). **(b) `force_include`** — new `force_include` column in `CATALOG_COLUMNS` (n=33) +
+      `_add_force_include()` stamper + UAC `DEFI_FORCE_INCLUDE_TOKENS`/`is_defi_force_include()` SSOT; verified
+      EIGEN@EIGENLAYER / ETHFI@ETHERFI → True, EIGEN in a UNISWAP_V3 pool (coincidental liquidity) → False. **(c)
+      catalogue-residual reconcile** — `_enumerate_v2_defi` residual path + new UAC
+      `EmptyConfirmedReason.EXPECTED_ACQUISITION_PENDING` (added to `OUT_OF_COVERAGE_WINDOW_REASONS`) so an
+      IS-listed-but-unfetched venue becomes a typed `empty_confirmed`, never a dangling `expected_unattempted`. (repo:
+      instruments-service, unified-api-contracts)
+
+- [ ] [BACKEND] P0 (R2d — honest-completion of R2 acquisition). **Register the new staking/restaking/vault venues in UAC
+      `expected_coverage.py::_DEFI` for `lst_rates`** so the rows the shipped acquisition writes are EXPECTED, not
+      `captured-but-unexpected` (dishonest coverage the other way). Scope = only the venues whose acquisition actually
+      lands real rows (the RPC-verified set: binance/wBETH, kelpdao/rsETH, renzo/ezETH, yearn_v3, beefy, idle,
+      pendle-SY, sanctum/jupSOL — NOT the honest-empty set). Cross-ref the tracked
+      `defi_coverage_capability_alignment_2026_05_22.md` + the deferred `vault_share_price/native_staking_rates` note at
+      `expected_coverage.py:371-376`. VERIFY: enumerate expected for one new venue-day and confirm the acquired
+      `lst_rates` row matches an expected key (not unexpected). (repo: unified-api-contracts)
 
 ### R3 — Historical migration: batch → per-instrument, column+row UNION · P0 (gated on R1+R2)
 
@@ -568,6 +584,23 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — R2 acquisition + R2c SHIPPED; R2d + R3 next).** `wf_bc31645a` both agents landed
+  clean, shas reachable on `origin/live-defi-rollout`:
+  - **R2 e2e acquisition** `market-tick-data-service@8746708c` (QG green, 6330 tests): 19 EVM extended `lst_rates`
+    configs + Solana jupSOL, **every token runtime-verified via live Alchemy RPC through the shipped path** (not read).
+    ezETH's known-unimplemented multicall RESOLVED via rate-provider `getRate()` (proven == `calculateTVLs()` exact).
+    Vault data_type = reused `lst_rates`. 8 venues honest-empty with typed reasons (KARAK/SYMBIOTIC/CONVEX/PENDLE-PT-YT/
+    Solana-INF/laineSOL/JITORESTAKING-VRTs/SOLANA-NATIVE — probed, not fabricated). **Follow-up = R2d** (register these
+    in UAC `expected_coverage._DEFI` so rows are expected-not-unexpected — agent correctly left the coverage machinery
+    untouched rather than ship under-verified).
+  - **R2c** `instruments-service@155c8239` + `unified-api-contracts@07b291a2` (QG green both): monotonicity guard
+    relaxed 1.0→0.5 (`block_on_regression` KEPT) so real delistings surface; `force_include` column + UAC
+    `DEFI_FORCE_INCLUDE_TOKENS` SSOT (EIGEN/ETHFI True, coincidental-liquidity False); catalogue-residual reconcile via
+    new `EmptyConfirmedReason.EXPECTED_ACQUISITION_PENDING`. Full per-instrument TVL-time-series `available_to` = a
+    documented R2c follow-up (guard-relax + last-seen done now).
+  - **Next**: R2d (UAC expected-coverage registration, small+verified) → R3 (MTDS now free; fork the per-instrument
+    migration) → IS catalogue backfill/rollup + MTDS per-instrument backfill → R4 coverage.
 
 - **2026-07-18 (slot-4, /autonomous — R1+R2 SHIPPED; capture-halt drift re-armed; acquisition+R2c dispatched).**
   - **R1 (writer) + R2 (venue-wire) landed + flipped** (this plan @fe76e3bed): MTDS `write_defi_rows` per-instrument
