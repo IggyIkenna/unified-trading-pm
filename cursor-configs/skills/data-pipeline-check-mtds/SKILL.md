@@ -109,8 +109,36 @@ cells, never collapsed):
 
 ```bash
 cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
-  --asset-group <AG> --venues <VENUE> --data-types <DT> --day <DAY> --legs force,skip
+  --asset-group <AG> --venues <VENUE> --data-types <DT> --day <DAY> --legs force,skip \
+  --require-captured --auto-day
 ```
+
+> **ALWAYS pass `--require-captured --auto-day` (added 2026-07-18).** Without them the matrix tests shards that CANNOT
+> be proven and reports false failures:
+>
+> - **`--require-captured`** — only check cells that genuinely have captured PROD data. A force-leg re-downloads the
+>   sampled instrument and asserts a parquet appears; on a cell with no data it fetches nothing and reports a FALSE
+>   `no_parquet` failure. Unprovable cells are now recorded `skipped/no_captured_data_for_cell` instead of burning a VM.
+> - **`--auto-day`** — per cell, substitute a day that actually HAS data when `--day` doesn't, preferring a
+>   **non-first-of-month** day (day-1 is Tardis's free/no-auth tier, so a 1st exercises the UNAUTHENTICATED path). The
+>   corpus is sparse and uneven — DERIBIT `options_chain` has been captured on exactly ONE day ever, `volatility_index`
+>   on one, DERIBIT `liquidations` on three, OKX `trades` only on a 1st — so a single global `--day` cannot cover the
+>   real surface. Measured 2026-07-18: a single-day run covered 46 of the 52 ever-captured Tardis cells; `--auto-day`
+>   closes the remaining 6.
+> - The run also unions in cells the PROD index shows as captured but the UAC lists omit — `OKX-FUTURES`/`OKX-SWAP`
+>   (absent from `VENUES_BY_ASSET_GROUP['cefi']`) and `volatility_index` (absent from
+>   `DATA_TYPES_BY_ASSET_GROUP['cefi']`): **8 live cells the matrix had never enumerated**, so it reported a clean sweep
+>   while never testing them.
+> - **`--tardis-only`** scopes to venues sourced via the Tardis adapter (`VENUE_TO_ADAPTER_KEY == 'tardis'`), excluding
+>   native-REST HYPERLIQUID / ASTER / LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET, which do not count against
+>   the N=1 Tardis IP cap.
+>
+> **Interpreting verdicts while the raw→canonical instrument-id migration is in flight:** the downloader's
+> `--instrument-ids` matches RAW venue-native symbols EXACTLY (no substring/ underlying expansion), while the manifest
+> keys on canonical ids. So (a) the sampler takes the raw symbol from the PROD parquet listing, and (b) a cell whose
+> PROD data is ALREADY canonical-named cannot be force-fetched at all and returns 0 rows — that is the migration
+> boundary, NOT a pipeline error. When a verdict looks wrong, read the VM `run.log`
+> (`Processed date=…: N venues ok, 0 failed, R total records`) as ground truth.
 
 This sequences, per shard, via the shared `unified_trading_library.pipeline_e2e_check` engine:
 
