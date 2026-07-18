@@ -163,3 +163,24 @@ noise), with the 6 corrections locked by explicit assertions. The MED-confidence
 governance-execution-derived (Dune first-event confirmation was credit-blocked) — good to ±a few days, a large
 improvement over the prior 20/50-day errors. **Status → resolved for the ≥7d drifts; the ≤4d tail is low-impact +
 guarded.**
+
+## CORRECTION 2026-07-18 (COMPOUND overrides reverted to the Tab-14 subgraph audit)
+
+The instruments-service `test_evm_creation_resolver::test_compound_v3_arbitrum_uses_uac_ssot` FAILED against the first
+correction pass and caught a real error in it: that test pins `("ARBITRUM","COMPOUND_V3") = 2023-05-04`, which is the
+**Tab-14 subgraph audit** (2026-05-08 — earliest `dailyMarketAccountings` event 2023-05-04 22:00:26 UTC). The on-chain
+verification agents could NOT run Dune (credits exhausted) and fell back to **governance-execution** dates for
+ARBITRUM/OPTIMISM (medium confidence) and **contract-creation** dates for ETHEREUM/BASE — all LOWER authority than a
+day-precise subgraph first-market-activity date. I had wrongly let those override the Tab-14 audit.
+
+**Reverted all four COMPOUND pairs to the Tab-14 subgraph-audited `chain_env` values** and aligned `venue_launch_dates`
+to them: ETHEREUM 2022-08-13, ARBITRUM 2023-05-04, BASE 2023-08-04, OPTIMISM 2024-04-06 (both registries now agree at
+the audited value; the IS test passes). **The AAVE_V3-BSC (2024-01-23) and AAVE_V3-LINEA (2025-02-11) corrections
+STAND** — those used Aave's OWN protocol changelog (a first-party authority that outranks a third-party subgraph audit,
+and which agreed with chain_env). **Residual (flagged, not resolved):** ETHEREUM's contract-creation date (2022-08-26,
+per Etherscan) vs the Tab-14 first-event (2022-08-13) is a genuine conflict — a first market event cannot precede
+contract deployment, so one is wrong; needs a Dune first-`Supply`/`SupplyCollateral`-event query (blocked here by
+credits) to settle. Kept the audited 2022-08-13 as the conservative default.
+
+**Lesson:** a documented subgraph audit outranks a governance/announcement/contract-creation date; do NOT override it on
+lower-authority evidence. The drift-ratchet guard + the downstream evm_creation_resolver test together caught it.

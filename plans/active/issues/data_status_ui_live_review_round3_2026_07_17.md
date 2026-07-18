@@ -200,15 +200,30 @@ catalogue). Overriding the monotonic guard would have deleted 2,306 legit rows. 
 removed-venue rows) is provably safe; the full-vs-incremental delta is filed below as a SEPARATE finding to investigate
 before any full rebuild.
 
-### F8 — `--mode full` catalogue regen is lossy vs the incremental catalogue (2,306-row delta) — `- [ ]` OPEN (found 2026-07-18)
+### F8 — `--mode full` catalogue regen is lossy vs the incremental catalogue — `- [x]` ROOT-CAUSED + guarded (durable fix scoped)
 
-Discovered while verifying F7: a `build_instrument_catalogue.py --asset-group defi --mode full` dry-run rolls up
-**9,418** rows, but the live (incrementally-built) catalogue holds **11,787** — a full re-walk produces ~2,306 FEWER
-instruments than the accumulated incremental frozen tail. Either the frozen tail has accumulated stale rows the full
-walk correctly drops (→ full is the corrective truth), or the full walk under-covers history the frozen tail rightly
-preserves (→ full is lossy). Until this is understood, **`--mode full` on any asset group is unsafe** (it would trip the
-monotonic guard for a large, unexplained shrink). Investigate: diff the full-mode row set vs the incremental catalogue
-by instrument_id + check whether the missing 2,306 have extant `by_date` source objects.
+**ROOT CAUSE (definitive full-vs-live diff, 2026-07-18):** ran a full-mode defi roll-up in-process (monkeypatched
+`promote_catalogue` to capture the output) and diffed its instrument_ids against the live catalogue. The full walk
+produces 9,418 rows, live has 11,724 → **drops 2,378, adds 72** — and **2,346 of the 2,378 dropped are DELISTED**
+instruments (`available_to` set, only 32 active): Morpho markets (944), Uniswap V3 pools (358), Aave aTokens/debt-tokens
+(473+469 `A_TOKEN`/`DEBT_TOKEN`), Trader Joe / Pancake / etc. So it is **NOT** aging-out (by_date is complete
+2020→2026), NOT stale cruft — it is **full-mode UNDER-producing the CUMULATIVE all-instruments-ever set** that the
+incremental frozen tail preserves. The module's own docstring documents this exact contract ("a cumulative,
+all-instruments-ever lifecycle catalogue, NOT a current snapshot") and the SAME bug class was fixed for SPORTS on
+2026-07-15 via the frozen-tail merge (`_merge_incremental`). **So `--mode full` is genuinely LOSSY for defi/cefi/tradfi
+too — the monotonic guard correctly blocked it.**
+
+**FIXED (made full-mode SAFE + transparent) — `instruments-service@24616d0f`:** added `_shrink_drop_diagnostics` + wired
+it into `promote_catalogue`'s `CATALOGUE_SHRINK_BLOCKED` path, so a blocked shrink now LOGS + emits (in the CRITICAL
+event) exactly which instruments would be dropped — count by venue / instrument_type + the active-vs-delisted split + a
+sample — turning the opaque block into a reviewable report before anyone runs `--allow-catalogue-shrink`. The guard
+already prevented silent data loss; this makes it legible.
+
+**Durable follow-up (scoped, tracked):** extend the SPORTS frozen-tail-merge fix (`_merge_incremental`) to the
+defi/cefi/tradfi `--mode full` path so a full rebuild MERGES-preserves the cumulative set (never silently drops a
+previously-catalogued delisted instrument, only updates `available_to`), matching the documented contract — the real
+durable fix so a full self-heal/rollback is safe without `--allow-catalogue-shrink`. Until then: use
+`--mode incremental` (the authoritative path); the guard + drop-list diagnostic keep full-mode safe.
 
 **Operator (2026-07-17): "i thought we got rid of some of these dsol venues like DRIFT as they got hacked".** CONFIRMED:
 DRIFT was removed from the venue registry 2026-07-16 (operator ruling — hacked ~$280M, rebranded Velocity DEX; all
@@ -280,7 +295,7 @@ synchronously.
 | F5  | non-canonical instrument_type spellings                             | deployment-api + instruments-service | ✅ FIXED — drilldown display `@512180be` + writer `@ee19f6f3` (catalogue was already canonical)                        |
 | F6  | redundant COINBASE + bare-vs-chain dup                              | deployment-api + instruments-service | ✅ FIXED — display collapse `@512180be` + writer `@ee19f6f3`                                                           |
 | F7  | DRIFT (removed) still in DeFi drilldown                             | deployment-api + IS catalogue        | ✅ FIXED — filter `@512180be` + purge (defi 63/cefi 10 rows, GCS-verified) + writer `@ee19f6f3`                        |
-| F8  | `--mode full` regen lossy (2,306 delta)                             | instruments-service                  | OPEN — found while verifying F7; definitive full-vs-live diff running to root-cause                                    |
+| F8  | `--mode full` regen lossy (drops delisted cumulative set)           | instruments-service                  | ✅ ROOT-CAUSED + guarded `@24616d0f` (drop-list diagnostic); durable frozen-tail-merge fix scoped                      |
 | F9  | league filter exact/case-sensitive + upcoming-fixtures raw ids      | deployment-api + deployment-ui       | ✅ FIXED — be `@eeb23b13` + ui `@680e4139`/`@e643a5c` (pw:L2 ✓); name+partial+case-insensitive match, upcoming names   |
 | F10 | New Listings/Upcoming Expiries slow (35s cold, unbounded) → timeout | deployment-api + deployment-ui       | ✅ FIXED — be `@4df2a93e` + ui `@e643a5c`; pagination (killed 644K-row build) + parallel reads (35→22.9s) + warm cache |
 
