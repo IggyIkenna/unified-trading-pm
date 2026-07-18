@@ -296,3 +296,16 @@ ENG_CHAMPIONSHIP=558≈552) — the capture was never missing fixtures, the roll
   {FIXTURE_EVENTS,FIXTURE_LINEUPS,FIXTURE_STATS,PLAYER_STATS} 2020-06-06 2026-07-17). It skip-existings the captured
   dates above and finishes only the remainder. Deleting the SPOT VMs mid-run = preemption semantics: idempotent, no data
   lost (captured shards persist in GCS + are consolidated).
+
+## ✅ ROUND BACKFILL LAUNCHED (2026-07-18 09:25Z)
+
+- VM `af-backfill-20260718-092543` (asia-northeast1-c, SPOT, e2-standard-8) — STATUS RUNNING, STARTED <60s.
+- `--entity FIXTURES 2019-01-01 2026-07-17` (schedule grain carrying `league.round`; NOT FIXTURE_EVENTS). No `--force`.
+- Tarball freshness gate PASSED: **instruments-service @ d9ca1c0c** (contains writer fix @19ae5890 — round now written
+  from raw `league.round`), UAC @ 3bb5875ad495, **UTL @ a4566e18** (built from the clean committed HEAD — a concurrent
+  slot's uncommitted retry WIP in streaming_writer/retry was shelved-and-restored byte-identical for the build, so it is
+  NOT in this tarball). Quota remaining_daily_quota=169255; 193 req/min, 1 VM (no rate thrash).
+- GCS log: `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260718-092543/run.log`
+- VERIFY pending: at T+10min sample a 2019/2020 `entity=fixtures/.../fixtures.parquet` → `round` populated.
+- AFTER completion: catalogue rollup `--since 2019-01-01`, verify `competition_phase` not ~100% UNKNOWN, then RESUME the
+  4 enrichment entities (skip-existing).
