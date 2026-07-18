@@ -7,16 +7,22 @@ summary:
   create` command in ~88 launchers. A comment inside a backslash-continued command silently truncates it — bash -n and
   shellcheck do NOT flag it — so gcloud ran with no --metadata/--boot-disk/--labels (a metadata-less VM with no
   startup-script = no backfill) and then errored on the stray --boot-disk-size flag.
-status: fixing
-nature: bug
-asset_group: infra
-stage: infra
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
 repos: [deployment-service]
-scope: fleet
+scope: [engineer, admin]
 tags: [vm-launcher, gcloud, disk-provisioning, p0, quality-gate-gap]
 related: [check_backfill_vm_disk_provisioning.py]
 created: 2026-07-18
+parent_epic: infrastructure_master
 priority: P0
+source:
+  ["discovered during the A3.1 Databento throughput measurement — 3 metadata-less VMs booted idle and were deleted"]
+assigned_vm:
+resolved_by:
+locked_by:
 ---
 
 # P0 — disk-policy sweep broke the `gcloud` line-continuation across 88 VM launchers
@@ -76,8 +82,8 @@ on all 88; 0 remaining matches of the broken pattern. Shipped with the A3.1 Data
 
 ## Follow-ups (P1)
 
-- [ ] **Add a QG check that catches a comment inside a `\`-continued command** (the gate gap that let this ship) — a
-      small AST/line-scan in the deployment-service QG (`scripts/quality_gates/`). Without it, the next sweep can
-      re-break the fleet silently.
-- [ ] Prefer moving rationale comments **above** the `gcloud compute instances create` line as a convention (documented
-      in the launcher-runbook), so a future sweep can't reintroduce the break.
+- [ ] [SCRIPT] P1. **Add a QG check that catches a comment inside a `\`-continued command** (the gate gap that let this
+      ship) — a small AST/line-scan in the deployment-service QG (`scripts/quality_gates/`). Without it, the next sweep
+      can re-break the fleet silently.
+- [ ] [DOCS] P2. Prefer moving rationale comments **above** the `gcloud compute instances create` line as a convention
+      (documented in the launcher-runbook), so a future sweep can't reintroduce the break.
