@@ -163,6 +163,47 @@ cap-1 enforced by `tardis-concurrency-guard.sh` on every launch (it correctly BL
 strictly sequentially, never concurrently; a twin-guard watchdog deletes any VM that is not the current arm; a
 403/`concurrent-IP-lock` tripwire watches for vendor pushback, since higher connection counts are the plausible trigger.
 
+### CONCLUSION of the concurrency thread — the caps are not the lever
+
+Three controlled arms, run strictly sequentially under cap-1, steady-state and boot excluded:
+
+| Arm | downloads / book | MB/s (RX) | sockets to Cloudflare                  |
+| --- | ---------------- | --------- | -------------------------------------- |
+| A   | 32 / 16          | 11.09     | 16                                     |
+| B   | 32 / 24          | 11.75     | 16                                     |
+| C   | 64 / 32          | 12.46     | **12** (fell) + 162 ConnectionTimeouts |
+
+Quadrupling the book cap and doubling the download cap bought ~12%, and at 64 the socket count FELL while connection
+timeouts appeared. Nothing local is saturated at any setting: CPU ~30% of 16 vCPU, disk util ~10%, RSS 8.4 GB of 128,
+zero 403s and zero 429s throughout.
+
+**Eliminated by measurement, not assumption** — batch width (batches carry 52-427 tasks, never too small), empty/no-op
+shards (only 1% return Empty CSV), memory-pressure pauses (zero fired, mem 9.4% vs a ~75% threshold), the byte gate
+(`max_in_flight_bytes` is never passed), the thread pools (both sized `max_concurrent_downloads + 8` = 40+), the
+workspace-wide Tardis lease (default-OFF, zero mentions in the run log) and chunking barriers (`_run_per_symbol_batch`
+gathers both runners whole).
+
+**What the ceiling actually is.** A keyed Tardis fetch runs ~0.7 MB/s per stream — this repo already recorded the same
+number ("curl 0.69 MB/s cold on the same box" in `tardis_csv_transport`), and 16 streams x 0.7 = the ~11 MB/s we
+measure. The vendor also appears to throttle by DELAY rather than rejection: an UNAUTHENTICATED request for a keyed
+mid-month file takes **7-13 seconds to return a 356-byte 401**. That is why we have never seen a 429 or a 403 during
+normal running — there is no rejection to observe, only latency. (A free day-1 file, cached at the Cloudflare edge,
+returns 57.6 MB in 0.27s at 210 MB/s on the same box, so neither the network nor our egress is a constraint.)
+
+**So ~11-12 MB/s is this account's practical rate for this workload, and 30 MB/s is not reachable by client-side
+tuning.** This restates the morning's conclusion — but that one was unsafe because the disk confound was still in play;
+this one is established with the disk removed and the caps swept across a 4x range. The disk fix remains the real win:
+2.36 -> 11.09 MB/s, 4.7x.
+
+**Not shipped, deliberately:** no cap change. Arm C (64/32) is marginally faster on RX but loses sockets and introduces
+162 connection timeouts, so the service-config defaults (32/16) stay as they are. The 500GB disk is also NOT warranted —
+disk util is ~10% at 12 MB/s, so it would buy nothing; revisit only if a workload ever saturates the current 250GB (~70
+MB/s of writes).
+
+**Remaining lever is commercial**, as in the morning analysis: better account terms, or a fetch granularity that
+amortises per-request latency. Tardis's datasets API is per-symbol-per-day for trades/book_snapshot_5, so the bulk path
+we already use for options_chain/futures_chain has no equivalent here.
+
 ## Original (WRONG) analysis — kept as a record
 
 # Tardis account-level volume quota — ~7-8 GB, then ~2 MB/s
