@@ -184,22 +184,56 @@ Two independent, non-conflicting fixes:
       in 2 more live sites (features-sports via features-service, footystats via instruments_service); 1 site ruled out
       (transfermarkt, narrow window by design); 3 sources unobserved (no recent run to inspect). See "P3 Audit Findings"
       below for evidence + the new features-sports todo this audit spawned.
-- [ ] [DATA] P2. **Make the features-sports per-day backfill loop manifest-aware** (the same "prune, don't scan" fix as
-      the sibling instruments-service P2 todo above, but a DIFFERENT repo/file — NOT covered by that fix). In
+- [x] ✅ [DATA] P2. **Make the features-sports per-day backfill loop manifest-aware** (the same "prune, don't scan" fix
+      as the sibling instruments-service P2 todo above, but a DIFFERENT repo/file — NOT covered by that fix). In
       `features-service/features_service/sports/cli/handlers/batch_handler.py`, `_run_feature_group` /
       `_run_reference_tables` unconditionally load the FULL per-date reference-data set (14 entities, including
       per-league fallback scans across dozens of league shards — observed a 28,166-row `progressive_stats` GCS read for
       a single already-fully-resolved date) BEFORE `_should_skip_attempted()` checks the manifest and skips the actual
       compute. Read the manifest FIRST to compute the genuinely-pending date set within the requested window and jump
       directly to those dates, instead of paying real per-date GCS I/O on every date regardless of skip outcome. Add a
-      regression test asserting O(pending days) GCS reads, not O(total window days). (repo: features-service)
-- [ ] [INFRA] P3. **Resolve the `fs-backfill-` VM-name prefix collision** between `launch-footystats-backfill-vm.sh`
+      regression test asserting O(pending days) GCS reads, not O(total window days). (repo: features-service) — **DONE
+      2026-07-18 slot-3, features-service@12bf6efe**: root-caused the actual waste one level higher than the per-table
+      skip checks — `batch_dates_from_args` (`features_service/sports/cli/parser.py`) emits every calendar day in
+      `[--start-date, --end-date]` unconditionally, and `BatchHandler.run()` calls `run_fetch_providers()` (which
+      unconditionally loads the full ~14-entity reference-data set via `read_all_reference_data()`) BEFORE any
+      `_should_skip_attempted()` check ever runs — so a fully-resolved date still pays the full reference-data GCS read
+      every time. Added `features_service/sports/cli/handlers/_pending_dates.py::compute_pending_dates()` (reads the
+      availability index ONCE per window via
+      `read_availability_index(bucket, columns=["date",     "feature_group", "capture_status"], filters=[date range])`,
+      drops any date where every requested table/feature_group already carries a terminal `captured`/`empty_confirmed`
+      status) and wired it into `ComputeHandler._run_batch` (`features_service/sports/cli/main.py`) — prunes `date_list`
+      before building payloads, `--force` bypasses pruning, an empty pending list short-circuits with no dispatch at
+      all. 9 new regression tests (`tests/sports/unit/test_pending_dates.py` unit-level +
+      `tests/sports/unit/test_main_batch_prune.py` CLI-level, incl. an explicit O(pending)-not-O(window) assertion over
+      a synthetic 2000-day window with only 3 pending days) + full `tests/sports/` suite green + basedpyright/ruff
+      clean. Shipping was blocked by a repo-wide `quality-gates.sh` RED unrelated to this fix (10 pre-existing failures
+      — filed `features_service_qg_red_bucket_symbol_ssot_drift_2026_07_18.md`, repo-blocker `RB-e00887d6`);
+      root-caused + fixed both clusters myself (a deliberate 2026-07-18 tradfi `-USD` operator ruling and a live Fold-A
+      bucket-resolver migration, both just missing test updates) before a peer's more complete production-code fix
+      (`1368732a`) landed and superseded my test-only patch — reconciled by pulling the peer commit and cherry-picking
+      only my sports-specific files back on top. Full `quality-gates.sh` green (sentinel = HEAD) before ship.
+- [x] ✅ [INFRA] P3. **Resolve the `fs-backfill-` VM-name prefix collision** between `launch-footystats-backfill-vm.sh`
       (instruments-service, `--sports-provider FOOTYSTATS`) and `launch-features-sports-backfill-vm.sh`
       (features-service, `features_service.sports compute`) — both emit `VM_NAME="fs-backfill-${RUN_TS}"` and share one
       `vm_prefix_registry.py` entry, so name-based fleet inspection (this audit, the zombie-watchdog's per-prefix
       staleness threshold) cannot disambiguate which launcher produced a given `fs-backfill-*` VM without reading its
       metadata/command line. Give one of the two launchers a distinct prefix + registry entry. (repo:
-      deployment-service)
+      deployment-service) — **DONE 2026-07-18 slot-4, `deployment-service@613ec25` + `deployment-api@317a58a`**:
+      footystats keeps `fs-backfill-` (unchanged); `launch-features-sports-backfill-vm.sh` moved to its own
+      `fts-backfill-` prefix (distinct from the `fss-backfill-vm-N` parallel-fanout variant of the same backfill),
+      updating its VM_NAME + singleton-lock filter + `--force` help text. Added the new prefix to every tracking surface
+      keyed off the old shared string: `deployment-service/vm_prefix_registry.py` (`VM_PREFIX_TO_BUCKET` SSOT,
+      bucket=features-sports), `data_pipeline_monitors/launcher_registry.py` (relaunch binding — required for
+      `test_launcher_registry.py`'s bidirectional-parity guard against the watchdog registry), `cli.py`'s
+      `_DATA_VM_PREFIXES` sweep, `deployment_cluster_registry.py`'s capture-launcher ownership derivation, and
+      `deployment-api`'s `vm_events.py` `_PREFIX_TO_SERVICE` map (previously any `fs-backfill-*` VM, including
+      features-sports ones, was misattributed to `instruments-service`). Also fixed an adjacent pre-existing bug
+      surfaced while wiring this up: `deployment-api/routes/backfill_launch.py`'s `FEATURES_SPORTS_BACKFILL` spec
+      carried `vm_prefix_template="features"`, which never matched the launcher's real prefix even before this collision
+      — corrected to `fts-backfill` so the route's logged/tracked `vm_name` matches what the launcher actually creates.
+      `deployment-service` QG green (225 targeted tests incl. `test_launcher_registry.py` +
+      `test_data_pipeline_monitors*.py` re-run individually); `deployment-api` QG green. Both shipped via quickmerge.
 
 ## Evidence
 

@@ -9,7 +9,7 @@ summary:
   defect clusters — a stale bucket-naming assertion drift left behind by d98a1fdc (2026-07-17), and a tradfi symbol
   "-USD" suffix drift in cross_instrument — block EVERY ship from this repo under the green-tree HARD RULE, not just
   mine.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [data]
@@ -23,6 +23,8 @@ priority: P1
 assigned_vm: planning
 source: [api_football_backfill_chronological_scan_never_reaches_pending_tail-004]
 resolved_by:
+  slot-8 (both todos verify-only closed 2026-07-18 — fix already shipped by unrelated Fold-A + UAC contract commits, see
+  todo evidence)
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -101,21 +103,35 @@ over-appended it. Not investigated further — outside this dispatch's scope (da
 3. Once both clusters are green, quality-gates.sh writes a fresh sentinel and every blocked ship (mine included) resumes
    via the normal quickmerge flow.
 
-- [ ] [BACKEND] P1. Determine the correct post-d98a1fdc bucket-naming shape for delta_one/volatility (flat
-      `features-{family}-prd-{pid}` vs the old per-family `features-volatility-cefi-{pid}`) by reading the current
-      `resolve_bucket()`/cloud-providers.yaml SSOT, then fix whichever side is wrong: update the 6 Cluster-A tests
-      (`tests/delta_one/unit/test_persistence_event_details.py::TestSinkBucketResolution::test_falls_back_to_canonical_bucket_when_env_unset`,
-      `tests/unit/test_config.py::test_get_output_bucket_falls_back_to_ssot`,
-      `tests/volatility/unit/test_dependency_config_models.py::TestDependencyCheckerDataStructures::{test_output_bucket_ignores_test_mode,test_output_bucket_resolves_canonical_shape_via_ssot,test_output_bucket_defi_raises_no_defi_options}`,
-      `tests/volatility/unit/test_io_loader_writer.py::TestVolatilityWriter::test_bucket_resolves_via_config_get_output_bucket_not_hardcoded`)
-      to the confirmed-correct shape, OR fix `resolve_bucket()`/the dependency checkers if the flat shape is a
-      regression. Pay special attention to `test_output_bucket_defi_raises_no_defi_options` — it currently does NOT
-      raise `BucketNamingError` at all, which may be a separate DEFI-rejection regression, not just a naming-shape
-      mismatch. (repo: features-service)
-- [ ] [BACKEND] P1. Trace the tradfi `-USD` symbol-suffix drift in `TestTradfiVenues`
-      (`tests/cross_instrument/unit/test_paired_dispatch.py::TestTradfiVenues::{test_nasdaq_etf,test_nyse_etf,test_ice_commodity_spot,test_nymex_commodity_spot}`)
-      to its source commit, confirm whether the `-USD` suffix is the new correct behavior or a symbol-builder
-      regression, and fix whichever side is wrong. (repo: features-service)
+- [x] ✅ [BACKEND] P1. Determine the correct post-d98a1fdc bucket-naming shape for delta_one/volatility — **RESOLVED, no
+      code change needed — features-service@1368732a.** Root cause was NOT d98a1fdc itself: an independent, much larger,
+      operator-sanctioned migration (**Fold A**, `plans/active/bucket_fold_features_2026_07_17.md`) landed on
+      `live-defi-rollout` the same day (2026-07-18) and deliberately retired the per-family
+      `features-volatility-cefi-{pid}` shape in favor of the flat per-asset-group `features-{ag}-{env}-{pid}` shape —
+      confirmed the CORRECT current SSOT (`cloud-providers.yaml` folded `features:` key +
+      `VolatilityServiceConfig.get_output_bucket()` → `resolve_bucket(kind="features", ...)`). That same commit
+      (features-service@1368732a) already updated all 6 Cluster-A tests to assert the new flat shape, INCLUDING
+      `test_output_bucket_defi_raises_no_defi_options` — it was renamed to
+      `test_output_bucket_defi_resolves_folded_features_bucket` because DEFI-rejection is now intentionally enforced at
+      the CLI layer (`cli/main.py` asset_group_choices), not the bucket resolver, since the folded `features` yaml key
+      legitimately carries a DEFI entry shared across families. Verified via a fresh full
+      `bash scripts/quality-gates.sh` run on FF-pulled `live-defi-rollout` HEAD (`47acb31f`): **17682 passed, 0 failed,
+      209 skipped** (sentinel written `47acb31f...`) — all 6 Cluster-A tests green, confirmed by direct inspection of
+      their current assertions. My fresh-pull simply picked up the fix; I made no code edits. (repo: features-service)
+- [x] ✅ [BACKEND] P1. Trace the tradfi `-USD` symbol-suffix drift in `TestTradfiVenues` — **RESOLVED, new correct
+      behavior, not a regression — traced to UAC@33e3f369** ("fix(tradfi): extend `_build_tradfi_cash` -USD quote suffix
+      to EQUITY/CURRENCY/ETF/BOND/COMMODITY", 2026-07-18T16:43:34+01:00). This is an operator-ratified contract change
+      (`plans/active/tradfi_consolidated_closeout_2026_07_18.md` line 358: "Equity id = `-USD` on ALL FOUR surfaces" —
+      target `NASDAQ:EQUITY:AAPL-USD`) that extends the existing INDEX-only `-USD` suffix convention (operator-ratified
+      2026-06-11, commit `32d0d40`) to every other TradFi cash type, so the pattern is uniform regardless of asset class
+      (CDS excluded — no base/quote dimension). `_TRADFI_CASH_QUOTE_SUFFIXED_TYPES` in
+      `unified_api_contracts/internal/reference/canonical_id_builder.py` now includes EQUITY/CURRENCY/ETF/BOND/
+      COMMODITY alongside INDEX. features-service@1368732a's QG run caught this same-day UAC contract drift and updated
+      all 4 `TestTradfiVenues` assertions to the new `-USD`-suffixed form as a byproduct of the Fold-A ship. Verified
+      via the same full `bash scripts/quality-gates.sh` run cited on the sibling todo (LDR HEAD `47acb31f`): **17682
+      passed, 0 failed** — all 4 tests green, confirmed by direct inspection of their current assertions
+      (`tests/cross_instrument/unit/test_paired_dispatch.py::TestTradfiVenues`). No code edits needed. (repo:
+      features-service)
 
 ## Evidence
 
