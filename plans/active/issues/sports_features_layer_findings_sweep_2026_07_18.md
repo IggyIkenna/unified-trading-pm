@@ -1025,3 +1025,87 @@ listing, not per-league re-walks), snapshots each parquet to `*.pre_round_backfi
 **Still partial, stated not hidden**: already-running VMs keep the budget they computed at their own launch, so the key
 stays oversubscribed until they drain. Launch-time division cannot fix a fleet that grows after launch — the remaining
 fix is runtime re-division / leasing shares from a central budget (§ M todo).
+
+## O. `round` is ~50% populated in RAW — the 3.2% was the CATALOGUE. The gap is the ROLLUP, not capture.
+
+The surgical pilot (`--max-leagues 1 --seasons 2019 --apply`) reported
+`ALLSVENSKAN APPLIED +0/4349 rows across 1551 parquet(s) (242 fixtures fetched)` — it fetched fine and filled **zero**.
+That prompted a proper measurement instead of another backfill.
+
+Measured `round` population per day, BOTH entities:
+
+| day        | fixtures_schedule | %   | legacy fixtures |
+| ---------- | ----------------- | --- | --------------- |
+| 2019-05-11 | 47/153            | 31% | 55/237          |
+| 2020-09-19 | 171/289           | 59% | 171             |
+| 2021-03-13 | 166/284           | 58% | 166             |
+| 2022-10-05 | 44/88             | 50% | 44              |
+| 2023-08-19 | 334/666           | 50% | 334             |
+| 2024-04-06 | 187/394           | 47% | 187             |
+| 2025-11-08 | 195/404           | 48% | 195             |
+| 2026-03-14 | 142/354           | 40% | 142             |
+
+**RETRACTED (mine, twice over):**
+
+1. "`round` is blank / ~0% in raw" — it is **~30-60% populated across all of history**. My earlier `round 0/4` and `0/7`
+   readings were single small legacy shards, not a representative sample. I generalised from a handful of EPL shards.
+2. "The entity split explains it" (§ G-RESOLVED framing) — legacy `entity=fixtures` and `entity=fixtures_schedule` carry
+   **IDENTICAL** round counts on 7 of 8 sampled days. The split is real but is NOT the round story.
+
+**So the 3.2% in the original issue was measured on the CATALOGUE (545/17,064 rows), while raw holds ~50%.** The loss is
+in the ROLL-UP, not the capture. That reframes the remaining work completely:
+
+- A whole-corpus `--force` refetch (1.26M calls) was never the right instrument — and neither is the surgical backfill
+  for the ~50% that ALREADY has round.
+- The genuinely-missing ~50% is a real but much smaller target, and some of it is honest absence (cup/friendly fixtures
+  legitimately have no `Regular Season - N` round).
+
+- [ ] [DATA] P0. Rebuild the sports catalogue
+      (`build_instrument_catalogue.py --asset-group sports --since     2019-01-01`) and re-measure `round` /
+      `competition_phase` there. If the catalogue jumps from 3.2% toward the raw ~50%, the rollup was simply stale and
+      NO backfill is needed for that half.
+- [ ] [DIAG] P0. Only after that: characterise the residual raw blanks — split genuine absence (cups/friendlies with no
+      round concept) from real capture gaps, and size the surgical run against the real gap.
+- [ ] [CODE] P1. The surgical script scans `"/entity=fixtures/"` (line 79) — the LEGACY entity. Retarget to
+      `entity=fixtures_schedule` (verified to carry `af_fixture_id` + `round`) before any real run, or it patches the
+      wrong tree. Same staleness class as `migrate_sports_canonical_v9.py`.
+
+## P. DERIVE `round` for the confident majority, spend API calls only on the clustered remainder
+
+Operator 2026-07-18: _"work out per league when the non standard games cluster so you can end up manually inserting
+round info for 70% of normal games you are 100% confident on ... should take calls down a lot, a couple hours rather
+than days"_. Measured — the idea holds, with a precise ceiling and one caveat.
+
+**The populated ~50% is a FREE LABELLED GROUND-TRUTH SET.** Any derivation rule can be scored against it with zero API
+calls before being applied to the blank half. Measured on 3,234 sampled fixtures (6 matchdays, Aug-Sep 2023):
+
+- `round` populated 1,562/3,234 (48%).
+- Of those, **1,072 = 69% are `Regular Season - N`** — the operator's "70% of normal games", confirmed.
+- The remainder are cup/qualifying structures that cluster: `Preliminary Round` 124, `1st Round Qualifying` 103,
+  `2nd Round Qualifying` 74, `3rd Round Qualifying` 40, `1st/2nd/4th/5th Round`, `Group B - 26`.
+
+**Derivability ceiling — 97.0%.** Grouping the Regular-Season fixtures by `(af_league_id, day)`: **225 of 232 groups
+carry exactly ONE round number**; only 7 span multiple rounds. So "all fixtures for a league on a matchday share one
+round" holds 97% of the time, and that is the hard ceiling for date→round derivation.
+
+**The 3% failures CLUSTER BY LEAGUE, not randomly** — league `253` alone accounts for 4 of the 7 (a split/scattered
+schedule). That is what makes the operator's plan work: ambiguity is a per-league property, so a confidence whitelist is
+possible instead of a blanket refetch.
+
+**Correctness guard — `round` is NOT chronological position.** Postponed fixtures mean a `Regular Season - 12` match can
+be played after round 15. Naive date-ordering would silently write WRONG rounds, and a derived value written as if
+captured is the banned silent-placeholder. Hence: score first, whitelist second, and mark derived values as derived.
+
+**CAVEAT — the validation set may not be exchangeable with the target.** The 97% is measured on fixtures that ALREADY
+have `round`. If the blanks are disproportionately cups/friendlies (where `Regular Season - N` does not apply at all),
+derivation covers far less of them. This MUST be measured before sizing the API run.
+
+- [ ] [DIAG] P0. Profile the BLANK half by league + competition type. If blanks concentrate in cups/friendlies,
+      derivation is not the lever there — honest absence is (a cup tie has no `Regular Season - N`).
+- [ ] [CODE] P1. Build the per-league confidence whitelist: for each (league, season), score date→round derivation
+      against the populated fixtures. Whitelist leagues scoring 100%; exclude any league with a multi-round matchday
+      (e.g. `253`).
+- [ ] [CODE] P1. Derive `round` ONLY for whitelisted (league, season) blanks, and stamp provenance (derived vs captured)
+      — never write a derived value indistinguishable from a fetched one.
+- [ ] [DATA] P1. API-fetch only the residual: non-whitelisted leagues + cup competitions + any league-season with no
+      populated fixtures to score against. Size the run from THAT count, not the whole corpus.

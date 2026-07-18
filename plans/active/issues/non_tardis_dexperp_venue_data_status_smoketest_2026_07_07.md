@@ -208,10 +208,19 @@ Two secondary findings:
       `HTTP 400`. Confirmed live: `limit≤100` returns real trades immediately. This is independent of the Tardis-slug
       bug above — it breaks the NATIVE (pre-2026-04-17) trades path specifically. One-line fix. —
       market-tick-data-service@0c4000a02 changes `_umi_lighter.py` limit param from "500" to "100".
-- [ ] [FIX] P1. **LIGHTER-ZKSYNC: fix the `pipeline_mode_resolver.py:58` venue-key mismatch**
-      (`_VENUE_OVERRIDES["LIGHTER"]` never matches the real normalized key `"LIGHTER_ZKSYNC"`) — also correct the
-      override's own comment ("Solana perp" → zkSync) — and investigate why native `ohlcv_1m` capture stopped after
-      2026-05-05.
+- [x] [FIX] P1. ✅ **CORE FIXED — `unified-trading-library@d59f14db`** (the CORRECT source-aware fix, NOT the naive
+      rename). Deleted the dead `_VENUE_OVERRIDES["LIGHTER"]` key + added a source-blind guard in
+      `derive_pipeline_mode_for_row`: `(LIGHTER-ZKSYNC, ohlcv_1m)` with no explicit `source` now returns **None**
+      (honest not-derivable) instead of fabricating `batch_tardis` from `SOURCE_PRIORITY[0]` — native `/candles`
+      (source=lighter_api) rows never touched Tardis. trades/book/derivative_ticker stay `batch_tardis` (genuinely
+      Tardis-archived from 2026-04-17); an explicit `source=` is still honored. +4 unit tests. **DEFERRED (scoped
+      follow-ups, NOT blocking correctness):** (a) a positive `BATCH_LIGHTER_API` stamp for native rows — needs a full
+      `lighter_api` SourceCapability wiring (real REST endpoint/modes/creds), too much to guess unattended + it hit the
+      PipelineMode↔SOURCE_PRIORITY closed-set cascade; (b) threading `source=` through backfill/manifest_writer/rebuild
+      (the CORE fix already makes those paths honest None); (c) a `--force` manifest re-stamp of the existing
+      `batch_tardis`-mislabeled rows (attended real-infra — read each row's true source/path segment first). The "native
+      ohlcv_1m stopped after 2026-05-05" investigation also folds into (c). The `_VENUE_OVERRIDES` "Solana perp" comment
+      was removed with the dead key.
 - [x] [FIX] P1. ✅ **FIXED — `market-tick-data-service@55dac12a`** (the CORRECT honest fix, NOT the naive one). The
       `/orderbook` endpoint is CURRENT-only (no historical params), so a naive "use the target date" would FABRICATE a
       timestamp on a past partition (data-correctness violation). Instead `fetch_extended_rest` now gates the book leg
@@ -344,3 +353,18 @@ Two secondary findings:
     resolved). Remaining: (a) a no-risk 1-line hardening to also emit `replay_<source>/` prefixes
     (`(Mode.BATCH, Mode.LIVE, Mode.REPLAY)`) to close a latent replay_ gap; (b) run the reconciler `--unphantom` reverse
     pass on real infra to heal any already-flipped rows. → fold into the phantom-audit plan.
+
+- **2026-07-18 (autonomous, continuation) — operator: "decommission pacifica for now" + "do LIGHTER/HYPERLIQUID now".**
+  - ✅ **PACIFICA — resolved to DECOMMISSIONED** (07-16 stands, 07-18 keep-MVP retracted; see the DECISION todo). No
+    code needed (already removed + locked); N/A'd the moot PACIFICA todos.
+  - ✅ **LIGHTER-ZKSYNC pipeline_mode — CORE FIXED `unified-trading-library@d59f14db`** (source-blind ohlcv_1m → None,
+    never fabricate batch_tardis; dead key deleted; +4 tests). The positive `BATCH_LIGHTER_API` stamp + source-threading
+    - the `--force` re-stamp are DEFERRED (see the FIX todo) — the positive stamp needs a full new-source
+      SourceCapability wiring (real endpoints) that hit the closed-set cascade and shouldn't be guessed unattended.
+  - 🟡 **HYPERLIQUID replay-prefix hardening — DEFERRED (not a regression).** The 1-line `Mode.REPLAY` add to
+    `possible_manifest._canonical_pipeline_mode_prefixes` is correct + no-risk, BUT the UAC tree is currently
+    foreign-contended: a peer's uncommitted WIP already broke the `test_possible_manifest` prefix-count guard (sports
+    0→10, independent of my change), so I could not land a green UAC tree. The actual HYPERLIQUID 373/540 false-phantom
+    is ALREADY covered by the existing `Mode.LIVE` prefix (live_hyperliquid), so this is future-proofing, not an active
+    bug — re-attempt when the UAC tree is quiescent. The `--unphantom` reverse-pass heal is a separate attended
+    real-infra step (only needed if any rows are still flipped after the live_ coverage).

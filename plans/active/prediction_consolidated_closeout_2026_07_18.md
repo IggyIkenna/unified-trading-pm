@@ -232,16 +232,20 @@ fixture-linked before MVP backfill.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
-- [ ] [BACKEND] P0. **Fixture-match attributes on prediction soccer — RESOLVER + SCHEMA SHIPPED; materialization join IN
-      FLIGHT (round-2a).** UAC `InstrumentRecord` + `INSTRUMENTS_PARQUET_SCHEMA` 6 fields shipped
-      `unified-api-contracts@e7ed754e` (additive nullable, rule-11 cross-AG round-trip verified); IS
-      `process_write._records_to_dataframe` join + MTDS prediction-tick schema dispatched (round-2). Resolver increment
-      SHIPPED `instruments-service@85988ade` (QG-green, 662 lines, 8 files): new `adapters/prediction/fixture_match.py`
-      resolver + per-instrument side-table — **Polymarket** soccer resolves + stamps `af_fixture_id` off the SAME
-      fixtures parquet the MTDS `FixtureIdResolver` reads (`candidate_parquet_paths("FIXTURES",…,BATCH_API_FOOTBALL)`,
-      cached per (league,day), canonicalising both sides through the SAME `validate_team_resolution` alias index — no
-      new GCS walk); **Kalshi** soccer stamps honest-absence (`af_fixture_match_status=UNRESOLVED_TEAM_NAME`,
-      `af_fixture_id=None`, `af_league_id`+`fixture_date` still resolved) pending E2; closed set
+- [x] ✅ [BACKEND] P0. **Fixture-match attributes on prediction soccer — RESOLVER + SCHEMA + MATERIALIZATION COMPLETE
+      (instrument-level, 2026-07-18).** The 6 fixture columns now flow resolver→side-table→instrument parquet: UAC
+      `InstrumentRecord` + `INSTRUMENTS_PARQUET_SCHEMA` `unified-api-contracts@e7ed754e` (additive nullable) + IS
+      `process_write._records_to_dataframe` join `instruments-service@e3ffc613` (type-boundary handled: side-table
+      int/str → contract str/date, honest-absence on bad values; cross-AG round-trip verified — non-prediction rows keep
+      all 6 None; QG-green 4579 passed). MTDS prediction-tick schema = OPTIONAL/DEFERRED (catalogue carries the attrs;
+      tick-grain only if the arb path needs it). Historical BACKFILL of the columns for existing instruments = held with
+      the Phase-B prod run. Resolver increment SHIPPED `instruments-service@85988ade` (QG-green, 662 lines, 8 files):
+      new `adapters/prediction/fixture_match.py` resolver + per-instrument side-table — **Polymarket** soccer resolves +
+      stamps `af_fixture_id` off the SAME fixtures parquet the MTDS `FixtureIdResolver` reads
+      (`candidate_parquet_paths("FIXTURES",…,BATCH_API_FOOTBALL)`, cached per (league,day), canonicalising both sides
+      through the SAME `validate_team_resolution` alias index — no new GCS walk); **Kalshi** soccer stamps
+      honest-absence (`af_fixture_match_status=UNRESOLVED_TEAM_NAME`, `af_fixture_id=None`,
+      `af_league_id`+`fixture_date` still resolved) pending E2; closed set
       `MATCHED`/`UNRESOLVED_TEAM_NAME`/`NO_FIXTURE_DATA`, nullable int, no sentinel; resolver never raises. Tests:
       `test_prediction_fixture_match.py`. **NOW SHIPPING (round-2, constraint lifted)** — materialize the 6 attrs as
       real parquet/manifest COLUMNS: UAC `InstrumentRecord` ✅ e7ed754e + IS `process_write._records_to_dataframe` join
@@ -695,3 +699,23 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     prediction consumers can join by `instrument_id` without a tick-grain denormalization. Adding 6 columns to the
     shared MTDS prediction-tick schema is only warranted if the Phase-E arb path needs tick-grain fixture attrs (like
     the odds-tick side does) — deferred pending that call, to avoid a shared-schema change of uncertain necessity.
+
+- **2026-07-18 (slot-2, autonomous tick 9) — A4 materialization COMPLETE (instrument-level); shared-file CODE round
+  done.**
+  - **IS `process_write` materialization SHIPPED + verified — `instruments-service@e3ffc613` (QG-green, 4579 passed).**
+    The `_records_to_dataframe` join reads `fixture_match_for_instrument_key` and emits the 6 columns, handling the type
+    boundary (side-table `af_league_id` int → contract str; `fixture_date` str → date via a guarded
+    `_fixture_date_to_date`, honest-absence on bad values); additive/rule-11 is structural (all 6 default None → emitted
+    None for every record, overwritten only on a prediction side-table hit; cefi/tradfi/defi round-trip verified None).
+    **A4 flipped ✅** — resolver (85988ade) + schema (e7ed754e) + materialization (e3ffc613) = the fixture columns now
+    materialize into the instrument parquet end-to-end.
+  - **Cross-agent interaction caught + fixed by the IS agent:** E2's honest-absence test used `Bilbao`/`Vallecano` as
+    "unresolvable" — but the UAC agent then ADDED those exact aliases (uac@e7ed754e), turning the test RED on LDR. Fixed
+    minimally with guaranteed-fictional club renderings ("Zzyzx Wanderers"/"Noexist Rovers") so the honest-absence guard
+    survives future alias growth. (A good reminder to keep negative-resolution tests keyed on structurally-impossible
+    names, not real-but-currently-absent clubs.)
+  - **STATE — the prediction-close-out shared-file CODE work is now essentially DONE.** Shipped + verified this session:
+    A2 identity (is@0d0c3742 + pm@16272205a), §6 (mtds@3397e7ae), A4 resolver+schema+materialization (is@85988ade +
+    uac@e7ed754e + is@e3ffc613), E2 Kalshi resolution+aliases (is@ec8633ac + uac@e7ed754e), §5 union (uac@e7ed754e),
+    Phase-B migration SCRIPT (mtds@5392b20b, dry-run). **Remaining is prod-RUN + small remainders** — see the Deferred
+    ledger + the Phase-B item's two findings.

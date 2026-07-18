@@ -488,6 +488,21 @@ id.)
 
 ## Progress Log
 
+- **2026-07-18 (slot-3, /autonomous) — ✅ MIGRATION 1/3 APPLIED + DURABLE: the manifest (surface C) is canonicalized on
+  the LIVE cefi tick manifest and it STUCK.** Sequence: (1) first `--apply` of Script 3 canonicalized the index but its
+  post-verify gate caught 42,915 eu/captured 5-col collisions the eu-reconcile missed (cross-`pipeline_mode`: a
+  `batch_tardis` eu vs a `batch_native` captured — the 6-col dedup can't catch it). (2) Root discovery: the
+  **manifest CONSOLIDATOR cron `uts-prod-manifest-consolidator-execution-cefi-cron` runs EVERY MINUTE and re-rawed the
+  index** — this is why "nothing stuck" before; the Track-1 drain is mandatory, not optional. (3) A shipped the
+  eu-reconcile fix (`instruments-service@555ddf1c`: reconcile against the FULL post-relabel captured-key set, on ALL
+  blobs). (4) **DRAIN**: paused the consolidator cron + stopped the live cefi backfill VM. (5) **RE-APPLY** (drained,
+  555ddf1c) → `GATE PASSED: 0 further-resolvable captured, 0 eu/captured collisions` (id_changed=1,535,266,
+  itype_changed=3,519,879, perp=374,227, eu-dropped=70,114, orphans-dropped=167,859 non-captured, cull PACIFICA 2,960
+  EMPTY rows, snapshot `_index/snapshots/pre_d4_*`). (6) **RE-ENABLE** consolidator → **STICK TEST PASSED**: manifest
+  stays **97.94% canonical / 1.59% non-canonical** (captured-non-canonical 425k→**18,983** genuinely-unresolvable) after
+  the consolidator rebuilt from the now-canonical per-VM shards. Fleet restored (consolidator ENABLED). Surface A
+  (rename) + surface B (content on a VM) next; then verify `ADAF0:USTF0` + `DERIBIT AVAX-USDC@LIN` on all four surfaces.
+
 - **2026-07-18 (slot-3) — Script 3 `--apply` RAN by operator; POST-APPLY GATE FAILED (42,915 eu/captured collisions) →
   eu-reconcile FIXED + shipped (`instruments-service@555ddf1c`; supersedes `@ae4030ef`).** The canonicalization landed
   (itype_changed 3.5M, relabeled 436,934, perp 374,227, dated_itype_fixed 888,752, cull PACIFICA 2,960 empty, dedup
