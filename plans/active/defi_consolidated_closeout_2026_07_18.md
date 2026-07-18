@@ -152,7 +152,22 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       `engine/orchestrator/defi.py`'s venue list (same class as the 7-lending-guard bug — built-but-not-firing). **ALSO
       write missing adapters**: **cbETH (Coinbase)** + **wBETH (Binance)** LSTs have no adapter at all (tokens ARE
       whitelisted). Then re-measure the universe (currently 11,724; this materially grows the LST/restaking/vault
-      count). A too-small denominator makes per-instrument coverage lie. (repo: instruments-service)
+      count). A too-small denominator makes per-instrument coverage lie. **CHAIN CONSTRAINT (operator 2026-07-18): new
+      venue chains ⊆ the EXISTING canonical DeFi chain set (ETH/ARB/BASE/OPT/POLYGON/AVAX/BSC/LINEA/SOLANA) — do NOT add
+      a new chain.** (repo: instruments-service, unified-api-contracts)
+- [ ] [BACKEND] P0. **E2E ACQUISITION (operator 2026-07-18): adding a yield-bearing/staking VENUE must be done
+      end-to-end — IS enumeration is NOT enough; MTDS must actually ACQUIRE the data or the instrument is permanently
+      `empty` (dishonest coverage).** MTDS `cli/handlers/lst_rates_handler.py` acquires rates **per-token config** (each
+      token → `{contract, method(exchangeRate|convertToAssets|getRate), selector}` via Alchemy RPC at historical
+      blocks); Solana LSTs via `solana_lst_archival.fetch_solana_lst_rates`. **Gaps to close for e2e**: (a) add the
+      rate-fetch config for each newly-wired LST/LRT — rocket_pool(rETH `getExchangeRate`), kelpdao(rsETH),
+      puffer(pufETH), karak, symbiotic, cbETH(`exchangeRate`), wBETH — contracts are in `DEFI_MAJOR_ASSET_ADDRESSES`;
+      (b) **implement renzo/ezETH** — the known-unimplemented multicall (`RestakeManager.calculateTVLs()` → derive
+      rate); (c) Solana sanctum/solblaze/solana_native via the `solana_lst_archival` path; (d) **vaults
+      (yearn/beefy/idle) have NO acquisition** — they are ERC-4626 so the existing `convertToAssets` config path applies
+      (add each vault's contract), pendle(PT/YT) + convex need their own; decide the vault data_type (reuse `lst_rates`
+      share-price vs a new `vault_rates`). Each addition VERIFIED by an actual RPC returning a plausible rate ("run it,
+      don't read it"). (repo: market-tick-data-service)
 
 - [ ] [BACKEND] P0. **IS is structurally already the denominator** (`enumerate_expected_universe.py::_enumerate_v2_defi`
       seeds `expected` per `(venue,chain,itype,instrument_id,data_type,day)`; `available_from` STRONG via real on-chain
