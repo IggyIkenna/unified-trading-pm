@@ -91,7 +91,61 @@ The operator sequenced code+data changes AFTER the SSOT. These are ready; each n
 - **C1 — archival of `gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`** (terminal/superseded but
   `locked_by: live-defi-rollout`) — locked plans are never autonomous-archived; needs `[unlock-plan]`. **REC: unlock +
   archive** (it's superseded by the venue-before-chain canonicalisation).
-- _(Further Phase-1 contradiction-sweep rulings + near-complete fold targets appended here.)_
+
+### Phase-1 sweep results (31 contradictions + 10 done-but-unchecked; corpus mechanically GREEN, 0 hard failures)
+
+**APPLIED this pass**: removed BINANCE-DELIVERY from the cefi plan's "Drop venues (remove entirely)" list (it was still
+there in the CEFI CANONICAL SPEC section — contradicting the keep-non-MVP ruling + would delete real COIN-M data) →
+moved to KEPT.
+
+**C2 — OPERATOR RULINGS needed (5, parked)**:
+
+- **C2a [P2] `instrument_type` COLUMN case — UPPER vs lowercase (⚠ affects the SSOT I just shipped).** The cross-asset
+  SSOT §7 + the defi plan say the manifest `instrument_type` COLUMN is lowercase; but tradfi + cefi ALREADY SHIPPED
+  scripts that UPPERCASE the column (both citing "operator 2026-07-18"). The GCS path SEGMENT is definitely lowercase;
+  the id middle segment is UPPER; the COLUMN is the open question. **REC: confirm UPPERCASE column (it shipped) → then
+  correct SSOT §7 + the defi plan** (codex edit = operator-gated). A self-caught inconsistency in my SSOT.
+- **C2b [P1] cefi Track-2 reopen-50.79%** — `cefi_consolidated_closeout:119` autonomously RE-OPENED the archived
+  completion program + REVERSED the operator's 50.79% coverage acceptance. Human-only governance; do NOT resume the
+  backfill until explicit confirm/deny.
+- **C2c [P1] DeFi expected_unattempted denominator** — `instruments_completion_tracker:242` marks it DONE (1.38M v1
+  grain) + derives 62.06% coverage; the v2 SSOT (locked issue) says the real backlog is 63.9M, never applied →
+  denominator understated. Edits a DONE-claim + live coverage on an operator-owned tracker + a locked issue. REC: add a
+  correction note (1.38M = retired v1; v2 = 63.9M open → Track-3).
+- **C2d [P2] GCS lifecycle codex** — `codex/05-infrastructure/gcs-lifecycle-policies.md` says "*-store NOT lifecycle'd"
+  vs the operator 2026-07-13 STANDARD→COLDLINE@60d ruling (already provisioned on ml-store). Codex edit + confirm the
+  exact ladder.
+- **C2e [P2] sports_odds_bookmaker locked** — `status:active` + `locked_by: live-defi-rollout`, genuine open work (28
+  unmapped league tiers). Needs `[unlock-plan]` to archive, OR confirm the follow-up migrated to sports_master.
+
+**C3 — EPIC + May-23-critical-path narrative banners (parked — authority-gated; provable but epics/critical-path are not
+autonomously edited)**: `defi_master.md:258/292/307` + `master_to_live_defi_2026_05_23.md:524/308` +
+`master_data_canonicalisation_migration_catalogue:1972` still frame HYPERLIQUID/ASTER as DeFi perp DEXs; the SSOT §6 +
+shipped code classify them **cefi CLOB** (GMX is the sole defi perp). REC: add a 2026-07-18 correction banner (matching
+the existing `defi_master:260` pattern), NOT a blind find-replace.
+
+**C4 — small auto-fixes VERIFIED-provable, ready to apply next pass** (deferred from this pass to avoid mass-editing
+concurrently-edited plans in deep context): cefi Track-4 deribit_options_chain (:150) → repoint to Track-2 (the plan's
+own :223 operator correction invalidates the "P0 writer-gate/reclass" framing; reconcile 112,727↔122,585); cefi headline
+:10/:73/:98 "awaiting only drain+apply" → "+ Track-6 alignment"; defi Track-6 (:321) → repoint to the SHIPPED
+`GET /api/data-status/axis-value-census` (deployment-ui@3fb6779), drop the new `/distinct-values` endpoint;
+data_completion_to_100 (:416) "lease-mode" → N=1 Tardis cap; scratch_scenarios 13 (:9) drop "Drift"; tradfi A2 (:189)
+"restoration" → "verify declaration = billing reality"; codex_alignment_deviations (:17) `assigned_vm` → NA;
+bucket_estate (:11) ml count; strategy_master (:90) 53→59. **Checkbox flips (HARD evidence)**: tradfi:316
+(deployment-api@09656f4 + ui@3fb6779), bucket_fold_ml:170 (UTL deserialize-gate), deployment_registry status table.
+
+**C5 — archival-ready (verified superseded/complete + unlocked; execute next pass to avoid dangling-ref/orphan risk)**:
+`defi_pool_id_chain_uniqueness_2026_07_18`, `instruments_service_docs_consolidation_2026_07_08`,
+`execution_fidelity_tiers_uac_governed_2026_06_28`, + issues `slot6_git_reset_dataloss`, `drift_helius_path_obsolete`,
+`drift_helius_perp_funding_shards…`, `instruments_service_bitfinex_futures_golden_drift`,
+`drift_v2_sig_index_parts_cache_full_download`, `drift_v2_sig_index_program_wide_helius_oom`. **Migrate-then-archive**
+(residual to a live issue first): `data_pipeline_e2e_check` (confirm next-steps tracked), `mtds_solana_drift_backfill…`
+(migrate the fail-open gate-check class), `gcs_bucket_estate_cleanup` (migrate the lending-indices twin GCS-delete
+residual).
+
+**No-miss ledger**: 31 contradictions + 10 done-unchecked → **26 auto-fixable** (1 applied + 25 enumerated in C4/C5) +
+**5 operator-rulings** (C2, +the SSOT §7 self-correction) parked here. routed_to_operator == parked. agent skips: 0. 4
+items = scope/time/history (not findings — durability sweeps still running, foreign-tfvars-blocked flip).
 
 ## Progress Log
 
