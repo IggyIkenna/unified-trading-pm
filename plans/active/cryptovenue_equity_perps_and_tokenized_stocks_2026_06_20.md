@@ -131,6 +131,20 @@ standalone canonical (no basis leg, dispersion only across crypto venues).
      downloads trades+funding+book. Verify manifest `capture_status` for an EQUITY_PERP shard. Repo: instruments-service
      (enum) + deployment-service (launch).
 
+  > **STATUS 2026-07-18 (Binance full-listing widen — operator directive; edits 1–3 DONE, sub-item 4 OPEN):** The
+  > un-filter gate this todo describes was **ALREADY removed 2026-06-23** — `_passes_asset_filter` (now
+  > `parsing.py:545`, not `:357-367`) is FULL-UNIVERSE (no `CEFI_BASE_ASSET_UNIVERSE` gate on SPOT/PERP/FUTURE), so the
+  > equity perps already pass; the HL/aster duplicate gates are likewise no longer base-gates. Per the 2026-07-16 ruling
+  > the equity identity rides the `is_equity_perp`/`tracks_equity` tags (NOT an `EQUITY_PERP` type), stamped at rollup
+  > by `_cefi_equity_tags` (`build_instrument_catalogue.py:775`), which imports `CEFI_EQUITY_PERP_BASE_UNIVERSE`
+  > DIRECTLY from UAC — so the universe add IS the coupling (no IS adapter code change needed). **WIDENED the universe
+  > to ALL live Binance `contractType=TRADIFI_PERPETUAL`** (139 contracts / 138 bases pulled live from
+  > `fapi/v1/exchangeInfo`): +20 NEW bases (124→144), incl. a first-time **HK_EQUITY** category
+  > (Tencent/Xiaomi/Zhipu/MiniMax). Coupled tests assert a sample tag `is_equity_perp` + pass the filter. —
+  > unified-api-contracts@172e8cdb + instruments-service@ff6d9750 (QG-green both; full detail + the 20-base list in
+  > Progress Log 2026-07-18). **Sub-item 4 (launch the Tardis backfill) stays OPEN** — explicitly out of scope for this
+  > catalogue-definition widen (operator: no MTDS backfill / prod mutation).
+
 ## Phase 3 — live CLOB depth (shared with the prediction-perps plan's Phase 3)
 
 - [ ] [SCRIPT] P2. Live BBO+depth recording for these equity perps (for basis-arb slippage calibration) — reuse the CeFi
@@ -213,6 +227,62 @@ context (probed limits, file surfaces, conventions) is in the Progress Log so a 
       Repos: unified-api-contracts + market-tick-data-service + unified-trading-pm (CLAUDE.md).
 
 ## Progress Log
+
+### 2026-07-18 — Binance equity-perp universe WIDENED to ALL live TRADIFI_PERPETUAL listings (operator directive)
+
+**Operator directive 2026-07-18:** "WIDEN the cefi equity-perp universe to ALL Binance equity-perp listings — get all
+the Binance listings, it's recent data so not that much, we can curate it our end."
+
+**Live pull (public, no auth):** `GET https://fapi.binance.com/fapi/v1/exchangeInfo` — 841 symbols; **139 are
+`contractType=TRADIFI_PERPETUAL`** (the equity-perp surface; the other 702 are PERPETUAL/CURRENT_QUARTER/NEXT_QUARTER
+with `underlyingType=COIN` = crypto). The 139 by `underlyingType`: 121 EQUITY / 8 COMMODITY / 5 HK_EQUITY / 3 KR_EQUITY
+/ 2 PREMARKET (135 TRADING + 4 PENDING_TRADING); every one carries `underlyingSubType=["TradFi"]`. 138 distinct
+baseAssets (SPCX has both USDT + USD1 quote variants).
+
+**Filter used (grounded in the live field, not invented):** `contractType == "TRADIFI_PERPETUAL"` cleanly partitions
+equity perps from crypto — no per-name curation needed to keep crypto out. The 3 crypto INDEX perps live today
+(DEFI/BTCDOM/ALL, all `contractType=PERPETUAL`) are correctly NOT equity perps and stay out.
+
+**Diff vs the 124-base `CEFI_EQUITY_PERP_BASE_UNIVERSE`: 20 NEW bases (124 → 144), zero collisions with the crypto
+`CEFI_BASE_ASSET_UNIVERSE`:**
+
+- **15 US EQUITY/ETF** (`underlyingType=EQUITY`): APP (AppLovin), GEV (GE Vernova), SNOW (Snowflake), VRT (Vertiv), WEN
+  (Wendy's), XBI (SPDR S&P Biotech ETF), SOXS + TZA (Direxion daily 3x bear ETFs — SOXS = bear pair of the already-in
+  SOXL); + 7 Binance collision-avoidance / mangled tickers whose real twin is unresolved (kept per "curate our end",
+  `tracks_equity=""`): BNC, BOT, FWDI, INTW, MUU, SKHY, SNXX.
+- **5 HK_EQUITY** (NEW `underlyingType` category — first time covered): HK0700 (Tencent, HKEX 0700), HK1810 (Xiaomi,
+  HKEX 1810), TENCENT (Tencent named-variant baseAsset), MINIMAX + ZHIPU (Chinese-AI listings).
+
+**Nothing excluded as non-equity** — `contractType=TRADIFI_PERPETUAL` already excludes crypto, so all 138 live bases are
+equity perps by Binance's own classification; the 14 not-added were already present (the 6 "in universe but not live
+today" — CFG/DIA/INX/ROBO/SLX/SPX — are the ticker-reuse names the file already flags as KEPT, left untouched).
+
+**Symbol↔ticker mapping approach:** the base universe stores the RAW Binance `baseAsset` (matching existing entries);
+`_cefi_equity_tags` maps the tokenized-spot `<TICKER>X` form via `base[:-1]` automatically. The Databento DBEQ.BASIC
+real-equity twin link (`crypto_equity_link.tracks_equity`) is left UNWIRED for the 20 new bases — they tag
+`is_equity_perp=True` / `tracks_equity=""` exactly like the existing standalone SPCX/OPENAI/ANTHROPIC pre-IPO perps
+(honest; the basis leg needs the tradfi DBEQ universe expansion — Phase 1b — a separate follow-up). No false twin
+minted.
+
+**Coupled un-filter (Phase 2 P1) — the gate was ALREADY open:** `_passes_asset_filter` (`parsing.py:545`) has been
+FULL-UNIVERSE since operator 2026-06-23 (no `CEFI_BASE_ASSET_UNIVERSE` gate on SPOT/PERP/FUTURE), so equity perps
+already pass. Per the 2026-07-16 ruling the equity identity rides the tags (NOT an `EQUITY_PERP` type), stamped at
+rollup by `_cefi_equity_tags` (`build_instrument_catalogue.py:775`) which imports `CEFI_EQUITY_PERP_BASE_UNIVERSE`
+directly from UAC — so the UAC universe add IS the coupling; the IS catalogue stamps `is_equity_perp=True` for the new
+bases automatically, no IS adapter code change needed.
+
+**Shipped (both landed on live-defi-rollout, verified ancestor of origin/live-defi-rollout):**
+
+- **unified-api-contracts@172e8cdb** — +20 bases in `cefi_instrument_universe.CEFI_EQUITY_PERP_BASE_UNIVERSE` (124→144)
+  - docstring provenance + `test_crypto_equity_link.py::test_binance_20260718_full_listing_widen_bases_in_universe`.
+    QG-green (`quality-gates.sh --no-fix`, 284s, ALL PASSED).
+- **instruments-service@ff6d9750** — coupled tests: `test_cefi_equity_tags_classifier` asserts APP/GEV/SNOW/XBI/TENCENT/
+  ZHIPU (+ SNOWX tokenized-spot) tag `is_equity_perp`; `test_passes_asset_filter_binance_equity_perp_base` asserts
+  APP/TENCENT resolve/pass the CeFi filter. QG-green (123s, ALL PASSED). Shipped with `--skip-preflight` (dirty-deps
+  carve-out: UTL + UAC carried live foreign `fold_a_cutover` WIP that isn't mine — only my named files committed).
+
+**Out of scope (unchanged):** Phase 2 P1 sub-item 4 (launch the Tardis backfill) — operator: no MTDS backfill / prod
+mutation this task. This is catalogue/universe definition only.
 
 ### 2026-07-16 — broad `instrument_type` + `is_equity_perp`/`tracks_equity` tags (operator ruling; WS-H double-seed fix)
 
