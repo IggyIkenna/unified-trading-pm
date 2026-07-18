@@ -124,11 +124,12 @@ source:
       The 2.89M-cell gap is ~1-2 days at June rates → we resume filling; **coverage % is the climbing metric.** ACTION →
       the resume-backfill todo below (runs AFTER the Track-1 re-enable so it doesn't fight the drain). The operator can
       reverse this ruling; surfaced in the session report.
-- [ ] [DATA] P1. **Resume the cefi Tardis COVERAGE backfill on the fixed code (the Track-2 ACTION of the ruling above).**
-      Launch AFTER the Track-1 Phase-D re-enable (else the drain kills it). **N=1 Tardis cap, both clouds** (the storm
-      rule — count the fleet with `tardis-concurrency-guard.sh` first; scale on the one IP via `SINGLE_VM_QUEUE=1` +
-      `TARDIS_MAX_CONCURRENT_DOWNLOADS`, NEVER more VMs). SPOT (idempotent backfill). Re-measure coverage post-run;
-      supersede the archived 50.79% with the new number. (repo: deployment-service / market-tick-data-service)
+- [ ] [DATA] P1. **Resume the cefi Tardis COVERAGE backfill on the fixed code (the Track-2 ACTION of the ruling
+      above).** Launch AFTER the Track-1 Phase-D re-enable (else the drain kills it). **N=1 Tardis cap, both clouds**
+      (the storm rule — count the fleet with `tardis-concurrency-guard.sh` first; scale on the one IP via
+      `SINGLE_VM_QUEUE=1` + `TARDIS_MAX_CONCURRENT_DOWNLOADS`, NEVER more VMs). SPOT (idempotent backfill). Re-measure
+      coverage post-run; supersede the archived 50.79% with the new number. (repo: deployment-service /
+      market-tick-data-service)
 
 ## Track 3 — Manifest completeness axis (SEPARATE from id-format) · P1
 
@@ -252,11 +253,11 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       RESOLVED-BY-DELETION** (2026-07-18). The hardcoded `_L5_VENUES` tuple (finding 4, missing 11 cefi venues) no
       longer exists: it was added by `market-tick-data-service@0908bda7` (the order_flow_imbalance L2 feature) and
       **removed entirely by `market-tick-data-service@a4fb3d13`**, which retired order_flow_imbalance ("zero real
-      consumers, zero production rows ever captured; duplicated MDPS's live implementation"). `grep -rn _L5_VENUES
-      market_tick_data_service/` = 0 hits; `preflight()` in `book_microstructure_handler.py` only resolves the output
-      bucket now (no hardcoded venue list). The issue's two *onchain* sub-audits (`_SOURCE_COVERAGE_START`,
-      `_PROTOCOL_TO_DATA_TYPE`/kamino-split) are DeFi, NOT cefi — they stay open in the issue, outside this cefi
-      close-out. (repo: market-tick-data-service)
+      consumers, zero production rows ever captured; duplicated MDPS's live implementation").
+      `grep -rn _L5_VENUES     market_tick_data_service/` = 0 hits; `preflight()` in `book_microstructure_handler.py`
+      only resolves the output bucket now (no hardcoded venue list). The issue's two _onchain_ sub-audits
+      (`_SOURCE_COVERAGE_START`, `_PROTOCOL_TO_DATA_TYPE`/kamino-split) are DeFi, NOT cefi — they stay open in the
+      issue, outside this cefi close-out. (repo: market-tick-data-service)
 - [ ] [BACKEND] P1. **`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`** — operator wants this done before
       the migration even though it's not a blocker. **SCOPE UNCLEAR — it's a multi-phase strategy/universe plan; confirm
       which phases are the pre-migration ask (likely the instrument-typing/catalogue portion, not the live-strategy
@@ -274,6 +275,73 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       `[DATA] P1` todo under §119. Autonomous ruling within documented intent (/autonomous 2026-07-18); operator can
       reverse.
 
+## Track 6 — Non-canonical ENUMERATION audit → the migration must align EVERY form to one SSOT (operator ask, 2026-07-18) · P0
+
+- **Source / ask**: the deployment-ui/api **"data status"** view used to enumerate every instrument_type / data_type /
+  chain / venue that EXISTS in the GCS data/manifest for an asset_group — a duplication + non-canonical-naming detector.
+  It was **removed** from the UI/API. Operator (2026-07-18): re-add it; and MEANWHILE use the enumeration so the
+  migration is COMPLETE (align EVERY non-canonical form to one SSOT), not just the classes Scripts 1–4 target.
+- **Audit tool**: `market-tick-data-service@81b72f1d`
+  (`scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`) — re-derives the enumeration from
+  `read_availability_index(cefi_bucket)`. **Measured live 2026-07-18** on the **11,185,557-row** cefi manifest
+  (`market-data-tick-cefi-prd-central-element-323112`):
+  - **instrument_id: 1,864,357 non-canonical (16.67%)** — bare-wire (no `VENUE:TYPE:` prefix) **1,367,181** (380,672
+    resolve via the 3-tuple wire-map / **986,509 UNRESOLVED**, dominated by blank itype); `:PERP:` shorthand **374,272**
+    (0 resolve); missing-quote (`ETHUSDT_210326`) **91,254**; `nc:other` (`PAXG_USDC-27JUN25`) **30,986**; blank
+    **62,367**; DERIBIT:COMBO **662**.
+  - **instrument_type COLUMN drift — a NEW axis Scripts 1–4 do NOT touch**: BLANK **3,186,640** · lowercase `perpetual`
+    **289,700** · `spot_pair` **25,189** · `None` **24,583** · `spot` **21,336** ·
+    `futures_chain`(data_type-leaked-into-itype) **66,129** · `options_chain` **581** · `future` **182** · `index`
+    **2**.
+  - **venue drift**: `OKX` 64 · blank 34 · `KALSHI-PERP` 784 · `POLYMARKET-PERP` 480 · `DERIBIT-COMBO` 226 ·
+    `COINBASE-CDE` 22,370. **data_type**: blank 9,750.
+- **Coverage gap (why the `--apply` must WAIT for these)**: Scripts 1–4 resolve ~380k bare-wire; the other **~1.48M**
+  non-canonical rows (blank-itype-driven bare-wire, `:PERP:`, missing-quote, COMBO) need DEDICATED paths. Running the
+  current `--apply` would relabel ~380k and leave ~1.48M non-canonical — "canonical" would be a lie. **Track 6 gates the
+  cutover `--apply`.** The blank-itype axis is the ROOT: fixing it first lets the 3-tuple resolve most of the 986k
+  UNRESOLVED bare-wire.
+
+- [x] ✅ [REVIEW] P0. **Operator canonical rulings — RECEIVED 2026-07-18. The rebuilt catalogue is the SSOT; align the
+      manifest to it.** 1. **Blank/missing instrument_type (3.19M)** → **catalogue-resolve by (venue, raw_symbol) AND
+      venue-suffix-infer when not in the catalogue** (operator chose the most aggressive option): `-SPOT`→`SPOT_PAIR`,
+      `-FUTURES`/`-SWAP`/`-PERP` venue→derivatives (dated symbol→`FUTURE`, else `PERPETUAL`). Accept the small mis-type
+      risk on delisted symbols the catalogue no longer knows. 2. **Orphans (not in catalogue)** → **DROP unless cleanly
+      mappable to canonical.** Bare-`OKX` (64) → remap to `OKX-SWAP`/`-SPOT`/`-FUTURES` where the symbol resolves
+      cleanly, else drop; blank venue/id/data_type → drop. 3. **KALSHI-PERP (784) + POLYMARKET-PERP (480) → DROP** —
+      VERIFIED 2026-07-18: **100% `empty_confirmed`, `row_count=0`, `instrument_count=0`, blank `instrument_id`** — no
+      real perp data (the "Polymarket perps that don't work" that were dropped originally; these are just empty probe
+      rows for 8 data_types × dates). If they ever capture real perp data they'd map cleanly to canonical, but there is
+      none today. 4. **DERIBIT:COMBO is CANONICAL** (catalogue has `instrument_type=COMBO` 138,544 + venue
+      `DERIBIT-COMBO` 69,272) — my audit's canonical-set was missing COMBO; combos get MIGRATED, not excluded.
+      `COINBASE-CDE` (99 in catalogue) legit.
+- [ ] [SCRIPT] P0. **instrument_type column normalization** — casing (`perpetual`/`spot`/`spot_pair`/`future` → UPPER,
+      `spot`→`SPOT_PAIR`), `None`/blank → catalogue-inferred by (venue, raw_symbol) (the venue name disambiguates most:
+      `-SPOT`→SPOT_PAIR, `-FUTURES`/`-SWAP`→PERPETUAL|FUTURE), data_type-leak (`futures_chain`/`options_chain` as itype)
+      → real FUTURE/OPTION. This is the ROOT fix that unblocks ~986k bare-wire resolutions. (repo: instruments-service)
+- [ ] [SCRIPT] P0. **`:PERP:` → `:PERPETUAL:` rewrite** (374,272 manifest rows + any on-disk content) with symbol
+      decompose (`ASTER:PERP:CLUSDT` → `ASTER:PERPETUAL:CL-USDT@LIN`). Extends Script 2/3. (repos:
+      market-tick-data-service, instruments-service)
+- [ ] [SCRIPT] P1. **missing-quote + nc:other decompose** (`ETHUSDT_210326`, `PAXG_USDC-27JUN25`) via the catalogue —
+      extract the raw symbol tail, resolve to canonical dated-future/option. (repo: instruments-service)
+- [ ] [BACKEND] P0. **POST-CUTOVER: flip the smoke-check + downloader to canonical instrument ids** — MUST land with (or
+      immediately after) the cutover `--apply`, else targeted re-fetch silently breaks fleet-wide. Today the
+      downloader's `--instrument-ids` matches **RAW venue-native symbols EXACTLY** (no substring/underlying expansion,
+      no canonical→raw resolution), so the moment a venue's objects are canonical-named there is no raw symbol left to
+      pass and a targeted fetch returns **0 rows with no error**. Measured 2026-07-18 mid-migration: 8 of 46 provable
+      Tardis cells were already canonical-only (BITFINEX-FUTURES ×4, BYBIT-SPOT ×2, COINBASE-FUTURES ×2) and could not
+      be force-fetched at all. Three coupled changes: (1) make `--instrument-ids` accept canonical ids (or resolve
+      canonical→raw) in the MTDS download path; (2) revert the smoke-check sampler
+      (`scripts/pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing`) to sample the CANONICAL id and drop the
+      `':' in stem` skip-guard added for the mixed-naming window (market-tick-data-service@1875b95b); (3) drop the
+      `--tardis-only` docs' "verdicts are unreliable mid-migration" caveat once manifest lookups key on the same id form
+      the writer records — that mismatch is what makes the check report `failed` on shards that genuinely succeeded (IS
+      reported `failed=17` while all 18 venues wrote records). Full evidence:
+      `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`. (repos:
+      market-tick-data-service, unified-trading-pm)
+- [ ] [FEATURE] P1. **Re-add the "data status" enumeration to deployment-ui/api** — the distinct instrument_type /
+      data_type / chain / venue listing per AG that was removed; it is the durable non-canonical/duplication detector.
+      (repos: deployment-api, deployment-ui) — investigate the removal commit first.
+
 ## Codex SSOTs (read before touching a track)
 
 `codex/02-data/availability-manifest-and-data-status.md`, `…/pipeline-mode-partition.md`,
@@ -289,8 +357,8 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   inferred from that erroneous ceiling, not given. The 2.89M-cell gap is ~1-2 days at June rates. This is an autonomous
   ruling made WITHIN documented intent (operator: "continue mapping all todos until they are 100% done /autonomous" +
   the fixed-throughput facts) — recorded so the operator can reverse. The ACTION (resume the cefi Tardis backfill on the
-  fixed code, N=1 cap, SPOT, AFTER the Track-1 re-enable so it doesn't fight the drain) is now the `[DATA] P1` todo under
-  §119; coverage % is the climbing metric, re-measured post-run to supersede the archived 50.79%.
+  fixed code, N=1 cap, SPOT, AFTER the Track-1 re-enable so it doesn't fight the drain) is now the `[DATA] P1` todo
+  under §119; coverage % is the climbing metric, re-measured post-run to supersede the archived 50.79%.
 
 - **2026-07-18 (slot-3) — Plan authored from a 3-agent audit of ~30 active cefi/IS/MTDS docs + direct verification.**
   Verdict: id-canonicalization migration (Track 1) is FINAL for its axis and cutover-ready; cefi overall has 5 separate
