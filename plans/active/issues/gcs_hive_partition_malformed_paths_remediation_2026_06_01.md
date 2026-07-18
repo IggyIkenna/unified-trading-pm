@@ -138,11 +138,11 @@ Canonical spec (SSOT = `reader.py:19` / `orchestrator.py:25`):
 
 ```
 # per-instrument (non-derivative)
-raw_tick_data/by_date/day={date}/asset_group={ag}/venue={venue}/instrument_type={itype}/data_type={dt}/{SYMBOL}.parquet
+raw_tick_data/by_date/day={date}/pipeline_mode={mode}_{source}/asset_group={ag}/venue={venue}/instrument_type={itype}/data_type={dt}/{SYMBOL}.parquet
 # derivative chains (options_chain / futures_chain)
-raw_tick_data/by_date/day={date}/asset_group={ag}/venue={venue}/instrument_type={itype}/data_type={dt}/underlying={U}/ticks.parquet
-# defi (chain= inserted after asset_group)
-raw_tick_data/by_date/day={date}/asset_group=defi/chain={CHAIN}/venue={PROTOCOL}/instrument_type={itype}/data_type={dt}/...
+raw_tick_data/by_date/day={date}/pipeline_mode={mode}_{source}/asset_group={ag}/venue={venue}/instrument_type={itype}/data_type={dt}/underlying={U}/ticks.parquet
+# defi (venue={PROTOCOL} before chain={CHAIN}; itype lowercase in path)
+raw_tick_data/by_date/day={date}/pipeline_mode={mode}_{source}/asset_group=defi/venue={PROTOCOL}/chain={CHAIN}/instrument_type={itype}/data_type={dt}/...
 ```
 
 `asset_group=` is canonical (`RAW_TICK_ASSET_GROUP_HIVE_KEY`); `category=` is legacy-tolerated on historical objects.

@@ -138,3 +138,17 @@ per-domain path prefixes:
 - **2026-07-17, authored** as the portfolio-state successor of [[bucket_estate_fold_design_2026_07_13]] §3 todo 1.
   Live-trading-adjacent — reader cutover + delete operator-gated, retention confirm required before COLDLINE. Object
   counts NOT re-measured this session — executor re-measures per domain. Nothing executed yet.
+- **2026-07-18, `/autonomous` — PROVISION only (additive/safe; the sensitive live migration + cutover DEFERRED to the
+  careful gated pass per this plan's operator-gated design).** Provisioned the folded target
+  `portfolio-state-{prd,test}-central-element-323112` (direct gcloud, ASIA-NORTHEAST1/UBLA/STANDARD→COLDLINE@60d). NOTE
+  the design flags **retention-confirm-before-COLDLINE** for live-trading snapshots — the 60d lifecycle is applied as the
+  canonical default but the operator must confirm live position/pnl/risk retention doesn't need STANDARD longer than 60d
+  (if so, adjust before it bites). **Sources measured:** `positions-store` (flat), `pnl-attribution-store` (flat),
+  `pnl-attribution-output` (bare, no-pid), `archetype-state-{prd,test}` (env-tiered), `position-store-sports-{prd,test}`
+  (env-tiered); **`risk-metrics-store` NOT present** on GCP (likely empty / PATH_REGISTRY-`DataSetSpec`-only — assert at
+  migration). **DEFERRED (this is the LAST + most sensitive fold — do NOT rush):** the 6-source migration + the
+  OPERATOR-GATED reader cutover (UTL PATH_REGISTRY flat trio gains its `-{env}-` tier here for the first time +
+  `pnl/config.py` bare default + the 2 yaml kinds → `portfolio-state` + per-domain prefixes) + redeploy + end-to-end
+  verify (diff real position/pnl/risk vs pre-migration) + the operator-gated delete. Follows the Fold-A discovery→
+  implement→adversarially-verify shape; strategy-service pnl/position modules are the real writers (the yaml-named
+  risk-and-exposure/pnl-attribution/position-balance-monitor services do NOT exist as repos — redeploy strategy-service).

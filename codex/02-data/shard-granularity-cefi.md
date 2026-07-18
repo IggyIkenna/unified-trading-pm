@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: CeFi shard granularity — instrument_type × quote_asset × margin_type (v6) + cluster validation
 summary:
-  CeFi manifest v6 shard key adds quote_asset/margin_type/combo_type/leg_weights, splitting DERIBIT inverse (USD)
-  vs linear (USDC/USDT) options into separate chain-bundle paths; cluster coverage is the 4th write-gate pillar.
+  CeFi manifest v6 shard key adds quote_asset/margin_type/combo_type/leg_weights, splitting DERIBIT inverse (USD) vs
+  linear (USDC/USDT) options into separate chain-bundle paths; cluster coverage is the 4th write-gate pillar.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,9 +11,19 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer]
 tags: [cefi, manifest, shard-granularity, deribit, quality-gates, data-correctness]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/partitioning.md, codex/04-architecture/shard-level-failure-isolation.md, codex/06-coding-standards/validation-and-errors.md]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/partitioning.md,
+    codex/04-architecture/shard-level-failure-isolation.md,
+    codex/06-coding-standards/validation-and-errors.md,
+  ]
 created: 2026-04-23
-authoritative_for: [CeFi options/futures chain shard key v6 (quote_asset/margin_type/combo_type/leg_weights), CeFi bundle cluster-validation write-gate pillar]
+authoritative_for:
+  [
+    CeFi options/futures chain shard key v6 (quote_asset/margin_type/combo_type/leg_weights),
+    CeFi bundle cluster-validation write-gate pillar,
+  ]
 referenced_by:
 owner:
 last_reviewed: 2026-05-17
@@ -93,21 +103,22 @@ Legacy v1–v5 parquets are read with all four columns backfilled to `""` — sa
 [tardis_shared.py](../../../market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py)
 — extracts `(quote_asset, margin_type)` per row.
 
-| Venue                    | Symbol pattern                        | quote                    | margin      |
-| ------------------------ | ------------------------------------- | ------------------------ | ----------- |
-| DERIBIT                  | `BTC-*` / `ETH-*` (no `_` before `-`) | `USD`                    | `inverse`   |
-| DERIBIT                  | `BTC_USDC-*`, `ETH_USDT-*`            | `USDC` / `USDT`          | `linear`    |
-| BINANCE-FUTURES          | `*USDT`, `*USDC`                      | `USDT` / `USDC`          | `linear`    |
-| BINANCE-FUTURES          | `*USD_PERP`, `*USD_{YYMMDD}`          | `USD`                    | `inverse`   |
-| BYBIT                    | `*USDT`, `*USDC`, `*PERP`             | `USDT` / `USDC` / `USDC` | `linear`    |
-| BYBIT                    | `*USD` (no T)                         | `USD`                    | `inverse`   |
-| OKX-SWAP                 | `*-USDT-SWAP`, `*-USDC-SWAP`          | `USDT` / `USDC`          | `linear`    |
-| OKX-SWAP                 | `*-USD-SWAP`                          | `USD`                    | `inverse`   |
-| HYPERLIQUID / ASTER      | all perps                             | `USDC`                   | `linear`    |
-| CME / CBOE               | `ESM26`, `VX-21JAN26-20-C`            | `USD`                    | `linear`    |
-| COINBASE-SPOT / OKX-SPOT | `BTC-USD`, `BTC-USDT`                 | quote                    | `""` (spot) |
-| BINANCE-SPOT             | `btcusdt` (lowercase concat)          | quote                    | `""` (spot) |
-| UPBIT                    | `KRW-BTC` (quote-first)               | `KRW`                    | `""` (spot) |
+| Venue                    | Symbol pattern                        | quote                                              | margin      |
+| ------------------------ | ------------------------------------- | -------------------------------------------------- | ----------- |
+| DERIBIT                  | `BTC-*` / `ETH-*` (no `_` before `-`) | `USD`                                              | `inverse`   |
+| DERIBIT                  | `BTC_USDC-*`, `ETH_USDT-*`            | `USDC` / `USDT`                                    | `linear`    |
+| BINANCE-FUTURES          | `*USDT`, `*USDC`                      | `USDT` / `USDC`                                    | `linear`    |
+| BINANCE-FUTURES          | `*USD_PERP`, `*USD_{YYMMDD}`          | `USD`                                              | `inverse`   |
+| BYBIT                    | `*USDT`, `*USDC`, `*PERP`             | `USDT` / `USDC` / `USDC`                           | `linear`    |
+| BYBIT                    | `*USD` (no T)                         | `USD`                                              | `inverse`   |
+| OKX-SWAP                 | `*-USDT-SWAP`, `*-USDC-SWAP`          | `USDT` / `USDC`                                    | `linear`    |
+| OKX-SWAP                 | `*-USD-SWAP`                          | `USD`                                              | `inverse`   |
+| HYPERLIQUID              | all perps                             | `USDC`                                             | `linear`    |
+| ASTER                    | all perps                             | per-symbol real quote (`USDT`, tail `USD1`/`USDC`) | `linear`    |
+| CME / CBOE               | `ESM26`, `VX-21JAN26-20-C`            | `USD`                                              | `linear`    |
+| COINBASE-SPOT / OKX-SPOT | `BTC-USD`, `BTC-USDT`                 | quote                                              | `""` (spot) |
+| BINANCE-SPOT             | `btcusdt` (lowercase concat)          | quote                                              | `""` (spot) |
+| UPBIT                    | `KRW-BTC` (quote-first)               | `KRW`                                              | `""` (spot) |
 
 Unknown venues or ambiguous symbols return `("", "")` — the shard falls back to the v5 path shape without the nested
 `quote=`/`margin=` segments.
@@ -203,10 +214,11 @@ Every CeFi bundle parquet row carries `available_at = tick.timestamp + scrape_la
 
 ## Non-goals (for v6)
 
-- Does NOT extend `build_instrument_id` with `quote_asset` / `margin_type` kwargs. Canonical IDs
-  (`DERIBIT:OPTION:BTC:26DEC25:100000:C`) stay stable for backward compatibility of the catalogue. Disambiguation is
-  load-bearing at the _shard path_ + _manifest row_ layer, not in the ID. (Follow-up: Phase 2c of the v6 plan —
-  deferred.)
+- Does NOT extend `build_instrument_id` with `quote_asset` / `margin_type` kwargs. Canonical IDs — under the decided
+  cefi grammar `VENUE:TYPE:BASE-QUOTE@MARGIN[-YYYYMMDD][-STRIKE-C|P]`, e.g.
+  `DERIBIT:OPTION:BTC-USD@INV-20251226-100000-C` (DERIBIT always carries the quote; inverse coin-margined ⇒ `@INV`) —
+  stay stable for backward compatibility of the catalogue. Disambiguation is load-bearing at the _shard path_ +
+  _manifest row_ layer, not in the ID. (Follow-up: Phase 2c of the v6 plan — deferred.)
 - Does NOT touch sports / prediction / DeFi manifests at the v6 column level. v6 is additive for them — the four new
   columns are simply `""`.
 

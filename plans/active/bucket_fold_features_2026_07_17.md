@@ -214,3 +214,24 @@ design's counts are 2026-07-13).
   (features-{cefi,defi,tradfi} + ml-store) + Phase-E delete (time-gated). Full per-file spec: scratchpad
   `fold_a_cutover_spec.md` + workflow `wf_74794c43-894` transcript. NOTE: heavy multi-slot PM contention — commits need
   `--no-verify` fast-path + sync-retry (branch-drift hook races the automated main→LDR backmerge).
+- **2026-07-18, UTL KEYSTONE SHIP — root-caused the blocker (NOT my diff) + partially fixed.** The Fold-A UTL ship
+  (`--files` the 6 files: `cloud_interface/bucket_naming.py`, `config_interface/paths/registry.py`,
+  `tests/fixtures/cloud-providers.yaml`, `tests/cloud_interface/unit/test_bucket_naming.py` + the bundled ml-Fold-B P1
+  security gate `domain_client/artifact_store.py` + `tests/unit/test_model_registry.py`) is blocked ONLY by a local
+  QG that is RED on **editable-sibling-ahead** foreign tests — NOT my code. PROOF: local HEAD == origin/live-defi-rollout
+  (49723b77, 0/0) and **origin UTL quality-gates-v2 is GREEN at that exact SHA** (10:29:56Z). Two stale tests: (1)
+  `test_instruments_catalog_reader::test_missing_catalog_returns_source_returned_zero` — FIXED (bumped its fixture date
+  2022-09-01→2023-06-01; AAVE_V3-ETHEREUM launch was corrected 2022-03-16→2023-01-27 per
+  `issues/uac_defi_launch_date_registry_drift_2026_07_18.md`, so the old date is now pre-launch; 2023-06-01 is post-launch
+  under BOTH old+new dates → safe for pinned-wheel CI too). (2) `test_derive_instrument_id::test_tradfi_equity` — expects
+  `XNAS:EQUITY:AAPL` but my editable instruments-service sibling (in-sync w/ origin, 0/0, HEAD 4b4b9a7d) produces
+  `AAPL-USD` from an UNRELEASED committed change; UTL CI uses the PINNED IS wheel (produces `AAPL`) → green. **This test
+  is NOT safely fixable by me** — changing it to `AAPL-USD` would break the pinned-wheel CI; it self-resolves when the
+  `-USD` IS wheel releases + the owning slot updates it. **My launch-date fix is UNCOMMITTED in the UTL tree (durable).**
+  **RESUME RECIPE for the loop:** (a) `cd unified-trading-library && bash scripts/quality-gates.sh --no-fix` — if the
+  ONLY failure is `test_derive_instrument_id` (editable-sibling churn), re-check periodically; when it greens (IS wheel
+  released / test updated by its owner), (b) quickmerge the 6 files + `tests/unit/test_instruments_catalog_reader.py`
+  (7 total, `--skip-preflight`), (c) then the leaf yaml/code ships (deployment-service `configs/cloud-providers.yaml`;
+  UAC `unified_api_contracts/config/cloud-providers.yaml`; features-service; deployment-api
+  `routes/batch_config_utils.py` ONLY; ml-service; strategy-service), (d) BQ re-mount + consolidator + redeploy+verify +
+  TF-state import. Do NOT `--no-verify`-ship over the derive test (it's a real behavior fork for the pinned wheel).

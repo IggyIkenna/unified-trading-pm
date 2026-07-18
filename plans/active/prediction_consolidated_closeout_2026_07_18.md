@@ -209,12 +209,16 @@ fixture-linked before MVP backfill.
 
 ### A2 — Instrument-id / underlying / CQG writers converge (fold: canonical-identity migration)
 
-- [ ] [BACKEND] P0. **Finish the prediction canonical-identity migration (4 open of 8)** — adapter-level `underlying`
-      from `classify_*_to_canonical_group`, materialise `canonical_instrument_id` from `cross_venue_mapping`, and align
-      the Prediction sports-fixture key with the Sports asset group's `build_fixture_id()`.
-      `prediction_canonical_identity_migration_2026_07_08.md`. **This is the Phase-E Leg-1 seam** — the
-      sports-fixture-key alignment todo here is exactly what Phase E extends to Kalshi + `af_fixture_id`. (repos:
-      instruments-service, unified-api-contracts)
+- [ ] [BACKEND] P0. **Finish the prediction canonical-identity migration — now 5/8 done (slot-2 verified 2026-07-18).**
+      Shipped: todos 1/3/4/5 (`instruments-service@0d0c3742` — adapter `underlying` from
+      `classify_*_to_canonical_group`, cross-venue `canonical_instrument_id`, titles-map decision, Polymarket sports
+      `build_fixture_id`) + todo 6 as VERIFY (`unified-trading-pm@16272205a` — downstream `instrument_id` uniqueness
+      SAFE, venue embedded by construction). **3 DEFERRED (not prediction-specific-file):** todo 2 = full
+      `prod/catalog.parquet` regen (prod-GCS operational run, gated on the in-flight shared canonical migration so it
+      doesn't bake transitional ids); todo 7 = `gcs_paths.py` bucket-abbreviation flip (SHARED UAC file + gated on MTDS
+      `migrate_prediction_to_pred_prd_v9.py`); todo 8 = MDPS UAC-pin verify (market-data-processing-service repo, its CI
+      catches the drift). Source: `prediction_canonical_identity_migration_2026_07_08.md`. **Phase-E Leg-1 seam** = todo
+      5 (done Polymarket; Kalshi extended in Phase E). (repos: instruments-service, unified-api-contracts)
 - [ ] [BACKEND] P1. **Route every prediction id/underlying/CQG writer through the shared canonical builder + a QG that
       fails a non-canonical prediction `instrument_id`/`canonical_question_group` on write** — re-drift prevention, so
       new writes can't reintroduce the dupes A0 enumerates. (repos: instruments-service, market-tick-data-service,
@@ -378,6 +382,15 @@ fixture-linked before MVP backfill.
       exchange lay (exclude from back-lay arbs; include in 3-way with exchange_meta validation); keep the honest gate
       that a real two-sided book must exist on BOTH venues before emitting an arb row.
       `codex/04-architecture/cross-venue-prediction-arb-detection.md`. (repos: features-service)
+- [ ] [BACKEND] P2. **Fix venue-derivation for prediction/sports `instrument_id`s in execution-service** (finding,
+      slot-2 2026-07-18).
+      `execution-service/execution_service/validation/instrument_format.py::get_venue_from_instrument_id()` returns
+      `instrument_id.split(":")[0]` — correct for `VENUE:TYPE:SYMBOL` (CeFi/DeFi + venue-first prediction ids like
+      `KALSHI:PREDICTION_MARKET:…`) but WRONG for TYPE-first sports/prediction ids (`FOOTBALL:POLYMARKET:…` →
+      "FOOTBALL"; `PREDICTION:KALSHI:…` → "PREDICTION"). Directly affects Phase-E arb venue derivation. Possibly
+      not-yet-triggered (prediction execution wiring TBD). Cross-repo → execution-service owner: verify the trigger, fix
+      at the derivation site (branch on TYPE-first vs venue-first, or use the UAC venue parser). (repos:
+      execution-service)
 
 ## Codex SSOTs (read before touching a phase)
 
@@ -492,3 +505,38 @@ fixture-linked before MVP backfill.
     QG-green + quickmerge) → then Phase-B prediction migration (own drain window) → C/D/E. Operator-decision to unblock
     §5: does a BATCH manifest row count as satisfied by LIVE-only object evidence? (A: yes, union batch+live for the
     cell [REC — CF-12 batch=live symmetry]; B: no, BATCH tracks batch-path completeness only; Other).
+
+- **2026-07-18 (slot-2, autonomous tick 3) — operator left 2h (/autonomous, "prediction-specific files only"); fanned
+  out sub-agents; §6 verified already-fixed; INDEX re-added.**
+  - **§6 (KALSHI→polymarket_clob provenance mislabel) — CODE already RESOLVED** by `market-tick-data-service@3397e7ae`
+    ("rebuild_prediction_manifest venue-resolves bundle pipeline_mode/source per-venue"). Verified INDEPENDENTLY (git
+    log
+    - current write site L543-560 uses `derive_pipeline_mode_for_row(venue,…)`), NOT trusting the §6 sub-agent — which
+      died on an API error after reaching the same conclusion, leaving ZERO uncommitted MTDS changes. Annotated the
+      issue doc §6 CODE-RESOLVED; the ~11,988 historical mislabeled rows self-correct on the next rebuild (held Phase-B
+      DATA step, not a code task). §6 code side done.
+  - **INDEX `### Prediction` re-added** — my entry had been dropped from the committed tree by a rebase (heavy
+    concurrent INDEX churn from other slots' verify-rerun-2 syncs); re-committed to make it durable.
+  - **A2 sub-agent (IS `adapters/prediction/**` + UAC `canonical/domain/predictions/**`) still running** — will
+    verify/journal/flip its shipped items on completion, then fan out A4 (fixture-attribute writers) + E2 (Kalshi soccer
+    team registry).
+  - **Method note:** sub-agent code-ships are adversarially verified (git log + code read) before I flip anything — a
+    dead/incomplete agent's claim is never taken on trust.
+
+- **2026-07-18 (slot-2, autonomous tick 4) — A2 sweep verified + accepted; exec-service finding captured; A4
+  dispatched.**
+  - **A2 (prediction canonical-identity) verified & accepted.** Adversarially confirmed: todo 6 flip is real
+    (`unified-trading-pm@16272205a` — "downstream instrument_id uniqueness VERIFIED SAFE, venue embedded by
+    construction"), the sub-agent left ZERO uncommitted mess and did NOT touch this plan, and todos 1/3/4/5 are
+    pre-shipped (`instruments-service@0d0c3742` ancestor of HEAD). Identity migration now **5/8**; the 3 remaining
+    (catalog regen / `gcs_paths.py` shared file / MDPS repo) are genuinely NOT prediction-specific-file → deferred with
+    reasons (A2 item updated above). No QG needed (IS/UAC only READ; pure PM flip).
+  - **NEW cross-repo data-correctness finding (captured as Phase-E P2, flagged for execution-service owner):**
+    `execution-service .../validation/instrument_format.py::get_venue_from_instrument_id()` = `split(":")[0]`
+    mis-derives venue for TYPE-first prediction/sports ids (`FOOTBALL:POLYMARKET:…`→"FOOTBALL",
+    `PREDICTION:KALSHI:…`→"PREDICTION"). Verified by reading the function (L100-102) + the id shapes (market_state.py
+    L401 `{venue}:PREDICTION:{ticker}` venue-first vs the type-first sports/prediction ids). Relevant to Phase-E arb
+    venue derivation; possibly not-yet-triggered.
+  - **A4 (Phase-E Leg-1 fixture-attribute writers) dispatched** — scope-first sub-agent: implement the
+    prediction-specific-file-safe increment (Polymarket `af_fixture_id` resolve + honest Kalshi absence stamping), DEFER
+    - report any shared-UAC-schema requirement. Will verify + flip on completion.

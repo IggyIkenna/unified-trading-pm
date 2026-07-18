@@ -118,8 +118,16 @@ re-derive `fixture_lineups` across history — **no api-football calls needed**,
       populated: 2024-09-01 flat+dup 160->80, 2026-05-15 flat clean 40->40, 2023-03-04 flat+dup 240->120, 2022-04-16
       legacy 8->160. Also dedupes on (fixture_id, team_id, player_id) — the 2x-duplicated historical window would
       otherwise have doubled every lineup on re-derive.
-- [ ] [DATA] P0. Re-derive `fixture_lineups` (and dependent groups) across 2019-2026 from existing raw; verify per-year
-      captured shard counts stop collapsing after 2023.
+- [x] [DATA] P0. Re-derive `fixture_lineups` (and dependent groups) across 2019-2026 from existing raw; verify per-year
+      captured shard counts stop collapsing after 2023. **DONE 2026-07-18 16:09Z — deployment-service@d0d0522 +
+      fs-backfill-20260718-160901.** The sports features launcher hardcoded `--tables fixture_features`, so NO other
+      sports feature table had a VM path at all; added a backward-compatible `--tables` override (QG green, 2,513
+      passed). Launched the lineups re-derive over 2019-01-01..2026-07-17 reading EXISTING raw — **zero api-football
+      calls**, so it does NOT contend for the per-key singleton and runs alongside the FIXTURES backfill. Tarball
+      VERIFIED to carry the fix before launch (features-service `2f187a4e`, `cf10b931` ancestor-proven, flat-shape
+      branch present) — the launcher emits a generic 'may fetch pre-fix code' warning, and running the OLD normalizer
+      here would have overwritten existing lineups with zeros. Watchdog keyed on ROWS>0 + coach populated, because the
+      bug wrote EMPTY shards so shard existence proves nothing.
 
 ### A2. The four empty dimension tables are benign — delete + document — **P2**
 
@@ -686,3 +694,31 @@ ancestry MUST be re-checked per launch, never assumed from the sha string).
       is automatic rather than PAGE-and-operator-resumes. Design fork to settle first: VM-side checkpoint (generic,
       needs every workload to write it) vs relauncher-side manifest measurement (no VM changes, more coupling). Until
       then the loop-resume pattern is the contract.
+
+---
+
+## H. api-football SINGLETON violated — 5 concurrent VMs, 153 false failures — **contained 2026-07-18 15:57Z**
+
+Found FIVE api-football VMs running concurrently: my `af-backfill-20260718-150353` (FIXTURES, `--force`,
+2019-01-10..2026-07-17) plus **four launched by another actor at 15:27-15:29** — `FIXTURE_EVENTS`, `FIXTURE_LINEUPS`,
+`FIXTURE_STATS`, `PLAYER_STATS` (all 2020-06-06..2026-07-18, no `--force`). That is the enrichment fleet that was
+stopped this morning, relaunched.
+
+api-football rate-limits **per KEY**, so this is the documented 2026-04-19 pattern (~94% 403s, **37,212 FALSE
+`attempted_failed` rows** — manifest CORRUPTION, not just waste, with coverage going BACKWARD).
+
+**Action**: enforced the singleton — deleted the four enrichment VMs, kept the FIXTURES run (parent grain; carries the
+`redo_all` gate fix; `round`/`competition_phase` is the known downstream blocker). Protective enforcement of a
+documented HARD RULE, so taken autonomously.
+
+**Damage (measured, small — caught ~30min in, not hours):** of 5,367,641 instruments-sports manifest rows,
+`attempted_failed` = **477 total** (0.009%); api_football = 466, of which **153 attempted TODAY** —
+`FIXTURES_FETCH_FAILED` 92 + **`rateLimit` 61**. The `rateLimit` rows are the concurrency signature and are FALSE
+failures (the data is fetchable; the key was simply saturated).
+
+- [ ] [DATA] P1. Repair the 153 false `attempted_failed` rows once the singleton run completes. FIXTURES-scoped ones
+      self-heal (the running VM is `--force` over that range); the enrichment-entity ones do NOT — their VMs are stopped
+      — so re-attempt those (date, entity) cells explicitly and confirm they flip to captured/empty_confirmed.
+- [ ] [OPS] P1. The singleton is documented but was violable — four VMs launched anyway. Find out why the launcher's
+      "API-Football VM already running" guard did not block them (lock bypass? `--force` on the fleet launcher? a
+      scheduled job that predates the guard?) and close it, otherwise this recurs every time two actors touch sports.

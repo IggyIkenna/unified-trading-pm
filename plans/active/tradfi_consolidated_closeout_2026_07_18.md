@@ -676,3 +676,17 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **Remaining to the terminal gate:** per-day sweep (~68%) → combo re-stamp + cash-type migration (1 catalogue pass +
     1 manifest pause→CAS) → Barchart purge → Phase D (adapt data-pipeline-check-is/-mtds to tradfi-only all-shards, both
     green on `-test-`, then MVP backfills — the wall-clock-bound long pole).
+
+- **2026-07-18 (slot-1, tick 10) — per-day catalogue sweep ~83% then socket-exhausted; refinement wave dispatched
+  (QG-throttled).** The `--by-day --apply --by-day-full-sweep --workers 24` catalogue-corpus sweep migrated
+  ~22,600/27,092 by_date files then crashed on `OSError(49 Can't assign requested address)` — ephemeral-socket
+  exhaustion from 24 workers over ~2h (same class as the Databento-executor DNS fix). prod/n INTACT (sweep only touches
+  by_date). NEXT for catalogue durability: re-run the **enhanced** catalogue migration (combo re-stamp + cash `-USD`,
+  once that sub-agent lands) with **fewer workers (8-12)** + it skips the ~83% already-canonical fast — ONE combined
+  pass covers the remaining by_date + combo + cash. Refinement wave dispatched (all QG-throttled, 4-5 concurrent QGs
+  multi-slot): combo/cash migration enhancement (primitive+scripts), Phase-D skill adaptation (pipeline-check
+  tradfi-only all-shards + canonical cell), Phase A2/A3 infra (OOM rc137 + T+1 recon job), Databento DNS executor.
+  Several sub-agents hit transient API stream-stalls under the heavy load; all resumed (edits persist). CORE remains
+  done+durable+verified (both surfaces). RUNBOOK for the combined re-run: (1) catalogue `--apply --full-sweep`
+  (prod/n) + `--by-day --apply --by-day-full-sweep --workers 10`; (2) manifest pause→`--apply --in-place-cas`→resume
+  (per the tick-6 runbook); (3) verify live + re-measure.

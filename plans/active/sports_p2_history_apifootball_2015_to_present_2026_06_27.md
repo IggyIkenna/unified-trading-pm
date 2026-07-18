@@ -2191,3 +2191,135 @@ toward "this relaunch may survive") but does not itself move the gate. Not flipp
 same resume criteria as slot-4's entry: (a) `zombie_watchdog_relaunch_reaped_live_backfills-001` ships, or (b) the fleet
 has been running long enough (past the 60-min shard-staleness window, i.e. VMs older than ~16:27-16:29Z) for a fresh
 `read_availability_index` gate read to be informative.
+
+### 2026-07-18T15:49Z — data_engineering slot-7 (Todo `-001` — 13th bounce, precondition (a) newly met but found the fix is dormant, filed a new time-sensitive P0)
+
+Dispatched onto `-001`. Fresh-pulled all slot repos clean, no dirty state inherited.
+
+**Precondition (a) status changed since slot-5's check (~6 min prior)**: `GET /api/backlog` now shows
+`zombie_watchdog_relaunch_reaped_live_backfills-001` `status: done`, `done_sha: 5a5a504` — the widened `(15.0, 180.0)`
+af-backfill-* threshold fix shipped at 15:43:37Z (slot-3). Read the actual diff (`deployment-service@5a5a504` —
+`scripts/vm/vm_zombie_watchdog.py`): confirmed it does exactly what the issue doc's todo asked (heartbeat 10→15min
+matching global default, shard 60→180min for headroom), with the matching unit test updated and full QG green per the
+commit's own note.
+
+**But checked whether this fix actually protects the live fleet, and it does not — found a second, undocumented gap**:
+`gcloud compute instances list --filter="name~vm-zombie-watchdog"` shows the running daemon is
+`vm-zombie-watchdog-20260623-171612`, booted **2026-06-23** — three and a half weeks before the fix. Per
+`launch-vm-zombie-watchdog.sh`'s own SSOT comment, the daemon uploads `vm_zombie_watchdog.py` to GCS **once at launch**
+and "never re-fetches mid-loop." So the merged fix is currently DORMANT — the live daemon is still enforcing the OLD
+`(10.0, 60.0)` pair against the 4 relaunched entity VMs (`af-backfill-20260718-15{2725,2753,2818,2852}`, ~20min old at
+this check, still `RUNNING` per a fleet-liveness spot-check). Those VMs hit the OLD 60min shard-staleness mark at
+~16:27-16:29Z — under 40min away at time of writing — so without a daemon relaunch, the fix shipping did NOT actually
+close this bounce loop's root cause.
+
+**Not doing the daemon relaunch myself**: killing/relaunching `vm-zombie-watchdog-*` is a shared, cross-cutting infra
+action (it polls the ENTIRE VM fleet, not just this task), outside `data_engineering` craft scope. Filed a new
+time-sensitive `[INFRA] P0` todo in the issue doc
+(`plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`, "Incident 2 follow-up" section)
+with the exact relaunch recipe + the ~16:27-16:29Z deadline, so an infra-role dispatch (or main agent) can act on it
+before the window closes. Not flipping this checkbox — the enrichment gate itself is still far from met regardless
+(pending counts were ~1900/1925/1893/1172 across the 4 remaining entities as of the last full gate read, 15:20Z;
+untouched this dispatch since a fresh `read_availability_index` this soon after slot-5's check would add no signal).
+`/skip-current-task` — resume this todo once (a) the new daemon-relaunch P0 lands (check the issue doc / backlog for a
+`done_sha` on it) or the fleet is confirmed to have survived past ~16:29Z either way, whichever is observed first.
+
+### 2026-07-18T16:05Z — data_engineering slot-7 (same dispatch, continued) — CORRECTION: root cause was never the watchdog daemon; an agent is manually deleting the fleet, and it happened AGAIN live during this session
+
+**Superseding my own note above 15 minutes later.** Before recommending anyone act on the daemon-relaunch P0, checked
+the daemon's serial console (`gcloud compute instances get-serial-port-output vm-zombie-watchdog-20260623-171612`): it
+has printed `INFO DRY RUN — no VMs killed` on every 5-min sweep continuously through 15:55Z. This daemon has never
+deleted anything — the threshold value is irrelevant. My own P0 was wrong; struck it through in the issue doc.
+
+**Pulled the full audit-log `protoPayload` (not just principalEmail) for all 3 known af-backfill kill clusters**
+(09:18-09:19Z, 12:42-43Z, 13:56-57Z). Every delete call carries
+`callerSuppliedUserAgent: ... agent-name/claude_code ... invocation-id/<uuid> ...` — this is the gcloud CLI's tag for a
+command run from a **Claude Code agent's Bash tool**, not an automated daemon/Cloud-Run job (confirmed by contrast: the
+genuinely-automated `uts-prod-batch-sa` Cloud Run job inserts in the same log stream carry no such tag). Each of the 3
+clusters has a DIFFERENT invocation-id — three separate agent dispatches independently deleting this task's own live
+fleet. Also ruled out `deployment_service.data_pipeline_monitors` (`uts-prod-dp-heartbeat-watcher`/`-exit-code-monitor`
+Cloud Run jobs, 45min auto-kill) via their execution logs at the exact 09:15-09:20Z window: `0 stalled` / `0 non-clean`
+— not the actor either.
+
+**Then it happened a 4th time, live, during this exact investigation**: re-checked the fleet at 16:00Z and all 4
+relaunch VMs (`af-backfill-20260718-15{2725,2753,2818,2852}`) were GONE. Audit log: deleted at 15:58:38Z (+ retried
+15:59:28-30Z), invocation-id `0e43e5cdf12749d698c92a0085ada484`, same `agent-name/claude_code` signature. Checked the
+live backlog: `zombie_watchdog_relaunch_reaped_live_backfills-003` (auto-derived from my own now-superseded P0,
+"relaunch the daemon") is dispatched to **slot-5** — very likely slot-5 tested/diagnosed the daemon fix with a live
+(non-dry-run) `vm_zombie_watchdog.py` invocation or similar and killed the fleet as a side effect. Could not message
+slot-5 directly (worker-to-worker messaging is restricted to main/review/operator only — `POST /api/slots/5/message`
+rejected `from_role: "worker-slot-7"`), so filed `BLK-a75d72cc` asking main to message slot-5 to stop before any further
+live zombie-watchdog testing.
+
+**Most plausible mechanism** (flagged as plausible, not proven): `launch-api-football-backfill-vm.sh`'s singleton-lock
+refusal path prints a ready-to-copy `Stop: gcloud compute instances delete $EXISTING --zone=$ZONE --quiet` suggestion
+whenever a second concurrent af-backfill/af-audit VM is attempted without `--skip-lock`/`--force` — a rushed dispatch
+could execute that line against what's actually this task's own live fleet member rather than a genuinely stale
+lock-holder. Not confirmed via audit correlation (the pre-refusal `instances.list` check isn't itself logged the same
+way), offered honestly as a hypothesis, not a closed case.
+
+**Filed the full correction + 3 new todos** in the issue doc
+(`plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`, "Incident 2 correction" section):
+`[INFRA] P1` harden the launcher's refusal message (remove/guard the raw Stop suggestion), `[PROCESS] P1` add an
+explicit no-delete-without-verifying-staleness guardrail to `data_engineering.md`/`RULES.md`, `[DATA] P1` audit other
+bounced tasks for the same agent-deleted-own-VM signature.
+
+**Not flipping this checkbox** — gate still far from met (pending counts unchanged from the last full read), and the
+fleet that would have made progress toward it was just deleted a 4th time. `/skip-current-task` — resume once (a) the 3
+new todos above land, and (b) a fresh relaunch survives long enough for a genuine gate re-read. Given the severity
+(real-time destructive agent action, 4 recurrences in ~7h, cross-cutting to any task using this launcher pattern), this
+is a big finding — escalated via `BLK-a75d72cc` in addition to the issue-doc todos.
+
+### 2026-07-18T16:20Z — data_engineering slot-9 (Todo `-001` — 14th+ bounce, confirmed BLK-a75d72cc resolved, found real progress was hidden in unconsolidated per-VM shards, relaunched with `--skip-lock`)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean, no dirty state inherited (also recovered/verified a
+stranded QG-passed commit from an earlier killed session on this slot's `features-service` — already independently
+shipped to LDR at `2686f169`, nothing further needed there).
+
+**Checked `BLK-a75d72cc` status first** (slot-7's live-4th-kill escalation): `blocked_answered` — main messaged slot-5
+to stop before any further live (non-dry-run) zombie-watchdog testing;
+`zombie_watchdog_relaunch_reaped_live_backfills-003` (the superseded "relaunch the daemon" todo slot-5 was on) now shows
+`status: cancelled` in the live backlog. The immediate live threat is resolved. Of the 3 new Incident-2-correction
+todos: `-005` (data_engineering.md/RULES.md guardrail) `dispatched` to slot 2 (in progress); `-004` (harden launcher's
+Stop-suggestion) and `-006` (audit other bounced tasks) still `queued`, not yet picked up.
+
+**Confirmed the 4th kill slot-7 found is still the current state** — `gcloud compute instances list` (non-snap SDK):
+zero `af-backfill-20260718-152*` VMs remain (only the unrelated `af-backfill-20260718-150353` FIXTURES force-backfill
+VM, out of this todo's scope). No new (5th) kill happened between slot-7's check and this one.
+
+**New finding: re-ran the gate query and got numbers IDENTICAL to slot-8's PRE-relaunch read (15:20Z)** — FIXTURE_EVENTS
+1935, FIXTURE_LINEUPS 1925, FIXTURE_STATS 1893, PLAYER_STATS 1172, INJURIES 0 pending. At first glance this reads as
+"the killed 15:27-15:58 relaunch made zero progress" — but that's wrong. Read the 4 killed VMs' own per-VM manifest
+shards directly (`_index/per_vm/af-backfill-20260718-15{2725,2753,2818,2852}.parquet` via `gcsfs`, bypassing the
+consolidated index): each contains hundreds of REAL rows written during their ~31min of life before the kill — EVENTS
+2603 rows (176 `captured` + 2427 `empty_confirmed`), LINEUPS 2862 (191 + 2671), STATS 2659 (94 + 2565), PLAYER_STATS
+3010 (84 + 2926). This is genuine work product sitting in per-VM shards awaiting the manifest consolidator's next merge
+cycle — `read_availability_index` reads the CONSOLIDATED index only, so a kill mid-run doesn't erase progress, it just
+delays when that progress becomes visible in the gate query. Worth flagging for future dispatches on this todo: an
+unchanged gate reading after a relaunch does NOT by itself mean "zero progress, wasted compute" — check the per-VM
+shards before concluding that.
+
+**Independently verified tarball freshness** (this slot's `gsutil` has the same known-broken credential store as prior
+sessions — `Your credentials are invalid` even on the non-snap SDK): `gcloud storage cat` on
+`code/{repo}-code.manifest.json` for all 4 relevant repos (instruments-service, unified-api-contracts,
+unified-trading-library, deployment-service) — all 4 tarballs were refreshed 16:14-16:15Z (minutes before this check,
+likely a routine cron or a sibling slot's push) and their `commit_sha` matches this slot's local `git rev-parse HEAD`
+exactly for all 4 repos. Safe to launch on.
+
+**Relaunched the 4 residual entities** via
+`deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity <ENTITY> 2020-06-06 2026-07-18`
+— deliberately used `--skip-lock` from the start (not `--force`, no `redo_all`) specifically so the launch NEVER hits
+the singleton-lock refusal path at all (the pre-existing unrelated `af-backfill-20260718-150353` FIXTURES VM would
+otherwise trigger that refusal and print the raw `Stop: gcloud compute instances delete ...` suggestion slot-7's
+investigation identified as the likely self-inflicted-harm vector — avoided entirely by not going down that code path in
+the first place, not by exercising restraint after seeing the message). New fleet: `af-backfill-20260718-161608`
+FIXTURE_EVENTS · `-161641` FIXTURE_LINEUPS · `-161712` FIXTURE_STATS · `-161740` PLAYER_STATS, all
+`2020-06-06..2026-07-18`. All 4 verified `RUNNING` ~10s after the last launch (no fire-and-forget). Did NOT
+touch/inspect/delete any other VM in the fleet (the unrelated FIXTURES VM `-150353` was left alone, per craft-scope +
+the guardrail this incident is in the process of formalizing).
+
+**Not flipping this checkbox** — gate still far from met even accounting for the unconsolidated per-VM progress (rough
+order of magnitude: a few thousand rows against ~6,925 total pending across the 4 entities). `/skip-current-task` after
+this ships. Resume-criteria unchanged from slot-7's note: (a) the 2 remaining Incident-2 todos (`-004`, `-006`) land,
+and (b) this relaunch survives long enough (or the manifest consolidator runs) for a genuinely informative gate re-read
+— check per-VM shards too, not just the consolidated index, per the finding above.
