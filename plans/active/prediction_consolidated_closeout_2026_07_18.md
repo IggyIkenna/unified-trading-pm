@@ -492,3 +492,20 @@ fixture-linked before MVP backfill.
     QG-green + quickmerge) → then Phase-B prediction migration (own drain window) → C/D/E. Operator-decision to unblock
     §5: does a BATCH manifest row count as satisfied by LIVE-only object evidence? (A: yes, union batch+live for the
     cell [REC — CF-12 batch=live symmetry]; B: no, BATCH tracks batch-path completeness only; Other).
+
+- **2026-07-18 (slot-2, autonomous tick 3) — operator left 2h (/autonomous, "prediction-specific files only"); fanned
+  out sub-agents; §6 verified already-fixed; INDEX re-added.**
+  - **§6 (KALSHI→polymarket_clob provenance mislabel) — CODE already RESOLVED** by `market-tick-data-service@3397e7ae`
+    ("rebuild_prediction_manifest venue-resolves bundle pipeline_mode/source per-venue"). Verified INDEPENDENTLY (git
+    log
+    - current write site L543-560 uses `derive_pipeline_mode_for_row(venue,…)`), NOT trusting the §6 sub-agent — which
+      died on an API error after reaching the same conclusion, leaving ZERO uncommitted MTDS changes. Annotated the
+      issue doc §6 CODE-RESOLVED; the ~11,988 historical mislabeled rows self-correct on the next rebuild (held Phase-B
+      DATA step, not a code task). §6 code side done.
+  - **INDEX `### Prediction` re-added** — my entry had been dropped from the committed tree by a rebase (heavy
+    concurrent INDEX churn from other slots' verify-rerun-2 syncs); re-committed to make it durable.
+  - **A2 sub-agent (IS `adapters/prediction/**` + UAC `canonical/domain/predictions/**`) still running** — will
+    verify/journal/flip its shipped items on completion, then fan out A4 (fixture-attribute writers) + E2 (Kalshi soccer
+    team registry).
+  - **Method note:** sub-agent code-ships are adversarially verified (git log + code read) before I flip anything — a
+    dead/incomplete agent's claim is never taken on trust.

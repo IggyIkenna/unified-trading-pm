@@ -184,3 +184,9 @@ cross-AG regression rigor as the original bundle-atom fix)**:
 6. **[CODE, P2] Root-cause the KALSHI→`batch_polymarket_clob`/`polymarket_clob` provenance mislabel** in
    `rebuild_prediction_manifest.py`'s writer (a stale/carried-over loop variable is the leading hypothesis given the
    clustered `written_at`); fix at the write site, not via a manifest patch.
+   - ✅ **CODE-RESOLVED — `market-tick-data-service@3397e7ae`** ("rebuild_prediction_manifest venue-resolves bundle
+     pipeline_mode/source per-venue (was hardcoding POLYMARKET, mis-stamping Kalshi)"). Current write site stamps
+     `derive_pipeline_mode_for_row(venue, "prediction", …)` → Polymarket→`polymarket_clob`, Kalshi→`kalshi` (rebuild
+     script L543-560). Verified live 2026-07-18 (slot-2, prediction close-out §6, independent git-log + code read). The
+     ~11,988 HISTORICAL mislabeled rows self-correct on the next `rebuild_prediction_manifest.py` run — that DATA
+     re-emit is part of the held Phase-B prediction migration, not a separate code task.

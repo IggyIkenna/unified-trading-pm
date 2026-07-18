@@ -187,6 +187,16 @@ current work.
   which existed undetected on HEAD because zero UTL validators fire at raw-data write time. 3 repos (UTL +
   instruments-service + PM).
 
+### Prediction
+
+- [prediction_consolidated_closeout_2026_07_18.md](prediction_consolidated_closeout_2026_07_18.md) — One-pass prediction
+  close-out aggregating every open prediction + prediction-touching IS/MTDS plan/issue: Phase A code → B migrations
+  (manifest/catalogue/CQG canonicalisation + enumeration-driven dedupe) → C data-status/honest-coverage (RE-ADD the
+  removed dimensions-enumeration view) → D re-smoke-test with `data-pipeline-check-{is,mtds}` adapted to prediction
+  against `-test-` buckets → MVP-backfill-ready; **+ Phase E** football (soccer) cross-venue arb enablement (thread
+  `af_fixture_id` onto Polymarket + Kalshi soccer, ~0% team-alias gap, unify the two disconnected arb paths).
+  `parent_epic: predictions_master`.
+
 ### Data & Testing
 
 - [instruments_to_100pct_eod_2026_05_04.md](instruments_to_100pct_eod_2026_05_04.md) — instruments-service to ≥99%
