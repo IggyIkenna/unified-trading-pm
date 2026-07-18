@@ -144,11 +144,22 @@ residual. Mitigated this dispatch by relaunching the 4 residual entities
       `test_vm_zombie_watchdog.py::TestPerPrefixIdleThresholds::test_backfill_prefix_gets_widened_threshold` to match;
       219/219 unit tests + full `quality-gates.sh` green on the shipped SHA. Full campaign-mode/RPM-keyed dynamic
       threshold (the "preferred" alternative) is NOT done — left to §3 / P2 below if the widened static pair recurs.
-- [ ] [INFRA] P2. **Add a heartbeat-sidecar reliability check** — cross-reference whether the killed VMs' heartbeat
+- [x] ✅ [INFRA] P2. **Add a heartbeat-sidecar reliability check** — cross-reference whether the killed VMs' heartbeat
       blobs were genuinely stale for >10min or whether the sidecar (`setup-data-pipeline-vm.sh` lines 816-833) is itself
       intermittently failing to start/write; the 2026-07-18 heartbeat blob for `af-backfill-20260717-151237` shows a
       write only 16s before the delete call, consistent with either a last-second race or a sidecar gap. (repo:
-      deployment-service)
+      deployment-service) — **deployment-service@e777ed3**: new `heartbeat_sidecar_reliability.py` module
+      (`classify_heartbeat_reliability` pure core + `audit_killed_vm(s)` GCS sweep, reusing a new
+      `_gcs.heartbeat_blob_write_epoch` raw-write-instant reader — the durable `vm-heartbeat/{vm}.txt` blob has no
+      delete lifecycle so it's still readable post-kill) classifies each (killed VM, kill_time) pair as
+      `genuinely_stale` (blob age at kill time >= the watchdog's own per-prefix threshold — kill was justified),
+      `reliability_gap_suspected` (blob younger than threshold at kill time — last-second sweep/kill race OR an
+      intermittently-failing sidecar), or `unknown_no_blob`. Standalone `heartbeat_sidecar_reliability_cli.py` (single
+      `--vm-name`/`--kill-time` or batch `--killed-vms-json`) resolves the SAME per-prefix threshold the watchdog
+      applies via a deferred import of `vm_zombie_watchdog` (mirrors `cli.py._zombie_watchdog`), mirroring
+      `check_vm.py`/`check_vm_cli.py`'s always-dry, never-alerts conventions. 13 new unit tests (pure classification +
+      GCS-epoch math + CLI exit-code branching, `FakeStorage`-injected, credential-free); full `quality-gates.sh` green
+      on the shipped SHA.
 
 ## Incident 2 follow-up — 2026-07-18T15:49Z (the shipped fix is INERT until the daemon is relaunched)
 
