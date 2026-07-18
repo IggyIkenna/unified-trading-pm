@@ -712,11 +712,38 @@ backfill for this prefix. No code fix needed for the delete pattern itself.
 (`mtds-lending-indices-20260712-112557`) terminated via OOM (`EXIT_STATUS=137`) on `e2-standard-4` (16GB). A genuine
 latent reliability gap for long/full-history `mtds-lending-indices` runs.
 
-- [ ] [INFRA] P3. **Investigate/fix OOM (`EXIT_STATUS=137`, Linux OOM-killer) on long-running `mtds-lending-indices`
+- [x] ✅ [INFRA] P3. **Investigate/fix OOM (`EXIT_STATUS=137`, Linux OOM-killer) on long-running `mtds-lending-indices`
       full-history backfills** — confirmed on `mtds-lending-indices-20260712-112557` (ran ~29h on `e2-standard-4`/16GB
       before the collector process was kernel-killed; the VM's own `VM_SHUTDOWN_ON_COMPLETION` wrapper still ran its
       fail-safe self-delete cleanly, so no VM leaked, but the backfill work itself was lost mid-run). Check for an
       unbounded in-memory accumulation in the lending-indices collector
       (`market_tick_data_service --operation     collect-lending-indices`, e.g. buffering all rows before the periodic
       manifest-shard flush instead of streaming), or simply bump the launcher's machine type for full-history
-      invocations. (repo: market-tick-data-service, deployment-service)
+      invocations. (repo: market-tick-data-service, deployment-service) — **Investigated both candidates**: (1) the
+      lending-indices collector itself already streams/flushes per-`(protocol, chain)` shard
+      (`market_tick_data_service/cli/handlers/lending_indices_handler.py::_write_protocol_chain_rows` +
+      `_collect_solana_lending`, each shard's DataFrame is serialized+uploaded to GCS and goes out of scope before the
+      next shard — no per-run raw-row accumulation); (2) the launcher had ZERO span-aware machine sizing — a flat
+      `e2-standard-4`/16GB regardless of a 1-day vs 3-6-year window. Shipped the (b) fix — the concrete, low-risk,
+      correctly-scoped one — as `deployment-service@55c40ad`: `launch-mtds-lending-indices-backfill-vm.sh` now computes
+      the requested date span and defaults to `e2-standard-8` (32GB) for windows >30 days (single-day/30-day windows
+      unchanged at `e2-standard-4`); `MACHINE_TYPE` env var still overrides either default; the resolved machine type +
+      span are echoed at launch time (no more launching blind on sizing). QG green (148s), verified the date-span
+      arithmetic in isolation (single-day→0, exactly-30d→30 i.e. stays on the small default, full-history
+      2022→2026→1658d i.e. triggers the bump) before shipping. **Deliberately NOT touched this dispatch** (distinct,
+      shared-library-blast-radius fix, same "deserves its own investigation" reasoning already applied elsewhere in this
+      doc): `unified-trading-library/unified_trading_library/service_framework/io_batch.py::StorageOutput._results`
+      accumulates one small per-day summary dict (bytes, not rows) for the ENTIRE run across every batch-mode service,
+      never cleared — real "hold for entire run, never flush" pattern, but tiny per-entry and used far beyond
+      lending-indices, so not the OOM's likely primary cause and not safe to patch under this narrow todo's scope. Filed
+      as its own follow-up below rather than silently dropped.
+
+- [ ] [DATA] P3. **Defense-in-depth: bound or periodically clear `StorageOutput._results` in the UTL batch framework**
+      (`unified-trading-library/unified_trading_library/service_framework/io_batch.py:69-74`) — found while
+      investigating the `mtds-lending-indices` OOM above (Incident 7 follow-up). `StorageOutput.write()` appends every
+      per-day process-result summary to an in-memory list for the lifetime of a multi-year batch run and never clears
+      it; each entry is a small `{"records": {...}, "total": N}` dict (not raw rows), so this is unlikely to be the sole
+      cause of a 16GB OOM on its own, but it is a genuine unbounded-for-the-whole-run accumulation shared by EVERY
+      batch-mode service (not just lending-indices) — worth fixing as defense-in-depth (e.g. drop/summarize instead of
+      keep-forever, or cap+ring-buffer) once someone scopes the change against its full blast radius (used broadly
+      across UTL's `service_framework`, not a single-repo change). (repo: unified-trading-library)
