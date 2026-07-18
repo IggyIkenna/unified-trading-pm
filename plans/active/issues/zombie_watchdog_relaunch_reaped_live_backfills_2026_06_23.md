@@ -183,13 +183,92 @@ likely why the fix landing didn't itself resolve the bounce loop — the daemon 
 (`data_engineering.md` § does_not: "infra/VM launches (→ infra)"). Filing as the actionable next step, P0 given the
 ~38min-remaining window at time of writing:
 
-- [ ] [INFRA] P0. **Relaunch the `vm-zombie-watchdog` daemon VM to pick up the shipped threshold fix
-      (`deployment-service@5a5a504`)** — the running daemon (`vm-zombie-watchdog-20260623-171612`, booted 2026-06-23)
-      only uploads its script to GCS at launch time and never re-fetches mid-loop, so it is still enforcing the OLD
-      `(10.0, 60.0)` af-backfill-* thresholds despite the fix being merged. Recipe:
-      `gcloud compute instances delete vm-zombie-watchdog-20260623-171612 --zone asia-northeast1-c --quiet` then
-      `bash scripts/vm/launch-vm-zombie-watchdog.sh` (re-uploads the fixed `.py`, singleton lock ensures no overlap;
-      verify RUNNING within 60s — no fire-and-forget). Time-sensitive: the live
-      `af-backfill-20260718-15{2725,2753,2818,2852}` fleet (from `sports_p2_history_apifootball_2015_to_present-001`)
-      hits the OLD 60min shard-staleness mark around ~2026-07-18T16:27-16:29Z — relaunching the daemon before then is
-      what actually makes the already-shipped fix take effect. (repo: deployment-service)
+- [x] ~~[INFRA] P0. Relaunch the `vm-zombie-watchdog` daemon VM to pick up the shipped threshold fix~~ **SUPERSEDED
+      2026-07-18T16:0xZ (same dispatch, ~10min later) — this hypothesis was WRONG, see the correction below.** Read the
+      daemon's own serial console output
+      (`gcloud compute instances get-serial-port-output     vm-zombie-watchdog-20260623-171612`) before acting on the
+      relaunch recommendation above, and it has been printing `INFO DRY RUN — no VMs killed` on EVERY 5-min sweep
+      continuously through 15:55Z — this daemon is not, and never was, deleting anything, threshold value irrelevant.
+      Did NOT execute the relaunch (good thing — would have wasted effort on a red herring and briefly gapped the whole
+      fleet's monitoring for nothing). Superseded by the actual finding below.
+
+## Incident 2 correction — 2026-07-18T16:00Z (the actor was an AGENT running manual `gcloud` deletes, NOT any automated watchdog/daemon)
+
+**This corrects both the original Incident 2 root-cause (§ above, blaming `vm_zombie_watchdog.py`'s
+`PREFIX_IDLE_THRESHOLDS`) and my own immediately-preceding (and now-struck-through) "relaunch the daemon" hypothesis.**
+Both assumed an automated reaper was the actor. Neither is what the evidence shows.
+
+**Evidence**: pulled the FULL `protoPayload` (not just `principalEmail`) for the `v1.compute.instances.delete` calls
+against all 3 known af-backfill kill clusters (`af-backfill-20260717-15{1237,1335,1405,1433}` @ 09:18-09:19Z,
+`af-backfill-20260718-092543` @ 12:42-12:43Z, `af-backfill-20260718-124341` @ 13:56-13:57Z). Every single one carries:
+
+```
+callerSuppliedUserAgent: google-cloud-sdk gcloud/572.0.0 agent-name/claude_code command/gcloud.compute.instances.delete
+  invocation-id/<uuid> ... client-os/LINUX ... (Linux 6.17.0-1019-aws)
+```
+
+`agent-name/claude_code` is the gcloud CLI's user-agent tag for a command run from a **Claude Code agent session's Bash
+tool** — not a cron/Cloud-Run/GCE-startup-script daemon (those carry a plain `google-cloud-sdk gcloud/...` UA with no
+`agent-name` tag; compare the genuinely-automated `uts-prod-batch-sa` / `unified-trading-sa` Cloud Run job inserts
+elsewhere in the same log stream, which have no such tag). **Each of the 3 kill clusters has a DIFFERENT
+`invocation-id`** — three separate agent dispatches, each independently running a manual
+`gcloud compute instances delete` against this task's OWN live fleet, not one recurring daemon bug.
+
+**Ruled out the two actual automated reapers** that exist in this codebase, to be thorough:
+
+1. `vm_zombie_watchdog.py` (the persistent GCE daemon, `vm-zombie-watchdog-20260623-171612`) — confirmed via serial
+   console to be running `--dry-run` continuously since 2026-06-23 (`INFO DRY RUN — no VMs killed` every 5-min sweep,
+   through 2026-07-18T15:55Z). It has never deleted anything in this window — the widened-threshold fix
+   (`deployment-service@5a5a504`) was real and good hygiene but was fixing a mechanism that was not, in fact, the actor.
+2. `deployment_service.data_pipeline_monitors` (`uts-prod-dp-heartbeat-watcher` + `uts-prod-dp-exit-code-monitor` Cloud
+   Run jobs, `DEFAULT_KILL_MINUTES=45.0` auto-kill in `heartbeat_stall_watcher.py`) — checked their execution logs for
+   the exact 09:15-09:20Z window bracketing the first kill cluster: `heartbeat sweep: 3 running, 0 stalled` /
+   `exit-code sweep: 1 terminated, 0 non-clean` — neither found anything to kill at the time.
+
+**Most likely proximate mechanism** (plausible, not fully proven — flagging the distinction honestly): the
+entity-sharded `--fleet-vms` fan-out pattern this task uses hits `launch-api-football-backfill-vm.sh`'s own singleton
+lock (API-Football is rate-limited per-key, so the launcher refuses a second concurrent `af-backfill-*`/`af-audit-*` VM
+without `--skip-lock`/`--force`). That refusal path (`scripts/vm/launch-api-football-backfill-vm.sh` lines ~216-230)
+prints:
+
+```
+ERROR: API-Football VM already running in $ZONE: $EXISTING
+Options:
+  Inspect:   gcloud compute ssh $EXISTING --zone=$ZONE
+  Tail log:  gsutil cat gs://${CODE_BUCKET}/vm-logs/${EXISTING}/run.log
+  Stop:      gcloud compute instances delete $EXISTING --zone=$ZONE --quiet
+  Force:     bash $0 --force ...
+```
+
+A rushed dispatch hitting this lock (rather than reaching for the documented `--skip-lock` bypass, which THIS todo's own
+text calls for on the entity-sharded fan-out) has a ready-to-copy delete command sitting right there in the error output
+— with no requirement to actually run the `Inspect`/`Tail log` steps first. This is a plausible self-inflicted-harm
+vector: an agent could copy the `Stop:` line against what it assumed was a stale conflicting lock-holder without
+verifying liveness, when it was actually this task's own actively-progressing fleet member (or a sibling entity's VM).
+Not confirmed via audit-log correlation (the pre-refusal `instances.list` lock-check call isn't itself logged the same
+way an `insert`/`delete` is), so this is offered as the most plausible mechanism given the tooling, not a proven chain.
+
+**Why this matters more than the original threshold bug**: if the actor is agents, not automated code, then the
+just-shipped `deployment-service@5a5a504` fix helps only insofar as future agents happen to invoke
+`vm_zombie_watchdog.py` itself (which they may not have been doing at all) — it does NOT prevent an agent from directly
+running `gcloud compute instances delete`, which requires no special code path and bypasses every threshold. This is a
+recurring **agent-behavior** risk on this exact task (3 independent incidents in one day), not purely an infra
+config-tuning gap.
+
+**Recommended decision (supersedes the daemon-relaunch action item above)**:
+
+- [ ] [INFRA] P1. **Harden `launch-api-football-backfill-vm.sh`'s singleton-lock refusal message** — remove the raw
+      copy-pasteable `Stop: gcloud compute instances delete $EXISTING ...` suggestion, or at minimum gate it behind an
+      explicit warning ("only run this after confirming via Inspect/Tail that $EXISTING is genuinely stale — deleting a
+      live entity-fleet VM destroys hours of in-progress work") — the same pattern used elsewhere for destructive
+      suggestions. Apply the same audit to any other launcher script in `scripts/vm/` that prints a raw delete command
+      in its refusal/error path. (repo: deployment-service)
+- [ ] [PROCESS] P1. **Add an explicit guardrail to `unified-trading-pm/agents/data_engineering.md` (or `RULES.md`)**:
+      never run `gcloud compute instances delete` against a VM this task's OWN fleet (or a sibling entity/asset_group's
+      fleet) without first confirming genuine staleness via heartbeat blob + run.log tail + manifest shard mtime — a
+      singleton-lock refusal message suggesting a "Stop" command is NOT sufficient justification on its own. (repo:
+      unified-trading-pm)
+- [ ] [DATA] P1. **Audit whether any OTHER bounced/stalled backfill task in the current fleet shows the same
+      agent-deleted-own-VM signature** (`agent-name/claude_code` UA on `v1.compute.instances.delete` against a task's
+      own recently-launched VMs) — this incident took 3 recurrences across ~7 hours to even get investigated properly;
+      it may be recurring silently elsewhere. (repo: deployment-service, cross-cutting)

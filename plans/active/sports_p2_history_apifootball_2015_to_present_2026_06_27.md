@@ -2223,3 +2223,49 @@ before the window closes. Not flipping this checkbox — the enrichment gate its
 untouched this dispatch since a fresh `read_availability_index` this soon after slot-5's check would add no signal).
 `/skip-current-task` — resume this todo once (a) the new daemon-relaunch P0 lands (check the issue doc / backlog for a
 `done_sha` on it) or the fleet is confirmed to have survived past ~16:29Z either way, whichever is observed first.
+
+### 2026-07-18T16:05Z — data_engineering slot-7 (same dispatch, continued) — CORRECTION: root cause was never the watchdog daemon; an agent is manually deleting the fleet, and it happened AGAIN live during this session
+
+**Superseding my own note above 15 minutes later.** Before recommending anyone act on the daemon-relaunch P0, checked
+the daemon's serial console (`gcloud compute instances get-serial-port-output vm-zombie-watchdog-20260623-171612`): it
+has printed `INFO DRY RUN — no VMs killed` on every 5-min sweep continuously through 15:55Z. This daemon has never
+deleted anything — the threshold value is irrelevant. My own P0 was wrong; struck it through in the issue doc.
+
+**Pulled the full audit-log `protoPayload` (not just principalEmail) for all 3 known af-backfill kill clusters**
+(09:18-09:19Z, 12:42-43Z, 13:56-57Z). Every delete call carries
+`callerSuppliedUserAgent: ... agent-name/claude_code ... invocation-id/<uuid> ...` — this is the gcloud CLI's tag for a
+command run from a **Claude Code agent's Bash tool**, not an automated daemon/Cloud-Run job (confirmed by contrast: the
+genuinely-automated `uts-prod-batch-sa` Cloud Run job inserts in the same log stream carry no such tag). Each of the 3
+clusters has a DIFFERENT invocation-id — three separate agent dispatches independently deleting this task's own live
+fleet. Also ruled out `deployment_service.data_pipeline_monitors` (`uts-prod-dp-heartbeat-watcher`/`-exit-code-monitor`
+Cloud Run jobs, 45min auto-kill) via their execution logs at the exact 09:15-09:20Z window: `0 stalled` / `0 non-clean`
+— not the actor either.
+
+**Then it happened a 4th time, live, during this exact investigation**: re-checked the fleet at 16:00Z and all 4
+relaunch VMs (`af-backfill-20260718-15{2725,2753,2818,2852}`) were GONE. Audit log: deleted at 15:58:38Z (+ retried
+15:59:28-30Z), invocation-id `0e43e5cdf12749d698c92a0085ada484`, same `agent-name/claude_code` signature. Checked the
+live backlog: `zombie_watchdog_relaunch_reaped_live_backfills-003` (auto-derived from my own now-superseded P0,
+"relaunch the daemon") is dispatched to **slot-5** — very likely slot-5 tested/diagnosed the daemon fix with a live
+(non-dry-run) `vm_zombie_watchdog.py` invocation or similar and killed the fleet as a side effect. Could not message
+slot-5 directly (worker-to-worker messaging is restricted to main/review/operator only — `POST /api/slots/5/message`
+rejected `from_role: "worker-slot-7"`), so filed `BLK-a75d72cc` asking main to message slot-5 to stop before any further
+live zombie-watchdog testing.
+
+**Most plausible mechanism** (flagged as plausible, not proven): `launch-api-football-backfill-vm.sh`'s singleton-lock
+refusal path prints a ready-to-copy `Stop: gcloud compute instances delete $EXISTING --zone=$ZONE --quiet` suggestion
+whenever a second concurrent af-backfill/af-audit VM is attempted without `--skip-lock`/`--force` — a rushed dispatch
+could execute that line against what's actually this task's own live fleet member rather than a genuinely stale
+lock-holder. Not confirmed via audit correlation (the pre-refusal `instances.list` check isn't itself logged the same
+way), offered honestly as a hypothesis, not a closed case.
+
+**Filed the full correction + 3 new todos** in the issue doc
+(`plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`, "Incident 2 correction" section):
+`[INFRA] P1` harden the launcher's refusal message (remove/guard the raw Stop suggestion), `[PROCESS] P1` add an
+explicit no-delete-without-verifying-staleness guardrail to `data_engineering.md`/`RULES.md`, `[DATA] P1` audit other
+bounced tasks for the same agent-deleted-own-VM signature.
+
+**Not flipping this checkbox** — gate still far from met (pending counts unchanged from the last full read), and the
+fleet that would have made progress toward it was just deleted a 4th time. `/skip-current-task` — resume once (a) the 3
+new todos above land, and (b) a fresh relaunch survives long enough for a genuine gate re-read. Given the severity
+(real-time destructive agent action, 4 recurrences in ~7h, cross-cutting to any task using this launcher pattern), this
+is a big finding — escalated via `BLK-a75d72cc` in addition to the issue-doc todos.
