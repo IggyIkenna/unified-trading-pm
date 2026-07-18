@@ -283,12 +283,16 @@ deployment-api display fix. Grounded facts + the expanded scope:
       base-prefix match), but a future venue removal now auto-propagates from the one UAC SSOT instead of needing a
       parallel deployment-api edit. Tests added both sides (UAC: membership + no-active-venue-collision gates;
       deployment-api: SSOT-identity test); both repos' `quality-gates.sh` green.
-- [ ] [DATA] P3. **`from 2020-01` floor-date smell** on Solana protocols — CONFIRMED a real (minor) bug (investigated
-      2026-07-18). The correct launch dates EXIST in `unified_api_contracts.registry.venue_launch_dates`
-      (`KAMINO-SOLANA` 2022-08-24, `JITO-SOLANA` 2022-08-16, etc.), but the drilldown shows a generic **2020-01** floor
-      — instruments-service has a `_DEFAULT_TRADFI_FLOOR = datetime(2020, 1, …)` + a "generic 2020-01 floor when neither
-      layer has the pair" fallback (`reference_data/utils/evm_creation_resolver.py`,
-      `reference_data/adapters/tradfi/databento/`). So the DeFi listing-date derivation is falling back to the default
-      floor instead of consulting `venue_launch_dates` for the protocol's real launch. **Fix direction:** thread
-      `venue_launch_dates` into the DeFi `available_from` derivation (use the real launch date; the 2020-01 floor only
-      when truly unknown). Low-priority display accuracy — does not block the F5/F6/F7 sweep.
+- [x] [DATA] P3. **Solana DeFi launch-date accuracy — FIXED `instruments-service@0b1f0cad`.** The real bug was more
+      specific than the "2020-01 floor" hypothesis:
+      `reference_data/adapters/defi/_solana_utils.py::get_protocol_floor_date` (which every Solana adapter calls to seed
+      its `available_from_datetime`) consulted ONLY a **stale local hardcoded dict** that had drifted from reality
+      (kamino local=2024-01-01 vs real 2022-08-24; jito local=2021-11-01 vs 2022-08-16; orca local=2022-03-01 vs
+      2021-02-09) — never touching the UAC SSOT. Fix threads `venue_launch_dates.get_venue_launch_date("defi", venue)`
+      as the PRIMARY lookup (chain-suffixed `{PROTOCOL}-SOLANA` then bare), falling back to the local dict only for
+      protocols UAC doesn't cover, then the existing honest `KeyError` guard (never fabricates a date). Adversarially
+      verified, QG green. **Forward** (new rollups); a regen would refresh historical `available_from` (gated on F8 —
+      see the `--mode full` safety finding). **Follow-up filed:** `uac_defi_launch_date_registry_drift_2026_07_18.md` —
+      UAC has TWO disagreeing DeFi launch-date registries (`venue_launch_dates.DEFI_VENUE_LAUNCH_DATES` vs
+      `chain_env.PROTOCOL_LAUNCH_DATES`, disagree on AAVE_V3-ETHEREUM 2022-03-16 vs audited-correct 2023-01-27) — a real
+      SSOT contradiction the P3 agent surfaced.
