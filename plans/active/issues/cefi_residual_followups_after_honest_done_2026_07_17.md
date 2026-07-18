@@ -204,7 +204,17 @@ pairs stay honest-unresolved (reported, never guessed).
 
 - [ ] [DOCS] P0. **Lock the two contracts**: single-instrument cefi filename stem = FULL `instrument_id`; shard atom
       WITH `pipeline_mode`. The contradicting codex docs get corrected in Phase 2, but the form is byte-locked now so
-      writer/migration/reader agree. (repo: unified-trading-pm)
+      writer/migration/reader agree. (repo: unified-trading-pm) **→ MERGED INTO Phase-2 §445 (2026-07-18, /autonomous
+      sequencing decision):** the "lock BEFORE code" purpose is now moot — the writer (D2), all 4 migration scripts, and
+      the reader bridge (D3) are already written AND dry-run/gate-proven to agree (rename dry-run stems = FULL
+      `instrument_id` e.g. `BINANCE-FUTURES:PERPETUAL:ADA-USDT@LIN.parquet`; Script-3 dedup on the pinned 6-col
+      `pipeline_mode`-bearing atom). Both contracts live in the SAME two docs §445 reconciles
+      (`per-asset-group-bucket-layouts.md` filename split + `availability-manifest-and-data-status.md` shard atom), so
+      locking now + reconciling later = double-editing with drift risk. Doing them TOGETHER post-apply (when the final
+      on-disk shapes are proven) is strictly better. The forms are already correct in code; this is a docs-consistency
+      lock, not a code gate. **The single-instrument-stem vs aggregated-`underlying={U}/ticks.parquet`-bundle split MUST
+      be stated explicitly** (the migration only renames single-instrument files; futures_chain/options_chain bundles
+      keep `ticks.parquet`).
 
 ## Phase 0b — Code fixes (MUST land + DEPLOY to every writer AND every narrow-read consumer before any corpus rewrite)
 
