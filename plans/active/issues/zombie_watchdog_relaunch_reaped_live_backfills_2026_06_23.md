@@ -574,11 +574,19 @@ green on the shipped SHA (226 tests, incl. the 7 new ones).
       (0.99.0 satisfies every cross-package `<1.0.0` ceiling + `>=0.13.0`/`>=0.33.0` floor pair). Scoped to the
       zombie-watchdog launcher only — a fleet-wide audit of every OTHER `scripts/vm/launch-*.sh` for the same exposure
       is still open, not done here. (repo: deployment-service, fleet-wide audit still open)
-- [ ] [INFRA] P0-when-picked-up. **Relaunch `vm-zombie-watchdog` in `--dry-run` ONLY, verify a clean poll cycle against
-      currently-live VMs (no false zombies), before EVER proposing `dry_run=false` again** — per main's `BLK-b5b76074`
-      answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo. Blocked on the
-      two P1 items above landing first (the daemon cannot boot cleanly without them). Until then the fleet has ZERO
-      watchdog coverage — accepted as the safe state. (repo: deployment-service)
+- [x] ✅ [INFRA] P0-when-picked-up. **Relaunch `vm-zombie-watchdog` in `--dry-run` ONLY, verify a clean poll cycle
+      against currently-live VMs (no false zombies), before EVER proposing `dry_run=false` again** — per main's
+      `BLK-b5b76074` answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo.
+      Deleted the stale pre-`c5684db` dry-run daemon (`vm-zombie-watchdog-20260718-164953`, launched by slot-2 with the
+      still-broken `--no-deps` install) and relaunched `vm-zombie-watchdog-20260718-165908` explicitly `--dry-run` with
+      the fully fixed code (`e9e8cc8` + `6ea3f24` + `c5684db` all present). First real poll cycle (17:05:34Z) completed
+      cleanly: `Watchdog summary: 5 alive / 0 zombie / 4 too_young` / `DRY RUN — no VMs killed` — confirms both the
+      universal-false-positive bug (Incident 5's `_blob_age_minutes` fix) and the boot-crash bugs (the two P1 items
+      above) are genuinely resolved end-to-end, not just unit-tested. **Left the daemon running in `--dry-run`** —
+      restores census/heartbeat visibility for the fleet with zero kill risk, matching the original Incident-1
+      recommendation ("keep the watchdog in `--dry-run`" is safe and useful on its own). Did NOT switch to
+      `dry_run=false` — that remains the separate, explicitly operator-gated decision per main's answer, not part of
+      this task's scope. (repo: deployment-service)
 
 ## Incident 6 — 2026-07-18, root-cause of the 2026-06-24 `af-backfill-*` 5-VM subcluster (evidence: Cloud Monitoring, since GCS-hosted `run.log`/heartbeat had already expired)
 
