@@ -136,19 +136,27 @@ fixed from a log trace alone.
 
 ## Todos
 
-- [ ] [DATA] P1. Root-cause + fix the `read_historical_fixtures` "truth value of a Series is ambiguous" error
+- [x] ✅ [DATA] P1. Root-cause + fix the `read_historical_fixtures` "truth value of a Series is ambiguous" error
       (`recovery=fail_fast`, correlation ids `4fd0d41b` and similar) — find the bare-Series boolean-context site and use
       `.empty`/`.any()`/`.all()` explicitly. Add a regression test reproducing the exact failure mode. (repo:
-      features-service)
-- [ ] [DATA] P2. Decide whether `batch_feature_quality_gate`'s `recovery=skip` path should BLOCK the write (like
+      features-service) — features-service@538c233e
+- [x] ✅ [DATA] P2. Decide whether `batch_feature_quality_gate`'s `recovery=skip` path should BLOCK the write (like
       `FeatureWriteGate REJECTED shard` does for `fixture_player_stats`) instead of writing a >85%-all-NaN shard through
-      — this is a data-correctness policy decision, not just a bug fix. (repo: features-service)
-- [ ] [DATA] P2. Once the above is fixed, gap-fill the CORRECTED affected-date set (~521 dates, not 7): 2019-01-20
+      — this is a data-correctness policy decision, not just a bug fix. (repo: features-service) —
+      features-service@4be73e2a
+- [x] ✅ [DATA] P2. Once the above is fixed, gap-fill the CORRECTED affected-date set (~521 dates, not 7): 2019-01-20
       through 2019-12-06 (intermittent, ~244 dates), 2019-12-12 through 2020-03-03 (intermittent, ~52 dates), and
       2025-12-04 through the corpus's live edge (contiguous, 225+ dates and growing daily until the fix ships) — the
       exact per-VM date lists are in "What I found" item 4 above. `--force` on the fixed code, same pattern as the
       sibling elo/travel gap-fill. Re-verify against the live corpus edge at fix time since the 2025-12-04→ window is
-      still open. (repo: features-service)
+      still open. (repo: features-service) — **spec captured; NO separate fleet launched.** Per main's final disposition
+      (BLK-db467fc8, reaffirmed BLK-fab4e006): this gap-fill is FOLDED into the main-owned consolidated 521-date
+      recompute that also re-verifies the sibling elo/travel fixes on the identical date set — one pass fixes all three
+      independently-broken columns (venue_context zeroing here + elo tz-naive + travel home-venue-coords) together, and
+      its manifest-coverage result is the evidence that flips `sports-gap-fill-fleet-20260717-complete`. The 521-date
+      scope + ~40.2h/278s-per-date estimate above is the input spec for that consolidated pass. The actual VM-fleet
+      launch (SPOT, `launch-features-vm.sh --force` on features-service@4be73e2a+) is a scheduling/spend decision main
+      flags to the operator at that time — it does not fire from this task.
 
 ## Progress Log
 
@@ -163,6 +171,43 @@ actual task is gap-filling (confirmed `venue_context`'s all-NaN columns here com
 failing, not from either of those two already-fixed bugs). Not fixing this myself (outside scope). Returning to the
 elo/travel gap-fill task to verify its actual completion coverage (3,452/3,453 corpus dates — every VM finished 0-exit
 except this one date on this one VM) before flipping its checkboxes.
+
+### 2026-07-18T08:16Z — data_engineering slot-2 — todo 1 fixed
+
+**Root cause (confirmed by direct repro, not guesswork)**: the bare-Series boolean-context site is
+`features_service/sports/data/gcs_normalizers.py::_build_canonical_fixture_ids` line 153
+(`if r.get("home_name") and r.get("away_name")` inside `df.apply(..., axis=1)`) — but the Series only appears there as a
+_symptom_. The actual defect is upstream in `normalize_fixtures`: its rename step
+(`rename = {k: v for k, v in _FIXTURE_COL_MAP.items() if k in df.columns}; df = df.rename(columns=rename)`) blindly
+renamed e.g. `af_home_name` → `home_name` even when `home_name` already existed on `df` (created a few lines earlier by
+`_flatten_canonical_fixture_objects` from a nested `home_team` dict). A plain `.rename()` does not merge in that case —
+it produces a SECOND column with the same label `home_name`. `read_historical_fixtures`'s 400-day lookback window
+concatenates fixture snapshots from BOTH schema generations (canonical nested `home_team`/`away_team` dicts, and legacy
+flat `af_home_name`/`af_away_name`) — confirmed via direct repro (`pd.concat` of one canonical-shaped row + one
+legacy-shaped row through `normalize_fixtures` reproduces the exact `ValueError` at the exact line). Once the target
+date's lookback window started spanning both generations (recent dates, following the canonical backfill campaign
+documented in `sports_legacy_canonical_row_gap_2026_07_16.md`), every historical-fixtures read hit the duplicate-column
+collision → `row.get("home_name")` returned a Series instead of a scalar → boolean-context `ValueError` →
+`recovery=fail_fast` → empty Team history → every history-dependent calculator degraded for that date. This is NOT
+confined to a "recency" data-freshness issue as originally hypothesized — it recurs for ANY target date whose lookback
+window spans the schema-transition period, which now includes dates going forward too.
+
+**Fix**: added `_rename_coalescing_collisions()` in `gcs_normalizers.py` — for each `_FIXTURE_COL_MAP` rename, if the
+target column already exists, coalesce (`target.combine_first(source)`, preferring the existing/flattened value, filling
+from the raw column only where missing) instead of blindly renaming into a duplicate. Applies to ALL `_FIXTURE_COL_MAP`
+mappings generically (not just home_name/away_name — home_team_id/away_team_id/league_id/winner_id/fixture_id were
+exposed to the identical collision mechanism). No data is silently dropped — honest-absence preserved (a cell is only
+empty when BOTH the canonical and legacy sides are null).
+
+**Regression test**:
+`tests/sports/unit/test_gcs_normalizers.py::TestNormalizeFixtures::test_mixed_canonical_and_legacy_rows_do_not_duplicate_columns`
+— constructs the exact mixed-schema `pd.concat` scenario, verified it raises the exact reported `ValueError` against the
+pre-fix code (reverted via `git stash` to confirm), then passes with the fix. Full sports suite (3000 tests) + full
+`quality-gates.sh` green.
+
+**Shipped**: features-service@538c233e. Todo 1 only — todos 2 (quality-gate `recovery=skip` policy decision) and 3
+(gap-fill 2026-07-11→07-17, and possibly wider given the "recurs going forward" finding above) are separate P2 items,
+left for a follow-up dispatch.
 
 ### 2026-07-18T08:2xZ — data_engineering slot-4 (dispatched to Todo-3 gap-fill; found scope was wrong before starting)
 
@@ -179,3 +224,89 @@ that I'm flagging it rather than silently absorbing it. Filing `/blocked` next t
 widened scope so `-001`'s regression test and `-002`'s policy decision account for the real window, not just last week,
 and (b) the cross-cutting risk that the just-completed elo+travel gap-fill's "verified via parquet sampling" claim may
 not have covered these same ~521 dates. Continuing to wait on `-001`/`-002` before I can actually run the gap-fill.
+
+**2026-07-18T08:18Z addendum (slot-2, todo-1)** — slot-4's widened-scope finding (~521 dates, not ~7, spanning
+2019-01→2020-03 intermittent + 2025-12-04→open-ended) is consistent with this fix's root cause: the bug is driven by
+whether a target date's 400-day lookback window straddles the canonical/legacy schema-mix, not by simple "recency", so a
+bimodal/non-contiguous affected-date set is exactly what's expected. Todo 1's regression test covers the mechanism
+itself (schema-mix duplicate-column collision), not a specific date range, so it does not need updating for the wider
+window. Todo 3 (gap-fill) should use slot-4's corrected date list once dispatched.
+
+### 2026-07-18T08:3xZ — data_engineering slot-2 (dispatched Todo 3 gap-fill; measured cost, VM-fleet scale, not launching without sign-off)
+
+Dispatched `-004` (Todo 3, the gap-fill) immediately after `-001` (the fix, same slot). Before launching anything, sized
+the actual compute cost using the SAME methodology + measured unit cost the sibling
+`sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` doc established (slot-8, 2026-07-17T13:4xZ):
+`run_new_calculators` computes ALL Phase-4 calculators per `(date, league)` in one pass off the SAME date's full
+reference-data read + 400-day historical-fixtures lookback — that lookback/read cost is what `~278s/date` measures, and
+my fix changes correctness (dedupes a rename collision), not I/O volume, so the sibling's measured unit cost applies
+unchanged here.
+
+**Estimate**: 521 affected dates × ~278s/date ≈ 144,838s ≈ **~40.2 hours of serial single-worker compute** — smaller
+than the sibling's full-corpus figure (140+ hours over ~3,453 dates) because this is a bounded, non-contiguous date
+list, not a full-corpus re-run, but still squarely VM-fleet scale (tens of VM-hours), not something to run inline in a
+worker session.
+
+**Cannot be satisfied by the just-completed consolidated 10-VM fleet** (`features-sports-*`, `BLK-a3149ab4`, completed
+~2026-07-18T07:54Z per the parent VM's exit): that fleet ran BEFORE this fix shipped (`features-service@538c233e`), so
+every date in this bug's ~521-date list that fleet touched was written using the OLD buggy code — i.e. the fleet's own
+output for those dates is exactly the degraded data this gap-fill needs to overwrite, not evidence the gap-fill is
+already done.
+
+**Not launching a VM fleet autonomously.** Following the same discipline four separate peer slots already established on
+the sibling doc for this exact class of decision (real infra-cost, VM-fleet-scale gap-fill) — measure, document, request
+operator/main sign-off via `/blocked`, do not self-authorize. Filing `/blocked` now with a recommendation (a modest
+2-4-VM SPOT fleet scoped exactly to the 521 dates via `launch-features-vm.sh`, ~10-20 VM-hours wall-clock depending on
+fleet size, `--force` on `features-service@538c233e`+). Not idling on the answer — resuming the `/boot` loop for other
+dispatchable work per worker doctrine.
+
+### 2026-07-18T08:5xZ — data_engineering slot-3 — todo 2 decided + shipped
+
+**Decision: YES, block the write.** Read both gates in full before deciding:
+
+- `FeatureWriteGate` (`unified-trading-library/unified_trading_library/feature_service_base/write_gate.py`), already
+  wired into every sports table via `write_sports_table` (`features-service/features_service/sports/data/writer.py`)
+  with `nan_threshold=0.85`, DOES block — but its `_check_nan` explicitly EXCLUDES any column matching a
+  `sparse_columns` prefix from the ratio check (`WRITE_GATE_CONFIG.sparse_columns["derived_features"]` lists exactly the
+  prefixes this bug's cascade hits: `travel_distance`/`cumulative_travel`, `home_league_position`, `matchday`,
+  `home_xg_`, `ht_`, `squad_value`, etc.) — that allowlist exists for LEGITIMATE per-column honest-absence (XG missing
+  pre-season, travel geodata missing for some venues), so it correctly does NOT fire here, but that is exactly why it
+  missed this incident: `read_historical_fixtures` failing zeros 8 ENTIRE calculator groups at once, and every one of
+  those groups' columns happens to already be sparse-allowlisted.
+- `batch_feature_quality_gate` (`_validate_feature_quality` in
+  `features-service/features_service/sports/cli/handlers/batch_handler.py`, called only for `derived_features`) was the
+  OTHER check — it already computed the exact all-NaN-column count/ratio and emitted a HIGH `DATA_QUALITY` structured
+  error, but its docstring said "Does NOT block the write" verbatim.
+
+Made `_validate_feature_quality` raise `WriteGateRejectedError` when the all-NaN fraction — computed WITHOUT the
+sparse-columns exemption, since this gate's whole purpose is to catch the cross-cutting collapse the exemption is
+designed to let through — reaches 0.85 (same threshold `WRITE_GATE_CONFIG.nan_threshold` already uses for this service,
+for consistency). Reused the EXISTING `WriteGateRejectedError` →
+`record_empty(reason= EmptyConfirmedReason.EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` handling already wired at the
+`_run_feature_group` call site (`_produce_derived_features` runs inside that function's try block) — no new exception
+type or manifest plumbing needed, this is the identical honest-absence pattern `fixture_player_stats` already gets from
+`FeatureWriteGate` itself.
+
+Added 2 regression tests in `tests/sports/unit/test_batch_handler.py`
+(`test_validate_feature_quality_blocks_at_85pct_all_nan`, `test_validate_feature_quality_allows_below_threshold`)
+proving the new block fires at ≥85% all-NaN and stays silent for ordinary low-single-digit sparse columns. Full sports
+suite + full `quality-gates.sh` green (ran twice — once pre-commit, re-ran post-commit so the `.qg_last_passed_sha`
+sentinel matched the shipped SHA before quickmerge, per the canonical commit→QG→quickmerge order in
+`unified-trading-pm/agents/worker.md`).
+
+**Shipped**: features-service@4be73e2a. Todo 3 (the gap-fill) still depends on slot-4's operator sign-off for the
+VM-fleet launch (unrelated to this todo) and now additionally needs `--force` re-run against this commit too, since any
+date in the gap-fill list that would have hit ≥85% all-NaN under the old code will now be correctly recorded as
+`empty_confirmed(EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` instead of a degraded `captured` write once re-run.
+
+### 2026-07-18T08:5xZ — data_engineering slot-5 — todo 3 closed per main's final ruling (no fleet launched by this task)
+
+Dispatched `-004` after slot-3's session ended before it could act on `blocked_answered` for `BLK-fab4e006`. Read the
+full activity trail first (both `-001`/`-002` prereqs shipped; two separate `/blocked` escalations — slot-2's
+`BLK-db467fc8` and slot-3's `BLK-fab4e006` — both answered by main with the SAME terminal disposition: do **not** launch
+a dedicated VM fleet for this todo; the 521-date gap-fill is folded into a main-owned consolidated recompute that also
+re-verifies the sibling elo/travel fixes on the identical dates, and that pass's manifest coverage is the evidence
+gating `sports-gap-fill-fleet-20260717-complete`). No further /blocked needed — this was already a `final` disposition,
+reaffirmed twice; re-raising it would violate "release -004; do not re-raise this." Flipped todo 3 to done with the
+fold-in rationale recorded inline. Not launching `launch-features-vm.sh` myself. No code changed in this session (this
+task's remaining work was purely the plan-doc disposition, per main's ruling).
