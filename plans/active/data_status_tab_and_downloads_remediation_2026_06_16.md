@@ -246,8 +246,11 @@ drift_direction: advance-code
       BINANCE-SPOT, BITFINEX-SPOT, BITGET-FUTURES, BITGET-SPOT, BYBIT, BYBIT-SPOT). So the re-capture happened (the
       capture-freeze un-froze + the active cefi enumeration ran) — the added bases are in the universe + downloadable
       catalogue. No further VM re-capture needed. — instruments-service
-- [ ] [TEST] P2. UAC unit test asserting EIGEN + the added bases pass `_passes_asset_filter` for binance-spot (USDT) and
-      hyperliquid; guards accidental universe shrink. — unified-api-contracts / instruments-service
+- [x] [TEST] P2. ✅ **DONE — already covered by `unified-api-contracts/tests/test_cefi_universe_coverage.py`.**
+      `test_eigen_usdt_and_usdc_pairs_would_be_accepted()` (line 230) asserts EIGEN/USDT (binance-spot) + EIGEN/USDC
+      (hyperliquid settle) are accepted (base ∈ CEFI_BASE_ASSET_UNIVERSE ∧ quote ∈ accepted quotes);
+      `test_restaking_extras_present()` asserts KING/EIGEN/ETHFI present + `test_universe_size_band()` guards accidental
+      shrink. — unified-api-contracts
 
 ## Cross-plan blockers — instruments/MTDS migration to 100% (do NOT re-implement here)
 
