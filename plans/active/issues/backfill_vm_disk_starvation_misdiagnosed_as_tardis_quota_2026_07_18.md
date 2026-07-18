@@ -1,18 +1,15 @@
 ---
 doc_type: issue
-title:
-  Tardis throttles the ACCOUNT after ~7-8 GB per run — throughput collapses ~12 MB/s to ~2 MB/s and no client-side
-  concurrency change can beat it
-summary:
-  Three independent backfill VMs each collapsed after downloading ~7-8 GB, measured off the wire via the Cloud
-  Monitoring network-RX counter. Baseline (8 concurrent slots) cliffed at ~7.2 GB then ran 2.33 MB/s; an optimised VM
-  with 6x the concurrency (32 non-book + 16 book) cliffed at ~7.0 GB then ran 1.96 MB/s. The collapse happens WITHIN an
-  unchanged workload — bybit-spot trades measured 13.96 MB/s at 16:41 and 3.48 MB/s at 16:43, same venue, same data_type
-  — so it is neither venue-specific, data_type-specific, nor a shard-size artefact. Both runs also took the SAME ~16-17
-  min to reach the quota, so 6x more slots did not even reach it faster, which means the pre-cliff ~12 MB/s is itself an
-  account-level ceiling rather than a concurrency limit. Consequence for planning - the effective sustained rate is the
-  POST-cliff ~2 MB/s, not the headline ~12.
-status: open
+title: >-
+  Backfill VMs were disk-starved by a pd-standard 50GB boot disk — misdiagnosed for hours as a Tardis account quota
+summary: >-
+  A pd-standard 50GB boot disk sustains only ~6 MB/s of writes and its burst credits deplete by CUMULATIVE BYTES
+  WRITTEN. Vendor payloads are .csv.gz, so download RX is ~5x amplified on write — 2.4 MB/s of download is ~12 MB/s of
+  disk. Every backfill VM therefore ran ~12 MB/s for ~7.5GB and then collapsed to ~2.4 MB/s permanently. Measured
+  directly with iostat on a degraded VM: %util 99.94, w_await 1015ms, aqu-sz 51, CPU 93.5% idle / 6.2% iowait, RAM 115GB
+  free of 128, disk 11% full. VALIDATED fix: on pd-balanced 250GB the same workload sustained 11.1 MB/s past 21GB with
+  peaks of 18.15 MB/s and no cliff — 4.7x. Swept across 57 download-heavy launchers and QG-enforced.
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -44,6 +41,83 @@ locked_by:
 locked_since:
 resolved_by:
 ---
+
+> **✅ RESOLVED 2026-07-18 — ROOT CAUSE WAS OUR DISK, NOT TARDIS.** This doc originally concluded that Tardis throttles
+> the account after ~7-8 GB. That was WRONG, and so were the two follow-up theories (VM/session-scoped quota, then
+> source-IP). The real cause is a `pd-standard` 50GB boot disk saturating. Fixed in deployment-service@d259f61 (57
+> launchers) + @9c82335, enforced by `scripts/quality_gates/check_backfill_vm_disk_provisioning.py`. The original
+> analysis is kept below the resolution section as a record of how a measurement-led investigation still went wrong four
+> times.
+
+## Resolution — measured, then validated
+
+### The evidence that settled it
+
+`iostat` on the degraded VM, while it was running at 2.4 MB/s:
+
+```
+sda  w/s=50.4  wkB/s=12188  w_await=1015ms  aqu-sz=51  %util=99.94
+CPU: 93.5% idle, 6.2% iowait   RAM: 115GB free of 128, swap 0   disk 11% full, inodes 3%
+```
+
+The disk was 100% utilised with one full second of write latency and 51 requests queued, while the CPU idled and 115GB
+of RAM sat unused. RAM pressure, disk fullness and GC are all excluded by those same numbers.
+
+### Why it looked like a vendor quota
+
+| Observation                                                | Read as a Tardis quota      | Actually                                         |
+| ---------------------------------------------------------- | --------------------------- | ------------------------------------------------ |
+| Cliff tracks cumulative VOLUME (~7.5GB), not time or venue | a bytes-based account quota | PD burst credits deplete by bytes written        |
+| A fresh VM always starts fast again                        | a per-session/VM allowance  | a fresh disk has fresh burst credits             |
+| ZERO HTTP 429s, only ConnectionTimeouts                    | an invisible throttle       | nobody was throttling us; writes were backing up |
+| 6x concurrency changed nothing (7.67 vs 7.58 MB/s)         | an account-level ceiling    | the bottleneck was never concurrency             |
+| An in-place source-IP swap changed nothing                 | quota is account-scoped     | the IP was never relevant                        |
+
+Tardis serves `.csv.gz`, so ~2.4 MB/s of compressed RX becomes ~12 MB/s of decompressed/parquet writes (~5x). The whole
+investigation measured RX and never asked whether the SINK could absorb it.
+
+### Validation (VM `cefi-queue-heavy-binancefutu-x17-20260718-184320`, pd-balanced 250GB)
+
+```
+19:06  cum= 9.50GB  recent5=11.21 MB/s  peak=14.67
+19:10  cum=12.79GB  recent5=13.91 MB/s  peak=14.73
+19:14  cum=16.79GB  recent5=15.92 MB/s  peak=18.15
+19:22  cum=21.69GB  recent5=11.16 MB/s  peak=18.15
+```
+
+Nearly 3x past the 7.5GB point where pd-standard died every time, with throughput intact. **11.1 MB/s sustained vs 2.36
+MB/s = 4.7x**, and the peak clears the 15 MB/s target.
+
+### What shipped
+
+- **deployment-service@9c82335** — pd-balanced 250GB on the 5 Tardis launchers; first version of the gate; rotation
+  supervisor hardened.
+- **deployment-service@d259f61** — swept 57 download-heavy launchers (Tardis + Databento/TradFi + every `*backfill*`
+  - every `*forward-poll*`); gate generalised + renamed to `check_backfill_vm_disk_provisioning.py`, now resolving
+    indirect `--boot-disk-size="${BOOT_DISK_GB}GB"` forms; verified red-on-regression on both the type and size paths.
+- **deployment-service@69dbf72** — dropped the superseded gate file.
+
+### Two further bugs found on the way
+
+1. **Manual VM delete is indistinguishable from SPOT preemption.** The shutdown-script emits the preemption signal, so
+   the fleet relauncher (`scripts/recovery/relaunch_backfill_vm.py`) replays the launch params. Deleting a VM and
+   launching a replacement produced TWO VMs 469ms apart (`...-181342` / `...-181344`, identical venues + data types),
+   i.e. two source IPs on one Tardis account → **HTTP 403 `concurrent-IP-lock`, 1181 rejections, zero bytes**. The
+   account recovered on its own once back to a single VM. `rotate-cefi-backfill-vm.sh` now waits `ADOPT_WAIT` and ADOPTS
+   an auto-relaunched VM instead of racing it, and asserts cap-1 every cycle.
+2. **`launch-legacy-bucket-migration-sharded.sh` referenced `${BOOT_DISK_GB}` with no assignment anywhere**, so it
+   expanded to `--boot-disk-size=GB` and gcloud would have rejected the launch. Found by the new gate.
+
+### Open follow-up
+
+- ~65 non-backfill launchers (live/cron/utility) still specify no `--boot-disk-type`. They are not download-heavy so
+  they are out of the gate's scope, but any that write sustained data should be reviewed.
+- The `2.65x VM-rotation` workaround documented below is now **obsolete** — it treated the symptom. Rotation is retained
+  only as a preemption-recovery path, not a throughput strategy.
+
+---
+
+## Original (WRONG) analysis — kept as a record
 
 # Tardis account-level volume quota — ~7-8 GB, then ~2 MB/s
 
