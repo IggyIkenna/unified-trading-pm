@@ -129,8 +129,11 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 
 ### R1 — Writer: per-instrument fan-out (forward-write) · P0
 
-- [ ] [BACKEND] P0. **`write_defi_rows` (`market_interface/adapters/defi/canonical_write.py:103-296`) fans out**: after
-      per-row `instrument_id` enrichment, `df.groupby("instrument_id")` → return a LIST of `(group_df, path)`, each leaf
+- [x] ✅ [BACKEND] P0. **SHIPPED `market-tick-data-service@4ca2640d` (QG green; runtime-verified: returns per-instrument
+      list, distinct `{sanitized_symbol}.parquet` leaves, sanitizer byte-matches the migration; real blast radius = ~37
+      `write_defi_rows` call sites + evm_defi per-instrument `record_captured` loop + 25 test files, all handled).**
+      `write_defi_rows` (`market_interface/adapters/defi/canonical_write.py:103-296`) fans out**: after per-row
+      `instrument_id` enrichment, `df.groupby("instrument_id")` → return a LIST of `(group_df, path)`, each leaf
       `{sanitized_symbol}.parquet` via `build_defi_partition_path(..., file_name=…)` (already accepts `file_name`, no
       builder change). `_write_and_upload` (`cli/handlers/evm_defi_collectors.py:36-68`) loops the upload. **6/7
       handlers already emit per-instrument manifest rows** (dex_pools / dex_swaps / oracle_prices / risk_params /
@@ -141,13 +144,16 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 
 ### R2 — IS: the honest per-(venue,chain) availability denominator · P0
 
-- [ ] [BACKEND] P0. **WIRE THE MISSING STAKING/RESTAKING/VAULT VENUES INTO `_DEFI_VENUES` (the denominator is missing
-      ~15 protocols).** Measured 2026-07-18 (operator caught it): the enumerated `_DEFI_VENUES` = 63 venues but only
-      **Lido / etherfi / Ethena / Jito / Marinade** cover the LST/restaking/vault space — the catalogue has just **7**
-      LST/STAKING/YIELD_BEARING instruments. **15 adapters exist + are registered in `factory.py::_ADAPTERS` + have
-      POPULATED registries + whitelisted tokens (`DEFI_MAJOR_ASSET_SYMBOLS`) + genesis dates in `chain_env.py` — but are
-      NOT in `_DEFI_VENUES`, so the enumeration never calls them**: `rocket_pool` (rETH), `renzo` (ezETH), `kelpdao`
-      (rsETH), `puffer` (pufETH), `karak`, `symbiotic`, `jito_restaking`, `sanctum`, `solblaze` (bSOL),
+- [x] ✅ [BACKEND] P0. **SHIPPED `instruments-service@c934dd97` + `unified-api-contracts@eccaa493` (QG green;
+      `_DEFI_VENUES` 63→89, +26 venues, **+85 real instruments**; cbETH/wBETH adapters written; chains ⊆ canonical set ✓
+      (0 new chains); 4 empty-chain venues correctly dropped (YEARN-OPT/BEEFY-POLYGON/IDLE-ARB/POLYGON return 0);
+      MVP_SCOPE v16→17).** WIRE THE MISSING STAKING/RESTAKING/VAULT VENUES INTO `_DEFI_VENUES` (the denominator is
+      missing ~15 protocols).** Measured 2026-07-18 (operator caught it): the enumerated `_DEFI_VENUES` = 63 venues but
+      only **Lido / etherfi / Ethena / Jito / Marinade** cover the LST/restaking/vault space — the catalogue has just
+      **7** LST/STAKING/YIELD_BEARING instruments. **15 adapters exist + are registered in `factory.py::_ADAPTERS` +
+      have POPULATED registries + whitelisted tokens (`DEFI_MAJOR_ASSET_SYMBOLS`) + genesis dates in `chain_env.py` —
+      but are NOT in `_DEFI_VENUES`, so the enumeration never calls them**: `rocket_pool` (rETH), `renzo` (ezETH),
+      `kelpdao` (rsETH), `puffer` (pufETH), `karak`, `symbiotic`, `jito_restaking`, `sanctum`, `solblaze` (bSOL),
       `solana_native_staking`, `yearn`, `beefy`, `pendle` (PT/YT), `convex`, `idle`. **Fix**: add them to
       `engine/orchestrator/defi.py`'s venue list (same class as the 7-lending-guard bug — built-but-not-firing). **ALSO
       write missing adapters**: **cbETH (Coinbase)** + **wBETH (Binance)** LSTs have no adapter at all (tokens ARE
