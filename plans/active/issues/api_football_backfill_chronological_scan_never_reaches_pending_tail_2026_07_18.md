@@ -148,12 +148,36 @@ Two independent, non-conflicting fixes:
       scope, ~16.7% / 1,155 cells)**: isolated dates spanning 2020-06-14..2021-07-30 + 2024-12-24..25 + 2025-12-25
       across the 4 entities — small enough to fold into the P2 systemic fix below (manifest-aware date-jump) rather than
       warranting its own narrow-VM launch now.
-- [ ] [DATA] P2. **Make the api_football per-day backfill loop manifest-aware: jump across already-fully-resolved date
-      ranges instead of iterating + skip-checking every calendar day** — root-cause fix in
+- [x] ✅ [DATA] P2. **Make the api_football per-day backfill loop manifest-aware: jump across already-fully-resolved
+      date ranges instead of iterating + skip-checking every calendar day** — root-cause fix in
       `instruments-service/instruments_service/cli/instruments_handler.py` (and/or wherever `check_shard_freshness()`'s
       caller drives the outer date loop). Add a regression test asserting that a backfill over a window where e.g. the
       first N-1 years are already fully resolved reaches the pending tail in O(pending days), not O(total window days).
-      (repo: instruments-service)
+      (repo: instruments-service) — `instruments-service@15df7d14`. **Traced the ~27s/date root cause past
+      `check_shard_freshness()`**: for api_football's 4 per-fixture entities (FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS)
+      the date-level pre-flight (`process_preflight.py::_freshness_preflight`) already ALWAYS defers to per-league
+      handlers (`_SPORTS_PER_LEAGUE_ENTITIES`, line ~530) — the coarse `check_shard_freshness` is never even reached for
+      these entities. The real per-date cost is `_gather_per_fixture_rows` (`sports_reference_fixtures.py`) calling
+      `_read_existing_per_league_fixture_ids` — blocking GCS I/O (`blob.exists()` + `download_bytes()`) — ONCE PER
+      (entity, league) PAIR, SEQUENTIALLY in a `for` loop; a date with ~5-15 leagues in scope pays 5-15 serialized
+      round-trips, matching the measured ~27s/date exactly. **Could not literally "jump" the outer date-iteration
+      loop**: it lives in shared UTL (`service_framework/_adapter.py::_Adapter.run()` / `io_batch.py::DateRangeInput`),
+      generic across every service, with no per-handler override hook — changing it is explicit fleet-wide blast radius
+      this issue doc itself warns against. Also ruled out a manifest-`CAPTURED`-cell shortcut to skip the per-league
+      parquet read entirely: `_gather_per_fixture_rows`'s own docstring documents that the manifest cell tracks
+      "captured" at (date, data_type, league_id) granularity, NOT which individual `af_fixture_id`s are in it — trusting
+      it would reintroduce the exact partial-cell under-fetch bug (2026-05-05 MATCHES-18%-coverage incident) the
+      fixture-id-precise per-league read exists to prevent. **Implemented instead**: extracted the pre-fetch-skip lookup
+      into `_read_captured_per_entity_league()` and fan every (entity, league) round-trip out CONCURRENTLY via
+      `asyncio.to_thread` + `asyncio.gather` instead of the sequential `for` loop — same result set, same per-cell
+      correctness, wall-clock now bounded by ONE round-trip's latency instead of N serialized ones. This converts the
+      practical cost from O(total_window_days × leagues_per_day × round_trip_latency) to O(total_window_days ×
+      round_trip_latency) — i.e. still visits every calendar day (a true O(pending_days) skip requires a shared-UTL
+      framework change, out of this todo's safe scope) but eliminates the per-day multiplier that produced the measured
+      ~16.7h/entity, converging the practical wall-clock to minutes for a multi-year historical window. 2 new regression
+      tests in `test_orchestrator_sports_pipeline.py` (`TestGatherPerFixtureRowsConcurrentPreFetchSkip`): 5 distinct
+      leagues' lookups complete in ≈1 simulated round-trip, not 5×; `redo_all=True` still bypasses the lookup entirely
+      (unchanged pre-existing behaviour). Full `quality-gates.sh` green.
 - [x] [DATA] P3. **Audit whether any OTHER long-window api_football (or other source) backfill in flight/recently-run
       has the same chronological-scan-never-reaches-tail shape** — this launcher/CLI pattern is shared, so any other
       multi-year single-entity backfill is a candidate. (repo: instruments-service) — ✅ unified-trading-pm — CONFIRMED
