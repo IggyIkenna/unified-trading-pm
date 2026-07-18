@@ -567,6 +567,26 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-18 (slot-4, /autonomous — R1+R2 SHIPPED; capture-halt drift re-armed; acquisition+R2c dispatched).**
+  - **R1 (writer) + R2 (venue-wire) landed + flipped** (this plan @fe76e3bed): MTDS `write_defi_rows` per-instrument
+    fan-out `market-tick-data-service@4ca2640d`; IS `_DEFI_VENUES` 63→89 (+26 staking/restaking/vault venues, +85 real
+    instruments, MVP_SCOPE v16→17) `instruments-service@c934dd97` + `unified-api-contracts@eccaa493`. **Chain constraint
+    ENFORCED** — post-ship `_DEFI_VENUES` chains = {ARB, AVAX, BASE, BSC, ETH, LINEA, OPT, POLYGON, SOLANA} ⊆ canonical
+    set, **0 extra chains** (operator: "dont add extra chains beyond existing canonical" ✓); 4 empty-chain venues
+    dropped (YEARN_V3-OPTIMISM/BEEFY-POLYGON/IDLE-ARBITRUM/IDLE-POLYGON return 0 rows).
+  - **Capture-halt DRIFT caught + re-armed (protective, autonomous-safe):** the plan documents all DeFi capture STOPPED,
+    but `defi-fwd-dex-pools-poll` + `defi-fwd-dex-swaps-poll` had **respawned to RUNNING** (their schedulers
+    `defi-fwd-dex-{pools,swaps}-prd` were still ENABLED → re-launched) on the OLD batch-writer code, polluting the
+    corpus R3 will migrate. Re-armed: **paused** both schedulers (no respawn) + **stopped** both VMs; AWS both regions
+    clear; `defi-fwd-oracle-prices-prd` already PAUSED. IS enum/catalogue/consolidator crons LEFT RUNNING (availability
+    source).
+  - **Acquisition e2e + R2c DISPATCHED (`wf_bc31645a`):** MTDS agent = per-instrument rate acquisition for the 26 new
+    venues (LST rate configs rETH/cbETH/wBETH/rsETH/pufETH/karak/symbiotic + ezETH multicall + Solana LST path +
+    ERC-4626 vault `convertToAssets` for yearn/beefy/idle + pendle PT), each verified via a real RPC (operator: "if
+    adding venues to add yield bearing/staking need to do that e2e including adaptors for the data acquisitions"). IS
+    agent (R2c) = `force_include` flag + extend catalogue-residual empty-reconcile to the new venues + first-cut honest
+    `available_to` (relax the `min_ratio=1.0` monotonicity guard + last-seen delist). Different repos → parallel-safe.
+
 - **2026-07-18 (slot-4, /autonomous — R-phase implementation START).** Operator (away 4h) directed: quantify → R2+R1 →
   R3 → IS+MTDS backfills/rollup, no stopping.
   - **Phase 0 quantify DONE (read-only):** the 15 unwired staking/restaking/vault adapters would add **~85 real
