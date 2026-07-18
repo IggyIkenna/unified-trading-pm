@@ -406,7 +406,24 @@ pairs stay honest-unresolved (reported, never guessed).
       non-canonical classes: (a) historical margin-marker undecomposed — run the existing
       `migrate_cefi_dated_perps_margin_marker_2026_07_09.py --apply`; (b) all non-margin venues — extend it to
       catalogue-decompose; (c) on-chain historical raw-content (`BTC-PERP`→canonical). Snapshot-first to
-      `_migration_backups/`. Do NOT re-fetch. (repo: market-tick-data-service)
+      `_migration_backups/`. Do NOT re-fetch. (repo: market-tick-data-service) — **SCRIPT WRITTEN + dry-run-validated:
+      `market-tick-data-service@ec04e8f5` (`scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`); 12-day
+      dry-run 7,270/12,662 files, all 3 classes resolve. `--apply` is Phase-E (operator-gated) — see the 2 pre-apply
+      fixes below.**
+- [ ] [SCRIPT] P1. **SCRIPT-1 pre-`--apply` fixes (before the corpus-wide content backfill runs).** (a) The size-10 GCS
+      connection pool vs 32 workers caused ~27% transient `error` failures in the 12-day dry-run (idempotent → re-runs
+      converge, but wasteful): enlarge the pool or reduce `--workers`, and run corpus-wide on a DEDICATED VM
+      (corpus-wide ≫ the 12-day/7,270-file sample, ~billions of rows). (b) `_report`'s STOP line counts only the
+      `read_error` outcome, not the driver's `error` outcome, so it printed `read_errors=0` while 3,380 files errored —
+      sum both so `--apply` failure counts are honest. (found 2026-07-18 Phase-C dry-run.) (repo:
+      market-tick-data-service)
+- [ ] [SCRIPT] P2. **Manifest `instrument_type` mislabel cleanup — OKX-FUTURES dated-futures tagged PERPETUAL (~116,742
+      rows).** The bulk of Script-3's 174,649 honest-unresolved main-index rows are OKX-FUTURES dated futures
+      (`XRP-USD-240329` etc., mostly past-expiry delisted) whose manifest `instrument_type` is `PERPETUAL` while the
+      catalogue has them as `FUTURE`, so the 3-tuple honestly misses. Correcting the manifest itype PERPETUAL→FUTURE for
+      dated symbols would recover most of them. Separate data-quality task, NOT a cutover blocker (leaving them raw is
+      the correct never-guess behaviour; they are delisted historical). (found 2026-07-18 Phase-C honest-unresolved
+      audit.) (repo: instruments-service)
 - [ ] [SCRIPT] P0. **Filename rename (Tardis lane).** Rename single-instrument cefi objects wire→canonical, extending
       the proven `migrate_onchain_perp_perpetual_canonical_2026_07_08.py` pattern (GCS rename + manifest rewrite
       together). Snapshot-first; idempotent; per-day prefix batches (single-walk discipline). (repo:
@@ -440,6 +457,40 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-18 (slot-3, /autonomous) — PHASE C COMPLETE: all 4 migration-script dry-runs done + validated against live
+  prod; the cutover is fully staged behind the Phase-D operator drain gate. Measured evidence (read-only, NO
+  `--apply`):**
+
+  | script                | dry-run result (12-day sample where corpus-wide)                                                                                                                                            | verdict                    |
+  | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+  | 1 content backfill    | 7,270/12,662 files would-patch (margin 5,009 + non-margin 2,210 + on-chain 51), **~1.5B tick-row cells** (a 1.08B / b 438M / c 2.6M); 195M honest-unresolved rows left as-is; STOP-bound ok | ⚠️ works, but see findings |
+  | 2 filename rename     | **10,308 renames**, 1,782 unresolved-wire, 543 already-canonical, 29 chain-skipped, **0 collisions**; samples correct                                                                       | ✅ clean                   |
+  | 3 manifest completion | **346,719 relabeled** (all majors resolve), 211,331 honest-unresolved, 24,991 eu removed, 69,241 dedup-collapsed, **canonical 83.12%→93.66%**                                               | ✅ clean                   |
+  | 4 eu-twin drop        | **9,850 drops** (EXTENDED-STARKNET 9,817 + DERIBIT 24 + OKX-FUTURES 9), within [8k,15k]                                                                                                     | ✅ clean                   |
+  - **#1 regression guard PROVEN on the live rebuilt catalogue**: `(BYBIT,SPOT_PAIR,BTCUSDT)→BYBIT:SPOT_PAIR:BTC-USDT`,
+    `(BYBIT,PERPETUAL,BTCUSDT)→BYBIT:PERPETUAL:BTC-USDT@LIN`, +ETHUSDT + BINANCE-FUTURES BTC/ETH all RESOLVE — the exact
+    majors the 2-tuple relabel left raw. And the operator's originating example resolves:
+    `(BITFINEX-FUTURES,PERPETUAL,ADAF0:USTF0)→BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`.
+  - **HONEST-UNRESOLVED CHARACTERIZED (verified, not hand-waved)**: the 174,649 unresolved captured rows in the main
+    index are **dominated by OKX-FUTURES (116,742 = 67%)**, which are **dated futures mislabeled
+    `instrument_type=PERPETUAL` in the manifest** (`XRP-USD-240329`, `ETH-USD-230331`, `BTC-USD-240126` — mostly
+    PAST-EXPIRY delisted). The catalogue correctly has these as `FUTURE`, so the `(venue,PERPETUAL,dated-symbol)`
+    3-tuple honestly misses. This is a PRE-EXISTING manifest `instrument_type` mislabel on delisted futures, NOT a
+    Script-3 under-resolution — leaving them as-is is the correct never-guess behaviour. A separate follow-up (correct
+    the manifest itype PERPETUAL→FUTURE for dated symbols) would recover most; filed below, NOT a cutover blocker.
+  - **SCRIPT 1 FINDINGS (must address before the corpus-wide `--apply` — filed as todos below):** (a) the 12-day dry-run
+    logged **error=3,380 (~27%)** transient failures from GCS **connection-pool exhaustion** (size-10 pool vs 32
+    workers, aggravated by my running 4 heavy jobs concurrently) — the resolve logic is unaffected (would_patch_a/b/c
+    all correct) and the migration is idempotent (re-runs converge), but the corpus-wide `--apply` needs the pool
+    enlarged or workers reduced, on a DEDICATED VM (corpus-wide = orders of magnitude beyond the 12-day/7,270-file
+    sample, ~billions of rows). (b) a **reporting bug**: `_report`'s STOP line counts only `read_error`, not the
+    driver's `error` outcome, so it printed `read_errors=0` while 3,380 files errored — misleading for `--apply`; fix to
+    sum both.
+  - **Sub-agent provenance**: two background opus agents authored the scripts (MTDS `ec04e8f5`+`549babf7`, IS
+    `04ca7813`+`b61f9bdd`). The IS agent died on a mid-response API error AFTER committing+pushing both scripts but
+    BEFORE dry-running them, so I ran the IS dry-runs (Scripts 3+4) myself. I reviewed all 4 scripts line-by-line for
+    prod-mutation correctness before trusting any count (GOTCHA #10).
 
 - **2026-07-18 (slot-3, /autonomous) — PHASE C: all 4 migration scripts WRITTEN + committed + pushed; dry-runs in
   progress (2 of 4 complete, both clean + within STOP-ON-SURPRISE bounds).** Scripts (all under `scripts/`, direct-push
