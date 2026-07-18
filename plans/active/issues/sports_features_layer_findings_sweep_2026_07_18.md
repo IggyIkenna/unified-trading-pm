@@ -118,8 +118,16 @@ re-derive `fixture_lineups` across history — **no api-football calls needed**,
       populated: 2024-09-01 flat+dup 160->80, 2026-05-15 flat clean 40->40, 2023-03-04 flat+dup 240->120, 2022-04-16
       legacy 8->160. Also dedupes on (fixture_id, team_id, player_id) — the 2x-duplicated historical window would
       otherwise have doubled every lineup on re-derive.
-- [ ] [DATA] P0. Re-derive `fixture_lineups` (and dependent groups) across 2019-2026 from existing raw; verify per-year
-      captured shard counts stop collapsing after 2023.
+- [x] [DATA] P0. Re-derive `fixture_lineups` (and dependent groups) across 2019-2026 from existing raw; verify per-year
+      captured shard counts stop collapsing after 2023. **DONE 2026-07-18 16:09Z — deployment-service@d0d0522 +
+      fs-backfill-20260718-160901.** The sports features launcher hardcoded `--tables fixture_features`, so NO other
+      sports feature table had a VM path at all; added a backward-compatible `--tables` override (QG green, 2,513
+      passed). Launched the lineups re-derive over 2019-01-01..2026-07-17 reading EXISTING raw — **zero api-football
+      calls**, so it does NOT contend for the per-key singleton and runs alongside the FIXTURES backfill. Tarball
+      VERIFIED to carry the fix before launch (features-service `2f187a4e`, `cf10b931` ancestor-proven, flat-shape
+      branch present) — the launcher emits a generic 'may fetch pre-fix code' warning, and running the OLD normalizer
+      here would have overwritten existing lineups with zeros. Watchdog keyed on ROWS>0 + coach populated, because the
+      bug wrote EMPTY shards so shard existence proves nothing.
 
 ### A2. The four empty dimension tables are benign — delete + document — **P2**
 
