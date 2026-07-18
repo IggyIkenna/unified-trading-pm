@@ -410,13 +410,13 @@ pairs stay honest-unresolved (reported, never guessed).
       `market-tick-data-service@ec04e8f5` (`scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`); 12-day
       dry-run 7,270/12,662 files, all 3 classes resolve. `--apply` is Phase-E (operator-gated) — see the 2 pre-apply
       fixes below.**
-- [ ] [SCRIPT] P1. **SCRIPT-1 pre-`--apply` fixes (before the corpus-wide content backfill runs).** (a) The size-10 GCS
-      connection pool vs 32 workers caused ~27% transient `error` failures in the 12-day dry-run (idempotent → re-runs
-      converge, but wasteful): enlarge the pool or reduce `--workers`, and run corpus-wide on a DEDICATED VM
-      (corpus-wide ≫ the 12-day/7,270-file sample, ~billions of rows). (b) `_report`'s STOP line counts only the
-      `read_error` outcome, not the driver's `error` outcome, so it printed `read_errors=0` while 3,380 files errored —
-      sum both so `--apply` failure counts are honest. (found 2026-07-18 Phase-C dry-run.) (repo:
-      market-tick-data-service)
+- [x] ✅ [SCRIPT] P1. **SCRIPT-1 pre-`--apply` fixes** — **`market-tick-data-service@d47609ec`** (2026-07-18). (a) pool:
+      `--workers` default lowered **32→12** to stop oversubscribing the size-10 urllib3 pool (`get_storage_client()`
+      caches ONE pooled client per process shared by all worker threads; 32 > pool_maxsize=10 caused the ~27% transient
+      `error` failures) — a dedicated VM MAY raise workers only in tandem with re-verifying `_GCS_HTTP_POOL_MAXSIZE`.
+      (b) reporting: `errors = _stats.get("read_error",0) + _stats.get("error",0)` so the STOP line counts the driver's
+      `error` outcome too (was printing `read_errors=0` while 3,380 files errored). QG green (6187 passed, exit 0).
+      (repo: market-tick-data-service)
 - [ ] [SCRIPT] P2. **Manifest `instrument_type` mislabel cleanup — OKX-FUTURES dated-futures tagged PERPETUAL (~116,742
       rows).** The bulk of Script-3's 174,649 honest-unresolved main-index rows are OKX-FUTURES dated futures
       (`XRP-USD-240329` etc., mostly past-expiry delisted) whose manifest `instrument_type` is `PERPETUAL` while the
