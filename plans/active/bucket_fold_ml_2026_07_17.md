@@ -357,3 +357,32 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
     (drift-detector SSOT) + DIRECT gcloud job update (the features-onchain-cefi comment at `:225` confirms consolidator
     jobs are created/removed directly via gcloud, NOT tofu apply) + re-run `gen_consolidator_catalog.py`. Retarget →
     `"ml-store" = "ml-store-${local.deployment_env_short}-${var.project_id}"` (env-tiered; job → …-ml-store).
+
+- **2026-07-18, TICK 7 — base-image fix PROVEN + shipped to LDR; consolidator SSOT retarget shipped; canonical main
+  build promoting.** (1) **Base-image pin bump** (unblocks the redeploy): read-only sub-agent `ac33f074` confirmed the
+  UTL base Docker image bakes fresh PM `live-defi-rollout` QG scripts at every bake (UTL `cloudbuild.yaml`
+  `clone-pm-scripts` → `Dockerfile:84 COPY . .`), and the fresh `:latest` = `sha256:76a15429…` (v0.55.0) CARRIES the
+  PYSEC-2026-3447 ignore (grep=2). Also found the automated pin-bump fan-out `digest-drift-sweep.yml` is SILENTLY BROKEN
+  fleet-wide (uses repo-scoped `GITHUB_TOKEN` for cross-repo Contents API → never dispatches) → 11 repos stale-pinned →
+  ALL their service builds red — filed P1 issue `base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md`
+  (unified-trading-pm@1e87df090), operator decision pending. **Bumped ml-service `Dockerfile` `BASE_IMAGE_DIGEST`
+  b7e391f8→76a15429, QG-green, quickmerged ml-service@5d05c4c** (LDR). **PROOF the fix works:** manual
+  `gcloud builds submit` off the fixed LDR tree (build `2eedb3ca`) PASSED Step #7 in-image QG (no PYSEC-2026-3447
+  failure — pin fix confirmed) + Step #8 operability-probe + pushed the image; it only failed at Step #13
+  `publish-wheel` because a manual submit strips `.git` → setuptools-scm can't detect the version — an artifact of
+  manual-submit, NOT a real failure (the main-triggered build has `.git`). Triggered the fleet LDR→main promote
+  (`ldr-to-main-promote-fleet`, workflow_dispatch 10:09Z) to land 5d05c4c on ml-service main → the `ml-service-build`
+  trigger then produces the canonical SUCCESS build to cite. Watcher `bgjjhh1mb` armed for it. (2) **Consolidator
+  retarget (SSOT):** the ml consolidator is effectively a no-op — NO `_index/per_vm/` shards exist in any ml bucket (ml
+  uses single-blob-CAS: ManifestWriter writes `availability_index.parquet` directly; models index lives at
+  `models/_index/`), and the AWS source `unified-trading-ml-training-artifacts-<acct>` NO LONGER EXISTS. Shipped the
+  DECLARED-ESTATE retarget: repointed both TF maps' `ml-training-artifacts` value → `ml-store-{env}-{pid}` (gcp
+  `…_scheduler.tf:223` env-tiered / aws `:44` `ml-store-prd-<acct>`), kept the category KEY (live job name stays stable;
+  rename→ml-store is a cosmetic closeout item), regen'd `consolidator_catalog.generated.json` (ml
+  `bucket_template`→`ml-store-{env}-{project}`, 1-line diff). deployment-service + deployment-api QG green; shipping via
+  quickmerge. **The LIVE Cloud Run Job `--bucket` repoint is DELIBERATELY COUPLED WITH the Phase-E delete** (atomic —
+  the live job safely stays on the still-existing `ml-training-artifacts` until that bucket is deleted; repointing it
+  early would make the root-based consolidator write an EMPTY `_index/availability_index.parquet` at ml-store root, a
+  potential data-status regression since the real model index is under `models/_index/`). Phase E must: repoint the live
+  GCP job `--bucket`→`ml-store-prd-<pid>` AND verify the data-status reader's expected availability_index path BEFORE
+  deleting `ml-training-artifacts`.
