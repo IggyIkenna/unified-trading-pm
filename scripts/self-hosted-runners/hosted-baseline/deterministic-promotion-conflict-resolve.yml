@@ -139,8 +139,9 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        "Deterministic promotion-conflict resolver: ${{ github.event.client_payload.repo_name || inputs.repo_name }}
-        ${{ github.event.client_payload.target_branch || inputs.target_branch }} → outcome=${{ needs.resolve.outputs.outcome }}"
+        "Deterministic promotion-conflict resolver: ${{ github.event.client_payload.repo_name || inputs.repo_name }} ${{
+        github.event.client_payload.target_branch || inputs.target_branch }} → outcome=${{ needs.resolve.outputs.outcome
+        }}"
       severity: ${{ needs.resolve.outputs.outcome == 'escalated' && 'INFO' || 'WARNING' }}
       conclusion: ${{ needs.resolve.result }}
       workflow_name: ${{ github.workflow }}

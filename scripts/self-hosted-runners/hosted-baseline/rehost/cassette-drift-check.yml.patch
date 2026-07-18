@@ -1,0 +1,28 @@
+--- derived
++++ hosted
+@@ -45,16 +45,15 @@
+           token: ${{ secrets.GH_PAT }}
+           path: unified-api-contracts
+
+-      # No actions/setup-python and no `pip install uv`: this runs on the self-hosted glue pool,
+-      # whose python3 IS the slot venv on 3.13 (first on the unit PATH) — the version UAC's
+-      # requires-python = ">=3.13,<3.14" demands — and which already provides uv
+-      # (scripts/self-hosted-runners/slot-venv-requirements.txt). Re-adding either would
+-      # re-download tools that are already resident on a box we pay for 24/7. Provisioning lives
+-      # in scripts/self-hosted-runners/bootstrap-ci-host.sh; if the version is ever wrong, fix it
+-      # THERE, not here. The step this replaced pinned "3.12", which CONTRADICTED UAC's
+-      # requires-python and silently made `uv pip install -e .` unresolvable every night.
+-      # Self-hosted-ONLY: restoring runs-on: ubuntu-latest requires restoring BOTH steps
+-      # (see scripts/self-hosted-runners/hosted-baseline/cassette-drift-check.yml).
++      - name: Set up Python
++        uses: actions/setup-python@v6
++        with:
++          # UAC declares requires-python = ">=3.13,<3.14". A "3.12" pin makes
++          # `uv pip install -e .` unresolvable, silently degrading this job.
++          python-version: "3.13"
++
++      - name: Install uv
++        run: pip install uv
+
+       - name: Install unified-api-contracts (isolated venv)
+         run: |

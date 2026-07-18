@@ -1,0 +1,106 @@
+---
+doc_type: plan
+title: InstrumentRecord schema-completeness + extra='forbid' — stop silently dropping adapter kwargs
+summary:
+  Operator ruled 2026-07-18 to close the InstrumentRecord silent-drop class properly (not a minimal remove).
+  InstrumentRecord uses pydantic's default extra='ignore', so any kwarg an adapter passes that the model does not
+  declare is silently DROPPED (that is how the prediction title was lost before A4 added `question`). Measurement (flip
+  extra='forbid' + run IS adapter tests) surfaced ~4 systemic undeclared kwargs across ~30 adapters — symbol /
+  min_order_size / is_active / updated_at (+ more candidates from a static scan). This plan gets the authoritative list,
+  decides per-field add-to-schema vs remove-from-caller, applies it, and flips extra='forbid' so future drops fail LOUD.
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [data]
+repos: [unified-api-contracts, instruments-service]
+scope: [engineer]
+tags: [uac-contract, instrument-record, pydantic, schema-completeness, honest-absence, silent-drop]
+related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
+created: 2026-07-18
+last_updated: 2026-07-18
+parent_epic: instruments_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P3
+estimate_class: refactor
+estimate_baseline_ai_days: 2.5
+estimate_calibrated_ai_days: 1.0
+assigned_role: data_engineering
+drift_direction: advance-code
+depends_on: []
+source:
+  "data_status_page_ux_and_canonicalisation_2026_07_16.md P3 InstrumentRecord side-discovery (operator ruling
+  2026-07-18: schema-completeness, not minimal-remove)"
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+---
+
+# InstrumentRecord schema-completeness + extra='forbid'
+
+**Operator ruling (2026-07-18):** do the schema-completeness version — decide per-field whether each silently-dropped
+kwarg SHOULD be captured (add to `InstrumentRecord` + the parquet schema) or removed from the caller — then flip
+`extra='forbid'`. NOT the minimal behaviour-preserving remove.
+
+## Context
+
+`unified_api_contracts/internal/reference/instrument.py::InstrumentRecord` uses pydantic's default `extra='ignore'`. A
+kwarg a caller believes it is persisting but that the model does not declare is a lie-by-omission (same honest-absence
+class as a fabricated value) — it vanishes with no error, no log, no test failure. The concrete instance already fixed:
+the prediction adapters passed `symbol=str(title)[:100]` which was dropped, so the catalogue label fell back to the raw
+slug — A4 added the `question` field + the adapters now populate it (kalshi.py / polymarket parsing.py), and the old
+`symbol=` consumer was removed there.
+
+**Measured blast radius (2026-07-18, flip `extra='forbid'` + run IS adapter tests):** the model currently drops, at
+minimum, these systemic kwargs (partial run — todo 1 gets the authoritative complete list):
+
+| dropped kwarg    | seen in adapters                                  | likely disposition (todo 2 confirms)                                  |
+| ---------------- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| `symbol`         | betfair, ibkr, renzo, solend (+ prediction fixed) | display/exchange symbol — likely REMOVE (raw_symbol covers it) or map |
+| `min_order_size` | betfair, kalshi, polymarket parsing               | DISTINCT from declared `min_size` — decide ADD-field vs remove        |
+| `is_active`      | betfair, kalshi, polymarket parsing               | overlaps declared `status` (InstrumentStatus) — likely map to status  |
+| `updated_at`     | betfair, kalshi, polymarket parsing               | metadata timestamp — decide ADD-field vs remove                       |
+
+A static scan flagged further candidates in defi/deribit adapters (`spot_asset`, `debt_symbol`, `onchain_symbol`,
+`contract_address`, `decimals`, `borrow_symbol`, `capability`, …) — some may be false positives from greedy parsing; the
+authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
+
+## Codex SSOTs (read before touching)
+
+- `codex/02-data/honest-absence-downstream-handling.md` — a dropped field a caller believed persisted is honest-absence.
+- `codex/02-data/availability-manifest-and-data-status.md` — INSTRUMENTS_PARQUET_SCHEMA alignment (adding a field is a
+  parquet-column change; the InstrumentRecord docstring documents the 1:1 model↔column contract).
+- `unified_api_contracts/internal/reference/instrument.py` — the model + `INSTRUMENTS_PARQUET_SCHEMA`.
+
+## Todos
+
+- [ ] [DATA] P1. **Get the AUTHORITATIVE list** — flip `model_config = ConfigDict(extra="forbid")` on a branch and run
+      the FULL UAC + IS suites (not a -k subset); collect every `extra_forbidden` field name + the adapter/call-site
+      that passes it. This is the foundation gate (my measurement was a subset).
+- [ ] [DATA] P1. **Per-field disposition table — the bias is REMOVE, ADD is the exception.** These kwargs are currently
+      DUMPED across the board by the adapters and READ BY NOTHING (that silent no-op is why they went unnoticed). So for
+      each dropped kwarg apply a three-part test (operator 2026-07-18) and ADD to the schema ONLY if all three hold,
+      else REMOVE from the caller: 1. **Code usage** — grep for a real CONSUMER: does any code path
+      (features/ml/strategy/UI/download) actually read this field off the record/parquet, or would a concrete consumer
+      want it? "An adapter passes it" is NOT usage. 2. **Business reason** — is there a plausible trading/reference-data
+      reason to persist it (does it carry decision value), vs incidental adapter scratch state. 3. **Doesn't already
+      exist** — no declared field already carries the same information. Record the verdict + evidence per field.
+      Anchors: `is_active`→already `status` (REMOVE/map); `symbol`→already `raw_symbol` (likely REMOVE);
+      `min_order_size` vs `min_size` (distinct? only ADD if a consumer needs the order minimum separately); `updated_at`
+      (a consumer of capture-provenance? else REMOVE).
+- [ ] [DATA] P1. **ADD the kept fields** — declare them on `InstrumentRecord` + align `INSTRUMENTS_PARQUET_SCHEMA` (1:1
+      model↔column contract); additive + optional (non-breaking added-optional-field), so existing rows/validators are
+      unaffected. UAC unit test per added field.
+- [ ] [DATA] P1. **FIX the callers** — for REMOVE fields, drop the undeclared kwarg from each adapter; for ADD fields,
+      point the adapter at the new declared field. Cover every call site the todo-1 run surfaced.
+- [ ] [DATA] P1. **Flip `extra='forbid'`** — add `model_config = ConfigDict(extra="forbid")`; UAC + IS suites green
+      (proves no remaining undeclared-kwarg caller). Add a UAC test asserting an unknown kwarg now RAISES.
+- [ ] [REVIEW] P2. **Post-phase codex audit** — note the extra='forbid' contract + any new fields in
+      `honest-absence-downstream-handling.md` + the InstrumentRecord docstring; confirm no plan↔codex drift.
+
+## Progress Log
+
+- **2026-07-18** — Authored after the operator chose schema-completeness (not minimal-remove) for the InstrumentRecord
+  silent-drop hardening. Human plan (operator-driven). The concrete prediction-title data-loss is ALREADY fixed (A4
+  `question=`); this plan closes the systemic class + makes the contract fail-loud.

@@ -650,3 +650,26 @@ good as its ENTITY NAME — enumerate what a run actually created (unfiltered by
       fix @7d49d096 + fresh tarball → `fixtures_schedule` rows with `round` populated 100% in every sampled shard.
 - [ ] [OPS] P0. Let the backfill run to completion (watchdog v4 keyed on `entity=fixtures_schedule` created today), then
       run the catalogue rollup `--since 2019-01-01` and verify `competition_phase` is no longer ~100% UNKNOWN.
+
+### G-ops (2026-07-18 15:04Z) — `--force` + SPOT has NO resume; the LOOP is the resume mechanism
+
+`af-backfill-20260718-141638` was **preempted after ~10 min of real work** (SPOT; log stops mid-fetch at 14:30:16, no
+completion marker, no `PREEMPTED` file). It reached 2019-01-07 and wrote **61 `fixtures_schedule` objects across 9
+distinct days** (2019-01-01..09), all with `round` populated.
+
+**Structural problem:** measured throughput is ~9 days per 10 min ≈ **54 days/hour**, so the full 2019-01-01..2026-07-17
+range (2,390 days) is **~44 hours** of runtime. `--force` is what makes the run re-write history, but it also disables
+the skip that would let a relaunch pick up where it left off — so a single long run on SPOT can NEVER complete: every
+preemption restarts at the START_DATE.
+
+**Resolution (no new code):** relaunch each time from `last_completed_day + 1`. The autonomous loop supplies the resume:
+on each tick, measure the max `day=` with a `fixtures_schedule` object created today, and relaunch
+`--force --entity FIXTURES <last+1> 2026-07-17`. Progress is monotonic with zero redo, and a preemption costs only the
+partial day. Watchdog v5 prints `last_completed_day` explicitly so the next tick can act on it without re-deriving.
+
+Applied: relaunched `af-backfill-20260718-150353` from **2019-01-10** (gate fix re-verified aboard: tarball sha
+`c810f194`, `7d49d096` ancestor-proven, `if redo_all:` present — the sha moves every rebuild as peers land commits, so
+ancestry MUST be re-checked per launch, never assumed from the sha string).
+
+- [ ] [OPS] P1. Consider making `redo_all` resume-aware in code (skip days whose `round` is already populated), so the
+      operator/loop isn't the resume mechanism. Until then, the loop-resume pattern above is the contract.

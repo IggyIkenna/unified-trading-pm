@@ -1,0 +1,22 @@
+--- derived
++++ hosted
+@@ -41,12 +41,18 @@
+         with:
+           fetch-depth: 1
+
++      - name: Set up Python
++        uses: actions/setup-python@v6
++        with:
++          # pyproject requires-python = ">=3.13,<3.14". On the glue pool the slot venv already
++          # provides this; on ubuntu-latest it must be set up explicitly.
++          python-version: "3.13"
++
+       - name: Corpus frontmatter check
+         id: gate
+         shell: bash
+         run: |
+           set -uo pipefail
+-          # The glue slot's venv python (unit PATH) carries the PM deps the checker needs.
+           OUT="$(python3 scripts/plan-hygiene/check_frontmatter_schema.py --quiet 2>&1)"
+           RC=$?
+           echo "$OUT"

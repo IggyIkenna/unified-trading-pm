@@ -165,6 +165,26 @@ jobs:
               labels: ['removed-symbol-rot', 'automated'],
             });
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable; as the LAST step it is free and runs on this job's runner.
+        # `if: always()` + `job.status` reproduces the old `conclusion: needs.sweep.result`. PM is
+        # checked out at `path: workspace/unified-trading-pm`, so the local action path carries that
+        # prefix. secrets/vars do not reach a composite action — passed explicitly.
+        if: always()
+        uses: ./workspace/unified-trading-pm/.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "removed-symbols-workspace-sweep"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   notify:
     name: Slack — Removed-Symbols Workspace Sweep
     needs: [sweep]
@@ -177,18 +197,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Removed-Symbols Sweep Event
-    needs: [sweep, notify]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.sweep.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"event": "removed-symbols-workspace-sweep"}'

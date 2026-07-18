@@ -1,0 +1,33 @@
+--- derived
++++ hosted
+@@ -61,29 +61,7 @@
+
+       # ── SYSTEM DEPS ──────────────────────────────────────────────────────────
+       - name: Install Claude Code CLI
+-        run: |
+-          set -euo pipefail
+-          # SELF-HOSTED runner ([self-hosted, glue]): npm's DEFAULT global prefix is
+-          # /usr/lib/node_modules, which is root:root drwxr-xr-x while this runner executes as a
+-          # NON-root user. `npm install -g` there can therefore only ever succeed as a NO-OP — and
+-          # that is exactly what it did for months, silently, because the installed version already
+-          # matched latest. The 2.1.175 -> 2.1.212 release turned the no-op into a real upgrade, npm
+-          # tried to rename into /usr/lib/node_modules/@anthropic-ai/, and it EACCES'd (errno -13):
+-          #   run 29556693095 05:11 = last no-op SUCCESS; 29559227122 06:09 onwards = hourly CRITICAL.
+-          # So this was a latent misconfiguration a routine upstream release exposed, not a
+-          # regression in the workflow or the package.
+-          #
+-          # Fix: install under a USER-WRITABLE prefix instead of touching /usr/lib. This mirrors the
+-          # convention already in place on the dev hosts (`npm config get prefix` there is already
+-          # /home/<user>/.npm-global). Set via env, NOT `npm config set`, so we do not mutate the
+-          # shared runner's global npm state. plan-health-agent.yml does the same install but on
+-          # ubuntu-latest, where the runner user CAN write the default prefix — it is unaffected.
+-          export NPM_CONFIG_PREFIX="${HOME}/.npm-global"
+-          mkdir -p "${NPM_CONFIG_PREFIX}/bin"
+-          # Persist onto PATH for every LATER step in this job (the export dies with this shell).
+-          echo "${NPM_CONFIG_PREFIX}/bin" >> "$GITHUB_PATH"
+-          npm install -g @anthropic-ai/claude-code
+-          "${NPM_CONFIG_PREFIX}/bin/claude" --version
++        run: npm install -g @anthropic-ai/claude-code --quiet
+
+       # ── GIT IDENTITY ─────────────────────────────────────────────────────────
+       - name: Configure git identity
