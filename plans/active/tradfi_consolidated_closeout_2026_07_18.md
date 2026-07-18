@@ -348,6 +348,62 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - [ ] [DATA] P0. **MVP backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single
       Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
 
+## Pass-through from the 2026-07-18 consolidated canonicalisation audit (slot-4) — decisions + measured worklist
+
+> Authored by the DeFi close-out audit (`defi_consolidated_closeout_2026_07_18.md`) and handed here per the operator's
+> ownership split (tradfi findings land in THIS plan). Operator rulings 2026-07-18.
+
+**Operator decisions confirmed (tradfi):**
+
+- **Equity id = `-USD` on ALL FOUR surfaces** — target `NASDAQ:EQUITY:AAPL-USD`. Today the content `instrument_id`
+  column + manifest key emit BARE `NASDAQ:EQUITY:AAPL` (only the filename carries `-USD`, via a separate `file_stem`).
+  **Code fix**: `_build_tradfi_cash` currently appends the quote only for `INDEX` — extend it to append `-USD` for
+  `EQUITY` (and `ETF`) so the content column matches the decided target. Then migrate the historical rows (1,762,272
+  prefixed-missing-`-USD` + 1,082,217 raw-ticker rows). The Phase-B/D verify gate must assert `-USD` on equity too (its
+  current regex only targets FUTURE/OPTION).
+- **Venue token = HYPHEN SSOT** (tradfi venues are already single-spelling uppercase — CME/NYSE/NASDAQ/CBOE/KRX/FX — no
+  drift; confirmed clean on this surface).
+- **Daily data_type = `ohlcv_24h`** (least churn) — the live manifest already carries **541,579 `ohlcv_24h` rows and
+  ZERO `ohlcv_1d`**, so `ohlcv_24h` is the persisted token → **no data migration**. The only code change: add
+  `ohlcv_24h` to `market-tick-data-service/.../tradfi/tradfi_shared.py::TRADFI_DATA_TYPES` (which currently RAISES on
+  it) and reconcile the Yahoo adapter docstring. The daily Treasury/KRW ids (`CBOE:INDEX:US10Y-USD`,
+  `FX:CURRENCY:KRW-USD`) are stable either way.
+- **Combos = the leg-aware signed-weight spec** (operator 2026-07-09,
+  `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`): per-leg human-readable `instrument_key` + weight +
+  direction-as-sign, 1–4-leg hard cap, migrate code AND data. The IS-catalogue CME + CBOE/VX path is shipped; **OPEN
+  here**: the **1,154,976 tick-side `UD_*` manifest combos** (null id + null `combo_type`/`leg_weights`) need the same
+  legs-re-derived → structured `VENUE:COMBO:…` id + populated `leg_weights` treatment (Phase-B), plus the
+  `build_instrument_catalogue.py` self-refresh durability fix. **Open sub-nuance**: the top-level combo id being
+  strategy-named (`CME:COMBO:SP500-BUTTERFLY-…` from `build_combo_id`) vs the operator's "no separate strategy field,
+  infer from legs" spec — resolve when combos are worked; doesn't block.
+- **ETF** — keep `etf` as a distinct canonical instrument_type (ETF ≠ equity; IBIT/ETHA are MVP crypto-ETFs); case-fold
+  `ETF`→`etf`. (Flag if you'd rather fold ETF into `equity` — 270,460 rows either way.)
+- **~591k instrument_type MISLABELS** (options/combos stamped `future`/`FUTURE`) → re-stamp from the classifier by BODY,
+  not the stored column (the plan's cited "~400k" is the lowercase-`future` subset; the 206,200 `FUTURE` calendar
+  spreads are an additional cohort).
+
+**Live manifest worklist (`market-data-tick-tradfi-prd`, 5.55M rows; canonical id ≈0.02%, ZERO derivative ids carry
+`@LIN/@INV`)** — venue/data_type/source/pipeline_mode are CLEAN; instrument_type + instrument_id are the work:
+
+| dimension       | non-canonical                                   | canonical target                                 |     ~rows | action                          |
+| --------------- | ----------------------------------------------- | ------------------------------------------------ | --------: | ------------------------------- |
+| instrument_type | `FUTURE`/`EQUITY`/`SPOT_PAIR`/`FUTURES`         | lowercase                                        |   750,715 | case-fold                       |
+| instrument_type | `combo` (null id + null combo_type)             | leg-aware `VENUE:COMBO:…` + `leg_weights`        | 1,154,976 | synthesize (see combo decision) |
+| instrument_type | `etf`/`ETF`                                     | `etf` (case-fold)                                |   270,460 | case-fold                       |
+| instrument_type | `NULL`/`''`                                     | populate from writer grain                       |   596,851 | resolve                         |
+| instrument_type | MISLABEL `future`=option/combo, `FUTURE`=spread | relabel from id                                  |   591,183 | relabel                         |
+| instrument_id   | prefixed missing `-USD` (`NYSE:EQUITY:DUK`)     | `…-USD`                                          | 1,762,272 | append quote                    |
+| instrument_id   | raw ticker (`ASTS`,`QQQ`)                       | `VENUE:EQUITY\|ETF:SYM-USD`                      | 1,082,217 | reconstruct                     |
+| instrument_id   | raw databento option (`EW1H0_C3025`)            | `VENUE:OPTION:ROOT-USD@LIN-YYYYMMDD-STRIKE-C\|P` |   238,359 | reconstruct                     |
+| instrument_id   | raw chain-root (`SI.OPT`,`VX.FUT`)              | `VENUE:FUTURES_CHAIN:ROOT-USD@LIN`               |   216,563 | reconstruct                     |
+| instrument_id   | whitespace (`CME:OPTION:E3AN6 C7960`)           | de-spaced canonical                              |   206,579 | strip whitespace                |
+| instrument_id   | NULL/empty aggregate rows                       | synthesize symbolic id                           | 1,844,635 | synthesize                      |
+| data_type       | `futures_chain` leaked (8)                      | belongs in instrument_type                       |         8 | relabel                         |
+| source/vendor   | legacy `barchart` (retired)                     | drop or keep-historical                          |     4,655 | operator: drop?                 |
+
+**Enumeration-restore (cross-AG, owned by the DeFi plan Track 6)**: the raw distinct-values audit panel per asset_group
+(removed on `deployment-api@512180be`) is being restored so this worklist stays live-visible during the migration.
+
 ## Codex SSOTs (read before touching a phase)
 
 `codex/02-data/tradfi-databento-sourcing-ssot.md`, `codex/02-data/availability-manifest-and-data-status.md`,
