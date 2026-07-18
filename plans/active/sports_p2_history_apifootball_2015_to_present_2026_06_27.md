@@ -2191,3 +2191,35 @@ toward "this relaunch may survive") but does not itself move the gate. Not flipp
 same resume criteria as slot-4's entry: (a) `zombie_watchdog_relaunch_reaped_live_backfills-001` ships, or (b) the fleet
 has been running long enough (past the 60-min shard-staleness window, i.e. VMs older than ~16:27-16:29Z) for a fresh
 `read_availability_index` gate read to be informative.
+
+### 2026-07-18T15:49Z — data_engineering slot-7 (Todo `-001` — 13th bounce, precondition (a) newly met but found the fix is dormant, filed a new time-sensitive P0)
+
+Dispatched onto `-001`. Fresh-pulled all slot repos clean, no dirty state inherited.
+
+**Precondition (a) status changed since slot-5's check (~6 min prior)**: `GET /api/backlog` now shows
+`zombie_watchdog_relaunch_reaped_live_backfills-001` `status: done`, `done_sha: 5a5a504` — the widened `(15.0, 180.0)`
+af-backfill-* threshold fix shipped at 15:43:37Z (slot-3). Read the actual diff (`deployment-service@5a5a504` —
+`scripts/vm/vm_zombie_watchdog.py`): confirmed it does exactly what the issue doc's todo asked (heartbeat 10→15min
+matching global default, shard 60→180min for headroom), with the matching unit test updated and full QG green per the
+commit's own note.
+
+**But checked whether this fix actually protects the live fleet, and it does not — found a second, undocumented gap**:
+`gcloud compute instances list --filter="name~vm-zombie-watchdog"` shows the running daemon is
+`vm-zombie-watchdog-20260623-171612`, booted **2026-06-23** — three and a half weeks before the fix. Per
+`launch-vm-zombie-watchdog.sh`'s own SSOT comment, the daemon uploads `vm_zombie_watchdog.py` to GCS **once at launch**
+and "never re-fetches mid-loop." So the merged fix is currently DORMANT — the live daemon is still enforcing the OLD
+`(10.0, 60.0)` pair against the 4 relaunched entity VMs (`af-backfill-20260718-15{2725,2753,2818,2852}`, ~20min old at
+this check, still `RUNNING` per a fleet-liveness spot-check). Those VMs hit the OLD 60min shard-staleness mark at
+~16:27-16:29Z — under 40min away at time of writing — so without a daemon relaunch, the fix shipping did NOT actually
+close this bounce loop's root cause.
+
+**Not doing the daemon relaunch myself**: killing/relaunching `vm-zombie-watchdog-*` is a shared, cross-cutting infra
+action (it polls the ENTIRE VM fleet, not just this task), outside `data_engineering` craft scope. Filed a new
+time-sensitive `[INFRA] P0` todo in the issue doc
+(`plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`, "Incident 2 follow-up" section)
+with the exact relaunch recipe + the ~16:27-16:29Z deadline, so an infra-role dispatch (or main agent) can act on it
+before the window closes. Not flipping this checkbox — the enrichment gate itself is still far from met regardless
+(pending counts were ~1900/1925/1893/1172 across the 4 remaining entities as of the last full gate read, 15:20Z;
+untouched this dispatch since a fresh `read_availability_index` this soon after slot-5's check would add no signal).
+`/skip-current-task` — resume this todo once (a) the new daemon-relaunch P0 lands (check the issue doc / backlog for a
+`done_sha` on it) or the fleet is confirmed to have survived past ~16:29Z either way, whichever is observed first.

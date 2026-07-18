@@ -149,3 +149,36 @@ residual. Mitigated this dispatch by relaunching the 4 residual entities
       intermittently failing to start/write; the 2026-07-18 heartbeat blob for `af-backfill-20260717-151237` shows a
       write only 16s before the delete call, consistent with either a last-second race or a sidecar gap. (repo:
       deployment-service)
+
+## Incident 2 follow-up — 2026-07-18T15:49Z (the shipped fix is INERT until the daemon is relaunched)
+
+Dispatched to `sports_p2_history_apifootball_2015_to_present-001` (13th+ bounce). Checked whether
+`deployment-service@5a5a504` (the widened `(15.0, 180.0)` threshold fix above) actually protects the currently-running
+relaunch (`af-backfill-20260718-15{2725,2753,2818,2852}`, launched ~15:27-15:29Z). **It does not, yet**:
+`gcloud compute instances list --filter="name~vm-zombie-watchdog"` shows the daemon still running is
+`vm-zombie-watchdog-20260623-171612` — booted **2026-06-23**, three and a half weeks before the fix commit
+(2026-07-18T15:43:37Z). Per the launcher's own SSOT comment (`launch-vm-zombie-watchdog.sh` lines 27-33): the daemon
+uploads `vm_zombie_watchdog.py` to `gs://deployment-scripts-{pid}/scripts/vm_zombie_watchdog.py` **once, at launch
+time**, and "the running watchdog never re-fetches mid-loop." So the currently-running daemon is still enforcing the OLD
+`(10.0, 60.0)` af-backfill-* pair regardless of the merged code fix — the fix is real but dormant until the daemon
+process itself is killed and relaunched.
+
+**Consequence**: the current 4-VM relaunch is still at risk of being wrongly reaped again at its ~60-min mark
+(~2026-07-18T16:27-16:29Z, under the OLD threshold) even though the fix shipped before that deadline. This is very
+likely why the fix landing didn't itself resolve the bounce loop — the daemon restart is a separate, undone step.
+
+**Not doing the relaunch myself** — killing/relaunching `vm-zombie-watchdog-*` is a shared cross-cutting infra action
+(monitors the ENTIRE VM fleet, not just this task's backfill), outside `data_engineering` craft scope
+(`data_engineering.md` § does_not: "infra/VM launches (→ infra)"). Filing as the actionable next step, P0 given the
+~38min-remaining window at time of writing:
+
+- [ ] [INFRA] P0. **Relaunch the `vm-zombie-watchdog` daemon VM to pick up the shipped threshold fix
+      (`deployment-service@5a5a504`)** — the running daemon (`vm-zombie-watchdog-20260623-171612`, booted 2026-06-23)
+      only uploads its script to GCS at launch time and never re-fetches mid-loop, so it is still enforcing the OLD
+      `(10.0, 60.0)` af-backfill-* thresholds despite the fix being merged. Recipe:
+      `gcloud compute instances delete vm-zombie-watchdog-20260623-171612 --zone asia-northeast1-c --quiet` then
+      `bash scripts/vm/launch-vm-zombie-watchdog.sh` (re-uploads the fixed `.py`, singleton lock ensures no overlap;
+      verify RUNNING within 60s — no fire-and-forget). Time-sensitive: the live
+      `af-backfill-20260718-15{2725,2753,2818,2852}` fleet (from `sports_p2_history_apifootball_2015_to_present-001`)
+      hits the OLD 60min shard-staleness mark around ~2026-07-18T16:27-16:29Z — relaunching the daemon before then is
+      what actually makes the already-shipped fix take effect. (repo: deployment-service)
