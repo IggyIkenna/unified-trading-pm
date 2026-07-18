@@ -54,6 +54,16 @@ code_refs:
 
 # DeFi canonical naming SSOT (data_type · chain · instrument_type · path · bucket)
 
+> **🟡 WRITE-MODEL SUPERSEDED (operator 2026-07-18) — DeFi → per-instrument (flat pattern #1).** The naming vocabulary
+> below (data_type / chain / instrument_type / path / bucket) STANDS. What changes: the leaf file is no longer a
+> multi-instrument `{venue}_{chain}_{capture_ts}.parquet` batch — DeFi now shard-writes **ONE parquet per instrument**,
+> `{file}` = the symbolic canonical id (`filename == instrument_id == manifest key`), exactly like cefi/tradfi. The
+> writer change is a `groupby("instrument_id")` fan-out at `write_defi_rows`; IS owns the per-(venue,chain)
+> `available_from`/`available_to` denominator; the historical batch files migrate to per-instrument via a column+row
+> UNION (forking `migrate_defi_full_v9_canonical.py`). SSOT: `cross-asset-canonical-target-ssot.md` §1 (pattern #1) +
+> `plans/active/defi_consolidated_closeout_2026_07_18.md` § Per-instrument re-architecture (R1–R4). DeFi capture is
+> STOPPED pending the writer fix.
+
 > **Status: AUTHORITATIVE (operator-locked 2026-06-01).** This is the single source of truth for the DeFi canonical
 > wire/storage vocabulary. The DeFi C0 migration (`migrate_defi_full_v9_canonical.py`) writes to these forms; every
 > writer/reader/plan/codex listed below MUST converge on them. A surface that diverges is **review-blocking** (it makes
