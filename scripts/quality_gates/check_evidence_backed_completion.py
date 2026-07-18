@@ -51,7 +51,13 @@ DEFAULT_PROJECT = "central-element-323112"
 
 # A checked-off todo line: `- [x] ...` (case-insensitive x).
 _CHECKED_RE = re.compile(r"^\s*-\s*\[[xX]\]\s")
-_UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[[ xX]\]\s")
+# ANY single-char-bracket todo marker (`[x]`/`[X]`/`[ ]`/`[~]`/`[-]`/...) ends a block's continuation
+# — not just `[ xX]`. A checked block's continuation buffer must stop at the NEXT todo item
+# regardless of that item's state, else an adjacent in-progress (`[~]`) or other-state todo's prose
+# gets misattributed into the PRIOR checked block's evidence scan (seen live: an in-progress
+# "Atomic writer/reader cutover" todo's "no redeploy until all code lands" text got swallowed into
+# the preceding DONE todo's block, producing a false runtime-green-claim-without-evidence violation).
+_UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[.\]\s")
 
 # A structured Evidence ref carrying one or more cloudbuild ids.
 _EVIDENCE_LINE_RE = re.compile(r"Evidence:\s*(?P<body>.+)", re.IGNORECASE)
