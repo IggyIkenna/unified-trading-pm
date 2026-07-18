@@ -110,12 +110,14 @@ source:
 
 ## Per-instrument re-architecture (operator 2026-07-18 — SUPERSEDES the batch-model tracks; DeFi capture STOPPED)
 
-> **🟡 In-flight refactor + capture halted.** All DeFi capture was STOPPED 2026-07-18 (2 GCP forward-poll VMs
-> `defi-fwd-{dex-pools,oracle-prices}-poll` + 5 `uts-prod-mtds-collect-*defi*` / `defi-fwd-oracle-prices-prd` schedulers
-> paused; AWS clear; **IS enum/catalogue crons LEFT RUNNING** — IS remains the availability source). DeFi is being
-> re-architected to shard-write ONE parquet per instrument (like cefi/tradfi), collapsing SSOT §1 pattern #4 → pattern
-> #1. This is the target; the batch-model column/path framing in the tracks below is superseded. Grounded in code
-> (workflow `wf_20749dad`).
+> **🟡 In-flight refactor + capture halted (re-armed 2026-07-18).** All DeFi capture is STOPPED — GCP forward-poll VMs
+> `defi-fwd-dex-pools-poll` + `defi-fwd-dex-swaps-poll` stopped and their schedulers
+> `defi-fwd-{dex-pools,dex-swaps, oracle-prices}-prd` + `uts-prod-mtds-collect-{evm,solana}-defi-cron` PAUSED (they had
+> respawned once on the old batch-writer — re-armed by pausing the schedulers first, so no further respawn); AWS both
+> regions clear; **IS enum/catalogue/consolidator crons LEFT RUNNING** — IS remains the availability source. DeFi is
+> being re-architected to shard-write ONE parquet per instrument (like cefi/tradfi), collapsing SSOT §1 pattern #4 →
+> pattern #1. This is the target; the batch-model column/path framing in the tracks below is superseded. Grounded in
+> code (workflow `wf_20749dad`).
 
 **Why**: MTDS wrote an arbitrary bunch of instruments per capture into one `{venue}_{chain}_{capture_ts}.parquet` batch,
 blank manifest `instrument_id`, multiple batch files per shard-day — the root cause of the manifest/data-status pain +
@@ -129,8 +131,11 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 
 ### R1 — Writer: per-instrument fan-out (forward-write) · P0
 
-- [ ] [BACKEND] P0. **`write_defi_rows` (`market_interface/adapters/defi/canonical_write.py:103-296`) fans out**: after
-      per-row `instrument_id` enrichment, `df.groupby("instrument_id")` → return a LIST of `(group_df, path)`, each leaf
+- [x] ✅ [BACKEND] P0. **SHIPPED `market-tick-data-service@4ca2640d` (QG green; runtime-verified: returns per-instrument
+      list, distinct `{sanitized_symbol}.parquet` leaves, sanitizer byte-matches the migration; real blast radius = ~37
+      `write_defi_rows` call sites + evm_defi per-instrument `record_captured` loop + 25 test files, all handled).**
+      `write_defi_rows` (`market_interface/adapters/defi/canonical_write.py:103-296`) fans out**: after per-row
+      `instrument_id` enrichment, `df.groupby("instrument_id")` → return a LIST of `(group_df, path)`, each leaf
       `{sanitized_symbol}.parquet` via `build_defi_partition_path(..., file_name=…)` (already accepts `file_name`, no
       builder change). `_write_and_upload` (`cli/handlers/evm_defi_collectors.py:36-68`) loops the upload. **6/7
       handlers already emit per-instrument manifest rows** (dex_pools / dex_swaps / oracle_prices / risk_params /
@@ -141,18 +146,36 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 
 ### R2 — IS: the honest per-(venue,chain) availability denominator · P0
 
-- [ ] [BACKEND] P0. **WIRE THE MISSING STAKING/RESTAKING/VAULT VENUES INTO `_DEFI_VENUES` (the denominator is missing
-      ~15 protocols).** Measured 2026-07-18 (operator caught it): the enumerated `_DEFI_VENUES` = 63 venues but only
-      **Lido / etherfi / Ethena / Jito / Marinade** cover the LST/restaking/vault space — the catalogue has just **7**
-      LST/STAKING/YIELD_BEARING instruments. **15 adapters exist + are registered in `factory.py::_ADAPTERS` + have
-      POPULATED registries + whitelisted tokens (`DEFI_MAJOR_ASSET_SYMBOLS`) + genesis dates in `chain_env.py` — but are
-      NOT in `_DEFI_VENUES`, so the enumeration never calls them**: `rocket_pool` (rETH), `renzo` (ezETH), `kelpdao`
-      (rsETH), `puffer` (pufETH), `karak`, `symbiotic`, `jito_restaking`, `sanctum`, `solblaze` (bSOL),
+- [x] ✅ [BACKEND] P0. **SHIPPED `instruments-service@c934dd97` + `unified-api-contracts@eccaa493` (QG green;
+      `_DEFI_VENUES` 63→89, +26 venues, **+85 real instruments**; cbETH/wBETH adapters written; chains ⊆ canonical set ✓
+      (0 new chains); 4 empty-chain venues correctly dropped (YEARN-OPT/BEEFY-POLYGON/IDLE-ARB/POLYGON return 0);
+      MVP_SCOPE v16→17).** WIRE THE MISSING STAKING/RESTAKING/VAULT VENUES INTO `_DEFI_VENUES` (the denominator is
+      missing ~15 protocols).** Measured 2026-07-18 (operator caught it): the enumerated `_DEFI_VENUES` = 63 venues but
+      only **Lido / etherfi / Ethena / Jito / Marinade** cover the LST/restaking/vault space — the catalogue has just
+      **7** LST/STAKING/YIELD_BEARING instruments. **15 adapters exist + are registered in `factory.py::_ADAPTERS` +
+      have POPULATED registries + whitelisted tokens (`DEFI_MAJOR_ASSET_SYMBOLS`) + genesis dates in `chain_env.py` —
+      but are NOT in `_DEFI_VENUES`, so the enumeration never calls them**: `rocket_pool` (rETH), `renzo` (ezETH),
+      `kelpdao` (rsETH), `puffer` (pufETH), `karak`, `symbiotic`, `jito_restaking`, `sanctum`, `solblaze` (bSOL),
       `solana_native_staking`, `yearn`, `beefy`, `pendle` (PT/YT), `convex`, `idle`. **Fix**: add them to
       `engine/orchestrator/defi.py`'s venue list (same class as the 7-lending-guard bug — built-but-not-firing). **ALSO
       write missing adapters**: **cbETH (Coinbase)** + **wBETH (Binance)** LSTs have no adapter at all (tokens ARE
       whitelisted). Then re-measure the universe (currently 11,724; this materially grows the LST/restaking/vault
-      count). A too-small denominator makes per-instrument coverage lie. (repo: instruments-service)
+      count). A too-small denominator makes per-instrument coverage lie. **CHAIN CONSTRAINT (operator 2026-07-18): new
+      venue chains ⊆ the EXISTING canonical DeFi chain set (ETH/ARB/BASE/OPT/POLYGON/AVAX/BSC/LINEA/SOLANA) — do NOT add
+      a new chain.** (repo: instruments-service, unified-api-contracts)
+- [ ] [BACKEND] P0. **E2E ACQUISITION (operator 2026-07-18): adding a yield-bearing/staking VENUE must be done
+      end-to-end — IS enumeration is NOT enough; MTDS must actually ACQUIRE the data or the instrument is permanently
+      `empty` (dishonest coverage).** MTDS `cli/handlers/lst_rates_handler.py` acquires rates **per-token config** (each
+      token → `{contract, method(exchangeRate|convertToAssets|getRate), selector}` via Alchemy RPC at historical
+      blocks); Solana LSTs via `solana_lst_archival.fetch_solana_lst_rates`. **Gaps to close for e2e**: (a) add the
+      rate-fetch config for each newly-wired LST/LRT — rocket_pool(rETH `getExchangeRate`), kelpdao(rsETH),
+      puffer(pufETH), karak, symbiotic, cbETH(`exchangeRate`), wBETH — contracts are in `DEFI_MAJOR_ASSET_ADDRESSES`;
+      (b) **implement renzo/ezETH** — the known-unimplemented multicall (`RestakeManager.calculateTVLs()` → derive
+      rate); (c) Solana sanctum/solblaze/solana_native via the `solana_lst_archival` path; (d) **vaults
+      (yearn/beefy/idle) have NO acquisition** — they are ERC-4626 so the existing `convertToAssets` config path applies
+      (add each vault's contract), pendle(PT/YT) + convex need their own; decide the vault data_type (reuse `lst_rates`
+      share-price vs a new `vault_rates`). Each addition VERIFIED by an actual RPC returning a plausible rate ("run it,
+      don't read it"). (repo: market-tick-data-service)
 
 - [ ] [BACKEND] P0. **IS is structurally already the denominator** (`enumerate_expected_universe.py::_enumerate_v2_defi`
       seeds `expected` per `(venue,chain,itype,instrument_id,data_type,day)`; `available_from` STRONG via real on-chain
@@ -545,6 +568,26 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-18 (slot-4, /autonomous — R1+R2 SHIPPED; capture-halt drift re-armed; acquisition+R2c dispatched).**
+  - **R1 (writer) + R2 (venue-wire) landed + flipped** (this plan @fe76e3bed): MTDS `write_defi_rows` per-instrument
+    fan-out `market-tick-data-service@4ca2640d`; IS `_DEFI_VENUES` 63→89 (+26 staking/restaking/vault venues, +85 real
+    instruments, MVP_SCOPE v16→17) `instruments-service@c934dd97` + `unified-api-contracts@eccaa493`. **Chain constraint
+    ENFORCED** — post-ship `_DEFI_VENUES` chains = {ARB, AVAX, BASE, BSC, ETH, LINEA, OPT, POLYGON, SOLANA} ⊆ canonical
+    set, **0 extra chains** (operator: "dont add extra chains beyond existing canonical" ✓); 4 empty-chain venues
+    dropped (YEARN_V3-OPTIMISM/BEEFY-POLYGON/IDLE-ARBITRUM/IDLE-POLYGON return 0 rows).
+  - **Capture-halt DRIFT caught + re-armed (protective, autonomous-safe):** the plan documents all DeFi capture STOPPED,
+    but `defi-fwd-dex-pools-poll` + `defi-fwd-dex-swaps-poll` had **respawned to RUNNING** (their schedulers
+    `defi-fwd-dex-{pools,swaps}-prd` were still ENABLED → re-launched) on the OLD batch-writer code, polluting the
+    corpus R3 will migrate. Re-armed: **paused** both schedulers (no respawn) + **stopped** both VMs; AWS both regions
+    clear; `defi-fwd-oracle-prices-prd` already PAUSED. IS enum/catalogue/consolidator crons LEFT RUNNING (availability
+    source).
+  - **Acquisition e2e + R2c DISPATCHED (`wf_bc31645a`):** MTDS agent = per-instrument rate acquisition for the 26 new
+    venues (LST rate configs rETH/cbETH/wBETH/rsETH/pufETH/karak/symbiotic + ezETH multicall + Solana LST path +
+    ERC-4626 vault `convertToAssets` for yearn/beefy/idle + pendle PT), each verified via a real RPC (operator: "if
+    adding venues to add yield bearing/staking need to do that e2e including adaptors for the data acquisitions"). IS
+    agent (R2c) = `force_include` flag + extend catalogue-residual empty-reconcile to the new venues + first-cut honest
+    `available_to` (relax the `min_ratio=1.0` monotonicity guard + last-seen delist). Different repos → parallel-safe.
 
 - **2026-07-18 (slot-4, /autonomous — R-phase implementation START).** Operator (away 4h) directed: quantify → R2+R1 →
   R3 → IS+MTDS backfills/rollup, no stopping.

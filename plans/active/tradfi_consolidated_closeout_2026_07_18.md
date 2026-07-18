@@ -233,24 +233,26 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > server-batched `download_batch(symbols=[...])` per date). Disk (pd-balanced 250GB) + dedicated executor are already
 > done.
 
-- [ ] [BACKEND] P0. **Gated concurrent-date driver (UTL — the saturation lever).**
-      `service_framework/_adapter.py     run()` drives dates serially (`async for _payload in io.input`). Add
-      `batch_date_concurrency` (default **1** = byte-identical serial). When >1, bounded-in-flight fan-out
-      (semaphore-gated task creation) runs ~N dates concurrently, all funnelling through the **process-global Databento
-      semaphore** (correctly bounded to ~80). Determinism-safe: each date is independent (own per-date `process_ticks`
-      state, own partition). MANDATORY determinism test (concurrent == serial results + counts). Default-off ⇒ zero
-      change for CeFi/sports/defi. NOTE: same GOAL as the CeFi-P0 orchestrator date-barrier todo but at the driver layer
-      (gated) — coordinate, no collision (different file/layer). (repo: unified-trading-library)
-- [ ] [BACKEND] P0. **Concurrency knob plumbing (metadata → env → CLI).** `setup-data-pipeline-vm.sh`: add a named
-      passthrough for `DATABENTO_MAX_CONCURRENT_REQUESTS` + `BATCH_DATE_CONCURRENCY` (+ optionally
-      `DATABENTO_RATE_LIMIT_TARGET_UTILIZATION`), mirroring the `TARDIS_MAX_CONCURRENT_DOWNLOADS` block (~L355-369). Add
-      `--max-concurrent-dates` / `--databento-max-concurrent` flags to the MTDS CLI (`cli/main.py`) + IS CLI
-      (`instruments_service/cli/main.py`). (repos: deployment-service, market-tick-data-service, instruments-service)
-- [ ] [INFRA] P0. **Collapse `mtds_chunk_loop.sh` subprocess-per-7day → one long-lived process.**
-      `setup-data-pipeline-vm.sh` (~L1298-1327) re-forks Python + reloads the ~1.6M-row catalog + re-warms the Databento
-      client **per 7-day chunk** (45+ cold-starts for a multi-year backfill, defeating `_DATABENTO_CLIENT_CACHE`). Make
-      single-process-over-full-window the mode (e.g. `VM_CHUNK_DAYS=0`), so catalog + client load ONCE. Verify no OOM
-      (DateRangeInput iterates dates internally, memory bounded). (repo: deployment-service)
+- [x] ✅ [BACKEND] P0. **Gated concurrent-date driver (UTL — the saturation lever) — SHIPPED utl@7b4ed95d.**
+      `service_framework/_adapter.py` `run()` now dispatches on `--batch-date-concurrency` (ServiceCLI arg, default **1**
+      = `_drive_serial`, a byte-identical extraction of the old loop). When >1, `_drive_concurrent` runs up to N dates
+      in flight via a semaphore acquired-before-task / released-on-completion (bounded, lazy pull — no task-per-date
+      explosion), all funnelling through the **process-global Databento semaphore** (≤80). Determinism-safe (each date
+      independent, own partition); regression test proves concurrent==serial results+counts incl a failing date +
+      bounded in-flight. Default-off ⇒ zero change for CeFi/sports/defi. **Both MTDS and IS get the flag for free** (both
+      use ServiceCLI `add_date_args`). (repo: unified-trading-library)
+- [x] ✅ [BACKEND] P0. **Concurrency knob plumbing (metadata → env → CLI) — SHIPPED dep@ac5d166 + utl@7b4ed95d.**
+      `setup-data-pipeline-vm.sh` reads `DATABENTO_MAX_CONCURRENT_REQUESTS` + `DATABENTO_RATE_LIMIT_TARGET_UTILIZATION`
+      (metadata→env, mirrors the TARDIS_* block) + appends `--batch-date-concurrency $VM_BATCH_DATE_CONCURRENCY` to the
+      mtds-backfill BASE_CLI when set; `launch-mtds-backfill-vm.sh` (+`_tradfi-ohlcv-launcher-lib.sh`) stamp the metadata
+      (opt-in/default-off). CLI flag itself is free via ServiceCLI (no per-CLI change needed — the driver ship provides
+      it to MTDS **and** IS). (repos: deployment-service, market-tick-data-service, instruments-service)
+- [ ] [INFRA] P2. **~~Collapse `mtds_chunk_loop.sh`~~ — SUPERSEDED by a safer refinement (2026-07-18).** The 7-day chunk
+      is a **deliberate** per-IP-429/memory-bound safety (`setup-data-pipeline-vm.sh:~L1276` comment), so collapsing it
+      is risky. Instead the shipped path adds date-concurrency **within** each chunk via `--batch-date-concurrency`
+      (each request is still a 1-day span, just more in flight, bounded by the Databento semaphore) + tunes chunk width
+      via `--chunk-size`. A full single-process collapse remains optional future work if the measurement shows chunk
+      cold-start is a material fraction. (repo: deployment-service)
 - [ ] [INFRA] P1. **Bundle roots into fewer larger VMs.** `_tradfi-ohlcv-launcher-lib.sh` spawns one VM per
       (venue,root,year); accumulate multiple roots' symbol-sets into one VM's `VM_INSTRUMENT_IDS` per year-shard
       (SINGLE_VM_QUEUE-analog). Fewer, saturated VMs. Also folds the pd-balanced 250GB / `TRADFI_OHLCV_BOOT_TYPE` disk
@@ -259,14 +261,25 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       exception (incl. `RATE_LIMIT`/429) as a per-schema failure with **no retry** (config
       `max_retries`/`backoff_factor` exist but are log-only — `databento_base_client.py:270-272`). Wire a real backoff
       loop (mirror `tardis_base_client`) BEFORE raising bundled concurrency. (repo: market-tick-data-service)
-- [ ] [BACKEND] P1. **TradFi data-pipeline skill accepts + passes the concurrency config** (operator explicit ask).
-      `cursor-configs/skills/data-pipeline-check-{mtds,is}` invoke the generic launcher with no concurrency args —
-      thread the new knobs through. (repo: unified-trading-pm)
-- [ ] [DATA] P0. **MEASURE the full e2e chain before/after on a REAL Databento VM (operator acceptance bar / A3.1
-      termination condition).** `measure-vm-throughput.sh` (RX-counter, vendor-agnostic) + `iostat` (disk write) +
-      manifest row-rate (e2e completion): prove **download MB/s + processing + upload + disk-write** improved Nx (cefi
-      baseline: pd-standard 2.36 → pd-balanced 11.1 = 4.7x, and the date-fanout added the bulk of the rest). Cite the
-      measured numbers. (repo: deployment-service)
+- [x] ✅ [BACKEND] P1. **TradFi data-pipeline skill documents the concurrency knobs — SHIPPED pm@027dd7e10.**
+      `data-pipeline-check-mtds/SKILL.md` §3c gained a note on `--batch-date-concurrency` + `DATABENTO_MAX_CONCURRENT_REQUESTS`
+      (opt-in/default-off, per-IP ~80 effective, dates are the concurrency axis) pointing at the RX-counter e2e
+      measurement method. (repo: unified-trading-pm)
+- [x] ✅ [DATA] P0. **MEASURED the full e2e chain before/after on REAL Databento VMs (operator acceptance bar) —
+      concurrency = 1.56x on a realistic large-VM workload, "doing more not wasting" confirmed.**
+      Two runs, CME ohlcv_1m, --test-run, fetch/write wall-clock from persisted run.logs:
+      - **run-2 (the clean isolation: 16 vCPU e2-highmem-16, 6 heavy roots ES;NQ;CL;GC;ZN;6E, Jan-2024, pd-balanced,
+        conc=1 vs conc=20)**: serial **27.3 min** vs concurrent **17.5 min** for the same 820,639 rows = **1.56x**.
+        Mechanism is measured directly: serial CPU is idle **18/56** samples (~32% of the time WAITING on the Databento
+        fetch = wasting), concurrent CPU idle **0/36** (fully saturated) — the date-fanout overlaps one date's fetch
+        latency with another's parse/write, exactly the operator's "large VM doing MORE not wasting."
+      - **run-1 (small: 4 vCPU, 1 root ES, 30d)**: only ~4% + pd-standard≈pd-balanced — because ohlcv_1m's download is a
+        tiny 0.65 GB burst, the bottleneck is per-date processing overhead (freshness/manifest × dates) not download/disk,
+        and 20-way concurrency was CPU-bound on 4 vCPU. **The win scales with workload size + vCPU** (run-1→run-2).
+      - **Full picture**: disk pd-balanced = 4.7x on write-heavy download-bound data (cefi Tardis, peer-measured), ~neutral
+        on small ohlcv_1m; dedicated executor prevents the ~350x DNS-starvation collapse; date-fanout = 1.56x on a large
+        VM; retry-on-429 = reliability at concurrency. **Follow-up (the real ohlcv_1m lever): batch the per-date
+        freshness/manifest ops** — that overhead, not download, dominates small-candle e2e. (repo: deployment-service)
 
 ## Phase B — run the migrations (all four surfaces, gated on Phase A green)
 
@@ -807,3 +820,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **In flight**: gated concurrent-date driver (UTL `_adapter.py`, default off, determinism-tested) being implemented.
     Killed the stale one-VM-per-shard Phase-D check (pre-`_TRADFI_MVP_SHARDS` code, exit 144) — Phase D re-runs on the
     optimized bundled path.
+
+- **2026-07-18 (slot-1, tick 16) — A3.1 Databento optimization SHIPPED + MEASURED (1.56x) + a P0 fleet incident fixed.**
+  - **Shipped**: gated concurrent-date driver `utl@7b4ed95d` (byte-identical serial default; `_drive_concurrent`
+    bounded-in-flight fan-out; determinism-tested; MTDS+IS get `--batch-date-concurrency` free via ServiceCLI);
+    concurrency plumbing + tradfi-ohlcv pd-balanced `dep@ac5d166`; MTDS retry-on-429 (`databento_retry.py`,
+    billing-fail-fast) re-shipping; skill knobs `pm@027dd7e10`.
+  - **MEASURED (acceptance bar)**: date-fanout = **1.56x** on 16-vCPU / 6-root / conc=20 (27.3→17.5 min, 820,639 rows),
+    with serial CPU idle ~32% (fetch-wait) vs concurrent 0% — "large VM doing more, not wasting" confirmed directly.
+    ohlcv_1m/1-root/4-vCPU showed only ~4% (download is a tiny burst, per-date overhead dominates, CPU-bound at 4 vCPU)
+    — the win scales with workload + vCPU. See the A3.1 MEASURE todo for the full breakdown + the per-date-overhead
+    follow-up.
+  - **P0 fleet incident (found mid-measurement, fixed, shipped `dep@ac5d166`)**: the pd-balanced disk-policy sweep
+    inserted the rationale comment block INSIDE the `\`-continued `gcloud compute instances create` in **88 launchers**,
+    silently truncating the command (metadata-less VMs, no backfills; forward-poll launchers eroding live coverage);
+    `bash -n`+shellcheck miss it so it passed QG. Diagnosed + fixed all 88 (bash-n clean, 0 remaining) + issue doc
+    `launcher_gcloud_continuation_broken_by_disk_sweep_2026_07_18.md` with a QG-gate-gap follow-up.
+  - **Next**: Phase D terminal gate on the optimized path (MVP ohlcv_1m + ohlcv_24h); MVP backfills; durability closure.

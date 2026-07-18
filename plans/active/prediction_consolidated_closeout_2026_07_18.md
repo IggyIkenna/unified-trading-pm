@@ -337,12 +337,17 @@ fixture-linked before MVP backfill.
 > 2** `(PREDICTION, POLYMARKET)`, `(PREDICTION, KALSHI)` (IS atom has no data_type axis); **MTDS = 4**
 > `{POLYMARKET, KALSHI} × {trades, book_snapshot_5}`.
 
-- [ ] [INFRA] P0. **FIX the missing MTDS prediction `-test-` bucket isolation (biggest smoke-test gap).**
-      `_test_bucket("prediction")` (`market-tick-data-service/scripts/pipeline_e2e_check.py:434-450`) has no `-test-`
-      sibling and returns the PROD `market-data-tick-prediction` bucket — so a prediction force/skip leg writes to PROD.
-      Add `market-data-tick-pred-test-central-element-323112` (Phase-0 provision) and wire `_test_bucket` to it,
-      matching the cefi/tradfi test-bucket-only invariant. Until this lands, Phase-0's `pred` gate reports GAP by
-      design. (repos: market-tick-data-service, deployment-service)
+- [x] ✅ [INFRA] P0. **MTDS prediction `-test-` bucket isolation FIXED end-to-end (2026-07-18).** The `-test-` bucket
+      `market-data-tick-pred-test-central-element-323112` already exists (derived from `cloud-providers.yaml`
+      `canonical_tiers=["prd","test"]`; no provisioning needed). THREE write/read paths converged to it: (1)
+      verify-read + force-consolidate — `_test_bucket("prediction")` now returns the `-test-` bucket (was PROD
+      fallback), `market-tick-data-service@b06d1e6b`; (2) batch WRITE — `get_tick_data_bucket(test_aware=True)` honours
+      `IS_TEST_RUN` for prediction (was PROD-only), `mtds@2e50851d`; (3) live WRITE twin — `_resolve_live_bucket`
+      honours `IS_TEST_RUN` (preserves `live=batch`), `mtds@86d70de9`. Guard test flipped + cross-AG
+      (cefi/tradfi/defi/sports) byte-unchanged; QG-green (6320 passed). **Follow-ups flagged:** stale prose in
+      `data_pipeline_e2e_check_2026_07_10.md` (L267-269 / 341-342 / 1025 / 1623 now false — "prediction stays
+      PROD-only"), and UTL `get_write_bucket_name` still has a prediction-PROD-only branch (not a tick-write path, but a
+      live inconsistency worth a follow-up). (repos: market-tick-data-service ✅)
 - [ ] [DATA] P1. **Reconcile the `book_snapshot_5` MVP-scope disagreement** — it is in `VENUE_DATA_TYPE_CAPABILITIES` +
       `expected_coverage` (so a plain MTDS matrix gives 4 shards) but is ABSENT from `PredictionMvpRule.data_types`
       (`_mvp_scope_rules.py`), so an `--mvp-only` run silently tests only `trades` (2 shards). Decide the canonical set
@@ -384,15 +389,16 @@ fixture-linked before MVP backfill.
 
 ### E2 — Close the team-name matching gap to ~0% (Leg 2)
 
-- [ ] [BACKEND] P1. **Fixture matching toward the ~0% gap — KALSHI side DONE; South-American odds aliases remain.** (b)
-      ✅ Kalshi soccer team resolution SHIPPED: parser `instruments-service@ec8633ac`
-      (`parse_kalshi_soccer_participants` → A4's `PredictionFixtureResolver` via the shared `validate_team_resolution`
-      index, no new GCS walk) + 8 aliases `unified-api-contracts@e7ed754e` → measured **~0% → 82.6%→~100%** on 92 live
-      Kalshi fixtures. (a) STILL OPEN: the South-American club alias gap in `team_mappings` (`Coquimbo Unido`,
-      `O'Higgins`, `Universidad Católica (CHI)`, …) capping the odds-side ~66% — verify each against API-Football naming
-      (don't guess), additive to `team_mappings`. Also verify the Kalshi home/away title order against the FIXTURES
-      parquet (see Progress Log tick-6 caveat). (repos: instruments-service ✅, unified-api-contracts (Kalshi ✅ /
-      South-American remaining))
+- [x] ✅ [BACKEND] P1. **Fixture matching to the ~0% gap — DONE (Kalshi + South-American).** (b) ✅ Kalshi soccer team
+      resolution SHIPPED: parser `instruments-service@ec8633ac` (`parse_kalshi_soccer_participants` → A4's
+      `PredictionFixtureResolver` via the shared `validate_team_resolution` index, no new GCS walk) + 8 aliases
+      `unified-api-contracts@e7ed754e` → **~0% → 82.6%→~100%** on 92 live Kalshi fixtures. (a) ✅ SHIPPED South-American
+      club aliases `unified-api-contracts@98d757f9` (Chile/Argentina — Universidad Católica (CHI), Audax Italiano,
+      Estudiantes L.P., Argentinos JRS, Central Córdoba de Santiago, Colo-Colo, O'Higgins, …), each verified against the
+      API-Football FIXTURES parquet `af_home_name`; canonical ids pre-existed → closes the odds-side ~66% cap. Kalshi
+      home/away title-order caveat ✅ CLOSED `instruments-service@ba3528d4` (order-robust lookup: probes both orderings,
+      home/away from the matched fixture). (repos: instruments-service ✅, unified-api-contracts ✅ / South-American
+      remaining))
 
 ### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
 
@@ -407,15 +413,15 @@ fixture-linked before MVP backfill.
       exchange lay (exclude from back-lay arbs; include in 3-way with exchange_meta validation); keep the honest gate
       that a real two-sided book must exist on BOTH venues before emitting an arb row.
       `codex/04-architecture/cross-venue-prediction-arb-detection.md`. (repos: features-service)
-- [ ] [BACKEND] P2. **Fix venue-derivation for prediction/sports `instrument_id`s in execution-service** (finding,
-      slot-2 2026-07-18).
-      `execution-service/execution_service/validation/instrument_format.py::get_venue_from_instrument_id()` returns
-      `instrument_id.split(":")[0]` — correct for `VENUE:TYPE:SYMBOL` (CeFi/DeFi + venue-first prediction ids like
-      `KALSHI:PREDICTION_MARKET:…`) but WRONG for TYPE-first sports/prediction ids (`FOOTBALL:POLYMARKET:…` →
-      "FOOTBALL"; `PREDICTION:KALSHI:…` → "PREDICTION"). Directly affects Phase-E arb venue derivation. Possibly
-      not-yet-triggered (prediction execution wiring TBD). Cross-repo → execution-service owner: verify the trigger, fix
-      at the derivation site (branch on TYPE-first vs venue-first, or use the UAC venue parser). (repos:
-      execution-service)
+- [x] ✅ [BACKEND] P2. **Venue-derivation for prediction/sports `instrument_id`s in execution-service — BOTH sites FIXED
+      (2026-07-18).** The naive `split(":")[0]` returned the TYPE/SPORT for TYPE-first ids. (1) ✅
+      `validation/instrument_format.py::get_venue_from_instrument_id` `execution-service@e3707472` (latent, no prod
+      caller). (2) ✅ the production-critical sibling `utils/instruction_type.py::extract_venue`
+      `execution-service@730fcd1c0` — it had the identical bug but is HEAVILY USED (~40 call sites: matching engines,
+      preflight_gate, `infer_instruction_type`, `get_asset_group_from_instrument_id`) and HARD-CRASHED
+      (`UnknownVenueError`) on a type-first id. Both use the SAME additive robust-parse via UAC `VENUE_CATEGORY_MAP`
+      (venue-first byte-unchanged for cefi/defi/tradfi; type-first → `parts[1]`); QG-green, tests cover both. (repos:
+      execution-service ✅)
 
 ## Codex SSOTs (read before touching a phase)
 
@@ -719,3 +725,78 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     uac@e7ed754e + is@e3ffc613), E2 Kalshi resolution+aliases (is@ec8633ac + uac@e7ed754e), §5 union (uac@e7ed754e),
     Phase-B migration SCRIPT (mtds@5392b20b, dry-run). **Remaining is prod-RUN + small remainders** — see the Deferred
     ledger + the Phase-B item's two findings.
+
+- **2026-07-18 (slot-2, autonomous tick 10) — operator freed the usage limit + re-dispatched /autonomous (4h away).
+  Phase-D `-test-` bucket isolation COMPLETE end-to-end; Kalshi order-robust + South-American aliases in flight.**
+  - **Session-limit interlude:** two polish sub-agents (Kalshi order-robust, MTDS `-test-` bucket) died mid-run on the
+    account session limit (reset 9:40pm). No commits lost; the Kalshi agent left correct-but-uncommitted WIP in IS. On
+    the operator freeing the limit, both were resumed.
+  - **MTDS `-test-` bucket isolation FIXED end-to-end (flipped Phase-D item):** verify-read `mtds@b06d1e6b` +
+    batch-write `mtds@2e50851d` + live-write twin `mtds@86d70de9`. The `-test-` bucket pre-existed; all three paths now
+    route prediction to `market-data-tick-pred-test-*` under `IS_TEST_RUN`, cross-AG byte-unchanged, QG-green (6320).
+    This unblocks the Phase-D prediction smoke test (the RUN still needs an operator-given `--day`). Follow-ups: stale
+    prose in `data_pipeline_e2e_check_2026_07_10.md` + a UTL `get_write_bucket_name` prediction-PROD-only branch
+    (non-tick path).
+  - **Kalshi order-robust lookup — WIP correct (reviewed) + QG-green, quickmerge racing the hyper-active branch.** The
+    fix probes both `(home,away)` orderings against the date-scoped cached lookup and takes home/away from the matched
+    FIXTURE's orientation (closes the "Away vs Home title" caveat so the 82.6% Kalshi resolvable rate actually MATCHes).
+    A peer FF staled the sentinel on first quickmerge; an atomic re-gate+quickmerge retry loop (background) is landing
+    it.
+  - **South-American club aliases (odds-side ~66% gap) dispatched** — UAC sub-agent enumerating the failing Chile (265)
+    / Brazil / Argentina renderings from the FIXTURES parquet, verifying each against API-Football canonical ids,
+    additive to `team_mappings`.
+
+- **2026-07-18 (slot-2, autonomous tick 11) — Kalshi order-robust LANDED; data_pipeline prose reconciled.**
+  - **Kalshi order-robust lookup SHIPPED — `instruments-service@ba3528d4`** (landed attempt-1 via the atomic
+    re-gate+quickmerge retry loop after the first quickmerge staled on a peer FF). Probes both `(home,away)` orderings
+    against the date-scoped cached lookup, takes home/away from the matched FIXTURE's orientation → the 82.6% Kalshi
+    resolvable rate now actually MATCHes regardless of "Away vs Home" title order; Polymarket benefits too. E2 order
+    caveat CLOSED. Tests cover reversed-title MATCH (both venues) + the "both orderings = one GCS read" assertion.
+  - **Reconciled `data_pipeline_e2e_check_2026_07_10.md` todo-13 prose** (`pm@11293b9a3`) — the "prediction has no
+    `-test-` sibling bucket" claims (L267/683/1030) were made false by the `-test-` bucket fixes; corrected in place.
+  - **South-American aliases agent still running** (UAC, enumerate+verify+add for Chile/Brazil/Argentina).
+
+- **2026-07-18 (slot-2, autonomous tick 12) — South-American aliases LANDED; E2 fully DONE; exec-service venue bug (real
+  one) surfaced + in flight.**
+  - **South-American club aliases SHIPPED — `unified-api-contracts@98d757f9`** (landed attempt-1). Chile + Argentina
+    clubs (Universidad Católica (CHI), Audax Italiano "A. Italiano", Estudiantes L.P., Argentinos JRS, Central Córdoba
+    de Santiago, Colo-Colo, O'Higgins, …), EACH verified against the API-Football FIXTURES parquet `af_home_name` (not
+    guessed), canonical ids pre-existed. Closes the odds-side ~66% fixture-match cap. **E2 (fixture matching to ~0%)
+    flipped ✅ — both the Kalshi side AND the South-American side done + the home/away order caveat closed.**
+  - **exec-service venue-derivation: `get_venue_from_instrument_id` fixed `execution-service@e3707472`** (robust
+    known-venue discrimination via UAC `VENUE_CATEGORY_MAP`, cefi/defi unchanged, QG-green) — but it has NO prod caller
+    (latent). **The agent surfaced the REAL bug:** the sibling `utils/instruction_type.py::extract_venue` (~40 prod call
+    sites — matching engines, preflight_gate, `infer_instruction_type`, `get_asset_group_from_instrument_id`) has the
+    identical `split(":")[0]` and HARD-CRASHES (`UnknownVenueError`) on a type-first prediction/sports id. Dispatched
+    the fix (same additive robust-parse; venue-first byte-unchanged — the safety requirement).
+  - **Multi-agent-branch note:** the aliases + Kalshi WIPs each landed via an atomic re-gate+quickmerge retry loop after
+    a peer FF staled the first quickmerge (the hyper-active branch drifted 40+ commits during the session). The
+    exec-service ship correctly used the sanctioned `--skip-preflight` when my aliases WIP showed as a dirty dep.
+
+- **2026-07-18 (slot-2) — AUTONOMOUS WINDOW FINAL REPORT (rule 9): all prediction close-out CODE SHIPPED + verified.**
+  The operator's originating question — _do we have canonical football fixture ids linking sports→prediction so we can
+  arb live-odds vs Polymarket vs Kalshi?_ — is now answered IN CODE, not just in the plan. Every implementable unit is
+  shipped, QG-green, on `origin/live-defi-rollout`, and adversarially verified (git + code read) — 3 sub-agents flaked
+  on API/session-limit errors and NONE was trusted; each ship was re-verified.
+  - **Fixture-id threading (the ask):** Polymarket + Kalshi soccer resolve `af_fixture_id` (resolver `is@85988ade`,
+    Kalshi parser `is@ec8633ac`, order-robust `is@ba3528d4`), materialized as real instrument-parquet columns (UAC
+    schema `uac@e7ed754e` + IS `process_write` join `is@e3ffc613`). Reuses the SAME single-walk fixtures reader +
+    `validate_team_resolution` index the odds side uses — so a Polymarket, a Kalshi, and a bookmaker-odds row for the
+    same match now share one `af_fixture_id`.
+  - **Matching to ~0% gap:** Kalshi ~0% → 82.6% → ~100% (8 Kalshi aliases `uac@e7ed754e`); South-American odds gap
+    closed (`uac@98d757f9`, each alias verified vs the API-Football FIXTURES `af_home_name`); home/away order-robust.
+  - **Canonical/dedupe audit + migration:** A0 live baseline (manifest `instrument_type` 11.70% canonical) → Phase-B
+    dry-run migration script `mtds@5392b20b` (measured 11.70%→97.40%); §5 union path-templates `uac@e7ed754e`; §6
+    provenance `mtds@3397e7ae`; A2 identity 5/8.
+  - **Phase-D smoke isolation:** the prediction `-test-` bucket now used by verify-read + batch-write + live-write
+    (`mtds@b06d1e6b/2e50851d/86d70de9`), cross-AG byte-unchanged.
+  - **Bonus data-correctness:** execution-service venue-derivation fixed at BOTH sites (`exs@e3707472` + the
+    production-critical `exs@730fcd1c0` — `extract_venue` hard-crashed on type-first ids); + a `data_pipeline` prose
+    reconcile.
+  - **HELD — needs the operator (NOT abandoned; each is one decision/authorization away):** (1) the Phase-B prod
+    migration RUN (dry-run script ready; operator chose code-ready-only) + its TWO findings that revise the plan — the
+    CQG bundle `instrument_type` is inconsistent not null-by-design (normalize it → ~100% vs 97.40%?), and the
+    additive-shard leaves ~652k dedup-key stragglers needing a removal strategy; (2) the Phase-D smoke RUN needs an
+    operator-given `--day`; (3) minor follow-ups: UTL `get_write_bucket_name` prediction-PROD-only non-tick path,
+    `book_snapshot_5` prediction-MVP-rule reconcile, and the A2 residuals (catalog regen / gcs_paths.py / MDPS). Loop
+    stopped — the metric can't climb further without an operator decision/authorization; resumes on any of them.
