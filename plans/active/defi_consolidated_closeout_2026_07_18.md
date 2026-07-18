@@ -176,9 +176,15 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 **Sequencing**: R1+R2 (ship together — new days land per-instrument + reconcile) → R3 (migrate history to the identical
 layout) → R4 (coverage) → resume capture. **This SUPERSEDES the batch-model column/path work in the tracks below** — the
 column migrations (id/address/lending-split, case, venue-spelling) still happen, but folded into R1/R3, not a separate
-cell-grain rewrite. `consolidate_multi_parquet_per_day` winner-pick is RETIRED for DeFi. **Small-files**:
-per-(instrument, day) for low-freq DeFi (≈1 row/day) → many KB objects (one lending protocol ≈300k) — accepted (matches
-cefi/tradfi); a per-instrument-MONTH compaction is a recommended SEPARATE follow-up (keeps the shared `day=` hive).
+cell-grain rewrite. `consolidate_multi_parquet_per_day` winner-pick is RETIRED for DeFi. **Small-files (per-DAY is
+bounded by TVL — a non-issue)**: the IS catalogue holds **11,724 valid instruments total** (POOL 7,224 · SPOT_ASSET
+1,389 · A_TOKEN 1,117 + DEBT_TOKEN 1,060 · legacy LENDING 892 · GMX PERPETUAL 33 · LST/STAKING ~7 · SPOT_PAIR 2) across
+66 (venue,chain) shards, so a day writes **~11.7k tick files max** — the TVL filter is doing its job (measured
+2026-07-18, `instruments-store-defi-prd/prod/catalog.parquet`). The only mild concern is the **CUMULATIVE** object count
+over the full backfill (~11.7k × days × data_types ≈ a few million tiny objects) — same shape as cefi/tradfi; a
+per-instrument-MONTH compaction is a recommended SEPARATE follow-up ONLY if the total object count bites (keeps the
+shared `day=` hive). **This is MTDS tick-data only** — IS stays the per-(venue,chain) availability BUNDLE (all
+instruments in one `instruments.parquet` with `available_from/to`).
 
 ## Canonical target (operator-decided 2026-07-18 — the thing we converge all four surfaces on)
 
