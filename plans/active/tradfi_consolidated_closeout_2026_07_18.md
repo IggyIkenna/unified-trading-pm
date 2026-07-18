@@ -265,6 +265,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       `EXCHANGE_CODE_TO_NAME` only maps the bare root. Non-MVP (ICE not in MVP universe) so quarantine-with-tracking
       unblocks the MVP metric. Options: **A: qualifier-normalize + map base root [REC]** / B: accept `_qualifier`, relax
       gate for ICE / C: quarantine ICE, defer. Surface to operator when ICE cells are worked; does NOT block MVP.
+- [ ] [DATA] P0. **Enumeration-driven migration (SINGLE SOURCE OF TRUTH — operator, 2026-07-18).** The migration MUST be
+      driven by the FULL distinct set of dimension values actually present in the tradfi manifest/GCS rollup (query the
+      availability_index/coverage-rollup), NOT sampled shapes — so every value is covered + dupes are caught. **Audit
+      done (local snapshot, scratchpad `enumerate_dimensions.py`)** — non-canonical dimensions found: (1)
+      `instrument_type` **18 distinct** with case+plural dupes — `FUTURE`(568k)/`future`(421k)/`FUTURES`/`futures`,
+      `EQUITY`/`equity`, `ETF`/`etf`, `SPOT_PAIR`/`spot_pair`, `indices`/`index`, +
+      `<null>`(511k)/`''`(85k)/`UNKNOWN`(77); catalogue is all-UPPERCASE enum while manifest is mixed → surfaces
+      DISAGREE. Writer `_PARTITION_INSTRUMENT_TYPE` (`databento_adapter.py:179`) maps FUTURE→`futures_chain`,
+      OPTION→`options_chain`, EQUITY→`equity` (lowercase, bundle-grain). (2) **Barchart STALE** —
+      `source=barchart`(4,655) + venue `BARCHART`(9,119) + `pipeline_mode=batch_barchart` despite Barchart being
+      RETIRED. (3) `chain` null-vs-`''` dupe. **Canonical `instrument_type` form (casing + per-contract
+      `future`/`option` vs bundle `futures_chain`/`options_chain` grain + catalogue↔manifest alignment) =
+      BLOCKED-OPERATOR-DECISION (asked 2026-07-18)** — do NOT re-stamp millions of rows on a guess. Once decided, bake
+      the variant→canonical map into the migration + verify-gate. (repos: market-tick-data-service,
+      unified-trading-library, instruments-service)
 - [ ] [DATA] P1. **v9 schema / manifest-status finish** (`tradfi_v9_stage1_finish_2026_07_06.md`) — fresh CF-1…CF-12
       all-GREEN re-run; confirm live `_index.schema_version` is int64 not string `'9'`
       (`cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`); Layer-1 % recorded. **Legacy-twin bucket
@@ -281,6 +296,15 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - [ ] [BACKEND] P1. **Data-status page renders canonical tradfi** (the "Upcoming expiries" + instruments/catalogue
       views) — `data_status_page_ux_and_canonicalisation_2026_07_16.md`; deployment-api legacy venue-lookup gap
       (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi).
+- [ ] [BACKEND] P1. **RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api (operator, 2026-07-18 —
+      "I really need to add it back").** Per asset_group, list every distinct `instrument_type` / `data_type` / `chain`
+      / `source` / `pipeline_mode` / `venue` present in the manifest/GCS (the honest-coverage rollup) with counts, so
+      non-canonical naming + duplications are VISIBLE (the exact dupes the 2026-07-18 audit found:
+      `FUTURE`/`future`/`FUTURES`, `EQUITY`/`equity`, stale `barchart`). This existed, was REMOVED — restore it as the
+      standing canonical-drift detector (it is how we catch the next drift without a manual parquet read). Backend =
+      deployment-api endpoint over the availability_index distinct-values; UI = a dimensions panel on the data-status
+      page. Find where it was removed (git log deployment-api/deployment-ui for the removed enumeration endpoint/view).
+      (repos: deployment-api, deployment-ui)
 - [ ] [BACKEND] P2. **Denominator / catalogue-completeness + new untracked findings** — 875 tradfi atoms with narrowed
       historical objects + 153 duplicate KRX row_keys
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures

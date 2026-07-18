@@ -133,13 +133,17 @@ that are structurally unpopulatable (`_fetched_players` is never appended to any
 the data sits elsewhere is actively misleading (workspace rule: delete deprecated code, no shims; never silent
 placeholders).
 
-- [ ] [CODE] P2. Delete `export_players`/`export_coaches`/`export_referees`/`export_rounds` + their
+- [x] [CODE] P2. Delete `export_players`/`export_coaches`/`export_referees`/`export_rounds` + their
       `PLAYERS_/COACHES_/REFEREES_/ROUNDS_COLUMNS`, and every registration (`cli/batch_write.py`,
       `cli/handlers/batch_handler.py`, `cli/handlers/_available_at_helpers.py`, `exporters/validation.py`,
-      `schemas/output_schemas.py`, `docs/SCHEMA_VALIDATION.md`).
-- [ ] [DOC] P2. Document the real homes in code: coach -> `fixture_lineups.coach_id/coach_name`; referee ->
+      `schemas/output_schemas.py`, `docs/SCHEMA_VALIDATION.md`). **DONE — features-service@d564bf6f.** QG green (17,682
+      passed / 0 failed, ALL QUALITY GATES PASSED). Also updated the tests pinning the old contract
+      (`test_returns_14_tables` -> `test_returns_10_tables`, the expected-names set, and the `players`/`referees`
+      `available_at` parametrize).
+- [x] [DOC] P2. Document the real homes in code: coach -> `fixture_lineups.coach_id/coach_name`; referee ->
       `fixtures.referee_id`; player identity -> `fixture_lineups` + `player_stats` (`player_id`/`player_name`); rounds
-      -> genuinely absent upstream.
+      -> genuinely absent upstream. **DONE — features-service@d564bf6f.** Recorded as a block comment at the foot of
+      `exports.py` plus the `exporters/__init__.py` docstring, including the verification that nothing depends on them.
 - [ ] [DATA] P2. Purge the resulting always-empty manifest rows / shards so they stop inflating the coverage denominator
       (4 groups x ~4,216 dates of `empty_confirmed`).
 
@@ -426,3 +430,71 @@ a credential ask.
       "population" was the T-0 fallback living off the post-kickoff bucketing leak — see B1.)
 - [ ] [MODEL] P2. Consider adding T-6h or T-2h as a MODEL horizon: both carry 68 fixtures vs T-24h's 25 (2.7x coverage),
       are safely pre-match, and fall after most team news.
+
+---
+
+## F. Canonical-naming audit of the sports manifests — **P1**
+
+Operator 2026-07-18: data-status in deployment-ui/api used to LIST every instrument_type / data_type / chain present in
+the GCS data + manifest per asset group — the way non-canonical naming and duplication got caught. **That listing was
+removed and needs to come back.** In the meantime the same list is queryable directly. First pass below (read via
+`read_availability_index`) already finds real violations.
+
+### F1. CASE-duplication — the same value stored twice in two cases
+
+`market-data-sports` `data_type` (13 distinct) contains **three duplicate pairs**:
+
+| canonical?      | also present as |
+| --------------- | --------------- |
+| `ODDS`          | `odds`          |
+| `ODDS_MOVEMENT` | `odds_movement` |
+| `ODDS_SNAPSHOT` | `odds_snapshot` |
+
+`instrument_type` (15 distinct) contains two more: `PADDYPOWER`/`paddypower`, `PINNACLE`/`pinnacle`.
+
+Every case-pair silently splits the same logical shard set into two manifest identities — coverage, dedupe and any
+group-by are wrong wherever this occurs.
+
+### F2. DIMENSION POLLUTION — `instrument_type` is holding venues
+
+Live `instrument_type` values:
+`PADDYPOWER, PINNACLE, SPORT, betmgm, betway, bovada, coral, fanduel, ladbrokes_uk, odds, paddypower, pinnacle, skybet, unibet_uk, williamhill`.
+
+Only `SPORT` is plausibly an instrument type. Eleven are **bookmakers** (belong in `venue`) and `odds` is a **data
+type**. So three different dimensions are being written into one column.
+
+### F3. Timeframe baked into `data_type`
+
+`odds_horizon_bucket` also appears as `odds_horizon_bucket_15m` / `_1h` / `_4h` / `_1d`. A `timeframe` column already
+exists in the v9 schema, so the suffixed variants look like a second SSOT for the same axis. **OPERATOR QUESTION — which
+is canonical?**
+
+### F4. Suspect `venue` values
+
+`venue` (37) is mostly uppercase-canonical bookmakers, but includes `FOOTBALL` (a sport, not a venue) and `ODDS_API` (a
+source/vendor — `source` already carries `odds_api`). **OPERATOR QUESTION — are these intended?**
+
+### F5. features-sports still carries the 4 deleted dimension groups
+
+`feature_group` (18) still lists `coaches` / `players` / `referees` / `rounds`. The CODE is deleted (A2) but the
+manifest rows remain — this is the outstanding A2 DATA purge.
+
+### F6. instruments-sports manifest is UNREADABLE via the standard reader
+
+`read_availability_index("instruments-store-sports-prd-…")` raised `ManifestConsolidatorStaleError` ("consolidated blob
+age 173.4s > 120s threshold — falling back to per-VM shards"). The instruments-sports consolidator is running behind its
+own staleness budget, so the audit could not enumerate that bucket at all. Needs its own check — a manifest nobody can
+read is a coverage blind spot.
+
+- [ ] [CODE] P1. Restore the data-status "distinct dimension values present per asset_group" listing in deployment-api +
+      deployment-ui (instrument_type / data_type / venue / chain / pipeline_mode / source), so non-canonical naming and
+      duplication are visible again instead of needing an ad-hoc query.
+- [ ] [DATA] P1. Normalise the F1 case-duplicates to ONE canonical case and rewrite the affected manifest rows.
+- [ ] [CODE] P1. Fix the F2 writer(s) putting bookmakers + `odds` into `instrument_type`; add a QG assertion that
+      `instrument_type` only accepts declared UAC values for the asset group.
+- [ ] [ASK] P1. Operator decisions needed: F3 (is `odds_horizon_bucket_{tf}` canonical, or does `timeframe` own that
+      axis?) and F4 (are `FOOTBALL` / `ODDS_API` valid `venue` values?).
+- [ ] [DIAG] P1. F6 — why is the instruments-sports consolidated index persistently older than its 120s budget?
+- [ ] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
+      leagues and fixtures and betting market canonicals are relevant too") and fold the result into the migration so
+      everything lands on one SSOT.

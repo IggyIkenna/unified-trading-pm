@@ -10,6 +10,11 @@ name: ldr-to-main-promote
 # no LDR→main PR is open, it opens one and enables v2-gated auto-merge — so direct pushes drain within the
 # operator's 1-hour SLA instead of relying on the next quickmerge.
 #
+# FROZEN HEAD (2026-07-18): the promote PR head is an IMMUTABLE per-SHA ref `promote/<repo>/<sha12>`, NOT
+# the live live-defi-rollout branch. Ported from ldr-to-main-promote-fleet.yml (which has worked this way
+# since 2026-06-30) after PM's LDR-headed PR #1149 deadlocked. See the frozen-head block in the drain step
+# for the two defects this closes (moving-head TOCTOU + the App-authored `action_required` deadlock).
+#
 # SAFETY: never force-pushes; opens a PR and enables auto-merge → quality-gates-v2 on the main PR is what
 # actually merges it (a red gate leaves the PR open + BLOCKED, surfaced by ci-failure-watcher). Idempotent:
 # reuses an existing open LDR→main PR (incl. quickmerge's) rather than opening a duplicate. `dry_run` lists
@@ -76,6 +81,11 @@ jobs:
           REPO: ${{ github.event.repository.name }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+          # PAT for ref writes + PR authorship + the auto-merge ARM. The App token can do none of
+          # those three correctly here: it cannot enablePullRequestAutoMerge (WS-L canary
+          # 2026-06-26), and a PR it authors lands quality-gates-v2 in `action_required` (see the
+          # frozen-head block below). Same secret + same usage as the fleet bot's GH_PAT_FOR_ARM.
+          GH_PAT_FOR_ARM: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
           ACTION="noop"; PR=""
@@ -108,8 +118,53 @@ jobs:
             echo "WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. $PROV_OUT"
           fi
 
-          # ── Reuse an existing open LDR→main PR (quickmerge's standing sweep or a prior bot run) ──
-          PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+          # ── Frozen-head migration (2026-07-18) ───────────────────────────────────────────────
+          # This bot (2026-06-09) predates the fleet bot's frozen-head design (2026-06-30) and was
+          # never migrated: it opened its promote PR with `--head live-defi-rollout`. Two defects
+          # came with that, both already solved in ldr-to-main-promote-fleet.yml:
+          #
+          #  [1] TOCTOU + a land-mine. The PR head IS the SSOT branch, so it advances under every
+          #      push while quality-gates-v2 runs (PM's LDR moves 18-26 commits/hr; v2 takes 1-3
+          #      min) and auto-merge fires ASYNCHRONOUSLY on whatever head is current — so an
+          #      UN-validated tree can merge. Worse, an LDR-headed PR armed with --delete-branch
+          #      DELETES live-defi-rollout on merge (it deleted deployment-ui's LDR 2026-06-29),
+          #      which is why this bot could never safely reclaim its own refs.
+          #  [2] action_required deadlock. A promote PR authored by the uts-ci-poller APP lands
+          #      quality-gates-v2 in `action_required` — held for approval, 0s, never executes — so
+          #      the required context never reports and the PR sits BLOCKED forever. A/B-proven on a
+          #      held head SHA (WS-L 2026-06-27): App-created → action_required; PAT-created → ran →
+          #      success → merged. The close+reopen recovery below is the REACTIVE band-aid for this;
+          #      authoring with the PAT removes the cause. Measured 2026-07-18: PR #1149 sat BLOCKED
+          #      with zero runs on its head while the glue pool was down, so the band-aid (which
+          #      needs a bot tick) could not fire either.
+          #
+          # Fix, ported from the fleet bot: an IMMUTABLE per-SHA ref as the head + a PAT-authored PR,
+          # with fleet bug#5 (legacy no-slash ref D/F-conflicts the per-SHA ref) and bug#7 (a stale
+          # LDR-headed promote PR is a land-mine) guards.
+          # SSOT: codex/08-workflows/ci-cd-flow.md § "PM Option-B standing LDR→main PR".
+          [ -n "${GH_PAT_FOR_ARM:-}" ] || GH_PAT_FOR_ARM="$GH_TOKEN" # fail-safe: never empty-token a gh call
+          LDR_SHA=$(gh api "repos/$OWNER/$REPO/commits/live-defi-rollout" --jq '.sha' 2>/dev/null || echo "")
+          if [ -z "$LDR_SHA" ] || [ "$LDR_SHA" = "null" ]; then
+            echo "WARN: could not resolve live-defi-rollout tip — skipping this tick (retry in 15m)"
+            { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          PROMOTE_HEAD="promote/$REPO/${LDR_SHA:0:12}"
+
+          # bug#7 guard: close any stale head=live-defi-rollout promote PR into main — including the
+          # ones THIS bot opened before this migration. Backmerge PRs are base=live-defi-rollout, so
+          # they are not matched.
+          if [ "$DRY_RUN" != "true" ]; then
+            for _LDR_PR in $(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+                --state open --json number --jq '.[].number' 2>/dev/null); do
+              gh pr close "$_LDR_PR" --repo "$OWNER/$REPO" \
+                --comment "Closed by the PM Option-B drain bot (frozen-head migration 2026-07-18): promotes now open from an immutable per-SHA ref (\`promote/<repo>/<sha>\`). A head=live-defi-rollout promote PR merges an unvalidated moving head, and would DELETE the SSOT branch if ever armed with --delete-branch." 2>/dev/null \
+                && echo "  🛡️  bug#7 guard: closed stale LDR-headed promote PR #$_LDR_PR" || true
+            done
+          fi
+
+          # ── Reuse an open promote PR from the CURRENT per-SHA ref ──
+          PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$PROMOTE_HEAD" \
             --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
@@ -137,13 +192,50 @@ jobs:
               { echo "action=would-open"; echo "pr="; } >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            BODY="PM Option-B auto-drain: live-defi-rollout → main ($FILES changed file(s)). Sweeps sanctioned direct pushes (docs(plans) flips, scripts/.github carve-out) to main. Merges when quality-gates-v2 passes. SSOT: ldr-to-main-promote.yml."
-            PR_URL=$(gh pr create --repo "$OWNER/$REPO" \
+            # bug#5 hardening: delete the LEGACY no-slash `promote/$REPO` ref FIRST — it
+            # directory/file-conflicts `promote/$REPO/<sha>` (HTTP 422) and the superseded-ref
+            # cleanup below (which filters on "promote/$REPO/") can never catch it. Left unhandled
+            # it froze 15/21 fleet repos at ref-creation on 2026-06-29.
+            if gh api "repos/$OWNER/$REPO/git/refs/heads/promote/$REPO" >/dev/null 2>&1; then
+              GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X DELETE "repos/$OWNER/$REPO/git/refs/heads/promote/$REPO" >/dev/null 2>&1 \
+                && echo "  🛡️  bug#5: deleted legacy no-slash ref refs/heads/promote/$REPO (D/F-conflicts the per-SHA ref)" || true
+            fi
+            # Create-only (POST). A 409 means a prior tick already created it for this SAME SHA —
+            # correct, not an error: verify it resolves and continue. The ref is immutable (its name
+            # encodes the SHA), so it never needs a force-update.
+            if ! GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/$REPO/git/refs" \
+                 -f ref="refs/heads/$PROMOTE_HEAD" -f sha="$LDR_SHA" >/dev/null 2>&1; then
+              if ! gh api "repos/$OWNER/$REPO/git/refs/heads/$PROMOTE_HEAD" >/dev/null 2>&1; then
+                echo "  ⛔ could not create immutable promote ref $PROMOTE_HEAD @ ${LDR_SHA:0:8} — retry next tick"
+                { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+            echo "  frozen-head: $PROMOTE_HEAD → ${LDR_SHA:0:12} (tree ${LDR_TREE:0:12}) — PR opens from this immutable ref"
+            # Superseded-ref cleanup: when LDR advances, the previous tick's ref is stale. Close its
+            # open PR and delete the ref so orphan promote/* branches don't accumulate.
+            for _STALE_HEAD in $(gh pr list --repo "$OWNER/$REPO" --base main --state open \
+                --json headRefName \
+                --jq ".[] | select(.headRefName | startswith(\"promote/$REPO/\")) | select(.headRefName != \"$PROMOTE_HEAD\") | .headRefName" 2>/dev/null); do
+              _STALE_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$_STALE_HEAD" \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              if [ -n "$_STALE_NUM" ] && [ "$_STALE_NUM" != "null" ]; then
+                gh pr close "$_STALE_NUM" --repo "$OWNER/$REPO" \
+                  --comment "Closed by the PM Option-B drain bot: superseded by a newer LDR tip (new ref: \`$PROMOTE_HEAD\`)." 2>/dev/null || true
+                echo "  closed superseded promote PR #$_STALE_NUM (head=$_STALE_HEAD)"
+              fi
+              GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X DELETE "repos/$OWNER/$REPO/git/refs/heads/$_STALE_HEAD" >/dev/null 2>&1 \
+                && echo "  deleted orphan promote ref refs/heads/$_STALE_HEAD" || true
+            done
+            BODY="PM Option-B auto-drain: live-defi-rollout → main ($FILES changed file(s)) from the immutable per-SHA ref \`$PROMOTE_HEAD\` @ ${LDR_SHA:0:12}. Sweeps sanctioned direct pushes (docs(plans) flips, scripts/.github carve-out) to main. Merges when quality-gates-v2 passes. SSOT: ldr-to-main-promote.yml."
+            # PAT-authored, NOT App-authored — an App-created promote PR deadlocks in
+            # `action_required` forever (see [2] in the frozen-head block above).
+            PR_URL=$(GH_TOKEN="$GH_PAT_FOR_ARM" gh pr create --repo "$OWNER/$REPO" \
               --title "chore(promote): LDR → main (Option-B auto-drain)" \
-              --body "$BODY" --base main --head live-defi-rollout 2>/dev/null || true)
+              --body "$BODY" --base main --head "$PROMOTE_HEAD" 2>/dev/null || true)
             if [ -z "$PR_URL" ]; then
-              # Race: another run/quickmerge opened it between the list and the create.
-              PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+              # Race: another run opened it between the list and the create.
+              PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head "$PROMOTE_HEAD" \
                 --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
               [ -z "$PR_NUM" ] && { echo "WARN: PR create failed and none found"; { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"; exit 0; }
             else
@@ -154,7 +246,11 @@ jobs:
                 { echo "action=provenance_blocked"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
                 exit 0
               fi
-              gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null \
+              # --delete-branch is safe ONLY because the head is the bot's per-SHA ref. It is
+              # COUPLED to the frozen head: with head=live-defi-rollout this flag deletes the SSOT
+              # branch on merge (deployment-ui, 2026-06-29). Never re-add one without the other.
+              # PAT-armed: the App token cannot enablePullRequestAutoMerge (WS-L 2026-06-26).
+              GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_URL" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null \
                 || echo "  WARN: auto-merge unavailable — merge manually: $PR_URL"
               { echo "action=opened"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
               exit 0
@@ -171,7 +267,7 @@ jobs:
             { echo "action=provenance_blocked"; echo "pr=$PR"; } >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+          GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null || true
 
           MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
           if [ "$MSTATE" = "blocked" ]; then
@@ -196,7 +292,7 @@ jobs:
               echo "  v2-never-reported on head ${HEAD_SHA:0:8} — close+reopen to re-fire quality-gates-v2"
               gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null && sleep 3 \
                 && gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
-                && gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+                && GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null || true
               ACTION="recovered"
             else
               echo "  PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving it"
@@ -262,8 +358,14 @@ jobs:
                   ACTION="dirty_nonmanifest"
                 fi
               fi
-              # Re-arm auto-merge (the PR head advanced if we pushed; harmless no-op otherwise).
-              gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+              # Re-arm auto-merge. Under FROZEN HEAD (2026-07-18) this is best-effort: the reconcile
+              # above pushes to live-defi-rollout, which no longer moves THIS PR's head (that head is
+              # the immutable snapshot ref), so a genuinely-dirty PR stays dirty here. It self-heals
+              # on the NEXT tick — the new LDR tip (now carrying the reconcile merge) gets a new
+              # per-SHA ref and a fresh, clean PR, and this stale one is closed by the superseded-ref
+              # cleanup. One tick (~15 min) slower than the old head==LDR behaviour, and correct
+              # instead of merging a moving head. Kept for the race where `dirty` already cleared.
+              GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --merge --delete-branch --repo "$OWNER/$REPO" 2>/dev/null || true
             fi
           else
             echo "  PR #$PR_NUM mergeable_state=${MSTATE:-unknown} (auto-merge pending)"
