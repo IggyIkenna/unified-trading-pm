@@ -646,3 +646,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **Still queued:** combo re-stamp (above), cash-type `-USD` writer fix
     (`NASDAQ:EQUITY:AAPL-USD`/`FX:CURRENCY:KRW-USD` — builder `_build_tradfi_cash` adds `-USD` only for INDEX today),
     catalogue per-day sweep (~60% done), Barchart-retired purge, Phase A2/A3, Phase D.
+
+- **2026-07-18 (slot-1, tick 8) — ✅ MANIFEST DURABILITY CONFIRMED (verified live, not assumed).** Two re-measures at
+  +3min and +7min post-migration are BYTE-IDENTICAL (925,816 FUTURE/OPTION, 553,901 canonical 59.83%, raw 165,715 +
+  whitespace 206,200; index generation/size stable at 80.6MB). **The raw count is FLAT across ~10 consolidator cycles →
+  NO REVERT.** The every-minute consolidator did a ONE-TIME prune (my CAS index 617,808 canonical → consolidator
+  steady-state 553,901; ~64k rows removed as stale/dedup, NOT reverted to raw — raw stayed flat) then stabilized. So the
+  CAS-of-the-consolidated-index approach IS durable here (matching the `restamp_tradfi_schema_v9_tail` precedent). Both
+  Phase-B surfaces (catalogue + manifest) are now migrated + independently-verified-live + durable. The residual 59.83%
+  (vs a naive 100%) is entirely the quarantined combos (`UD_1V__VT_`) sitting in the FUTURE/OPTION denominator — the
+  combo re-stamp (FUTURE→COMBO) P0 follow-up removes them from the denominator and lifts the TRUE non-combo
+  FUTURE/OPTION canonical toward ~100%.
