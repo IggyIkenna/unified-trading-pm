@@ -322,3 +322,38 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   promote→deploy, then run a real training+inference under ml-store/ + cite cloudbuild) + consolidator 2→1 retarget;
   Phase E delete (multi-day zero-reads window). deployment-api display (P2) + PM mirror (P3) still deferred on their
   external blockers.
+
+- **2026-07-18, TICK 6 (`/autonomous` resume) — Phase D verify-exercised DONE (runtime proof, ALL PASS); redeploy
+  BLOCKED on a FLEET-WIDE base-image staleness (not the fold).** State confirmed at resume: ml-store-{prd,test} buckets
+  provisioned + data present (`models/`, `training-artifacts/` prefixes); UTL+ml-service+deployment-service cutover on
+  origin/main (grep-verified `training-artifacts/` prefix in `training_orchestrator.py` on main).
+  - **VERIFY-EXERCISED (runtime, ml-service `.venv`, real prod code paths — scratchpad `verify_ml_fold.py`, ALL PASS):**
+    (1) `resolve_bucket_name` folds ALL 5 legacy ml kinds → `ml-store-{env}-{pid}` on gcp+aws × prd+test (24 assertions
+    green); (2) real GCS round-trips via UTL `upload_to_storage`/`download_from_storage` (the SAME helpers the writers
+    use) on `ml-store-test-central-element-323112` at EVERY cutover prefix — `models/models/…/model.joblib`,
+    `training-artifacts/experiments/…/metrics.json`, `configs/…`, `predictions/…`, `artifacts/…` — write+read
+    byte-identical + object-exists at folded path; (3) real `ModelRegistry._deserialize_model` joblib gate ADMITS
+    `models/`, REJECTS `artifacts/` sibling. All test objects cleaned up (gcs_delete). This is the runtime "exercised"
+    proof the cutover writes/reads correctly on the folded env-tiered bucket.
+  - **REDEPLOY blocker (fleet-wide, PRE-EXISTING, NOT caused by the fold):** the `ml-service-build` Cloud Build
+    (trigger, push→`^main$`) has FAILED every run since ~2026-07-14; last SUCCESS `412055ba` (07-14T03:48, pre-cutover).
+    The 07-17T18:14 build (`5bf19ecc`, the fe3b7c2 cutover promote) failed at Step #7 in-image QG: "Codex compliance
+    FAILED: 1 violation" = pip-audit `setuptools 82.0.1 : PYSEC-2026-3447`. ROOT CAUSE: the QG base scripts are baked
+    into the UTL base Docker image at `/app/unified-trading-pm/scripts/quality-gates-base/`; ml-service/Dockerfile pins
+    a STALE base digest `sha256:b7e391f8…` whose baked `qg-common.sh` PREDATES the fleet fix — the PYSEC-2026-3447
+    ignore landed in PM `qg-common.sh:106` on 07-14 (commit `3f4fad38`, on origin/main+LDR) but the pinned base image is
+    older. Fresh UTL base `:latest` = `sha256:76a15429…` (v0.55.0, pushed 07-18T10:36). This blocks ALL service deploys,
+    not just ml (features-service main build also FAILED today 08:54). Since the cutover CODE is v2-green on main
+    (authoritative gate) and verify-exercised passes at runtime, the fold's correctness is PROVEN; the
+    cloudbuild=SUCCESS citation is gated on the base-image bump. Dispatched a read-only sub-agent (`ac33f074`) to
+    confirm the fresh base carries the ignore + scope the minimal fix (bump `BASE_IMAGE_DIGEST` → ship via
+    quickmerge→promote). FLEET FINDING for operator.
+  - **CONSOLIDATOR 2→1 retarget sites confirmed:** GCP
+    `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf:223`
+    (`"ml-training-artifacts" = "ml-training-artifacts-${var.project_id}"`), AWS `.../aws/…:44`, + catalog
+    `deployment-api/deployment_api/consolidator_catalog.generated.json:183-187`. Only `ml-training-artifacts` had a
+    consolidator (2 cloud jobs: Cloud Run Job `uts-prod-manifest-consolidator-ml-training-artifacts` + AWS Batch); the
+    other 4 ml kinds never had one → it's genuinely a retarget-of-1-logical-job, not 5→1. Apply mechanism = TF map edit
+    (drift-detector SSOT) + DIRECT gcloud job update (the features-onchain-cefi comment at `:225` confirms consolidator
+    jobs are created/removed directly via gcloud, NOT tofu apply) + re-run `gen_consolidator_catalog.py`. Retarget →
+    `"ml-store" = "ml-store-${local.deployment_env_short}-${var.project_id}"` (env-tiered; job → …-ml-store).

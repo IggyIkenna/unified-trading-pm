@@ -96,7 +96,18 @@ Silent + throughput-amplified = P1 data-correctness.
   (MTDS) — both assert the failed shard is recorded, never silently dropped, and that a clean result does not
   over-raise.
 
-## Deferred — P2 efficiency follow-up (not correctness)
+## P2 efficiency follow-up — RESOLVED 2026-07-17 (unified-trading-library@546bd99d)
+
+The startup 429 thundering-herd is now absorbed by an OUTER retry over the whole GCS upload
+(`streaming_writer._upload_gcs_with_retry` → `with_retry`), so the big DERIBIT-perpetual shards land on pass-1 instead
+of a later retry pass. `with_retry` now honors google.api_core's `.code` attribute (`TooManyRequests.code == 429`) so
+429/5xx are retried while **400/precondition is NEVER retried** (`BadRequest.code == 400` is not in
+`_RETRYABLE_STATUS_CODES`) — this also satisfies Tardis Support's "avoid immediate retries on 400" guidance, applied to
+our writes. The gcp.py 900-line cap that originally blocked this is avoided by placing the retry in the io layer
+(475→496 L) rather than the provider. The related Tardis download-side 400 behaviour was verified already-compliant and
+locked in by a regression guard (market-tick-data-service: `tests/unit/test_tardis_no_immediate_retry_on_400.py`).
+
+### Original follow-up notes (kept for provenance)
 
 **Reduce the startup 429 thundering-herd so pass-1 lands the big shards** (today the biggest, most valuable DERIBIT
 book_snapshot_5 shards systematically fail on pass-1 and only land on a later retry pass — correct, but a real tax):
