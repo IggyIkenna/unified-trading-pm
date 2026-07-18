@@ -160,17 +160,10 @@ gcp:
     # Per-AG per-env split deferred; migration from old per-AG buckets sequenced under mtds_mdps_master Phase 1.
     strategy-store: "strategy-store-${GCP_PROJECT_ID}"
     strategy-store-test: "strategy-store-test-${GCP_PROJECT_ID}"
-    # NOTE: execution-store env-split ROLLED BACK — non-env-split shape until provisioning lands.
-    execution-store:
-      CEFI: "execution-store-cefi-${GCP_PROJECT_ID}"
-      TRADFI: "execution-store-tradfi-${GCP_PROJECT_ID}"
-      DEFI: "execution-store-defi-${GCP_PROJECT_ID}"
-      # Sports execution-store — separate per-AG fill/order/manifest store. Sports execution
-      # is event-driven venue-API placement (no canonical GCS reads); results land here so
-      # they are queryable by asset_group=sports rather than in the CeFi bucket. Non-env-split
-      # to match the execution-store family rollback + the shape ExecutionServicesConfig
-      # constructs (execution-store-sports-{pid}).
-      SPORTS: "execution-store-sports-${GCP_PROJECT_ID}"
+    # execution FOLD C (bucket_fold_execution_strategy_2026_07_17): folded per-asset_group dict ->
+    # one env-tiered bucket; asset_group moves into a top-level object-key prefix ({ag}/execution/...).
+    # Mirrors deployment-service/configs/cloud-providers.yaml (authoring SSOT) + the UAC packaged copy.
+    execution-store: "execution-store-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
     # Sports pipeline buckets
     features-sports: "features-sports-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
     # Sports venue-balance snapshot store — EOD snapshots written by VenueBalanceTracker.
