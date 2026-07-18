@@ -330,10 +330,11 @@ the canon plan; track there, not as duplicate todos:
       corrected 2 pre-existing tests that asserted the bug; QG green (88.53% cov). Deribit spot now enumerates + passes
       `CEFI_BASE_ASSET_UNIVERSE` like any venue. **Run-verify that real Deribit spot appears in a re-captured day**
       (data-ops, rides the IS re-capture). — instruments-service
-- [ ] [DATA] P2. **Verify Deribit BTC/ETH options present** (audit §J): run-verify a representative day has BTC/ETH
-      options in the batch catalogue (Tardis DERIBIT path; check the endpoint tier didn't drop option metadata).
-      **Operator 2026-06-16: BTC/ETH underlyings are FINE for now** — do NOT widen `CEFI_OPTIONS_UNDERLYINGS` or wire
-      the dedicated `DERIBIT-OPTIONS` adapter. — instruments-service
+- [x] [DATA] P2. ✅ **VERIFIED 2026-07-18 — Deribit BTC/ETH options present in the live cefi catalogue.** Read
+      `prod/catalog.parquet` (cefi, 425,573 rows) on real infra: **264,122 DERIBIT OPTION rows — BTC 129,777 + ETH
+      134,345** (instrument_types on DERIBIT = COMBO/FUTURE/OPTION/PERPETUAL/SPOT_PAIR; option metadata intact). Per
+      operator 2026-06-16, kept BTC/ETH underlyings only (did NOT widen `CEFI_OPTIONS_UNDERLYINGS`). —
+      instruments-service
 
 ## Phase E (TIER 4 — LAST, 🔴 GATED on the v9 `--apply` migration) — Download path-drift + all-asset-group smoke test
 
