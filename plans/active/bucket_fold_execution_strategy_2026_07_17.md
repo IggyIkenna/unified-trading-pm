@@ -112,18 +112,18 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
       `execution-store-{env}-{pid}/{ag}/execution/…` (incl. `nautilus-catalog-cache/`) and the prediction kind →
       `.../pred/…`; byte-count parity per AG (cefi ≈ 6142 obj — re-measure). strategy-store is a name re-tier, not a
       data move — copy the flat bucket contents to the tiered name, parity-verify.
-- [x] ✅ [CODE] P1. **Atomic cutover** — **CODE LAYER DONE 2026-07-18 (6/7 repos, UTL CI GREEN).** LANDED:
-      UAC@1dd02a73 (yaml exec-flat+strategy-tier+facade), UTL@d822bab5 (registry exec_fills/nautilus + strategy 3 rows +
+- [x] ✅ [CODE] P1. **Atomic cutover** — **CODE LAYER DONE 2026-07-18 (6/7 repos, UTL CI GREEN).** LANDED: UAC@1dd02a73
+      (yaml exec-flat+strategy-tier+facade), UTL@d822bab5 (registry exec_fills/nautilus + strategy 3 rows +
       _KIND_ALIASES exec-prediction + execution.py client), strategy-service@c425d5b5 (reader fold + VaR golden fix),
       execution-service@6af18c2e (writer surface + fill-twin), deployment-service@9f3f43b (yaml + single-root
       consolidator-TF + canonical-kind maps), UI@8075d6d7 (2 catalogue routes), PM@34125fac3 (yaml mirrors).
       **deployment-api DEFERRED** (display-only, tree tangled with unrelated Fold-B/data_status WIP). **UTL CI break
-      root-caused + fixed:** the resolver's workspace-yaml discovery finds unified-trading-pm/configs/cloud-providers.yaml
-      in CI (deployment-service not a UTL dep); its stale-on-LDR per-AG execution-store failed UTL's folded-resolution
-      tests even with a good UAC clone — the FIX-workflow PM agent folded it but hit the usage limit before committing;
-      folded + pushed, qg-v2 re-triggered GREEN. Original todo text below.
-- [ ] [CODE] P1. **(orig) Atomic cutover** — repoint Fold C sites → `kind="execution-store"` + `{ag}/` path prefix, and Fold D
-      sites → the re-tiered flat `strategy-store` name (incl. the UAC `strategy_store_bucket` facade + the two UI
+      root-caused + fixed:** the resolver's workspace-yaml discovery finds
+      unified-trading-pm/configs/cloud-providers.yaml in CI (deployment-service not a UTL dep); its stale-on-LDR per-AG
+      execution-store failed UTL's folded-resolution tests even with a good UAC clone — the FIX-workflow PM agent folded
+      it but hit the usage limit before committing; folded + pushed, qg-v2 re-triggered GREEN. Original todo text below.
+- [ ] [CODE] P1. **(orig) Atomic cutover** — repoint Fold C sites → `kind="execution-store"` + `{ag}/` path prefix, and
+      Fold D sites → the re-tiered flat `strategy-store` name (incl. the UAC `strategy_store_bucket` facade + the two UI
       hardcoded routes). Ship per-repo QG-green: execution-service, strategy-service, UTL, deployment-api, UI, UAC.
 - [ ] [INFRA] P1. **Redeploy + verify-exercised** — redeploy execution-service + strategy-service; verify a live fill
       write lands under `execution-store/{ag}/…` and the UI catalogue routes resolve the re-tiered strategy-store (diff
@@ -151,28 +151,29 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   **172 obj**. **PROVISIONED** the folded GCP targets (direct gcloud, ASIA-NORTHEAST1/UBLA/STANDARD→COLDLINE@60d):
   `execution-store-{prd,test}-central-element-323112` (both were absent), `strategy-store-prd-central-element-323112`
   (`strategy-store-test` already existed). **MIGRATING** (server-side, additive — sources untouched): Fold D
-  `strategy-store/*` → `strategy-store-prd/*` (flat re-tier, same layout: `_index/ backtests/ catalogue/ configs/
-  hedge_ratio_snapshots/ legacy_cefi/ strategy_decision_context/ strategy_instructions/ tracer_runs/`); Fold C
-  `execution-store-{cefi,defi,tradfi}/*` → `execution-store-prd/{ag}/*` (AG becomes top-level prefix; cefi layout
-  `execution/ configs/ deployment_history/ blocked_spreads/ backfill_batches/ nautilus-catalog-cache/ nautilus_catalog/
-  …` all gain the `cefi/` prefix) + `execution-store-pred-prd/*` → `execution-store-prd/pred/`; sports (0) assert-empty.
-  **cefi is LIVE** — the bulk copy is a point-in-time snapshot; a FINAL RSYNC at cutover catches new-fill drift (expected
-  parity-drift on cefi until then). **MIGRATE DONE + PARITY ✓ (2026-07-18):** strategy-store src=dst=37,765,413 B;
-  execution cefi src=dst=1,610,459,707 B (no snapshot drift), defi/tradfi/pred copied under `{ag}/` prefixes, sports (0)
-  asserted empty. **NEXT (gated, NOT this session):** Fold-C+D code CUTOVER is GATED on the parent W2
-  [[strategy_store_split_brain_2026_07_13]] repoint landing first (todo 2 — strategy-service already resolves flat
-  `kind="strategy-store"`, verified; the HARDCODED per-AG readers deployment-api/UI/UAC-facade are the W2 scope to
+  `strategy-store/*` → `strategy-store-prd/*` (flat re-tier, same layout:
+  `_index/ backtests/ catalogue/ configs/ hedge_ratio_snapshots/ legacy_cefi/ strategy_decision_context/ strategy_instructions/ tracer_runs/`);
+  Fold C `execution-store-{cefi,defi,tradfi}/*` → `execution-store-prd/{ag}/*` (AG becomes top-level prefix; cefi layout
+  `execution/ configs/ deployment_history/ blocked_spreads/ backfill_batches/ nautilus-catalog-cache/ nautilus_catalog/ …`
+  all gain the `cefi/` prefix) + `execution-store-pred-prd/*` → `execution-store-prd/pred/`; sports (0) assert-empty.
+  **cefi is LIVE** — the bulk copy is a point-in-time snapshot; a FINAL RSYNC at cutover catches new-fill drift
+  (expected parity-drift on cefi until then). **MIGRATE DONE + PARITY ✓ (2026-07-18):** strategy-store
+  src=dst=37,765,413 B; execution cefi src=dst=1,610,459,707 B (no snapshot drift), defi/tradfi/pred copied under
+  `{ag}/` prefixes, sports (0) asserted empty. **NEXT (gated, NOT this session):** Fold-C+D code CUTOVER is GATED on the
+  parent W2 [[strategy_store_split_brain_2026_07_13]] repoint landing first (todo 2 — strategy-service already resolves
+  flat `kind="strategy-store"`, verified; the HARDCODED per-AG readers deployment-api/UI/UAC-facade are the W2 scope to
   confirm); execution-store-cefi DELETE is OPERATOR-GATED (live fills). Cutover follows the Fold-A discovery→implement→
-  adversarially-verify shape (execution-service `service_config.py` + UTL PATH_REGISTRY `execution_fills`/`nautilus_catalog`
-  + strategy re-tier writers + UAC `strategy_store_bucket` facade + 2 UI hardcoded routes). Also: execution/strategy
-  service builds will need the same base-image pin bump as ml (fleet digest-sweep fix f6e98bbdd auto-handles it once it
-  promotes + the 6h sweep runs).
+  adversarially-verify shape (execution-service `service_config.py` + UTL PATH_REGISTRY
+  `execution_fills`/`nautilus_catalog`
+  - strategy re-tier writers + UAC `strategy_store_bucket` facade + 2 UI hardcoded routes). Also: execution/strategy
+    service builds will need the same base-image pin bump as ml (fleet digest-sweep fix f6e98bbdd auto-handles it once
+    it promotes + the 6h sweep runs).
 
 - **2026-07-18, `/autonomous` — C+D CODE CUTOVER shipping (4-workflow pipeline: IMPLEMENT→VERIFY→FIX→REVERIFY).** Ran a
   6-agent IMPLEMENT workflow (one per repo) → 2 adversarial verifiers → a 5-agent FIX workflow → re-verify. The
-  adversarial passes earned their keep — caught, before anything shipped: (1) **strategy-service holds Fold-C byte-parity
-  execution-fills READERS** (`pnl/adapters/domain_adapter` + `pnl/engine/orchestrator`) that I'd mis-scoped as
-  "redeploy-only" — un-folded they `KeyError`/silently-mismatch the writer's `{category}/execution/…` path (silent
+  adversarial passes earned their keep — caught, before anything shipped: (1) **strategy-service holds Fold-C
+  byte-parity execution-fills READERS** (`pnl/adapters/domain_adapter` + `pnl/engine/orchestrator`) that I'd mis-scoped
+  as "redeploy-only" — un-folded they `KeyError`/silently-mismatch the writer's `{category}/execution/…` path (silent
   hold-day P&L drop); FIXED writer==reader (resolve_bucket_name(kind="execution-store") + category=). (2)
   `execution-service dependency_checker` resolved the RETIRED `strategy-store-test` yaml key → BucketNamingError; FIXED
   to tiered resolve. (3) deployment-service `_SERVICE_TO_CANONICAL_KIND` missing execution/strategy; (4) deployment-api
@@ -187,7 +188,7 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   tests green, platform-stable. **LOOSE END:** a large separate replay/source-capability WIP of mine (~8 UAC files:
   possible_manifest/pipeline_mode/_source_priority_data/_cefi-capability/lighter_api) re-dirties UAC (codegen or
   slot-cron restore) — unrelated to C+D; ship C+D with `--skip-preflight`; the replay feature needs finishing/committing
-  or reverting separately. **Operator context: TEST DATA, not precious, single-root _index/, autonomous delete.**
+  or reverting separately. **Operator context: TEST DATA, not precious, single-root \_index/, autonomous delete.**
 
 - **2026-07-18, OPERATOR DECISIONS (interactive Q&A) — full-send, canonical-first, NOT precious data.** Operator
   clarified the trading-adjacent buckets hold only random test data — **no real trades have happened; nothing is writing
@@ -199,3 +200,20 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   **Pre-authorized AUTONOMOUS delete** of all sources incl. execution-store-cefi after the 4 gates (parity + cutover +
   verify-exercised + zero-reads) — no operator pause. W2 gate SATISFIED (verified). Same coordinated ship-all-then-
   redeploy shape as Fold-A. cutover spec = workflow wf_9e961e81-417 output (whvoyecxl.output).
+
+- **2026-07-18, UTL `quality-gates-v2` RED → diagnosed + CONFIRMED RESOLVED (no new fix needed).** After UTL@d822bab5
+  (folded resolver + folded `tests/fixtures/cloud-providers.yaml`), UTL v2 went RED (runs 29659419522 @20:17Z,
+  29660682095 @20:57Z) on the **tests** slice. Root cause: the CI resolution source is **not** the UTL test fixture —
+  the v2 workflow exports `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` →
+  `unified-trading-pm/scripts/quality-gates-base/ci-test-cloud-providers.yaml` (base-service.sh:471; base-library.sh
+  does NOT set it, so UTL **local** QG uses the folded fixture → local-green while CI-red). That PM mirror still carried
+  the OLD `execution-store` per-AG DICT + un-tiered `strategy-store`, so the folded UTL tests hit
+  `BucketNamingError: Kind 'execution-store' … is per-asset_group` + `strategy-store-{pid}` vs `-prd-` assert-mismatch.
+  The CI-tail `--- Logging error --- / ValueError: I/O operation on closed file` is benign pytest teardown noise, NOT
+  the failure. **Already fixed on origin:** `be973918e` (@21:10Z, "fix(config): fold PM cloud-providers.yaml mirrors for
+  C+D (unblock UTL CI)") folded BOTH PM mirrors (ci-test + configs) — landed ~13 min AFTER the last red run. Evidence
+  UTL v2 **GREEN**: run **29661120709 @21:10:48Z SUCCESS** (first run after the fold; identical code, only the mirror
+  changed) + re-triggered 29661344579. **Fleet-safety verified** before concluding: no sibling pytest resolves the OLD
+  exec/strategy shape against the shared fixture (execution-service assertions are literal/mock;
+  deployment-service/deployment-api/UI have none) — execution-service (29659402526) + strategy-service (29659413987) v2
+  stayed GREEN. No UTL change required.
