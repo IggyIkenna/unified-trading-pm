@@ -102,10 +102,27 @@ in the log and needs a direct repro to pin down.
 3. **Crashed a fleet VM mid-flight**: this is what caused `features-sports-sports-20260717-135916` (part of the
    authorized `BLK-a3149ab4` elo+travel consolidated gap-fill) to exit non-zero on its final date, after successfully
    completing all 344 prior dates in its range.
-4. Confined to the most-recent ~week of the corpus (2026-07-11→2026-07-17 observed) — every earlier date across all 10
-   VMs (2017-02-02→2026-07-10, ~3,446 days) completed cleanly with no trace of this error, so this looks like a
-   data-freshness/recency issue (very-recent "historical fixtures" not yet fully settled) triggering a latent code bug,
-   not a corpus-wide regression.
+4. **CORRECTED 2026-07-18T08:2xZ (slot-4) — NOT confined to the most-recent week.** A full re-scan of all 10 fleet VM
+   logs
+   (`gs://deployment-scripts-central-element-323112/vm-logs/features-sports-sports-20260717-1356{08,32,53,14,33,55, 20,38,56}/run.log` +
+   `-135916`), correlating every `Team history: 0 rows` line against the preceding
+   `truth value of a Series is ambiguous` error (excluding one unrelated transient 503 on 2025-12-15), finds the bug
+   recurs in **three separate corpus windows, ~521 affected dates total**, not ~7:
+   - VM `135653` (range 2018-12-26→2019-12-05): **244** affected dates, scattered/intermittent from 2019-01-20 through
+     2019-12-06 (dozens of short runs, not one contiguous block).
+   - VM `135714` (range 2019-12-07→2020-11-14): **52** affected dates, scattered from 2019-12-12 through 2020-03-03.
+   - VM `135916` (range 2025-08-07→2026-07-17): **225** affected dates, ONE CONTIGUOUS block from 2025-12-04 through
+     2026-07-17 (with a single gap at 2025-12-15, caused by an unrelated transient 503 GCS error, not this bug).
+   - All other 6 fleet VMs (covering 2017-02-02→2018-12-18 and 2020-11-16→2025-08-04) show **zero** occurrences —
+     confirmed via `grep`-equivalent count, not sampling. So the true window is bimodal: an intermittent 2019-01→2020-03
+     patch (~1 year) and a solid 2025-12-04→2026-07-17 block (~7.5 months, and still open-ended — every date since
+     2025-12-04 up to the corpus's live edge is affected). This is NOT a recency-only issue; whatever triggers it
+     recurred once ~6 years ago and again now. Todo 3 below is updated to reflect the real gap-fill scope.
+     **Cross-cutting risk**: the elo+travel consolidated gap-fill fleet (this same 10-VM run) was just marked
+     complete/verified via "direct parquet content sampling" — if that spot-check didn't happen to sample from inside
+     these ~521 dates, its `venue_context`/travel-column verification may not actually cover them (this bug zeroes
+     `venue_context` independently of the elo/travel fixes). Flagging for operator awareness, not re-opening that plan
+     myself — outside this issue's scope to verify.
 
 ## Recommended decision
 
@@ -126,9 +143,12 @@ fixed from a log trace alone.
 - [ ] [DATA] P2. Decide whether `batch_feature_quality_gate`'s `recovery=skip` path should BLOCK the write (like
       `FeatureWriteGate REJECTED shard` does for `fixture_player_stats`) instead of writing a >85%-all-NaN shard through
       — this is a data-correctness policy decision, not just a bug fix. (repo: features-service)
-- [ ] [DATA] P2. Once the above is fixed, gap-fill the affected recent-week dates (2026-07-11 through 2026-07-17 at
-      minimum — re-check whether the window is wider) with `--force` on the fixed code, same pattern as the sibling
-      elo/travel gap-fill. (repo: features-service)
+- [ ] [DATA] P2. Once the above is fixed, gap-fill the CORRECTED affected-date set (~521 dates, not 7): 2019-01-20
+      through 2019-12-06 (intermittent, ~244 dates), 2019-12-12 through 2020-03-03 (intermittent, ~52 dates), and
+      2025-12-04 through the corpus's live edge (contiguous, 225+ dates and growing daily until the fix ships) — the
+      exact per-VM date lists are in "What I found" item 4 above. `--force` on the fixed code, same pattern as the
+      sibling elo/travel gap-fill. Re-verify against the live corpus edge at fix time since the 2025-12-04→ window is
+      still open. (repo: features-service)
 
 ## Progress Log
 
@@ -143,3 +163,19 @@ actual task is gap-filling (confirmed `venue_context`'s all-NaN columns here com
 failing, not from either of those two already-fixed bugs). Not fixing this myself (outside scope). Returning to the
 elo/travel gap-fill task to verify its actual completion coverage (3,452/3,453 corpus dates — every VM finished 0-exit
 except this one date on this one VM) before flipping its checkboxes.
+
+### 2026-07-18T08:2xZ — data_engineering slot-4 (dispatched to Todo-3 gap-fill; found scope was wrong before starting)
+
+Dispatched `-003` (the gap-fill todo). `-001` (root-cause fix, slot 2) and `-002` (quality-gate policy decision, slot 3)
+are still `dispatched`/in-progress — this todo has no formal `prereqs` gate on them (`depends_on: []`,
+`gate_on_depends: false` in this doc's frontmatter), so the dispatcher handed it to me anyway even though the gap-fill
+genuinely cannot run until the fix lands. Rather than idle-wait doing nothing useful, did the "re-check whether the
+window is wider" part of my own todo's brief now (read-only GCS log analysis via the features-service `.venv`'s
+`google.cloud.storage` client, no code touched, no collision risk with slots 2/3): downloaded and grepped all 10 fleet
+VM run.logs, correlating every `Team history: 0 rows` line against a preceding `truth value of a Series is ambiguous`
+error. Result: the affected-date count is **~521, not ~7** — see the corrected "What I found" item 4 and the rewritten
+Todo 3 above. This is a big-enough scope change (7.4x, spans 3 non-contiguous corpus windows across 2 different years)
+that I'm flagging it rather than silently absorbing it. Filing `/blocked` next to notify main/operator of (a) the
+widened scope so `-001`'s regression test and `-002`'s policy decision account for the real window, not just last week,
+and (b) the cross-cutting risk that the just-completed elo+travel gap-fill's "verified via parquet sampling" claim may
+not have covered these same ~521 dates. Continuing to wait on `-001`/`-002` before I can actually run the gap-fill.
