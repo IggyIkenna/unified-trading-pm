@@ -235,16 +235,24 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
       (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s.
 
-## Phase D — re-smoke-test the backfills (skills ADAPTED to tradfi) → MVP-backfill-ready
+## Phase D — re-smoke-test the backfills, TradFi-only, ALL shards (the post-migration completion gate)
 
-- [ ] [DATA] P0. **Adapt `data-pipeline-check-mtds` + `data-pipeline-check-is` to the tradfi MVP universe** — add the
-      tradfi (asset_group, venue, data_type) cells (ES futures/options, single-stock equities, CME BTC/ETH
-      futures+options, Treasury `ohlcv_24h`, KRW daily) with force-refetch + skip-if-fresh proofs per cell + a canonical
-      regression cell (assert 0 raw / 0 non-`@LIN` ids in the written shard). Build on the shared engine in
-      `data_pipeline_e2e_check_2026_07_10.md`. (repos: unified-trading-pm, market-tick-data-service,
-      instruments-service)
-- [ ] [DATA] P0. **Run both adapted skills on a real day** — prove force/skip + canonical shape for every MVP cell on
-      real `-test-` buckets; report path cited. Green = tradfi is code-complete, migrated, honestly-covered, and ready.
+> **This is the plan's terminal gate.** Post-migration, run BOTH pipeline-check skills scoped to **tradfi only** and
+> require green across **every** tradfi shard (not just the MVP cells) — force-refetch + skip-if-fresh + a
+> canonical-shape assertion — so we KNOW tradfi is complete before any MVP backfill. Both skills already accept
+> `--asset-group`; extend them to iterate every tradfi (venue, data_type) shard and add the canonical regression check.
+
+- [ ] [DATA] P0. **Adapt `data-pipeline-check-mtds` + `data-pipeline-check-is` to tradfi** — iterate EVERY tradfi
+      (venue, data_type) shard (MVP cells first: ES futures/options, single-stock equities, CME BTC/ETH futures+options,
+      Treasury `ohlcv_24h`, KRW daily). Per shard: force-refetch + skip-if-fresh proof + a **canonical regression cell**
+      asserting the written shard's `instrument_id` is `PRODUCT_ROOT-USD@LIN-YYYYMMDD[-STRIKE-C|P]` (0 raw, 0
+      whitespace, 0 non-`@LIN`). Build on the shared engine in `data_pipeline_e2e_check_2026_07_10.md`. (repos:
+      unified-trading-pm, market-tick-data-service, instruments-service)
+- [ ] [DATA] P0. **Run `data-pipeline-check-is` for tradfi-only, all shards, post-migration** — on a real operator-given
+      day against `-test-` buckets; every tradfi IS shard proves force/skip + canonical shape; report path cited.
+- [ ] [DATA] P0. **Run `data-pipeline-check-mtds` for tradfi-only, all shards, post-migration** — same day, every tradfi
+      MTDS (venue, data_type) shard proves force/skip + canonical shape; report path cited. **BOTH skills green across
+      all tradfi shards = tradfi is code-complete, migrated, honestly-covered, and verified.**
 - [ ] [DATA] P0. **MVP backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single
       Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
 
