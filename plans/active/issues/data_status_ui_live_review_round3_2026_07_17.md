@@ -221,18 +221,46 @@ only [RECOMMENDED]; (B) purge DRIFT's 3,556 rows from the IS defi catalogue/inde
 "removed" intent but loses audit history); (C) both. The "from 2020-01" floor date on these Solana protocols is a
 secondary date-floor smell (Solana DeFi didn't exist Jan 2020). **NOTIFIED operator.**
 
+### F9 — sports LEAGUE filter is exact/case-sensitive + Upcoming Fixtures shows raw league ids — `- [ ]` IN PROGRESS (operator 2026-07-18)
+
+Operator: typing "Allsvenskan" (a league human NAME) in the fixtures-browser LEAGUE filter returns 0; a team name
+("Halmstad") matches. Root cause (measured): the LEAGUE filter is an EXACT, case-sensitive match on the raw `league_id`
+(`fixtures_browser.py:258` + `upcoming_fixtures.py:303`: `df["league_id"].astype(str) == league_filter`), while the TEAM
+filter already does case-insensitive substring (`_matches_team`, `.lower()` + `in`) and the catalogue instrument_id
+search already does `.str.lower().str.contains` — so those two are fine; only the LEAGUE filter is the outlier.
+Operator's general theme: **all filters should be case-insensitive + PARTIAL (substring / "first half of the word")**,
+matching human names too. Also (screenshot): **Upcoming Fixtures still renders raw league ids (113/114)** — it needs the
+F1 human-name treatment. **Fix (round4 workflow `wf_fbac7262`):** LEAGUE filter → case-insensitive substring on
+league_id OR resolved human display_name (shared helper in `upcoming_fixtures.py`, distinct-resolve not per-row) +
+Upcoming Fixtures renders human league names.
+
+### F10 — New Listings + Upcoming Expiries very slow / "Unknown error" (latency, NOT OOM) — `- [ ]` IN PROGRESS (operator 2026-07-18)
+
+Operator: New Listings + Upcoming Expiries very slow to load "if it's using catalogue" + New Listings shows "Unknown
+error". Diagnosed (measured live 2026-07-18): **NOT OOM** — the F2 16Gi/4CPU fix holds (0 OOM in 2h). It is pure
+LATENCY: `catalogue_lifecycle.list_new_listings(30)` = **35s**, `list_upcoming_expiries(5)` = **31s** — it reads ALL
+FIVE per-AG `prod/catalog.parquet` COLD serially (prediction alone = **2.9M rows / 17s**; tradfi 1.17M) on every 5-min
+TTL cache miss AND returns **644,380 rows unbounded**; 35s > the Cloud Run / browser fetch timeout → 500 "Unknown
+error". NOT previously flagged with a specific fix (F2 covered only the OOM; there is a general `ui_build_warm_cache`
+plan). **Fix (round4 workflow `wf_fbac7262`):** pagination (limit/offset, `total_count`, page-only row build, mirroring
+A5's `/catalogue`) + parallelise the 5 per-AG reads (cold ≈ slowest single ≈ 17s not 35s serial) + warm the cache off
+the request path (prime at startup + background refresh under the TTL) so a user request never does the cold read
+synchronously.
+
 ## Fix status
 
-| #   | Finding                                 | Repo(s)                              | Status                                                                                                              |
-| --- | --------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| F1  | Fixtures league human names             | deployment-api + deployment-ui       | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)                                                 |
-| F2  | 3 panels "Unknown error" (OOM)          | deployment-api (`cloudbuild`)        | ✅ FIXED + VERIFIED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; live rev 00198 = 16Gi/4CPU, 0 OOM since deploy |
-| F3  | Catalogue Explorer dropdowns            | deployment-api + deployment-ui       | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`                                                |
-| F4  | mock/dev robustness (F1/F3)             | deployment-ui                        | ✅ FIXED — `@9f88629`                                                                                               |
-| F5  | non-canonical instrument_type spellings | deployment-api + instruments-service | ✅ FIXED — drilldown display `@512180be` + writer `@ee19f6f3` (catalogue was already canonical)                     |
-| F6  | redundant COINBASE + bare-vs-chain dup  | deployment-api + instruments-service | ✅ FIXED — display collapse `@512180be` + writer `@ee19f6f3`                                                        |
-| F7  | DRIFT (removed) still in DeFi drilldown | deployment-api + IS catalogue        | ✅ FIXED — filter `@512180be` + purge (defi 63/cefi 10 rows, GCS-verified) + writer `@ee19f6f3`                     |
-| F8  | `--mode full` regen lossy (2,306 delta) | instruments-service                  | OPEN — found while verifying F7; full-mode unsafe until understood (see finding)                                    |
+| #   | Finding                                                             | Repo(s)                              | Status                                                                                                              |
+| --- | ------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| F1  | Fixtures league human names                                         | deployment-api + deployment-ui       | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)                                                 |
+| F2  | 3 panels "Unknown error" (OOM)                                      | deployment-api (`cloudbuild`)        | ✅ FIXED + VERIFIED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; live rev 00198 = 16Gi/4CPU, 0 OOM since deploy |
+| F3  | Catalogue Explorer dropdowns                                        | deployment-api + deployment-ui       | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`                                                |
+| F4  | mock/dev robustness (F1/F3)                                         | deployment-ui                        | ✅ FIXED — `@9f88629`                                                                                               |
+| F5  | non-canonical instrument_type spellings                             | deployment-api + instruments-service | ✅ FIXED — drilldown display `@512180be` + writer `@ee19f6f3` (catalogue was already canonical)                     |
+| F6  | redundant COINBASE + bare-vs-chain dup                              | deployment-api + instruments-service | ✅ FIXED — display collapse `@512180be` + writer `@ee19f6f3`                                                        |
+| F7  | DRIFT (removed) still in DeFi drilldown                             | deployment-api + IS catalogue        | ✅ FIXED — filter `@512180be` + purge (defi 63/cefi 10 rows, GCS-verified) + writer `@ee19f6f3`                     |
+| F8  | `--mode full` regen lossy (2,306 delta)                             | instruments-service                  | OPEN — found while verifying F7; definitive full-vs-live diff running to root-cause                                 |
+| F9  | league filter exact/case-sensitive + upcoming-fixtures raw ids      | deployment-api + deployment-ui       | IN PROGRESS — round4 wf; league filter → name+partial+case-insensitive, upcoming-fixtures human names               |
+| F10 | New Listings/Upcoming Expiries slow (35s cold, unbounded) → timeout | deployment-api + deployment-ui       | IN PROGRESS — round4 wf; pagination + parallel reads + warm cache (NOT OOM — F2 holds)                              |
 
 ## Fix plan — F5/F6/F7 IS-catalogue canonicalisation sweep (operator-decided 2026-07-18)
 
