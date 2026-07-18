@@ -264,11 +264,13 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       (`market-data-tick-prediction`, resolving to the short `pred` token), not a key in the per-asset_group
       `market-data` dict (CEFI/DEFI/TRADFI/SPORTS only). Both `get_bucket_name`/`get_write_bucket_name` now special-case
       it, mirroring the pattern IS's `resolve_instruments_store_kind()` and MTDS's `reader.py::_tick_bucket()` already
-      apply locally. `get_write_bucket_name` stays PROD-only for prediction even under `IS_TEST_RUN` — confirmed via a
-      real `gcloud storage buckets describe` that `market-data-tick-pred-test-central-element-323112` does not exist, so
-      routing to it would resolve to a bucket that doesn't exist. 2 new regression tests
-      (`TestGetBucketName`/`TestGetWriteBucketName` in `test_cloud_constants.py`) + functional verification (`gcloud`
-      confirmed no test bucket; `get_bucket_name`/`get_write_bucket_name` both resolve correctly now, no crash).
+      apply locally. `get_write_bucket_name` stays PROD-only for prediction even under `IS_TEST_RUN`. **CORRECTED
+      2026-07-18:** `market-data-tick-pred-test-central-element-323112` DOES exist (the earlier "does not exist" reading
+      was wrong); the prediction TICK-write paths were migrated to it (mtds@2e50851d/86d70de9, verify-read b06d1e6b), so
+      `get_write_bucket_name` staying PROD-only is now an un-migrated NON-tick-write path (follow-up), not a
+      missing-bucket constraint. 2 new regression tests (`TestGetBucketName`/`TestGetWriteBucketName` in
+      `test_cloud_constants.py`) + functional verification (`gcloud` confirmed no test bucket;
+      `get_bucket_name`/`get_write_bucket_name` both resolve correctly now, no crash).
 
 - [x] 14. ✅ [DATA] P1. Re-run `market-tick-data-service/scripts/pipeline_e2e_check.py --legs force,skip` against a real
       MVP shard/day post-`tardis_adapter.py` fix to confirm the CEFI Tardis force-leg genuinely writes to the TEST
@@ -414,17 +416,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-              full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-              is NOT a tooling bug or an adapter regression.
-              `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-              under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-              `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-              sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-              `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-              (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-              full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-              the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-              pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                  full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                  is NOT a tooling bug or an adapter regression.
+                  `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+                  under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+                  `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+                  sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                  (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                  full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                  the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                  pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -680,8 +682,13 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   resolved**, each shipped separately with real verification (see individual todo evidence above for full detail):
   - **Todo 13** (prediction bucket-naming gap) — unified-trading-library@886630c1. `get_bucket_name`/
     `get_write_bucket_name` now special-case prediction's dedicated flat yaml kind, mirroring IS's existing pattern.
-    `get_write_bucket_name` deliberately stays PROD-only for prediction under `IS_TEST_RUN` (confirmed via a real
-    `gcloud storage buckets describe` that no `-test-` sibling bucket is provisioned).
+    **UPDATE 2026-07-18 (prediction close-out):** the `-test-` sibling bucket `market-data-tick-pred-test-*` DOES exist
+    (derived from `cloud-providers.yaml` `canonical_tiers=["prd","test"]`) — the "no `-test-` sibling provisioned"
+    rationale below is superseded. The prediction TICK-write paths were migrated to honour `IS_TEST_RUN`:
+    `get_tick_data_bucket(test_aware=True)` (`market-tick-data-service@2e50851d`) + the live twin `_resolve_live_bucket`
+    (`mtds@86d70de9`), plus the verify-read `_test_bucket` (`mtds@b06d1e6b`). `get_write_bucket_name` (UTL) still stays
+    PROD-only for prediction — but as an un-migrated NON-tick-write path (no prediction tick-write routes through it),
+    NOT because a `-test-` bucket is missing; tracked as a follow-up.
   - **Todo 15** (consolidator scheduling gap) — unified-trading-pm PR #916 (748f1c8e), document-only. Investigated the
     real Terraform scheduling mechanism and decided `document-exempt` over `extend` — extending is mechanically easy but
     works against this same doc's own cron-count-reduction goal for buckets that only see occasional smoke-check
@@ -1022,7 +1029,7 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   | `IS_no_parquet_at_instrument_availability` | 47    | IS genuinely wrote zero rows for ~18 root venues (OKX, COINBASE-CDE, KALSHI-PERP, POLYMARKET-PERP, and others). Real, not-yet-individually-triaged findings. Todo 25.                                                                                                                                                          |
   | `manifest_no_matching_row`                 | 25    | Small residual after the manifest-bucket-verification fix — likely genuine zero-row captures (nothing to match), not the fixed bug recurring.                                                                                                                                                                                  |
   | `manifest_attempted_failed`                | 12    | Genuine adapter-level fetch failures — real findings.                                                                                                                                                                                                                                                                          |
-  | `BucketNamingError`                        | 9     | Small, PREDICTION-asset-group-specific edge case, consistent with the already-documented "prediction has no `-test-` sibling bucket" finding (todo 13) — likely one remaining code path that doesn't special-case it. Not investigated further this session.                                                                   |
+  | `BucketNamingError`                        | 9     | PREDICTION-specific edge. NOTE 2026-07-18: prediction's `-test-` bucket EXISTS + the tick-write paths now use it (mtds@2e50851d/86d70de9/b06d1e6b); this residual is likely the un-migrated `get_write_bucket_name` non-tick path, not a missing bucket. Follow-up.                                                            |
   | `write_verify_error:NotFound:404`          | 3     | GCS eventual-consistency blips — negligible.                                                                                                                                                                                                                                                                                   |
   | `timeout_no_exit_status`                   | 1     | Single genuine timeout — negligible.                                                                                                                                                                                                                                                                                           |
 
