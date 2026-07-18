@@ -277,7 +277,18 @@ jobs:
   # ── NOTIFY via carrier (gains dedup ledger — alert_quality_audit_2026_06_18 Phase 6) ────────────
   notify:
     needs: handle-major-bump
-    if: always() && needs.handle-major-bump.outputs.action != 'none' && needs.handle-major-bump.result != 'failure'
+    # `repo` must be non-empty (2026-07-18). The job gate above is the `major-bump-pending` LABEL,
+    # but repo/version come from a `<!-- major-bump-metadata -->` block in the issue BODY. An issue
+    # can carry the label without a parseable block, and then this paged
+    #   "❌ Major bump *REJECTED* — `` v — by @uts-ci-poller[bot]"
+    # — an actionable-severity alert naming NO repo and NO version, so nobody can act on it. Measured
+    # twice on 2026-07-18 (17:50, 18:51); both handler runs themselves SUCCEEDED, so this was pure
+    # alert noise, not a failure. #ci-failures is actionable-only: an alert with no identifying
+    # fields is worse than silence because it still costs a human the read.
+    # SSOT: codex/04-architecture/ci-alerting.md.
+    if: |
+      always() && needs.handle-major-bump.outputs.action != 'none' &&
+      needs.handle-major-bump.result != 'failure' && needs.handle-major-bump.outputs.repo != ''
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: >-
