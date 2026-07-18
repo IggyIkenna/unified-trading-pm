@@ -138,3 +138,27 @@ have `venue_launch_dates` overlay/import it (fast, but trusts chain_env for all 
 per-pair re-verification); (B) per-pair on-chain re-verify each ≥7d drift (AAVE_V3-BSC/LINEA, COMPOUND_V3-\*) against
 mainnet first-tx / subgraph, accept the ≤1d tail as noise; (C) leave as-is + rely on the ratchet. **Recommend (B)** for
 the ≥7d drifts (6 pairs) since a 292d error materially mis-classifies the expected window; the ≤1d tail is low-impact.
+
+## On-chain verification of the 6 ≥7d drifts — DONE 2026-07-18 (operator: "run it")
+
+Fanned out one agent per pair (Dune decoded-table lookups were blocked by "not enough credits", so each fell back to the
+protocol's OWN canonical source — Aave changelog, Compound `comet` GitHub `roots.json` — + block-explorer contract
+creation + governance execution timelines, cross-checked ≥2 sources). **Result: chain_env was NOT uniformly right** —
+verifying per-pair was the correct call:
+
+| Pair                 | venue      | chain_env  | **verified**   | winner        | conf | source                                             |
+| -------------------- | ---------- | ---------- | -------------- | ------------- | ---- | -------------------------------------------------- |
+| AAVE_V3-BSC          | 2023-04-06 | 2024-01-23 | **2024-01-23** | chain_env     | HIGH | Aave changelog "Jan 23 2024 BNB market deploys"    |
+| AAVE_V3-LINEA        | 2024-09-26 | 2025-02-11 | **2025-02-11** | chain_env     | HIGH | Aave changelog Feb 11 2025 (venue matched nothing) |
+| COMPOUND_V3-BASE     | 2023-08-11 | 2023-08-04 | **2023-08-11** | **venue**     | HIGH | Comet cUSDbCv3 Base contract creation              |
+| COMPOUND_V3-ETHEREUM | 2022-08-26 | 2022-08-13 | **2022-08-26** | **venue**     | HIGH | Comet cUSDCv3 mainnet creation (launch ≥ creation) |
+| COMPOUND_V3-ARBITRUM | 2023-04-14 | 2023-05-04 | **2023-05-15** | neither       | MED  | Compound Prop 160 executed ~May 14, market May 15  |
+| COMPOUND_V3-OPTIMISM | 2024-02-16 | 2024-04-06 | **2024-04-16** | chain_env-ish | MED  | Comet OP first activity ~Apr 16 2024               |
+
+**Applied all 6 corrections** so both registries now AGREE at the verified value — `venue_launch_dates.py`
+(AAVE_V3-BSC/LINEA, COMPOUND_V3-ARBITRUM/OPTIMISM) + `chain_env.py` (COMPOUND_V3-ETHEREUM/BASE/ARBITRUM/OPTIMISM). The
+drift-ratchet guard allowlist dropped from 19 → **13** (only the ≤4d tail remains: AAVE_V3-POLYGON/AVALANCHE 4d + the 1d
+noise), with the 6 corrections locked by explicit assertions. The MED-confidence ARBITRUM/OPTIMISM values are
+governance-execution-derived (Dune first-event confirmation was credit-blocked) — good to ±a few days, a large
+improvement over the prior 20/50-day errors. **Status → resolved for the ≥7d drifts; the ≤4d tail is low-impact +
+guarded.**
