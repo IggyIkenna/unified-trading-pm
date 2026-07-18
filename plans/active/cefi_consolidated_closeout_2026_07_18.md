@@ -342,6 +342,99 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       data_type / chain / venue listing per AG that was removed; it is the durable non-canonical/duplication detector.
       (repos: deployment-api, deployment-ui) — investigate the removal commit first.
 
+      **INVESTIGATED 2026-07-18 (slot-3) — no single removal commit exists; the capability eroded across several
+          legitimate "fix" commits, not one deletion.** `git log -S"distinct"/-S"enumerate"` + `--grep` across the full
+          deployment-api/deployment-ui history found no commit that deletes a raw-enumeration feature. What actually
+          happened: (1) `BreakdownsAccordion`/`coverage.py:_build_breakdowns` (the "Instrument Coverage Summary") still
+          groups by the RAW manifest string per axis (venue/chain/instrument_type/data_type via
+          `SHARD_AXIS_MATRIX`-derived `BREAKDOWN_AXES`) and never canonicalises the query key — only its P4-A DISPLAY
+          label went canonical-friendly (`deployment-ui@7853409`, raw value still on hover) — so this surface never
+          literally lost the raw-value signal. (2) The NEWER hierarchical drilldown (`data_status_hierarchical.py`)
+          picked up a same-day (2026-07-18 08:14, `deployment-api@512180b`) DISPLAY canonicalisation that MERGES
+          instrument_type/venue duplicate rows into one tree node for correct completion-percentage rollups — this is
+          the closest thing to an actual regression of the "spot the dupe" signal, and its own commit message documents
+          the exact kind of raw diversity the operator described (`COINBASE-SPOT instrument_types = ['', 'SPOT_PAIR',
+          'spot', 'spot_pair']`). (3) A DIFFERENT, adjacent feature — the Catalogue Explorer's
+          `/catalogue-filter-options` (`deployment-api@2fc46eb`, shipped 2026-07-17) — already returns raw distinct
+          venue/instrument_type/data_type values, but reads the per-instrument IDENTITY catalogue
+          (`prod/catalog.parquet`) for cefi/defi/tradfi, NOT the raw manifest, and has NO `chain` axis at all — so it
+          only partially covers the ask. **Restoration shipped as a NEW, dedicated, read-only endpoint** (the operator's
+          own suggested shape) rather than un-doing 512180b's legitimate math fix or bolting onto the filter-dropdown
+          endpoint: `GET /api/data-status/axis-value-census` (`deployment_api/routes/data_status/_axis_census.py`) reads
+          `read_availability_index(bucket, columns=[venue, chain, instrument_type, data_type])` directly (single bounded
+          slim read) and returns every distinct RAW value + row count per axis, honest-absence per axis (chain omitted
+          entirely outside DeFi rather than a fabricated `[]`). UI: `AxisValueCensus.tsx` (new panel, IS-only phase-1 —
+          mirrors `CatalogueExplorer`'s scope decision) flags raw `instrument_type` values that fold to the same
+          canonical label via the existing `canonicalInstrumentTypeLabel` alias map (reuses P4-A's table; other axes
+          list raw values unflagged — no registry exists to safely fold venue/chain without false-positiving two
+          genuinely different venues together).
+
+          **Shipped: deployment-ui@3fb6779** (full `[UI]` gate green — tsc/eslint/vitest 1007 passed/build; `pw:L2 ✓`
+          `tests/e2e/data-status-axis-value-census.spec.ts`). **deployment-api: code complete, tests green, full
+          `quality-gates.sh` PASSED** (`.qg_last_passed_sha` written at HEAD `e765660`) — includes a real, unrelated
+          pre-existing-bug fix found+fixed while chasing a false-positive test failure:
+          `_has_active_migration_vm` (`services/data_status/manifest.py`) leaked a raw `ValueError` from
+          `get_compute_engine_client` on any non-GCP `CLOUD_PROVIDER` (the unit-test-default `local` —
+          `tests/unit/conftest.py:429`) straight through a helper whose own docstring promises "failures return False,
+          never a gate" — `ValueError` was simply missing from its except tuple; proven pre-existing + zero-overlap via
+          a stash/baseline re-run on the clean tree before diagnosing it. **NOT YET QUICKMERGED** — blocked at STAGE 2
+          Pre-Flight by 3 DIRTY sibling deps (`unified-trading-library`, `unified-api-contracts`, `deployment-service`,
+          all carrying an unrelated in-flight "features FOLD A" / `fold_a_cutover_spec` cross-repo bucket-naming
+          migration, stale mtime but substantial/multi-file — not a small drive-by dep edit safe to inherit-commit under
+          the dirty-deps carve-out without its author's context). **Next step once those clear (no code change
+          needed):** `cd deployment-api && bash scripts/quickmerge.sh "feat(data-status): restore raw manifest
+          axis-value census — non-canonical-naming / duplication detector (Track-6)" --agent --files
+          'deployment_api/routes/data_status/__init__.py deployment_api/routes/data_status/_axis_census.py
+          tests/unit/test_route_data_status_axis_census.py deployment_api/services/data_status/manifest.py'` (working
+          tree already has all 4 files + the green sentinel; re-verify sentinel still matches HEAD before re-running).
+
+## Pass-through from the 2026-07-18 consolidated canonicalisation audit (slot-4) — decisions + measured worklist
+
+> Authored by the DeFi close-out audit (`defi_consolidated_closeout_2026_07_18.md`) and handed here per the operator's
+> ownership split (cefi findings land in THIS plan). Operator rulings 2026-07-18.
+
+**Operator decisions confirmed (cefi):**
+
+- **Venue token = HYPHENATED** (`BINANCE-FUTURES:PERPETUAL:BTC-USDT@LIN`), NOT underscore — the builder only `.upper()`s
+  the venue and it must equal the GCS `venue=` axis (always hyphen); underscore would FAIL the verify-gate `[A-Z0-9-]+`.
+  So the live manifest's ~9.5M "hyphen" rows are ALREADY canonical → **no `-`→`_` rename** (the underscore illustrative
+  form in earlier docs is wrong).
+- **ASTER quote = USDT** (linear): 504/509 ASTER perps quote USDT (confirmed live via `fapi.asterdex.com/exchangeInfo`;
+  docs "fully settled in USDT"). ASTER data is REAL (its own Binance-compatible endpoints, not a Binance proxy).
+  Representative id = `ASTER:PERPETUAL:BTC-USDT@LIN` (the ~5 USDC pairs carry their real quote). **Corrects any
+  `ASTER:...-USDC` in earlier notes.**
+- **DERIBIT always-quote** — confirmed the gating P0 (already Track-1 / §195).
+- **Venue purge (operator ruling)** — remove the CULLED/defunct/non-MVP venues ENTIRELY from UAC + manifest + GCS data +
+  MVP catalogue + docs, **snapshot-first** (irreversible): BINANCE-DELIVERY (COIN-M non-MVP), BITSTAMP-SPOT /
+  HUOBI-SPOT/-FUTURES / GEMINI-SPOT / PHEMEX-SPOT (defunct), and the Solana-perp cull (DRIFT/PACIFICA/MANGO/ZETA/FLASH/
+  SOLAYER/PICASSO/CAMBRIAN). **KEEP** KALSHI-PERP + POLYMARKET-PERP (roadmap — will be added), LIGHTER-ZKSYNC
+  (blocked-credentials MVP scaffold — external-data-always-available rule), EXTENDED-STARKNET (live MVP). Clean the
+  STALE `codex/02-data/mvp-scope-canonical.md` PACIFICA-as-MVP bolding.
+- **DERIBIT-COMBO leg-aware combos (cross-AG)** — adopt the operator's 2026-07-09 leg-aware signed-weight spec (per-leg
+  human-readable `instrument_key` + weight + direction-as-sign, 1–4-leg hard cap) for DERIBIT-COMBO by extending the
+  shared `build_leg()` path to `cefi/deribit_combo_adapter.py` + `cefi/tardis/combos.py` — the open cross-AG P2 in
+  `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`.
+
+**Live manifest worklist (`market-data-tick-cefi-prd`, 11.19M rows; ~44.3% of ids non-canonical)** — the migration must
+map these (measured via the distinct-values audit; counts approximate):
+
+| dimension       | non-canonical                                     | canonical target                                   |     ~rows | action                                          |
+| --------------- | ------------------------------------------------- | -------------------------------------------------- | --------: | ----------------------------------------------- |
+| instrument_type | `PERPETUAL`/`SPOT_PAIR`/`FUTURE`/`OPTION`         | lowercase (`perpetual`…)                           |     7.58M | case-fold (column only; id segment stays UPPER) |
+| instrument_type | `''`/`NULL`/`spot`/`index`                        | resolve from id / remap                            |     3.23M | resolve                                         |
+| instrument_id   | perp missing `@LIN`/`@INV`                        | append margin marker                               | 2,402,330 | reconstruct                                     |
+| instrument_id   | raw no-colon (`SPELLUSDT`)                        | `VENUE:TYPE:BASE-QUOTE@MARGIN`                     | 1,362,316 | reconstruct                                     |
+| instrument_id   | DERIBIT option (0% canonical)                     | `DERIBIT:OPTION:BASE-USD@INV-YYYYMMDD-STRIKE-C\|P` |  ~428,600 | add quote + YYYYMMDD                            |
+| instrument_id   | `VENUE:PERP:RAW` (HL/LIGHTER/ASTER)               | `VENUE:PERPETUAL:BASE-QUOTE@LIN\|INV`              |   374,272 | reconstruct                                     |
+| instrument_id   | DERIBIT future `BASE-DDMMMYY`                     | `DERIBIT:FUTURE:BASE-USD@INV-YYYYMMDD`             |  ~250,600 | add quote                                       |
+| instrument_id   | KRAKEN raw `FI_/FF_`                              | `KRAKEN-FUTURES:FUTURE:BASE-USD@…-YYYYMMDD`        |    68,469 | reconstruct                                     |
+| source          | `''`/`NULL`                                       | vendor token (`tardis`/native)                     | 3,441,207 | backfill vendor                                 |
+| pipeline_mode   | `NULL`                                            | `{mode}_{source}`                                  |   345,492 | backfill                                        |
+| venue           | `OKX` bare (64) · `DERIBIT-COMBO`→`DERIBIT` (226) | resolve family / encode combo in id                |      ~290 | resolve/collapse                                |
+
+**Enumeration-restore (cross-AG, owned by the DeFi plan Track 6)**: a raw un-canonicalised distinct-values audit panel
+per asset_group (the view removed on `deployment-api@512180be`) is being restored so this worklist stays live-visible.
+
 ## Codex SSOTs (read before touching a track)
 
 `codex/02-data/availability-manifest-and-data-status.md`, `…/pipeline-mode-partition.md`,

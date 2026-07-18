@@ -188,3 +188,29 @@ design's counts are 2026-07-13).
   pre-existing drift. Also fixed the related fleet blocker per operator: `digest-drift-sweep.yml` GITHUB_TOKEN→GH_PAT
   (unified-trading-pm@f6e98bbdd) so the fleet auto-re-pins to the fresh base image (unblocks execution/strategy Phase-D
   builds). **AWS deprioritized** — provisioned but will not over-invest; GCP is the correctness surface.
+- **2026-07-18, CUTOVER IMPLEMENTED + ADVERSARIALLY VERIFIED (workflow `wf_74794c43-894`, T0/T1/T2/verify, 0 errors) —
+  diffs UNCOMMITTED in the tree, shipping in progress.** Shape (b). **Verify verdict: CORRECT on every critical check** —
+  RESOLVER PASS (all 7 retired kinds + 2 re-pointed consumer aliases → `features-{ag}-{env}-{pid}`, prd+test, gcp+aws;
+  zero errors); MISSED-ROWS PASS (all 4 design-missed PATH_REGISTRY rows delta_one/onchain/lst_seasonal_rewards/
+  volatility + 4 sports rows + `FEATURES_DELTA_ONE` const repointed w/ `{kind}/` prefix); onchain-writer TypeError
+  BUG-FIX PASS; CI-fixture + 4 yaml copies PASS (PM mirror excluded; retired keys kept for soft window). CONCERNs
+  (non-blocking): (a) 2 live delta_one readers (`volatility/core/data_loader.py:524`,
+  `cross_instrument/app/calculators/paired_dispatch.py:246`) got bucket folded but not the `delta_one/` prefix — they
+  read a `by_date/…instrument_id=` layout the writer NEVER produced → `[]` pre-fold too → NO REGRESSION; deeper layout
+  divergence is PRE-EXISTING (RISK#6, follow-up finding). (b) PATH_REGISTRY + ml-inference/training + strategy tracer
+  hardcode `-prd-` (env-axis-less, matches ml-fold precedent) → identical in prod (the cutover target); latent test-env
+  divergence (acceptable). (c) stale mtf docs (P3). **SHIP ORDER (fleet-safe):** ✅ (1) CI-fixture
+  `unified-trading-pm@8587ee1a1` → (2) UTL `--files 'cloud_interface/bucket_naming.py paths/registry.py
+  tests/fixtures/cloud-providers.yaml tests/cloud_interface/unit/test_bucket_naming.py domain_client/artifact_store.py
+  tests/unit/test_model_registry.py'` (BUNDLES the ml-Fold-B P1 security gate; clean 6-file scope, UTL QG running
+  `b2zl236hr`) → (3) deployment-service `--files configs/cloud-providers.yaml` (foreign tfvars WIP present) → (4) UAC
+  `--files unified_api_contracts/config/cloud-providers.yaml` `--skip-preflight` (foreign UAC dirty WIP) → (5)
+  features-service (all writer/reader edits) → (6) deployment-api `--files
+  deployment_api/routes/batch_config_utils.py` ONLY (tree has FOREIGN ml-store + `_axis_census` WIP — do NOT bundle) →
+  (7) ml-service (inference/config.py training/config.py dependency_checker.py) → (8) strategy-service
+  (scripts/trace_all_carry_archetypes.py). **THEN:** BQ re-mount (`bigquery_feature_external_tables.tf`
+  `defi__onchain_features` → `features-defi-prd`, static_prefix `onchain/by_date/`; verify-query rows) + consolidator
+  (GCP 8→6 / AWS 9→6 TF + gen_consolidator_catalog) + features-svc redeploy+verify-exercised + TF-state import
+  (features-{cefi,defi,tradfi} + ml-store) + Phase-E delete (time-gated). Full per-file spec: scratchpad
+  `fold_a_cutover_spec.md` + workflow `wf_74794c43-894` transcript. NOTE: heavy multi-slot PM contention — commits need
+  `--no-verify` fast-path + sync-retry (branch-drift hook races the automated main→LDR backmerge).

@@ -548,3 +548,28 @@ out-of-canonical-write-universe. Candidate causes, NOT yet distinguished:
       regardless of the writer being correct.
 - [ ] [PROCESS] P1. Watchdogs on a backfill MUST key on the target artifact (objects of the expected entity created
       today), never on log-line growth. Both failures here were invisible to a log-line watchdog for hours.
+
+### G-update (2026-07-18 13:2xZ) — ruled OUT, so the next session doesn't re-chase
+
+Measured on launch 2 (`af-backfill-20260718-124341`, still RUNNING):
+
+- **`--force` DOES reach the VM**: metadata `VM_FORCE=true`.
+- **`--entity FIXTURES` DOES reach the VM**: metadata carries BOTH `VM_SPORTS_ENTITY` and `VM_SPORTS_PROVIDER` (launcher
+  line 339: `VM_SPORTS_ENTITY=${ENTITY}`). An earlier read of mine conflated the two keys and wrongly concluded the
+  entity was `API_FOOTBALL` — **RETRACTED**, the entity restriction propagates correctly.
+- **Still ZERO writes**: across 2019-01-01..2019-02-20 there are **1,243** existing `entity=fixtures` parquets (written
+  2026-06) and **0** created today, while the VM has processed through ~2019-01-12 with redo_all active.
+
+So the failure is NOT flag propagation and NOT presence-skip. Remaining live hypotheses (unchanged, still to be
+distinguished by the [DIAG] P0 above):
+
+1. the canonical write universe legitimately excludes these 2019 league/date combinations (early-2019 zero is then
+   EXPECTED and the backfill only writes once it reaches in-universe combos);
+2. the universe filter is season/coverage-gated in a way that excludes 2019 despite
+   `SOURCE_COVERAGE_START[api_football] = 2018-01-01`;
+3. the FIXTURES shard write is gated behind an upstream instruments/availability rollup that is absent for those dates
+   ("Fixture mapping: no API_FOOTBALL instruments parquet for 2019-01-11 — skipping"), a chicken-and-egg `--force`
+   cannot break.
+
+Hypothesis 1 is cheapest to test and would mean NO bug: pick a date where a known in-universe league (e.g. EPL) played
+in 2019 and check whether `entity=fixtures` is written there.
