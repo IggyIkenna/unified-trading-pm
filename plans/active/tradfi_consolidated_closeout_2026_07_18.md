@@ -152,14 +152,15 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > Phase-B migration emits this shape; the Phase-B/D verify gate asserts the `-USD@LIN` shape (not just presence of
 > `@LIN`).
 
-- [ ] [BACKEND] P0. **IS catalogue adapter emits raw + a non-matching third shape.**
-      `instruments-service/.../reference_data/adapters/tradfi/databento/adapter.py:880` writes primary
-      `instrument_key = VENUE:TYPE:{sanitized_raw}` (→ `CME:FUTURE:GCQ26`, and persisted `instrument_id` shows
-      `CBOE:FUTURE:VX/F1`), and `:974-999` emits
-      `canonical_instrument_id = VENUE:TYPE:PRODUCT_ROOT:YYYY-MM[:STRIKE{C|P}]` (no `@LIN`, month-only, colon strike).
-      Converge to the MTDS target
-      (`market-tick-data-service/.../tradfi/tradfi_shared.py::derive_tradfi_row_instrument_id`); drop or make the
-      additive field byte-equal. (repo: instruments-service)
+- [x] ✅ [BACKEND] P0. **IS catalogue adapter converged to `-USD@LIN` — instruments-service@287d1607.** For resolvable
+      FUTURE/OPTION, `instrument_key` is now built via the shared
+      `build_instrument_id(canonical_venue, itype, product_root, expiry_date=…, strike=…, option_right=…,     margin_marker="LIN", quote_asset="USD")`
+      — byte-identical to the MTDS write path (same `EXCHANGE_CODE_TO_NAME` root translation). `canonical_instrument_id`
+      set BYTE-EQUAL to `instrument_key`; the old colon/month-only additive `_build_canonical_instrument_id` DELETED.
+      Unresolved product-root (OSI `O:SPX…`, unknown roots) falls back to the sanitized-raw shape — no crash, no
+      fabricated identity (historical/unresolvable = Phase B). Tests assert `CME:FUTURE:SP500-USD@LIN-20300621` /
+      `CME:OPTION:SP500-USD@LIN-20251017-5000-C` / `CBOE:FUTURE:VIX-USD@LIN-20260722`; removed one invalid test (schema
+      forbids FUTURE-with-null-expiry). IS QG green. (repo: instruments-service)
 - [x] ✅ [BACKEND] P0. **Manifest writer now stamps the canonical `-USD@LIN` id (forward-write) — mtds@c44d5f0d.**
       Traced: the manifest `availability_index` `instrument_id` is DERIVED from the parquet **content** `instrument_id`
       column by the shared writer (`unified_trading_library/io/streaming_writer.py`→`manifest_writer`), so once the
