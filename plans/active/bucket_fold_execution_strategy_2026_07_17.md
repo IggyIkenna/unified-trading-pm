@@ -147,7 +147,9 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   `execution/ configs/ deployment_history/ blocked_spreads/ backfill_batches/ nautilus-catalog-cache/ nautilus_catalog/
   …` all gain the `cefi/` prefix) + `execution-store-pred-prd/*` → `execution-store-prd/pred/`; sports (0) assert-empty.
   **cefi is LIVE** — the bulk copy is a point-in-time snapshot; a FINAL RSYNC at cutover catches new-fill drift (expected
-  parity-drift on cefi until then). **NEXT (gated, NOT this session):** Fold-C+D code CUTOVER is GATED on the parent W2
+  parity-drift on cefi until then). **MIGRATE DONE + PARITY ✓ (2026-07-18):** strategy-store src=dst=37,765,413 B;
+  execution cefi src=dst=1,610,459,707 B (no snapshot drift), defi/tradfi/pred copied under `{ag}/` prefixes, sports (0)
+  asserted empty. **NEXT (gated, NOT this session):** Fold-C+D code CUTOVER is GATED on the parent W2
   [[strategy_store_split_brain_2026_07_13]] repoint landing first (todo 2 — strategy-service already resolves flat
   `kind="strategy-store"`, verified; the HARDCODED per-AG readers deployment-api/UI/UAC-facade are the W2 scope to
   confirm); execution-store-cefi DELETE is OPERATOR-GATED (live fills). Cutover follows the Fold-A discovery→implement→
