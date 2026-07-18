@@ -384,10 +384,47 @@ cmd_install() {
   # read fails 404 "job request not found" (2026-07-18: 1377 restarts, 2.5h fleet-wide CI outage).
   # refresh-gh-token.sh and glue-runner-run.sh point CLOUDSDK_CONFIG here as a COMMAND PREFIX.
   #
-  # NOTE: this creates the dir only. It must be SEEDED with a credential that works OUTSIDE a job —
-  # a machine identity, not a human account. Until then the token path fails LOUDLY (by design).
-  # See codex/07-security/self-hosted-runner-security-posture.md.
   install -d -o "${RUNNER_USER}" -g "${RUNNER_USER}" -m 0700 "${RUNNER_BASE}/.gcloud"
+
+  # Seed it with the MACHINE identity: Workload Identity Federation from this host's AWS instance
+  # role. No key on disk — the cred-config holds only the pool/provider audience, the IMDS URLs and
+  # the impersonation target, and the subject token is minted from IMDSv2 at call time. It therefore
+  # works OUTSIDE a job, which is the whole point (the credential that broke on 2026-07-18 was a
+  # GitHub-OIDC WIF cred whose issuer only exists INSIDE a job).
+  #
+  # Provisioned 2026-07-18: pool aws-glue-runners / provider ec2-instance-role, locked by attribute
+  # condition to arn:aws:sts::427895769566:assumed-role/uts-orchestrator-epic-role; the SA holds
+  # roles/secretmanager.secretAccessor on the GH_PAT secret ONLY (not project-wide).
+  #
+  # Without this block a re-provisioned host came up with an EMPTY private config and no identity —
+  # the token path then fails loudly but the host is dead on arrival. Idempotent: regenerates the
+  # cred-config only when absent, and re-activation is a no-op.
+  : "${GLUE_WIF_FILE:=${RUNNER_BASE}/glue-runner-wif.json}"
+  : "${GLUE_WIF_PROVIDER:=projects/1060025368044/locations/global/workloadIdentityPools/aws-glue-runners/providers/ec2-instance-role}"
+  : "${GLUE_WIF_SA:=glue-runner-gh-pat@central-element-323112.iam.gserviceaccount.com}"
+  if [ ! -s "${GLUE_WIF_FILE}" ]; then
+    sudo -u "${RUNNER_USER}" gcloud iam workload-identity-pools create-cred-config \
+      "${GLUE_WIF_PROVIDER}" \
+      --service-account="${GLUE_WIF_SA}" \
+      --aws --enable-imdsv2 \
+      --output-file="${GLUE_WIF_FILE}" ||
+      echo "WARN: could not generate ${GLUE_WIF_FILE} — the token path will fail loudly until it exists" >&2
+  fi
+  if [ -s "${GLUE_WIF_FILE}" ]; then
+    chown "${RUNNER_USER}:${RUNNER_USER}" "${GLUE_WIF_FILE}"
+    chmod 0600 "${GLUE_WIF_FILE}"
+    sudo -u "${RUNNER_USER}" env CLOUDSDK_CONFIG="${RUNNER_BASE}/.gcloud" \
+      gcloud auth login --cred-file="${GLUE_WIF_FILE}" >/dev/null 2>&1 ||
+      echo "WARN: gcloud auth login --cred-file failed for ${GLUE_WIF_FILE}" >&2
+    # Verify by LENGTH only — never echo a secret into provisioning logs.
+    if sudo -u "${RUNNER_USER}" env CLOUDSDK_CONFIG="${RUNNER_BASE}/.gcloud" \
+      gcloud secrets versions access latest --secret="${GH_TOKEN_SECRET:-GH_PAT}" \
+      --project="${GCP_PROJECT:-central-element-323112}" >/dev/null 2>&1; then
+      echo "  machine identity OK: $(sudo -u "${RUNNER_USER}" env CLOUDSDK_CONFIG="${RUNNER_BASE}/.gcloud" gcloud config list --format='value(core.account)' 2>/dev/null)"
+    else
+      echo "WARN: private gcloud config cannot read ${GH_TOKEN_SECRET:-GH_PAT} — runners will fail loudly at registration" >&2
+    fi
+  fi
 
   # 4) helper scripts
   install -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${HERE}/glue-runner-run.sh"   "${RUNNER_BASE}/glue-runner-run.sh"
