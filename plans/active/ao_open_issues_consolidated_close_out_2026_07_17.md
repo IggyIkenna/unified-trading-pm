@@ -151,10 +151,13 @@ NOT AO and are deliberately out of scope here.
       PPID 1), burning CPU + account budget and racing re-dispatched work. Implement BOTH halves: (a) the TmuxPruner
       kills the worker process tree whose slot config-dir maps to a dead/absent session (match by
       `claude_session_id`/config dir, never by name-grep alone); (b) a periodic orphan sweep (config-dir → PID → slot
-      liveness) catching residue incl. PPID-1 trees. Guards: never kill a PID belonging to a live session; dry-run mode;
-      log every kill with slot + PID + age. Source: doc #3 Defect B. **Gate**: the doc's regression — simulated
-      `tmux_session_lost` leaves zero detached claude processes for that slot; live sweep on the VM reports 0 orphans
-      (one-time cleanup of the current ~10 included).
+      liveness) catching residue incl. PPID-1 trees. Guards: never kill a PID belonging to a live session; **honor
+      `boot_grace_seconds` — NEVER reap a slot's process inside its fresh-spawn grace window (a booting worker's tmux
+      session isn't registered yet; this is the exact 6/6-AutoSpawn-workers-killed-56-120s-post-spawn incident class —
+      config.py boot_grace_seconds exists precisely for this)**; dry-run mode; log every kill with slot + PID + age.
+      Source: doc #3 Defect B. **Gate**: the doc's regression — simulated `tmux_session_lost` leaves zero detached
+      claude processes for that slot; live sweep on the VM reports 0 orphans (one-time cleanup of the current ~10
+      included).
 - [ ] [BACKEND] P1. **Stale-dispatch invariant (Defect A, resume-path aware).** The pruner's requeue (`ao@5b07bd3`)
       already releases on a "requeue" verdict, but a `resume-pending` verdict keeps the task bound — and when the resume
       never happens (07-17 incident: slots went `killed` holding tasks), nothing reconciles. Add the reconciler
@@ -162,7 +165,10 @@ NOT AO and are deliberately out of scope here.
       tick beyond `resume_attempts` exhaustion → auto-release + `stale_dispatch_reclaimed` activity event. Must NOT
       fight the resume path — only fire after resume is exhausted/impossible. Source: doc #3 Defect A + doc #2
       symptom 1. **Gate**: doc #3's regression test; live `dispatched` count equals live-worker-held count across a 24h
-      window (spot-checked).
+      window (spot-checked); **AND an explicit no-double-dispatch assertion — a task released by this invariant is NEVER
+      simultaneously live on a resumed worker. The release fires strictly AFTER `resume_lifecycle` marks resume
+      exhausted/impossible (order the two so the same task can never reach two agents); test the exact race (resume
+      in-flight when the invariant tick fires → invariant defers, no release).**
 - [ ] [INFRA] P3. **Root-cause the 96/day `tmux_session_lost` rate** (or record it as accepted churn). The 07-17
       incident was 5 losses in one second (backend/tmux blip); today's rate is 96/24h with 158 `worker_polling_dead`.
       Either find the driver (backend restarts? host pressure? tmux server?) or record the rate as expected with the
@@ -176,9 +182,12 @@ NOT AO and are deliberately out of scope here.
       anyone the task is stuck). Auto-park at ≥N distinct within-TTL skips carrying a `BLOCKED|PARKED|GATED` reason via
       the durable `priority_override`/false-prereq recipe (`ao@8dd5763`), WITH an unpark path when the condition clears,
       and an operator-visible surface (activity event + dashboard flag — the same class as `needs_operator_count`). This
-      closes doc #1's last todo AND doc #5's auto-park design todo in one mechanism. Sources: doc #1 todo 2, doc #5
-      fix-todo 3(design). **Gate**: a fleet-skipped task auto-parks with a visible reason; clearing the condition
-      unparks it; test-pinned.
+      closes doc #1's last todo AND doc #5's auto-park design todo in one mechanism. **DEPENDS ON Phase-1
+      preserve-by-`brief` (Phase 1 todo 2): an id-keyed park is silently dropped on the next id-shift regen, so
+      auto-park is NOT durable until that lands — sequence Phase 1 first.** **Park = the ≥N-skips escalation of the ONE
+      fleet-scoped cooldown store built in Phase-6 (blocked-task cooldown); reuse that store, do not build a second
+      park-specific cooldown.** Sources: doc #1 todo 2, doc #5 fix-todo 3(design). **Gate**: a fleet-skipped task
+      auto-parks with a visible reason; clearing the condition unparks it; test-pinned.
 - [ ] [ADMIN] P2. **Wire the mvp-defi unpark.** `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` (still
       `false`) must be flipped by whoever lands the seed-chain/backfill progress (`data_completion_defi_2026_07_15`'s
       owner), or the park outlives its reason. Add the pointer on that plan + a line in the park's prereq description
@@ -187,11 +196,31 @@ NOT AO and are deliberately out of scope here.
 
 ### Phase 4 — infra/ops hardening
 
-- [ ] [INFRA] P1. **`ORCHESTRATOR_DB_PATH` into `.env.local` via bootstrap** — the one-concept-two-places footgun that
-      caused the wrong-DB GC incident and has now bitten THREE diagnostic sessions (twice on 07-17, once again in this
-      session's probe). Bootstrap writes it; idempotent; service unit stays authoritative. Source: doc #8 todo 2.
-      **Gate**: doc #8's gate — plain `config.db_path()` as ubuntu with no overrides prints
-      `/var/lib/orchestrator/state.db`.
+- [ ] [INFRA] P1. **State home = ONE in-repo source (`data/state/`); drop the two-places + the env overrides.** The
+      wrong-DB GC incident + THREE bitten diagnostic sessions were the "one concept, two places" footgun:
+      `ORCHESTRATOR_DB_PATH`/`ORCHESTRATOR_STATE_JSON` are set in the systemd unit (→ `/var/lib/orchestrator/…`, out of
+      repo) while `config.py`'s default is in-repo `data/state/…`, so a CLI tool run as `ubuntu` without the unit env
+      resolves the WRONG path. Operator ruling 2026-07-18: **keep AO backend state IN the repo, one definition, no
+      duplicate var.** Resolution: make `config.py`'s in-repo `data/state/{state.db,state.json}` the SINGLE SSOT —
+      REMOVE the unit `Environment=ORCHESTRATOR_DB_PATH/STATE_JSON` lines + `ReadWritePaths=/var/lib/orchestrator`, and
+      stop setting those vars anywhere (the default IS the path → nothing to duplicate; service + CLI agree). ⚠️ **This
+      reverses the deliberate `/var/lib` redeploy-wipe protection** — so it becomes a HARD requirement that the deploy
+      path preserve state instead: `ao-self-pull.sh` + any redeploy/re-clone MUST NEVER `git clean -x` / wipe
+      `data/state/` (it is gitignored → a bare FF-pull is already safe; the guard is against `clean -fdx` + fresh
+      clone), and the SnapshotLoop S3/GCS archive stays the DR fallback. Migration (operator-gated, live): move the
+      running `/var/lib/orchestrator/*.db` → `data/state/` on the VM, then restart. Source: doc #8 todo 2 + operator
+      2026-07-18. **Gate**: `config.db_path()` as `ubuntu` with no env prints the in-repo path; service + a CLI audit
+      tool resolve the SAME db; a simulated redeploy (FF-pull + `git clean -fd`) leaves `data/state/` intact.
+- [ ] [INFRA] P2. **Duplicate-purpose env-var sweep (verify-consumer-then-remove).** Audit 2026-07-18: (1)
+      `ORCHESTRATOR_OPERATOR` is written `= ORCHESTRATOR_VM_ID` by `bootstrap_vm.sh` on every host, but
+      `host_operator()` already DERIVES operator from `vm_id` when unset → pure redundancy; stop writing it in bootstrap
+      (keep the field as an optional override). (2) `ORCHESTRATOR_DB_PATH`/`STATE_JSON` two-places — folded into the
+      state-home item above. (3) CHECKED & **KEEP** — `GOOGLE_CLOUD_PROJECT` vs `GCP_PROJECT_ID` are NOT a removable
+      duplicate: the former is a Google-SDK standard the client reads directly, the latter is workspace canon (`auth.py`
+      reads `google_cloud_project or gcp_project_id` — different consumers). (4) CHECKED & **KEEP** — the
+      `WORKSPACE_ROOT`/`UNIFIED_TRADING_WORKSPACE_ROOT`/`ORCHESTRATOR_WORKSPACE_ROOT` trio is deliberately separate
+      (own-config vs ambient passthrough, documented in `config.py`). **Gate**: `OPERATOR` no longer written by
+      bootstrap + a host with only `VM_ID` set resolves the same operator; keep-decisions recorded in ENV_VARS.md.
 - [ ] [INFRA] P2. **Per-repo freeze-streak alert in `slot-cron-ff-pull.sh`.** Verified still absent: the dirty-streak
       WARN fires only when EVERY repo in a sweep skips — a single frozen clone (the exact 2-day outage mode) stays
       silent. Make the streak per-repo (repo X `[skip:dirty]`/`[skip:ff-failed]` N consecutive ticks → WARN naming the
@@ -241,7 +270,10 @@ NOT AO and are deliberately out of scope here.
       code today. Remaining: (a) one regression test pinning "a paused slot receives no task from ANY path" (dispatch,
       autospawn, plan_health, escalation, AND the dead-slot failover/spill path — the spill path was NOT verified this
       session); (b) verify the dashboard renders paused distinctly so an operator-paused slot is never mistaken for a
-      stuck one. **Gate**: the all-paths test exists + bug-injection proves it bites; spill-path verdict recorded.
+      stuck one. NOTE (2026-07-18): the cited line numbers (`dispatch.py:186`, `autospawn.py:631/:2031`,
+      `slots_worker.py:316`, etc.) DRIFTED after the config `.tuning.` call-site refactor — **verify by SYMBOL**
+      (`_slot_configured`, `pick_next_task`, `_pick_free_slot`), not line. **Gate**: the all-paths test exists +
+      bug-injection proves it bites; spill-path verdict recorded.
 - [ ] [BACKEND] P1. **plan_health cadence — MEASURED 21 dispatches in 5.5h (11:02→16:30Z), overlapping instances
       confirmed (`superseded-plan_health` exit reasons + one ACTIVE at probe time).** Operator policy: once per 4–8h
       unless CI-triggered — NOT every 15–30 min. Root cause found: `main-backmerge-to-ldr.yml` § "Ping plan-health
@@ -267,11 +299,16 @@ NOT AO and are deliberately out of scope here.
       unblock time on skip (e.g. "VM finishes in ~15 min") — extend the `/skip-current-task` payload with
       `estimated_unblock_minutes`, and the cooldown becomes that estimate (+small buffer) instead of the defaults.
       Design note: this is the missing middle layer between the existing slot-scoped skip TTL and Phase-3's auto-park
-      (park = the ≥N-skips escalation of the same mechanism; the cooldown handles the 1st–Nth skip window). Implement
-      fleet-scoped cooldown state keyed by task_id + the change-listeners on prerequisite/regen/park events. Sources:
-      operator 2026-07-17 + doc #5's fleet-wide-cooldown gap. **Gate**: regression tests (skip-blocked → no cross-slot
-      redispatch inside base cooldown; prereq flip → immediate re-eligibility; no change → 1h; ETA honoured); measured
-      redispatch-of-declined-task rate drops to the policy curve on the live VM.
+      (park = the ≥N-skips escalation of the same mechanism; the cooldown handles the 1st–Nth skip window). **Build
+      exactly ONE fleet-scoped cooldown store** (keyed by task*id, with change-listeners on prerequisite/regen/park
+      events) that is REUSED by Phase-3 auto-park AND AF-1's escalator backoff — do NOT ship three separate
+      cooldown/backoff engines (they diverge). \*\*New tunables (base cooldown, 1h fallback, N-skip park threshold,
+      escalator cap) go on the env-free `config.tuning` / `TuningDefaults`, NOT a new `ORCHESTRATOR*\*` alias** (per the
+      2026-07-18 config split); reuse existing knobs where they fit (`slot_skip_ttl_hours`,
+      `orphaned_task_reclaim_grace_seconds`, `dispatch_ack_timeout_seconds`). Sources: operator 2026-07-17 + doc #5's
+      fleet-wide-cooldown gap. **Gate**: regression tests (skip-blocked → no cross-slot redispatch inside base cooldown;
+      prereq flip → immediate re-eligibility; no change → 1h; ETA honoured); measured redispatch-of-declined-task rate
+      drops to the policy curve on the live VM.
 - [ ] [INFRA] P1. **plan_reconciler daily 01:00 UTC was NOT RUNNING — part (a) DONE 2026-07-18 window armed; (b)/(c) +
       two NEW defects remain.** **(a) ✅ RE-ENABLED 2026-07-17T18:03Z (operator request, this session)**: ran
       `install-plan-reconciler-timer.sh --operator ubuntu --time 01:00` via SSM; verified `is-enabled=enabled`,
@@ -320,9 +357,10 @@ NOT AO and are deliberately out of scope here.
       (≈3.8 dispatches per escalation — redispatch churn), `escalation_resolved=108`, `escalation_unresolved=83`. Every
       dispatch is a full cicd agent session; nothing in any open issue doc tracks escalator EFFICACY — the alerting
       codex governs how escalations PAGE, not whether they WORK. Proposal: (a) an unresolved-escalation triage pass
-      (what are the 83 — one recurring wall or many?); (b) a redispatch cap + backoff per escalation_id (same family as
-      the Phase-6 blocked-task cooldown); (c) a resolved:dispatched efficacy KPI in the daily digest. **Gate**: the 83
-      are explained; redispatch per escalation capped; KPI visible.
+      (what are the 83 — one recurring wall or many?); (b) a redispatch cap + backoff per escalation_id — **implemented
+      ON the ONE fleet-scoped cooldown store from the Phase-6 blocked-task item, not a separate escalator engine**; (c)
+      a resolved:dispatched efficacy KPI in the daily digest. **Gate**: the 83 are explained; redispatch per escalation
+      capped; KPI visible.
 - [ ] [INFRA] P2. **(AF-2) plan_health true daily volume is 55 dispatches/24h — 13 of which produced NO result.**
       `plan_health_dispatched=55`, `plan_health_result=42`, `plan_health_dispatch_failed=4` in the last 24h — worse than
       the 5.5h sample in Phase 6, and each run is a sonnet worker digesting ~449 plans (real daily token spend). The 13
@@ -339,10 +377,14 @@ NOT AO and are deliberately out of scope here.
       risk.** `gcs_sync.SnapshotLoop` runs and `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set
       (systemd env; GCS unset by design on the AWS host). But no local `state.json` was found at the expected path
       during the probe, and NOTHING asserts snapshot age — a broken snapshot loop would look exactly like a working one
-      until the day state.db is lost (same class as the reconciler timer that silently vanished, Phase 6). Proposal: (a)
-      verify the S3 object's last-modified NOW; (b) add a snapshot-age assertion (digest line or health endpoint: last
-      successful snapshot < N hours, alert on breach); (c) one documented restore drill. **Gate**: measured snapshot age
-      recorded; the age assertion alerts when the loop is deliberately stopped in a test.
+      until the day state.db is lost (same class as the reconciler timer that silently vanished, Phase 6). **RE-VERIFY
+      FIRST (2026-07-18) — the "no local state.json at the expected path" evidence is likely a PROBE ARTIFACT**: the
+      probe ran as `ubuntu` without the systemd env, so it checked the in-repo default, not
+      `/var/lib/orchestrator/state.json` (same root as the Phase-4 DB_PATH bug). Once Phase-4 moves state in-repo to
+      `data/state/`, the default path IS correct and the artifact disappears. Proposal: (a) re-measure the S3 object's
+      last-modified NOW (the REAL signal, independent of local path); (b) add a snapshot-age assertion (digest line or
+      health endpoint: last successful snapshot < N hours, alert on breach); (c) one documented restore drill. **Gate**:
+      measured snapshot age recorded; the age assertion alerts when the loop is deliberately stopped in a test.
 - [ ] [BACKEND] P2. **(AF-5) Dispatch→done conversion is ~18% and NO surfaced metric tracks fleet efficiency.** 24h: 310
       boots / 154 dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task even with the spawn budget
       fixed (the leaks are 117 skips + 96 session-losses, i.e. Phases 2/3/6 mechanics). The OBSERVABILITY gap is
@@ -352,15 +394,10 @@ NOT AO and are deliberately out of scope here.
       KPIs (spawns, dispatches, done, conversion %, boots-per-done, top skip reasons) with a wow-level alert on sharp
       regression. **Gate**: the KPIs render; the 2026-07-12-class degradation (spawn:dispatch 0.6:1→44:1) would have
       been visible within one digest cycle.
-- [ ] [REVIEW] P3. **(AF-6) `agent-orchestrator/docs/ENV_VARS.md` residual multi-VM framing — OPERATOR-DECISION
-      pending.** Found during the 2026-07-18 AO stale-reference sweep (which fixed everything else — 0 dead links, 0
-      deleted-doc refs, 0 misleading-as-live markers across the AO codex + repo docs). ENV_VARS still carries
-      `ORCHESTRATOR_OPERATOR ... branch operator (tab/<vm_id>/<slot>)` (the RETIRED tab-branch model) and a "Fleet VM
-      (epic worker)" section header (no epic VMs since 2026-06-27). Left deliberately: it is a legitimately-used
-      per-host config reference that still correctly documents the laptop/vm_id/`STANDALONE` model, so the framing is
-      low-severity, not a dead link. Operator was asked 2026-07-18 whether to do a focused ENV_VARS pass; **awaiting
-      that yes/no** — do NOT start without it. **Gate**: operator rules fix-or-leave; if fix, drop the `tab/` branch
-      example + rename the "epic worker" framing to "fleet/central VM", verify against `server/config.py`.
+- [x] [REVIEW] P3. ✅ **(AF-6) `ENV_VARS.md` residual multi-VM framing — DONE (ao@c03ccce).** Resolved as part of the
+      `ao_config_env_var_consolidation_2026_07_18` Phase-4 rewrite: ENV_VARS.md was rewritten to the two-class shape,
+      dropping the retired `tab/<vm_id>/<slot>` branch example and the "Fleet VM (epic worker)" section header for the
+      single-VM `planning` reality, verified against `server/config.py`.
 
 ## Externally blocked (tracked, not actionable here)
 
@@ -381,6 +418,18 @@ NOT AO and are deliberately out of scope here.
 
 ## Progress Log
 
+- **2026-07-18 — Cross-cutting review pass (operator-requested drift/regression check)**: read the whole plan for
+  contradictions + regression risks and patched 9 points. (1) Phase-4 `DB_PATH`/`STATE_JSON` two-places → **one in-repo
+  source** (operator ruling: AO state in the repo, not `/var`) + a HARD deploy-preservation guard replacing the reversed
+  `/var/lib` wipe-protection; added a duplicate-purpose env-var sweep item (stop writing redundant
+  `ORCHESTRATOR_OPERATOR=VM_ID`; `GOOGLE_CLOUD_PROJECT`/`GCP_PROJECT_ID` + the `WORKSPACE_ROOT` trio checked & kept).
+  (2) verify-by-symbol note (line refs drifted after the config `.tuning.` refactor). (3) Phase-2 orphan-reap must honor
+  `boot_grace_seconds` (booting-worker-kill incident class). (4) Phase-2 stale-dispatch gate now asserts
+  no-double-dispatch, fires strictly after resume exhaustion. (6) ONE fleet-scoped cooldown store reused by blocked-task
+  cooldown + auto-park + AF-1 escalator backoff (not three). (7) Phase-3 auto-park now DEPENDS ON Phase-1
+  preserve-by-`brief`. (8) new tunables → env-free `TuningDefaults`, reuse existing knobs. (9) AF-4 "no state.json"
+  flagged as a probe artifact to re-verify (wrong path / env-not-loaded), resolves once state is in-repo. AF-6 flipped
+  ✅ DONE (fixed in ao@c03ccce). No todo undoes another; nothing shipped to code — plan-only.
 - **2026-07-17T18:05Z** — Reconciler timer RE-ENABLED per operator request (Phase-6 item, part (a)): installed via SSM,
   `enabled` + armed for 2026-07-18 01:04:12 UTC; the Persistent catch-up dispatched `agt-55b581` (live now on slot-2)
   despite the dispatch script logging a FALSE failure (curl 30s < endpoint's measured 56s — new defect recorded on the
@@ -388,8 +437,8 @@ NOT AO and are deliberately out of scope here.
   — `is-enabled` can't see that; the liveness check must assert `is-active` + next-elapse.
 - **2026-07-18** — AO documentation stale-reference sweep (operator-directed, separate from the issue-doc work above):
   deleted `host-offline-failover.md` (codex) + `OPERATIONS.md` (repo) per operator ruling; purged
-  OPERATIONS/tab-mirror/_agent_pings/vm-orchestrator/:8026/post-P5/Cloud-Run-as-live refs across the AO codex + repo doc
-  set; made the codex e2e-operator-runbook self-contained (was an OPERATIONS.md wrapper). Shipped pm@20f06b2b7 +
+  OPERATIONS/tab-mirror/\_agent_pings/vm-orchestrator/:8026/post-P5/Cloud-Run-as-live refs across the AO codex + repo
+  doc set; made the codex e2e-operator-runbook self-contained (was an OPERATIONS.md wrapper). Shipped pm@20f06b2b7 +
   pm@e0c796e3c + pm@071652432 (codex), ao@3d2c0e6 + ao@63d8284 (repo). Final state: 0 dead links, 0 refs to any of the
   12 deleted AO docs, 0 misleading-as-live markers. NB: the earlier 3 "harshkantariya [main·harsh_pc]" AO-doc-cleanup
   commits (13c25d2e5/fca8d2643/19766e7) were from a SECOND Claude process bound to this same session on the office VS
