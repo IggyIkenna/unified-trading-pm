@@ -206,9 +206,16 @@ never revisited them). By data-year: **2022:87, 2023:26, 2025:3**. Leak signatur
 The 43-fixture difference had **no genuine ~24h-pre-kickoff observation** — mis-bucketed post-kickoff data. The clean
 re-derive produced exactly 25, matching canonical.
 
-- [ ] [DATA] P1. Backup-then-rebuild the **113** fixable shards (116 minus the 3 in B2): copy each shard to a backup
+- [x] [DATA] P1. Backup-then-rebuild the **113** fixable shards (116 minus the 3 in B2): copy each shard to a backup
       prefix, delete, re-derive, verify `steam@T-24h == 0`. Operator-approved 2026-07-18 (option A: keeps the guard
-      fully protective rather than weakening it).
+      fully protective rather than weakening it). — **DONE 2026-07-18 12:16Z: 113/113 rebuilt (pilot 2022-04-16 + batch
+      OK=112 EMPTY=0 FAIL=0)**. Every shard copied to
+      `gs://features-sports-prd-central-element-323112/_leak_remediation_backup_20260718/` BEFORE deletion (soft-delete
+      was unverifiable — the SA lacks `storage.buckets.get`, a 403 not a 404). Guard verdict on each rebuild:
+      `LOSS_GUARD_PASS [no_existing_shard]` — the guard stayed fully protective, it simply had no corrupt baseline to
+      defend. Evidence (8-date sample, all CLEAN): horizons are exactly `['T-10m','T-1h','T-24h']` (leaked HT gone) and
+      steam/odds_movement/clv at T-24h are ALL zero — e.g. 2022-04-16 199 rows -> 121, T-24h fixtures 68 -> 25 matching
+      canonical genuine, steam@T-24h 29 -> 0.
 
 ### B2. Three dates cannot be reprocessed — `ADAPTER_RETURNED_EMPTY_OUTPUT` — **P1**
 
