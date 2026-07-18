@@ -263,11 +263,15 @@ config-tuning gap.
       live entity-fleet VM destroys hours of in-progress work") — the same pattern used elsewhere for destructive
       suggestions. Apply the same audit to any other launcher script in `scripts/vm/` that prints a raw delete command
       in its refusal/error path. (repo: deployment-service)
-- [ ] [PROCESS] P1. **Add an explicit guardrail to `unified-trading-pm/agents/data_engineering.md` (or `RULES.md`)**:
+- [x] ✅ [PROCESS] P1. **Add an explicit guardrail to `unified-trading-pm/agents/data_engineering.md` (or `RULES.md`)**:
       never run `gcloud compute instances delete` against a VM this task's OWN fleet (or a sibling entity/asset_group's
       fleet) without first confirming genuine staleness via heartbeat blob + run.log tail + manifest shard mtime — a
       singleton-lock refusal message suggesting a "Stop" command is NOT sufficient justification on its own. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — **unified-trading-pm@aec9053e6**: added new STEP 0.55 "VM-delete guardrail" section to
+      `agents/data_engineering.md` (+ a `does_not` bullet) requiring confirmation via heartbeat blob age vs. per-prefix
+      threshold + run.log tail + manifest shard mtime before any `gcloud compute instances delete`, and stating
+      explicitly that a launcher's singleton-lock "Stop:" suggestion is not sufficient justification on its own; cites
+      this issue doc's "Incident 2 correction" as the evidence trail.
 - [ ] [DATA] P1. **Audit whether any OTHER bounced/stalled backfill task in the current fleet shows the same
       agent-deleted-own-VM signature** (`agent-name/claude_code` UA on `v1.compute.instances.delete` against a task's
       own recently-launched VMs) — this incident took 3 recurrences across ~7 hours to even get investigated properly;
