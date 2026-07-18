@@ -925,3 +925,26 @@ nulls are fixtures that genuinely carry no coach upstream — honest absence, no
 This closes the A1 chain end-to-end: normalizer flat-shape fix (features-service@cf10b931) + dedupe + coach emission,
 delivered over history by the `--redo-all` launcher gap fix. **Zero api-football calls** — the entire restoration came
 from raw already on disk.
+
+### H-UPDATE (2026-07-18 19:12Z) — the concurrency damage is HEALING, not growing
+
+Canonical index read (5,368,385 rows — read the parquet DIRECTLY; `read_availability_index` fell back to per-VM shards
+under the stale-index gate and reported a FALSE `0`, cf. § J):
+
+| metric                   | 15:57Z                                      | 19:12Z             | delta       |
+| ------------------------ | ------------------------------------------- | ------------------ | ----------- |
+| `attempted_failed` total | 477                                         | **385**            | **-92**     |
+| attempted TODAY          | 153                                         | **61**             | **-92**     |
+| error_reason breakdown   | `FIXTURES_FETCH_FAILED` 92 + `rateLimit` 61 | **`rateLimit` 61** | 92 repaired |
+
+**RETRACTED (mine)**: § H said the enrichment-entity false failures "do NOT self-heal — their VMs are stopped". They DID
+heal: the (auto-relaunched) enrichment VMs re-attempt those cells, and all 92 `FIXTURES_FETCH_FAILED` rows flipped to
+captured/empty. **No new failures since containment** — so 4 concurrent VMs are not currently generating fresh
+rate-limit damage the way 5 were. No further VM intervention is warranted.
+
+Residual: **61 `rateLimit` rows** from the 5-VM window (15:27-15:57Z). They are FALSE failures — the data is fetchable,
+the key was saturated. They will heal the same way if their (date, entity) cells are re-attempted; otherwise re-attempt
+explicitly once the key has a single owner.
+
+- [ ] [DATA] P2. Confirm the residual 61 `rateLimit` rows reach captured/empty (they should heal via normal re-attempt);
+      only force an explicit re-attempt if they persist after the enrichment fleet completes its range.
