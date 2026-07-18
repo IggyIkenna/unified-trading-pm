@@ -376,6 +376,19 @@ cmd_install() {
   chown "${RUNNER_USER}:${RUNNER_USER}" "${RUNNER_BASE}/repo.refreshed-at"
   chmod 0644 "${RUNNER_BASE}/repo.refreshed-at"
 
+  # 3b) launcher-PRIVATE gcloud config dir (2026-07-18)
+  # The token path must not read the runner user's shared ~/.config/gcloud. Self-hosted runners do
+  # not reset HOME between jobs, so a job step running google-github-actions/auth writes a WIF
+  # external_account credential there and makes it ACTIVE for every later process; its subject token
+  # comes from actions-run-service and exists only INSIDE a job, so afterwards every Secret Manager
+  # read fails 404 "job request not found" (2026-07-18: 1377 restarts, 2.5h fleet-wide CI outage).
+  # refresh-gh-token.sh and glue-runner-run.sh point CLOUDSDK_CONFIG here as a COMMAND PREFIX.
+  #
+  # NOTE: this creates the dir only. It must be SEEDED with a credential that works OUTSIDE a job —
+  # a machine identity, not a human account. Until then the token path fails LOUDLY (by design).
+  # See codex/07-security/self-hosted-runner-security-posture.md.
+  install -d -o "${RUNNER_USER}" -g "${RUNNER_USER}" -m 0700 "${RUNNER_BASE}/.gcloud"
+
   # 4) helper scripts
   install -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${HERE}/glue-runner-run.sh"   "${RUNNER_BASE}/glue-runner-run.sh"
   install -m 0755 -o "${RUNNER_USER}" -g "${RUNNER_USER}" "${HERE}/job-cleanup.sh"       "${RUNNER_BASE}/job-cleanup.sh"

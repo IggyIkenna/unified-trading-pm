@@ -32,6 +32,15 @@ set -uo pipefail
 : "${GH_TOKEN_SECRET:=GH_PAT}"
 : "${GCP_PROJECT:=central-element-323112}"
 : "${GH_TOKEN_FILE:=/run/github-glue-runner/gh_token}"
+# Launcher-PRIVATE gcloud config (2026-07-18). The comment below already argues that the token path
+# must not depend on "a per-user gcloud config that nothing tests and any `gcloud config set` can
+# silently change" — that reasoning was applied to the PROJECT but not to the CREDENTIAL, which is
+# the half that actually broke. Self-hosted runners do not reset HOME between jobs, so a job step
+# running google-github-actions/auth writes into the shared ~/.config/gcloud and makes its WIF
+# external_account credential ACTIVE for every later process. That credential mints its subject
+# token from actions-run-service, which exists only INSIDE a job, so afterwards every fetch here
+# fails with 404 "job request not found" — 1377 restarts and a 2.5h fleet-wide CI outage.
+: "${GLUE_GCLOUD_CONFIG:=/opt/github-glue-runners/.gcloud}"
 
 TOKEN_DIR="$(dirname "${GH_TOKEN_FILE}")"
 mkdir -p "${TOKEN_DIR}" && chmod 700 "${TOKEN_DIR}"
@@ -43,7 +52,11 @@ mkdir -p "${TOKEN_DIR}" && chmod 700 "${TOKEN_DIR}"
 err_file="$(mktemp)"; trap 'rm -f "${err_file}"' EXIT
 # --project is passed EXPLICITLY: relying on gcloud's default project means the token path depends on
 # a per-user gcloud config that nothing tests and any `gcloud config set` can silently change.
-token="$(gcloud secrets versions access latest \
+# CLOUDSDK_CONFIG is a COMMAND PREFIX, never exported and never put in the systemd EnvironmentFile:
+# that env reaches `exec ./run.sh` and therefore every job step (measured on a live Runner.Listener
+# 2026-07-18), so exporting it would invite jobs to write their credentials into this private config
+# — the opposite of the isolation intended here.
+token="$(CLOUDSDK_CONFIG="${GLUE_GCLOUD_CONFIG}" gcloud secrets versions access latest \
   --secret="${GH_TOKEN_SECRET}" --project="${GCP_PROJECT}" 2>"${err_file}")"
 rc=$?
 

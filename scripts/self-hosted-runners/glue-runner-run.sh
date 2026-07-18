@@ -66,7 +66,12 @@ fi
 # into a bare "GH_TOKEN must be set", and cost ~16h of a silently bleeding pool on 2026-07-17.
 if [ -z "${GH_TOKEN:-}" ] && [ -n "${GH_TOKEN_SECRET:-}" ]; then
   echo "token cache ${GH_TOKEN_FILE} absent/empty — falling back to a direct Secret Manager read" >&2
-  GH_TOKEN="$(gcloud secrets versions access latest --secret="${GH_TOKEN_SECRET}" \
+  # CLOUDSDK_CONFIG as a COMMAND PREFIX — same isolation as refresh-gh-token.sh, same reason: a job
+  # step running google-github-actions/auth poisons the shared ~/.config/gcloud with a WIF credential
+  # whose issuer only exists inside a job (2026-07-18, 2.5h outage). Never export it and never put it
+  # in the EnvironmentFile — that env reaches `exec ./run.sh` and every job step below.
+  GH_TOKEN="$(CLOUDSDK_CONFIG="${GLUE_GCLOUD_CONFIG:-/opt/github-glue-runners/.gcloud}" \
+    gcloud secrets versions access latest --secret="${GH_TOKEN_SECRET}" \
     ${GCP_PROJECT:+--project="${GCP_PROJECT}"})" || {
     echo "FATAL: Secret Manager read of '${GH_TOKEN_SECRET}' failed (see the gcloud error above)." >&2
     echo "       project=${GCP_PROJECT:-<unset — gcloud default>} user=$(id -un)" >&2
