@@ -701,3 +701,17 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   FUTURE/OPTION assertion) = a small follow-up. **Catalogue --by-day durability re-run launched (workers=10 to dodge the
   24-worker socket exhaustion; idempotent; ~2-3h, runs past the window).** MANIFEST combo/cash re-run pending its
   enhanced MTDS script landing (then pause→CAS).
+
+- **2026-07-18 (slot-1, tick 12) — ✅ MANIFEST RE-RUN (combo+cash) VERIFIED LIVE — 2nd big climb.** Shipped enhanced
+  manifest script (mtds@0e2ab69b) after unblocking the MTDS QG (Databento-executor split databento_fetch.py 915→887 into
+  a new `databento_fetch_executor.py` module). Ran pause→`--apply --in-place-cas`→resume (gen
+  1784395068233125→…156548316 CAS OK, consolidator RESUMED verified): 2,096,778 CASH rows→`-USD` + 325,473 combos
+  re-stamped→COMBO (derivatives already canonical from tick-7). **INDEPENDENT live re-measure:** FUTURE/OPTION canonical
+  **59.83%→94.78%** (553,901/584,430 — combos left the denominator); **EQUITY 99.9% `-USD`** (incl. KRX Korean
+  `005930.KS-USD`); COMBO 1,480,449. **Residual/durability nuance:** lowercase `future`/`futures`/`FUTURES` types still
+  appear — the consolidator re-introduces them from source per-VM-shard fragments (whose per-contract WRITE paths still
+  emit lowercase). The derivative canonical IDs are durable (that's the primary target); the instrument_type-DIMENSION
+  casing needs the **writer-instrument_type→UPPERCASE convergence** (already a tracked A todo) for full durability — a
+  code fix on the tardis/per-contract manifest write paths, not another migration. Both surfaces now: catalogue prod/n
+  fully canonical (99.98% true) + manifest 94.78% FUTURE/OPTION + 99.9% cash. NEXT: writer-itype convergence, catalogue
+  --by-day durability (running), Phase D.
