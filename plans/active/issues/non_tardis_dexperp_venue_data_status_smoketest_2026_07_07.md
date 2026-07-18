@@ -237,22 +237,29 @@ Two secondary findings:
 - [ ] [CODE] P3. **HYPERLIQUID: delete the dead stub** `HyperliquidAdapter._download_trades_from_tardis()`
       (`hyperliquid_adapter.py:424-427`) — confirmed never called by the real batch pipeline; leaving a known-broken
       method around is a trap for a future engineer who assumes it's live.
-- [~] [DECISION] P1. ⚠️ **PARTIALLY DECIDED + SSOT CONTRADICTION FLAGGED (2026-07-18).** Operator answered "keep MVP +
-  BLOCKED-CREDENTIALS scaffold" for PACIFICA-SOLANA + LIGHTER-ZKSYNC. Applied for **LIGHTER-ZKSYNC** (it exists):
-  `live_capable` flipped honestly to False (batch scaffold preserved) — `unified-api-contracts@a7ff8417`. **BUT
-  PACIFICA-SOLANA is a hard conflict — NOT actioned.** A non-Tardis fix-investigation (2026-07-18) found PACIFICA was
-  **decommissioned entirely on 2026-07-16** (operator ruling: all Solana perp DEXes dropped except Jupiter) — it is
-  locked in `venue_adapter_keys.DECOMMISSIONED_VENUE_BASES`, purged from `data_type_capability.py`, and guarded by a
-  test. The 2026-07-18 "keep PACIFICA MVP" answer therefore **CONTRADICTS the 2026-07-16 decommission**; resurrecting
-  PACIFICA autonomously would undo a completed, locked decommission. **OPERATOR MUST RESOLVE** (was 2026-07-18 a
-  deliberate un-decommission of PACIFICA, or answered without the 2026-07-16 drop in view?). Kept PACIFICA fully removed
-  pending that ruling (a `PACIFICA-stays-removed` lock test was added @a7ff8417). The remaining PACIFICA FIX/VERIFY
-  todos below stay BLOCKED-OPERATOR-DECISION on this conflict; the LIGHTER/EXTENDED ones are unblocked.
-- [ ] [FIX] P2. **PACIFICA-SOLANA: resolve the `derivative_ticker`/standalone-`perp_funding` duplicate-source risk**
-      (`_umi_pacifica.py:227-276` and `_perp_funding_pacifica_lighter.py:125-175` both hit the same
-      `/funding_rate/history` endpoint under two different canonical `data_type` labels) before either pipeline is ever
-      turned on for real — same class of SSOT-ambiguity risk as the now-resolved MTDS/MDPS order-book-imbalance
-      duplication ([[mtds_mdps_order_book_imbalance_duplicated_2026_07_07]]).
+- [x] [DECISION] P1. ✅ **RESOLVED (operator 2026-07-18): PACIFICA STAYS DECOMMISSIONED; LIGHTER kept MVP.** The
+      07-18-vs-07-16 conflict is resolved in favor of the 2026-07-16 decommission — operator: "decommission pacifica for
+      now". PACIFICA remains fully removed (no MVP, no scaffold; the 07-18 keep-MVP answer is retracted), locked by
+      `DECOMMISSIONED_VENUE_BASES` + the stays-removed test @a7ff8417. LIGHTER-ZKSYNC keeps MVP (live_capable honestly
+      False, batch scaffold real). Original flag retained below.
+- [x] [DECISION-history] P1. ~~PARTIALLY DECIDED + SSOT CONTRADICTION FLAGGED (2026-07-18).~~ Operator answered "keep
+      MVP + BLOCKED-CREDENTIALS scaffold" for PACIFICA-SOLANA + LIGHTER-ZKSYNC. Applied for **LIGHTER-ZKSYNC** (it
+      exists): `live_capable` flipped honestly to False (batch scaffold preserved) — `unified-api-contracts@a7ff8417`.
+      **BUT PACIFICA-SOLANA is a hard conflict — NOT actioned.** A non-Tardis fix-investigation (2026-07-18) found
+      PACIFICA was **decommissioned entirely on 2026-07-16** (operator ruling: all Solana perp DEXes dropped except
+      Jupiter) — it is locked in `venue_adapter_keys.DECOMMISSIONED_VENUE_BASES`, purged from `data_type_capability.py`,
+      and guarded by a test. The 2026-07-18 "keep PACIFICA MVP" answer therefore **CONTRADICTS the 2026-07-16
+      decommission**; resurrecting PACIFICA autonomously would undo a completed, locked decommission. **OPERATOR MUST
+      RESOLVE** (was 2026-07-18 a deliberate un-decommission of PACIFICA, or answered without the 2026-07-16 drop in
+      view?). Kept PACIFICA fully removed pending that ruling (a `PACIFICA-stays-removed` lock test was added
+      @a7ff8417). The remaining PACIFICA FIX/VERIFY todos below stay BLOCKED-OPERATOR-DECISION on this conflict; the
+      LIGHTER/EXTENDED ones are unblocked.
+- [x] [FIX] P2. ✅ **N/A — PACIFICA decommissioned 2026-07-18 (venue fully removed; no pipeline to turn on).** ~~resolve
+      the `derivative_ticker`/standalone-`perp_funding` duplicate-source risk~~ (`_umi_pacifica.py:227-276` and
+      `_perp_funding_pacifica_lighter.py:125-175` both hit the same `/funding_rate/history` endpoint under two different
+      canonical `data_type` labels) before either pipeline is ever turned on for real — same class of SSOT-ambiguity
+      risk as the now-resolved MTDS/MDPS order-book-imbalance duplication
+      ([[mtds_mdps_order_book_imbalance_duplicated_2026_07_07]]).
 - [x] [FIX] P3. ✅ **PARTIALLY FIXED — `unified-api-contracts@a7ff8417`** (EXTENDED-STARKNET + LIGHTER-ZKSYNC). PACIFICA
       has NO row to fix — it was decommissioned 2026-07-16 (see the DECISION conflict above); do NOT re-add it. The
       genuinely-existing venues with the described dishonest declaration are EXTENDED-STARKNET + LIGHTER-ZKSYNC: flipped
