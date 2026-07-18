@@ -193,13 +193,27 @@ Two independent, non-conflicting fixes:
       compute. Read the manifest FIRST to compute the genuinely-pending date set within the requested window and jump
       directly to those dates, instead of paying real per-date GCS I/O on every date regardless of skip outcome. Add a
       regression test asserting O(pending days) GCS reads, not O(total window days). (repo: features-service)
-- [ ] [INFRA] P3. **Resolve the `fs-backfill-` VM-name prefix collision** between `launch-footystats-backfill-vm.sh`
+- [x] ✅ [INFRA] P3. **Resolve the `fs-backfill-` VM-name prefix collision** between `launch-footystats-backfill-vm.sh`
       (instruments-service, `--sports-provider FOOTYSTATS`) and `launch-features-sports-backfill-vm.sh`
       (features-service, `features_service.sports compute`) — both emit `VM_NAME="fs-backfill-${RUN_TS}"` and share one
       `vm_prefix_registry.py` entry, so name-based fleet inspection (this audit, the zombie-watchdog's per-prefix
       staleness threshold) cannot disambiguate which launcher produced a given `fs-backfill-*` VM without reading its
       metadata/command line. Give one of the two launchers a distinct prefix + registry entry. (repo:
-      deployment-service)
+      deployment-service) — **DONE 2026-07-18 slot-4, `deployment-service@613ec25` + `deployment-api@317a58a`**:
+      footystats keeps `fs-backfill-` (unchanged); `launch-features-sports-backfill-vm.sh` moved to its own
+      `fts-backfill-` prefix (distinct from the `fss-backfill-vm-N` parallel-fanout variant of the same backfill),
+      updating its VM_NAME + singleton-lock filter + `--force` help text. Added the new prefix to every tracking surface
+      keyed off the old shared string: `deployment-service/vm_prefix_registry.py` (`VM_PREFIX_TO_BUCKET` SSOT,
+      bucket=features-sports), `data_pipeline_monitors/launcher_registry.py` (relaunch binding — required for
+      `test_launcher_registry.py`'s bidirectional-parity guard against the watchdog registry), `cli.py`'s
+      `_DATA_VM_PREFIXES` sweep, `deployment_cluster_registry.py`'s capture-launcher ownership derivation, and
+      `deployment-api`'s `vm_events.py` `_PREFIX_TO_SERVICE` map (previously any `fs-backfill-*` VM, including
+      features-sports ones, was misattributed to `instruments-service`). Also fixed an adjacent pre-existing bug
+      surfaced while wiring this up: `deployment-api/routes/backfill_launch.py`'s `FEATURES_SPORTS_BACKFILL` spec
+      carried `vm_prefix_template="features"`, which never matched the launcher's real prefix even before this collision
+      — corrected to `fts-backfill` so the route's logged/tracked `vm_name` matches what the launcher actually creates.
+      `deployment-service` QG green (225 targeted tests incl. `test_launcher_registry.py` +
+      `test_data_pipeline_monitors*.py` re-run individually); `deployment-api` QG green. Both shipped via quickmerge.
 
 ## Evidence
 
