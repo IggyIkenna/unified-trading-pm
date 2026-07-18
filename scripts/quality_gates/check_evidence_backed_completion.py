@@ -51,7 +51,12 @@ DEFAULT_PROJECT = "central-element-323112"
 
 # A checked-off todo line: `- [x] ...` (case-insensitive x).
 _CHECKED_RE = re.compile(r"^\s*-\s*\[[xX]\]\s")
-_UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[[ xX]\]\s")
+# Any checkbox-shaped line ends the previous block's continuation — not just `[ ]`/`[x]`/`[X]`.
+# Some active plans use an informal `[~]` (in-progress) marker; treating only the canonical
+# states as boundaries let a `[~]` line be swallowed as "continuation text" of the PRIOR `- [x]`
+# block, merging an unrelated next-todo's language (e.g. "redeploy"/"green") into it and
+# producing false sub-rule-B violations (found 2026-07-18, bucket_fold_features_2026_07_17.md:95).
+_UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[.\]\s")
 
 # A structured Evidence ref carrying one or more cloudbuild ids.
 _EVIDENCE_LINE_RE = re.compile(r"Evidence:\s*(?P<body>.+)", re.IGNORECASE)

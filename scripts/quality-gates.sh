@@ -534,7 +534,7 @@ if [ -f "$EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     if python3 "$EVIDENCE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
         log_success "Evidence-backed-completion check passed (no over-claims; sub-rule B at/below baseline)"
     else
-        echo "❌ Evidence-backed-completion FAILED — a `- [x]` runtime-green claim cites a non-SUCCESS build, OR a new" >&2
+        echo "❌ Evidence-backed-completion FAILED — a '- [x]' runtime-green claim cites a non-SUCCESS build, OR a new" >&2
         echo "   build/deploy/promote-green claim has no 'Evidence: cloudbuild=<id>' ref. See plans/PLAN_FORMAT.md § 8b." >&2
         echo "   Re-baseline sub-rule B after intentional debt: python3 ${EVIDENCE_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
         _post_gate_fail "evidence-backed-completion"
