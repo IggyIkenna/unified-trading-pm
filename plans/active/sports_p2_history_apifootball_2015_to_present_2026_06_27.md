@@ -2534,3 +2534,55 @@ this todo has been waiting for; touching it now would only risk colliding with i
 narrow-window progress; expect the 83.3%-of-pending-mass window to close most of the gap if the ~1,540-rows/2-min early
 rate holds, with the residual ~16.7% (scattered 2020/2021/2024-12/2025-12 dates) still open pending the P2 systemic fix
 or a small targeted follow-up.
+
+### 2026-07-18T17:58Z — data_engineering slot-14 (Todo `-001` — hit slot-13's own ≥15-20min checkpoint, gate still not green, but confirmed the narrow-window redirect IS converging fast — new quantified rate + ETA)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean, no dirty state inherited. `uv sync` in instruments-service
+(no `.venv` existed in this slot's clone).
+
+**Checked in-flight sibling work first** (backlog, not re-derived from scratch):
+`api_football_backfill_chronological_scan_never_reaches_pending_tail-002` (P2 systemic manifest-aware date-jump fix,
+instruments-service) `dispatched` to slot 7, not yet `done`; `-004` (harden launcher Stop-suggestion) `dispatched` to
+slot 3. Not duplicating either.
+
+**Ran the consolidated gate query** (`read_availability_index`, `source==api_football`, the 4 remaining entities'
+2020-06-06→2026-07-18 windows) at 17:55:54Z, ~15-16 min post slot-13's 17:40Z redirect — squarely in the checkpoint
+window slot-13 itself flagged as informative:
+
+| data_type       | in-window rows | pending_fetch | captured | empty_confirmed |
+| --------------- | -------------: | ------------: | -------: | --------------: |
+| FIXTURE_EVENTS  |        212,164 |         1,935 |   37,934 |         172,293 |
+| FIXTURE_LINEUPS |        212,136 |         1,925 |   37,541 |         172,670 |
+| FIXTURE_STATS   |        212,233 |         1,893 |   27,887 |         182,452 |
+| PLAYER_STATS    |        219,046 |         1,172 |   24,996 |         192,878 |
+| INJURIES        |        194,004 |             0 |   10,476 |         183,528 |
+
+Byte-for-byte identical to slot-8's 07-17T15:20Z baseline and slot-11's 07-18T16:36Z read — the consolidated index
+itself still shows zero net movement (consistent with the ~15-16min elapsed being too early for real pending-cell
+resolutions to have landed + consolidated, not evidence the redirect isn't working).
+
+**Read the 4 redirected VMs' per-VM manifest shards directly** (bypassing the consolidated index, same technique
+slot-9/slot-13 used) to check actual redirect progress:
+
+| VM (entity)                 |   rows | min_date   | max_date   | captured |  empty |
+| --------------------------- | -----: | ---------- | ---------- | -------: | -----: |
+| `-161608` (FIXTURE_EVENTS)  | 16,751 | 2020-06-06 | 2026-04-13 |    1,111 | 15,640 |
+| `-161641` (FIXTURE_LINEUPS) | 15,229 | 2020-06-06 | 2026-04-13 |      793 | 14,436 |
+| `-161712` (FIXTURE_STATS)   | 12,516 | 2020-06-06 | 2026-03-26 |      349 | 12,167 |
+| `-161740` (PLAYER_STATS)    | 12,887 | 2020-06-06 | 2026-03-28 |      335 | 12,552 |
+
+`max_date` is already at 2026-03-26→04-13 — the redirect (`VM_START_DATE=2026-02-21`/`VM_END_DATE=2026-07-14` metadata,
+slot-3's fix) has advanced ~51-52 calendar days into the narrow window within ~18 min of runtime (~2.8-2.9 days/min),
+noticeably faster than slot-15's measured ~2.2 dates/min baseline for the old full-coverage-floor chronological scan.
+Per slot-8's original breakdown, ~79% of FIXTURE_EVENTS' pending mass sits in 2026-06/07 — at the observed rate the
+fleet needs roughly another ~25-30 min of comparable throughput to reach that window (2026-04-13 → ~2026-06-15 ≈ 63 days
+÷ ~2.8 days/min), though throughput will very likely slow once it starts hitting genuinely-pending cells (real API
+fetches, not presence-skip re-confirmation — the 0 new resolutions so far in the 02-21→04-13 span, all rows here already
+carried their current `capture_status`, is consistent with this still being the cheap warm-up stretch).
+
+**Not flipping this checkbox** — gate unchanged. **Not touching the fleet** — healthy, converging, and any
+relaunch/interruption right now would only cost the progress made since 17:40Z for no gain; also avoids colliding with
+slot-7's in-flight `-002` systemic fix. `/skip-current-task` — sharper resume criterion than the prior entry: check
+again once a `gcloud compute instances list` + per-VM shard read shows `max_date` for the 4 VMs has reached ~2026-06-01
+or later (est. ~18:20-18:30Z at the observed rate) — that is the point a consolidated `read_availability_index` re-read
+has a real chance of showing genuine pending_fetch movement, not another zero-signal repeat of this same check.
