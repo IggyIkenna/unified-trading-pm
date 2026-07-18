@@ -2497,3 +2497,40 @@ risk slot-15's writeup called out).
 P1 mitigation (`api_football_backfill_chronological_scan_never_reaches_pending_tail-001`) ships and a narrow-window
 fleet is running (then a gate re-read is genuinely informative), or (b) the P2 systemic fix (`-002`, instruments-service
 manifest-aware date-jump) lands, whichever comes first.
+
+### 2026-07-18T17:47Z — data_engineering slot-13 (Todo `-001` — precondition (a) just landed; filed + self-resolved a safety concern about slot-3's wording, gate re-read still too soon to be informative)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean, no dirty state inherited.
+
+**Safety check before proceeding**: slot-3's 17:36:35Z progress message on the sibling P1 todo
+(`api_football_backfill_chronological_scan_never_reaches_pending_tail-001`) read "Operator said proceed now — executing
+Option A: terminating the 4 wide af-backfill VMs" — but the only `blocked_answered` event on that task at that point
+(`BLK-99f50b65`, 17:35:38Z) explicitly said the opposite ("do NOT autonomously delete the 4 wide VMs... I am NOT
+authorizing it autonomously... PREFERRED NON-DESTRUCTIVE PATH: redirect in place"), and I could find no second
+authorization event in the activity log. Since this is the same fleet this todo depends on, filed `BLK-30f1b6ce`
+flagging the discrepancy (VMs still `RUNNING`, not yet deleted, at the time — still preventable) rather than guess.
+**Self-resolved before an answer came back**: re-read the sibling issue doc
+(`plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`, pushed
+17:43:35Z) — slot-3's _actual_ executed action was `gcloud compute instances add-metadata` (narrow
+`VM_START_DATE=2026-02-21`/`VM_END_DATE=2026-07-14`) + `gcloud compute instances reset` (hard reboot), **not** a delete;
+"terminating" in its chat message was just imprecise wording, not an unauthorized destructive act. Confirmed via
+`gcloud compute instances list` throughout (all 4 VMs `RUNNING` continuously, never deleted). Posted the correction back
+via `/progress` so main doesn't spend time chasing a resolved false alarm.
+
+**Precondition (a) has now landed**: the P1 mitigation todo is `[x]` with evidence — all 4 VMs redirected + reset at
+~17:39:48-17:40:07Z with the narrow window, and slot-3's own evidence shows real net-new progress within ~2 min of
+restart (one VM's per-VM shard max-date jumped `2020-10-10` → `2026-03-13`, 1,540 rows in-window, 15 newly `captured`).
+This is the first relaunch in this todo's 2-day, 15-20+-bounce history with confirmed non-redundant writes.
+
+**Deliberately did NOT re-run the consolidated gate query** — the redirect landed only ~7 min before this check (17:40Z
+→ 17:47Z), well short of the ~15-20 min checkpoint this same bounce cluster has repeatedly found necessary for a
+genuinely informative read (slot-9/11/15 entries above); re-reading now would either hit a stale pre-merge index or
+reproduce a still-mostly-unchanged count for zero signal, the exact low-value re-check pattern already flagged multiple
+times in this log. **Did not touch the fleet** — it is healthy and actively productive post-redirect, exactly the state
+this todo has been waiting for; touching it now would only risk colliding with its first genuinely-productive run.
+
+**Not flipping this checkbox.** `/skip-current-task` — resume once the redirected fleet has had a realistic runway
+(≥15-20 min post-17:40Z, i.e. ~17:55-18:00Z or later) for a `read_availability_index` re-read to actually reflect the
+narrow-window progress; expect the 83.3%-of-pending-mass window to close most of the gap if the ~1,540-rows/2-min early
+rate holds, with the residual ~16.7% (scattered 2020/2021/2024-12/2025-12 dates) still open pending the P2 systemic fix
+or a small targeted follow-up.
