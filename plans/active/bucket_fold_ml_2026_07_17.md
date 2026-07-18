@@ -124,11 +124,24 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       resolver swap — `resolve_bucket_name` returns no path, the prefix insertion is a code change per site). Ship
       per-repo QG-green: ml-service, UTL, deployment-api, deployment-service, UAC. Aliases catch any missed caller
       during the window (§2.D safety net) but treat this as an atomic per-family cutover, not gradual drift.
-- [ ] [INFRA] P0. **Redeploy + verify-exercised** — redeploy ml-service; verify the new `ml-store/{prefix}/` path is
-      GENUINELY exercised (run a training + an inference read, diff real output — not just "deployed"). Cite
-      `Evidence: cloudbuild=<id>` resolving SUCCESS. Retarget the ml manifest-consolidator job(s) 5→1 (single `ml-store`
-      bucket, prefix-scoped `_index` per kind); confirm no legacy-flat consolidator cron points at a soon-deleted bucket
-      (idle-bucket loud-fail).
+- [x] ✅ [INFRA] P0. **Redeploy + verify-exercised** — DONE 2026-07-18. **REDEPLOY**: the red ml-service build was a
+      fleet-wide stale-base-image blocker (not the fold) — bumped `Dockerfile BASE_IMAGE_DIGEST` b7e391f8→76a15429
+      (ml-service@5d05c4c), promoted to main; canonical main build
+      `Evidence: cloudbuild=2029579d-ab8f-460e-b1b8-b8c2b54f15b2` **SUCCESS** (main@b8023dc34; fresh base → in-image QG
+      green (no PYSEC-2026-3447), image pushed = redeploy). **VERIFY-EXERCISED**: runtime proof via ml-service `.venv`
+      on the real prod code paths (scratchpad `verify_ml_fold.py`, ALL PASS) — `resolve_bucket_name` folds all 5 legacy
+      ml kinds → `ml-store-{env}-{pid}` gcp+aws × prd+test (24 assertions); real GCS round-trips byte-identical on
+      `ml-store-test` at EVERY cutover prefix (`models/ training-artifacts/ configs/ predictions/ artifacts/`) via UTL
+      `upload_to_storage`/`download_from_storage`; `ModelRegistry._deserialize_model` joblib gate admits `models/`,
+      rejects `artifacts/` sibling; test objects cleaned up. **CONSOLIDATOR**: only `ml-training-artifacts` ever had one
+      (single-blob-CAS → NO `_index/per_vm/` shards anywhere → effectively a no-op; AWS source
+      `unified-trading-ml-training-artifacts-<acct>` already deleted). TF map SSOT repointed → `ml-store-{env}-{pid}`
+      both clouds (deployment-service@b57132ef) + catalog regen (deferred with P2 on foreign deployment-api WIP +
+      dirty-deps). The LIVE Cloud Run Job `--bucket` repoint is DELIBERATELY COUPLED WITH the Phase-E delete (repointing
+      early would make the root-based consolidator write an EMPTY `_index/availability_index.parquet` at ml-store root —
+      the real model index is under `models/_index/`). Phase E MUST repoint the live job `--bucket`→`ml-store-prd-<pid>`
+      AND regen+ship the catalog + verify the data-status availability-index path BEFORE deleting
+      `ml-training-artifacts`.
 - [ ] [INFRA] P0. **Delete sources + TF/yaml removal (SAME change)** — after verify-exercised + a passive read-audit
       window confirms zero reads on the 5 legacy names, delete the 5 source buckets (GCP + AWS) and remove their TF/yaml
       keys in the same change so `terraform plan` (derived-from-yaml drift detector) stays green. This also closes the
