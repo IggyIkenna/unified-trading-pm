@@ -863,3 +863,43 @@ group does. Any "make sports canonical" effort must decide that, not just the ca
       rows to lower-case under (a) would be actively wrong if the answer is (b), and would be only ~5% of the work under
       (c). Recommendation: **(c)**, because it is the only option that makes "sports is canonical" true rather than
       "sports is self-consistent"; but it is a multi-week programme, not a migration script.
+
+### K0-DECISION (operator 2026-07-18): **(b) sports → UPPER everywhere**
+
+Operator chose **(b)**: sports uses UPPERCASE `data_type` across all its layers — internally uniform, and knowingly
+divergent from tradfi/cefi/defi (which are uniformly lower-case). **K2 is UNBLOCKED** with this direction:
+
+- Reference (`instruments-sports`, 9 values) and features (`features-sports`, 4 values) are ALREADY all-UPPER — **no
+  change needed**, they are already conformant under (b).
+- Only **market-data-sports** is mixed (4 UPPER + 9 lower). Migration = normalise the 9 lower-case values UP:
+  `odds`→`ODDS`, `odds_snapshot`→`ODDS_SNAPSHOT`, `odds_movement`→`ODDS_MOVEMENT`,
+  `odds_horizon_bucket`→`ODDS_HORIZON_BUCKET` (+ the 4 legacy `odds_horizon_bucket_{15m,1h,4h,1d}` variants, which are
+  the dead cohort in § F3 — re-stamp or drop in the same pass).
+- This is the OPPOSITE direction to CF-7's `_CF7_DATA_TYPE_NORMALISE` (which mapped UPPER→lower). **CF-7's mapping is
+  now superseded for sports** — that script is legacy-only and slated for deletion anyway (§ K2).
+- **Bonus**: `canonical_writer_stamping.py`'s sports lower→UPPER map (which I nearly "fixed") is now ALIGNED with the
+  chosen canonical, not a bridge to work around. Leave it.
+
+Scope under (b) is far smaller than (c): ~42k case-duplicate rows in ONE bucket, versus ~5.4M reference rows + the
+features layer + every UAC `("sports", …)` key.
+
+## L. The features launcher could never replay a writer fix — **FIXED**
+
+`launch-features-sports-backfill-vm.sh` used its `FORCE` flag ONLY for the same-prefix VM singleton lock; it never
+reached `BACKFILL_CMD`. So the launcher structurally could not re-derive dates the manifest already marks captured/empty
+— i.e. it could never replay a writer fix over history.
+
+Measured: the lineups re-derive `fs-backfill-20260718-160901` ran **2.5 hours** logging
+`SKIP fixture_lineups for <date> — manifest shows prior captured/empty (use --force)` on every date and wrote **ZERO**
+shards. Identical defect class to the instruments-service fixtures gate (@7d49d096) — "force exists but does not reach
+the thing that needs it" is now a THIRD instance this session.
+
+Fixed in deployment-service@25d77c1: added `--redo-all`, deliberately SEPARATE from `--force` (`--force` = VM lock
+bypass; `--redo-all` = pass `--force` to the features CLI). Conflating them is the documented api-football mistake. QG
+green (2,542 passed). Relaunched as `fts-backfill-20260718-184352` with the CLI now receiving `--force`; tarball
+re-verified aboard (features-service `47acb31f`, `cf10b931` ancestor-proven, flat-shape branch + coach emission present)
+— MANDATORY here, because under `--redo-all` a pre-fix normalizer would OVERWRITE good 40-row shards with 0.
+
+**Note on the 356 "fresh" lineup shards**: they were written 06:42Z by a PRE-fix run, not by my VM — which is why they
+show `coach 0/40` (the old normalizer never emitted coach) despite having 40 rows (legacy nested shape parsed fine).
+They are exactly what the `--redo-all` pass now replaces.
