@@ -223,3 +223,31 @@ whether a target date's 400-day lookback window straddles the canonical/legacy s
 bimodal/non-contiguous affected-date set is exactly what's expected. Todo 1's regression test covers the mechanism
 itself (schema-mix duplicate-column collision), not a specific date range, so it does not need updating for the wider
 window. Todo 3 (gap-fill) should use slot-4's corrected date list once dispatched.
+
+### 2026-07-18T08:3xZ — data_engineering slot-2 (dispatched Todo 3 gap-fill; measured cost, VM-fleet scale, not launching without sign-off)
+
+Dispatched `-004` (Todo 3, the gap-fill) immediately after `-001` (the fix, same slot). Before launching anything, sized
+the actual compute cost using the SAME methodology + measured unit cost the sibling
+`sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` doc established (slot-8, 2026-07-17T13:4xZ):
+`run_new_calculators` computes ALL Phase-4 calculators per `(date, league)` in one pass off the SAME date's full
+reference-data read + 400-day historical-fixtures lookback — that lookback/read cost is what `~278s/date` measures, and
+my fix changes correctness (dedupes a rename collision), not I/O volume, so the sibling's measured unit cost applies
+unchanged here.
+
+**Estimate**: 521 affected dates × ~278s/date ≈ 144,838s ≈ **~40.2 hours of serial single-worker compute** — smaller
+than the sibling's full-corpus figure (140+ hours over ~3,453 dates) because this is a bounded, non-contiguous date
+list, not a full-corpus re-run, but still squarely VM-fleet scale (tens of VM-hours), not something to run inline in a
+worker session.
+
+**Cannot be satisfied by the just-completed consolidated 10-VM fleet** (`features-sports-*`, `BLK-a3149ab4`, completed
+~2026-07-18T07:54Z per the parent VM's exit): that fleet ran BEFORE this fix shipped (`features-service@538c233e`), so
+every date in this bug's ~521-date list that fleet touched was written using the OLD buggy code — i.e. the fleet's own
+output for those dates is exactly the degraded data this gap-fill needs to overwrite, not evidence the gap-fill is
+already done.
+
+**Not launching a VM fleet autonomously.** Following the same discipline four separate peer slots already established on
+the sibling doc for this exact class of decision (real infra-cost, VM-fleet-scale gap-fill) — measure, document, request
+operator/main sign-off via `/blocked`, do not self-authorize. Filing `/blocked` now with a recommendation (a modest
+2-4-VM SPOT fleet scoped exactly to the 521 dates via `launch-features-vm.sh`, ~10-20 VM-hours wall-clock depending on
+fleet size, `--force` on `features-service@538c233e`+). Not idling on the answer — resuming the `/boot` loop for other
+dispatchable work per worker doctrine.
