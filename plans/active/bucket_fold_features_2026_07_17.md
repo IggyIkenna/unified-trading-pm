@@ -101,11 +101,13 @@ design's counts are 2026-07-13).
       delta-one-{defi,tradfi}, volatility-{cefi,tradfi}, mtf-cefi. **Assert-EMPTY SKIP:** delta-one-pred,
       xinstrument-{cefi,defi,tradfi}, mtf-{defi,tradfi}. **sports:** NO data move (already at folded name
       `features-sports-prd`; content stays at root, no `{kind}/` prefix — env-tier repoint only in §3).
-- [~] [CODE] P1. **Atomic writer/reader cutover** — repoint every Fold A writer/reader (design §1) to
-      `kind="features-{ag}"` + a `{kind}/` path prefix. Ship per-repo QG-green: features-service, UTL, ml-service,
-      deployment-api, deployment-service, UAC. **T0 LANDED 2026-07-18:** UAC@cb951936 (yaml), UTL@4f0bcc34 (resolver),
-      UTL@ac2e2fef (keystone test-align). **IN FLIGHT:** features-service (QG), ml-service, deployment-api subset,
-      deployment-service yaml. Each safe-standalone (no redeploy until all code lands).
+- [x] ✅ [CODE] P1. **Atomic writer/reader cutover** — **DONE 2026-07-18 (code layer, all on LDR).** UAC@cb951936 (yaml
+      key), UTL@ac2e2fef (keystone test-align), UTL@4f0bcc34 (resolver `_KIND_ALIASES`+`PATH_REGISTRY`), UTL@bccc4ca4
+      (ml Fold-B deserialize gate), features-service@1368732a (all 6 family writers + 4 `-USD` test aligns),
+      deployment-service@2a1e415 (authoring yaml), ml-service@01cb7fd (feature-read repoints + `object_key_prefix`).
+      Each safe-standalone (no redeploy → deployed services keep old paths+buckets). **deployment-api DEFERRED**
+      (display-only `batch_config_utils.py`; its tree co-mingles a Fold-B ml-store display repoint +
+      a separate `data_status` axis-census WIP — ship those in their own scoped commits, not this Fold-A cutover).
 - [ ] [CODE] P1. **Re-mount BQ feature_external external tables** — for every affected external table, re-point
       `sourceUris` + `hivePartitioningOptions.sourceUriPrefix` to `gs://features-{ag}-{env}-{pid}/{kind}/` and re-create
       the table (DDL re-issue via UTL `bq_catalog.create_external_table`, §2.B). Gated on the writer cutover landing.
@@ -255,3 +257,19 @@ design's counts are 2026-07-13).
   `data_status` axis-census WIP), deployment-service `configs/cloud-providers.yaml`. **REDEPLOY+VERIFY (todo below)
   stays LAST** — the misplaced-write hazard only materialises on redeploy, so all code lands on LDR first. The ml Fold-B
   `artifact_store` deserialize gate (co-location security) is a separate UTL commit, pending.
+
+- **2026-07-18, `/autonomous` — Fold-A CODE CUTOVER COMPLETE (all 6 repos on LDR).** Full shipped set: UTL@ac2e2fef
+  (keystone), UAC@cb951936 (yaml), UTL@4f0bcc34 (resolver), UTL@bccc4ca4 (ml Fold-B gate), features-service@1368732a
+  (writers + 4 more `-USD` ETF/COMMODITY test aligns caught by its QG — same shipped-contract drift, `test_paired_dispatch`),
+  deployment-service@2a1e415 (authoring yaml), ml-service@01cb7fd (readers). Ship order honoured the dep-gate: UAC yaml
+  first (leaf gates clone UAC-LDR for the `features` key), then UTL resolver, then leaves. Contention handled inline
+  (peer backmerge pulled, ml-gate re-gated after drift, FF-pulls clean via empty-overlap stash/pop). **NOT YET DONE
+  (gated follow-ons):** (a) **REDEPLOY+VERIFY** — pipeline-driven: LDR→main promote (*/15, v2-gated) → features-service
+  cloudbuild → my `cloudbuild.yaml` STEP 6.5 re-pins `features-service-sports-job` to `:latest`. Verify-exercised = a
+  feature batch run WRITES under `features-{ag}-{env}/{kind}/` + an ml READ resolves it (cite `Evidence: cloudbuild=<id>`
+  SUCCESS). ASYNC — awaits the promote+build; a later tick verifies. (b) **BQ re-mount** — gated on the writer being
+  deployed+writing (migrated historical data is already at the folded prefix, but time the re-mount WITH redeploy so new
+  writes + BQ agree). (c) **Consolidator N→5 retarget** (+ AWS `features-onchain-cefi` drift reconcile). (d) **Delete**
+  (Phase E, zero-reads window). **deployment-api** batch_config_utils Fold-A repoint DEFERRED (display-only; its tree
+  co-mingles an unshipped Fold-B ml-store display repoint in `deployment_api_config.py` + a `data_status` axis-census
+  WIP — ship each in its own scoped commit, tracked as a loose end).
