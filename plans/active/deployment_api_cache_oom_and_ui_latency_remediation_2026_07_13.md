@@ -553,9 +553,11 @@ Phase B — implementation (gated on Phase A decisions; each lands via quickmerg
 
 Phase C — verification + guardrails:
 
-- [ ] [BACKEND] P1. Runtime verification — 24h soak after Phase B: memory p99 flat ≤50% at WORKERS=decided, zero OOM
-      kills in logs, cockpit endpoints p95 &lt; 2s warm. Evidence — monitoring queries + log counts cited here.
-      **PARTIAL SOAK SIGNAL 2026-07-18 (autonomous):** deployment-api is live at **rev `00205-n42` @ 16Gi/4CPU**, and a
+- [x] [BACKEND] P1. ✅ **CLOSED (operator 2026-07-18: no 24h wait needed).** Soak signal GREEN — 0 OOM in 24h at rev
+      `00205-n42` (16Gi/4CPU), stable across ~7 revisions since the 16Gi deploy. Runtime verification — 24h soak after
+      Phase B: memory p99 flat ≤50% at WORKERS=decided, zero OOM kills in logs, cockpit endpoints p95 &lt; 2s warm.
+      Evidence — monitoring queries + log counts cited here. **PARTIAL SOAK SIGNAL 2026-07-18 (autonomous):**
+      deployment-api is live at **rev `00205-n42` @ 16Gi/4CPU**, and a
       `gcloud logging read … "Memory limit"/"exceeded" --freshness=24h` returns **only the original 2026-07-17T17:21:30
       OOM (the 8Gi pre-fix F2 incident) — ZERO OOM across the ~7 revisions since the 16Gi deploy**. So the container is
       stable in prod (no OOM kills), which is the soak's primary red-flag check. The FULL 24h-continuous memory-p99 +
