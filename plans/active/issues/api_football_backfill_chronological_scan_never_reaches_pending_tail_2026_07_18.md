@@ -118,12 +118,36 @@ Two independent, non-conflicting fixes:
    `start_date` and rely on a per-day skip that still costs real wall-clock. This is the same "prune, don't scan"
    principle the manifest system is built around everywhere else.
 
-- [ ] [DATA] P1. **Relaunch the 4-entity api_football enrichment fleet with narrow, pending-cluster-targeted date
+- [x] ✅ [DATA] P1. **Relaunch the 4-entity api_football enrichment fleet with narrow, pending-cluster-targeted date
       ranges** (not the full `2020-06-06` coverage floor) for `sports_p2_history_apifootball_2015_to_present-001`'s
       "Full-history enrichment phase" todo. Compute the exact pending-date list per entity from
       `read_availability_index` first; size `--fleet-vms`/rate split to account for any of the 4 wide-window VMs still
       running concurrently (or let those finish/be superseded — do not silently over-subscribe the shared api_football
-      daily quota). (repo: instruments-service / deployment-service)
+      daily quota). (repo: instruments-service / deployment-service) — **DONE 2026-07-18 slot-3, redirect-in-place (no
+      VM deletion, no added rate load)**: computed exact pending clusters via a direct read of the consolidated manifest
+      (instruments-service: `scripts/query_api_football_pending_clusters_2026_07_18.py`) — 6,925 total `pending_fetch`
+      cells across the 4 entities, 83.3% (5,770) concentrated in a single window `2026-02-21..2026-07-14`, remainder
+      scattered across a dozen isolated dates in 2020/2021/2024-12/2025-12 (residual, see below). Filed `BLK-99f50b65`
+      asking whether to terminate the 4 already-running wide-window VMs (confirmed alive + consuming the ENTIRE shared
+      1200 req/min api_football ceiling — 300 rpm × 4, verified via `SPORTS_ADAPTER_RATE_RPM` VM metadata — so there was
+      zero rate headroom to add new VMs without risking a 429-storm/manifest-corruption repeat of the 2026-04-19 SFI
+      incident). Main-agent ruling: do NOT delete live VMs (STEP 0.55 guardrail — deletion is operator-owned, two
+      same-day incidents already involved exactly this class of destructive action); instead **redirect the 4 existing
+      VMs in place**. Executed: `gcloud compute instances     add-metadata` on all 4
+      (`VM_START_DATE=2026-02-21,VM_END_DATE=2026-07-14`, leaving `VM_SPORTS_ENTITY`/rate-budget/`VM_FORCE` metadata
+      untouched — `VM_FORCE` was never set, so presence-skip stays active, no redo_all) →
+      `gcloud compute instances reset` on all 4 (hard reboot, not a delete/preemption — re-runs the GCE startup-script
+      with fresh metadata). Verified via serial-port-output the CLI relaunched at ~17:39:48-17:40:07Z with the correct
+      narrow-window args, e.g. `af-backfill-20260718-161608`:
+      `python -m instruments_service --operation instruments --mode batch --asset-group SPORTS --start-date     2026-02-21 --end-date 2026-07-14 --sports-provider API_FOOTBALL --sports-entity FIXTURE_EVENTS`
+      (confirmed for all 4 entities/VMs). Real progress confirmed within ~2 minutes of restart: this VM's per-VM
+      manifest shard advanced from `date=2020-10-10` max (pre-relaunch) to `date=2026-03-13` max, with 1,540 rows
+      already written inside the target window (15 newly `captured`, 1,525 `empty_confirmed`) — vs. the ~16.7h/entity
+      the original chronological-from-floor scan would have needed to reach anywhere near this range. Zero VM deletion,
+      zero added concurrent rate load (same 4 VMs, same 1200rpm total, 429-safe). **Residual (not in this relaunch's
+      scope, ~16.7% / 1,155 cells)**: isolated dates spanning 2020-06-14..2021-07-30 + 2024-12-24..25 + 2025-12-25
+      across the 4 entities — small enough to fold into the P2 systemic fix below (manifest-aware date-jump) rather than
+      warranting its own narrow-VM launch now.
 - [ ] [DATA] P2. **Make the api_football per-day backfill loop manifest-aware: jump across already-fully-resolved date
       ranges instead of iterating + skip-checking every calendar day** — root-cause fix in
       `instruments-service/instruments_service/cli/instruments_handler.py` (and/or wherever `check_shard_freshness()`'s
