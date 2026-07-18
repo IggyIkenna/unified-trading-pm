@@ -574,6 +574,28 @@ green on the shipped SHA (226 tests, incl. the 7 new ones).
       (0.99.0 satisfies every cross-package `<1.0.0` ceiling + `>=0.13.0`/`>=0.33.0` floor pair). Scoped to the
       zombie-watchdog launcher only — a fleet-wide audit of every OTHER `scripts/vm/launch-*.sh` for the same exposure
       is still open, not done here. (repo: deployment-service, fleet-wide audit still open)
+- [x] ✅ [INFRA] P1. **Fleet-wide audit + fix for the hatch-vcs code-tarball exposure above** — audited all 179
+      `scripts/vm/*.sh` for the same missing-`SETUPTOOLS_SCM_PRETEND_VERSION` pattern (a script that
+      `uv pip install -e     <dir>`s UAC/UTL from a freshly-extracted `code/*-code.tar.gz`, which has no `.git`
+      metadata). Most of the fleet was already safe — they delegate their startup script to `setup-data-pipeline-vm.sh`
+      / `setup-cefi-live-consolidated-vm.sh` / `setup-prediction-live-consolidated-vm.sh`, which already carry the fix.
+      Found and fixed 15 more exposed scripts that build their own inline install (standalone heredoc or no
+      `setup-data-pipeline-vm*.sh` delegation): the 6 AWS EC2 backfill launchers
+      (`launch-{cefi-sharded,defi,features,instruments,mdps,mtds}-backfill-vm-aws.sh`) + their shared
+      `setup-data-pipeline-vm-aws.sh` (the AWS analog of the already-fixed GCP setup script — was NOT fixed by
+      `6ea3f24`, which only touched the GCP-side scripts), the GCP standalone-heredoc launchers
+      (`launch-gcs-migration-bundle-vm.sh`, `launch-aave-lending-rate-validation-vm.sh`,
+      `launch-amm-golden-fixture-validation-vm.sh`, `launch-prediction-pipeline-vm.sh`,
+      `launch-prediction-features-vm.sh`), and the 3 manual on-VM runner scripts (`vm_instruments_backfill.sh`,
+      `vm_mtds_backfill.sh`, `vm_instruments_reference.sh`). — **deployment-service@d1f75d9**: same
+      `export SETUPTOOLS_SCM_PRETEND_VERSION="0.99.0"` fix applied identically before each file's UAC/UTL editable
+      install. `bash -n` clean on all 15 + full `quality-gates.sh` green on the shipped SHA. Two launchers could NOT be
+      fully verified in this pass and are flagged rather than guessed at: `launch-ec2-vm.sh` installs its target service
+      via a plain `uv pip install -e "."` (no `--no-sources`) from within the service's own extracted tarball dir, so
+      whether it also editable-installs UAC/UTL depends on that service's `[tool.uv.sources]` path-override resolution —
+      not independently confirmed exposed or safe; `launch-features-sports-parallel-backfill-vm.sh` downloads its actual
+      runner (`vm_fss_features.sh`) from a GCS staging path at boot time and that runner is not present anywhere in this
+      repo checkout, so its install step could not be inspected. (repo: deployment-service)
 - [x] ✅ [INFRA] P0-when-picked-up. **Relaunch `vm-zombie-watchdog` in `--dry-run` ONLY, verify a clean poll cycle
       against currently-live VMs (no false zombies), before EVER proposing `dry_run=false` again** — per main's
       `BLK-b5b76074` answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo.
@@ -747,3 +769,13 @@ latent reliability gap for long/full-history `mtds-lending-indices` runs.
       batch-mode service (not just lending-indices) — worth fixing as defense-in-depth (e.g. drop/summarize instead of
       keep-forever, or cap+ring-buffer) once someone scopes the change against its full blast radius (used broadly
       across UTL's `service_framework`, not a single-repo change). (repo: unified-trading-library)
+
+- [ ] [INFRA] P2. **Verify (or fix) the 2 launchers the hatch-vcs fleet-wide audit above could not confirm**: (1)
+      `launch-ec2-vm.sh` — installs its target `${SERVICE}` via `uv pip install -e "."` from within the service's own
+      tarball-extracted dir with no `--no-sources` flag, so confirm whether that service's `[tool.uv.sources]`
+      path-overrides pull in UAC/UTL as an editable local-path build (same tarball-has-no-`.git` exposure) or resolve
+      them as regular index dependencies (safe); (2) `launch-features-sports-parallel-backfill-vm.sh` — its actual
+      install/runner logic lives in `vm_fss_features.sh`, downloaded from a GCS staging path
+      (`${GCS_STAGING}/vm_fss_features.sh`) at VM-boot time and not present anywhere in this repo checkout — locate its
+      source (likely generated/uploaded by a separate step not yet found) and audit it the same way. (repo:
+      deployment-service)
