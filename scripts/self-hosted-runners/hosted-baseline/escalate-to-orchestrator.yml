@@ -32,7 +32,9 @@ on:
         required: true
         type: number
       wall_type:
-        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health | data_pipeline_failure"
+        description:
+          "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health |
+          data_pipeline_failure"
         required: true
         type: string
       context:
@@ -60,10 +62,13 @@ on:
         required: true
         type: number
       wall_type:
-        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health | data_pipeline_failure"
+        description:
+          "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | main_ci_red | plan_health |
+          data_pipeline_failure"
         required: true
         type: choice
-        options: [merge_conflict, label_mismatch, sit_failure, ldr_qg_failure, main_ci_red, plan_health, data_pipeline_failure]
+        options:
+          [merge_conflict, label_mismatch, sit_failure, ldr_qg_failure, main_ci_red, plan_health, data_pipeline_failure]
       context:
         description: "Free-text context for the worker"
         required: true

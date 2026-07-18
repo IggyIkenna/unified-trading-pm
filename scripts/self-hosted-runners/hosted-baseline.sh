@@ -25,10 +25,20 @@
 #                            just the LIVE file with the flip reverted (hosted_form.py). This keeps
 #                            current logic.
 #   flipped, with logic   -> the flip ALSO changed real steps (cassette-drift-check.yml deleted its
-#                            `Set up Python` because the glue image ships Python; ubuntu-latest still
-#                            needs it). Only the pre-flip parent is a valid hosted form, and it is
-#                            LOGIC-STALE by construction. Recorded as such; restore refuses it
-#                            without --force.
+#                            `Set up Python` + `Install uv` because the glue image ships them;
+#                            ubuntu-latest still needs them). hosted_form() alone cannot recover
+#                            that, so the human judgement is recorded ONCE as a rehost overlay in
+#                            hosted-baseline/rehost/ and applied to CURRENT live on every snapshot:
+#                              <workflow>.patch  re-add hosted-only steps / revert a glue-only
+#                                                workaround to its hosted equivalent
+#                              <workflow>.ok     reviewed: hosted_form(live) is already correct
+#                                                (e.g. the flip was only a prettier reflow)
+#                            With no overlay it falls back to the pre-flip parent, which is
+#                            LOGIC-STALE by construction: recorded as such, reported every run, and
+#                            restore refuses it without --force.
+#   born self-hosted      -> the "flip" commit CREATED the file, so there is no hosted ancestor at
+#                            all (ldr-docs-gate.yml). Without an overlay NO baseline is written and
+#                            check 2 reports it missing — loudly absent beats quietly wrong.
 #
 # The original design used the pre-flip parent for ALL flipped workflows, on the assumption that
 # "that parent predates every change this epic made to it (the flip was always the first)". That
@@ -52,6 +62,13 @@ OUT="${HERE}/hosted-baseline"
 MANIFEST="${OUT}/MANIFEST.tsv"
 # The marker that identifies a flip. If the flip recipe ever changes, this must change with it.
 FLIP_MARKER='self-hosted, glue'
+# ...but the LITERAL marker is not sufficient on its own. ldr-docs-gate.yml uses
+# `runs-on: [self-hosted, Linux, X64, glue]`, which never contains the substring "self-hosted, glue",
+# so -S/grep on FLIP_MARKER alone silently classified it "never flipped" and copied it verbatim —
+# its "hosted baseline" still pointed at the glue pool (measured 2026-07-18). Detection and
+# validation therefore use this REGEX, which matches every self-hosted runs-on form in the fleet
+# ([self-hosted, glue], [self-hosted, Linux, X64, glue], [self-hosted, Linux, X64, glue-writer]).
+FLIP_RE='runs-on:[[:space:]]*\[self-hosted'
 
 log() { printf '\033[36m[hosted-baseline]\033[0m %s\n' "$*"; }
 warn() { printf '\033[33m[hosted-baseline] WARN:\033[0m %s\n' "$*" >&2; }
@@ -65,7 +82,9 @@ die() { printf '\033[31m[hosted-baseline] ERROR:\033[0m %s\n' "$*" >&2; exit 1; 
 # of 56 rows, no error printed). Capture everything, then take the first line in-shell.
 first_flip_commit() {
   local all
-  all="$(git -C "${REPO_ROOT}" log --reverse --format=%H -S"${FLIP_MARKER}" -- "$1" 2>/dev/null || true)"
+  # -G (regex on the diff) not -S (literal string): -S"${FLIP_MARKER}" misses the
+  # [self-hosted, Linux, X64, glue] form entirely. See FLIP_RE above.
+  all="$(git -C "${REPO_ROOT}" log --reverse --format=%H -G"${FLIP_RE}" -- "$1" 2>/dev/null || true)"
   printf '%s' "${all%%$'\n'*}"
 }
 
@@ -92,13 +111,55 @@ flip_was_mechanical() {
 # self-hosted-specific content beyond the banner and the derivation cannot be a hosted baseline.
 derive_hosted() {
   "${HERE}/hosted_form.py" "$1" >"$2" 2>/dev/null || return 1
-  ! grep -q "${FLIP_MARKER}" "$2"
+  ! grep -q "${FLIP_MARKER}" "$2" && ! grep -qE "${FLIP_RE}" "$2"
+}
+
+# ── REHOST OVERLAYS: the recorded human judgement for a flip that carried real logic ───────────
+#
+# Some flips changed more than runs-on, so hosted_form() alone cannot produce a correct hosted
+# baseline (cassette-drift-check's flip DELETED `Set up Python` + `Install uv`, which ubuntu-latest
+# still needs). Freezing a hand-written baseline would just rot again, so the judgement is stored as
+# an overlay applied to CURRENT live on every snapshot:
+#
+#   rehost/<workflow>.patch  apply this diff to hosted_form(live) — re-adds hosted-only steps, or
+#                            reverts a glue-only workaround to its hosted equivalent
+#   rehost/<workflow>.ok     hand-reviewed: hosted_form(live) is already a valid hosted baseline
+#                            (e.g. the flip was only a prettier reflow)
+#
+# A patch that stops applying is a LOUD failure, not a silent one: the workflow drops back to
+# history-logic-stale and verify starts reporting it again. That is the intended signal that live
+# has moved far enough to need re-reviewing.
+REHOST_DIR="${OUT}/rehost"
+
+rehost_hosted() {
+  local base="$1" live="$2" dest="$3" tmp
+  tmp="$(mktemp)"
+  if ! "${HERE}/hosted_form.py" "${live}" >"${tmp}" 2>/dev/null; then
+    rm -f "${tmp}"
+    return 1
+  fi
+  if [ -f "${REHOST_DIR}/${base}.patch" ]; then
+    if ! patch --quiet --batch --forward -r - "${tmp}" "${REHOST_DIR}/${base}.patch" >/dev/null 2>&1; then
+      rm -f "${tmp}"
+      return 1
+    fi
+  elif [ ! -f "${REHOST_DIR}/${base}.ok" ]; then
+    rm -f "${tmp}"
+    return 1
+  fi
+  # Validate before it is allowed to become a baseline: no flip marker, and still parseable YAML.
+  if grep -q "${FLIP_MARKER}" "${tmp}" || grep -qE "${FLIP_RE}" "${tmp}" ||
+    ! python3 -c 'import sys,yaml;yaml.safe_load(open(sys.argv[1]))' "${tmp}" >/dev/null 2>&1; then
+    rm -f "${tmp}"
+    return 1
+  fi
+  mv "${tmp}" "${dest}"
 }
 
 cmd_snapshot() {
   install -d -m 0755 "${OUT}"
   printf 'workflow\tsource\tprovenance_sha\tcaptured_from\n' > "${MANIFEST}"
-  local f base first rel n_hist=0 n_live=0 n_derived=0
+  local f base first rel n_hist=0 n_live=0 n_derived=0 n_rehost=0
   for f in "${WF_DIR}"/*.yml; do
     [ -e "${f}" ] || continue
     base="$(basename "${f}")"
@@ -120,10 +181,27 @@ cmd_snapshot() {
       printf '%s\tderived\t%s\t%s\n' "${base}" "$(git -C "${REPO_ROOT}" rev-parse --short HEAD)" \
         "live minus the mechanical flip ${first:0:9}" >> "${MANIFEST}"
       n_derived=$((n_derived + 1))
+    elif [ -n "${first}" ] && rehost_hosted "${base}" "${f}" "${OUT}/${base}"; then
+      # Flip carried real logic, but a hand-reviewed rehost overlay exists — apply it to CURRENT
+      # live so this baseline tracks the live file instead of freezing at the flip.
+      printf '%s\trehosted\t%s\t%s\n' "${base}" "$(git -C "${REPO_ROOT}" rev-parse --short HEAD)" \
+        "live + rehost/$([ -f "${REHOST_DIR}/${base}.patch" ] && echo "${base}.patch" || echo "${base}.ok")" >> "${MANIFEST}"
+      n_rehost=$((n_rehost + 1))
     elif [ -n "${first}" ]; then
-      # Flipped AND the flip carried real logic changes. Only the pre-flip parent is a valid hosted
-      # form; it is logic-stale by construction, so record that fact — cmd_verify reports it and
-      # cmd_restore refuses to apply it without --force.
+      # Flipped, flip carried real logic, and there is no overlay (or the overlay stopped applying).
+      # Only the pre-flip parent is a valid hosted form; it is logic-stale by construction, so record
+      # that — cmd_verify reports it and cmd_restore refuses to apply it without --force.
+      if ! git -C "${REPO_ROOT}" cat-file -e "${first}^:${rel}" 2>/dev/null; then
+        # BORN self-hosted: the "flip" commit CREATED the file, so no hosted ancestor exists and
+        # there is nothing to fall back to (ldr-docs-gate.yml, created 2026-07-17 directly on glue).
+        # Writing a derived guess here would be a baseline nobody reviewed, so write NOTHING and let
+        # check 2 report it as missing — loudly absent beats quietly wrong.
+        warn "${base} was BORN self-hosted (no hosted ancestor) and has no rehost overlay — add rehost/${base}.patch or .ok; NO baseline written"
+        rm -f "${OUT}/${base}"
+        printf '%s\tNO-HOSTED-FORM\t%s\t%s\n' "${base}" "${first:0:9}" \
+          "created self-hosted; needs a reviewed rehost overlay" >> "${MANIFEST}"
+        continue
+      fi
       git -C "${REPO_ROOT}" show "${first}^:${rel}" > "${OUT}/${base}" \
         || die "cannot read ${rel} at ${first}^ — history rewritten? Fix before trusting this baseline."
       printf '%s\thistory-logic-stale\t%s\t%s\n' "${base}" "${first}^" \
@@ -136,7 +214,7 @@ cmd_snapshot() {
       n_live=$((n_live + 1))
     fi
   done
-  log "snapshot: $((n_hist + n_live + n_derived)) workflows — ${n_derived} derived from live (mechanical flip), ${n_hist} recovered from history (flip carried logic changes), ${n_live} copied live"
+  log "snapshot: $((n_hist + n_live + n_derived + n_rehost)) workflows — ${n_derived} derived from live (mechanical flip), ${n_rehost} rehosted from live via a reviewed overlay, ${n_hist} recovered from history (UNREVIEWED flip logic), ${n_live} copied live"
   cmd_verify
 }
 
@@ -147,8 +225,8 @@ cmd_verify() {
   # 1. A baseline that mentions the flip marker is not a hosted baseline at all.
   for f in "${OUT}"/*.yml; do
     [ -e "${f}" ] || continue
-    if grep -q "${FLIP_MARKER}" "${f}"; then
-      warn "$(basename "${f}") baseline CONTAINS '${FLIP_MARKER}' — it is not a hosted baseline"
+    if grep -q "${FLIP_MARKER}" "${f}" || grep -qE "${FLIP_RE}" "${f}"; then
+      warn "$(basename "${f}") baseline still carries a self-hosted runs-on or the flip marker — it is not a hosted baseline"
       bad=$((bad + 1))
     fi
     grep -qE '^\s*runs-on:' "${f}" || true # reusable callers legitimately have none
@@ -198,6 +276,12 @@ cmd_verify() {
         drift=$((drift + 1))
       fi
       rm -f "${_vtmp}"
+    elif rehost_hosted "${base}" "${f}" "${_vtmp}" && diff -q "${_vtmp}" "${OUT}/${base}" >/dev/null 2>&1; then
+      rm -f "${_vtmp}" # rehost overlay reproduces the baseline from current live — in sync.
+    elif [ -f "${REHOST_DIR}/${base}.patch" ] || [ -f "${REHOST_DIR}/${base}.ok" ]; then
+      rm -f "${_vtmp}"
+      warn "${base} has a rehost overlay that NO LONGER APPLIES (or is out of sync) — re-review rehost/${base}.* against live"
+      drift=$((drift + 1))
     else
       rm -f "${_vtmp}"
       # Not auto-fixable: the flip bundled real edits, so the pre-flip parent is the only valid

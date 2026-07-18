@@ -48,9 +48,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          # UAC declares requires-python = ">=3.13,<3.14". The previous "3.12" pin meant
-          # `uv pip install -e .` could NEVER resolve, so this job silently fell back to a
-          # bare pydantic+pyyaml install that cannot import the detector at all.
+          # UAC declares requires-python = ">=3.13,<3.14". A "3.12" pin makes
+          # `uv pip install -e .` unresolvable, silently degrading this job.
           python-version: "3.13"
 
       - name: Install uv
@@ -157,6 +156,27 @@ jobs:
               labels: ['cassette-drift', 'automated'],
             });
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable; as the LAST step it is free and runs on this job's runner.
+        # `if: always()` + `job.status` reproduces `conclusion: needs.detect-cassette-drift.result`.
+        # PM is checked out at `path: unified-trading-pm` (not the workspace root), so the local
+        # action path carries that prefix. secrets/vars do not reach a composite action — passed
+        # explicitly (was `secrets: inherit`).
+        if: always()
+        uses: ./unified-trading-pm/.github/actions/persist-event
+        with:
+          repo_name: unified-api-contracts
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "cassette-drift-check"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
     name: Slack — Cassette Drift Check
@@ -170,18 +190,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Cassette Drift Event
-    needs: [detect-cassette-drift, notify]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-api-contracts
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.detect-cassette-drift.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"event": "cassette-drift-check"}'

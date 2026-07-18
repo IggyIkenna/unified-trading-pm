@@ -45,8 +45,20 @@ jobs:
             fi
           done
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Ensure jq
+        # Guarded because this now runs on a SHARED, long-lived host, not a throwaway hosted VM.
+        # Unguarded `sudo apt-get update && install` would mutate the live orchestrator box on every
+        # 6-hourly tick and can fail outright on an apt lock held by something else — a red canary
+        # for a reason that has nothing to do with the job. jq is provisioned by
+        # bootstrap-ci-host.sh, so on this runner the install never fires; on hosted, jq is
+        # pre-installed too, so this is strictly faster there as well.
+        run: |
+          if command -v jq >/dev/null 2>&1; then
+            echo "jq present: $(command -v jq) ($(jq --version))"
+          else
+            echo "jq missing — installing (expected only on a host outside bootstrap-ci-host.sh)"
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
 
       - name: Run workspace quickmerge validation
         run: |
