@@ -7,7 +7,7 @@ summary:
   create` command in ~88 launchers. A comment inside a backslash-continued command silently truncates it — bash -n and
   shellcheck do NOT flag it — so gcloud ran with no --metadata/--boot-disk/--labels (a metadata-less VM with no
   startup-script = no backfill) and then errored on the stray --boot-disk-size flag.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -21,7 +21,11 @@ priority: P0
 source:
   ["discovered during the A3.1 Databento throughput measurement — 3 metadata-less VMs booted idle and were deleted"]
 assigned_vm:
-resolved_by:
+resolved_by: >-
+  deployment-service@ac5d166 (peer: removed the in-continuation comments) + this slot's sweep (moved the rationale ABOVE
+  each command in 11 further launchers, verified per file that --boot-disk-size and --metadata are back inside ONE
+  command) + the gate that closes the gap: scripts/quality_gates/check_no_comment_in_line_continuation.py, wired into
+  quality-gates.sh, verified green on the fixed tree AND red on the re-injected shape that bash -n calls valid.
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code

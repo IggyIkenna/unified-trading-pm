@@ -204,6 +204,74 @@ MB/s of writes).
 amortises per-request latency. Tardis's datasets API is per-symbol-per-day for trades/book_snapshot_5, so the bulk path
 we already use for options_chain/futures_chain has no equivalent here.
 
+### Full concurrency sweep — five arms, and a 16-socket ceiling we did NOT break
+
+| Arm | downloads/book | pool | steady MB/s      | sockets                         |
+| --- | -------------- | ---- | ---------------- | ------------------------------- |
+| A   | 32 / 16        | 16   | 11.09            | 16                              |
+| B   | 32 / 24        | 16   | 11.75            | 16                              |
+| C   | 64 / 32        | 16   | **13.47**        | 12-16 (+162 ConnectionTimeouts) |
+| D   | 192 / 96       | 16   | 9.72 (degrading) | 16 (CPU 0.6%, disk idle)        |
+| E   | 32 / 16        | 128  | ~7 (early)       | 17                              |
+
+**Sockets to Cloudflare pinned at 16-17 in every arm** — across a 6x range of download semaphore (32 -> 192) and an 8x
+range of connection pool (16 -> 128). Nothing local ever saturated: at arm D the box sat at **0.6% CPU with ~0% disk
+util**, i.e. pure idle waiting.
+
+**A real bug was found and fixed on the way**: `tardis_connection_pool_size` defaulted to **16** while the
+`TardisClientConfig` dataclass it feeds declares **128** with a comment demanding "keep it >=
+tardis_max_concurrent_downloads or the surplus tasks wait for a slot and die at connect_timeout" — precisely the 162
+ConnectionTimeouts arm C produced. The config field was silently overriding the documented default. Shipped as 128.
+**Honest result: it did NOT raise the socket count** (17 vs 16), so it was not the ceiling — but it was wrong on its own
+terms and the next person raising concurrency would have hit it.
+
+**What the ceiling is — attributed, NOT proven.** The most consistent explanation for 16-17 sockets under every client
+setting is a **server-side per-IP concurrent-connection limit**. It fits the zero 403s/429s (Tardis throttles by delay,
+not rejection), the flat throughput, and the cap-1 single-IP rule. It is NOT proven: the decisive test (32 parallel
+authenticated curls from the VM, counting sockets and aggregate MB/s) was blocked because the API key is not readable
+from the SSH context, and the repo's own curl baseline (24 streams -> 32.9 MB/s) argues the opposite. **Treat 30 MB/s as
+open, not refuted.** The one measurement that would settle it is that parallel-curl run with the key.
+
+**Best measured config = 64/32** (13.47 MB/s, 1.21x over the 32/16 baseline). The overnight backfill runs there.
+Defaults in service_config are deliberately unchanged: arm C also produced connection timeouts, and arm D shows the
+curve turns DOWN past ~64, so 64/32 is an operator-set launch env, not a new default, until someone reproduces it across
+a longer run.
+
+### RESOLVED: the 16-socket ceiling is OURS, not Tardis's — and 30 MB/s is reachable
+
+The earlier section attributed the 16-socket plateau to a probable server-side per-IP limit and flagged it as unproven.
+**It is now disproven.** Test, on the running backfill VM (one VM, one IP, cap-1 untouched): a SEPARATE process opened
+24 additional TLS connections to datasets.tardis.dev while the backfill ran.
+
+```
+backfill process alone : 1-5 sockets
++ second process       : 24 more, every one succeeded
+TOTAL                  : 38 concurrent sockets from a single IP, sustained
+```
+
+So Tardis/Cloudflare happily serves 38+ concurrent connections from one IP. **The ceiling is client-side and
+per-process.** Note also that the backfill itself was holding only 1-5 sockets at that moment — far below even the 16
+measured earlier, and nowhere near its 64 slots.
+
+**Mechanism (now fully consistent with every arm).** A runner slot spans fetch AND parse AND upload. A keyed fetch of a
+~10 MB shard takes ~2s at 5-7 MB/s, while parse + parquet + GCS upload takes ~8s. So only ~10-20% of slots are ever in
+the fetch phase: 64 slots yields ~6-16 concurrent sockets, exactly what we measure. Raising the slot count does not fix
+the ratio — it multiplies the parse/upload side too, which is why arm D (192/96) DEGRADED to 9.72 MB/s: 192 concurrent
+parse+upload tasks thrash CPU and memory while fetch concurrency barely moves.
+
+**The fix is architectural, not a knob.** Decouple the two stages: run fetches at high concurrency into a bounded queue,
+and drain that queue with a smaller, separately-sized parse+upload pool. The fetch stage is pure I/O wait (the box sat
+at 0.6% CPU at arm D) so it can run wide; the parse stage is CPU/disk-bound and must stay narrow. Today a single
+semaphore governs both, so neither can be tuned without breaking the other.
+
+Expected ceiling once decoupled: the repo's own authenticated-curl baseline is 24 streams -> **32.9 MB/s**, and we now
+know the server will hold 38+ connections, so ~30 MB/s is a realistic target rather than a hope. Current best measured
+is 13.47 MB/s (64/32).
+
+**Deliberately not attempted unattended**: this is a real refactor of the Tardis download path, not a config change, and
+it should be built with tests rather than at 00:00 with no operator. Every knob-level lever HAS been swept and recorded
+above (semaphore 32/64/192, book cap 16/24/32/96, pool 16/128) — none of them is the answer.
+
 ## Original (WRONG) analysis — kept as a record
 
 # Tardis account-level volume quota — ~7-8 GB, then ~2 MB/s

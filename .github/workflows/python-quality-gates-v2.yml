@@ -1063,6 +1063,24 @@ jobs:
       # every failing commit a unique key, so a still-red branch paged on EVERY failing push
       # (105/wk). Keyed by ref_name, a red branch pages once per red-period; a genuinely new
       # failure after the cooldown still re-alerts. ci-status-update stays the went-red SSOT.
-      dedup_key: "qg-fail:${{ github.event.repository.name }}:${{ github.ref_name }}"
+      #
+      # ...but on a pull_request, `github.ref_name` is the HEAD ref, not a stable branch — and the
+      # LDR→main frozen-head migration (2026-07-18) made that head a PER-SHA ref,
+      # `promote/<repo>/<sha12>`. Every promote PR therefore minted a BRAND-NEW dedup key, so
+      # cooldown_min could never suppress anything on the promote path and one red condition paged
+      # once per promote PR. Measured the same day: unified-trading-library paged for BOTH #594 and
+      # #599, unified-trading-pm for BOTH #1163 and #1164 — the exact "still-red branch pages
+      # repeatedly" behaviour D2 was written to kill, silently reintroduced by the head change.
+      # Before frozen-head the promote head was `live-defi-rollout` (stable), which is why this
+      # only regressed now.
+      #
+      # Fix: on a pull_request dedup by the BASE ref (the thing that is actually stable across
+      # successive promote PRs); keep ref_name for push. That yields two durable streams per repo —
+      # `…:live-defi-rollout` for LDR pushes and `…:main` for promote PRs — so a repo that stays red
+      # across several promotes pages once per cooldown, and a genuinely new failure after it still
+      # re-alerts.
+      dedup_key:
+        "qg-fail:${{ github.event.repository.name }}:${{ github.event_name == 'pull_request' && github.base_ref ||
+        github.ref_name }}"
       cooldown_min: 120
     secrets: inherit
