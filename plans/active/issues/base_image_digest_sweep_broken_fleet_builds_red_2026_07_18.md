@@ -48,6 +48,9 @@ source:
   "Found 2026-07-18 during /autonomous execution of bucket_fold_ml_2026_07_17 Phase D (redeploy ml-service + cite
   cloudbuild=SUCCESS). The redeploy was blocked by a red ml-service Cloud Build; root-cause investigation (read-only
   sub-agent) traced it to this fleet-wide, silently-broken digest-drift-sweep automation."
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # digest-drift-sweep.yml broken → 11 service repos stale-pinned → all service Cloud Builds RED (PYSEC-2026-3447)
