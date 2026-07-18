@@ -129,6 +129,13 @@ cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
 >   (absent from `VENUES_BY_ASSET_GROUP['cefi']`) and `volatility_index` (absent from
 >   `DATA_TYPES_BY_ASSET_GROUP['cefi']`): **8 live cells the matrix had never enumerated**, so it reported a clean sweep
 >   while never testing them.
+> - **`--bundle`** (force-leg-only sweeps) carries ALL shards on ONE VM per day at the VM's native 32-way concurrency
+>   instead of one VM per shard. The cap-1 Tardis rule bounds concurrent **VMs** (one shared IP), NOT shards per VM — a
+>   single VM fetching 32-wide is exactly what production backfill does. Measured 2026-07-18: the per-shard runner
+>   spends ~155s of VM boot per cell versus 3-9s of actual fetching (~80% boot, ~3% fetch) to move 0.0-33 MB, so a
+>   46-cell run burned ~2h of boot for ~47 MB. Bundling takes a 52-cell full-surface run from 52 VMs to **7** (one per
+>   distinct day). Each shard is still verified independently. Do NOT use it with skip/live legs — the skip leg must
+>   observe the force leg's object fingerprint, so bundling would change what it proves.
 > - **`--tardis-only`** scopes to venues sourced via the Tardis adapter (`VENUE_TO_ADAPTER_KEY == 'tardis'`), excluding
 >   native-REST HYPERLIQUID / ASTER / LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET, which do not count against
 >   the N=1 Tardis IP cap.
