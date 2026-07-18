@@ -271,11 +271,18 @@ deployment-api display fix. Grounded facts + the expanded scope:
       `_is_removed_venue` — **defi 63 (DRIFT), cefi 10 (PACIFICA-SOLANA)**, snapshots saved, INDEPENDENTLY GCS-verified
       (DRIFT=0/PACIFICA=0, exact row counts). tradfi = no-op (0 removed, already canonical). One-off script:
       `scratchpad/surgical_catalogue_fix.py` (imports the writer helpers for byte-consistency).
-- [ ] [BACKEND] P2. **Removed-venue guard (F7 durable) — SUPERSEDED by the explicit set.** The general
-      `VENUES_BY_ASSET_GROUP` filter is UNSAFE until venue naming is canonicalised (the availability-index venue names
-      don't cleanly match the registry — bare vs `-<CHAIN>` — so a naive intersection would OVER-hide legit venues). The
-      explicit `_REMOVED_VENUE_BASES` set (P1) is the correct, safe mechanism; extending it is a one-line add per future
-      removal. Revisit a general filter only after a venue-naming canonicalisation lands. No action now.
+- [x] [BACKEND] P2. **Removed-venue guard (F7 durable) — made the explicit set a UAC SSOT.** DONE
+      `unified-api-contracts@77aa6818` + `deployment-api@a6d8b8c`. The general `VENUES_BY_ASSET_GROUP`
+      active-set-intersection filter stays UNSAFE (unchanged conclusion — availability-index venue names don't cleanly
+      match the registry, bare vs `-<CHAIN>`, so a naive intersection would OVER-hide legit venues); instead moved the
+      P1 explicit `_REMOVED_VENUE_BASES` set OFF the deployment-api local hardcode and onto a new UAC export
+      `unified_api_contracts.registry.venue_adapter_keys.DECOMMISSIONED_VENUE_BASES` (base names, uppercased, each
+      commented with removal date + reason, sourced from the same DRIFT/PACIFICA/MANGO/ZETA/FLASH removal records
+      already documented in `venue_adapter_keys.py`). deployment-api's `_REMOVED_VENUE_BASES` now `is`
+      `DECOMMISSIONED_VENUE_BASES` (asserted by a new test) — display behavior is byte-identical (same 5 bases, same
+      base-prefix match), but a future venue removal now auto-propagates from the one UAC SSOT instead of needing a
+      parallel deployment-api edit. Tests added both sides (UAC: membership + no-active-venue-collision gates;
+      deployment-api: SSOT-identity test); both repos' `quality-gates.sh` green.
 - [ ] [DATA] P3. **`from 2020-01` floor-date smell** on Solana protocols — CONFIRMED a real (minor) bug (investigated
       2026-07-18). The correct launch dates EXIST in `unified_api_contracts.registry.venue_launch_dates`
       (`KAMINO-SOLANA` 2022-08-24, `JITO-SOLANA` 2022-08-16, etc.), but the drilldown shows a generic **2020-01** floor
