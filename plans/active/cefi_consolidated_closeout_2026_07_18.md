@@ -180,6 +180,16 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
 > The operator reviewed the audit and directed a pre-migration close-out. The migration cutover (Track 1) is now GATED
 > on the P0 items below. Each maps to a source doc; archive the source when its item lands.
 
+- [ ] [BACKEND] P0. **DERIBIT `instrument_id` missing the quote — the canonical symbol must ALWAYS be `BASE-QUOTE` (operator
+      ruling 2026-07-18, overriding the `BASE[_QUOTE]` optional-quote decision in `instrument_id_format_canonicalization_2026_07_08.md`
+      line 96).** Verified live: **265,538 of 425,160 catalogue rows (62%) — ALL DERIBIT (263,950 OPTION + 1,588 FUTURE)** —
+      drop the quote (`raw=AVAX_USDC-1APR26` → `DERIBIT:FUTURE:AVAX@LIN-20260401`, must be `…AVAX-USDC@LIN…`;
+      `BTC-5APR19-3250-C` → `DERIBIT:OPTION:BTC@INV-…`, must be `…BTC-USD@INV-…`). DERIBIT-only (every other venue already
+      carries the quote). Fix the DERIBIT adapter/builder to always emit `BASE-QUOTE@MARGIN_TYPE[-YYYYMMDD][-STRIKE-C|P]`
+      (USDC linear / USD inverse) → **rebuild `prod/catalog.parquet`** (coordinated ~38-min prod op) → **extend the Phase-−1
+      verify gate** to also assert ZERO missing-quote ids (the current gate — 0 `:PERP:`, `instrument_id==canonical_instrument_id`
+      — let this class through). This GATES the Track-1 migration (else it bakes the quote-less form into all four surfaces).
+      (repo: instruments-service; found 2026-07-18 by the operator spotting `DERIBIT:FUTURE:AVAX@LIN-20260718`.)
 - [ ] [BACKEND] P0. **Remove the UAC-seed catalogue fallback EVERYWHERE — catalogues must FAIL LOUD if unavailable.**
       The `_load_sentinel_catalogs` "catalog read failed → fall back to UAC seed instruments" path is a bad fallback:
       the catalogues (sports=fixtures, cefi/defi/tradfi=instrument catalogue; verify prediction) should ALWAYS be
@@ -195,13 +205,15 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       assessment of purging the false rows (do NOT blind-purge prod). **Migration-critical**: needed so the
       backfill/manifest is honest before the cutover. Do NOT touch the cap-critical `venue_fetch.py` hot path unless
       verified safe. (repo: market-tick-data-service)
-- [ ] [DOCS] P1. **Upgrade the `data-pipeline-check-mtds` skill to cover the right buckets/paths.** It must exercise (1)
-      the DERIBIT bundle (greeks/IVs) + BINANCE-FUTURES (funding/OI) buckets/data_types that
-      `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` spot-checks, and (2) the deribit `options_chain`
-      / `futures_chain` path so it CATCHES the regression the item above fixes. Use the canonical GCS paths. (repo:
-      unified-trading-pm)
-- [ ] [INFRA] P1. **`issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`** — flip `launcher_registry.py`
-      DRIFT/PACIFICA entries to `None` (prevents self-heal relaunch); confirmation catalogue re-run. (repo:
+- [x] ✅ [DOCS] P1. **Upgrade the `data-pipeline-check-mtds` skill** — DONE `unified-trading-pm@ca3aebfc7`. §3a
+      DERIBIT/BINANCE-FUTURES regression cells incl. a NEGATIVE check (DERIBIT `futures_chain` → 0 `attempted_failed`, the
+      structurally-absent channel the MVP loop can't reach = the 112k-regression blind spot) + a two-force-runs diff for
+      the retry-storm signature; §3b content spot-checks (DERIBIT greeks/IVs, BINANCE-FUTURES funding/OI not all-null);
+      distinct report rows. (repo: unified-trading-pm)
+- [x] ✅ [INFRA] P1. **`issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`** — DONE (already satisfied by
+      `deployment-service@9b13679`, which REMOVED the DRIFT/PACIFICA launcher entries entirely; no-match fail-safe returns
+      `None`; QG green; `instruments-service@ee19f6f3` hardens the catalogue build against re-mint). Checkbox flipped
+      `unified-trading-pm@710190b23`. P2 confirmation-catalogue `--apply` (prod 0-diff) left open, non-blocking. (repo:
       deployment-service)
 - [ ] [BACKEND] P2. **`issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`** — MTDS `_L5_VENUES` read
       from `VENUE_DATA_TYPE_CAPABILITIES` (11 missing cefi venues). (repo: market-tick-data-service)
