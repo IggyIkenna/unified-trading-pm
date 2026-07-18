@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 81.43,
+        "warn_file_count": 0,
         "qg_red_reason": null,
-        "large_file_count": 1,
-        "coverage_pct": null,
-        "warn_file_count": 0
+        "large_file_count": 1
       }
     },
     "batch-live-reconciliation-service": {
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": null,
+        "coverage_pct": 74.72,
         "warn_file_count": 4,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "large_file_count": 0
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 82.35,
         "warn_file_count": 16,
-        "large_file_count": 4,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "large_file_count": 4
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 2,
+        "coverage_pct": 72.95,
         "warn_file_count": 11,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "large_file_count": 2
       }
     },
     "execution-service": {
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 84.38,
         "warn_file_count": 19,
-        "large_file_count": 0,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "large_file_count": 0
       }
     },
     "features-service": {
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 7,
-        "coverage_pct": null,
+        "coverage_pct": 91.15,
+        "warn_file_count": 7,
         "qg_red_reason": null,
-        "warn_file_count": 7
+        "large_file_count": 7
       }
     },
     "market-data-processing-service": {
@@ -820,10 +820,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 88.4,
+        "warn_file_count": 8,
         "qg_red_reason": null,
-        "large_file_count": 1,
-        "coverage_pct": null,
-        "warn_file_count": 8
+        "large_file_count": 1
       }
     },
     "market-tick-data-service": {
@@ -880,10 +880,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
+        "coverage_pct": 83.25,
         "warn_file_count": 38,
-        "large_file_count": 0,
-        "qg_red_reason": "pytest",
-        "coverage_pct": 83.25
+        "qg_red_reason": null,
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -1010,10 +1010,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 3,
+        "coverage_pct": 85.3,
         "warn_file_count": 8,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "large_file_count": 3
       }
     },
     "system-integration-tests": {
@@ -1164,10 +1164,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": null,
+        "coverage_pct": 73.53,
         "warn_file_count": 0,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "large_file_count": 0
       }
     },
     "unified-api-contracts": {
@@ -1211,10 +1211,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 96.27,
         "warn_file_count": 32,
-        "large_file_count": 24,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "large_file_count": 24
       }
     },
     "unified-trading-library": {
