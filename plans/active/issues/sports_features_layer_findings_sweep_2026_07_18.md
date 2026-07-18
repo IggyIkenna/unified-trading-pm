@@ -133,13 +133,17 @@ that are structurally unpopulatable (`_fetched_players` is never appended to any
 the data sits elsewhere is actively misleading (workspace rule: delete deprecated code, no shims; never silent
 placeholders).
 
-- [ ] [CODE] P2. Delete `export_players`/`export_coaches`/`export_referees`/`export_rounds` + their
+- [x] [CODE] P2. Delete `export_players`/`export_coaches`/`export_referees`/`export_rounds` + their
       `PLAYERS_/COACHES_/REFEREES_/ROUNDS_COLUMNS`, and every registration (`cli/batch_write.py`,
       `cli/handlers/batch_handler.py`, `cli/handlers/_available_at_helpers.py`, `exporters/validation.py`,
-      `schemas/output_schemas.py`, `docs/SCHEMA_VALIDATION.md`).
-- [ ] [DOC] P2. Document the real homes in code: coach -> `fixture_lineups.coach_id/coach_name`; referee ->
+      `schemas/output_schemas.py`, `docs/SCHEMA_VALIDATION.md`). **DONE — features-service@d564bf6f.** QG green (17,682
+      passed / 0 failed, ALL QUALITY GATES PASSED). Also updated the tests pinning the old contract
+      (`test_returns_14_tables` -> `test_returns_10_tables`, the expected-names set, and the `players`/`referees`
+      `available_at` parametrize).
+- [x] [DOC] P2. Document the real homes in code: coach -> `fixture_lineups.coach_id/coach_name`; referee ->
       `fixtures.referee_id`; player identity -> `fixture_lineups` + `player_stats` (`player_id`/`player_name`); rounds
-      -> genuinely absent upstream.
+      -> genuinely absent upstream. **DONE — features-service@d564bf6f.** Recorded as a block comment at the foot of
+      `exports.py` plus the `exporters/__init__.py` docstring, including the verification that nothing depends on them.
 - [ ] [DATA] P2. Purge the resulting always-empty manifest rows / shards so they stop inflating the coverage denominator
       (4 groups x ~4,216 dates of `empty_confirmed`).
 
