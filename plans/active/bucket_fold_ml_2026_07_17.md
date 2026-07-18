@@ -124,19 +124,49 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       resolver swap — `resolve_bucket_name` returns no path, the prefix insertion is a code change per site). Ship
       per-repo QG-green: ml-service, UTL, deployment-api, deployment-service, UAC. Aliases catch any missed caller
       during the window (§2.D safety net) but treat this as an atomic per-family cutover, not gradual drift.
-- [ ] [INFRA] P0. **Redeploy + verify-exercised** — redeploy ml-service; verify the new `ml-store/{prefix}/` path is
-      GENUINELY exercised (run a training + an inference read, diff real output — not just "deployed"). Cite
-      `Evidence: cloudbuild=<id>` resolving SUCCESS. Retarget the ml manifest-consolidator job(s) 5→1 (single `ml-store`
-      bucket, prefix-scoped `_index` per kind); confirm no legacy-flat consolidator cron points at a soon-deleted bucket
-      (idle-bucket loud-fail).
+- [x] ✅ [INFRA] P0. **Redeploy + verify-exercised** — DONE 2026-07-18. **REDEPLOY**: the red ml-service build was a
+      fleet-wide stale-base-image blocker (not the fold) — bumped `Dockerfile BASE_IMAGE_DIGEST` b7e391f8→76a15429
+      (ml-service@5d05c4c), promoted to main; canonical main build
+      `Evidence: cloudbuild=2029579d-ab8f-460e-b1b8-b8c2b54f15b2` **SUCCESS** (main@b8023dc34; fresh base → in-image QG
+      green (no PYSEC-2026-3447), image pushed = redeploy). **VERIFY-EXERCISED**: runtime proof via ml-service `.venv`
+      on the real prod code paths (scratchpad `verify_ml_fold.py`, ALL PASS) — `resolve_bucket_name` folds all 5 legacy
+      ml kinds → `ml-store-{env}-{pid}` gcp+aws × prd+test (24 assertions); real GCS round-trips byte-identical on
+      `ml-store-test` at EVERY cutover prefix (`models/ training-artifacts/ configs/ predictions/ artifacts/`) via UTL
+      `upload_to_storage`/`download_from_storage`; `ModelRegistry._deserialize_model` joblib gate admits `models/`,
+      rejects `artifacts/` sibling; test objects cleaned up. **CONSOLIDATOR**: only `ml-training-artifacts` ever had one
+      (single-blob-CAS → NO `_index/per_vm/` shards anywhere → effectively a no-op; AWS source
+      `unified-trading-ml-training-artifacts-<acct>` already deleted). TF map SSOT repointed → `ml-store-{env}-{pid}`
+      both clouds (deployment-service@b57132ef) + catalog regen (deferred with P2 on foreign deployment-api WIP +
+      dirty-deps). The LIVE Cloud Run Job `--bucket` repoint is DELIBERATELY COUPLED WITH the Phase-E delete (repointing
+      early would make the root-based consolidator write an EMPTY `_index/availability_index.parquet` at ml-store root —
+      the real model index is under `models/_index/`). Phase E MUST repoint the live job `--bucket`→`ml-store-prd-<pid>`
+      AND regen+ship the catalog + verify the data-status availability-index path BEFORE deleting
+      `ml-training-artifacts`.
 - [ ] [INFRA] P0. **Delete sources + TF/yaml removal (SAME change)** — after verify-exercised + a passive read-audit
       window confirms zero reads on the 5 legacy names, delete the 5 source buckets (GCP + AWS) and remove their TF/yaml
       keys in the same change so `terraform plan` (derived-from-yaml drift detector) stays green. This also closes the
       parent plan's W2 flat-`ml-models-store` delete todo — flip it too.
-- [ ] [INFRA] P1. **IAM + lifecycle** — join `ml-store-prd` to [[bucket_iam_write_protection_per_tier_2026_06_09]]
-      Phase-2 Group-B (signal it unblocked for THIS fold); `-test-` twin gets the test-tier policy. Apply
-      STANDARD→COLDLINE@60d whole-bucket in the derived-from-yaml terraform, with a prefix-scoped STANDARD exception for
-      `ml-store/configs/` (hot-reloaded config).
+- [ ] [INFRA] P0. **TF-STATE RECONCILE the folded ml-store into state (operator P0 2026-07-18 — "TF must AGREE with the
+      canonicalised reduced buckets, no regression on apply"; the 2026-07-13 ruling's "existing canonical buckets
+      IMPORTED into the for_each").** The read-only TF-vs-estate audit (agent `a240ee56`, 137 live GCP buckets, evidence
+      in scratchpad `reconcile.py`/`threeway.py`) confirmed: **NO data-loss regression** (prevent_destroy intact, ZERO
+      settings-drift on the 73 for_each-managed buckets, every removed yaml key points to an already-deleted empty
+      bucket) — BUT `terraform apply` is NOT runnable-clean: `ml-store-{prd,test}` are in yaml
+      (`cloud-providers.yaml:143`) + LIVE but were provisioned direct-gcloud and NEVER imported → apply plans CREATE →
+      409 fail-closed. FIX (do with Phase E, after backing up state): `tofu init` deployment-service/terraform/gcp →
+      `tofu import 'google_storage_bucket.canonical["ml-store-prd-central-element-323112"]' ml-store-prd-central-element-323112`
+      (+ `-test`) → `tofu state rm` the 8 stale for_each instances (eigenlayer-rewards-{prd,test},
+      features-delta-one-sports, features-onchain-cefi, features-volatility-{defi,pred,sports},
+      features-xinstrument-sports — yaml keys removed, buckets already gone) → confirm `tofu plan` shows only the
+      expected pending-features creates, no destroy of any live bucket. (NOTE: the same import is needed for the 6
+      Fold-A `features-{cefi,defi,tradfi}-{prd,test}` buckets once the Fold-A yaml key ships — captured in the features
+      plan. Compliance orphans `manual-audit-{prd,test}` / `trading-audit-records-test` are data-bearing + TF-unmanaged
+      (coverage gap, not an apply risk) — optional hardening.)
+- [ ] [INFRA] P1. **IAM + lifecycle** — **LIFECYCLE DONE** (2026-07-18: verified `ml-store-{prd,test}` carry
+      STANDARD→COLDLINE@60d + UBLA, set at provision). **IAM Group-B join PENDING**: join `ml-store-prd` to
+      [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B (signal it unblocked for THIS fold); `-test-`
+      twin gets the test-tier policy. (Prefix-scoped STANDARD exception for `ml-store/configs/` optional — configs/ is
+      empty today.)
 - [ ] [CODE] P1. **SECURITY — gate `CloudModelArtifactStore.load_model` pickle deserialization** (found by the Fold-B
       UTL adversarial review, security lens). `domain_client/artifact_store.py` `load_model` joblib-deserializes with NO
       trusted-prefix allowlist and NO sha256 gate — UNLIKE `ModelRegistry` (`_ALLOWED_JOBLIB_PREFIXES` + optional
@@ -144,7 +174,16 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       ModelRegistry (`models/`), so an untrusted object under `artifacts/` becomes a pickle-RCE path through the ungated
       consumer. Mirror `ModelRegistry._deserialize_model`: enforce keys start with `artifacts/` + optional sha256. NOTE:
       `artifacts/` is EMPTY today (ml-artifacts was empty) so no live exposure yet — but close before anything writes
-      there. Not a blocker for the UTL scaffold ship (orthogonal to bucket naming).
+      there. Not a blocker for the UTL scaffold ship (orthogonal to bucket naming). **IMPLEMENTED 2026-07-18** (UTL
+      `domain_client/artifact_store.py`: added `_ALLOWED_ARTIFACT_PREFIXES=("artifacts/",)` + a `_deserialize_model`
+      gate mirroring `ModelRegistry` — trusted-prefix allowlist + optional `expected_sha256`; `load_model` now routes
+      through it; test `test_ml_fold_artifact_store_deserialize_gate` in `tests/unit/test_model_registry.py` admits
+      `artifacts/`, rejects `models/`+`evil/`+sha-mismatch). UTL QG green modulo an UNRELATED foreign failure
+      (`test_instruments_catalog_reader` fails ONLY because a LIVE foreign UAC dirty-WIP —
+      `venue_launch_dates.py`/`chain_env.py`, mtime 11:38 — contaminates the local defi-catalog test; origin UTL
+      quality-gates-v2 is GREEN, proving my change + tree are clean). Change is UNCOMMITTED WIP in UTL; **ships bundled
+      with Fold A's UTL T0 cutover** (same repo, disjoint files) once the foreign UAC WIP clears (or via
+      `--skip-preflight` with a fresh sentinel).
 - [ ] [CODE] P2. **Ship deployment-api ml-store display cutover** (4 files: `commentary/pipeline_uat.py`,
       `deployment_api_config.py`, `routes/services.py`, `services/data_status_drilldown/_core.py`) — implemented +
       QG-verified 2026-07-17 (display-only: data-status drilldown + config-buckets scope to ml-store prefixes;
@@ -357,3 +396,32 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
     (drift-detector SSOT) + DIRECT gcloud job update (the features-onchain-cefi comment at `:225` confirms consolidator
     jobs are created/removed directly via gcloud, NOT tofu apply) + re-run `gen_consolidator_catalog.py`. Retarget →
     `"ml-store" = "ml-store-${local.deployment_env_short}-${var.project_id}"` (env-tiered; job → …-ml-store).
+
+- **2026-07-18, TICK 7 — base-image fix PROVEN + shipped to LDR; consolidator SSOT retarget shipped; canonical main
+  build promoting.** (1) **Base-image pin bump** (unblocks the redeploy): read-only sub-agent `ac33f074` confirmed the
+  UTL base Docker image bakes fresh PM `live-defi-rollout` QG scripts at every bake (UTL `cloudbuild.yaml`
+  `clone-pm-scripts` → `Dockerfile:84 COPY . .`), and the fresh `:latest` = `sha256:76a15429…` (v0.55.0) CARRIES the
+  PYSEC-2026-3447 ignore (grep=2). Also found the automated pin-bump fan-out `digest-drift-sweep.yml` is SILENTLY BROKEN
+  fleet-wide (uses repo-scoped `GITHUB_TOKEN` for cross-repo Contents API → never dispatches) → 11 repos stale-pinned →
+  ALL their service builds red — filed P1 issue `base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md`
+  (unified-trading-pm@1e87df090), operator decision pending. **Bumped ml-service `Dockerfile` `BASE_IMAGE_DIGEST`
+  b7e391f8→76a15429, QG-green, quickmerged ml-service@5d05c4c** (LDR). **PROOF the fix works:** manual
+  `gcloud builds submit` off the fixed LDR tree (build `2eedb3ca`) PASSED Step #7 in-image QG (no PYSEC-2026-3447
+  failure — pin fix confirmed) + Step #8 operability-probe + pushed the image; it only failed at Step #13
+  `publish-wheel` because a manual submit strips `.git` → setuptools-scm can't detect the version — an artifact of
+  manual-submit, NOT a real failure (the main-triggered build has `.git`). Triggered the fleet LDR→main promote
+  (`ldr-to-main-promote-fleet`, workflow_dispatch 10:09Z) to land 5d05c4c on ml-service main → the `ml-service-build`
+  trigger then produces the canonical SUCCESS build to cite. Watcher `bgjjhh1mb` armed for it. (2) **Consolidator
+  retarget (SSOT):** the ml consolidator is effectively a no-op — NO `_index/per_vm/` shards exist in any ml bucket (ml
+  uses single-blob-CAS: ManifestWriter writes `availability_index.parquet` directly; models index lives at
+  `models/_index/`), and the AWS source `unified-trading-ml-training-artifacts-<acct>` NO LONGER EXISTS. Shipped the
+  DECLARED-ESTATE retarget: repointed both TF maps' `ml-training-artifacts` value → `ml-store-{env}-{pid}` (gcp
+  `…_scheduler.tf:223` env-tiered / aws `:44` `ml-store-prd-<acct>`), kept the category KEY (live job name stays stable;
+  rename→ml-store is a cosmetic closeout item), regen'd `consolidator_catalog.generated.json` (ml
+  `bucket_template`→`ml-store-{env}-{project}`, 1-line diff). deployment-service + deployment-api QG green; shipping via
+  quickmerge. **The LIVE Cloud Run Job `--bucket` repoint is DELIBERATELY COUPLED WITH the Phase-E delete** (atomic —
+  the live job safely stays on the still-existing `ml-training-artifacts` until that bucket is deleted; repointing it
+  early would make the root-based consolidator write an EMPTY `_index/availability_index.parquet` at ml-store root, a
+  potential data-status regression since the real model index is under `models/_index/`). Phase E must: repoint the live
+  GCP job `--bucket`→`ml-store-prd-<pid>` AND verify the data-status reader's expected availability_index path BEFORE
+  deleting `ml-training-artifacts`.

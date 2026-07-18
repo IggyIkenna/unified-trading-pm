@@ -715,7 +715,13 @@ for _clone in "${_ws_root}"/*/ "${_ws_root}"/.tabs/*/*/; do
     # whenever the installed hook lacks the strict guard, so every clone converges within one 5-min
     # sweep instead of only at clone time — main-workspace clones were never covered by
     # setup-tab-worktrees.sh at all, and that is where all 33 bypassed commits came from.
-    if [[ -f "${_pp_guard}" ]] && ! grep -q 'check_strict_quickmerge' "${_pp_hook}" 2>/dev/null; then
+    # IDENTITY-gated (2026-07-18), not marker-gated. A `grep -q check_strict_quickmerge` test only
+    # asks "does SOME strict hook exist" — so it re-heals a MISSING hook but never refreshes a STALE
+    # one. Measured the same day: adding the frontmatter guard [2] left .tabs/*/unified-trading-pm
+    # pinned on the previous 2-guard hook, because that hook still matched the marker. Comparing
+    # against the canonical source instead makes EVERY future hook change propagate within one sweep,
+    # with no marker to remember to update.
+    if [[ -f "${_pp_guard}" ]] && ! cmp -s "${_pp_guard}" "${_pp_hook}" 2>/dev/null; then
         cp "${_pp_guard}" "${_pp_hook}" 2>/dev/null \
             && chmod +x "${_pp_hook}" || true
     fi

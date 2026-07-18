@@ -9,7 +9,7 @@ summary:
   "Unknown error" — backend code VERIFIED WORKING against real GCS locally, so this is a deploy-lag / client-timeout
   issue, not a code bug. (3) Catalogue Explorer venue / data_type / instrument_type are free-text inputs that should be
   dropdowns of the real distinct values.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [data-status, deployment-ui, deployment-api, ux, fixtures, prediction, catalogue, sports]
 related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-17
-last_updated: 2026-07-17
+last_updated: 2026-07-18
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -29,6 +29,9 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: ui_developer
 drift_direction: advance-code
 resolved_by:
+  "All F1-F10 + P/A findings shipped & verified. Last: F8 durable frozen-tail merge instruments-service@9d6aa5ee
+  (live-verified no-shrink) + F2 OOM fix live-verified 16Gi/4CPU. Follow-up
+  uac_defi_launch_date_registry_drift_2026_07_18.md also resolved (0 drift)."
 locked_by:
 locked_since:
 source: operator live UI review 2026-07-17 pm (screenshots in chat)
@@ -63,7 +66,10 @@ a human `league_name` alongside the id — league data is UAC data, the UI must 
 renders the name (id as a subtitle/tooltip). Honest-absence: an id with no registry entry shows the raw id, never a
 fabricated name.
 
-### F2 — New listings + Upcoming expiries + Prediction catalogue: "Unknown error" — `- [x]` FIXED (OOM), pending deploy-verify
+### F2 — New listings + Upcoming expiries + Prediction catalogue: "Unknown error" — `- [x]` FIXED + VERIFIED (OOM)
+
+> **VERIFIED 2026-07-18:** live revision `00198-tkc` = 16Gi/4CPU, **0 OOM** since the deploy. (Note: a SEPARATE latency
+> issue on New Listings / Upcoming Expiries — 35s cold read, not OOM — was later reported + is tracked as F10.)
 
 **CORRECTED diagnosis (2026-07-17 pm): the root cause is a container OOM, NOT deploy-lag/latency and NOT a code-logic
 bug.** My first pass said "deploy-lag" — that was wrong; I confirmed it by reading the LIVE Cloud Run logs (ground
@@ -197,15 +203,42 @@ catalogue). Overriding the monotonic guard would have deleted 2,306 legit rows. 
 removed-venue rows) is provably safe; the full-vs-incremental delta is filed below as a SEPARATE finding to investigate
 before any full rebuild.
 
-### F8 — `--mode full` catalogue regen is lossy vs the incremental catalogue (2,306-row delta) — `- [ ]` OPEN (found 2026-07-18)
+### F8 — `--mode full` catalogue regen is lossy vs the incremental catalogue — `- [x]` ROOT-CAUSED + guarded + DURABLE FIX SHIPPED
 
-Discovered while verifying F7: a `build_instrument_catalogue.py --asset-group defi --mode full` dry-run rolls up
-**9,418** rows, but the live (incrementally-built) catalogue holds **11,787** — a full re-walk produces ~2,306 FEWER
-instruments than the accumulated incremental frozen tail. Either the frozen tail has accumulated stale rows the full
-walk correctly drops (→ full is the corrective truth), or the full walk under-covers history the frozen tail rightly
-preserves (→ full is lossy). Until this is understood, **`--mode full` on any asset group is unsafe** (it would trip the
-monotonic guard for a large, unexplained shrink). Investigate: diff the full-mode row set vs the incremental catalogue
-by instrument_id + check whether the missing 2,306 have extant `by_date` source objects.
+**ROOT CAUSE (definitive full-vs-live diff, 2026-07-18):** ran a full-mode defi roll-up in-process (monkeypatched
+`promote_catalogue` to capture the output) and diffed its instrument_ids against the live catalogue. The full walk
+produces 9,418 rows, live has 11,724 → **drops 2,378, adds 72** — and **2,346 of the 2,378 dropped are DELISTED**
+instruments (`available_to` set, only 32 active): Morpho markets (944), Uniswap V3 pools (358), Aave aTokens/debt-tokens
+(473+469 `A_TOKEN`/`DEBT_TOKEN`), Trader Joe / Pancake / etc. So it is **NOT** aging-out (by_date is complete
+2020→2026), NOT stale cruft — it is **full-mode UNDER-producing the CUMULATIVE all-instruments-ever set** that the
+incremental frozen tail preserves. The module's own docstring documents this exact contract ("a cumulative,
+all-instruments-ever lifecycle catalogue, NOT a current snapshot") and the SAME bug class was fixed for SPORTS on
+2026-07-15 via the frozen-tail merge (`_merge_incremental`). **So `--mode full` is genuinely LOSSY for defi/cefi/tradfi
+too — the monotonic guard correctly blocked it.**
+
+**FIXED (made full-mode SAFE + transparent) — `instruments-service@24616d0f`:** added `_shrink_drop_diagnostics` + wired
+it into `promote_catalogue`'s `CATALOGUE_SHRINK_BLOCKED` path, so a blocked shrink now LOGS + emits (in the CRITICAL
+event) exactly which instruments would be dropped — count by venue / instrument_type + the active-vs-delisted split + a
+sample — turning the opaque block into a reviewable report before anyone runs `--allow-catalogue-shrink`. The guard
+already prevented silent data loss; this makes it legible.
+
+**DURABLE FIX SHIPPED — `instruments-service@9d6aa5ee`:** extended the SPORTS frozen-tail-merge (`_merge_incremental`)
+to the defi/cefi/tradfi/prediction `--mode full` path via a new `close_absent=False` mode. A full walk stays
+authoritative for the `available_to` of every instrument that STILL has by_date data (branch 1 recomputes it, so a
+genuine delisting is carried by the fresh window row), but a previously-catalogued instrument whose by_date has since
+been PRUNED is now preserved verbatim instead of silently dropped — matching the cumulative all-instruments-ever
+contract. Branch 3 (the trailing-window delist-close at `window_start-1`) is disabled in this mode because a full walk
+has no meaningful window boundary. `--allow-catalogue-shrink` remains the escape hatch for a deliberate re-aggregate
+that INTENDS to drop (skips the merge). So `--mode full` is now a SAFE self-heal/rollback path without needing
+`--allow-catalogue-shrink`.
+
+**Runtime-verified on the LIVE defi catalogue (2026-07-18):** loaded the real `prod/catalog.parquet` (11,724 rows, 3,827
+delisted) + a real 5-day by_date window (362 parquets → 7,388 rows) and ran the `close_absent=False` merge → **11,724
+merged, 0 dropped, all 11,724 prev keys preserved (merged ≥ prev → NO shrink)**; the 4,336 frozen-tail rows (incl. every
+delisted instrument) are carried through — exactly the class `--mode full` previously dropped. Unit: 28 tests green (5
+new full-rebuild + 2 shrink-diagnostic + the existing `_merge_incremental` suite), IS gate green. (A local full-corpus
+walk is impractical — the O(all-history) by_date LISTING is the bottleneck the incremental path exists to avoid — so
+verification used the real live prev catalogue + a real window, which proves the merge property the fix delivers.)
 
 **Operator (2026-07-17): "i thought we got rid of some of these dsol venues like DRIFT as they got hacked".** CONFIRMED:
 DRIFT was removed from the venue registry 2026-07-16 (operator ruling — hacked ~$280M, rebranded Velocity DEX; all
@@ -221,18 +254,65 @@ only [RECOMMENDED]; (B) purge DRIFT's 3,556 rows from the IS defi catalogue/inde
 "removed" intent but loses audit history); (C) both. The "from 2020-01" floor date on these Solana protocols is a
 secondary date-floor smell (Solana DeFi didn't exist Jan 2020). **NOTIFIED operator.**
 
+### F9 — sports LEAGUE filter is exact/case-sensitive + Upcoming Fixtures shows raw league ids — `- [x]` FIXED
+
+**SHIPPED — `deployment-api@eeb23b13` + `deployment-ui@680e4139`/`e643a5c` (pw:L2 ✓, 2 specs green).** A shared
+`league_matches_filter` (in `upcoming_fixtures.py`, the imported-from module — no circular import) resolves each
+DISTINCT raw `league_id` once and matches the filter as a case-insensitive SUBSTRING against either the raw id OR the
+UAC `display_name` (mirroring the team filter) — so "allsven"/"Allsvenskan"/"ALLSVENSKAN" all match league 113
+(verified: `league_matches_filter('113','allsven')` → True). Applied to BOTH the fixtures browser and upcoming fixtures;
+`/fixtures/upcoming` now also returns a `league_names` map and the Upcoming Fixtures UI renders the human name (raw id
+subtitle, honest-absence fallback), matching F1; both League-id placeholders now read "e.g. EPL or Allsvenskan".
+Adversarially verified.
+
+Operator: typing "Allsvenskan" (a league human NAME) in the fixtures-browser LEAGUE filter returns 0; a team name
+("Halmstad") matches. Root cause (measured): the LEAGUE filter is an EXACT, case-sensitive match on the raw `league_id`
+(`fixtures_browser.py:258` + `upcoming_fixtures.py:303`: `df["league_id"].astype(str) == league_filter`), while the TEAM
+filter already does case-insensitive substring (`_matches_team`, `.lower()` + `in`) and the catalogue instrument_id
+search already does `.str.lower().str.contains` — so those two are fine; only the LEAGUE filter is the outlier.
+Operator's general theme: **all filters should be case-insensitive + PARTIAL (substring / "first half of the word")**,
+matching human names too. Also (screenshot): **Upcoming Fixtures still renders raw league ids (113/114)** — it needs the
+F1 human-name treatment. **Fix (round4 workflow `wf_fbac7262`):** LEAGUE filter → case-insensitive substring on
+league_id OR resolved human display_name (shared helper in `upcoming_fixtures.py`, distinct-resolve not per-row) +
+Upcoming Fixtures renders human league names.
+
+### F10 — New Listings + Upcoming Expiries very slow / "Unknown error" (latency, NOT OOM) — `- [x]` FIXED
+
+**SHIPPED — `deployment-api@4df2a93e` + `deployment-ui@e643a5c`.** Three levers in `catalogue_lifecycle.py`: (1)
+**pagination** — `list_new_listings_page`/`list_upcoming_expiries_page` return `(page_rows, total_count)` and build only
+the 50-row page (the prior UNBOUNDED 644,380-row dict build was the actual cause of the 500s — now eliminated); (2)
+**parallel reads** — the 5 per-AG catalogue reads fan out on a bounded ThreadPool (cold **35s → 22.9s**, now bounded by
+the slowest single AG, not the serial sum); (3) a **background warm task** refreshes the default-params cache every 270s
+so user requests hit the warm path (~0s) in steady state, and even a cold miss (~22s) stays under the 120s client
+timeout. `total_count=644,380` matches the pre-fix baseline EXACTLY (honest same result set, just paged). Adversarially
+verified. Follow-up (open risk): the warm task only warms DEFAULT params — a non-default asset_group/venue filter still
+pays a cold read.
+
+Operator: New Listings + Upcoming Expiries very slow to load "if it's using catalogue" + New Listings shows "Unknown
+error". Diagnosed (measured live 2026-07-18): **NOT OOM** — the F2 16Gi/4CPU fix holds (0 OOM in 2h). It is pure
+LATENCY: `catalogue_lifecycle.list_new_listings(30)` = **35s**, `list_upcoming_expiries(5)` = **31s** — it reads ALL
+FIVE per-AG `prod/catalog.parquet` COLD serially (prediction alone = **2.9M rows / 17s**; tradfi 1.17M) on every 5-min
+TTL cache miss AND returns **644,380 rows unbounded**; 35s > the Cloud Run / browser fetch timeout → 500 "Unknown
+error". NOT previously flagged with a specific fix (F2 covered only the OOM; there is a general `ui_build_warm_cache`
+plan). **Fix (round4 workflow `wf_fbac7262`):** pagination (limit/offset, `total_count`, page-only row build, mirroring
+A5's `/catalogue`) + parallelise the 5 per-AG reads (cold ≈ slowest single ≈ 17s not 35s serial) + warm the cache off
+the request path (prime at startup + background refresh under the TTL) so a user request never does the cold read
+synchronously.
+
 ## Fix status
 
-| #   | Finding                                 | Repo(s)                              | Status                                                                                                              |
-| --- | --------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| F1  | Fixtures league human names             | deployment-api + deployment-ui       | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)                                                 |
-| F2  | 3 panels "Unknown error" (OOM)          | deployment-api (`cloudbuild`)        | ✅ FIXED + VERIFIED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; live rev 00198 = 16Gi/4CPU, 0 OOM since deploy |
-| F3  | Catalogue Explorer dropdowns            | deployment-api + deployment-ui       | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`                                                |
-| F4  | mock/dev robustness (F1/F3)             | deployment-ui                        | ✅ FIXED — `@9f88629`                                                                                               |
-| F5  | non-canonical instrument_type spellings | deployment-api + instruments-service | ✅ FIXED — drilldown display `@512180be` + writer `@ee19f6f3` (catalogue was already canonical)                     |
-| F6  | redundant COINBASE + bare-vs-chain dup  | deployment-api + instruments-service | ✅ FIXED — display collapse `@512180be` + writer `@ee19f6f3`                                                        |
-| F7  | DRIFT (removed) still in DeFi drilldown | deployment-api + IS catalogue        | ✅ FIXED — filter `@512180be` + purge (defi 63/cefi 10 rows, GCS-verified) + writer `@ee19f6f3`                     |
-| F8  | `--mode full` regen lossy (2,306 delta) | instruments-service                  | OPEN — found while verifying F7; full-mode unsafe until understood (see finding)                                    |
+| #   | Finding                                                             | Repo(s)                              | Status                                                                                                                             |
+| --- | ------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | Fixtures league human names                                         | deployment-api + deployment-ui       | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)                                                                |
+| F2  | 3 panels "Unknown error" (OOM)                                      | deployment-api (`cloudbuild`)        | ✅ FIXED + VERIFIED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; live rev 00198 = 16Gi/4CPU, 0 OOM since deploy                |
+| F3  | Catalogue Explorer dropdowns                                        | deployment-api + deployment-ui       | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`                                                               |
+| F4  | mock/dev robustness (F1/F3)                                         | deployment-ui                        | ✅ FIXED — `@9f88629`                                                                                                              |
+| F5  | non-canonical instrument_type spellings                             | deployment-api + instruments-service | ✅ FIXED — drilldown display `@512180be` + writer `@ee19f6f3` (catalogue was already canonical)                                    |
+| F6  | redundant COINBASE + bare-vs-chain dup                              | deployment-api + instruments-service | ✅ FIXED — display collapse `@512180be` + writer `@ee19f6f3`                                                                       |
+| F7  | DRIFT (removed) still in DeFi drilldown                             | deployment-api + IS catalogue        | ✅ FIXED — filter `@512180be` + purge (defi 63/cefi 10 rows, GCS-verified) + writer `@ee19f6f3`                                    |
+| F8  | `--mode full` regen lossy (drops delisted cumulative set)           | instruments-service                  | ✅ FIXED — durable frozen-tail merge `@9d6aa5ee` (live-verified: 11,724 prev, 0 dropped, no shrink) + guard/diagnostic `@24616d0f` |
+| F9  | league filter exact/case-sensitive + upcoming-fixtures raw ids      | deployment-api + deployment-ui       | ✅ FIXED — be `@eeb23b13` + ui `@680e4139`/`@e643a5c` (pw:L2 ✓); name+partial+case-insensitive match, upcoming names               |
+| F10 | New Listings/Upcoming Expiries slow (35s cold, unbounded) → timeout | deployment-api + deployment-ui       | ✅ FIXED — be `@4df2a93e` + ui `@e643a5c`; pagination (killed 644K-row build) + parallel reads (35→22.9s) + warm cache             |
 
 ## Fix plan — F5/F6/F7 IS-catalogue canonicalisation sweep (operator-decided 2026-07-18)
 
@@ -283,12 +363,16 @@ deployment-api display fix. Grounded facts + the expanded scope:
       base-prefix match), but a future venue removal now auto-propagates from the one UAC SSOT instead of needing a
       parallel deployment-api edit. Tests added both sides (UAC: membership + no-active-venue-collision gates;
       deployment-api: SSOT-identity test); both repos' `quality-gates.sh` green.
-- [ ] [DATA] P3. **`from 2020-01` floor-date smell** on Solana protocols — CONFIRMED a real (minor) bug (investigated
-      2026-07-18). The correct launch dates EXIST in `unified_api_contracts.registry.venue_launch_dates`
-      (`KAMINO-SOLANA` 2022-08-24, `JITO-SOLANA` 2022-08-16, etc.), but the drilldown shows a generic **2020-01** floor
-      — instruments-service has a `_DEFAULT_TRADFI_FLOOR = datetime(2020, 1, …)` + a "generic 2020-01 floor when neither
-      layer has the pair" fallback (`reference_data/utils/evm_creation_resolver.py`,
-      `reference_data/adapters/tradfi/databento/`). So the DeFi listing-date derivation is falling back to the default
-      floor instead of consulting `venue_launch_dates` for the protocol's real launch. **Fix direction:** thread
-      `venue_launch_dates` into the DeFi `available_from` derivation (use the real launch date; the 2020-01 floor only
-      when truly unknown). Low-priority display accuracy — does not block the F5/F6/F7 sweep.
+- [x] [DATA] P3. **Solana DeFi launch-date accuracy — FIXED `instruments-service@0b1f0cad`.** The real bug was more
+      specific than the "2020-01 floor" hypothesis:
+      `reference_data/adapters/defi/_solana_utils.py::get_protocol_floor_date` (which every Solana adapter calls to seed
+      its `available_from_datetime`) consulted ONLY a **stale local hardcoded dict** that had drifted from reality
+      (kamino local=2024-01-01 vs real 2022-08-24; jito local=2021-11-01 vs 2022-08-16; orca local=2022-03-01 vs
+      2021-02-09) — never touching the UAC SSOT. Fix threads `venue_launch_dates.get_venue_launch_date("defi", venue)`
+      as the PRIMARY lookup (chain-suffixed `{PROTOCOL}-SOLANA` then bare), falling back to the local dict only for
+      protocols UAC doesn't cover, then the existing honest `KeyError` guard (never fabricates a date). Adversarially
+      verified, QG green. **Forward** (new rollups); a regen would refresh historical `available_from` (gated on F8 —
+      see the `--mode full` safety finding). **Follow-up filed:** `uac_defi_launch_date_registry_drift_2026_07_18.md` —
+      UAC has TWO disagreeing DeFi launch-date registries (`venue_launch_dates.DEFI_VENUE_LAUNCH_DATES` vs
+      `chain_env.PROTOCOL_LAUNCH_DATES`, disagree on AAVE_V3-ETHEREUM 2022-03-16 vs audited-correct 2023-01-27) — a real
+      SSOT contradiction the P3 agent surfaced.

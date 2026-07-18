@@ -109,8 +109,36 @@ cells, never collapsed):
 
 ```bash
 cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
-  --asset-group <AG> --venues <VENUE> --data-types <DT> --day <DAY> --legs force,skip
+  --asset-group <AG> --venues <VENUE> --data-types <DT> --day <DAY> --legs force,skip \
+  --require-captured --auto-day
 ```
+
+> **ALWAYS pass `--require-captured --auto-day` (added 2026-07-18).** Without them the matrix tests shards that CANNOT
+> be proven and reports false failures:
+>
+> - **`--require-captured`** — only check cells that genuinely have captured PROD data. A force-leg re-downloads the
+>   sampled instrument and asserts a parquet appears; on a cell with no data it fetches nothing and reports a FALSE
+>   `no_parquet` failure. Unprovable cells are now recorded `skipped/no_captured_data_for_cell` instead of burning a VM.
+> - **`--auto-day`** — per cell, substitute a day that actually HAS data when `--day` doesn't, preferring a
+>   **non-first-of-month** day (day-1 is Tardis's free/no-auth tier, so a 1st exercises the UNAUTHENTICATED path). The
+>   corpus is sparse and uneven — DERIBIT `options_chain` has been captured on exactly ONE day ever, `volatility_index`
+>   on one, DERIBIT `liquidations` on three, OKX `trades` only on a 1st — so a single global `--day` cannot cover the
+>   real surface. Measured 2026-07-18: a single-day run covered 46 of the 52 ever-captured Tardis cells; `--auto-day`
+>   closes the remaining 6.
+> - The run also unions in cells the PROD index shows as captured but the UAC lists omit — `OKX-FUTURES`/`OKX-SWAP`
+>   (absent from `VENUES_BY_ASSET_GROUP['cefi']`) and `volatility_index` (absent from
+>   `DATA_TYPES_BY_ASSET_GROUP['cefi']`): **8 live cells the matrix had never enumerated**, so it reported a clean sweep
+>   while never testing them.
+> - **`--tardis-only`** scopes to venues sourced via the Tardis adapter (`VENUE_TO_ADAPTER_KEY == 'tardis'`), excluding
+>   native-REST HYPERLIQUID / ASTER / LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET, which do not count against
+>   the N=1 Tardis IP cap.
+>
+> **Interpreting verdicts while the raw→canonical instrument-id migration is in flight:** the downloader's
+> `--instrument-ids` matches RAW venue-native symbols EXACTLY (no substring/ underlying expansion), while the manifest
+> keys on canonical ids. So (a) the sampler takes the raw symbol from the PROD parquet listing, and (b) a cell whose
+> PROD data is ALREADY canonical-named cannot be force-fetched at all and returns 0 rows — that is the migration
+> boundary, NOT a pipeline error. When a verdict looks wrong, read the VM `run.log`
+> (`Processed date=…: N venues ok, 0 failed, R total records`) as ground truth.
 
 This sequences, per shard, via the shared `unified_trading_library.pipeline_e2e_check` engine:
 
@@ -129,6 +157,82 @@ This sequences, per shard, via the shared `unified_trading_library.pipeline_e2e_
 4. **skip-leg**: same shard, no `--force`; confirms the freshness-preflight skip signal
    (`"Pre-flight: venue=%s date=%s — all requested data_types fully covered"` from `venue_fetch.py:249`) appears in
    `run.log`, and that the test-bucket object's fingerprint (generation + `updated`) is unchanged from the force-leg.
+
+### 3a. CeFi DERIBIT / BINANCE-FUTURES bundle regression cells (explicit — the plain MVP loop misses one of these)
+
+Per `plans/active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` (the bundle backfill verification
+plan) and `plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (the structurally-absent-channel
+regression), the `cefi` leg of Phase 1's per-`(asset_group, venue, data_type)` loop MUST cover these cells explicitly —
+two are already inside the plain MVP loop above (call them out because they carry known regression history), the third
+is a **hand-added negative check** the MVP loop will never reach on its own:
+
+- **DERIBIT, OPTION → `options_chain`** — the ONLY Deribit-options MVP data_type
+  (`CeFiMvpRule.instrument_type_data_types["OPTION"] = {"options_chain"}`,
+  `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_rules.py:553`); already inside the
+  plain MVP loop, but this cell had a near-total historic failure (10,114 `attempted_failed` / 1 `captured` at
+  discovery, still 99.999% failed 12 days later per the issue doc's 2026-07-15 corroboration) — treat it as the
+  highest-value force/skip cell in the cefi matrix, not a routine one. Canonical GCS shape (per
+  `market-tick-data-service/market_tick_data_service/reader.py`'s documented path convention, bucket resolved via
+  `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="cefi")`):
+  `raw_tick_data/by_date/day={DAY}/asset_group=cefi/venue=DERIBIT/instrument_type=OPTION/data_type=options_chain/underlying={BTC|ETH}/ticks.parquet`
+  — bundled per `underlying=`, never per strike (see the shard-atom note above).
+- **DERIBIT / BINANCE-FUTURES, PERPETUAL → `derivative_ticker`** (carries the `funding_rate` field) — MVP per
+  `CeFiMvpRule.instrument_type_data_types["PERPETUAL"]` (`_mvp_scope_rules.py:554`); already inside the plain MVP loop.
+  This is what "verify funding … populated" in the bundle-verification plan's P2 spot-checks means — `funding_rate` is a
+  FIELD inside the `derivative_ticker` parquet (`CEFI_PERPETUAL_DERIVATIVE_TICKER` schema contract,
+  `unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py:250`), not a separate `data_type`.
+- **DERIBIT `futures_chain` — NOT an MVP data_type, and must NEVER be attempted.** This cell will **never** surface from
+  the plain MVP-driven loop above: no CeFi venue (Deribit included) declares `futures_chain` anywhere in `CeFiMvpRule`,
+  and Tardis confirms structurally that **no** CeFi Tardis venue exposes a `futures_chain` channel at all
+  (`GET /v1/exchanges/<exch>` audit, cited in the bundle-verification plan). That MVP-scope blind spot is exactly what
+  the 2026-07-15 regression exploited: the retry path kept attempting this off-MVP, structurally-absent channel anyway,
+  re-stamping `attempted_failed` over a prior `empty_confirmed` reclass (66,007 → 112,727 rows in the manifest, 100.0%
+  failed / 0 captured — see the bundle-verification plan's "P0 — DERIBIT + BINANCE-FUTURES bundle verification" section
+  and the issue doc's "2026-07-15 corroboration"). **Add this as a hand-listed NEGATIVE-check cell** (never derived from
+  `is_mvp()` — that's the whole point):
+
+  ```bash
+  # negative-check: DERIBIT futures_chain must show 0 attempted_failed for <DAY> (expected_unattempted/empty_confirmed
+  # only — a captured or attempted_failed row here means the retry path is still hitting a channel Tardis never offers).
+  python3 -c "
+  from unified_trading_library import read_availability_index, resolve_bucket_name
+  bucket = resolve_bucket_name(cloud='gcp', kind='market-data', asset_group='cefi')
+  df = read_availability_index(bucket)
+  day_col = 'date' if 'date' in df.columns else 'day'
+  row = df[(df['venue'].astype(str).str.upper() == 'DERIBIT')
+           & (df['data_type'] == 'futures_chain') & (df[day_col] == '<DAY>')]
+  bad = row[row['capture_status'] == 'attempted_failed']
+  print('FAIL: futures_chain attempted a structurally-absent channel' if not bad.empty else 'PASS: futures_chain not attempted')
+  "
+  ```
+
+  - **PASS** = no row, or a row with `capture_status` in `{expected_unattempted, empty_confirmed}` — the shard was never
+    (mis)attempted for `<DAY>`.
+  - **FAIL** = any `attempted_failed` row for this cell — the regression is still firing; report it as a flagged gap
+    labeled `regression_check: structural_channel_reattempted`, never silently reclassify it yourself — the
+    reclassify-after-the-fact approach is what already failed once (66,007 reclassed rows the retry path then grew back
+    past); the real fix is gating the writer so the shard is never attempted, and that fix belongs to the issue doc, not
+    this skill.
+  - Run the **force-leg twice in a row** for this cell (same `<DAY>`) and diff the `attempted_failed` count between the
+    two reads — a rising count on the SAME day is the retry-storm signature re-firing, not a one-time miscapture.
+
+### 3b. Content-level spot-checks (a `captured` capture_status alone doesn't prove the columns are real)
+
+Per the bundle-verification plan's P2 spot-checks: a manifest `capture_status=captured` only proves a parquet exists,
+not that its numeric columns are populated rather than an all-NaN blanket (the exact failure mode the plan's DERIBIT
+finding hit: 136/138 "captured" rows were `PHANTOM_CAPTURED_NO_OBJECT`). Add these as report-level content assertions
+against the actual test-bucket parquet the force-leg just wrote (read it directly with pandas/pyarrow, not a fresh PROD
+read):
+
+- **DERIBIT `options_chain`** (3 random `<DAY>`s from the force-leg run): assert the Deribit-only columns `mark_iv`,
+  `greeks_delta`, `greeks_gamma`, `greeks_vega`, `greeks_theta` are not all-null across the underlying's parquet
+  (`CEFI_OPTIONS_CHAIN_SNAPSHOT`, `_snapshot_contracts.py:55` — these five are `provided_by_venues={"DERIBIT"}`
+  precisely because only Deribit's Tardis feed carries Greeks/IV).
+- **BINANCE-FUTURES `derivative_ticker`** (1 `<DAY>` from the force-leg run): assert `funding_rate` and `open_interest`
+  are not all-null (`CEFI_PERPETUAL_DERIVATIVE_TICKER`, `contracts.py:250`).
+- A cell that passes `capture_status=captured` but fails this content check is a **distinct failure mode** — label it
+  `content_check: NaN_blanket` in the report; don't conflate it with a manifest-level force/skip failure or the 3a
+  structural-absence negative check.
 
 ## 4. Phase 2 — live leg (MVP-scoped)
 
@@ -159,6 +263,11 @@ wrote pipeline_e2e_check report to plans/audit/results/data_pipeline_e2e_check_m
 - Every shard cell must carry a force-verdict and a skip-verdict **labeled `skip_proof: genuine (prod-captured)` or
   `skip_proof: ambiguous`**; every MVP venue must carry a live-verdict. A cell with neither is not "skipped" — it's a
   gap, and belongs on the next tick (see step 6) or as a flagged gap in the report.
+- For `cefi`, the report MUST also carry the § 3a DERIBIT `futures_chain` negative-check verdict
+  (`PASS`/`FAIL: regression_check=structural_channel_reattempted`) and the § 3b content-check verdicts
+  (`PASS`/`FAIL: content_check=NaN_blanket`) for DERIBIT `options_chain` greeks/IV and BINANCE-FUTURES
+  `derivative_ticker` funding/open_interest — as their own rows, distinct from the force/skip/live verdicts above (three
+  different failure modes on the same cell must never collapse into one pass/fail bit).
 
 ## 6. Under `/autonomous` — loop, don't stop at "done, what's next"
 

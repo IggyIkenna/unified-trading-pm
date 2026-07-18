@@ -50,6 +50,7 @@ jobs:
     outputs:
       skip: ${{ steps.validate.outputs.skip }}
       notify_worthy: ${{ steps.update.outputs.notify_worthy }}
+      recovered: ${{ steps.update.outputs.recovered }}
       prev_status: ${{ steps.update.outputs.prev_status }}
       severity_class: ${{ steps.update.outputs.severity_class }}
       sit_pass: ${{ steps.update.outputs.sit_pass }}
@@ -156,8 +157,17 @@ jobs:
           # symmetric (the documented "steady-state is anti-spam" intent).
           FAIL_REGRESSION=false
           if [ "$WRITTEN" = "FAILING" ] && [ "$PREV" != "FAILING" ]; then FAIL_REGRESSION=true; fi
+          # A genuine RECOVERY: we were FAILING and are no longer. Distinct from a routine green
+          # (e.g. SIT_PASS into SIT_VALIDATED), which is normal activity nobody needs paged about.
+          # Operator ruling 2026-07-18: "recovery is not a normal activity — the failure and the
+          # recovery should be recorded at all times." A red that pages and then goes silent leaves
+          # you unable to tell "fixed in 11 min" from "still broken 3 hours later" without going to
+          # look (measured: deployment-ui went FAILING 10:31 and FEATURE_GREEN 10:43, and the green
+          # was never sent because the notify job was gated `status == FAILING`).
+          RECOVERED=false
+          if [ "$PREV" = "FAILING" ] && [ "$WRITTEN" != "FAILING" ]; then RECOVERED=true; fi
           NOTIFY_WORTHY=false
-          if [ "$FAIL_REGRESSION" = "true" ] || { [ "$PREV" = "FAILING" ] && [ "$WRITTEN" != "FAILING" ]; } || [ "$SIT_PASS" = "true" ]; then
+          if [ "$FAIL_REGRESSION" = "true" ] || [ "$RECOVERED" = "true" ] || [ "$SIT_PASS" = "true" ]; then
             NOTIFY_WORTHY=true
           fi
           SEVERITY_CLASS=INFO
@@ -167,6 +177,7 @@ jobs:
           fi
           {
             echo "notify_worthy=${NOTIFY_WORTHY}"
+            echo "recovered=${RECOVERED}"
             echo "prev_status=${PREV}"
             echo "written_status=${WRITTEN}"
             echo "severity_class=${SEVERITY_CLASS}"
@@ -335,13 +346,25 @@ jobs:
   notify:
     name: Slack — CI Status Update
     needs: [update-ci-status, build-message]
-    # Transition-gated (anti-spam): only ping Slack on regression-to-FAILING or recovery-from-FAILING.
-    # ci_failures_channel_cleanup WS-2 (D3): drop the green all-clears (CI RECOVERED / SIT-pass) from
-    # Slack — not operator-actionable. Gate on status==FAILING so ONLY regressions page; the ci_status
-    # Firestore write + GCS ledger still record recoveries (a digest count is a P3 follow-up).
+    # Transition-gated (anti-spam): ping Slack on a regression TO FAILING or a genuine RECOVERY from
+    # FAILING — and on nothing else.
+    #
+    # History: WS-2 (D3) dropped ALL green all-clears by gating `status == 'FAILING'`, to stop the
+    # channel saying "everything is OK" on every run. That over-corrected: it also silenced the
+    # recovery of a red that had PAGED. Measured 2026-07-18 — deployment-ui went FAILING at 10:31
+    # (CRITICAL, paged) and recovered to FEATURE_GREEN at 10:43; the recovery was detected and
+    # written to Firestore + the GCS ledger, but the Slack job was SKIPPED, so the operator saw a
+    # CRITICAL that never closed. Operator ruling 2026-07-18: "we just don't need to know when normal
+    # activities happen — recovery is NOT a normal activity; the failure and the recovery should be
+    # recorded at all times."
+    #
+    # So: gate on FAILING **or** `recovered` (PREV=FAILING and no longer). A routine green — notably
+    # SIT_PASS into SIT_VALIDATED, which is normal activity — is still NOT notified, because it sets
+    # notify_worthy but not `recovered`. The carrier's own routine-green suppressor is the second
+    # belt: a success/neutral INFO post is dropped unless `recovery: true` (passed below).
     if:
       always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
-      'true' && github.event.client_payload.status == 'FAILING'
+      'true' && (github.event.client_payload.status == 'FAILING' || needs.update-ci-status.outputs.recovered == 'true')
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: ${{ needs.build-message.outputs.message }}
@@ -361,7 +384,10 @@ jobs:
       # Explicit recovery flag (belt-and-suspenders to the carrier's marker heuristic): true ONLY on the
       # recovery-FROM-FAILING transition (a green/INFO post that the routine-green gate would otherwise drop
       # if the message wording ever changed). A regression-TO-FAILING is a failure conclusion → always posts.
-      recovery: ${{ github.event.client_payload.status != 'FAILING' && needs.update-ci-status.result == 'success' }}
+      # Uses the job's explicit `recovered` output (PREV=FAILING and no longer) rather than inferring from
+      # `status != FAILING`, which would ALSO be true for a routine SIT_PASS green and wrongly mark it a
+      # recovery — the carrier would then post it instead of dropping it as normal activity.
+      recovery: ${{ needs.update-ci-status.outputs.recovered == 'true' }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit

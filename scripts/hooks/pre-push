@@ -3,7 +3,7 @@
 # Lifecycle: permanent
 # Delete-when: NA
 #
-# pre-push — TWO chained guards. This file IS the installed hook (install-hooks.sh copies it to
+# pre-push — THREE chained guards. This file IS the installed hook (install-hooks.sh copies it to
 # every repo's .git/hooks/pre-push), so it must carry both.
 #
 #   [1] strict-quickmerge (BLOCKS) — CODE reaching live-defi-rollout/staging/main must have gone
@@ -86,7 +86,67 @@ else
   fi
 fi
 
-# ── [2] dep-alignment guard (staging only) — original behaviour, unchanged ─────────────────────
+# ── [2] frontmatter-schema guard (PM only, BLOCKS) ────────────────────────────────────────────
+# Closes the `--no-verify` window between a bypassed COMMIT and a red CI. The schema check already
+# runs pre-COMMIT (run_hygiene_sweep.sh --precommit, whose comment says it "closes that bypass at
+# commit time") — but a pre-commit hook is a LOCAL, single-clone gate: `git commit --no-verify`
+# skips it and nothing re-checks frontmatter until CI's lint-codex slice, which then reds the whole
+# fleet's PM gate.
+#
+# Measured 2026-07-18: c1c76beaf (slot-3) landed plans/active/cefi_consolidated_closeout_2026_07_18.md
+# with `assigned_role: data` — never a valid role (the enum is agents/*.md filenames;
+# data_engineering.md exists, data.md never did). Every link was verified sound: the check IS in the
+# pre-commit sweep, the checker DOES exit 1 on that value, the hook IS installed in every clone, and
+# the enum never changed — so it was a one-off local bypass. It still reached the shared branch and
+# red-lined PM QG for everyone until corrected 20 min later.
+#
+# PM-ONLY: check_frontmatter_schema.py + its DOC_TREES (plans/**, codex/**, agents/*.md, **/*.mdc)
+# are PM-relative; other repos have no such docs. Scoped to the docs ACTUALLY being pushed (the
+# range's changed files), so an untouched pre-existing violation elsewhere never blocks your push.
+if [ "$REPO_NAME" = "unified-trading-pm" ]; then
+  _fm="${REPO_ROOT}/scripts/plan-hygiene/check_frontmatter_schema.py"
+  if [ ! -f "$_fm" ]; then
+    echo "pre-push: frontmatter schema checker not found — skipping (CI lint-codex still gates)"
+  else
+    _fm_protected="refs/heads/live-defi-rollout refs/heads/staging refs/heads/main"
+    _fm_files=""
+    while read -r _lref _lsha _rref _rsha; do
+      [ -z "${_rref:-}" ] && continue
+      case " $_fm_protected " in *" $_rref "*) : ;; *) continue ;; esac
+      [ "${_lsha:-}" = "0000000000000000000000000000000000000000" ] && continue # branch delete
+      if [ "${_rsha:-}" = "0000000000000000000000000000000000000000" ]; then
+        _fm_rng="$_lsha"
+      else
+        _fm_rng="${_rsha}..${_lsha}"
+      fi
+      # Added/Copied/Modified/Renamed only — a DELETED doc has no frontmatter to validate.
+      _fm_files="${_fm_files} $(git diff --name-only --diff-filter=ACMR "$_fm_rng" -- \
+        'plans/active/*.md' 'plans/active/issues/*.md' 'plans/epics/*.md' 'codex/**/*.md' \
+        'agents/*.md' 2>/dev/null | tr '\n' ' ')"
+    done <<<"$STDIN_DATA"
+    # De-dup + drop paths deleted in the working tree (a range can name a since-removed file).
+    _fm_list=""
+    for _f in $_fm_files; do
+      [ -f "$REPO_ROOT/$_f" ] || continue
+      case " $_fm_list " in *" $_f "*) : ;; *) _fm_list="${_fm_list} $_f" ;; esac
+    done
+    if [ -n "${_fm_list// /}" ]; then
+      # shellcheck disable=SC2086  # intentional word-split: _fm_list is a space-separated path list
+      if ! (cd "$REPO_ROOT" && python3 "$_fm" --quiet $_fm_list); then
+        echo ""
+        echo "  ⛔ pre-push BLOCKED — a doc you are pushing FAILS the frontmatter schema."
+        echo "     This is the same check CI's lint-codex slice runs, so pushing it reds PM QG"
+        echo "     for the WHOLE FLEET (every repo's CI clones PM). Fix it here, not there."
+        echo "     Remedy: python3 scripts/docs/seed_frontmatter.py --apply <path> (derivable"
+        echo "     fields), then fill the content fields by hand."
+        echo "     Schema: codex/11-project-management/doc-frontmatter-schema.md"
+        exit 1
+      fi
+    fi
+  fi
+fi
+
+# ── [3] dep-alignment guard (staging only) — original behaviour, unchanged ─────────────────────
 # Delegates to check-dep-alignment.py (same logic as quickmerge Stage 0). No-op off staging.
 # KEPT because the ldr_main (staging-bypassed) toggle is documented as REVERSIBLE — a breaking
 # bump or an operator decision routes a repo back through staging, and this must still fire then.

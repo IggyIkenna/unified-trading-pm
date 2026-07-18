@@ -188,9 +188,12 @@ pairs stay honest-unresolved (reported, never guessed).
       move the ambiguity count. Independently corroborated from two different code paths (orchestrator pandas cross-tab
       AND the shipped `cefi_wire_bridge.get_cefi_wire_map()` → "439 ambiguous excluded"). Supersedes the divergent
       297/777/781 figures everywhere (blueprint open-q #7 CLOSED). (repo: instruments-service)
-- [ ] [SCRIPT] P1. **Sample OPTION / dated-FUTURE `raw_symbol` coverage on the REBUILT catalogue** (blueprint open-q #14
-      — the "decompose ALL types" claim is still unproven for per-option / per-expiry chains). (repo:
-      instruments-service)
+- [x] ✅ [SCRIPT] P1. **Sample OPTION / dated-FUTURE `raw_symbol` coverage on the REBUILT catalogue** — DONE via the
+      Phase-−1 gate (`instruments-service@scripts/gate_cefi_catalogue_canonical_phase_minus1_2026_07_18.py`, ran GREEN
+      2026-07-18 on the rebuilt 425,573-row `prod/catalog.parquet`). Open-q #14 ("decompose ALL types") PROVEN: OPTION
+      **264,122** rows decompose per-strike/per-expiry (`BTC-5APR19-3250-C` → `DERIBIT:OPTION:BTC-USD@INV-20190405-3250-C`),
+      dated-FUTURE **9,091** decompose per-expiry (`adausd_200925` → `BINANCE-DELIVERY:FUTURE:ADA-USD@INV-20200926`);
+      PERPETUAL 5,411 / SPOT_PAIR 8,405. All quote-bearing (gate's 0-missing-quote assertion). (repo: instruments-service)
 - [ ] [SCRIPT] P2. **586 marker-less `VENUE:PERPETUAL:BASE-QUOTE` catalogue rows** (blueprint open-q #19, measured
       2026-07-17: BITGET-FUTURES 275 / BINANCE-FUTURES 153 / COINBASE-FUTURES 107 / BINANCE-DELIVERY 27 /
       BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3 — NOT just the 16 BITFINEX rows the blueprint recorded). Deliberately
@@ -201,7 +204,17 @@ pairs stay honest-unresolved (reported, never guessed).
 
 - [ ] [DOCS] P0. **Lock the two contracts**: single-instrument cefi filename stem = FULL `instrument_id`; shard atom
       WITH `pipeline_mode`. The contradicting codex docs get corrected in Phase 2, but the form is byte-locked now so
-      writer/migration/reader agree. (repo: unified-trading-pm)
+      writer/migration/reader agree. (repo: unified-trading-pm) **→ MERGED INTO Phase-2 §445 (2026-07-18, /autonomous
+      sequencing decision):** the "lock BEFORE code" purpose is now moot — the writer (D2), all 4 migration scripts, and
+      the reader bridge (D3) are already written AND dry-run/gate-proven to agree (rename dry-run stems = FULL
+      `instrument_id` e.g. `BINANCE-FUTURES:PERPETUAL:ADA-USDT@LIN.parquet`; Script-3 dedup on the pinned 6-col
+      `pipeline_mode`-bearing atom). Both contracts live in the SAME two docs §445 reconciles
+      (`per-asset-group-bucket-layouts.md` filename split + `availability-manifest-and-data-status.md` shard atom), so
+      locking now + reconciling later = double-editing with drift risk. Doing them TOGETHER post-apply (when the final
+      on-disk shapes are proven) is strictly better. The forms are already correct in code; this is a docs-consistency
+      lock, not a code gate. **The single-instrument-stem vs aggregated-`underlying={U}/ticks.parquet`-bundle split MUST
+      be stated explicitly** (the migration only renames single-instrument files; futures_chain/options_chain bundles
+      keep `ticks.parquet`).
 
 ## Phase 0b — Code fixes (MUST land + DEPLOY to every writer AND every narrow-read consumer before any corpus rewrite)
 
@@ -410,13 +423,13 @@ pairs stay honest-unresolved (reported, never guessed).
       `market-tick-data-service@ec04e8f5` (`scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`); 12-day
       dry-run 7,270/12,662 files, all 3 classes resolve. `--apply` is Phase-E (operator-gated) — see the 2 pre-apply
       fixes below.**
-- [ ] [SCRIPT] P1. **SCRIPT-1 pre-`--apply` fixes (before the corpus-wide content backfill runs).** (a) The size-10 GCS
-      connection pool vs 32 workers caused ~27% transient `error` failures in the 12-day dry-run (idempotent → re-runs
-      converge, but wasteful): enlarge the pool or reduce `--workers`, and run corpus-wide on a DEDICATED VM
-      (corpus-wide ≫ the 12-day/7,270-file sample, ~billions of rows). (b) `_report`'s STOP line counts only the
-      `read_error` outcome, not the driver's `error` outcome, so it printed `read_errors=0` while 3,380 files errored —
-      sum both so `--apply` failure counts are honest. (found 2026-07-18 Phase-C dry-run.) (repo:
-      market-tick-data-service)
+- [x] ✅ [SCRIPT] P1. **SCRIPT-1 pre-`--apply` fixes** — **`market-tick-data-service@d47609ec`** (2026-07-18). (a) pool:
+      `--workers` default lowered **32→12** to stop oversubscribing the size-10 urllib3 pool (`get_storage_client()`
+      caches ONE pooled client per process shared by all worker threads; 32 > pool_maxsize=10 caused the ~27% transient
+      `error` failures) — a dedicated VM MAY raise workers only in tandem with re-verifying `_GCS_HTTP_POOL_MAXSIZE`.
+      (b) reporting: `errors = _stats.get("read_error",0) + _stats.get("error",0)` so the STOP line counts the driver's
+      `error` outcome too (was printing `read_errors=0` while 3,380 files errored). QG green (6187 passed, exit 0).
+      (repo: market-tick-data-service)
 - [ ] [SCRIPT] P2. **Manifest `instrument_type` mislabel cleanup — OKX-FUTURES dated-futures tagged PERPETUAL (~116,742
       rows).** The bulk of Script-3's 174,649 honest-unresolved main-index rows are OKX-FUTURES dated futures
       (`XRP-USD-240329` etc., mostly past-expiry delisted) whose manifest `instrument_type` is `PERPETUAL` while the
@@ -457,6 +470,38 @@ pairs stay honest-unresolved (reported, never guessed).
 `codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
+
+- **2026-07-18 (slot-3, /autonomous) — CUTOVER STAGED; drain+`--apply`+content GATED on a QUIET cefi fleet (a
+  concurrent pipeline-check sweep is active).** Everything reversible is done + verified; only the irreversible core
+  remains, and it needs a writer-free window.
+  - **Reader-bridge (377) VERIFIED READY**: the D3 `CeFiWireCanonicalMap` bridge is on current `origin/main` for BOTH
+    MTDS (`engine/cefi_wire_bridge.py`, `cefi_catalog_reader.py`, `partitioned_writer.py`,
+    `market_interface/adapters/cefi/catalog_id_resolver.py`) and MDPS (`app/utils/cefi_wire_bridge.py`,
+    `canonical_writer_shaping.py`, `path_parsing.py`). Consumers are batch/job workloads (pick up the image at next
+    invocation, which is post-re-enable); features' read is filename-agnostic (rename can't break it); execution-service
+    needs only a redeploy (non-trading → low risk). So readers survive the rename/rewrite.
+  - **DRAIN BLOCKER (measured)**: `gcloud compute instances list … name~cefi status=RUNNING` = **2 VMs**, both from a
+    concurrent PIPELINE-CHECK sweep — `instr-backfill-cefi-pchk-0718120011-f-<venue>` + `mtds-backfill-cefi-pipelinecheck-
+    <ts>` (a fresh mtds-backfill launched every ~4 min; venue cycles okx-spot→deribit→…). AWS cefi = 0. The STANDING
+    capture writers (Tardis `cefi-queue-*` / on-chain `cefi-*`) are already quiet — it is ONLY this concurrent sweep
+    (another session running the `data-pipeline-check-mtds` skill) that is live. Draining it would be (a) interfering
+    (not my operation) and (b) INEFFECTIVE — the controller relaunches per-venue writers that would then RACE my
+    rename/content `--apply` (the exact hazard the drain exists to prevent). Per the drain HARD RULE ("no GCS cutover
+    with writers live") the cutover WAITS for the sweep to finish (a fleet-quiet watcher is armed), then executes
+    drain→snapshot→Scripts 2/3/4 `--apply`→re-enable→Script-1 content on a VM. **This is a fleet-coordination gate, not a
+    code/data problem** — surfaced to the operator.
+
+- **2026-07-18 (slot-3, /autonomous) — CUTOVER STEP 1+2 DONE: catalogue rebuilt + Phase-−1 gate GREEN (surface D is
+  canonical-clean).** Rebuilt `prod/catalog.parquet` with the DERIBIT-quote fix (`instruments-service@d72edcf7`) +
+  equity-perp widen (`unified-api-contracts@172e8cdb` + `instruments-service@ff6d9750`): **425,573 rows** (monotonic
+  guard ACCEPT, new=425573 vs current=425160; `CATALOGUE_PROMOTED` event, exit 0), **802 flagged `is_equity_perp`** (the
+  widened Binance universe landed). Ran the NEW Phase-−1 gate
+  (`instruments-service@scripts/gate_cefi_catalogue_canonical_phase_minus1_2026_07_18.py`) live — **GREEN**: `:PERP:`=0,
+  `instrument_id!=canonical_instrument_id`=0, **missing-quote=0** (the DERIBIT `AVAX@LIN`→`AVAX-USDC@LIN` class is GONE
+  from the catalogue — the rollup RE-DERIVES `instrument_id` from `raw_symbol` via the fixed builder, so pre-fix by_date
+  parquets don't leak). Coverage sample proves per-strike/per-expiry decomposition (OPTION 264,122; dated-FUTURE 9,091;
+  PERPETUAL 5,411; SPOT_PAIR 8,405). **The wire-map the apply scripts build from this catalogue is now clean** → the
+  cutover (drain + Scripts 2/3/4 `--apply` + Script-1 content) can proceed against a canonical foundation.
 
 - **2026-07-18 (slot-3, /autonomous) — PHASE C COMPLETE: all 4 migration-script dry-runs done + validated against live
   prod; the cutover is fully staged behind the Phase-D operator drain gate. Measured evidence (read-only, NO

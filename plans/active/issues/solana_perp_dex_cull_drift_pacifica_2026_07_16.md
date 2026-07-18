@@ -49,7 +49,7 @@ assigned_vm:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-16T13:05Z
+last_updated: 2026-07-18T10:07Z
 ---
 
 # Solana perp DEX cull — DRIFT + PACIFICA data/state purge (2026-07-16)
@@ -244,17 +244,50 @@ still reference them if needed.
 
 ## Todos
 
-- [ ] [CODE] P0. Flip `"mtds-solana-drift-backfill"` and `"cefi-pacifica-"` to `None` in
+- [x] [CODE] P0. Flip `"mtds-solana-drift-backfill"` and `"cefi-pacifica-"` to `None` in
       `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py` (+ guard test
       `tests/unit/test_launcher_registry.py`) so the self-heal watchdog cannot relaunch either VM this task stopped
       (both left `TERMINATED`, not deleted). Mirrors the identical precedent already shipped for the Helius path
       (`deployment-service@46d6492`, `mtds-drift-sig-walker-` → `None`). Repo: deployment-service. Sibling/CODE-track
-      scope — DATA/STATE task (this one) deliberately did not touch this file.
+      scope — DATA/STATE task (this one) deliberately did not touch this file. **CLOSED 2026-07-18, already satisfied —
+      `deployment-service@9b13679`** (landed 2026-07-16T13:15:01Z, i.e. same-day, ahead of this handoff being picked
+      up): rather than flipping the two entries to `None`, that commit **removed them outright** from BOTH
+      `LAUNCHER_FOR_VM_PREFIX` (`launcher_registry.py`) and the parity-required `VM_PREFIX_TO_BUCKET`
+      (`vm_prefix_registry.py`) — a stronger guarantee than the literal instruction: `resolve_launcher_for_vm()`'s
+      no-match fail-safe path already returns `None` for any unregistered vm_name (`launcher_registry.py:328-331`), so
+      full removal is behaviourally identical to an explicit `None` entry for self-heal purposes, PLUS it strips the VM
+      class from deployment-target classification entirely (no `VM_PREFIX_TO_BUCKET` entry either) — closer to the
+      operator's "no instruments no mvp nothing" framing than leaving a documented-but-dead `None` placeholder. Verified
+      live (2026-07-18, this task): (1) neither `mtds-solana-drift-backfill` nor any `cefi-pacifica-solana-...` VM name
+      prefix-matches ANY current key in `LAUNCHER_FOR_VM_PREFIX` (checked programmatically); (2) `vm_prefix_registry.py`
+      carries no DRIFT/PACIFICA prefix entries either (only unrelated comment-string hits); (3) the guard test
+      `tests/unit/test_launcher_registry.py`'s bidirectional parity checks ((a) every watchdog prefix has a registry
+      entry, (c) no registry-only stale prefix) hold because both files were pruned symmetrically; (4) full
+      `deployment-service` `quality-gates.sh --no-fix` run clean at current HEAD —
+      **`0a811e82b6d01a6b6f20a60f8966f3b56e4c1b2a`** (2664 passed, 5 skipped, ALL QUALITY GATES PASSED, sentinel
+      `.qg_last_passed_sha` matches HEAD exactly). No further code edit was needed or made.
 - [ ] [DATA] P2. Once the sibling's UAC venue removal + instruments-service adapter removal are fully on `origin` (per
       the coordinator: IS landed `4d65d468`+`b37e9d82`, MTDS deletion still in flight), re-run
       `build_instrument_catalogue.py --asset-group defi` (and `cefi`, if it also derives from a venue-capability
       registry) as a confirmation pass — should be a no-op diff against this task's surgical row-delete purge if both
       sides agree. Not blocking (the row-delete already satisfies "no instruments" today). Repo: instruments-service.
+      **Status checked 2026-07-18 (left open, not flipped — see note)**: the pre-conditions are now satisfied on
+      `origin` — IS `4d65d468`+`b37e9d82` (2026-07-16) and, per this doc's own COMPLETION RECORD, MTDS
+      `market-tick-data-service@2e674d1f` (also 2026-07-16, "55 files, −11,178 lines") — so the "MTDS deletion still in
+      flight" caveat above is stale. Beyond that, `instruments-service@ee19f6f3` (2026-07-18, on `origin`,
+      `git merge-base --is-ancestor` verified) went further than a one-off confirmation run: it hardens
+      `scripts/build_instrument_catalogue.py` itself to structurally EXCLUDE `DRIFT`/`DRIFT-SOLANA`/`PACIFICA`/
+      `PACIFICA-SOLANA` (+ MANGO/ZETA/FLASH families, both bare and `-SOLANA`-suffixed spellings) from ever re-minting a
+      catalogue row on ANY future regen (`_REMOVED_VENUES` + `_is_removed_venue()`), proven by two new dedicated unit
+      tests (`test_rollup_excludes_registry_removed_venues`,
+      `test_rollup_is_removed_venue_matches_bare_and_suffixed_forms` in
+      `tests/unit/scripts/test_build_instrument_catalogue.py`) — a durable code-level guarantee against the resurrection
+      concern this todo was hedging against, stronger than a single manual confirmation pass. **What remains**: no
+      evidence found of an actual `--apply` execution of `build_instrument_catalogue.py` against prod GCS
+      (`gs://instruments-store-{defi,cefi}-prd-.../prod/catalog.parquet`) post-fix to produce a literal 0-diff
+      confirmation artifact — that live-prod regen is instruments-service-repo scope and a prod mutation, both outside
+      this closing task's bounds (`deployment-service`-only, no-prod-mutations). Left open as a low-priority,
+      non-blocking instruments-service todo for whoever next touches that repo's catalogue pipeline.
 
 ## Per-surface counts + purge evidence
 
@@ -564,3 +597,16 @@ Stale generated audit artifacts (`orphan-report.txt`, `type_usage_audit.json`) a
   above) so the self-heal watchdog cannot relaunch either stopped VM; the MTDS repo-code deletion the coordinator
   flagged as "still in flight via a sub-agent" will make this doubly moot once it lands (the launcher would have nothing
   to invoke).
+- **2026-07-18T10:07Z** — Closing pass (operator-directed, deployment-service-scoped sub-agent). Checked
+  `deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py` at current
+  `origin/live-defi-rollout` HEAD before editing anything: the `[CODE] P0` handoff was **already satisfied** by
+  `deployment-service@9b13679` (2026-07-16T13:15:01Z — landed same day, ahead of this handoff being picked up), which
+  removed both entries outright rather than nulling them (a stronger fix — see the Todos-section note for the full
+  verification). No code edit was required; ran `deployment-service`'s full `quality-gates.sh --no-fix` as evidence
+  (green at HEAD `0a811e82b6d01a6b6f20a60f8966f3b56e4c1b2a`, sentinel-matched). Flipped `[CODE] P0` to done with the
+  evidence trail. Also checked `[DATA] P2` (instruments-service confirmation-catalogue re-run): pre-conditions (IS +
+  MTDS registry removal on origin) are satisfied, and `instruments-service@ee19f6f3` (2026-07-18) has since hardened
+  `build_instrument_catalogue.py` to structurally exclude the killed venues from any future regen (unit-tested) — a
+  durable guarantee beyond what a one-off confirmation run would give. No evidence found of an actual prod `--apply`
+  regen run producing a literal 0-diff artifact; that step is instruments-service-repo scope and a prod mutation, both
+  outside this task's bounds, so `[DATA] P2` is left open (non-blocking) with this status noted rather than checked off.
