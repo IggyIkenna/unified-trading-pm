@@ -288,6 +288,39 @@ wrote pipeline_e2e_check report to plans/audit/results/data_pipeline_e2e_check_m
 - A flat progress metric (no new cell proved across a tick) is a STALL — diagnose (`gh run view --log-failed`-style VM
   log inspection), don't repeat the same failing launch.
 
+## Measuring throughput — how NOT to get it wrong (added 2026-07-18)
+
+**This check cannot measure throughput. Do not quote its numbers as pipeline MB/s.** It fetches ONE instrument per VM,
+so it is boot-dominated: measured 2026-07-18, ~155s of VM boot per cell versus 3-9s of actual fetching (~80% boot, ~3%
+fetch, ~15% finalize). Ten cells moved 2.1M rows but only 47 MB over ~40 min of wall clock — an aggregate ~0.02 MB/s
+that says nothing about the pipeline. To measure throughput, run a REAL 32-wide backfill VM
+(`launch-cefi-sharded-backfill.sh`) and read ITS logs.
+
+When you do measure it, these five traps were all hit for real on 2026-07-18 and produced four successive wrong answers
+(15-16 -> 13.5 -> 11.5 -> 9.4 MB/s) before the workload was properly characterised:
+
+1. **Completion-based MB/s structurally UNDERCOUNTS under concurrency.** The metric only credits bytes when a shard
+   COMPLETES, but 32-wide means 100-300 shards sit in flight with their bytes already downloaded and uncredited.
+   In-flight grew 114 -> 216 -> 297 while the "rate" appeared to collapse — nothing was wrong. A falling completion rate
+   is NOT evidence of a stall; check `requests` vs `successes` before concluding anything.
+2. **Short windows are wave-noise.** Completions arrive in waves, so the same run yielded: 14.62 MB/s (66s window),
+   14.00 (187s), 15.71 (307s), 16.36 (425s), 13.52 (535s), 11.41 (660s). Anything under ~15 min of fetching is not a
+   number. Always exclude the first 300s (startup burst) AND require a long window.
+3. **Throughput is VENUE-MIX dependent — always report the blended whole-run average.** Same VM, same day, zero errors:
+   bybit-spot and friends ran 12-18.6 MB/s while DERIBIT (options chains) ran ~3.4 MB/s. A figure sampled while fast
+   venues dominate is not a planning number. Any ETA must use the blended average, because a real backfill has to
+   traverse DERIBIT too.
+4. **Do not grep a bare `429`** — it matches millisecond timestamps (`14:40:18,429`) and manufactures a phantom
+   throttling story. Match `HTTP 429` / `TooManyRequests`. Same for `error` (matches `error=-` in success lines).
+5. **Low CPU with work in flight is normal, not a hang.** `cpu=1.6%` with 297 requests in flight means the box is
+   waiting on network I/O — the expected state for a download-bound pipeline. Confirm via swap/rss/threads and the last
+   completion timestamp before calling it stalled.
+
+**Ground truth is the VM `run.log`, never the report verdict**:
+`Processed date=...: N venues ok, 0 failed, R total records` plus `StreamingParquetWriter: uploaded ...`. While the
+raw->canonical id migration is in flight the report's pass/fail is actively misleading — a full IS sweep reported
+`failed=17` when all 18 venues had genuinely written records.
+
 ## Extending to a new service
 
 Copy this file, swap: the per-service script path (`<service>/scripts/pipeline_e2e_check.py`), the launcher script name,
