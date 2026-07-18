@@ -17,6 +17,11 @@ tags: [vm-launcher, gcloud, disk-provisioning, p0, quality-gate-gap]
 related: [check_backfill_vm_disk_provisioning.py]
 created: 2026-07-18
 priority: P0
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # P0 — disk-policy sweep broke the `gcloud` line-continuation across 88 VM launchers
