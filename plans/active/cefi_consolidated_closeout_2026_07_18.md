@@ -274,6 +274,47 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       `[DATA] P1` todo under §119. Autonomous ruling within documented intent (/autonomous 2026-07-18); operator can
       reverse.
 
+## Track 6 — Non-canonical ENUMERATION audit → the migration must align EVERY form to one SSOT (operator ask, 2026-07-18) · P0
+
+- **Source / ask**: the deployment-ui/api **"data status"** view used to enumerate every instrument_type / data_type /
+  chain / venue that EXISTS in the GCS data/manifest for an asset_group — a duplication + non-canonical-naming
+  detector. It was **removed** from the UI/API. Operator (2026-07-18): re-add it; and MEANWHILE use the enumeration so
+  the migration is COMPLETE (align EVERY non-canonical form to one SSOT), not just the classes Scripts 1–4 target.
+- **Audit tool**: `market-tick-data-service@81b72f1d`
+  (`scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`) — re-derives the enumeration from
+  `read_availability_index(cefi_bucket)`. **Measured live 2026-07-18** on the **11,185,557-row** cefi manifest
+  (`market-data-tick-cefi-prd-central-element-323112`):
+  - **instrument_id: 1,864,357 non-canonical (16.67%)** — bare-wire (no `VENUE:TYPE:` prefix) **1,367,181** (380,672
+    resolve via the 3-tuple wire-map / **986,509 UNRESOLVED**, dominated by blank itype); `:PERP:` shorthand
+    **374,272** (0 resolve); missing-quote (`ETHUSDT_210326`) **91,254**; `nc:other` (`PAXG_USDC-27JUN25`) **30,986**;
+    blank **62,367**; DERIBIT:COMBO **662**.
+  - **instrument_type COLUMN drift — a NEW axis Scripts 1–4 do NOT touch**: BLANK **3,186,640** · lowercase
+    `perpetual` **289,700** · `spot_pair` **25,189** · `None` **24,583** · `spot` **21,336** ·
+    `futures_chain`(data_type-leaked-into-itype) **66,129** · `options_chain` **581** · `future` **182** · `index` **2**.
+  - **venue drift**: `OKX` 64 · blank 34 · `KALSHI-PERP` 784 · `POLYMARKET-PERP` 480 · `DERIBIT-COMBO` 226 ·
+    `COINBASE-CDE` 22,370. **data_type**: blank 9,750.
+- **Coverage gap (why the `--apply` must WAIT for these)**: Scripts 1–4 resolve ~380k bare-wire; the other **~1.48M**
+  non-canonical rows (blank-itype-driven bare-wire, `:PERP:`, missing-quote, COMBO) need DEDICATED paths. Running the
+  current `--apply` would relabel ~380k and leave ~1.48M non-canonical — "canonical" would be a lie. **Track 6 gates the
+  cutover `--apply`.** The blank-itype axis is the ROOT: fixing it first lets the 3-tuple resolve most of the 986k
+  UNRESOLVED bare-wire.
+
+- [ ] [REVIEW] P0. **Operator canonical rulings** (see the questions posed 2026-07-18) — blank-itype resolution
+      strategy; prediction-venue rows (KALSHI-PERP/POLYMARKET-PERP) in the cefi manifest; DERIBIT:COMBO; blank
+      venue/id/data_type rows; COINBASE-CDE. These shape the normalization scripts below, so they land FIRST.
+- [ ] [SCRIPT] P0. **instrument_type column normalization** — casing (`perpetual`/`spot`/`spot_pair`/`future` → UPPER,
+      `spot`→`SPOT_PAIR`), `None`/blank → catalogue-inferred by (venue, raw_symbol) (the venue name disambiguates most:
+      `-SPOT`→SPOT_PAIR, `-FUTURES`/`-SWAP`→PERPETUAL|FUTURE), data_type-leak (`futures_chain`/`options_chain` as itype)
+      → real FUTURE/OPTION. This is the ROOT fix that unblocks ~986k bare-wire resolutions. (repo: instruments-service)
+- [ ] [SCRIPT] P0. **`:PERP:` → `:PERPETUAL:` rewrite** (374,272 manifest rows + any on-disk content) with symbol
+      decompose (`ASTER:PERP:CLUSDT` → `ASTER:PERPETUAL:CL-USDT@LIN`). Extends Script 2/3. (repos: market-tick-data-service,
+      instruments-service)
+- [ ] [SCRIPT] P1. **missing-quote + nc:other decompose** (`ETHUSDT_210326`, `PAXG_USDC-27JUN25`) via the catalogue —
+      extract the raw symbol tail, resolve to canonical dated-future/option. (repo: instruments-service)
+- [ ] [FEATURE] P1. **Re-add the "data status" enumeration to deployment-ui/api** — the distinct instrument_type /
+      data_type / chain / venue listing per AG that was removed; it is the durable non-canonical/duplication detector.
+      (repos: deployment-api, deployment-ui) — investigate the removal commit first.
+
 ## Codex SSOTs (read before touching a track)
 
 `codex/02-data/availability-manifest-and-data-status.md`, `…/pipeline-mode-partition.md`,
