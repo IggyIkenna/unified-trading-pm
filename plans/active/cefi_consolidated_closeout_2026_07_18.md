@@ -49,7 +49,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 8.0
 estimate_calibrated_ai_days: 6.4
-assigned_role: data
+assigned_role: data_engineering
 drift_direction: none
 locked_by:
 locked_since:
@@ -180,24 +180,25 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
 > The operator reviewed the audit and directed a pre-migration close-out. The migration cutover (Track 1) is now GATED
 > on the P0 items below. Each maps to a source doc; archive the source when its item lands.
 
-- [ ] [BACKEND] P0. **DERIBIT `instrument_id` missing the quote — the canonical symbol must ALWAYS be `BASE-QUOTE` (operator
-      ruling 2026-07-18, overriding the `BASE[_QUOTE]` optional-quote decision in `instrument_id_format_canonicalization_2026_07_08.md`
-      line 96).** Verified live: **265,538 of 425,160 catalogue rows (62%) — ALL DERIBIT (263,950 OPTION + 1,588 FUTURE)** —
-      drop the quote (`raw=AVAX_USDC-1APR26` → `DERIBIT:FUTURE:AVAX@LIN-20260401`, must be `…AVAX-USDC@LIN…`;
-      `BTC-5APR19-3250-C` → `DERIBIT:OPTION:BTC@INV-…`, must be `…BTC-USD@INV-…`). DERIBIT-only (every other venue already
-      carries the quote). Fix the DERIBIT adapter/builder to always emit `BASE-QUOTE@MARGIN_TYPE[-YYYYMMDD][-STRIKE-C|P]`
-      (USDC linear / USD inverse) → **rebuild `prod/catalog.parquet`** (coordinated ~38-min prod op) → **extend the Phase-−1
-      verify gate** to also assert ZERO missing-quote ids (the current gate — 0 `:PERP:`, `instrument_id==canonical_instrument_id`
-      — let this class through). This GATES the Track-1 migration (else it bakes the quote-less form into all four surfaces).
+- [ ] [BACKEND] P0. **DERIBIT `instrument_id` missing the quote — the canonical symbol must ALWAYS be `BASE-QUOTE`
+      (operator ruling 2026-07-18, overriding the `BASE[_QUOTE]` optional-quote decision in
+      `instrument_id_format_canonicalization_2026_07_08.md` line 96).** Verified live: **265,538 of 425,160 catalogue
+      rows (62%) — ALL DERIBIT (263,950 OPTION + 1,588 FUTURE)** — drop the quote (`raw=AVAX_USDC-1APR26` →
+      `DERIBIT:FUTURE:AVAX@LIN-20260401`, must be `…AVAX-USDC@LIN…`; `BTC-5APR19-3250-C` → `DERIBIT:OPTION:BTC@INV-…`,
+      must be `…BTC-USD@INV-…`). DERIBIT-only (every other venue already carries the quote). Fix the DERIBIT
+      adapter/builder to always emit `BASE-QUOTE@MARGIN_TYPE[-YYYYMMDD][-STRIKE-C|P]` (USDC linear / USD inverse) →
+      **rebuild `prod/catalog.parquet`** (coordinated ~38-min prod op) → **extend the Phase-−1 verify gate** to also
+      assert ZERO missing-quote ids (the current gate — 0 `:PERP:`, `instrument_id==canonical_instrument_id` — let this
+      class through). This GATES the Track-1 migration (else it bakes the quote-less form into all four surfaces).
       (repo: instruments-service; found 2026-07-18 by the operator spotting `DERIBIT:FUTURE:AVAX@LIN-20260718`.)
-- [x] ✅ [BACKEND] P0. **Remove the UAC-seed catalogue fallback — catalogues FAIL LOUD** — DONE `market-tick-data-service@3253cae3`
-      (QG green, 6183 passed). New `InstrumentCatalogUnavailableError(RuntimeError)` (NOT `ValueError`, so the
-      manifest/canonicalise `except ValueError` can't swallow it; added to the manifest-write re-raise allowlist).
-      cefi/defi/tradfi `list_instruments` + `_load_sentinel_catalogs` + sports sentinel path now RAISE on
-      absent/empty/schema-drift; only `KeyError` (no reader registered = out of job scope) tolerated; off-season empty
-      sports stays honest. Verified buckets are the consolidated shape (`instruments-store-{cefi,defi,tradfi,sports}-prd-central-element-323112`).
-      Prediction has NO separate catalogue (rides sports fixtures). Tests mock the catalogue read (sanctioned). (repo:
-      market-tick-data-service)
+- [x] ✅ [BACKEND] P0. **Remove the UAC-seed catalogue fallback — catalogues FAIL LOUD** — DONE
+      `market-tick-data-service@3253cae3` (QG green, 6183 passed). New `InstrumentCatalogUnavailableError(RuntimeError)`
+      (NOT `ValueError`, so the manifest/canonicalise `except ValueError` can't swallow it; added to the manifest-write
+      re-raise allowlist). cefi/defi/tradfi `list_instruments` + `_load_sentinel_catalogs` + sports sentinel path now
+      RAISE on absent/empty/schema-drift; only `KeyError` (no reader registered = out of job scope) tolerated;
+      off-season empty sports stays honest. Verified buckets are the consolidated shape
+      (`instruments-store-{cefi,defi,tradfi,sports}-prd-central-element-323112`). Prediction has NO separate catalogue
+      (rides sports fixtures). Tests mock the catalogue read (sanctioned). (repo: market-tick-data-service)
 - [x] ✅ [BACKEND] P0. **Gate Tardis cefi on the vendor response + stop false `attempted_failed`** — DONE
       `market-tick-data-service@a7569298` (QG green, 6187 passed; `venue_fetch.py` UNTOUCHED). Tardis HTTP-400
       `code=300`(invalid-symbol)/`code=140`(date-not-available) now classified `is_structural_absence` → recorded
@@ -205,36 +206,36 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       still raise. **Remediation DRY-RUN measured (operator-gated `--apply`, NOT run):** impossible-combo per-symbol
       Tardis-400s = **24,410** (`code=300` invalid-symbol / `code=140` date-not-available — GENUINE per-symbol source
       absences → reclass to `empty_confirmed`; needs a mirror of the reclass script, not yet built); ~955k residual is
-      genuine transient 403 IP-lock (correctly af). (repo: market-tick-data-service)
-      **⚠️ CORRECTION (operator 2026-07-18): the futures_chain 122,585 are NOT a false-af / source-absence — DO NOT
-      RECLASS them.** `futures_chain`/`options_chain` are OUR per-underlying SHARD BUNDLES (MTDS aggregates the per-symbol
-      Tardis data types `trades`/`book_snapshot_5`/`derivative_ticker`/`liquidations`/`options_chain` by underlying into
+      genuine transient 403 IP-lock (correctly af). (repo: market-tick-data-service) **⚠️ CORRECTION (operator
+      2026-07-18): the futures_chain 122,585 are NOT a false-af / source-absence — DO NOT RECLASS them.**
+      `futures_chain`/`options_chain` are OUR per-underlying SHARD BUNDLES (MTDS aggregates the per-symbol Tardis data
+      types `trades`/`book_snapshot_5`/`derivative_ticker`/`liquidations`/`options_chain` by underlying into
       `…/data_type={dt}/underlying={U}/ticks.parquet`); Tardis is called per-symbol; the `instrument_id` type stays
       FUTURE/OPTION; the failure + aggregation are ON OUR SIDE. So the 122,585 are REAL capture gaps (per-symbol
       dated-futures data didn't capture → bundle never built — consistent with the throughput collapse), which FILL on
       the **Track-2 coverage backfill** (throughput fixed @14 MB/s), NOT a reclass. The
-      `deribit_options_chain_af_g4_blocker_2026_07_03.md` "structurally-absent channel" premise + its 2026-07-12 reclass
-      + `reclass_cefi_futures_chain_no_tardis_source.py` are all built on the SAME confusion — do not propagate them; the
-      real fix is capture + build the bundle, tracked under Track-2.
+      `deribit_options_chain_af_g4_blocker_2026_07_03.md` "structurally-absent channel" premise + its 2026-07-12
+      reclass + `reclass_cefi_futures_chain_no_tardis_source.py` are all built on the SAME confusion — do not propagate
+      them; the real fix is capture + build the bundle, tracked under Track-2.
 - [ ] [BACKEND] P1. **UAC per-venue seed fallback (surfaced by the fail-loud work) — decide + remove if catalogues are
       the sole source.** Distinct from the wholesale absent-catalogue fallback just removed in MTDS:
       `unified_api_contracts.registry.market_data_categories.get_expected_instruments_for_venue` STILL falls back to the
       per-venue MVP seed when `instruments_provider` is None / a PRESENT catalogue lacks a specific venue
-      (`market_data_categories.py:2250` + `registry/defi_prediction_instrument_seeds.py`). Per the operator's "catalogues
-      should be the sole source" ruling this should also fail-loud / be removed — but it's a UAC change with fleet blast
-      radius, so scope it deliberately. Also here: register Tardis error codes in `classify_venue_error` + the
-      REQUEST-side vendor-catalogue gating (preflight shouldn't generate cefi `futures_chain` shards →
+      (`market_data_categories.py:2250` + `registry/defi_prediction_instrument_seeds.py`). Per the operator's
+      "catalogues should be the sole source" ruling this should also fail-loud / be removed — but it's a UAC change with
+      fleet blast radius, so scope it deliberately. Also here: register Tardis error codes in `classify_venue_error` +
+      the REQUEST-side vendor-catalogue gating (preflight shouldn't generate cefi `futures_chain` shards →
       `expected_unattempted`) belong in the in-flight UAC `coverage_exclusions` work. (repo: unified-api-contracts)
 - [x] ✅ [DOCS] P1. **Upgrade the `data-pipeline-check-mtds` skill** — DONE `unified-trading-pm@ca3aebfc7`. §3a
-      DERIBIT/BINANCE-FUTURES regression cells incl. a NEGATIVE check (DERIBIT `futures_chain` → 0 `attempted_failed`, the
-      structurally-absent channel the MVP loop can't reach = the 112k-regression blind spot) + a two-force-runs diff for
-      the retry-storm signature; §3b content spot-checks (DERIBIT greeks/IVs, BINANCE-FUTURES funding/OI not all-null);
-      distinct report rows. (repo: unified-trading-pm)
+      DERIBIT/BINANCE-FUTURES regression cells incl. a NEGATIVE check (DERIBIT `futures_chain` → 0 `attempted_failed`,
+      the structurally-absent channel the MVP loop can't reach = the 112k-regression blind spot) + a two-force-runs diff
+      for the retry-storm signature; §3b content spot-checks (DERIBIT greeks/IVs, BINANCE-FUTURES funding/OI not
+      all-null); distinct report rows. (repo: unified-trading-pm)
 - [x] ✅ [INFRA] P1. **`issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`** — DONE (already satisfied by
-      `deployment-service@9b13679`, which REMOVED the DRIFT/PACIFICA launcher entries entirely; no-match fail-safe returns
-      `None`; QG green; `instruments-service@ee19f6f3` hardens the catalogue build against re-mint). Checkbox flipped
-      `unified-trading-pm@710190b23`. P2 confirmation-catalogue `--apply` (prod 0-diff) left open, non-blocking. (repo:
-      deployment-service)
+      `deployment-service@9b13679`, which REMOVED the DRIFT/PACIFICA launcher entries entirely; no-match fail-safe
+      returns `None`; QG green; `instruments-service@ee19f6f3` hardens the catalogue build against re-mint). Checkbox
+      flipped `unified-trading-pm@710190b23`. P2 confirmation-catalogue `--apply` (prod 0-diff) left open, non-blocking.
+      (repo: deployment-service)
 - [ ] [BACKEND] P2. **`issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`** — MTDS `_L5_VENUES` read
       from `VENUE_DATA_TYPE_CAPABILITIES` (11 missing cefi venues). (repo: market-tick-data-service)
 - [ ] [BACKEND] P1. **`cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`** — operator wants this done before
