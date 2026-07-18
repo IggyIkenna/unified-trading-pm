@@ -1109,3 +1109,35 @@ derivation covers far less of them. This MUST be measured before sizing the API 
       — never write a derived value indistinguishable from a fetched one.
 - [ ] [DATA] P1. API-fetch only the residual: non-whitelisted leagues + cup competitions + any league-season with no
       populated fixtures to score against. Size the run from THAT count, not the whole corpus.
+
+### P-SIZING (2026-07-18) — the blank half IS exchangeable; ~89% derivable, API residual is TINY
+
+The § P caveat ("blanks may be disproportionately cups, so the ground-truth set may not transfer") is **measured and
+REFUTED**. Same 6-matchday sample (3,234 fixtures, 1,672 blank = 51.7%):
+
+| bucket                                                             | leagues | blank fixtures  |
+| ------------------------------------------------------------------ | ------- | --------------- |
+| leagues with BOTH populated + blank (derivable target)             | **50**  | **1,539 (92%)** |
+| blank-ONLY leagues (never any round — cups/friendlies/unsupported) | **7**   | 133 (8%)        |
+
+**92% of blanks live in leagues that ALREADY have round data**, so the populated fixtures are valid ground truth for
+exactly the leagues we need to fill. Combined with the § P ceiling (97% of `(league, day)` groups carry exactly one
+round), **~89% of blanks are derivable with ZERO api-football calls**.
+
+**Revised sizing — the operator's "couple hours rather than days" is conservative:**
+
+| path                                     | api-football calls                                                                                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| full `--force` corpus refetch (rejected) | ~1,260,000                                                                                                                                    |
+| surgical whole-corpus script             | ~600-700                                                                                                                                      |
+| **derive-then-fetch (this plan)**        | **~1 bulk call per residual (league, season)** — the 7 blank-only leagues + leagues with multi-round matchdays. Tens of calls, not thousands. |
+
+The residual is bounded by DISTINCT (league, season) pairs needing a fetch, NOT by fixture or date count — one
+`GET /fixtures?league&season` returns the whole season (measured: 242 fixtures in one call).
+
+- [ ] [CODE] P0. Implement derive-then-fetch: (1) score date→round per (league, season) against populated fixtures; (2)
+      derive blanks for leagues scoring 100%, stamped as DERIVED provenance; (3) enumerate the residual (blank-only
+      leagues + non-perfect scorers) and bulk-fetch ONLY those (league, season) pairs.
+- [ ] [DIAG] P2. Classify the 7 blank-only leagues: genuine honest absence (a cup tie has no `Regular Season - N`) vs a
+      real capture gap. Do not fetch what has no round concept — that is honest absence and should be recorded as such,
+      not chased.
