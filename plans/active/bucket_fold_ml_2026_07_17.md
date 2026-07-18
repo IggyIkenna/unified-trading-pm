@@ -146,6 +146,22 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       window confirms zero reads on the 5 legacy names, delete the 5 source buckets (GCP + AWS) and remove their TF/yaml
       keys in the same change so `terraform plan` (derived-from-yaml drift detector) stays green. This also closes the
       parent plan's W2 flat-`ml-models-store` delete todo — flip it too.
+- [ ] [INFRA] P0. **TF-STATE RECONCILE the folded ml-store into state (operator P0 2026-07-18 — "TF must AGREE with the
+      canonicalised reduced buckets, no regression on apply"; the 2026-07-13 ruling's "existing canonical buckets
+      IMPORTED into the for_each").** The read-only TF-vs-estate audit (agent `a240ee56`, 137 live GCP buckets, evidence
+      in scratchpad `reconcile.py`/`threeway.py`) confirmed: **NO data-loss regression** (prevent_destroy intact, ZERO
+      settings-drift on the 73 for_each-managed buckets, every removed yaml key points to an already-deleted empty
+      bucket) — BUT `terraform apply` is NOT runnable-clean: `ml-store-{prd,test}` are in yaml
+      (`cloud-providers.yaml:143`) + LIVE but were provisioned direct-gcloud and NEVER imported → apply plans CREATE →
+      409 fail-closed. FIX (do with Phase E, after backing up state): `tofu init` deployment-service/terraform/gcp →
+      `tofu import 'google_storage_bucket.canonical["ml-store-prd-central-element-323112"]' ml-store-prd-central-element-323112`
+      (+ `-test`) → `tofu state rm` the 8 stale for_each instances (eigenlayer-rewards-{prd,test},
+      features-delta-one-sports, features-onchain-cefi, features-volatility-{defi,pred,sports},
+      features-xinstrument-sports — yaml keys removed, buckets already gone) → confirm `tofu plan` shows only the
+      expected pending-features creates, no destroy of any live bucket. (NOTE: the same import is needed for the 6
+      Fold-A `features-{cefi,defi,tradfi}-{prd,test}` buckets once the Fold-A yaml key ships — captured in the features
+      plan. Compliance orphans `manual-audit-{prd,test}` / `trading-audit-records-test` are data-bearing + TF-unmanaged
+      (coverage gap, not an apply risk) — optional hardening.)
 - [ ] [INFRA] P1. **IAM + lifecycle** — **LIFECYCLE DONE** (2026-07-18: verified `ml-store-{prd,test}` carry
       STANDARD→COLDLINE@60d + UBLA, set at provision). **IAM Group-B join PENDING**: join `ml-store-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B (signal it unblocked for THIS fold); `-test-`
