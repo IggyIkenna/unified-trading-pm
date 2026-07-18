@@ -126,6 +126,16 @@ surface — Phase A1 (writer) → B (migrate `prod/catalog.parquet`) → C (widg
 
 Everything below is scoped so these cells are canonical, honestly-covered, and smoke-tested green before MVP backfill.
 
+> **Data-type × source priority for MVP backfills (operator, 2026-07-18 — supersedes any "restore mbp_10" framing):**
+> For **Databento** tradfi, the billing entitlement is **1-month L3 + 1-year L1** — so `mbp_10`/`trades`/`tbbo` are
+> **billing-gated by design (documented, NOT a bug to fix)**. The MVP backfill data_type for the instruments we care
+> about is **`ohlcv_1m` only** (it has FULL history). The venue capability _declaration_ MAY still enumerate what's
+> _possible_ (mbp_10/trades/tbbo within their limits), but the actual **MVP backfills = 1m candles**. For **daily**
+> cells we use **Yahoo Finance** as the source (still gives **24h / 1d**): daily Treasuries `ohlcv_24h` + daily **KRW**
+> FX. So Phase D smoke-tests + Phase-D MVP backfills iterate: Databento intraday shards → `ohlcv_1m`; Yahoo daily shards
+> → `ohlcv_24h`/`ohlcv_1d`. This DE-SCOPES the A2 "mbp_10/trades/tbbo restoration" item to "declaration reflects the
+> documented billing reality" (verify, don't chase L3 full history).
+
 ---
 
 ## Phase A — get ALL the code ready (writers live+batch · migration scripts · aggregation · adapters · download speed)
