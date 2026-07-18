@@ -31,9 +31,11 @@ execution:
 
 # agent-orchestrator — E2E Operator Runbook
 
-> **Workspace-level wrapper.** Ground-truth for repo-local workflows lives in `agent-orchestrator/docs/OPERATIONS.md`
-> and `agent-orchestrator/README.md`. This doc adds workspace-specific context, URL registry, and the standard runbook
-> governance fields required by CLAUDE.md "Runbook Execution-Owner SSOT" HARD RULE.
+> **THE operator runbook** for agent-orchestrator (the repo-local `OPERATIONS.md` wrapper was retired 2026-07-18 — this
+> is the single authoritative runbook). Architecture SSOT:
+> `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; service reference:
+> `codex/04-architecture/agent-orchestrator-overview.md`. Carries the runbook governance fields required by CLAUDE.md
+> "Runbook Execution-Owner SSOT" HARD RULE.
 >
 > Architecture SSOT: `codex/04-architecture/agent-orchestrator-overview.md` Infra/deploy reference:
 > `codex/05-infrastructure/agent-orchestrator-deploy.md` Plan-of-record:
@@ -98,9 +100,9 @@ Full flip-day checklist: `agent-orchestrator/docs/AUTH_INVENTORY.md`.
 
 ## Morning startup (local dev)
 
-> Skip for Cloud Run access — the staging backend is always running.
+> The central VM backend runs as a systemd service (`orchestrator.service`); this section is for local-dev only.
 
-Full procedure in `agent-orchestrator/docs/OPERATIONS.md` § "Morning startup". Summary:
+Local-dev startup:
 
 ```bash
 # Step 0: refresh PM inventory (PM-integration mode only)
@@ -142,9 +144,10 @@ is unreachable but you want to keep working.
 
 ---
 
-## How to spawn a main / review / backup agent
+## How to spawn a main / review agent
 
-Full procedure: `agent-orchestrator/docs/OPERATIONS.md` § "Register your three core agents". Summary:
+The runtime self-heals these (the keeper respawns `main`; `review` is a standing singleton) — manual spawn is rarely
+needed. To register one by hand:
 
 1. Open a fresh Claude Code session: `claude`
 2. Inside the session: `/remote-control` — copy the printed URL.
@@ -188,7 +191,7 @@ HealthMonitor detects stale slots within 65s (working slot silent >25 min → `s
 
 **Dashboard**: stale slot row turns red with `[Reassign]` button.
 
-**Three primitives** (from `agent-orchestrator/docs/OPERATIONS.md` § "Skip a task vs. reassign"):
+**Three primitives** (skip vs. reassign vs. kill):
 
 | Operation                                            | Worker process | Slot status after | Task status                      | When                          |
 | ---------------------------------------------------- | -------------- | ----------------- | -------------------------------- | ----------------------------- |
@@ -222,7 +225,7 @@ Key events to watch:
 
 ---
 
-## How to chat with main / review / backup
+## How to chat with main / review
 
 **Async (dashboard)**: Agents panel → role tab → compose box → Send (or Cmd/Ctrl+Enter). Message delivered on next 60s
 poll. Use for: "check worker #4", "hot-reload backlog", "promote backup → main".
@@ -249,30 +252,19 @@ Each slot is assigned an `account_id` from `data/config/accounts.json`. When an 
 
 ## State backup and recovery
 
-### Today (pre-P5): laptop disk
-
-State lives on the central VM at `data/state/state.db` + `data/state/state.json`.
+State lives on the central VM at `data/state/state.db` + `data/state/state.json`. `SnapshotLoop` (`server/gcs_sync.py`)
+auto-snapshots every 30 min + on shutdown, and mirrors to the cloud bucket set by `ORCHESTRATOR_S3_BUCKET` (AWS,
+`uts-orchestrator-state-<account>`) and/or `ORCHESTRATOR_GCS_BUCKET` (GCP) — no-op if unset. It does NOT auto-commit to
+git.
 
 ```bash
-# Manual snapshot (writes state.json + git commit)
+# Manual snapshot (writes state.json; commits only for an operator-initiated snapshot)
 curl -sX POST http://localhost:8765/api/snapshot
-
-# End-of-day snapshot
 curl -sX POST "http://localhost:8765/api/snapshot?reason=eod"
 ```
 
-Auto-snapshot (`SnapshotLoop`) runs every 30 min; writes `state.json` to disk and uploads to GCS if
-`ORCHESTRATOR_GCS_BUCKET` is set. Does NOT auto-commit to git (manual snapshots only).
-
-Backup: `tar czf ~/backups/orchestrator-$(date +%Y%m%d).tar.gz -C /opt/orchestrator data/`
-
-Recovery: stop server → restore tarball → restart. SQLite + state.json + backlog all come back.
-
-### Post-P5: GCS bucket
-
-`gs://agent-orchestrator-state-prod/` (asia-northeast1, 30-day retention — workspace GCS SSOT per CLAUDE.md). Set
-`ORCHESTRATOR_GCS_BUCKET=agent-orchestrator-state-prod` on prod Cloud Run. Every snapshot auto- uploads. No nightly cron
-needed.
+Recovery: stop the service → restore the snapshot (from disk or the cloud bucket) → restart. SQLite + state.json +
+backlog all come back.
 
 ---
 
@@ -296,16 +288,17 @@ curl -sS -X POST http://localhost:8765/api/conditions/data-schema-shipped \
 
 ## Reliability layer — 5 mitigations shipped 2026-05-20
 
-All 5 are live on the Ikenna VM backend. The original plan + per-phase commit shas are in
-[`plans/active/agent_reliability_mitigations_2026_05_20.md`](../../plans/active/agent_reliability_mitigations_2026_05_20.md).
+All are live on the central VM backend. The original plan + per-phase commit shas are archived at
+`plans/archive/2026_05/agent_reliability_mitigations_2026_05_20.md`. (Mitigation #1 of the original five, mirror-failure
+alerting via `tab-mirror-to-ldr.yml`, was RETIRED with the tab-branch model — see § "Slot model" — and is dropped from
+the table below.)
 
-| #   | Mitigation                          | Surface                                                                                                    | What it does                                                                                                                                                                                                                                |
-| --- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Mirror-failure → orchestrator alert | `POST /api/mirror-events` (public webhook) + `GET /api/mirror-events` + `POST /api/mirror-events/<id>/ack` | `.github/workflows/tab-mirror-to-ldr.yml` POSTs every outcome to the orchestrator. Skip/race-lost surface as alerted=true so the dashboard can show "LDR mirror blocked on `<repo>@<sha>`" instead of work sitting orphaned on a tab branch |
-| 2   | Pre-spawn dirty-state gate          | `spawn_slot()` runs `server/worktree_clean_check.py` before tmux                                           | Refuses spawn (HTTP 409) when slot worktrees have uncommitted changes. Returns per-repo dirty manifest + 3 resolution options. `dirty_state_resolution=stash` auto-stashes                                                                  |
-| 3   | Per-agent `.agent-claim` file       | `.tabs/<N>/.agent-claim` JSON; `GET /api/slots/<N>/claim`                                                  | Distinguishes "my predecessor's WIP (context reset)" from "another teammate's WIP (foreign)". 1h TTL refreshed by heartbeat. Agent on boot reads claim to decide ownership                                                                  |
-| 4   | Heartbeat in-flight files           | `HeartbeatRequest.in_flight_files`; `GET /api/slots/<N>/in-flight-files`                                   | Each heartbeat carries `{repo, path, intent, last_touched}` per file the worker is touching. Persists past tmux death so a successor agent can resume the predecessor's WIP                                                                 |
-| 5   | On-demand artifact pattern          | `.tabs/<N>/` code-only; venvs / node_modules built on first need                                           | Verified 2026-05-20 on VM: 12 slots × 27 repos = 3.7G total (would be ~160G if venvs eagerly built). See `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern"                                                      |
+| #   | Mitigation                    | Surface                                                                  | What it does                                                                                                                                                                           |
+| --- | ----------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2   | Pre-spawn dirty-state gate    | `spawn_slot()` runs `server/worktree_clean_check.py` before tmux         | Refuses spawn (HTTP 409) when slot worktrees have uncommitted changes. Returns per-repo dirty manifest + 3 resolution options. `dirty_state_resolution=stash` auto-stashes             |
+| 3   | Per-agent `.agent-claim` file | `.tabs/<N>/.agent-claim` JSON; `GET /api/slots/<N>/claim`                | Distinguishes "my predecessor's WIP (context reset)" from "another teammate's WIP (foreign)". 1h TTL refreshed by heartbeat. Agent on boot reads claim to decide ownership             |
+| 4   | Heartbeat in-flight files     | `HeartbeatRequest.in_flight_files`; `GET /api/slots/<N>/in-flight-files` | Each heartbeat carries `{repo, path, intent, last_touched}` per file the worker is touching. Persists past tmux death so a successor agent can resume the predecessor's WIP            |
+| 5   | On-demand artifact pattern    | `.tabs/<N>/` code-only; venvs / node_modules built on first need         | Verified 2026-05-20 on VM: 12 slots × 27 repos = 3.7G total (would be ~160G if venvs eagerly built). See `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern" |
 
 ## Slot model (single central VM)
 
@@ -353,22 +346,24 @@ Escalate to the other operator or stop autonomous work when:
 | Mirror-events stop landing in `GET /api/mirror-events`              | GHA workflow may have errored — check Actions tab on a recent tab-branch push                   |
 | Spawn returns 30s `did not become ready`                            | Verify `/tmp` is in `ReadWritePaths`; re-run `install-orchestrator-service.sh --restart`        |
 
-For data-correctness issues (trading pipeline, manifest, GCS parquets): those are outside this service's scope —
-escalate via `plans/active/_agent_pings.md`.
+For data-correctness issues (trading pipeline, manifest, GCS parquets): those are outside this service's scope — raise a
+worker `/blocked` question with `authority=operator` (pages Slack) or file an issue doc under `plans/active/issues/`.
 
 ---
 
 ## Validation smoke tests
 
-From `agent-orchestrator/docs/OPERATIONS.md` § "Validation smoke tests":
+Fast checks with no Claude session needed:
 
 ```bash
 # Pre-flight check
 curl -sf http://localhost:8765/api/healthz | python3 -m json.tool
 curl -s  http://localhost:8765/api/state | python3 -m json.tool
 
-# /blocked round-trip (Test E — fastest, no Claude session needed)
-# See OPERATIONS.md for full curl sequence
+# /blocked round-trip: POST a test question, confirm it lands in the blocked queue, answer it, confirm it clears
+curl -sX POST http://localhost:8765/api/blocked -H 'content-type: application/json' \
+  -d '{"slot_id":0,"question":"smoke test","authority":"main_agent"}'
+curl -s http://localhost:8765/api/blocked | python3 -m json.tool
 ```
 
 ---

@@ -415,7 +415,7 @@ Accepted by operator (plan decision 2026-05-19).
 
 ## See also
 
-- `agent-orchestrator/docs/OPERATIONS.md` — full operator workflows
+- `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — full operator workflows
 - `agent-orchestrator/README.md` — architecture overview + local dev
 - `codex/04-architecture/agent-orchestrator-overview.md` — service architecture SSOT
 - `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — day-to-day runbook

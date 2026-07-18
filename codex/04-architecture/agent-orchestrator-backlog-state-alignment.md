@@ -12,13 +12,12 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, plan-hygiene, self-healing, backlog, infrastructure]
-related: [agent-orchestrator-overview.md, agent-orchestrator-autospawn.md, agent-orchestrator-host-offline-failover.md]
+related: [agent-orchestrator-overview.md, agent-orchestrator-autospawn.md]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator backlog-to-state.db alignment and regen]
 referenced_by:
   [
     codex/04-architecture/agent-orchestrator-autospawn.md,
-    codex/04-architecture/agent-orchestrator-host-offline-failover.md,
     codex/04-architecture/agent-orchestrator-overview.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
@@ -60,7 +59,7 @@ normal cadence). The prior 6 h / 21600 s cadence lagged newly-pushed plans by up
 PM repo (plans/active/*.md)
     │
     ├─ sorted *.md files
-    ├─ skip: INDEX.md, _agent_pings.md, _*.md
+    ├─ skip: INDEX.md, _*.md (underscore-prefixed)
     ├─ [scope filter] skip plans not dispatchable: assigned_vm ≠ planning,
     │  execution_scope: local-only, or status: draft
     │

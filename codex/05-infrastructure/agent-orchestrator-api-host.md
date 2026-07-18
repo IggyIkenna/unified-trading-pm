@@ -3,8 +3,9 @@ doc_type: codex-ssot
 title: agent-orchestrator — central API host architecture
 summary:
   Central API host architecture for agent-orchestrator (EC2 i-0c9b283b31d6b5ca7, 13.113.200.22) — nginx :443 to uvicorn
-  :8765 router (fleet reached over private VPC :8026), systemd resource limits, the orch-watchdog forensic snapshots,
-  EventBridge+Lambda auto-reboot with a sliding-24h reboot ceiling, and the httpx (no-subprocess) usage poller.
+  :8765 (in-process tmux slots on this same VM — no per-VM fleet backends), systemd resource limits, the orch-watchdog
+  forensic snapshots, EventBridge+Lambda auto-reboot with a sliding-24h reboot ceiling, and the httpx (no-subprocess)
+  usage poller.
 status: current
 nature: ssot
 asset_group: [meta]

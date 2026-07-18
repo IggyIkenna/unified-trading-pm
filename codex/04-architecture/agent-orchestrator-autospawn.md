@@ -14,18 +14,12 @@ repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, role-registry, model-tier, slack, infrastructure]
 related:
-  [
-    agent-orchestrator-overview.md,
-    agent-orchestrator-host-offline-failover.md,
-    agent-orchestrator-worker-liveness.md,
-    agent-orchestrator-backlog-state-alignment.md,
-  ]
+  [agent-orchestrator-overview.md, agent-orchestrator-worker-liveness.md, agent-orchestrator-backlog-state-alignment.md]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator AutoSpawn worker-spawn architecture]
 referenced_by:
   [
     codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
-    codex/04-architecture/agent-orchestrator-host-offline-failover.md,
     codex/04-architecture/agent-orchestrator-overview.md,
     codex/04-architecture/agent-orchestrator-worker-liveness.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
@@ -231,7 +225,7 @@ name, slot ID, and dashboard link.
 
 ## Rollout procedure
 
-Enable per-VM via systemd drop-in (one VM at a time; canary on vm-orchestrator first):
+Enable on the central orchestrator VM (id `planning`) via systemd drop-in:
 
 ```ini
 # /etc/systemd/system/orchestrator.service.d/autospawn.conf
@@ -239,10 +233,8 @@ Enable per-VM via systemd drop-in (one VM at a time; canary on vm-orchestrator f
 Environment=ORCHESTRATOR_AUTOSPAWN_ENABLED=true
 ```
 
-Rollout script: `unified-trading-pm/scripts/orchestrator/enable_autospawn.sh`.
-
-Fleet rollout: `unified-trading-pm/scripts/orchestrator/run_fleet_enable_autospawn.sh` (sequential, canary abort on
-vm-orchestrator failure; captures per-VM enable-time and first-autospawn-time).
+Rollout script: `unified-trading-pm/scripts/orchestrator/enable_autospawn.sh` (single central VM since 2026-06-27; the
+`run_fleet_enable_autospawn.sh` multi-VM sequencer is a multi-VM-era holdover, unused on single-VM).
 
 ---
 

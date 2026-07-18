@@ -12,13 +12,12 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, watchdog, slack, infrastructure]
-related: [agent-orchestrator-autospawn.md, agent-orchestrator-overview.md, agent-orchestrator-host-offline-failover.md]
+related: [agent-orchestrator-autospawn.md, agent-orchestrator-overview.md]
 created: 2026-06-01
 authoritative_for: [agent-orchestrator worker-liveness watchdog]
 referenced_by:
   [
     codex/04-architecture/agent-orchestrator-autospawn.md,
-    codex/04-architecture/agent-orchestrator-host-offline-failover.md,
     codex/04-architecture/agent-orchestrator-overview.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
@@ -195,8 +194,8 @@ infrastructure required.
 
 ## Rollout procedure
 
-Roll the flag **sequentially** (canary on vm-orchestrator first; abort if false-positive kill rate is >5% — i.e., a
-legitimately-thinking worker gets killed):
+Enable the flag on the central orchestrator VM (id `planning`) and watch the false-positive kill rate — abort if it
+exceeds >5% (i.e., a legitimately-thinking worker gets killed):
 
 ```ini
 # /etc/systemd/system/orchestrator.service.d/watchdog.conf
