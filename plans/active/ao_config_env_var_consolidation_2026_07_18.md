@@ -260,6 +260,19 @@ Measurement/design notes for a fresh session: (1) pydantic-settings makes a bare
 IDE diagnostics are non-gating; only runtime test-pass + `server/` lint/types gate. (3) tuning knobs are read at
 call-time, so `set_tuning` on the live singleton survives until the next `reset_config()`.
 
+**2026-07-18 (follow-on — config-default reconciliation, ao@955f5f5)** — operator reviewed the operator-surface fields
+and adjusted defaults to match host reality; three fail-safe/security calls made:
+
+- `worker_watchdog_enabled` + `autospawn_enabled` — kept default **OFF** (fail-safe). A self-healing loop that acts on
+  the live fleet must never run on a fresh/demo/test backend by accident; the VM opts in explicitly. (A brief flip to
+  default-ON was reverted.)
+- `plan_regen_interval_seconds` default **1800 → 600**; the VM keeps its explicit `300` (5-min) override — a legitimate
+  per-host choice, not drift.
+- `allow_anonymous` — kept default **True** (dev-open). Flipping to False risks locking a fresh local/demo backend out
+  of its own dashboard; the only exposed host (the VM) is already explicitly `false`.
+- `resume_fresh_context_pct` 95 → 90 (tuning). No prod-VM env change needed — every host that wants a non-default
+  already sets it explicitly.
+
 ## Deferred work after 2026-07-18
 
 | Item                                                                                                                                       | State / why deferred                                                                                                                                                                                | Blocked on            |
