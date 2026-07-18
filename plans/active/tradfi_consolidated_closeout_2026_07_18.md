@@ -334,3 +334,36 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   delta-one single-stock equities, CME BTC/ETH futures+options, daily treasuries + KRW) → MVP-backfill-ready. All
   tradfi + tradfi-touching IS/MTDS docs aggregated above; none duplicated. The DERIBIT missing-quote finding stays
   captured on the cefi side (`cefi_consolidated_closeout_2026_07_18.md` line 183).
+
+- **2026-07-18 (slot-1, autonomous loop) — Phase A1 underway: UAC builder SHIPPED + MTDS forward-write converged + full
+  leak trace.** Re-verified the climbing metric live myself (own measurement, not the doc) on a fresh prod snapshot:
+  - **CLIMBING METRIC baseline = 0.0000% canonical (`-USD@LIN`)** on the id-column surfaces: catalogue `instrument_id`
+    **0 / 1,111,322** FUTURE/OPTION (113,349 raw like `CBOE:FUTURE:VX/F1` + **997,973 whitespace** — the
+    `CME:OPTION:E3AN6 C7960` literal-space class); catalogue `canonical_instrument_id` **0 / 1,111,322** (all empty
+    strings); manifest `availability_index.parquet` `instrument_id` **0 / 989,723** (783,523 raw like `EW1H0_P2785` +
+    206,200 whitespace). Reusable measurement tool: scratchpad `measure_metric.py` (pyarrow, matches the exact
+    `VENUE:TYPE:ROOT-USD@LIN-YYYYMMDD[-STRIKE-C|P]` shape).
+  - **[A1 builder] SHIPPED — `unified-api-contracts@8b7c4967`.** Extended the shared
+    `canonical_id_builder._build_with_margin_marker` to compose an explicit `-USD` quote onto the _bare_ product-root
+    symbol segment when `quote_asset` is passed alongside `margin_marker` → `CME:FUTURE:SP500-USD@LIN-20300621`,
+    `CME:OPTION:SP500-USD@LIN-20251017-5000-C`, `CBOE:FUTURE:VIX-USD@LIN-20260722`. Additive + opt-in: default
+    `quote_asset=""` keeps every existing `margin_marker` caller byte-identical (audited — all CeFi callers embed the
+    quote in the symbol e.g. `BTC-USDT`/`BTC-USD` and never pass `quote_asset`, so zero risk of double-append; verified
+    `BINANCE_FUTURES:PERPETUAL:BTC-USDT@LIN` / `BINANCE_DELIVERY:FUTURE:BTC-USD@INV-20260925` unchanged). Added
+    `TestTradfiUsdMarginMarker`. UAC QG green (337s).
+  - **[A1 writers] MTDS forward-write CONVERGED (edits made, MTDS QG/ship pending this tick):**
+    `databento_enrichment.py::_classify_row` (primary databento tick forward-write) and
+    `tradfi_shared.py::derive_tradfi_row_instrument_id` (batch derive) now pass `quote_asset="USD"` for FUTURE/OPTION →
+    both emit `-USD@LIN`. UAC is editable-local to MTDS (confirmed) so the change resolves at runtime.
+  - **LEAK TRACE (drives remaining A1 + Phase B):** (1) **IS catalogue adapter** `.../tradfi/databento/adapter.py:880`
+    sets `instrument_key = VENUE:TYPE:{sanitized_raw}` (→ the catalogue's raw `instrument_id`, e.g. `CME:FUTURE:GCQ26`),
+    and `_build_canonical_instrument_id` (`:974`) emits a colon/month-only non-`@LIN` additive field (mostly empty live
+    because `_resolve_product_root` returns None) — BOTH must converge to `-USD@LIN` (→ IS sub-agent). (2) **Manifest**
+    `instrument_id` derives from the parquet **content** `instrument_id` column via
+    `unified_trading_library/io/streaming_writer.py`→`manifest_writer`, so once the content column is canonical (done),
+    forward-write manifest rows are canonical too; historical manifest+catalogue rows are the Phase-B migration. (3) The
+    `tardis_*` paths under `adapters/tradfi/` are CeFi (deribit `derive_row_instrument_id`) or the **futures_chain
+    bundle** atom (product-symbol id = canonical by design) — NOT tradfi-databento leaks.
+  - **Concurrency note:** slot-3 is running the parallel `cefi_consolidated_closeout_2026_07_18.md` (same shared UAC
+    builder); QG cap = 2 (10 cores) so serialize; reconcile-not-stomp if slot-3 lands a builder change (my change is
+    additive so it merges cleanly). Env: 8 repos present, gcloud `central-element-323112` ADC, AWS `427895769566`.
