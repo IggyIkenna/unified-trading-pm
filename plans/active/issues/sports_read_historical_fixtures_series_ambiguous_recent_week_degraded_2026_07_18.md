@@ -144,12 +144,19 @@ fixed from a log trace alone.
       `FeatureWriteGate REJECTED shard` does for `fixture_player_stats`) instead of writing a >85%-all-NaN shard through
       — this is a data-correctness policy decision, not just a bug fix. (repo: features-service) —
       features-service@4be73e2a
-- [ ] [DATA] P2. Once the above is fixed, gap-fill the CORRECTED affected-date set (~521 dates, not 7): 2019-01-20
+- [x] ✅ [DATA] P2. Once the above is fixed, gap-fill the CORRECTED affected-date set (~521 dates, not 7): 2019-01-20
       through 2019-12-06 (intermittent, ~244 dates), 2019-12-12 through 2020-03-03 (intermittent, ~52 dates), and
       2025-12-04 through the corpus's live edge (contiguous, 225+ dates and growing daily until the fix ships) — the
       exact per-VM date lists are in "What I found" item 4 above. `--force` on the fixed code, same pattern as the
       sibling elo/travel gap-fill. Re-verify against the live corpus edge at fix time since the 2025-12-04→ window is
-      still open. (repo: features-service)
+      still open. (repo: features-service) — **spec captured; NO separate fleet launched.** Per main's final disposition
+      (BLK-db467fc8, reaffirmed BLK-fab4e006): this gap-fill is FOLDED into the main-owned consolidated 521-date
+      recompute that also re-verifies the sibling elo/travel fixes on the identical date set — one pass fixes all three
+      independently-broken columns (venue_context zeroing here + elo tz-naive + travel home-venue-coords) together, and
+      its manifest-coverage result is the evidence that flips `sports-gap-fill-fleet-20260717-complete`. The 521-date
+      scope + ~40.2h/278s-per-date estimate above is the input spec for that consolidated pass. The actual VM-fleet
+      launch (SPOT, `launch-features-vm.sh --force` on features-service@4be73e2a+) is a scheduling/spend decision main
+      flags to the operator at that time — it does not fire from this task.
 
 ## Progress Log
 
@@ -291,3 +298,15 @@ sentinel matched the shipped SHA before quickmerge, per the canonical commit→Q
 VM-fleet launch (unrelated to this todo) and now additionally needs `--force` re-run against this commit too, since any
 date in the gap-fill list that would have hit ≥85% all-NaN under the old code will now be correctly recorded as
 `empty_confirmed(EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` instead of a degraded `captured` write once re-run.
+
+### 2026-07-18T08:5xZ — data_engineering slot-5 — todo 3 closed per main's final ruling (no fleet launched by this task)
+
+Dispatched `-004` after slot-3's session ended before it could act on `blocked_answered` for `BLK-fab4e006`. Read the
+full activity trail first (both `-001`/`-002` prereqs shipped; two separate `/blocked` escalations — slot-2's
+`BLK-db467fc8` and slot-3's `BLK-fab4e006` — both answered by main with the SAME terminal disposition: do **not** launch
+a dedicated VM fleet for this todo; the 521-date gap-fill is folded into a main-owned consolidated recompute that also
+re-verifies the sibling elo/travel fixes on the identical dates, and that pass's manifest coverage is the evidence
+gating `sports-gap-fill-fleet-20260717-complete`). No further /blocked needed — this was already a `final` disposition,
+reaffirmed twice; re-raising it would violate "release -004; do not re-raise this." Flipped todo 3 to done with the
+fold-in rationale recorded inline. Not launching `launch-features-vm.sh` myself. No code changed in this session (this
+task's remaining work was purely the plan-doc disposition, per main's ruling).
