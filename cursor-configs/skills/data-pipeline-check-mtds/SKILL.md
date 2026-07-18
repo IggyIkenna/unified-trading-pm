@@ -316,6 +316,18 @@ When you do measure it, these five traps were all hit for real on 2026-07-18 and
    waiting on network I/O — the expected state for a download-bound pipeline. Confirm via swap/rss/threads and the last
    completion timestamp before calling it stalled.
 
+6. **Completion-based metrics CANNOT settle sustained throughput — use the VM's network RX counter.** Both MB/s and
+   rows/s credit work only when a shard COMPLETES, so with 300+ large shards in flight (2-3M rows each) they collapse
+   exactly when concurrency is working hardest. Measured 2026-07-18 over 32.4 min: 1,628 shards / 577.6M rows / 14.57 GB
+   completed = 297k rows/s and 7.49 MB/s — but with hundreds of shards downloaded-but-uncredited, so the true rate is
+   higher and UNQUANTIFIED. Four successive figures (15-16 -> 13.5 -> 11.5 -> 9.4 MB/s) were all produced by this broken
+   instrument. **The authoritative measure is bytes off the wire**: `cat /sys/class/net/ens4/statistics/rx_bytes`
+   sampled twice over 20-60s (via `gcloud compute ssh <vm> --tunnel-through-iap`). If SSH/IAP is unavailable, say the
+   number is unmeasured rather than quoting a completion-derived one.
+7. **Parquet output-MB/s is NOT venue-comparable.** Compression varies enormously: DERIBIT dated futures run 2-3M rows
+   per shard but compress to ~6.5 MB, while bybit-spot runs ~289k rows at ~8.3 MB — ~10x the row work for smaller
+   output. Comparing venues by output MB/s makes the row-heavy, well-compressing ones look "slow" when they are not.
+
 **Ground truth is the VM `run.log`, never the report verdict**:
 `Processed date=...: N venues ok, 0 failed, R total records` plus `StreamingParquetWriter: uploaded ...`. While the
 raw->canonical id migration is in flight the report's pass/fail is actively misleading — a full IS sweep reported
