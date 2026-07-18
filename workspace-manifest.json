@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 16,
+        "qg_red_reason": null,
         "large_file_count": 4,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "warn_file_count": 16,
+        "coverage_pct": 82.32
       }
     },
     "deployment-service": {
@@ -530,9 +530,9 @@
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
         "large_file_count": 0,
-        "warn_file_count": 11,
         "qg_red_reason": null,
-        "coverage_pct": 85.3
+        "coverage_pct": 85.31,
+        "warn_file_count": 11
       },
       "ldr_ci_status": "GREEN"
     },
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "large_file_count": 7,
         "qg_red_reason": null,
-        "warn_file_count": 8,
-        "large_file_count": 6,
-        "coverage_pct": null
+        "warn_file_count": 7,
+        "coverage_pct": 91.26
       }
     },
     "market-data-processing-service": {
@@ -880,10 +880,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
         "large_file_count": 0,
-        "warn_file_count": 37,
-        "coverage_pct": 83.27,
-        "qg_red_reason": null
+        "coverage_pct": 83.25,
+        "warn_file_count": 37
       }
     },
     "ml-service": {
@@ -1211,10 +1211,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 96.27,
         "qg_red_reason": null,
         "large_file_count": 24,
-        "warn_file_count": 31
+        "coverage_pct": 96.27,
+        "warn_file_count": 32
       }
     },
     "unified-trading-library": {
@@ -1264,9 +1264,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 6,
-        "warn_file_count": 21,
         "qg_red_reason": null,
-        "coverage_pct": 87.83
+        "coverage_pct": null,
+        "warn_file_count": 21
       }
     },
     "unified-trading-pm": {
@@ -1299,9 +1299,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "large_file_count": 0,
         "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": 75.84,
         "warn_file_count": 0
       }
     },
@@ -1399,7 +1399,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1415,10 +1415,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 74.84,
-        "warn_file_count": 6,
         "large_file_count": 14,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "warn_file_count": 6,
+        "coverage_pct": 74.66
       }
     },
     "e2e-testing": {
