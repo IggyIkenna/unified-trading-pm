@@ -20,6 +20,29 @@ same holds in `--mode live`. Writes are **test-bucket-only** — this never muta
 instrument-type coverage (SPOT_PAIR/PERPETUAL/FUTURE/OPTION/…) is a reporting dimension, never a separate shard key.
 SPORTS shards are `(sports_provider, day)`.
 
+## Read the VM run.log as ground truth, not the report verdict (added 2026-07-18)
+
+**While the raw->canonical instrument-id migration is in flight, this check's pass/fail is actively misleading.** The
+verification looks up a manifest row keyed on the sampled RAW symbol while the writer records the row under the
+CANONICAL id, so it returns `manifest_status_invalid:no_matching_row` on shards that genuinely succeeded. Measured
+2026-07-18: a full `--tardis-only` sweep reported `total=18 passed=1 failed=17` while **all 18 venues had written real
+records** (DERIBIT 3396, OKX 2790, BYBIT 1188, ...). Anyone — or any cron — alerting on these verdicts would see
+near-total failure where there is none.
+
+Score a run from the VM `run.log` instead:
+
+```
+instruments: date=<DAY> wrote <N> records across <M> venues
+Shard completeness OK: M/M venues written for date=<DAY>
+```
+
+A cell is genuinely OK when records > 0, completeness is OK, and there is no `Traceback`. Full evidence + the fix
+dependency: `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` (the downloader-side
+fix shipped as `market-tick-data-service@687abd54`).
+
+For THROUGHPUT measurement pitfalls (this check cannot measure throughput — it is boot-dominated), see the matching
+section in the `data-pipeline-check-mtds` skill.
+
 ## 0. `--day` is REQUIRED — never synthesize one
 
 This check is meaningless without a real target day. If the invoking prompt doesn't carry an explicit
