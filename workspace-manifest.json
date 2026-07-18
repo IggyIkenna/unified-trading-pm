@@ -759,7 +759,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 91.23,
         "warn_file_count": 7,
         "large_file_count": 7,
         "qg_red_reason": null
@@ -880,7 +880,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 83.25,
         "warn_file_count": 37,
         "large_file_count": 0,
         "qg_red_reason": null
@@ -1415,10 +1415,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 14,
-        "qg_red_reason": null,
+        "coverage_pct": 74.89,
         "warn_file_count": 6,
-        "coverage_pct": 74.66
+        "large_file_count": 14,
+        "qg_red_reason": null
       }
     },
     "e2e-testing": {
