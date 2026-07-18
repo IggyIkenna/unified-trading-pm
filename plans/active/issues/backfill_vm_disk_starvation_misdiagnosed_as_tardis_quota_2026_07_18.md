@@ -120,6 +120,49 @@ MB/s = 4.7x**, and the peak clears the 15 MB/s target.
 
 ---
 
+## Follow-up thread — throughput after the disk fix (2026-07-18 evening, in flight)
+
+The disk fix removed the disk as the constraint but did NOT reach the ~30 MB/s the codebase implies is available. This
+section is the running journal of that second investigation.
+
+### What the caps do and do not explain (measured, three arms)
+
+| Arm | downloads / book cap | steady-state MB/s (boot excluded)        |
+| --- | -------------------- | ---------------------------------------- |
+| A   | 32 / 16              | 11.09 mean, 11.73 median                 |
+| B   | 32 / 24              | 11.75 mean, 12.05 median (1.06x — noise) |
+| C   | 64 / 32              | in flight                                |
+
+Raising the book cap did nothing, and the reason is that the caps were never binding: sockets to Cloudflare sat at 16
+while trades ran 9-of-32. Confirmed the cap really applied via the adapter's own log line
+(`book_snapshot_5 runner capped at 24`), so this is not a passthrough bug.
+
+### Why the slots look half-empty
+
+A runner slot is held across download AND parse AND the GCS upload, so ~32 occupied slots present as ~16 open sockets —
+roughly half the slots are uploading, not downloading. Ruled out by measurement, not assumption: `max_in_flight_bytes`
+is never passed (byte gate is a no-op), zero memory-pressure pauses fired (mem 9.4% of 128GB, threshold ~75%), batches
+carry 52-427 tasks (never too small to saturate), and both thread pools are sized `max_concurrent_downloads + 8` = 40.
+
+### The actual shape of the workload (the thing that matters)
+
+Shard sizes over 2,056 uploads: **mean 10.32 MB, median 3.80, p90 30.20, max 152.90 — and 41% are under 1 MB.** Dispatch
+runs 93.5 requests/min with ZERO idle minutes. So a large fraction of requests pay a full ~10s round trip to move well
+under a megabyte: these streams are **latency-bound, not bandwidth-bound**, which means throughput should scale close to
+linearly with concurrency while CPU (~40%), disk (~20% util) and RAM (9.6 of 128 GB) all have headroom.
+
+### Stale guidance this invalidates
+
+`service_config.py` carries "past ~24 there is no throughput left to win" and a measured "24 streams -> 32.9 MB/s"
+plateau. Both were measured on **pd-standard, under disk saturation** — the same flaw that voided the morning's 8-vs-48
+concurrency A/B. They are not evidence about the post-fix system. Arm C (64/32) tests exactly this.
+
+### Guardrails held throughout
+
+cap-1 enforced by `tardis-concurrency-guard.sh` on every launch (it correctly BLOCKED a second launch earlier); arms run
+strictly sequentially, never concurrently; a twin-guard watchdog deletes any VM that is not the current arm; a
+403/`concurrent-IP-lock` tripwire watches for vendor pushback, since higher connection counts are the plausible trigger.
+
 ## Original (WRONG) analysis — kept as a record
 
 # Tardis account-level volume quota — ~7-8 GB, then ~2 MB/s
