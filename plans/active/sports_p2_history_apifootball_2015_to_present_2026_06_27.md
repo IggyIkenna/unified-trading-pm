@@ -2586,3 +2586,51 @@ slot-7's in-flight `-002` systemic fix. `/skip-current-task` — sharper resume 
 again once a `gcloud compute instances list` + per-VM shard read shows `max_date` for the 4 VMs has reached ~2026-06-01
 or later (est. ~18:20-18:30Z at the observed rate) — that is the point a consolidated `read_availability_index` re-read
 has a real chance of showing genuine pending_fetch movement, not another zero-signal repeat of this same check.
+
+### 2026-07-18T18:53Z — data_engineering slot-3 (Todo `-001` — first checkpoint with genuine gate-relevant movement: middle of the redirect window resolved, fleet now grinding through the tail on real fetches, not presence-skip)
+
+Dispatched (resumed) onto `-001`. Fresh-pulled all 25 slot repos clean, no dirty state inherited (the earlier GIT STATUS
+RED nudge for this slot — deployment-api/features-service/instruments-service/market-tick-data-service — was already
+stale/resolved by pickup, all 4 clean and in sync with `origin/live-defi-rollout`, no action needed). Confirmed the 4
+VMs from the 16:16-18Z launch / 17:40Z redirect (`af-backfill-20260718-16{1608,1641,1712,1740}`) still `RUNNING`, no 5th
+kill.
+
+**Ran both checks past the checkpoints prior entries flagged** (well past slot-14's ~18:20-18:30Z estimate, this read at
+18:50-18:53Z):
+
+1. `scripts/query_api_football_pending_clusters_2026_07_18.py` (consolidated index): total `pending_fetch` still 6,925
+   (same aggregate as the pre-redirect baseline), but the **shape changed materially** — the previously-single
+   `2026-02-21..2026-07-14` cluster (83.3%/5,770 cells) has split into two disjoint clusters (`2026-02-21..2026-03-22` +
+   `2026-06-24..2026-07-14`), meaning the middle of the redirect window (`2026-03-23..2026-06-23`) is now fully resolved
+   — the cluster-gap algorithm (14-day gap threshold) only splits a range when the middle genuinely clears. Residual
+   scattered dates (2020/2021/2024-12/2025-12/2026-05-08) unchanged in shape from the original P1 finding — not yet
+   touched by this redirect's window.
+2. Direct per-VM manifest shard read (bypassing the consolidated index, same technique as slot-9/13/14): all 4 shards
+   updated **within the last ~90 seconds** of this check (`18:51:01Z`-`18:52:04Z`) — actively writing, not stalled.
+   `max_date` per VM: `-161608` (FIXTURE_EVENTS) `2026-05-30`, `-161641` (FIXTURE_LINEUPS) `2026-06-05`, `-161712`
+   (FIXTURE_STATS) `2026-05-03`, `-161740` (PLAYER_STATS) `2026-05-25` — all comfortably past slot-14's
+   `2026-06-01`-or-later checkpoint bar for 2 of 4, close for the other 2. Advanced from slot-14's `2026-03-13..04-13`
+   read (17:58Z) by ~45-75 calendar days in the intervening ~53-55 min — but at a markedly SLOWER per-minute rate
+   (~0.8-1.4 days/min vs. the earlier ~2.8-2.9 days/min "cheap warm-up" rate), and `captured` counts are now real
+   (363-1,124 per VM, up from single digits/teens at the 17:58Z read) rather than pure presence-skip re-confirmation —
+   exactly the throughput drop-off slot-14 predicted once the fleet started hitting genuinely-pending cells and real API
+   fetches instead of already-resolved re-confirmation.
+
+**Interpretation**: this is the first checkpoint in this todo's whole bounce history where BOTH signals (cluster-shape
+narrowing + real per-VM captured-count growth) agree the redirect is doing genuine, non-redundant work — not just "VM is
+alive". At the observed post-warm-up rate (~0.8-1.4 days/min), the remaining ~40-75 days to reach the redirect's
+`2026-07-14` end date is another ~30-95 min out.
+
+**Did not touch the fleet** — healthy and genuinely converging; a relaunch now would discard this progress for zero
+gain. **Did not launch a supplementary fleet for the residual scattered-date clusters** (2020/2021/2024-12/2025-12)
+despite having the ready-made narrow-window commands from the cluster script — the same 4 VMs are still consuming the
+full shared `api_football` 1200 rpm ceiling per the already-adjudicated `BLK-99f50b65` finding (main: do not
+over-subscribe), so there is zero safe rate headroom to add VMs until this fleet's window walk completes or is otherwise
+freed. That residual (~1,155 cells) is real remaining work but is NOT safe to start concurrently with the current fleet.
+
+**Not flipping this checkbox.** `/skip-current-task` — resume once (a) a `gcloud compute instances list` + per-VM shard
+read shows all 4 VMs' `max_date` at or past `2026-07-14` (est. ~19:25-20:20Z at the observed post-warm-up rate) — at
+that point either the gate is genuinely close to green (main window resolved) and only the small residual scattered-date
+clusters remain, needing one small follow-up narrow relaunch once the main fleet's rate-budget share frees up; or (b)
+one of the 4 VMs self-terminates (`exit_code=0`, window walk complete) freeing rate budget early for a residual-cluster
+relaunch sooner than the full-fleet estimate.
