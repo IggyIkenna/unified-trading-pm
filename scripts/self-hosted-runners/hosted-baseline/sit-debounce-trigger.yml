@@ -375,6 +375,25 @@ jobs:
 
           echo "SIT dispatch complete"
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: was a separate 1-billed-minute-minimum `persist:` job calling the
+        # persist-cicd-event.yml reusable; as the LAST step it is free and runs on this job's runner.
+        # `if: always()` + `job.status` reproduces the old `conclusion: needs.check-and-trigger.result`.
+        # secrets/vars do not reach a composite action — passed explicitly (was `secrets: inherit`).
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "sit-debounce-trigger"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── SLACK NOTIFY — SIT triggered (reusable workflow) ──────────────────
   notify-sit-triggered:
     name: Slack — SIT Debounce Triggered
@@ -388,21 +407,6 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — SIT Debounce Event
-    needs: [check-and-trigger, notify-sit-triggered]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.check-and-trigger.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"event": "sit-debounce-trigger"}'
 
   # ── STARVATION CHECK (folded from sit-starvation-detector.yml 2026-06-27) ──────────────
   # Runs every 5 min (this workflow's cron) — more frequent than the old 30-min schedule.
@@ -507,6 +511,26 @@ jobs:
             done
           fi
 
+      - name: Persist CI/CD event (starvation)
+        # CI-cost STEP 2c: was the separate `stale-persist:` job calling the persist-cicd-event.yml
+        # reusable (1-billed-minute minimum). Same guard as before: only when the stale-lock ALERT
+        # fired, and the hardcoded `conclusion: failure` is kept — the ledger records the CONDITION
+        # (starvation detected), not this job's mechanical result, which is `success` even when it
+        # finds a dangling lock. secrets/vars do not reach a composite action — passed explicitly.
+        if: always() && steps.stale-check.outputs.alert == 'true'
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: "failure"
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "sit-starvation-detected"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── AUTO-REMEDIATE dangling lock — dispatch a new debounce-trigger run ─────────────────
   stale-remediate:
     name: Auto-remediate — re-trigger SIT for dangling lock
@@ -564,18 +588,3 @@ jobs:
       dedup_key: "sit-lock-cleared"
       cooldown_min: 5
     secrets: inherit
-
-  stale-persist:
-    name: Persist — SIT Starvation Event
-    needs: [check-stale-lock, stale-notify, stale-notify-resolved]
-    if: always() && needs.check-stale-lock.outputs.alert == 'true'
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: "failure"
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"event": "sit-starvation-detected"}'

@@ -171,21 +171,25 @@ jobs:
           fi
 
           COOLDOWN_MIN="${INPUT_COOLDOWN_MIN:-240}"
-          # The ledger is date-partitioned; a cooldown window can straddle UTC midnight, so read
-          # TODAY + YESTERDAY. Each is best-effort (a missing object → empty), so a brand-new key
-          # or a first-of-day key always posts.
-          TODAY=$(date -u +"%Y-%m-%d")
-          YESTERDAY=$(date -u -d "yesterday" +"%Y-%m-%d" 2>/dev/null || date -u -v-1d +"%Y-%m-%d")
-          MERGED="$(mktemp)"
-          : > "$MERGED"
-          for d in "$YESTERDAY" "$TODAY"; do
-            gsutil cp "gs://${CICD_EVENTS_BUCKET}/cicd/alerts/${d}/alerts.jsonl" "$MERGED.part" 2>/dev/null \
-              && cat "$MERGED.part" >> "$MERGED" || true
-          done
+          # ── PER-KEY MARKER OBJECT (root-cause fix, 2026-07-17) ─────────────────────
+          # The old implementation scanned the shared date-partitioned alerts.jsonl — which is
+          # written with an unlocked read-modify-write (cp down → append → cp up), so concurrent
+          # posts CLOBBER each other's rows (the D2 ledger-race class). MEASURED 2026-07-17: the
+          # day's ledger held 21 rows with ZERO `promotion-lag` rows despite ~11 branch-health
+          # posts — every persist was lost to the top-of-hour burst, every read-back fail-opened,
+          # and the "dedup'd" alert re-paged EVERY tick. The dedup state now lives in ONE OBJECT
+          # PER KEY (`cicd/alerts/dedup/<key>.json`, atomic overwrite, no shared object, no
+          # read-modify-write) — a key's last-post time can no longer be lost to a concurrent
+          # writer of a DIFFERENT key. The append-only alerts.jsonl stays as best-effort history
+          # (its lossiness is the open D2 decision); dedup no longer depends on it.
+          SAFE_KEY="$(printf '%s' "$DEDUP_KEY" | tr -c 'A-Za-z0-9._-' '_')"
+          MARKER_URI="gs://${CICD_EVENTS_BUCKET}/cicd/alerts/dedup/${SAFE_KEY}.json"
+          MARKER_FILE="$(mktemp)"
+          gsutil cp "$MARKER_URI" "$MARKER_FILE" 2>/dev/null || : > "$MARKER_FILE"
 
-          # Pure decision in python: find the LATEST ledger row carrying this dedup_key and compare
-          # its age to the cooldown. Any parse/IO hiccup → fail-open (post).
-          DEDUP_KEY="$DEDUP_KEY" COOLDOWN_MIN="$COOLDOWN_MIN" LEDGER_FILE="$MERGED" python3 - <<'PYEOF'
+          # Pure decision in python: read the key's marker timestamp and compare its age to the
+          # cooldown. Any parse/IO hiccup → fail-open (post).
+          DEDUP_KEY="$DEDUP_KEY" COOLDOWN_MIN="$COOLDOWN_MIN" MARKER_FILE="$MARKER_FILE" python3 - <<'PYEOF'
           import json, os
           from datetime import datetime, timedelta, timezone
 
@@ -194,30 +198,18 @@ jobs:
               cooldown = timedelta(minutes=float(os.environ.get("COOLDOWN_MIN", "240")))
           except ValueError:
               cooldown = timedelta(minutes=240)
-          path = os.environ["LEDGER_FILE"]
+          path = os.environ["MARKER_FILE"]
 
           latest = None
           try:
-              with open(path, encoding="utf-8") as fh:
-                  for line in fh:
-                      line = line.strip()
-                      if not line:
-                          continue
-                      try:
-                          row = json.loads(line)
-                      except json.JSONDecodeError:
-                          continue
-                      if not isinstance(row, dict) or row.get("dedup_key") != key:
-                          continue
+              raw = open(path, encoding="utf-8").read().strip()
+              if raw:
+                  row = json.loads(raw)
+                  if isinstance(row, dict) and row.get("dedup_key") == key:
                       ts = str(row.get("timestamp") or "")
-                      try:
-                          when = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                      except ValueError:
-                          continue
-                      if latest is None or when > latest:
-                          latest = when
-          except OSError:
-              latest = None  # unreadable → fail-open
+                      latest = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+          except (OSError, ValueError, json.JSONDecodeError):
+              latest = None  # unreadable/corrupt marker → fail-open
 
           out = os.environ["GITHUB_OUTPUT"]
           if latest is None:
@@ -413,6 +405,17 @@ jobs:
             --arg dedup_key "${INPUT_DEDUP_KEY:-}" \
             '{event_type:$event_type, timestamp:$timestamp, repo:$repo, workflow_name:$workflow_name,
               severity:$severity, conclusion:$conclusion, run_url:$run_url, message:$message, dedup_key:$dedup_key}')
+          # DEDUP MARKER first (root-cause fix 2026-07-17): the per-key object the dedup gate
+          # reads. Atomic single-object overwrite — immune to the read-modify-write clobbering
+          # that silently erased keys from the shared ledger and made every "dedup'd" alert
+          # re-page each tick.
+          if [ -n "${INPUT_DEDUP_KEY:-}" ]; then
+            SAFE_KEY="$(printf '%s' "$INPUT_DEDUP_KEY" | tr -c 'A-Za-z0-9._-' '_')"
+            printf '%s' "$ALERT_JSON" | gsutil cp - "gs://${CICD_EVENTS_BUCKET}/cicd/alerts/dedup/${SAFE_KEY}.json" \
+              && echo "Dedup marker written: dedup/${SAFE_KEY}.json" || true
+          fi
+          # History append (best-effort; KNOWN-LOSSY under concurrency — the open D2 ledger-race
+          # decision. Dedup deliberately does NOT depend on this object.)
           OBJECT_PATH="cicd/alerts/${DATE_PARTITION}/alerts.jsonl"
           GCS_URI="gs://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
           LOCAL_FILE="/tmp/alerts.jsonl"

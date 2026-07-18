@@ -18,16 +18,28 @@
 # │ not an archaeology exercise.                                                                     │
 # └────────────────────────────────────────────────────────────────────────────────────────────────┘
 #
-# PROVENANCE IS THE WHOLE POINT. For a workflow we already flipped, the working tree is NOT pristine
-# — so `snapshot` reaches into git history for the version immediately BEFORE the first commit that
-# introduced `self-hosted, glue` to that file. That parent predates every change this epic made to
-# it (the flip was always the first), so it still carries the original runs-on, setup-python and
-# install steps. For a workflow we never touched, the working tree IS the baseline.
+# PROVENANCE IS THE WHOLE POINT, and it has THREE cases (revised 2026-07-18):
+#
+#   never flipped        -> the working tree IS the hosted baseline. Copy it.
+#   flipped, mechanically -> the flip commit touched only runs-on/comments, so the hosted form is
+#                            just the LIVE file with the flip reverted (hosted_form.py). This keeps
+#                            current logic.
+#   flipped, with logic   -> the flip ALSO changed real steps (cassette-drift-check.yml deleted its
+#                            `Set up Python` because the glue image ships Python; ubuntu-latest still
+#                            needs it). Only the pre-flip parent is a valid hosted form, and it is
+#                            LOGIC-STALE by construction. Recorded as such; restore refuses it
+#                            without --force.
+#
+# The original design used the pre-flip parent for ALL flipped workflows, on the assumption that
+# "that parent predates every change this epic made to it (the flip was always the first)". That
+# assumption expired: measured 2026-07-18, 22 of 32 mechanically-flipped baselines had gone
+# logic-stale, so `restore --all` would have rolled back days of work — turning the safety net into
+# the hazard it exists to prevent. verify now catches that (check 4).
 #
 #   ./hosted-baseline.sh snapshot   # (re)build the baseline + MANIFEST.tsv. Idempotent.
-#   ./hosted-baseline.sh verify     # audit: baselines still hosted? unflipped ones still in sync?
+#   ./hosted-baseline.sh verify     # audit: hosted? present? unflipped in sync? flipped logic-stale?
 #   ./hosted-baseline.sh diff [wf]  # what the flip actually changed, per workflow
-#   ./hosted-baseline.sh restore <wf>|--all   # put the hosted form back into .github/workflows/
+#   ./hosted-baseline.sh restore [--force] <wf>|--all   # put the hosted form back
 #
 # The baseline lives OUTSIDE .github/workflows/ on purpose: GitHub only scans that one directory
 # (non-recursively), so a copy here can never be picked up and run as a duplicate workflow.
@@ -57,20 +69,65 @@ first_flip_commit() {
   printf '%s' "${all%%$'\n'*}"
 }
 
+# Did the flip commit change ONLY runs-on / comments for this file?
+#
+# If yes, the live file can be transformed straight back to a CORRECT hosted form, which keeps every
+# post-flip logic change. If no, the flip bundled real edits — cassette-drift-check.yml also DELETED
+# its `Set up Python` step because the glue image ships Python, and ubuntu-latest still needs it — so
+# only the pre-flip history is a trustworthy hosted form, at the cost of being logic-stale.
+flip_was_mechanical() {
+  local rel="$1" first="$2" n
+  n="$(git -C "${REPO_ROOT}" show "${first}" -- "${rel}" 2>/dev/null |
+    grep -E '^[+-]' | grep -vE '^(\+\+\+|---)' |
+    grep -vcE '^[+-][[:space:]]*(#|runs-on:)')"
+  [ "${n:-1}" -eq 0 ]
+}
+
+# Derive the hosted form of "$1" into "$2". Returns non-zero when the result is NOT trustworthy.
+#
+# The self-check matters: flip_was_mechanical only inspects the FIRST flip commit, so
+# self-hosted-specific logic added LATER slips past it. rules-alignment-agent.yml is the live
+# example — its flip was purely runs-on, but a later commit added an npm global-prefix workaround
+# that only applies on the glue pool. If the derived file still mentions the flip marker, there is
+# self-hosted-specific content beyond the banner and the derivation cannot be a hosted baseline.
+derive_hosted() {
+  "${HERE}/hosted_form.py" "$1" >"$2" 2>/dev/null || return 1
+  ! grep -q "${FLIP_MARKER}" "$2"
+}
+
 cmd_snapshot() {
   install -d -m 0755 "${OUT}"
   printf 'workflow\tsource\tprovenance_sha\tcaptured_from\n' > "${MANIFEST}"
-  local f base first rel n_hist=0 n_live=0
+  local f base first rel n_hist=0 n_live=0 n_derived=0
   for f in "${WF_DIR}"/*.yml; do
     [ -e "${f}" ] || continue
     base="$(basename "${f}")"
     rel=".github/workflows/${base}"
     first="$(first_flip_commit "${rel}")"
-    if [ -n "${first}" ]; then
-      # Flipped: the tree is NOT pristine. Take the parent of the flip commit.
+    local derived_ok=1
+    if [ -n "${first}" ] && flip_was_mechanical "${rel}" "${first}"; then
+      derive_hosted "${f}" "${OUT}/${base}.tmp" && derived_ok=0
+      rm -f "${OUT}/${base}.tmp"
+    fi
+    if [ "${derived_ok}" -eq 0 ]; then
+      # Flipped, but the flip was PURELY runs-on: derive the hosted form from the LIVE file so the
+      # baseline carries current logic. Reaching into history here (the original behaviour) froze the
+      # baseline at the flip: measured 2026-07-18, 22 of 32 mechanically-flipped baselines had gone
+      # logic-stale, so `restore --all` would have rolled back days of work — the exact
+      # revert-to-wrong-version hazard this directory exists to prevent.
+      "${HERE}/hosted_form.py" "${f}" > "${OUT}/${base}" \
+        || die "hosted_form.py failed on ${rel} — refusing to write a half-baked baseline."
+      printf '%s\tderived\t%s\t%s\n' "${base}" "$(git -C "${REPO_ROOT}" rev-parse --short HEAD)" \
+        "live minus the mechanical flip ${first:0:9}" >> "${MANIFEST}"
+      n_derived=$((n_derived + 1))
+    elif [ -n "${first}" ]; then
+      # Flipped AND the flip carried real logic changes. Only the pre-flip parent is a valid hosted
+      # form; it is logic-stale by construction, so record that fact — cmd_verify reports it and
+      # cmd_restore refuses to apply it without --force.
       git -C "${REPO_ROOT}" show "${first}^:${rel}" > "${OUT}/${base}" \
         || die "cannot read ${rel} at ${first}^ — history rewritten? Fix before trusting this baseline."
-      printf '%s\thistory\t%s\t%s\n' "${base}" "${first}^" "pre-flip parent of ${first:0:9}" >> "${MANIFEST}"
+      printf '%s\thistory-logic-stale\t%s\t%s\n' "${base}" "${first}^" \
+        "pre-flip parent of ${first:0:9} (flip bundled logic changes)" >> "${MANIFEST}"
       n_hist=$((n_hist + 1))
     else
       # Never flipped: the working tree IS the hosted form.
@@ -79,7 +136,7 @@ cmd_snapshot() {
       n_live=$((n_live + 1))
     fi
   done
-  log "snapshot: $((n_hist + n_live)) workflows — ${n_hist} recovered from history (flipped), ${n_live} copied live"
+  log "snapshot: $((n_hist + n_live + n_derived)) workflows — ${n_derived} derived from live (mechanical flip), ${n_hist} recovered from history (flip carried logic changes), ${n_live} copied live"
   cmd_verify
 }
 
@@ -122,6 +179,34 @@ cmd_verify() {
     fi
   done
 
+  # 4. LOGIC drift on FLIPPED workflows — the blind spot that made this directory a liability.
+  # Checks 1-3 only ever asked "is the baseline hosted?" and "are UNFLIPPED baselines in sync?", so a
+  # flipped workflow could accumulate any amount of post-flip logic change and still verify clean
+  # while its baseline silently rotted. Measured 2026-07-18: 22 of 32 mechanically-flipped baselines
+  # were logic-stale, i.e. `restore --all` would have rolled back days of work with no warning.
+  for f in "${WF_DIR}"/*.yml; do
+    [ -e "${f}" ] || continue
+    base="$(basename "${f}")"
+    rel=".github/workflows/${base}"
+    [ -f "${OUT}/${base}" ] || continue
+    first="$(first_flip_commit "${rel}")"
+    [ -n "${first}" ] || continue
+    _vtmp="$(mktemp)"
+    if flip_was_mechanical "${rel}" "${first}" && derive_hosted "${f}" "${_vtmp}"; then
+      if ! diff -q "${_vtmp}" "${OUT}/${base}" >/dev/null 2>&1; then
+        warn "${base} is FLIPPED and its baseline is LOGIC-STALE (live has changed since) — re-run: $0 snapshot"
+        drift=$((drift + 1))
+      fi
+      rm -f "${_vtmp}"
+    else
+      rm -f "${_vtmp}"
+      # Not auto-fixable: the flip bundled real edits, so the pre-flip parent is the only valid
+      # hosted form AND is logic-stale by construction. Report it every run — this is a standing
+      # condition a human must resolve by hand, not something snapshot can repair.
+      warn "${base} baseline is pre-flip history (the flip bundled logic changes) — LOGIC-STALE by construction; hand-review before any restore"
+    fi
+  done
+
   if [ "${bad}" -gt 0 ] || [ "${missing}" -gt 0 ] || [ "${drift}" -gt 0 ]; then
     die "verify FAILED: ${bad} non-hosted baseline(s), ${missing} missing, ${drift} stale. Re-run: $0 snapshot"
   fi
@@ -146,10 +231,29 @@ cmd_diff() {
 # Restore is a COPY, deliberately: it puts back the exact bytes that ran on GitHub-hosted, including
 # the setup-python / pip-install steps the flip removed. Reverting `runs-on` alone would leave a
 # hosted job with no Python set up — broken in a NEW way, which is the trap this exists to prevent.
+# A baseline recorded as history-logic-stale is a valid HOSTED form but an OLD one: restoring it
+# silently reverts every logic change made since the flip. Refuse by default; --force is the
+# deliberate "I know, I want the pre-flip version" escape hatch.
+restore_is_logic_stale() {
+  grep -qE "^$1	history-logic-stale	" "${MANIFEST}" 2>/dev/null
+}
+
 cmd_restore() {
-  local target="${1:-}"
-  [ -n "${target}" ] || die "usage: $0 restore <workflow.yml>|--all"
+  local target="${1:-}" force=0
+  if [ "${target}" = "--force" ]; then force=1; target="${2:-}"; fi
+  [ "${2:-}" = "--force" ] && force=1
+  [ -n "${target}" ] || die "usage: $0 restore [--force] <workflow.yml>|--all"
   [ -d "${OUT}" ] || die "no baseline — run: $0 snapshot"
+  if [ "${force}" -eq 0 ]; then
+    local stale_n
+    stale_n="$(awk -F'\t' 'NR>1 && $2=="history-logic-stale"{n++} END{print n+0}' "${MANIFEST}" 2>/dev/null)"
+    if [ "${target}" = "--all" ] && [ "${stale_n:-0}" -gt 0 ]; then
+      die "refusing --all: ${stale_n} baseline(s) are logic-stale (flip bundled logic changes) and would REVERT current logic. Review with '$0 diff <wf>', then re-run with --force, or restore the safe ones individually."
+    fi
+    if [ "${target}" != "--all" ] && restore_is_logic_stale "${target}"; then
+      die "refusing ${target}: its baseline is pre-flip history and would REVERT every change since the flip. Review with '$0 diff ${target}', then re-run: $0 restore --force ${target}"
+    fi
+  fi
   if [ "${target}" = "--all" ]; then
     local f n=0
     for f in "${OUT}"/*.yml; do
