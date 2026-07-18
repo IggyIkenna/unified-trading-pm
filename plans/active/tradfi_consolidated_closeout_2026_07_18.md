@@ -622,3 +622,27 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
      leaks) + 0 whitespace on OK rows. 5.
      **`gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-tradfi-cron --location asia-northeast1 --project central-element-323112`**
      (CRITICAL — never leave the consolidator paused). Then re-measure the manifest surface (the second climb) + flip.
+
+- **2026-07-18 (slot-1, tick 7) — 🎯 MANIFEST SURFACE MIGRATED (2nd climb) — consolidator paused→CAS→RESUMED cleanly.**
+  Executed the runbook: paused `uts-prod-manifest-consolidator-market-data-tradfi-cron` (runs `*/1` — EVERY MINUTE, so
+  the pause was essential) → `--apply --in-place-cas` (generation-match CAS: gen 1784386961903329→1784387144414068, NO
+  race, 5,553,510 rows rewritten, 114.8MB) → **RESUMED (ENABLED, verified)**. **INDEPENDENT live re-measure:** manifest
+  derivative `instrument_id` **0% → 62.4223%** (617,808/989,723); remaining 37.58% = the enumerated quarantine set (325k
+  `UD_1V__VT_` CBOE user-defined-strategy COMBOS + 39k unparseable + continuous — NOT raw leaks, they belong to the
+  combo track). `instrument_type` now UPPERCASE per operator ruling (`equity`+`EQUITY`→`EQUITY` 1.99M, `combo`→`COMBO`
+  1.15M, mislabels re-derived → `OPTION` 238,227). **Backups:**
+  `_index/backups/availability_index.pre_usd_lin_20260718T150445Z.parquet`.
+  - **RESIDUAL (the key follow-up — cleans both the metric + the dimension):** 165,715 rows still typed lowercase
+    `future` = the quarantined COMBOS whose `instrument_type` my migration left unchanged (quarantine = no id/type
+    change). They should be `COMBO` (classifier-derived). Because they're counted as raw FUTURE/OPTION, they DRAG the
+    62.42% down — re-stamping quarantined-combo `instrument_type`→`COMBO` (on BOTH catalogue + manifest) lifts the true
+    FUTURE/OPTION-canonical toward ~100% AND removes the last `future`/`FUTURE` dimension dupe. P0 follow-up.
+  - **Durability re-check IN PROGRESS** (does the every-minute consolidator revert the CAS rewrite? modeled on
+    `restamp_tradfi_schema_v9_tail` which persisted, so expected durable — verifying live).
+  - **Phase C dimensions-view DONE** (operator ask): backend `deployment-api@09656f4`
+    (`GET /data-status/axis-value-census`) + UI already shipped by the cefi-Track-6 peer (`deployment-ui@3fb6779`);
+    live-verified reproducing the exact drift audit. The old drilldown "removal" was `deployment-api@512180be`
+    display-canonicalizing (folding dupes) — good UX, killed drift-detection; the census panel restores the raw view.
+  - **Still queued:** combo re-stamp (above), cash-type `-USD` writer fix
+    (`NASDAQ:EQUITY:AAPL-USD`/`FX:CURRENCY:KRW-USD` — builder `_build_tradfi_cash` adds `-USD` only for INDEX today),
+    catalogue per-day sweep (~60% done), Barchart-retired purge, Phase A2/A3, Phase D.
