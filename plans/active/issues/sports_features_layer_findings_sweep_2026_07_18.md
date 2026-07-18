@@ -1141,3 +1141,42 @@ The residual is bounded by DISTINCT (league, season) pairs needing a fetch, NOT 
 - [ ] [DIAG] P2. Classify the 7 blank-only leagues: genuine honest absence (a cup tie has no `Regular Season - N`) vs a
       real capture gap. Do not fetch what has no round concept — that is honest absence and should be recorded as such,
       not chased.
+
+### P-ERA (2026-07-18) — `round` capture STARTS mid-2019; the underivable residual is one bounded era
+
+First dry-run of `instruments-service/scripts/derive_sports_fixture_round_2026_07_18.py` returned **0 filled / 2,390
+blank / 2,390 no-sibling**. That was MY sampling error, not a script failure: `--max-days 40` takes the FIRST 40 sorted
+days = earliest 2019, and round population there is **0%** — no populated siblings exist to propagate from. (Third time
+this session a small unrepresentative sample produced a confident wrong read; the fix is the same each time — sample
+across the range, or measure the whole corpus.)
+
+Measured population by era (one sampled matchday per year, `entity=fixtures_schedule`):
+
+| matchday   | rows | populated | %        |
+| ---------- | ---- | --------- | -------- |
+| 2019-02-09 | 575  | 0         | **0.0%** |
+| 2019-08-17 | 362  | 238       | 65.7%    |
+| 2020-09-19 | 289  | 171       | 59.2%    |
+| 2021-03-13 | 284  | 166       | 58.5%    |
+| 2022-10-05 | 88   | 44        | 50.0%    |
+| 2023-08-19 | 666  | 334       | 50.2%    |
+| 2024-04-06 | 394  | 187       | 47.5%    |
+| 2025-11-08 | 404  | 195       | 48.3%    |
+| 2026-03-14 | 354  | 142       | 40.1%    |
+
+**`round` capture begins around mid-2019** and holds 40-66% thereafter. So the work splits cleanly:
+
+- **2019-08 → 2026**: siblings exist → DERIVE (zero API calls), bounded by the § P 97% unanimity ceiling.
+- **early 2019 (Jan → ~Aug)**: 0% populated → nothing to derive from → API fetch. **Bounded by (league, season) pairs,
+  NOT days**: season 2019 across ~89 leagues ≈ **~89 bulk calls**, since one `GET /fixtures?league&season` returns the
+  whole season (measured: 242 fixtures in one call).
+
+Total projected api-football spend for the entire `round` gap: **~100 calls**, versus the ~1,260,000 of the rejected
+`--force` corpus refetch — and versus ~600-700 for the whole-corpus surgical script. The operator's "a couple of hours
+rather than days" is conservative; this is minutes of API time.
+
+- [ ] [DIAG] P0. Full-corpus dry-run running (no `--max-days`) — read fill / ambiguous / no-sibling corpus-wide before
+      `--apply`. Confirms the era split and gives the exact residual.
+- [ ] [CODE] P1. Cross-file sibling grouping: the script groups per PARQUET. If a (league, day)'s populated rows and
+      blanks live in different files, siblings are invisible and blanks are mis-counted as "no sibling". If the full-run
+      no-sibling count exceeds the ~8% predicted by § P-SIZING, group by (league, day) ACROSS the day's files.
