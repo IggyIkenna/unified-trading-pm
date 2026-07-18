@@ -147,10 +147,12 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 - **Async-wait / poll / background-task discipline (HARD RULE — recurring "found asleep" class)**: never report a
   backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness tasks); poll
   only external work on a **progress metric** (flat = STALL → diagnose); don't over-watch / no-sawtooth / don't poll
-  what you can direct-check; monitors read terminal `exit_code` + manifest counts + log-mtime + a TERMINAL **measured**
-  verdict (liveness `kill -0 <PID>`, no self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes —
-  arm your OWN `run_in_background` heartbeat watchdog (≤30-min) in the SAME turn. SSOT:
-  `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+  what you can direct-check; **backfill/migration progress = count of TARGET artifacts created (entity-scoped,
+  `time_created` not `updated`), NEVER activity** — a 3.5h run logged + heartbeated healthily while writing ZERO
+  `entity=fixtures`, and an entity-agnostic shard check passed it because OTHER entities were writing; monitors read
+  terminal `exit_code` + manifest counts + log-mtime + a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no
+  self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background`
+  heartbeat watchdog (≤30-min) in the SAME turn. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
   plans, memory).
 

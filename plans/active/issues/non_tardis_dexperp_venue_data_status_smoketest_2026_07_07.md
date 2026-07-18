@@ -229,10 +229,10 @@ Two secondary findings:
 - [ ] [CODE] P3. **HYPERLIQUID: delete the dead stub** `HyperliquidAdapter._download_trades_from_tardis()`
       (`hyperliquid_adapter.py:424-427`) — confirmed never called by the real batch pipeline; leaving a known-broken
       method around is a trap for a future engineer who assumes it's live.
-- [ ] [DECISION] P1. **Operator decision needed on PACIFICA-SOLANA and LIGHTER-ZKSYNC's MVP status** given zero real
-      production data today for either (LIGHTER-ZKSYNC pending the P0 Tardis-slug fix above, which may change this) —
-      same "remove from MVP instruments if we truly can't get the data" logic the operator applied to the KALSHI-PERP
-      question. Do not decide unilaterally; this doc surfaces the evidence, operator calls it.
+- [x] [DECISION] P1. ✅ **DECIDED (operator 2026-07-18): KEEP MVP + BLOCKED-CREDENTIALS scaffold.** Per the
+      external-data-always-available rule — do NOT descope PACIFICA-SOLANA/LIGHTER-ZKSYNC; build the adapter scaffold,
+      mark the live connectors `BLOCKED-CREDENTIALS`, and flip `live_capable` honestly (see the P3 `live_capable` todo
+      below). This UNBLOCKS the remaining FIX/VERIFY todos in this doc (they no longer wait on the MVP-scope call).
 - [ ] [FIX] P2. **PACIFICA-SOLANA: resolve the `derivative_ticker`/standalone-`perp_funding` duplicate-source risk**
       (`_umi_pacifica.py:227-276` and `_perp_funding_pacifica_lighter.py:125-175` both hit the same
       `/funding_rate/history` endpoint under two different canonical `data_type` labels) before either pipeline is ever

@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Async-wait & poll discipline — how an agent waits for things to complete _well_
 summary:
-  SSOT for how an agent waits on async work it cannot finish synchronously — watch a climbing PROGRESS
-  metric not just the terminal condition, short-interval-first then expand, treat a stall as
-  STOP-and-diagnose, prefer harness completion over polling; codifies watcher-coverage (terminal verdict
-  on every exit path, measured-not-assumed, kill -0 liveness) and the no-over-watch / no-sawtooth rule.
+  SSOT for how an agent waits on async work it cannot finish synchronously — watch a climbing PROGRESS metric not just
+  the terminal condition, short-interval-first then expand, treat a stall as STOP-and-diagnose, prefer harness
+  completion over polling; codifies watcher-coverage (terminal verdict on every exit path, measured-not-assumed, kill -0
+  liveness) and the no-over-watch / no-sawtooth rule.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,16 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [orchestrator, monitoring, self-healing, observability, runbook, verification]
-related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/12-agent-workflow/canonical-plan-flow.md, codex/08-workflows/ci-cd-flow.md]
+related:
+  [
+    codex/05-infrastructure/vm-tarball-deployment.md,
+    codex/12-agent-workflow/canonical-plan-flow.md,
+    codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-03
 authoritative_for: [agent async-wait and poll cadence discipline, background-task watcher coverage]
-referenced_by: [codex/04-architecture/cross-venue-prediction-arb-detection.md, codex/06-coding-standards/sub-agent-workflow.md]
+referenced_by:
+  [codex/04-architecture/cross-venue-prediction-arb-detection.md, codex/06-coding-standards/sub-agent-workflow.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -226,12 +232,12 @@ Composes with the Watcher-coverage rule above (terminal verdict on every path; v
 
 ## Self-deleting VM/job — monitor must read exit_code, not just RUNNING-count (HARD RULE, codified 2026-06-22)
 
-Backfill and batch VMs launched with `VM_SHUTDOWN_ON_COMPLETION=true` **self-delete on exit whether they SUCCEEDED (exit
-0) or CRASHED (exit 137=OOM / any other non-zero)**. A monitor that only watches the RUNNING set and treats a VM leaving
-as "completed/drained" is **BLIND to mass failures**.
+Backfill and batch VMs launched with `VM_SHUTDOWN_ON_COMPLETION=true` **self-delete on exit whether they SUCCEEDED
+(exit 0) or CRASHED (exit 137=OOM / any other non-zero)**. A monitor that only watches the RUNNING set and treats a VM
+leaving as "completed/drained" is **BLIND to mass failures**.
 
-**Incident (2026-06-22):** 3 sports backfills OOM-died with exit 137, self-deleted, and the drain-only monitor read
-14→1 as healthy completion — no wake fired. Coverage was actually 0% with 75k+ `attempted_failed` rows.
+**Incident (2026-06-22):** 3 sports backfills OOM-died with exit 137, self-deleted, and the drain-only monitor read 14→1
+as healthy completion — no wake fired. Coverage was actually 0% with 75k+ `attempted_failed` rows.
 
 **RULE:** a backfill monitor MUST, per VM:
 
@@ -245,14 +251,14 @@ as "completed/drained" is **BLIND to mass failures**.
 A backfill VM can sit `RUNNING` with no exit yet make zero progress for hours — the exit_code and RUNNING checks both
 show "healthy" while the work is entirely stuck.
 
-**Incident (2026-06-22):** Transfermarkt + FootyStats VMs hung 6.5h on an unbounded HTTP call — alive, exit_code
-absent, RUNNING. An exit-code + RUNNING monitor never woke; only a human spot-check caught it.
+**Incident (2026-06-22):** Transfermarkt + FootyStats VMs hung 6.5h on an unbounded HTTP call — alive, exit_code absent,
+RUNNING. An exit-code + RUNNING monitor never woke; only a human spot-check caught it.
 
 **RULE:** the monitor's progress signal MUST include **log mtime advancement**. A frozen mtime past a generous threshold
 (≥45 min) = HANG → WAKE.
 
-- The GCS-tee'd `run.log` **LAGS** the on-VM log by minutes; for the authoritative mtime,
-  SSH-read `/tmp/vm-exec-*.log` directly on the VM.
+- The GCS-tee'd `run.log` **LAGS** the on-VM log by minutes; for the authoritative mtime, SSH-read `/tmp/vm-exec-*.log`
+  directly on the VM.
 - The underlying bug behind such hangs is almost always an outbound HTTP/scrape call with **no `timeout=`** and no
   per-shard cancellation wrapper. Fix: `asyncio.wait_for(coro, timeout=N)` at the per-shard level so the stall is
   cancelled → caught → the loop continues. Never let an unbounded outbound call become a VM-wide hang.
@@ -267,17 +273,17 @@ wake **ONLY IF it completes**. A sub-agent that **dies silently** (rate-limit at
 **hangs** sends NO completion notification. The sub-agent's internal monitor wakes the sub-agent, not you. You get
 **ZERO wake** and go dormant indefinitely until the operator pings.
 
-**Incident (2026-06-24):** a post-quota-reset ramp driver was dispatched at 00:00 UTC and died silently before
-launching anything. The main loop went dormant 4.5h, wasting the day's fresh API-Football quota. The operator found it
-inactive mid-morning — same class as every "operator finds me asleep" incident.
+**Incident (2026-06-24):** a post-quota-reset ramp driver was dispatched at 00:00 UTC and died silently before launching
+anything. The main loop went dormant 4.5h, wasting the day's fresh API-Football quota. The operator found it inactive
+mid-morning — same class as every "operator finds me asleep" incident.
 
 **RULE:** in the SAME turn as any sub-agent dispatch, ALSO arm YOUR OWN independent `run_in_background` **heartbeat
 watchdog** that:
 
 1. Polls the **real ground-truth signal** (VMs RUNNING / quota being consumed / the metric climbing) — NOT the
    sub-agent's liveness.
-2. Reaches a **TERMINAL verdict + EXITS** (waking you) on done/problem **OR after a hard ≤30-min heartbeat
-   REGARDLESS** — so you wake on signal OR on a guaranteed cadence, whichever comes first.
+2. Reaches a **TERMINAL verdict + EXITS** (waking you) on done/problem **OR after a hard ≤30-min heartbeat REGARDLESS**
+   — so you wake on signal OR on a guaranteed cadence, whichever comes first.
 3. Prints an **explicit verdict line** on every exit path (done/problem/heartbeat) — silent expiry is banned.
 4. Is **re-armed on each wake** until the work is verifiably complete, then stood down.
 
@@ -292,12 +298,49 @@ heartbeat that does REAL verification each tick, not many 5-min arm-check-arm cy
 
 ## Direct-check beats polling (operator 2026-06-23)
 
-A build / Cloud Run execution / PR / job status is a **single on-demand query** (`gcloud builds describe`, `gh run view`,
-`gcloud run jobs executions describe`) — describe it and act. By the time you look it is **often already done**. Arming a
-30s-tick poller or "waiter" loop around a queryable status is **wasted motion that manufactures a dormancy gap** (the
-operator then finds you "waiting" on something already finished).
+A build / Cloud Run execution / PR / job status is a **single on-demand query** (`gcloud builds describe`,
+`gh run view`, `gcloud run jobs executions describe`) — describe it and act. By the time you look it is **often already
+done**. Arming a 30s-tick poller or "waiter" loop around a queryable status is **wasted motion that manufactures a
+dormancy gap** (the operator then finds you "waiting" on something already finished).
 
-The only **irreducible** wait is the underlying operation itself — a Docker image build is ~8–12 min and cannot be forced
-faster. For that floor, use **one** tracked `run_in_background` task that exits on completion (it auto-wakes you); do not
-wrap a one-call status check in a polling loop, and do not chain short waiters (sawtooth). Direct-check → conclude → move
-on. Composes with § "Watcher coverage" + the "Don't over-watch + no-sawtooth" rule in CLAUDE.md.
+The only **irreducible** wait is the underlying operation itself — a Docker image build is ~8–12 min and cannot be
+forced faster. For that floor, use **one** tracked `run_in_background` task that exits on completion (it auto-wakes
+you); do not wrap a one-call status check in a polling loop, and do not chain short waiters (sawtooth). Direct-check →
+conclude → move on. Composes with § "Watcher coverage" + the "Don't over-watch + no-sawtooth" rule in CLAUDE.md.
+
+## Backfill progress = the TARGET ARTIFACT, entity-scoped — never activity (HARD RULE, codified 2026-07-18)
+
+A backfill/migration monitor MUST key on **objects of the requested type appearing in the window**, not on any activity
+signal. Activity signals — log-line growth, log mtime, heartbeat blobs, process liveness, "N calls queued", `RUNNING`
+status — all report **healthy while zero target output is produced**.
+
+Measured failure (sports round-FIXTURES, 2026-07-18): a backfill VM launched `--entity FIXTURES` ran **3.5 hours** with
+log lines climbing 81k → 103k, `PIPELINE_HEARTBEAT` firing, per-date "Shard completeness OK" messages, and
+`status=RUNNING` throughout. It wrote **ZERO** `entity=fixtures` objects. Root cause: the write gate was existence-only
+and ignored `redo_all`, so every already-captured date was skipped. A second launch WITH `--force` also wrote zero. The
+failure was invisible to every activity-based signal for hours; one query — _"how many `entity=fixtures` parquets were
+created today?"_ — settled it in seconds.
+
+**The entity-scoping refinement (this is the subtle part).** "Some artifact was written" is NOT sufficient. That same VM
+was writing per-VM manifest shards briskly the whole time — for `fixture_lineups` / `fixture_stats` / `fixture_events` /
+`player_stats`. Those entities honour `redo_all`; the FIXTURES gate did not. So a shard-progress check that is
+**entity-agnostic** sees healthy progress and passes the VM. `deployment-service/scripts/vm/ vm_zombie_watchdog.py`
+already checks per-VM manifest-shard write progress explicitly to catch "alive + heartbeating but no useful work
+happening" — but it is entity-agnostic, so it would have passed this VM.
+
+**Rules:**
+
+1. The monitor's progress metric is a **count of target artifacts created in the run window** (GCS object `time_created`
+   on the expected prefix/entity, or manifest rows for that `data_type`) — never log/heartbeat activity.
+2. When the job declares a TARGET (`--entity X`, a data_type, an asset_group), the metric MUST be **scoped to that
+   target**. A job asked for X that produces only Y is FAILING, however busy it looks.
+3. Sample dates/keys the job reaches EARLY, and alert on **still-zero after a bounded window** (a first-launch monitor
+   keyed on dates the job had not yet reached produced a false alert on the same incident — the sample must be inside
+   the processed range).
+4. `time_created` / generation, never `updated` — a storage-class lifecycle transition bumps `updated` without any write
+   (measured on the same corpus).
+5. Activity signals remain valid ONLY for the orthogonal question "is the process hung?" (log-mtime advancement,
+   heartbeat) — they can never establish that useful work happened.
+
+Applies to backfills, migrations, re-derives and consolidator runs alike. SSOT for the incident:
+`plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` § G.

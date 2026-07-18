@@ -541,8 +541,19 @@ out-of-canonical-write-universe. Candidate causes, NOT yet distinguished:
    precondition, so the FIXTURES shard can never be written for a date whose instruments rollup is absent — a
    chicken-and-egg that `--force` does not break.
 
-- [ ] [DIAG] P0. Distinguish 1/2/3 above. Concretely: take ONE date with a known in-universe league (e.g. an EPL
+- [x] [DIAG] P0. Distinguish 1/2/3 above. Concretely: take ONE date with a known in-universe league (e.g. an EPL
       matchday in 2019) and trace whether `entity=fixtures` is written; if not, find the exact gate that drops it.
+      **ROOT CAUSE FOUND + FIXED — instruments-service@7d49d096.** The `entity=fixtures` write gate in
+      `_ensure_canonical_fixtures_for_override` was **existence-ONLY**: existing per-league canonical fixtures set
+      `_needs_write = False` and nothing was written _regardless of_ `VM_FORCE`/`redo_all` — the flag was plumbed to the
+      per-fixture enrichment entities but never to this function. That exactly predicts the measured asymmetry
+      (enrichment shards re-wrote: 72/61/50/19; `entity=fixtures`: 0). Hypotheses 1-3 all RULED OUT: EPL _is_ in the
+      canonical universe and its passed Jan-2019 matchdays still wrote nothing, and the 'no instruments parquet' log
+      line is a best-effort SECONDARY mapping write documented to no-op. Fix = plumb `redo_all` through
+      `sports_reference.py -> _resolve_fixture_ids -> _ensure_canonical_fixtures_for_override` + override the existence
+      check; AND bypass the old-path shortcut under `redo_all` (that parquet is pre-migration OLD-writer data, so
+      copying it forward would re-materialise the stale blank-`round` rows `--force` was meant to replace). 2 regression
+      tests pin both. Evidence: QG green (4,579 passed / 0 failed).
 - [ ] [DIAG] P0. Verify whether the round writer fix (instruments-service@19ae5890) is even reachable — it is in the
       tarball (@d9ca1c0c, freshness-gate verified), but if the FIXTURES shard never writes, `round` can never populate
       regardless of the writer being correct.
@@ -573,3 +584,39 @@ distinguished by the [DIAG] P0 above):
 
 Hypothesis 1 is cheapest to test and would mean NO bug: pick a date where a known in-universe league (e.g. EPL) played
 in 2019 and check whether `entity=fixtures` is written there.
+
+### G-status (2026-07-18 13:56Z) — fix shipped, deployment BLOCKED on a peer's live WIP
+
+- **Code fix SHIPPED**: `instruments-service@7d49d096` (QG green, 4,579 passed). Plan checkbox flipped.
+- **VM STOPPED**: `af-backfill-20260718-124341` deleted. It carried the PRE-fix tarball, so under `--force` it was
+  re-fetching already-captured enrichment at ~1,126 calls/date while still writing zero `entity=fixtures` — pure quota
+  burn with no progress toward `round`.
+- **Tarball rebuild BLOCKED**: `create-code-tarballs.sh --asset-group SPORTS` aborts on
+  `market-tick-data-service has uncommitted changes` BEFORE it reaches instruments-service. That WIP is a peer's and is
+  LIVE + STAGED (tardis_symbol_resolution.py + a new test, mtimes 13:52-13:53, index status `M `/`A `) — someone is
+  mid-commit. NOT shelved: stashing staged work someone is about to commit risks corrupting their commit, and
+  `--allow-dirty-tarball` would ship their untested WIP. Waiting for their commit is the correct call.
+- Note the backfill VM does not actually need MTDS (its freshness gate checks only instruments-service /
+  unified-api-contracts / unified-trading-library / deployment-service) — the batch builder just aborts on the first
+  dirty repo regardless.
+
+**NEXT (in order, once MTDS is committed):**
+
+1. `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS` — verify a sha-pinned
+   `instruments-service-code@7d49d096*.tar.gz` appears.
+2. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --entity FIXTURES 2019-01-01 2026-07-17`
+   (`--force` is REQUIRED — it is what the new gate honours).
+3. Watchdog on the ARTIFACT, not log lines: `entity=fixtures` objects created today must climb within ~15 min.
+4. Then: catalogue rollup `--since 2019-01-01` and verify `competition_phase` is no longer ~100% UNKNOWN.
+
+- [x] [OPS] P0. Execute the 4 steps above once `market-tick-data-service` is clean. — **Steps 1-3 DONE 2026-07-18
+      14:16Z.** Peer landed their MTDS WIP (`687abd54`) so the tarball rebuilt clean. Tarball carries the fix: built sha
+      `650dd4b7` with `7d49d096` PROVEN an ancestor, and the built tree contains both halves (`if redo_all:` override +
+      `_old_blob.exists() and not redo_all` bypass). Relaunched `af-backfill-20260718-141638` (SPOT,
+      `--force --entity FIXTURES 2019-01-01..2026-07-17`), freshness gate green on all 4 tarballs, quota 150,888
+      remaining, 258 req/min, 1 VM. Watchdog v3 armed on the ARTIFACT (`entity=fixtures` objects created today across
+      2019-01-01..20), alerting at 20min if still zero. Step 4 (catalogue rollup + competition_phase verification)
+      pending the run.
+- [ ] [OPS] P0. Step 4 — after the backfill completes:
+      `build_instrument_catalogue.py --asset-group sports     --since 2019-01-01`, then verify `competition_phase` is no
+      longer ~100% UNKNOWN and `is_promotion_relegation` is a real signal rather than a constant False.
