@@ -135,3 +135,23 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
 - **2026-07-17, authored** as the execution+strategy successor of [[bucket_estate_fold_design_2026_07_13]] §3 todo 1.
   Object counts NOT re-measured this session — executor re-measures per AG at provision time. Fold D gated on the parent
   W2 split-brain repoint (todo 2). Nothing executed yet.
+- **2026-07-18, `/autonomous` — PROVISION + MIGRATE started (operator steer: "start C+D provisioning, additive/safe,
+  while Fold-A ship waits").** Re-measured GCP: `execution-store-cefi` **6144 obj** (live fills — confirms the ~6142
+  estimate), defi 2, tradfi 1, sports 0; `execution-store-pred-{prd,test}` exist (pred kind); `strategy-store` flat
+  **172 obj**. **PROVISIONED** the folded GCP targets (direct gcloud, ASIA-NORTHEAST1/UBLA/STANDARD→COLDLINE@60d):
+  `execution-store-{prd,test}-central-element-323112` (both were absent), `strategy-store-prd-central-element-323112`
+  (`strategy-store-test` already existed). **MIGRATING** (server-side, additive — sources untouched): Fold D
+  `strategy-store/*` → `strategy-store-prd/*` (flat re-tier, same layout: `_index/ backtests/ catalogue/ configs/
+  hedge_ratio_snapshots/ legacy_cefi/ strategy_decision_context/ strategy_instructions/ tracer_runs/`); Fold C
+  `execution-store-{cefi,defi,tradfi}/*` → `execution-store-prd/{ag}/*` (AG becomes top-level prefix; cefi layout
+  `execution/ configs/ deployment_history/ blocked_spreads/ backfill_batches/ nautilus-catalog-cache/ nautilus_catalog/
+  …` all gain the `cefi/` prefix) + `execution-store-pred-prd/*` → `execution-store-prd/pred/`; sports (0) assert-empty.
+  **cefi is LIVE** — the bulk copy is a point-in-time snapshot; a FINAL RSYNC at cutover catches new-fill drift (expected
+  parity-drift on cefi until then). **NEXT (gated, NOT this session):** Fold-C+D code CUTOVER is GATED on the parent W2
+  [[strategy_store_split_brain_2026_07_13]] repoint landing first (todo 2 — strategy-service already resolves flat
+  `kind="strategy-store"`, verified; the HARDCODED per-AG readers deployment-api/UI/UAC-facade are the W2 scope to
+  confirm); execution-store-cefi DELETE is OPERATOR-GATED (live fills). Cutover follows the Fold-A discovery→implement→
+  adversarially-verify shape (execution-service `service_config.py` + UTL PATH_REGISTRY `execution_fills`/`nautilus_catalog`
+  + strategy re-tier writers + UAC `strategy_store_bucket` facade + 2 UI hardcoded routes). Also: execution/strategy
+  service builds will need the same base-image pin bump as ml (fleet digest-sweep fix f6e98bbdd auto-handles it once it
+  promotes + the 6h sweep runs).
