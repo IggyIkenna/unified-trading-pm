@@ -7,7 +7,7 @@ summary:
   alone silently picks one chain's pool. Add `chain` to the DeFi POOL identity everywhere, gated on a cross-service
   shard-atom check (the atom must be identical across writer/manifest/status/gate/UI AND MTDS/MDPS/ features) so the
   identity change lands coherently rather than fragmenting one lifecycle.
-status: active
+status: superseded
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -40,12 +40,29 @@ source:
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: defi_consolidated_closeout_2026_07_18.md
 ---
 
 # DeFi POOL instrument_id chain-uniqueness
 
-**Operator ruling (2026-07-18):** full fix — add `chain` to the DeFi POOL identity (not just a catalogue dedupe-key).
+> **🟥 SUPERSEDED 2026-07-18 by `defi_consolidated_closeout_2026_07_18.md` (operator-confirmed).** That plan already
+> owns the DeFi instrument-identity canonicalisation and settled the POOL key by operator ruling: the **dual-key** model
+> — `canonical_instrument_id = VENUE-CHAIN:POOL:TOKEN0-TOKEN1[-FEE_BPS]` (chain-carrying → chain-unique, e.g.
+> `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500`) while `instrument_id = pool_address.lower()` stays the address-anchored
+> MACHINE key (`pool_address` also stays its own column for on-chain lookups). So chain lives in the venue segment of
+> the _canonical_ id, NOT folded into the machine `instrument_id` as this plan originally proposed — the two schemes
+> CONFLICT, and the closeout's operator ruling wins. **This plan's original design (`pool::CHAIN::addr` machine id) is
+> WITHDRAWN.** The only durable carry-over is the verification below.
+>
+> **Carry-over to fold into the closeout (verification):** the 6 known cross-chain address collisions (`0x004c167d…`
+> CURVE on AVALANCHE+OPTIMISM; `0x01abc00e…`/`0x03cd191f…`/`0x06df3b2b…`/`0xc6a5032d…`/`0xfeadd389…` BALANCER on
+> ETHEREUM+POLYGON) must each resolve to a DISTINCT `canonical_instrument_id` post-migration, and every
+> data-status/coverage consumer must key on `canonical_instrument_id` (chain-unique), never the bare `instrument_id`
+> (which collides BY DESIGN in the dual-key model). Add that as a verification check under the closeout's POOL-canonical
+> todo.
+
+**Original finding (retained for provenance; the FIX is superseded — see banner):** the live defi catalogue carries 6
+pool contract addresses deployed on two chains each (12 rows) that collide on `instrument_id == pool_address.lower()`.
 
 ## Context
 
