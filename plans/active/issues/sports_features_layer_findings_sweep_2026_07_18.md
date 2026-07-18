@@ -541,8 +541,19 @@ out-of-canonical-write-universe. Candidate causes, NOT yet distinguished:
    precondition, so the FIXTURES shard can never be written for a date whose instruments rollup is absent — a
    chicken-and-egg that `--force` does not break.
 
-- [ ] [DIAG] P0. Distinguish 1/2/3 above. Concretely: take ONE date with a known in-universe league (e.g. an EPL
+- [x] [DIAG] P0. Distinguish 1/2/3 above. Concretely: take ONE date with a known in-universe league (e.g. an EPL
       matchday in 2019) and trace whether `entity=fixtures` is written; if not, find the exact gate that drops it.
+      **ROOT CAUSE FOUND + FIXED — instruments-service@7d49d096.** The `entity=fixtures` write gate in
+      `_ensure_canonical_fixtures_for_override` was **existence-ONLY**: existing per-league canonical fixtures set
+      `_needs_write = False` and nothing was written _regardless of_ `VM_FORCE`/`redo_all` — the flag was plumbed to the
+      per-fixture enrichment entities but never to this function. That exactly predicts the measured asymmetry
+      (enrichment shards re-wrote: 72/61/50/19; `entity=fixtures`: 0). Hypotheses 1-3 all RULED OUT: EPL _is_ in the
+      canonical universe and its passed Jan-2019 matchdays still wrote nothing, and the 'no instruments parquet' log
+      line is a best-effort SECONDARY mapping write documented to no-op. Fix = plumb `redo_all` through
+      `sports_reference.py -> _resolve_fixture_ids -> _ensure_canonical_fixtures_for_override` + override the existence
+      check; AND bypass the old-path shortcut under `redo_all` (that parquet is pre-migration OLD-writer data, so
+      copying it forward would re-materialise the stale blank-`round` rows `--force` was meant to replace). 2 regression
+      tests pin both. Evidence: QG green (4,579 passed / 0 failed).
 - [ ] [DIAG] P0. Verify whether the round writer fix (instruments-service@19ae5890) is even reachable — it is in the
       tarball (@d9ca1c0c, freshness-gate verified), but if the FIXTURES shard never writes, `round` can never populate
       regardless of the writer being correct.
