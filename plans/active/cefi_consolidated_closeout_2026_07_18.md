@@ -299,9 +299,21 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   cutover `--apply`.** The blank-itype axis is the ROOT: fixing it first lets the 3-tuple resolve most of the 986k
   UNRESOLVED bare-wire.
 
-- [ ] [REVIEW] P0. **Operator canonical rulings** (see the questions posed 2026-07-18) — blank-itype resolution
-      strategy; prediction-venue rows (KALSHI-PERP/POLYMARKET-PERP) in the cefi manifest; DERIBIT:COMBO; blank
-      venue/id/data_type rows; COINBASE-CDE. These shape the normalization scripts below, so they land FIRST.
+- [x] ✅ [REVIEW] P0. **Operator canonical rulings — RECEIVED 2026-07-18. The rebuilt catalogue is the SSOT; align the
+      manifest to it.**
+      1. **Blank/missing instrument_type (3.19M)** → **catalogue-resolve by (venue, raw_symbol) AND venue-suffix-infer
+         when not in the catalogue** (operator chose the most aggressive option): `-SPOT`→`SPOT_PAIR`,
+         `-FUTURES`/`-SWAP`/`-PERP` venue→derivatives (dated symbol→`FUTURE`, else `PERPETUAL`). Accept the small
+         mis-type risk on delisted symbols the catalogue no longer knows.
+      2. **Orphans (not in catalogue)** → **DROP unless cleanly mappable to canonical.** Bare-`OKX` (64) → remap to
+         `OKX-SWAP`/`-SPOT`/`-FUTURES` where the symbol resolves cleanly, else drop; blank venue/id/data_type → drop.
+      3. **KALSHI-PERP (784) + POLYMARKET-PERP (480) → DROP** — VERIFIED 2026-07-18: **100% `empty_confirmed`,
+         `row_count=0`, `instrument_count=0`, blank `instrument_id`** — no real perp data (the "Polymarket perps that
+         don't work" that were dropped originally; these are just empty probe rows for 8 data_types × dates). If they
+         ever capture real perp data they'd map cleanly to canonical, but there is none today.
+      4. **DERIBIT:COMBO is CANONICAL** (catalogue has `instrument_type=COMBO` 138,544 + venue `DERIBIT-COMBO` 69,272)
+         — my audit's canonical-set was missing COMBO; combos get MIGRATED, not excluded. `COINBASE-CDE` (99 in
+         catalogue) legit.
 - [ ] [SCRIPT] P0. **instrument_type column normalization** — casing (`perpetual`/`spot`/`spot_pair`/`future` → UPPER,
       `spot`→`SPOT_PAIR`), `None`/blank → catalogue-inferred by (venue, raw_symbol) (the venue name disambiguates most:
       `-SPOT`→SPOT_PAIR, `-FUTURES`/`-SWAP`→PERPETUAL|FUTURE), data_type-leak (`futures_chain`/`options_chain` as itype)
