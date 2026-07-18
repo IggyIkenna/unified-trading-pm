@@ -9,7 +9,7 @@ summary:
   "Unknown error" — backend code VERIFIED WORKING against real GCS locally, so this is a deploy-lag / client-timeout
   issue, not a code bug. (3) Catalogue Explorer venue / data_type / instrument_type are free-text inputs that should be
   dropdowns of the real distinct values.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [data-status, deployment-ui, deployment-api, ux, fixtures, prediction, catalogue, sports]
 related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-17
-last_updated: 2026-07-17
+last_updated: 2026-07-18
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -29,6 +29,9 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: ui_developer
 drift_direction: advance-code
 resolved_by:
+  "All F1-F10 + P/A findings shipped & verified. Last: F8 durable frozen-tail merge instruments-service@9d6aa5ee
+  (live-verified no-shrink) + F2 OOM fix live-verified 16Gi/4CPU. Follow-up
+  uac_defi_launch_date_registry_drift_2026_07_18.md also resolved (0 drift)."
 locked_by:
 locked_since:
 source: operator live UI review 2026-07-17 pm (screenshots in chat)
