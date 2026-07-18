@@ -126,9 +126,9 @@ class OrchestratorConfig(UnifiedCloudConfig):   # BaseSettings — THE .env surf
       `extra="ignore"`). Two ways: a re-bootstrap now purges it (agent-orchestrator@5ad97b9), OR an SSM `sed -i`
       backup-first + clean restart. Operator-gated: touches prod env. **BLOCKED-OPERATOR-DECISION** (no rush — inert
       no-op today).
-- [ ] [DOC] P2. **Trim redundant-to-default VM vars** — note (do not necessarily delete) `WATCHDOG_DAILY_CAP=50`,
-      `SNAPSHOT_INTERVAL_SECONDS=1800`, `WORKER_HOST=local`, `REGEN_PRUNE_STALE=true` on the VM just re-state code
-      defaults. Record in ENV_VARS.md "redundant, safe to remove" rather than silently changing prod.
+- [x] [DOC] P2. ✅ **Recorded the redundant-to-default VM vars** — agent-orchestrator@c03ccce. ENV_VARS.md now has a
+      "Redundant on the live VM (safe to remove)" section for `WATCHDOG_DAILY_CAP=50`, `SNAPSHOT_INTERVAL_SECONDS=1800`,
+      `WORKER_HOST=local`, `REGEN_PRUNE_STALE=true` (documented, not silently changed on prod).
 
 ## Phase 1 — split the class (config.py only)
 
@@ -165,17 +165,19 @@ class OrchestratorConfig(UnifiedCloudConfig):   # BaseSettings — THE .env surf
 
 ## Phase 4 — docs
 
-- [ ] [DOC] P1. **Rewrite `docs/ENV_VARS.md` to the two-class shape** — the operator surface = the env-reading class
-      (what you populate per host); a short "everything else is `config.tuning`, edit-and-redeploy, not env" note
-      replacing the "~80 remaining knobs / grep config.py" section. Clears AF-6: remove `tab/<vm_id>/<slot>`, "Fleet VM
-      (epic worker)", `ORCHESTRATOR_OPERATOR = tab branch operator" framing → single-VM `planning` reality.
-- [ ] [DOC] P2. **Codex reconcile** — check `codex/06-coding-standards/config-reloader-pattern.md` for any "every knob
-      is a field on OrchestratorConfig" claim that the nested split invalidates; update to name the two classes.
+- [x] [DOC] P1. ✅ **Rewrote `docs/ENV_VARS.md` to the two-class shape** — agent-orchestrator@c03ccce. Documents the
+      operator surface (env-read) vs `config.tuning` (env-free, edit+redeploy), replacing the "~80 remaining knobs /
+      grep config.py" note. Cleared AF-6: dropped `tab/<vm_id>/<slot>`, "Fleet VM (epic worker)", and the
+      `ORCHESTRATOR_OPERATOR = tab branch operator` framing for the single-VM `planning` reality.
+- [x] [DOC] P2. ✅ **Codex reconcile — nothing to change** — checked
+      `codex/06-coding-standards/config-reloader-pattern.md`: 0 grep hits for `OrchestratorConfig` / "every knob" /
+      `tuning`; its single "orchestrator" mention is about crash telemetry, not config structure. The nested split
+      invalidates no claim there.
 
 ## Phase 5 — ship + verify
 
-- [ ] [BACKEND] P1. **Ship each phase via `quickmerge.sh --agent --files`** from a QG-green tree; flip the phase's todos
-      here in the same turn with `<repo>@<sha>` evidence.
+- [x] [BACKEND] P1. ✅ **Shipped each phase via `quickmerge.sh --agent --files`** from a QG-green tree, flipping todos
+      in the same turn: Phase 0 ao@5ad97b9, Phases 1-3 ao@2d6d60b, Phase 4 ao@c03ccce. All landed on LDR, ahead=0.
 - [ ] [SCRIPT] P2. **(operator-gated) apply the Phase-0 P2 VM `.env.local` cleanup** once code is live + `ao-self-pull`
       has the new config; verify `curl localhost:8765/api/mode` + a clean restart via SSM.
 
@@ -240,3 +242,29 @@ i-0c9b283b31d6b5ca7), `bootstrap_vm.sh`, repo-wide `ORCHESTRATOR_*=` grep, and 1
 Classification: 63 operator / 81 tuning (20 test-coupled). Two DEAD vars found still written by bootstrap + live VM
 (`REGEN_DB_PATH`, `REGEN_REQUIRE_VM_MATCH`). Folds in AF-6 (ENV_VARS.md residual) from
 `ao_open_issues_consolidated_close_out_2026_07_17.md`. No code shipped yet.
+
+**2026-07-18 (execution — Phases 0-5 code complete)** — all code + docs shipped, every phase QG-green:
+
+- **Phase 0** ao@5ad97b9 — bootstrap now purges the retired `REGEN_REQUIRE_VM_MATCH` on re-bootstrap (correction: it
+  already purged `REGEN_DB_PATH`; the gap was only REQUIRE_VM_MATCH) + stale-comment cleanup.
+- **Phases 1-3** ao@2d6d60b — `TuningDefaults` env-free split (81 knobs moved, verified round-trip + env-free), 85
+  call-site rewires across 26 modules, 20 test-coupled knobs rewired onto a `set_tuning` conftest fixture + direct
+  `TuningDefaults` bounds asserts. QG: **1366 passed / 1 skipped**, dashboard green, ruff + basedpyright clean.
+  Deviation: dropped the two dead `_blank_*_loop` blank-coercers (env-free makes them unreachable).
+- **Phase 4** ao@c03ccce — ENV_VARS.md rewritten to the two-class shape, AF-6 residual cleared; codex config-reloader
+  doc checked (nothing to reconcile).
+
+Measurement/design notes for a fresh session: (1) pydantic-settings makes a bare `BaseModel` field inherited into a
+`BaseSettings` read env by BARE name — that's WHY tuning had to be a NESTED sub-model, not a mixin (empirically shown).
+(2) QG basedpyright EXCLUDES `tests/` (`include=["server"]`) and ruff `tests/*` ignores F401/F841/F811 — so test-file
+IDE diagnostics are non-gating; only runtime test-pass + `server/` lint/types gate. (3) tuning knobs are read at
+call-time, so `set_tuning` on the live singleton survives until the next `reset_config()`.
+
+## Deferred work after 2026-07-18
+
+| Item                                                                                                                                       | State / why deferred                                                                                                                                                                                | Blocked on            |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Phase 0 P2 / Phase 5 P2 — remove dead `REGEN_REQUIRE_VM_MATCH` + trim the redundant-to-default vars from the LIVE planning-VM `.env.local` | Operator-owned — touches prod env. Inert no-op today (config `extra="ignore"` ignores it), so no urgency. A re-bootstrap now clears REQUIRE_VM_MATCH; or SSM `sed -i` backup-first + clean restart. | **operator decision** |
+
+Recommended NEXT: nothing here is blocking — the refactor is functionally complete and live-safe. The only open items
+are the operator-gated prod-env tidy-ups above; do them opportunistically on the next VM re-bootstrap.
