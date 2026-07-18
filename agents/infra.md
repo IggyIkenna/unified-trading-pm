@@ -92,6 +92,19 @@ references — the DOMAIN MAP (paths workspace-relative to unified-trading-pm/):
 
 Do not load domains the plan doesn't touch.
 
+STEP 0.65 — VM-delete guardrail (HARD RULE, codified 2026-07-18 after the `cefi-queue-heavy-binancefutu-x15`/`-x17`
+mid-stream kills — see `plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md` § "Incident
+3"). Audit-log evidence (`agent-name/claude_code` UA, 17 distinct `invocation-id`s across 17 kills) showed the actor was
+agents running a manual `gcloud compute instances delete` against a Tardis-fleet VM — NOT `tardis-concurrency-guard.sh`
+(it has no delete code path at all, only a launch-time refuse-or-warn). Same class as Incident 2's `af-backfill` kills,
+mirrored here as this craft's own version of `data_engineering.md` STEP 0.55: **NEVER run
+`gcloud compute instances delete` against a VM in this task's own fleet (or a sibling entity/asset_group's fleet)
+without first confirming genuine staleness** via ALL of: (1) the heartbeat blob (`vm-heartbeat/<vm>.txt` age vs. the
+watchdog's per-prefix threshold), (2) a `run.log` tail (active writes in the last few minutes = alive, not stale), and
+(3) the manifest shard mtime (is it still advancing). A concurrency-cap guard's refusal (e.g.
+`tardis-concurrency-guard.sh`) means WAIT or escalate, not delete the running VM yourself — deleting a live backfill VM
+destroys hours of in-progress, idempotent-but-costly work.
+
 STEP 1+ — work the plan start-to-finish (it is sized for one agent). Resolved decisions + acceptance Gates are in the
 plan; you implement to the Gate. Run quality-gates.sh, ship via quickmerge, and VERIFY CI after push (quality-gates-v2
 is the required check on every repo). If you surface an unknown the plan didn't anticipate, file an issue doc + escalate
