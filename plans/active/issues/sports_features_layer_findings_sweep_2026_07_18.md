@@ -584,3 +584,29 @@ distinguished by the [DIAG] P0 above):
 
 Hypothesis 1 is cheapest to test and would mean NO bug: pick a date where a known in-universe league (e.g. EPL) played
 in 2019 and check whether `entity=fixtures` is written there.
+
+### G-status (2026-07-18 13:56Z) — fix shipped, deployment BLOCKED on a peer's live WIP
+
+- **Code fix SHIPPED**: `instruments-service@7d49d096` (QG green, 4,579 passed). Plan checkbox flipped.
+- **VM STOPPED**: `af-backfill-20260718-124341` deleted. It carried the PRE-fix tarball, so under `--force` it was
+  re-fetching already-captured enrichment at ~1,126 calls/date while still writing zero `entity=fixtures` — pure quota
+  burn with no progress toward `round`.
+- **Tarball rebuild BLOCKED**: `create-code-tarballs.sh --asset-group SPORTS` aborts on
+  `market-tick-data-service has uncommitted changes` BEFORE it reaches instruments-service. That WIP is a peer's and is
+  LIVE + STAGED (tardis_symbol_resolution.py + a new test, mtimes 13:52-13:53, index status `M `/`A `) — someone is
+  mid-commit. NOT shelved: stashing staged work someone is about to commit risks corrupting their commit, and
+  `--allow-dirty-tarball` would ship their untested WIP. Waiting for their commit is the correct call.
+- Note the backfill VM does not actually need MTDS (its freshness gate checks only instruments-service /
+  unified-api-contracts / unified-trading-library / deployment-service) — the batch builder just aborts on the first
+  dirty repo regardless.
+
+**NEXT (in order, once MTDS is committed):**
+
+1. `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group SPORTS` — verify a sha-pinned
+   `instruments-service-code@7d49d096*.tar.gz` appears.
+2. `bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --entity FIXTURES 2019-01-01 2026-07-17`
+   (`--force` is REQUIRED — it is what the new gate honours).
+3. Watchdog on the ARTIFACT, not log lines: `entity=fixtures` objects created today must climb within ~15 min.
+4. Then: catalogue rollup `--since 2019-01-01` and verify `competition_phase` is no longer ~100% UNKNOWN.
+
+- [ ] [OPS] P0. Execute the 4 steps above once `market-tick-data-service` is clean.
