@@ -2138,3 +2138,29 @@ from scratch; (3) once genuinely 0 pending (excluding TEAMS, out of this todo's 
 pre-existing smaller `attempted_failed` issue, not chased this dispatch), flip this checkbox with per-entity evidence.
 `/skip-current-task` after shipping — matching this doc's established precedent (real progress + root-cause-bounded
 relaunch is the shippable unit when the underlying compute isn't finished yet).
+
+### 2026-07-18T15:4xZ — data_engineering slot-4 (Todo `-001` — 11th bounce, cheap re-check, decline: relaunch too fresh + fix already in flight)
+
+Dispatched (resumed) onto `-001`. Fresh-pulled all slot repos clean. Checked the two things slot-8's note asked the next
+dispatch to check, rather than blind-repeating the full diagnosis:
+
+1. **Infra fix status** — `zombie_watchdog_relaunch_reaped_live_backfills-001` (the `[INFRA] P1` widened
+   `PREFIX_IDLE_THRESHOLDS` todo from the issue doc) is confirmed **already `dispatched` to slot 3** in the live backlog
+   (`GET /api/backlog`, priority 20) — not sitting unpicked, so no escalation/priority-bump needed right now.
+2. **Fleet survival** — `gcloud compute instances list --filter="name~af-backfill-20260718"` (non-snap SDK at
+   `~/google-cloud-sdk/bin`; this slot's snap `gcloud` still hits the same `cap_dac_override` credential-store bug noted
+   last session) shows all 4 relaunched entity VMs (`-152725` EVENTS / `-152753` LINEUPS / `-152818` STATS / `-152852`
+   PLAYER_STATS) still `RUNNING`, ~15-18 min old — the watchdog has not reaped this relaunch (yet; it's inside the 60min
+   shard-staleness window either way, too early to call it survived).
+
+Also noted an unrelated 5th `af-backfill-20260718-150353` VM (`VM_SPORTS_ENTITY=FIXTURES`, `VM_FORCE=true`,
+2019-01-10→2026-07-17) — a separate FIXTURES force-backfill from a different task, out of this todo's enrichment scope
+(FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS/INJURIES/STANDINGS/TEAMS only); not investigated further here.
+
+**Decline, no new diagnosis run**: re-running the full `read_availability_index` gate query now (~15-18 min after the
+last measurement) would almost certainly reproduce the same pending counts session-8 already logged — that exact
+"re-check nothing changed, decline" pattern is what bounces 2-9 already did on this todo. With the fix in flight
+elsewhere and the fleet still alive, there's nothing new this dispatch can add. Not flipping the checkbox.
+`/skip-current-task` — resume this todo once (a) slot 3's watchdog-threshold fix ships (check
+`zombie_watchdog_relaunch_reaped_live_backfills-001` status) or (b) enough wall-clock has passed for a genuinely fresh
+gate re-read to be informative, whichever comes first.
