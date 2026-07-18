@@ -603,3 +603,22 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     type (scope_B.md §7). (2) **Durability NOT yet done** — only `--full-sweep` (prod/n) ran; the per-day
     `instrument_availability/by_date/` corpus still needs `--by-day --apply` or the next `build_instrument_catalogue.py`
     rebuild reverts prod/n. NEXT: run `--by-day`, then manifest pause+CAS.
+
+- **2026-07-18 (slot-1, tick 6) — catalogue per-day durability sweep RUNNING + manifest CAS-mode built + EXECUTION
+  RUNBOOK.** Per-day sweep `--by-day --apply --by-day-full-sweep --workers 24` running in bg (2,636 partitions / 27,092
+  files, ~3h idempotent, safe — backs up each file, skips already-canonical; progress = TARGET files rewritten).
+  Manifest CAS-mode added to `migrate_tradfi_manifest_usd_lin_2026_07_18.py` (`--in-place-cas`: download →
+  generation-match CAS rewrite that REPLACES raw rows, fixing the additive-dedup-key duplication; dry-run verified
+  617,808/617,808 canonical + 3.3M UPPERCASE + 142,590 bundle translations). **MANIFEST EXECUTION RUNBOOK (the riskiest
+  op — run each step, verify, RESUME at the end no matter what):**
+  1. Ship the CAS-mode (in flight). 2.
+     `gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-tradfi-cron --location asia-northeast1 --project central-element-323112`
+     → `describe ... --format='value(state)'` must show PAUSED.
+  2. `cd market-tick-data-service && GCP_PROJECT_ID=central-element-323112 .venv/bin/python scripts/migrate_tradfi_manifest_usd_lin_2026_07_18.py --apply --in-place-cas`
+     (BACKGROUND — 132MB download + 4M-row rewrite + snapshot to `_index/backups/` + `if_generation_match` CAS upload;
+     aborts LOUDLY on race, no partial write).
+  3. Independent verify: re-download `_index/availability_index.parquet` + run scratchpad `measure_metric.py` → expect
+     derivative `instrument_id` ~62.4% canonical (rest = the enumerated combo/unparseable/continuous quarantine, NOT raw
+     leaks) + 0 whitespace on OK rows. 5.
+     **`gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-tradfi-cron --location asia-northeast1 --project central-element-323112`**
+     (CRITICAL — never leave the consolidator paused). Then re-measure the manifest surface (the second climb) + flip.

@@ -21,7 +21,7 @@ name: freeze-deferred-build-replay
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # drain shortly after any freeze window lifts
+    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: post-freeze drain tolerates ≤1h; was */30)
   workflow_dispatch:
     inputs:
       dry_run:

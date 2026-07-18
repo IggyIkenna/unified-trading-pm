@@ -14,12 +14,15 @@ name: branch-health
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # every 30 min — covers both the old drift-tick (1h) and lag monitor (30m)
+    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: alert-only surface, dedup is state-transition based — an hourly tick still fires every alert exactly once; was */30)
   workflow_dispatch:
     inputs:
       threshold_min:
         description: "Lag threshold in minutes (lag-monitor job)"
         default: "60"
+      sit_threshold_min:
+        description: "LDR→main lag threshold for SIT-covered repos (full-SIT-round-trip floor)"
+        default: "120"
 
 permissions:
   contents: read
@@ -101,6 +104,10 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_ETAG_CACHE_FILE: .gh-etag-cache.json
           THRESH: ${{ github.event.inputs.threshold_min || '60' }}
+          # SIT-covered repos get a longer LDR→main threshold — their promote FLOOR is a full SIT
+          # round-trip, so 60m false-fires on a healthy promote (agent-orchestrator ~156m on
+          # 2026-07-18 = 3 SIT rounds, promote PR itself merged in 2 min). Only LDR→main is affected.
+          SIT_THRESH: ${{ github.event.inputs.sit_threshold_min || '120' }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         run: |
           set +e
@@ -108,7 +115,7 @@ jobs:
           if [ -f .lag-state.json ]; then
             LAST_LAG=$(jq -r '.lag // false' .lag-state.json 2>/dev/null || echo "false")
           fi
-          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH" --slack)
+          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH" --sit-threshold-min "$SIT_THRESH" --slack)
           RC=$?
           echo "$REPORT"
           if [ "$RC" -eq 1 ]; then LAG=true; else LAG=false; fi

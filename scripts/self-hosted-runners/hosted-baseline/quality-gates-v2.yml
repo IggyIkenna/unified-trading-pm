@@ -45,7 +45,10 @@ jobs:
   dispatch-cloud-build:
     name: Dispatch cloud-build trigger (staging only)
     needs: quality-gates-v2
-    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    # docs_only (A1): a documentation-only push changes no code — no image to rebuild.
+    if:
+      github.event_name == 'push' && github.ref == 'refs/heads/staging' && needs.quality-gates-v2.outputs.docs_only !=
+      'true'
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch qg-passed → cloud-build-router

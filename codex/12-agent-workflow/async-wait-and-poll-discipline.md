@@ -344,3 +344,21 @@ happening" — but it is entity-agnostic, so it would have passed this VM.
 
 Applies to backfills, migrations, re-derives and consolidator runs alike. SSOT for the incident:
 `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` § G.
+
+### Refinement (same day, 2026-07-18) — an artifact check is only as good as the ENTITY NAME
+
+An artifact-keyed monitor fails EXACTLY like an activity-keyed one when it queries a **stale entity name**. Measured
+hours after codifying the rule above: the sports fixtures entity had been SPLIT into `entity=fixtures_schedule` +
+`entity=fixtures_outcomes`, but the monitor still counted the legacy `entity=fixtures`. It reported **zero writes on a
+WORKING fix** and was ~7 minutes from raising a false "the fix did not take effect" alert. The real state was
+`fixtures_schedule` with `round` populated 1/1 and 2/2.
+
+So, before trusting a zero from an artifact check:
+
+1. **Enumerate what the run ACTUALLY created** (`by entity` histogram over the day prefix, unfiltered) before concluding
+   "nothing was written". One unfiltered listing distinguishes "wrote nothing" from "wrote somewhere else" in a single
+   query — and is the ONLY cheap way to catch a rename/split.
+2. A zero from a name-filtered query is **two hypotheses, not one**: nothing written, OR written under a different name.
+   Never collapse them.
+3. Entity names split/rename over a corpus's life; the June-era objects still sit under the OLD name, so "the old name
+   exists in GCS" does NOT prove it is still the write target.

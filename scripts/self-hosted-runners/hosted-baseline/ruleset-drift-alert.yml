@@ -31,9 +31,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
+      # No actions/setup-python: this runs on the self-hosted glue pool, whose python3 IS the slot
+      # venv on 3.13 (first on the unit PATH) — the version pyproject requires. Re-adding it would
+      # re-download a Python that is already resident, on a box we pay for 24/7. Provisioning lives
+      # in scripts/self-hosted-runners/bootstrap-ci-host.sh; if the version is ever wrong, fix it
+      # THERE, not here. NOTE: this workflow is now self-hosted-ONLY — restoring runs-on:
+      # ubuntu-latest requires restoring setup-python with it.
 
       - name: Verify ruleset check-name consistency
         id: verify

@@ -620,3 +620,33 @@ in 2019 and check whether `entity=fixtures` is written there.
 - [ ] [OPS] P0. Step 4 — after the backfill completes:
       `build_instrument_catalogue.py --asset-group sports     --since 2019-01-01`, then verify `competition_phase` is no
       longer ~100% UNKNOWN and `is_promotion_relegation` is a real signal rather than a constant False.
+
+### G-RESOLVED (2026-07-18 14:35Z) — fix confirmed working; my verification metric was wrong
+
+**`round` IS NOW POPULATING.** Measured on writes produced by the fixed build (`af-backfill-20260718-141638`, tarball
+`650dd4b7` with `7d49d096` ancestor-proven):
+
+| day        | entity              | round populated | sample                |
+| ---------- | ------------------- | --------------- | --------------------- |
+| 2019-01-03 | `fixtures_schedule` | **1/1**         | `Regular Season - 21` |
+| 2019-01-05 | `fixtures_schedule` | **2/2**         | `Regular Season - 11` |
+
+**RETRACTED (mine) — "zero fixtures written".** Every "zero" measurement in § G above queried the LEGACY
+`entity=fixtures`. That entity has been **SPLIT into `entity=fixtures_schedule` + `entity=fixtures_outcomes`** (`round`
+lives on the schedule leg; outcomes carries scores/end-time and correctly has no `round`). An unfiltered by-entity
+histogram over `day=2019-01-03` showed **164 objects created today** — `fixtures_schedule` 3, `fixtures_outcomes` 3,
+`standings` 59, `teams` 87, plus the enrichment entities — i.e. the run was writing all along under the current names.
+Watchdog v3 was ~7 minutes from raising a FALSE "the fix did not take effect" alert on a working fix.
+
+**The redo_all fix is still correct and still necessary** — do NOT revert it. Launch 1's by-entity breakdown contained
+NO `fixtures_schedule` at all (only fixture_lineups/stats/events/player_stats), so the schedule writes appearing now are
+genuinely the gate fix taking effect. The root cause and the fix were right; only the measurement was wrong.
+
+Codified as a refinement in `codex/12-agent-workflow/async-wait-and-poll-discipline.md`: an artifact check is only as
+good as its ENTITY NAME — enumerate what a run actually created (unfiltered by-entity histogram) before concluding
+"nothing was written"; a name-filtered zero is two hypotheses (wrote nothing / wrote elsewhere), never one.
+
+- [x] [DIAG] P0. Verify the round writer fix is reachable — **YES, confirmed end-to-end**: writer fix @19ae5890 + gate
+      fix @7d49d096 + fresh tarball → `fixtures_schedule` rows with `round` populated 100% in every sampled shard.
+- [ ] [OPS] P0. Let the backfill run to completion (watchdog v4 keyed on `entity=fixtures_schedule` created today), then
+      run the catalogue rollup `--since 2019-01-01` and verify `competition_phase` is no longer ~100% UNKNOWN.

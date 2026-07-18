@@ -42,18 +42,30 @@ permissions:
 
 jobs:
   update-ci-status:
+    # CI-cost B1 + STEP 2b: the ~13k/mo ci_status writer. Goes to the LONG-LIVED glue-writer pool,
+    # NOT the JIT glue pool: at ~1 run/2.5min the JIT register/deregister round-trip would dominate
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ steps.validate.outputs.skip }}
       notify_worthy: ${{ steps.update.outputs.notify_worthy }}
+      recovered: ${{ steps.update.outputs.recovered }}
       prev_status: ${{ steps.update.outputs.prev_status }}
       severity_class: ${{ steps.update.outputs.severity_class }}
       sit_pass: ${{ steps.update.outputs.sit_pass }}
     steps:
-      - name: Checkout
+      - name: Checkout (sparse — STEP 2b trim)
+        # STEP 2b (ci-cost plan, 2026-07-17): this job needs exactly TWO paths — the store script
+        # it runs and the persist-event composite it `uses:` — not the whole PM tree. Sparse
+        # checkout keeps the highest-frequency workflow (~13k runs/mo) light on the warm writer
+        # slot. (Literal zero-checkout is off the table per the D1 resolution: `uses: ./…`
+        # resolves against the WORKSPACE, so .github/actions must exist on disk.)
         uses: actions/checkout@v5
         with:
           fetch-depth: 1
+          sparse-checkout: |
+            .github/actions
+            scripts/cicd/ci_status_store.py
+          sparse-checkout-cone-mode: false
 
       - name: Validate payload
         id: validate
@@ -76,12 +88,13 @@ jobs:
           echo "Updating ci_status: $REPO → $STATUS"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-      - name: Authenticate to GCP (Firestore SSOT write)
-        id: gcp_auth
-        if: steps.validate.outputs.skip != 'true'
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      # STEP 2b (2026-07-17): the per-run `google-github-actions/auth@v3` step is DROPPED — this
+      # job runs ONLY on the self-hosted glue-writer pool, where the runner user's ambient ADC
+      # (~ubuntu/.config/gcloud/application_default_credentials.json) satisfies the python
+      # Firestore client. PROBED on the box before dropping (the plan's required probe): `env -i`
+      # + the unit's PATH, venv python → Firestore write+read+delete OK. gcloud-CLI credentials
+      # and the ADC file are DIFFERENT stores; the probe tested ADC specifically. If this job is
+      # ever moved back to hosted runners, restore the auth step (hosted has no ambient ADC).
 
       - name: Write ci_status to the Firestore SSOT + compute Slack notify gating
         id: update
@@ -99,9 +112,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
-          # SSOT write — no longer the best-effort Phase-1 dual-write: the SDK install + Firestore
-          # write must succeed (a failure reddens this run; the next v2 event re-dispatches).
-          python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+          # SSOT write — the Firestore write must succeed (a failure reddens this run; the next
+          # v2 event re-dispatches). STEP 2b: the writer slot's dedicated venv PRE-INSTALLS
+          # google-cloud-firestore (probed on the box), so the per-run pip install is now a
+          # verify-only no-op that self-heals if the venv is ever rebuilt without the lib.
+          python3 -c "import google.cloud.firestore" 2>/dev/null \
+            || python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
           # Resolve the committer date of the tested sha (the stale-write ordering key for the
           # set_status guard) via the API — the consumer sha is NOT in PM's git history, so a local
           # `git show` cannot. Best-effort: an empty value leaves the guard inert for this write
@@ -139,8 +155,17 @@ jobs:
           # symmetric (the documented "steady-state is anti-spam" intent).
           FAIL_REGRESSION=false
           if [ "$WRITTEN" = "FAILING" ] && [ "$PREV" != "FAILING" ]; then FAIL_REGRESSION=true; fi
+          # A genuine RECOVERY: we were FAILING and are no longer. Distinct from a routine green
+          # (e.g. SIT_PASS into SIT_VALIDATED), which is normal activity nobody needs paged about.
+          # Operator ruling 2026-07-18: "recovery is not a normal activity — the failure and the
+          # recovery should be recorded at all times." A red that pages and then goes silent leaves
+          # you unable to tell "fixed in 11 min" from "still broken 3 hours later" without going to
+          # look (measured: deployment-ui went FAILING 10:31 and FEATURE_GREEN 10:43, and the green
+          # was never sent because the notify job was gated `status == FAILING`).
+          RECOVERED=false
+          if [ "$PREV" = "FAILING" ] && [ "$WRITTEN" != "FAILING" ]; then RECOVERED=true; fi
           NOTIFY_WORTHY=false
-          if [ "$FAIL_REGRESSION" = "true" ] || { [ "$PREV" = "FAILING" ] && [ "$WRITTEN" != "FAILING" ]; } || [ "$SIT_PASS" = "true" ]; then
+          if [ "$FAIL_REGRESSION" = "true" ] || [ "$RECOVERED" = "true" ] || [ "$SIT_PASS" = "true" ]; then
             NOTIFY_WORTHY=true
           fi
           SEVERITY_CLASS=INFO
@@ -150,6 +175,7 @@ jobs:
           fi
           {
             echo "notify_worthy=${NOTIFY_WORTHY}"
+            echo "recovered=${RECOVERED}"
             echo "prev_status=${PREV}"
             echo "written_status=${WRITTEN}"
             echo "severity_class=${SEVERITY_CLASS}"
@@ -200,9 +226,33 @@ jobs:
               ;;
           esac
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c, THE PRIZE CALLER (~14.3k runs/30d ⇒ the old separate `persist:` job alone
+        # billed ~$86/mo at GitHub's 1-minute-per-job minimum). As the LAST step it is free on this
+        # writer runner. Same skip-guard as the old job (`steps.validate.outputs.skip` is what the
+        # job output `skip` maps from); `job.status` reproduces `conclusion:
+        # needs.update-ci-status.result`. This job's existing full checkout satisfies the local
+        # `uses: ./…` resolution — the STEP 2b slim-down (sparse checkout etc.) is a separate,
+        # later change so this conversion stays one variable. secrets/vars passed explicitly.
+        if: always() && steps.validate.outputs.skip != 'true'
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: ${{ github.event.client_payload.repo }}
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: ${{ job.status }}
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.event.client_payload.sha }}
+          details_json: '{"status": "${{ github.event.client_payload.status }}"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── BUILD MESSAGE BODY (decodes optional failure excerpt) ────────────────────
   build-message:
     name: Build notification message
+    # CI-cost B1 + STEP 2b: the ~13k/mo ci_status writer. Goes to the LONG-LIVED glue-writer pool,
+    # NOT the JIT glue pool: at ~1 run/2.5min the JIT register/deregister round-trip would dominate
     runs-on: ubuntu-latest
     needs: [update-ci-status]
     # Only build/notify on a meaningful TRANSITION (regression to FAILING, or recovery
@@ -292,13 +342,25 @@ jobs:
   notify:
     name: Slack — CI Status Update
     needs: [update-ci-status, build-message]
-    # Transition-gated (anti-spam): only ping Slack on regression-to-FAILING or recovery-from-FAILING.
-    # ci_failures_channel_cleanup WS-2 (D3): drop the green all-clears (CI RECOVERED / SIT-pass) from
-    # Slack — not operator-actionable. Gate on status==FAILING so ONLY regressions page; the ci_status
-    # Firestore write + GCS ledger still record recoveries (a digest count is a P3 follow-up).
+    # Transition-gated (anti-spam): ping Slack on a regression TO FAILING or a genuine RECOVERY from
+    # FAILING — and on nothing else.
+    #
+    # History: WS-2 (D3) dropped ALL green all-clears by gating `status == 'FAILING'`, to stop the
+    # channel saying "everything is OK" on every run. That over-corrected: it also silenced the
+    # recovery of a red that had PAGED. Measured 2026-07-18 — deployment-ui went FAILING at 10:31
+    # (CRITICAL, paged) and recovered to FEATURE_GREEN at 10:43; the recovery was detected and
+    # written to Firestore + the GCS ledger, but the Slack job was SKIPPED, so the operator saw a
+    # CRITICAL that never closed. Operator ruling 2026-07-18: "we just don't need to know when normal
+    # activities happen — recovery is NOT a normal activity; the failure and the recovery should be
+    # recorded at all times."
+    #
+    # So: gate on FAILING **or** `recovered` (PREV=FAILING and no longer). A routine green — notably
+    # SIT_PASS into SIT_VALIDATED, which is normal activity — is still NOT notified, because it sets
+    # notify_worthy but not `recovered`. The carrier's own routine-green suppressor is the second
+    # belt: a success/neutral INFO post is dropped unless `recovery: true` (passed below).
     if:
       always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
-      'true' && github.event.client_payload.status == 'FAILING'
+      'true' && (github.event.client_payload.status == 'FAILING' || needs.update-ci-status.outputs.recovered == 'true')
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: ${{ needs.build-message.outputs.message }}
@@ -318,22 +380,10 @@ jobs:
       # Explicit recovery flag (belt-and-suspenders to the carrier's marker heuristic): true ONLY on the
       # recovery-FROM-FAILING transition (a green/INFO post that the routine-green gate would otherwise drop
       # if the message wording ever changed). A regression-TO-FAILING is a failure conclusion → always posts.
-      recovery: ${{ github.event.client_payload.status != 'FAILING' && needs.update-ci-status.result == 'success' }}
+      # Uses the job's explicit `recovered` output (PREV=FAILING and no longer) rather than inferring from
+      # `status != FAILING`, which would ALSO be true for a routine SIT_PASS green and wrongly mark it a
+      # recovery — the carrier would then post it instead of dropping it as normal activity.
+      recovery: ${{ needs.update-ci-status.outputs.recovered == 'true' }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — CI Status Event
-    needs: [update-ci-status, notify]
-    if: always() && needs.update-ci-status.outputs.skip != 'true'
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: ${{ github.event.client_payload.repo }}
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.update-ci-status.result }}
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.event.client_payload.sha }}
-      details_json: '{"status": "${{ github.event.client_payload.status }}"}'

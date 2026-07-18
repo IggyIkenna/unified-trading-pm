@@ -94,6 +94,26 @@ jobs:
             echo "PLAN_SUMMARY_EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: the old single `persist:` job fired for BOTH of this workflow's event
+        # paths (push AND /approve-plan comment); their job-level `if`s are disjoint, so exactly one
+        # runs per event — each path now carries its own copy of the step, preserving one row per
+        # run. The hardcoded `conclusion: success` is kept from the old job (it never recorded a
+        # job result). secrets/vars do not reach a composite action — passed explicitly.
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: "success"
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "plan-notification"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── Handle /approve-plan comments ─────────────────────────────────────────
   handle-plan-approval:
     name: Handle /approve-plan comment
@@ -169,6 +189,23 @@ jobs:
 
           echo "Plan approved: $PLAN_NAME"
 
+      - name: Persist CI/CD event
+        # CI-cost STEP 2c: the approval-path copy of the persist step — see the note on the
+        # notify-plan-change copy above; exactly one of the two runs per event.
+        if: always()
+        uses: ./.github/actions/persist-event
+        with:
+          repo_name: unified-trading-pm
+          workflow_name: ${{ github.workflow }}
+          run_id: ${{ github.run_id }}
+          conclusion: "success"
+          branch: ${{ github.ref_name }}
+          commit_sha: ${{ github.sha }}
+          details_json: '{"event": "plan-notification"}'
+          cloud_provider: ${{ vars.CLOUD_PROVIDER }}
+          events_bucket: ${{ vars.CICD_EVENTS_BUCKET }}
+          gcp_sa_key: ${{ secrets.GCP_SA_KEY }}
+
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify-plan-change-telegram:
@@ -198,18 +235,3 @@ jobs:
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
-
-  persist:
-    name: Persist — Plan Notification Event
-    needs: [notify-plan-change, handle-plan-approval]
-    if: always()
-    uses: ./.github/workflows/persist-cicd-event.yml
-    secrets: inherit
-    with:
-      repo_name: unified-trading-pm
-      workflow_name: ${{ github.workflow }}
-      run_id: ${{ github.run_id }}
-      conclusion: "success"
-      branch: ${{ github.ref_name }}
-      commit_sha: ${{ github.sha }}
-      details_json: '{"event": "plan-notification"}'
