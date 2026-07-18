@@ -32,15 +32,15 @@ code_refs:
 
 # Agent-Orchestrator Slack Notifications
 
-Slash-webhook push notifications from the agent-orchestrator Cloud Run service to `#agent-orchestrator-alerts` in the
-`odum-research` Slack workspace.
+Outbound webhook push notifications from the agent-orchestrator backend (the central orchestrator VM) to
+`#agent-orchestrator-alerts` in the `odum-research` Slack workspace.
 
 ---
 
 ## Overview
 
-- **Webhook URL source**: GCP Secret Manager secret `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` (project
-  `central-element-323112`). Mounted as env var on Cloud Run staging + prod.
+- **Webhook URL source**: `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`, loaded from the VM's `.env.local` (provisioned via the
+  `ORCHESTRATOR_ENV_LOCAL` secret in AWS Secrets Manager / GCP Secret Manager `central-element-323112`).
 - **Channel**: `#agent-orchestrator-alerts`
 - **Slack app ID**: `A0B4N3802N9`
 - **Implementation**: `server/notifications/slack.py` — shipped at `agent-orchestrator@cd04fc2` (Block Kit + retry).
@@ -123,13 +123,13 @@ in local dev; unit tests patch `_WEBHOOK_URL` directly.
 
 ## Secret inventory (all in `central-element-323112`)
 
-| Secret                                    | Mounted on Cloud Run | Used for                                        |
-| ----------------------------------------- | -------------------- | ----------------------------------------------- |
-| `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`        | YES (P3)             | Incoming webhook — POST notifications           |
-| `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` | not yet (V2)         | Post-cutover slash-command request verification |
-| `AGENT_ORCHESTRATOR_SLACK_APP_ID`         | no                   | Reference only (app ID `A0B4N3802N9`)           |
-| `AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`      | no                   | OAuth post-cutover use                          |
-| `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET`  | no                   | OAuth post-cutover use                          |
+| Secret                                    | In VM `.env.local` | Used for                              |
+| ----------------------------------------- | ------------------ | ------------------------------------- |
+| `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`        | YES                | Incoming webhook — POST notifications |
+| `AGENT_ORCHESTRATOR_SLACK_SIGNING_SECRET` | not yet (V2)       | V2 slash-command request verification |
+| `AGENT_ORCHESTRATOR_SLACK_APP_ID`         | no                 | Reference only (app ID `A0B4N3802N9`) |
+| `AGENT_ORCHESTRATOR_SLACK_CLIENT_ID`      | no                 | V2 (OAuth) — not yet used             |
+| `AGENT_ORCHESTRATOR_SLACK_CLIENT_SECRET`  | no                 | V2 (OAuth) — not yet used             |
 
 ---
 
