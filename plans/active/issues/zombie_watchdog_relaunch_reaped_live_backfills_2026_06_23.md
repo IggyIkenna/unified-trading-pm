@@ -272,7 +272,60 @@ config-tuning gap.
       threshold + run.log tail + manifest shard mtime before any `gcloud compute instances delete`, and stating
       explicitly that a launcher's singleton-lock "Stop:" suggestion is not sufficient justification on its own; cites
       this issue doc's "Incident 2 correction" as the evidence trail.
-- [ ] [DATA] P1. **Audit whether any OTHER bounced/stalled backfill task in the current fleet shows the same
+- [x] ✅ [DATA] P1. **Audit whether any OTHER bounced/stalled backfill task in the current fleet shows the same
       agent-deleted-own-VM signature** (`agent-name/claude_code` UA on `v1.compute.instances.delete` against a task's
       own recently-launched VMs) — this incident took 3 recurrences across ~7 hours to even get investigated properly;
-      it may be recurring silently elsewhere. (repo: deployment-service, cross-cutting)
+      it may be recurring silently elsewhere. (repo: deployment-service, cross-cutting) — audited via
+      `gcloud logging read` against `central-element-323112` for
+      `protoPayload.methodName="v1.compute.instances.delete"     AND protoPayload.requestMetadata.callerSuppliedUserAgent:"agent-name/claude_code"`,
+      `--freshness=30d` (**capped at `--limit=500`** — 500/500 rows returned, so the true 30-day count may exceed this;
+      not exhaustive). Result: **the 3 already-documented `af-backfill-*` kills (Incident 2) are the only recurrence of
+      the original signature** (copy-pasted singleton-lock `Stop:` command / staleness misjudgment) in the sample. Also
+      confirmed as NOT incidents: `fss-backfill-vm-1..10` and `mtds-{dex-swaps,perp-funding,solana-drift}-backfill`
+      (fixed pool-worker names — each `delete` is immediately followed by an `insert` of the SAME name seconds later,
+      i.e. GCE's delete-before-relaunch-same-name requirement, not a mid-run kill); dozens of `cefi-<venue>-<year>*` VMs
+      deleted within 1-10 min of launch by `ikenna@odum-research.com` (manual dev/test launch-then-verify-then-delete
+      cycles, not campaign backfills). **New finding (not previously documented) — see "Incident 3" below**: a DIFFERENT
+      VM family, `cefi-queue-heavy-binancefutu-x15`/`-x17` (Tardis `SINGLE_VM_QUEUE=1` CEFI backfill queue workers),
+      shows the SAME class of symptom (deleted by `unified-trading-sa` via the same `agent-name/claude_code` UA while
+      actively streaming, no clean-exit marker) — confirmed via `run.log`, not yet root-caused. Filed as a new follow-up
+      todo below rather than fixed inline (root-cause work is `infra`/`deployment-service` craft, out of
+      `data_engineering` scope per `does_not`).
+
+## Incident 3 — 2026-07-15→18, `cefi-queue-heavy-binancefutu-x15`/`-x17` (SINGLE_VM_QUEUE Tardis workers) killed mid-stream, cause NOT YET root-caused
+
+Found during the -006 audit above (fleet-wide `gcloud logging read` sweep for the `agent-name/claude_code` UA on
+`v1.compute.instances.delete`). **12 `cefi-queue-heavy-binancefutu-x15`/`-x17` VMs** were deleted by
+`unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (same automation identity as the `af-backfill`
+kills) across 2026-07-15T17:41Z → 2026-07-18T15:50Z, at deltas of 5–156 min after each VM's own launch (embedded in its
+name). Spot-verified one in full: `cefi-queue-heavy-binancefutu-x17-20260717-173330` (launched 17:33:30Z, deleted
+19:50:38Z — Δ137min). Its `run.log`
+(`gs://deployment-scripts-central-element-323112/vm-logs/cefi-queue-heavy-binancefutu-x17-20260717-173330/run.log`,
+10,483 lines) shows continuous active Tardis streaming (per-symbol `book_snapshot_5` shard writes + `PIPELINE_HEARTBEAT`
+every ~60s) up to **19:49:37Z — under 1 min before the delete** — and contains **zero**
+`EXIT_STATUS`/`DEPLOYMENT_COMPLETED`/`PREEMPTED`/`Traceback` markers anywhere in the file. This is the same
+"actively-working-VM-killed-with-no-clean-shutdown" evidence pattern as Incidents 1 and 2.
+
+**Ruled out as a false alarm**: read `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` —
+`SINGLE_VM_QUEUE=1` VMs are explicitly designed to run their full bucket of shards and **self-delete on completion**
+(`VM_SHUTDOWN_ON_COMPLETION`); there is no documented external cycling/relaunch loop that intentionally deletes a
+still-running queue VM mid-batch. So this is NOT a known/by-design pattern.
+
+**NOT root-caused** (out of `data_engineering` craft scope — infra/VM-launcher work): two live hypotheses, neither
+confirmed: (a) a recurrence of the Incident-2 pattern (an agent copy-pasting a delete command, this time off a different
+launcher's lock-refusal or a mis-scoped cleanup), or (b) `tardis-concurrency-guard.sh` enforcing the documented **HARD
+1-concurrent-Tardis-VM-fleet-wide cap** by killing what it judged a duplicate/excess `cefi-queue-heavy-binancefutu-*`
+launch — plausible given the sequential x15/x17 relaunch cadence, but not verified against the guard's actual logic or
+concurrent-VM state at each kill time.
+
+- [ ] [INFRA] P1. **Root-cause the `cefi-queue-heavy-binancefutu-x15`/`-x17` mid-stream kills** — determine whether the
+      actor is `tardis-concurrency-guard.sh` (concurrency-cap enforcement — if so, verify it's choosing the right VM to
+      kill and not discarding in-progress work needlessly) or an agent manually invoking
+      `gcloud compute instances     delete` (the Incident-2 pattern recurring on a new launcher). Check
+      `tardis-concurrency-guard.sh`'s own invocation logs/audit trail for the same timestamps, and audit-log
+      `protoPayload.authenticationInfo` for whether the guard runs under `unified-trading-sa` directly (matches) or a
+      distinct identity. (repo: deployment-service)
+- [ ] [DATA] P2. **Re-run this audit past the 500-row cap** — the `gcloud logging read --limit=500` sweep above returned
+      exactly 500/500 rows for the 30-day window, meaning the true count of `agent-name/claude_code` `instances.delete`
+      calls may exceed what was sampled; a paginated or narrower-windowed re-run would confirm completeness before
+      treating the Incident-3 finding as the full extent of the pattern. (repo: deployment-service)
