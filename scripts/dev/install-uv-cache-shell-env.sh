@@ -47,9 +47,22 @@ fi
 MARK_BEGIN="# >>> shared uv-cache convention (install-uv-cache-shell-env.sh) >>>"
 MARK_END="# <<< shared uv-cache convention <<<"
 
+# GNU sed edits in place with a bare `-i`; BSD/macOS sed requires an explicit
+# (empty) backup suffix (`-i ''`). Passing the GNU form to BSD sed makes it read
+# the sed script as the backup suffix and the filename as the program — it errors
+# ("command i expects \ followed by text") and writes nothing, so a hand-run on a
+# macOS dev host silently no-ops. Detect the flavor once (only GNU sed answers
+# `--version`) and build the right in-place invocation. The `\|…\|` address form
+# below is accepted by both seds, so only the `-i` arg differs.
+if sed --version >/dev/null 2>&1; then
+    _sed_inplace=(sed -i)
+else
+    _sed_inplace=(sed -i '')
+fi
+
 strip_block() { # $1 = rc file
     # Delete any existing managed block (between markers, inclusive).
-    sed -i "\|^${MARK_BEGIN}\$|,\|^${MARK_END}\$|d" "$1"
+    "${_sed_inplace[@]}" "\|^${MARK_BEGIN}\$|,\|^${MARK_END}\$|d" "$1"
 }
 
 install_block() { # $1 = rc file
