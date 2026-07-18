@@ -20,7 +20,6 @@ related:
     agent-orchestrator-autospawn.md,
     agent-orchestrator-worker-liveness.md,
     agent-orchestrator-backlog-state-alignment.md,
-    agent-orchestrator-host-offline-failover.md,
     ../05-infrastructure/agent-orchestrator-deploy.md,
     ../05-infrastructure/agent-orchestrator-api-host.md,
   ]
@@ -234,8 +233,9 @@ deployment-api); this orchestrator page stays for worker-ops. Division-of-surfac
 
 `FailoverLoop` (`server/failover.py`) re-homes soft-pinned queued tasks off a host that has gone silent >10 min. It was
 built for the multi-host era (e.g. an operator laptop going offline); with one central VM there is no second host to
-fail over to, so it is effectively dormant. `failover_allowed: false` on a task opts it out permanently. Full contract:
-[`agent-orchestrator-host-offline-failover.md`](agent-orchestrator-host-offline-failover.md).
+fail over to, so it is effectively dormant. `failover_allowed: false` on a task opts it out permanently. The loop still
+initialises at boot (`server/server.py`) and its runtime status is on `GET /api/ops/failover`, but it takes no action
+while the fleet is single-host.
 
 ## Local dev — port 8765
 
@@ -305,6 +305,5 @@ Architecture & operating model SSOT:
 Behaviour-domain docs: [`agent-orchestrator-autospawn.md`](agent-orchestrator-autospawn.md) (spawn) ·
 [`agent-orchestrator-worker-liveness.md`](agent-orchestrator-worker-liveness.md) (liveness + account failover) ·
 [`agent-orchestrator-backlog-state-alignment.md`](agent-orchestrator-backlog-state-alignment.md) (dispatch + regen +
-task state) · [`agent-orchestrator-host-offline-failover.md`](agent-orchestrator-host-offline-failover.md). In-flight
-remediation of the open items: `plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`. Epic:
-`plans/epics/orchestrator_master.md`.
+task state). In-flight remediation of the open items:
+`plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`. Epic: `plans/epics/orchestrator_master.md`.

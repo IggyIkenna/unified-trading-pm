@@ -252,7 +252,8 @@ ORCHESTRATOR_PUBLIC_URL=https://agent-orchestrator.staging.odum-research.com  # 
 ORCHESTRATOR_PUBLIC_URL=https://agent-orchestrator.odum-research.com           # (prod)
 ```
 
-Post-P5: add `ORCHESTRATOR_GCS_BUCKET=agent-orchestrator-state-prod` for state snapshot uploads.
+For cloud state-snapshot mirroring set `ORCHESTRATOR_S3_BUCKET` (AWS, primary — `uts-orchestrator-state-<account>`)
+and/or `ORCHESTRATOR_GCS_BUCKET` (GCP); `SnapshotLoop` no-ops when both are unset.
 
 ---
 
@@ -367,19 +368,15 @@ firebase deploy --only hosting:uat \
 
 ---
 
-## GCS state bucket (post-P5)
+## Cloud state bucket (disaster recovery)
 
-```
-gs://agent-orchestrator-state-prod/
-  Region:    europe-west4
-  Retention: 30-day version retention
-  IAM:       bound to prod Cloud Run service account
-```
+`SnapshotLoop` (`server/gcs_sync.py`) mirrors `state.json` + a SQLite hot-copy every 30 min (and on shutdown) to the
+cloud bucket(s) set on the central VM's `.env.local`:
 
-Set `ORCHESTRATOR_GCS_BUCKET=agent-orchestrator-state-prod` on prod Cloud Run service. The `SnapshotLoop` in
-`server/gcs_sync.py` uploads `state.json` every 30 min when this env var is set.
+- `ORCHESTRATOR_S3_BUCKET` — AWS, the primary path on the current fleet (`uts-orchestrator-state-<account>`).
+- `ORCHESTRATOR_GCS_BUCKET` — GCP, the cloud-agnostic mirror; set both to write both clouds.
 
-One-time state migration at P5: `gsutil cp data/state/state.json gs://agent-orchestrator-state-prod/state.json`
+No-op when unset (local-disk state only). Recovery: restore the snapshot object → restart the service.
 
 ---
 
@@ -415,7 +412,7 @@ Accepted by operator (plan decision 2026-05-19).
 
 ## See also
 
-- `agent-orchestrator/docs/OPERATIONS.md` — full operator workflows
+- `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — full operator workflows
 - `agent-orchestrator/README.md` — architecture overview + local dev
 - `codex/04-architecture/agent-orchestrator-overview.md` — service architecture SSOT
 - `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — day-to-day runbook
