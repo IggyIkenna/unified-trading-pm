@@ -155,6 +155,37 @@ sampled-instrument-id source. The shared engine (`unified_trading_library.pipeli
 change — see the `data-pipeline-check-mtds` skill for the sibling that already differs on shard atom (6-tuple incl.
 `data_type`) and skip-leg proof (PROD pre-check required).
 
+## Measuring throughput for ANY asset_group — use the network-RX counter (added 2026-07-18)
+
+**Completion-based numbers are not throughput.** Do NOT derive MB/s from `Tardis streaming success` lines, parquet
+bytes, rows/s, or this check's own timings — all of them credit work only when a shard COMPLETES, so with hundreds of
+large shards in flight they collapse exactly when concurrency is working hardest, and parquet output is not comparable
+across venues (DERIBIT runs 2-3M rows/shard compressing to ~6.5 MB vs bybit-spot ~289k rows at ~8.3 MB). On 2026-07-18
+that instrument produced four successive wrong answers — 15-16 -> 13.5 -> 11.5 -> 9.4 MB/s — for a cefi backfill VM
+whose ACTUAL sustained rate, measured off the wire, was **4.15 MB/s**.
+
+**The canonical measure (works for every asset_group, no ssh needed — IAP is often unavailable):**
+
+```bash
+bash deployment-service/scripts/vm/measure-vm-throughput.sh <vm-name> [zone] [project] [startRFC3339]
+```
+
+It reads `compute.googleapis.com/instance/network/received_bytes_count` from Cloud Monitoring and reports total GB,
+**mean (the sustained rate to quote)**, peak minute, and a per-5min profile. Window defaults to the VM's
+`creationTimestamp`, so the whole run is covered.
+
+Rules when reporting a throughput figure for any asset_group:
+
+- Quote the **MEAN over the whole run**, never a peak minute or a short window.
+- **Always show the per-5min profile** — it reveals ramps and collapses an average hides. The 2026-07-18 cefi run ramped
+  to ~12.8 MB/s for ~15 min then fell to ~2-3 MB/s for the next 50; the mean alone (4.15) hides both.
+- RX is **compressed bytes off the wire** (Tardis serves `.csv.gz`) — a DIFFERENT quantity from parquet output. Never
+  compare an RX figure against a parquet-derived baseline; state which one any target refers to.
+- RX covers the whole interface, so it includes small non-fetch traffic (catalogue/manifest reads). Uploads are TX, so
+  they do not inflate it.
+- If the metric returns no data (VM younger than ~3 min — Monitoring lags), report the number as **UNMEASURED**. Do not
+  substitute a completion-derived figure.
+
 ## Not wired into `quality-gates.sh`
 
 This check does real I/O + real VM spend + multi-minute-plus runtime — it stays a standalone, on-demand skill
