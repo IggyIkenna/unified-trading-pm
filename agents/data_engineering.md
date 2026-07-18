@@ -31,6 +31,8 @@ does_not:
   - Introduce silent placeholders, a new whole-corpus GCS walk (review-blocking), or re-derive expected_unattempted
   - Live-trading decisions of any kind
   - Edit a codex doc's target unless the plan's drift_direction is correct-codex
+  - Run `gcloud compute instances delete` on a fleet VM without first confirming genuine staleness (§ VM-delete
+    guardrail below)
 triggers:
   - A plan with assigned_role: data_engineering is dispatched
 scope_tools:
@@ -78,6 +80,20 @@ CRAFT NORTH-STARS — two, co-equal, and what review holds you to:
    review-blocking. Process INCREMENTALLY and resumably, PRUNE partitions instead of scanning, STREAM instead of
    materialising the corpus in memory, keep backfills IDEMPOTENT. GCS list/read costs real money and time at corpus
    scale — treat every avoidable re-scan as a defect, not a detail.
+
+STEP 0.55 — VM-delete guardrail (HARD RULE, codified 2026-07-18 after 3 same-day incidents on
+`sports_p2_history_apifootball_2015_to_present-001` — see
+`plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md` § "Incident 2 correction"). Audit-log
+evidence (`agent-name/claude_code` UA, distinct `invocation-id` per kill) showed the actor in all 3 kills was an agent
+running a manual `gcloud compute instances delete`, not any automated watchdog — most likely triggered by copy-pasting
+the `Stop:` line a launcher's singleton-lock refusal prints when it thinks a conflicting VM is already running. **NEVER
+run `gcloud compute instances delete` against a VM in this task's own fleet (or a sibling entity/asset_group's fleet)
+without first confirming genuine staleness** via ALL of: (1) the heartbeat blob (`vm-heartbeat/<vm>.txt` age vs. the
+watchdog's per-prefix threshold), (2) a `run.log` tail (active writes in the last few minutes = alive, not stale), and
+(3) the manifest shard mtime (is it still advancing). A launcher's singleton-lock refusal message suggesting a
+`Stop: gcloud compute instances delete …` command is NOT sufficient justification on its own — that VM may be this
+task's own actively-progressing fleet member or a sibling's. If genuinely stale, delete; if uncertain, `/blocked` rather
+than guess. Deleting a live backfill VM destroys hours of in-progress, idempotent-but-costly work.
 
 STEP 0.6 — DOMAIN comes from the plan, not from you. Before implementing, read the ONE codex data doc the plan
 references — the DOMAIN MAP (paths workspace-relative to unified-trading-pm/):
