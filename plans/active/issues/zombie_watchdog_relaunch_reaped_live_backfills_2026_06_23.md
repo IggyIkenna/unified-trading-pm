@@ -770,12 +770,23 @@ latent reliability gap for long/full-history `mtds-lending-indices` runs.
       keep-forever, or cap+ring-buffer) once someone scopes the change against its full blast radius (used broadly
       across UTL's `service_framework`, not a single-repo change). (repo: unified-trading-library)
 
-- [ ] [INFRA] P2. **Verify (or fix) the 2 launchers the hatch-vcs fleet-wide audit above could not confirm**: (1)
+- [x] ✅ [INFRA] P2. **Verify (or fix) the 2 launchers the hatch-vcs fleet-wide audit above could not confirm**: (1)
       `launch-ec2-vm.sh` — installs its target `${SERVICE}` via `uv pip install -e "."` from within the service's own
       tarball-extracted dir with no `--no-sources` flag, so confirm whether that service's `[tool.uv.sources]`
       path-overrides pull in UAC/UTL as an editable local-path build (same tarball-has-no-`.git` exposure) or resolve
       them as regular index dependencies (safe); (2) `launch-features-sports-parallel-backfill-vm.sh` — its actual
       install/runner logic lives in `vm_fss_features.sh`, downloaded from a GCS staging path
       (`${GCS_STAGING}/vm_fss_features.sh`) at VM-boot time and not present anywhere in this repo checkout — locate its
-      source (likely generated/uploaded by a separate step not yet found) and audit it the same way. (repo:
-      deployment-service)
+      source (likely generated/uploaded by a separate step not yet found) and audit it the same way. —
+      **deployment-service@763b4f4**: (1) `launch-ec2-vm.sh` confirmed EXPOSED — verified every `--task`-reachable
+      service's `pyproject.toml` (market-tick-data-service, features-service, strategy-service, execution-service,
+      instruments-service, market-data-processing-service, ml-service, deployment-service) declares the identical
+      `[tool.uv.sources]` path-override for `unified-api-contracts`/`unified-trading-library` to
+      `../unified-api-contracts`/`../unified-trading-library`, which DO exist as siblings in this launcher's tarball
+      layout (`COMMON_REPOS` packages them side-by-side) — a plain `uv pip install -e "."` with no `--no-sources`
+      resolves those overrides and hits the same hatch-vcs no-`.git` failure. Fixed by exporting
+      `SETUPTOOLS_SCM_PRETEND_VERSION="0.99.0"` before the install. (2) `launch-features-sports-parallel-backfill-vm.sh`
+      confirmed SAFE, no fix needed — its runner script lives in the **e2e-testing** repo
+      (`e2e-testing/scripts/common/vm_fss_features.sh`, not deployment-service, which is why the original audit couldn't
+      find it) and already uses `--no-sources` plus per-package `SETUPTOOLS_SCM_PRETEND_VERSION_FOR_*` env vars.
+      `bash -n` clean + full `quality-gates.sh` green on the shipped SHA. (repo: deployment-service)
