@@ -20,7 +20,11 @@ related:
   ]
 created: 2026-05-20
 authoritative_for: [agent-orchestrator Slack notification functions + payload/retry contract]
-referenced_by: [codex/12-agent-workflow/orchestrator-safety-mechanisms.md, plans/audit/instructions/orchestrator_master_audit_instructions.md]
+referenced_by:
+  [
+    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -137,11 +141,11 @@ in local dev; unit tests patch `_WEBHOOK_URL` directly.
 
 ## V2 out-of-scope
 
-| Feature                                  | Deferred to                                            |
-| ---------------------------------------- | ------------------------------------------------------ |
-| Bidirectional interactivity + slash cmds | `agent_orchestrator_slack_interactivity_2026_05_XX.md` |
-| Notify on slot_unblocked / agent_stale   | Same interactivity plan                                |
-| Direct messages to individual operators  | Same interactivity plan                                |
+| Feature                                  | Deferred to                                        |
+| ---------------------------------------- | -------------------------------------------------- |
+| Bidirectional interactivity + slash cmds | a future Slack-interactivity plan (not yet scoped) |
+| Notify on slot_unblocked / agent_stale   | Same interactivity plan                            |
+| Direct messages to individual operators  | Same interactivity plan                            |
 
 ---
 

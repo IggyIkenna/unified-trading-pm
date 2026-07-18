@@ -245,8 +245,9 @@ Each slot is assigned an `account_id` from `data/config/accounts.json`. When an 
 4. **Recovery**: click **Clear** on account row when the window resets, or reassign affected slots to a different
    account via `POST /api/slots/{id}/reassign` + spawn with a new `account_id`.
 
-**Named successor plan** for full multi-account failover:
-`plans/active/agent_orchestrator_multi_account_failover_2026_05_XX.md` (post-P5 scope).
+Account failover is automatic: the watchdog evicts a slot off a usage-capped / auth-failed account onto a headroom
+account (resume-preserving where a `claude_session_id` exists). Full contract:
+`codex/04-architecture/agent-orchestrator-worker-liveness.md` § account failover.
 
 ---
 
