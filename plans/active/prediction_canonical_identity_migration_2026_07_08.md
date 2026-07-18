@@ -32,7 +32,7 @@ related:
     audit/results/canonical_instrument_id_audit_2026_07_08.md,
   ]
 created: 2026-07-08
-last_updated: 2026-07-08
+last_updated: 2026-07-18
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
@@ -54,10 +54,13 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
-> **Status: `active`** — picked up 2026-07-09. Todos 1, 3, 4, 5 implemented + verified against real prod GCS data this
-> session (see Progress Log). Todo 2 (full catalogue regen/backfill) is real-scoped + smoke-tested but the FULL
-> unsupervised run is intentionally NOT executed this session (workspace staged-rollout rule). Todos 6-8 carried
-> forward, not started.
+> **Status: `active`** — picked up 2026-07-09. Todos 1, 3, 4, 5 implemented and verified against real prod GCS data (see
+> Progress Log); todo 6 VERIFIED SAFE / closed 2026-07-18 (no code change — raw prediction `instrument_id` embeds venue
+> by construction; all real consumers respect venue). Remaining open: todo 2 (full catalogue regen/backfill, real-scoped
+> and smoke-tested, the FULL unsupervised run intentionally NOT executed — staged-rollout, and must wait for the shared
+> canonical-identity migration to settle), todo 7 (shared UAC `gcs_paths.py` MARKET_DATA bucket — gated on MTDS
+> migration confirmation), todo 8 (MDPS stale test assertions — different repo, gated on its UAC pin bump). See the
+> 2026-07-18 Progress Log entry for the DEFERRED reasons.
 
 ## Codex SSOTs
 
@@ -120,10 +123,21 @@ being wired into the write path or persisted on the catalog. This plan is the mi
       reading that function; no network call, unlike the unused `_cross_reference_fixture()`). Real example: EPL Arsenal
       vs. Chelsea, 2026-03-22 → `canonical_instrument_id="EPL:CHELSEA_v_ARSENAL:20260322"`. Concrete byte-parity test in
       `tests/unit/test_polymarket_boost.py::TestBuildSportsId::test_valid_league_returns_tuple`.
-- [ ] [VERIFY] P2. **Check whether any real downstream consumer treats Prediction `instrument_id` as globally unique
-      without also keying on `venue`** (carried over from the original finding-8 open question — never actually
-      checked). If one exists, the `canonical_instrument_id` population in todo 3 needs to preserve per-venue uniqueness
-      at the raw `instrument_id` level regardless of what `canonical_instrument_id` adds.
+- [x] [VERIFY] P2. ✅ **Check whether any real downstream consumer treats Prediction `instrument_id` as globally unique
+      without also keying on `venue`** — VERIFIED SAFE, no code change needed (2026-07-18 read-only cross-repo sweep;
+      see Progress Log). The raw prediction `instrument_id` embeds venue **by construction** (`PREDICTION:{VENUE}:…`,
+      `FOOTBALL:{VENUE}:…`, `{VENUE}:PREDICTION_MARKET:…` — PREDICTION routes through UAC `build_instrument_id`), so it
+      is already globally unique on its own; every real consumer respects venue: UTL
+      `instruments_catalog_reader.get_availability_bounds()` keys on the `(asset_group, venue, instrument_id)` triple,
+      MTDS `live/_is_universe.py::collect_keys_from_is_blobs()` takes `venue` as a param AND prepends it to every
+      deduped id, and the features cross-venue arb calculators use a purpose-built venue-less `xv_instrument_id` match
+      key **while retaining separate `kalshi_market_ticker` / `polymarket_condition_id` columns** (intentional
+      cross-venue matching, not a collision). No collision-risky consumer exists → todo 3's remediation clause is moot;
+      and `canonical_instrument_id` is a SEPARATE catalogue column that never mutates the raw `instrument_id`, so
+      per-venue uniqueness is preserved unconditionally. (Side-note, out of this plan's prediction-file scope:
+      execution-service `validation/instrument_format.py::get_venue_from_instrument_id()` returns `split(":")[0]`, which
+      is the TYPE/SPORT prefix — not the venue — for prediction/sports ids; a latent venue-derivation mismatch,
+      unrelated to this uniqueness question, flagged for the execution-service owner.)
 - [ ] [DECISION] P3. **Re-evaluate `gcs_paths.py`'s `(PREDICTION, MARKET_DATA)` bucket template** once
       `market-tick-data-service/scripts/migrate_prediction_to_pred_prd_v9.py`'s Progress Log confirms
       `market-data-tick-pred-prd-{pid}` is the sole, complete SSOT (deliberately left as the long-form
@@ -222,3 +236,38 @@ being wired into the write path or persisted on the catalog. This plan is the mi
   writes specifically. No fix needed here; closing this as investigated/resolved. Also noted in passing: the
   `canonical_instrument_id_audit_2026_07_08.md` doc's reference to an `instruments-store-prediction` bucket (as a live
   naming-split partner) is now stale — that bucket 404s; only `instruments-store-pred-prd-*` exists.
+- **2026-07-18** — Prediction-specific open-item sweep (scope-restricted session: prediction files only; shared UAC
+  canonical infra was mid-migration by other slots and must not be touched). Reconfirmed todos 1/3/4/5 remain shipped +
+  intact — `instruments-service@0d0c3742` is an ancestor of HEAD, tree clean (adapters + `build_instrument_catalogue.py`
+  - tests all present). Actioned the remaining opens:
+  * **Todo 6 (downstream `instrument_id` uniqueness) — VERIFIED SAFE, closed.** Read-only cross-repo sweep (IS/UTL/MTDS/
+    features/execution/strategy/MDPS). The raw prediction `instrument_id` embeds venue by construction (PREDICTION
+    routes through UAC `build_instrument_id` → `PREDICTION:{VENUE}:…` / `FOOTBALL:{VENUE}:…` /
+    `{VENUE}:PREDICTION_MARKET:…`), so it is globally unique on its own. Real consumers verified venue-respecting: UTL
+    `instruments_catalog_reader.get_availability_bounds()` keys on the `(asset_group, venue, instrument_id)` triple
+    (exact canonical-id match first, venue+raw_symbol / venue+base_asset fallbacks); MTDS `live/_is_universe.py`
+    `collect_keys_from_is_blobs()` takes `venue` as a param and prepends it to every deduped id (venue-scoped `set`);
+    features cross-venue arb (`prediction_cross_venue_dispersion.py` et al.) uses a deliberate venue-less
+    `xv_instrument_id = "XV:{underlying}:{bet_type}:{settlement}"` match key while carrying separate
+    `kalshi_market_ticker` / `polymarket_condition_id` columns (intentional cross-venue matching, not a collision). No
+    collision-risky consumer exists → the todo-3 remediation clause is moot; and `canonical_instrument_id` is a SEPARATE
+    catalogue column that never mutates raw `instrument_id`, so per-venue uniqueness is preserved unconditionally. Side
+    finding (out of this plan's prediction-file scope): execution-service `validation/instrument_format.py`
+    `get_venue_from_instrument_id()` returns `split(":")[0]` — the TYPE/SPORT prefix, not the venue, for
+    prediction/sports ids (latent venue-derivation mismatch, unrelated to this uniqueness question; flagged for the
+    execution-service owner, not fixed here as it is outside the prediction-adapter/UAC-predictions scope this session
+    was restricted to).
+  * **Todo 2 (full `prod/catalog.parquet` regen) — still open, DEFERRED.** This is an operational full-corpus prod-GCS
+    run (~21k blobs → ~2.5M-row catalogue, ~25-40 min), `execution_scope: local-only` + staged-rollout, not a
+    prediction-file change. Deliberately NOT fired this session: other slots were actively migrating the shared
+    canonical identity infra (`canonical_id_builder`, tradfi/cefi canonicalizers) that `build_instrument_catalogue.py`
+    imports — running a full regen mid-migration would bake transitional/half-migrated canonical ids into the persisted
+    catalogue. Schedule after the canonical-identity migration settles.
+  * **Todo 7 (`gcs_paths.py` MARKET_DATA bucket template) — still open, DEFERRED.** `gcs_paths.py` is a shared UAC file
+    (not prediction-specific) and the flip is explicitly gated on the MTDS `migrate_prediction_to_pred_prd_v9.py`
+    Progress Log confirming `market-data-tick-pred-prd-{pid}` is the sole complete SSOT. Shared file + external gate →
+    operator/owner decision, out of this session's scope.
+  * **Todo 8 (MDPS stale test assertions) — still open, DEFERRED.** Lives in `market-data-processing-service` (not
+    instruments-service / UAC-predictions), gated on MDPS bumping its `unified-api-contracts` pin past the
+    `gcs_paths.py` abbreviation; its own CI catches the drift on that bump. Out of the prediction-file scope this
+    session was restricted to.
