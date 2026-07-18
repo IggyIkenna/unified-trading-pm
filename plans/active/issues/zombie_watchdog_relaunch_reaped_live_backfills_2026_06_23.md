@@ -522,20 +522,26 @@ green on the shipped SHA (226 tests, incl. the 7 new ones).
       the raw native client already embedded in UTL's `StorageClient` rather than adding `.reload()`/`.updated` to the
       UTL wrapper itself (main's explicit call — narrower blast radius, doesn't risk changing behavior for every other
       `GCSBlobHandle` caller in the codebase). (repo: deployment-service)
-- [ ] [INFRA] P1. **Fix the launcher's stale comment + missing `deployment_service` pip-install** in
+- [x] ✅ [INFRA] P1. **Fix the launcher's stale comment + missing `deployment_service` pip-install** in
       `launch-vm-zombie-watchdog.sh` — pip-install `/tmp/dep-src` (like UAC/UTL) or correct the comment + import if
-      `deployment_service` truly shouldn't be needed. NOT fixed in this dispatch (out of the operator-gated scope of
-      `BLK-b5b76074`'s answer, which was specifically about the `_blob_age_minutes` bug) — the daemon cannot boot
-      cleanly without this fix either, so any future relaunch attempt will hit it again. (repo: deployment-service)
-- [ ] [INFRA] P1. **Fix the code-tarball build pipeline for hatch-vcs dynamic-version packages** —
+      `deployment_service` truly shouldn't be needed. — **deployment-service@6ea3f24**: added
+      `pip install --quiet --no-deps /tmp/dep-src` after the tarball extraction (the watchdog's module-level
+      `from deployment_service.vm_prefix_registry import VM_PREFIX_TO_BUCKET` was never satisfied; the prior comment
+      conflated the `_backup_vm_logs_before_kill` registry-path helpers moving to UTL with this unrelated top-level
+      import, which never moved). `--no-deps` skips deployment-service's heavy
+      fastapi/uvicorn/botocore/web3/pytest-family deps, which the watchdog never touches — mirrors the same route
+      `setup-data-pipeline-vm.sh` already uses for this exact package. `bash -n` clean + full `quality-gates.sh` green
+      on the shipped SHA. (repo: deployment-service)
+- [x] ✅ [INFRA] P1. **Fix the code-tarball build pipeline for hatch-vcs dynamic-version packages** —
       `unified-api-contracts` and `unified-trading-library` (and likely others using
       `[tool.hatch.version] source = "vcs"`) cannot be `pip install`-ed from the `code/*-code.tar.gz` artifacts used by
-      VM launchers (no `.git` metadata → `setuptools-scm` version-detection failure). Systemic across EVERY launcher
-      that installs these tarballs this way, not just the zombie watchdog — audit `scripts/vm/launch-*.sh` fleet-wide
-      for the same silent-crash-loop exposure. Either bake `SETUPTOOLS_SCM_PRETEND_VERSION=<tag>` into the tarball-build
-      step (stamp the real git tag at build time) or ensure enough `.git` metadata survives into the tarball for
-      `setuptools-scm` to resolve a real version. NOT fixed in this dispatch (same reason as the item above). (repo:
-      deployment-service, fleet-wide audit)
+      VM launchers (no `.git` metadata → `setuptools-scm` version-detection failure). — **deployment-service@6ea3f24**:
+      exported `SETUPTOOLS_SCM_PRETEND_VERSION="0.99.0"` before the UAC/UTL tarball pip-installs in
+      `launch-vm-zombie-watchdog.sh`, matching the value + rationale already established in
+      `setup-data-pipeline-vm.sh`/`setup-cefi-live-consolidated-vm.sh`/`setup-prediction-live-consolidated-vm.sh`
+      (0.99.0 satisfies every cross-package `<1.0.0` ceiling + `>=0.13.0`/`>=0.33.0` floor pair). Scoped to the
+      zombie-watchdog launcher only — a fleet-wide audit of every OTHER `scripts/vm/launch-*.sh` for the same exposure
+      is still open, not done here. (repo: deployment-service, fleet-wide audit still open)
 - [ ] [INFRA] P0-when-picked-up. **Relaunch `vm-zombie-watchdog` in `--dry-run` ONLY, verify a clean poll cycle against
       currently-live VMs (no false zombies), before EVER proposing `dry_run=false` again** — per main's `BLK-b5b76074`
       answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo. Blocked on the
