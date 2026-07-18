@@ -157,3 +157,14 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   + strategy re-tier writers + UAC `strategy_store_bucket` facade + 2 UI hardcoded routes). Also: execution/strategy
   service builds will need the same base-image pin bump as ml (fleet digest-sweep fix f6e98bbdd auto-handles it once it
   promotes + the 6h sweep runs).
+
+- **2026-07-18, OPERATOR DECISIONS (interactive Q&A) — full-send, canonical-first, NOT precious data.** Operator
+  clarified the trading-adjacent buckets hold only random test data — **no real trades have happened; nothing is writing
+  execution right now.** So the "live cefi fills" caution is moot: the 6144 cefi objects are STATIC historical test data
+  (no live-write hazard, no final-rsync/write-drain needed, no misplaced-write-on-redeploy risk). Goal is CANONICAL
+  structure for eventual (weekend) trading — do NOT over-gate on safety. **Decisions:** (1) **Risk#3 → SINGLE ROOT
+  `_index/`** — the execution consolidator writes ONE bucket-root `_index/latest.json` merged across AGs (full job
+  collapse); reader reads root + AG-filter; safe because nothing's live. (2) **Full-send BOTH C+D** autonomously. (3)
+  **Pre-authorized AUTONOMOUS delete** of all sources incl. execution-store-cefi after the 4 gates (parity + cutover +
+  verify-exercised + zero-reads) — no operator pause. W2 gate SATISFIED (verified). Same coordinated ship-all-then-
+  redeploy shape as Fold-A. cutover spec = workflow wf_9e961e81-417 output (whvoyecxl.output).
