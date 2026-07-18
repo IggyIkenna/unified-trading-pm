@@ -111,8 +111,13 @@ INPUT (flat raw): shape (40, 13)  ->  OUTPUT: shape (0, 0)   # 40 rows -> 0
 **Fix**: handle the flat shape (keep legacy parsing for any old shards), and emit `coach_id`/`coach_name`. Then
 re-derive `fixture_lineups` across history — **no api-football calls needed**, the corpus is already on disk.
 
-- [ ] [CODE] P0. Fix `_normalize_fixture_lineups` to parse the flat one-row-per-player shape + emit `coach_*`; add a
-      regression test pinning BOTH shapes (flat 40 rows -> 40 rows; legacy nested -> unchanged).
+- [x] [CODE] P0. Fix `_normalize_fixture_lineups` to parse the flat one-row-per-player shape + emit `coach_*`; add a
+      regression test pinning BOTH shapes (flat 40 rows -> 40 rows; legacy nested -> unchanged). —
+      features-service@cf10b931 + 7 regression tests. Evidence: QG green (17,689 passed / 0 failed, ALL QUALITY GATES
+      PASSED). Verified on real shards, all four on-disk conditions now yield exactly 11 starters per XI with coach 100%
+      populated: 2024-09-01 flat+dup 160->80, 2026-05-15 flat clean 40->40, 2023-03-04 flat+dup 240->120, 2022-04-16
+      legacy 8->160. Also dedupes on (fixture_id, team_id, player_id) — the 2x-duplicated historical window would
+      otherwise have doubled every lineup on re-derive.
 - [ ] [DATA] P0. Re-derive `fixture_lineups` (and dependent groups) across 2019-2026 from existing raw; verify per-year
       captured shard counts stop collapsing after 2023.
 
