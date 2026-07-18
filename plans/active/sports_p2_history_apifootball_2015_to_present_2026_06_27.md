@@ -2411,3 +2411,55 @@ landing independently; not investigated further here (out of this todo's own sco
 would add risk (singleton-lock refusal path) for zero benefit. `/skip-current-task` — resume once (a) the gate genuinely
 approaches 0 (check per-VM shards too, not just the consolidated index, per slot-9's finding), or (b) the new backlog
 prerequisite lands and changes how this todo gets dispatched.
+
+### 2026-07-18T17:15Z — data_engineering slot-15 (Todo `-001` — ROOT CAUSE FOUND: the backfill scans chronologically from the coverage floor and would take ~16.7h/entity to ever reach the pending tail; the 17+ bounces were never going to close via relaunch alone)
+
+Dispatched onto `-001`. Fresh-pulled all slot repos clean, no dirty state inherited. Confirmed slot-9's relaunched fleet
+(`af-backfill-20260718-16{1608,1641,1712,1740}`) was still healthy (`run.log` tails, fresh `PIPELINE_HEARTBEAT`, zero
+Tracebacks) throughout — no 5th kill this session.
+
+**Ran the actual gate query twice** (`read_availability_index`, `source==api_football`, the 4 remaining entities' 2020+
+windows), ~40 min apart, deliberately waiting through a full manifest-consolidator merge cycle in between (confirmed via
+`gcloud run jobs executions describe` that the merge genuinely completed successfully, `~7m` duration matching this
+bucket's known slow-merge precedent — NOT a stuck/hung execution, verified before concluding anything): pending_fetch
+was **byte-for-byte identical both times** — FIXTURE_EVENTS 1935 / FIXTURE_LINEUPS 1925 / FIXTURE_STATS 1893 /
+PLAYER_STATS 1172 — matching slot-8's 07-17T15:20Z baseline AND slot-11's 07-18T16:36Z read. Zero net movement despite
+~50-60 min of 4 healthy VMs actively writing.
+
+**Found why**: read the per-VM manifest shards directly (bypassing the consolidated index) for 2 of the 4 VMs.
+`af-backfill-20260718-161608` (FIXTURE_EVENTS, ~58 min old) had written 10,861 rows covering ONLY `date=2020-06-06`
+through `2020-10-10` (127 distinct dates, ~2.2 dates/min) — i.e. it is walking **strictly chronologically from the
+coverage floor** (`--start-date=2020-06-06`, the launcher's default), not from wherever the pending cells actually are.
+`af-backfill-20260718-161740` (PLAYER_STATS) showed the identical pattern (`2020-06-06`..`2020-09-16`, 103 dates).
+Cross-checked all 10,861 of the EVENTS VM's written composite keys (date, league_id, venue) against the freshly-merged
+canonical index: **100% already carried the identical `capture_status`** — every single row this VM wrote this session
+was a redundant re-confirmation of already-resolved work, zero net-new resolutions of `expected_unattempted` cells.
+
+At the observed ~2.2 dates/min chronological rate, closing the ~2,225-day window (2020-06-06→2026-07-18) to reach
+2026-06/07 — where slot-8 already established ~79% of the FIXTURE_EVENTS pending mass sits — would take **~16.7 hours of
+uninterrupted per-VM runtime**, just to arrive at the first genuinely-pending date. No relaunch across this todo's
+entire 2-day, 6-relaunch history has survived anywhere near that long. This is the primary, previously-undiagnosed root
+cause of the whole bounce cycle: it was never (only) the zombie-watchdog kills or the manual-delete incidents (both now
+fixed) — the backfill's own date-iteration order guarantees it can't reach the pending tail within any realistic
+session, regardless of how healthy a given relaunch is.
+
+**Filed as a new, focused issue doc** (distinct from the zombie-watchdog and manifest-consolidator-lock issues already
+tracked — this is a third, independent root cause):
+`plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md` —
+unified-trading-pm (this commit). 3 todos: (P1) relaunch with narrow, pending-cluster-targeted date ranges instead of
+the full coverage-floor window (immediate mitigation, computed from the gate query's per-date breakdown — care needed on
+the shared `api_football` rate-budget math if launched alongside the still-running wide-window VMs); (P2) make the
+per-day backfill loop in `instruments-service/instruments_service/cli/instruments_handler.py` manifest-aware so it jumps
+across already-resolved date ranges instead of iterating + skip-checking every calendar day (systemic fix, prevents
+recurrence for every future multi-year api_football backfill); (P3) audit other long-window backfills for the same
+shape.
+
+**Not flipping this checkbox** — gate unchanged, and per the finding above a same-shaped relaunch (same coverage-floor
+start-date) would NOT close it within any reasonable session regardless of fleet health. **Did not touch the 4 running
+VMs** (they are healthy, not stale — the VM-delete guardrail's staleness bar doesn't apply, and killing them without a
+correctly-scoped replacement ready would lose their in-flight work for zero gain) and did not launch a replacement fleet
+myself this dispatch — computing the exact per-entity pending-date list and the safe concurrent-rate-budget math for a
+narrow-window relaunch is real, scoped work better done as its own dispatch (per the new P1 todo) rather than rushed at
+the tail of an already-long investigation. `/skip-current-task` — resume once the P1 mitigation (narrow relaunch) or the
+P2 systemic fix lands; a plain "relaunch and wait" dispatch on this todo will keep reproducing the same zero-progress
+result until one of those lands.
