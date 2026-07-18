@@ -313,3 +313,12 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   (v2-gated drain) + deploys, THEN verify-exercised (real training+inference under ml-store/) + consolidator 2→1
   retarget. Phase E (delete 5 sources) is gated on verify-exercised + a multi-day zero-reads audit window — inherently
   NOT completable in one session (rule-1 legitimate time-gate); sources stay (additive/reversible) until then.
+- **2026-07-18, CI GREEN closeout for Stage 1+2.** The UTL v2 that failed on the stale CI fixture (`96269655`) RE-RAN
+  GREEN after the fixture fix landed (`gh run rerun`); UTL live-defi-rollout is v2-success (also later commits
+  `4a30bd27`/`e12fb780` green). ml-service (`5b287e90`) + deployment-service (`0a811e82`) are v2-GREEN on
+  live-defi-rollout. So the entire runtime-critical ml cutover (UTL + ml-service + deployment-service + 4 resolver yaml
+  copies + CI fixture) is SHIPPED and CI-GREEN, promoting to main via the standard v2-gated drain. REMAINING for full ml
+  fold completion (both pipeline/time-gated, NOT this session): Phase D verify-exercised (needs ml-service to
+  promote→deploy, then run a real training+inference under ml-store/ + cite cloudbuild) + consolidator 2→1 retarget;
+  Phase E delete (multi-day zero-reads window). deployment-api display (P2) + PM mirror (P3) still deferred on their
+  external blockers.

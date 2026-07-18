@@ -118,3 +118,36 @@ design's counts are 2026-07-13).
 - **2026-07-17, authored** as the features successor of [[bucket_estate_fold_design_2026_07_13]] §3 todo 1. Object
   counts NOT re-measured this session (larger corpus) — the executor must re-measure per (ag, kind) at provision time,
   especially the features-onchain-defi twin. Nothing executed yet.
+- **2026-07-18, DISCOVERY complete (workflow `wf_cff0c0d3-08f`, 4/5 agents; bucket-state agent hit a transient
+  ENOTFOUND, re-measure at execution).** Verified Fold-A ground truth — this plan is now execution-ready (mirrors the ml
+  Fold-B playbook, which is code-complete + CI-green as the reference). **Current features yaml keys + shapes**
+  (deployment-service authoring copy; 5 canonical copies total — the same set as ml incl. the
+  `scripts/quality-gates-base/ci-test-cloud-providers.yaml` CI fixture that tick-1 for ml originally missed, so Fold-A
+  MUST add its folded keys to ALL 5): per-kind families are **PER-AG DICTS, NON-env-tiered** (env-split rolled back) —
+  `features-delta-one` (CEFI/TRADFI/DEFI/PRED, L58-62), `features-volatility` (CEFI/TRADFI only — DEFI/PRED/SPORTS
+  removed 2026-07-17, L71-73), `features-onchain` (DEFI only — CEFI removed, L84-85), `features-xinstrument`
+  (CEFI/TRADFI/DEFI/PRED, L104-108), `features-mtf` (CEFI/TRADFI/DEFI, L119-122); FLAT env-tiered: `features-sports`
+  (L160), `features-calendar` (L189), `features-prediction`→`features-pred-{env}` (L193); FLAT non-env legacy:
+  `features-commodity`→`commodity-signals-batch-{pid}` (L167). AWS mirror same shapes (bare `features-…` names in yaml).
+  **Aliases** (UTL bucket_naming.py:94-95): `features-cross-instrument`→`features-xinstrument`,
+  `features-multi-timeframe`→`features-mtf` already exist; Fold-A extends these + adds folded per-AG destinations.
+  **Provisioning:** derived-from-yaml (canonical_buckets.tf for_each handles flat-string-vs-per-AG-dict at L58-61 +
+  setup-buckets.py), tiers prd+test — adding the 5 folded env-tiered keys auto-yields 10 buckets; **tofu-apply unsafe →
+  provision via direct gcloud/aws** (same as ml). **Consolidator:** GCP **8** feature jobs, AWS **9**
+  (`manifest_consolidator_buckets_extended` maps) — **AWS DRIFT: AWS still carries `features-onchain-cefi` (aws
+  scheduler.tf:35) that GCP removed 2026-07-17** (reconcile in the retarget). NO consolidator today for
+  `features-xinstrument`/`features-mtf`/`features-prediction`. N→5 retarget = rewrite the `_extended` maps to the 5
+  folded bucket names + fix the AWS IAM S3 policy loop (aws scheduler.tf:186-187). **PATH_REGISTRY alias-immune rows**
+  (`config_interface/paths/registry.py:180,187,194,201`) — literal templates, MUST be hand-repointed (the ml fold proved
+  aliases don't cover these). **BQ external tables (Fold-A-unique):** feature buckets mount as BQ external tables at
+  bucket ROOT (Hive auto-discovery) via UTL `bq_catalog.create_external_table` + `providers/gcp.py`; folding inserts a
+  leading `{kind}/` prefix → every affected external table's `sourceUris`+`sourceUriPrefix` must re-point to
+  `gs://features-{ag}-{env}-{pid}/{kind}/` and the table be re-created (DDL re-issue, external tables hold no data),
+  gated on the writer cutover. **onchain-defi twin:** `features-onchain-defi-central-element-323112` measured
+  EMPTY/ABSENT this session — the design's flat(~712)-vs-prd(~76) hazard is LIKELY STALE (the netflow_xsec_research
+  corpus was relocated to onchain-research per [[features_onchain_bare_bucket_not_asset_group_migratable_2026_07_15]]);
+  re-measure at execution but expect no reconcile needed. Folded targets `features-{ag}-{prd,test}` confirmed ABSENT.
+  **Full per-repo cutover-site + BQ-table lists** in workflow `wf_cff0c0d3-08f` output (transcript dir). NEXT: Fold-A
+  execution is the biggest fold (BQ re-mount) — run as its own focused cutover pass (provision+migrate → UTL/yaml+alias
+  T0 → features-service+consumers prefix cutover → BQ re-mount → redeploy+verify → consolidator N→5 → zero-reads
+  delete), same implement-then-adversarially-verify shape as ml.
