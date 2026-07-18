@@ -337,12 +337,17 @@ fixture-linked before MVP backfill.
 > 2** `(PREDICTION, POLYMARKET)`, `(PREDICTION, KALSHI)` (IS atom has no data_type axis); **MTDS = 4**
 > `{POLYMARKET, KALSHI} × {trades, book_snapshot_5}`.
 
-- [ ] [INFRA] P0. **FIX the missing MTDS prediction `-test-` bucket isolation (biggest smoke-test gap).**
-      `_test_bucket("prediction")` (`market-tick-data-service/scripts/pipeline_e2e_check.py:434-450`) has no `-test-`
-      sibling and returns the PROD `market-data-tick-prediction` bucket — so a prediction force/skip leg writes to PROD.
-      Add `market-data-tick-pred-test-central-element-323112` (Phase-0 provision) and wire `_test_bucket` to it,
-      matching the cefi/tradfi test-bucket-only invariant. Until this lands, Phase-0's `pred` gate reports GAP by
-      design. (repos: market-tick-data-service, deployment-service)
+- [x] ✅ [INFRA] P0. **MTDS prediction `-test-` bucket isolation FIXED end-to-end (2026-07-18).** The `-test-` bucket
+      `market-data-tick-pred-test-central-element-323112` already exists (derived from `cloud-providers.yaml`
+      `canonical_tiers=["prd","test"]`; no provisioning needed). THREE write/read paths converged to it: (1)
+      verify-read + force-consolidate — `_test_bucket("prediction")` now returns the `-test-` bucket (was PROD
+      fallback), `market-tick-data-service@b06d1e6b`; (2) batch WRITE — `get_tick_data_bucket(test_aware=True)` honours
+      `IS_TEST_RUN` for prediction (was PROD-only), `mtds@2e50851d`; (3) live WRITE twin — `_resolve_live_bucket`
+      honours `IS_TEST_RUN` (preserves `live=batch`), `mtds@86d70de9`. Guard test flipped + cross-AG
+      (cefi/tradfi/defi/sports) byte-unchanged; QG-green (6320 passed). **Follow-ups flagged:** stale prose in
+      `data_pipeline_e2e_check_2026_07_10.md` (L267-269 / 341-342 / 1025 / 1623 now false — "prediction stays
+      PROD-only"), and UTL `get_write_bucket_name` still has a prediction-PROD-only branch (not a tick-write path, but a
+      live inconsistency worth a follow-up). (repos: market-tick-data-service ✅)
 - [ ] [DATA] P1. **Reconcile the `book_snapshot_5` MVP-scope disagreement** — it is in `VENUE_DATA_TYPE_CAPABILITIES` +
       `expected_coverage` (so a plain MTDS matrix gives 4 shards) but is ABSENT from `PredictionMvpRule.data_types`
       (`_mvp_scope_rules.py`), so an `--mvp-only` run silently tests only `trades` (2 shards). Decide the canonical set
@@ -719,3 +724,23 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     uac@e7ed754e + is@e3ffc613), E2 Kalshi resolution+aliases (is@ec8633ac + uac@e7ed754e), §5 union (uac@e7ed754e),
     Phase-B migration SCRIPT (mtds@5392b20b, dry-run). **Remaining is prod-RUN + small remainders** — see the Deferred
     ledger + the Phase-B item's two findings.
+
+- **2026-07-18 (slot-2, autonomous tick 10) — operator freed the usage limit + re-dispatched /autonomous (4h away).
+  Phase-D `-test-` bucket isolation COMPLETE end-to-end; Kalshi order-robust + South-American aliases in flight.**
+  - **Session-limit interlude:** two polish sub-agents (Kalshi order-robust, MTDS `-test-` bucket) died mid-run on the
+    account session limit (reset 9:40pm). No commits lost; the Kalshi agent left correct-but-uncommitted WIP in IS. On
+    the operator freeing the limit, both were resumed.
+  - **MTDS `-test-` bucket isolation FIXED end-to-end (flipped Phase-D item):** verify-read `mtds@b06d1e6b` +
+    batch-write `mtds@2e50851d` + live-write twin `mtds@86d70de9`. The `-test-` bucket pre-existed; all three paths now
+    route prediction to `market-data-tick-pred-test-*` under `IS_TEST_RUN`, cross-AG byte-unchanged, QG-green (6320).
+    This unblocks the Phase-D prediction smoke test (the RUN still needs an operator-given `--day`). Follow-ups: stale
+    prose in `data_pipeline_e2e_check_2026_07_10.md` + a UTL `get_write_bucket_name` prediction-PROD-only branch
+    (non-tick path).
+  - **Kalshi order-robust lookup — WIP correct (reviewed) + QG-green, quickmerge racing the hyper-active branch.** The
+    fix probes both `(home,away)` orderings against the date-scoped cached lookup and takes home/away from the matched
+    FIXTURE's orientation (closes the "Away vs Home title" caveat so the 82.6% Kalshi resolvable rate actually MATCHes).
+    A peer FF staled the sentinel on first quickmerge; an atomic re-gate+quickmerge retry loop (background) is landing
+    it.
+  - **South-American club aliases (odds-side ~66% gap) dispatched** — UAC sub-agent enumerating the failing Chile (265)
+    / Brazil / Argentina renderings from the FIXTURES parquet, verifying each against API-Football canonical ids,
+    additive to `team_mappings`.
