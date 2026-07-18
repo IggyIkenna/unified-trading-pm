@@ -28,10 +28,12 @@ created: "2026-07-18"
 parent_epic: sports_master
 priority: P1
 assigned_vm: planning
-author: data_engineering (slot-15)
 source: [sports_p2_history_apifootball_2015_to_present-001]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
