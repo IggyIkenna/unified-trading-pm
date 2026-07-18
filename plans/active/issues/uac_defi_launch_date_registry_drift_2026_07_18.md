@@ -9,7 +9,7 @@ summary:
   unified_api_contracts.registry.chain_env.PROTOCOL_LAUNCH_DATES carry different launch dates for the same
   protocol-chain pairs — chain_env is subgraph-audited and more precise, venue_launch_dates is coarser and in one case
   (AAVE_V3-ETHEREUM) demonstrably reverts a documented correctness fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -21,8 +21,9 @@ created: 2026-07-18
 parent_epic: defi_master
 priority: P2
 source: [instruments-service PIECE P3 — Solana DeFi available_from floor fix, 2026-07-18]
-assigned_vm:
+assigned_vm: NA
 resolved_by:
+  "unified-api-contracts@f849a238 — AAVE-ETH + 6 on-chain-verified corrections; see On-chain verification section"
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
