@@ -39,7 +39,10 @@ last_updated: 2026-07-18
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: >-
+  deployment-service@9c82335 (5 Tardis launchers + first gate) + @d259f61 (57 download-heavy launchers swept, gate
+  generalised to check_backfill_vm_disk_provisioning.py) + @69dbf72 + @3803f3d. Validated live on
+  cefi-queue-heavy-binancefutu-x17-20260718-184320: 11.1 MB/s sustained past 21.69GB, peak 18.15 MB/s, no cliff.
 ---
 
 > **✅ RESOLVED 2026-07-18 — ROOT CAUSE WAS OUR DISK, NOT TARDIS.** This doc originally concluded that Tardis throttles
