@@ -171,7 +171,7 @@ relaunch (`af-backfill-20260718-15{2725,2753,2818,2852}`, launched ~15:27-15:29Z
 (2026-07-18T15:43:37Z). Per the launcher's own SSOT comment (`launch-vm-zombie-watchdog.sh` lines 27-33): the daemon
 uploads `vm_zombie_watchdog.py` to `gs://deployment-scripts-{pid}/scripts/vm_zombie_watchdog.py` **once, at launch
 time**, and "the running watchdog never re-fetches mid-loop." So the currently-running daemon is still enforcing the OLD
-`(10.0, 60.0)` af-backfill-* pair regardless of the merged code fix — the fix is real but dormant until the daemon
+`(10.0, 60.0)` af-backfill-\* pair regardless of the merged code fix — the fix is real but dormant until the daemon
 process itself is killed and relaunched.
 
 **Consequence**: the current 4-VM relaunch is still at risk of being wrongly reaped again at its ~60-min mark
@@ -266,8 +266,7 @@ config-tuning gap.
       in its refusal/error path. (repo: deployment-service) — **deployment-service@de24324**: gated the raw
       copy-pasteable `Stop: gcloud compute instances delete $EXISTING`line behind an explicit CAUTION block     (requires confirming via Inspect/Tail first) in`launch-api-football-backfill-vm.sh`'s singleton-lock refusal     path, and in the shared `lc_singleton_check()`helper in`scripts/vm/lib/launcher_common.sh`(used by 5 other     launchers). Audited every launcher in`scripts/vm/`for the same inline-duplicated refusal-path pattern     (grepped for`Stop:.*gcloud
       compute instances
-      delete`against an "already running"/EXISTING-class variable, as     opposed to the benign end-of-script`$VM_NAME` self-cleanup convention which was left untouched) and applied
-      the identical fix to all of them — 58 files total, incl. `launch-sports-manifest-rescan-vm.sh` (the `$BLOCKER`    var from the exact VM-name-collision incident referenced elsewhere in this doc),`launch-sfi-backfill-vm.sh`     (`$NAME`), and `launch-tradfi-backfill-vm.sh` (`$existing`). Verified `bash
+      delete`against an "already running"/EXISTING-class variable, as     opposed to the benign end-of-script`$VM_NAME`self-cleanup convention which was left untouched) and applied     the identical fix to all of them — 58 files total, incl.`launch-sports-manifest-rescan-vm.sh`(the`$BLOCKER`    var from the exact VM-name-collision incident referenced elsewhere in this doc),`launch-sfi-backfill-vm.sh`     (`$NAME`), and `launch-tradfi-backfill-vm.sh` (`$existing`). Verified `bash
       -n`clean on all 58 + full    `quality-gates.sh` green on the shipped SHA.
 - [x] ✅ [PROCESS] P1. **Add an explicit guardrail to `unified-trading-pm/agents/data_engineering.md` (or `RULES.md`)**:
       never run `gcloud compute instances delete` against a VM this task's OWN fleet (or a sibling entity/asset_group's
