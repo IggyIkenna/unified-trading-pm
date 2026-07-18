@@ -554,14 +554,16 @@ green on the shipped SHA (226 tests, incl. the 7 new ones).
       `GCSBlobHandle` caller in the codebase). (repo: deployment-service)
 - [x] ✅ [INFRA] P1. **Fix the launcher's stale comment + missing `deployment_service` pip-install** in
       `launch-vm-zombie-watchdog.sh` — pip-install `/tmp/dep-src` (like UAC/UTL) or correct the comment + import if
-      `deployment_service` truly shouldn't be needed. — **deployment-service@6ea3f24**: added
-      `pip install --quiet --no-deps /tmp/dep-src` after the tarball extraction (the watchdog's module-level
-      `from deployment_service.vm_prefix_registry import VM_PREFIX_TO_BUCKET` was never satisfied; the prior comment
-      conflated the `_backup_vm_logs_before_kill` registry-path helpers moving to UTL with this unrelated top-level
-      import, which never moved). `--no-deps` skips deployment-service's heavy
-      fastapi/uvicorn/botocore/web3/pytest-family deps, which the watchdog never touches — mirrors the same route
-      `setup-data-pipeline-vm.sh` already uses for this exact package. `bash -n` clean + full `quality-gates.sh` green
-      on the shipped SHA. (repo: deployment-service)
+      `deployment_service` truly shouldn't be needed. — **deployment-service@6ea3f24**, corrected by
+      **deployment-service@c5684db** (slot-5, same dispatch window): my first pass added
+      `pip install --quiet --no-deps /tmp/dep-src`, which installs cleanly but still crash-loops at IMPORT time —
+      `deployment_service/__init__.py` unconditionally imports `LiveDeployer` → `VMBackend` → `VMConfigManager` →
+      `jinja2` (and other heavy deps) regardless of which submodule is actually needed, so `--no-deps` just moves the
+      `ModuleNotFoundError` from `unified_api_contracts` to `jinja2` instead of fixing it. slot-5 verified this via a
+      real end-to-end scratch-venv test (built real tarballs, reproduced the `--no-deps` import failure, confirmed a
+      full non-`--no-deps` install imports `deployment_service.vm_prefix_registry.VM_PREFIX_TO_BUCKET` cleanly, 203
+      entries) and shipped the fix as a plain `pip install --quiet /tmp/dep-src` (no `--no-deps`). Landed SHA is
+      `c5684db`, not `6ea3f24`. (repo: deployment-service)
 - [x] ✅ [INFRA] P1. **Fix the code-tarball build pipeline for hatch-vcs dynamic-version packages** —
       `unified-api-contracts` and `unified-trading-library` (and likely others using
       `[tool.hatch.version] source = "vcs"`) cannot be `pip install`-ed from the `code/*-code.tar.gz` artifacts used by
@@ -572,11 +574,41 @@ green on the shipped SHA (226 tests, incl. the 7 new ones).
       (0.99.0 satisfies every cross-package `<1.0.0` ceiling + `>=0.13.0`/`>=0.33.0` floor pair). Scoped to the
       zombie-watchdog launcher only — a fleet-wide audit of every OTHER `scripts/vm/launch-*.sh` for the same exposure
       is still open, not done here. (repo: deployment-service, fleet-wide audit still open)
-- [ ] [INFRA] P0-when-picked-up. **Relaunch `vm-zombie-watchdog` in `--dry-run` ONLY, verify a clean poll cycle against
-      currently-live VMs (no false zombies), before EVER proposing `dry_run=false` again** — per main's `BLK-b5b76074`
-      answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo. Blocked on the
-      two P1 items above landing first (the daemon cannot boot cleanly without them). Until then the fleet has ZERO
-      watchdog coverage — accepted as the safe state. (repo: deployment-service)
+- [x] ✅ [INFRA] P1. **Fleet-wide audit + fix for the hatch-vcs code-tarball exposure above** — audited all 179
+      `scripts/vm/*.sh` for the same missing-`SETUPTOOLS_SCM_PRETEND_VERSION` pattern (a script that
+      `uv pip install -e     <dir>`s UAC/UTL from a freshly-extracted `code/*-code.tar.gz`, which has no `.git`
+      metadata). Most of the fleet was already safe — they delegate their startup script to `setup-data-pipeline-vm.sh`
+      / `setup-cefi-live-consolidated-vm.sh` / `setup-prediction-live-consolidated-vm.sh`, which already carry the fix.
+      Found and fixed 15 more exposed scripts that build their own inline install (standalone heredoc or no
+      `setup-data-pipeline-vm*.sh` delegation): the 6 AWS EC2 backfill launchers
+      (`launch-{cefi-sharded,defi,features,instruments,mdps,mtds}-backfill-vm-aws.sh`) + their shared
+      `setup-data-pipeline-vm-aws.sh` (the AWS analog of the already-fixed GCP setup script — was NOT fixed by
+      `6ea3f24`, which only touched the GCP-side scripts), the GCP standalone-heredoc launchers
+      (`launch-gcs-migration-bundle-vm.sh`, `launch-aave-lending-rate-validation-vm.sh`,
+      `launch-amm-golden-fixture-validation-vm.sh`, `launch-prediction-pipeline-vm.sh`,
+      `launch-prediction-features-vm.sh`), and the 3 manual on-VM runner scripts (`vm_instruments_backfill.sh`,
+      `vm_mtds_backfill.sh`, `vm_instruments_reference.sh`). — **deployment-service@d1f75d9**: same
+      `export SETUPTOOLS_SCM_PRETEND_VERSION="0.99.0"` fix applied identically before each file's UAC/UTL editable
+      install. `bash -n` clean on all 15 + full `quality-gates.sh` green on the shipped SHA. Two launchers could NOT be
+      fully verified in this pass and are flagged rather than guessed at: `launch-ec2-vm.sh` installs its target service
+      via a plain `uv pip install -e "."` (no `--no-sources`) from within the service's own extracted tarball dir, so
+      whether it also editable-installs UAC/UTL depends on that service's `[tool.uv.sources]` path-override resolution —
+      not independently confirmed exposed or safe; `launch-features-sports-parallel-backfill-vm.sh` downloads its actual
+      runner (`vm_fss_features.sh`) from a GCS staging path at boot time and that runner is not present anywhere in this
+      repo checkout, so its install step could not be inspected. (repo: deployment-service)
+- [x] ✅ [INFRA] P0-when-picked-up. **Relaunch `vm-zombie-watchdog` in `--dry-run` ONLY, verify a clean poll cycle
+      against currently-live VMs (no false zombies), before EVER proposing `dry_run=false` again** — per main's
+      `BLK-b5b76074` answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo.
+      Deleted the stale pre-`c5684db` dry-run daemon (`vm-zombie-watchdog-20260718-164953`, launched by slot-2 with the
+      still-broken `--no-deps` install) and relaunched `vm-zombie-watchdog-20260718-165908` explicitly `--dry-run` with
+      the fully fixed code (`e9e8cc8` + `6ea3f24` + `c5684db` all present). First real poll cycle (17:05:34Z) completed
+      cleanly: `Watchdog summary: 5 alive / 0 zombie / 4 too_young` / `DRY RUN — no VMs killed` — confirms both the
+      universal-false-positive bug (Incident 5's `_blob_age_minutes` fix) and the boot-crash bugs (the two P1 items
+      above) are genuinely resolved end-to-end, not just unit-tested. **Left the daemon running in `--dry-run`** —
+      restores census/heartbeat visibility for the fleet with zero kill risk, matching the original Incident-1
+      recommendation ("keep the watchdog in `--dry-run`" is safe and useful on its own). Did NOT switch to
+      `dry_run=false` — that remains the separate, explicitly operator-gated decision per main's answer, not part of
+      this task's scope. (repo: deployment-service)
 
 ## Incident 6 — 2026-07-18, root-cause of the 2026-06-24 `af-backfill-*` 5-VM subcluster (evidence: Cloud Monitoring, since GCS-hosted `run.log`/heartbeat had already expired)
 
@@ -702,11 +734,48 @@ backfill for this prefix. No code fix needed for the delete pattern itself.
 (`mtds-lending-indices-20260712-112557`) terminated via OOM (`EXIT_STATUS=137`) on `e2-standard-4` (16GB). A genuine
 latent reliability gap for long/full-history `mtds-lending-indices` runs.
 
-- [ ] [INFRA] P3. **Investigate/fix OOM (`EXIT_STATUS=137`, Linux OOM-killer) on long-running `mtds-lending-indices`
+- [x] ✅ [INFRA] P3. **Investigate/fix OOM (`EXIT_STATUS=137`, Linux OOM-killer) on long-running `mtds-lending-indices`
       full-history backfills** — confirmed on `mtds-lending-indices-20260712-112557` (ran ~29h on `e2-standard-4`/16GB
       before the collector process was kernel-killed; the VM's own `VM_SHUTDOWN_ON_COMPLETION` wrapper still ran its
       fail-safe self-delete cleanly, so no VM leaked, but the backfill work itself was lost mid-run). Check for an
       unbounded in-memory accumulation in the lending-indices collector
       (`market_tick_data_service --operation     collect-lending-indices`, e.g. buffering all rows before the periodic
       manifest-shard flush instead of streaming), or simply bump the launcher's machine type for full-history
-      invocations. (repo: market-tick-data-service, deployment-service)
+      invocations. (repo: market-tick-data-service, deployment-service) — **Investigated both candidates**: (1) the
+      lending-indices collector itself already streams/flushes per-`(protocol, chain)` shard
+      (`market_tick_data_service/cli/handlers/lending_indices_handler.py::_write_protocol_chain_rows` +
+      `_collect_solana_lending`, each shard's DataFrame is serialized+uploaded to GCS and goes out of scope before the
+      next shard — no per-run raw-row accumulation); (2) the launcher had ZERO span-aware machine sizing — a flat
+      `e2-standard-4`/16GB regardless of a 1-day vs 3-6-year window. Shipped the (b) fix — the concrete, low-risk,
+      correctly-scoped one — as `deployment-service@55c40ad`: `launch-mtds-lending-indices-backfill-vm.sh` now computes
+      the requested date span and defaults to `e2-standard-8` (32GB) for windows >30 days (single-day/30-day windows
+      unchanged at `e2-standard-4`); `MACHINE_TYPE` env var still overrides either default; the resolved machine type +
+      span are echoed at launch time (no more launching blind on sizing). QG green (148s), verified the date-span
+      arithmetic in isolation (single-day→0, exactly-30d→30 i.e. stays on the small default, full-history
+      2022→2026→1658d i.e. triggers the bump) before shipping. **Deliberately NOT touched this dispatch** (distinct,
+      shared-library-blast-radius fix, same "deserves its own investigation" reasoning already applied elsewhere in this
+      doc): `unified-trading-library/unified_trading_library/service_framework/io_batch.py::StorageOutput._results`
+      accumulates one small per-day summary dict (bytes, not rows) for the ENTIRE run across every batch-mode service,
+      never cleared — real "hold for entire run, never flush" pattern, but tiny per-entry and used far beyond
+      lending-indices, so not the OOM's likely primary cause and not safe to patch under this narrow todo's scope. Filed
+      as its own follow-up below rather than silently dropped.
+
+- [ ] [DATA] P3. **Defense-in-depth: bound or periodically clear `StorageOutput._results` in the UTL batch framework**
+      (`unified-trading-library/unified_trading_library/service_framework/io_batch.py:69-74`) — found while
+      investigating the `mtds-lending-indices` OOM above (Incident 7 follow-up). `StorageOutput.write()` appends every
+      per-day process-result summary to an in-memory list for the lifetime of a multi-year batch run and never clears
+      it; each entry is a small `{"records": {...}, "total": N}` dict (not raw rows), so this is unlikely to be the sole
+      cause of a 16GB OOM on its own, but it is a genuine unbounded-for-the-whole-run accumulation shared by EVERY
+      batch-mode service (not just lending-indices) — worth fixing as defense-in-depth (e.g. drop/summarize instead of
+      keep-forever, or cap+ring-buffer) once someone scopes the change against its full blast radius (used broadly
+      across UTL's `service_framework`, not a single-repo change). (repo: unified-trading-library)
+
+- [ ] [INFRA] P2. **Verify (or fix) the 2 launchers the hatch-vcs fleet-wide audit above could not confirm**: (1)
+      `launch-ec2-vm.sh` — installs its target `${SERVICE}` via `uv pip install -e "."` from within the service's own
+      tarball-extracted dir with no `--no-sources` flag, so confirm whether that service's `[tool.uv.sources]`
+      path-overrides pull in UAC/UTL as an editable local-path build (same tarball-has-no-`.git` exposure) or resolve
+      them as regular index dependencies (safe); (2) `launch-features-sports-parallel-backfill-vm.sh` — its actual
+      install/runner logic lives in `vm_fss_features.sh`, downloaded from a GCS staging path
+      (`${GCS_STAGING}/vm_fss_features.sh`) at VM-boot time and not present anywhere in this repo checkout — locate its
+      source (likely generated/uploaded by a separate step not yet found) and audit it the same way. (repo:
+      deployment-service)

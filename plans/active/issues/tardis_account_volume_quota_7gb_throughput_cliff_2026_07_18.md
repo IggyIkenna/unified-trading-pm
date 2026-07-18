@@ -123,6 +123,42 @@ the `data-pipeline-check-*` skills).
 3. **Is it bytes or requests?** Distinguishable by running one large-shard-only and one small-shard-only VM and
    comparing where each cliffs.
 
+## ROTATION TEST — the throttle is VM/SESSION-scoped, NOT account-scoped (2026-07-18)
+
+Decisive experiment: delete the throttled VM and launch a fresh one (new IP, SAME account, still exactly ONE VM so cap-1
+is never violated), ~15 min after the previous VM had collapsed to 1-2 MB/s.
+
+```
+17:03   1.16 MB/s   (boot ramp)
+17:04   6.03 MB/s
+17:05  13.30 MB/s   <-- FULL SPEED RESTORED
+17:06  10.33 MB/s
+```
+
+The fresh VM immediately regained full throughput. **The quota therefore attaches to the VM / session / IP, not to the
+account**, which means it IS addressable on our side — contrary to this doc's original "commercial, not technical"
+conclusion, which is hereby corrected.
+
+### What rotation buys (arithmetic from the measured numbers)
+
+| Strategy                     | Behaviour                                     | Effective sustained rate |
+| ---------------------------- | --------------------------------------------- | ------------------------ |
+| One long-running VM (today)  | ~12 MB/s for ~7 GB, then ~2 MB/s indefinitely | **~2-2.7 MB/s**          |
+| Rotate every ~7 GB (~16 min) | ~7 GB per ~20 min cycle incl. ~3-4 min boot   | **~5.8 MB/s**            |
+
+That is roughly a **2.5-3x improvement** on the long-run rate, using only scheduling — no extra VMs, no cap-1 violation,
+no code change to the fetch path.
+
+**It does NOT reach 15 MB/s.** The pre-cliff ceiling is ~12-13 MB/s and is only available for the first ~7 GB, so ~5.8
+MB/s is the realistic ceiling for a rotation strategy. Reaching a sustained 15 MB/s would still require better account
+terms.
+
+### Implementation shape
+
+A supervisor that watches the VM's cumulative RX (or simply elapsed ~15 min / ~7 GB) and, on reaching the threshold,
+deletes and relaunches — reusing `tardis-concurrency-guard.sh` so only one VM is ever live. Boot is ~3-4 min, so the
+duty cycle is ~80% productive. Shorter boots (pre-baked image) would raise the ceiling toward ~7 MB/s.
+
 ## Recommended next steps
 
 - **Commercial, not technical**: confirm the account's rate/volume terms with Tardis Support. No client-side change
