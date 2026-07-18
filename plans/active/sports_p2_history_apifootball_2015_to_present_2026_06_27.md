@@ -2164,3 +2164,30 @@ elsewhere and the fleet still alive, there's nothing new this dispatch can add. 
 `/skip-current-task` — resume this todo once (a) slot 3's watchdog-threshold fix ships (check
 `zombie_watchdog_relaunch_reaped_live_backfills-001` status) or (b) enough wall-clock has passed for a genuinely fresh
 gate re-read to be informative, whichever comes first.
+
+### 2026-07-18T15:43Z — data_engineering slot-5 (Todo `-001` — 12th bounce, cheap re-check ~3min after slot-4's, both preconditions still unmet)
+
+Dispatched (resumed) onto `-001`. Fresh-pulled all slot repos clean, no dirty state inherited.
+
+**Checked both of slot-8's stated resume preconditions**: (1) infra fix
+`zombie_watchdog_relaunch_reaped_live_backfills-001` — `GET /api/backlog` still shows
+`status: dispatched, dispatched_to: 3`, no `done_sha` — not shipped yet. (2) wall-clock since the last gate read
+(slot-8, ~15:20Z) is only ~23 min, and slot-4 already checked ~3 min before this dispatch at essentially the same clock
+distance — re-running `read_availability_index` now would not be a "genuinely fresh" read by the bar slot-8 set.
+
+**Fleet-liveness spot-check only** (cheaper than the full gate query, still useful signal):
+`gcloud compute instances list --filter="name~af-backfill-20260718"` — all 4 relaunched entity VMs (`-152725` EVENTS /
+`-152753` LINEUPS / `-152818` STATS / `-152852` PLAYER_STATS) still `RUNNING`, ~15-17 min old, i.e. survived past the
+watchdog's tightened 10-min heartbeat threshold (though still inside its 60-min shard-staleness window, so not yet a
+clean bill of health). `run.log` tails (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`) confirm
+all 4 are actively writing rows with fresh `PIPELINE_HEARTBEAT` timestamps 15:42-15:44Z, zero Tracebacks — genuinely
+progressing, not stalled. (Noted the unrelated 5th `af-backfill-20260718-150353` FIXTURES force-backfill VM again, still
+out of this todo's enrichment scope, not investigated.)
+
+**Decline again, no new diagnosis run**: both of slot-8's resume conditions remain unmet by design (infra fix not
+shipped; not enough new wall-clock for a fresh gate read). The fleet-liveness check is genuinely new information
+(confirms the relaunch has now outlived the watchdog's 10-min heartbeat threshold without being reaped, one data point
+toward "this relaunch may survive") but does not itself move the gate. Not flipping the checkbox. `/skip-current-task` —
+same resume criteria as slot-4's entry: (a) `zombie_watchdog_relaunch_reaped_live_backfills-001` ships, or (b) the fleet
+has been running long enough (past the 60-min shard-staleness window, i.e. VMs older than ~16:27-16:29Z) for a fresh
+`read_availability_index` gate read to be informative.
