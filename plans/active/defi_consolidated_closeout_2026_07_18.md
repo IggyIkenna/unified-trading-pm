@@ -585,6 +585,29 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — THREE parallel tracks dispatched; remaining waves sequenced).** With R1/R2/R2c
+  shipped, kicked three repo-disjoint workflows concurrently (no quickmerge races):
+  - `wj9qqu5ry` — **R2d** (UAC expected_coverage._DEFI registration) + **R3-author** (fork
+    `migrate_defi_full_v9_canonical` → `migrate_defi_batch_to_per_instrument.py`, column+row UNION, dry-run default,
+    unit-tested) + an **adversarial correctness verify** gating any `--apply`.
+  - `wk821p5lx` — **Track 6** enumeration-view restore (deployment-api `/api/data-status/distinct-values/{ag}` from the
+    coverage.json rollup + `chain` read-col → deployment-ui panel + pw:L2 regression spec). Operator's explicit ask.
+  - `w2bkwrb74` — **IS lending code P0**: fix the 7 adapters silently returning `[]` (stale `LENDING` guard vs the
+    A_TOKEN/DEBT_TOKEN they mint, CONFIRMED real: euler_v2/venus/solend/radiant/benqi/marginfi/fluid all guard
+    `not in (None, LENDING)` vs morpho.py:93's `(None, A_TOKEN, DEBT_TOKEN)`) + bake the split into
+    `build_instrument_catalogue.py` so `--mode full` can't revert. Fix→adversarial verify.
+  - **Remaining waves, SEQUENCED (why each waits)**: **Wave B (POOL/SPOT taxonomy)** — POOL glued-key 4→3-seg
+    (`canonical/crosscutting/defi.py:313`) + POOL-id Option A pinning test + SPOT hard-enforce (EIGEN/ETHFI→SPOT_ASSET,
+    meteora/lifinity→AMM_POOL) + `canonical_id_builder.py` LENDING-example drop — spans UAC+IS, waits on R2d+IS-lending
+    freeing those repos. **Wave C (DOC/codex contradiction fixes)** — mvp-scope-canonical.md:56 PACIFICA-as-MVP
+    (BLOCKING) + ~14 codex/UAC-doc + ~33 IS/MTDS-doc lines — docs-describe-code, so runs AFTER Wave B so docs match
+    final code. **Wave D (DATA migrations)** — LENDING→split ~16.7M rows · canon walk C2–C12 · manifest itype
+    case+venue-spell unify · phantom/dup purge (Track 3) · cull residue (Track 7) — all operate on the corpus/manifest
+    R3 migrates, so AFTER R3 `--apply`. **Wave E (infra runs)** — IS catalogue backfill/rollup (needs all IS code in) +
+    MTDS per-instrument backfill (needs R3 + rebuild manifest) + Track 8 resume crons. **Wave F** — R4 coverage vs the
+    IS denominator + final report. Loop: react to each of the 3 tracked workflows on completion, dispatch the next
+    unblocked wave.
+
 - **2026-07-19 (slot-4, /autonomous — R2 acquisition + R2c SHIPPED; R2d + R3 next).** `wf_bc31645a` both agents landed
   clean, shas reachable on `origin/live-defi-rollout`:
   - **R2 e2e acquisition** `market-tick-data-service@8746708c` (QG green, 6330 tests): 19 EVM extended `lst_rates`
