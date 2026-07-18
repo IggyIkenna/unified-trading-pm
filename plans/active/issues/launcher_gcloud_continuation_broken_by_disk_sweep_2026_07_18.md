@@ -23,6 +23,9 @@ source:
 assigned_vm:
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # P0 — disk-policy sweep broke the `gcloud` line-continuation across 88 VM launchers
