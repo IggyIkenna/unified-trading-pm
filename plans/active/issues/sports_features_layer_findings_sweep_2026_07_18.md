@@ -360,3 +360,62 @@ identity, not noise.
       KEPT and `龙虾` / `币安人生` as REJECTED.
 - [ ] [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
       date/league range once the guard is narrowed.
+
+---
+
+## E. Early-horizon sparsity is CAPTURE coverage, not market availability — **P1**
+
+**RETRACTED (mine, 2026-07-18)**: I first attributed thin early buckets to "bookmakers haven't priced fixtures 24h out".
+Operator challenged it ("could also be because we fetched odds on less fixtures earlier then added fixtures on narrower
+time buckets"). Measurement says the operator is right.
+
+Per-horizon fixture counts for day=2022-04-16 are NON-MONOTONIC, which market availability cannot explain (coverage
+would rise steadily toward kickoff):
+
+| horizon | fixtures | rows | observed bm window (min) | declared window |
+| ------- | -------- | ---- | ------------------------ | --------------- |
+| T-24h   | **25**   | 317  | 1433.7 – 1487.0          | (1380, 1500)    |
+| T-12h   | 68       | 896  | 706.7 – 744.1            | (660, 780)      |
+| T-6h    | 68       | 898  | 343.4 – 380.4            | (330, 390)      |
+| T-4h    | 68       | 896  | 224.5 – 256.4            | (210, 270)      |
+| T-2h    | 68       | 884  | 110.0 – 134.7            | (90, 150)       |
+| T-1h    | **29**   | 270  | 50.5 – 70.0              | (45, 75)        |
+| T-10m   | 67       | 870  | 5.6 – 14.9               | (5, 15)         |
+| T-0     | **8**    | 27   | 0.0 – 2.4                | (-5, 5)         |
+
+**Decisive test** — of the 43 fixtures present at T-6h but absent at T-24h, their EARLIEST observation is:
+
+```
+min=728  median=735  max=741 minutes before kickoff
+observed earlier than 1440 min (24h): 0 of 43
+```
+
+A **13-minute spread across 43 fixtures** is a SINGLE capture event, not 43 bookmakers independently deciding to open a
+market. Those fixtures entered our capture ~12.25h before kickoff and were never sampled at 24h. Note also that every
+horizon samples only a NARROW SLICE of its declared window (T-24h declares 120 min wide, observed span is 53 min),
+consistent with a small number of discrete polls rather than continuous coverage.
+
+**Consequence**: the T-24h model row — the only horizon whose input scope is `["T-24h"]` alone — is built on the
+THINNEST and most capture-biased sample we hold (25 of 68 fixtures, ~37%). Any model trained at T-24h is silently fitted
+to whichever fixtures our poller happened to reach early.
+
+**Capability gap**: there is **no `/v4/historical` support anywhere in the codebase** (grep-verified across
+market-tick-data-service / instruments-service / unified-api-contracts). The Odds API exposes point-in-time snapshots,
+but we cannot currently refetch a past T-24h window. The only odds cron is `uts-prod-mdps-odds-horizon-bucket-daily`
+(`15 1 * * *`), which BUCKETS already-captured ticks — it does not capture.
+
+**Operator 2026-07-18: credentials are available for BOTH live and batch**, so the remaining work is code + config, not
+a credential ask.
+
+- [ ] [CODE] P1. Implement The Odds API `/v4/historical/sports/{sport}/odds?date=<ISO>` adapter leg so past horizon
+      windows can be backfilled; cost per snapshot must be measured before a full-corpus run.
+- [ ] [DATA] P1. Once (E1) exists, backfill the T-24h (and T-1h / T-0) windows for fixtures that currently have no
+      sample there; re-derive odds_features after.
+- [ ] [CONFIG] P1. FORWARD fix — start capture earlier and poll often enough that every fixture is sampled in every
+      declared horizon window (the observed 53-min slice of a 120-min T-24h window shows current polling is too sparse).
+- [ ] [CONFIG] P1. Enable the live in-play connector (`market_tick_data_service/live/connectors/odds_api_ws.py`) now
+      that credentials exist — this is what populates the HT horizon, which currently emits nothing. HT is already
+      declared in `MODEL_HORIZONS` + `FEATURE_HORIZONS`, so it populates with NO contract change. (Its prior
+      "population" was the T-0 fallback living off the post-kickoff bucketing leak — see B1.)
+- [ ] [MODEL] P2. Consider adding T-6h or T-2h as a MODEL horizon: both carry 68 fixtures vs T-24h's 25 (2.7x coverage),
+      are safely pre-match, and fall after most team news.
