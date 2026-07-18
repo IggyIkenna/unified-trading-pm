@@ -150,13 +150,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       Converge to the MTDS target
       (`market-tick-data-service/.../tradfi/tradfi_shared.py::derive_tradfi_row_instrument_id`); drop or make the
       additive field byte-equal. (repo: instruments-service)
-- [ ] [BACKEND] P0. **Manifest writer stamps the raw databento symbol as `instrument_id` for derivatives** (measured: 0
-      `@LIN`, 568k raw in 2026). Ensure the MTDS manifest/consolidator writes the canonical id, keyed identically to the
-      parquet column (shard atom identical across writer/manifest/status/gate/UI). Trace both the forward-write and the
-      consolidator/aggregation build path. (repos: market-tick-data-service, unified-trading-library)
-- [ ] [BACKEND] P0. **Verify + converge the tick parquet CONTENT** (`instrument_key`/`symbol` columns) — confirm
-      forward-written rows carry the canonical id; if `symbol` (raw) is what flows into the manifest, that is the leak.
-      (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P0. **Manifest writer now stamps the canonical `-USD@LIN` id (forward-write) — mtds@c44d5f0d.**
+      Traced: the manifest `availability_index` `instrument_id` is DERIVED from the parquet **content** `instrument_id`
+      column by the shared writer (`unified_trading_library/io/streaming_writer.py`→`manifest_writer`), so once the
+      content column is canonical the forward-write manifest key is canonical + byte-identical (shard atom identical
+      across writer/manifest). Historical manifest rows (`EW1H0_P2785` etc.) are the Phase-B migration, not a writer
+      bug. Regression test that content→manifest keying holds is tracked as the A1 test todo below. (repos:
+      market-tick-data-service, unified-trading-library)
+- [x] ✅ [BACKEND] P0. **Tick parquet CONTENT `instrument_id` converged to `-USD@LIN` — mtds@c44d5f0d.** The databento
+      forward-write (`databento_enrichment.py::_classify_row`) and batch derive
+      (`tradfi_shared.py::derive_tradfi_row_instrument_id`) both now pass `margin_marker="LIN", quote_asset="USD"`. It
+      is the enriched `instrument_id` column (NOT the raw `symbol`) that flows into the manifest key. Runtime PROOF (own
+      venv, "run it not read it"): `derive_tradfi_row_instrument_id` FUTURE `ESM26`→`CME:FUTURE:SP500-USD@LIN-20260619`,
+      OPTION `E3AN6 C7960`→`CME:OPTION:SP500-USD@LIN-20260117-7960-C` (0 whitespace — fixes the operator-seen
+      banned-space class; product root ES→SP500 resolved). (repo: market-tick-data-service)
 - [x] ✅ [OPERATOR] P0. **TradFi quote/margin ruling — DECIDED 2026-07-18: explicit `-USD`** (see the A1 banner above).
       All tradfi is USD-settled (no inverse), but the quote is carried anyway for cross-asset-class uniformity +
       non-ambiguity, consistent with the DERIBIT ruling. Target =
@@ -367,3 +374,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **Concurrency note:** slot-3 is running the parallel `cefi_consolidated_closeout_2026_07_18.md` (same shared UAC
     builder); QG cap = 2 (10 cores) so serialize; reconcile-not-stomp if slot-3 lands a builder change (my change is
     additive so it merges cleanly). Env: 8 repos present, gcloud `central-element-323112` ADC, AWS `427895769566`.
+
+- **2026-07-18 (slot-1, tick 2) — MTDS forward-write SHIPPED + verified; IS convergence written, ship in progress.**
+  - **[A1 writers] SHIPPED `market-tick-data-service@c44d5f0d`** — `databento_enrichment.py::_classify_row` (primary
+    databento tick forward-write) + `tradfi_shared.py::derive_tradfi_row_instrument_id` (batch derive) now emit
+    `-USD@LIN`. Landed on attempt 1 of an atomic re-gate+quickmerge retry loop (won the push-race vs slot-3's parallel
+    MTDS cefi-script commits — those FF-staled my QG sentinel twice, so I automated the re-gate). MTDS QG green.
+  - **Runtime PROOF (own venv):** FUTURE `ESM26`→`CME:FUTURE:SP500-USD@LIN-20260619`; OPTION `E3AN6 C7960`
+    →`CME:OPTION:SP500-USD@LIN-20260117-7960-C` (0 whitespace, product root ES→SP500). Metric on LIVE surfaces stays 0%
+    until Phase B migrates historical — writers are the gate for B, now open.
+  - **[A1 IS] IS catalogue adapter convergence WRITTEN** (sub-agent, uncommitted in
+    `instruments-service/.../tradfi/databento/adapter.py` + `tests/unit/test_databento_tardis_adapter.py`) — reviewing +
+    gating + shipping now (sub-agent stopped pre-ship). Note: slot-3 already shipped the parallel DERIBIT
+    always-BASE-QUOTE fail-loud fix `instruments-service@d72edcf7` (same 2026-07-18 quote ruling, cefi side).
+  - **Scoping:** launched a 4-agent read-only Workflow (`wf_2f2c9a39-164`) mapping Phase A2/A3 + B + C + D into
+    actionable change-maps (in flight). Phase-B schema recon done: catalogue+manifest carry NO strike/option_right cols
+    → migration must re-parse each raw id via the databento classifier (one shared `canonicalize_raw_tradfi_id`), so
+    migrated == newly-written byte-for-byte; unparseable spreads (`UD_1V__VT_...`) → quarantine not silent-drop.
