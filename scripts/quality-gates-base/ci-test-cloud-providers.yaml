@@ -156,21 +156,20 @@ gcp:
     # MUST carry it (parity with UAC + deployment-service cloud-providers.yaml) or any consumer
     # that resolves a folded ml kind raises BucketNamingError under the QG fixture.
     ml-store: "ml-store-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
-    # Unified flat bucket — cross-asset strategies share one bucket (D6 Phase 4, operator decision 2026-05-20).
-    # Per-AG per-env split deferred; migration from old per-AG buckets sequenced under mtds_mdps_master Phase 1.
-    strategy-store: "strategy-store-${GCP_PROJECT_ID}"
-    strategy-store-test: "strategy-store-test-${GCP_PROJECT_ID}"
-    # NOTE: execution-store env-split ROLLED BACK — non-env-split shape until provisioning lands.
-    execution-store:
-      CEFI: "execution-store-cefi-${GCP_PROJECT_ID}"
-      TRADFI: "execution-store-tradfi-${GCP_PROJECT_ID}"
-      DEFI: "execution-store-defi-${GCP_PROJECT_ID}"
-      # Sports execution-store — separate per-AG fill/order/manifest store. Sports execution
-      # is event-driven venue-API placement (no canonical GCS reads); results land here so
-      # they are queryable by asset_group=sports rather than in the CeFi bucket. Non-env-split
-      # to match the execution-store family rollback + the shape ExecutionServicesConfig
-      # constructs (execution-store-sports-{pid}).
-      SPORTS: "execution-store-sports-${GCP_PROJECT_ID}"
+    # strategy-store FOLD D (bucket_fold_execution_strategy_2026_07_17.md) — already a single flat
+    # cross-asset bucket; Fold D adds the `-${DEPLOYMENT_ENV_SHORT}-` env tier (mirrors features/ml).
+    # The explicit `strategy-store-test` key is now REDUNDANT (the tiered key derives
+    # `strategy-store-test-{pid}` at env=test) so it is retired here. Parity with UAC +
+    # UTL's local test fixture (tests/fixtures/cloud-providers.yaml) so the CI-test SSOT this
+    # file backs doesn't diverge from what the dynamic yaml-sweep test collects at import time.
+    strategy-store: "strategy-store-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
+    # execution-store FOLD C — the per-asset_group execution DICT folds into ONE flat env-tiered
+    # bucket; asset_group moves into a top-level object-key PREFIX (`{ag}/`, `pred/`) applied by the
+    # writer/reader, NOT the bucket name. `resolve_bucket_name(kind="execution-store", asset_group=X)`
+    # now returns this flat bucket ignoring asset_group (same mechanism strategy-store uses). Retired
+    # per-AG source buckets kept during the soft window (deleted in Phase E). Parity with UAC +
+    # UTL's local test fixture.
+    execution-store: "execution-store-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
     # Sports pipeline buckets
     features-sports: "features-sports-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
     # Sports venue-balance snapshot store — EOD snapshots written by VenueBalanceTracker.
@@ -351,16 +350,14 @@ aws:
     # ml-store = FOLDED ml bucket (Fold B) — mirrors GCP; see the GCP § comment. Parity with
     # UAC + deployment-service cloud-providers.yaml so folded ml kinds resolve under the fixture.
     ml-store: "ml-store-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
-    # Unified flat bucket — mirrors GCP strategy-store consolidation (D6 Phase 4, operator decision 2026-05-20).
-    strategy-store: "strategy-store-${AWS_ACCOUNT_ID}"
-    strategy-store-test: "strategy-store-test-${AWS_ACCOUNT_ID}"
-    # NOTE: execution-store env-split ROLLED BACK — mirrors GCP rollback (Phase D).
-    execution-store:
-      CEFI: "execution-store-cefi-${AWS_ACCOUNT_ID}"
-      TRADFI: "execution-store-tradfi-${AWS_ACCOUNT_ID}"
-      DEFI: "execution-store-defi-${AWS_ACCOUNT_ID}"
-      # Sports execution-store — mirrors GCP (separate per-AG fill/order/manifest store).
-      SPORTS: "execution-store-sports-${AWS_ACCOUNT_ID}"
+    # strategy-store FOLD D — env-tiered flat bucket; mirrors GCP. `strategy-store-test` retired
+    # (the tiered key derives `strategy-store-test-{acct}` at env=test). Parity with UAC + UTL's
+    # local test fixture.
+    strategy-store: "strategy-store-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
+    # execution-store FOLD C — folded flat env-tiered bucket; mirrors GCP (asset_group -> object-key
+    # prefix, not bucket name). Retired per-AG source buckets kept during the soft window. Parity
+    # with UAC + UTL's local test fixture.
+    execution-store: "execution-store-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
     # Sports pipeline buckets
     features-sports: "features-sports-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
     # Sports venue-balance snapshot store — mirrors GCP position-store-sports.
