@@ -546,6 +546,21 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-18 (slot-4, /autonomous — R-phase implementation START).** Operator (away 4h) directed: quantify → R2+R1 →
+  R3 → IS+MTDS backfills/rollup, no stopping.
+  - **Phase 0 quantify DONE (read-only):** the 15 unwired staking/restaking/vault adapters would add **~85 real
+    instruments** (raw ~150 inflated by a multi-chain-default bug in rocket_pool/kelpdao/puffer/convex/symbiotic).
+    Biggest: **pendle 30 · beefy 16 · yearn 6 · symbiotic 4 · renzo 4 · karak 3 · sanctum 3 · jito_restaking 3 · idle
+    3**; the rest 1 each; `solana_native_staking` 0. Universe **11,724 → ~11,800** — small numeric add but completes the
+    restaking/vault category (was ~7). Real chains taken from `chain_env.PROTOCOL_LAUNCH_DATES` (authoritative — avoids
+    phantom chains): beefy ×6, yearn ×3(ETH/ARB/OPT), idle ×3(ETH/ARB/POLYGON), renzo/karak/pendle ×2(ETH/ARB), the rest
+    ETH-only, sanctum/jito_restaking/solblaze SOLANA.
+  - **R2+R1 implementation DISPATCHED (`wf_6c04b662`):** IS agent = wire the 15 into `_STATIC_/_SOLANA_DEFI_VENUES` +
+    UAC `VENUE_TO_ADAPTER_KEY` mappings + write cbETH (Coinbase) + wBETH (Binance) adapters; MTDS agent =
+    `write_defi_rows` `groupby(instrument_id)` per-instrument fan-out + `evm_defi` per-instrument manifest loop. Both
+    QG-green + runtime-verified + ship via quickmerge. Then R2c (honest `available_to` TVL-timeseries +
+    `force_include`), R3 (union batch→per-instrument migration), IS+MTDS backfills/rollup, R4 coverage.
+
 - **2026-07-18 (slot-4, /autonomous) — Canonical-target audit → doc reconciliation → SSOT reference SHIPPED; migrations
   PARKED.** Handoff record (rule 6 — resume losslessly from here):
   - **Committed this session**: DeFi plan + cefi/tradfi pass-through (`unified-trading-pm@58a6a54ed`); the
