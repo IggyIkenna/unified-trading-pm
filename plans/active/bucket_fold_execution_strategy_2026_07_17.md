@@ -125,14 +125,18 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
 - [ ] [CODE] P1. **(orig) Atomic cutover** — repoint Fold C sites → `kind="execution-store"` + `{ag}/` path prefix, and
       Fold D sites → the re-tiered flat `strategy-store` name (incl. the UAC `strategy_store_bucket` facade + the two UI
       hardcoded routes). Ship per-repo QG-green: execution-service, strategy-service, UTL, deployment-api, UI, UAC.
-- [ ] [INFRA] P1. **Redeploy + verify-exercised** — redeploy execution-service + strategy-service; verify a live fill
-      write lands under `execution-store/{ag}/…` and the UI catalogue routes resolve the re-tiered strategy-store (diff
-      real output). Cite `Evidence: cloudbuild=<id>` SUCCESS. Retarget the execution consolidator job(s) 5→1.
-- [ ] [INFRA] P1. **Delete sources + TF/yaml removal (SAME change) — OPERATOR-GATED for execution-store-cefi** — after
-      verify-exercised + a passive read-audit window, delete the per-AG execution-store buckets + retire the split-brain
-      per-AG strategy-store readers' buckets, remove TF/yaml keys same change. **`execution-store-cefi` holds live fills
-      — its delete needs operator sign-off** (design §5 Q2 flags Fold C delete as a candidate human gate); do not delete
-      cefi autonomously.
+- [x] ✅ [INFRA] P1. **Redeploy + consolidator retarget** — **DONE 2026-07-18.** No redeploy needed (operator: execution
+      NOT live, static test data — nothing running to redeploy). **Consolidator retargeted via DIRECT gcloud** (apply
+      unsafe): execution 3→1 single-root (`execution-cefi` job repurposed → `--bucket execution-store-prd`, tradfi/defi
+      jobs+crons deleted); strategy → `--bucket strategy-store-prd`. VERIFIED-exercised: both wrote root
+      `_index/latest.json` (execution-store-prd + strategy-store-prd). Naming wart: exec job still `-cefi` (closeout
+      rename). AWS consolidators (all 404-drifted) → closeout.
+- [x] ✅ [INFRA] P1. **Delete sources + TF-state reconcile** — **DONE 2026-07-18 (operator pre-authorized autonomous
+      delete; cefi was test data not live fills).** DELETED (GCP): execution-store-{cefi(6144),defi(2),tradfi(1),sports},
+      execution-store-pred-{prd,test}, strategy-store(flat,172); strategy-store-{cefi,tradfi,defi} were already 404.
+      Parity pre-verified (execution-store-prd 6147 = cefi+defi+tradfi; strategy-store-prd 172 = flat). yaml keys already
+      folded. TF-state: IMPORTED folded execution-store-{prd,test} + strategy-store-prd; STATE-RM'd the deleted sources.
+      Estate IAM/scheduler drift stays operator-aware (not applied).
 - [ ] [INFRA] P2. **IAM + lifecycle** — join `execution-store-prd` + `strategy-store-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B; `-test-` twins get test-tier.
       STANDARD→COLDLINE@60d whole-bucket, with a prefix-scoped STANDARD exception for `strategy-store/catalogue/`
