@@ -132,34 +132,36 @@ class OrchestratorConfig(UnifiedCloudConfig):   # BaseSettings — THE .env surf
 
 ## Phase 1 — split the class (config.py only)
 
-- [ ] [BACKEND] P1. **Add `TuningDefaults(BaseModel)` + move the 81 tuning fields** (see Appendix A) verbatim — same
-      defaults, same `gt/ge/le` bounds, same `BoolEnvTrue/False` coercers, same docstrings — but DROP each
-      `validation_alias`. Group by subsystem with section headers. Keep the 4 `field_validator`s that belong to moved
-      fields (`_blank_main_loop`, `_blank_review_loop`) on TuningDefaults.
-- [ ] [BACKEND] P1. **Add `tuning: TuningDefaults = TuningDefaults()` to OrchestratorConfig** and delete the 81 moved
-      fields from it. Leave the 63 operator fields (Appendix B) exactly as they are (env aliases intact).
-- [ ] [BACKEND] P1. **Update the in-file resolver fns** that read moved knobs (`main_loop_seconds()`,
-      `review_loop_seconds()`, `review_slot_ids()` stays operator, etc.) to read `get_config().tuning.<field>`; keep the
-      module-level `DEFAULT_*` constants as the single default source referenced by TuningDefaults.
+- [x] [BACKEND] P1. ✅ **Added `TuningDefaults(BaseModel)` + moved the 81 tuning fields** — agent-orchestrator@2d6d60b.
+      Same defaults/bounds/`BoolEnvTrue/False` coercers/docstrings, `validation_alias` dropped, grouped by subsystem.
+      DEVIATION: the two `_blank_*_loop` blank-coercer validators were NOT kept — env-free makes a blank string
+      unreachable, so they were dead code; removed them (a bare `default=` handles unset). Every field default + bound
+      verified to round-trip vs the pre-split snapshot (0 mismatches).
+- [x] [BACKEND] P1. ✅ **Added `tuning: TuningDefaults = Field(default_factory=TuningDefaults)`** —
+      agent-orchestrator@2d6d60b. 81 fields deleted from OrchestratorConfig; the 63 operator fields keep their env
+      aliases.
+- [x] [BACKEND] P1. ✅ **Updated in-file resolvers** — agent-orchestrator@2d6d60b. `main_loop_seconds()` /
+      `review_loop_seconds()` now read `get_config().tuning.*`; `review_slot_ids()` / `fleet_worker_cap()` stay
+      operator. Empirically verified nested `tuning` is env-FREE (bare / `__` / `ORCHESTRATOR_`-prefixed all ignored)
+      yet bounds-validates.
 
 ## Phase 2 — rewire consumer call sites (~60 reads across server/)
 
-- [ ] [BACKEND] P1. **Rewrite every `get_config().<tuning_field>` → `get_config().tuning.<tuning_field>`** across
-      `server/` (Appendix A is the exact field set; ~60 single-line edits, most one-per-module). Grep-verify zero
-      `get_config().<moved>` remain outside `tuning.`.
-- [ ] [BACKEND] P1. **`basedpyright` + import-smoke** —
-      `python -c "from server.config import get_config; c=get_config(); c.tuning.watchdog_interval_seconds"` resolves;
-      no attribute errors.
+- [x] [BACKEND] P1. ✅ **Rewrote every `get_config().<tuning>` → `get_config().tuning.<tuning>`** —
+      agent-orchestrator@2d6d60b. 85 reads across 26 server modules (3 receiver styles: `get_config().x`,
+      `config.get_config().x`, `cfg`/`_CFG` bindings), scripted + receiver-aware; grep-verified 0 unprefixed moved-field
+      reads remain.
+- [x] [BACKEND] P1. ✅ **basedpyright + import-smoke** — agent-orchestrator@2d6d60b. All server modules import (0
+      failures); `basedpyright server/` clean; `get_config().tuning.watchdog_interval_seconds` resolves.
 
 ## Phase 3 — rewire the 20 test-coupled knobs (11 test files)
 
-- [ ] [TEST] P1. **Switch `monkeypatch.setenv("ORCHESTRATOR_<moved>", …)` → direct injection** for the 20 test-coupled
-      fields (Appendix A ‡). Pattern: `object.__setattr__(get_config().tuning, "<field>", <val>)` after
-      `reset_config()`, or build a `TuningDefaults(<field>=…)` and patch it on. Delete env-PARSING tests that only
-      asserted "blank→default / bad→raise via env" (moot once env-free); replace coverage with a
-      `TuningDefaults(<field>=<bad>)` bounds test where the behavior still matters.
-- [ ] [TEST] P1. **Full suite green** — `bash scripts/quality-gates.sh` (agent-orchestrator) passes; no skipped/xfailed
-      config tests.
+- [x] [TEST] P1. ✅ **Rewired the 20 test-coupled knobs off `setenv`** — agent-orchestrator@2d6d60b. Added a
+      `set_tuning` conftest fixture (sets on the live `get_config().tuning`); behavior tests use it, bounds/env-parse
+      tests became `TuningDefaults(<field>=<bad>)` construction asserts (the moot "blank→default via env" cases
+      deleted). 12 files touched (test_config, test_autospawn, test_tmux_nudge_retry, test_agent_silence, + 8 more).
+- [x] [TEST] P1. ✅ **Full suite green** — agent-orchestrator@2d6d60b. `bash scripts/quality-gates.sh` PASSED: 1366
+      passed / 1 skipped, dashboard tsc + vitest (94) green, ruff + basedpyright clean.
 
 ## Phase 4 — docs
 
