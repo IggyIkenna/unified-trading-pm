@@ -948,3 +948,37 @@ explicitly once the key has a single owner.
 
 - [ ] [DATA] P2. Confirm the residual 61 `rateLimit` rows reach captured/empty (they should heal via normal re-attempt);
       only force an explicit re-attempt if they persist after the enrichment fleet completes its range.
+
+## M. Why we get rate-limited: the divisor was a PROMISE, not a measurement — **FIXED** (deployment-service@e85d570)
+
+Operator: _"why we getting rate limited so much dont we knwo our rate limits on api football side and govern them across
+vms properly?"_ — we DO know them, and a governor exists. The gap is where the divisor comes from.
+
+**The design (sound):** api-football enforces **1200 req/min AND 450,000 req/day, ONE quota across ALL endpoints**. The
+launcher computes a daily-aware effective ceiling, splits it `EFFECTIVE_RPM / FLEET_VMS`, stamps the per-VM req/min +
+matched concurrency into VM metadata, and the adapter self-enforces that throttle.
+
+**The gap:** `FLEET_VMS="${FLEET_VMS:-1}"` — it **defaulted to 1 and never auto-detected**. So every VM assumed it was
+ALONE unless a human remembered `--fleet-vms N`. Nothing enforced that promise. Worse, the singleton COUNT ran only
+inside `if ! $FORCE && ! $SKIP_LOCK` — it did not count on exactly the paths that create concurrency:
+
+- `--force` / `--skip-lock` (deliberate fan-out)
+- a second actor launching independently (§ I — the auto-relaunched enrichment fleet)
+- **auto-relaunch**: `RelaunchPreemptedVm` replays the ORIGINAL env, so a VM relaunched into a now-crowded fleet carries
+  a per-VM budget computed when it WAS alone. This one cannot be fixed by operator discipline at all.
+
+Five concurrent VMs each throttling at a full-budget share = **5x oversubscription**, which is why the 429s appeared
+despite an apparently-correct governor. Measured: **61 `rateLimit` FALSE `attempted_failed` rows in ~30 min**.
+
+**Fix:** when `--fleet-vms` is not explicitly passed, COUNT the running `af-backfill-*`/`af-audit-*` VMs and derive
+`FLEET_VMS = count + 1`, logging the derivation loudly. Explicit `--fleet-vms` still wins. QG green (2,542 passed).
+
+**PARTIAL by construction — stated in the log, not hidden:** already-running VMs keep the budget they computed at THEIR
+launch, so the key stays oversubscribed until they finish. Launch-time division cannot fix a fleet that grows after
+launch.
+
+- [ ] [CODE] P1. Runtime re-division: VMs should read the CURRENT fleet size (or lease a share from a central budget)
+      and re-throttle when the fleet grows, instead of trusting a launch-time constant. Until then the singleton lock is
+      doing the real work and every bypass path is a live oversubscription risk.
+- [ ] [CODE] P1. `RelaunchPreemptedVm` should RE-DERIVE the rate budget on replay rather than replaying the original
+      per-VM share — same root cause as § G-ops (replaying stale launch params).
