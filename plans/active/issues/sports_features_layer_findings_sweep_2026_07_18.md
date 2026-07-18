@@ -1069,3 +1069,43 @@ in the ROLL-UP, not the capture. That reframes the remaining work completely:
 - [ ] [CODE] P1. The surgical script scans `"/entity=fixtures/"` (line 79) — the LEGACY entity. Retarget to
       `entity=fixtures_schedule` (verified to carry `af_fixture_id` + `round`) before any real run, or it patches the
       wrong tree. Same staleness class as `migrate_sports_canonical_v9.py`.
+
+## P. DERIVE `round` for the confident majority, spend API calls only on the clustered remainder
+
+Operator 2026-07-18: _"work out per league when the non standard games cluster so you can end up manually inserting
+round info for 70% of normal games you are 100% confident on ... should take calls down a lot, a couple hours rather
+than days"_. Measured — the idea holds, with a precise ceiling and one caveat.
+
+**The populated ~50% is a FREE LABELLED GROUND-TRUTH SET.** Any derivation rule can be scored against it with zero API
+calls before being applied to the blank half. Measured on 3,234 sampled fixtures (6 matchdays, Aug-Sep 2023):
+
+- `round` populated 1,562/3,234 (48%).
+- Of those, **1,072 = 69% are `Regular Season - N`** — the operator's "70% of normal games", confirmed.
+- The remainder are cup/qualifying structures that cluster: `Preliminary Round` 124, `1st Round Qualifying` 103,
+  `2nd Round Qualifying` 74, `3rd Round Qualifying` 40, `1st/2nd/4th/5th Round`, `Group B - 26`.
+
+**Derivability ceiling — 97.0%.** Grouping the Regular-Season fixtures by `(af_league_id, day)`: **225 of 232 groups
+carry exactly ONE round number**; only 7 span multiple rounds. So "all fixtures for a league on a matchday share one
+round" holds 97% of the time, and that is the hard ceiling for date→round derivation.
+
+**The 3% failures CLUSTER BY LEAGUE, not randomly** — league `253` alone accounts for 4 of the 7 (a split/scattered
+schedule). That is what makes the operator's plan work: ambiguity is a per-league property, so a confidence whitelist is
+possible instead of a blanket refetch.
+
+**Correctness guard — `round` is NOT chronological position.** Postponed fixtures mean a `Regular Season - 12` match can
+be played after round 15. Naive date-ordering would silently write WRONG rounds, and a derived value written as if
+captured is the banned silent-placeholder. Hence: score first, whitelist second, and mark derived values as derived.
+
+**CAVEAT — the validation set may not be exchangeable with the target.** The 97% is measured on fixtures that ALREADY
+have `round`. If the blanks are disproportionately cups/friendlies (where `Regular Season - N` does not apply at all),
+derivation covers far less of them. This MUST be measured before sizing the API run.
+
+- [ ] [DIAG] P0. Profile the BLANK half by league + competition type. If blanks concentrate in cups/friendlies,
+      derivation is not the lever there — honest absence is (a cup tie has no `Regular Season - N`).
+- [ ] [CODE] P1. Build the per-league confidence whitelist: for each (league, season), score date→round derivation
+      against the populated fixtures. Whitelist leagues scoring 100%; exclude any league with a multi-round matchday
+      (e.g. `253`).
+- [ ] [CODE] P1. Derive `round` ONLY for whitelisted (league, season) blanks, and stamp provenance (derived vs captured)
+      — never write a derived value indistinguishable from a fetched one.
+- [ ] [DATA] P1. API-fetch only the residual: non-whitelisted leagues + cup competitions + any league-season with no
+      populated fixtures to score against. Size the run from THAT count, not the whole corpus.
