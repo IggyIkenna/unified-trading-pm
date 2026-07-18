@@ -395,8 +395,10 @@ fixture-linked before MVP backfill.
       index, no new GCS walk) + 8 aliases `unified-api-contracts@e7ed754e` → measured **~0% → 82.6%→~100%** on 92 live
       Kalshi fixtures. (a) STILL OPEN: the South-American club alias gap in `team_mappings` (`Coquimbo Unido`,
       `O'Higgins`, `Universidad Católica (CHI)`, …) capping the odds-side ~66% — verify each against API-Football naming
-      (don't guess), additive to `team_mappings`. Also verify the Kalshi home/away title order against the FIXTURES
-      parquet (see Progress Log tick-6 caveat). (repos: instruments-service ✅, unified-api-contracts (Kalshi ✅ /
+      (don't guess), additive to `team_mappings`. Kalshi home/away title-order caveat ✅ CLOSED
+      `instruments-service@ba3528d4` (order-robust lookup: probes both orderings, home/away taken from the matched
+      fixture). [Original note kept for context:] verify the Kalshi home/away title order against the FIXTURES parquet
+      (see Progress Log tick-6 caveat). (repos: instruments-service ✅, unified-api-contracts (Kalshi ✅ /
       South-American remaining))
 
 ### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
@@ -744,3 +746,13 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   - **South-American club aliases (odds-side ~66% gap) dispatched** — UAC sub-agent enumerating the failing Chile (265)
     / Brazil / Argentina renderings from the FIXTURES parquet, verifying each against API-Football canonical ids,
     additive to `team_mappings`.
+
+- **2026-07-18 (slot-2, autonomous tick 11) — Kalshi order-robust LANDED; data_pipeline prose reconciled.**
+  - **Kalshi order-robust lookup SHIPPED — `instruments-service@ba3528d4`** (landed attempt-1 via the atomic
+    re-gate+quickmerge retry loop after the first quickmerge staled on a peer FF). Probes both `(home,away)` orderings
+    against the date-scoped cached lookup, takes home/away from the matched FIXTURE's orientation → the 82.6% Kalshi
+    resolvable rate now actually MATCHes regardless of "Away vs Home" title order; Polymarket benefits too. E2 order
+    caveat CLOSED. Tests cover reversed-title MATCH (both venues) + the "both orderings = one GCS read" assertion.
+  - **Reconciled `data_pipeline_e2e_check_2026_07_10.md` todo-13 prose** (`pm@11293b9a3`) — the "prediction has no
+    `-test-` sibling bucket" claims (L267/683/1030) were made false by the `-test-` bucket fixes; corrected in place.
+  - **South-American aliases agent still running** (UAC, enumerate+verify+add for Chile/Brazil/Argentina).
