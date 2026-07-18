@@ -9,7 +9,7 @@ summary:
   defect clusters — a stale bucket-naming assertion drift left behind by d98a1fdc (2026-07-17), and a tradfi symbol
   "-USD" suffix drift in cross_instrument — block EVERY ship from this repo under the green-tree HARD RULE, not just
   mine.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [data]
@@ -23,6 +23,8 @@ priority: P1
 assigned_vm: planning
 source: [api_football_backfill_chronological_scan_never_reaches_pending_tail-004]
 resolved_by:
+  slot-8 (both todos verify-only closed 2026-07-18 — fix already shipped by unrelated Fold-A + UAC contract commits, see
+  todo evidence)
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -105,8 +107,8 @@ over-appended it. Not investigated further — outside this dispatch's scope (da
       code change needed — features-service@1368732a.** Root cause was NOT d98a1fdc itself: an independent, much larger,
       operator-sanctioned migration (**Fold A**, `plans/active/bucket_fold_features_2026_07_17.md`) landed on
       `live-defi-rollout` the same day (2026-07-18) and deliberately retired the per-family
-      `features-volatility-cefi-     {pid}` shape in favor of the flat per-asset-group `features-{ag}-{env}-{pid}` shape
-      — confirmed the CORRECT current SSOT (`cloud-providers.yaml` folded `features:` key +
+      `features-volatility-cefi-{pid}` shape in favor of the flat per-asset-group `features-{ag}-{env}-{pid}` shape —
+      confirmed the CORRECT current SSOT (`cloud-providers.yaml` folded `features:` key +
       `VolatilityServiceConfig.get_output_bucket()` → `resolve_bucket(kind="features", ...)`). That same commit
       (features-service@1368732a) already updated all 6 Cluster-A tests to assert the new flat shape, INCLUDING
       `test_output_bucket_defi_raises_no_defi_options` — it was renamed to
@@ -116,14 +118,20 @@ over-appended it. Not investigated further — outside this dispatch's scope (da
       `bash scripts/quality-gates.sh` run on FF-pulled `live-defi-rollout` HEAD (`47acb31f`): **17682 passed, 0 failed,
       209 skipped** (sentinel written `47acb31f...`) — all 6 Cluster-A tests green, confirmed by direct inspection of
       their current assertions. My fresh-pull simply picked up the fix; I made no code edits. (repo: features-service)
-- [ ] [BACKEND] P1. Trace the tradfi `-USD` symbol-suffix drift in `TestTradfiVenues`
-      (`tests/cross_instrument/unit/test_paired_dispatch.py::TestTradfiVenues::{test_nasdaq_etf,test_nyse_etf,test_ice_commodity_spot,test_nymex_commodity_spot}`)
-      to its source commit, confirm whether the `-USD` suffix is the new correct behavior or a symbol-builder
-      regression, and fix whichever side is wrong. **NOTE for the next worker: this also appears ALREADY RESOLVED** by
-      the same features-service@1368732a ship (Fold-A's QG run caught + fixed 4 `-USD` ETF/COMMODITY test aligns as a
-      byproduct of a same-day UAC contract change, `uac@33e3f369`) — the full QG run cited above shows 0 failures
-      suite-wide, including this file. Not flipped here (out of this task's scope — task id `-001` only covers the
-      bucket-naming todo) but should be a fast verify-only close for whoever picks up `-002`.
+- [x] ✅ [BACKEND] P1. Trace the tradfi `-USD` symbol-suffix drift in `TestTradfiVenues` — **RESOLVED, new correct
+      behavior, not a regression — traced to UAC@33e3f369** ("fix(tradfi): extend `_build_tradfi_cash` -USD quote suffix
+      to EQUITY/CURRENCY/ETF/BOND/COMMODITY", 2026-07-18T16:43:34+01:00). This is an operator-ratified contract change
+      (`plans/active/tradfi_consolidated_closeout_2026_07_18.md` line 358: "Equity id = `-USD` on ALL FOUR surfaces" —
+      target `NASDAQ:EQUITY:AAPL-USD`) that extends the existing INDEX-only `-USD` suffix convention (operator-ratified
+      2026-06-11, commit `32d0d40`) to every other TradFi cash type, so the pattern is uniform regardless of asset class
+      (CDS excluded — no base/quote dimension). `_TRADFI_CASH_QUOTE_SUFFIXED_TYPES` in
+      `unified_api_contracts/internal/reference/canonical_id_builder.py` now includes EQUITY/CURRENCY/ETF/BOND/
+      COMMODITY alongside INDEX. features-service@1368732a's QG run caught this same-day UAC contract drift and updated
+      all 4 `TestTradfiVenues` assertions to the new `-USD`-suffixed form as a byproduct of the Fold-A ship. Verified
+      via the same full `bash scripts/quality-gates.sh` run cited on the sibling todo (LDR HEAD `47acb31f`): **17682
+      passed, 0 failed** — all 4 tests green, confirmed by direct inspection of their current assertions
+      (`tests/cross_instrument/unit/test_paired_dispatch.py::TestTradfiVenues`). No code edits needed. (repo:
+      features-service)
 
 ## Evidence
 
