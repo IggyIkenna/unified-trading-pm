@@ -200,7 +200,7 @@ catalogue). Overriding the monotonic guard would have deleted 2,306 legit rows. 
 removed-venue rows) is provably safe; the full-vs-incremental delta is filed below as a SEPARATE finding to investigate
 before any full rebuild.
 
-### F8 — `--mode full` catalogue regen is lossy vs the incremental catalogue — `- [x]` ROOT-CAUSED + guarded (durable fix scoped)
+### F8 — `--mode full` catalogue regen is lossy vs the incremental catalogue — `- [x]` ROOT-CAUSED + guarded + DURABLE FIX SHIPPED
 
 **ROOT CAUSE (definitive full-vs-live diff, 2026-07-18):** ran a full-mode defi roll-up in-process (monkeypatched
 `promote_catalogue` to capture the output) and diffed its instrument_ids against the live catalogue. The full walk
@@ -219,11 +219,23 @@ event) exactly which instruments would be dropped — count by venue / instrumen
 sample — turning the opaque block into a reviewable report before anyone runs `--allow-catalogue-shrink`. The guard
 already prevented silent data loss; this makes it legible.
 
-**Durable follow-up (scoped, tracked):** extend the SPORTS frozen-tail-merge fix (`_merge_incremental`) to the
-defi/cefi/tradfi `--mode full` path so a full rebuild MERGES-preserves the cumulative set (never silently drops a
-previously-catalogued delisted instrument, only updates `available_to`), matching the documented contract — the real
-durable fix so a full self-heal/rollback is safe without `--allow-catalogue-shrink`. Until then: use
-`--mode incremental` (the authoritative path); the guard + drop-list diagnostic keep full-mode safe.
+**DURABLE FIX SHIPPED — `instruments-service@9d6aa5ee`:** extended the SPORTS frozen-tail-merge (`_merge_incremental`)
+to the defi/cefi/tradfi/prediction `--mode full` path via a new `close_absent=False` mode. A full walk stays
+authoritative for the `available_to` of every instrument that STILL has by_date data (branch 1 recomputes it, so a
+genuine delisting is carried by the fresh window row), but a previously-catalogued instrument whose by_date has since
+been PRUNED is now preserved verbatim instead of silently dropped — matching the cumulative all-instruments-ever
+contract. Branch 3 (the trailing-window delist-close at `window_start-1`) is disabled in this mode because a full walk
+has no meaningful window boundary. `--allow-catalogue-shrink` remains the escape hatch for a deliberate re-aggregate
+that INTENDS to drop (skips the merge). So `--mode full` is now a SAFE self-heal/rollback path without needing
+`--allow-catalogue-shrink`.
+
+**Runtime-verified on the LIVE defi catalogue (2026-07-18):** loaded the real `prod/catalog.parquet` (11,724 rows, 3,827
+delisted) + a real 5-day by_date window (362 parquets → 7,388 rows) and ran the `close_absent=False` merge → **11,724
+merged, 0 dropped, all 11,724 prev keys preserved (merged ≥ prev → NO shrink)**; the 4,336 frozen-tail rows (incl. every
+delisted instrument) are carried through — exactly the class `--mode full` previously dropped. Unit: 28 tests green (5
+new full-rebuild + 2 shrink-diagnostic + the existing `_merge_incremental` suite), IS gate green. (A local full-corpus
+walk is impractical — the O(all-history) by_date LISTING is the bottleneck the incremental path exists to avoid — so
+verification used the real live prev catalogue + a real window, which proves the merge property the fix delivers.)
 
 **Operator (2026-07-17): "i thought we got rid of some of these dsol venues like DRIFT as they got hacked".** CONFIRMED:
 DRIFT was removed from the venue registry 2026-07-16 (operator ruling — hacked ~$280M, rebranded Velocity DEX; all
@@ -286,18 +298,18 @@ synchronously.
 
 ## Fix status
 
-| #   | Finding                                                             | Repo(s)                              | Status                                                                                                                 |
-| --- | ------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| F1  | Fixtures league human names                                         | deployment-api + deployment-ui       | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)                                                    |
-| F2  | 3 panels "Unknown error" (OOM)                                      | deployment-api (`cloudbuild`)        | ✅ FIXED + VERIFIED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; live rev 00198 = 16Gi/4CPU, 0 OOM since deploy    |
-| F3  | Catalogue Explorer dropdowns                                        | deployment-api + deployment-ui       | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`                                                   |
-| F4  | mock/dev robustness (F1/F3)                                         | deployment-ui                        | ✅ FIXED — `@9f88629`                                                                                                  |
-| F5  | non-canonical instrument_type spellings                             | deployment-api + instruments-service | ✅ FIXED — drilldown display `@512180be` + writer `@ee19f6f3` (catalogue was already canonical)                        |
-| F6  | redundant COINBASE + bare-vs-chain dup                              | deployment-api + instruments-service | ✅ FIXED — display collapse `@512180be` + writer `@ee19f6f3`                                                           |
-| F7  | DRIFT (removed) still in DeFi drilldown                             | deployment-api + IS catalogue        | ✅ FIXED — filter `@512180be` + purge (defi 63/cefi 10 rows, GCS-verified) + writer `@ee19f6f3`                        |
-| F8  | `--mode full` regen lossy (drops delisted cumulative set)           | instruments-service                  | ✅ ROOT-CAUSED + guarded `@24616d0f` (drop-list diagnostic); durable frozen-tail-merge fix scoped                      |
-| F9  | league filter exact/case-sensitive + upcoming-fixtures raw ids      | deployment-api + deployment-ui       | ✅ FIXED — be `@eeb23b13` + ui `@680e4139`/`@e643a5c` (pw:L2 ✓); name+partial+case-insensitive match, upcoming names   |
-| F10 | New Listings/Upcoming Expiries slow (35s cold, unbounded) → timeout | deployment-api + deployment-ui       | ✅ FIXED — be `@4df2a93e` + ui `@e643a5c`; pagination (killed 644K-row build) + parallel reads (35→22.9s) + warm cache |
+| #   | Finding                                                             | Repo(s)                              | Status                                                                                                                             |
+| --- | ------------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| F1  | Fixtures league human names                                         | deployment-api + deployment-ui       | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)                                                                |
+| F2  | 3 panels "Unknown error" (OOM)                                      | deployment-api (`cloudbuild`)        | ✅ FIXED + VERIFIED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; live rev 00198 = 16Gi/4CPU, 0 OOM since deploy                |
+| F3  | Catalogue Explorer dropdowns                                        | deployment-api + deployment-ui       | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`                                                               |
+| F4  | mock/dev robustness (F1/F3)                                         | deployment-ui                        | ✅ FIXED — `@9f88629`                                                                                                              |
+| F5  | non-canonical instrument_type spellings                             | deployment-api + instruments-service | ✅ FIXED — drilldown display `@512180be` + writer `@ee19f6f3` (catalogue was already canonical)                                    |
+| F6  | redundant COINBASE + bare-vs-chain dup                              | deployment-api + instruments-service | ✅ FIXED — display collapse `@512180be` + writer `@ee19f6f3`                                                                       |
+| F7  | DRIFT (removed) still in DeFi drilldown                             | deployment-api + IS catalogue        | ✅ FIXED — filter `@512180be` + purge (defi 63/cefi 10 rows, GCS-verified) + writer `@ee19f6f3`                                    |
+| F8  | `--mode full` regen lossy (drops delisted cumulative set)           | instruments-service                  | ✅ FIXED — durable frozen-tail merge `@9d6aa5ee` (live-verified: 11,724 prev, 0 dropped, no shrink) + guard/diagnostic `@24616d0f` |
+| F9  | league filter exact/case-sensitive + upcoming-fixtures raw ids      | deployment-api + deployment-ui       | ✅ FIXED — be `@eeb23b13` + ui `@680e4139`/`@e643a5c` (pw:L2 ✓); name+partial+case-insensitive match, upcoming names               |
+| F10 | New Listings/Upcoming Expiries slow (35s cold, unbounded) → timeout | deployment-api + deployment-ui       | ✅ FIXED — be `@4df2a93e` + ui `@e643a5c`; pagination (killed 644K-row build) + parallel reads (35→22.9s) + warm cache             |
 
 ## Fix plan — F5/F6/F7 IS-catalogue canonicalisation sweep (operator-decided 2026-07-18)
 
