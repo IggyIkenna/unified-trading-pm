@@ -325,7 +325,74 @@ concurrent-VM state at each kill time.
       `tardis-concurrency-guard.sh`'s own invocation logs/audit trail for the same timestamps, and audit-log
       `protoPayload.authenticationInfo` for whether the guard runs under `unified-trading-sa` directly (matches) or a
       distinct identity. (repo: deployment-service)
-- [ ] [DATA] P2. **Re-run this audit past the 500-row cap** — the `gcloud logging read --limit=500` sweep above returned
-      exactly 500/500 rows for the 30-day window, meaning the true count of `agent-name/claude_code` `instances.delete`
-      calls may exceed what was sampled; a paginated or narrower-windowed re-run would confirm completeness before
-      treating the Incident-3 finding as the full extent of the pattern. (repo: deployment-service)
+- [x] ✅ [DATA] P2. **Re-run this audit past the 500-row cap** — the `gcloud logging read --limit=500` sweep above
+      returned exactly 500/500 rows for the 30-day window, meaning the true count of `agent-name/claude_code`
+      `instances.delete` calls may exceed what was sampled; a paginated or narrower-windowed re-run would confirm
+      completeness before treating the Incident-3 finding as the full extent of the pattern. (repo: deployment-service)
+      — see "Incident 4" below: re-ran paginated (timestamp-cursor + `--order=asc`, deduped by `insertId`) across the
+      full 30-day window. **The cap was hiding the majority of the population**: 2,703 unique delete events vs. the 500
+      originally sampled (the capped audit saw ~18.5% of the true count). Confirms completeness was NOT safe to assume
+      from the capped sample; two new findings below.
+
+## Incident 4 — 2026-07-18T16:2x-16:3xZ, paginated re-audit past the 500-row cap (confirms the P2 audit-completeness concern was justified)
+
+Dispatched to `zombie_watchdog_relaunch_reaped_live_backfills-008`. Re-ran the `v1.compute.instances.delete` +
+`agent-name/claude_code` UA sweep from the same 30-day window (`2026-06-18T16:23:47Z` → `2026-07-18T16:23:47Z`,
+`central-element-323112`), this time paginated: `--order=asc --limit=500` per page, cursor advanced to the max
+`timestamp` seen each page, re-queried with `timestamp>=cursor`, deduped globally by `insertId` (handles same-timestamp
+ties safely). 6 pages, terminated on a <500-row final page (no artificial cap). Full unique-record dump:
+`audit_results.jsonl` (2,703 rows) — not committed (scratch artifact); re-derivable from the query above.
+
+**Headline: the original single-page 500-row sample covered only entries newer than ~2026-06-30T06:53Z — 12 days of the
+30-day window were entirely invisible to it.** True unique-event count: **2,703** (vs 500 sampled, ~18.5% coverage).
+Every VM-delete appears as exactly 2 log entries (a few seconds to ~2min apart, distinct `insertId`s) — consistent with
+GCP's request-received + operation-completed audit pairing for one logical delete call, not a double-delete bug; divide
+event-counts by ~2 to estimate unique deletion actions.
+
+**Re-checked the two families this issue already flags**, to see whether the cap was concealing more of the SAME
+incidents or the picture was already complete:
+
+- `cefi-queue-heavy-binancefutu-x15`/`-x17` (Incident 3): extended audit finds **18 unique VM names / 36 delete events**
+  (vs. the 12 VMs spot-checked in Incident 3), but **zero of them fall outside the original sample's time coverage** —
+  the cap wasn't hiding anything new here, just under-enumerating the same ongoing pattern. Strengthens Incident 3's
+  evidence base (more instances of the same signature) without changing its "not yet root-caused" status.
+- `af-backfill-*` (Incident 2): extended audit finds **22 unique VM names / 44 delete events** (vs. the 3 documented
+  2026-07-17/18 incidents) — **and 12 of those VM names (24 events) are a previously-undocumented cluster from
+  2026-06-24**, entirely outside the original 500-row sample's time coverage. Detail: all by `ikenna@odum-research.com`.
+  Two distinct timing sub-patterns within the cluster: 7 VMs deleted 2-4min after their own launch timestamp (embedded
+  in the VM name) — matches this doc's already-documented "manual dev/test launch-then-verify-then-delete" pattern (see
+  the `cefi-<venue>-<year>*` exclusion above) and is likely benign; but 5 VMs
+  (`af-backfill-20260624-04{2653,2731,2751,2815,2834}`) were deleted **~80-82min after their own launch** — inconsistent
+  with a quick dev/test cycle, NOT yet confirmed via run.log whether this was a genuine mid-run kill of progressing work
+  or an extended manual debug session. Flagged as a new todo below rather than root-caused inline
+  (infra/deployment-service craft, out of `data_engineering` scope).
+
+**New candidate cluster surfaced by the full-window audit (not previously flagged anywhere in this doc)**:
+`mtds-lending-indices` is the **single largest family by volume** — 41 unique VM names / 82 delete events, more than
+either `af-backfill` or `cefi-queue-heavy-binancefutu`. Unlike the already-ruled-out fixed-pool families
+(`mtds-gas-fees` uses static year-keyed names `2020`-`2026`; `fss-backfill-vm-1..10` /
+`mtds-{dex-swaps,perp-funding,solana-drift}-backfill` are fixed pool-worker names where each `delete` is immediately
+followed by a same-name `insert`), `mtds-lending-indices` VM names are **timestamped/ephemeral**
+(`mtds-lending-indices-YYYYMMDD-HHMMSS`), matching the ephemeral-campaign-VM shape of the families that DO turn out to
+be incidents. Spot-check: deletes lag each VM's own launch timestamp by ~40-45min (not an immediate dev-test cycle).
+Principals: `harshkantariya@odum-research.com` (60 events), `ikenna@odum-research.com` (22 events), both under the
+`agent-name/claude_code` UA. **Not root-caused** — out of `data_engineering` craft scope; flagging as a new candidate
+for the same INFRA investigation as Incident 3/the 2026-06-24 af-backfill subcluster.
+
+**Scope note**: only the two already-flagged families plus the top-2-by-volume prefixes (`mtds-lending-indices`,
+`mtds-gas-fees`) were spot-checked in detail; the remaining ~35 distinct VM-name prefixes in the 2,703-row dataset
+(`prediction-live-*`, `cefi-bitget-futures-*`, `sports-enrich-*`, `tradfi-bf-*`, etc.) were NOT individually triaged —
+this was an audit-completeness re-run (confirm the sample wasn't truncated), not a full re-triage of every family. A
+full triage of the remaining prefixes is a separate, larger scope than this P2 todo covered.
+
+- [ ] [INFRA] P2. **Root-cause the 2026-06-24 `af-backfill-*` 5-VM subcluster**
+      (`af-backfill-20260624-04{2653,2731,2751,2815,2834}`, deleted by `ikenna@odum-research.com` ~80-82min after each
+      VM's own launch — NOT the quick 2-4min dev-test pattern the other 7 VMs in the same cluster show) — pull `run.log`
+      for at least one of the 5 to confirm active-vs-idle at kill time, same method as Incident 2/3. (repo:
+      deployment-service)
+- [ ] [INFRA] P2. **Root-cause the `mtds-lending-indices` delete pattern** — 41 unique ephemeral-named VMs / 82 delete
+      events across the 30-day window (the single largest family in the audit, larger than either `af-backfill` or
+      `cefi-queue-heavy-binancefutu`), deletes lag each VM's own launch timestamp by ~40-45min. Determine whether this
+      is a legitimate short-lived consolidator job pattern (delete-after-completion, benign) or another instance of the
+      Incident-2/3 mid-run-kill signature — check `run.log` for a clean `EXIT_STATUS`/`VM_SHUTDOWN_ON_COMPLETION` marker
+      on a sample of the 41. (repo: deployment-service, market-tick-data-service)
