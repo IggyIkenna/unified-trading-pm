@@ -392,9 +392,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 11,
-        "coverage_pct": null,
+        "coverage_pct": 72.97,
         "qg_red_reason": null,
+        "warn_file_count": 11,
         "large_file_count": 2
       }
     },
@@ -455,9 +455,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 84.38,
-        "warn_file_count": 19,
+        "coverage_pct": 84.39,
         "qg_red_reason": null,
+        "warn_file_count": 19,
         "large_file_count": 0
       }
     },
@@ -759,10 +759,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": null,
+        "large_file_count": 7,
         "warn_file_count": 7,
-        "coverage_pct": 90.9,
-        "qg_red_reason": "ruff",
-        "large_file_count": 7
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -880,10 +880,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 83.22,
-        "warn_file_count": 38,
-        "qg_red_reason": null,
-        "large_file_count": 0
+        "coverage_pct": 83.27,
+        "large_file_count": 1,
+        "warn_file_count": 37,
+        "qg_red_reason": "ruff"
       }
     },
     "ml-service": {
@@ -1211,10 +1211,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 32,
-        "large_file_count": 24,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "coverage_pct": 96.28
+        "warn_file_count": 32,
+        "large_file_count": 24
       }
     },
     "unified-trading-library": {
@@ -1263,10 +1263,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 87.93,
+        "coverage_pct": 87.9,
+        "large_file_count": 6,
         "warn_file_count": 21,
-        "qg_red_reason": null,
-        "large_file_count": 6
+        "qg_red_reason": null
       }
     },
     "unified-trading-pm": {
