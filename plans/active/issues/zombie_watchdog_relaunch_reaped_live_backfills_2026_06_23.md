@@ -324,13 +324,52 @@ launcher's lock-refusal or a mis-scoped cleanup), or (b) `tardis-concurrency-gua
 launch — plausible given the sequential x15/x17 relaunch cadence, but not verified against the guard's actual logic or
 concurrent-VM state at each kill time.
 
-- [ ] [INFRA] P1. **Root-cause the `cefi-queue-heavy-binancefutu-x15`/`-x17` mid-stream kills** — determine whether the
-      actor is `tardis-concurrency-guard.sh` (concurrency-cap enforcement — if so, verify it's choosing the right VM to
-      kill and not discarding in-progress work needlessly) or an agent manually invoking
+- [x] ✅ [INFRA] P1. **Root-cause the `cefi-queue-heavy-binancefutu-x15`/`-x17` mid-stream kills** — determine whether
+      the actor is `tardis-concurrency-guard.sh` (concurrency-cap enforcement — if so, verify it's choosing the right VM
+      to kill and not discarding in-progress work needlessly) or an agent manually invoking
       `gcloud compute instances     delete` (the Incident-2 pattern recurring on a new launcher). Check
       `tardis-concurrency-guard.sh`'s own invocation logs/audit trail for the same timestamps, and audit-log
       `protoPayload.authenticationInfo` for whether the guard runs under `unified-trading-sa` directly (matches) or a
-      distinct identity. (repo: deployment-service)
+      distinct identity. (repo: deployment-service) — **RESOLVED 2026-07-18, root-caused via code read +
+      `gcloud logging read` (`central-element-323112`, `--freshness=30d`)**: 1. **`tardis-concurrency-guard.sh` is ruled
+      out categorically** — read the full script (`deployment-service/scripts/vm/tardis-concurrency-guard.sh`):
+      `tardis_concurrency_guard()` only counts existing VMs and either `return 0`/warns or prints a refusal + `return 1`
+      (`exit 1` in every caller). It contains **zero** `gcloud … delete`/`instances delete` calls anywhere in the file,
+      and its refusal message (unlike `launch-api-football-backfill-vm.sh`'s pre-fix singleton-lock message) never even
+      suggests a raw `Stop:` delete command — it only offers `Inspect`/`Wait`/`FORCE=1`. A guard with no delete code
+      path cannot be the actor that deletes VMs, so no invocation-log correlation was needed to rule it out. 2. **The
+      actor IS an agent manually running `gcloud compute instances delete`** — pulled full `protoPayload` for every
+      `v1.compute.instances.delete` against `cefi-queue-heavy-binancefutu-x15`/`-x17` in the 30-day window (27 unique
+      VM-name delete events). 17 of the 27 carry `principalEmail: unified-trading-sa@central-element-323112…` +
+      `callerSuppliedUserAgent` containing `agent-name/claude_code` (spot-verified full example:
+      `cefi-queue-heavy-binancefutu-x17-20260717-173330`, deleted 19:50:38Z with active per-symbol streaming logged
+      seconds before) — the **exact same signature** Incident 2 used to identify its actor, and each of the 17 carries a
+      **distinct `invocation-id`** (17 separate agent dispatches across 2026-07-15T21:54Z→2026-07-18T16:20Z, not one
+      recurring daemon). This is confirmed to be the SAME agent-behavior class as Incident 2, recurring on a different
+      VM family (Tardis cefi-queue workers instead of `af-backfill`), not a new/different bug mechanism. 3. **New
+      sub-finding — a concurrent double-launch preceded at least one kill, explaining agent motive**:
+      `cefi-queue-heavy-binancefutu-x15-20260716-075253` (launched 07:52:53) was still RUNNING when
+      `cefi-queue-heavy-binancefutu-x15-20260716-075338` launched 45s later (07:53:38) — both matching the same
+      `TARDIS_VM_NAME_PATTERN`, i.e. a real violation of the operator's 1-concurrent-Tardis-VM HARD RULE. `-075253` was
+      then deleted by the `agent-name/claude_code` UA at 08:00:03. Plausible mechanism: an agent noticed 2 same-family
+      VMs running (cap violation, real or self-caused by a race past the guard) and "fixed" it by manually deleting the
+      actively-progressing one instead of respecting the guard's `Inspect`/`Wait` path or escalating — same
+      self-inflicted-harm shape as Incident 2's singleton-lock-message hypothesis, just without a copy-pasteable command
+      to blame this time. 4. **A separate, distinct, and NOT-an-incident sub-family was also present in the same sweep
+      and is explicitly ruled OUT here to avoid double-counting**: 8 of the 27 delete events (`x15-20260716-11{3400}`
+      through `x15-20260716-153514`, ~07-16 11:41Z→19:29Z) carry
+      `principalEmail:        1060025368044-compute@developer.gserviceaccount.com` (the GCE **default compute SA**, i.e.
+      the VM's own instance identity) with **no** `agent-name` UA tag and `client-os-ver 6.17.0-1020-gcp` (a GCP VM
+      calling `gcloud` against itself, not the AWS-hosted agent session host `-1019-aws` seen on every
+      `claude_code`-tagged event) — consistent with `VM_SHUTDOWN_ON_COMPLETION` self-deletes, not an external kill.
+      (Their unusually short ~7-30min runtimes are themselves odd and may warrant a separate look, but that is a
+      different question than "mid-stream external kill" and out of this todo's scope.) 5. **Fix shipped**: since the
+      root cause is agent behavior (not a `deployment-service` code defect — `tardis-concurrency-guard.sh` has no delete
+      capability to fix), added the equivalent of Incident 2's `data_engineering.md` STEP 0.55 VM-delete guardrail to
+      `unified-trading-pm/agents/infra.md` (the craft actually dispatched to launch/manage this VM family) —
+      **unified-trading-pm@4697e2b6a**: new STEP 0.65 requiring heartbeat-blob-age + run.log-tail + manifest-shard-mtime
+      confirmation before any `gcloud compute instances delete` against a fleet VM, citing this issue doc's Incident 3
+      resolution as the evidence trail.
 - [x] ✅ [DATA] P2. **Re-run this audit past the 500-row cap** — the `gcloud logging read --limit=500` sweep above
       returned exactly 500/500 rows for the 30-day window, meaning the true count of `agent-name/claude_code`
       `instances.delete` calls may exceed what was sampled; a paginated or narrower-windowed re-run would confirm
