@@ -109,9 +109,15 @@ cells, never collapsed):
 
 ```bash
 cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
-  --asset-group <AG> --venues <VENUE> --data-types <DT> --day <DAY> --legs force,skip \
+  --asset-group <AG> --venue <VENUE> --data-types <DT> --day <DAY> --legs force,skip \
   --require-captured --auto-day
 ```
+
+> **Doc-fix (2026-07-18): the checker's own flag is `--venue` (singular), never `--venues`.** `--venues`/plural
+> `--data-types` are the LAUNCHER's flags (`launch-mtds-backfill-vm.sh`, invoked internally by this checker) — passing
+> `--venues` to `scripts/pipeline_e2e_check.py` itself errors `unrecognized arguments`. This block is moot for a
+> tradfi-only, all-shards run (§3c below) — omit `--venue`/`--data-types` entirely and let `--asset-group TRADFI` drive
+> the full enumeration.
 
 > **ALWAYS pass `--require-captured --auto-day` (added 2026-07-18).** Without them the matrix tests shards that CANNOT
 > be proven and reports false failures:
@@ -240,6 +246,80 @@ read):
 - A cell that passes `capture_status=captured` but fails this content check is a **distinct failure mode** — label it
   `content_check: NaN_blanket` in the report; don't conflate it with a manifest-level force/skip failure or the 3a
   structural-absence negative check.
+
+### 3c. TradFi-only, ALL shards — Phase D terminal gate (added 2026-07-18)
+
+Per `tradfi_consolidated_closeout_2026_07_18.md` Phase D — the plan's **terminal gate**: post-migration, prove
+force-refetch + skip-if-fresh + a **canonical-shape regression** across **every** tradfi `(venue, data_type)` shard, not
+just the MVP cells, before any real MVP backfill runs.
+
+**Enumeration is narrowed, not the raw cross-product.** TRADFI's raw `VENUES_BY_ASSET_GROUP × DATA_TYPES_BY_ASSET_GROUP`
+list is 7 venues × 10 data_types = 70 cells, but `enumerate_mtds_shards` narrows TRADFI the same way it already narrows
+PREDICTION — to each venue's UAC-declared fetchable capability set (`get_expected_data_types_for_venue`) — because most
+of the raw 70 are either IS-domain reference surfaces MTDS batch can never fetch
+(`corporate_action_confirmed`/`earnings_result`/`macro_result`) or billing-gated-by-design data_types no adapter serves
+for that venue (`CME/tbbo`, `NASDAQ/mbp_10`, …). **Measured 2026-07-18, the real fetchable surface is 12 cells:**
+
+| Venue                                                                       | Fetchable data_types                | Source                                                                                              |
+| --------------------------------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| NASDAQ                                                                      | `ohlcv_1s`, `ohlcv_1m`              | Databento                                                                                           |
+| NYSE                                                                        | `ohlcv_1s`, `ohlcv_1m`              | Databento                                                                                           |
+| CME                                                                         | `ohlcv_1s`, `ohlcv_1m`              | Databento                                                                                           |
+| CBOE                                                                        | `ohlcv_1s`, `ohlcv_1m`, `ohlcv_24h` | Databento (1s/1m) + Yahoo (24h)                                                                     |
+| ICE                                                                         | `ohlcv_24h`                         | Yahoo                                                                                               |
+| KRX                                                                         | `ohlcv_24h`                         | Yahoo                                                                                               |
+| FX                                                                          | `ohlcv_24h`                         | Yahoo — **no databento adapter** (`VENUE_TO_ADAPTER_KEY['FX'] == '__no_adapter_yet__'`); verify the |
+| daily-KRW write path works or record it `BLOCKED-…`, never silently skip it |
+
+**Operator data-type priority (2026-07-18) — what an MVP force-leg actually exercises:** Databento intraday MVP
+backfills are **`ohlcv_1m` ONLY** (`mbp_10`/`trades`/`tbbo` are billing-gated by design — the 1-month L3 / 1-year L1
+entitlement — not a bug to chase); daily cells (Treasuries, KRW) are Yahoo-sourced `ohlcv_24h`.
+
+**`--mvp-only` for TRADFI is a hand-listed set, not `is_mvp()`.** Measured 2026-07-18:
+`is_mvp(asset_group='tradfi', venue='CME', instrument_type='FUTURE', data_type='ohlcv_1m')` is **False** with no
+`base_ccy` (only True once `base_ccy='ES'` is supplied) — this checker's enumeration-time MVP probe has no sampled
+instrument yet, so it can never supply one, and naively probing every `InstrumentType` with none silently returns
+**zero** tradfi cells. The engine instead hand-lists the operator's 2026-07-18 MVP universe as 5 `(venue, data_type)`
+cells:
+
+| MVP item                                                                                   | Shard             |
+| ------------------------------------------------------------------------------------------ | ----------------- |
+| S&P index futures + options, CME BTC/ETH futures + options, Treasury futures (ZT/ZF/ZN/ZB) | `CME/ohlcv_1m`    |
+| Delta-one single-stock equities + ETFs (NASDAQ-listed)                                     | `NASDAQ/ohlcv_1m` |
+| Delta-one single-stock equities (NYSE-listed)                                              | `NYSE/ohlcv_1m`   |
+| Daily Treasury yield indices (US2Y/US5Y/US10Y/US30Y/US3M)                                  | `CBOE/ohlcv_24h`  |
+| Daily KRW/USD                                                                              | `FX/ohlcv_24h`    |
+
+**The canonical-shape regression** (`--legs …,canonical`) is a 4th leg, TRADFI-only: after the force-leg writes to the
+`-test-` bucket, it reads that shard's freshly-written `instrument_id`/`instrument_type` rows and asserts every
+FUTURE/OPTION-embedded id matches `^[A-Z0-9-]+:(FUTURE|OPTION):[A-Z0-9]+-USD@LIN-\d{8}(-\d+(\.\d+)?-[CP])?$` (0 raw, 0
+whitespace, 0 non-`@LIN`) — via the **shipped** `unified_api_contracts.assert_tradfi_derivative_ids_canonical` (never a
+re-implemented regex, so it can't drift from the Phase-B migration scripts' own self-check). A shard with zero
+FUTURE/OPTION ids (a pure `EQUITY`/`INDEX` `ohlcv_24h` cell) records a vacuous `passed`, not a false failure. Every
+non-TRADFI shard records `skipped/canonical_shape_check_is_tradfi_only` — safe to request `canonical` alongside any
+`--asset-group`.
+
+**MVP cells first, then every shard:**
+
+```bash
+cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
+  --day <DAY> --asset-group TRADFI --legs force,skip,canonical \
+  --mvp-only --require-captured --auto-day
+# then, once the 5 MVP cells are green:
+cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
+  --day <DAY> --asset-group TRADFI --legs force,skip,canonical \
+  --require-captured --auto-day
+```
+
+- No `--tardis-only` — every tradfi venue routes via `databento`/Yahoo, none via Tardis (`VENUE_TO_ADAPTER_KEY`); tradfi
+  cells are NOT subject to the N=1 Tardis IP cap and may run in parallel (subject to real Databento rate limits).
+- `--legs force,skip,canonical` omits `live` for tradfi by default — MTDS's live producer needs a registered
+  `WSFeedConnector` per venue (Phase 3.5 rollout), which tradfi venues may not have; add `,live` once one is confirmed
+  registered for the venue under test.
+- **Green definition (the plan's Phase D exit criterion):** every tradfi `(venue, data_type)` cell carries a `passed`
+  force + a labeled skip (`genuine`/`ambiguous`) + a `passed` canonical verdict. Combined with a green
+  `data-pipeline-check-is --asset-group TRADFI` run (§ below), that is what "tradfi is code-complete, migrated,
+  honestly-covered, and verified" means before the real MVP backfill runs.
 
 ## 4. Phase 2 — live leg (MVP-scoped)
 
