@@ -107,20 +107,19 @@ source:
 
 ## Ground-truth verdict (from the folded issues — RE-VERIFY live before migrating, per Phase A0)
 
-Grounded in the folded plans/issues, **not** a fresh live GCS read (this plan did not re-measure prod — the first
-migration step, A0, is to enumerate the live prediction dimensions the way tradfi did). What the folded docs already
-establish:
+Authored from the folded plans/issues; **A0 (autonomous tick 1, 2026-07-18) has since re-measured prod live** — rows
+marked "A0 live read" carry the measured correction (see Progress Log § A0). What the docs + A0 establish:
 
-| Surface                                   | Canonical / linked?          | Reality (cited source doc)                                                                                                                                                                                                                                                                                                                              |
-| ----------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CQG cluster atom in the live manifest     | **absent at `captured`**     | live `market-data-tick-pred-prd…/_index` has **ZERO** `data_type=prediction_canonical_question_group` rows at `captured`; the phantom reconciler assumes a per-object row-key but the v9 bundle atom's `instrument_id` is a synthetic CQG label → it **wipes** the bundle rows (`issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`) |
-| Prediction capture liveness               | **was dead 07-01→07-06**     | capture-outage remediation in flight; KALSHI/POLYMARKET-PERP adapters hit the wrong Kalshi host → **fake PERPETUAL contaminated cefi (25,473 rows)** (`prediction_capture_incident_remediation_2026_07_06.md`)                                                                                                                                          |
-| MTDS prediction `-test-` bucket isolation | **MISSING (writes to PROD)** | `_test_bucket("prediction")` has no `-test-` sibling and falls back to the PROD `market-data-tick-prediction` bucket (`market-tick-data-service/scripts/pipeline_e2e_check.py:434-450`) — a prediction force/skip leg would write to PROD, breaking the test-bucket-only invariant cefi/tradfi enjoy                                                    |
-| Instrument-id canonical shape             | **partial**                  | adapter `underlying` from `classify_*_to_canonical_group` + `canonical_instrument_id` from cross_venue_mapping are 4/8 done (`prediction_canonical_identity_migration_2026_07_08.md`)                                                                                                                                                                   |
-| Football fixture ↔ live bookmaker odds    | **joined, ~66%**             | odds ticks carry `af_fixture_id` + `af_fixture_match_status`; ~66% fixture-level match, gap = South-American team-alias hole, not a join bug (`instruments-service/docs/SPORTS_INSTRUMENTS.md`)                                                                                                                                                         |
-| Football fixture ↔ Polymarket market      | **string bridge only**       | Polymarket soccer computes the same `build_fixture_id()` string (`LEAGUE:HOME_v_AWAY:YYYYMMDD`) as the sports asset group (`instruments-service/.../reference_data/adapters/prediction/polymarket/parsing.py::_build_sports_id`) — the STRING, not the numeric `af_fixture_id`                                                                          |
-| Football fixture ↔ Kalshi market          | **NONE**                     | Kalshi titles are city-level ("Seattle vs Cleveland") with no team registry → no fixture id at all; per-venue Kalshi↔Polymarket sports pairing needs a title-map the schema doesn't persist → honestly absent                                                                                                                                           |
-| Cross-venue arb code                      | **two disconnected paths**   | features-service `cross_venue_arb_detector` (Kalshi↔Polymarket, crypto-oriented in practice) + e2e `live_arb_scanner.py` (bookmakers+Betfair+Polymarket, NO Kalshi, prototype); neither keys on `af_fixture_id`                                                                                                                                         |
+| Surface                                   | Canonical / linked?                                                          | Reality (cited source doc)                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CQG cluster atom in the live manifest     | **present at `captured`: 17,352 rows** — CORRECTED 2026-07-18 (A0 live read) | A0 measured 80,068 CQG bundle rows (captured 17,352 / empty_confirmed 60,286 / expected_unattempted 2,421 / attempted_failed 9), 81 distinct canonical CQG values — this SUPERSEDES the folded issue's "ZERO at captured" claim; the phantom wipe is fixed or intermittent. **Re-check** `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` status before assuming a wipe (Phase-B item downgraded to verify-not-fix) |
+| Prediction capture liveness               | **was dead 07-01→07-06**                                                     | capture-outage remediation in flight; KALSHI/POLYMARKET-PERP adapters hit the wrong Kalshi host → **fake PERPETUAL contaminated cefi (25,473 rows)** (`prediction_capture_incident_remediation_2026_07_06.md`)                                                                                                                                                                                                                            |
+| MTDS prediction `-test-` bucket isolation | **MISSING (writes to PROD)**                                                 | `_test_bucket("prediction")` has no `-test-` sibling and falls back to the PROD `market-data-tick-prediction` bucket (`market-tick-data-service/scripts/pipeline_e2e_check.py:434-450`) — a prediction force/skip leg would write to PROD, breaking the test-bucket-only invariant cefi/tradfi enjoy                                                                                                                                      |
+| Instrument-id canonical shape             | **partial**                                                                  | adapter `underlying` from `classify_*_to_canonical_group` + `canonical_instrument_id` from cross_venue_mapping are 4/8 done (`prediction_canonical_identity_migration_2026_07_08.md`)                                                                                                                                                                                                                                                     |
+| Football fixture ↔ live bookmaker odds    | **joined, ~66%**                                                             | odds ticks carry `af_fixture_id` + `af_fixture_match_status`; ~66% fixture-level match, gap = South-American team-alias hole, not a join bug (`instruments-service/docs/SPORTS_INSTRUMENTS.md`)                                                                                                                                                                                                                                           |
+| Football fixture ↔ Polymarket market      | **string bridge only**                                                       | Polymarket soccer computes the same `build_fixture_id()` string (`LEAGUE:HOME_v_AWAY:YYYYMMDD`) as the sports asset group (`instruments-service/.../reference_data/adapters/prediction/polymarket/parsing.py::_build_sports_id`) — the STRING, not the numeric `af_fixture_id`                                                                                                                                                            |
+| Football fixture ↔ Kalshi market          | **NONE**                                                                     | Kalshi titles are city-level ("Seattle vs Cleveland") with no team registry → no fixture id at all; per-venue Kalshi↔Polymarket sports pairing needs a title-map the schema doesn't persist → honestly absent                                                                                                                                                                                                                             |
+| Cross-venue arb code                      | **two disconnected paths**                                                   | features-service `cross_venue_arb_detector` (Kalshi↔Polymarket, crypto-oriented in practice) + e2e `live_arb_scanner.py` (bookmakers+Betfair+Polymarket, NO Kalshi, prototype); neither keys on `af_fixture_id`                                                                                                                                                                                                                           |
 
 **Conclusion**: prediction is NOT MVP-backfill-ready — the CQG cluster atom is being wiped from the manifest, capture
 only just recovered, MTDS prediction has no test-bucket isolation, and the football fixture identity that would enable
@@ -182,15 +181,16 @@ fixture-linked before MVP backfill.
 
 ### A0 — Enumerate the live prediction dimensions FIRST (single source of truth)
 
-- [ ] [AUDIT] P0. **Enumerate the FULL distinct set of prediction dimension values actually present in the live
-      manifest/catalogue** (`venue`, `data_type`, `instrument_type`, and the CQG values on the
-      `prediction_canonical_question_group` bundle rows) — the migration + dedupe MUST be driven by the real enumerated
-      set, NOT sampled shapes, so every value is covered and dupes (case/spacing/legacy variants) are caught. Sources:
-      manifest `gs://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet` (CQG carried in
-      the `instrument_id` column on bundle rows where `data_type==prediction_canonical_question_group`) + catalogue
-      `gs://instruments-store-pred-prd-central-element-323112/prod/catalog.parquet`. Record the baseline "climbing
-      metric" (% canonical) and the distinct-value tables in the Progress Log. (repos: instruments-service,
-      market-tick-data-service)
+- [x] ✅ [AUDIT] P0. **Enumerated the FULL distinct prediction dimension set from live prod GCS (slot-2, 2026-07-18)** —
+      manifest `availability_index` 756,817 rows + catalogue `prod/catalog.parquet` 2,900,318 rows; see Progress Log §
+      A0. **Non-canonical/dedupe targets found (drive Phase B), catalogue = SSOT:** (1) `data_type` DUPE
+      `prediction_trades` vs canonical `trades`; (2) manifest `instrument_type` 18 distinct — canonical
+      `PREDICTION_MARKET` mixed with lowercase dupes `prediction`/`prediction_market` + underlying-asset LEAKAGE
+      (BTC/ETH/SPX/DJIA/NDX/GOLD/SILVER/CRUDE_OIL/DOGE/XRP/BNB/HYPE/OTHER) + `''`, while the catalogue is clean
+      (`PREDICTION_MARKET` only); (3) `source` empty `''`; (4) catalogue `base_asset` 572,211 distinct raw market-title
+      text w/ leading-whitespace dupes. **Clean:** CQG (81 canonical UPPERCASE values, no dupes) + catalogue
+      `instrument_type`. Reusable reads: scratchpad `enumerate_prediction_dimensions.py` /
+      `count_prediction_baseline.py`. (repos: instruments-service, market-tick-data-service)
 
 ### A1 — Capture path honest + live (fold: capture-incident remediation)
 
@@ -248,13 +248,15 @@ fixture-linked before MVP backfill.
       CQG cluster rows so honest-coverage can see them.
       `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` +
       `issues/phantom_captures_prediction_2026_06_28.md`. (repos: market-tick-data-service, unified-trading-library)
-- [ ] [DATA] P0. **Enumeration-driven canonical/dedupe migration of the prediction manifest + catalogue (single source
-      of truth, operator 2026-07-18)** — using the A0 distinct-value set, normalise every non-canonical `venue` /
-      `data_type` / `instrument_type` / CQG variant UP to its canonical form and collapse dupes (case/spacing/legacy);
-      keep the prediction canonical naming, migrate the manifest to match the catalogue SSOT. Additive per-VM-shard
-      write; re-stamp any mislabeled rows from the classifier, not the stored column. Fold: the prediction slice of
-      `data_completion_prediction_2026_07_15.md` (23 open — the primary open data track). (repos:
-      market-tick-data-service, instruments-service, unified-trading-library)
+- [ ] [DATA] P0. **Enumeration-driven canonical/dedupe migration of the prediction manifest (A0-driven, single source of
+      truth, operator 2026-07-18)** — CONCRETE A0 targets, catalogue is SSOT: (a) `data_type` `prediction_trades` →
+      `trades`; (b) `instrument_type` → `PREDICTION_MARKET` — fold lowercase `prediction`/`prediction_market`, and
+      re-stamp the underlying-asset-leakage rows (`BTC`/`ETH`/`SPX`/`DJIA`/`NDX`/`GOLD`/`SILVER`/`CRUDE_OIL`/`DOGE`/
+      `XRP`/`BNB`/`HYPE`/`OTHER`/`''`, the pre-Plan-A legacy `data_type=<base_asset>` shape) by classifying from the
+      CQG/underlying, NOT trusting the column; (c) stamp empty `source=''` from the writer's `default_source`; (d)
+      catalogue `base_asset` whitespace-strip + dedupe (leading-space title variants). Additive per-VM-shard write
+      (race-free vs the ~10-min consolidator). Fold: the prediction slice of `data_completion_prediction_2026_07_15.md`
+      (23 open). (repos: market-tick-data-service, instruments-service, unified-trading-library)
 - [ ] [DATA] P0. **Backfill the fixture-match attributes (A4 columns) across historical Polymarket + Kalshi soccer** —
       resolve `af_fixture_id` per market from the fixtures parquet (canonical `home_id`/`away_id` + `af_league_id` +
       `fixture_date`) OR by parsing the human-readable canonical name, stamping `af_fixture_match_status`. Honest nulls
@@ -432,3 +434,27 @@ fixture-linked before MVP backfill.
     `canonical_question_group` (manifest-only bundle) / per-CID `instrument_id` (raw), NOT
     `(instrument_id OR underlying)` — `underlying` is display-only. Added the "Shard atom for prediction" subsection to
     Ground-truth; it is the root cause of the Phase-B CQG-wipe and the verify-gate assertion for A0/A2/B/D.
+
+- **2026-07-18 (slot-2, autonomous tick 1) — A0 live enumeration DONE; climbing-metric baseline set (this SUPERSEDES the
+  "NOT re-measured live" caveat above).** Read-only prod GCS (scratchpad `enumerate_prediction_dimensions.py` +
+  `count_prediction_baseline.py`, own venv, ADC `central-element-323112`). Manifest
+  `market-data-tick-pred-prd/_index/availability_index.parquet` = 756,817 rows; catalogue
+  `instruments-store-pred-prd/prod/catalog.parquet` = 2,900,318 rows.
+  - **CLIMBING METRIC baselines (manifest):** `instrument_type` **11.70% canonical** (88,560 `PREDICTION_MARKET` /
+    756,817; rest = 633,521 null + 17,361 `prediction` + 9,460 `''` + 7,007 `prediction_market` + ~1,100
+    underlying-asset leakage BTC/ETH/SPX/SOL/NDX/GOLD/DJIA/SILVER/CRUDE_OIL/BNB/DOGE/HYPE/XRP/OTHER); `data_type`
+    **99.55%** (only `prediction_trades` 3,385 = dupe of `trades`); `source` **~100%** (only 2 empty rows). Catalogue is
+    CLEAN (`instrument_type`=`PREDICTION_MARKET` only; `data_type` no dupe).
+  - **Dedupe/canonical targets (drive Phase B, catalogue = SSOT):** `prediction_trades`→`trades`; manifest
+    `instrument_type`→`PREDICTION_MARKET` (fold lowercase dupes + re-stamp null/underlying-leakage per-CID rows,
+    classify from CQG/underlying — verify null-vs-required for the raw grain against writer intent, don't blind-stamp);
+    stamp the 2 empty `source`; catalogue `base_asset` (572,211 distinct raw titles) whitespace-strip + dedupe
+    leading-space variants.
+  - **CQG dimension CLEAN:** 81 distinct canonical UPPERCASE values, no dupes — incl. football `SPORTS_EPL_MATCH` /
+    `SPORTS_LA_LIGA_MATCH` / `SPORTS_SERIE_A_MATCH` / `SPORTS_BUNDESLIGA_MATCH` / `SPORTS_CHAMPIONS_LEAGUE_MATCH` /
+    `SPORTS_UEFA_MATCH` / `SPORTS_WORLD_CUP_MATCH` (the Phase-E football slice).
+  - **CORRECTION to Ground-truth:** CQG cluster atom is **present at `captured` (17,352 rows)**, NOT "ZERO" as the
+    folded issue `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` claimed — the wipe is fixed or
+    intermittent; Ground-truth row updated, Phase-B item downgraded to verify-not-fix.
+  - **Env:** 9 target repos present on `live-defi-rollout`; ADC `central-element-323112`; other slots mid-migration
+    (HEAD = tradfi Phase B) → prediction work scoped to prediction-specific files, no VM drain.
