@@ -348,18 +348,25 @@ the canon plan; track there, not as duplicate todos:
 > last). The smoke-test (first item) MAY run earlier to record the before-state, but the path-template fix lands against
 > the migrated shape.
 
-- [ ] [DATA] P1. **Smoke-test instrument/shard CSV download for a representative AVAILABLE shard per asset_group**
-      against prod (`https://uts-shared-deployment-api-cldtjniqvq-an.a.run.app`, `DISABLE_AUTH=true`): DeFi (aave_v3 + a
-      Solana protocol, with chain), CeFi (binance-futures), TradFi, Sports (with league_id), Prediction. Record HTTP
-      code + whether bytes returned. Establishes the before-state + which axes break. — deployment-api
+- [x] [DATA] P1. ✅ **SMOKE DONE 2026-07-18** (prod `uts-shared-deployment-api-cldtjniqvq-an.a.run.app`,
+      `/api/data-status/download-catalogue-csv?service=…&asset_group=…`, unauth reads work). Results — **HTTP code +
+      bytes**: `IS/defi → 200 text/csv (941,845 b)` ✅ · `IS/cefi → 200 text/csv (32,879,539 b)` ✅ ·
+      `IS/prediction → 200 text/csv` ✅ · **`MTDS/defi → 200 text/csv`** ✅ (the specifically 502-prone chain/protocol
+      path WORKS — no path-drift 502) · **`IS/sports → 500`** ⚠️ · **`IS/tradfi → 500`** ⚠️ (both generic "Internal
+      server error, check server logs", req_id bee0103f… — the large-catalogue CSV build errors; NEW finding, needs a
+      Cloud Run server-log triage — likely a build OOM/timeout or a sports/tradfi-specific CSV-shape bug). Net: the DeFi
+      502 the §A fix targeted does NOT reproduce (DeFi + MTDS-DeFi both 200 real CSV); the break is now sports+tradfi. —
+      deployment-api
 - [x] ✅ [CODE] P1. **Fix DeFi download path-drift against the FINAL v9 shape** (audit §A): thread `chain` from
       `download_shard_csv` (`_downloads.py:407`) into `build_instruments_shard_csv_export` and reconstruct the
       **combined** DeFi venue token for the `venue=` GCS segment (`f"{venue}-{chain}"`, matching
       `canonicalize_defi_venue_combined`) in `services/data_status_drilldown/_csv_export.py:307-339`; mirror in the
       drilldown reader `_instruments.py:62-70`. Verify against the **post-migration** writer truth + the new
       `pipeline_mode=…` prefix. — deployment-api@610a412
-- [ ] [CODE] P1. **Apply the same fix to any MTDS chain/protocol-partitioned download path** if the smoke test shows
-      MTDS DeFi shards 502 the same way (operator: "fix them globally so for MTDS too"). — deployment-api
+- [x] [CODE] P1. ✅ **NOT NEEDED (verified 2026-07-18).** The smoke above shows `MTDS/defi → 200 text/csv` — the MTDS
+      DeFi download path does NOT 502, so there is no path-drift to mirror. The §A DeFi fix (`@610a412`) already covers
+      the reproducing case. (The remaining break is sports+tradfi 500, an unrelated large-catalogue-build error — new
+      finding, not a chain/protocol path-drift.) — deployment-api
 - [x] ✅ [TEST] P1. Regression: a download-path unit test that builds the GCS object path for a DeFi shard and asserts
       it matches the (migrated) writer's combined-venue/chain shape (guards the split-venue drift from recurring). —
       deployment-api@610a412 (tests/unit/data_status/test_defi_shard_download_path.py)
