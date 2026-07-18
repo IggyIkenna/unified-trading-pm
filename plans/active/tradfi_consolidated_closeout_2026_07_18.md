@@ -257,10 +257,13 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (venue,root,year); accumulate multiple roots' symbol-sets into one VM's `VM_INSTRUMENT_IDS` per year-shard
       (SINGLE_VM_QUEUE-analog). Fewer, saturated VMs. Also folds the pd-balanced 250GB / `TRADFI_OHLCV_BOOT_TYPE` disk
       default (staged locally 2026-07-18). (repo: deployment-service)
-- [ ] [BACKEND] P1. **Real retry-on-429 in the Databento fetch path.** `databento_fetch.py:598-629` records any
-      exception (incl. `RATE_LIMIT`/429) as a per-schema failure with **no retry** (config
-      `max_retries`/`backoff_factor` exist but are log-only — `databento_base_client.py:270-272`). Wire a real backoff
-      loop (mirror `tardis_base_client`) BEFORE raising bundled concurrency. (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P1. **Real retry-on-429 in the Databento fetch path — SHIPPED mtds@73c286a2 (`databento_retry.py`).**
+      The fetch previously recorded ANY exception (incl. `RATE_LIMIT`/429) as a per-schema shard failure with no retry
+      (config `max_retries`/`backoff_factor` were log-only). Now `fetch_timeseries_range_with_retry` wraps the timeseries
+      fetch in a bounded `backoff_factor*2^attempt` (capped) loop that retries ONLY the transient whitelist
+      (429/`RATE_LIMIT`/`SERVER_ERROR`/connection/timeout via the existing `_classify_databento_exception`);
+      billing/400/auth/symbology fail FAST on attempt 1 (the 3 billing-gated datasets stay fail-closed by design).
+      Unit-tested (retryable retried N× / non-retryable once). (repo: market-tick-data-service)
 - [x] ✅ [BACKEND] P1. **TradFi data-pipeline skill documents the concurrency knobs — SHIPPED pm@027dd7e10.**
       `data-pipeline-check-mtds/SKILL.md` §3c gained a note on `--batch-date-concurrency` + `DATABENTO_MAX_CONCURRENT_REQUESTS`
       (opt-in/default-off, per-IP ~80 effective, dates are the concurrency axis) pointing at the RX-counter e2e
