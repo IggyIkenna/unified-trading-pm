@@ -212,13 +212,21 @@ Two secondary findings:
       (`_VENUE_OVERRIDES["LIGHTER"]` never matches the real normalized key `"LIGHTER_ZKSYNC"`) — also correct the
       override's own comment ("Solana perp" → zkSync) — and investigate why native `ohlcv_1m` capture stopped after
       2026-05-05.
-- [ ] [FIX] P1. **EXTENDED-STARKNET: fix `_fetch_extended_book_for_symbol`'s date bug** (`_umi_extended.py:415`, uses
-      `datetime.now(tz=UTC)` instead of the target backfill `date`) — this is why `book_snapshot_5` has zero rows ever
-      despite otherwise-real code; re-run a backfill for a past day post-fix to confirm real rows land.
-- [ ] [FIX] P1. **EXTENDED-STARKNET: fix the `pipeline_mode_resolver.py:56` override not applying** — real
-      Extended-native data is currently mislabeled `pipeline_mode=batch_tardis, source=tardis` at every captured row;
-      find why the declared `_VENUE_OVERRIDES["EXTENDED-STARKNET"]` override isn't reaching the real write path and fix
-      the resolution, not just the override declaration.
+- [x] [FIX] P1. ✅ **FIXED — `market-tick-data-service@55dac12a`** (the CORRECT honest fix, NOT the naive one). The
+      `/orderbook` endpoint is CURRENT-only (no historical params), so a naive "use the target date" would FABRICATE a
+      timestamp on a past partition (data-correctness violation). Instead `fetch_extended_rest` now gates the book leg
+      on `is_current_day` — a past-day backfill SKIPS `_fetch_extended_book_for_symbol` entirely (honest absence: no
+      HTTP, no fabricated timestamp, no stray `attempted_failed` row); `book_snapshot_5` is captured going forward by
+      the live WS connector. Candles/trades/funding unaffected. +4 unit tests. **Real-infra confirm still wanted:** a
+      past-day + a current-day EXTENDED backfill to observe 0 past-book rows + a live current-book row (deferred to an
+      attended run).
+- [x] [FIX] P1. ✅ **FIXED — `unified-trading-library@08662724`.** Root cause: the `_VENUE_OVERRIDES` key was hyphenated
+      `"EXTENDED-STARKNET"` but both lookup sites normalize via `venue.upper().replace("-","_")` →
+      `"EXTENDED_STARKNET"`, so the override NEVER matched and rows fell through to `batch_tardis` (fabricated Tardis
+      provenance on a self-archived venue). Renamed the key to `"EXTENDED_STARKNET"` → the override fires →
+      `BATCH_EXTENDED` (honest; EXTENDED is always self-archived, no Tardis split). +3 unit tests. **Data-migration
+      note:** existing rows already stamped `batch_tardis` are not auto-corrected — a manifest re-stamp is a separate
+      attended step.
 - [ ] [VERIFY] P2. **HYPERLIQUID: root-cause the batch-trades zero-rows gap** — suspected field-name mismatch in
       `_parse_node_fills` (`hyperliquid_s3.py:403-408`) against the real S3 `node_fills` payload shape; confirm against
       a real downloaded S3 object before assuming this is the cause, then fix.
@@ -229,18 +237,29 @@ Two secondary findings:
 - [ ] [CODE] P3. **HYPERLIQUID: delete the dead stub** `HyperliquidAdapter._download_trades_from_tardis()`
       (`hyperliquid_adapter.py:424-427`) — confirmed never called by the real batch pipeline; leaving a known-broken
       method around is a trap for a future engineer who assumes it's live.
-- [x] [DECISION] P1. ✅ **DECIDED (operator 2026-07-18): KEEP MVP + BLOCKED-CREDENTIALS scaffold.** Per the
-      external-data-always-available rule — do NOT descope PACIFICA-SOLANA/LIGHTER-ZKSYNC; build the adapter scaffold,
-      mark the live connectors `BLOCKED-CREDENTIALS`, and flip `live_capable` honestly (see the P3 `live_capable` todo
-      below). This UNBLOCKS the remaining FIX/VERIFY todos in this doc (they no longer wait on the MVP-scope call).
+- [~] [DECISION] P1. ⚠️ **PARTIALLY DECIDED + SSOT CONTRADICTION FLAGGED (2026-07-18).** Operator answered "keep MVP +
+  BLOCKED-CREDENTIALS scaffold" for PACIFICA-SOLANA + LIGHTER-ZKSYNC. Applied for **LIGHTER-ZKSYNC** (it exists):
+  `live_capable` flipped honestly to False (batch scaffold preserved) — `unified-api-contracts@a7ff8417`. **BUT
+  PACIFICA-SOLANA is a hard conflict — NOT actioned.** A non-Tardis fix-investigation (2026-07-18) found PACIFICA was
+  **decommissioned entirely on 2026-07-16** (operator ruling: all Solana perp DEXes dropped except Jupiter) — it is
+  locked in `venue_adapter_keys.DECOMMISSIONED_VENUE_BASES`, purged from `data_type_capability.py`, and guarded by a
+  test. The 2026-07-18 "keep PACIFICA MVP" answer therefore **CONTRADICTS the 2026-07-16 decommission**; resurrecting
+  PACIFICA autonomously would undo a completed, locked decommission. **OPERATOR MUST RESOLVE** (was 2026-07-18 a
+  deliberate un-decommission of PACIFICA, or answered without the 2026-07-16 drop in view?). Kept PACIFICA fully removed
+  pending that ruling (a `PACIFICA-stays-removed` lock test was added @a7ff8417). The remaining PACIFICA FIX/VERIFY
+  todos below stay BLOCKED-OPERATOR-DECISION on this conflict; the LIGHTER/EXTENDED ones are unblocked.
 - [ ] [FIX] P2. **PACIFICA-SOLANA: resolve the `derivative_ticker`/standalone-`perp_funding` duplicate-source risk**
       (`_umi_pacifica.py:227-276` and `_perp_funding_pacifica_lighter.py:125-175` both hit the same
       `/funding_rate/history` endpoint under two different canonical `data_type` labels) before either pipeline is ever
       turned on for real — same class of SSOT-ambiguity risk as the now-resolved MTDS/MDPS order-book-imbalance
       duplication ([[mtds_mdps_order_book_imbalance_duplicated_2026_07_07]]).
-- [ ] [FIX] P3. **PACIFICA-SOLANA: correct UAC's `live_capable=True` declaration** (`data_type_capability.py:598-608`)
-      for trades/book_snapshot_5/derivative_ticker to reflect that the live connector is a `BLOCKED-CREDENTIALS` stub,
-      not a working live path — either flip to `False` until real credentials land, or build the real connector.
+- [x] [FIX] P3. ✅ **PARTIALLY FIXED — `unified-api-contracts@a7ff8417`** (EXTENDED-STARKNET + LIGHTER-ZKSYNC). PACIFICA
+      has NO row to fix — it was decommissioned 2026-07-16 (see the DECISION conflict above); do NOT re-add it. The
+      genuinely-existing venues with the described dishonest declaration are EXTENDED-STARKNET + LIGHTER-ZKSYNC: flipped
+      `live_capable=True → False` for all 3 data_types (trades/book_snapshot_5/derivative_ticker) to reflect the
+      `BLOCKED-CREDENTIALS` live-WS stubs; `batch_capable` stays True (MVP batch scaffold real). `live_capable` gates
+      only the live-readiness surface (not the coverage denominator / batch_ready / MVP scope). +2 honesty-guard tests
+      (incl. a PACIFICA-stays-removed lock). Flip back per data_type when a real live connector + credentials land.
 - [ ] [VERIFY] P3. **EXTENDED-STARKNET: check whether any downstream consumer reads
       `asset_group=defi/data_type=perp_funding`** for this venue specifically, rather than `cefi/derivative_ticker`
       where the real funding data actually lives — if one exists, it would incorrectly conclude Extended has no funding
@@ -296,3 +315,25 @@ Two secondary findings:
     blind unattended. **Net:** the MVP decision is resolved; these FIX/VERIFY todos remain open as tracked,
     careful-design work (the safe outcome per the autonomous safety rules — no fabricated timestamps, no
     manifest-rebuild breakage for a checkbox).
+
+- **2026-07-18 (autonomous) — 3 confirmed bugs FIXED (correct, non-fabricating) + 2 scoped for attended work + 1 SSOT
+  conflict flagged.** A 5-agent investigation pinned the precise correct fix + data-correctness risk for each bug; I
+  applied the three that are unit-testable with zero data-correctness risk, and captured the rest.
+  - ✅ **EXTENDED override key** — `unified-trading-library@08662724` (key underscore-normalized → BATCH_EXTENDED).
+  - ✅ **EXTENDED book_snapshot_5** — `market-tick-data-service@55dac12a` (current-only endpoint → skip past-day, honest
+    absence; the naive "target-date stamp" was rejected as a fabricated-timestamp violation).
+  - ✅ **EXTENDED/LIGHTER live_capable** — `unified-api-contracts@a7ff8417` (True→False honest; batch scaffold kept).
+  - ⚠️ **PACIFICA SSOT CONTRADICTION** — the 2026-07-18 "keep MVP" answer conflicts with the 2026-07-16 full
+    decommission (locked in `DECOMMISSIONED_VENUE_BASES`). NOT actioned; operator must resolve (see the DECISION todo).
+  - 🔭 **LIGHTER-ZKSYNC pipeline_mode** (SCOPED, not applied — multi-file cross-repo + a new UAC enum + real-infra
+    verify). Correct fix (per investigation): DELETE the dead `_VENUE_OVERRIDES["LIGHTER"]` key; make source-blind
+    `(LIGHTER-ZKSYNC, ohlcv_1m)` derivation return `None` (honest not-derivable, NEVER fabricate batch_tardis on native
+    `source=lighter_api` /candles rows); thread the row's `source` through `backfill_pipeline_mode.py` +
+    `manifest_writer/_writer_ingest.py` + `rebuild_cefi_manifest.py`; register `PipelineMode.BATCH_LIGHTER_API` +
+    `lighter_api` in UAC `SOURCE_PRIORITY[(cefi,ohlcv_1m)]`. Needs a `--dry-run` against the real cefi manifest to read
+    each row's true `source`/`pipeline_mode=` path segment before any `--force` re-stamp. → author as its own plan.
+  - 🔭 **HYPERLIQUID phantom 373/540** (SCOPED) — the auditor's `possible_manifest._canonical_pipeline_mode_prefixes`
+    ALREADY iterates `Mode.LIVE`, so `live_hyperliquid` is now covered (the original false-phantom is likely already
+    resolved). Remaining: (a) a no-risk 1-line hardening to also emit `replay_<source>/` prefixes
+    (`(Mode.BATCH, Mode.LIVE, Mode.REPLAY)`) to close a latent replay_ gap; (b) run the reconciler `--unphantom` reverse
+    pass on real infra to heal any already-flipped rows. → fold into the phantom-audit plan.
