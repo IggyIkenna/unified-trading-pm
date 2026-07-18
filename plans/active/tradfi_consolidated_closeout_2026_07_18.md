@@ -555,3 +555,31 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     KRW). **Skills linker** — this slot still had the legacy per-skill `.claude/skills` layout (Jul 7), so
     data-pipeline-check-is/-mtds + plan-reconcile + pre-compact (added Jul 17-18) never surfaced; re-ran
     `link-claude-skills.sh` → migrated to the single-dir link, all 6 skills now surface (mid-session).
+
+- **2026-07-18 (slot-1, tick 4) — Phase B migration scripts written + dry-run-VERIFIED; 2 CRITICAL findings caught
+  before any prod write.** Both scripts (2 sub-agents) reuse the shared `canonicalize_raw_tradfi_id` primitive:
+  - **Catalogue** `instruments-service/scripts/canonicalize_tradfi_catalogue_usd_lin_2026_07_18.py` — dry-run vs local
+    snapshot: **99.86% OK** (1,109,717/1,111,322; 338 combo + 204 neg-strike + 1,063 ICE-qualifier quarantine);
+    self-check passes; snapshot-before-write to `prod/backups/`. In-place `prod/n` rewrite + `--by-day` corpus
+    (durability). SAFE to `--apply` (flat rewrite, no dedup-key/consolidator concern). Shipping via the git-add-prestage
+    workaround.
+  - **Manifest** `market-tick-data-service/scripts/migrate_tradfi_manifest_usd_lin_2026_07_18.py` — SHIPPED
+    `market-tick-data-service@2bddcb9e`. Dry-run: derivative **62.42% OK** (617,808/989,755) + **238,227 mislabel
+    fixes**
+    - **3,300,155 UPPERCASE case re-stamps** (Bucket 3, operator ruling) + 142,590 bundle-underlying translations;
+      self-verify 617,808/617,808 canonical.
+  - **🚨 CRITICAL (data-correctness) — dedup-key: the manifest per-VM-shard additive write DUPLICATES, does NOT achieve
+    0-raw.** `instrument_id`/`instrument_type`/`underlying` ARE members of the consolidator's `_OPTIONAL_DEDUP_COLS`
+    (`unified_trading_library/manifest_consolidator.py`), so changing them changes the row's dedup key → the additive
+    shard ADDS the corrected row as a NEW key and the OLD raw row SURVIVES the merge (both coexist). So `--apply` alone
+    leaves the raw rows in place. **Manifest migration REVISED: must PAUSE the tradfi manifest-consolidator + CAS
+    in-place rewrite** (sanctioned by the CLAUDE.md direct-index-mutation rule) so raw rows are REPLACED not duplicated;
+    the additive+`superseded_keys`-purge alt still needs a pause/CAS for the removal, so pause+CAS is the one correct
+    path. **DO NOT run manifest `--apply` as-is.** Captured as the revised Phase-B manifest todo.
+  - **quickmerge TOOLING BUG (affects every agent shipping a NEW file)** — `quickmerge.sh`'s early "identical to main"
+    check (`git diff origin/main`) does NOT see UNTRACKED files → for a first-time script it silently prints "nothing to
+    merge" + exits 0 WITHOUT shipping. Workaround: `git add` the file BEFORE quickmerge. FIX needed in
+    `unified-trading-pm/scripts/quickmerge.sh` (stage `--files` before the early-exit, or also check
+    `git status --porcelain`) — filed as a Phase-B-adjacent tooling todo.
+  - **NEXT:** catalogue `--apply` (safe) → verify → then build the manifest pause+CAS path → manifest `--apply` →
+    verify-gate 0 raw → re-measure the live metric (the climb).
