@@ -393,9 +393,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 2,
-        "coverage_pct": 72.95,
+        "warn_file_count": 11,
         "qg_red_reason": null,
-        "warn_file_count": 11
+        "coverage_pct": null
       }
     },
     "execution-service": {
@@ -880,10 +880,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 38,
         "large_file_count": 0,
-        "coverage_pct": 83.25,
-        "qg_red_reason": null,
-        "warn_file_count": 38
+        "qg_red_reason": "pytest",
+        "coverage_pct": 83.25
       }
     },
     "ml-service": {
