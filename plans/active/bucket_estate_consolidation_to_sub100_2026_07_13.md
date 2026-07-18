@@ -328,9 +328,15 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       file:line cutover tables, 18-todo sequencing, estate math 139→~100, \_KIND_ALIASES soft-transition
       recommendation). Successor-plan destination + portfolio-state human-only + lifecycle-ladder confirm are parked as
       that doc's operator-decisions section.
-- [ ] [DATA] P2. Execute the folds per design (likely 2-3 split plans for parallelism — features / ml / stores), each
-      with the DeFi-migration playbook: parity verify → reader cutover → redeploy+verify-exercised → delete + TF/yaml
-      removal in the same change. Target end-state ≈100 total (≈80 excluding GCP-system).
+- [x] ✅ [DATA] P2. Execute the folds per design — **ALL 5 WAVE-3 FOLDS COMPLETE 2026-07-19** (bucket_fold_{features,ml,
+      execution_strategy,portfolio_state}_2026_07_17). Each ran the playbook: parity verify → code cutover (multi-agent
+      implement→adversarial-verify→fix, which caught a silent-P&L reader bug + stale-PM-yaml CI break) → consolidator
+      retarget via direct gcloud (single-root _index, apply-unsafe) → delete sources → TF import folded + state-rm sources.
+      **~30 source buckets removed; estate now 114 total** (down from ~140+). BQ feature_external re-mounted (766k rows).
+      Remaining toward the ≈100 target: the 114-vs-59-TF gap is PRE-EXISTING estate drift (market-data/billing buckets
+      not in canonical TF — operator-aware, separate from the folds). Soft-window alias sunset + a few loose ends
+      (deployment-api C+D display, execution-service tenderly_budget prefix, UAC replay WIP, consolidator job renames)
+      tracked in bucket_fold_closeout.
 - [ ] [CONFIG] P2. **Residual asset-group-parity drift the 2026-07-17 sweep found but left** (all cosmetic/waste, none
       blocking; the GCP live path is fully reconciled): (a)
       `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf:35` + `terraform/aws/main.tf:74` still
