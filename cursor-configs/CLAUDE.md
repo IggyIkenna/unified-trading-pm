@@ -283,16 +283,19 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   VMs both clouds, consolidate, snapshot before any GCS cutover); every compute unit is a classified DEPLOYMENT TARGET
   (`classify_deployment_target`). **Backfill VMs default to SPOT (HARD RULE)**: every backfill/idempotent launcher
   provisions `--provisioning-model=SPOT` (~60-91% cheaper; idempotent shards re-run on preemption) — `--on-demand` (env
-  `ON_DEMAND=true`) is the only opt-out; live/forward/cron/paper VMs + `--mode live` stay on-demand (preemption loses
-  live data); on-demand for backfill is a bug. **Tardis VMs: HARD cap **1** concurrent, both clouds — the lease does NOT
-  lift it, it AMPLIFIES the storm** (operator 2026-07-16; the earlier cap-3 was measured on skip-scans, not real
-  fetching): count the running fleet BEFORE launching (`tardis-concurrency-guard.sh`, wired into the cefi/mtds
-  launchers). N>1 in the real gap measured ~94% 403s + **37,212 FALSE `attempted_failed` rows** (manifest corruption,
-  not just waste) + coverage going BACKWARD; N=1 measured ZERO 403s. Scale on the ONE IP — `SINGLE_VM_QUEUE=1`
-  bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults 16/4 leave the box ~93%
-  idle) — NEVER more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt. SSOTs:
-  `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
-  `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
+  `ON_DEMAND=true`) is the only opt-out; **preemption recovery MUST resume from measured PROGRESS, never replay
+  `START_DATE` (HARD RULE)** — `RelaunchPreemptedVm` replays the ORIGINAL params, which is right for skip-enabled runs
+  but restarts any `--force`/`redo_all` run at day one FOREVER (force disables the skip the resume relies on); drive
+  those as bounded relaunches from `last_completed_unit + 1` and say so in the launch plan; live/forward/cron/paper
+  VMs + `--mode live` stay on-demand (preemption loses live data); on-demand for backfill is a bug. **Tardis VMs: HARD
+  cap **1** concurrent, both clouds — the lease does NOT lift it, it AMPLIFIES the storm** (operator 2026-07-16; the
+  earlier cap-3 was measured on skip-scans, not real fetching): count the running fleet BEFORE launching
+  (`tardis-concurrency-guard.sh`, wired into the cefi/mtds launchers). N>1 in the real gap measured ~94% 403s + **37,212
+  FALSE `attempted_failed` rows** (manifest corruption, not just waste) + coverage going BACKWARD; N=1 measured ZERO
+  403s. Scale on the ONE IP — `SINGLE_VM_QUEUE=1` bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` /
+  `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults 16/4 leave the box ~93% idle) — NEVER more VMs. Non-Tardis venues
+  (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt. SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis
+  cap), `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT
   reference (**Polygon.io is NOT removed** — it rebranded to **Massive** and is a live secondary TradFi source:
