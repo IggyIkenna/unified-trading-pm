@@ -67,6 +67,36 @@ The decisive observation is that the collapse happens **inside an unchanged work
 CPU falls to 0.6-1.2 of 16 cores at the cliff (idle-waiting on the network), rss stays ~8.6 GB, and there are ZERO HTTP
 429s, timeouts, upload failures or tracebacks in the run log. The client is healthy; the bytes simply stop arriving.
 
+## Decisive A/B — 6x concurrency changed NOTHING
+
+Two VMs, same queue, same day, profiled identically with the RX counter, at EQUAL sample size (n=17 one-minute windows
+each):
+
+| Configuration                                    | mean      | median    | max        |
+| ------------------------------------------------ | --------- | --------- | ---------- |
+| baseline — 8 concurrent slots (the cap bug)      | 7.67 MB/s | 9.62 MB/s | 12.92 MB/s |
+| optimised — 32 non-book + 16 book (6x the slots) | 7.58 MB/s | 9.91 MB/s | 13.96 MB/s |
+
+Statistically identical. The optimised VM also reached the ~7 GB cliff in the SAME ~16 min. If the client were the
+constraint, 6x the in-flight downloads would have moved at least one of these numbers.
+
+## Mechanism — connection timeouts, NOT HTTP 429
+
+Post-cliff the run log carries **137 `ConnectionTimeoutError` to `s3.us-east-1.wasabisys.com` (datasets.tardis.dev's
+storage backend) and ZERO HTTP 429 / TooManyRequests**. So the throttle is enforced by making connections slow or
+unavailable rather than by returning an explicit rate-limit status. Two consequences:
+
+- Nothing in our stack can detect it as throttling — there is no 429 to back off from — which is why it presented for a
+  whole session as a mysterious "throughput collapse".
+- **Worth raising with Tardis Support explicitly**: ask whether the account has a per-run/per-window volume allowance
+  and whether it is signalled anywhere, because silent connection starvation is indistinguishable from a network fault
+  at the client.
+
+**Ruled out — connector exhaustion (checked, not assumed):** `connection_pool_size` is aiohttp's `limit_per_host` = 128,
+and the download semaphore caps real concurrency at 32 + 16 = 48, comfortably under it. Note the run log's "requests
+minus successes" is QUEUE DEPTH, not open connections — the request line is emitted BEFORE the semaphore is acquired —
+so figures like "264 in flight" describe the backlog, not sockets.
+
 ## What this rules out
 
 - **NOT venue-specific** — bitget-futures `book_snapshot_5` ran 12.9 MB/s while bybit `book_snapshot_5` ran 1.7 MB/s

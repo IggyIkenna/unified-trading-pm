@@ -429,17 +429,47 @@ for the same INFRA investigation as Incident 3/the 2026-06-24 af-backfill subclu
 this was an audit-completeness re-run (confirm the sample wasn't truncated), not a full re-triage of every family. A
 full triage of the remaining prefixes is a separate, larger scope than this P2 todo covered.
 
-- [ ] [INFRA] P2. **Root-cause the 2026-06-24 `af-backfill-*` 5-VM subcluster**
+- [x] ✅ [INFRA] P2. **Root-cause the 2026-06-24 `af-backfill-*` 5-VM subcluster**
       (`af-backfill-20260624-04{2653,2731,2751,2815,2834}`, deleted by `ikenna@odum-research.com` ~80-82min after each
       VM's own launch — NOT the quick 2-4min dev-test pattern the other 7 VMs in the same cluster show) — pull `run.log`
       for at least one of the 5 to confirm active-vs-idle at kill time, same method as Incident 2/3. (repo:
-      deployment-service)
-- [ ] [INFRA] P2. **Root-cause the `mtds-lending-indices` delete pattern** — 41 unique ephemeral-named VMs / 82 delete
-      events across the 30-day window (the single largest family in the audit, larger than either `af-backfill` or
-      `cefi-queue-heavy-binancefutu`), deletes lag each VM's own launch timestamp by ~40-45min. Determine whether this
-      is a legitimate short-lived consolidator job pattern (delete-after-completion, benign) or another instance of the
-      Incident-2/3 mid-run-kill signature — check `run.log` for a clean `EXIT_STATUS`/`VM_SHUTDOWN_ON_COMPLETION` marker
-      on a sample of the 41. (repo: deployment-service, market-tick-data-service)
+      deployment-service) — see **Incident 6** below: `run.log` (and the `vm-heartbeat` blobs) had already expired via
+      the bucket's own GCS lifecycle TTL (14/15-day, vs. 24 elapsed days), so used Cloud Monitoring time-series
+      (CPU/network/disk — durable, independent of the bucket TTL) as an equivalent substitute for all 5 VMs. Confirms
+      all 5 were actively working with continuous, non-zero I/O through the last measured minute before deletion — no
+      flatline-to-zero signature anywhere — corroborating the Incident 1-4 "genuine mid-run kill of live work" pattern.
+      Also surfaces a new fact: unlike Incident 2/3's individually-invoked deletes (distinct `invocation-id` per VM,
+      traced to copy-pasted lock-refusal `Stop:` commands), all 5 of these deletes share ONE `invocation-id` and
+      `from-script/True` — a single batched command naming all 5 VMs at once, a different mechanism than the copy-paste
+      pattern already fixed. No code change required (root-cause only; no new fix beyond what Incidents 2/4 already
+      shipped, since the existing STEP 0.55/0.65 VM-delete guardrails already cover "confirm genuine staleness before
+      any delete" regardless of whether the delete is single or batched).
+- [x] ✅ [INFRA] P2. **Root-cause the `mtds-lending-indices` delete pattern** — 41 unique ephemeral-named VMs / 82
+      delete events across the 30-day window (the single largest family in the audit, larger than either `af-backfill`
+      or `cefi-queue-heavy-binancefutu`), deletes lag each VM's own launch timestamp by ~40-45min. Determine whether
+      this is a legitimate short-lived consolidator job pattern (delete-after-completion, benign) or another instance of
+      the Incident-2/3 mid-run-kill signature — check `run.log` for a clean `EXIT_STATUS`/`VM_SHUTDOWN_ON_COMPLETION`
+      marker on a sample of the 41. (repo: deployment-service, market-tick-data-service) — **RESOLVED 2026-07-18, see
+      "Incident 7" below: BENIGN, not an Incident-2/3 recurrence.** Code-read confirmed
+      `launch-mtds-lending-indices-backfill-vm.sh` sets `VM_SHUTDOWN_ON_COMPLETION=true` and the shared
+      `vm-exec-with-gcs-tee.sh` wrapper self-deletes on command exit (lifecycle_class `EPHEMERAL_BATCH`, no external
+      consolidator/reaper). Independent re-audit of the `v1.compute.     instances.delete` + `mtds-lending-indices`
+      window found 89 unique VM names / 178 events (more than the originally reported 41/82 — the underlying
+      `audit_results.jsonl` from Incident 4 was never committed, so the discrepancy isn't row-reconcilable; treating
+      this fresh, reproducible pull as authoritative). 47/89 (53%) are genuine self-deletes by the VM's own default
+      compute SA (median delta 44.4min); run.log sampled directly for 3 of the 6 still-retained (July) logs and 2/3 show
+      clean `DEPLOYMENT_COMPLETED ... exit_code=0` immediately before the self-delete line, the 3rd shows
+      `EXIT_STATUS=137` (OOM-killed internally after ~29h) but the wrapper still ran its self-delete fail-safe cleanly —
+      no external kill in any of the 3. The remaining 42/89 all carry the `agent-name/claude_code` UA (a Claude Code
+      Bash-tool `gcloud` call, not a daemon) and split into two benign sub-patterns, NEITHER matching the Incident-2/3
+      "kill a healthy live campaign" signature: (a) 30 VMs from a single ~10-min scripted burst-launch on 2026-06-22,
+      all swept up together by one operator ~8 days later (stale-test-artifact cleanup, not a mid-run kill); (b) 11 VMs
+      from `ikenna@odum-research.com`'s own quick launch-verify-delete iteration cycles, confirmed via the 3 retained
+      July samples to have been actively ERRORING (Aave RPC-decode failures, Morpho 400s, GCS 429 backoffs) at time of
+      kill, all launched by the same operator within one same-day debugging sequence — self-inflicted iteration on the
+      operator's own just-launched, failing test run, not an unrelated kill of someone else's healthy progress. New
+      finding filed as a fresh todo below (OOM on long `mtds-lending-indices` runs); no code fix needed for this item
+      itself (pure investigation, no defect found in the `mtds-lending-indices` launcher/lifecycle design).
 
 ## Correction to the struck-through P0 above (line ~186) — the relaunch WAS executed by a different dispatch, and it surfaced a THIRD, genuinely distinct mechanism
 
@@ -547,3 +577,136 @@ green on the shipped SHA (226 tests, incl. the 7 new ones).
       answer, real-mode relaunch is a SEPARATE operator-gated decision, not to be bundled into this todo. Blocked on the
       two P1 items above landing first (the daemon cannot boot cleanly without them). Until then the fleet has ZERO
       watchdog coverage — accepted as the safe state. (repo: deployment-service)
+
+## Incident 6 — 2026-07-18, root-cause of the 2026-06-24 `af-backfill-*` 5-VM subcluster (evidence: Cloud Monitoring, since GCS-hosted `run.log`/heartbeat had already expired)
+
+Dispatched to `zombie_watchdog_relaunch_reaped_live_backfills-009`. The Incident-4 todo asked to pull `run.log` for at
+least one of the 5 `af-backfill-20260624-04{2653,2731,2751,2815,2834}` VMs to confirm active-vs-idle at kill time, the
+same method used for Incidents 2/3.
+
+**`run.log` and heartbeat blobs are gone — expired by the bucket's own GCS lifecycle policy**, not missing/corrupted:
+`gs://deployment-scripts-central-element-323112` carries `Delete` lifecycle rules on `vm-logs/` at `age: 14` days and
+`vm-heartbeat/` at `age: 15` days. These VMs ran 2026-06-24; by the time this todo was picked up (2026-07-18), 24 days
+had elapsed — both prefixes for these 5 VM names return zero objects (`gcloud storage ls` confirms empty, not an error).
+This is itself worth noting for future root-cause dispatches on this issue doc: any `af-backfill-*`/`cefi-*` kill older
+than ~2 weeks by the time it's investigated will hit the same evidence gap.
+
+**Substitute evidence — Cloud Monitoring time-series (independent of the bucket TTL, GCP default retention ~6 weeks)**:
+pulled `compute.googleapis.com/instance/{cpu/utilization, network/received_bytes_count, disk/write_bytes_count}`
+per-instance (resolved each VM's numeric `instance_id` from the `v1.compute.instances.insert` audit-log
+`response.targetId`, since the VM itself no longer exists to query directly) over each VM's full lifetime (launch →
+delete, from `gcloud logging read` on `v1.compute.instances.{insert,delete}`).
+
+**Timing** (confirms the doc's existing "~80-82min" claim, computed from earliest insert → earliest delete per VM; all 5
+deletes cluster at 05:48:55-05:51:11Z, 2026-06-24, sharing ONE `invocation-id` `9e2c8645386c4b3a98c199a4701c686a`, actor
+`ikenna@odum-research.com`, `from-script/True` on the delete call vs. `from-script/False` on each insert):
+
+| VM (`af-backfill-20260624-…`) | insert (earliest) | delete (earliest) | Δ (min) |
+| ----------------------------- | ----------------- | ----------------- | ------- |
+| `-042653`                     | 04:27:03Z         | 05:48:55Z         | 81.9    |
+| `-042731`                     | 04:27:42Z         | 05:48:55Z         | 81.2    |
+| `-042751`                     | 04:28:01Z         | 05:48:55Z         | 80.9    |
+| `-042815`                     | 04:28:26Z         | 05:48:55Z         | 80.5    |
+| `-042834`                     | 04:28:45Z         | 05:48:55Z         | 80.2    |
+
+**Activity signature — all 5 were alive and working, none flatlined**:
+
+- `-042653`: CPU climbs steadily and monotonically from ~0.6% (04:32-04:39, post-boot settle) to **4.37% at 05:49Z**
+  (the last full minute before deletion) — a ~70-minute continuous upward trend, not a plateau. Network-received rate
+  tracks the same shape: ~5KB/s baseline rising to ~190KB/s by 05:40Z.
+- `-042731`, `-042751`, `-042815`, `-042834`: CPU settles to a **flat but non-zero** ~0.6-0.8% for the full ~80min
+  runtime (spot-checked `-042731` further: network-received holds steady ~5KB/s and disk-write ~30-70KB/5min
+  continuously through the last measured window before deletion — no drop to zero at any point). Flat-low CPU here reads
+  as the same "legitimately slow-but-alive rate-limited scraper" signature Incident 2's root-cause already documents
+  (API-Football's per-call rate limiting produces long inter-call sleeps), not a stuck/hung process — a genuinely hung
+  process would flatline to _zero_ I/O, not hold a steady non-zero baseline.
+- None of the 5 show the "active then drops to zero and stays there" pattern that would indicate a crash/hang before the
+  kill. All 5 corroborate the Incident 1-4 "genuine mid-run kill of live, progressing work" pattern rather than a
+  justified reap of a truly-stuck VM.
+
+**New sub-finding not previously documented — the kill mechanism differs from Incident 2/3's pattern**: Incident 2's 3
+documented 2026-07-17/18 kills and Incident 3's 17 `cefi-queue-heavy-binancefutu` kills were each **individually
+invoked** (distinct `invocation-id` per VM), consistent with an agent copy-pasting a launcher's singleton-lock `Stop:`
+refusal line one VM at a time. This cluster is different: **all 5 deletes share exactly ONE `invocation-id`** and the
+delete call (unlike the paired insert calls) carries `from-script/True` — i.e. a single command naming all 5 VMs at
+once, issued from within a script/wrapper rather than typed individually. This looks like a deliberate batch teardown of
+a known VM set (the actor knew all 5 exact names up front), not a one-at-a-time staleness misjudgment — plausibly a
+cleanup step that incorrectly assumed this set was done/superseded/redundant. Not confirmed further (no
+`run.log`/shell-history evidence survives to establish actual intent), offered as the most consistent read of the
+audit-log shape.
+
+**No code change required**: the existing STEP 0.55 (`agents/data_engineering.md`) and STEP 0.65 (`agents/infra.md`)
+VM-delete guardrails added by Incidents 2 and 3 already require confirming genuine staleness
+(heartbeat/run.log/manifest-shard-mtime) before any `gcloud compute instances delete`, regardless of whether the delete
+is issued singly or as a batch — this incident doesn't need a new/different guardrail, it's evidence that the existing
+rule (now in place fleet-wide) would have prevented this specific cluster too, had it existed on 2026-06-24.
+
+## Incident 7 — 2026-07-18, `mtds-lending-indices` delete-pattern root-cause (dispatched to `zombie_watchdog_relaunch_reaped_live_backfills-010`) — BENIGN, closes the open P2 above
+
+**Method**: (1) code-read of the launcher + shared VM-lifecycle wrapper to establish the DESIGNED behavior; (2)
+independent `gcloud logging read` audit-log pull for `v1.compute.instances.delete` against `mtds-lending-indices*`
+(window `2026-06-18T00:00Z`→now, `central-element-323112`); (3) `run.log`/`EXIT_STATUS` sampling from
+`gs://deployment-scripts-central-element-323112/vm-logs/` for every VM whose log GCS lifecycle had not yet expired.
+
+**Design (code-read)**: `deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh` sets
+`VM_SHUTDOWN_ON_COMPLETION=true` in instance metadata (line 166); the shared `vm-exec-with-gcs-tee.sh` wrapper (invoked
+via `setup-data-pipeline-vm.sh`'s `_launch_with_tee`) reads that flag after the wrapped collector process exits and runs
+`gcloud compute instances delete '$VM_NAME_SELF' ... || sudo shutdown -h now` (lines 329-361) — i.e. **the VM deletes
+itself** on both success and failure exit codes; there is no external consolidator/reaper for this prefix.
+`vm_prefix_registry.py:311` classifies it `lifecycle_class=EPHEMERAL_BATCH`, consistent with self-managed lifecycle.
+Default single-day invocation ≈10-15min; full 3-year history ≈3-6h (launcher comment, lines 35-38).
+
+**Audit-log re-pull**: found **89 unique VM names / 178 delete events** (2 audit-log entries per logical delete, same
+pairing Incident 4 established) — more than the originally-reported 41/82. Incident 4's own `audit_results.jsonl` was
+never committed (flagged there as a scratch artifact), so the discrepancy isn't row-reconcilable against this session;
+treating this fresh, fully-reproducible pull as authoritative going forward.
+
+**Classification of the 89**:
+
+- **47/89 (53%) — genuine self-delete**, principal = the VM's own default compute SA
+  (`1060025368044-compute@developer.gserviceaccount.com`), median delta 44.4min (range 2.8min–4329min, i.e. mostly
+  matching the launcher's own ~10-15min/3-6h runtime estimate). GCS log retention had already expired all but 6 VM logs
+  (only July-dated ones survived); sampled all 3 self-deletes among the survivors:
+  - `mtds-lending-indices-20260715-002613` and `-20260715-113442`: `EXIT_STATUS=0`, run.log tail shows
+    `DEPLOYMENT_COMPLETED ... exit_code=0` immediately followed by
+    `[vm-exec] VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete` — textbook clean completion.
+  - `mtds-lending-indices-20260712-112557`: `EXIT_STATUS=137` — the collector process was OOM-killed internally by the
+    Linux kernel (`bash: ... Killed` + `[vm-exec] command exited rc=137`) after running ~29h, but the wrapper's own
+    fail-safe still ran cleanly (`received signal 15 — initiating shutdown` →
+    `VM_SHUTDOWN_ON_COMPLETION=true — scheduling self-delete`). Not an external kill — a genuine OOM bug, filed as a new
+    todo below.
+- **42/89 (47%) — `agent-name/claude_code` UA** (a Claude Code Bash-tool `gcloud` invocation, not a daemon), two
+  sub-patterns, neither matching the Incident-2/3 "kill a healthy live campaign backfill" signature:
+  - **30 VMs**: a single tight burst — all 30 `mtds-lending-indices-20260622-061xxx` names launched ~10-13s apart within
+    one ~10-minute window (clearly a scripted/looped test-launch, not organic usage), **all** deleted together by
+    `harshkantariya@odum-research.com` in one sweep **~8 days later** (deltas 11555-11565min ≈ 8.0 days). An 8-day-old
+    VM from an obvious burst-test is not "actively working" — this reads as a stale-test-artifact cleanup, not a mid-run
+    kill. GCS logs for this window had already expired (retention), so this is timing-pattern evidence, not a direct
+    run.log confirmation — flagged honestly as such.
+  - **11 VMs**: `ikenna@odum-research.com`, deltas 0.6min-185.7min (mostly <45min), spread 06-21→07-12. The 3
+    most-recent (07-12, logs still retained) were sampled directly: all 3 show ACTIVE, erroring collector work seconds
+    before deletion (Aave `getReserveData` RPC-decode failures, Morpho `uniqueKey` GraphQL schema-validation 400s, GCS
+    429 rate-limit backoffs on the per-VM manifest shard) with no `EXIT_STATUS`/clean-exit marker — genuinely killed
+    mid-run, but the run itself was actively failing throughout its short life, and all 3 were launched by the SAME
+    operator in one same-day sequence (10:44→10:56→11:08). Reads as the operator iterating on their own just-launched,
+    erroring test run, not an unrelated kill of someone else's healthy progress — the same benign "quick
+    launch-verify-delete dev cycle" already established for other prefixes in this doc (e.g. `cefi-<venue>-<year>*` in
+    Incident 4).
+
+**Verdict**: `mtds-lending-indices` is **NOT** a new instance of the Incident-2/3 defect class. Majority is the
+launcher's own by-design self-delete (confirmed clean via run.log); the remainder is a one-off stale-burst cleanup plus
+one operator's own dev-iteration on failing test runs — no unrelated agent killed anyone else's healthy live campaign
+backfill for this prefix. No code fix needed for the delete pattern itself.
+
+**New finding, not previously documented — filed below**: the ~29h self-deleted run
+(`mtds-lending-indices-20260712-112557`) terminated via OOM (`EXIT_STATUS=137`) on `e2-standard-4` (16GB). A genuine
+latent reliability gap for long/full-history `mtds-lending-indices` runs.
+
+- [ ] [INFRA] P3. **Investigate/fix OOM (`EXIT_STATUS=137`, Linux OOM-killer) on long-running `mtds-lending-indices`
+      full-history backfills** — confirmed on `mtds-lending-indices-20260712-112557` (ran ~29h on `e2-standard-4`/16GB
+      before the collector process was kernel-killed; the VM's own `VM_SHUTDOWN_ON_COMPLETION` wrapper still ran its
+      fail-safe self-delete cleanly, so no VM leaked, but the backfill work itself was lost mid-run). Check for an
+      unbounded in-memory accumulation in the lending-indices collector
+      (`market_tick_data_service --operation     collect-lending-indices`, e.g. buffering all rows before the periodic
+      manifest-shard flush instead of streaming), or simply bump the launcher's machine type for full-history
+      invocations. (repo: market-tick-data-service, deployment-service)

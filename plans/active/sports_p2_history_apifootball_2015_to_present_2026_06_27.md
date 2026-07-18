@@ -179,7 +179,7 @@ drift_direction: advance-code
       54s/fixture class-default crawl that made the planning-VM coordinator unviable (that coordinator mechanism is
       RETIRED; PID 3837082 dead, TEAMS EU flat since 2026-07-06). **GW fleet launched 2026-07-14 11:13–11:15 UTC** (5
       SPOT VMs, entity-sharded, `--fleet-vms 5` → 75-76 req/min/VM, concurrency 6, live /status
-      remaining_daily_quota=290,613): `af-backfill-20260714-111307` FIXTURE_EVENTS · `af-backfill-20260714-111346`
+      remaining*daily_quota=290,613): `af-backfill-20260714-111307` FIXTURE_EVENTS · `af-backfill-20260714-111346`
       FIXTURE_LINEUPS · `af-backfill-20260714-111414` FIXTURE_STATS · `af-backfill-20260714-111447` PLAYER_STATS ·
       `af-backfill-20260714-111518` INJURIES. STANDINGS skipped (window EU=0, AF=0 — nothing pending); TEAMS skipped
       (window EU=728 = exactly 8 no-coverage cup/one-off leagues × 91 days —
@@ -187,7 +187,7 @@ drift_direction: advance-code
       NULL/`""` fix; fetching would no-op). **GW gate**: window query → the 4 per-fixture data_types at 0
       pending-fetch + 0 blank-reason, presence gap (fixture-days lacking a captured enrichment row: EVENTS 1,356 /
       LINEUPS 1,377 / STATS 1,699 / PLAYER_STATS 1,582 of 1,848 captured-fixture shards) closed to
-      captured-or-typed-`EXPECTED_*`; INJURIES window EU 30→0. Full-history verify gate moves to the follow-on todo. —
+      captured-or-typed-`EXPECTED*\*`; INJURIES window EU 30→0. Full-history verify gate moves to the follow-on todo. —
       **GATE MET 2026-07-14 ~16:55Z**: instruments-service@0d9ffabd (write-path 3-leg fix) + @86cc71ff (presence-guard
       hardening) + @0fe2f17b (false-empty repair one-off, main-agent, first pass) + this session's second repair pass
       (50 residual cells the first pass missed). Independently re-verified via `--cross`: false-empty=0,
@@ -2198,7 +2198,7 @@ Dispatched onto `-001`. Fresh-pulled all slot repos clean, no dirty state inheri
 
 **Precondition (a) status changed since slot-5's check (~6 min prior)**: `GET /api/backlog` now shows
 `zombie_watchdog_relaunch_reaped_live_backfills-001` `status: done`, `done_sha: 5a5a504` — the widened `(15.0, 180.0)`
-af-backfill-* threshold fix shipped at 15:43:37Z (slot-3). Read the actual diff (`deployment-service@5a5a504` —
+af-backfill-\* threshold fix shipped at 15:43:37Z (slot-3). Read the actual diff (`deployment-service@5a5a504` —
 `scripts/vm/vm_zombie_watchdog.py`): confirmed it does exactly what the issue doc's todo asked (heartbeat 10→15min
 matching global default, shard 60→180min for headroom), with the matching unit test updated and full QG green per the
 commit's own note.
@@ -2352,3 +2352,62 @@ with zero new signal, the same low-value re-check pattern flagged in slot-4/slot
 fleet has run long enough past ~16:31-16:34Z (15min heartbeat mark) for a preliminary liveness read, or past
 ~19:16-19:18Z (180min shard mark, post `-004`'s widened threshold if that daemon is ever relaunched — though per
 slot-7's finding the daemon was never the actual actor) for a genuinely informative gate re-read.
+
+### 2026-07-18T16:52Z — data_engineering slot-11 (Todo `-001` — genuine gate re-read past the 15-min checkpoint, still far from met; found + filed a real reader-path gap in the consolidator false-DOWN fix)
+
+Dispatched (resumed) onto `-001`. Fresh-pulled all slot repos clean. Waited out slot-9's relaunch
+(`af-backfill-20260718-16{1608,1641,1712,1740}`) past its 15-min zombie-watchdog heartbeat checkpoint before re-reading
+the gate (matching this doc's own established precedent for when a re-check is actually informative) — confirmed via
+`gcloud compute instances list` at 16:32Z (all 4 `RUNNING`, ~14-16min old) and again at 16:52Z (still all 4 `RUNNING`,
+~35min old, well past every reaping threshold this bounce cluster has hit today). `run.log` tails at both checkpoints
+show live per-fixture/per-league writes with fresh timestamps, zero Tracebacks — genuinely healthy, not stalled.
+
+**Ran the actual `read_availability_index` gate query** (single read, `source==api_football`, the 5 in-scope entities,
+their respective coverage floors) — hit `ManifestConsolidatorStaleError` on the first attempt. Investigated rather than
+assuming "consolidator down": `gcloud run jobs executions list` for `uts-prod-manifest-consolidator-instruments-sports`
+showed execution `n7sc6` (`started_at=16:28:39Z`, matching the live `consolidator.lock` object) was a **genuine, still
+in-flight ~7-8min merge** (this bucket's known-slow pattern, `CONSOLIDATOR_LOCK_TTL_SECONDS=2400` override, per the
+already-resolved `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md`), not a stuck/dead lock — it
+completed cleanly at 16:35:49Z, index refreshed 16:35:44Z, lock released. Waited for it, then re-ran the query
+successfully.
+
+**Gate result (fresh, post-merge read, 16:36Z)**:
+
+| data_type       | in-window rows | pending_fetch | attempted_failed |
+| --------------- | -------------: | ------------: | ---------------: |
+| FIXTURE_EVENTS  |        212,165 |         1,935 |                2 |
+| FIXTURE_LINEUPS |        212,137 |         1,925 |                0 |
+| FIXTURE_STATS   |        212,234 |         1,893 |                1 |
+| PLAYER_STATS    |        219,047 |         1,172 |                0 |
+| INJURIES        |        194,662 |             0 |                0 |
+
+Still far from the gate (0 pending across all 5). Compared against slot-8's original 07-17T15:20Z pre-relaunch baseline
+(1,972/2,219/2,864/1,232/558): real but slow net progress over ~25h and multiple kills — INJURIES fully closed, the
+other 4 down 2-34%. Ran a phantom-EU spot-check on FIXTURE_EVENTS (do EU rows coexist with a captured/empty counterpart
+at the same (date, league_id) key, the G2-dedup failure mode this same plan hit once before) — **0 phantom keys found**,
+so the frozen-looking count between checks is not a duplicate-row artifact; it's genuinely slow throughput, consistent
+with a day of repeated relaunches after kills. Not flipping the checkbox.
+
+**Filed a real, narrower residual finding**: `read_availability_index`'s own stale-check (`_read_slow_path`,
+`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:141-155`) never calls
+`consolidator_cycle_in_flight()` — that check is wired into `assert_consolidator_healthy` (the writer-preflight path)
+only, per `c47273c1`/`2d1f77a8`. So any direct `read_availability_index` caller (exactly the kind of manual gate-check
+this todo's many dispatches keep running) still gets a scary false "consolidator is behind or DOWN" error during this
+bucket's normal ~7-8min merges, even though the consolidator is healthy — I nearly misdiagnosed my own false alarm as a
+new outage before checking the execution history. Documented with full evidence + a concrete, scoped `[DATA] P2` fix
+todo as an addendum to the existing (already-`resolved`) issue doc rather than opening a duplicate:
+`plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` —
+unified-trading-pm@6250f536d (`assigned_vm` flipped `NA`→`planning` so the new todo is dispatchable). Not fixed inline
+here — same "fleet-wide blast radius, deserves its own investigation" reasoning that doc already applied to the original
+lock primitive; a reader needs a bounded-wait-and-retry, not just "don't raise" (the latter would fall through to the
+OOM-risk per-VM merge the guard exists to prevent).
+
+**Also noted**: a new `sports-p2-todo1-2015-present-complete` prerequisite condition appeared in the live backlog
+(`agent-orchestrator/data/config/backlog.yaml`) during this session, added by a peer concurrently — the
+dispatch-cooldown fix this doc's last 10+ bounce entries have been flagging as "main/operator's job" appears to be
+landing independently; not investigated further here (out of this todo's own scope, and someone else is actively on it).
+
+**Not touching the fleet** — healthy, presence-skip, no `--force`, no action needed; a redundant relaunch right now
+would add risk (singleton-lock refusal path) for zero benefit. `/skip-current-task` — resume once (a) the gate genuinely
+approaches 0 (check per-VM shards too, not just the consolidated index, per slot-9's finding), or (b) the new backlog
+prerequisite lands and changes how this todo gets dispatched.

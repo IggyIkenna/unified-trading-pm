@@ -68,7 +68,7 @@ source:
   features-service-sports-job, manually trigger + watch to SUCCEEDED. The new job/terraform themselves verified correct;
   the manual execution failed on this separate, pre-existing infra condition discovered as a direct consequence of the
   mandated 'watch to a genuine SUCCEEDED terminal state' verification step."
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
   "MISDIAGNOSIS of the already-root-caused sibling
   manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md (a legit ~7-8min real merge, not an
@@ -150,7 +150,7 @@ pattern per `codex/05-infrastructure/manifest-consolidator-ssot.md`) is a differ
 `features-service-sports` — this dispatch's scope was the sports Cloud Run Job deploy, not the consolidator. The
 lock/TTL logic likely lives in a shared library or a Batch/Cloud-Run-Job image used by **~29**
 `uts-prod-manifest-consolidator-*` jobs (`gcloud run jobs list | grep consolidator` — cefi/defi/tradfi/prediction
-instruments, features-_, market-data-_, execution-*, ml-training-artifacts, strategy) — a fix here has fleet-wide blast
+instruments, features-_, market-data-_, execution-\*, ml-training-artifacts, strategy) — a fix here has fleet-wide blast
 radius and deserves its own investigation, not a same-touch patch under time/scope pressure for an unrelated deploy
 task.
 
@@ -526,3 +526,62 @@ MTDS `uts-prod-consolidator-liveness-watchdog`. Proven end-to-end: `features-ser
 `SUCCEEDED` on both a manual (`…-qsqs4`) and a real scheduled fire (`…-6tm9w`) with the consolidator preflight passing
 on EVERY date and ZERO `CONSOLIDATOR_DOWN` — the exact false-DOWN this doc described, now cleared. No change to the
 consolidator lock primitive was needed. Closing as `resolved`; the sibling doc carries the durable root-cause record.
+
+## REOPENED-SCOPE FINDING (2026-07-18 ~16:37Z) — the `consolidator_cycle_in_flight()` fix was wired into the WRITER preflight path, not the READER path; `read_availability_index` still raises during a legitimate in-flight merge
+
+Found while dispatched to `sports_p2_history_apifootball_2015_to_present-001` (Todo "Full-history enrichment phase"),
+running a plain read-only gate query (`read_availability_index(bucket)`, filtered `source==api_football`) against
+`instruments-store-sports-prd-central-element-323112` to check whether the 2020-06-06+ enrichment fleet's pending count
+had moved. Hit the exact same-shaped error this issue doc already root-caused:
+
+```
+unified_trading_library.manifest_writer._state.ManifestConsolidatorStaleError: Consolidated availability_index for
+bucket='instruments-store-sports-prd-central-element-323112' is stale or missing (older than
+MANIFEST_CONSOLIDATED_STALENESS_SEC=120s) while per-VM shards exist — the manifest consolidator is behind or DOWN.
+```
+
+**Live-verified this was a false alarm, not a regression of the fixed livelock**: `gcloud run jobs executions list`
+showed execution `uts-prod-manifest-consolidator-instruments-sports-n7sc6` (`started_at=16:28:39Z`, matching the
+`consolidator.lock` object's own `started_at`) running a genuine long merge — it completed successfully at `16:35:49Z`
+(7m10s, consistent with this bucket's known ~7-8min real-merge duration and its `CONSOLIDATOR_LOCK_TTL_SECONDS=2400`
+override); `availability_index.parquet` updated `16:35:44Z`; the lock object was gone (404) immediately after. Textbook
+correct acquire→merge→write→release, exactly the pattern this doc's "VERIFIED" section already describes as healthy.
+
+**But the read that hit the error came from `read_availability_index()` directly, not from `assert_consolidator_healthy`
+or the `ConsolidatorLivenessMonitor` watchdog** — those are the only two callers `c47273c1`/`2d1f77a8` wired
+`consolidator_cycle_in_flight()` into (confirmed by code read: `manifest_writer/_state.py:397-400` inside
+`assert_consolidator_healthy`). `read_availability_index`'s own stale-check, `_read_slow_path` in
+`manifest_writer/_read_index.py:141-155`, raises `ManifestConsolidatorStaleError` purely off
+`_consolidated_blob_age_sec(...) > staleness_budget` whenever `_per_vm_shards_exist(...)` is true — it never calls
+`consolidator_cycle_in_flight()`. So **any direct caller of `read_availability_index` (ad-hoc gate-check scripts, this
+exact class of manual verification query) still gets the scary "consolidator is behind or DOWN" error during every
+legitimate long merge on a slow bucket**, even though the consolidator is provably healthy — the same false-positive UX
+this whole issue doc exists to eliminate, just on a different code path than the two that were actually patched.
+
+**Impact**: narrower than the original finding (this doesn't block any production preflight/watchdog — those are fixed),
+but directly affects manual/ad-hoc data-correctness verification on `instruments-sports` and any other long-merge bucket
+(`market-data-cefi`, `market-data-tick-defi-prd` per the horizon table above) — exactly the kind of read this
+`sports_p2_history_apifootball_2015_to_present` todo's many prior dispatches have been running to check the enrichment
+gate. A dispatch unaware of this bucket's known slow-merge behavior could easily misread this error as "the consolidator
+is down" (as I nearly did) rather than "wait ~1-2 min for the in-flight merge and retry."
+
+**Not fixed here** (same "fleet-wide blast radius, deserves its own investigation" reasoning this doc already applied to
+the original lock primitive): `read_availability_index` is called broadly across the whole system, and the correct fix
+shape for a READER (which needs to return DATA, unlike a preflight check that can simply no-op) is different from
+`assert_consolidator_healthy`'s "don't raise" — it likely needs to bounded-wait/retry for the in-flight cycle to finish
+(using the same per-bucket `consolidator_inflight_horizon_for_bucket()` as the wait ceiling) rather than just
+suppressing the error, which would otherwise fall through to the OOM-risk per-VM merge this whole guard exists to
+prevent. That needs deliberate design + tests, not a same-touch patch under an unrelated todo's time pressure.
+
+- [ ] [DATA] P2. **Wire a bounded wait-and-retry into `read_availability_index`'s `_read_slow_path`
+      (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:141-155`) for the
+      legitimate-in-flight-merge case** — when `_consolidated_blob_age_sec(...)` exceeds the staleness budget AND
+      `consolidator_cycle_in_flight(client, bucket)` is true (mirror the check already proven safe in
+      `assert_consolidator_healthy`, `manifest_writer/_state.py:397-400`), poll for the lock to clear (bounded by
+      `consolidator_inflight_horizon_for_bucket(bucket)`) and re-check blob freshness once, rather than raising
+      `ManifestConsolidatorStaleError` immediately. Only raise if still stale after the in-flight cycle genuinely
+      completes (or the horizon is exceeded — a real down/stuck case). Add a regression test mirroring the existing
+      `consolidator_cycle_in_flight` boundary tests. (repo: unified-trading-library)
+
+Status left `resolved` for the original (writer-path) finding — this addendum tracks a distinct, narrower residual on
+the reader path, not a regression of the fixed issue.
