@@ -554,14 +554,16 @@ green on the shipped SHA (226 tests, incl. the 7 new ones).
       `GCSBlobHandle` caller in the codebase). (repo: deployment-service)
 - [x] ✅ [INFRA] P1. **Fix the launcher's stale comment + missing `deployment_service` pip-install** in
       `launch-vm-zombie-watchdog.sh` — pip-install `/tmp/dep-src` (like UAC/UTL) or correct the comment + import if
-      `deployment_service` truly shouldn't be needed. — **deployment-service@6ea3f24**: added
-      `pip install --quiet --no-deps /tmp/dep-src` after the tarball extraction (the watchdog's module-level
-      `from deployment_service.vm_prefix_registry import VM_PREFIX_TO_BUCKET` was never satisfied; the prior comment
-      conflated the `_backup_vm_logs_before_kill` registry-path helpers moving to UTL with this unrelated top-level
-      import, which never moved). `--no-deps` skips deployment-service's heavy
-      fastapi/uvicorn/botocore/web3/pytest-family deps, which the watchdog never touches — mirrors the same route
-      `setup-data-pipeline-vm.sh` already uses for this exact package. `bash -n` clean + full `quality-gates.sh` green
-      on the shipped SHA. (repo: deployment-service)
+      `deployment_service` truly shouldn't be needed. — **deployment-service@6ea3f24**, corrected by
+      **deployment-service@c5684db** (slot-5, same dispatch window): my first pass added
+      `pip install --quiet --no-deps /tmp/dep-src`, which installs cleanly but still crash-loops at IMPORT time —
+      `deployment_service/__init__.py` unconditionally imports `LiveDeployer` → `VMBackend` → `VMConfigManager` →
+      `jinja2` (and other heavy deps) regardless of which submodule is actually needed, so `--no-deps` just moves the
+      `ModuleNotFoundError` from `unified_api_contracts` to `jinja2` instead of fixing it. slot-5 verified this via a
+      real end-to-end scratch-venv test (built real tarballs, reproduced the `--no-deps` import failure, confirmed a
+      full non-`--no-deps` install imports `deployment_service.vm_prefix_registry.VM_PREFIX_TO_BUCKET` cleanly, 203
+      entries) and shipped the fix as a plain `pip install --quiet /tmp/dep-src` (no `--no-deps`). Landed SHA is
+      `c5684db`, not `6ea3f24`. (repo: deployment-service)
 - [x] ✅ [INFRA] P1. **Fix the code-tarball build pipeline for hatch-vcs dynamic-version packages** —
       `unified-api-contracts` and `unified-trading-library` (and likely others using
       `[tool.hatch.version] source = "vcs"`) cannot be `pip install`-ed from the `code/*-code.tar.gz` artifacts used by
