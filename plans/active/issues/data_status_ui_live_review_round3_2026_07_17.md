@@ -132,7 +132,16 @@ the `/api/data-status/catalogue` prefix and returned the rows shape (no `venues`
 `.map`. **Fixed `deployment-ui@9f88629`**: added both mock handlers + hardened the real component's consumption with
 `?? []` so ANY malformed response degrades to empty dropdowns instead of throwing.
 
-### F5 — instrument_type axis carries NON-CANONICAL spellings → same type splits into multiple drilldown rows — `- [ ]` OPEN (data-correctness, filed)
+### F5 — instrument_type axis carries NON-CANONICAL spellings → same type splits into multiple drilldown rows — `- [x]` FIXED
+
+**FIXED (2026-07-18).** Drilldown DISPLAY canonicalised — `deployment-api@512180be` (`data_status_hierarchical.py`): the
+instrument_type axis group-key is canonicalised via the UAC `InstrumentType` legacy map (spot/spot_pair→SPOT_PAIR,
+perpetual→PERPETUAL, future/futures_chain→FUTURE; `''`/`'None'`/`nan`→a single honest `UNKNOWN` node), and merged groups
+SUM their captured/empty/failed counts with `completion_pct` RECOMPUTED from the summed totals (not averaged) —
+count-preserving, adversarially verified. Forward captures canonicalised at the WRITER — `instruments-service@ee19f6f3`
+(`build_instrument_catalogue.py` + `writers.py`). Measured: the `prod/catalog.parquet` catalogue was ALREADY canonical
+for cefi/defi/tradfi (the non-canonical spellings lived only in the availability INDEX behind the drilldown, now fixed
+at display + forward at the writer).
 
 **Operator (2026-07-17): "bybit spot appearing in two places as instrument type in the drilldown".** MEASURED against
 the live cefi availability indexes (read-only, 2026-07-18):
@@ -151,7 +160,15 @@ WRITE path (IS rollup / MTDS manifest) to the UAC canonical set, and/or canonica
 interim; treat `''`/`'None'` as honest-absence (a single "unknown" bucket, never fabricated). Cross-venue (not just
 bybit/coinbase) — a data-correctness sweep. **NOTIFIED operator.**
 
-### F6 — redundant legacy `COINBASE` venue (blank types) in the IS index — `- [ ]` OPEN (data-correctness, filed)
+### F6 — redundant legacy `COINBASE` venue + bare-vs-chain duplicate venues — `- [x]` FIXED
+
+**FIXED (2026-07-18).** Drilldown DISPLAY collapses bare-vs-chain duplicate venues to one canonical node
+(`deployment-api@512180be`: `JITO`+`JITO-SOLANA`→`JITO-SOLANA`, `RAYDIUM`/`MARINADE` likewise — conservative exact
+3-pair map, count-preserving relabel-before-groupby, NOT a blanket bare→Solana rule). Forward writer collapses the same
+(`instruments-service@ee19f6f3`). Measured: the `prod/catalog.parquet` catalogue carries NO bare-vs-chain dupes (only
+the bare forms exist there; the dupes are in the availability index → handled at display). The bare `COINBASE` alias is
+already re-keyed away in `VENUES_BY_ASSET_GROUP` (`market_data_categories.py:303`) so it is excluded from the active
+universe.
 
 **Operator (2026-07-17): "coinbase … has so many venues which actually have data — are any redundant".** MEASURED: the
 three registry venues are legitimately distinct — `COINBASE-SPOT` (spot), `COINBASE-FUTURES` (intl perps),
@@ -162,7 +179,33 @@ instrument_type (a futures venue carrying spot pairs — likely miscategorised r
 consolidate the bare `COINBASE` alias into `COINBASE-SPOT` in the IS catalogue (and audit the `COINBASE-FUTURES`
 SPOT_PAIR rows). Overlaps F5 (both are IS-catalogue venue/type canonicalisation). **NOTIFIED operator.**
 
-### F7 — DRIFT (removed 2026-07-16) still shows in the DeFi drilldown — 3,556 stale IS rows — `- [ ]` OPEN (data-correctness, filed)
+### F7 — DRIFT (removed 2026-07-16) still shows in the DeFi drilldown — `- [x]` FIXED (filter + purge, verified)
+
+**FIXED (2026-07-18) — operator's "filter + purge" done both ways.** (1) FILTER: the drilldown excludes the removed
+Solana perp DEXes (`deployment-api@512180be`: `_REMOVED_VENUE_BASES` = DRIFT/PACIFICA/MANGO/ZETA/FLASH, base-prefix
+match so bare + `-SOLANA` forms both go, applied globally before aggregation so root totals stay consistent). (2) PURGE:
+surgically dropped the removed-venue rows from the live `prod/catalog.parquet` — **defi 11,787→11,724 (63 DRIFT rows),
+cefi 425,170→425,160 (10 PACIFICA-SOLANA rows mislabeled into cefi)** — using the shipped writer's own
+`_is_removed_venue` helper for consistency; snapshots saved (`catalog.20260718T0900Z.canonicalise.<ag>.bak.parquet`);
+**INDEPENDENTLY re-read live GCS: DRIFT=0, PACIFICA=0, row counts exact.** Forward writer excludes them
+(`instruments-service@ee19f6f3`).
+
+**NOTE — did NOT run `--mode full` regen (verify-before-write caught a data-loss trap):** the defi full-mode dry-run
+produced 9,418 rows vs the current 11,787 = a 2,369-row shrink, but only 63 are DRIFT — the other **2,306 are a
+`--mode full` vs `--mode incremental` delta** (a full re-walk yields fewer instruments than the accumulated frozen-tail
+catalogue). Overriding the monotonic guard would have deleted 2,306 legit rows. The surgical purge (exactly 63+10
+removed-venue rows) is provably safe; the full-vs-incremental delta is filed below as a SEPARATE finding to investigate
+before any full rebuild.
+
+### F8 — `--mode full` catalogue regen is lossy vs the incremental catalogue (2,306-row delta) — `- [ ]` OPEN (found 2026-07-18)
+
+Discovered while verifying F7: a `build_instrument_catalogue.py --asset-group defi --mode full` dry-run rolls up
+**9,418** rows, but the live (incrementally-built) catalogue holds **11,787** — a full re-walk produces ~2,306 FEWER
+instruments than the accumulated incremental frozen tail. Either the frozen tail has accumulated stale rows the full
+walk correctly drops (→ full is the corrective truth), or the full walk under-covers history the frozen tail rightly
+preserves (→ full is lossy). Until this is understood, **`--mode full` on any asset group is unsafe** (it would trip the
+monotonic guard for a large, unexplained shrink). Investigate: diff the full-mode row set vs the incremental catalogue
+by instrument_id + check whether the missing 2,306 have extant `by_date` source objects.
 
 **Operator (2026-07-17): "i thought we got rid of some of these dsol venues like DRIFT as they got hacked".** CONFIRMED:
 DRIFT was removed from the venue registry 2026-07-16 (operator ruling — hacked ~$280M, rebranded Velocity DEX; all
@@ -180,15 +223,16 @@ secondary date-floor smell (Solana DeFi didn't exist Jan 2020). **NOTIFIED opera
 
 ## Fix status
 
-| #   | Finding                                 | Repo(s)                         | Status                                                                                                              |
-| --- | --------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| F1  | Fixtures league human names             | deployment-api + deployment-ui  | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)                                                 |
-| F2  | 3 panels "Unknown error" (OOM)          | deployment-api (`cloudbuild`)   | ✅ FIXED + VERIFIED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; live rev 00198 = 16Gi/4CPU, 0 OOM since deploy |
-| F3  | Catalogue Explorer dropdowns            | deployment-api + deployment-ui  | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`                                                |
-| F4  | mock/dev robustness (F1/F3)             | deployment-ui                   | ✅ FIXED — `@9f88629`                                                                                               |
-| F5  | non-canonical instrument_type spellings | instruments-service (writer)    | OPEN — filed, data-correctness sweep (its own plan); operator notified                                              |
-| F6  | redundant legacy COINBASE venue         | instruments-service (catalogue) | OPEN — filed, overlaps F5; operator notified                                                                        |
-| F7  | DRIFT (removed) still in DeFi drilldown | deployment-api and/or IS data   | OPEN — operator chose FILTER+PURGE; converges on IS writer (see fix plan below)                                     |
+| #   | Finding                                 | Repo(s)                              | Status                                                                                                              |
+| --- | --------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| F1  | Fixtures league human names             | deployment-api + deployment-ui       | ✅ FIXED — be `@7a7b608f` + ui `@1dbc25d` + L2 `@e67fac7` (pw:L2 ✓)                                                 |
+| F2  | 3 panels "Unknown error" (OOM)          | deployment-api (`cloudbuild`)        | ✅ FIXED + VERIFIED — mem 8→16Gi + cpu 2→4 `@18a362ec`+`@861c29894`; live rev 00198 = 16Gi/4CPU, 0 OOM since deploy |
+| F3  | Catalogue Explorer dropdowns            | deployment-api + deployment-ui       | ✅ FIXED — be `@2fc46ebc` + ui `@1dbc25d`+`@9f88629` + L2 `@e67fac7`                                                |
+| F4  | mock/dev robustness (F1/F3)             | deployment-ui                        | ✅ FIXED — `@9f88629`                                                                                               |
+| F5  | non-canonical instrument_type spellings | deployment-api + instruments-service | ✅ FIXED — drilldown display `@512180be` + writer `@ee19f6f3` (catalogue was already canonical)                     |
+| F6  | redundant COINBASE + bare-vs-chain dup  | deployment-api + instruments-service | ✅ FIXED — display collapse `@512180be` + writer `@ee19f6f3`                                                        |
+| F7  | DRIFT (removed) still in DeFi drilldown | deployment-api + IS catalogue        | ✅ FIXED — filter `@512180be` + purge (defi 63/cefi 10 rows, GCS-verified) + writer `@ee19f6f3`                     |
+| F8  | `--mode full` regen lossy (2,306 delta) | instruments-service                  | OPEN — found while verifying F7; full-mode unsafe until understood (see finding)                                    |
 
 ## Fix plan — F5/F6/F7 IS-catalogue canonicalisation sweep (operator-decided 2026-07-18)
 
@@ -212,27 +256,26 @@ deployment-api display fix. Grounded facts + the expanded scope:
 **Todos (execute as tracked units — writer + regen is real-infra, coordinate on the HOT-contended
 `build_instrument_catalogue.py`):**
 
-- [ ] [BACKEND] P1. **deployment-api drilldown INTERIM (immediate, no regen)** — canonicalise `instrument_type` at the
-      drilldown group-by via the UAC `InstrumentType` legacy→canonical map (collapses `spot`/`spot_pair`/`SPOT_PAIR` →
-      `SPOT_PAIR`, `perpetual`/`PERPETUAL` → `PERPETUAL`, `future`/`futures_chain`/`FUTURE` → `FUTURE`; `''`/`'None'` →
-      one honest `UNKNOWN` bucket), and EXCLUDE known-removed venues (DRIFT + PACIFICA/MANGO-SOLANA/ZETA-SOLANA/
-      FLASH-SOLANA) from the venue axis. Fixes the operator's VISIBLE display immediately;
-      `services/data_status_drilldown/`.
-- [ ] [SCRIPT] P1. **IS writer — instrument_type canonicalisation (F5)** — apply the UAC `InstrumentType` map at the
-      point `build_instrument_catalogue.py` stamps `instrument_type` (line ~267 `CATALOG_COLUMNS` / emission), so every
-      catalogue row carries a canonical value; `''`/`None` → an explicit honest sentinel, never the string `'None'`.
-      Cross-venue.
-- [ ] [SCRIPT] P1. **IS writer — venue canonicalisation + removed-venue exclusion (F6/F7)** — collapse bare-vs-chain
-      duplicate venues to ONE canonical form and DROP registry-removed venues (DRIFT etc.) at write time (honor
-      `VENUES_BY_ASSET_GROUP` / the venue_adapter_keys active set).
-- [ ] [SCRIPT] P1. **Full catalogue regen** (real-infra) after the writer fixes land — snapshot each per-AG
-      `prod/catalog.parquet`, regen, INDEPENDENTLY re-read from GCS to verify DRIFT is gone + instrument_type is
-      canonical + no bare-vs-chain dupes (the A4/tradfi-repair verify discipline). This IS the "purge" (F7-B) — the
-      regen naturally drops DRIFT once the writer excludes it; a separate object delete is only needed if a snapshot of
-      the old data is wanted first.
-- [ ] [BACKEND] P2. **Removed-venue guard (F7 durable)** — once venue naming is canonical, add the general active-venue
-      filter to the drilldown (honor `VENUES_BY_ASSET_GROUP`) so ANY future removed venue auto-hides, superseding the P1
-      interim's hardcoded exclusion list.
+- [x] [BACKEND] P1. **deployment-api drilldown display canonicalisation** — DONE `deployment-api@512180be`
+      (`data_status_hierarchical.py`): instrument_type canonical merge (count-preserving, `%` recomputed from sums) +
+      removed-venue exclusion (`_REMOVED_VENUE_BASES` base-prefix) + bare-vs-chain collapse. Adversarially verified.
+- [x] [SCRIPT] P1. **IS writer — instrument_type canonicalisation (F5)** — DONE `instruments-service@ee19f6f3`
+      (`_canonicalize_instrument_type` + `INSTRUMENT_TYPE_UNKNOWN` at the emission point + `writers.py` forward). NB the
+      `prod/catalog.parquet` was MEASURED already-canonical for cefi/defi/tradfi — this is defensive + fixes forward
+      availability-index captures; the non-canonical values were in the availability index (drilldown), handled by P1.
+- [x] [SCRIPT] P1. **IS writer — venue canonicalisation + removed-venue exclusion (F6/F7)** — DONE
+      `instruments-service@ee19f6f3` (`_REMOVED_VENUES` frozenset + `_DUPLICATE_VENUE_ALIASES` conservative 3-pair
+      collapse).
+- [x] [SCRIPT] P1. **Catalogue purge (F7-B)** — DONE via a SURGICAL in-place drop (NOT `--mode full` regen — see F8):
+      dropped the removed-venue rows from the live `prod/catalog.parquet` using the shipped writer's own
+      `_is_removed_venue` — **defi 63 (DRIFT), cefi 10 (PACIFICA-SOLANA)**, snapshots saved, INDEPENDENTLY GCS-verified
+      (DRIFT=0/PACIFICA=0, exact row counts). tradfi = no-op (0 removed, already canonical). One-off script:
+      `scratchpad/surgical_catalogue_fix.py` (imports the writer helpers for byte-consistency).
+- [ ] [BACKEND] P2. **Removed-venue guard (F7 durable) — SUPERSEDED by the explicit set.** The general
+      `VENUES_BY_ASSET_GROUP` filter is UNSAFE until venue naming is canonicalised (the availability-index venue names
+      don't cleanly match the registry — bare vs `-<CHAIN>` — so a naive intersection would OVER-hide legit venues). The
+      explicit `_REMOVED_VENUE_BASES` set (P1) is the correct, safe mechanism; extending it is a one-line add per future
+      removal. Revisit a general filter only after a venue-naming canonicalisation lands. No action now.
 - [ ] [DATA] P3. **`from 2020-01` floor-date smell** on Solana protocols — CONFIRMED a real (minor) bug (investigated
       2026-07-18). The correct launch dates EXIST in `unified_api_contracts.registry.venue_launch_dates`
       (`KAMINO-SOLANA` 2022-08-24, `JITO-SOLANA` 2022-08-16, etc.), but the drilldown shows a generic **2020-01** floor
