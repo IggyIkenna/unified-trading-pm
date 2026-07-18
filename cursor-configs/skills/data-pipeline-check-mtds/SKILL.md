@@ -253,6 +253,15 @@ Per `tradfi_consolidated_closeout_2026_07_18.md` Phase D — the plan's **termin
 force-refetch + skip-if-fresh + a **canonical-shape regression** across **every** tradfi `(venue, data_type)` shard, not
 just the MVP cells, before any real MVP backfill runs.
 
+> **Databento concurrency knobs (added 2026-07-18, A3.1 — "large VM doing more, not wasting").** Databento is the slow
+> stage; its limits are **per-IP** (~100 concurrent conn / 100 req/s × 0.8 ≈ **80 effective**, not per-key). A tradfi
+> ohlcv backfill's concurrency axis is **dates** (one server-batched `download_batch` per date), so saturate the budget
+> from ONE large VM via `launch-mtds-backfill-vm.sh --batch-date-concurrency N` (→ `VM_BATCH_DATE_CONCURRENCY` metadata
+> → the UTL `ServiceCLI` gated concurrent-date driver, default 1 = serial/byte-identical) plus
+> `DATABENTO_MAX_CONCURRENT_REQUESTS` (VM-metadata → env). **Opt-in / default-off** and requires the UTL driver deployed
+> in the code tarball — omit it for a plain smoke check. Verify a real backfill's e2e win with the RX-counter method in
+> the "Measuring throughput" section below (download MB/s) + manifest rows/hr, NOT `%CPU`/log-line rate.
+
 **Enumeration is narrowed, not the raw cross-product.** TRADFI's raw `VENUES_BY_ASSET_GROUP × DATA_TYPES_BY_ASSET_GROUP`
 list is 7 venues × 10 data_types = 70 cells, but `enumerate_mtds_shards` narrows TRADFI the same way it already narrows
 PREDICTION — to each venue's UAC-declared fetchable capability set (`get_expected_data_types_for_venue`) — because most
