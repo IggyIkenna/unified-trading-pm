@@ -72,8 +72,21 @@ machine sizing for Deribit bundling.
 - [ ] [VERIFY] P0. Verify DERIBIT options_chain af after wave-1 reprobe VMs complete (ETA: 1-3 hours)
 - [ ] [MONITOR] P1. If af > 0 after reprobe: check DERIBIT light VM logs for OOM/preemption evidence
 - [ ] [OPS] P1. Close issue when DERIBIT options_chain af=0 in prd manifest
+> **⚠️ CORRECTION (operator, 2026-07-18): the "structurally-absent channel" premise below is WRONG — do NOT reclass or
+> writer-gate `futures_chain` to `expected_unattempted`/`empty_confirmed`.** `futures_chain`/`options_chain` are NOT
+> Tardis channels — they are OUR per-underlying SHARD BUNDLES: MTDS calls Tardis PER SYMBOL (normal) for the ordinary
+> data types (`trades`/`book_snapshot_5`/`derivative_ticker`/`liquidations`/`options_chain`) and AGGREGATES them by
+> underlying into `…/data_type=futures_chain/underlying={U}/ticks.parquet`. The `instrument_id` type stays FUTURE/OPTION;
+> the shard failure + aggregation are ON OUR SIDE. So the 112,727 / 100% `attempted_failed` is a REAL capture gap (the
+> per-symbol dated-futures data didn't capture → the bundle never built — consistent with the ~350x throughput collapse,
+> `cefi_tardis_throughput_collapse_350x_2026_07_17.md`), NOT a source absence. **The correct fix is to CAPTURE the
+> per-symbol data + build the bundle** (now viable — throughput fixed @14 MB/s), tracked under the Track-2 coverage
+> backfill (`cefi_consolidated_closeout_2026_07_18.md`). The 2026-07-12 reclass + `reclass_cefi_futures_chain_no_tardis_source.py`
+> are built on the same confusion and must NOT be re-run for futures_chain.
+
 - [ ] [DATA] P0. **`futures_chain` retry path must STOP attempting a structurally-absent channel** (re-opened
-      2026-07-15, plan-reconcile §1, operator ruling A — this doc now owns it).
+      2026-07-15, plan-reconcile §1, operator ruling A — this doc now owns it). **← SUPERSEDED by the correction banner
+      above (2026-07-18): it is our bundle, not a source absence; fix = capture, not reclass.**
       `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` recorded 66,007 `attempted_failed` cells
       reclassed to `empty_confirmed`/`EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` on 2026-07-12, treating it as settled.
       It is **NOT durable**: this doc's own 2026-07-15 triage reads **112,727 / 112,727 attempted_failed (100.0%, 0

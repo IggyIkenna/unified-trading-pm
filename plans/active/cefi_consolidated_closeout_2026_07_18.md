@@ -202,10 +202,20 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       `market-tick-data-service@a7569298` (QG green, 6187 passed; `venue_fetch.py` UNTOUCHED). Tardis HTTP-400
       `code=300`(invalid-symbol)/`code=140`(date-not-available) now classified `is_structural_absence` → recorded
       `empty_confirmed`/skipped like a 404, NEVER `attempted_failed`; error code logged; 5xx/429/403/non-structural-400
-      still raise. **Remediation DRY-RUN measured (operator-gated `--apply`, NOT run):** futures_chain false-af =
-      **122,585** (DERIBIT 112,700 · BYBIT 5,250 · BINANCE-FUTURES 4,635) via the existing
-      `reclass_cefi_futures_chain_no_tardis_source.py`; impossible-combo 400s = **24,410** (needs a mirror reclass, not
-      yet built); ~955k residual is genuine transient 403 IP-lock (correctly af). (repo: market-tick-data-service)
+      still raise. **Remediation DRY-RUN measured (operator-gated `--apply`, NOT run):** impossible-combo per-symbol
+      Tardis-400s = **24,410** (`code=300` invalid-symbol / `code=140` date-not-available — GENUINE per-symbol source
+      absences → reclass to `empty_confirmed`; needs a mirror of the reclass script, not yet built); ~955k residual is
+      genuine transient 403 IP-lock (correctly af). (repo: market-tick-data-service)
+      **⚠️ CORRECTION (operator 2026-07-18): the futures_chain 122,585 are NOT a false-af / source-absence — DO NOT
+      RECLASS them.** `futures_chain`/`options_chain` are OUR per-underlying SHARD BUNDLES (MTDS aggregates the per-symbol
+      Tardis data types `trades`/`book_snapshot_5`/`derivative_ticker`/`liquidations`/`options_chain` by underlying into
+      `…/data_type={dt}/underlying={U}/ticks.parquet`); Tardis is called per-symbol; the `instrument_id` type stays
+      FUTURE/OPTION; the failure + aggregation are ON OUR SIDE. So the 122,585 are REAL capture gaps (per-symbol
+      dated-futures data didn't capture → bundle never built — consistent with the throughput collapse), which FILL on
+      the **Track-2 coverage backfill** (throughput fixed @14 MB/s), NOT a reclass. The
+      `deribit_options_chain_af_g4_blocker_2026_07_03.md` "structurally-absent channel" premise + its 2026-07-12 reclass
+      + `reclass_cefi_futures_chain_no_tardis_source.py` are all built on the SAME confusion — do not propagate them; the
+      real fix is capture + build the bundle, tracked under Track-2.
 - [ ] [BACKEND] P1. **UAC per-venue seed fallback (surfaced by the fail-loud work) — decide + remove if catalogues are
       the sole source.** Distinct from the wholesale absent-catalogue fallback just removed in MTDS:
       `unified_api_contracts.registry.market_data_categories.get_expected_instruments_for_venue` STILL falls back to the
