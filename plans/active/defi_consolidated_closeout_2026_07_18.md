@@ -696,6 +696,21 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — fleet monitor hardened + migration throughput diagnosed & 4x-sped-up).**
+  Autonomous tick caught the fleet monitor `b7vaiegfp` silent 36min → owner found it was HARNESS-KILLED (not hung; it
+  had recovered 2 preemptions 2025q1/q4, 12/27 done, 0 un-recovered). Replaced with **hardened monitor v2 `b6zrwiwv0`**:
+  timeout-wrapped gcloud calls, a heartbeat FILE (liveness independent of stdout), per-VM restart cap (6),
+  preemption-vs-completion via the `INFO DONE cells=` marker, and **auto-launches the whole-corpus
+  `rebuild_defi_manifest` VM on all-terminal** (completion self-triggers the rebuild, no re-invoke dependency).
+  **Throughput diagnosed empirically** (2024q2 = 18,743 bundles/11,467 cells; preflight-read 16.5min + apply ~90min at
+  16 workers; box measured 85% IDLE, 0 I/O-wait) → **GCS round-trip-LATENCY-bound + under-parallelized** (parallelism
+  only across cells, 16 workers vs 11k cells), NOT CPU/GIL/disk/cross-region. Fix (safe/idempotent, no code change):
+  relaunched the 15 pending quarters at **e2-standard-16 / WORKERS=64** (deleted the old 16-worker VMs first → 0 race;
+  same `b1a23cbf` pin; merge/needs_attr logic untouched). New ETA **~45-60min** (wall = slowest of 15 parallel quarters,
+  from 15:01Z relaunch). 12 done quarters untouched (idempotent). Owner confirming with a throughput probe; on
+  all-terminal → auto rebuild → verify (per-instrument atoms, gas_fees GAS.parquet on a ≤7-digit AVAX/BSC cell, sampled
+  cells).
+
 - **2026-07-19 (slot-4, /autonomous — parallel migration fleet UP + healthy; gas_fees fix CONFIRMED active).**
   `a9d66cf09d` executed cleanly: killed recovery loop `bd014y3c2` → stopped the serial VM → launched **27 parallel
   per-quarter SPOT VMs** (`canonical-migration-defi-pi-range-…-<YYYYqN>`, 2020q1..2026q3), pinned **`b1a23cbf`** (LDR
