@@ -250,10 +250,29 @@ shared by every consumer of every instruments-\* manifest bucket.
       column-selection-dependent-dedup mechanism this todo asked to investigate is demonstrated + fixed at the code
       level, which is this todo's scope (repo: unified-trading-library only — the sibling P1 FIXTURES-write-path /
       backfill-correction todos are instruments-service work, out of scope for this dispatch).
-- [ ] [PROCESS] P2. Once the P2 reader fix lands, re-audit whether any OTHER "gate unchanged, bounce again" call made
+- [x] ✅ [PROCESS] P2. Once the P2 reader fix lands, re-audit whether any OTHER "gate unchanged, bounce again" call made
       across this todo's 20+-dispatch history was itself a reader-fallback artifact rather than genuine zero progress —
       the per-VM-shard direct-read technique several dispatches already used (slot-9/13/14) as a workaround should
-      become the DEFAULT verification method until the reader fix ships, not an ad-hoc fallback.
+      become the DEFAULT verification method until the reader fix ships, not an ad-hoc fallback. — See "## Re-audit
+      findings (Task -004)" below. Verdict: the bulk of the 20+ bounce history (sessions 21-30 and the 07-18
+      fleet-relaunch cluster, slot-9/11/15/13/14/3) was GENUINE non-progress toward the gate, independently confirmed at
+      the time via direct per-VM-shard reads + a phantom-EU dedup spot-check — caused by the separate, already-diagnosed
+      chronological-scan-never-reaches-the-tail defect, not by root-cause-2's reader bug. The ONE reading that does NOT
+      fit that explanation — slot-8's 2026-07-19T15:36Z "6,925 byte-for-byte identical" read, taken AFTER the fleet had
+      already reached its full window with `exit_code=0` (so the chronological-scan defect no longer applied) — is the
+      strongest candidate for a genuine root-cause-2 artifact, and is in fact the exact reading that triggered root
+      cause 2's discovery. Confirmed the fix's mechanics make this plausible:
+      `query_api_football_pending_clusters_2026_07_18.py` requests slim `columns=` that never include `league_id`, so
+      under the pre-fix code every one of ITS OWN reads (not just cross-call comparisons) consistently exercised the
+      coarser, `league_id`-blind dedup path — a stable bias that would suppress incremental per-league progress rather
+      than just adding noise, consistent with the "unnervingly stable 6,925" plateau. Re-ran the identical script
+      post-fix: pending_fetch is now 5,515 (down from 6,925) — the plateau has broken. This delta is CONFOUNDED by
+      genuine concurrent fleet activity (a force-refresh VM was launched in that same 07-19 session) so the full
+      1,410-row drop cannot be cleanly attributed to the reader fix alone vs. real new captures; a clean retroactive A/B
+      isn't possible since state has moved on. Recommendation (going forward): trust a fresh consolidated
+      `read_availability_index`/gate-script read in general now that the dedup bug is fixed, but keep the per-VM-shard
+      direct-read cross-check as a REQUIRED (not ad-hoc) second opinion specifically in the pattern that fooled this
+      todo for 20+ rounds — a fleet reports full completion/`exit_code=0` yet the very next gate read is unchanged.
 - [ ] [DATA] P2. Audit other consumers of FIXTURES `status_short`/`status_long` (match-outcome features, any
       live-vs-settled dashboard/report) for downstream impact from the pre-fix corpus-wide `NS` mis-stamping — flag
       anything that silently treated "NS" as "not yet played" when the match may actually have concluded.
@@ -280,3 +299,72 @@ would re-audit using the still-broken reader". Broader lesson for issue-doc auth
 at creation time, or the same premature-dispatch pattern recurs on the next multi-todo issue doc with an in-doc
 fix→verify/audit chain. Recommend adding this to `plans/active/task_template.md`'s authoring checklist if not already
 covered.
+
+## Re-audit findings (Task -004) — 2026-07-19T~17:1xZ (slot-3, data_engineering)
+
+**Prereq verified before starting**: `-003` (the P2 reader fix) is genuinely `done` — `unified-trading-library@c6691925`
+is a confirmed ancestor of this slot's current `live-defi-rollout` HEAD (`git merge-base --is-ancestor` check), unlike
+when slot-6 hit this same task earlier today and correctly skipped it. Re-auditing now with the fixed reader is
+methodologically sound.
+
+**Method**: walked `plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md`'s full dispatch history
+(sessions 1-38, `- 2777` lines) for every "unchanged" / "gate still failing" / "pending_fetch" claim, cross-referencing
+which of those checks had independent corroboration already recorded in the doc (direct per-VM-shard reads, phantom-key
+dedup spot-checks) versus which relied solely on `read_availability_index` /
+`query_api_football_pending_clusters_2026_07_18.py`.
+
+**Finding 1 — the pending-clusters script is a STATIC-columns caller, not a variable one.** Read
+`instruments-service/scripts/query_api_football_pending_clusters_2026_07_18.py`: every single invocation across this
+whole bounce history requests the identical slim `columns=["date","data_type","source","capture_status","error_reason"]`
+— it never includes `league_id`. Read the actual fix diff (`unified-trading-library@c6691925`,
+`unified_trading_library/manifest_writer/_read_index.py`): pre-fix, `_SLIM_MERGE_BASE_COLS` only force-decoded the 4
+hard-required dedup cols (`date`/`venue`/`data_type`/`service_name`); `league_id` (an _optional_ dedup dim) was decoded
+into the merge ONLY when the caller's `columns=` happened to include it. Since this script's `columns=` never includes
+`league_id`, it did not merely risk occasional cross-call inconsistency — it consistently exercised the COARSER,
+`league_id`-blind dedup key on every read, session after session. A coarser dedup key collapses more rows per (date,
+data_type) key, which suppresses sensitivity to incremental per-league captures — consistent with, though not strictly
+proof of, the "byte-for-byte identical 6,925" plateau this todo's dispatches kept hitting.
+
+**Finding 2 — direct evidence the plateau has broken.** Re-ran the identical (unmodified) script post-fix:
+`5,373,225 total rows read | 891,404 api_football enrichment rows | 5,515 pending_fetch` — down from the last-recorded
+6,925 (session 2026-07-19T15:36Z). This is the first movement recorded since the plateau began. **Caveat**: this delta
+is confounded — that same 07-19 session also launched a force-refresh VM for the confirmed-stuck tail window, so genuine
+new captures landed independently of the reader fix. The 1,410-row drop cannot be cleanly split between "reader fix
+stopped hiding rows" and "real new work landed" after the fact; no clean retroactive A/B is possible since bucket state
+has moved on.
+
+**Finding 3 — classifying the 20+ historical "unchanged" bounces.** For the bulk of the history (sessions 21-30, and the
+07-18 fleet-relaunch cluster — slot-9 L2273, slot-11 L2356, slot-15 L2415, slot-13/14/3 L2501-2638), the doc ALREADY
+contains independent corroboration that these were GENUINE non-progress-toward-the-gate, for a reason unrelated to root
+cause 2:
+
+- slot-9 (L2273) and slot-15 (L2415) directly read the killed/running VMs' per-VM manifest shards and found real
+  `captured`/`empty_confirmed` rows being written — but for dates that were **already non-pending** (the backfill scans
+  chronologically from the coverage floor and hadn't reached the actual pending tail yet — the separate,
+  already-diagnosed defect in `api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`). Real
+  I/O, zero gate movement, for an algorithmic reason — not a reader artifact.
+- slot-11 (L2356) additionally ran a phantom-EU dedup spot-check (do EU rows coexist with a captured/empty counterpart
+  at the same `(date, league_id)` key — the exact failure mode root cause 2 later confirmed) and found **0 phantom
+  keys** at that checkpoint, meaning the reader was not silently hiding a dedup collision at that specific point in
+  time. That specific reading is corroborated as accurate.
+- This means root cause 2 (reader inconsistency) is a genuine, real, now-fixed defect, but it is NOT the primary
+  explanation for most of this todo's 20+-dispatch bounce history — the chronological-scan defect (fixed separately, per
+  session 2026-07-18T17:15Z) already explains the bulk of it, and was independently verified via direct reads at the
+  time, not just inferred after the fact.
+
+**Finding 4 — the one reading that doesn't fit the chronological-scan explanation.** Slot-8's 2026-07-19T15:36Z read
+("total pending_fetch STILL 6,925 — byte-for-byte identical") came AFTER the 4-VM fleet had already run its FULL window
+to `VM_END_DATE=2026-07-14` with `exit_code=0` for all 4 VMs — i.e., by that point the chronological-scan defect no
+longer applied (the scan had genuinely reached the tail). This is the one instance in the whole history that the
+already-diagnosed chronological-scan defect cannot explain, and it is in fact the exact reading that triggered root
+cause 2's discovery this session. It is the best candidate for a genuine root-cause-2 (reader) artifact, consistent with
+Finding 1 + Finding 2 above, though — per the Finding 2 caveat — not provable as the SOLE explanation in isolation.
+
+**Verdict**: no OTHER individual historical "gate unchanged" reading in this todo's bounce history needs to be
+retroactively reclassified as a reader artifact beyond the one already identified pre-audit (slot-8's 07-19T15:36Z read,
+which is what led to fixing root cause 2 in the first place). The per-VM-shard direct-read technique
+(slot-9/11/13/14/15's ad-hoc workaround) should remain a REQUIRED cross-check specifically in the pattern that produced
+the one genuine artifact: a fleet reports full completion (`exit_code=0`, reached its configured end date) yet the
+immediately-following consolidated gate read is unchanged. In every OTHER "unchanged" pattern seen in this history
+(mid-run, pre-completion, or shortly after a kill/relaunch), the existing chronological-scan-defect explanation + the
+doc's own phantom-key spot-checks already account for the result without invoking a reader bug.
