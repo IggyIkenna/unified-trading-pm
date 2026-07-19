@@ -1239,7 +1239,9 @@ Key findings:
 - No NaN-placeholder bars emitted by any CeFi venue. The 2026-05-05 MDPS incident pattern (`capture_status=captured`
   with all-NaN OHLC) is absent from new writes post-writegate Wave 2.M.
 - All 18 adapters route on-source-zero-response to `record_empty(reason=EXPECTED_*)` (Category A) correctly.
-- GMX/DRIFT cefi-side wiring absent in MTDS routing — these have no tick adapter; not a manifest violation.
+- GMX perp funding is captured on the **defi axis** (`derivative_ticker` + `perp_funding` via The Graph, wired
+  2026-07-15); it has no cefi tick adapter, which is correct — not a manifest violation. DRIFT was CULLED 2026-07-16
+  (removed entirely). See `../04-architecture/solana-defi-coverage.md`.
 - `_handle_empty_tick_data` (MDPS `batch_workers.py` + `live_workers.py`) is the approved post-Wave-2.M method that
   routes through `record_empty_for_shard` — it is NOT in the banned-pattern set (it replaced `_create_empty_output`).
 

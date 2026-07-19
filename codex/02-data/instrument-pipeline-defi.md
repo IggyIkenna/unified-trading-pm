@@ -52,10 +52,11 @@ code_refs:
 
 > **📌 CANONICAL PATH UPDATE (2026-07-10) — the `raw_tick_data/` path examples below show the pre-canonical shape.** The
 > fully-canonical DeFi raw-tick object path is
-> `raw_tick_data/by_date/day={date}/pipeline_mode={mode}/asset_group=defi/chain={chain}/venue={v}/instrument_type={it}/data_type={dt}/{key}.parquet`
-> — with the `pipeline_mode=` hive segment PRIMARY (left of `asset_group=`) and `asset_group=defi` (not the legacy
-> `category=`/no-key shape shown in the diagrams). SSOTs: [`pipeline-mode-partition.md`](pipeline-mode-partition.md)
-> (source-aware `{mode}_{source}[_{transport}]`; readers PREFIX-MATCH) +
+> `raw_tick_data/by_date/day={date}/pipeline_mode={mode}_{source}/asset_group=defi/venue={v}/chain={chain}/instrument_type={it}/data_type={dt}/{key}.parquet`
+> — with the `pipeline_mode={mode}_{source}` hive segment PRIMARY (left of `asset_group=`), **`venue` BEFORE `chain`**
+> (operator-locked, `defi-canonical-naming-ssot.md`), and `asset_group=defi` (not the legacy `category=`/no-key shape
+> shown in the diagrams). SSOTs: [`pipeline-mode-partition.md`](pipeline-mode-partition.md) (source-aware
+> `{mode}_{source}[_{transport}]`; readers PREFIX-MATCH) +
 > [`per-asset-group-bucket-layouts.md`](per-asset-group-bucket-layouts.md) (per-AG canonical layout). Writers emit
 > canonical PRIMARY; the legacy shape coexists on disk until the per-AG canonical migration deletes it.
 
@@ -72,7 +73,7 @@ instruments-service
     │  Provides: InstrumentRecord objects with canonical instrument_key
     │  Adapters (under reference_data/adapters/defi/ as of 2026-05-14 — refreshed per Phase 2J audit):
     │    Lending: aave_v3, benqi, compound_v3, euler_v2, fluid, kamino, morpho, radiant, spark, venus
-    │    DEX: balancer, curve, drift, lifinity, lighter, meteora, orca, pacifica, phoenix,
+    │    DEX: balancer, curve, lifinity, lighter, meteora, orca, phoenix,
     │         raydium, uniswap_v2, uniswap_v3, uniswap_v4
     │    DEX agg: jupiter
     │    LST: etherfi, ethfi, jito, lido, marinade, rocket_pool, sanctum, solblaze
@@ -84,6 +85,8 @@ instruments-service
     │    (solayer/picasso/cambrian removed 2026-06-02 — no usable/decodable data source, operator decision)
     │    (mango/zeta/flash_trade removed 2026-07-15 — operator ruling: dead API endpoints, ~$0 TVL, zero MTDS
     │     capture ever wired; see codex/04-architecture/solana-defi-coverage.md)
+    │    (drift/pacifica removed 2026-07-16 — operator ruling: all Solana perp DEXes dropped except Jupiter;
+    │     drift.py + pacifica.py DELETED, DRIFT/PACIFICA CULLED; see codex/04-architecture/solana-defi-coverage.md)
     │    Native staking: solana_native_staking (instruments-service@9d7cfc7, 2026-05-14)
     │    (47 DeFi adapters total; excludes _solana_utils.py, _lst_utils.py, extended.py base helpers)
     │  CeFi adapters (under reference_data/adapters/cefi/): binance, hyperliquid, et al. — NOT DeFi.
@@ -315,6 +318,11 @@ suffix) does NOT match the subgraph prefix and silently has no adapter; `GMX` ma
 match while UAC `_PERPS` declares perp-shape (DF-10 cross-shape mismatch). Future auditors: don't grep for literal
 `CANONICAL_VENUE_TO_ADAPTER["FOO"]` — read this section first, then walk the subgraph-prefix dict + protocol
 indirection.
+
+> **Update 2026-07-16 (operator ruling)**: `DRIFT-SOLANA` + the `drift` adapter were CULLED entirely (no `drift.py`);
+> the `DRIFT`/`DRIFT-SOLANA` examples above are HISTORICAL illustrations of the auto-mapping mechanism, which itself is
+> unchanged. `GMX` is now **defi-axis-only** (DEX-pool perp), no longer cefi-dual-classified. See
+> [`solana-defi-coverage.md`](../04-architecture/solana-defi-coverage.md).
 
 ## Related Docs
 

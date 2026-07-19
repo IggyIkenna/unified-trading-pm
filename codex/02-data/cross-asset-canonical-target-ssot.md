@@ -247,7 +247,7 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   / HUOBI / GEMINI / PHEMEX; tradfi ICE (Databento purge + non-MVP → quarantine), Barchart VIX cash (retired).
 - **Kept registered (NOT purged)**: **BINANCE-DELIVERY** (live COIN-M product — descope from MVP backfill, keep the UAC
   scaffold, mark non-MVP), KALSHI-PERP + POLYMARKET-PERP (roadmap), LIGHTER-ZKSYNC (blocked-credentials scaffold),
-  EXTENDED-STARKNET (live MVP). (LIGHTER/EXTENDED/PACIFICA are CeFi-classified per §6.)
+  EXTENDED-STARKNET (live MVP). (LIGHTER/EXTENDED are CeFi-classified per §6; PACIFICA CULLED 2026-07-16 — see §10.)
 
 ## 11. Operator decisions log (2026-07-18)
 

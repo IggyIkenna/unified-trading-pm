@@ -1405,8 +1405,10 @@ manifest absence now definitively means "outside expected universe" — e.g. a p
 present in canonical with `capture_status=empty_confirmed AND error_reason=EXPECTED_PRE_GENESIS_CHAIN`, so the rollup's
 expected denominator counts it as known-empty rather than missing. Spot-check verification 2026-05-07:
 `gs://market-data-tick-defi-prd-{pid}/_index/availability_index.parquet` has 688,220 `EXPECTED_PRE_GENESIS_CHAIN` rows
-(sample: `chain=ARBITRUM venue=AAVE_V3-ARBITRUM day=2018-01-01`). TradFi has 35,050 `EXPECTED_WEEKEND` + 2,427
-`EXPECTED_HOLIDAY` rows (sample: `venue=BARCHART day=2018-01-06` — Saturday).
+(sample — **legacy chain-before-venue + combined `PROTOCOL-CHAIN` shape**; canonical is venue-before-chain with a
+separate `chain=` per `per-asset-group-bucket-layouts.md`: `chain=ARBITRUM venue=AAVE_V3-ARBITRUM day=2018-01-01`).
+TradFi has 35,050 `EXPECTED_WEEKEND` + 2,427 `EXPECTED_HOLIDAY` rows (sample: `venue=BARCHART day=2018-01-06` —
+Saturday).
 
 ### Mechanism: `ManifestWriter.write_with_zero_fill`
 
@@ -1681,7 +1683,7 @@ reads the manifest index, NOT the parquet corpus, so it is exempt from the singl
 
 ## DeFi Protocol × Chain Coverage
 
-30 protocols × 11 chains = 57 venue combos. Key coverage:
+29 protocols × 11 chains = 56 venue combos (DRIFT-SOLANA CULLED 2026-07-16 — was 30/57). Key coverage:
 
 | Chain       | Protocol Count | Examples                                                                                       |
 | ----------- | -------------- | ---------------------------------------------------------------------------------------------- |
@@ -1690,7 +1692,7 @@ reads the manifest index, NOT the parquet corpus, so it is exempt from the singl
 | ARBITRUM    | 7              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CAMELOT_V3, SUSHISWAP, GMX                         |
 | AVALANCHE   | 6              | AAVE_V3, BALANCER, CURVE, SUSHISWAP_V3, TRADER_JOE_V2, GMX                                     |
 | OPTIMISM    | 6              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CURVE, VELODROME_V2                                |
-| SOLANA      | 6              | DRIFT, KAMINO, RAYDIUM, ORCA, MARINADE, JITO                                                   |
+| SOLANA      | 5              | KAMINO, RAYDIUM, ORCA, MARINADE, JITO (DRIFT CULLED 2026-07-16)                                |
 | POLYGON     | 3              | AAVE_V3, UNISWAP_V3, BALANCER                                                                  |
 | BSC         | 2              | AAVE_V3, PANCAKESWAP_V3                                                                        |
 | LINEA       | 1              | AAVE_V3                                                                                        |

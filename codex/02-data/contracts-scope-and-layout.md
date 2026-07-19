@@ -3,20 +3,30 @@ doc_type: codex-ssot
 title: Contracts Scope and Layout — SSOT
 summary:
   SSOT for UAC scope + layout — the external/canonical surface is a T0 leaf that must not import internal
-  (internal→canonical is the only permitted direction), the Citadel facade package structure,
-  canonical-vs-internal type ownership, deleted-directory bans, the universal v9 source column, and canonical
-  data_type naming.
+  (internal→canonical is the only permitted direction), the Citadel facade package structure, canonical-vs-internal type
+  ownership, deleted-directory bans, the universal v9 source column, and canonical data_type naming.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [deployment-api, execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [uac, canonicalisation, refactor, data-pipeline, ssot-audit, tradfi]
 related: [canonical-schema-groups.md, vcr-cassette-ownership.md, ../04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
 authoritative_for: [UAC external/canonical/internal scope + import-direction rules]
-referenced_by: [codex/02-data/README.md, codex/02-data/canonical-schema-groups.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/per-source-colocation.md, codex/02-data/pipeline-mode-and-batch-live-reconciliation.md, codex/02-data/prediction-data-types-catalog.md, codex/02-data/schema-governance.md, codex/02-data/vcr-cassette-ownership.md]
+referenced_by:
+  [
+    codex/02-data/README.md,
+    codex/02-data/canonical-schema-groups.md,
+    codex/02-data/data-lineage-MTDS-features-ml.md,
+    codex/02-data/per-source-colocation.md,
+    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    codex/02-data/prediction-data-types-catalog.md,
+    codex/02-data/schema-governance.md,
+    codex/02-data/vcr-cassette-ownership.md,
+  ]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -256,17 +266,17 @@ when an adapter is called with an unsupported mode, environment, or auth scope. 
 The following sub-packages have been removed from UAC and must not be imported, recreated, or referenced in any new
 code, plan, or test:
 
-| Deleted path              | Notes                                                                                        |
-| ------------------------- | -------------------------------------------------------------------------------------------- |
-| `canonical/normalize/`    | Normalization helpers moved; consumers use `normalize_utils/`                                |
-| `external/sports/`        | Sports schemas migrated to canonical domain layout                                           |
-| `external/cloud_sdks/`    | Cloud SDK contracts removed (belong in `unified_cloud_interface`, not UAC)                   |
-| `external/onchain/`       | On-chain schemas migrated to `canonical/domain/defi/` and `canonical/crosscutting/defi.py`  |
-| `external/macro/`         | Macro schemas removed                                                                        |
-| `schemas/`                | Formerly a top-level schemas directory; migrated into the canonical/external split           |
-| `shared/`                 | Formerly a top-level shared directory; content redistributed to canonical/internal           |
-| `external/kaiko/`         | Kaiko removed as a data provider                                                             |
-| `external/polygon/`       | Polygon.io removed as a TradFi data provider (Polygon L2 blockchain in `canonical/crosscutting/defi.py` is intact — do not confuse the two) |
+| Deleted path           | Notes                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `canonical/normalize/` | Normalization helpers moved; consumers use `normalize_utils/`                                                                               |
+| `external/sports/`     | Sports schemas migrated to canonical domain layout                                                                                          |
+| `external/cloud_sdks/` | Cloud SDK contracts removed (belong in `unified_cloud_interface`, not UAC)                                                                  |
+| `external/onchain/`    | On-chain schemas migrated to `canonical/domain/defi/` and `canonical/crosscutting/defi.py`                                                  |
+| `external/macro/`      | Macro schemas removed                                                                                                                       |
+| `schemas/`             | Formerly a top-level schemas directory; migrated into the canonical/external split                                                          |
+| `shared/`              | Formerly a top-level shared directory; content redistributed to canonical/internal                                                          |
+| `external/kaiko/`      | Kaiko removed as a data provider                                                                                                            |
+| `external/polygon/`    | Polygon.io removed as a TradFi data provider (Polygon L2 blockchain in `canonical/crosscutting/defi.py` is intact — do not confuse the two) |
 
 Agents that encounter an import path starting with any of these segments must treat it as a stale reference and file a
 triage issue rather than referencing the deleted module.
@@ -277,22 +287,23 @@ triage issue rather than referencing the deleted module.
 
 **Import path:** `unified_api_contracts.canonical.crosscutting.ledger`
 
-The ledger SSOT defines the cross-cutting financial record types used by the four ledgers that track as-if-filled
-state across the system (paper, batch, and live trading paths).
+The ledger SSOT defines the cross-cutting financial record types used by the four ledgers that track as-if-filled state
+across the system (paper, batch, and live trading paths).
 
 **Key exports:**
 
-| Symbol                          | Kind      | Description                                                                     |
-| ------------------------------- | --------- | ------------------------------------------------------------------------------- |
-| `LedgerRow`                     | Pydantic  | Base schema for all ledger entries                                              |
-| `InstructionLedgerRow`          | alias     | `LedgerRow` alias — the instruction tape (SIGNAL/ORDER/FILL/CANCEL events)     |
-| `PassiveLedgerRow`              | alias     | `LedgerRow` alias — accruals (DeFi yield, funding, borrow costs)               |
-| `TreasuryLedgerRow`             | alias     | `LedgerRow` alias — treasury / capital-flow entries                             |
-| `PricingLedgerRow`              | alias     | `LedgerRow` alias — mark-to-market / pricing entries                           |
-| 5 StrEnums                      | StrEnum × 5 | Ledger-specific enumerations (event types, directions, etc.)               |
-| `CrossClientTransferForbiddenError` | Exception | Raised when a transfer would cross client boundaries (enforced by execution-service `TransferCoordinator`) |
+| Symbol                              | Kind        | Description                                                                                                |
+| ----------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------- |
+| `LedgerRow`                         | Pydantic    | Base schema for all ledger entries                                                                         |
+| `InstructionLedgerRow`              | alias       | `LedgerRow` alias — the instruction tape (SIGNAL/ORDER/FILL/CANCEL events)                                 |
+| `PassiveLedgerRow`                  | alias       | `LedgerRow` alias — accruals (DeFi yield, funding, borrow costs)                                           |
+| `TreasuryLedgerRow`                 | alias       | `LedgerRow` alias — treasury / capital-flow entries                                                        |
+| `PricingLedgerRow`                  | alias       | `LedgerRow` alias — mark-to-market / pricing entries                                                       |
+| 5 StrEnums                          | StrEnum × 5 | Ledger-specific enumerations (event types, directions, etc.)                                               |
+| `CrossClientTransferForbiddenError` | Exception   | Raised when a transfer would cross client boundaries (enforced by execution-service `TransferCoordinator`) |
 
 **Downstream SSOTs:**
+
 - Architecture + four-ledger design: `codex/04-architecture/global-ledger-architecture.md`
 - Event taxonomy (all 11 lifecycle events): `codex/02-data/ledger-event-taxonomy.md`
 
@@ -447,15 +458,15 @@ asset-group-agnostic (verified for cefi/defi/sports, uac@559dc81b). Landed: uac@
 Six canonical decisions codified by the 2026-05-08/05-12 cross-asset-group catalogue audit
 (`cross_asset_group_catalogue_audit_2026_05_10.md` Phase 1). These correct previously ambiguous or fragmented SSOTs.
 
-| #   | Finding                                                                                                                                                                                                                               | Canonical resolution                                                                                                                                                                                                                                                                                                                 | Key symbol / location                                                                                                                    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | **Dual prediction module** — `canonical/domain/prediction/` (singular) and `canonical/domain/predictions/` (plural) appeared redundant                                                                                                | Both are canonical and non-redundant: singular = `PredictionMarketMapper` (venue→canonical mapping); plural = `PredictionCanonicalQuestionGroup` taxonomy. Services use facade: `from unified_api_contracts.prediction import ...`                                                                                                   | `unified_api_contracts/prediction.py` facade                                                                                             |
-| 2   | **Radiant orphan adapter** — `instruments-service/adapters/defi/radiant.py` existed with no UAC protocol entry                                                                                                                        | `RADIANT-ARBITRUM` + `RADIANT-BSC` added to `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (lending_indices + oracle_prices)                                                                                                                                                                                                                    | `registry/defi_venue_capabilities.py` UAC@`6dd274b`                                                                                      |
-| 3   | **GMX + DRIFT dual-classification** — present in both `VENUES_BY_ASSET_GROUP["cefi"]` and defi registries                                                                                                                             | Retain in defi registries for protocol-coverage tracking; add `DEFI_VENUE_AXIS_OVERRIDES` dict to flag axis="cefi" for market-data routing. Consumers of defi registries must check this dict before routing.                                                                                                                        | `registry/defi_venues.py` `DEFI_VENUE_AXIS_OVERRIDES` UAC@`7c8482e`                                                                      |
-| 4   | **Case-folding drift** — venue IDs used inconsistently (BLAZESTAKE vs SOLBLAZE, TRADERJOEV2 vs TRADER_JOEV2)                                                                                                                          | `VENUES_BY_ASSET_GROUP` uppercase keys are canonical user-facing IDs. `to_canonical_venue(venue_id)` helper in `defi_venues.py` normalises aliases. New aliases: BLAZESTAKE→SOLBLAZE-SOLANA, TRADERJOEV2→TRADER_JOEV2-AVALANCHE.                                                                                                     | `registry/defi_venues.py` `to_canonical_venue` UAC@`b73949d`                                                                             |
-| 5   | **LST_TOKEN_TO_PROTOCOL_ASSET location unknown**                                                                                                                                                                                      | Confirmed at `unified_api_contracts.internal.domain.defi.lst` as `LST_TOKEN_TO_PROTOCOL_ASSET: dict[str, tuple[str, str]]` (LST token symbol → (protocol, base_asset)) + helpers `iter_lst_tokens_for_protocol` / `resolve_lst_protocol_asset`. Placement under `internal/` is correct (resolver scope, not contract-facing schema). | `unified_api_contracts/internal/domain/defi/lst.py`                                                                                      |
-| 6   | **Chain-set fragmentation** — `MAINNET_CHAIN_IDS` (19), `CHAIN_GENESIS_DATES` (21), `GAS_FEE_CHAIN_START_DATES` (14) were inconsistent subsets                                                                                        | Invariant: `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES keys ⊇ GAS_FEE_CHAIN_START_DATES keys`. SCROLL+ZKSYNC added to `MAINNET_CHAIN_IDS`/`TESTNET_CHAIN_IDS`; BLAST+MODE+GNOSIS+SCROLL+ZKSYNC added to `GAS_FEE_CHAIN_START_DATES` (14→19 entries). Mainnet now 21 chains.                                                             | `registry/chain_env.py` UAC@`6dd274b`                                                                                                    |
-| 7   | **Kalshi API host migration** — `trading-api.kalshi.com` became `api.elections.kalshi.com` (election markets endpoint). 17 code sites across 5 repos pointed at the old host. Bug was dormant while Kalshi was `BLOCKED-CREDENTIALS`. | All UAC external schemas + 9 REST URL files + 1 WS URL file updated to new host. Cassettes re-recorded against new host. Phases 2-4 (live diff + credential unblock + canary) gated on Kalshi API key provisioning. Demo URL `demo-api.kalshi.co` unchanged.                                                                         | `unified_api_contracts/external/kalshi/` + instruments-service@`79ad855` + MTDS@`28b84ce` + execution-service@`8a3cbe48` (UAC@`5729197`) |
+| #   | Finding                                                                                                                                                                                                                               | Canonical resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Key symbol / location                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Dual prediction module** — `canonical/domain/prediction/` (singular) and `canonical/domain/predictions/` (plural) appeared redundant                                                                                                | Both are canonical and non-redundant: singular = `PredictionMarketMapper` (venue→canonical mapping); plural = `PredictionCanonicalQuestionGroup` taxonomy. Services use facade: `from unified_api_contracts.prediction import ...`                                                                                                                                                                                                                                                                                                         | `unified_api_contracts/prediction.py` facade                                                                                             |
+| 2   | **Radiant orphan adapter** — `instruments-service/adapters/defi/radiant.py` existed with no UAC protocol entry                                                                                                                        | `RADIANT-ARBITRUM` + `RADIANT-BSC` added to `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (lending_indices + oracle_prices)                                                                                                                                                                                                                                                                                                                                                                                                                          | `registry/defi_venue_capabilities.py` UAC@`6dd274b`                                                                                      |
+| 3   | **GMX + DRIFT dual-classification** — present in both `VENUES_BY_ASSET_GROUP["cefi"]` and defi registries                                                                                                                             | Retain in defi registries for protocol-coverage tracking; add `DEFI_VENUE_AXIS_OVERRIDES` dict to flag axis="cefi" for market-data routing. Consumers of defi registries must check this dict before routing. **⚠️ SUPERSEDED 2026-07-16 (operator ruling)**: **DRIFT CULLED** entirely (removed from all registries — no `drift.py`); **GMX is now defi-axis-only** (DEX-pool perp, `instrument_type=perpetual`) — the cefi `DEFI_VENUE_AXIS_OVERRIDES` no longer applies to either. See `codex/04-architecture/solana-defi-coverage.md`. | `registry/defi_venues.py` `DEFI_VENUE_AXIS_OVERRIDES` UAC@`7c8482e`                                                                      |
+| 4   | **Case-folding drift** — venue IDs used inconsistently (BLAZESTAKE vs SOLBLAZE, TRADERJOEV2 vs TRADER_JOEV2)                                                                                                                          | `VENUES_BY_ASSET_GROUP` uppercase keys are canonical user-facing IDs. `to_canonical_venue(venue_id)` helper in `defi_venues.py` normalises aliases. New aliases: BLAZESTAKE→SOLBLAZE-SOLANA, TRADERJOEV2→TRADER_JOEV2-AVALANCHE.                                                                                                                                                                                                                                                                                                           | `registry/defi_venues.py` `to_canonical_venue` UAC@`b73949d`                                                                             |
+| 5   | **LST_TOKEN_TO_PROTOCOL_ASSET location unknown**                                                                                                                                                                                      | Confirmed at `unified_api_contracts.internal.domain.defi.lst` as `LST_TOKEN_TO_PROTOCOL_ASSET: dict[str, tuple[str, str]]` (LST token symbol → (protocol, base_asset)) + helpers `iter_lst_tokens_for_protocol` / `resolve_lst_protocol_asset`. Placement under `internal/` is correct (resolver scope, not contract-facing schema).                                                                                                                                                                                                       | `unified_api_contracts/internal/domain/defi/lst.py`                                                                                      |
+| 6   | **Chain-set fragmentation** — `MAINNET_CHAIN_IDS` (19), `CHAIN_GENESIS_DATES` (21), `GAS_FEE_CHAIN_START_DATES` (14) were inconsistent subsets                                                                                        | Invariant: `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES keys ⊇ GAS_FEE_CHAIN_START_DATES keys`. SCROLL+ZKSYNC added to `MAINNET_CHAIN_IDS`/`TESTNET_CHAIN_IDS`; BLAST+MODE+GNOSIS+SCROLL+ZKSYNC added to `GAS_FEE_CHAIN_START_DATES` (14→19 entries). Mainnet now 21 chains.                                                                                                                                                                                                                                                                   | `registry/chain_env.py` UAC@`6dd274b`                                                                                                    |
+| 7   | **Kalshi API host migration** — `trading-api.kalshi.com` became `api.elections.kalshi.com` (election markets endpoint). 17 code sites across 5 repos pointed at the old host. Bug was dormant while Kalshi was `BLOCKED-CREDENTIALS`. | All UAC external schemas + 9 REST URL files + 1 WS URL file updated to new host. Cassettes re-recorded against new host. Phases 2-4 (live diff + credential unblock + canary) gated on Kalshi API key provisioning. Demo URL `demo-api.kalshi.co` unchanged.                                                                                                                                                                                                                                                                               | `unified_api_contracts/external/kalshi/` + instruments-service@`79ad855` + MTDS@`28b84ce` + execution-service@`8a3cbe48` (UAC@`5729197`) |
 
 ---
 
