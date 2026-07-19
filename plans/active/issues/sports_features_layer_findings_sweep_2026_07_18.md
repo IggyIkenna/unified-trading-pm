@@ -1353,8 +1353,57 @@ Without the derivation the repoint would have surfaced ~50%; without the repoint
 second half is NOT closed by this: `round` is now present and rich, but nothing derives the phase from it at catalogue
 level.
 
-- [ ] [CODE] P0. Project `competition_phase` / `round_name` / `is_promotion_relegation` in the catalogue rollup,
-      deriving them from `round` via `classify_competition_phase`. `round` is now 70.6% populated, so the classifier
-      finally has real input — this is the last link between the § Q derivation and the ML features.
+- [x] [CODE] P0. ~~Project `competition_phase` in the catalogue rollup~~ — **RETRACTED, wrong layer.** These are UAC
+      **`features_sports`** fields (`internal/domain/features_sports/__init__.py:138-142`), not catalogue columns, so
+      "the rollup never projects them" was true but irrelevant. The real producer already exists:
+      `features_service/sports/calculators/season_context.py`, fed by
+      `derived_features_helpers.py:_compute_season_features`, which **already** extracts matchday from the round string
+      (`r"(\d+)$"` on `round`) and maps `round -> round_name`. So the chain was never missing — it was **starved of
+      input**, because `round` was blank. Populating `round` (§ Q + § R) is what unblocks it; **no new projection code
+      is needed, only a features RE-RUN.** Note there are two unrelated `competition_phase` derivations:
+      instruments-service `classify_competition_phase(round_name)` (NORMAL_LEAGUE / PLAYOFF / TOURNAMENT …) and the
+      features one (`early|mid|late` from matchday progress). The UAC field is the features one.
 - [ ] [DIAG] P0. The other ~9 stale-entity consumers (§ R list) are still reading the frozen corpus. Each needs the same
       repoint + a re-run; anything reporting stale sports data since 2026-05-23 is suspect.
+
+### S (2026-07-19) — P1 MEASURED: `total_matchdays` is hardcoded **38 for every league on earth**
+
+`features-service/features_service/sports/exporters/derived_features_helpers.py:735`:
+
+```python
+if "total_matchdays" not in enriched.columns:
+    enriched["total_matchdays"] = 38          # <- every league, every season
+```
+
+This is a **silent placeholder** in the sense the codex bans: it is not flagged, not provenance-stamped, and it produces
+confidently wrong numbers rather than honest absence. Measured against the live corpus (819 `fixtures_schedule`
+parquets, 2023-08..2024-06, distinct `Regular Season - N`):
+
+| league     | true season length   | hardcoded 38 |
+| ---------- | -------------------- | ------------ |
+| EPL        | 38                   | correct      |
+| LA_LIGA    | 38                   | correct      |
+| SERIE_A    | 38                   | correct      |
+| BUNDESLIGA | **34**               | off by −4    |
+| EREDIVISIE | **34**               | off by −4    |
+| LIGUE_1    | **34**               | off by −4    |
+| MLS        | **50** (36 distinct) | off by +12   |
+
+**Correct for only 3 of 7 leagues measured.** Three consumers inherit the error:
+
+- `games_remaining = total - matchday` — on Ligue 1's FINAL matchday (34) this reports **4 games remaining**, not 0.
+- `points_at_stake = games_remaining x 3 x multiplier` — inherits it directly, so end-of-season stakes are inflated
+  exactly when they matter most (relegation/title run-ins are the signal these features exist to capture).
+- `competition_phase = f(matchday / total)` — the frac is wrong, so `early|mid|late` boundaries land in the wrong place:
+  Ligue 1 reads 34/38 = 0.89 at season END; MLS reads 50/38 = 1.32, pinning it to `late` all season.
+
+**Do NOT "fix" this with max-observed-matchday.** Deriving the total from matchdays seen so far under-estimates
+mid-season, which makes `games_remaining` too small and the phase too `late` — strictly worse than 38 for the leagues 38
+currently gets right. The fix needs the FULL season schedule (api-football publishes it upfront, and `fixtures_schedule`
+already carries future fixtures), or a per-league reference mapping.
+
+- [ ] [CODE] P1. Build a real per-(league, season) `total_matchdays` reference from the corpus (one walk, `round` column
+      only — the measurement above generalises to all 782 leagues) and consume it in `_compute_season_features`. Fall
+      back to **honest `None`**, never 38, when a league is absent from the map.
+- [ ] [DATA] P1. After the fix, sports features need a re-run for the affected leagues — the currently-persisted
+      `games_remaining` / `points_at_stake` / `competition_phase` are wrong wherever season length != 38.
