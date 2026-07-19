@@ -2,39 +2,48 @@
 doc_type: issue
 title:
   "api_football enrichment gate has TWO previously-undiagnosed root causes on top of the already-fixed
-  chronological-scan/watchdog issues: (1) captured FIXTURES rows frozen at status_short=NS forever block enrichment's
-  completed-fixture lookup, so relaunching never resolves them; (2) the read_availability_index pending_fetch count is
-  reader-path-dependent (column selection changes which shard files get merged), so the same query can report wildly
-  different totals for the identical key"
+  chronological-scan/watchdog issues: (1) FIXED — CanonicalFixture has no `status` attribute so every FIXTURES row ever
+  written was persisted `status_short=NS` regardless of the real outcome, permanently hiding it from enrichment's
+  completed-fixture lookup; (2) the read_availability_index pending_fetch count is reader-path-dependent (column
+  selection changes which shard files get merged), so the same query can report wildly different totals for the
+  identical key"
 summary:
   "Dispatched onto sports_p2_history_apifootball_2015_to_present-001 (the 20+-bounce full-history-enrichment todo).
   Confirmed the 4 VMs from the prior session's narrow-window redirect (af-backfill-20260718-16{1608,1641,1712,1740}) all
   completed exit_code=0 through their VM_END_DATE=2026-07-14. Re-ran the established
   query_api_football_pending_clusters_2026_07_18.py gate script: total pending_fetch STILL 6,925 — byte-for-byte
-  identical to every prior read in this bounce history, despite the fleet running its full window to completion. Root
-  cause 1 (NS-staleness): read the actual per-league FIXTURES parquets for the residual pending-cluster dates. The
-  2026-06-24..2026-07-14 cluster (majority of FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS pending mass) is essentially
-  100% status_short=NS (Not Started) in the captured FIXTURES data, even though these dates are now days to weeks in the
-  past and the matches have obviously concluded in the real world. The 2026-02-21..2026-03-22 cluster is a 30-45%
-  NS-stuck mix. `_read_fixture_ids_from_gcs` (instruments_service/engine/orchestrator/sports_fixtures.py:225) only
-  treats status_short in {FT,AET,PEN} as 'completed' and enrichment can only ever act on completed fixture_ids — so for
-  any date whose FIXTURES row was captured before kickoff/before the match finished and never re-fetched, enrichment
-  logs '0 completed fixture IDs' and can NEVER make progress there, no matter how many times the fleet relaunches with
-  the SAME (non-force) presence- skip semantics. There is no code path anywhere in this system that re-fetches FIXTURES
-  to refresh a stale NS status once a row has been captured once. Verified the fix: a single `--sports-entity FIXTURES
-  --force` CLI run for 2026-06-24 re-fetched fixtures live (picking up their now-final status) and cascaded into real
-  enrichment writes in the same pass (814 fixture_events / 1936 fixture_lineups / 18 fixture_stats / 253 player_stats
-  rows). Root cause 2 (reader inconsistency): read_availability_index's manifest reader falls back from the canonical
-  consolidated blob to a per-VM-shard merge whenever the consolidated blob is >120s old (`_read_consolidated_if_fresh`
-  in unified_trading_library/manifest_writer/_read_index.py:727). Two back-to-back reads for the IDENTICAL
-  (date=2026-06-24, data_type=FIXTURE_EVENTS, source=api_football) key, differing only in whether `league_id` was in the
-  requested `columns` list, returned utterly different distributions: without league_id — 189 total rows (captured=2,
-  empty_confirmed=93, expected_unattempted=94); with league_id — 94 total rows, ALL expected_unattempted, 0
-  captured/empty. Since every prior dispatch on this todo (20+) used exactly this reader/script to declare 'gate still
-  failing, 6,925 pending, unchanged', and the underlying per-VM-shard-fallback merge behavior is
-  column-selection-sensitive, the reliability of every one of those readings needs re-examination — it is plausible the
-  true pending count has been silently drifting down (or has genuinely been static) but the measurement instrument
-  itself cannot currently distinguish those cases when it falls into the fallback path."
+  identical to every prior read in this bounce history, despite the fleet running its full window to completion. **Root
+  cause 1 — CORRECTED mid-session, now FIXED (instruments-service)**: initially misdiagnosed as 'stale cached status,
+  needs a periodic re-fetch'; a forced live re-fetch of 2026-06-24 proved that theory wrong — the freshly re-fetched raw
+  API response correctly reported 152/158 fixtures as completed (FT/AET/PEN) at fetch time (log: 'API-Football
+  date=2026-06-24: 158 InstrumentRecords (152 completed)'), yet the SAME run still persisted `status_short=NS` for all
+  155 rows on re-check. The real bug:
+  `instruments_service/engine/orchestrator/sports.py::_flatten_canonical_fixture_for_disk` set both
+  `status_long`/`status_short` from `getattr(fx, 'status', None)` — but `CanonicalFixture` has NO `status` attribute at
+  all (the function's own docstring already flagged this as 'genuinely absent from both the model and the raw fixture
+  block', the exact same gap already fixed for the `round` field via `_round_from_af_response`, just never applied to
+  status). So `getattr` always returned None and the row was ALWAYS written with the hardcoded `'NS'`/`'Unknown'`
+  defaults, regardless of the true match outcome, for every single fixture ever captured via this write path (contrast:
+  older 2020-2025 dates are correctly settled because they were populated via the separate
+  `recover_fixtures_from_truthset.py` backfill script, a different code path that doesn't have this bug). Fixed by
+  adding `_status_from_af_response()` (mirrors `_round_from_af_response`) that reads
+  `af_response['fixture']['status']['short'/'long']` from the raw API response already threaded through the function for
+  the Q5/Q6 lifecycle overlay, and wiring it into the row dict ahead of the old `fx.status` fallback (preserved for
+  legacy/no-af_response callers). 4 new unit tests added; all 29 existing + new tests in
+  test_orchestrator_fixture_flattener.py / test_fixture_lifecycle_columns.py pass. Shipped:
+  instruments-service@4ef4cfeb. This is a forward-fix only — every FIXTURES row captured BEFORE this fix (the entire
+  history via the live/daily write path) still carries the wrong `status_short=NS` on disk and needs a
+  backfill-correction pass; a `--force` re-fetch of an affected date will now correctly persist the real status **as
+  fetched at re-fetch time** (not retroactively correct for matches whose real-time status has since changed, but
+  correct going forward). Root cause 2 (reader inconsistency, UNCHANGED, still open): read_availability_index's manifest
+  reader falls back from the canonical consolidated blob to a per-VM-shard merge whenever the consolidated blob is >120s
+  old (`_read_consolidated_if_fresh` in unified_trading_library/manifest_writer/_read_index.py:727). Two back-to-back
+  reads for the IDENTICAL (date=2026-06-24, data_type=FIXTURE_EVENTS, source=api_football) key, differing only in
+  whether `league_id` was in the requested `columns` list, returned utterly different distributions: without league_id —
+  189 total rows (captured=2, empty_confirmed=93, expected_unattempted=94); with league_id — 94 total rows, ALL
+  expected_unattempted, 0 captured/empty. Since every prior dispatch on this todo (20+) used exactly this reader/script
+  to declare 'gate still failing, 6,925 pending, unchanged', and the underlying per-VM-shard-fallback merge behavior is
+  column-selection-sensitive, the reliability of every one of those readings needs re-examination."
 status: open
 nature: issue
 asset_group: [sports]
@@ -75,14 +84,16 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+sequential: true
 ---
 
 # api_football enrichment: stale-NS fixture status + gate reader inconsistency
 
 > **NOTIFY-OPERATOR (big finding — data-correctness, cross-cutting, invalidates 20+ prior gate readings on
-> `sports_p2_history_apifootball_2015_to_present-001`).** Two genuinely new, previously-undocumented root causes found
-> this session, on top of the already-fixed zombie-watchdog-kill and chronological-scan issues tracked separately.
-> Neither of these is fixed by "relaunch the fleet again."
+> `sports_p2_history_apifootball_2015_to_present-001`).** Root cause 1 is FIXED this session (instruments-service code
+> fix + tests, shipped). Root cause 2 (manifest reader inconsistency) is still open and cross-cutting. Neither is fixed
+> by "relaunch the fleet again" alone — root cause 1 additionally needs a backfill-correction pass over already-written
+> rows (the code fix only corrects NEW writes going forward).
 
 ## What I found
 
@@ -91,8 +102,8 @@ session's narrow-window redirect fleet (`af-backfill-20260718-16{1608,1641,1712,
 `VM_END_DATE=2026-07-14`) had all 4 VMs complete cleanly (`exit_code=0`) overnight, per their own `run.log`s'
 `DEPLOYMENT_COMPLETED` lines (19:50-20:09Z 2026-07-18).
 
-**Root cause 1 — captured FIXTURES rows never get their status refreshed, so enrichment permanently sees "0 completed
-fixture IDs" for a whole class of dates.**
+**Root cause 1 — FIXED. Every FIXTURES row ever written was permanently stamped `status_short=NS`, regardless of the
+real outcome, because `CanonicalFixture` has no `status` attribute at all — not a staleness/caching problem.**
 
 `_read_fixture_ids_from_gcs` (`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py:225-251`)
 reads the already-captured FIXTURES parquet for a date and filters `status_short.isin({"FT","AET","PEN"})` to decide
@@ -110,24 +121,38 @@ Direct parquet reads of the captured FIXTURES data show:
 | 2026-03-01 / 2026-03-22                                                                           | ~45-48% `NS`, rest `FT`/`PEN`                                  |
 | 2020-08-16, 2020-12-02/03, 2021-01-19/20, 2021-06-14/17, 2021-07-28/29, 2024-12-24/25, 2025-12-25 | 100% `FT`/`AET`/`PEN`/`CANC` (fully settled, no NS)            |
 
-The pattern: dates that were captured close to real-time (near the FIXTURES daily/forward pipeline's write time) get
-frozen at whatever status the match had AT CAPTURE TIME — usually `NS` (not yet kicked off) — and **there is no code
-path anywhere in instruments-service that re-fetches a date's FIXTURES to pick up the final result once the match
-concludes**. Older, already-historical dates (2020/2021/2024/2025) show 100% settled status because they were captured
-well after the fact (via the original backfill / truthset recovery), so they never hit this gap. The
-2026-06-24..2026-07-14 residual cluster (53-71% of every enrichment entity's pending mass per
-`query_api_football_pending_clusters_2026_07_18.py`) is who this affects hardest — it is not a "backfill hasn't reached
-it yet" gap (the redirected fleet DID walk through every one of these dates and completed), it is a structural dead end:
-the fetch step correctly runs, correctly finds the date's FIXTURES already captured, and correctly finds 0 of them
-"completed" — because none of them were ever revisited after kickoff.
+**Initial (WRONG) hypothesis, corrected in this same session**: first assumed this was stale-cached status that a
+`--force` re-fetch would naturally correct by "picking up the now-final status". Disproved by direct evidence: ran
+`--sports-entity FIXTURES --force` for 2026-06-24 — the live fetch's own log line read
+`API-Football date=2026-06-24: 158 InstrumentRecords (152 completed)`, i.e. the RAW API response, at the moment of
+re-fetch, correctly reported 152/158 fixtures as `FT`/`AET`/`PEN`. Yet re-reading the GCS-persisted FIXTURES parquet
+immediately afterward still showed all 155 written rows as `NS`. The live data was right; the persisted row was wrong.
+That ruled out "stale API-side status" and pointed at the write path itself.
 
-**Verified the fix works**: ran
-`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd .venv/bin/instruments-service --operation instruments --mode batch --asset-group SPORTS --sports-provider API_FOOTBALL --start-date 2026-06-24 --end-date 2026-06-24 --sports-entity FIXTURES --force`
-for the single worst-case date. `--force` re-fetches FIXTURES live (bypassing presence-skip), which naturally surfaces
-the now-final status, and the SAME run cascades straight into enrichment in one pass: log evidence shows "814
-fixture_events rows written" / "1936 fixture_lineups rows written" / "18 fixture_stats rows written" / "253 player_stats
-rows written" for this one date — genuine, non-redundant enrichment that no amount of non-force relaunching would ever
-have produced.
+**Actual root cause**: `sports.py::_flatten_canonical_fixture_for_disk` built the row with
+`"status_short": getattr(fx, "status", None) or "NS"` — but `fx` is a `CanonicalFixture`, which the function's own
+docstring already documented as NOT carrying a `status` field ("`status_long` is still defaulted (it is genuinely absent
+from both the model and the raw fixture block)") — the EXACT same shape of bug already fixed for the `round` column via
+`_round_from_af_response` (issue: `sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17`), just never
+applied to `status`. Since `getattr` always misses, EVERY fixture row ever written through this path was persisted
+`status_short="NS"` regardless of the true outcome — for the whole history, not just recent dates. The only reason older
+2020-2025 dates show correct settled statuses is that they were populated via the separate
+`recover_fixtures_from_truthset.py` backfill script (a different, unaffected write path), not because this bug only
+affects recent dates.
+
+**Shipped the fix** (instruments-service, this session): added `_status_from_af_response(af_response)` — reads
+`af_response["fixture"]["status"]["short"/"long"]` from the raw API response dict already threaded through
+`_flatten_canonical_fixture_for_disk` for the Q5/Q6 lifecycle overlay (same source `_round_from_af_response` already
+uses for `round`) — and wired it ahead of the old `fx.status` fallback (preserved for legacy/no-`af_response` callers,
+matching `_round_from_af_response`'s own fallback pattern). Added 4 new unit tests
+(`test_orchestrator_fixture_flattener.py`): `_status_from_af_response` extraction + empty-block defaults, and the
+flattener preferring the af_response-derived status over the always-missing `fx.status`. All 29 tests in the two
+affected test files pass.
+
+**This is a forward-fix only.** It corrects every NEW fixture write from now on. It does NOT retroactively correct the
+millions of already-written FIXTURES rows that were persisted with the wrong `NS` status — those need a
+backfill-correction pass (re-fetch + overwrite, same mechanism as `--force`, now actually effective post-fix) before
+enrichment can resolve the historical residual pending clusters. See the todos below.
 
 **Root cause 2 — `read_availability_index`'s pending-count is reader-path-dependent, not just slow-to-consolidate.**
 
@@ -160,28 +185,32 @@ fresh per-VM-shard writes reliably.
 This todo (`sports_p2_history_apifootball_2015_to_present-001`) has bounced across 20+ dispatches over 2 days, consuming
 a genuinely large amount of fleet time (5+ VM-fleet relaunches), specifically BECAUSE its own gate query kept reporting
 zero progress. Root cause 1 explains why relaunching the SAME dates over and over could never close the gate even with
-perfectly healthy VMs — the fetch step was structurally incapable of resolving those cells. Root cause 2 means the
-diagnostic instrument every dispatch has relied on to decide "still stuck" vs. "converging" may itself be unreliable in
-exactly the situations (fresh writes, <120s old) this bounce history keeps hitting. This is squarely a data-correctness
-/ pipeline-observability defect, not specific to this one todo — the same `read_availability_index` fallback path is
+perfectly healthy VMs — every FIXTURES row was permanently mis-stamped `NS` at write time, so the completed-fixture
+filter enrichment depends on could never find anything, no matter how many times or how correctly the fetch ran. This
+was NOT specific to recent dates or to this one todo — it is a defect in the core FIXTURES write path that has been
+mis-stamping status on every fixture ever captured through it since inception; any OTHER consumer relying on
+`status_short`/`status_long` for fixtures written this way (e.g. match-outcome features, live-vs-settled dashboards)
+should be treated as suspect until the backfill-correction pass (below) lands. Root cause 2 means the diagnostic
+instrument every dispatch has relied on to decide "still stuck" vs. "converging" may itself be unreliable in exactly the
+situations (fresh writes, <120s old) this bounce history keeps hitting. This is squarely a data-correctness /
+pipeline-observability defect pair, not specific to this one todo — the same `read_availability_index` fallback path is
 shared by every consumer of every instruments-\* manifest bucket.
 
 ## Recommended decision / next steps
 
-- [ ] [DATA] P1. Add a periodic FIXTURES status-refresh pass to the api_football pipeline: for any already-captured date
-      whose fixtures are still `status_short` NOT IN `{FT,AET,PEN,CANC,AWD,PST,ABD}` (i.e. non-terminal) AND the date is
-      more than ~2 days in the past, re-fetch that date with `--force` to pick up the real final status before
-      enrichment ever attempts it. (repo: instruments-service — likely the daily/forward sports scheduler cron, or a new
-      dedicated one-off + a recurring hook.) This is what actually unblocks
-      `sports_p2_history_apifootball_2015_to_present-001`'s gate — no non-force relaunch of the enrichment fleet will
-      ever close it while stale-NS fixtures exist in the target window.
-- [ ] [DATA] P1. Quantify + run a bounded `--force` FIXTURES refresh for the currently-known residual clusters:
-      2026-02-21..2026-03-22 (30-45% NS) and the tail of 2026-06-24..2026-07-14 (a VM, `af-backfill-20260719-160307`,
-      was launched this session for 2026-06-25..2026-07-14 with `--force     --sports-entity FIXTURES`; verify it
-      completes and re-measure). Do NOT blanket-`--force` the 2026-02-21..03-22 window without first checking whether a
-      smarter per-fixture-targeted refresh is available — a blanket force there would re-fetch the 55-70% of leagues
-      that are already correctly settled, wasting real API-key budget (see the launcher's own over-subscription
-      warnings).
+- [x] [DATA] P1. Fix the FIXTURES write path so `status_short`/`status_long` are read from the raw `af_response` instead
+      of the always-missing `CanonicalFixture.status` attribute — DONE this session, instruments-service
+      (`sports.py::_status_from_af_response` + wiring into `_flatten_canonical_fixture_for_disk`; 4 new unit tests,
+      29/29 passing).
+- [ ] [DATA] P1. Backfill-correct already-written FIXTURES rows: for any already-captured date whose fixtures are still
+      `status_short` NOT IN `{FT,AET,PEN,CANC,AWD,PST,ABD}` (i.e. non-terminal) AND the date is more than ~2 days in the
+      past, re-fetch that date with `--force` — now that the write-path fix has shipped, this will actually persist the
+      correct status (before the fix, `--force` re-fetched correctly but silently re-wrote the SAME wrong `NS` value,
+      which is why the first attempt at this todo appeared not to work). Scope to the two known residual clusters first
+      (2026-02-21..2026-03-22 mixed 30-45% NS; 2026-06-24..2026-07-14 ~100% NS) before considering a wider historical
+      sweep — do NOT blanket-`--force` a mostly-already-correct window, it wastes real API-key budget on rows that don't
+      need it. (repo: instruments-service) Consider also wiring a periodic status-refresh pass (daily/forward scheduler)
+      so future non-terminal captures self-heal within a few days instead of needing another manual backfill.
 - [ ] [DATA] P2. Investigate `_read_and_merge_per_vm_shards` / `_read_consolidated_if_fresh` column-selection
       sensitivity (repo: unified-trading-library, `unified_trading_library/manifest_writer/_read_index.py`) — confirm
       whether requesting `league_id` (or any column) changes which shard files are included in the fallback merge, and
@@ -192,3 +221,29 @@ shared by every consumer of every instruments-\* manifest bucket.
       across this todo's 20+-dispatch history was itself a reader-fallback artifact rather than genuine zero progress —
       the per-VM-shard direct-read technique several dispatches already used (slot-9/13/14) as a workaround should
       become the DEFAULT verification method until the reader fix ships, not an ad-hoc fallback.
+- [ ] [DATA] P2. Audit other consumers of FIXTURES `status_short`/`status_long` (match-outcome features, any
+      live-vs-settled dashboard/report) for downstream impact from the pre-fix corpus-wide `NS` mis-stamping — flag
+      anything that silently treated "NS" as "not yet played" when the match may actually have concluded.
+
+## Process note — 2026-07-19T16:30Z (slot-6, data_engineering)
+
+`sequential: true` was missing from this doc's frontmatter, so `regen_backlog_from_plan.py`'s `_wire_sequential_prereqs`
+never chained this doc's own todos to each other. Result: all 4 derived tasks (`-001..-004`) dispatched simultaneously
+(to slots 4/3/5/6) even though `-004`'s own text explicitly reads "Once the P2 reader fix lands" — i.e. it requires
+`-003` (`unified-trading-library` reader fix) to be `done` first, and `-003` was still `dispatched`/in-progress when
+`-004` landed on slot-6. Doing the re-audit now would mean re-examining 20+ historical gate readings using a reader that
+is STILL the broken, column-selection-sensitive one this doc's root-cause-2 describes — i.e. the re-audit's own
+methodology would be unreliable, exactly the failure mode this todo exists to fix.
+
+Fix applied: added `sequential: true` to this doc's frontmatter (chains each task's `prereqs.completed_tasks` to the
+PREVIOUS task in `plan_order` on the next regen tick — `server/regen_backlog_from_plan.py:488-524` /
+`unified-trading-pm/plans/PLAN_FORMAT.md`). This doesn't recall the 4 already-dispatched tasks, but it does mean: if
+`-004` is skipped/re-queued (as slot-6 is about to do, since `-003` genuinely isn't done), the NEXT regen tick will gate
+it on `-003` (and by the linear chain, `-002`/`-001`) actually completing before re-dispatching it to any slot.
+
+Slot-6 action: `/skip-current-task` on `-004` with reason "prereq -003 (P2 reader fix) not done yet — doing this now
+would re-audit using the still-broken reader". Broader lesson for issue-doc authoring: any issue doc whose todos have a
+"once X lands, do Y" dependency written in prose (not just `depends_on` cross-plan links) needs `sequential: true` set
+at creation time, or the same premature-dispatch pattern recurs on the next multi-todo issue doc with an in-doc
+fix→verify/audit chain. Recommend adding this to `plans/active/task_template.md`'s authoring checklist if not already
+covered.

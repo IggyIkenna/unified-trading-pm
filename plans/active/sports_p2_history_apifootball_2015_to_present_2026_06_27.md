@@ -2722,3 +2722,56 @@ once it hits genuinely non-cached fetches), `/skip-current-task` — resume once
 completes (`exit_code=0`) and a per-VM-shard direct read confirms the 2026-06-24..07-14 cluster's
 fixture_events/lineups/stats/player_stats cells flip from EU to captured/empty (not just the naive consolidated-index
 count, per root cause 2), or (b) either of the two new P1 issue-doc todos lands.
+
+### 2026-07-19T16:03-16:35Z — data_engineering slot-8 (same session, continued — CORRECTION: root cause 1 was misdiagnosed as staleness; found + fixed the real bug — CanonicalFixture has no `status` attribute, so every FIXTURES row was ALWAYS written `status_short=NS` regardless of outcome)
+
+**Superseding my own diagnosis above within the same session.** The launched VM `af-backfill-20260719-160307`
+(`--force --entity FIXTURES 2026-06-25..2026-07-14`) got killed (`rc=137`, "Killed" — likely OOM, no preemption event
+found in the audit log, ruled out via `gcloud logging read ... event_subtype="compute.instances.preempted"`) after
+writing only `2026-06-25`. Before relaunching, re-checked whether that one date's status actually flipped from NS to
+FT/settled — **it had not**: `2026-06-25` still read 96/96 `NS` after the force re-fetch. Then re-checked my EARLIER
+"verified fix" claim on `2026-06-24` from the prior log entry — **also still 155/155 `NS`**, despite that same run's own
+log showing the LIVE fetch correctly saw `API-Football date=2026-06-24: 158 InstrumentRecords (152 completed)`. The live
+data was right at fetch time; the persisted parquet was wrong. That disproves "stale cached status, force refreshes it"
+— the bug is in the WRITE path, not staleness.
+
+**Found the actual bug**:
+`instruments-service/instruments_service/engine/orchestrator/sports.py::_flatten_canonical_fixture_for_disk` built
+`status_long`/`status_short` from `getattr(fx, "status", None)` — but `fx` is a `CanonicalFixture`, which (per the
+function's own docstring, already honest about this) has NO `status` attribute at all. `getattr` always misses, so every
+row was written with the hardcoded `"NS"`/`"Unknown"` fallback, unconditionally, since this write path's inception —
+this is the EXACT same bug shape already fixed for the `round` column via `_round_from_af_response` (issue
+`sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17`), just never applied to `status`. Older
+2020-2025 dates show correct settled status only because they were populated via the separate
+`recover_fixtures_from_truthset.py` script, a different write path unaffected by this bug.
+
+**Shipped the fix** — instruments-service@4ef4cfeb: added `_status_from_af_response(af_response)` (mirrors
+`_round_from_af_response`), reading `fixture.status.{short,long}` from the raw API response already threaded through for
+the Q5/Q6 lifecycle overlay; wired ahead of the old `fx.status` fallback (preserved for legacy/no-af_response callers).
+4 new unit tests added to `test_orchestrator_fixture_flattener.py`; all 29 tests across the two affected test files
+pass. Full `quality-gates.sh` green (98s), shipped via quickmerge (landed on `live-defi-rollout`, Tier-C drain promotes
+to staging within 15min).
+
+**Corrected the issue doc**
+(`plans/active/issues/api_football_enrichment_stale_ns_fixture_status_and_gate_reader_inconsistency_2026_07_19.md`) in
+place — rewrote the summary/root-cause-1 sections to describe the real mechanism, marked the "add a periodic
+status-refresh pass" todo done (superseded by the actual fix), and added the correct next todo: this is a **forward-fix
+only** — it corrects NEW writes, not the enormous number of already-written rows carrying the wrong `NS` stamp. A
+backfill-correction pass (re-fetch + overwrite the residual pending-cluster dates, NOW actually effective post-fix) is
+still required before this todo's gate can close. Also flagged a new P2 audit todo: any other consumer of FIXTURES
+`status_short`/`status_long` should be checked for downstream impact from the historical mis-stamping.
+
+**Retry VM status**: relaunched a smaller 5-day probe (`af-backfill-20260719-161700`, `2026-06-26..2026-06-30`, still on
+the PRE-fix tarball — its purpose was isolating the OOM, not testing the status fix) to check whether the earlier kill
+was window-size-related. As of this entry it has survived past the point of the earlier kill (2 dates written cleanly,
+heartbeating normally) — inconclusive on OOM root cause but not itself blocking. It will still write `NS` (old code); a
+fresh relaunch on the NOW-fixed tarball is the correct next step for actually closing the residual clusters, not this
+probe's output.
+
+**Not flipping this checkbox** — the gate is still far from met: root cause 1's forward-fix ships correct data from here
+on, but the historical residual clusters (2026-02-21..03-22, 2026-06-24..07-14, and the older scattered dates) still
+carry the wrong pre-fix status until a backfill-correction relaunch runs on the new tarball. `/skip-current-task` —
+resume once (a) a fresh tarball build (`create-code-tarballs.sh --include instruments-service`) picks up `4ef4cfeb`, and
+(b) a `--force` FIXTURES relaunch on the residual clusters is run AND VERIFIED to actually flip `status_short` away from
+`NS` this time (check the raw parquet directly, per this session's own hard-won lesson — a "814 rows written" log line
+is NOT sufficient evidence the status field itself was corrected).
