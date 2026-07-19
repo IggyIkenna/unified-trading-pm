@@ -155,12 +155,14 @@ re-sweep. Not expanded here; left for that todo.
       each CLI's `asset_group_choices` to decide whether these 5 families are genuinely retired (folded into `features`)
       or whether cloud-providers.yaml lost declarations it should still carry. (repo: unified-api-contracts /
       features-service) — ✅ determination: (b), see "Determination (todo 1)" above (this doc, slot-5, 2026-07-19).
-- [ ] [INFRA] P1. Apply the determined fix: drop the 5 retired families from `check_asset_group_parity.py`'s
+- [x] [INFRA] P1. Apply the determined fix: drop the 5 retired families from `check_asset_group_parity.py`'s
       `_KIND_TO_FAMILY` dict and replace with union-of-families coverage for the folded `"features"` kind (CEFI/TRADFI/
       DEFI/PREDICTION) — see "Fix shape for todo 2" above. Do NOT touch the 5 families' `asset_group_choices` (they are
       correct as-is) and do NOT restore the 5 old per-family `cloud-providers.yaml` keys. Re-run
       `bash scripts/quality-gates.sh` end to end to confirm STEP 5.104 (and the rest of the gate) goes green and a fresh
-      sentinel is written. (repo: features-service, unified-api-contracts)
+      sentinel is written. (repo: features-service, unified-api-contracts) — ✅ features-service@bc7bc4ff,
+      unified-api-contracts@1ff91e5b — both shipped via quickmerge, both quality-gates.sh green end to end (STEP 5.104
+      confirmed passing in both runs), see "Fix applied" + "Evidence" below.
 - [ ] [PROCESS] P3. Once fixed, re-check `plans/active/bucket_fold_closeout_2026_07_17.md`'s other "correctly LEFT
       (legitimate, non-breaking)" sites listed in the same Alias-Sunset-Part-A entry (the features e2e harness,
       `upgrade_manifest_to_v8.py`, `cloud_constants` legacy "positions" map, inference-config comments) for the same
@@ -195,6 +197,19 @@ Verified: `.venv/bin/python scripts/quality_gates/check_asset_group_parity.py` (
 local-path dependency so the sibling-repo edit is live) →
 `OK: every per-asset-group feature kind matches its family's CLI asset_group_choices`. Full
 `bash scripts/quality-gates.sh` re-run end to end for final confirmation + fresh sentinel (see Evidence).
+
+**Shipped**: `features-service@bc7bc4ff` (quickmerge, full QG green 326s incl. STEP 5.104) and
+`unified-api-contracts@1ff91e5b` (quickmerge, full QG green 276s). Both landed on `live-defi-rollout`.
+
+**Near-miss during shipping (operational note, not a plan action item)**: committed the UAC fix locally before shipping
+it, then ran `features-service`'s `quickmerge.sh`, which cascades ancestor path-dependencies (`unified-api-contracts`,
+`unified-trading-library`) onto the current dep-branch as STAGE 0 — that cascade force-aligned `unified-api-contracts`
+to `origin/live-defi-rollout` (a hard reset), silently discarding the not-yet-pushed local commit (working tree was
+clean so no pre-commit-hook or dirty-tree guard caught it). Recovered cleanly via `git reflog`
+(`git reset --hard <sha>`) since origin still only had the pre-fix state — no data was lost upstream, only a few minutes
+of re-running QG. Lesson for future cross-repo fixes touching an ancestor + a dependent repo in the same task: **ship
+(quickmerge) the ancestor repo BEFORE running quickmerge on the dependent repo**, not after — the dependent's cascade
+step assumes ancestors are already at the intended pushed state.
 
 ## Evidence
 
