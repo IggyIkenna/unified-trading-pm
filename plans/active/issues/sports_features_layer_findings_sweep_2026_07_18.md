@@ -1611,3 +1611,39 @@ decision, not by this work.
 **What this cost in api-football calls: 353** (194 + 159 bulk (league,season) fetches). The § Q derivation closed 4.3x
 more rows than both backfills combined at ZERO call cost — the ordering (derive first, fetch only the residue) is what
 kept this to hours instead of the multi-day run the original per-fixture framing implied.
+
+### X (2026-07-19) — end-to-end chain VALIDATED on real data before committing a fleet
+
+Ran the real read + season-context path against a **pre-cutover** date (2024-03-09 — the case § V was about) rather than
+launching multi-day VMs on the assumption it works.
+
+**§ V confirmed live in the real read path**, not just in unit tests: instrumenting
+`gcs_reader._read_split_fixtures_fallback` shows `read_reference_entity` now takes the SPLIT leg
+(`used the SPLIT leg: True`), with `round` at **193/193 = 100%**.
+
+Chain output for that day:
+
+| column                                | populated       |
+| ------------------------------------- | --------------- |
+| `round_name`                          | 193/193 (100%)  |
+| `matchday`                            | 185/193 (95.9%) |
+| `competition_phase`                   | 149/193 (77.2%) |
+| `games_remaining` / `points_at_stake` | 149/193 (77.2%) |
+
+`competition_phase` distribution `{late: 118, early: 31, None: 44}`. **The original issue's headline was
+`competition_phase` ~100% UNKNOWN** — it is now 77.2% populated with real values. The 44 `None` are league-seasons
+absent from the § S season-length map, i.e. the deliberate honest-NaN path, not a failure.
+
+**A row-count heuristic nearly produced a false verdict here.** The split leg has 373 RAW parquet rows but returns 193
+after the schedule/outcomes join + normalize, so a "did we get >340 rows?" check reported "STALE LEGACY LEG" when the
+fix was in fact working. Counts across a join/normalize boundary are not comparable; instrumenting the actual call is.
+Same failure mode as the § W misclassification — inferring a property from an aggregate instead of measuring the thing
+itself.
+
+- [ ] [INFRA] P0. Fan out the features re-run. **HARD RULE interaction**: the re-run needs `FORCE=true` (otherwise
+      presence-skip makes it a no-op), and `--force` on SPOT is NOT replayable — `RelaunchPreemptedVm` replays the
+      original params and force disables the skip the resume relies on, so a preempted run restarts at day one FOREVER
+      (`codex/05-infrastructure/spot-vms-for-backfill.md`). Drive it as **bounded per-year chunks** (2019..2026) so a
+      preemption replays one year, not the whole corpus. Use the consolidated
+      `launch-features-vm.sh --feature-family sports --asset-group SPORTS` (the sports-specific launcher carries a
+      deprecation note for new backfills).
