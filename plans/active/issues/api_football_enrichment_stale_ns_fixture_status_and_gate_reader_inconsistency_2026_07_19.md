@@ -202,14 +202,33 @@ shared by every consumer of every instruments-\* manifest bucket.
       of the always-missing `CanonicalFixture.status` attribute — DONE this session, instruments-service
       (`sports.py::_status_from_af_response` + wiring into `_flatten_canonical_fixture_for_disk`; 4 new unit tests,
       29/29 passing).
-- [ ] [DATA] P1. Backfill-correct already-written FIXTURES rows: for any already-captured date whose fixtures are still
-      `status_short` NOT IN `{FT,AET,PEN,CANC,AWD,PST,ABD}` (i.e. non-terminal) AND the date is more than ~2 days in the
-      past, re-fetch that date with `--force` — now that the write-path fix has shipped, this will actually persist the
-      correct status (before the fix, `--force` re-fetched correctly but silently re-wrote the SAME wrong `NS` value,
-      which is why the first attempt at this todo appeared not to work). Scope to the two known residual clusters first
-      (2026-02-21..2026-03-22 mixed 30-45% NS; 2026-06-24..2026-07-14 ~100% NS) before considering a wider historical
-      sweep — do NOT blanket-`--force` a mostly-already-correct window, it wastes real API-key budget on rows that don't
-      need it. (repo: instruments-service)
+- [x] ⚠️ [DATA] P1. Backfill-correct already-written FIXTURES rows: for any already-captured date whose fixtures are
+      still `status_short` NOT IN `{FT,AET,PEN,CANC,AWD,PST,ABD}` (i.e. non-terminal) AND the date is more than ~2 days
+      in the past, re-fetch that date with `--force` — now that the write-path fix has shipped, this will actually
+      persist the correct status (before the fix, `--force` re-fetched correctly but silently re-wrote the SAME wrong
+      `NS` value, which is why the first attempt at this todo appeared not to work). Scope to the two known residual
+      clusters first (2026-02-21..2026-03-22 mixed 30-45% NS; 2026-06-24..2026-07-14 ~100% NS) before considering a
+      wider historical sweep — do NOT blanket-`--force` a mostly-already-correct window, it wastes real API-key budget
+      on rows that don't need it. (repo: instruments-service) — instruments-service@366aaefd: shipped
+      `scripts/refresh_stale_api_football_fixture_status_2026_07_19.py` (targeted, uses the
+      `sports.fixtures.status_refresh` trigger's per-`(date, league)` scan, not a blanket re-fetch) and RAN it for real
+      against production infra. Cluster 1 (2026-02-21..2026-03-22): only 1 stale cell found (already largely corrected
+      by prior-session activity). Cluster 2 (2026-06-24..2026-07-14): 57 `(date, league)` cells re-fetched + written,
+      195 rows, manifest 5,373,282→+57 entries (confirmed real: `ManifestWriter` hit real generation-conflict retries
+      against concurrent fleet writers during the run). **⚠️ Flagging incomplete, not a clean fix — new anomaly found,
+      NOT yet root-caused:** a fresh re-scan immediately after the run reports the SAME 594 total stale cells for
+      cluster 2 (unchanged). Direct spot-check: queried the LIVE api-football API for
+      `COPA_CHILE`/`2026-06-24`/`af_fixture_id=1544424` — the raw response correctly reports `status_short=FT` and
+      `_flatten_canonical_fixture_for_disk` correctly extracts `FT` from it (verified both independently) — yet the
+      on-disk parquet for that exact `(date, league)` cell still reads `NS` after the run. Given `task -004`'s own
+      finding above already established that concurrent fleet writes confound clean before/after reads on this same
+      corpus during this session, the leading hypothesis is the same class of confound (a sibling slot's concurrent
+      VM-based `--force` relaunch on an overlapping date range re-wrote/raced with these cells), not a bug in this new
+      code path — but this is NOT confirmed, and the alternative (a genuine write/overwrite defect in
+      `_write_fixtures_per_league`/`_gated_sink_write` under concurrent writers) has not been ruled out. **Recommend**:
+      (1) re-run this script once current fleet backfill activity on `sports_p2_history_apifootball_2015_to_present-001`
+      quiesces, to get a clean before/after read; (2) if the stale count STILL doesn't drop on a clean re-run, escalate
+      as a genuine write-path defect (separate from both already-fixed root causes 1 and 2).
 - [x] ✅ [DATA] P1. Wire a periodic status-refresh pass (daily/forward scheduler) so future non-terminal captures
       self-heal within a few days instead of needing another manual backfill. — instruments-service@7d07e2a4: added
       `_find_stale_fixture_leagues_for_date` (`instruments_service/engine/orchestrator/sports_fixtures.py` — single-date
