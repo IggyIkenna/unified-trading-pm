@@ -696,6 +696,20 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — giant-Solana-cell floor is the real bottleneck; ETA ~4-5h; let-it-run +
+  verify-success).** Deep diagnostic (top/py-spy attempt/dmesg) on the long-pole shard 2025q1s1 after ~2h: the python
+  (pid 7015) is HEALTHY + working — **154% CPU, 9.7GB RES, no OOM-kills**, grinding a single GIANT Solana
+  `dex_pool_state` cell (millions of pool rows → one per-pool leaf write; the migration's per-instrument write loop is
+  inherently slow for mega-cells). Convergence 4/30 shards done (~2h in). **Key facts:** (1) date-sharding CANNOT split
+  an atomic cell, so the fleet ETA floor = the heaviest single cell (~4-5h total, done ~23:00-00:00 UTC — still faster
+  than the ~9.5h single-VM, since giant cells now parallelise ACROSS shards). (2) The e2-standard-4 (16GB) downsizing I
+  recommended ("GIL-bound → small VMs") carries an **OOM risk** on 9.7GB+ cells — surviving so far, no kills. (3) A cell
+  is NOT checkpointed until fully written + source renamed `_migrated_*`, so RELAUNCHING now would DISCARD the ~2h
+  invested in each in-flight giant cell → do NOT churn; let the current shards finish their giant cells. **Recovery
+  contract:** an OOM'd shard self-deletes (looks "done") but leaves a partial cell (un-renamed bundle) — the
+  at-all-terminal residual-bundle scan (already in the rebuild checklist) catches it → re-migrate that cell. No new
+  operator decision; progressing.
+
 - **2026-07-19 (slot-4, /autonomous — finer re-shard LIVE: 30 sub-shard VMs; ETA ~1-1.5h; 24 quarters already done).**
   Owner executed the finer date-shard: stopped the 6 heavy quarter-VMs, launched **30 date-disjoint sub-shards**
   (2025q1-4 = 6×~2-week each = 24; 2026q1-2 = 3×per-month each = 6), all RUNNING on **e2-standard-4 on-demand**

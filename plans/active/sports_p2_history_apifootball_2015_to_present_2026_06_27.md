@@ -3072,3 +3072,63 @@ gap. The RIGHT next step for `-001`'s own gate is landing the new todo's fix, no
 `/skip-current-task` — resume once the new off-season-gap-closer todo lands (instruments-service), then re-run the gate
 script; the existing 4-VM fleet can keep running in the meantime (harmless, makes real incremental progress on non-gap
 cells) but should not be treated as sufficient on its own to close this gate.
+
+### 2026-07-19T20:57-21:49Z — data_engineering slot-4 (same `-001` dispatch, continued — the filed todo landed (slot-3, `7f6a7a83`), found+fixed a real bug in it before shipping, applied it against production, verified correctness at the cell level, and root-caused why the aggregate gate STILL won't reflect it yet)
+
+**The todo filed in the previous entry landed fast**: slot-3 picked it up, live-confirmed my code-traced hypothesis was
+WRONG in the specific detail (the 3 sampled cells were genuine pending-fetch gaps, not off-season absences — provider
+covered + FIXTURES itself `captured`/sibling-entities-captured for the same cells), and shipped a SAFER closer
+(instruments-service@`7f6a7a83`, `_close_stale_enrichment_expected_unattempted_cells`) that only stamps empty when
+independently provable: no provider coverage, or FIXTURES' own manifest row for the identical (date, league) is already
+`empty_confirmed`. Dry-run: 5,310 of 5,515 (96%) safely closeable, 205 genuine gaps correctly left alone.
+
+**Found + fixed a real bug before it could corrupt anything.** A first live `--apply` attempt (this dispatch) crashed
+immediately: `UnprovenHonestAbsenceError` — mirroring a FIXTURES row whose reason is `SOURCE_RETURNED_ZERO` onto an
+enrichment entity requires real `FetchEvidence` (a manifest writer Phase-1 KEYSTONE safety gate,
+`data_pipeline_hardening_self_monitoring_2026_06_22`), which this classification-only closer never has. Confirmed ZERO
+partial writes landed (the gate raises BEFORE any write; no new shard appeared). Sized the blocked subset: only 36 of
+~5,300 mirror candidates carry `SOURCE_RETURNED_ZERO` (the rest are `EXPECTED_*` reasons, exempt by design — confirmed
+via `unified_api_contracts.canonical.crosscutting._honest_coverage_empty_reasons`'s own documented
+"`SOURCE_RETURNED_ZERO` is data-type-aware... stays a within-window gap [for ENRICHMENT]" rule). **Shipped the fix**
+(instruments-service@`2c85218c`): excludes `SOURCE_RETURNED_ZERO` mirror candidates from the closer (leaves them as
+honest pending gaps), plus fixed the standalone script's OWN un-synced duplicate dry-run-counting logic to match. 2 new
+regression tests, full `quality-gates.sh` green, shipped via quickmerge.
+
+**Applied the fixed closer against production**:
+`close_stale_enrichment_expected_unattempted_cells_2026_07_19.py --apply` → **5,288 (date, entity, league) cells
+closed** (645 `EXPECTED_NO_PROVIDER_COVERAGE` + 4,643 FIXTURES-mirrors), confirmed by the writer's own log
+(`ManifestWriter: updated availability index (5,378,522 total entries, 5,288 new)`) and independently re-derived twice
+via direct targeted reads on specific cells (e.g. `2020-09-19/FIXTURE_STATS/DFL_SUPERCUP` now correctly reads
+`empty_confirmed/EXPECTED_NO_FIXTURE`, reproducible on repeat checks) — **the data-level fix is genuinely correct and
+safely persisted.**
+
+**However, the aggregate `query_api_football_pending_clusters_2026_07_18.py` gate STILL reads 5,515 pending — root-
+caused why, NOT a bug in the fix itself**: `UnifiedCloudConfig.manifest_per_vm_shards` defaults `False` in this
+environment (confirmed directly), so the closer's `ManifestWriter` wrote via the LEGACY CAS path (a direct
+read-merge-write against the single consolidated `_index/availability_index.parquet` blob) — NOT a
+`_index/per_vm/<instance>.parquet` shard (confirmed: no new shard appeared under any plausible instance-id for this
+process; the only 6 shards in the bucket are the 4 fleet VMs + `_legacy_seed` + `sports-fixtures-job`, none from this
+run). `_read_and_merge_per_vm_shards` (the function every "genuinely fresh" read in this doc's history relies on) reads
+**ONLY** `_index/per_vm/*.parquet` — it never reads the consolidated blob during fallback, by design (that's the whole
+point of the fallback: bypass a stale/missing consolidated blob using a DIFFERENT data source). So a CAS-path write is
+**structurally invisible to shard-fallback reads** until the periodic manifest consolidator's next full cycle folds it
+(+ the per-VM shards) back into a fresh consolidated blob — a read hits my correct update ONLY when it happens to read
+the consolidated blob directly (within its own ≤120s freshness window of MY write, a narrow and non-deterministic
+window), and misses it entirely once that window closes and shard-fallback kicks in (confirmed: forcing
+`MANIFEST_CONSOLIDATED_STALENESS_SEC=30` to guarantee fallback reproducibly shows the STALE pre-apply state, while an
+un-forced direct per-cell read on the SAME cell reproducibly shows the CORRECT new state on 2 separate re-checks).
+
+**New reusable finding for this bucket/plan**: any one-off script that calls `ManifestWriter` WITHOUT
+`MANIFEST_PER_VM_SHARDS=true` writes via legacy CAS, which is real and durable but will not show up in the
+`query_api_football_pending_clusters`-style shard-fallback gate reads until the manifest consolidator's next cycle. Do
+NOT conclude "the fix didn't work" from an unchanged shard-fallback-forced pending count shortly after such a write —
+verify via a direct per-cell `read_availability_index` check instead (as done here), or wait for/trigger a consolidator
+cycle before trusting the aggregate gate again.
+
+**Not flipping this checkbox yet** — the underlying DATA is now ~96% closed (verified correct), but the standard gate
+script cannot yet CONFIRM this at the aggregate level pending the next consolidator cycle. `/skip-current-task` — resume
+once (a) a consolidator cycle has run (check `manifest_consolidator_run_at` metadata or simply re-run the gate script
+fresh after enough elapsed time) and the aggregate `pending_fetch` count reflects the ~227-cell residual (down from
+5,515), then (b) handle the small remaining genuine-gap follow-up (originally ~205, now expected ~227 per the freshest
+dry-run) via a normal targeted re-fetch, and (c) the 2026-06-24..07-14 cluster still gated on `-009` (already resolved —
+re-check whether a narrow-window relaunch is now safe there too).
