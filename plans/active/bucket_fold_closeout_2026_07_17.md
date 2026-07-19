@@ -93,8 +93,8 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       archetype-state, position-store-sports, strategy-store-flat all gone). The 114-vs-59-TF-tracked gap is
       PRE-EXISTING estate drift (market-data/billing buckets not in canonical TF) — separate from the folds,
       operator-aware. AWS recount deferred (operator deprioritized AWS; GCP is where the real data is).
-- [ ] [DOCS] P3. **Parent-plan + issue-doc bookkeeping** — **MOSTLY DONE 2026-07-19 (one sub-item left).** ✅ Parent W3
-      execute todo already flipped ([[bucket_estate_consolidation_to_sub100_2026_07_13]] line 331). ✅
+- [x] ✅ [DOCS] P3. **Parent-plan + issue-doc bookkeeping** — **DONE 2026-07-19.** ✅ Parent W3 execute todo already
+      flipped ([[bucket_estate_consolidation_to_sub100_2026_07_13]] line 331). ✅
       [[bucket_estate_fold_design_2026_07_13]] §3 draft skeleton flipped (all executed-via-split-plan todos → done +
       pointers; IAM re-gating + alias-sunset left honestly open with tracking pointers). ✅ Hygiene sweep (0 hard
       failures) + inventory (0 orphans) verified. ✅ 3 audit issue docs ASSESSED — **none fully fold-resolved, all stay
@@ -103,9 +103,12 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       remains; (2) `strategy_store_split_brain` — bucket side resolved (Fold D + 07-14 delete), reader-code legs
       (deployment-api defaults + UAC enumerate_envelope) remain = closeout 4c/4d; (3)
       `recon_bucket_missing_nightly_recon_failing` — OUT of fold scope (recon bucket fixed separately
-      blrs@2f0380b/ds@ccfaca26; upstream producer chain is its own lifecycle). **STILL OPEN**: the parent plan's OWN
-      broader codex-audit todo (line ~355 — `bucket-naming-and-config.md` superseded-pointer fix + CLAUDE.md
-      archived-plan pointer + `per-asset-group-bucket-layouts.md` folded shapes).
+      blrs@2f0380b/ds@ccfaca26; upstream producer chain is its own lifecycle). ✅ **Parent codex-audit todo (line ~355)
+      DONE: PM@c6f97b239** — CLAUDE.md storage rule + `bucket-naming-and-config.md` stub (frontmatter `superseded_by` +
+      summary + banner + read-instead list) repointed from the dead CLAUDE "(b+)" section + the archived
+      `bucket_name_ssot` plan → the live `codex/05-infrastructure/bucket-isolation-model.md`;
+      `per-asset-group-bucket-layouts.md` assessed NOT stale (covers Group A raw + path divergences; Group B folded
+      shapes live in bucket-isolation-model.md, already updated PM@8ea8abd89).
 
 ## Progress Log
 
@@ -163,3 +166,20 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   (terraform-drift / recon / strategy-store-split-brain) IF the folds resolved them (needs per-doc read); the parent
   plan's own broader codex-audit todo (line 355 — `bucket-naming-and-config.md` superseded-pointer fix +
   `per-asset-group-bucket-layouts.md`).
+- **2026-07-19, `/autonomous` closeout tick — BOOKKEEPING TODO 4 fully DONE.** Flipped
+  [[bucket_estate_fold_design_2026_07_13]] §3 draft skeleton (all 15 executed-via-split-plan todos → done + per-fold
+  pointers; the two genuinely-open items — IAM re-gating [tracked in
+  [[bucket_iam_write_protection_per_tier_2026_06_09]]]
+  - alias sunset [gated] — left honestly `[ ]`). Assessed the 3 audit issue docs → **none fully fold-resolved, all stay
+    OPEN with a "Wave-3 fold assessment" note added** documenting what the folds DID resolve + what remains
+    (terraform-drift: per-fold TF slice done, broader main.tf reconcile remains; strategy-store-split-brain: bucket side
+    done, reader-code legs = 4c/4d; recon: out-of-fold-scope). Shipped the **parent codex-audit todo (line ~355)**:
+    PM@c6f97b239 (promote-PR #1179) repointed CLAUDE.md's storage-rule SSOT + the `bucket-naming-and-config.md`
+    superseded stub (frontmatter/summary/ banner/read-instead) from the dead CLAUDE "(b+)" section + the archived
+    `bucket_name_ssot` plan → the live `codex/05-infrastructure/bucket-isolation-model.md`;
+    `per-asset-group-bucket-layouts.md` assessed NOT stale. **Discovered (out-of-scope finding, not fixed)**: a mangled
+    bucket-SSOT rule-shorthand ("(b+)" / "ln") appears in several other codex docs (artifact-versioning,
+    ml-experiment-lifecycle, defi/tradfi/prediction-data-types-catalog, data-catalogue-schema,
+    data-lineage-MTDS-features-ml) — pre-existing, not fold-caused, ambiguous to auto-fix; a doc-hygiene follow-up, not
+    this closeout's scope. **CLOSEOUT STATUS: only the soft-window-gated alias sunset (todo 1)
+  - the code loose-ends (4c deployment-api stash / 4d UAC WIP / 4e dormant helpers) remain.**
