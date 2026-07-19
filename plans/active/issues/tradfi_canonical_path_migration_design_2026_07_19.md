@@ -142,3 +142,18 @@ The chain `quote=/margin=` partitions change the shard atom → writer↔manifes
 
 Massive 1.47M-object delete · legacy-object delete after copy · any prod-bucket delete. Non-destructive prep + dry-run +
 canonical-shape code changes proceed autonomously.
+
+## Progress log
+
+- **2026-07-19 — Keystone step 2/3 (SINGLES filename) SHIPPED `mtds@d257b7be`** (QG-green: 6433 passed, 0 failed). W1
+  `partitioned_writer.py::_resolve_file_symbol` gate extended to `tradfi` (singles now named by full canonical
+  `instrument_id`, e.g. `NYSE:EQUITY:ABBV-USD.parquet`, `FX:SPOT_PAIR:EUR-USD.parquet`); W2
+  `tradfi_shared.py::_file_stem_for` single branch stems by `instrument_id` (combo excluded — unsettled leg-id; chain
+  branch untouched); `_umi_yahoo.py` FX + KRX-equity rows now stamp the canonical id via
+  `derive_tradfi_row_instrument_id`; W1 symbol-less non-derivative tradfi fallback now RAISES (prediction
+  book_snapshot_5 keeps the silent ticks.parquet fan-in). Filename-only — manifest shard atom unchanged (stays on bare
+  symbol). Two tests that asserted the OLD tradfi-excluded behavior were fixed (FX test → canonical `FX:SPOT_PAIR:` id)
+  / the now-obsolete "excluded-supported-group" test deleted (writer supports only cefi/tradfi/prediction — all three
+  now in the override). **STILL PENDING in the keystone:** the CHAIN `quote=/margin=` shard-atom change (writer chain
+  branch + UAC `build_tradfi_partition_path` + reader/checker + manifest) — the higher-risk lockstep piece, next.
+- **Orphan-proof map**: PROVEN on the full 2,734,646-object corpus, 0 orphans (see final reconcile above).
