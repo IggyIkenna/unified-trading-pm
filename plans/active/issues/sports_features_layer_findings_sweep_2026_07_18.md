@@ -1219,3 +1219,45 @@ Matches the § P-SIZING prediction (92% mixed-league x 97% unanimity ~= 89%) alm
 - [ ] [DATA] P1. Then rebuild the catalogue (`build_instrument_catalogue.py --asset-group sports --since 2019-01-01`)
       and verify `competition_phase` is no longer ~100% UNKNOWN — the § O hypothesis is that the rollup, not capture,
       was the 3.2%.
+
+### Q-RESULT (2026-07-19 00:13Z) — derivation APPLIED corpus-wide: 115,715 rows filled, ZERO api-football calls
+
+```
+rows scanned : 499,620
+blank round  : 354,279
+DERIVED      : 115,715  (32.7% of blanks)  <- zero API calls
+ambiguous    :   6,654  (refused: multi-round matchday)
+no-sibling   : 231,910  across 3,386 days  <- API residual
+```
+
+**Round coverage on every era that had data to propagate from (before -> after):**
+
+| day        | before | after     | gain      |
+| ---------- | ------ | --------- | --------- |
+| 2019-08-17 | 65.7%  | **98.6%** | +32.9 pts |
+| 2020-09-19 | 59.2%  | **98.3%** | +39.1 pts |
+| 2021-03-13 | 58.5%  | **97.2%** | +38.7 pts |
+| 2022-10-05 | 50.0%  | **90.9%** | +40.9 pts |
+| 2023-08-19 | 50.2%  | **98.2%** | +48.0 pts |
+| 2024-04-06 | 47.5%  | **92.4%** | +44.9 pts |
+| 2025-11-08 | 48.3%  | **95.5%** | +47.2 pts |
+| 2026-03-14 | 40.1%  | 69.2%     | +29.1 pts |
+
+Writes verified: `round_provenance='derived'` present (e.g. 320 rows on 2023-08-19, 177 on 2024-04-06) with plausible
+values (`Regular Season - 20`, `Regular Season - 2`), and 40-42 `*.pre_round_derive.bak` snapshots per sampled day.
+
+**RETRACTED (mine — 4th sampling over-prediction today): "89.2% of blanks".** That pilot sampled 2023-2025 matchdays,
+the BEST-populated eras. Corpus-wide the fill rate is **32.7%**, because 65.5% of blanks have NO populated sibling in
+their `(league, day)` at all. The corpus dry-run should have run BEFORE quoting a headline number. The 89.2% was not
+wrong about those days — it was wrong as a corpus estimate.
+
+**Provenance caveat (minor, by design of the two-pass split):** `captured` is stamped only on files that also contain
+blanks; a file with no blanks returns early and is left unstamped. So the invariant to rely on is
+`round_provenance == 'derived'` identifies derived rows — anything else is captured/pre-existing. The safety requirement
+(a derived value must never be indistinguishable from a fetched one) holds.
+
+- [ ] [DATA] P1. Residual fetch: 231,910 no-sibling blanks across 3,386 days, dominated by the early-2019 zero-era.
+      Bounded by DISTINCT (league, season) pairs (~600-700 bulk calls, the original surgical-script estimate), NOT by
+      fixture count. Retarget that script to `entity=fixtures_schedule` first (§ O todo).
+- [ ] [DATA] P1. Then rebuild the catalogue and verify `competition_phase` — with raw now at 90-99% on populated eras,
+      this is the real test of the § O "the 3.2% was the stale rollup" hypothesis.

@@ -82,32 +82,42 @@ Raw data is environment-tiered in GCS name. The naming convention adds the env s
 Naming: `{prefix}-{ag}-{env_short}-{project_id}` (e.g. `market-data-tick-cefi-prd-central-element-323112`). Cross-asset
 kinds (no AG): `{prefix}-{env_short}-{project_id}` (e.g. `features-calendar-prd-central-element-323112`).
 
-### Group B — Derived Data (env-tiered)
+### Group B — Derived Data (env-tiered, Wave-3 folded)
 
-Derived data is tier-specific. Each tier writes to its own bucket set.
+Derived data is tier-specific (each tier writes its own bucket set) **and Wave-3-folded** (2026-07-17/19): the former
+per-kind / per-AG bucket explosion collapsed into five canonical folded buckets. The kind/AG axis that used to be in the
+**bucket name** is now a top-level **object-key PREFIX** on the path. Resolution is unchanged for callers —
+`resolve_bucket_name(kind=<any retired kind>)` transparently returns the folded bucket via UTL `_KIND_ALIASES` (soft
+window; see below).
 
-| Domain                  | Bucket prefix           | Per-AG?                            |
-| ----------------------- | ----------------------- | ---------------------------------- |
-| `features-delta-one`    | `features-delta-one`    | Yes (cefi/defi/tradfi/sports/pred) |
-| `features-volatility`   | `features-volatility`   | Yes                                |
-| `features-onchain`      | `features-onchain`      | Yes (cefi/defi)                    |
-| `features-xinstrument`  | `features-xinstrument`  | Yes                                |
-| `features-mtf`          | `features-mtf`          | Yes                                |
-| `execution-store`       | `execution-store`       | Yes (cefi/defi/tradfi/sports)      |
-| `strategy-store`        | `strategy-store`        | No (cross-asset flat)              |
-| `ml-training-artifacts` | `ml-training-artifacts` | No (cross-asset)                   |
-| `ml-artifacts`          | `ml-artifacts`          | No                                 |
-| `ml-models-store`       | `ml-models-store`       | No                                 |
-| `ml-predictions-store`  | `ml-predictions-store`  | No                                 |
-| `ml-configs-store`      | `ml-configs-store`      | No                                 |
+| Folded bucket     | Per-AG?                                | Retired kinds folded in                                                                                                                | Object-key prefix (was the bucket-name axis)                                                                                   |
+| ----------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `features-{ag}`   | **Yes** (cefi/defi/tradfi/sports/pred) | `features-delta-one`, `-volatility`, `-onchain`, `-xinstrument`, `-mtf`                                                                | `delta_one/` \| `volatility/` \| `onchain/` \| `xinstrument/` \| `mtf/`                                                        |
+| `ml-store`        | No (cross-asset flat)                  | `ml-models-store`, `-predictions-store`, `-configs-store`, `-training-artifacts`, `ml-artifacts`                                       | `models/` \| `predictions/` \| `configs/` \| `training-artifacts/` \| `artifacts/`                                             |
+| `execution-store` | No (cross-asset flat; **ag→prefix**)   | per-AG `execution-store-{cefi,defi,tradfi,sports}` (dict) + `execution-store-prediction`                                               | `{cefi,defi,tradfi,sports}/…` (asset_group) + `pred/` (prediction branch)                                                      |
+| `strategy-store`  | No (cross-asset flat)                  | (already flat — gained its `-{env}-` tier in this wave)                                                                                | — (no fold; env-tier only)                                                                                                     |
+| `portfolio-state` | No (cross-asset flat)                  | `positions-store`, `pnl-attribution-store`, `risk-metrics-store`, `pnl-attribution-output`, `archetype-state`, `position-store-sports` | `positions/` \| `pnl-attribution/` \| `risk-metrics/` \| `pnl-attribution-output/` \| `archetype-state/` \| `position-sports/` |
 
-Naming (per-AG): `{prefix}-{ag}-{env_short}-{project_id}` (e.g. `features-delta-one-cefi-prd-central-element-323112`)
-Naming (cross-asset): `{prefix}-{env_short}-{project_id}` (e.g. `strategy-store-prd-central-element-323112`)
+Naming (per-AG, `features-{ag}`): `{prefix}-{ag}-{env_short}-{project_id}` (e.g.
+`features-cefi-prd-central-element-323112`). Naming (cross-asset, the other four): `{prefix}-{env_short}-{project_id}`
+(e.g. `ml-store-prd-central-element-323112`, `execution-store-prd-central-element-323112`,
+`portfolio-state-prd-central-element-323112`).
 
-> **Prior state (rolled back)**: Group B env-split was temporarily rolled back (2026-05-19) while G4 canonicalisation
-> migrations ran. Re-enabling was re-scoped 2026-07-13 (operator ruling — single migration, no double migrates): Group B
-> gains its `-{env}-` form via the consolidation folds of
-> `plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md` (consolidated buckets env-tiered from birth);
+> **SUPERSEDED (2026-07-19, Wave-3 folds)** — the prior per-kind bucket rows (`features-delta-one`, `ml-models-store`,
+> per-AG `execution-store-{ag}`, the six portfolio stores, …) are RETIRED. The source buckets were migrated (additive
+> server-side copy, parity-verified) then deleted; ~30 buckets removed (estate 114 GCP). The fold is documented per
+> domain in `plans/active/bucket_fold_{features,ml,execution_strategy,portfolio_state}_2026_07_17.md` +
+> `plans/active/bucket_fold_closeout_2026_07_17.md`. Each writer/reader now prepends its object-key prefix (a wrong
+> prefix = silent empty read — guarded by writer↔reader parity unit tests in UTL `tests/config_interface/`).
+
+> **`_KIND_ALIASES` soft window** — UTL `bucket_naming._KIND_ALIASES` maps every retired kind → its folded key (applied
+> once, non-transitively, BEFORE the yaml lookup). The retired per-kind yaml keys are KEPT during the soft window so
+> un-redeployed consumers still resolve; the alias shadows them. The aliases + retired yaml keys are hard-removed at the
+> **alias-sunset** phase (closeout plan P3) once every `resolve_bucket_name` caller of the old kind is grep-clean.
+
+> **Prior env-split state (folded into the above)**: Group B env-split was temporarily rolled back (2026-05-19) while G4
+> canonicalisation migrations ran, then re-scoped 2026-07-13 (operator ruling — single migration, no double migrates) to
+> land via these Wave-3 consolidation folds (folded buckets env-tiered from birth);
 > `bucket_env_split_rollout_2026_06.md` is archived/superseded.
 
 ---
@@ -120,17 +130,17 @@ instruments-store-defi-prd-central-element-323112
 market-data-tick-cefi-prd-central-element-323112
 features-calendar-prd-central-element-323112
 
-# Group B — env tier after AG (per-AG kinds)
-features-delta-one-cefi-prd-central-element-323112
-execution-store-cefi-prd-central-element-323112
+# Group B — env tier after AG (the one remaining per-AG folded kind: features-{ag})
+features-cefi-prd-central-element-323112     # kind=features-delta-one|-volatility|-mtf|… ag=cefi (per-kind → object prefix)
 
-# Group B — env tier after prefix (cross-asset kinds)
+# Group B — env tier after prefix (cross-asset folded kinds; kind/AG axis → object prefix)
 strategy-store-prd-central-element-323112
-ml-training-artifacts-prd-central-element-323112
-ml-artifacts-prd-central-element-323112
+ml-store-prd-central-element-323112          # kind=ml-models-store|-predictions-store|… (per-kind → models/|predictions/|…)
+execution-store-prd-central-element-323112   # any asset_group (ag → {category}/ prefix) + prediction (→ pred/)
+portfolio-state-prd-central-element-323112   # positions|pnl-attribution|risk-metrics|archetype-state|… (→ domain prefix)
 
 # Mock tier (mode-based, any env)
-features-delta-one-cefi-mock-central-element-323112
+features-cefi-mock-central-element-323112
 ```
 
 ---
@@ -239,13 +249,18 @@ from unified_trading_library.cloud_interface import resolve_bucket_name
 bucket = resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="cefi")
 # → "instruments-store-cefi-prd-central-element-323112"
 
-# Group B — features
+# Group B — features (Wave-3 folded: 5 per-kind → per-AG features-{ag}; kind → object-key prefix)
 bucket = resolve_bucket_name(cloud="gcp", kind="features-delta-one", asset_group="defi")
-# → "features-delta-one-defi-prd-central-element-323112"
+# → "features-defi-prd-central-element-323112"   (writer prepends "delta_one/" to the object key)
 
 # Group B — cross-asset strategy store
 bucket = resolve_bucket_name(cloud="gcp", kind="strategy-store")
 # → "strategy-store-prd-central-element-323112"
+
+# Group B — cross-asset folded stores (kind/AG axis → object-key prefix, NOT bucket name)
+resolve_bucket_name(cloud="gcp", kind="ml-models-store")            # → "ml-store-prd-…"        (prefix "models/")
+resolve_bucket_name(cloud="gcp", kind="execution-store", asset_group="cefi")  # → "execution-store-prd-…" (prefix "cefi/")
+resolve_bucket_name(cloud="gcp", kind="positions-store")           # → "portfolio-state-prd-…" (prefix "positions/")
 ```
 
 Services must never hardcode bucket names. `resolve_bucket_name()` handles Group A/B classification, tier resolution,

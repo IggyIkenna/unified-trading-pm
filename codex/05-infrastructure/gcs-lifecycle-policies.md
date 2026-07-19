@@ -94,6 +94,14 @@ type: reference
   year-over-year coverage drift analysis. Scheduled re-evaluation: 2027-05.
 - **`gs://*-store-*` strategy / execution / risk / pnl-store buckets** — strategy outputs are durable artifacts;
   lifecycle is owned by the strategy / strategy-store retention spec, not deployment-service.
+  > **Updated 2026-07-19 (Wave-3 folds)**: the folded Group B buckets (`features-{ag}`, `ml-store`, `execution-store`,
+  > `strategy-store`, `portfolio-state`) were **provisioned with a `STANDARD → COLDLINE @ 60d` lifecycle by default**
+  > (the canonical folded-bucket default, applied at `gcloud storage buckets create` time). Exception:
+  > **`portfolio-state-{prd}` is a confirm-before-COLDLINE case** — live position/pnl/risk snapshots may need STANDARD
+  > longer than 60d; the 60d default is applied but flagged for operator retention confirmation
+  > (`bucket_fold_portfolio_state_2026_07_17.md` § IAM + lifecycle todo, design §2.E). So these buckets ARE
+  > lifecycle-managed (COLDLINE class-transition), NOT delete-expired — the "durable artifacts, no expiry" intent holds
+  > for object _deletion_; only the storage class transitions.
 - **`gs://market-data-tick-*` / `gs://instruments-store-*`** — manifest snapshot retention is governed by the manifest
   consolidator's `_index/snapshots/` retention spec, not generic lifecycle.
 
