@@ -19,7 +19,7 @@ status: open
 nature: issue
 asset_group: [meta]
 stage: [data]
-repos: [features-service, unified-api-contracts]
+repos: [features-service, unified-api-contracts, unified-trading-library, deployment-service, deployment-api]
 scope: [engineer, admin]
 tags: [features-service, quality-gates, asset-group-parity, bucket-fold, repo-blocker, qg-red]
 related:
@@ -147,6 +147,68 @@ resolution. This is exactly the "features e2e harness" site the closeout doc alr
 "correctly LEFT" sites — it is now stale by the same pattern this issue documents, a second data point for the P3
 re-sweep. Not expanded here; left for that todo.
 
+## Note on todo 2 (slot-6, 2026-07-19)
+
+Landed on this issue independently (via the todo-3 dispatch) while slot-5 was already applying the same todo-2 fix.
+Discovered + fixed the identical orphan-SPORTS-key finding slot-5 documents in "Fix applied (todo 2, slot-5)" below —
+reconciled via `git pull --rebase --autostash` (one real conflict, resolved keeping slot-5's already-shipped
+`unified-api-contracts@1ff91e5b`/`features-service@bc7bc4ff` content; my duplicate local edit to the same 2 files was
+discarded as redundant). One finding from that investigation slot-5's writeup does not cover: removing the SPORTS yaml
+key risked breaking any consumer that enumerated it. Checked —
+`unified-trading-library/unified_trading_library/migrations/upgrade_manifest_to_v8.py`'s `_PER_AG_KINDS` list enumerated
+`("features", (..., "sports", ...))`. This script is NOT dead code (contra its "dead one-off migration" characterization
+in the closeout doc — it IS invoked, via `deployment-service/scripts/vm/phase11-backfill-coordinator.sh` and
+`unified-trading-library/scripts/migrate_manifest_v8.py`). Confirmed fail-soft: `_collect_buckets()` wraps each
+`resolve_bucket_name` call in `try/except BucketNamingError` + `logger.warning(...)`, so removing the SPORTS yaml key
+would NOT have crashed it, just logged a benign warning and silently skipped a resolve that was already redundant with
+the separate `_FLAT_KINDS_SPORTS` enumeration (same physical bucket, sports coverage stays intact). Fixed anyway for
+hygiene: dropped `"sports"` from that tuple + added a comment explaining why. Shipped as part of "Fix applied (todo 3,
+slot-6)" below (`unified-trading-library`).
+
+## Determination (todo 3 re-check, 2026-07-19, slot-6)
+
+Re-checked all 4 named "correctly LEFT (legitimate, non-breaking)" sites from the closeout doc's Alias-Sunset-Part-A
+entry, now that the fold + a follow-on alias sunset (2026-07-19, `bucket_naming.py` `_KIND_ALIASES`) have both landed:
+
+1. **Features e2e harness — BROKEN, FIXED.** `features-service/scripts/e2e/run_pipeline_e2e.py`'s `FAMILY_SPECS` dict
+   set `output_kind="features-delta-one"` / `"features-volatility"` for the `delta_one`/`volatility` families — both
+   SHORT retired kind aliases that the SAME-DAY alias sunset removed from `_KIND_ALIASES`. Proved the break directly:
+   `resolve_bucket_name(cloud="gcp", kind="features-delta-one", asset_group="cefi")` raises
+   `BucketNamingError: Unknown kind 'features-delta-one'` (not caught anywhere in `run_e2e()` — a real crash for any
+   `--family delta_one` or `--family volatility` e2e run). `cross_instrument`/`multi_timeframe` were unaffected — they
+   already used the LONG, PERMANENT consumer-facing alias names (`features-cross-instrument`/`features-multi-timeframe`,
+   which the sunset explicitly keeps). **Fixed**: `output_kind="features"` for both broken entries (matches the
+   already-correct `_delta_one_test_bucket()` helper a few lines below, which had already been fixed independently and
+   carries an "alias retired 2026-07-19" comment — the main `FAMILY_SPECS` dict was simply never updated to match).
+   Verified all 4 families now resolve to the same folded test bucket. Also found + fixed the SAME pattern in a sibling
+   file: `features-service/scripts/multi_timeframe/smoke_matrix.py`'s `SMOKE_INPUT_KIND = "features-delta-one"` — this
+   one is WORSE because `features_service/common/__init__.py::resolve_latest_captured_date()` wraps the resolve in a
+   broad `except Exception: return None`, so the break was SILENT (no crash, no warning — just always falling back to
+   the hardcoded `FALLBACK_DATE` instead of ever finding the real latest-captured smoke date). Fixed to `"features"`.
+2. **`check_asset_group_parity` kind→family mapping-dict — the ORIGINAL finding this issue doc is about; FIXED** by
+   slot-5 (`features-service@bc7bc4ff`, "Fix applied (todo 2, slot-5)" below).
+3. **`upgrade_manifest_to_v8.py` — genuinely NOT dead** (contra the closeout doc), but its SPORTS-enumeration break was
+   fail-soft; fixed as a hygiene cleanup (see "Note on todo 2 (slot-6)" above). No further action.
+4. **`cloud_constants` legacy "positions" map — confirmed STILL dead.** No live caller of `get_bucket_name("positions")`
+   anywhere in the workspace (grepped all repos). Correctly LEFT, no action.
+5. **Inference-config comments — confirmed STILL just comments.** `ml-service`'s many `"features-delta-one-service"`
+   references are SERVICE-NAME labels for dependency-graph tracking (`UPSTREAM_DEPS`, `feature_sources`, etc.) — a
+   different namespace entirely from the bare `"features-delta-one"` bucket-KIND string that broke elsewhere. Zero
+   `resolve_bucket_name(kind=...)` calls with a retired kind string found in `ml-service`. Correctly LEFT, no action.
+
+**NEW finding, deferred (NOT fixed in this task — see the new todo below)**: while chasing the "data-status-drilldown
+service→kind maps" reference from an EARLIER (superseded) closeout-doc log entry, found
+`deployment-api/deployment_api/services/data_status_drilldown/_core.py`'s `SERVICE_TO_KIND` dict still maps
+`"features-delta-one-service"` → `"features-delta-one"`, `"features-volatility-service"` → `"features-volatility"`,
+`"features-onchain-service"` → `"features-onchain"` (all 3 SHORT retired kind strings). Confirmed this IS live and
+UNGUARDED: `build_bucket_name()` (same file) and `deployment_api/services/data_status/manifest.py:742` both call
+`resolve_bucket_name(cloud="gcp", kind=kind, ...)` with this dict's value directly, no try/except — a genuine unhandled
+`BucketNamingError` for any delta_one/volatility/onchain data-status-drilldown lookup (this backs the data-status UI's
+per-service bucket resolution). This CONTRADICTS the closeout doc's later claim that "the deployment-api features leg
+was done in 4c@ff1c691" — either that repoint targeted a different site, or this dict was missed. **Not fixed here**:
+deployment-api is a large service I have zero prior context in (import graph, `PREDICTION_KIND_MAP` coupling, full test
+suite) — a blind edit risks a worse regression than the one it fixes. Filed as todo 4 below instead.
+
 ## Recommended decision / next steps
 
 - [x] [INFRA] P1. Determine the correct current state for the 5 folded families
@@ -163,15 +225,34 @@ re-sweep. Not expanded here; left for that todo.
       sentinel is written. (repo: features-service, unified-api-contracts) — ✅ features-service@bc7bc4ff,
       unified-api-contracts@1ff91e5b — both shipped via quickmerge, both quality-gates.sh green end to end (STEP 5.104
       confirmed passing in both runs), see "Fix applied" + "Evidence" below.
-- [ ] [PROCESS] P3. Once fixed, re-check `plans/active/bucket_fold_closeout_2026_07_17.md`'s other "correctly LEFT
+- [x] [PROCESS] P3. Once fixed, re-check `plans/active/bucket_fold_closeout_2026_07_17.md`'s other "correctly LEFT
       (legitimate, non-breaking)" sites listed in the same Alias-Sunset-Part-A entry (the features e2e harness,
       `upgrade_manifest_to_v8.py`, `cloud_constants` legacy "positions" map, inference-config comments) for the same
-      assumed-safe-but-now-broken pattern, given this is the second such instance found post-fold.
-- [ ] [PROCESS] P3. `scripts/e2e/run_pipeline_e2e.py`'s `FAMILY_SPECS` dict (lines ~72/80/89/97) hardcodes 4 retired
+      assumed-safe-but-now-broken pattern, given this is the second such instance found post-fold. — ✅ DONE 2026-07-19
+      slot-6: found + fixed 2 genuinely broken sites (e2e harness `FAMILY_SPECS` — this ALSO resolves the duplicate P3
+      todo below; `multi_timeframe/smoke_matrix.py` `SMOKE_INPUT_KIND`); confirmed 2 sites still correctly LEFT
+      (`cloud_constants` positions map, inference-config comments); found 1 NEW live-broken site in a 4th repo
+      (deployment-api), deferred to todo 4. See "Fix applied (todo 3, slot-6)" below.
+- [x] [PROCESS] P3. `scripts/e2e/run_pipeline_e2e.py`'s `FAMILY_SPECS` dict (lines ~72/80/89/97) hardcodes 4 retired
       per-family kind strings
       (`features-delta-one`/`-volatility`/`features-cross-instrument`/`features-multi-timeframe`) for `_test_bucket()`
       resolution — stale by the exact same post-fold pattern this issue documents (found during todo-1 investigation,
       2026-07-19). Repoint to the folded `kind="features"` or fold into the P3 re-sweep above. (repo: features-service)
+      — ✅ DONE 2026-07-19 slot-6 as part of the todo-3 re-check above: `delta_one`/`volatility` repointed to
+      `output_kind="features"` (the 2 LONG consumer-facing names `features-cross-instrument`/`features-multi-timeframe`
+      were already valid permanent aliases, unaffected).
+- [ ] [INFRA] P0. **NEW — deployment-api `SERVICE_TO_KIND` still maps 3 services to retired SHORT kind strings**
+      (`features-delta-one-service`→`"features-delta-one"`, `features-volatility-service`→`"features-volatility"`,
+      `features-onchain-service`→`"features-onchain"` in `deployment_api/services/data_status_drilldown/_core.py`). Both
+      `build_bucket_name()` (same file) and `deployment_api/services/data_status/manifest.py:742` call
+      `resolve_bucket_name(kind=kind, ...)` with these values UNGUARDED (no try/except) — genuine unhandled
+      `BucketNamingError` for delta_one/volatility/onchain data-status-drilldown lookups (a live UI-facing API path).
+      Fix shape: remap the 3 dict values to `"features"` (matching the fold); check `PREDICTION_KIND_MAP` and any other
+      structure keyed by the OLD kind strings for a matching repoint (grep `PREDICTION_KIND_MAP\[.features-delta-one.\]`
+      etc. — may need consolidating since 3 services now converge on ONE folded kind). Run deployment-api's full
+      `quality-gates.sh` + the `data_status_drilldown` test suite (`tests/unit/test_data_status_drilldown.py`,
+      `tests/unit/test_drilldown_cache.py`, `tests/unit/test_data_status_service.py`) before shipping — this file has
+      real production coupling not yet fully traced. (repo: deployment-api)
 
 ## Fix applied (todo 2, 2026-07-19, slot-5)
 
@@ -210,6 +291,32 @@ clean so no pre-commit-hook or dirty-tree guard caught it). Recovered cleanly vi
 of re-running QG. Lesson for future cross-repo fixes touching an ancestor + a dependent repo in the same task: **ship
 (quickmerge) the ancestor repo BEFORE running quickmerge on the dependent repo**, not after — the dependent's cascade
 step assumes ancestors are already at the intended pushed state.
+
+## Fix applied (todo 3, 2026-07-19, slot-6)
+
+**e2e harness** (`features-service/scripts/e2e/run_pipeline_e2e.py`): `FAMILY_SPECS["delta_one"].output_kind` and
+`FAMILY_SPECS["volatility"].output_kind` repointed from the retired short aliases (`"features-delta-one"`,
+`"features-volatility"`) to the folded `"features"` kind. `cross_instrument`/`multi_timeframe` untouched (already used
+the still-valid long consumer-facing aliases). Verified all 4 families now resolve to the same folded `-test-` bucket
+via `_test_bucket()`.
+
+**Smoke matrix** (`features-service/scripts/multi_timeframe/smoke_matrix.py`): `SMOKE_INPUT_KIND` repointed from
+`"features-delta-one"` to `"features"` — this one degraded silently (`resolve_latest_captured_date()` swallows
+`BucketNamingError` and returns `None`), so the smoke matrix was always falling back to the hardcoded `FALLBACK_DATE`.
+
+**v8 migration hygiene** (`unified-trading-library/unified_trading_library/migrations/upgrade_manifest_to_v8.py`):
+dropped the now-invalid `"sports"` entry from `_PER_AG_KINDS`'s `"features"` tuple (see "Note on todo 2" above) — fixes
+a benign warning-log-only skip, sports coverage was never actually lost (`_FLAT_KINDS_SPORTS` already covers it).
+
+**Mirror-copy sync** (the SPORTS removal slot-5 shipped in the UAC SSOT needed mirroring — 2 of the 5 copies were still
+stale after slot-5's fix): `deployment-service/configs/cloud-providers.yaml`,
+`unified-trading-pm/configs/cloud-providers.yaml`,
+`unified-trading-pm/scripts/quality-gates-base/ci-test-cloud-providers.yaml`,
+`unified-trading-library/tests/fixtures/cloud-providers.yaml` — all 4 dropped the same orphan `SPORTS:` line under the
+folded `features:` key (both clouds), matching `unified-api-contracts@1ff91e5b`.
+
+**Deferred**: the deployment-api `SERVICE_TO_KIND` break (todo 4) — see "Determination (todo 3 re-check)" above for why
+it was not fixed in this task.
 
 ## Evidence
 

@@ -56,12 +56,12 @@ gcp:
     # `_KIND_ALIASES` maps retired kinds → `features`. Full docs in the SSOT
     # deployment-service/configs/cloud-providers.yaml (this CI fixture is comment-light to stay
     # under the check-yaml consecutive-comment limit).
+    # SPORTS key REMOVED 2026-07-19 — mirrors the deployment-service SSOT removal.
     features:
       CEFI: "features-cefi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
       TRADFI: "features-tradfi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
       DEFI: "features-defi-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
       PREDICTION: "features-pred-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
-      SPORTS: "features-sports-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"
     # ml-store = FOLDED ml bucket (Fold B — bucket_fold_ml_2026_07_17.md). The five ml
     # kind-buckets (models / predictions / configs / training-artifacts / artifacts) collapse
     # into ONE env-tiered bucket; the per-kind separation becomes a top-level object-key PREFIX
@@ -196,12 +196,12 @@ aws:
     # above; delta-one is never computed for sports.
     # features FOLD A (fold_a_cutover_spec, 2026-07-18) — folded per-asset_group `features` key;
     # mirrors the GCP section. Retired per-kind keys kept during the soft window (Phase E delete).
+    # SPORTS key REMOVED 2026-07-19 — mirrors the GCP section removal above.
     features:
       CEFI: "features-cefi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
       TRADFI: "features-tradfi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
       DEFI: "features-defi-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
       PREDICTION: "features-pred-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
-      SPORTS: "features-sports-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
     # ml-store = FOLDED ml bucket (Fold B) — mirrors GCP; see the GCP § comment. Parity with
     # UAC + deployment-service cloud-providers.yaml so folded ml kinds resolve under the fixture.
     ml-store: "ml-store-${DEPLOYMENT_ENV_SHORT}-${AWS_ACCOUNT_ID}"
