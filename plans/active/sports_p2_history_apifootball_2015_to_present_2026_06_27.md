@@ -2899,3 +2899,33 @@ scope, gated on `-008`. `/skip-current-task` — resume once (a) this fleet's VM
 long enough for a genuinely informative gate re-read (the per-VM-shard direct-read technique, not just the naive
 consolidated-index read, per this log's own root-cause-2 lesson), and/or (b) `-008` lands and a narrow-window relaunch
 becomes safe/effective for the two big clusters. Did not touch/inspect/delete any other VM in the project.
+
+### 2026-07-19T18:16-18:23Z — data_engineering slot-4 (same `-001` dispatch, resumed — verified no new safe launch target exists; every residual cluster is either already in-flight or gated on `-009`)
+
+Dispatched onto `-001` (`dispatch_reason: resume`). Fresh-pulled all repos clean. Verified the 4-VM fleet slot-7
+launched (`af-backfill-20260719-180520/180545/180603/180620`, window `2020-06-06..2026-05-10`) is still `RUNNING` (via
+`google.cloud.compute_v1` — the `gcloud` CLI snap is broken on this host,
+`snap-confine: required permitted capability cap_dac_override not found`, unrelated to any of this session's code;
+worked around via the instruments-service `.venv`'s `google-cloud-compute`/`google-cloud-storage` Python clients
+directly against the same ADC). All 4 `run.log`s (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`)
+show fresh mtimes (<1 min old at check time) and genuine live fetches
+(`Fetched N events/lineup rows/stat rows/player stat entries for fixture=...`), rate-limit backoffs are expected
+token-bucket pacing, zero Tracebacks — healthy, not stalled.
+
+Ran `scripts/query_api_football_pending_clusters_2026_07_18.py` fresh (per-VM-shard fallback, consolidated blob was
+
+> 120s stale): **total pending_fetch still 5,515** — unchanged from slot-7's pre-launch read ~15 min earlier, expected
+> given a 6-year fetch window needs hours, not minutes, to show up in the aggregate count. Cross-checked every reported
+> cluster's date range against the running fleet's `2020-06-06..2026-05-10` window: **every cluster across all 4
+> entities is already inside that window EXCEPT `2026-06-24..2026-07-14`** (46-64% of pending mass per entity), which
+> the fleet deliberately excludes because it's the cluster `-008`/`-009` are forensically investigating (the
+> CANONICAL-resolved season-cache-0-fixtures anomaly — `-009` still `dispatched`, unresolved as of this check).
+> Launching a fetch fleet against that cluster now would either duplicate `-009`'s own live re-fetch work or burn
+> API-key budget re-hitting the same not-yet-understood zero-match bug. **Conclusion: there is no new, non-duplicative,
+> non-colliding launch target available this dispatch** — every actionable window is already covered by the in-flight
+> fleet or blocked on `-009`'s root-cause landing.
+
+**Not flipping this checkbox** — gate unchanged (5,515 pending). Recording this analysis so the next dispatch doesn't
+re-derive it. `/skip-current-task` — resume once (a) the running 4-VM fleet self-terminates or a re-read shows the
+non-`2026-06-24..07-14` pending mass has genuinely dropped, or (b) `-009` lands and a narrow-window relaunch becomes
+safe for the `2026-06-24..2026-07-14` cluster.
