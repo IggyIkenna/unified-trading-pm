@@ -99,21 +99,68 @@ features-service sports-fixture status-filter fix, not bucket-fold/infra work).
   independent instance suggests the Wave-3 bucket-fold closeout's "correctly LEFT" sites should get a fresh sweep rather
   than being assumed still-safe.
 
+## Determination (todo 1, 2026-07-19, slot-5)
+
+**Verdict: (b) — the 5 families are genuinely retired as separate `cloud-providers.yaml` keys; the fold is real,
+deliberate, and code has already fully cut over. `cloud-providers.yaml` is not missing anything — the gate script's
+`_KIND_TO_FAMILY` dict is stale.**
+
+Evidence:
+
+1. `unified_api_contracts/config/cloud-providers.yaml:58-65` (gcp) / `:197-203` (aws) carry an explicit fold-A comment:
+   _"features FOLD A (fold_a_cutover_spec, 2026-07-18): folded per-asset_group key; the 5 retired per-kind buckets
+   collapse into features-{ag}-${DEPLOYMENT_ENV_SHORT}-{pid}, per-kind → key prefix."_ The single folded `features:` key
+   declares `CEFI`/`TRADFI`/`DEFI`/`PREDICTION`/`SPORTS` on both clouds — none of the 5 old per-family keys
+   (`features-delta-one`/`-volatility`/`-onchain`/`-xinstrument`/`-mtf`) exist any more, by design.
+2. Every one of the 5 families' writer/reader call sites is already repointed to `resolve_bucket(kind="features", ...)`
+   — grepped `kind="features-{delta-one,volatility,onchain,xinstrument,mtf}"` across
+   `features_service/{delta_one,volatility,onchain,cross_instrument,multi_timeframe}/`: zero live code call sites remain
+   (`delta_one/app/core/feature_writer.py:79`, `volatility/core/feature_writer.py:109`, `onchain/config.py:116` and
+   `:124`, `cross_instrument/app/cross_venue_arb_runner.py:140`, plus each family's `config.py` — all call
+   `kind="features"`). The only 2 hits for the old strings are stale docstring comments, not executable code
+   (`cross_instrument/app/calculators/paired_dispatch.py:218`, `volatility/core/dependency_checker.py:80`).
+3. Every family's CLI `asset_group_choices` is a **subset** of the folded key's declared set — no orphan/missing risk
+   from the union either:
+   - `delta_one`: CEFI/TRADFI/DEFI/PREDICTION (`delta_one/cli/parser.py:44`, `CATEGORIES`)
+   - `volatility`: CEFI/TRADFI (`volatility/cli/parser.py:24-27`, `ASSET_GROUP_CHOICES`)
+   - `cross_instrument`: CEFI/DEFI/TRADFI/PREDICTION (`cross_instrument/cli/main.py:180`)
+   - `multi_timeframe`: CEFI/TRADFI/DEFI (`multi_timeframe/cli/main.py:246`)
+   - `onchain`: DEFI only, pinned via the `_ONCHAIN_ASSET_GROUP` constant (`onchain/config.py:22`) — not a CLI choice;
+     already routed through the gate's `_CONSTANT_AUTHORITY` path, not the AST CLI-scan path.
+   - Union = `{CEFI, TRADFI, DEFI, PREDICTION}` ⊆ folded key's `{CEFI, TRADFI, DEFI, PREDICTION, SPORTS}`.
+
+**Fix shape for todo 2** (do NOT restore the 5 old per-family yaml keys — that re-provisions the exact orphan-bucket
+problem the 2026-07-17 sweep and this fold were built to eliminate): drop the 5 stale entries from
+`check_asset_group_parity.py`'s `_KIND_TO_FAMILY`. Because that dict's schema is 1:1 (`kind → single family`) and 5
+families now share ONE folded kind (`"features"`), a straight drop with no replacement silently loses gate coverage for
+these families' future asset_group/CLI drift — the gate needs a small structural change so the folded `"features"` kind
+is checked against the **union** of all 5 families' invocable asset groups (CEFI/TRADFI/DEFI/PREDICTION), not a single
+family (a naive `"features": "<one-family>"` entry would wrongly treat another family's legitimate asset_group as an
+"EXTRA" violation). **Do NOT touch the 5 families' `asset_group_choices`** — they are all correct as-is; the issue's
+original phrasing ("so the CLIs no longer accept an asset_group with nowhere to write") is not accurate — every one of
+these asset groups already resolves through the folded `features` bucket, there is nowhere left to remove.
+
+**Flagged, out of scope for todo 2, feeds the existing P3 re-sweep todo below**: `scripts/e2e/run_pipeline_e2e.py`'s
+`FAMILY_SPECS` dict (`output_kind=` at lines ~72/80/89/97) still hardcodes the same 4 retired kind strings
+(`features-delta-one`/`-volatility`/`features-cross-instrument`/`features-multi-timeframe`) for its `_test_bucket()`
+resolution. This is exactly the "features e2e harness" site the closeout doc already called out as one of the OTHER
+"correctly LEFT" sites — it is now stale by the same pattern this issue documents, a second data point for the P3
+re-sweep. Not expanded here; left for that todo.
+
 ## Recommended decision / next steps
 
-- [ ] [INFRA] P1. Determine the correct current state for the 5 folded families
+- [x] [INFRA] P1. Determine the correct current state for the 5 folded families
       (features-delta-one/mtf/onchain/volatility/xinstrument): read
       `plans/active/bucket_estate_fold_design_2026_07_13.md` + current `cloud-providers.yaml` `features:` folded key +
       each CLI's `asset_group_choices` to decide whether these 5 families are genuinely retired (folded into `features`)
       or whether cloud-providers.yaml lost declarations it should still carry. (repo: unified-api-contracts /
-      features-service)
-- [ ] [INFRA] P1. Apply the determined fix: either (a) restore the 5 per-family `cloud-providers.yaml` declarations, or
-      (b) drop the 5 retired families from `check_asset_group_parity.py`'s `_KIND_TO_FAMILY` dict AND remove/update the
-      corresponding `asset_group_choices` entries in
-      `features_service/{delta_one,multi_timeframe,onchain,volatility,cross_instrument}/cli/` so the CLIs no longer
-      accept an asset_group with nowhere to write. Re-run `bash scripts/quality-gates.sh` end to end to confirm STEP
-      5.104 (and the rest of the gate) goes green and a fresh sentinel is written. (repo: features-service,
-      unified-api-contracts)
+      features-service) — ✅ determination: (b), see "Determination (todo 1)" above (this doc, slot-5, 2026-07-19).
+- [ ] [INFRA] P1. Apply the determined fix: drop the 5 retired families from `check_asset_group_parity.py`'s
+      `_KIND_TO_FAMILY` dict and replace with union-of-families coverage for the folded `"features"` kind (CEFI/TRADFI/
+      DEFI/PREDICTION) — see "Fix shape for todo 2" above. Do NOT touch the 5 families' `asset_group_choices` (they are
+      correct as-is) and do NOT restore the 5 old per-family `cloud-providers.yaml` keys. Re-run
+      `bash scripts/quality-gates.sh` end to end to confirm STEP 5.104 (and the rest of the gate) goes green and a fresh
+      sentinel is written. (repo: features-service, unified-api-contracts)
 - [ ] [PROCESS] P3. Once fixed, re-check `plans/active/bucket_fold_closeout_2026_07_17.md`'s other "correctly LEFT
       (legitimate, non-breaking)" sites listed in the same Alias-Sunset-Part-A entry (the features e2e harness,
       `upgrade_manifest_to_v8.py`, `cloud_constants` legacy "positions" map, inference-config comments) for the same
