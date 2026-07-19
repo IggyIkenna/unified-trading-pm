@@ -305,6 +305,38 @@ autonomously at night. Recorded here as the clear next step rather than attempte
 **Best proven config remains 64/32 coupled (13.47 MB/s).** The overnight backfill runs there, aimed at the coverage
 frontier (2026-02-22+) so it does real work rather than skip-scanning the ~530 GB the prior run already captured.
 
+### Multi-process-per-VM (2026-07-19): breaks the socket ceiling, NOT the throughput ceiling
+
+Built, adversarially-reviewed (5 guards SOUND) and shipped a launcher-only fan-out (deployment-service,
+VM_NUM_WORKERS>1) that runs N download PROCESSES on ONE VM, each a disjoint venue slice with a distinct VM_NAME-pK
+manifest shard. cap-1 untouched (one VM). Default VM_NUM_WORKERS=1 is a byte-identical no-op.
+
+**Mechanism confirmed live (N=2):** 2 processes, disjoint venues, distinct shards, 0 403s, disk 3% (temp files unlinked
+after upload — not filling), memory 23-36GB/128. **Sockets to Cloudflare broke to 64** — versus the ~15 ceiling every
+single-process arm hit. So the per-process socket limit IS real and multi-process DOES break it.
+
+**But sustained throughput did NOT improve.** Over 42 min: mean 11.80 MB/s (0.88x the 13.47 single-process baseline),
+median 11.82, peak 27.76 (2.06x). The decisive snapshot: BOTH workers busy holding 22+16 = 38 concurrent sockets, yet
+aggregate RX still ~12 MB/s — the same as one process at ~15 sockets. **More sockets, same throughput.** Not imbalance
+(both workers were active); the binding constraint is a SHARED source-side aggregate rate limit — Tardis serves from
+Wasabi (s3.wasabisys.com) and the inbound RX per account/IP caps at ~12-13 MB/s regardless of how many connections we
+open. N processes SPLIT that pie rather than multiply it.
+
+**This corrects the earlier "the ceiling is client-side" reading.** That was inferred from a test that only proved a 2nd
+process OPENS more sockets (38) — it did NOT prove the aggregate throughput doubled. The real fan-out shows it does not.
+There are TWO different limits: sockets are per-process (~15, broken by multi-process) and throughput is per-account/IP
+source-side (~13, NOT broken). The transient peak to 27.76 shows Wasabi CAN briefly deliver 2x, so it is not a hard wall
+— but the SUSTAINED aggregate sits at the single-process rate.
+
+**So ~13 MB/s is a Tardis/Wasabi account-or-IP inbound ceiling, and 30 MB/s is not reachable by any client-side lever
+measured (concurrency, pool, decoupling, or multi-process).** The remaining path is commercial: better Tardis account
+terms / a faster storage tier, or a second IP (which the account cap may also cover, and which cap-1 forbids as a second
+VM). The fan-out stays shipped — correct, safe, default-off — and becomes useful only if the account throughput ceiling
+is lifted.
+
+**The one durable win of this whole thread remains the disk fix (4.7x, 2.36 -> 11.09 MB/s).** Best sustained config is
+single-process 64/32 at ~13.5 MB/s; the overnight backfill runs there.
+
 ## Original (WRONG) analysis — kept as a record
 
 # Tardis account-level volume quota — ~7-8 GB, then ~2 MB/s
