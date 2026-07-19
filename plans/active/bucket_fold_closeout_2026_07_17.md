@@ -291,3 +291,29 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   - entangled with the terraform derived-from-yaml destroys ([[terraform_bucket_estate_drift_resurrection_2026_07_13]],
     do-NOT-tofu-apply). AWS fold-completion (source deletion) is an operator-gated follow-up on the terraform-drift
     issue.
+- **2026-07-19, ALIAS SUNSET Phase 2 Part A (caller repoints) — DONE across all repos.** Every LIVE
+  `resolve_bucket_name(kind="<retired>")` consumer now calls the FOLDED kind directly (behaviorally NO-OP — the retired
+  kinds already aliased to the folded bucket, and every per-kind object-key prefix is caller-derived, verified per
+  site). Shipped: **ml-service@a958123** (8 sites, sub-agent — ml-*-store/ml-training-artifacts→ml-store),
+  **features-service@31a4e9c1e** (2 backfill scripts, sub-agent — features-onchain→features; package code was already
+  folded), **execution-service** (tenderly_budget archetype-state→portfolio-state), **UTL@83920031**
+  (artifact_store/model_registry/cloud_constants ml-*→ml-store), **deployment-service@52f5e5c** (ml_experiments
+  ml-artifacts/ml-models-store→ml-store); the **deployment-api** features leg was done in 4c@ff1c691. Sub-agents
+  independently confirmed the fold cutover had already repointed most consumers — the retired-kind callers were just
+  stragglers. Sites correctly LEFT (legitimate, non-breaking): the features e2e harness (derives bucket NAME from the
+  kind = repoint RISK), `check_asset_group_parity` kind→family mapping-dict, `upgrade_manifest_to_v8.py` (dead one-off
+  v8→v9 migration that resolves retired kinds via a loop-var), `cloud_constants` legacy "positions" map (dead —
+  `get_bucket_name("positions")` never called), inference-config comments.
+- **ALIAS SUNSET Phase 2 Part B (alias + yaml-key REMOVAL) — GENUINELY COUPLED, operator-gated follow-up (documented,
+  not a lazy defer).** After Part A, the retired kinds are grep-clean of LIVE resolve callers, BUT their aliases CANNOT
+  be cleanly removed autonomously because: (a) **yaml-key coupling** —
+  features-_/ml-_/archetype-state/position-store-sports/ execution-store-prediction all RETAIN yaml keys (GCP+AWS) that
+  the derived-from-yaml terraform reads; removing them is part of the
+  [[terraform_bucket_estate_drift_resurrection_2026_07_13]] reconciliation (deleted-GCP/existing-AWS buckets = the
+  operator-aware 32-destroy drift, do-NOT-tofu-apply); (b) **harness/migration coupling** — the features e2e harness +
+  the v8 migration still resolve retired kinds (removing the alias would change their resolution to the old/deleted
+  buckets). The **only cleanly-removable** kind is `positions-store` (alias-only, no yaml key, dead map ref) — a trivial
+  follow-up alongside the Phase-1-style removals. Net: the aliases correctly map retired→folded and stay as a SAFE
+  soft-transition net; their removal is folded into the terraform-drift reconciliation. **CLOSEOUT STATUS: every
+  autonomously-actionable item is DONE. The sole remainder — the alias+yaml-key hard-removal — is genuinely gated on the
+  operator-aware terraform-drift reconciliation (yaml-mirror-sync + the 32-destroy plan) + AWS fold-completion.**
