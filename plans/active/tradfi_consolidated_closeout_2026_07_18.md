@@ -862,3 +862,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     `record_captured`); (3) run the real MVP backfills (CME/NASDAQ/NYSE ohlcv_1m via the optimized large-VM concurrency,
     CBOE/FX ohlcv_24h via Yahoo) to fill PROD → the skip legs become genuine; (4) re-run the MVP-scoped gate + the IS
     7-venue sweep.
+
+- **2026-07-19 (slot-1, tick 18) — Phase D check-classification fixed + CME root-caused to a single operator decision.**
+  - **SHIPPED mtds@37ac8a64** (fix(tradfi): Phase-D gate classification): `--mvp-only` now enumerates EXACTLY the 5
+    `_TRADFI_MVP_SHARDS` (suppresses the `_augment_with_observed_cells` +15 PROD-observed augmentation); billing-gated
+    Databento datasets (`trades`/`tbbo`/`mbp_10`, keyed off the UAC `DATABENTO_SCHEMA_LEVEL` billing-guard SSOT) classify
+    **EXEMPT** (`skipped`/`billing_gated_by_design`), not failed. Unit-tested. This eliminates the 36-of-60 RED that was
+    dominated by billing-gated + non-MVP cells — NOT real MVP path failures.
+  - **CME:ohlcv_1m root-caused → P0 data-correctness finding (issue
+    `databento_future_option_blank_instrument_id_shard_atom_2026_07_19.md`)**: `databento_adapter.py:179-185`'s static
+    `_PARTITION_INSTRUMENT_TYPE` writes EVERY Databento TradFi FUTURE/OPTION as a `futures_chain`/`options_chain`
+    (blank `instrument_id`, `underlying=<root>`), so the checker's per-contract match finds `no_matching_row`. NASDAQ/NYSE
+    pass (EQUITY, id preserved). **BLOCKED-OPERATOR-DECISION**: shard-atom for a TradFi ohlcv_1m future = per-root chain
+    (fix checker, no migration) OR per-contract `-USD@LIN-YYYYMMDD` (fix writer + re-migrate). **HELD the CME/ICE MVP
+    backfills** pending the ruling; NASDAQ/NYSE ohlcv_1m + CBOE/FX ohlcv_24h (Yahoo) unaffected.
+  - **State**: A3.1 optimization done+measured (1.56x); P0 launcher fleet-fix live; Phase-D check meaningful. The ONLY
+    open blocker to closing the MVP is the CME shard-atom ruling. Next after ruling: writer/checker fix → run MVP
+    backfills (optimized concurrency) → re-run MVP gate + IS 7-venue sweep → durability closure.
