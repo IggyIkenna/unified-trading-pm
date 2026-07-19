@@ -1326,3 +1326,35 @@ that is real — but the catalogue will keep reporting ~0% until its reader is r
 - [ ] [PROCESS] P1. An entity rename/split MUST enumerate and migrate consumers in the same change. This one shipped the
       writer on 2026-05-23 and left ~10 readers pointing at a corpus that stopped updating — silently, because a frozen
       corpus still reads successfully.
+
+### R-FIXED (2026-07-19 02:01Z) — catalogue repointed to the LIVE entity: `round` 0.7% -> **70.6%**
+
+`SPORTS_FIXTURE_ENTITY` repointed `fixtures` -> `fixtures_schedule`, full `--since 2019-01-01` rollup re-run:
+
+| metric               | legacy entity | live entity                 | original issue |
+| -------------------- | ------------- | --------------------------- | -------------- |
+| catalogue rows       | 121,538       | **164,763**                 | 17,064         |
+| `round` populated    | 837 (0.7%)    | **116,285 (70.6%)**         | 545 (3.2%)     |
+| `Regular Season - N` | —             | 90,238 (77.6% of populated) | —              |
+
+**+43,225 rows the frozen entity was simply missing.** The original issue's headline — _"round populated on only 545 of
+17,064 rows (3.2%)"_ — is now **116,285 of 164,763**.
+
+Safe-to-repoint was VERIFIED first, not assumed: the split is clean (legacy 55 cols = schedule 43 + outcomes 15,
+**nothing missing from both**), and this rollup reads only SCHEDULE fields (`af_home_name` / `af_away_name` / `date` /
+`timestamp` / `round`), all 100% populated on the schedule leg — so no outcomes join was needed.
+
+**The derivation and the repoint are COMPLEMENTARY, not redundant** — worth stating because either alone looks
+sufficient and neither is: § Q lifted RAW from 40-66% to 90-99% at zero API cost; § R made any of it visible downstream.
+Without the derivation the repoint would have surfaced ~50%; without the repoint the derivation was invisible.
+
+**STILL OPEN — `competition_phase` is ABSENT, not UNKNOWN.** `competition_phase` / `round_name` /
+`is_promotion_relegation` are not catalogue columns at all; the rollup never projects them. So the original issue's
+second half is NOT closed by this: `round` is now present and rich, but nothing derives the phase from it at catalogue
+level.
+
+- [ ] [CODE] P0. Project `competition_phase` / `round_name` / `is_promotion_relegation` in the catalogue rollup,
+      deriving them from `round` via `classify_competition_phase`. `round` is now 70.6% populated, so the classifier
+      finally has real input — this is the last link between the § Q derivation and the ML features.
+- [ ] [DIAG] P0. The other ~9 stale-entity consumers (§ R list) are still reading the frozen corpus. Each needs the same
+      repoint + a re-run; anything reporting stale sports data since 2026-05-23 is suspect.
