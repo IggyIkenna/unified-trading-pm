@@ -120,10 +120,13 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [ ] [CODE] P0. **K1 — emit UPPER at the LIVE writer**: fix `_build_sports_shard_path` (`venue_fetch.py:871-900`) + the
       sentinel row-key builders (`sentinels.py` v1:420-426, v2:305-311, skip-fan:180-197) to emit
       `DATA_TYPE=TRADES`/`INSTRUMENT_TYPE=ODDS`. This is the currently-running writer; must ship BEFORE K2.
-- [ ] [DATA] P1. **K2 — migrate the historical lower-case rows UP** (only after K1): normalise `odds`→`ODDS` (20,331),
-      `odds_movement`/`odds_snapshot` (4+4), + drop the dead `odds_horizon_bucket_{15m,1h,4h,1d}` cohort (1,337) — all
-      from the one legacy `ticks_migrated_20260505` artifact; ~20,339 rows, one bucket. CF-7's UPPER→lower map is
-      superseded for sports.
+- [ ] [DATA] P1. **K2 — migrate the historical lower-case rows UP** (only after K1). **SCOPE CORRECTED (contradiction
+      sweep #9): the dominant lower-case data_type is `trades` = 1,806,553 rows (91.5% of the bucket), NOT the ~20k
+      `odds`-family.** K1 already commits to fixing the live writer to emit `TRADES` — so K2 must migrate the historical
+      `trades` rows too (the `odds`→`ODDS` (20,331) / `odds_movement`/`odds_snapshot` (4+4) / dead
+      `odds_horizon_bucket_{15m,1h,4h,1d}` (1,337) family is the SMALL tail). Decide explicitly: either K2 migrates
+      ~1.8M `trades`→`TRADES` (the real bucket-wide job, not "one bucket, small"), or state why `trades` is deferred
+      relative to the `odds` family. CF-7's UPPER→lower map is superseded for sports.
 - [ ] [CODE] P1. **F1/F2 — venue/instrument_type cleanup**: fix the footystats legacy bundle mislabel
       (`venue=ODDS_API`→`FOOTYSTATS`, 42,476 rows); clean the `instrument_type` pollution (110,759 blank + 56,048 None +
       bookmaker-name rows). Do NOT touch the deliberate `mdps_odds_horizon_bucket` `venue=ODDS_API` aggregate (124,294,
@@ -161,6 +164,18 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track O — ODDS-LEAK: post-kickoff contamination + the B2 dead-zone · P1
 
+- [ ] [OPERATOR] P0. **⏰ TIME-CRITICAL — retention cliff ~2026-07-20.** The 112,277 `attempted_failed` BETFAIR/
+      MATCHBOOK/PINNACLE rows (Track O below / audit §2.5) are NOT an unexplained gap — already root-caused in
+      `sports_trades_venue_fetch_failed_2026_07_15`: `rebuild_sports_manifest_v9.py`'s E4 apply-pass clobbered
+      `attempted_at` to a 2026-07-13T23:56:41Z 8-second window on years-old rows (writer fix landed,
+      market-tick-data-service@6fad6565). The true pre-rebuild generation
+      (`_index/availability_index.parquet#1783986822147154`) is soft-delete-recoverable ONLY until ~2026-07-20, and
+      recovery REQUIRES `gcloud storage restore` (recreates the object live at the same path — no restore-to-backup
+      primitive), a racy in-place op on a live index the consolidator rewrites every ~11 min. **OPERATOR DECISION**: run
+      the controlled-window restore (pause consolidator → restore → capture → restore-current → resume) before the
+      cliff, or accept permanent loss of the true `attempted_at` on these rows. NOT done autonomously — low impact
+      (wrong timestamp on failed-attempt metadata, status correct, zero ML impact) vs high risk (corrupting the live
+      5.3M-row index). The prior author explicitly declined a blind time-pressure restore; escalated to operator.
 - [ ] [DATA] P0. Run `reprocess_sports_odds.py --force` for 2025-12-18/24/31 through the REAL script so the manifest
       coarse row flips off the stale `captured` (from the legacy-path leak) to `attempted_failed` (18,31) /
       `empty_confirmed` (24) — the B2 diagnosis was never persisted.
@@ -238,6 +253,103 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       non-ASCII fixtures (sweep §D).
 
 ---
+
+## Contradiction resolution (sports, 2026-07-19)
+
+From a dedicated contradiction sweep (56 issue docs + 11 plans + 9 codex docs + the epic, all read directly, plus 6
+GCS/parquet measurements). Matches the `defi_consolidated_closeout` "Contradiction resolution" pattern. **Two of these
+are self-contradictions in THIS closeout / the audit — both now fixed** (marked ✅).
+
+### DOC-vs-DOC
+
+1. **112,277 `attempted_failed` triplet — ALREADY root-caused, and TIME-CRITICAL.** Audit §2.5 / Track O called it
+   "root-cause needed"; `sports_trades_venue_fetch_failed_2026_07_15` already traced it (v9-rebuild `attempted_at`
+   clobber, fix @6fad6565) with a ~2026-07-20 retention cliff. → escalated as the Track O P0 OPERATOR item above.
+2. **Staleness budget — same defect as sweep §J, conflicting fix values.** Both target
+   `AG_STALENESS_BUDGET_SEC["sports"]` in `_staleness_budget.py`. §J proposed 180–240s (merge-duration); the issue doc
+   proposed 1800s (observed ~11-min blob-age swing). The read gate checks blob AGE → §J's value would still false-trip.
+   **RESOLUTION**: merge into one fix; size off the observed refresh interval (≥1800s) or re-measure current cadence.
+   (HONEST-COVERAGE track.)
+3. **`sports-adapter-dependency-order.md` §5 "gate is the one correct DependencyError" ↔
+   `sports_t0_t1_dependency_gate_never_wired`**: grep-verified every T1 caller omits `date=`, so the gate never fires
+   (confirmed: understat has captured rows 2014-2017 where api-football has zero fixtures — impossible if the gate
+   fired). Codex is stale. (ENTITY-SPLIT/CODEX.)
+4. **`sports_dependency_check_manifest_vs_gcs_path` measures 11-25 min cost of the same function #3 shows is
+   unreachable.** Either the cost was measured via a synthetic `date=`-passing path or the optimization solves a
+   non-materializing cost. NOT resolved — reconcile the 5 named call sites against the 11 enumerated in the gate doc.
+   (ENTITY-SPLIT.)
+
+### DOC-vs-REALITY (settled by direct measurement)
+
+5. **Manifest atom is literally `"FIXTURES"`** — measured: 333,594 rows, max `written_at` 2026-07-19T10:11:33Z (today),
+   ZERO `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES`. Confirms Track C1 objectively. (CANON C1.)
+6. ✅ **SELF-CONTRADICTION in the audit (FIXED)**: §2.1 said `entity=fixtures` FROZEN, §2.6 said "still active today".
+   Measured: every file incl. today's `day=` partition has `Creation Time 2026-05-23T20:35:42Z` — FROZEN. §2.6 conflated
+   pre-fetched future-dated file _presence_ with active writing. Audit §2.6 reworded to "stale, not actively written".
+7. **`sports-data-types-catalog.md` still documents lower-case sports data_types** — contradicts K0-(b). Exact quote
+   captured. (CODEX.)
+8. ✅ **SELF-CONTRADICTION in THIS closeout (FIXED)**: K2's "~20,339 rows, one bucket" excluded `trades` = 1,806,553
+   rows (91.5%, lower-case) that K1 commits to fixing at the writer. K2 scope corrected above to name the ~1.8M `trades`
+   decision explicitly.
+
+### STALE-SUPERSEDED
+
+9. `sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17` headline "3.2%" superseded by measured 70.6%
+   (§R-FIXED); status still open. Residual NOT captured elsewhere: audit the sibling `status_long` "Unknown" default
+   (same bug class). (COVERAGE/CLEANUP.)
+10. Two FOLD plans still list `sports_reference_v2/` as "migrate-worthy" — it's confirmed dead (frozen 2026-04-20). Add
+    a retraction note at fold-in. (STORE.)
+11. Codex `sports-scheduling-and-sharding.md` §9/§12, `sports-live-odds-connectivity.md` §3 (13 deleted scrapers),
+    `sports-integration-plan.md` (mislabeled current) — all confirmed drifted with specifics. (CODEX.)
+
+### NOT-duplicates (explicit, to prevent a future false-merge)
+
+12. Sweep **§B2** (615-min TIER1 dead-zone → EMPTY output) vs `sports_odds_stale_fixture_reinjection` (frozen board
+    re-bucketed → OVER-population; Russia-PL zombie class still open, partial fix MDPS@3bf56ff). Different mechanisms,
+    same module. Do NOT merge. (ODDS-LEAK — add the reinjection item.)
+
+### Aggregation-completeness gaps — open work NOT in the tracks above (now folded in)
+
+- **A [largest] — the elo/travel/read_historical_fixtures gap-fill campaign is entirely absent from both docs** (grep-0
+  for `elo`/`travel`/`read_historical_fixtures`/"521 date"). 4 issue docs, all shipped-in-body but `status: open`:
+  `sports_elo_calculator_tz_naive_season_boundary_silent_skip` (@04274b6a),
+  `sports_travel_calculator_home_venue_coords_never_resolved` (@6efefde2,@9923b0d8),
+  `sports_travel_calculator_tz_aware_kickoff_crash` (@d878f11a,@81036512),
+  `sports_read_historical_fixtures_series_ambiguous` (@538c233e,@4be73e2a — a ~521-date recompute fleet ran). **Confirm
+  this 521-date gap-fill and the §Z re-run are ONE combined recompute, not dropped against each other.** → FEATURES.
+- **B** — the ⏰ 112,277 retention cliff (finding #1) → Track O P0 above.
+- **C** — `sports_odds_ownership_registry_split_brain`: DEFERRED PURGE of 127,018 bogus `api_football×ODDS` rows + "did
+  the re-seed stop" verify. → CANON/ODDS-LEAK.
+- **D** — `sports_manifest_null_vs_empty_dedup_double_count`: unexplained consolidator incremental-dedup gap + 612,682
+  blank-`error_reason` `empty_confirmed` residue. → HONEST-COVERAGE.
+- **E** — `sports_index_recency_masked_captured_atoms`: redeploy `expected-universe-v2-sports` Cloud Run image + P3
+  cross-AG seeder-over-captured sweep. → HONEST-COVERAGE.
+- **F** — `sports_odds_team_name_alias_gap_south_america`: Chile PRIMERA_DIVISION Odds-API aliases missing (57% match).
+  → CANON/COVERAGE.
+- **G** — `sports_odds_stale_fixture_reinjection` Russia-zombie half (finding #12). → ODDS-LEAK.
+- **H** — `status_long` "Unknown" default audit (finding #9). → CLEANUP.
+- **I** — `sports_derived_features_per_league_layout_unread_by_ml_loader`: features-bucket path SSOT codex doc +
+  `odds_api_team_mapping` coverage. → CODEX/CANON.
+- **J** — `sports_dependency_check_manifest_vs_gcs_path`: manifest-slice replacement for `check_api_football_dependency`
+  (finding #4). → ENTITY-SPLIT.
+- **K** — `sports_reference_function_size_qg_regression`: 3 functions over the QG size ratchet. → CLEANUP.
+- **L** — `sports_cf8_available_at_backfill_regression`: RED on both surfaces, parked pending an operator window. →
+  operator decisions.
+- **M** — `sports_halftime_odds_sfi_vs_inplay`: `_apply_ht_odds_pit_gate` default-cutoff branch is dead code; 12,463 T-0
+  rows at `bm<-55` flow ungated. → ODDS-LEAK.
+- **N** — `sports_is_manifest_eu_regression_overwrite`: footystats MATCHES (5,641) + PREDICTIONS (44,163) residuals not
+  root-caused at the writer. → HONEST-COVERAGE.
+- **O** — `sports_legacy_canonical_row_gap` OR-1 Option D (player_stats-only union + fixture_events re-fetch) never
+  executed + 3 unfiled loose ends (canonical player_stats 2x dup; standings/teams writing 2026 live under historical
+  `day=`; 640-row cartesian player_values). → STORE.
+
+### Duplicate/merge + status-flip recommendations
+
+- Merge `sports_manifest_read_staleness_budget_missing` → sweep §J. Merge `sports_trades_venue_fetch_failed` → the
+  112,277 item. Flip `sports_golden_window_attempted_failed_remediation` +
+  `sports_is_odds_capture_code_incomplete_reversal` → resolved, pointing at `sports_odds_ownership_registry_split_brain`
+  (terminal). **~20+ issue docs are shipped-in-body but still `status: open`** — the Track X status-flip sweep should
+  cover the full list, not a sample.
 
 ## Cross-AG finding (belongs to a prediction/tick close-out, tracked here for visibility)
 
