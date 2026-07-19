@@ -840,3 +840,25 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     `bash -n`+shellcheck miss it so it passed QG. Diagnosed + fixed all 88 (bash-n clean, 0 remaining) + issue doc
     `launcher_gcloud_continuation_broken_by_disk_sweep_2026_07_18.md` with a QG-gate-gap follow-up.
   - **Next**: Phase D terminal gate on the optimized path (MVP ohlcv_1m + ohlcv_24h); MVP backfills; durability closure.
+
+- **2026-07-19 (slot-1, tick 17) — Phase D MTDS ran on the fixed+optimized launchers (report exit 1) — RED is dominated
+  by check-classification + chicken-egg, NOT the MVP fetch path.** `pipeline_e2e_check.py --asset-group TRADFI --mvp-only
+  --legs force,skip,canonical --auto-day --day 2026-07-13`: total=60 passed=17 **failed=36** ambiguous=4 skipped=3. The
+  fresh tarball carried the shipped driver+retry+fixed launchers; every VM launched cleanly (P0 fleet fix confirmed live
+  end-to-end). Breakdown of the 36:
+  - **`tbbo` (18) + `trades` (18) = the 3 billing-gated-by-design Databento datasets** (mbp_10/trades/tbbo, 1mo-L3/1yr-L1
+    per operator) — these MUST be **exempt** (no data by design), the check **fails** them → **CHECK BUG (P0 for the
+    gate): exempt billing-gated cells**. Plus `futures_chain`/`options_chain`/`ohlcv_15m`/`ohlcv_1s` = non-MVP cells the
+    `--mvp-only` flag failed to suppress (the `_augment_with_observed_cells` +15 PROD-observed augmentation overrides
+    `--mvp-only`) → **CHECK BUG: `--mvp-only` must suppress the observed-cell augmentation**.
+  - **MVP-cell truth**: NASDAQ ohlcv_1m ✅force · NYSE ohlcv_1m ✅force · FX ohlcv_24h ✅force+✅skip(genuine) ·
+    **CME ohlcv_1m ❌force `manifest_status_invalid:no_matching_row`** (the fetch works — measurement wrote 159k+820k
+    rows — but the manifest STATUS has no matching row; **investigate: the canonical `-USD@LIN` id migration vs the
+    check's expected manifest key / `record_captured` id**) · CBOE ohlcv_24h ⏭skipped (`no_captured_data_for_cell` —
+    needs the Yahoo daily backfill). Skip legs elsewhere = ambiguous (no PROD backfilled data — the chicken-egg the real
+    MVP backfills resolve).
+  - **Next steps (Phase D closeout, resumable)**: (1) fix the check `--mvp-only` to suppress augmentation + exempt
+    billing-gated (tbbo/trades/mbp_10) cells; (2) diagnose CME:ohlcv_1m `manifest_status_invalid` (canonical-id key vs
+    `record_captured`); (3) run the real MVP backfills (CME/NASDAQ/NYSE ohlcv_1m via the optimized large-VM concurrency,
+    CBOE/FX ohlcv_24h via Yahoo) to fill PROD → the skip legs become genuine; (4) re-run the MVP-scoped gate + the IS
+    7-venue sweep.
