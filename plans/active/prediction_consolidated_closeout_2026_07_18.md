@@ -297,7 +297,12 @@ fixture-linked before MVP backfill.
       `instrument_type`/`data_type` are consolidator DEDUP-KEY columns → the additive shard adds the corrected rows but
       leaves ~652k OLD rows as stragglers (doubling); reaching the target % needs an old-row sweep = the "naive direct
       `_index` rewrite" that resurrects on `--force` rebuild → the run needs a tombstone/removal strategy. Both
-      documented in the script docstring + printed by dry-run.
+      documented in the script docstring + printed by dry-run. **✅ MANIFEST `--apply` APPLIED 2026-07-19 (tick 18) —
+      `market-data-tick-pred-prd/_index` CAS REPLACE, generation `…161980856`→`…195626006`, 745,107 rows, 12,524
+      stragglers removed, `instrument_type` 11.80%→100% / `data_type` 100% / `source` 100%, 0 captured cells lost;
+      snapshot `_index/backups/pre_prediction_canonicalize_20260719T103301075148Z.parquet`; consolidator paused→resumed
+      (ENABLED). Manifest targets (a)(b)(c) DONE; catalogue `base_asset` (d) = the separate A2 catalogue regen (below).
+      Durability caveat: per-CID + `prediction_trades` re-accumulate until the items-2+3 follow-up lands.**
 - [ ] [DATA] P1. **Writer-root durability COMPLETION (items 2+3 of the migration checklist step 0) — the Phase-B
       `--apply` cleanup is DURABLE for the CQG bundle (item 1 SHIPPED `market-tick-data-service@1ec415f8`) but TRANSIENT
       for per-CID + `prediction_trades` until these land** (surfaced tick 17): (2) canonicalize the prediction per-CID
@@ -924,3 +929,23 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     denominator). The operator scoped the writer-root prereq to `_finalize_prediction_bundles` (item 1); items 2+3 are
     the tracked durability follow-up. `prediction_trades` re-accumulation is small (3,385 rows A0); per-CID null is the
     larger drift. A periodic migration re-run closes the gap until 2+3 land.
+
+- **2026-07-19 (slot-2, autonomous tick 18) — Phase-B prediction manifest migration `--apply` EXECUTED + VERIFIED on
+  PROD; consolidator paused→resumed cleanly.** Ran the operator checklist as one self-contained auto-resuming sequence
+  (EXIT-trap guarantees resume even on failure):
+  - **STEP 3 pause**: `uts-prod-manifest-consolidator-market-data-prediction-cron` → state PAUSED (confirmed).
+  - **STEP 4 `--apply`** (`--remove-stragglers --apply --confirm-prod-write --bundle-mode normalize`): the fixed
+    captured-cell guard passed live (**45,279 in == 45,279 out**, no false abort) → snapshot pre-image (47.8 MB) to
+    `_index/backups/pre_prediction_canonicalize_20260719T103301075148Z.parquet` → **APPLY COMPLETE (in-place CAS
+    REPLACE): 745,107 rows written, generation `1784457161980856`→`1784457195626006`, 12,524 stragglers REMOVED,
+    45,989,101 bytes.** MIGRATION EXIT=0. Targets: #1 `prediction_trades`→`trades` 3,385; #2 `instrument_type`→
+    `PREDICTION_MARKET` 668,257 (all-rows 11.80%→100%); #3 2 empty-source→`polymarket_clob`.
+  - **STEP 6 verify** (re-run dry-run against the now-live index): TARGET #1 **0 rows**, TARGET #2 **0 in-scope rows**,
+    TARGET #3 **0 rows**; rows IN 745,107 == rows OUT 745,107, stragglers 0; captured cells 45,279 == 45,279 →
+    **"Nothing to canonicalize/remove — every target is already canonical. Done."**
+  - **STEP 5 resume**: consolidator resumed; **live re-check state = ENABLED** (authoritative, not just log-claimed).
+  - **CAS safety held**: single-GET generation token + `if_generation_match` — no concurrent writer clobbered the window
+    (the `*/1` consolidator was paused). Rollback path = the `_index/backups/` snapshot if ever needed.
+  - **Durability**: the CQG bundle is now durable (writer-root item-1 `mtds@1ec415f8` deployed on the next cycle stamps
+    `PREDICTION_MARKET`); per-CID `instrument_type` + `prediction_trades` re-accumulate on new writes until the
+    items-2+3 follow-up lands (tracked P1 todo). Next: A2 catalogue regen (migration target (d) / plan todo 2).
