@@ -155,16 +155,61 @@ re-sweep. Not expanded here; left for that todo.
       each CLI's `asset_group_choices` to decide whether these 5 families are genuinely retired (folded into `features`)
       or whether cloud-providers.yaml lost declarations it should still carry. (repo: unified-api-contracts /
       features-service) — ✅ determination: (b), see "Determination (todo 1)" above (this doc, slot-5, 2026-07-19).
-- [ ] [INFRA] P1. Apply the determined fix: drop the 5 retired families from `check_asset_group_parity.py`'s
+- [x] [INFRA] P1. Apply the determined fix: drop the 5 retired families from `check_asset_group_parity.py`'s
       `_KIND_TO_FAMILY` dict and replace with union-of-families coverage for the folded `"features"` kind (CEFI/TRADFI/
       DEFI/PREDICTION) — see "Fix shape for todo 2" above. Do NOT touch the 5 families' `asset_group_choices` (they are
       correct as-is) and do NOT restore the 5 old per-family `cloud-providers.yaml` keys. Re-run
       `bash scripts/quality-gates.sh` end to end to confirm STEP 5.104 (and the rest of the gate) goes green and a fresh
-      sentinel is written. (repo: features-service, unified-api-contracts)
+      sentinel is written. (repo: features-service, unified-api-contracts) — ✅ features-service@bc7bc4ff,
+      unified-api-contracts@1ff91e5b — both shipped via quickmerge, both quality-gates.sh green end to end (STEP 5.104
+      confirmed passing in both runs), see "Fix applied" + "Evidence" below.
 - [ ] [PROCESS] P3. Once fixed, re-check `plans/active/bucket_fold_closeout_2026_07_17.md`'s other "correctly LEFT
       (legitimate, non-breaking)" sites listed in the same Alias-Sunset-Part-A entry (the features e2e harness,
       `upgrade_manifest_to_v8.py`, `cloud_constants` legacy "positions" map, inference-config comments) for the same
       assumed-safe-but-now-broken pattern, given this is the second such instance found post-fold.
+- [ ] [PROCESS] P3. `scripts/e2e/run_pipeline_e2e.py`'s `FAMILY_SPECS` dict (lines ~72/80/89/97) hardcodes 4 retired
+      per-family kind strings
+      (`features-delta-one`/`-volatility`/`features-cross-instrument`/`features-multi-timeframe`) for `_test_bucket()`
+      resolution — stale by the exact same post-fold pattern this issue documents (found during todo-1 investigation,
+      2026-07-19). Repoint to the folded `kind="features"` or fold into the P3 re-sweep above. (repo: features-service)
+
+## Fix applied (todo 2, 2026-07-19, slot-5)
+
+Applied determination (b): rewrote `check_asset_group_parity.py` so `_KIND_TO_FAMILY: dict[str, str]` (1:1 kind→family)
+became `_KIND_TO_FAMILIES: dict[str, tuple[str, ...]]` (1:many), with a single entry
+`"features": ("volatility", "delta_one", "onchain", "cross_instrument", "multi_timeframe")`. `check()` now unions every
+mapped family's invocable asset groups per kind before diffing against the yaml-declared set, and violation messages
+name the specific family(ies) that need/reject a given asset_group rather than assuming one family per kind. The 5 CLIs'
+`asset_group_choices` were left untouched, as determined.
+
+**Second finding, fixed in the same commit (in-file, per findings-triage "in your file → fix in same commit")**: running
+the rewritten gate surfaced a NEW violation the original 5-violation report didn't show —
+`{gcp,aws}.storage.features.SPORTS` is declared in `cloud-providers.yaml` but none of the 5 folded families' CLIs accept
+`SPORTS`. Traced: the fold (2026-07-18) reintroduced the exact orphan the 2026-07-17 asset-group-parity sweep had
+already deleted from the old `features-delta-one` per-family dict (yaml carries the removal comment one section above
+the fold). Confirmed safe to drop — `features-sports-${env}-${pid}` (the SPORTS template string) is identical to the
+separate dedicated `features-sports` flat key the `sports` family actually writes through
+(`features_service/sports/.../resolve_bucket(kind="features-sports", asset_group="sports")` — never `kind="features"`),
+so removing the per-AG alias loses no reachable bucket. Dropped `SPORTS:` from the folded `features:` dict on both
+clouds in `cloud-providers.yaml`, with an inline comment explaining the removal and pointing back to this issue doc.
+
+Verified: `.venv/bin/python scripts/quality_gates/check_asset_group_parity.py` (default UAC-packaged yaml, editable
+local-path dependency so the sibling-repo edit is live) →
+`OK: every per-asset-group feature kind matches its family's CLI asset_group_choices`. Full
+`bash scripts/quality-gates.sh` re-run end to end for final confirmation + fresh sentinel (see Evidence).
+
+**Shipped**: `features-service@bc7bc4ff` (quickmerge, full QG green 326s incl. STEP 5.104) and
+`unified-api-contracts@1ff91e5b` (quickmerge, full QG green 276s). Both landed on `live-defi-rollout`.
+
+**Near-miss during shipping (operational note, not a plan action item)**: committed the UAC fix locally before shipping
+it, then ran `features-service`'s `quickmerge.sh`, which cascades ancestor path-dependencies (`unified-api-contracts`,
+`unified-trading-library`) onto the current dep-branch as STAGE 0 — that cascade force-aligned `unified-api-contracts`
+to `origin/live-defi-rollout` (a hard reset), silently discarding the not-yet-pushed local commit (working tree was
+clean so no pre-commit-hook or dirty-tree guard caught it). Recovered cleanly via `git reflog`
+(`git reset --hard <sha>`) since origin still only had the pre-fix state — no data was lost upstream, only a few minutes
+of re-running QG. Lesson for future cross-repo fixes touching an ancestor + a dependent repo in the same task: **ship
+(quickmerge) the ancestor repo BEFORE running quickmerge on the dependent repo**, not after — the dependent's cascade
+step assumes ancestors are already at the intended pushed state.
 
 ## Evidence
 

@@ -534,29 +534,81 @@ league/date (a narrower, distinct gap — see new todo below). A second scan aft
 2 — expected, since most of that cluster's mass sits in dates the season-cache lookup isn't currently resolving, not
 because the entity-path fix failed (the 9 cells that DID have resolvable data correctly flipped).
 
-- [ ] [DATA] P1. Investigate why `run_sports_fixture_status_refresh`'s targeted `league_ids=` season-cache fetch returns
-      0 fixtures for the majority of the still-stale `(date, league)` cells in the 2026-06-24..2026-07-14 cluster (e.g.
-      `2026-03-17`, `2026-07-05`, `2026-06-27` all logged "Fetched 0 fixtures (with raw)" during the `--apply` run above
-      despite `_find_stale_fixture_leagues_for_date` having flagged those exact leagues as non-terminal). Check whether
-      the trigger's `today` boundary or the season-year resolution (`_effective_season_for_league`) is computed from the
-      CLUSTER's end date rather than the real current date — that would cause `_fetch_season_fixtures_with_raw` to query
-      the wrong season for some leagues. (repo: instruments-service) — **2026-07-19T~17:4xZ (slot-8) partial narrowing,
-      not yet root-caused**: ruled out one hypothesis — `_find_stale_fixture_leagues_for_date`'s returned `league_id`
-      set is actually the RAW numeric `af_league_id` string (e.g. `"129"`, `"1067"`), not a canonical league_id, because
-      `inject_league_id=True` derives it from the GCS blob path's `league={L}/` segment (numeric partition), not a
-      canonical column. Confirmed this is NOT itself the bug: `run_sports_fixture_status_refresh`'s `get_league(lid)`
-      call (line ~187) DOES successfully resolve these raw numeric strings back to a `LeagueDefinition` — log evidence
-      shows `league=129` (a raw numeric id) correctly fetched "648 season fixtures ... season=2026" before returning 0
-      matches for the specific date. So resolution succeeds; the failure is downstream, in why 648 season-wide fixtures
-      for a league contain none on the flagged date. Direct inspection of `date=2026-06-27`'s captured
-      `fixtures_schedule` data shows HUNDREDS of non-terminal rows across ~150+ distinct raw league ids, with kickoff
-      timestamps clustered mid-afternoon UTC and status values spanning the full lifecycle (`NS`/`1H`/`HT`/`2H`/`TBD`) —
-      i.e. this specific date's capture looks like it was taken as a live mid-match snapshot at some point, not just
-      individual stragglers, and the true scope of "stale" cells across this cluster may be far larger than the 394 the
-      scan currently reports (the scan may itself be under-counting, or double-counting the same real league under two
-      different `league_id` representations across different write eras — pre- vs post- entity-split). This needs a
-      fresh, focused investigation session — NOT a quick fix — covering: (a) whether
-      `_find_stale_fixture_leagues_for_date`'s numeric-vs-canonical `league_id` set double-counts/undercounts leagues
-      across the entity-split boundary, (b) why a 648-fixture full-season cache returns zero hits for a date its own
-      manifest row claims a fixture exists on, (c) the true total scope of non-terminal cells in this cluster (may be
-      materially larger than 394).
+- [x] ⚠️ [DATA] P1. Investigate why `run_sports_fixture_status_refresh`'s targeted `league_ids=` season-cache fetch
+      returns 0 fixtures for the majority of the still-stale `(date, league)` cells in the 2026-06-24..2026-07-14
+      cluster (e.g. `2026-03-17`, `2026-07-05`, `2026-06-27` all logged "Fetched 0 fixtures (with raw)" during the
+      `--apply` run above despite `_find_stale_fixture_leagues_for_date` having flagged those exact leagues as
+      non-terminal). Check whether the trigger's `today` boundary or the season-year resolution
+      (`_effective_season_for_league`) is computed from the CLUSTER's end date rather than the real current date — that
+      would cause `_fetch_season_fixtures_with_raw` to query the wrong season for some leagues. (repo:
+      instruments-service) — **2026-07-19T~17:4xZ (slot-8) partial narrowing, not yet root-caused**: ruled out one
+      hypothesis — `_find_stale_fixture_leagues_for_date`'s returned `league_id` set is actually the RAW numeric
+      `af_league_id` string (e.g. `"129"`, `"1067"`), not a canonical league_id, because `inject_league_id=True` derives
+      it from the GCS blob path's `league={L}/` segment (numeric partition), not a canonical column. Confirmed this is
+      NOT itself the bug: `run_sports_fixture_status_refresh`'s `get_league(lid)` call (line ~187) DOES successfully
+      resolve these raw numeric strings back to a `LeagueDefinition` — log evidence shows `league=129` (a raw numeric
+      id) correctly fetched "648 season fixtures ... season=2026" before returning 0 matches for the specific date. So
+      resolution succeeds; the failure is downstream, in why 648 season-wide fixtures for a league contain none on the
+      flagged date. Direct inspection of `date=2026-06-27`'s captured `fixtures_schedule` data shows HUNDREDS of
+      non-terminal rows across ~150+ distinct raw league ids, with kickoff timestamps clustered mid-afternoon UTC and
+      status values spanning the full lifecycle (`NS`/`1H`/`HT`/`2H`/`TBD`) — i.e. this specific date's capture looks
+      like it was taken as a live mid-match snapshot at some point, not just individual stragglers, and the true scope
+      of "stale" cells across this cluster may be far larger than the 394 the scan currently reports (the scan may
+      itself be under-counting, or double-counting the same real league under two different `league_id` representations
+      across different write eras — pre- vs post- entity-split). This needs a fresh, focused investigation session — NOT
+      a quick fix — covering: (a) whether `_find_stale_fixture_leagues_for_date`'s numeric-vs-canonical `league_id` set
+      double-counts/undercounts leagues across the entity-split boundary, (b) why a 648-fixture full-season cache
+      returns zero hits for a date its own manifest row claims a fixture exists on, (c) the true total scope of
+      non-terminal cells in this cluster (may be materially larger than 394). — **2026-07-19T~18:0xZ (slot-3,
+      data_engineering) — instruments-service@2684cd18: real bug (a) CONFIRMED + FIXED; (b)/(c) still open, new
+      follow-up todo below.** Correcting slot-8's claim above: empirically re-tested `get_league("129")` directly
+      (`.venv/bin/python -c "from unified_api_contracts.sports     import get_league; print(get_league('129'))"`) — it
+      returns `None`. `LEAGUE_REGISTRY` is keyed by CANONICAL league_id strings only (`get_league()`'s own docstring:
+      "Look up a league by its canonical identifier"); a raw numeric string never resolves through it. The "league=129
+      ... 648 season fixtures" log line slot-8 read is from `_fetch_season_fixtures_with_raw`'s OWN logging of the
+      RESOLVED `api_football_id` (129) passed in as an `int` arg — not evidence that `get_league("129")` (the raw
+      numeric STRING lookup) succeeded. The specific league slot-8 traced must have had a CANONICAL `league_id` in its
+      stale-set entry (which resolves fine); the raw-numeric form is a real, SEPARATE, silent failure mode that was
+      never actually exercised in that trace. Confirmed via write-path read: `_write_fixtures_per_league`
+      (`sports_fixtures.py:321-395`) groups by `league_id` when present on the input frame (preferred branch) and does
+      NOT rewrite that column to canonical form before the sink write — only the GCS partition path
+      (`partition={"league": _canonical_lid}`) is canonicalized. A `fixtures_schedule` blob written via the
+      `af_league_id`-only fallback branch for a league outside `get_prediction_leagues()`'s narrower set groups by a
+      raw-numeric `_canonical_league_id` value (the fallback at `sports_fixtures.py:364-366`), so its PARQUET COLUMN can
+      genuinely hold a raw numeric string even though its PATH is canonical — and since `_read_per_league_entity_df`'s
+      `inject_league_id` only path-parses when the `league_id` COLUMN is absent, a blob with that raw-numeric column
+      value is read back as-is. The result: `_find_stale_fixture_leagues_for_date` can return a mix of canonical AND
+      raw-numeric strings depending on WHICH write era/branch produced that specific blob — confirming slot-8's own
+      suspicion (a) as genuinely true, not ruled out. **Fixed**: `run_sports_fixture_status_refresh`
+      (`sports_fixture_status_refresh.py`) previously called `get_league(lid)` only — a raw-numeric `lid` silently
+      resolved to `None` and that stale league was DROPPED from `af_ids` with zero logging, meaning it was NEVER
+      re-fetched, forever, on every single trigger run. Added `_resolve_stale_league()` (mirrors
+      `_canonical_league_id`'s own numeric-resolution pass: falls back to `get_league_by_api_football_id(int(lid))` when
+      `get_league(lid)` returns `None` and `lid.isdigit()`), and now logs a `logger.warning` naming every stale
+      `league_id` that STILL can't resolve via either path (previously 100% silent) — this closes part of open question
+      (a) (raw-numeric entries were being silently dropped, not just theoretically at risk) and makes (c) empirically
+      answerable on the next live trigger run (the new warning log directly reports the count + identity of
+      genuinely-unresolvable cells vs. previously-invisible-but-now-fixed numeric ones). 2 new unit tests
+      (`test_raw_numeric_league_id_resolves_via_af_id_fallback`,
+      `test_unresolvable_numeric_league_id_skipped_and_logged`); all 17 tests in the file pass; full `quality-gates.sh`
+      green (sentinel matches shipped SHA). **(b) and (c) remain genuinely open** — this fix resolves a real silent-drop
+      bug but does NOT explain why a CANONICAL-resolved league's own 648-fixture season cache misses a date its manifest
+      claims exists (slot-8's original, still-unexplained anomaly) — see new todo below.
+
+- [ ] [DATA] P1. Root-cause why a CANONICAL-resolved league's `_fetch_season_fixtures_with_raw` season cache (648
+      fixtures for league_id=129/Argentine Primera Nacional, season=2026) returns ZERO matches for
+      `fx.kickoff_utc.date().isoformat() == date` on a specific flagged date (e.g. `2026-06-27`) whose
+      `fixtures_schedule` manifest row claims a fixture exists there — slot-8's original anomaly, NOT explained by the
+      raw-numeric silent-drop bug fixed above (this league resolved fine). Season-year computation was verified correct
+      for this case (`_effective_season_for_league(129, ref_date)` with `season_months=(2,11)` → season 2026 for any
+      March/June/July 2026 date, confirmed via direct `.venv/bin/python` invocation) — NOT a wrong-season bug. Candidate
+      directions for the next session: (i) whether the specific match on that date is tracked under a DIFFERENT
+      api_football league id in their system (e.g. a cup/playoff stage) even though our `LeagueDefinition` groups it
+      under the same canonical id — `/fixtures?league=129&season=2026` would then genuinely never return it; (ii)
+      whether `kickoff_utc` on the season-cache fixtures for this league is somehow NOT exactly UTC despite `_iso()`'s
+      handling (spot-check the raw `af_response['fixture']['date']` string for a known fixture on the flagged date
+      against its parsed `kickoff_utc.isoformat()`); (iii) run the live re-fetch again with the NEW loud-logging from
+      the fix above to get a clean count of genuinely-unresolvable vs. now-fixed cells, THEN re-examine whether any
+      residual "0 matches" cases are canonical-resolved (this bug) or raw-numeric (already fixed). Needs live GCS +
+      api-football queries against production data — a bounded, focused session, not a static-code read. (repo:
+      instruments-service)
