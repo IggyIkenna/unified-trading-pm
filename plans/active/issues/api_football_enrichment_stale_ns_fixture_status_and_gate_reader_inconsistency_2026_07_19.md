@@ -292,9 +292,36 @@ shared by every consumer of every instruments-\* manifest bucket.
       `read_availability_index`/gate-script read in general now that the dedup bug is fixed, but keep the per-VM-shard
       direct-read cross-check as a REQUIRED (not ad-hoc) second opinion specifically in the pattern that fooled this
       todo for 20+ rounds — a fleet reports full completion/`exit_code=0` yet the very next gate read is unchanged.
-- [ ] [DATA] P2. Audit other consumers of FIXTURES `status_short`/`status_long` (match-outcome features, any
+- [x] ✅ [DATA] P2. Audit other consumers of FIXTURES `status_short`/`status_long` (match-outcome features, any
       live-vs-settled dashboard/report) for downstream impact from the pre-fix corpus-wide `NS` mis-stamping — flag
-      anything that silently treated "NS" as "not yet played" when the match may actually have concluded.
+      anything that silently treated "NS" as "not yet played" when the match may actually have concluded. — See "##
+      Re-audit findings (Task -006)" below. Found ONE genuine, confirmed impact:
+      `features-service/features_service/sports/exporters/derived_features_helpers.py::_filter_completed_before` (feeds
+      `_build_h2h_history`) filters to rows where `status.isin({"FT","AET","PEN","Match Finished"})` — since
+      `status_short` was hardcoded `"NS"` for the entire live/daily-write-path corpus pre-fix while `home_goals`/
+      `away_goals` (separate `CanonicalFixture` attributes, unaffected by the bug) were populated correctly for finished
+      matches, this filter silently excluded every genuinely-completed api_football fixture with a valid score from
+      H2H-history feature computation, corpus-wide, for the bug's entire lifetime. Filed a new [DATA] P1 follow-up todo
+      below (repo: features-service) rather than fixing inline — this is out of data_engineering's own craft scope
+      (features-service feature-computation code) and the fix is best sequenced after the P1 backfill-correction pass
+      (the still-open todo above) so H2H features get recomputed against corrected data rather than patched twice. 6
+      other candidate consumers surveyed (`unified_trading_library/sports_fixtures.py`'s league-active detector,
+      `unified_trading_library/fixtures/match_lifecycle.py` [write-time only, reads raw af_response not the persisted
+      column], `market-tick-data-service/sports_catalog_reader.py` [dead/unused passthrough field],
+      `deployment-api/upcoming_fixtures.py` [filters by kickoff_utc window only, status is display-only],
+      `deployment-api/_fixtures_pools.py` [display-only], `instruments-service/sports/     fixture_completeness.py`
+      [docstring-only mention, not wired into any filter]) — none of these gate a real decision on
+      `status_short`/`status_long` in a way the mis-stamping bug would corrupt.
+- [ ] [DATA] P1. Fix
+      `features-service/features_service/sports/exporters/derived_features_helpers.py::_filter_completed_before` (feeds
+      `_build_h2h_history`, used for match-outcome H2H features): the status-based exclusion
+      (`df[~has_status | df["status"].isin({"FT","AET","PEN","Match Finished"})]`) silently dropped every
+      genuinely-completed api_football fixture mis-stamped `status_short="NS"` even though `home_goals`/`away_goals`
+      were already populated with the real final score. Since the preceding line already filters to
+      `home_goals.notna()`, the status check is redundant AND wrong for this source — either drop it for api_football
+      rows or widen it to trust a populated score as sufficient evidence of completion. Sequence AFTER the P1
+      backfill-correction pass above lands (recompute H2H history against corrected data, not the still-`NS` historical
+      rows) to avoid a second patch. (repo: features-service)
 
 ## Process note — 2026-07-19T16:30Z (slot-6, data_engineering)
 
@@ -387,3 +414,70 @@ the one genuine artifact: a fleet reports full completion (`exit_code=0`, reache
 immediately-following consolidated gate read is unchanged. In every OTHER "unchanged" pattern seen in this history
 (mid-run, pre-completion, or shortly after a kill/relaunch), the existing chronological-scan-defect explanation + the
 doc's own phantom-key spot-checks already account for the result without invoking a reader bug.
+
+## Re-audit findings (Task -006) — 2026-07-19T~17:2xZ (slot-3, data_engineering)
+
+**Method**: `grep -rl "status_short\|status_long" --include="*.py"` across every repo in the workspace (excluding
+tests), then read each match's surrounding code to determine whether it (a) reads the LIVE `af_response` at write time
+(never exposed to the historical persisted mis-stamping) or (b) reads the PERSISTED `status_short`/`status_long` parquet
+columns, and if (b), whether it gates a real filtering/classification decision on the value or merely displays it.
+
+**Consumers surveyed and verdict**:
+
+1. **`features-service/features_service/sports/exporters/derived_features_helpers.py::_filter_completed_before`**
+   (L388-395) — **REAL, CONFIRMED IMPACT.** Feeds `_build_h2h_history`, used for match-outcome H2H features. Filters
+   first to `home_goals.notna()`, THEN excludes any row whose `status` is present but not in
+   `{"FT","AET","PEN","Match Finished"}`. Traced the write path
+   (`instruments-service/instruments_service/engine/orchestrator/sports.py:295-296`):
+   `home_goals = getattr(fx, "home_goals", None)` — `CanonicalFixture` DOES carry `home_goals`/`away_goals` as real
+   attributes (unlike `status`, which it lacks entirely per root cause 1), so these are populated correctly with the
+   real final score for finished matches, completely independent of the status bug. Meanwhile `status_short` was
+   hardcoded `"NS"` for every row written through this path pre-fix (root cause 1). Net effect: any genuinely-finished
+   api_football fixture with a valid recorded score was silently EXCLUDED from H2H-history feature computation for the
+   entire bug lifetime, because it failed the redundant status check even though the score-based completeness signal was
+   already correct. This is exactly the "silently treated NS as not yet played when the match may actually have
+   concluded" pattern the todo asked to find. Filed as a new `[DATA] P1` todo above (repo: features-service) — out of
+   data_engineering craft scope to fix inline, and best sequenced after the backfill-correction pass so H2H features get
+   recomputed against corrected historical data rather than patched twice.
+
+2. **`unified-trading-library/unified_trading_library/sports_fixtures.py`** (the `EXPECTED_FIXTURE_POSTPONED` /
+   `EXPECTED_FIXTURE_CANCELLED` classifier, L120-178) — **NO impact.** Its logic is
+   `active_statuses = statuses - {"PST", "CANC"}`; any status outside `{PST, CANC}` — including the mis-stamped `"NS"` —
+   falls into "active", which is exactly the correct classification for a real (non-postponed, non-cancelled) fixture.
+   The bug doesn't change this function's output because it was never trying to distinguish NS from FT in the first
+   place, only postponed/cancelled from everything else.
+
+3. **`unified-trading-library/unified_trading_library/fixtures/match_lifecycle.py::extract_match_lifecycle`** — **NO
+   impact.** Confirmed its only caller is `instruments-service/.../sports.py:167` at WRITE time, fed directly from the
+   raw `af_response` dict (`status_block = fixture.get("status")`), never from the persisted parquet column. The Q5/Q6
+   lifecycle columns it derives (`match_result`, `went_to_extra_time`, `went_to_penalties`, HT/ET/PEN timestamps) were
+   therefore correctly computed from live data throughout the bug's lifetime — a useful corroborating fact: only
+   `status_short`/`status_long` themselves were corrupted, not the parallel lifecycle columns that happen to share the
+   same write call.
+
+4. **`market-tick-data-service/market_tick_data_service/engine/sports_catalog_reader.py`** (L126-127) — **NO current
+   impact.** `status_raw = row.get("status_short")` is carried onto `CatalogRow.fixture_status` as a passthrough;
+   grepped for `fixture_status` elsewhere in the repo and found zero downstream consumers — a currently-unused field,
+   not gating any live decision.
+
+5. **`deployment-api/deployment_api/services/upcoming_fixtures.py`** — **LOW/cosmetic only.** `list_upcoming_fixtures`
+   filters purely by `kickoff_utc` falling in `[today, today+days]` (L390-393); `status` is carried onto the
+   `UpcomingFixture` response only as a display field (L174), never used to filter. A fixture that just concluded within
+   the rolling window could display a stale `"NS"` label for up to ~2 days — but that matches the INTENDED skip-window
+   of the periodic status-refresh trigger shipped earlier this session (deliberately skips the most recent 2 days), not
+   new fallout from this bug.
+
+6. **`deployment-api/deployment_api/services/data_status_drilldown/_fixtures_pools.py`** (L51, L224) — **Display-only.**
+   `status_short` is aliased to a `"status"` display column in a drill-down/download table; not used to filter or gate
+   any decision — a mis-stamped row just shows the wrong text in an admin table.
+
+7. **`instruments-service/instruments_service/sports/fixture_completeness.py`** (L35) — **No live impact.**
+   `status_short` appears only in a docstring ("optional; future use") — not yet wired into any filter.
+
+8. **`instruments-service/instruments_service/triggers/sports_fixtures_daily_repoll.py`** — not an independent consumer;
+   this is WRITE-path documentation for the same flattener root cause 1 already fixed ("this module does NOT re-derive
+   it — it writes whatever `_flatten_canonical_fixture_for_disk` produces").
+
+**Verdict**: one genuine, confirmed, corpus-wide-impacting consumer bug found (features-service H2H history filter),
+tracked as a new todo above. All other surveyed consumers either read live data (unaffected) or treat the persisted
+status field as display-only / not-yet-wired (no silent decision corruption).
