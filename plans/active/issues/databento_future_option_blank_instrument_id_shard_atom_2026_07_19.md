@@ -55,8 +55,8 @@ Every Databento `FUTURE` row is written `instrument_type=futures_chain`. Since
 `futures_chain ∈ _UNDERLYING_PARTITIONED_TYPES` (`engine/orchestrator/symbol_rules.py:258`),
 `engine/orchestrator/venue_fetch.py:451-459` sets `is_derivative=True` → `instrument_id_for_manifest = ""` and
 `underlying_for_manifest = <translated root>` (ES→SP500 via UAC `tradfi_symbology.py:166`). So the **real** manifest row
-for CME ohlcv_1m is `instrument_type=futures_chain, underlying="SP500", instrument_id=""`. This is unlike the dynamic
-`tradfi_shared.py::_shard_instrument_type_for` (chain only when a shard genuinely spans >1 symbol) used by the _other_
+for CME ohlcv*1m is `instrument_type=futures_chain, underlying="SP500", instrument_id=""`. This is unlike the dynamic
+`tradfi_shared.py::_shard_instrument_type_for` (chain only when a shard genuinely spans >1 symbol) used by the \_other*
 TradFi adapters (Yahoo/ECB/OFR/FRED/IBKR) — Databento is the outlier.
 
 ## Consequence (checker)
