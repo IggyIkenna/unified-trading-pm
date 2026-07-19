@@ -2,14 +2,22 @@
 doc_type: codex-ssot
 title: Sports Integration Plan
 summary:
-  Sports (football betting) as an asset class, not a separate system — service-augmentation map, canonical
-  fixture-ID matching, 19 feature categories x horizon (T-24h/T-60m/T-0/HT), and the 2026-03-01 consolidation
-  of the 4 standalone sports services into the shared pipeline.
+  Sports (football betting) as an asset class, not a separate system — service-augmentation map, canonical fixture-ID
+  matching, 19 feature categories x horizon (T-24h/T-60m/T-0/HT), and the 2026-03-01 consolidation of the 4 standalone
+  sports services into the shared pipeline.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, execution-service, features-service, instruments-service, market-data-processing-service, strategy-service]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [sports, features, ml, execution, odds]
 related: [sports-batch-live.md, sports-live-odds-connectivity.md, ../02-data/per-asset-group-bucket-layouts.md]
@@ -22,6 +30,14 @@ code_refs:
 ---
 
 # Sports Integration Plan
+
+> **⛔ SUPERSEDED (2026-07-19) — historical pre-implementation artifact, not current architecture.** This doc is a
+> day-one planning document: its bucket paths (`gs://market-data-raw/SPORTS/…`, `gs://instruments-data/SPORTS/…`),
+> instrument-key formats, execution venues (Smarkets/Polymarket), and "Phase 1–6 (Q2–Q4 2026)" future-tense framing do
+> NOT match the live system. It was mislabeled `status: current`. **For live sports architecture read instead:**
+> `codex/04-architecture/sports-batch-live.md`, `codex/02-data/sports-data-types-catalog.md`,
+> `codex/02-data/sports-gcs-path-ssot.md`, `plans/epics/sports_master.md`, and
+> `plans/active/sports_consolidated_audit_2026_07_19.md`. Retained for history only.
 
 ## Overview
 

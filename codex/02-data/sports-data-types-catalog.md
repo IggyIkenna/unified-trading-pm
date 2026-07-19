@@ -11,16 +11,34 @@ stage: [meta]
 repos: [features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [sports, mtds, mdps, odds, data-status, catalogue]
-related: [codex/02-data/sports-gcs-path-ssot.md, codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/sports-fixtures-lifecycle.md]
+related:
+  [
+    codex/02-data/sports-gcs-path-ssot.md,
+    codex/02-data/sports-data-source-coverage-matrix.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/02-data/sports-fixtures-lifecycle.md,
+  ]
 created: 2026-05-24
 authoritative_for: [MTDS/MDPS sports data_type catalog (odds and derived types), sports bookmaker coverage matrix]
-referenced_by: [codex/01-domain/sports-instruments.md, codex/02-data/README.md, codex/02-data/sports-fixtures-lifecycle.md]
+referenced_by:
+  [codex/01-domain/sports-instruments.md, codex/02-data/README.md, codex/02-data/sports-fixtures-lifecycle.md]
 owner:
 last_reviewed: 2026-05-24
 code_refs:
 ---
 
 # Sports Data Types Catalog
+
+> **⚠️ CANONICAL CORRECTION (2026-07-19) — data_type is UPPER-CASE for sports.** Per operator **K0-DECISION (b)**
+> (2026-07-18): sports `data_type` is **UPPER-case everywhere** — sports is the only asset_group that is UPPER (tradfi/
+> cefi/defi are lower-case). The canonical forms are **`ODDS`, `ODDS_SNAPSHOT`, `ODDS_MOVEMENT`,
+> `ARBITRAGE_OPPORTUNITY`, `ODDS_HORIZON_BUCKET`, `MARKETS`, `OUTCOMES`, `SETTLEMENTS`** (+ the reference types
+> `FIXTURES_SCHEDULE`/ `FIXTURES_OUTCOMES`/`TEAMS`/… already UPPER). The lower-case forms shown in the body below are
+> the pre-decision spelling and are being migrated (`market-data-tick-sports-prd` is the only mixed bucket; live
+> writer + historical rows pending — see `plans/active/sports_consolidated_closeout_2026_07_19.md` Track C / K1-K2).
+> **`timeframe` is its own column, never baked into `data_type`** — the suffixed `odds_horizon_bucket_{15m,1h,4h,1d}`
+> cohort is DEAD (F3). CF-7's UPPER→lower normalise map is SUPERSEDED for sports. SSOT for the decision:
+> `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` § K0-DECISION.
 
 > SSOT for all MTDS/MDPS Sports data type definitions, sources, shard keys, and implementation status. Last updated:
 > 2026-05-24.

@@ -34,6 +34,14 @@ code_refs:
 
 # Sports GCS Path SSOT
 
+> **⚠️ CORRECTION (2026-07-19).** Two path facts drifted: (1) live sports_reference paths carry a **`pipeline_mode=`
+> segment** (`sports_reference/by_date/day={D}/pipeline_mode=batch_api_football/entity={E}/…`), not the
+> `pipeline_mode`-less layout some examples below show — readers PREFIX-MATCH canonical-then-legacy. (2) The **fixtures
+> entity is SPLIT**: `entity=fixtures_schedule` + `entity=fixtures_outcomes` (2026-05-23), replacing the now-FROZEN bare
+> `entity=fixtures`. Note the live layout is under `sports_reference/by_date/` — `sports_reference_v2/by_date/` is a
+> DEAD abandoned layout (frozen 2026-04-20), do not read/write it. See
+> `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / STORE).
+
 **What it is.** The canonical path-resolver for sports parquet on GCS. Every sports reader / writer / data-status audit
 / phantom-row reconciler uses this SSOT — no hardcoded `entity=...` strings inline.
 

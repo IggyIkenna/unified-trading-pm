@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Sports Adapter Dependency Order — SSOT
 summary:
   api-football is T0 (canonical fixtures/leagues/teams) for every sports date; T1 enrichment adapters
-  (footystats/understat/transfermarkt/SFI/open-meteo/betfair) read its GCS parquet, gated by a factory-preflight DependencyError.
+  (footystats/understat/transfermarkt/SFI/open-meteo/betfair) read its GCS parquet, gated by a factory-preflight
+  DependencyError.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,16 +12,39 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [sports, instruments, backfill, footystats, data-correctness, orchestrator]
-related: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-scheduling-and-sharding.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/04-architecture/shard-level-failure-isolation.md]
+related:
+  [
+    codex/02-data/sports-data-source-coverage-matrix.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/02-data/per-asset-group-bucket-layouts.md,
+    codex/04-architecture/shard-level-failure-isolation.md,
+  ]
 created: 2026-04-20
 authoritative_for: [sports adapter T0/T1 run-order dependency, api-football pre-flight DependencyError gate]
-referenced_by: [codex/02-data/sports-data-source-coverage-matrix.md, codex/02-data/sports-gcs-path-ssot.md, codex/02-data/sports-scheduling-and-sharding.md, codex/15-runbooks/backfill-completion-playbook.md, codex/15-runbooks/smoke-testing-playbook.md]
+referenced_by:
+  [
+    codex/02-data/sports-data-source-coverage-matrix.md,
+    codex/02-data/sports-gcs-path-ssot.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/15-runbooks/backfill-completion-playbook.md,
+    codex/15-runbooks/smoke-testing-playbook.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
 ---
 
 # Sports Adapter Dependency Order — SSOT
+
+> **⚠️ CORRECTION (2026-07-19) — two live drifts in this doc.** (1) **Entity split**: the T0 api-football writer and
+> every T1 reader now use `entity=fixtures_schedule` (+ `entity=fixtures_outcomes` for scores/status) under
+> `pipeline_mode=batch_api_football/`, NOT the bare `entity=fixtures` this doc's §1/§3 still show — the bare entity is
+> FROZEN (last real write 2026-05-23, measured). (2) **The §5 fail-loud dependency gate is UNREACHABLE in production**:
+> `check_api_football_dependency()` only fires `if date is not None`, and grep-verified that every real T1 call site
+> (`footystats.py`, `transfermarkt.py`, `understat.py`, `sfi.py`) omits `date=` — confirmed by live data (understat has
+> captured rows 2014-2017 where api-football has zero fixtures, impossible if the gate fired). See
+> `plans/active/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md` +
+> `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / CODEX tracks).
 
 **Purpose**: canonical reference for the run-order of sports reference-data adapters inside instruments-service. Written
 2026-04-20 as part of Phase 3 of the `institutional_smoke_matrix_2026_04_20` plan after the SPORTS smoke incident
