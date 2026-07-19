@@ -2775,3 +2775,57 @@ resume once (a) a fresh tarball build (`create-code-tarballs.sh --include instru
 (b) a `--force` FIXTURES relaunch on the residual clusters is run AND VERIFIED to actually flip `status_short` away from
 `NS` this time (check the raw parquet directly, per this session's own hard-won lesson — a "814 rows written" log line
 is NOT sufficient evidence the status field itself was corrected).
+
+### 2026-07-19T17:03-17:26Z — data_engineering slot-8 (same session, continued — FOUND + FIXED root cause 1b: a dead read path that made root cause 1's fix look ineffective; multiple peers collaboratively closed the rest of this issue doc during the session)
+
+Verified my own "verified the fix" claim from the previous entry was WRONG in one specific way: rebuilt the
+instruments-service tarball (`create-code-tarballs.sh --include instruments-service`, picked up `4ef4cfeb`) and ran a
+real 1-day verification VM (`af-backfill-20260719-164510`, `2026-07-01`, `exit_code=0`). Live fetch correctly reported
+`187/205 completed`, but re-reading the persisted parquet via `_read_per_league_entity_df(..., "fixtures")` STILL showed
+all-NS. Traced why: the `254fb843` entity-split (2026-06-24) moved status columns to `entity=fixtures_schedule/` and
+`_write_fixtures_per_league` never writes the legacy bare `entity=fixtures/` again — every GCS object under that path is
+frozen at a `2026-06-22`/`2026-06-27` snapshot regardless of how many times a date is re-fetched. Confirmed
+`entity=fixtures_schedule` for the SAME date/run DID show the correct `4 FT / 1 CANC / 166 NS` breakdown — the fix from
+`4ef4cfeb` was correct all along; I was just reading the wrong (dead) location to verify it.
+
+**Fixed** — instruments-service@`e1524d21`: added `_read_fixtures_entity_with_schedule_fallback` (tries
+`fixtures_schedule` first, legacy `fixtures` fallback for pre-migration dates) and wired it into the three affected read
+helpers (`_read_fixture_ids_from_gcs`, `_find_stale_fixture_leagues_for_date`, `_build_fixture_league_map_from_gcs` —
+the last one likely explains some of this session's earlier "out-of-universe" drop counts too, since a stale
+fixture-id→league map would silently misclassify genuinely in-universe fixtures). 7 new/updated tests, full
+`quality-gates.sh` green.
+
+**This resolved a live anomaly a peer had just flagged**: while I was mid-investigation, slot-4 shipped `366aaefd` (a
+targeted backfill-correction sweep script) and flagged "spot-check shows live API + flatten both correctly return FT,
+yet parquet still reads NS" as an unconfirmed anomaly, provisionally blamed on concurrent-write races. Documented in the
+issue doc that it was actually root cause 1b (the same dead-path bug), not a race. Re-ran their sweep script post-fix:
+cluster 1 (2026-02-21..03-22) stale-cell count dropped from a stuck 594 to 1; cluster 2 (2026-06-24..07-14) to 394. Ran
+`--apply`: 9 more `(date, league)` cells genuinely re-fetched + corrected (26 rows). Filed one new follow-up todo (why
+the targeted season-cache fetch returns 0 fixtures for most of the remaining stale cells in cluster 2 — a narrower,
+distinct gap, possibly a `today`-boundary issue in the trigger).
+
+**Notable session-wide pattern**: this issue doc
+(`api_football_enrichment_stale_ns_fixture_status_and_gate_reader_ inconsistency_2026_07_19.md`) became a genuinely
+collaborative multi-agent effort over this session — independently of my own dispatch, other slots shipped: a periodic
+status-refresh trigger (slot-4, `7d07e2a4`), the targeted backfill-correction sweep script (slot-4, `366aaefd`), the
+manifest-reader column-selection-dependent-dedup fix for root cause 2 (unknown slot,
+`unified-trading-library@c6691925`), a re-audit of the historical 20+-bounce log distinguishing genuine non-progress
+from reader artifacts (slot-3), and a downstream-consumer audit that found a real, separate bug in features-service's
+H2H-history completed-fixture filter (slot-3) — now tracked as its own todo. By the end of this session essentially
+every todo in the issue doc is closed except the two new ones filed this round (the season-cache 0-fixtures gap here,
+and the features-service H2H filter fix, out of data_engineering craft scope).
+
+Cleaned up: deleted `af-backfill-20260719-161700` (the 5-day OOM-diagnostic probe VM from earlier this session) after
+confirming genuine staleness — heartbeat blob frozen at `16:37:41Z` (48+ min stale at check time), `run.log` and serial
+console both silent since the same timestamp, per-VM manifest shard absent. It was running pre-fix code and had no
+further diagnostic value; the OOM-vs-multi-day-single-process question it was probing is now moot since the targeted
+per-`(date, league)` trigger (much cheaper than a blanket multi-day `--force` run) is the going-forward mechanism, not a
+long single-process VM.
+
+**Not flipping this checkbox.** The gate is closer than at any point in this todo's 20+-dispatch history (real code
+fixes shipped and verified for both original root causes plus this session's root cause 1b; the historical
+backfill-correction mechanism now works correctly), but per-cell correction across the full residual corpus is still in
+progress (cluster 2's season-cache gap needs its own fix first). `/skip-current-task` — resume once (a) the new
+season-cache-0-fixtures todo lands, then re-run the backfill-correction sweep to closure, or (b) a fresh
+`read_availability_index`/`query_api_football_pending_clusters_2026_07_18.py` read (now trustworthy post root-cause-2
+fix) shows genuine convergence toward 0 pending for the two residual clusters.
