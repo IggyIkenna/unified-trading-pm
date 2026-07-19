@@ -272,6 +272,39 @@ is 13.47 MB/s (64/32).
 it should be built with tests rather than at 00:00 with no operator. Every knob-level lever HAS been swept and recorded
 above (semaphore 32/64/192, book cap 16/24/32/96, pool 16/128) — none of them is the answer.
 
+### Fetch/parse decoupling — SHIPPED, tested, and honestly NOT the throughput lever
+
+I told the operator the decoupling was "where the 30 MB/s lives." That was wrong. It shipped and is correct, but it does
+not raise throughput.
+
+**What shipped** (MTDS + launcher): `tardis_max_concurrent_downloads` used to drive four things at once — runner task
+slots, the fetch semaphore, and both thread pools. A new knob `tardis_max_inflight_tasks` (default 128,
+`TARDIS_MAX_INFLIGHT_TASKS`, launcher passthrough added) now sizes ONLY the non-book runner's task slots, leaving the
+fetch semaphore and pools on the old knob. book_snapshot_5 is deliberately left coupled (its slot count is the 8
+MiB-per-parse memory bound). Tested: 6401 unit tests pass; the decoupled log line ("non-book runner 128 in-flight task
+slot") is confirmed live on the VM.
+
+**Arm F (fetch=48, slots=128, book=32), measured**: 8-10 MB/s, sockets ~15, declining to 0.76x of the 11.09 baseline. No
+better than the coupled arms — and note slots=128 came from the code default because this VM launched a few minutes
+before the launcher passthrough shipped, so the intended 192 did not apply; but 128 already exceeds the 48 fetch cap, so
+the decoupling WAS active and still did nothing.
+
+**The real finding, now proven across six arms.** Throughput sits at 8-13 MB/s and concurrent sockets at ~15 regardless
+of EVERY single-process lever tried: fetch semaphore (32/48/64/192), task slots (coupled, then 128 decoupled), book cap
+(16/24/32/96), connection pool (16/128). The one thing that ever moved the socket count was a SECOND PROCESS: on the
+same VM/IP it opened 24 extra Tardis connections for 38 sustained. So a single event loop / connection context tops out
+near 15 concurrent in-flight fetches here, below any semaphore we set, and the limiter is beneath the task-scheduling
+layer the decoupling addresses.
+
+**The one lever that is both proven and cap-1-safe: multiple downloader PROCESSES on one VM.** Cap-1 governs concurrent
+VMs (IPs); N processes on one VM share the IP, and the 38-socket test proves the server serves them. This is the path to
+~30 MB/s. It is NOT a config change — it needs a real design: shard the (venue, date) space across processes without
+double-fetching, and coordinate the manifest writes. That should be built with the operator and with tests, not
+autonomously at night. Recorded here as the clear next step rather than attempted blind.
+
+**Best proven config remains 64/32 coupled (13.47 MB/s).** The overnight backfill runs there, aimed at the coverage
+frontier (2026-02-22+) so it does real work rather than skip-scanning the ~530 GB the prior run already captured.
+
 ## Original (WRONG) analysis — kept as a record
 
 # Tardis account-level volume quota — ~7-8 GB, then ~2 MB/s

@@ -89,11 +89,17 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [x] [CODE] P0. ✅ §Z season_context fabrication FIXED — **features-service@c6eb1f38** (QG green). Gate derives
       matchday from `round`; `_competition_phase`/games_remaining honest `None` on NaN; 2 regression tests. The 8-VM
       re-run fleet writing the fabricated pattern was STOPPED.
-- [ ] [DATA] P0. **Clean corpus-wide `derived_features` re-run** (2019→present, replaces the stopped fleet) — bounded
-      per-year SPOT chunks (the `--force` × SPOT preemption-replay hard rule: a preempted force-run restarts at day one,
-      so chunk it), watchdog on a validated creation-time metric (whole-date filter, not an hour pattern — cf. codex
-      async rule 1a). MUST run AFTER § C1 (manifest atom) so shards record the split atom. Verify via corpus re-scan
-      (matchday non-null ≈ round non-null; competition_phase a real early/mid/late spread, NOT 100% 'late').
+- [~] [DATA] P0. **Clean corpus-wide `derived_features` re-run** (2019→present, replaces the stopped fleet) — bounded
+  per-year SPOT chunks (the `--force` × SPOT preemption-replay hard rule: a preempted force-run restarts at day one, so
+  chunk it), watchdog on a validated creation-time metric (whole-date filter, not an hour pattern — cf. codex async rule
+  1a). **PREREQUISITE (measured 2026-07-19): the features-service GCS tarball must include the §Z fix before launching**
+  — the tarball was STALE (`aa7ea0ff`, built 07:30Z, pre-fix); a naive relaunch would have REPEATED the corrupt run.
+  Rebuilt via `create-code-tarballs.sh --include features-service` (all 5 repos verified clean@LDR first) → features
+  tarball now `c6eb1f38`. **CORRECTION: this re-run does NOT depend on § C1** — C1 is instruments-service manifest
+  bookkeeping; the re-run reads fixture PARQUETS (already correct via §Q/T/W round + §V split-read), so it is gated only
+  on the §Z code fix + a fresh tarball (both done). 2024 pilot chunk launched; verify its shards show a real
+  early/mid/late competition_phase spread before fanning out the remaining years. Verify via corpus re-scan (matchday
+  non-null ≈ round non-null; phase NOT 100% 'late').
 - [ ] [DIAG] P1. `sfi_progressive_features` is corpus-empty (1 manifest row) despite a documented 2020→today window —
       find why the backfill never ran, then run it. Without it every HT/progressive-SFI ML feature is unavailable.
 - [ ] [DIAG] P2. `is_promotion_relegation` is hardcoded `False` (dead) — wire it from the standings relegation-zone
