@@ -111,22 +111,28 @@ per-domain path prefixes:
       buckets as creates. UTL QG green.
 - [x] ✅ [DATA] P2. **Parity migrate** — **DONE 2026-07-19.** Only 1 real object existed (pnl-attribution-store, an
       ARBITRAGE_PRICE_DISPERSION funding-rate parquet) → server-side copied to `portfolio-state-prd/pnl-attribution/`,
-      parity verified. positions-store(0)/archetype-state-{prd,test}(0)/position-store-sports-{prd,test}(0) asserted-empty;
-      risk-metrics-store + pnl-attribution-output ABSENT. No real portfolio state written (test/dev, nothing traded).
+      parity verified. positions-store(0)/archetype-state-{prd,test}(0)/position-store-sports-{prd,test}(0)
+      asserted-empty; risk-metrics-store + pnl-attribution-output ABSENT. No real portfolio state written (test/dev,
+      nothing traded).
 - [x] ✅ [CODE] P2. **Cutover** — **DONE 2026-07-19 (operator full-send, test data).** Driven via IMPLEMENT→adversarial-
       verify workflow (woq29kqa8, GO all 5 repos). LANDED: PM yaml mirrors@a1c500097 (folded FIRST — the C+D
       PM-yaml-in-CI lesson), UAC yaml, UTL@(registry positions/pnl_attribution/risk_metrics → portfolio-state-prd +
-      literal domain prefix + _KIND_ALIASES 6 retired kinds), strategy-service (pnl/config resolved_output_bucket +
-      4 pnl writers + venue_balance_tracker position-sports/ prefix), deployment-service yaml. UTL CI GREEN.
-      X-repo loose end: execution-service `tenderly_budget.py` writes archetype-state at bucket root (internally
-      symmetric, empty bucket → no data loss) — closeout prefix fix.
-- [x] ✅ [INFRA] P2. **Redeploy/consolidator** — **N/A / DONE 2026-07-19.** No redeploy (nothing writing portfolio-state,
-      test/dev). No portfolio-state consolidator exists (plan-noted — the flat trio never had one); skipped.
+      literal domain prefix + _KIND_ALIASES 6 retired kinds), strategy-service (pnl/config resolved_output_bucket + 4
+      pnl writers + venue_balance_tracker position-sports/ prefix), deployment-service yaml. UTL CI GREEN. X-repo loose
+      end: execution-service `tenderly_budget.py` writes archetype-state at bucket root (internally symmetric, empty
+      bucket → no data loss) — **CLOSEOUT PREFIX FIX DONE 2026-07-19: execution-service@9a1f4f1d** (added
+      `_BUDGET_DOMAIN_PREFIX="archetype-state"` → blob path now
+      `archetype-state/tenderly_budget/{archetype}/day=….json`; docstring updated to the folded portfolio-state bucket;
+      6 unit tests green, QG green; LDR→staging via Tier-C drain).
+- [x] ✅ [INFRA] P2. **Redeploy/consolidator** — **N/A / DONE 2026-07-19.** No redeploy (nothing writing
+      portfolio-state, test/dev). No portfolio-state consolidator exists (plan-noted — the flat trio never had one);
+      skipped.
 - [x] ✅ [INFRA] P2. **Delete sources + TF-reconcile** — **DONE 2026-07-19 (operator pre-authorized autonomous delete;
       test data, not live).** DELETED the 6 source buckets (positions-store, pnl-attribution-store, archetype-state-
-      {prd,test}, position-store-sports-{prd,test}). TF: imported portfolio-state-{prd,test}; state-rm'd the 4 TF-tracked
-      sources (positions/pnl-attribution not TF-managed). yaml keys folded (archetype-state/position-store-sports kept for
-      soft-window → closeout). This was the LAST destructive step of Wave-3 — ALL 5 FOLDS NOW COMPLETE.
+      {prd,test}, position-store-sports-{prd,test}). TF: imported portfolio-state-{prd,test}; state-rm'd the 4
+      TF-tracked sources (positions/pnl-attribution not TF-managed). yaml keys folded
+      (archetype-state/position-store-sports kept for soft-window → closeout). This was the LAST destructive step of
+      Wave-3 — ALL 5 FOLDS NOW COMPLETE.
 - [ ] [INFRA] P2. **IAM + lifecycle** — join `portfolio-state-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B; `-test-` twin gets test-tier. **CONFIRM
       retention before COLDLINE** — live-trading snapshots may need STANDARD longer than 60d (design §2.E flags
@@ -143,9 +149,9 @@ per-domain path prefixes:
 - **2026-07-18, `/autonomous` — PROVISION only (additive/safe; the sensitive live migration + cutover DEFERRED to the
   careful gated pass per this plan's operator-gated design).** Provisioned the folded target
   `portfolio-state-{prd,test}-central-element-323112` (direct gcloud, ASIA-NORTHEAST1/UBLA/STANDARD→COLDLINE@60d). NOTE
-  the design flags **retention-confirm-before-COLDLINE** for live-trading snapshots — the 60d lifecycle is applied as the
-  canonical default but the operator must confirm live position/pnl/risk retention doesn't need STANDARD longer than 60d
-  (if so, adjust before it bites). **Sources measured:** `positions-store` (flat), `pnl-attribution-store` (flat),
+  the design flags **retention-confirm-before-COLDLINE** for live-trading snapshots — the 60d lifecycle is applied as
+  the canonical default but the operator must confirm live position/pnl/risk retention doesn't need STANDARD longer than
+  60d (if so, adjust before it bites). **Sources measured:** `positions-store` (flat), `pnl-attribution-store` (flat),
   `pnl-attribution-output` (bare, no-pid), `archetype-state-{prd,test}` (env-tiered), `position-store-sports-{prd,test}`
   (env-tiered); **`risk-metrics-store` NOT present** on GCP (likely empty / PATH_REGISTRY-`DataSetSpec`-only — assert at
   migration). **DEFERRED (this is the LAST + most sensitive fold — do NOT rush):** the 6-source migration + the
@@ -153,4 +159,5 @@ per-domain path prefixes:
   `pnl/config.py` bare default + the 2 yaml kinds → `portfolio-state` + per-domain prefixes) + redeploy + end-to-end
   verify (diff real position/pnl/risk vs pre-migration) + the operator-gated delete. Follows the Fold-A discovery→
   implement→adversarially-verify shape; strategy-service pnl/position modules are the real writers (the yaml-named
-  risk-and-exposure/pnl-attribution/position-balance-monitor services do NOT exist as repos — redeploy strategy-service).
+  risk-and-exposure/pnl-attribution/position-balance-monitor services do NOT exist as repos — redeploy
+  strategy-service).

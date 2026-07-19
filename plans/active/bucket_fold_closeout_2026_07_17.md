@@ -134,3 +134,13 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   must reconcile it against origin's new axis-census versions (verify no overlap-conflict on `data_status/__init__.py` +
   `services/data_status/manifest.py`), gate, and ship as scoped commits OR discard if origin already covers it. Do NOT
   blind-pop (origin shipped overlapping files).
+- **2026-07-19, `/autonomous` closeout tick (cont.) — LOOSE-END 4a DONE: execution-service@9a1f4f1d.**
+  `execution_service/providers/tenderly_budget.py` now writes under the `archetype-state/` domain prefix inside the
+  folded portfolio-state bucket (`_BUDGET_DOMAIN_PREFIX="archetype-state"` → blob key
+  `archetype-state/tenderly_budget/{archetype}/day=….json`), matching the Fold-E domain-prefix convention (positions/,
+  pnl-attribution/, risk-metrics/, …). No data migration needed — the bucket was empty (nothing traded) and
+  writer+reader are the same class (internally symmetric). Docstring updated to the folded bucket. 6 unit tests green,
+  execution-service QG green. Staging-first repo → LDR→staging via Tier-C drain. Remaining loose ends: deployment-api
+  C+D-display/Fold-B WIP (stashed, 4c — reconcile vs origin's new axis-census), UAC replay WIP (4d), UTL/UAC dormant
+  un-tiered helpers (4e), consolidator job renames (cosmetic — documented in the codex SUPERSEDED banner, not
+  executing), AWS recount.
