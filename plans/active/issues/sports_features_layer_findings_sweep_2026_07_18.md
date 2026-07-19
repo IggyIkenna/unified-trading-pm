@@ -244,8 +244,36 @@ Raw is abundant (~18k rows each) but zero rows bucket. Their legacy shadows are 
 rejected by the `bm<0` guard. If so this is **honest absence mis-recorded as `attempted_failed`** (should be
 `empty_confirmed`), which also wrongly depresses the coverage denominator.
 
-- [ ] [DIAG] P1. Confirm whether all raw observations for these 3 dates are post-kickoff; if yes, record
-      `empty_confirmed` (honest absence) instead of `attempted_failed`, and delete the leaked legacy shadow.
+- [x] [DIAG] P1. ✅ MEASURED — **the hypothesis is REFUTED, and the proposed remediation would have HIDDEN a real bug.**
+      Raw is overwhelmingly _pre_-kickoff, not post: 96.7% of observations have `minutes_to_kickoff > 0`. The dominant
+      disqualifier is a different one entirely — the observations sit **>24h before kickoff**, i.e. outside every
+      `TIER1_HORIZONS` bucket (which spans T-24h..T-0), median ~4,590 min (~3.2 days) out.
+
+| date       | >24h out (unbucketable) | **bucketable (0–24h)** | post-kickoff | verdict                                      |
+| ---------- | ----------------------: | ---------------------: | -----------: | -------------------------------------------- |
+| 2025-12-18 |          25,180 (95.4%) |                **360** |          866 | **REAL BUG** — rows were droppable-but-valid |
+| 2025-12-24 |          24,738 (96.0%) |                  **0** |        1,035 | honest absence — empty IS correct            |
+| 2025-12-31 |          26,557 (95.1%) |                **362** |        1,007 | **REAL BUG** — same as 12-18                 |
+
+**The three dates are NOT one case.** Only 2025-12-24 has genuinely nothing to bucket. 12-18 and 12-31 each hold ~360
+observations inside the bucketable window that the adapter nonetheless dropped — so `attempted_failed` on those two is
+an HONEST signal of a genuine failure, and rewriting them to `empty_confirmed` (the original remediation) would have
+**suppressed a live bug and marked a real data gap as confirmed-empty**. That is the precise failure mode the
+honest-absence rule exists to prevent, arrived at from the wrong direction.
+
+A second hypothesis was also eliminated on the way: that the 18,480 rows were the RECOGNIZED-BUT-UNCONSUMABLE
+`venue=ODDS_API` meta shape (`instrument_type=sport`). Measured — the raw is 468+ files of `instrument_type=odds` under
+real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consumable shape.
+
+- [ ] [DIAG] P1. Root-cause why ~360 in-window observations on 2025-12-18 and 2025-12-31 fail to bucket while 2025-12-24
+      legitimately has none. Likely candidates: a fixture-mapping join dropping them, or a secondary guard beyond
+      `bm<=0`. Do NOT "fix" this by relabelling the manifest.
+- [ ] [DATA] P2. 2025-12-24 alone may legitimately become `empty_confirmed` once the above is understood — but only that
+      date, and only after the bucketing bug is fixed, so the two questions are not conflated again.
+- [ ] [DESIGN] P3. Separately: ~95% of captured odds sit >24h before kickoff and are therefore unbucketable by
+      construction. If that is the normal capture cadence, the pipeline is discarding the overwhelming majority of what
+      it pays to collect — worth confirming whether TIER1_HORIZONS should carry a T-48h/T-72h bucket, or whether capture
+      should be scheduled nearer kickoff.
 
 ### B3. Loss guard cannot express "known-corrupt baseline" — **P2**
 
