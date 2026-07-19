@@ -696,6 +696,25 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — catalogue re-rollup BLOCKED on IS base-image pin bump; fix verified-correct).**
+  Definitive diagnosis (a5f19b07): IS does NOT vendor UAC from the sibling — the Dockerfile is
+  `FROM unified-trading-library@<BASE_IMAGE_DIGEST>` and UAC is BAKED INTO the UTL base image. Fix chain: (1) ✅ UAC
+  `f7314dc2` on UAC main+LDR; (2) ✅ baked into UTL `e527a0d7` (built 14:52) — VERIFIED in-image
+  (RENZO-ETHEREUM/BEEFY-BSC/ COINBASE-ETHEREUM all `_validate_venue=None`; `_CHAIN_AWARE_DEFI_PREFIXES` present); (3) ❌
+  **IS Dockerfile pins the OLD pre-fix UTL `65209af1` (built 13:00, predates the promote) on main+LDR — THE BLOCKER**;
+  (4) ⏳ IS rebuild→deploy→re-enum→ re-rollup. Live-reprobed the deployed `:latest` (8692d5c): still rejects
+  RENZO-ETHEREUM. **BLOCKED-OPERATOR-DECISION**: the pin bump `65209af1→e527a0d7` is STAGED in the IS working tree
+  (Dockerfile, uncommitted) but can't land cleanly — quickmerge snags at STAGE-3 QG because a foreign `_backmerge`
+  (40a2cb77) advanced HEAD + changed 10 files I don't own, forcing a full QG that risks the KNOWN pre-existing
+  `compound_v3` failure (I won't clear a pre-existing gate under a Dockerfile-only change). No
+  `update-dependency-version` automation confirmed for IS. Ready paths for the operator: **(A durable)** land the staged
+  pin via quickmerge once QG is release-cleared, **(B fast/non-durable)**
+  `gcloud builds submit --config=cloudbuild.yaml --substitutions=_RUN_INIMAGE_QG=false` from the pin-bumped tree →
+  repoint the 2 Cloud Run jobs to the new digest → re-enum (`is-daily-enum-defi`) + re-rollup
+  (`lifecycle-catalogue-full-defi`) → verify 26 venues in prod/catalog.parquet. Catalogue unchanged + snapshotted
+  (`prod/_snapshots/catalog.pre-rollup.20260719T040600Z.parquet`); no prod harm. This is POST-migration (not blocking
+  the migration) but IS the R4 coverage denominator.
+
 - **2026-07-19 (slot-4, /autonomous — fleet monitor hardened + migration throughput diagnosed & 4x-sped-up).**
   Autonomous tick caught the fleet monitor `b7vaiegfp` silent 36min → owner found it was HARNESS-KILLED (not hung; it
   had recovered 2 preemptions 2025q1/q4, 12/27 done, 0 un-recovered). Replaced with **hardened monitor v2 `b6zrwiwv0`**:
