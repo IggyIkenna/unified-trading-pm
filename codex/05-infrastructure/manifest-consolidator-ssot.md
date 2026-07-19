@@ -311,6 +311,27 @@ scenario in which the legacy VM should be relaunched.
 
 ## Coverage gap (operator directive 2026-05-20 — extend to ALL services)
 
+> **SUPERSEDED by the Wave-3 bucket folds (2026-07-17/19)** — the per-kind / per-AG bucket axis in the table below no
+> longer exists. The folds collapsed the Group B consolidator target set to the **folded** buckets, so the consolidator
+> job counts dropped accordingly. Post-fold GCP consolidator targets:
+>
+> | Folded target     | Consolidator jobs                                                                                                        | Fold effect                                                                                      |
+> | ----------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+> | `features-{ag}`   | per-AG (cefi/defi/tradfi/sports/pred) — the 5 per-kind→1 per-AG                                                          | feature consolidators **N → 5** (per-AG)                                                         |
+> | `execution-store` | **1 single-root** (`_index/` at bucket root; asset_group → prefix)                                                       | execution consolidators **3 → 1** (operator ruling: single-root, execution not live / test data) |
+> | `ml-store`        | 1 (cross-asset flat)                                                                                                     | ml consolidators **5 → 1**                                                                       |
+> | `strategy-store`  | 1 (cross-asset flat)                                                                                                     | unchanged (already flat)                                                                         |
+> | `portfolio-state` | **none** — the flat position/pnl/risk trio never had a consolidator (plan-noted); no portfolio-state consolidator exists | n/a                                                                                              |
+>
+> The retarget was applied via direct `gcloud run jobs update <job> --args=…@--bucket@<folded-bucket>` (tofu-apply
+> unsafe mid-fold) and verified by executing each job + checking the folded bucket's root `_index/latest.json`. The
+> Cloud Scheduler `*/1` crons only trigger the jobs — the bucket lives in the JOB args, so no cron edit was needed. Job
+> **renames** (e.g. `uts-prod-manifest-consolidator-execution-cefi` → `-execution`) are deferred/cosmetic (renaming a
+> Cloud Run job = delete+recreate; the args already point at the folded bucket). SSOT for the fold:
+> `plans/active/bucket_fold_{features,ml,execution_strategy,portfolio_state}_2026_07_17.md` +
+> `bucket_fold_closeout_2026_07_17.md`. **The 2026-05-20/26 table below is retained as history** — read it for the
+> pre-fold coverage-gap rationale, not the current target set.
+
 Cloud Run currently covers 10 buckets (5 IS + 5 MTDS). Per A3 v2 finding R-NEW-1, **16 service buckets have NO
 consolidated manifest**:
 
