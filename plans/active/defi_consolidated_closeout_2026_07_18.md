@@ -696,6 +696,16 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — completed shards verified CLEAN; OOM risk not materialised; residual-scan
+  refined).** Convergence 5/30 shards done (~2.5h). Ran the residual-bundle scan on a COMPLETED shard's range (2025q3s1,
+  2025-07-05/11): 24.9k-26k per-instrument atoms/day + 168 clean R3 `_migrated_*` markers + **ZERO true R3 residual
+  bundles** → shards are completing cleanly, the e2-std-4 OOM risk has NOT materialised. The scan's only hits were
+  `ticks_migrated_{ts}` leaves at BARE-VENUE paths (`venue=AAVEV3-ETHEREUM/…` — no chain/it/dt segments) — VERIFIED
+  benign: `parse_hive_path` returns None (not manifested), so they DON'T pollute the rebuild and my Defect A `_`-prefix
+  skip needn't cover them. They ARE the already-tracked **R5 glued-venue flat-tree cleanup** target. **All-terminal
+  residual scan contract:** flag ONLY bundle-shaped leaves at FULL hive paths (venue+chain+it+dt) that aren't
+  `_migrated_*` — EXCLUDE bare-venue `ticks_migrated_*` (benign + R5 scope) to avoid false alarms.
+
 - **2026-07-19 (slot-4, /autonomous — giant-Solana-cell floor is the real bottleneck; ETA ~4-5h; let-it-run +
   verify-success).** Deep diagnostic (top/py-spy attempt/dmesg) on the long-pole shard 2025q1s1 after ~2h: the python
   (pid 7015) is HEALTHY + working — **154% CPU, 9.7GB RES, no OOM-kills**, grinding a single GIANT Solana
