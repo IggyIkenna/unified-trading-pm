@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "large_file_count": 1,
         "warn_file_count": 0,
-        "qg_red_reason": null,
-        "large_file_count": 1
+        "coverage_pct": 81.43,
+        "qg_red_reason": null
       }
     },
     "batch-live-reconciliation-service": {
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
+        "large_file_count": 0,
         "warn_file_count": 4,
-        "qg_red_reason": null,
-        "large_file_count": 0
+        "coverage_pct": 74.71,
+        "qg_red_reason": null
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
+        "large_file_count": 4,
         "warn_file_count": 16,
-        "qg_red_reason": null,
-        "large_file_count": 4
+        "coverage_pct": 82.3,
+        "qg_red_reason": null
       }
     },
     "deployment-service": {
@@ -759,9 +759,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
         "large_file_count": 7,
         "warn_file_count": 7,
+        "coverage_pct": 90.88,
         "qg_red_reason": null
       }
     },
@@ -820,10 +820,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "large_file_count": 1,
         "warn_file_count": 8,
-        "qg_red_reason": null,
-        "large_file_count": 1
+        "coverage_pct": 88.4,
+        "qg_red_reason": null
       }
     },
     "market-tick-data-service": {
@@ -1010,10 +1010,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 85.3,
-        "warn_file_count": 8,
-        "qg_red_reason": "pytest",
-        "large_file_count": 3
+        "large_file_count": 3,
+        "warn_file_count": 9,
+        "coverage_pct": 85.29,
+        "qg_red_reason": null
       }
     },
     "system-integration-tests": {
@@ -1164,10 +1164,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "large_file_count": 0,
         "warn_file_count": 0,
-        "qg_red_reason": null,
-        "large_file_count": 0
+        "coverage_pct": 73.53,
+        "qg_red_reason": null
       }
     },
     "unified-api-contracts": {
@@ -1263,9 +1263,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 87.9,
         "large_file_count": 6,
         "warn_file_count": 21,
+        "coverage_pct": null,
         "qg_red_reason": null
       }
     },
