@@ -595,7 +595,7 @@ because the entity-path fix failed (the 9 cells that DID have resolvable data co
       bug but does NOT explain why a CANONICAL-resolved league's own 648-fixture season cache misses a date its manifest
       claims exists (slot-8's original, still-unexplained anomaly) — see new todo below.
 
-- [ ] [DATA] P1. Root-cause why a CANONICAL-resolved league's `_fetch_season_fixtures_with_raw` season cache (648
+- [x] ✅ [DATA] P1. Root-cause why a CANONICAL-resolved league's `_fetch_season_fixtures_with_raw` season cache (648
       fixtures for league_id=129/Argentine Primera Nacional, season=2026) returns ZERO matches for
       `fx.kickoff_utc.date().isoformat() == date` on a specific flagged date (e.g. `2026-06-27`) whose
       `fixtures_schedule` manifest row claims a fixture exists there — slot-8's original anomaly, NOT explained by the
@@ -611,4 +611,33 @@ because the entity-path fix failed (the 9 cells that DID have resolvable data co
       the fix above to get a clean count of genuinely-unresolvable vs. now-fixed cells, THEN re-examine whether any
       residual "0 matches" cases are canonical-resolved (this bug) or raw-numeric (already fixed). Needs live GCS +
       api-football queries against production data — a bounded, focused session, not a static-code read. (repo:
-      instruments-service)
+      instruments-service) — **2026-07-19T~18:3xZ (slot-7, data_engineering) — instruments-service@b664aaa6:
+      ROOT-CAUSED + FIXED, live-verified against production.** Ruled out both candidate hypotheses (i)/(ii) directly:
+      live-fetched the real 648-fixture season cache for league=129/season=2026 — all 648 raw `fixture.date` strings
+      carry a `+00:00` offset (candidate (ii), non-UTC offset, DISPROVEN — `_iso()`'s tz handling is not at fault here),
+      and the season cache genuinely contains ZERO fixtures dated 2026-06-27 (dates jump 06-23→07-04, a real gap, not a
+      league-id split per candidate (i)). Cross-referenced the captured `fixtures_schedule` blob for `date=2026-06-27`
+      directly: 18 rows with `af_league_id==129`, all `status_short=NS`, `af_fixture_id` range 1498613-1498630. Queried
+      api-football's `/fixtures?id=<id>` directly for 3 of those ids: ALL still resolve under
+      `league.id=129 season=2026`, but `fixture.date` now reads `2026-07-04`/`2026-07-05` with `status=FT` (Match
+      Finished). Extended the check to all 18 captured ids — **100% (18/18) confirmed moved to a different live date**,
+      0 vanished, 0 unchanged. **Actual root cause**: the entire round of Primera Nacional matches originally scheduled
+      for 2026-06-27 was POSTPONED by the league to 2026-07-04/07-05 sometime after capture. The season-cache date
+      filter (`fx.kickoff_utc.date().isoformat() == date`) always reflects the CURRENT live schedule — it can never find
+      a rescheduled fixture under its OLD captured date again, no matter how many times it's re-queried. Not a bug in
+      season fetch, league resolution, or timezone handling — a genuine data-modeling gap: nothing detects/recovers a
+      fixture whose real-world date changed after capture. **Fixed**: added `ApiFootballAdapter.get_fixtures_by_ids()`
+      (direct `/fixtures?ids=<id>-<id>-...` lookup, batched 20/call, bypassing date/league filtering entirely) + a
+      base-adapter default (empty list) for non-api_football sources. Added `_find_stale_fixture_ids_for_date()`
+      (fixture-level sibling of `_find_stale_fixture_leagues_for_date`) and wired a reschedule fallback into
+      `run_sports_fixture_status_refresh`: any stale fixture the season-cache date filter can't find is re-fetched
+      directly by id — which ALSO recovers fixtures whose `league_id` couldn't be resolved (no league resolution needed
+      for a by-id lookup), closing that residual gap for free. Refactored the trigger into
+      `_resolve_stale_league_af_ids` + `_reschedule_fallback_fetch` helpers to stay under the module-function-size gate
+      (200L). 12 new/updated unit tests across 3 test files (adapter batching/pagination/ error-reraise,
+      fixture-id-level scan, and 4 new trigger-level reschedule-fallback scenarios incl. error isolation +
+      unresolved-league recovery); full `quality-gates.sh` green (sentinel matches shipped SHA, exit 0). Note: this is a
+      status-refresh-time RECOVERY (the row gets its correct terminal status re-written under its original `day_str`
+      partition once the by-id fallback fires on a future scheduled run) — it does not retroactively move the GCS
+      partition itself; a `(b)`/`(c)`-style "how much of the corpus is affected" sweep was out of this task's root-cause
+      scope and would need its own bounded investigation if the operator wants a corpus-wide estimate.
