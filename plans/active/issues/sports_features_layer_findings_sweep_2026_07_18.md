@@ -1528,3 +1528,60 @@ legacy bytes never downloaded).
 
 - [ ] [DATA] P0. Sports features must be RE-RUN: every pre-cutover feature row was computed from the stale legacy frame.
       This supersedes the § S re-run note — one re-run now covers both the `total_matchdays` fix and this.
+
+### T P1 — VERIFIED against the corpus, not the log (2026-07-19)
+
+The backfill's own log claimed 9,706 rows filled. That is the script grading its own homework, so the corpus was
+re-scanned independently (same single-walk measurement that produced the "before" numbers):
+
+| scope                      | blanks before | blanks after | closed             |
+| -------------------------- | ------------: | -----------: | ------------------ |
+| **the 194 targeted pairs** |        10,452 |       **14** | **10,438 (99.9%)** |
+| corpus-wide                |       161,034 |      150,575 | 10,459             |
+
+**191 of 194 pairs fully cleared.** The 14 residual rows are fixtures the fresh fetch did not cover — left untouched by
+design rather than guessed.
+
+Reconciliation of the 91-row gap between the log's claim and the measurement (10,459 measured vs 9,706 + 662 pilot =
+10,368): the targeted set includes CURRENT-season (2026) pairs, and live forward-poll captures wrote `round` during the
+~1h run. Two NON-targeted pairs moved by the same mechanism and are visible in the diff (`128:2026` 494→479, `255:2026`
+359→353). So the measurement exceeds the claim because live capture ran concurrently, not because the count is
+unreliable — nothing is unaccounted for.
+
+### W (2026-07-19) — CORRECTION: the "cup competitions" were never cups; they are blank-round LEAGUES
+
+§ T and § U classified 648 in-window pairs (159 of them reachable) as "cups / unpublished" because their
+`max_regular_round == 0`, and reasoned that a bulk fetch might legitimately return nothing for them. **That inference
+was wrong, and the pilot disproved it.**
+
+`max_regular_round == 0` does not mean "this competition has no regular season". It means **no regular-season round was
+OBSERVABLE in the corpus** — which is exactly what a league whose `round` column is entirely blank looks like. The
+classifier conflated "is a cup" with "is completely unpopulated", and the second is precisely the population most in
+need of the backfill.
+
+Dry-run pilot over 5 of them:
+
+| pair                                | fixtures fetched |                      would-fill |
+| ----------------------------------- | ---------------: | ------------------------------: |
+| ARGENTINA_PRIMERA 128:2026          |              495 |                         **479** |
+| ARGENTINA_PRIMERA_NACIONAL 129:2023 |              670 |                         **512** |
+| PRIMERA_RFEF 435:2019+2021          |              760 |                         **760** |
+| J2_LEAGUE 99:2026                   |                0 |      0 — out-of-coverage season |
+| **total**                           |                  | **1,751 across 11,745 scanned** |
+
+Four of five are ordinary leagues (Argentine Primera, Primera RFEF) that simply had no round captured at all. They are
+fully fetchable. Only J2 2026 returned nothing, and that is an out-of-coverage season (not yet published), which IS
+honest absence.
+
+**Consequence: the § T/§ U "cup" caveat is withdrawn**, and 16,828 more rows are recoverable than those sections
+assumed. Backfill launched over all 159 reachable pairs (af fleet re-confirmed at 0 first, so the api-football singleton
+rule holds).
+
+The general lesson, which is the same one that produced the retractions earlier in this sweep: an ABSENCE in the data
+was read as a PROPERTY of the data. "No regular rounds recorded" was treated as "this competition has no regular
+rounds", when it only ever meant "we captured none". Absence is evidence of missing capture until a fetch proves
+otherwise — the pilot is what distinguishes them, not the classifier.
+
+- [x] [DIAG] P2. ✅ Cup pilot run — hypothesis REFUTED, the pairs are fetchable leagues (1,751 rows would-fill on 5).
+- [ ] [DATA] P1. 159-pair blank-league backfill RUNNING (16,828 rows targeted); verify against a corpus re-scan, not the
+      script log, per the § T P1 precedent.

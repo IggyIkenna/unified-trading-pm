@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Venue Availability SSOT
 summary:
   Venue availability SSOT — the 4 per-asset_group venue registries (VENUES_BY_ASSET_GROUP / ALL_DEFI_VENUES /
-  venue_launch_dates / coverage_starts), the UPPERCASE-vs-lowercase case-folding contract, the venue-class taxonomy,
-  and as_of_date / available_from_datetime instrument filtering.
+  venue_launch_dates / coverage_starts), the UPPERCASE-vs-lowercase case-folding contract, the venue-class taxonomy, and
+  as_of_date / available_from_datetime instrument filtering.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [instruments, defi, backfill, data-correctness, registry, cefi]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/instrument-pipeline-defi.md, codex/04-architecture/batch-live-architecture.md]
+related:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/instrument-pipeline-defi.md,
+    codex/04-architecture/batch-live-architecture.md,
+  ]
 created: 2026-04-03
-authoritative_for: [per-asset_group venue-availability registries and venue-class taxonomy, venue identifier case-folding contract, InstrumentRecord available_from_datetime as-of filtering]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-venues/venue-registry-reference.md, codex/03-services/venue-capability-registry.md]
+authoritative_for:
+  [
+    per-asset_group venue-availability registries and venue-class taxonomy,
+    venue identifier case-folding contract,
+    InstrumentRecord available_from_datetime as-of filtering,
+  ]
+referenced_by:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-venues/venue-registry-reference.md,
+    codex/03-services/venue-capability-registry.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -113,7 +128,8 @@ taxonomy (execution-only / refdata-only / api-capability-source).
 
 Motivating catalogue audits:
 
-- CF-9 / CF-10 — bare `GMX` / `DRIFT` cefi venues with no adapter (GHOST).
+- CF-9 / CF-10 — bare `GMX` / `DRIFT` cefi venues with no adapter (GHOST). _(2026-07-16: `DRIFT` CULLED entirely; `GMX`
+  reclassified **defi-axis** — see `../04-architecture/solana-defi-coverage.md`.)_
 - DF-6 — vault venues marked "live" with no adapter, handler, OR capability anywhere.
 - DF-20 — MARGINFI / SOLEND "live" ghosts.
 

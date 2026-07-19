@@ -640,6 +640,23 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — audit-residual fixes SHIPPED + verified).** `w14cdgtmr` → all 3 code residuals
+  CONFIRMED resolved: **MTDS `@e4dab8c2`** (aave_v3 lending_indices A_TOKEN→LENDING — all 7 EVM now LENDING-consistent
+  via a shared `_resolve_evm_defi_instrument_type` used by BOTH the write path AND record_captured, killing the
+  partition-split
+  - shard-atom desync, runtime-proven writer-atom==manifest-atom; + uniswap_v3/v4/v2/balancer/curve discovery keys
+    routed through the canonical `_dex_pool_symbol` resolver → 3-seg no-`@CHAIN`, byte-matching the tick id; QG 6401
+    tests); **UAC `@a5f5bdb8`** (5 lst_rates venues clipped to their real chain_env genesis — KELPDAO 2023-11-09 / RENZO
+    2024-04-29 / BEEFY 2021-12-01 / IDLE 2019-08-13 / PENDLE 2021-06-15, drift-guard-validated; before→after enumeration
+    proven NOT_YET_LIVE pre-launch; + defi.py docstring); **IS `@d1e0cac7`** (orca/raydium 4-seg POOL → 3-seg glued).
+    Codex DeFi DATA docs cleaned (path banners=0, active-DRIFT/PACIFICA=0); remaining `codex_clean=false` =
+    **sibling-domain** strategy/execution culled-venue refs (`codex/09-strategy/*`,
+    treasury-custody/defi-risk-monitoring/cefi-batch-live/ scenario-injection/carry-venue-live — need strategy/execution
+    to pick the SOL-staked-basis replacement → **follow-up passed to those owners**) + a cosmetic order-insensitive
+    tuple notation (non-blocking). **NOTE (small follow-up)**: bare `YEARN_V3` launch 2024-03-13 vs chain_env 2024-03-20
+    (7-day drift, not inflating — the drift guard doesn't check bare keys). Historical aave_v3 `a_token` lending_indices
+    re-key → Wave D.
+
 - **2026-07-19 (slot-4, /autonomous — completeness audit CONFIRMED the model + caught residuals; fix wave dispatched).**
   `wt2isqehe` (11 agents, adversarial audit of the SHIPPED code+docs, independent of the mid-flight R3 migration).
   **ACHIEVED / confirmed-correct** (the close-out's proven state): SPOT/AMM taxonomy 10/10 claims REFUTED (EIGEN/ETHFI=

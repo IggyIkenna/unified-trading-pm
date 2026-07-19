@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: Pipeline Coverage Matrix — instruments-service · MTDS · MDPS
 summary: >-
-  Navigational pipeline coverage matrix across instruments-service / MTDS / MDPS — per (asset_group,
-  venue, data_type) what each layer captures/produces, the manifest _index topology (per-VM shards +
-  consolidator + 120s read fallback), the v9 manifest schema recap, and the MTDS -> MDPS
-  input->processor map plus known gaps/asymmetries; links out to per-service SSOTs, not a duplicate
-  SSOT.
+  Navigational pipeline coverage matrix across instruments-service / MTDS / MDPS — per (asset_group, venue, data_type)
+  what each layer captures/produces, the manifest _index topology (per-VM shards + consolidator + 120s read fallback),
+  the v9 manifest schema recap, and the MTDS -> MDPS input->processor map plus known gaps/asymmetries; links out to
+  per-service SSOTs, not a duplicate SSOT.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -162,30 +161,33 @@ instruments-service writes `instrument_type` (not market data_types). Source:
 | BINANCE-FUTURES, BITFINEX-FUTURES, BITGET-FUTURES, KRAKEN-FUTURES, OKX-SWAP, OKX-FUTURES, BYBIT | PERPETUAL, FUTURE (BYBIT also SPOT)         | tardis                                   |
 | DERIBIT                                                                                         | SPOT_PAIR, PERPETUAL, FUTURE, OPTION, COMBO | tardis + `cefi/deribit_combo_adapter.py` |
 | HYPERLIQUID, ASTER                                                                              | PERPETUAL only (options/futures rejected)   | `cefi/hyperliquid.py`, `cefi/aster.py`   |
-| PACIFICA-SOLANA, EXTENDED-STARKNET, LIGHTER-ZKSYNC                                              | PERPETUAL                                   | CCXT fallback                            |
-| GMX, DRIFT                                                                                      | PERPETUAL (+SPOT for DRIFT)                 | defi adapter chain                       |
+| EXTENDED-STARKNET, LIGHTER-ZKSYNC                                                               | PERPETUAL                                   | CCXT fallback                            |
 
 CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 
+> **Culled/reclassified 2026-07-16 (operator ruling)**: `DRIFT` + `PACIFICA-SOLANA` CULLED (all Solana perp DEXes
+> dropped except Jupiter — no adapters, no UAC registration). `GMX` moved to the **defi** axis (DEX-pool perp — see the
+> DEFI table below + `defi-venue-protocol-catalogue.md`), so it is no longer a cefi-table venue. `EXTENDED-STARKNET` +
+> `LIGHTER-ZKSYNC` are KEPT (cefi-axis). See `codex/04-architecture/solana-defi-coverage.md`.
+
 ### DEFI
 
-| protocol                                               | chains                                      | inst_type      | mtds_ops                                                                 |
-| ------------------------------------------------------ | ------------------------------------------- | -------------- | ------------------------------------------------------------------------ |
-| AAVE_V3                                                | ETH, ARB, OPT, POLY, AVAX, BASE, BSC, LINEA | LENDING        | lending_indices, liquidations, risk_params, gas_fees                     |
-| SPARK                                                  | ETH                                         | LENDING        | lending_indices, liquidations, risk_params, gas_fees                     |
-| COMPOUND_V3                                            | ETH, ARB, BASE, OPT                         | LENDING        | lending_indices, liquidations, gas_fees                                  |
-| MORPHO                                                 | ETH, BASE                                   | LENDING        | liquidations, gas_fees (no lending_indices — uses `blue-api.morpho.org`) |
-| FLUID                                                  | ETH                                         | LENDING        | lending_indices, liquidations, gas_fees                                  |
-| UNISWAP_V2 / V3 / V4                                   | V2:ETH; V3:ETH/ARB/BASE/OPT/POLY; V4:ETH    | POOL           | dex_pools, dex_swaps, gas_fees                                           |
-| BALANCER                                               | ETH, ARB, POLY, OPT, AVAX, BASE             | POOL           | dex_pools, dex_swaps, gas_fees                                           |
-| CURVE                                                  | ETH, OPT, AVAX                              | POOL           | dex_pools, dex_swaps, gas_fees                                           |
-| PANCAKESWAP_V3, SUSHISWAP_V3, AERODROME_V3, CAMELOT_V3 | per-chain                                   | POOL           | dex_pools, dex_swaps, gas_fees                                           |
-| GMX                                                    | ARB, AVAX                                   | POOL           | dex_pools, dex_swaps, perp_funding, liquidations, gas_fees               |
-| LIDO, ETHERFI, ETHENA                                  | ETH                                         | YIELD_BEARING  | lst_rates, oracle_prices, rewards, gas_fees                              |
-| EIGENLAYER                                             | ETH                                         | SPOT_ASSET     | rewards, oracle_prices, gas_fees                                         |
-| DRIFT                                                  | SOLANA                                      | PERPETUAL+SPOT | perp_funding, oracle_prices                                              |
-| KAMINO, RAYDIUM, ORCA                                  | SOLANA                                      | POOL           | dex_pools, dex_swaps                                                     |
-| MARINADE, JITO                                         | SOLANA                                      | STAKING        | lst_rates, oracle_prices                                                 |
+| protocol                                               | chains                                      | inst_type       | mtds_ops                                                                 |
+| ------------------------------------------------------ | ------------------------------------------- | --------------- | ------------------------------------------------------------------------ |
+| AAVE_V3                                                | ETH, ARB, OPT, POLY, AVAX, BASE, BSC, LINEA | LENDING         | lending_indices, liquidations, risk_params, gas_fees                     |
+| SPARK                                                  | ETH                                         | LENDING         | lending_indices, liquidations, risk_params, gas_fees                     |
+| COMPOUND_V3                                            | ETH, ARB, BASE, OPT                         | LENDING         | lending_indices, liquidations, gas_fees                                  |
+| MORPHO                                                 | ETH, BASE                                   | LENDING         | liquidations, gas_fees (no lending_indices — uses `blue-api.morpho.org`) |
+| FLUID                                                  | ETH                                         | LENDING         | lending_indices, liquidations, gas_fees                                  |
+| UNISWAP_V2 / V3 / V4                                   | V2:ETH; V3:ETH/ARB/BASE/OPT/POLY; V4:ETH    | POOL            | dex_pools, dex_swaps, gas_fees                                           |
+| BALANCER                                               | ETH, ARB, POLY, OPT, AVAX, BASE             | POOL            | dex_pools, dex_swaps, gas_fees                                           |
+| CURVE                                                  | ETH, OPT, AVAX                              | POOL            | dex_pools, dex_swaps, gas_fees                                           |
+| PANCAKESWAP_V3, SUSHISWAP_V3, AERODROME_V3, CAMELOT_V3 | per-chain                                   | POOL            | dex_pools, dex_swaps, gas_fees                                           |
+| GMX                                                    | ARB, AVAX                                   | POOL, PERPETUAL | dex_pools, dex_swaps, perp_funding, liquidations, gas_fees               |
+| LIDO, ETHERFI, ETHENA                                  | ETH                                         | YIELD_BEARING   | lst_rates, oracle_prices, rewards, gas_fees                              |
+| EIGENLAYER                                             | ETH                                         | SPOT_ASSET      | rewards, oracle_prices, gas_fees                                         |
+| KAMINO, RAYDIUM, ORCA                                  | SOLANA                                      | POOL            | dex_pools, dex_swaps                                                     |
+| MARINADE, JITO                                         | SOLANA                                      | STAKING         | lst_rates, oracle_prices                                                 |
 
 **Orphan adapters** (present, not in `PROTOCOL_CAPABILITIES`, not wired into orchestrator): `benqi.py`, `euler_v2.py`,
 `ethfi.py`, `radiant.py`, `venus.py`. Either dead or planned future venues.
@@ -223,29 +225,29 @@ CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 
 ### CEFI
 
-| venue                                                    | trades               | book_snapshot_5   | derivative_ticker        | liquidations        | options_chain | futures_chain |
-| -------------------------------------------------------- | -------------------- | ----------------- | ------------------------ | ------------------- | ------------- | ------------- |
-| BINANCE-SPOT                                             | yes                  | yes               | –                        | –                   | –             | –             |
-| BINANCE-FUTURES                                          | yes                  | yes               | yes                      | yes                 | –             | yes           |
-| BYBIT                                                    | yes                  | yes               | yes                      | yes                 | –             | yes           |
-| OKX-SPOT                                                 | yes                  | yes               | –                        | –                   | –             | –             |
-| OKX-FUTURES/SWAP                                         | yes                  | yes               | yes                      | yes                 | –             | –             |
-| DERIBIT                                                  | yes                  | yes               | yes                      | yes                 | yes           | yes           |
-| COINBASE, UPBIT, BITFINEX-SPOT, BITGET-SPOT, KRAKEN-SPOT | yes                  | yes               | –                        | –                   | –             | –             |
-| BITFINEX-FUTURES, BITGET-FUTURES, KRAKEN-FUTURES         | yes                  | yes               | yes                      | yes                 | –             | –             |
-| HYPERLIQUID                                              | yes (S3 ≥2025-03-22) | yes (≥2023-04-15) | yes                      | – (no feed)         | –             | –             |
-| ASTER                                                    | yes                  | –                 | yes                      | – (broken endpoint) | –             | –             |
-| GMX, DRIFT                                               | –                    | –                 | – (perp_funding instead) | –                   | –             | –             |
-| LIGHTER-ZKSYNC, PACIFICA-SOLANA, EXTENDED-STARKNET       | **live-only** ¹      | –                 | – (perp_funding)         | –                   | –             | –             |
+| venue                                                    | trades               | book_snapshot_5   | derivative_ticker | liquidations        | options_chain | futures_chain |
+| -------------------------------------------------------- | -------------------- | ----------------- | ----------------- | ------------------- | ------------- | ------------- |
+| BINANCE-SPOT                                             | yes                  | yes               | –                 | –                   | –             | –             |
+| BINANCE-FUTURES                                          | yes                  | yes               | yes               | yes                 | –             | yes           |
+| BYBIT                                                    | yes                  | yes               | yes               | yes                 | –             | yes           |
+| OKX-SPOT                                                 | yes                  | yes               | –                 | –                   | –             | –             |
+| OKX-FUTURES/SWAP                                         | yes                  | yes               | yes               | yes                 | –             | –             |
+| DERIBIT                                                  | yes                  | yes               | yes               | yes                 | yes           | yes           |
+| COINBASE, UPBIT, BITFINEX-SPOT, BITGET-SPOT, KRAKEN-SPOT | yes                  | yes               | –                 | –                   | –             | –             |
+| BITFINEX-FUTURES, BITGET-FUTURES, KRAKEN-FUTURES         | yes                  | yes               | yes               | yes                 | –             | –             |
+| HYPERLIQUID                                              | yes (S3 ≥2025-03-22) | yes (≥2023-04-15) | yes               | – (no feed)         | –             | –             |
+| ASTER                                                    | yes                  | –                 | yes               | – (broken endpoint) | –             | –             |
+| LIGHTER-ZKSYNC, EXTENDED-STARKNET                        | **live-only** ¹      | –                 | – (perp_funding)  | –                   | –             | –             |
 
 Adapters: `market_interface/adapters/{binance,bybit,okx,deribit,coinbase}.py`,
 `cefi/tardis_incremental_book_adapter.py`, `onchain_perps/{hyperliquid,aster}_adapter.py`.
 
 **Asymmetries:** `options_chain` is Deribit-only. `liquidations` absent from all spot venues + HYPERLIQUID + ASTER.
-`derivative_ticker` perp-only. ¹ `trades` for LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET is **live-only, no
-historical tape** — upstream adapters lack an archival endpoint; strategies needing per-trade history must use
-`ohlcv_1m` bars or forward-poll history built post-launch (LIGHTER ≥2026-04-17, PACIFICA ≥2025-06-01, EXTENDED
-BLOCKED-OPERATOR-DECISION). See `plans/active/defi_master.md` item 2.P3.
+`derivative_ticker` perp-only. ¹ `trades` for LIGHTER-ZKSYNC / EXTENDED-STARKNET is **live-only, no historical tape** —
+upstream adapters lack an archival endpoint; strategies needing per-trade history must use `ohlcv_1m` bars or
+forward-poll history built post-launch (LIGHTER ≥2026-04-17, EXTENDED BLOCKED-OPERATOR-DECISION). See
+`plans/active/defi_master.md` item 2.P3. (`GMX, DRIFT` row + `PACIFICA-SOLANA` removed 2026-07-16 — DRIFT / PACIFICA
+CULLED; GMX moved to the defi axis, its `perp_funding` is in the DEFI table below.)
 
 ### DEFI (data_types by category)
 
