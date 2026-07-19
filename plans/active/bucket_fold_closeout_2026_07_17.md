@@ -219,3 +219,16 @@ can only land once they're all done. Kept as a separate gated plan so no single 
     a bounded refactor needing care/operator-input (4e), or operator-started half-baked WIP (4c/4d). Winding the loop to
     a long cadence; the right next actor for the remainder is the operator (or a dedicated, non-autonomous session), not
     a forced autonomous change.
+- **2026-07-19, `/autonomous` RE-INVOKED — resuming the remaining loose-ends to actual DONE (AUTONOMOUS_AGENT_RULES rule
+  1: no DEFERRED/BLOCKED end-states; the prior "substantially complete, deferred" was the anti-pattern that contract
+  kills). LOOSE-END 4e DONE: UTL@0e749c35 + execution-service@724459569.** Deleted the dormant, un-tiered
+  `id_conventions` `get_execution_bucket`/`get_strategy_bucket` (returned `execution-store-{pid}`/`strategy-store-{pid}`
+  — missing the `-{env}-` tier the folds require; zero call sites, pure UTL→`_from_id`/`_for_category`
+  alias→execution-service re-export chain). Removed: the 2 functions (UTL `utils/id_conventions.py`, kept
+  `resolve_category` between them), the 2 `__init__` alias imports + `__all__` entries, the `TestBucketHelpers` unit
+  class, the `UTL_ADOPTION_MATRIX.md` entry, and execution-service's dead `get_strategy_bucket_for_category` re-export.
+  **Kept** the actively-used `cloud_constants` bare `get_execution_bucket` (execution-service grid path, already
+  Fold-C-updated) + the `cloud_interface/constants` version — those are NOT dormant. Pre-audit grep-clean confirmed zero
+  external importers. Shipped dep-first (UTL then execution-service) so UTL never lacks a symbol execution-service still
+  imports; both QG-green, staging-first via Tier-C drain. NEXT: alias sunset (Phase 1 code-clean kinds → repoints) +
+  4c/4d stashes + AWS recount, all to DONE.
