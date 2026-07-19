@@ -232,3 +232,19 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   external importers. Shipped dep-first (UTL then execution-service) so UTL never lacks a symbol execution-service still
   imports; both QG-green, staging-first via Tier-C drain. NEXT: alias sunset (Phase 1 code-clean kinds → repoints) +
   4c/4d stashes + AWS recount, all to DONE.
+- **2026-07-19, ALIAS SUNSET Phase 1 (todo 1 — PARTIAL): UTL@c8f5bf39.** Removed the 3 alias-ONLY, production-grep-clean
+  retired kinds — `pnl-attribution-store`, `risk-metrics-store`, `pnl-attribution-output` — from UTL `_KIND_ALIASES` +
+  the `test_bucket_naming_cell_sweep` GCP+AWS assertions. Verified via exhaustive grep: zero
+  `resolve_bucket_name(kind=…)` callers (the flat trio's SSOT is the folded PATH_REGISTRY; writers call
+  `kind="portfolio-state"` directly + carry their own object-key prefix — e.g. `venue_balance_tracker.py:86`,
+  `tenderly_budget.py`), and these three NEVER had yaml keys (alias-only) so removal has **no yaml/terraform coupling**.
+  **Todo 1 remains OPEN** — still-aliased retired kinds + their sunset dependencies: (a) `positions-store`
+  (`cloud_constants.py:154` legacy `"positions"→"positions-store"` mapping) + `archetype-state` (`tenderly_budget.py`
+  caller) need a trivial caller repoint→`portfolio-state` first; (b) `position-store-sports` / `archetype-state` /
+  `execution-store-prediction` retain **yaml keys** across 5 copies → removal is coupled to the terraform
+  derived-from-yaml reconciliation ([[terraform_bucket_estate_drift_resurrection_2026_07_13]], operator-aware 32-destroy
+  drift — do NOT tofu-apply piecemeal); (c) `features-{delta-one,volatility,onchain}` (3–4 callers each) + `ml-*-store`
+  (4–13 callers) still deliberately use the retired vocab (the alias's designed soft-transition) → Phase-2 caller
+  repoints (behaviorally no-op renames kind="features-delta-one"→"features"; prefix stays caller-derived). The alias
+  sunset is a large behaviorally-no-op refactor; Phase 1 shipped the zero-coupling safe slice. Prioritizing 4c/4d
+  (operator's actual half-built functionality — higher value) next, then Phase-2 repoints.
