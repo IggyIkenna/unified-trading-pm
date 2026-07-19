@@ -879,3 +879,12 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **State**: A3.1 optimization done+measured (1.56x); P0 launcher fleet-fix live; Phase-D check meaningful. The ONLY
     open blocker to closing the MVP is the CME shard-atom ruling. Next after ruling: writer/checker fix → run MVP
     backfills (optimized concurrency) → re-run MVP gate + IS 7-venue sweep → durability closure.
+
+- **2026-07-19 (slot-1, tick 19) — clean MVP Phase-D verdict (post check-fix): 2/15 hard-fail, both CME (blocked).**
+  Re-ran `--mvp-only` (now enumerates EXACTLY 5 shards, not 20): total=15 passed=8 **failed=2** ambiguous=2 skipped=3.
+  Per MVP cell: **FX ohlcv_24h ✅ force+✅ skip(genuine) — fully green**; NASDAQ ohlcv_1m ✅ force / ⚠️ skip ambiguous;
+  NYSE ohlcv_1m ✅ force / ⚠️ skip ambiguous; CBOE ohlcv_24h ⏭ skipped (no data — needs Yahoo backfill); **CME ohlcv_1m
+  ❌ force+❌ skip = the 2 hard fails (the BLOCKED shard-atom issue)**. So: the MVP FETCH PATH is proven (all non-CME
+  force-legs pass), the check is now meaningful, and the terminal gate reduces to exactly two remaining actions —
+  **(1) the CME shard-atom ruling** (unblocks CME/ICE), and **(2) run the MVP backfills** (NASDAQ/NYSE ohlcv_1m +
+  CBOE/FX ohlcv_24h) to populate PROD so the ambiguous/skipped skip-legs become genuine. Both are documented + resumable.
