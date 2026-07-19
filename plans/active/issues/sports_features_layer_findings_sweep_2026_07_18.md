@@ -1450,8 +1450,13 @@ earlier 1,757-pair figure. Fetches must be scoped to the IN-WINDOW pair list, no
 "Quarter-finals") or is simply not published — a bulk fetch may legitimately return nothing for them, which is honest
 absence, not a gap. Verify on a pilot pair before spending 648 calls on the assumption.
 
-- [ ] [DATA] P1. Run the retargeted `backfill_sports_fixture_round_2026_07_17.py` scoped to the **194 in-window pairs
-      that have regular rounds** (10,452 rows) first — highest confidence a fetch helps.
+- [x] [DATA] P1. ✅ Retargeted backfill RUNNING against the 194 reachable in-window league pairs (10,452 blank rows),
+      scoped via the new `--pairs-file` — **instruments-service@34ada099** (QG green). `--leagues` x `--seasons` is a
+      cross product that would have spent ~800 calls on 194 pairs' work; a pairs-file spends one call per pair. **Pilot
+      verified the scan as a scoping instrument, not just the fetch**: the scan predicted 662 blank rows for 129:2026
+      (ARGENTINA_PRIMERA_NACIONAL) and the apply filled **exactly 662** across 1,297 parquets from 648 fetched fixtures,
+      each write re-downloaded and verified. Launched only after re-confirming 0 running af-* VMs, so the api-football
+      singleton rule holds.
 - [ ] [DIAG] P2. Pilot ~5 of the 648 cup pairs before committing the remaining calls; if the API returns no round for
       them, record it as explained-absence rather than an open gap.
 - [ ] [DECISION] P2. Pre-2019 (122,864 rows) is outside the stated window — confirm whether the corpus is meant to cover
