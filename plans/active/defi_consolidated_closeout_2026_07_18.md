@@ -696,6 +696,20 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — R3 migration switched to ON-DEMAND; GIL/data-volume-bound; --force declined).**
+  After 4 SPOT preemptions (2025q1/q2, 2024q4, + one recovered) blowing past the speed goal + eating recovery ticks,
+  relaunched the 8 remaining quarters ON-DEMAND (`PROVISIONING_MODEL=STANDARD`, `preemptible=false`,
+  `automaticRestart=true`; same scoped dates, pin `b1a23cbf` gas_fees-fix, e2-standard-16, WORKERS=64, idempotent
+  `_migrated_*` resume — no rework). **19 quarters DONE** (2020q1..2024q1 + 2024q3, errors=0, gas_fees split confirmed);
+  corpus completes when the 8 finish. On-demand fleet:
+  2024q2od/2024q4od/2025q1od/2025q2od/2025q3od/2025q4od/2026q1od/2026q2od. **Finding**: the migration is substantially
+  GIL/COMPUTE-bound (pandas per-leaf in a threadpool; box averaged ~1.3 cores at 64 workers), NOT I/O-latency-bound —
+  more workers/VMs beyond ~16-32 yield ~nothing; it's data-volume-bound. Realistic uninterrupted ETA ≈1.5-2.5h (wall =
+  slowest of 8 parallel). **--force DECLINED**: the migration-owner claimed `--force` only skips the preflight
+  ratio-gate; CLAUDE.md's preemption rule says `--force` disables the idempotent skip (re-processes done cells).
+  Contradiction unresolved → not worth a ~10-15min parallel saving; resolving from the code + adversarially verifying
+  the 19 done quarters BEFORE the rebuild, via workflow.
+
 - **2026-07-19 (slot-4, /autonomous — catalogue re-rollup BLOCKED on IS base-image pin bump; fix verified-correct).**
   Definitive diagnosis (a5f19b07): IS does NOT vendor UAC from the sibling — the Dockerfile is
   `FROM unified-trading-library@<BASE_IMAGE_DIGEST>` and UAC is BAKED INTO the UTL base image. Fix chain: (1) ✅ UAC
