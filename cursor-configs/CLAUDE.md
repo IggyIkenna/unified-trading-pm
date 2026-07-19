@@ -300,10 +300,14 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT
-  reference (**Polygon.io is NOT removed** — it rebranded to **Massive** and is a live secondary TradFi source:
-  `SOURCE_PRIORITY`/`possible_manifest` carry `massive` → `codex/02-data/tradfi-databento-sourcing-ssot.md`; the
-  `polygon` you see in DeFi code is the CHAIN, not the vendor); Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
-  `codex/04-architecture/defi-execution-overview.md`.
+  reference (**Massive (formerly Polygon.io) REMOVED as a tradfi source 2026-07-19** — operator ruling: Databento =
+  batch SoT, Yahoo = daily; NO LONGER in `SOURCE_PRIORITY`/routing [`uac@a2beed46` + `mtds@362a487e`]; `batch_massive`
+  GCS data
+  - `possible_manifest`/`PipelineMode` recognition KEPT until the gated GCS purge →
+    `codex/02-data/tradfi-databento-sourcing-ssot.md`,
+    `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`; the `polygon` you see in DeFi code is
+    the CHAIN, not the vendor); Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
+    `codex/04-architecture/defi-execution-overview.md`.
 - **Touching TRANSFERS / funds / clients?** **HARD: funds NEVER move between clients** — every transfer scoped to one
   `client_id` (`TransferCoordinator` raises `CrossClientTransferForbiddenError`); "cross-client rebalancing" framing is
   review-blocking. Per-client isolation = one subprocess per client. SSOTs:
