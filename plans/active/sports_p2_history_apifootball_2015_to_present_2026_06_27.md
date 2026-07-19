@@ -2695,7 +2695,7 @@ zombie-watchdog and chronological-scan issues):
 unified-trading-pm (this commit). 4 todos: (P1) add a periodic FIXTURES status-refresh pass for non-terminal-status
 dates >2 days old (repo: instruments-service — the real fix that unblocks this todo's gate); (P1) quantify + run the
 bounded `--force` refresh for the two known residual clusters (in progress, see below); (P2) fix the reader's
-column-selection sensitivity (repo: unified-trading-library, fleet-wide blast radius — every instruments-* bucket
+column-selection sensitivity (repo: unified-trading-library, fleet-wide blast radius — every instruments-\* bucket
 consumer is exposed); (P2) re-audit whether other "gate unchanged" calls across this bounce history were reader
 artifacts. **NOTIFY-OPERATOR banner added** (big finding — data-correctness, cross-cutting, invalidates the reliability
 of 20+ prior gate readings on this exact todo).

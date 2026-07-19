@@ -164,7 +164,7 @@ perfectly healthy VMs — the fetch step was structurally incapable of resolving
 diagnostic instrument every dispatch has relied on to decide "still stuck" vs. "converging" may itself be unreliable in
 exactly the situations (fresh writes, <120s old) this bounce history keeps hitting. This is squarely a data-correctness
 / pipeline-observability defect, not specific to this one todo — the same `read_availability_index` fallback path is
-shared by every consumer of every instruments-* manifest bucket.
+shared by every consumer of every instruments-\* manifest bucket.
 
 ## Recommended decision / next steps
 
@@ -186,7 +186,7 @@ shared by every consumer of every instruments-* manifest bucket.
       sensitivity (repo: unified-trading-library, `unified_trading_library/manifest_writer/_read_index.py`) — confirm
       whether requesting `league_id` (or any column) changes which shard files are included in the fallback merge, and
       if so, fix the merge to be column-selection-invariant (the set of rows returned for a fixed filter should never
-      depend on which columns are also requested). This is fleet-wide blast radius: every instruments-* bucket consumer
+      depend on which columns are also requested). This is fleet-wide blast radius: every instruments-\* bucket consumer
       using `read_availability_index` during a >120s-stale-consolidated window is exposed to the same inconsistency.
 - [ ] [PROCESS] P2. Once the P2 reader fix lands, re-audit whether any OTHER "gate unchanged, bounce again" call made
       across this todo's 20+-dispatch history was itself a reader-fallback artifact rather than genuine zero progress —
