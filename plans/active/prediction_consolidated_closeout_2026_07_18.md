@@ -280,7 +280,12 @@ fixture-linked before MVP backfill.
       catalogue `base_asset` whitespace-strip + dedupe (leading-space title variants). Additive per-VM-shard write
       (race-free vs the ~10-min consolidator). Fold: the prediction slice of `data_completion_prediction_2026_07_15.md`
       (23 open). (repos: market-tick-data-service, instruments-service, unified-trading-library) **SCRIPT WRITTEN +
-      dry-run measured — `market-tick-data-service@5392b20b`**
+      dry-run measured — `market-tick-data-service@5392b20b`** (initial) **+ `@916dd992`** (COMPLETE — now handles both
+      findings: `--bundle-mode {normalize,leave}` default normalize, and `--remove-stragglers` design =
+      pause-consolidator + snapshot + in-place `_index` CAS rewrite, guarded, NOT run). The 916dd992 agent found the
+      WRITER ROOT of finding (i): `engine/orchestrator/manifest_finalize._finalize_prediction_bundles` stamps lowercase
+      `instrument_type="prediction"` on every bundle row — so the bundle is emitted lowercase, not null; the writer-root
+      fix is on the operator-review checklist (else a `--force` rebuild resurrects stragglers).
       (`scripts/canonicalize_prediction_manifest_2026_07_18.py`, `--dry-run` DEFAULT, `--apply` behind
       `--confirm-prod-write`; prod RUN HELD per operator). Live dry-run (756,817 rows): #1 `prediction_trades`→`trades`
       3,385 rows (99.55%→100%); #2 per-CID `instrument_type`→`PREDICTION_MARKET` 648,616 rows (per-CID 4.16%→100%,
