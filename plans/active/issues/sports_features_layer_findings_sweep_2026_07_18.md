@@ -1703,9 +1703,19 @@ identified which — **this is an open lead, not a diagnosis.**
 (`r"(\d+)$"`). The field is therefore recoverable by a light targeted pass with **no features re-run required**, so
 baking it into the remaining year-chunks costs nothing that a cheap follow-up cannot fix.
 
-- [ ] [DIAG] P2. Root-cause where `matchday` is dropped between `_compute_season_features` and the writer. Start by
-      logging `result.columns` immediately before the `season_context` `_run_calc` to identify which earlier calculator
-      introduces the colliding empty column. Do NOT assume the base frame is the source — measured, it is not.
+- [ ] [DIAG] P2. Root-cause where `matchday` is dropped. **Three candidates ELIMINATED by measurement — do not re-run
+      these:** 1. _Base-frame collision_ — the normalized fixtures frame carries NO season_context column (`matchday`,
+      `competition_phase`, `games_remaining`, `points_at_stake`, `round_name`, `total_matchdays` all absent). 2. _A
+      competing emitter_ — `rg '"matchday"'` over `features_service/sports/` shows `season_context` is the ONLY
+      producer; nothing else can introduce a colliding empty column, so `_run_calc`'s first-writer-wins rule is not
+      reachable here. 3. _The `_run_calc` merge itself_ — exercised in isolation on the real 2024-01-03 frame:
+      season_context emits `matchday` 16/17 and **16/17 survives the merge**
+      (`quality_tracker: status=ok, 20 columns, 0 all-NaN`). So the loss is AFTER the merge, at or just before
+      persistence. `writer.py`'s `matchday` entry is an **expected-sparse allowlist** (suppresses all-NaN validation
+      failures), NOT a drop list — but that also means a column silently going all-null here is _by design_ not loud,
+      which is likely why this survived unnoticed. Next step: instrument the real exporter end-to-end for one day and
+      bisect between the season_context merge and the parquet write. Note a dtype smell worth checking there:
+      season_context emits `fixture_id` as `object` while the result spine is `Int64`.
 - [ ] [DATA] P3. Once root-caused, recover `matchday` from the persisted `round_name` (regex) rather than re-running the
       whole features corpus.
 
