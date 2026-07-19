@@ -354,9 +354,14 @@ Discriminator = **does a manifest row exist**.
       doesn't enforce convergence on POOL rows, and add ONE pinning test that POOL rows diverge
       (`instrument_id`=pool_address, `canonical_instrument_id`=3-segment glued key). Retire the 4-segment
       `DefiPoolIdentity.glued_pair_id` form → 3-segment. (repos: instruments-service, unified-api-contracts)
-- [ ] [DATA] P0. **Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN.** Migrate the ~16.7M `lending` rows to the split (code
-      done for 9 EVM protocols) AND bake the split into `build_instrument_catalogue.py` row-construction so a
-      `--mode full` rebuild can't revert it (kills the 2026-07-14 durability landmine). (repos: instruments-service)
+- [ ] [DATA] P0. **Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN.** **Builder-bake DONE `instruments-service@1af1be34`**
+      (FIX 2, runtime-proven): the split is now INTRINSIC to `build_instrument_catalogue.py` row-construction — the
+      canonical_id's `VENUE:TYPE:SYMBOL` segment is AUTHORITATIVE over a stale `LENDING` column for the
+      A_TOKEN/DEBT_TOKEN/SPOT_ASSET family, so a `--mode full` rebuild can't re-stamp LENDING (kills the 2026-07-14
+      durability landmine). Verify caveat (non-blocking): a dataless-tail row mis-stamped by a PRE-fix rebuild survives
+      verbatim through `_merge_incremental(close_absent=False)` until it reappears in by_date — **fully closed by the
+      remaining half below.** **REMAINING (Wave D, [DATA]): migrate the ~16.7M legacy `lending` rows** to the split
+      (code done for 9 EVM protocols) on real infra. (repos: instruments-service)
 - [ ] [DATA] P0. **Residual canon walk C2–C12** (single-walk discipline — reuse the existing worklist, no NEW
       whole-corpus walk): C2 data_type alias dedup (`dex_swaps`→`dex_pool_swaps`, `dex_pools`→`dex_pool_state`,
       `lending-indices`→`lending_indices`, `staking_yields`→`lst_rates`); C3 `VENUE-CHAIN`→flat venue + `chain`; C4
@@ -507,11 +512,17 @@ Discriminator = **does a manifest row exist**.
 
 ### P0 — a real live bug the audit caught (not a doc issue)
 
-- [ ] [BACKEND] P0. **7 lending adapters silently return `[]`** —
-      `euler_v2`/`venus`/`solend`/`radiant`/`benqi`/`marginfi`/`fluid` carry a stale type-guard
-      `if instrument_type not in (None, LENDING)` but now MINT `A_TOKEN`/`DEBT_TOKEN` → a caller passing the real type
-      gets ZERO instruments (a capture gap masquerading as empty). Fix = guard on `(None, A_TOKEN,     DEBT_TOKEN)`,
-      mirroring `morpho.py:93`. (repo: instruments-service)
+- [x] ✅ [BACKEND] P0. **SHIPPED `instruments-service@1af1be34` (QG green; runtime-verified via `get_instruments(type)`;
+      adversarial verdict CONFIRMED all-7-correct).** All 7 (`euler_v2`/`venus`/`solend`/`radiant`/`benqi`/`marginfi`/
+      `fluid`) carried the stale `not in (None, LENDING)` guard; **none still mint LENDING** — 6 emit
+      `{A_TOKEN,DEBT_TOKEN}` (guard → `(None, A_TOKEN, DEBT_TOKEN)` mirroring `morpho.py:93`); **solend is the
+      exception** — it also emits a `SPOT_ASSET` sibling per reserve (`build_spot_asset_record`), so its guard correctly
+      accepts `(None, A_TOKEN, DEBT_TOKEN, SPOT_ASSET)` (NOT a blind morpho copy). Pinning tests added
+      (LENDING/PERPETUAL → `[]` rejection). **Framing correction (verify finding, non-blocking)**: this is typed-caller
+      correctness + consistency, NOT a live production capture gap — every production discovery caller
+      (`fetch_instruments_for_all_venues`) passes `instrument_type=None`, which the OLD guard already accepted, so the
+      discovery path was already returning the full fetch; no production/test caller passes a typed value today. Still
+      correct + safe to fix (mirrors the migrated aave_v3/morpho/spark/compound_v3). (repo: instruments-service)
 
 ### Blocker + codex-SSOT / UAC-contract doc fixes (must clear BEFORE the SSOT reference — an agent following them mints wrong ids)
 
@@ -584,6 +595,17 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — IS lending code P0 SHIPPED + verified).** `w2bkwrb74` →
+  `instruments-service@1af1be34` (QG green, 979 tests; adversarial verdict CONFIRMED all_seven_correct + fix2_durable).
+  FIX 1: 7 stale `LENDING` guards → the types each actually mints (6×{A_TOKEN,DEBT_TOKEN}; solend +SPOT_ASSET) — none
+  mint LENDING. FIX 2: A_TOKEN/ DEBT_TOKEN/SPOT_ASSET split now intrinsic to the `--mode full` builder (canonical-id
+  TYPE-segment authoritative over a stale LENDING column). Two honest non-blocking findings folded into the flips: (a)
+  the guard bug is typed-caller-only (production discovery passes `None`, already accepted) → framing corrected, still a
+  valid consistency fix; (b) FIX 2 has a dataless-tail gap via the cumulative-preservation merge → closed by the Wave-D
+  ~16.7M-row migration. IS now free for Wave B (POOL/SPOT) once R2d frees UAC. NOTE: Track 6's api agent also landed its
+  IS-side coverage change `64a58cc1` (by_chain projection) cleanly on top — concurrent IS writes reconciled by
+  stage-by-name.
 
 - **2026-07-19 (slot-4, /autonomous — THREE parallel tracks dispatched; remaining waves sequenced).** With R1/R2/R2c
   shipped, kicked three repo-disjoint workflows concurrently (no quickmerge races):
