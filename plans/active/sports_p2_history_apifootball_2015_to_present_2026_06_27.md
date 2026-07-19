@@ -2848,3 +2848,54 @@ own focused investigation session (per-league numeric/canonical id reconciliatio
 `/skip-current-task` — same resume criteria as above, plus (c) the newly-narrowed season-cache investigation todo in the
 issue doc lands. `read_availability_index`/`query_api_football_pending_clusters_2026_07_18.py` read (now trustworthy
 post root-cause-2 fix) shows genuine convergence toward 0 pending for the two residual clusters.
+
+### 2026-07-19T17:59-18:10Z — data_engineering slot-7 (Todo `-001` — launched a scoped residual-cluster relaunch deliberately excluding the two in-flight-investigation clusters; deferred flip pending outcome)
+
+Dispatched onto `-001`. Fresh-pulled all repos clean, no dirty state inherited. Read the full 20+-dispatch bounce
+history + all 3 related issue docs (zombie-watchdog, chronological-scan, stale-NS/gate-reader) before acting.
+
+**Pre-action state check**: `gcloud compute instances list --filter="name~af-backfill"` — zero af-backfill VMs running
+(the last fleet, slot-3's redirected 4, self-terminated cleanly overnight per slot-8's entry). Live backlog
+(`GET /api/backlog`) shows `api_football_enrichment_stale_ns_fixture_status_and_gate_reader_inconsistency-008` (the
+season-cache-0-fixtures investigation, scoped specifically to the `2026-06-24..2026-07-14` and `2026-02-21..2026-03-22`
+clusters) `dispatched` to slot 3, in progress since 17:28:29Z — did not duplicate this.
+
+**Ran the established gate script** (`instruments-service/scripts/query_api_football_pending_clusters_2026_07_18.py`):
+total pending dropped **6,925 → 5,515** since the last read in this log (genuine ~20% convergence from the
+already-shipped fixes: root cause 1 status-write fix `4ef4cfeb`, root cause 1b entity-split read fix `e1524d21`, the
+periodic status-refresh trigger `7d07e2a4`, and the backfill-correction sweep `366aaefd`). Cluster shape: the two big
+clusters slot-3 is investigating remain the majority of pending mass (`2026-06-24..07-14` ~45-64%, `2026-02-21..03-22`
+~10-32% per entity), but a set of small SCATTERED residual dates also remain, untouched by and outside the scope of the
+`-008` investigation: `2020-06-14..2020-08-19`, `2020-12-02..04`, `2021-01-12..22`, `2021-06-13..2021-07-30`,
+`2024-12-24..25`, `2025-12-25`, `2026-03-23`, `2026-04-10`, `2026-05-08` (spread unevenly across
+FIXTURE_EVENTS/LINEUPS/STATS/PLAYER_STATS).
+
+**Confirmed the P2 systemic per-day-loop fix (`15df7d14`, concurrent per-league fan-out) already landed** — per the
+chronological-scan issue doc, all its todos are `[x]`. This converts a wide multi-year window from ~16.7h/entity to
+minutes, per that doc's own evidence. Cross-verified deployed tarballs vs local HEAD for all 4 relevant repos
+(instruments-service/unified-api-contracts/unified-trading-library/deployment-service) via `gcloud storage cat` on
+`gs://deployment-scripts-central-element-323112/code/{repo}-code.manifest.json` — all 4 `commit_sha` exactly match this
+slot's `git rev-parse HEAD` — safe to launch on.
+
+**Action taken**: launched 4 entity-sharded SPOT VMs, each a single wide window `2020-06-06..2026-05-10` — deliberately
+chosen to cover every scattered residual date above while stopping BEFORE the `2026-06-24..07-14` cluster `-008` is
+investigating (it does pass through `2026-02-21..03-22`, which is harmless — those cells just no-op at "0 fixtures" per
+`-008`'s own findings, not a collision since `-008` is read-only investigation, no VM):
+
+- `af-backfill-20260719-180520` FIXTURE_EVENTS
+- `af-backfill-20260719-180545` FIXTURE_LINEUPS
+- `af-backfill-20260719-180603` FIXTURE_STATS
+- `af-backfill-20260719-180620` PLAYER_STATS
+
+All launched via `--skip-lock --fleet-vms 4 --entity <ENTITY> 2020-06-06 2026-05-10` (no `--force`, no `redo_all` —
+presence-skip active). Verified no fire-and-forget: all 4 `RUNNING` within ~90s of launch; `run.log` tails for all 4
+(checked over the following ~3 min) show genuine live per-fixture fetches
+(`Fetched N events/lineup rows/stat rows/player stat entries for fixture=...`) with normal rate-limit backoff
+(`sleeping ~60s to next minute, attempt 2/10` — expected token-bucket pacing, not an error state), zero Tracebacks.
+
+**Not flipping this checkbox** — the launched fleet needs real wall-clock to converge (multi-year window even at the
+now-fast per-day rate is not instant) and the majority pending mass (the two big clusters) is out of this dispatch's
+scope, gated on `-008`. `/skip-current-task` — resume once (a) this fleet's VMs self-terminate (`exit_code=0`) or run
+long enough for a genuinely informative gate re-read (the per-VM-shard direct-read technique, not just the naive
+consolidated-index read, per this log's own root-cause-2 lesson), and/or (b) `-008` lands and a narrow-window relaunch
+becomes safe/effective for the two big clusters. Did not touch/inspect/delete any other VM in the project.
