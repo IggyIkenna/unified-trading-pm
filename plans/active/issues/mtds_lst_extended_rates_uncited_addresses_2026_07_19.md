@@ -38,6 +38,9 @@ source: cicd escalation agt-e7639b, quality-gates-v2 workflow_dispatch re-run 29
 assigned_vm:
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # MTDS quality-gates-v2 STEP 5.97 red — uncited addresses in `_lst_extended_rates.py`
