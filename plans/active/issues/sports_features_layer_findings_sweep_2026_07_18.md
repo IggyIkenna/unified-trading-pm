@@ -1407,3 +1407,45 @@ already carries future fixtures), or a per-league reference mapping.
       back to **honest `None`**, never 38, when a league is absent from the map.
 - [ ] [DATA] P1. After the fix, sports features need a re-run for the affected leagues — the currently-persisted
       `games_remaining` / `points_at_stake` / `competition_phase` are wrong wherever season length != 38.
+
+### T (2026-07-19) — residual round blanks SCOPED by measurement; my "early-2019 era" claim was WRONG
+
+One walk of the live `fixtures_schedule` corpus (2,031 league-seasons, `round`/`season`/`af_league_id` projected only),
+which also produced the § S season-length reference — **single walk, both answers**.
+
+**CORRECTION.** I earlier characterised the residual as "231,910 no-sibling blanks, early-2019 era". Both halves were
+wrong:
+
+- The count is **161,034**, not 231,910. The 231,910 figure counted rows in the day-wide BARE parquets too; the
+  orchestrator's reader (`_read_per_league_entity_df`) documents "there is no bare" and reads **only** `/league=` paths,
+  so bare rows are not part of the live read path.
+- It is not the "2019 era" — it is **pre-2019**, which the 2019-01-01..2026-07-17 backfill window does not even cover:
+
+| seasons                   | pairs |  blank rows | share     |
+| ------------------------- | ----: | ----------: | --------- |
+| 2013–2018 (OUT of window) |   915 | **122,864** | **76.3%** |
+| 2019–2027 (IN window)     |   842 |  **38,170** | 23.7%     |
+
+**The in-window job is ~4x smaller than I said, and it is bounded:**
+
+| coverage of in-window blanks |   rows | (league,season) fetches |
+| ---------------------------- | -----: | ----------------------: |
+| 50%                          | 19,168 |                  **70** |
+| 80%                          | 30,536 |                 **221** |
+| 95%                          | 36,270 |                     455 |
+| 100%                         | 38,170 |                     842 |
+
+So complete in-window coverage is **842 bulk calls**, and 80% is **221** — hours, not the multi-day run implied by the
+earlier 1,757-pair figure. Fetches must be scoped to the IN-WINDOW pair list, not fanned across 782 leagues x 8 seasons.
+
+**Do not assume a fetch fixes the cup competitions.** 648 of the 842 in-window pairs (27,718 rows) carry NO
+`Regular Season - N` round at all. Those are cups/knockouts whose round is a different vocabulary ("Round of 16",
+"Quarter-finals") or is simply not published — a bulk fetch may legitimately return nothing for them, which is honest
+absence, not a gap. Verify on a pilot pair before spending 648 calls on the assumption.
+
+- [ ] [DATA] P1. Run the retargeted `backfill_sports_fixture_round_2026_07_17.py` scoped to the **194 in-window pairs
+      that have regular rounds** (10,452 rows) first — highest confidence a fetch helps.
+- [ ] [DIAG] P2. Pilot ~5 of the 648 cup pairs before committing the remaining calls; if the API returns no round for
+      them, record it as explained-absence rather than an open gap.
+- [ ] [DECISION] P2. Pre-2019 (122,864 rows) is outside the stated window — confirm whether the corpus is meant to cover
+      2013–2018 at all before spending 915 fetches on it.
