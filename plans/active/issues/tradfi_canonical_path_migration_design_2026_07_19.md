@@ -54,9 +54,15 @@ cefi proof: `.../instrument_type=futures_chain/data_type=trades/underlying=BTC/q
 
 ## Ground truth
 
-Physical enumeration `bny7k1yk6` (2,346,992 objects and counting; NOT the manifest — the manifest has casing chaos
-`EQUITY`/`equity` same partition + 69% ghost rows). Analysis scripts (scratchpad, reusable): `shape_taxonomy.py` (95
-distinct templates), `orphan_classifier.py` (disposition classifier, 0-orphan proof).
+Physical enumeration `bny7k1yk6` — **FINAL: 2,734,646 objects (walk complete, rc=0)**; NOT the manifest (the manifest
+has casing chaos `EQUITY`/`equity` same partition + 69% ghost rows). Analysis scripts (scratchpad, reusable):
+`shape_taxonomy.py` (95 distinct templates), `orphan_classifier.py` (disposition classifier, 0-orphan proof).
+
+**Definitive final reconcile (full 2,734,646-object corpus, 0 ORPHAN):** PURGE_MASSIVE 1,696,166 · MIGRATE_CHAIN_ADDQM
+528,961 · MIGRATE_SINGLE_RENAME 389,703 · MIGRATE_HYPHEN 100,698 · QUARANTINE_GARBAGE_UL 14,633 · MIGRATE_CONTENT_REPAIR
+1,478 · QUARANTINE_CORRUPT 1,180 · MIGRATE_NONHIVE_EQ 920 · MIGRATE_SINGLE_NOOP 907. Totals: MIGRATE 1,022,667 · PURGE
+1,696,166 · QUARANTINE 15,813 · **ORPHAN 0** (1,022,667 + 1,696,166 + 15,813 = 2,734,646 ✓). The interim table below
+(2.35M) is superseded by these final counts.
 
 ## Proven orphan-proof disposition map (2.35M objects, 0 ORPHAN)
 
