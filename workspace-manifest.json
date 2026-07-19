@@ -951,7 +951,7 @@
         "warn_file_count": 5,
         "large_file_count": 0
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
