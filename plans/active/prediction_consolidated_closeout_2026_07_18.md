@@ -1177,3 +1177,23 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     0 in prod today = SEASONAL-honest (the only soccer CQGs in the July universe are off-season European leagues — EPL /
     Bundesliga / La Liga / Champions League; no summer-active league present) — it populates in-season (Aug+). Resolver
     unit-tested ~82.6% resolvable.
+
+- **2026-07-19 (slot-2, autonomous tick 26) — Phase-E identity wiring COMPLETE ([E1] landed); the af_fixture_id chain is
+  now end-to-end connected. All autonomous Phase-E code done; only E3 (money-risk) + a catalogue regen remain.**
+  - **[E1] `features-service@b0b6657c`** (QG green 177s) — `_records_from_universe` now populates all 6 fixture fields
+    on the `InstrumentRecord`s the Kalshi↔Polymarket matcher consumes, read from the `by_date` universe frame with
+    type-correct coercers (honest-None when absent). **The three wiring steps are all shipped: [0a] `is@7b3bad47`
+    (catalogue rollup) + [E1] `features@b0b6657c` (features populate) + [E2-complete] `uac@080b1b56` (match_key prefers
+    `af_fixture_id`).** So the identity chain is complete: resolver stamps `af_fixture_id` → `by_date` snapshots (live)
+    → catalogue rollup (next regen) → features records → `match_key` keys Kalshi↔Polymarket soccer on the exact fixture
+    id (fuzzy pairing preserved as fallback). All backward/forward-compatible; each adversarially verified or QG-proven.
+  - **Remaining for a LIVE football arb (NOT autonomous):** (i) a catalogue regen to project [0a] into `catalog.parquet`
+    (daily cron does it automatically now that [0a] is on `main`; no action needed); (ii) in-season soccer for
+    `af_fixture_id` to actually populate (Aug+); (iii) **[E3] — OPERATOR DECISIONS** (tick 24): odds as a tradeable 3rd
+    leg vs a fair-value REFERENCE anchor [recommend reference — no bookmaker execution adapter exists], odds source
+    (FootyStats `ODDS` vs live MTDS bookmaker venues), leagues, stake sizing, paper-vs-live. The features/strategy
+    kernels are hardcoded 2-venue today; E3 is a genuine strategy-design + risk decision, deliberately NOT guessed.
+  - **Smoke-harness robustness follow-up (from the re-smoke residuals, tick 25):** the IS canonical leg's READ still
+    uses the day-first prefix (make it the same CQG-first substring match as the write-verify); SPOT self-delete should
+    not fail a cell (retry/xfail on `vm_self_deleted_no_exit_status`); and the MTDS trades `-test-` force leg can't
+    fetch real venue trades into `-test-` (env limit). None are data/code defects; they gate a fully-formal 14/14 smoke.
