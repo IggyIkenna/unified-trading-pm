@@ -202,30 +202,6 @@ def _main_direct_repos(manifest_path: str | None = None) -> set[str]:
     return out
 
 
-def _sit_covered_repos(manifest_path: str | None = None) -> set[str]:
-    """Repos whose LDR→main promote is gated on the cross-repo SIT suite (`sit_cross_repo_validated_
-    repos` in the manifest). Their forward-promote FLOOR is a full SIT round-trip: the fleet bot must
-    see `sit_validated_tree == LDR tree`, so a fresh code change lands only after SIT (full e2e,
-    ~15-30 min) validates that exact tree — and if LDR MOVES during the SIT run, SIT re-dispatches and
-    the clock restarts. Two-to-three such rounds, plus GitHub's ~37%-throttled bot cadence, routinely
-    push a HEALTHY SIT-gated promote past 60 min (measured 2026-07-18: agent-orchestrator, 3 rounds
-    6846bdee→f1e81f4d→77efeb2b, ~156 min, promote PR itself merged in 2 min). So these repos get a
-    LONGER LDR→main lag threshold — this is the pipeline working, not a stall.
-    """
-    if manifest_path is None:
-        here = os.path.dirname(os.path.abspath(__file__))
-        manifest_path = os.path.join(here, "..", "..", "workspace-manifest.json")
-    try:
-        with open(manifest_path) as _mf:
-            m = cast("dict[str, object]", json.load(_mf))
-        cov = m.get("sit_cross_repo_validated_repos")
-        if isinstance(cov, list):
-            return {str(r) for r in cast("list[object]", cov)}
-    except (OSError, json.JSONDecodeError, ValueError):
-        pass
-    return set()
-
-
 def _branch_exists(repo: str, branch: str) -> bool:
     """True if origin/<branch> exists for the repo (404/error → False)."""
     return isinstance(_gh_json(f"repos/{OWNER}/{repo}/branches/{branch}"), dict)
@@ -486,18 +462,18 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--threshold-min", type=int, default=60)
     ap.add_argument(
-        "--sit-threshold-min",
+        "--ldr-main-threshold-min",
         type=int,
         default=120,
-        help="LDR→main lag threshold for SIT-covered repos (their floor is a full SIT round-trip; "
-        "60m false-fires on healthy SIT-gated promotes — see _sit_covered_repos).",
+        help="LDR→main lag threshold (ALL repos). The forward-promote floor is a ~40-min throttled "
+        "promote cadence — plus a full SIT round-trip (~156m) for SIT-gated repos — so the base 60m "
+        "self-clears on a healthy promote. Backmerge/staging directions keep --threshold-min.",
     )
     ap.add_argument("--now-iso", default="", help="UTC now (no wallclock in CI sandbox); else uses gh server time")
     ap.add_argument("--slack", action="store_true")
     args = ap.parse_args()
     thresh_s = cast(int, args.threshold_min) * 60.0
-    sit_thresh_s = cast(int, args.sit_threshold_min) * 60.0
-    sit_covered = _sit_covered_repos()
+    ldr_main_thresh_s = cast(int, args.ldr_main_threshold_min) * 60.0
     now_iso = cast(str, args.now_iso)
     as_slack = cast(bool, args.slack)
 
@@ -540,10 +516,11 @@ def main() -> int:
         for label, base, head, skip_ci_counts in directions:
             if repo in main_direct and "staging" in label:
                 continue  # main-direct (PM Option-B + ldr_main cutover): staging toggled off, not stuck
-            # SIT-covered repos get a longer LDR→main threshold — their forward-promote floor is a
-            # full SIT round-trip (see _sit_covered_repos), so 60m false-fires on a healthy promote.
-            # Only the LDR→main direction is SIT-gated; the backmerge directions keep the base 60m.
-            eff_thresh = sit_thresh_s if (label == "LDR→main" and repo in sit_covered) else thresh_s
+            # LDR→main gets a longer threshold for ALL repos (120m default): the forward-promote
+            # floor is a ~40-min throttled promote cadence — plus a full SIT round-trip (~156m) for
+            # SIT-gated repos — so the base 60m self-clears on a healthy promote. Backmerge/staging
+            # directions keep the base --threshold-min (60m).
+            eff_thresh = ldr_main_thresh_s if label == "LDR→main" else thresh_s
             res = _lag(repo, base, head, now, eff_thresh, skip_ci_counts)
             if res:
                 n, age, omsg = res
@@ -601,7 +578,10 @@ def main() -> int:
         _write_firestore_promotion_lag(repo_lags, now.isoformat(), gcp_project)
 
     if not findings:
-        print(f"✅ promotion-lag: all branches in sync within {int(thresh_s // 60)}m")
+        print(
+            f"✅ promotion-lag: all branches in sync "
+            f"(LDR→main within {int(ldr_main_thresh_s // 60)}m, backmerge/staging within {int(thresh_s // 60)}m)"
+        )
         return 0
 
     if as_slack:

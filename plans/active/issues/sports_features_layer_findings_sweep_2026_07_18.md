@@ -745,11 +745,18 @@ ancestry MUST be re-checked per launch, never assumed from the sha string).
       invoked; non-force still replays). **Scope note**: the existing recovery actuator was already wired fleet-wide
       (every SPOT launcher sources `launcher_common.sh`), so this defect was live for EVERY `--force` SPOT backfill, not
       just sports.
-- [ ] [OPS] P2. DURABLE fix still open — a **checkpoint contract**: the VM periodically writes `last_completed_unit` to
-      `vm-logs/{vm_name}/PROGRESS`, and `RelaunchPreemptedVm` reads it to override `START_DATE` on replay. Then recovery
-      is automatic rather than PAGE-and-operator-resumes. Design fork to settle first: VM-side checkpoint (generic,
-      needs every workload to write it) vs relauncher-side manifest measurement (no VM changes, more coupling). Until
-      then the loop-resume pattern is the contract.
+- [x] [OPS] P2. DURABLE fix SHIPPED 2026-07-19 — the **checkpoint contract**. The VM writes `last_completed_date` to
+      `vm-logs/{vm}/PROGRESS.json` as each backfill day-frontier advances, and `RelaunchPreemptedVm` reads it to
+      override `START_DATE` on replay — recovery is now AUTOMATIC (a `--force` run auto-resumes) rather than
+      PAGE-and-operator- resumes. Design fork settled = **VM-side checkpoint via the SHARED path** (UTL
+      `record_captured` → `manifest_writer/_vm_progress.py` emits a stdout marker → the VM tee-wrapper
+      `vm-exec-with-gcs-tee.sh` writes PROGRESS.json → the deployment `_gcs.read_progress_checkpoint` reader consumes
+      it), so ONE hook covers every launcher with NO per-launcher edit. ARTIFACT-based (fires from a real manifest
+      capture, never a log line) + monotonic-gated (a non-monotonic or absent checkpoint on a `--force` run still PAGEs
+      — never skips undone dates). Shipped: unified-trading-library@3de3296b (writer) + deployment-service@c138957
+      (reader) + tee-wrapper writer. SSOT: `codex/05-infrastructure/spot-vms-for-backfill.md` § "the CHECKPOINT CONTRACT
+      (IMPLEMENTED 2026-07-19)". Remaining (non-blocking): the per-launcher `lc_write_launch_params` rollout for exact
+      venue-scope replay + `VM_FORCE` persistence (only `launch-cefi-sharded-backfill.sh` calls it today).
 
 ---
 
@@ -889,16 +896,13 @@ Measured drift in `market-data-tick-sports-prd` (1,974,679 rows): `ODDS`/`odds` 
 **RETRACTED (mine)**: K0 said "`data_type` canonical = lower-case", generalising CF-7. CF-7's claim is scoped to the
 **MDPS odds** data_types only, and I wrongly promoted it to a sports-wide rule. Measured reality:
 
-| bucket                 | distinct | UPPER | lower         |
-| ---------------------- | -------- | ----- | ------------- |
-| market-data **tradfi** | 12       | **0** | 12            |
-| market-data **cefi**   | 9        | **0** | 9             |
-| market-data **defi**   | 6        | **0** | 6             |
-| instruments **tradfi** | 1        | **0** | `instruments` |
-| instruments **cefi**   | 1        | **0** | `instruments` |
-| instruments **sports** | 9        | **9** | 0             | ← FIXTURES, FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, MATCHES, PLAYER_STATS, PREDICTIONS, WEATHER |
-| features **sports**    | 4        | **4** | 0             | ← DERIVED_FEATURES, FIXTURE_FEATURES, ODDS_FEATURES, SFI_PROGRESSIVE_FEATURES                           |
-| market-data **sports** | 13       | 4     | 9             | ← the ONLY mixed bucket in the fleet                                                                    |
+| bucket | distinct | UPPER | lower | | ---------------------- | -------- | ----- | ------------- |
+------------------------------------------------------------------------------------------------------- | | market-data
+**tradfi** | 12 | **0** | 12 | | market-data **cefi** | 9 | **0** | 9 | | market-data **defi** | 6 | **0** | 6 | |
+instruments **tradfi** | 1 | **0** | `instruments` | | instruments **cefi** | 1 | **0** | `instruments` | | instruments
+**sports** | 9 | **9** | 0 | ← FIXTURES, FIXTURE_EVENTS, FIXTURE_LINEUPS, FIXTURE_STATS, MATCHES, PLAYER_STATS,
+PREDICTIONS, WEATHER | | features **sports** | 4 | **4** | 0 | ← DERIVED_FEATURES, FIXTURE_FEATURES, ODDS_FEATURES,
+SFI_PROGRESSIVE_FEATURES | | market-data **sports** | 13 | 4 | 9 | ← the ONLY mixed bucket in the fleet |
 
 **The operator's premise is inverted, and the conclusion is stronger: tradfi is lower-case; SPORTS is the outlier.**
 Sports is the only asset group using UPPERCASE `data_type` anywhere. UAC agrees — `("tradfi","trades")` /
@@ -1516,7 +1520,7 @@ absence, not a gap. Verify on a pilot pair before spending 648 calls on the assu
       cross product that would have spent ~800 calls on 194 pairs' work; a pairs-file spends one call per pair. **Pilot
       verified the scan as a scoping instrument, not just the fetch**: the scan predicted 662 blank rows for 129:2026
       (ARGENTINA_PRIMERA_NACIONAL) and the apply filled **exactly 662** across 1,297 parquets from 648 fetched fixtures,
-      each write re-downloaded and verified. Launched only after re-confirming 0 running af-* VMs, so the api-football
+      each write re-downloaded and verified. Launched only after re-confirming 0 running af-\* VMs, so the api-football
       singleton rule holds.
 - [ ] [DIAG] P2. Pilot ~5 of the 648 cup pairs before committing the remaining calls; if the API returns no round for
       them, record it as explained-absence rather than an open gap.
@@ -1789,15 +1793,15 @@ suppresses the matchday NaN rejection; `validate_feature_output` logs the budget
       whenever `footystats_matches` had any row that day, i.e. most of the 61,461 captured `derived_features` rows.
       Tracked in `sports_consolidated_closeout_2026_07_19.md` FEATURES track.
 - [x] [DIAG] P2. ✅ Root-cause found (above). **Three candidates ELIMINATED by measurement — do not re-run these:** 1.
-      _Base-frame collision_ — the normalized fixtures frame carries NO season_context column (`matchday`,
-      `competition_phase`, `games_remaining`, `points_at_stake`, `round_name`, `total_matchdays` all absent). 2. _A
-      competing emitter_ — `rg '"matchday"'` over `features_service/sports/` shows `season_context` is the ONLY
+      _Base-frame collision_ — the normalized fixtures frame carries NO season*context column (`matchday`,
+      `competition_phase`, `games_remaining`, `points_at_stake`, `round_name`, `total_matchdays` all absent). 2. \_A
+      competing emitter* — `rg '"matchday"'` over `features_service/sports/` shows `season_context` is the ONLY
       producer; nothing else can introduce a colliding empty column, so `_run_calc`'s first-writer-wins rule is not
       reachable here. 3. _The `_run_calc` merge itself_ — exercised in isolation on the real 2024-01-03 frame:
-      season_context emits `matchday` 16/17 and **16/17 survives the merge**
+      season*context emits `matchday` 16/17 and **16/17 survives the merge**
       (`quality_tracker: status=ok, 20 columns, 0 all-NaN`). So the loss is AFTER the merge, at or just before
       persistence. `writer.py`'s `matchday` entry is an **expected-sparse allowlist** (suppresses all-NaN validation
-      failures), NOT a drop list — but that also means a column silently going all-null here is _by design_ not loud,
+      failures), NOT a drop list — but that also means a column silently going all-null here is \_by design* not loud,
       which is likely why this survived unnoticed. Next step: instrument the real exporter end-to-end for one day and
       bisect between the season_context merge and the parquet write. Note a dtype smell worth checking there:
       season_context emits `fixture_id` as `object` while the result spine is `Int64`.

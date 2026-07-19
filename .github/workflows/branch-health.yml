@@ -20,8 +20,8 @@ on:
       threshold_min:
         description: "Lag threshold in minutes (lag-monitor job)"
         default: "60"
-      sit_threshold_min:
-        description: "LDR→main lag threshold for SIT-covered repos (full-SIT-round-trip floor)"
+      ldr_main_threshold_min:
+        description: "LDR→main lag threshold in minutes, all repos (default 120)"
         default: "120"
 
 permissions:
@@ -104,10 +104,10 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_ETAG_CACHE_FILE: .gh-etag-cache.json
           THRESH: ${{ github.event.inputs.threshold_min || '60' }}
-          # SIT-covered repos get a longer LDR→main threshold — their promote FLOOR is a full SIT
-          # round-trip, so 60m false-fires on a healthy promote (agent-orchestrator ~156m on
-          # 2026-07-18 = 3 SIT rounds, promote PR itself merged in 2 min). Only LDR→main is affected.
-          SIT_THRESH: ${{ github.event.inputs.sit_threshold_min || '120' }}
+          # LDR→main gets a longer threshold for ALL repos — the promote floor is a ~40-min throttled
+          # cadence, plus a full SIT round-trip (~156m; agent-orchestrator 2026-07-18 = 3 rounds) for
+          # SIT-gated repos — so the base 60m self-clears on a healthy promote. Only LDR→main affected.
+          LDR_MAIN_THRESH: ${{ github.event.inputs.ldr_main_threshold_min || '120' }}
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         run: |
           set +e
@@ -115,7 +115,7 @@ jobs:
           if [ -f .lag-state.json ]; then
             LAST_LAG=$(jq -r '.lag // false' .lag-state.json 2>/dev/null || echo "false")
           fi
-          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH" --sit-threshold-min "$SIT_THRESH" --slack)
+          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH" --ldr-main-threshold-min "$LDR_MAIN_THRESH" --slack)
           RC=$?
           echo "$REPORT"
           if [ "$RC" -eq 1 ]; then LAG=true; else LAG=false; fi

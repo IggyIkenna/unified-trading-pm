@@ -363,24 +363,3 @@ def test_main_direct_repos_staging_dormant_toggle_includes_all(tmp_path: Path) -
     md_off = plm._main_direct_repos(manifest_path=str(mpath))
     assert "e2e-testing" not in md_off
     assert "no-field-repo" not in md_off
-
-
-# ── SIT-covered longer LDR→main threshold (2026-07-18) ───────────────────────────────────────────
-# SIT-covered repos have a full-SIT-round-trip promote floor, so 60m false-fires on a healthy
-# promote. _sit_covered_repos reads `sit_cross_repo_validated_repos` from the manifest.
-
-
-def test_sit_covered_repos_reads_manifest(tmp_path: Path) -> None:
-    mf = tmp_path / "workspace-manifest.json"
-    mf.write_text(json.dumps({"sit_cross_repo_validated_repos": ["agent-orchestrator", "deployment-ui"]}))
-    cov = plm._sit_covered_repos(str(mf))
-    assert cov == {"agent-orchestrator", "deployment-ui"}
-
-
-def test_sit_covered_repos_missing_key_is_empty(tmp_path: Path) -> None:
-    # A manifest without the key (or unreadable) yields the empty set → everyone keeps the base
-    # threshold (fail-safe: never widens the threshold for a repo the manifest doesn't list).
-    mf = tmp_path / "workspace-manifest.json"
-    mf.write_text(json.dumps({"repositories": {}}))
-    assert plm._sit_covered_repos(str(mf)) == set()
-    assert plm._sit_covered_repos(str(tmp_path / "nope.json")) == set()
