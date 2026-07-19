@@ -1585,3 +1585,29 @@ otherwise — the pilot is what distinguishes them, not the classifier.
 - [x] [DIAG] P2. ✅ Cup pilot run — hypothesis REFUTED, the pairs are fetchable leagues (1,751 rows would-fill on 5).
 - [ ] [DATA] P1. 159-pair blank-league backfill RUNNING (16,828 rows targeted); verify against a corpus re-scan, not the
       script log, per the § T P1 precedent.
+
+### Round work — TERMINAL STATE (2026-07-19)
+
+| stage                                    | rows closed | verification                              |
+| ---------------------------------------- | ----------: | ----------------------------------------- |
+| § Q derivation (ZERO api-football calls) |     115,715 | populated eras 40-66% -> 90-99%           |
+| § T 194-pair backfill                    |      10,438 | corpus re-scan; 191/194 pairs cleared     |
+| § W 159-pair blank-league backfill       |      16,435 | corpus re-scan; delta 0 vs claim; 158/159 |
+
+Corpus blank-round rows **161,034 -> 134,140** across the two backfills (26,894 closed), on top of the 115,715 the
+derivation had already closed for free.
+
+**Every remaining in-window blank is accounted for — nothing is unexplained:**
+
+| remaining in-window blanks         |       rows | status                                                          |
+| ---------------------------------- | ---------: | --------------------------------------------------------------- |
+| § U pairs absent from UAC registry |     10,869 | **operator decision** — unreachable by any number of calls      |
+| residue in reached pairs           |        407 | fixtures the fresh fetch did not cover — untouched, not guessed |
+| **total**                          | **11,276** | reconciles exactly to the measured 11,276                       |
+
+The pre-2019 blanks (122,864 rows) sit outside the stated 2019-01-01..2026-07-17 window and are covered by the § T open
+decision, not by this work.
+
+**What this cost in api-football calls: 353** (194 + 159 bulk (league,season) fetches). The § Q derivation closed 4.3x
+more rows than both backfills combined at ZERO call cost — the ordering (derive first, fetch only the residue) is what
+kept this to hours instead of the multi-day run the original per-fixture framing implied.
