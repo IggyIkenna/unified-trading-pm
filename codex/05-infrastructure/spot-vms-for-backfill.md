@@ -161,10 +161,38 @@ real work. Replay-from-START_DATE would have re-done 2019-01-01..07 on every cyc
 4. `--on-demand` is NOT the fix. It hides the gap for one job while leaving every other SPOT `--force` run broken, and
    it forfeits the 60-91% cost saving the SPOT default exists for.
 
-**Open implementation gap** — the durable fix is a CHECKPOINT CONTRACT: the VM periodically writes its
-`last_completed_unit` to a known blob (e.g. `vm-logs/{vm_name}/PROGRESS`), and `RelaunchPreemptedVm` reads it and
-overrides `START_DATE` on replay. That is data-type agnostic (the VM knows its own units) and fixes every launcher at
-once. Tracked in `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` § G-ops.
+**Durable fix — the CHECKPOINT CONTRACT (IMPLEMENTED 2026-07-19).** The VM writes its `last_completed_date` to
+`vm-logs/{vm}/PROGRESS.json` as each backfill day-frontier advances, and `RelaunchPreemptedVm` reads it and overrides
+`START_DATE` on replay — so a preempted `--force` run RESUMES from its frontier instead of replaying day one. Data-type
+agnostic (the VM knows its own units) and **fixes every launcher at once VIA THE SHARED PATH** (no per-launcher edit —
+this is the whole point):
+
+- **Writer (two shared seams, both fleet-wide):**
+  - UTL `ManifestWriter.record_captured` → `manifest_writer/_vm_progress.py::record_vm_progress` emits a best-effort,
+    VM-gated stdout marker `[[VM_PROGRESS]] last_completed_date=<YYYY-MM-DD> monotonic=<bool>` on each day-frontier
+    ADVANCE. **ARTIFACT-based** — it fires from a real manifest capture, NEVER a log line, so a `--force` resume can
+    never skip a logged-but-unwritten day (the async-poll "count artifacts, not activity" rule). No-op off-VM (`VM_NAME`
+    gate).
+  - The VM tee-wrapper `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh` scans appended run.log bytes for the
+    latest marker and writes `vm-logs/{vm}/PROGRESS.json` (bounded scan; uploads only on frontier change). It already
+    owns that path (run.log + EXIT_STATUS) so the writer needs NO cross-layer bucket resolution.
+- **Reader:** `_gcs.read_progress_checkpoint` + the `exit_code_fleet_monitor` PREEMPTED sweep attach the checkpoint to
+  the `DP_VM_PREEMPTED` finding; `escalation._recover_preempted_vm` threads it into
+  `RelaunchPreemptedVm.relaunch(checkpoint=…)`, which sets `START_DATE=last_completed_date` before replay.
+- **SAFETY (monotonic gate):** the override skips `START_DATE` forward ONLY when the frontier is `monotonic` (dates
+  recorded in chronological order → everything before the frontier is complete, so resuming from it redoes at most the
+  last partial day and skips nothing). A NON-monotonic run (venue-outer iteration) has undone dates behind its max, so a
+  `--force` run with a non-monotonic-or-absent checkpoint still PAGEs `force_run_not_replayable` — never a silent gap.
+  Non-force runs keep today's verbatim replay when no checkpoint exists. Backward-compatible: no PROGRESS.json ⇒ prior
+  behavior.
+- **Latent bug also fixed:** `VM_FORCE` was never persisted into `LAUNCH_PARAMS.json`, so the force-PAGE guard was dead
+  code that never fired. The guard is now reachable; persisting `VM_FORCE` is part of the per-launcher rollout below.
+
+**Remaining (scope precision, non-blocking) — the per-launcher `lc_write_launch_params` rollout.** Only
+`launch-cefi-sharded-backfill.sh` calls it today; the other ~56 SPOT launchers relaunch with the launcher's DEFAULT
+venue/scope (broader than the terminated shard, absorbed by idempotent presence-skip) + persist `VM_FORCE`. The DATE
+dimension — the day-one-replay bug this section exists for — is fully closed by the checkpoint above regardless of the
+rollout. Tracked in `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` § G-ops.
 
 ## Coverage (2026-06-27 fleet-wide conversion)
 
