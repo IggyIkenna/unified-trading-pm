@@ -38,6 +38,12 @@ last_updated: 2026-04-21
 
 # Sports Scheduling & Sharding
 
+> **⚠️ CORRECTION (2026-07-19).** (1) §9's diagram shows `entity=fixtures/fixtures.parquet` as the live write target —
+> stale: fixtures are now SPLIT into `entity=fixtures_schedule`/`entity=fixtures_outcomes` under `pipeline_mode=`, and
+> the bare entity is FROZEN (2026-05-23). (2) §12's "Roadmap — open plans (as of 2026-04-21)" is a stale historical
+> snapshot; those 13 plans are all shipped/archived. Live open sports work is tracked in
+> `plans/active/sports_consolidated_closeout_2026_07_19.md`, not §12.
+
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
 > **Multi-axis correction (2026-05-06)** — shard atoms vs display axes (row-level columns) per asset_group are the SSOT

@@ -233,9 +233,12 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track D — CODEX: doc alignment · P1
 
-- [ ] [DOC] P1. Rewrite `sports-adapter-dependency-order.md` (repoint to split entities; wire the T0/T1 gate note) +
-      `sports-data-types-catalog.md` (UPPER per K0-(b); F3 timeframe) + `sports-gcs-path-ssot.md` (pipeline_mode + split
-      entity rows).
+- [x] [DOC] P1. ✅ CORRECTION BANNERS added to all 9 drifted codex docs (PM, this commit) — canonical facts stated at
+      the top (split entity, UPPER data_type per K0-(b), pipeline_mode segment, unreachable T0/T1 gate, deleted
+      scrapers, SUPERSEDED integration-plan, dead sports_reference_v2). Full body rewrites are a deliberate follow-up;
+      the banners stop the drift from misleading a reader NOW. Remaining: rewrite `sports-adapter-dependency-order.md`
+      (repoint to split entities; wire the T0/T1 gate note) + `sports-data-types-catalog.md` (UPPER per K0-(b); F3
+      timeframe) + `sports-gcs-path-ssot.md` (pipeline_mode + split entity rows).
 - [ ] [DOC] P2. SUPERSEDED banner on `sports-integration-plan.md`; retire the deleted-scrapers §3 in
       `sports-live-odds-connectivity.md`; split-note `sports-scheduling-and-sharding.md`/`sports-fixtures-lifecycle.md`/
       `sports-batch-live.md`/`sports-data-source-coverage-matrix.md`; fix the 5 broken `related:` paths in

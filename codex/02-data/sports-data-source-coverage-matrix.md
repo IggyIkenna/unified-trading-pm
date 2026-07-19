@@ -38,6 +38,11 @@ code_refs:
 
 # Sports Data Source — Coverage Matrix SSOT
 
+> **Note (2026-07-19).** FIXTURES now writes across two entities — `entity=fixtures_schedule` +
+> `entity=fixtures_outcomes` (2026-05-23) — and the fixtures **manifest atom** is still the legacy
+> `data_type="FIXTURES"` umbrella (migration pending, closeout Track C1). data_type is UPPER for sports (K0-(b)). See
+> `sports_consolidated_closeout_2026_07_19.md`.
+
 **Status:** canonical — consumed by deployment-api data-status aggregator, instruments-service adapter audits, and
 downstream coverage dashboards.
 

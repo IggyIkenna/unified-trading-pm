@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Sports Live Odds Connectivity
 summary:
-  The three live-odds connectivity paths for sports bookmakers — The Odds API (REST poll, no login),
-  exchange APIs (Betfair/Smarkets, keys only), and login+scrape workers; latency/auth/maintenance trade-offs, MDPS as producer.
+  The three live-odds connectivity paths for sports bookmakers — The Odds API (REST poll, no login), exchange APIs
+  (Betfair/Smarkets, keys only), and login+scrape workers; latency/auth/maintenance trade-offs, MDPS as producer.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,13 +14,24 @@ tags: [sports, odds, mdps, live-trading, footystats]
 related: [sports-integration-plan.md, sports-batch-live.md]
 created: 2026-03-27
 authoritative_for: [sports live-odds connectivity paths (aggregator/exchange/scraper)]
-referenced_by: [codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/sports-integration-plan.md]
+referenced_by:
+  [
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/04-architecture/sports-batch-live.md,
+    codex/04-architecture/sports-integration-plan.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
 ---
 
 # Sports Live Odds Connectivity
+
+> **⚠️ CORRECTION (2026-07-19) — the "Scrapers" section describes DELETED code.** The 13 named per-bookmaker Playwright
+> scrapers (SkyBet, Coral, Paddy Power, Ladbrokes, Bet365, Betway, Unibet, 888sport, William Hill, Betfred, BetVictor,
+> BoyleSports, Bwin) were **retired 2026-07-08** (execution-service@29a888a8d). Live/near-real-time odds now come from
+> The Odds API aggregator only (`odds_api`) — the in-play WebSocket connector (`odds_api_ws.py`) is effectively dark (14
+> rows in 6 years, measured), so HT-horizon starvation is structural. Treat the §3 scraper prose below as historical.
 
 How we connect to bookmakers in **live** mode: no batch files, real-time (or near real-time) odds. This doc is the SSOT
 for the three connectivity paths and the trade-offs (especially login/scrape).

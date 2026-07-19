@@ -30,6 +30,11 @@ type: data
 
 # Sports fixtures lifecycle
 
+> **Note (2026-07-19).** Fixtures are read via the SPLIT entities (`entity=fixtures_schedule` = schedule incl. `round`;
+> `entity=fixtures_outcomes` = scores/status), split 2026-05-23. Pre-cutover dates require the split-FIRST read order
+> (`features-service@e4b1f1ba`) because a legacy `entity=fixtures` object still exists there but is FROZEN and staler/
+> smaller than the live corpus. See `plans/active/sports_consolidated_audit_2026_07_19.md` § V.
+
 > **SSOT for the lifetime of a sports fixture across the ingestion pipeline.** Codifies the state machine, per-state
 > available_at semantics, and cross-source verifier design.
 
