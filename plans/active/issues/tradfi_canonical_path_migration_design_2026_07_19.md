@@ -184,18 +184,19 @@ Status by shape (updated 2026-07-19):
 - **SINGLE** ✅ writer full-id shipped `mtds@d257b7be`.
 - **CHAIN WRITE** ✅ shipped `uac@ad28e55a` + `mtds@145e4aae` — writer emits `underlying=/quote=/margin=/ticks.parquet`,
   manifest shard-atom carries quote/margin (5-tuple count-key), **byte-identical to the migration executor**
-  (test-verified atom==path). ⚠️ **CHAIN READ still pending**: `reader.py::_build_shard_bases`,
-  `candidate_parquet_paths`, `pipeline_e2e_check` don't yet probe the new chain tail — a fresh chain shard would be
-  WRITTEN canonical but not READ via the old probe paths. **Required before chain reads / backfill-resume / the
-  migration --apply is read back.**
+  (test-verified atom==path). **CHAIN READ** ✅ shipped `mtds@935e1f8d` — `reader.py::_blob_paths_derivative` probes the
+  v6 tail first (byte-identical, bare fallback for combo/cefi/pre-migration) + `rebuild_tradfi_manifest.py` parses AND
+  CARRIES quote/margin into `row_key` so the rebuilt shard atom matches the live writer (a review caught + fixed a
+  dedup-key divergence: rebuild had been dropping quote/margin → would double-count chain shards post-rebuild).
+  `candidate_parquet_paths`/`pipeline_e2e_check` needed no change (prefix/glob transparent, verified).
 - **WRITE-TIME GUARD** ✅ shipped in the same change — `canonical_path_violations` rejects non-canonical tradfi writes
   (chain missing quote/margin, single bare-symbol filename, `batch_massive`, non-Hive) and is CALLED (raises) in the W1
   writer path. So a regressing tradfi write now fails loud at the source.
 - **MASSIVE** ❌ still could reappear (routing/`SOURCE_PRIORITY` not yet stripped).
 - legacy hyphen/non-Hive/corrupt ✅ won't reappear (superseded writers).
 
-Remaining before backfills resume: (1) **reader/checker companion** (chain READ path), (2) Massive routing removal, (3)
-manifest-rebuild casing normalization (`EQUITY`/`equity` is a rebuild-pass inconsistency; physical paths are lowercase).
-The **Phase-D gate** force-writes fresh data + asserts canonical shape, so a regressing backfill fails there. Net:
-writer-in-lockstep ✅ + write-time guard ✅ + reader companion (pending) + Phase-D assertion, all before
-backfill-resume.
+Remaining before backfills resume: ~~(1) reader/checker companion~~ ✅ shipped `mtds@935e1f8d`; (2) **Massive routing
+removal**, (3) **manifest-rebuild casing normalization** (`EQUITY`/`equity` is a rebuild-pass inconsistency; physical
+paths are lowercase). The **Phase-D gate** force-writes fresh data + asserts canonical shape, so a regressing backfill
+fails there. Net: writer-in-lockstep ✅ + write-time guard ✅ + reader companion ✅ + Phase-D assertion — only Massive
+removal + casing normalization remain before backfill-resume.
