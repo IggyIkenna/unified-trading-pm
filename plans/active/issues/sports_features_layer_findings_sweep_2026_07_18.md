@@ -1764,8 +1764,32 @@ identified which — **this is an open lead, not a diagnosis.**
 (`r"(\d+)$"`). The field is therefore recoverable by a light targeted pass with **no features re-run required**, so
 baking it into the remaining year-chunks costs nothing that a cheap follow-up cannot fix.
 
-- [ ] [DIAG] P2. Root-cause where `matchday` is dropped. **Three candidates ELIMINATED by measurement — do not re-run
-      these:** 1. _Base-frame collision_ — the normalized fixtures frame carries NO season_context column (`matchday`,
+### Z-FIXED (2026-07-19) — root cause found, LIVE bug fixed, writing fleet STOPPED
+
+**The §Z lead is CLOSED and was far worse than "matchday dropped": the features layer was writing FABRICATED non-null
+`competition_phase='late'` / `games_remaining=0.0` / `points_at_stake=0.0` corpus-wide** — silently-wrong values a model
+reads as real signal, invisible to every NaN check. Confirmed live on freshly-written shards (competition_phase 100%
+`'late'`, zero early/mid; games_remaining 100% `0.0`).
+
+Root cause (fully traced, reproduced on 2019/2024 dates, via the REAL pipeline path — the earlier §X "77.2% populated"
+measured the ISOLATED `_compute_season_features` and so missed it): `derived_features_exporter.py:149-151` merges
+`footystats_matches` with no `candidate_cols` filter → injects an all-NaN `match_week` (footystats joins on a string
+slug that doesn't match numeric `fixture_id`); `derived_features_helpers.py:782-788` gate checked column PRESENCE not
+population → preferred the all-NaN `match_week` over the reliable round-derived `matchday`; NaN then fell through
+`_competition_phase` to `'late'` and `max(0.0, total-NaN)` to `0.0`. Two guards no-op'd it (writer.py sparse allowlist
+suppresses the matchday NaN rejection; `validate_feature_output` logs the budget violation but never blocks).
+
+- [x] [CODE] P0. ✅ FIXED — **features-service@c6eb1f38** (QG green). Gate derives `matchday` from `round` (match_week
+      fills only genuine gaps, never shadows); `_competition_phase` + batch-loop + single-fixture path return honest
+      `None` on NaN. Verified via the real gate path (matchday 40/40, phase `{early,mid,late}`, games 0..7; unmapped
+      league → honest `None`). 2 regression tests added (the exact missing test that let it ship).
+- [x] [OPS] P0. ✅ STOPPED the 8-VM features re-run fleet — it was actively writing the fabricated pattern; every shard
+      needs re-writing after the fix anyway.
+- [ ] [DATA] P0. **Corpus-wide `derived_features` re-run required** (clean, replaces the stopped fleet) — the bug fired
+      whenever `footystats_matches` had any row that day, i.e. most of the 61,461 captured `derived_features` rows.
+      Tracked in `sports_consolidated_closeout_2026_07_19.md` FEATURES track.
+- [x] [DIAG] P2. ✅ Root-cause found (above). **Three candidates ELIMINATED by measurement — do not re-run these:** 1.
+      _Base-frame collision_ — the normalized fixtures frame carries NO season_context column (`matchday`,
       `competition_phase`, `games_remaining`, `points_at_stake`, `round_name`, `total_matchdays` all absent). 2. _A
       competing emitter_ — `rg '"matchday"'` over `features_service/sports/` shows `season_context` is the ONLY
       producer; nothing else can introduce a colliding empty column, so `_run_calc`'s first-writer-wins rule is not

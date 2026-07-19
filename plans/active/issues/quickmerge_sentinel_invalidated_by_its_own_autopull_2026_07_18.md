@@ -93,3 +93,25 @@ before paying that cost.
 Found while shipping `7e364ab9e` (major-bump template reconciliation). The tree-strict sentinel it collides with is
 `19606d5ed`, shipped by the same session earlier the same day — so this is a self-inflicted interaction, reported here
 rather than hot-patched into `quickmerge.sh` at the end of a long session.
+
+## Decision (2026-07-19) — adopt Option 2 + Option 3; sentinel stays tree-strict
+
+Adopt **Option 2 (bounded retry loop in the ship path)** as the primary fix, plus **Option 3 (short-circuit for
+carve-out-only changesets)**. The tree-strict sentinel is **kept unchanged** — after a peer pull the tree genuinely
+differs and typecheck/tests are whole-program, so refusing is correct (do NOT weaken to per-file/ancestor). The defect
+is throughput/convergence, not strictness. Option 1 (re-gate inside quickmerge) is deferred — it re-architects the
+fleet's most critical shared script for a rate that was measured on one busy evening; establish the real bite-rate
+first.
+
+**Corroborating evidence (2026-07-19).** Re-encountered this exact class shipping the mtds STEP-5.97 citation fix on a
+shared, non-isolated working tree with ≥3 concurrent autostashing agents: (a) a peer's `git pull --rebase --autostash`
+**clobbered my uncommitted edits mid-gate** (work loss, not just a stale sentinel — worse than the PM case, because the
+tree is shared); (b) the pre-commit `check-branch-drift` hook then rejected the commit for being 1 behind; (c) the
+sentinel-vs-HEAD race recurred at quickmerge time. Operational workaround that held: **commit the changeset first**
+(committed work survives a peer autostash) → gate over the committed tree → quickmerge's committed-ahead path pushes it,
+re-gating on drift. This is essentially Option 2 done by hand and argues for making it first-class; it also surfaces a
+shared-tree corollary Option 2 should cover — **protect uncommitted work by committing before the long gate**, not only
+retry the sentinel.
+
+**Implementation status: DECIDED, not yet implemented** — recorded for operator greenlight rather than hot-patched into
+`quickmerge.sh` (fleet-critical) at session end, consistent with the original report's stance.

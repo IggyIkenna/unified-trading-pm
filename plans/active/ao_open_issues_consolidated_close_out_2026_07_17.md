@@ -106,10 +106,14 @@ NOT AO and are deliberately out of scope here.
       `sports_cf8_available_at_backfill_regression-001` (`done_sha=utl@f5f15e3a`) and `-002` (`utl@0f55cc2b`). Both
       done_shas are REAL UTL fixes whose plan checkboxes (`sports_cf8…_2026_07_13.md:348` and `:856`) never flipped;
       both predate the `@86b8b8b` checkbox-flip gate, so this is legacy poison the 07-16 sweep missed (they were likely
-      UNAUDITABLE then; regen backfilled their `brief_hash` since). First DIAGNOSE whether the underlying work is
-      genuinely done (the UTL fixes shipped — the todos may be flippable rather than reopenable); then either flip the
-      plan checkboxes (if the work is complete, making the rows honest) or `POST /api/backlog/{id}/reopen` (if not).
-      **Gate**: `audit_false_done.py --db … --pm …` reports `false_done: 0`, and the decision per row is recorded on
+      UNAUDITABLE then; regen backfilled their `brief_hash` since). **OWNERSHIP (operator 2026-07-18): the underlying
+      work is NOT AO's — it lives in `sports_cf8_available_at_backfill_regression_2026_07_13.md` (status: open, epic
+      `mtds_mdps_master`, role `data_engineering`). The "is the work genuinely done" verdict + the checkbox flip belong
+      to that plan's owner, not this AO plan.** The two rows: `-001` (`:348`) is a `[ ]`-open DATA re-emit task while
+      the backlog row shows `done`; `-002` (`:856`) is a `[x]`-DONE BACKEND task the audit only flags because the cited
+      `done_sha` isn't the commit that flipped the checkbox. AO scope here shrinks to: notify the sports/data owner to
+      verify + flip (or reopen), then RE-RUN the audit. **Gate**: `audit_false_done.py --db … --pm …` reports
+      `false_done: 0` after the sports owner's ruling is applied; the per-row decision is recorded on
       `backlog_task_done_status_diverges…`. Source: doc #4 + this session's probe.
 - [ ] [BACKEND] P1. **Close doc #4 (`backlog_task_done_status_diverges…`) for real.** Its todos are all `[x]` and it
       left `status: open` awaiting "an independent skeptical audit" — this session's audit found the 2 rows above, so
@@ -224,9 +228,11 @@ NOT AO and are deliberately out of scope here.
 - [ ] [INFRA] P2. **Per-repo freeze-streak alert in `slot-cron-ff-pull.sh`.** Verified still absent: the dirty-streak
       WARN fires only when EVERY repo in a sweep skips — a single frozen clone (the exact 2-day outage mode) stays
       silent. Make the streak per-repo (repo X `[skip:dirty]`/`[skip:ff-failed]` N consecutive ticks → WARN naming the
-      repo). NOTE: doc #7 says the operator routed "UI surface + alerting" to a separate agent — check with the operator
-      whether that agent shipped anything BEFORE building; if it exists, verify + close instead. Source: doc #7 todo 3.
-      **Gate**: doc #7's gate — a deliberately-frozen clone WARNs within N ticks.
+      repo). NOTE (operator 2026-07-18): the "UI surface" agent doc #7 mentioned is a DIFFERENT scope — the backlog
+      details pop-up (what tasks exist, their prerequisites, how tasks/plans connect) — and has not started (UI design
+      not final). It does NOT cover this `slot-cron-ff-pull.sh` alerting, so this is a **standalone AO task — build it**
+      (no cross-agent dependency). Source: doc #7 todo 3. **Gate**: doc #7's gate — a deliberately-frozen clone WARNs
+      within N ticks.
 - [ ] [INFRA] P2. **Fleet-wide frozen-clone sweep.** hk-host root repos measured behind=0 today, but the VM's SLOT
       clones + any other hosts were not swept. One pass: every host's root + slot clones, `HEAD..origin/LDR > 0` with
       untracked-only dirt → unfreeze (plain FF, per the doc's recipe). Source: doc #7 todo 4. **Gate**: sweep output
@@ -363,10 +369,13 @@ NOT AO and are deliberately out of scope here.
       capped; KPI visible.
 - [ ] [INFRA] P2. **(AF-2) plan_health true daily volume is 55 dispatches/24h — 13 of which produced NO result.**
       `plan_health_dispatched=55`, `plan_health_result=42`, `plan_health_dispatch_failed=4` in the last 24h — worse than
-      the 5.5h sample in Phase 6, and each run is a sonnet worker digesting ~449 plans (real daily token spend). The 13
-      result-less dispatches are pure waste (superseded/died mid-run). This is EVIDENCE strengthening the Phase-6
-      cooldown item, plus one addition: the cooldown gate should also require the PREVIOUS dispatch to have posted its
-      result (or timed out) before a new one spawns. **Gate**: folded into the Phase-6 plan_health item's acceptance.
+      the 5.5h sample in Phase 6, and each run is a **haiku** worker (`agents/plan_health.md` `model: haiku` — NOT
+      sonnet; the cheap radar) digesting ~449 plan skeletons. MEASURED 2026-07-18 (6-day activity_log): 288 dispatched /
+      186 result / 59 failed → only ~65% produce a result; run duration median 280s, mean 288s, p90 6.5 min, max 10.5
+      min. The result-less dispatches are pure waste (superseded/died mid-run). This is EVIDENCE strengthening the
+      Phase-6 cooldown item, plus one addition: the cooldown gate should also require the PREVIOUS dispatch to have
+      posted its result (or timed out) before a new one spawns. **Gate**: folded into the Phase-6 plan_health item's
+      acceptance.
 - [ ] [BACKEND] P3. **(AF-3) `activity_log` has NO retention policy — unbounded growth on the hot DB.** 83,813 rows
       spanning 20 days (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC;
       `activity_log` has nothing (grepped `state_store/` — no delete/prune path). Fine today, but it is silent unbounded

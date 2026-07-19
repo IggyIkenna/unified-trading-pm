@@ -105,8 +105,9 @@ Naming (per-AG, `features-{ag}`): `{prefix}-{ag}-{env_short}-{project_id}` (e.g.
 
 > **SUPERSEDED (2026-07-19, Wave-3 folds)** — the prior per-kind bucket rows (`features-delta-one`, `ml-models-store`,
 > per-AG `execution-store-{ag}`, the six portfolio stores, …) are RETIRED. The source buckets were migrated (additive
-> server-side copy, parity-verified) then deleted; ~30 buckets removed (estate 114 GCP). The fold is documented per
-> domain in `plans/active/bucket_fold_{features,ml,execution_strategy,portfolio_state}_2026_07_17.md` +
+> server-side copy, parity-verified) then deleted; ~41 buckets removed (estate 103 GCP: ~30 by the folds + 11 ml source
+> buckets in the ml-fold GCP completion). The fold is documented per domain in
+> `plans/active/bucket_fold_{features,ml,execution_strategy,portfolio_state}_2026_07_17.md` +
 > `plans/active/bucket_fold_closeout_2026_07_17.md`. Each writer/reader now prepends its object-key prefix (a wrong
 > prefix = silent empty read — guarded by writer↔reader parity unit tests in UTL `tests/config_interface/`).
 

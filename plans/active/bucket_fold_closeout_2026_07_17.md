@@ -77,7 +77,13 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       window has closed and is grep-clean (no `resolve_bucket_name` caller, no
       `READER_FELL_BACK_TO_LEGACY_PATH`-equivalent), hard-remove its `_KIND_ALIASES` entry (UTL `bucket_naming.py`) +
       any residual retired yaml key. "No double SSOT." Verify `terraform plan` (derived-from-yaml drift detector) stays
-      green after removals. (Absorbs each fold plan's deferred P3 alias-sunset todo.)
+      green after removals. (Absorbs each fold plan's deferred P3 alias-sunset todo.) **2026-07-19 PARTIAL: the yaml-key
+      side is DONE** — all 13 residual retired yaml keys removed from every copy
+      (ds@a91e520/UAC@a8e7f46d/PM@cb1fb1916/UTL@45957afa) and `terraform plan` stays 0-create/0-destroy, so the yaml-key
+      gate is cleared. **Remaining = the `_KIND_ALIASES` entry hard-removal**, still gated on the harness/migration
+      coupling (features e2e harness + v8 migration resolve retired kinds → removing the alias would break them);
+      `positions-store` (alias-only, no yaml key) stays the one trivially-removable follow-up. See Progress Log
+      2026-07-19 (cont.).
 - [x] ✅ [DOCS] P3. **Post-phase codex audit (all folds)** — **DONE 2026-07-19: PM@8ea8abd89** (promote-PR #1177 → main,
       v2 auto-merge). Ground truth taken from the live UTL resolver (`resolve_bucket_name`, run-it-don't-read-it), not
       the yaml. Updated `bucket-isolation-model.md` §2 Group-B table → folded shapes (`features-{ag}` per-AG; `ml-store`
@@ -87,8 +93,9 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       (features N→5 per-AG, execution 3→1 single-root, ml 5→1, strategy 1, portfolio-state none) + direct-gcloud
       retarget note; `gcs-lifecycle-policies.md` "intentionally NOT lifecycle'd" → updated: folded buckets provisioned
       `STANDARD→COLDLINE@60d`, portfolio-state confirm-before-COLDLINE. All 3 prettier-clean, QG-green.
-- [x] ✅ [DATA] P3. **Final estate recount** — **DONE 2026-07-19: GCP = 114 total buckets** (down from ~140+ pre-fold;
-      ~30 source buckets removed by the 5 folds). NO folded source bucket lingers (grep clean: execution-store-{ag},
+- [x] ✅ [DATA] P3. **Final estate recount** — **DONE 2026-07-19: GCP = 103 total buckets** (114 immediately post-fold,
+      then −11 ml source buckets deleted in the same session's ml-fold GCP completion; down from ~140+ pre-fold, ~30+11
+      source buckets removed total). NO folded source bucket lingers (grep clean: execution-store-{ag},
       features-{delta-one,volatility,onchain,xinstrument,mtf}-*, positions-store, pnl-attribution-store,
       archetype-state, position-store-sports, strategy-store-flat all gone). The 114-vs-59-TF-tracked gap is
       PRE-EXISTING estate drift (market-data/billing buckets not in canonical TF) — separate from the folds,
@@ -317,3 +324,45 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   soft-transition net; their removal is folded into the terraform-drift reconciliation. **CLOSEOUT STATUS: every
   autonomously-actionable item is DONE. The sole remainder — the alias+yaml-key hard-removal — is genuinely gated on the
   operator-aware terraform-drift reconciliation (yaml-mirror-sync + the 32-destroy plan) + AWS fold-completion.**
+- **2026-07-19, `/autonomous` (cont.) — TERRAFORM-DRIFT RECONCILIATION + YAML-MIRROR-SYNC COMPLETE; alias-sunset Part-B
+  yaml-key gate CLEARED.** Executed the operator-requested terraform-drift yaml-sync + destroy reconciliation, then
+  reconciled the pre-existing NON-bucket drift the apply surfaced. End-state `tofu plan` = **0 bucket create / 0 bucket
+  destroy** (drift detector clean; the ~32-destroy long-env Group-B blocks + retired-kind test buckets + full-word
+  `-prediction-test-` resources are GONE from main.tf — only migration comments remain; estate is derived-from-yaml via
+  `canonical_buckets.tf` for_each).
+  - **yaml-mirror-sync (all 5 copies shipped):** 13 retired bucket-kind keys stripped (features-{delta-one,volatility,
+    onchain,xinstrument,mtf}, ml-{models,predictions,configs,training-artifacts,artifacts}-store, position-store-sports,
+    execution-store-prediction, archetype-state) from deployment-service/configs SSOT (**ds@a91e520**), UAC-packaged
+    (**UAC@a8e7f46d**), PM configs+ci-test (**PM@cb1fb1916**, peer-folded 5f04b0702), UTL fixture (**UTL@45957afa**,
+    peer-folded). Resolver-verified: retired kinds still resolve via `_KIND_ALIASES`→folded keys (kept keys intact).
+    (ci-test fixture needed a comment-block condense — strict check-yaml rejects >~35 consecutive comment lines before a
+    mapping key.)
+  - **terraform reconciliation (ds@a91e520):** feature consolidator collapse per-kind→per-AG (6 → features-{cefi,defi,
+    tradfi}); removed the stale hand-written `features_delta_one_cefi_test` bucket block + its import block. Applied on
+    real infra (ADC admin, central-element-323112): 0 destroyed.
+  - **pre-existing NON-bucket drift reconciled (surfaced by the apply, orthogonal to the fold but in-path, all
+    ds@a91e520):** imported **4 Cloud Run jobs** (features-cefi consolidator [mine] + execution consolidator +
+    deployment-digest + lifecycle-catalogue-full-sports) + **5 Cloud Scheduler crons** that existed in GCP but were
+    absent from TF state (created by a prior apply, state lost → 409 on re-create); repointed **3 catalogue IAM grants**
+    (catalogue_regen / ui_runtime / instrument_catalogue strategy-store writer/reader) from the deleted flat
+    `strategy-store-central-element-323112` → canonical `strategy-store-prd-…` (verified against UAC
+    `STRATEGY_STORE_BUCKET_TEMPLATE` + the `enumerate_*.py` writers — all `strategy-store-prd-`; the 07-13 split-brain
+    is resolved in code, only the TF IAM lagged); fixed **governance-snapshot-monitor cpu 0.5→1** (gen2 always-allocated
+    rejects <1 vCPU — a create-blocking bug; the monitor had never deployed, now deploys); imported the pre-existing
+    **`odum_portal`** Cloud Run domain mapping (created imperatively 2026-06-21, never in TF → apply kept trying to
+    re-create the live mapping → 15-min hang; import made it a no-op).
+  - **sole residual (documented, NOT applied):** `google_bigquery_table.feature_external["defi__onchain_features"]`
+    `require_partition_filter=false→true` — pre-existing, orthogonal to the fold, appears in every plan; applying risks
+    breaking consumers that query without a partition filter → left a tracked residual, not auto-applied.
+  - **estate recount:** GCP now **103** (114 minus the 11 ml source buckets deleted in this session's ml-fold GCP
+    completion; parity-verified name-for-name before deletion). `run-sources-…-us-central1aa` = malformed-region Cloud
+    Run cruft (empty), safe to delete, left for operator.
+  - **Fold-A tracer shipped (operator "ship dirty worktrees" request):** **strategy-service@f4af06ba** —
+    `trace_all_carry_archetypes.py` repointed to folded `features-{ag}-prd` + kind-prefix (was inherited dirty WIP).
+    MTDS clean.
+  - **Alias-sunset Part-B status:** the **yaml-key gate is now CLEARED** (all retired yaml keys removed, terraform stays
+    green). The `_KIND_ALIASES` hard-removal for still-coupled kinds remains gated ONLY on the harness/migration
+    coupling (features e2e harness + v8 migration still resolve retired kinds); `positions-store` (alias-only) stays the
+    one trivially-removable follow-up. Issue [[terraform_bucket_estate_drift_resurrection_2026_07_13]] annotated: bucket
+    estate + yaml-sync + job/cron/IAM/governance drift DONE; tail items (setup-buckets.py retire, e2e fixture polluter,
+    broader lifecycle single-source) remain.

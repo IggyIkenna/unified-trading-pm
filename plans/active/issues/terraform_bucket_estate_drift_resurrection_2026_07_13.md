@@ -145,3 +145,36 @@ the BROADER main.tf reconcile — deleting the long-env Group-B TF blocks that s
 to the canonical kind set, retiring `setup-buckets.py` / fixing the e2e fixture polluter, and re-deleting any
 resurrected empties AFTER the block deletion — is NOT done. Close when the estate TF is fully derived-from-yaml with
 `terraform plan` clean.
+
+## 2026-07-19 (cont.) — PRIMARY (bucket-estate resurrection) RESOLVED; issue narrowed to non-bucket tail
+
+The operator-requested "terraform-drift yaml-sync + destroy reconciliation" was executed to completion on real infra
+(ADC admin, central-element-323112). The **bucket-estate resurrection root cause (directions a + b) is now resolved**;
+`terraform plan` is the clean drift detector the rulings intended.
+
+- **(a) TF derived-from-yaml — DONE.** The long-env Group-B `-prod-`/`-staging-` bucket blocks, the retired-kind test
+  buckets (gas-fees-test / solana-defi-test / evm-defi-test), and the full-word `-prediction-test-` resources are GONE
+  from `main.tf` (only migration comments remain); the canonical estate is the `canonical_buckets.tf`
+  `google_storage_bucket.canonical` for_each. **End-state `tofu plan` = 0 bucket create / 0 bucket destroy** (the
+  ~32-destroy resurrection drift no longer exists — nothing resurrects, nothing is orphaned).
+  deployment-service@a91e520.
+- **(b) yaml-copy sync — DONE.** The 13 retired bucket-kind keys stripped from ALL copies: deployment-service/configs
+  SSOT (ds@a91e520), UAC-packaged (UAC@a8e7f46d), PM-mirror configs + ci-test fixture (PM@cb1fb1916), UTL test fixture
+  (UTL@45957afa). Standalone-install/wheel resolution no longer surfaces deleted kinds.
+- **Bonus in-path drift reconciled** (surfaced by the apply, all ds@a91e520): 4 Cloud Run jobs + 5 Cloud Scheduler crons
+  that existed in GCP but were absent from TF state were **imported** (state was lost from a prior apply → they 409'd on
+  re-create); the 3 catalogue-regen IAM grants were **repointed** off the deleted flat
+  `strategy-store-central-element- 323112` → canonical `strategy-store-prd-…` (matches UAC
+  `STRATEGY_STORE_BUCKET_TEMPLATE` + the `enumerate_*.py` writers; the [[strategy_store_split_brain_2026_07_13]] code
+  side was already fixed, only the TF IAM lagged); the governance-snapshot-monitor **cpu 0.5→1** create-blocking bug was
+  fixed (gen2 rejects <1 vCPU); the pre-existing imperatively-created **`odum_portal`** Cloud Run domain mapping was
+  imported (was making apply try to re-create a live mapping).
+
+**REMAINING (why this STILL stays open — but the scope is now the non-bucket tail, not the estate):** (c) the four
+contradictory lifecycle declarations are reconciled to COLDLINE@60d **for the folded buckets only** — a single-source
+encoding for the whole estate is not done; (d) `setup-buckets.py` / `bucket_config.yaml` 4th-scheme retirement and the
+`e2e-testing/scripts/common/setup-gcp-fixtures.sh` non-canonical-name polluter are untouched; the AWS fold-completion is
+operator-deprioritized; and one orthogonal residual `tofu plan` diff remains —
+`google_bigquery_table.feature_external["defi__onchain_features"]` `require_partition_filter=false→true` (pre-existing,
+applying risks breaking partition-filter-less consumer queries — left un-applied, not a bucket concern). Close when
+(c)+(d) land.

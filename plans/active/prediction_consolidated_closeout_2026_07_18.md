@@ -949,3 +949,27 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   - **Durability**: the CQG bundle is now durable (writer-root item-1 `mtds@1ec415f8` deployed on the next cycle stamps
     `PREDICTION_MARKET`); per-CID `instrument_type` + `prediction_trades` re-accumulate on new writes until the
     items-2+3 follow-up lands (tracked P1 todo). Next: A2 catalogue regen (migration target (d) / plan todo 2).
+
+- **2026-07-19 (slot-2, autonomous tick 19) — Phase-D prediction smoke RAN on real `-test-` VMs; RED with THREE
+  actionable failure classes (the smoke tooling WORKS — it caught real issues).** day=2026-06-28 (all 4 prod shards
+  captured), legs force/skip/canonical. IS 0/14, MTDS 0/12. Reports in
+  `plans/audit/results/data_pipeline_e2e_check_{is,mtds}_2026_06_28.md`.
+  - **CLASS A — IS, all 14 cells 404 on the LONG bucket `instruments-store-prediction-test-central-element-323112`**
+    (the abbreviated `instruments-store-pred-test-*` EXISTS; long 404s). UAC `gcs_paths.py` L103/L110 are already
+    abbreviated, so a DIFFERENT resolver in the IS instruments write path (or the harness) produces the long
+    `prediction` form for the TEST tier — the same bug the A2/UTL fix closed for MARKET_DATA (`utl@1f35ec41`), still
+    open for INSTRUMENTS. All 14 IS failures (incl. `cqg_bundle_manifest_row_missing`,
+    `market_lifecycle_manifest_row_missing`) cascade from this ONE root cause. **Dispatched a triage+fix agent**
+    (root-cause the long-form resolver → mirror the market-data fix → re-run the IS leg).
+  - **CLASS B — MTDS canonical leg `noncanonical-instrument_type:'None'`** on freshly force-written per-CID shards
+    (POLYMARKET/KALSHI `:PREDICTION_MARKET:<cid> [None]`) — **live confirmation of writer-root item 2** (per-CID writer
+    stamps null `instrument_type`; the generic `writer_manifest.add` passes `itype_key` verbatim, RULE-11 → fix belongs
+    UPSTREAM at the prediction per-CID shard-key construction). Tracked as the P1 items-2+3 follow-up; NOT fixed here
+    (delicate). This is exactly the TRANSIENT-drift source flagged in tick 17.
+  - **CLASS C — MTDS force/skip `no_parquet_under raw_tick_data/by_date`** + IS `cqg_bundle_manifest_row_missing`:
+    likely a smoke-HARNESS path assumption (does prediction write under `raw_tick_data/by_date/` at all, or a CQG-bundle
+    / different prefix?) and/or downstream of the Class-A 404. Triage agent characterizing (harness-adapt vs real gap).
+  - **Honest status: the smoke is RED, NOT green.** The migration `--apply` (tick 18) canonicalized the PROD MANIFEST;
+    the smoke writes fresh to `-test-` and re-surfaces item-2 at the WRITER (per-CID null) — consistent, not
+    contradictory. Phase-D closes green only after Class A fix + a decision on item 2 (per-CID writer) for the canonical
+    leg. Do NOT tick Phase-D as passed until the triage lands.

@@ -91,3 +91,27 @@ agent's in-progress doc can freeze every other agent's ship path with no legitim
 
 Establish (3) first — if the doc reached the shared branch through a bypass, that is the actual defect and the cheapest
 fix. Otherwise (1), which mirrors an existing, already-accepted pattern in this repo rather than inventing a new one.
+
+## Decision (2026-07-19) — prerequisite (3) established; adopt (1)
+
+**Root cause is a pre-commit BYPASS, not a checker coverage gap (measured 2026-07-19).** The prerequisite the
+recommendation hinged on is now settled empirically:
+
+- The pre-commit `plan-hygiene` hook (`.pre-commit-config.yaml` → `run_hygiene_sweep.sh --precommit`) runs
+  `check_frontmatter_schema.py --quiet` on every staged `plans/**` doc (its `--precommit` branch, line ~67), and
+  `docspec.doc_type_for_path()` resolves `plans/active/issues/*.md` to `issue` — so the offending doc was **in scope**.
+- Feeding the incident's exact four enums (`status: fixing`, `nature: bug`, `asset_group: infra`, `stage: infra`)
+  through `docspec.validate_frontmatter('issue', …)` returns **4 violations** (each enum is rejected against its
+  registry set). So the pre-commit gate **would have failed the commit**. The sweep covers these keys — it was
+  **bypassed** (`git commit --no-verify` / a prek-skipped path), which is the ban agents are already under.
+
+**Therefore the checker needs no change (option 3's "fix the source" is already in place).** The residual defect is that
+a single bypassed bad doc freezes _every other_ agent's gate corpus-wide for the duration. Adopt **Option 1**: scope the
+**local** post-gate frontmatter check to the committer's own changeset (staged + committed-but-unpushed), mirroring the
+existing pre-push guard's reasoning; **CI's lint-codex slice keeps the corpus-wide enforcement** so nothing stops being
+enforced — a bypassed bad doc still fails CI, it just no longer blocks unrelated agents locally.
+
+**Implementation status: DECIDED, not yet implemented.** The change touches the fleet-wide QG post-gate frontmatter step
+(`base-service.sh` / the corpus-wide `check_frontmatter_schema` invocation) — a shared-critical script, so it is
+recorded here for operator greenlight rather than hot-patched. Complementary control (unchanged): agents remain banned
+from `--no-verify` / `SKIP_BRANCH_DRIFT`-class overrides.
