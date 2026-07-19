@@ -71,3 +71,13 @@ resolved_by:
    is the keeper, per the yaml's operator decision).
 3. Note: Terraform declares five per-AG env-suffixed strategy-store resources (main.tf:1249-1335) — remove alongside,
    per [[terraform_bucket_estate_drift_resurrection_2026_07_13]].
+
+## Wave-3 fold assessment (2026-07-19) — bucket side RESOLVED, reader-code legs remain → STAYS OPEN
+
+The Wave-3 execution+strategy fold ([[bucket_fold_execution_strategy_2026_07_17]], Fold D) + the 2026-07-14 per-AG
+delete resolved the **bucket** side of the split-brain: `strategy-store-{cefi,tradfi,defi}-{pid}` deleted (cefi
+residuals preserved to `legacy_cefi/`), the unified flat `strategy-store` re-tiered `-{env}-`, and the per-AG Terraform
+blocks state-rm'd. **Remaining (why this stays open)**: the READER-code legs — deployment-api per-AG defaults
+(`deployment_api_config.py:617-635`) + UAC `enumerate_envelope.py:1053` cefi hardcode — are still open, tracked as
+closeout loose-ends 4c (deployment-api C+D-display WIP, `stash@{0}`) + 4d (UAC WIP) in
+[[bucket_fold_closeout_2026_07_17]]. Close this issue when those two reader legs land.

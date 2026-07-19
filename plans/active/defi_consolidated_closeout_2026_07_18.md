@@ -610,6 +610,30 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — ⚠️ MTDS QG-RED from a cross-repo LENDING-retire break + R3 fix re-verify failed;
+  reconciliation dispatched).** Two serious findings from `w7q0vvc6l` (MTDS remediation) + the concurrent Wave B UAC
+  ship:
+  - **BIG FINDING (cross-repo SSOT break — FLAG-TO-OPERATOR).** Wave B's UAC stage shipped
+    `unified-api-contracts@e319864f` (retire flat `LENDING` → `UNSUPPORTED_BY_DESIGN`; POOL 3-seg; SPOT_PAIR validator).
+    But MTDS's MARKET-LEVEL lending handlers (`lending_indices`/`liquidations`/`risk_params`/`instruments_metadata`)
+    still pass `InstrumentType.LENDING` to `build_instrument_id`, which now RAISES → **9 MTDS tests fail → the whole
+    MTDS tree is QG-red** (MTDS installs UAC editable), blocking EVERY MTDS quickmerge (incl. the ready solana-split +
+    R3). Root cause = my Wave B scope updated UAC+IS but missed the MTDS market-level consumers (they weren't migrated
+    in lockstep). **DATA-MODEL DECISION (least-bad, per the plan's documented "A_TOKEN/DEBT_TOKEN only" intent — flagged
+    for operator review)**: migrate these per-reserve market-level rows to the reserve's **A_TOKEN** (its aToken = the
+    reserve's canonical representative; the supply/ collateral side). Alternative the operator may prefer: keep
+    `LENDING` valid for market-level DATA_TYPES (different grain from per-token holdings, arguably not the duplication
+    the operator's ruling targeted) — reversible if so. The historical `lending_indices`/`risk_params` rows re-key is a
+    Wave-D item.
+  - **R3 PART B re-verify FAILED (`safe_to_apply=FALSE` still).** The remediation's own fix (`_merge_onto_existing`
+    dedup on `_EVENT_KEY_COLS`) is WRONG for the SHARED multi-instrument `_needs_attribution` object: `block_number`/
+    `round_id` aren't row-unique across instruments, so `drop_duplicates(subset=key)` collapses DISTINCT rows and
+    deletes v9 data (reproduced: 3 v9 + 3 R3 rows → 2 survive; the ratio gate doesn't protect it). Fix = per-call
+    dedup-key: the LEAF write keeps `_EVENT_KEY_COLS`; `_flush_needs_attribution` uses lossless/full-row dedup. The
+    solana-split (862 L) + R3 script are code-complete + intact in the working tree, un-shippable until MTDS goes green.
+  - **Reconciliation dispatched (one MTDS wave)**: migrate the lending handlers off flat LENDING → A_TOKEN (unblock the
+    tree, ship with the ready solana-split) → re-fix R3's dedup + ship R3 → re-verify both (lending ids + R3 attack #4).
+
 - **2026-07-19 (slot-4, /autonomous — Track 6 enumeration view SHIPPED + LIVE; 2 process findings).** `wk821p5lx` →
   `instruments-service@64a58cc1` + `deployment-api@0d2f6e6` + `deployment-ui@4afcfd8` (pw:L2 ✓). The RAW distinct-values
   panel is live and **immediately surfaced the Wave-D worklist** (venue/itype/dtype/chain drift = exactly what the
@@ -619,10 +643,15 @@ Discriminator = **does a manifest row exist**.
     (code reaches LDR via quickmerge ONLY). The code is QG-green (6 unit tests + lint) and can't be cleanly
     trailer-fixed without a banned force-push, so it's ACCEPTED-as-shipped but flagged. Root cause = FINDING 2. The
     prerequisite drift-fix `@593327a` DID go via quickmerge (trailer present).
-  - **FINDING 2 (root cause, tracked)**: `deployment-api/tests/unit/test_route_deployments_inventory_aws.py` makes REAL
-    GCP calls that `pytest-socket` blocks locally → intermittent `JSONDecodeError` → fails the LOCAL quickmerge QG gate
-    (passes on networked CI). This flaky test pushed the agent to bypass quickmerge. Should be mocked → issue-doc
-    candidate (deployment-api infra, tangential to the DeFi close-out).
+  - **FINDING 2 (root cause) — RESOLVED `deployment-api@df530dcad` (via quickmerge, no bypass).** The inventory route
+    `_compute_inventory` fans out ~12 GCP censuses; the tests mocked only the PRIMARY seams, leaving 8 SECONDARY ones
+    (`list_cloud_run_services`/`list_cloud_functions`/`list_scheduler_jobs`/`get_disk_details`/`list_reserved_addresses`/
+    `list_unattached_disk_names`/`object_delta_for_asset_group`/`CostObservabilityService`) firing real transpacific GCP
+    calls → intermittent `JSONDecodeError` on a partially-reachable host. Fix = a reusable
+    `patch_inventory_secondary_census` fixture (`tests/mocks.py`) → deterministic offline (29.9s→0.5s, zero socket
+    warnings), QG exit 0. **RESIDUAL (out of scope, warnings-only, non-blocking)**:
+    `tests/unit/api/test_cost_observability.py` makes its own real Google socket connects — flag for a follow-up if
+    fully socket-silent QG is wanted.
   - **LESSON (cross-repo drift)**: R2c adding `EXPECTED_ACQUISITION_PENDING` to UAC `EMPTY_CONFIRMED_REASONS` silently
     broke `deployment-api::EMPTY_REASON_KEYS` (a mirror of the closed set) → any UAC closed-set member add must update
     the deployment-api mirror. Caught + fixed here (`@593327a`).

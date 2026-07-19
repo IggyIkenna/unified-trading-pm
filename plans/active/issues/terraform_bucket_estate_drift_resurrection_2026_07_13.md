@@ -132,3 +132,16 @@ NEARLINE@60→COLDLINE ladder reading is possible, confirm before applying), enc
 
 - `gcs-lifecycle-policies.md` update. Execution owned by `bucket_estate_consolidation_to_sub100_2026_07_13.md` Wave 0.
   Also ruled same day: dev/stg tiers retired (Wave 1); env-split plan unlocked + archived (superseded).
+
+## Wave-3 fold assessment (2026-07-19) — per-fold slice DONE, broader reconcile remains → STAYS OPEN
+
+The 5 Wave-3 folds executed the per-fold slice of direction (a)+(c): each fold **imported** its folded canonical
+`-prd-`/`-test-` bucket into the derived-from-yaml Terraform `for_each` and **`state rm`'d** the deleted source buckets,
+and provisioned the folded buckets **STANDARD→COLDLINE@60d** (replacing the untracked @14d for those buckets). ~30
+source buckets removed; estate 114 GCP; `gcs-lifecycle-policies.md` + `bucket-isolation-model.md` +
+`manifest-consolidator-ssot.md` codex updated to the folded shapes (PM@8ea8abd89). **Remaining (why this stays open)**:
+the BROADER main.tf reconcile — deleting the long-env Group-B TF blocks that still declare stale naming generations (the
+~32-destroy drift, operator-aware, do NOT `tofu apply` autonomously), syncing the UAC-packaged + PM-mirror yaml copies
+to the canonical kind set, retiring `setup-buckets.py` / fixing the e2e fixture polluter, and re-deleting any
+resurrected empties AFTER the block deletion — is NOT done. Close when the estate TF is fully derived-from-yaml with
+`terraform plan` clean.
