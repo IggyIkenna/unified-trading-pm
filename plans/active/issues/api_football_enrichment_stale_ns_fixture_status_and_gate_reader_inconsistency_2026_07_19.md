@@ -209,8 +209,21 @@ shared by every consumer of every instruments-\* manifest bucket.
       which is why the first attempt at this todo appeared not to work). Scope to the two known residual clusters first
       (2026-02-21..2026-03-22 mixed 30-45% NS; 2026-06-24..2026-07-14 ~100% NS) before considering a wider historical
       sweep — do NOT blanket-`--force` a mostly-already-correct window, it wastes real API-key budget on rows that don't
-      need it. (repo: instruments-service) Consider also wiring a periodic status-refresh pass (daily/forward scheduler)
-      so future non-terminal captures self-heal within a few days instead of needing another manual backfill.
+      need it. (repo: instruments-service)
+- [x] ✅ [DATA] P1. Wire a periodic status-refresh pass (daily/forward scheduler) so future non-terminal captures
+      self-heal within a few days instead of needing another manual backfill. — instruments-service@7d07e2a4: added
+      `_find_stale_fixture_leagues_for_date` (`instruments_service/engine/orchestrator/sports_fixtures.py` — single-date
+      scan of already-captured FIXTURES parquet against `status_short NOT IN {FT,AET,PEN,CANC,AWD,PST,ABD}`, no
+      whole-corpus walk) + the `sports.fixtures.status_refresh` trigger
+      (`instruments_service/triggers/sports_fixture_status_refresh.py`), which walks a bounded trailing window
+      `[today - min_age_days - lookback_days, today - min_age_days]` (defaults: skip the most recent 2 days, scan 30
+      days back) and re-fetches ONLY the stale `(date, league)` cells via targeted `league_ids=` fan-out (not a blanket
+      whole-date re-fetch — preserves API-key budget). Unit-tested
+      (`tests/unit/test_sports_fixture_status_refresh_scan.py`,
+      `tests/unit/triggers/test_sports_fixture_status_refresh.py`, 21 new tests); full `quality-gates.sh` green. NOT yet
+      wired to a Cloud Scheduler cron (same as the pre-existing `sports.fixtures.daily_repoll` trigger, which is also
+      unwired) — that scheduling + the bounded `--force` backfill sweep for the two known residual clusters above is
+      separate, still-open scope.
 - [ ] [DATA] P2. Investigate `_read_and_merge_per_vm_shards` / `_read_consolidated_if_fresh` column-selection
       sensitivity (repo: unified-trading-library, `unified_trading_library/manifest_writer/_read_index.py`) — confirm
       whether requesting `league_id` (or any column) changes which shard files are included in the fallback merge, and
