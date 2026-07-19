@@ -157,7 +157,7 @@ canonical-shape code changes proceed autonomously.
   now in the override). **STILL PENDING in the keystone:** the CHAIN `quote=/margin=` shard-atom change (writer chain
   branch + UAC `build_tradfi_partition_path` + reader/checker + manifest) — the higher-risk lockstep piece, next.
 - **Orphan-proof map**: PROVEN on the full 2,734,646-object corpus, 0 orphans (see final reconcile above).
-- **2026-07-19 — Dry-run migration EXECUTOR built + verified**
+- **2026-07-19 — Dry-run migration EXECUTOR SHIPPED `mtds@e16705db`**
   (`market-tick-data-service/scripts/migrate_tradfi_canonical_2026_07.py`
   - 18 unit tests; QG-green). Dry-run over the full enumeration re-proves 0 ORPHAN + disposition counts EXACTLY match
     the final reconcile. 1:1 object migration (copy→verify→delete), `--apply` gated; massive-purge double-gated
