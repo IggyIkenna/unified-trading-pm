@@ -2634,3 +2634,91 @@ that point either the gate is genuinely close to green (main window resolved) an
 clusters remain, needing one small follow-up narrow relaunch once the main fleet's rate-budget share frees up; or (b)
 one of the 4 VMs self-terminates (`exit_code=0`, window walk complete) freeing rate budget early for a residual-cluster
 relaunch sooner than the full-fleet estimate.
+
+### 2026-07-19T15:36-16:10Z — data_engineering slot-8 (Todo `-001` — TWO NEW ROOT CAUSES FOUND: stale-NS fixture status permanently blocks enrichment; the gate-reader itself is column-selection-inconsistent. Verified fix on 1 date, launched a force-refresh VM for the confirmed-stuck tail window.)
+
+Dispatched onto `-001`. Fresh-pulled all 25 slot repos clean, no dirty state inherited (the boot-time GIT STATUS RED
+nudges for instruments-service/features-service/deployment-api/agent-orchestrator were all already stale/resolved at
+pickup — ahead=0/behind=0 on every flagged repo, no action needed).
+
+**Confirmed slot-3's 4 redirected VMs (`af-backfill-20260718-16{1608,1641,1712,1740}`) all completed cleanly overnight**
+— `exit_code=0` on all 4, per their own `run.log` `DEPLOYMENT_COMPLETED` lines (19:50-20:09Z 07-18), having walked their
+full `2026-02-21..2026-07-14` window per `VM_END_DATE` metadata.
+
+**Re-ran `query_api_football_pending_clusters_2026_07_18.py`** (the established gate script this whole bounce history
+has used): total pending_fetch **still 6,925 — byte-for-byte identical** to every prior read despite the fleet running
+its entire window to completion. Same two residual clusters as slot-3/14's reads: `2026-06-24..2026-07-14` (majority,
+53-71% of pending mass per entity) + `2026-02-21..2026-03-22`.
+
+**Root cause 1 (NEW): captured FIXTURES rows are frozen at `status_short=NS` forever — no code path ever refreshes
+them.** Read the actual per-league FIXTURES parquets directly for the residual dates:
+`instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day={D}/entity=fixtures/`. Findings:
+2026-06-24 (155/155 `NS`), 2026-06-29 (39/39 `NS`), 2026-07-04 (508/508 `NS`) — **100% NS** despite these dates now
+being days-to-weeks in the past with matches obviously concluded in reality. 2026-02-21 (185 `FT`/132 `NS`/6 `PEN`/1
+`AWD` — 41% stuck), 2026-03-01/03-22 similarly ~45-48% stuck. By contrast every OLDER scattered residual date checked
+(2020-08-16, 2020-12-02/03, 2021-01-19/20, 2021-06-14/17, 2021-07-28/29, 2024-12-24/25, 2025-12-25) is 100%
+`FT`/`AET`/`PEN`/`CANC` — fully settled, because those were captured well after the fact via the original
+backfill/truthset recovery, not near-real-time. `_read_fixture_ids_from_gcs`
+(`instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py:225-251`) only treats
+`status_short ∈ {FT,AET,PEN}` as "completed" — enrichment can only ever act on completed fixture_ids, and per-fixture VM
+log evidence confirms: `af-backfill-20260718-161608`'s tail-window log shows
+`GCS fixture lookup date=2026-06-24: 0 completed fixture IDs` through `date=2026-07-06: 0 completed fixture IDs`
+(repeating for essentially every date in the cluster). This means the 20+-bounce relaunch strategy could NEVER have
+closed this gate — it's not a "hasn't reached the tail yet" problem (the redirected fleet DID walk every one of these
+dates to completion), it's a structural dead end: fetch runs, correctly finds FIXTURES already captured, correctly finds
+0 "completed" among them (because none were ever revisited post-kickoff), and enrichment has nothing to act on, forever,
+on every relaunch.
+
+**Verified the fix**: ran
+`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV_SHORT=prd .venv/bin/instruments-service --operation instruments --mode batch --asset-group SPORTS --sports-provider API_FOOTBALL --start-date 2026-06-24 --end-date 2026-06-24 --sports-entity FIXTURES --force`
+for the single worst-case date. `--force` bypasses presence-skip, re-fetches FIXTURES live (picking up the real final
+status), and cascades straight into enrichment in the SAME pass — log evidence: 814 `fixture_events` / 1936
+`fixture_lineups` / 18 `fixture_stats` / 253 `player_stats` rows written for this one date, genuine non-redundant
+enrichment no non-force relaunch would ever have produced.
+
+**Root cause 2 (NEW): `read_availability_index`'s pending count is reader-path-dependent, not just
+slow-to-consolidate.** Two back-to-back reads for the IDENTICAL key (`date=2026-06-24`, `data_type=FIXTURE_EVENTS`,
+`source=api_football`), differing ONLY in whether `league_id` was in the requested `columns`, returned incompatible
+distributions: without `league_id` — 189 rows (`captured=2`/`empty_confirmed=93`/`expected_unattempted=94`); with
+`league_id` — 94 rows, ALL `expected_unattempted`. Both hit the `_read_consolidated_if_fresh` >120s-stale fallback to
+`_read_and_merge_per_vm_shards` (`unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:727`) —
+confirmed via the logged `ManifestReader: consolidated blob age 355.7s > 120s threshold — falling back to per-VM shards`
+line. This means **every one of this todo's 20+ dispatches' "pending unchanged" readings, all taken via this same reader
+during what was very likely this same fallback window, cannot be fully trusted** — the instrument itself gives different
+answers for the same underlying state depending on which columns are asked for. (The per-VM direct-shard-read technique
+slot-9/13/14 already used as a manual workaround should be treated as the reliable method until this is fixed, not an
+ad-hoc fallback.)
+
+**Filed a new issue doc** (this is a genuinely new pair of root causes, distinct from the already-tracked
+zombie-watchdog and chronological-scan issues):
+`plans/active/issues/api_football_enrichment_stale_ns_fixture_status_and_gate_reader_inconsistency_2026_07_19.md` —
+unified-trading-pm (this commit). 4 todos: (P1) add a periodic FIXTURES status-refresh pass for non-terminal-status
+dates >2 days old (repo: instruments-service — the real fix that unblocks this todo's gate); (P1) quantify + run the
+bounded `--force` refresh for the two known residual clusters (in progress, see below); (P2) fix the reader's
+column-selection sensitivity (repo: unified-trading-library, fleet-wide blast radius — every instruments-\* bucket
+consumer is exposed); (P2) re-audit whether other "gate unchanged" calls across this bounce history were reader
+artifacts. **NOTIFY-OPERATOR banner added** (big finding — data-correctness, cross-cutting, invalidates the reliability
+of 20+ prior gate readings on this exact todo).
+
+**Took concrete action on the confirmed-100%-stuck window**: launched SPOT VM `af-backfill-20260719-160307`
+(`launch-api-football-backfill-vm.sh --force --entity FIXTURES 2026-06-25 2026-07-14`) — deliberately scoped to ONLY the
+tail cluster that's 100% NS-stuck (verified safe to blanket-force); deliberately did NOT force the
+2026-02-21..2026-03-22 mixed cluster (55-70% already correctly settled there — a blanket force would waste real API-key
+budget re-fetching already-good data; left as a follow-up needing a smarter per-fixture-targeted refresh, per the issue
+doc's P1 todo). Verified no fire-and-forget: VM `RUNNING` within ~10s of launch, serial console confirmed the exact
+intended command launched (`--force --sports-entity FIXTURES`, PID 6974) at 16:05:23Z (~2min after launch), and
+`run.log` showed genuine progress (`Sports reference: 1302 standing rows fetched`, live per-league fetches) at the
+16:06Z check. Tarball freshness: launcher's own check false-negatived (same known snap-gsutil credential-store bug prior
+sessions hit) — cross-verified via `gcloud storage cat` on all 4 relevant repos' manifests
+(instruments-service/unified-api-contracts/unified-trading-library/deployment-service): all 4 `commit_sha` match this
+slot's local `git rev-parse HEAD` exactly, safe to proceed. Also found + restored an incidental `uv.lock` drift in
+instruments-service from an earlier `uv sync` (not part of this task's deliverable, reverted before it could contaminate
+anything).
+
+**Not flipping this checkbox** — the gate is still far from confirmed 0 (and per root cause 2, "confirmed" itself needs
+the reliable per-VM-shard-direct-read method, not the naive script). Given the depth of this session's diagnostic work
+and that the actual fix (the launched VM) needs real wall-clock to run (est. ~20 days × 2-3min/day ≈ 40-60 min, longer
+once it hits genuinely non-cached fetches), `/skip-current-task` — resume once (a) VM `af-backfill-20260719-160307`
+completes (`exit_code=0`) and a per-VM-shard direct read confirms the 2026-06-24..07-14 cluster's
+fixture_events/lineups/stats/player_stats cells flip from EU to captured/empty (not just the naive consolidated-index
+count, per root cause 2), or (b) either of the two new P1 issue-doc todos lands.
