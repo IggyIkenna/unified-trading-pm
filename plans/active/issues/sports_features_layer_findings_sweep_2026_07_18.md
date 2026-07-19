@@ -1278,3 +1278,51 @@ delivered over history by the `--redo-all` launcher gap fix (deployment-service)
 entire restoration came from raw already on disk.
 
 The residual ~5% `coach_name` nulls are fixtures that genuinely carry no coach upstream — honest absence, not a defect.
+
+## R. ROOT CAUSE of `competition_phase` UNKNOWN — the entity split left EVERY CONSUMER on a dead entity — **P0**
+
+The catalogue rebuild completed cleanly (`CATALOGUE_ROLLUP_COMPLETED exit_code=0`, **121,538 rows** promoted, up from
+the 17,064 the original issue measured) — and `round` came out at **837/121,538 = 0.7%**, with `competition_phase`,
+`round_name` and `is_promotion_relegation` **columns entirely ABSENT**. That is WORSE than the 3.2% baseline, despite
+raw now sitting at 90-99% after § Q.
+
+**RETRACTED (mine, § O): "the loss is in the ROLLUP, rebuild it and the 3.2% resolves."** Rebuilding changed nothing,
+because the rollup is reading a **dead entity**.
+
+**Measured:**
+
+| entity                     | newest write         | status           |
+| -------------------------- | -------------------- | ---------------- |
+| `entity=fixtures`          | **2026-05-23 20:35** | FROZEN ~2 months |
+| `entity=fixtures_schedule` | **2026-07-18 21:27** | LIVE             |
+
+`build_instrument_catalogue.py:208` pins `SPORTS_FIXTURE_ENTITY = "fixtures"`. So the catalogue rolls up a corpus that
+stopped being written on 2026-05-23 — which is why the § Q derivation (115,715 rows into `fixtures_schedule`) is
+invisible to it, and why `competition_phase` has been UNKNOWN all along. **This was never a capture gap.**
+
+**The split migrated the WRITER and left the CONSUMERS behind.** Stale-entity readers found so far (non-exhaustive,
+`entity=fixtures` hard-coded):
+
+- `scripts/build_instrument_catalogue.py:208` (`SPORTS_FIXTURE_ENTITY`) — the catalogue itself
+- `scripts/backfill_sports_fixture_round_2026_07_17.py:79` — the surgical round filler (§ O)
+- `instruments_service/reference_data/sports_dependency.py`
+- `instruments_service/triggers/sports_fixtures_daily_repoll.py`
+- `scripts/backfill_weather.py:154`, `scripts/backfill_sports_fixture_stats_manifest.py:91`
+- `scripts/rescan_sports_fixtures_canonical.py:328,452`, `scripts/enumerate_expected_universe.py:1902`
+- `scripts/migrate_sports_per_league.py`, `scripts/reconcile_sports_blank_empty_reason_2026_06_24.py`
+
+This reframes the whole epic: chasing `round` through backfills (1.26M-call refetch, surgical script, derivation) was
+treating a CONSUMER-MIGRATION bug as a data-capture bug. The derivation was still worth doing — raw is now 90-99% and
+that is real — but the catalogue will keep reporting ~0% until its reader is repointed.
+
+- [ ] [CODE] P0. Repoint `SPORTS_FIXTURE_ENTITY` to `fixtures_schedule` (verify the schema carries what the rollup
+      needs: `af_fixture_id`, `round`, kickoff/timestamp) and re-run the catalogue. Handle `fixtures_outcomes` if the
+      rollup needs scores/status — the split put those on the OTHER leg.
+- [ ] [DIAG] P0. Audit EVERY consumer above for the same staleness; each is silently reading a 2-month-frozen corpus.
+      Anything reporting "sports data is missing/stale" since 2026-05-23 is suspect for this cause.
+- [ ] [CODE] P1. `competition_phase` / `round_name` / `is_promotion_relegation` are ABSENT as catalogue columns, not
+      merely UNKNOWN — the rollup never projects them. Even with a live entity, the derivation from `round` must be
+      wired into the catalogue build.
+- [ ] [PROCESS] P1. An entity rename/split MUST enumerate and migrate consumers in the same change. This one shipped the
+      writer on 2026-05-23 and left ~10 readers pointing at a corpus that stopped updating — silently, because a frozen
+      corpus still reads successfully.
