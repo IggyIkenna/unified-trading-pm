@@ -270,10 +270,38 @@ real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consuma
       `bm<=0`. Do NOT "fix" this by relabelling the manifest.
 - [ ] [DATA] P2. 2025-12-24 alone may legitimately become `empty_confirmed` once the above is understood — but only that
       date, and only after the bucketing bug is fixed, so the two questions are not conflated again.
-- [ ] [DESIGN] P3. Separately: ~95% of captured odds sit >24h before kickoff and are therefore unbucketable by
-      construction. If that is the normal capture cadence, the pipeline is discarding the overwhelming majority of what
-      it pays to collect — worth confirming whether TIER1_HORIZONS should carry a T-48h/T-72h bucket, or whether capture
-      should be scheduled nearer kickoff.
+- [x] [DESIGN] P3. ~~~95% of captured odds are unbucketable~~ **RETRACTED — I generalised from three anomalous dates.**
+      Operator challenged the number as implausible ("seems weird thats data corruption? we need to refetch odds!?").
+      They were right that it did not add up. Measured against normal match days:
+
+| date       | status  |    rows | **bucketable (0–24h)** | fixtures |
+| ---------- | ------- | ------: | ---------------------: | -------: |
+| 2025-12-17 | working |  10,680 |      **7,956 (74.5%)** |        4 |
+| 2025-12-20 | working | 307,168 |    **256,895 (83.6%)** |       69 |
+| 2025-12-18 | failing |  26,406 |             360 (1.4%) |        2 |
+| 2025-12-31 | failing |  27,926 |             362 (1.3%) |        2 |
+
+      **A normal match day is ~84% bucketable.** The three B2 dates are quiet holiday fixture lists (Thu 18 Dec,
+      Christmas Eve, New Year's Eve — 2 fixtures each vs 69 on Sat 20 Dec), so their raw is dominated by far-future
+      forward-book quotes with almost no imminent kickoffs. Reading them as the pipeline norm was a sampling error of
+      exactly the kind this sweep has hit repeatedly (§ W, § X): **an aggregate from a pathological subset generalised
+      to the population.** There is no T-48h/T-72h bucket gap and no capture-cadence crisis.
+
+      **NO data corruption, and NO odds refetch is warranted** — the operator's two explicit hypotheses were tested and
+      both refuted: (a) kickoff defaulted to midnight / wrong day → **0.0%** of kickoffs are at 00:00:00, hours cluster
+      realistically at 20/17/15/14 UTC; (b) wrong kickoff assignment → `bm_minutes_to_kickoff == (kickoff_utc -
+      bm_time)` for **100%** of rows, arithmetic exact.
+
+      One genuine observation survives, but it is a NOTE not a defect: capture is a **single daily fetch at 12:00 UTC**
+      (`fetch_utc` has exactly 1 distinct value per day), so a given fixture can only populate whichever TIER1 bucket
+      its noon-to-kickoff distance falls in. That is sufficient for the far horizons and is why busy days still bucket
+      84%, but near-kickoff buckets depend on fixtures kicking off shortly after noon. Worth knowing before anyone
+      reads thin T-10m coverage as a capture bug.
+
+      **Methodological note on my own error**: I first measured `minutes_to_kickoff` (computed from `fetch_utc`) when
+      the adapter uses `bm_minutes_to_kickoff` (computed from `bm_time`). The two differ on 100% of rows (median 4.9
+      min). It happened not to change the bucket counts, but I reported a number from the wrong column and only caught
+      it because the conclusion was challenged.
 
 ### B3. Loss guard cannot express "known-corrupt baseline" — **P2**
 
