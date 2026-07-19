@@ -2929,3 +2929,59 @@ Ran `scripts/query_api_football_pending_clusters_2026_07_18.py` fresh (per-VM-sh
 re-derive it. `/skip-current-task` — resume once (a) the running 4-VM fleet self-terminates or a re-read shows the
 non-`2026-06-24..07-14` pending mass has genuinely dropped, or (b) `-009` lands and a narrow-window relaunch becomes
 safe for the `2026-06-24..2026-07-14` cluster.
+
+### 2026-07-19T18:23-19:00Z — data_engineering slot-4 (same `-001` dispatch, continued — confirmed fleet health via 3 independent reads over 37min; found + documented a consolidated-index false-negative trap; no bug in the fleet itself)
+
+Held on the same dispatch (repeated `/heartbeat` cycles, `dispatch_reason: resume` throughout — no other task offered).
+Ran a bounded 25-min watcher (2-min poll, `google.cloud.compute_v1`) confirming all 4 fleet VMs stayed `RUNNING` the
+entire window, zero terminations/crashes. Cross-checked with `run.log` line-count growth over the same ~30min:
+`af-backfill-20260719-180520` 522→1,416 lines, `-180545` 562→1,734, `-180603` 514→1,555, `-180620` 417→1,571 (2.7-3.8x
+growth, genuine `Fetched N events/lineup rows/stat rows/player stat entries for fixture=...` lines throughout,
+rate-limit `sleeping ~56-60s to next minute` backoffs are expected token-bucket pacing) — **the fleet is healthy and
+actively working, not stalled.**
+
+**However, re-running `query_api_football_pending_clusters_2026_07_18.py` twice more (18:50Z, 18:58Z) returned
+BYTE-IDENTICAL output to the 18:23Z read** (5,373,234 total rows, 5,515 pending_fetch, identical cluster breakdowns) —
+despite the confirmed real fetch activity above. Investigated rather than trusting a flat "no progress" read, since this
+exact false-negative shape (naive/cached read says 0 movement while real work is happening) is this issue's own
+documented root-cause-2 lesson. Traced it: the 18:50Z run did NOT log the "falling back to per-VM shards" line (unlike
+the 18:23Z run, which did — consolidated blob was >120s stale then) — meaning it read the CACHED consolidated blob
+directly. Forcing `MANIFEST_CONSOLIDATED_STALENESS_SEC=1` to compel a shard-level read instead surfaced a real mechanism
+neither I nor prior sessions had documented: `unified_trading_library.manifest_writer._read_index._read_slow_path`
+SAFETY-REFUSES the raw per-VM-shard merge
+(`ManifestConsolidatorStaleError: ... Refusing to fall back to the per-VM shard merge (can OOM on large buckets)`)
+unless `MANIFEST_ALLOW_STALE_FALLBACK=true` is also set — it will wait once for an in-flight consolidator cycle
+(`_wait_for_in_flight_cycle_then_reread`, ~5min observed) then either re-read a freshly merged consolidated blob or
+refuse outright, rather than doing an unbounded shard merge itself. The 18:57:52Z log line inside that run
+(`consolidated blob age 1.9s > 1s threshold`) shows the consolidator DID complete a fresh merge cycle right around that
+timestamp. Re-ran the gate script at 18:58Z with default settings (no override) specifically to catch that
+freshly-merged blob — **still byte-identical to the 18:23Z read.** Given the consolidator provably ran a real merge
+cycle in between and the content still didn't move, the most likely explanation (not yet proven) is that the fleet's
+sequential per-day work simply hasn't reached the specific flagged residual dates yet in wall-clock terms: confirmed via
+the launcher chain (`launch-api-football-backfill-vm.sh` → `setup-data-pipeline-vm.sh`'s generic instruments-service
+branch) that each VM runs a SINGLE long-lived
+`python -m instruments_service --operation instruments --mode batch --asset-group SPORTS --start-date <window-start> --end-date <window-end> --sports-provider API_FOOTBALL --sports-entity <ENTITY>`
+process over the ENTIRE `2020-06-06..2026-05-10` window in one call — there is no bash-level per-day chunk loop (unlike
+the `mtds-backfill`/`cefi-hl-aster-backfill` VM_TASK branches, which DO chunk day-by-day at the launcher level); the
+per-day iteration order is internal to the `instruments_service` orchestrator and NOT traced further this session. Given
+the observed rate-limit backoffs are frequent (multiple consecutive `sleeping ~56-60s` lines per log window), and the
+flagged dates (e.g. `2025-12-25`, `2026-05-08`) are scattered LATE in a ~2,170-day window, it is plausible the fleet
+simply hasn't sequentially reached them yet 37min in — this is a hypothesis, not confirmed (did not trace the
+orchestrator's per-day loop order to verify ascending-only vs smarter targeting).
+
+**New reusable finding for future dispatches on this plan/bucket**: `MANIFEST_CONSOLIDATED_STALENESS_SEC=1` alone does
+NOT force a trustworthy per-VM-shard read on this bucket — it can hit the `ManifestConsolidatorStaleError` safety
+refusal instead of a real merge. `MANIFEST_ALLOW_STALE_FALLBACK=true` would force the recovery merge but was NOT
+attempted this session (explicitly flagged "can OOM on large buckets" — this bucket has 5.37M rows; didn't risk an
+uncontrolled merge without sizing it first). A future dispatch wanting a genuinely fresh per-VM-shard cross-check should
+either (a) wait for the consolidator's natural cycle + re-read promptly after, or (b) size the OOM risk before setting
+`MANIFEST_ALLOW_STALE_FALLBACK=true`.
+
+**Not flipping this checkbox** — gate unchanged (5,515 pending, unmoved across 3 independent reads spanning 37min
+despite confirmed real fetch activity). No new safe launch target found (same conclusion as the 18:23Z entry — every
+cluster except `2026-06-24..07-14` is inside the running fleet's window; that one remains gated on `-009`). `gcloud` CLI
+snap remains broken on this host (`cap_dac_override` capability error, unrelated to this task) — all VM/GCS inspection
+this session used the `instruments-service` `.venv`'s `google-cloud-compute`/`google-cloud-storage` Python clients
+directly. `/skip-current-task` — same resume criteria as the 18:23Z entry; additionally resume if a future dispatch
+traces the orchestrator's per-day loop order and confirms/refutes the "hasn't reached the flagged dates yet" hypothesis
+above.
