@@ -241,7 +241,7 @@ suite) — a blind edit risks a worse regression than the one it fixes. Filed as
       — ✅ DONE 2026-07-19 slot-6 as part of the todo-3 re-check above: `delta_one`/`volatility` repointed to
       `output_kind="features"` (the 2 LONG consumer-facing names `features-cross-instrument`/`features-multi-timeframe`
       were already valid permanent aliases, unaffected).
-- [ ] [INFRA] P0. **NEW — deployment-api `SERVICE_TO_KIND` still maps 3 services to retired SHORT kind strings**
+- [x] [INFRA] P0. **NEW — deployment-api `SERVICE_TO_KIND` still maps 3 services to retired SHORT kind strings**
       (`features-delta-one-service`→`"features-delta-one"`, `features-volatility-service`→`"features-volatility"`,
       `features-onchain-service`→`"features-onchain"` in `deployment_api/services/data_status_drilldown/_core.py`). Both
       `build_bucket_name()` (same file) and `deployment_api/services/data_status/manifest.py:742` call
@@ -252,7 +252,16 @@ suite) — a blind edit risks a worse regression than the one it fixes. Filed as
       etc. — may need consolidating since 3 services now converge on ONE folded kind). Run deployment-api's full
       `quality-gates.sh` + the `data_status_drilldown` test suite (`tests/unit/test_data_status_drilldown.py`,
       `tests/unit/test_drilldown_cache.py`, `tests/unit/test_data_status_service.py`) before shipping — this file has
-      real production coupling not yet fully traced. (repo: deployment-api)
+      real production coupling not yet fully traced. (repo: deployment-api) — ✅ deployment-api@6279e9c, shipped via
+      quickmerge. Remapped all 3 dict values to `"features"`. Verified no other repoint needed: `defi.py`/`manifest.py`
+      both import this same `SERVICE_TO_KIND` dict so they inherit the fix automatically; grepped for
+      `PREDICTION_KIND_MAP[.features-delta-one.]` etc. — zero hits, no consolidation needed (the folded `"features"`
+      kind already carries a `PREDICTION` yaml entry, so the existing fallback path in `manifest.py`/`defi.py` resolves
+      it directly). `SINGLE_ASSET_GROUP_SERVICES["features-onchain-service"]="defi"` left untouched (still correct —
+      onchain only ever writes DEFI). Full `bash scripts/quality-gates.sh` green end-to-end (109s, 4702 passed / 0
+      failed / 16 skipped, fresh sentinel `00560807b8adbd5c6cf1a3cee612ea8c30f5c273` →
+      `6279e9c05308f81deec31bc4220b0c0b699a069c`); the 3 named test suites
+      (`test_data_status_drilldown.py`/`test_drilldown_cache.py`/`test_data_status_service.py`) pass within that run.
 
 ## Fix applied (todo 2, 2026-07-19, slot-5)
 
