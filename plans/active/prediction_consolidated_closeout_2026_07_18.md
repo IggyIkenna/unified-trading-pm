@@ -348,10 +348,14 @@ fixture-linked before MVP backfill.
       `data_pipeline_e2e_check_2026_07_10.md` (L267-269 / 341-342 / 1025 / 1623 now false — "prediction stays
       PROD-only"), and UTL `get_write_bucket_name` still has a prediction-PROD-only branch (not a tick-write path, but a
       live inconsistency worth a follow-up). (repos: market-tick-data-service ✅)
-- [ ] [DATA] P1. **Reconcile the `book_snapshot_5` MVP-scope disagreement** — it is in `VENUE_DATA_TYPE_CAPABILITIES` +
-      `expected_coverage` (so a plain MTDS matrix gives 4 shards) but is ABSENT from `PredictionMvpRule.data_types`
-      (`_mvp_scope_rules.py`), so an `--mvp-only` run silently tests only `trades` (2 shards). Decide the canonical set
-      and align the registries. (repos: unified-api-contracts)
+- [x] ✅ [DATA] P1. **`book_snapshot_5` MVP-scope RECONCILED — `unified-api-contracts@53bf01d6`.** It was in all THREE
+      data registries (`DATA_TYPES_BY_ASSET_GROUP`, `VENUE_DATA_TYPE_CAPABILITIES`, `expected_coverage`) but absent from
+      `PredictionMvpRule.data_types` — verified NOT a deliberate trades-only exclusion (only COINBASE + Deribit-OPTION
+      have such decisions; prediction cited none; all 3 registries re-added it 2026-06-23 when both CLOB venues began
+      emitting it — the MVP rule was the un-updated outlier). Added `book_snapshot_5` to `PredictionMvpRule.data_types`
+      (captured: 399,713 rows) + bumped `MVP_SCOPE_CONFIG_VERSION` 17→18; rule-11 cross-AG-unchanged test added
+      (cefi/tradfi/defi/sports MVP sets pinned). `--mvp-only` prediction now tests all 4 shards. Operator can narrow
+      back to trades-only if that was the intent (documented in the code). (repos: unified-api-contracts ✅)
 - [ ] [DATA] P1. **Add force/skip smoke coverage for the CQG cluster grain + `market_lifecycle`** — today MTDS enumerate
       explicitly excludes `prediction_canonical_question_group` and IS collapses its atom to `(asset_group, venue)`, so
       neither is smoke-tested as a distinct shard. Extend the prediction adaptation so the CQG bundle + lifecycle grains
@@ -800,3 +804,17 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     operator-given `--day`; (3) minor follow-ups: UTL `get_write_bucket_name` prediction-PROD-only non-tick path,
     `book_snapshot_5` prediction-MVP-rule reconcile, and the A2 residuals (catalog regen / gcs_paths.py / MDPS). Loop
     stopped — the metric can't climb further without an operator decision/authorization; resumes on any of them.
+
+- **2026-07-19 (slot-2, autonomous tick 14) — operator resumed /autonomous; two code-ready follow-ups.**
+  - **`book_snapshot_5` MVP-scope RECONCILED — `unified-api-contracts@53bf01d6`** (flipped its P1). It was an un-updated
+    outlier (in all 3 data registries, absent from `PredictionMvpRule`); added it + config-version bump + rule-11
+    cross-AG-unchanged tests. `--mvp-only` prediction now tests all 4 shards.
+  - **Phase-B script completion IN FLIGHT** (MTDS retry-loop) — a sub-agent wrote the `--bundle-mode {normalize,leave}`
+    flag (finding 1) + the straggler-removal design/code (finding 2, `--remove-stragglers`: pause-consolidator +
+    snapshot + in-place `_index` CAS rewrite, guarded, NOT run) + found the writer ROOT:
+    `manifest_finalize. _finalize_prediction_bundles` stamps lowercase `instrument_type="prediction"` on bundle rows (so
+    the bundle is emitted lowercase, not null — explains the inconsistency; the writer-root-fix is on the operator
+    checklist so a `--force` rebuild doesn't resurrect stragglers). Landing via retry-loop; prod RUN still HELD.
+  - **Reminder — the prod-migration RUN + its two decisions remain operator-gated** (bundle-mode choice;
+    straggler-removal mechanism review). The script now SUPPORTS both, defaulting to my recommendations, one
+    authorization away.
