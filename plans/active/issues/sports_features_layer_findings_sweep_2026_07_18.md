@@ -1647,3 +1647,27 @@ itself.
       preemption replays one year, not the whole corpus. Use the consolidated
       `launch-features-vm.sh --feature-family sports --asset-group SPORTS` (the sports-specific launcher carries a
       deprecation note for new backfills).
+
+### Y (2026-07-19) — P2: `launch-features-vm.sh` prints a post-backfill hint naming a bucket that does not exist
+
+The launcher's closing instructions tell the operator to run:
+
+```
+rebuild_manifest_from_canonical_paths('features-sports-sports-central-element-323112', ...)
+```
+
+That bucket **404s**. The real one is `features-sports-prd-central-element-323112`
+(`resolve_bucket_name(cloud="gcp", kind="features", asset_group="sports")`) — the hint interpolates
+`<family>-<asset_group>` and omits the `-prd-` env segment. The data prefix in the hint is wrong too: objects live under
+`sports_features/`, not `features/by_date/`.
+
+**This bit me immediately and is worth recording as a monitoring hazard, not just a typo.** I armed the launch watchdog
+on the hinted bucket, so its progress metric read `shard_days=0` for 20 minutes — indistinguishable from a genuinely
+stalled backfill. A 404 bucket does not error in a `| wc -l` pipeline; it silently returns zero forever. This is the
+exact class the async-wait discipline warns about (a run that "logged and heartbeated healthily while writing ZERO
+target artifacts"), only inverted: here the artifacts may be fine and the MONITOR is lying. Either direction, the lesson
+is the same — **validate that a progress metric can ever be non-zero before trusting a zero reading.**
+
+- [ ] [CODE] P2. Fix the post-backfill hint in `deployment-service/scripts/vm/launch-features-vm.sh` to resolve the
+      bucket via `resolve_bucket_name` (never string-interpolate an env-split bucket name) and to name the real
+      `sports_features/` prefix.
