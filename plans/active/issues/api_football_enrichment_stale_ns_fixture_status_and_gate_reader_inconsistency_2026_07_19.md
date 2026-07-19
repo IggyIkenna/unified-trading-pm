@@ -525,4 +525,23 @@ because the entity-path fix failed (the 9 cells that DID have resolvable data co
       despite `_find_stale_fixture_leagues_for_date` having flagged those exact leagues as non-terminal). Check whether
       the trigger's `today` boundary or the season-year resolution (`_effective_season_for_league`) is computed from the
       CLUSTER's end date rather than the real current date — that would cause `_fetch_season_fixtures_with_raw` to query
-      the wrong season for some leagues. (repo: instruments-service)
+      the wrong season for some leagues. (repo: instruments-service) — **2026-07-19T~17:4xZ (slot-8) partial narrowing,
+      not yet root-caused**: ruled out one hypothesis — `_find_stale_fixture_leagues_for_date`'s returned `league_id`
+      set is actually the RAW numeric `af_league_id` string (e.g. `"129"`, `"1067"`), not a canonical league_id, because
+      `inject_league_id=True` derives it from the GCS blob path's `league={L}/` segment (numeric partition), not a
+      canonical column. Confirmed this is NOT itself the bug: `run_sports_fixture_status_refresh`'s `get_league(lid)`
+      call (line ~187) DOES successfully resolve these raw numeric strings back to a `LeagueDefinition` — log evidence
+      shows `league=129` (a raw numeric id) correctly fetched "648 season fixtures ... season=2026" before returning 0
+      matches for the specific date. So resolution succeeds; the failure is downstream, in why 648 season-wide fixtures
+      for a league contain none on the flagged date. Direct inspection of `date=2026-06-27`'s captured
+      `fixtures_schedule` data shows HUNDREDS of non-terminal rows across ~150+ distinct raw league ids, with kickoff
+      timestamps clustered mid-afternoon UTC and status values spanning the full lifecycle (`NS`/`1H`/`HT`/`2H`/`TBD`) —
+      i.e. this specific date's capture looks like it was taken as a live mid-match snapshot at some point, not just
+      individual stragglers, and the true scope of "stale" cells across this cluster may be far larger than the 394 the
+      scan currently reports (the scan may itself be under-counting, or double-counting the same real league under two
+      different `league_id` representations across different write eras — pre- vs post- entity-split). This needs a
+      fresh, focused investigation session — NOT a quick fix — covering: (a) whether
+      `_find_stale_fixture_leagues_for_date`'s numeric-vs-canonical `league_id` set double-counts/undercounts leagues
+      across the entity-split boundary, (b) why a 648-fixture full-season cache returns zero hits for a date its own
+      manifest row claims a fixture exists on, (c) the true total scope of non-terminal cells in this cluster (may be
+      materially larger than 394).
