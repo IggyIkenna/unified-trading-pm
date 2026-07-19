@@ -17,6 +17,11 @@ tags: [shard-atom, manifest, honest-coverage, canonical-id, phase-d, data-correc
 related: [tradfi_consolidated_closeout_2026_07_18, databento_adapter, pipeline_e2e_check]
 created: 2026-07-19
 priority: P0
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # P0 — Databento TradFi FUTURE/OPTION captures write blank `instrument_id` (futures_chain shape)
