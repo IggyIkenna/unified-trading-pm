@@ -1450,7 +1450,7 @@ earlier 1,757-pair figure. Fetches must be scoped to the IN-WINDOW pair list, no
 "Quarter-finals") or is simply not published — a bulk fetch may legitimately return nothing for them, which is honest
 absence, not a gap. Verify on a pilot pair before spending 648 calls on the assumption.
 
-- [x] [DATA] P1. ✅ Retargeted backfill RUNNING against the 194 reachable in-window league pairs (10,452 blank rows),
+- [x] [DATA] P1. ✅ Retargeted backfill COMPLETE against the 194 reachable in-window league pairs (10,452 blank rows),
       scoped via the new `--pairs-file` — **instruments-service@34ada099** (QG green). `--leagues` x `--seasons` is a
       cross product that would have spent ~800 calls on 194 pairs' work; a pairs-file spends one call per pair. **Pilot
       verified the scan as a scoping instrument, not just the fetch**: the scan predicted 662 blank rows for 129:2026
@@ -1496,3 +1496,35 @@ are from the corrected probe — the 0-league result was discarded, not reported
       other — the gap is a definition problem, not a data-fetch problem.
 - [ ] [DATA] P2. The 159 reachable cup pairs (16,849 rows) still need the pilot from § T before spending their calls — a
       cup's round vocabulary is "Quarter-finals", not "Regular Season - N", and a fetch may honestly return nothing.
+
+### V (2026-07-19) — FIXED: features read a legacy `entity=fixtures` object in preference to the LIVE split leg
+
+Found while auditing the § R stale-entity consumer list. `gcs_reader.read_reference_entity` **does** implement the
+schedule/outcomes split fallback correctly — but it was **unreachable for every pre-cutover date**. The probe returns
+the legacy `entity=fixtures` object first, and the split fallback only runs when that object is absent, which is true
+only on/after the 2026-05-23 cutover. Pre-cutover dates still have a legacy object, so features kept reading it.
+
+Measured 2026-07-19, same day, both entities present:
+
+| day        | `entity=fixtures` (what features read) | `entity=fixtures_schedule` (live)   |
+| ---------- | -------------------------------------- | ----------------------------------- |
+| 2024-03-09 | 317 rows, round populated **56.8%**    | 373 rows, round populated **96.0%** |
+| 2023-05-20 | 256 rows, round populated **56.2%**    | 301 rows, round populated **86.7%** |
+
+The features layer was reading a frame that is both **staler and smaller** than the live corpus — and because the § Q
+derivation and the § T backfill write ONLY to `fixtures_schedule`, **every bit of the round work was invisible to every
+sports feature on pre-cutover dates.** Same consumer-migration class as § R, but subtler: the code HAS the split path,
+it simply never reached it. A grep alone would have cleared this file — the reference to `entity=fixtures` looks correct
+in isolation, and only reading the probe ORDER shows the defect.
+
+**Fixed — features-service@e4b1f1ba** (QG green): fixtures try the split leg FIRST and fall back to legacy, preserving
+coverage for dates predating the split writer.
+
+Two existing tests exercised the legacy path with a blanket `blob_exists=True` mock, so under split-first precedence
+they were asserting the wrong leg. That is a mock artifact rather than a production regression — but waving it through
+on that reasoning is precisely what let this bug hide, so both now patch the split leg ABSENT (what a pre-split date
+actually looks like) and say why, plus a new test pins the precedence itself (legacy object present, split still wins,
+legacy bytes never downloaded).
+
+- [ ] [DATA] P0. Sports features must be RE-RUN: every pre-cutover feature row was computed from the stale legacy frame.
+      This supersedes the § S re-run note — one re-run now covers both the `total_matchdays` fix and this.
