@@ -157,3 +157,35 @@ canonical-shape code changes proceed autonomously.
   now in the override). **STILL PENDING in the keystone:** the CHAIN `quote=/margin=` shard-atom change (writer chain
   branch + UAC `build_tradfi_partition_path` + reader/checker + manifest) — the higher-risk lockstep piece, next.
 - **Orphan-proof map**: PROVEN on the full 2,734,646-object corpus, 0 orphans (see final reconcile above).
+- **2026-07-19 — Dry-run migration EXECUTOR built + verified**
+  (`market-tick-data-service/scripts/migrate_tradfi_canonical_2026_07.py`
+  - 18 unit tests; QG-green). Dry-run over the full enumeration re-proves 0 ORPHAN + disposition counts EXACTLY match
+    the final reconcile. 1:1 object migration (copy→verify→delete), `--apply` gated; massive-purge double-gated
+    (`--purge-massive` + `--massive-backfill-verified` sentinel); quarantine → `_quarantine/` (never deletes/fake-
+    canonicalizes). Local `_canonical_target` = the reference spec the writer lockstep change must match.
+
+## Open finding — the per-contract options_chain REBUNDLE (a required SECOND pass, not the 1:1 executor)
+
+The dry-run surfaced **149,521 per-contract chain objects** (chain itype, NO `underlying=`, per-contract stem like
+`ESZ4_P4200`): **148,524 are CME `instrument_type=options_chain/data_type=options_chain`** (140,135 `batch_databento` +
+9,386 `batch_massive`→purge), venue=CME only, 2022-10-13→2025-01-06. Per-root `options_chain` bundles barely exist today
+(~127 objects), so these per-contract files are the PRIMARY options-chain data in the WRONG (per-contract) shape. The
+operator's per-root ruling (futures+options bundle by underlying, like cefi) requires a **content-aware REDUCE**: read
+all option contracts of a root → concat → write ONE `underlying=<ROOT>/quote=/margin=/ticks.parquet` → delete the
+per-contract sources. The 1:1 executor records these as content-needed (never lost) but does NOT merge — **a second
+`--rebundle` pass is required** (VM-scale content read; ~148K objects). Smaller content-needed tails: 1,808 FX
+`ticks_migrated_*` stems (no symbol in path), 1,478 CONTENT_REPAIR, 1,180 CORRUPT.
+
+## Will new backfills STAY canonical post-migration? (operator Q, 2026-07-19)
+
+Not automatically — **only if the WRITER emits byte-identical canonical paths to the migration target** (batch=live).
+Status by shape: SINGLE ✅ (writer full-id shipped `mtds@d257b7be`); CHAIN ❌ regresses (writer still emits
+`underlying=/ticks.parquet`, no quote/margin — the chain lockstep change is NOT shipped); MASSIVE ❌ could reappear
+(routing/`SOURCE_PRIORITY` not yet stripped); legacy hyphen/non-Hive/corrupt ✅ won't reappear (superseded writers). So
+backfills must NOT resume until: (1) chain shard-atom change (writer chain branch + UAC `build_tradfi_partition_path` +
+manifest + reader/checker), (2) Massive routing removal, (3) manifest-rebuild casing normalization (`EQUITY`/`equity` is
+a rebuild-pass inconsistency; physical paths are lowercase). ENFORCEMENT (not hope): add a **write-time canonical
+guard** — extend `partition_paths.py::canonical_path_violations`/`is_canonical` to REJECT any non-canonical tradfi write
+(wrong filename shape, chain missing quote/margin, `batch_massive`, non-Hive) — folded into the chain lockstep change;
+the **Phase-D gate** force-writes fresh data + asserts canonical shape, so a regressing backfill fails there. Net:
+writer-in-lockstep + write-time guard + Phase-D assertion, all before backfill-resume.
