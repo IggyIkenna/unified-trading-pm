@@ -693,6 +693,19 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — parallel migration fleet UP + healthy; gas_fees fix CONFIRMED active).**
+  `a9d66cf09d` executed cleanly: killed recovery loop `bd014y3c2` → stopped the serial VM → launched **27 parallel
+  per-quarter SPOT VMs** (`canonical-migration-defi-pi-range-…-<YYYYqN>`, 2020q1..2026q3), pinned **`b1a23cbf`** (LDR
+  HEAD, descendant of `b4177dc6` — carries the gas_fees `\d{5,}_\d{5,}` fix; SHA self-verified in VM metadata). Fleet
+  recovery+monitor `b7vaiegfp` armed (5-min; preempted→idempotent restart, done→cleanup). **gas_fees fix PROVEN
+  active**: completed quarters write `data_type=gas_fees/GAS.parquet` for AVALANCHE/POLYGON (≤7-digit block bundles the
+  old `37ac8a64` code silently skipped), 0 errors, needs_attribution=0 → **the R5 gas_fees `--apply` re-run is now
+  OBVIATED** (folded into the main run). Progress: 11/27 complete (fast 2020-2022 idempotent+gas_fees quarters), 16
+  running, 0 preemptions. On all-terminal → `rebuild_defi_manifest` ONCE → verify per-instrument atoms + gas_fees
+  spot-check. Deferred (non-blocking): the `defi-pi-range` launcher-category quickmerge is blocked by FOREIGN dirty deps
+  (the in-flight UAC `instrument_validation.py` fix `ab71a0d8` + an untracked mtds file) — ships once those clear; first
+  category already landed `deployment-service@e07c40b`.
+
 - **2026-07-19 (slot-4, /autonomous — migration PARALLELIZED per operator; catalogue ROOT CAUSE found + fix shipped).**
   - **Operator asked for 30-60 min not hours → parallelizing** (`a9d66cf09d` re-orchestrating): stop the serial VM +
     recovery loop → relaunch as PARALLEL per-QUARTER VMs over the FULL 2020..today range (~26 SPOT VMs; quota is a
