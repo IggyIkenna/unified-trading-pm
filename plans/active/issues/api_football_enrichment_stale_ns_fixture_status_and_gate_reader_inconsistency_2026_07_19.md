@@ -224,12 +224,32 @@ shared by every consumer of every instruments-\* manifest bucket.
       wired to a Cloud Scheduler cron (same as the pre-existing `sports.fixtures.daily_repoll` trigger, which is also
       unwired) — that scheduling + the bounded `--force` backfill sweep for the two known residual clusters above is
       separate, still-open scope.
-- [ ] [DATA] P2. Investigate `_read_and_merge_per_vm_shards` / `_read_consolidated_if_fresh` column-selection
+- [x] ✅ [DATA] P2. Investigate `_read_and_merge_per_vm_shards` / `_read_consolidated_if_fresh` column-selection
       sensitivity (repo: unified-trading-library, `unified_trading_library/manifest_writer/_read_index.py`) — confirm
       whether requesting `league_id` (or any column) changes which shard files are included in the fallback merge, and
       if so, fix the merge to be column-selection-invariant (the set of rows returned for a fixed filter should never
       depend on which columns are also requested). This is fleet-wide blast radius: every instruments-\* bucket consumer
-      using `read_availability_index` during a >120s-stale-consolidated window is exposed to the same inconsistency.
+      using `read_availability_index` during a >120s-stale-consolidated window is exposed to the same inconsistency. —
+      unified-trading-library@c6691925. Root cause CONFIRMED: `_merge_shard_frames` only folds an optional dedup
+      dimension (e.g. `league_id`) into its dedup key when that column happens to be PRESENT in the merged frame, and
+      presence itself depended on whether the caller's slim `columns=` requested it — `_SLIM_MERGE_BASE_COLS` only
+      forced the 4 REQUIRED dedup cols (date/venue/data_type/service_name), not the 12 optional dedup dims nor the
+      `capture_status`/`attempted_at`/`written_at` tie-break cols `_merge_shard_frames` needs for its
+      captured-outranks + recency ordering. Reproduced via a standalone repro script BEFORE touching any code: two reads
+      of IDENTICAL underlying per-VM-shard data, differing only in whether `league_id` was requested, returned different
+      row counts (1 vs 2) for the same filter. Fix: `_SLIM_MERGE_BASE_COLS` now unions the base dedup cols with the full
+      `_OPTIONAL_DEDUP_COLS` set (hoisted to a module constant, mirroring `manifest_consolidator._OPTIONAL_DEDUP_COLS`)
+      and the tie-break cols, so every shard/consolidated slim read decodes enough columns to compute a
+      column-selection-INVARIANT merge regardless of the caller's requested output columns; `_backfill_slim` still trims
+      the return value to exactly what the caller asked for. Added
+      `test_slim_read_column_selection_does_not_change_dedup_result` (verified RED on pre-fix code via `git stash`,
+      GREEN after) to `tests/unit/test_manifest_read_index_slim.py`. Full `quality-gates.sh` green on the committed SHA
+      (sentinel matches HEAD). Note: did not attempt to re-derive the exact live 189-vs-94-row numbers from this doc's
+      session — those specific readings are additionally confounded by concurrent writes during an active backfill (not
+      a frozen snapshot), so an exact-number reproduction isn't possible after the fact. The underlying
+      column-selection-dependent-dedup mechanism this todo asked to investigate is demonstrated + fixed at the code
+      level, which is this todo's scope (repo: unified-trading-library only — the sibling P1 FIXTURES-write-path /
+      backfill-correction todos are instruments-service work, out of scope for this dispatch).
 - [ ] [PROCESS] P2. Once the P2 reader fix lands, re-audit whether any OTHER "gate unchanged, bounce again" call made
       across this todo's 20+-dispatch history was itself a reader-fallback artifact rather than genuine zero progress —
       the per-VM-shard direct-read technique several dispatches already used (slot-9/13/14) as a workaround should
