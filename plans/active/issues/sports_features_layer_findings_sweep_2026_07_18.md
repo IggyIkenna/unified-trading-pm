@@ -1708,3 +1708,34 @@ baking it into the remaining year-chunks costs nothing that a cheap follow-up ca
       introduces the colliding empty column. Do NOT assume the base frame is the source — measured, it is not.
 - [ ] [DATA] P3. Once root-caused, recover `matchday` from the persisted `round_name` (regex) rather than re-running the
       whole features corpus.
+
+### AA (2026-07-19) — the § Y monitoring lesson, generalised: a metric must be able to MOVE for the operation you are running
+
+The 8-VM features re-run reported `day_partitions=3462`, **flat across three consecutive 10-minute readings**. Read
+naively that is a textbook stall (flat progress metric → STOP and diagnose). It was not. The fleet was writing normally:
+288 objects created under `day=2019-*` in the same window.
+
+The metric counted **day partitions that already existed**. A `--force` re-run OVERWRITES existing `day=` directories
+rather than creating new ones, so the partition count is structurally incapable of increasing — it would have read 3462
+forever whether the fleet was healthy, hung, or dead.
+
+This is the second metric-design failure in two ticks, with different mechanisms but one root cause:
+
+| §   | metric                            | why it could never signal progress           |
+| --- | --------------------------------- | -------------------------------------------- |
+| Y   | object count on the hinted bucket | the bucket 404s; `\| wc -l` yields 0 forever |
+| AA  | `day=` partition count            | overwrite-in-place cannot grow the count     |
+
+**The rule the async-wait discipline should carry** (it currently says progress must be a count of TARGET artifacts and
+that flat = stall): that is necessary but not sufficient. Before trusting a reading, confirm the metric **can move for
+the operation actually being run** — a creation-time count moves under overwrite, a partition count does not; a count on
+a real bucket can be non-zero, one on a 404 cannot. **Otherwise a broken monitor is indistinguishable from a broken job,
+and the flat-means-stall rule fires on the monitor's own defect.** Both times here the honest-looking reading argued for
+killing healthy work.
+
+Fleet watchdog re-armed on creation-time counts across two independent chunks (2019 and 2025), which move under
+overwrite.
+
+- [ ] [DOC] P2. Fold this into `codex/12-agent-workflow/async-wait-and-poll-discipline.md`: add a metric-validity
+      precondition ("prove the metric can move for THIS operation before trusting flat/zero"), with the 404-bucket and
+      overwrite-blind cases as the two worked examples.
