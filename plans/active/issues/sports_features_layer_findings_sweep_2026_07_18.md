@@ -1528,3 +1528,22 @@ legacy bytes never downloaded).
 
 - [ ] [DATA] P0. Sports features must be RE-RUN: every pre-cutover feature row was computed from the stale legacy frame.
       This supersedes the § S re-run note — one re-run now covers both the `total_matchdays` fix and this.
+
+### T P1 — VERIFIED against the corpus, not the log (2026-07-19)
+
+The backfill's own log claimed 9,706 rows filled. That is the script grading its own homework, so the corpus was
+re-scanned independently (same single-walk measurement that produced the "before" numbers):
+
+| scope                      | blanks before | blanks after | closed             |
+| -------------------------- | ------------: | -----------: | ------------------ |
+| **the 194 targeted pairs** |        10,452 |       **14** | **10,438 (99.9%)** |
+| corpus-wide                |       161,034 |      150,575 | 10,459             |
+
+**191 of 194 pairs fully cleared.** The 14 residual rows are fixtures the fresh fetch did not cover — left untouched by
+design rather than guessed.
+
+Reconciliation of the 91-row gap between the log's claim and the measurement (10,459 measured vs 9,706 + 662 pilot =
+10,368): the targeted set includes CURRENT-season (2026) pairs, and live forward-poll captures wrote `round` during the
+~1h run. Two NON-targeted pairs moved by the same mechanism and are visible in the diff (`128:2026` 494→479, `255:2026`
+359→353). So the measurement exceeds the claim because live capture ran concurrently, not because the count is
+unreliable — nothing is unaccounted for.
