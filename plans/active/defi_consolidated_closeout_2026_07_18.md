@@ -634,6 +634,29 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4 — Wave C DeFi doc/codex alignment SHIPPED).** Aligned docs to the now-final model; the key
+  correction was the prior pass's (`@709274a5c`) **LENDING over-retire** — the Wave-B UAC `LENDING`-raise (`@e319864f`)
+  was reversed (MTDS `@acfb76ca` "revert partial A_TOKEN migration of market/event lending writers back to LENDING";
+  `evm_defi_handler` writes `instrument_type=LENDING`), so docs now state the **two-layer** model: HOLDINGS =
+  `A_TOKEN`/`DEBT_TOKEN` (operator SSOT); market/event lending DATA_TYPES (`lending_indices`/`liquidation_events`/
+  `flash_loan_events`/`position_data`) = `LENDING`/`SOLANA_LENDING` **interim** (PARKED, `issues/…open_questions…` § D)
+  — NOT "LENDING retired". Ships: **PM codex `unified-trading-pm@4060741a1`** (naming-ssot instrument_type row +
+  dex_pool_state union note; data-type-taxonomy lending_indices shard key `a_token/debt_token`→`lending` + interim note;
+  availability-manifest AvailabilityRecord comment; mvp-scope clarifier). **UAC `unified-api-contracts@fa60d5b4`**
+  (canonical-instrument-ids LENDING two-layer note; canonical_id_builder validator comment narrowed to single-token
+  SPOT_PAIR misuse — the `glued_pair_id` docstring was already 3-seg via `@e319864f`). **IS
+  `instruments-service@dbf856ca`** (DEFI_INSTRUMENTS EIGEN/ETHFI→SPOT_ASSET + meteora/lifinity→SOLANA_AMM_POOL marked
+  SHIPPED `@c31d37c3`, HYPERLIQUID/ASTER cefi-classified note, emitted-types LENDING caveat; ADAPTER_ARCHITECTURE
+  "LENDING not a real member"→corrected). **MTDS `market-tick-data-service@e9764b38`** (GCS_PATHS + DEFI_DOWNLOAD
+  lending path `instrument_type=a_token`→`lending` + interim caveat; DRIFT-as-defi-perp removed, GMX-only). **Verified
+  vs shipped code**: DRIFT fully culled (UAC registries + `solana_perp_dex_cull…` — so the handoff note "DRIFT=defi" is
+  WRONG, docs keep DRIFT culled); GMX in `DEFI_PERP_VENUES`; UAC id-builder supports LENDING/A_TOKEN/DEBT_TOKEN/
+  SOLANA_LENDING. **Flagged for siblings (cross-AG, not fixed here)**: `shard-granularity-cefi.md:106` ASTER=USDC (cefi;
+  already per-symbol-quote in the v6 symbol table but the Non-goals example line is cefi-scope) + `:207` DERIBIT grammar
+  (cefi); tradfi FUTURE/EQUITY `-USD` and DERIBIT-keeps-quote lines in `canonical-instrument-ids.md`/DATABENTO docs
+  (cefi/tradfi). The two ASTER/HYPERLIQUID issue docs already carry `asset_group: [cefi]`/`[cross-cutting]` (no stale
+  `category=DEFI` label found); `gcs_hive_partition_…` already carries SUPERSEDED banners + the venue-before-chain path
+  fix.
 - **2026-07-19 (slot-4, /autonomous — R3-run RECON caught a discovery bug BEFORE apply; fix dispatched; Wave C
   running).** Live dry-run recon on the real corpus (`market-data-tick-defi-prd-central-element-323112`, ADC) — this is
   why recon-before-apply is non-negotiable:
