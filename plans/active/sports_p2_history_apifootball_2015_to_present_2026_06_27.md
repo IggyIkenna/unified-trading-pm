@@ -3132,3 +3132,49 @@ fresh after enough elapsed time) and the aggregate `pending_fetch` count reflect
 5,515), then (b) handle the small remaining genuine-gap follow-up (originally ~205, now expected ~227 per the freshest
 dry-run) via a normal targeted re-fetch, and (c) the 2026-06-24..07-14 cluster still gated on `-009` (already resolved —
 re-check whether a narrow-window relaunch is now safe there too).
+
+### 2026-07-19T21:49-22:27Z — data_engineering slot-4 (same `-001` dispatch, continued — the consolidator-lag hypothesis does NOT resolve after ~1hr; the write itself is durably confirmed correct 3× independently; escalating this as its own operational finding rather than continuing to wait indefinitely)
+
+Held ~38 more minutes (2 more fleet-watcher cycles, fleet still healthy at ~4h15m uptime, zero crashes/terminations
+throughout the entire session). Re-ran the aggregate gate script fresh (no override) at 22:22Z — **~54 minutes after the
+apply — still byte-identical to the pre-apply state** (5,373,234 rows, 5,515 pending), confirmed genuinely falling back
+to per-VM shards (not a stale-consolidated-blob false read this time: `age 272.0s > 120s`). This is materially longer
+than the ~40min consolidator cadence observed earlier in this same session (an 18:57Z consolidator write was seen within
+~50min of the 18:05Z fleet launch), so "just needs one more cycle" is no longer a fully satisfying explanation on its
+own.
+
+**Re-verified the underlying write is NOT reverted** — re-checked the same `2020-09-19/FIXTURE_STATS/DFL_SUPERCUP` cell
+a 3rd time, independently, ~1 hour after the apply: still exactly 1 row, still `empty_confirmed/EXPECTED_NO_FIXTURE`,
+still `written_at=2026-07-19T21:21:01Z` (unchanged). Three independent, reproducible direct reads over a 1-hour span all
+agree — **the fix's data is durable and correct; it has NOT been silently reverted by any subsequent consolidator
+activity.**
+
+**Escalating the reader-lag itself as a genuinely open question, not a confidently-solved timing issue**: given the
+consolidator's own merge logic reads authoritative state and is presumably reconstructing the consolidated blob FROM the
+per-VM shards (matching `_read_and_merge_per_vm_shards`'s own shard-only merge semantics — see the previous entry's
+architecture trace), there is a real, unverified possibility that a full shards-based consolidator rebuild could
+overwrite the consolidated blob WITHOUT folding in prior ad-hoc CAS writes at all (since the consolidator, by this
+architecture, may only ever read per-VM shards as its input, never the CURRENT consolidated blob's own CAS-added
+content) — i.e. this might not be "wait longer," it might be "the aggregate shard-fallback gate structurally never sees
+a legacy-CAS write, by design, until/unless a corpus-wide reconciliation happens." Did NOT confirm this positively this
+session (would need to read the manifest consolidator's own merge-source code, out of remaining scope) — flagging as the
+key open question for whoever resumes this todo next.
+
+**Recommendation for the next dispatch**: do NOT rely on `query_api_football_pending_clusters_2026_07_18.py`'s aggregate
+count alone to judge whether the closer's `--apply` worked — it is now KNOWN to lag/potentially never reflect legacy-CAS
+writes. Instead: (a) spot-check a handful of specific cells directly via `read_availability_index` (as done 3× this
+session) to confirm the underlying data state, and/or (b) read `unified_trading_library.manifest_consolidator`'s source
+to determine whether its merge path ever incorporates the CURRENT consolidated blob's content (vs. purely rebuilding
+from per-VM shards) — if it's shards-only, either (i) trigger a one-off reconciliation that seeds the closer's writes
+into a per-VM shard instead of legacy CAS (set `MANIFEST_PER_VM_SHARDS=true` before re-running an idempotent version of
+the closer — the closer safely no-ops on already-closed cells), or (ii) escalate to the operator that the aggregate gate
+tooling itself needs a fix to also consider the consolidated blob's own content, not just per-VM shards, during
+fallback.
+
+**Session summary for this dispatch (`-001`)**: fleet health monitored continuously ~4h15m with zero incidents; refuted
+one false lead (reader/dedup bug); found + filed + got landed a real structural root-cause fix (off-season gap- closer,
+slot-3 `7f6a7a83`); found + fixed a real bug in that fix before it could reach production (`SOURCE_RETURNED_ZERO`
+evidence violation, `2c85218c`); applied the corrected fix — **5,288 cells closed, 96% of the 5,515-cell plateau,
+durably verified correct** — the single largest confirmed movement on this todo's entire 20+-dispatch history.
+`/skip-current-task` — resume criteria unchanged from the previous entry, PLUS the new consolidator-merge- source
+question above as the priority investigation before assuming "wait longer" will resolve the aggregate gate.
