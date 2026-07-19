@@ -183,3 +183,39 @@ can only land once they're all done. Kept as a separate gated plan so no single 
     data-lineage-MTDS-features-ml) — pre-existing, not fold-caused, ambiguous to auto-fix; a doc-hygiene follow-up, not
     this closeout's scope. **CLOSEOUT STATUS: only the soft-window-gated alias sunset (todo 1)
   - the code loose-ends (4c deployment-api stash / 4d UAC WIP / 4e dormant helpers) remain.**
+- **2026-07-19, `/autonomous` closeout tick — DIAGNOSTIC (no code ship; remaining items are gated/risky/half-baked).**
+  Investigated the 3 remaining code loose-ends + the alias-sunset gate; all deferred with precise diagnoses:
+  - **Alias-sunset gate check (todo 1) — QUANTIFIED, stays GATED.** Grepped every retired kind for live
+    `resolve_bucket_name(kind="…")` callers: **features-\* / ml-\* still have 2–9 callers EACH** (features-delta-one 3,
+    -volatility 3, -onchain 4; ml-models-store 9, ml-training-artifacts 7, ml-predictions/configs/artifacts 2 each) —
+    consumers deliberately keep the OLD kind vocab (that's the alias design), so sunset needs a full per-consumer
+    REPOINT to the folded kind, NOT just a redeploy. 8 kinds ARE current-code-grep-clean (features-xinstrument,
+    features-mtf, execution-store-prediction, positions-store, pnl-attribution-store, risk-metrics-store,
+    pnl-attribution-output, position-store-sports) but the soft-window/old-deployment gate still applies, and
+    `archetype-state` now has 1 caller (the `tenderly_budget.py` fixed earlier this session). Verdict: partial sunset of
+    the 8 grep-clean kinds is _possible_ but the full sweep is a multi-repo repoint of features/ml consumers — a real
+    task, correctly left gated.
+  - **4e dormant helpers — DEFERRED (risky-for-low-value).** `id_conventions.get_execution_bucket`/`get_strategy_bucket`
+    are dormant (UTL → `__init__` `_from_id`/`_for_category` alias → execution-service re-export, zero call sites) AND
+    un-tiered (`execution-store-{pid}` missing `-{env}-`). BUT there are THREE same-named function sets in UTL
+    (`cloud_constants.py`, `id_conventions.py`, `cloud_interface/constants.py`) and the `cloud_constants` bare
+    `get_execution_bucket` is ACTIVELY used on execution-service's trading-adjacent grid path
+    (grid_generator_cli.py:334, grid_batch.py, live_execution_handler.py:646 — already Fold-C-updated). A multi-site
+    deletion of same-named functions on a trading-adjacent codebase, autonomously, for dormant low-value code carries
+    mistake-risk > benefit; tiering has a utils→cloud_interface circular-import risk + breaks the project_id test
+    contract. Needs a bounded dedicated refactor (consolidate the 3 sets onto `resolve_bucket_name`) or operator input —
+    NOT an autonomous quick tier/delete.
+  - **4c deployment-api stash — DEFERRED (half-baked, partially superseded).** `stash@{0}` is folded-bucket
+    DISPLAY/config WIP (11 files: deployment_api_config, batch_config_utils, services,
+    consolidator_catalog.generated.json, pipeline_uat, path_combinatorics, service_status_execution, +
+    data_status/manifest which OVERLAP origin's already-shipped axis-census). Grep-clean for strategy-store (so it does
+    NOT advance strategy_store_split_brain — that reader leg is a separate un-started change). Moderate-value
+    observability WIP, delicate to reconcile (origin moved the base on overlapping files), uncommitted/untested.
+    Preserved in the deployment-api clone's `stash@{0}` ("slot3-deployment-api-wip-superseded-check-2026-07-19") for a
+    careful operator-aware session — do NOT autonomously force half-baked display WIP into the live devops backend.
+  - **4d UAC replay WIP + AWS recount — DEFERRED** (UAC stash = half-baked replay/source-capability WIP,
+    operator-started; AWS = operator-deprioritized). **VERDICT: the Wave-3 fold mission + closeout are SUBSTANTIALLY
+    COMPLETE** — core folds 100% done, 3/4 closeout todos done. Every remaining item is genuinely gated (alias sunset),
+    a bounded refactor needing care/operator-input (4e), or operator-started half-baked WIP (4c/4d). Winding the loop to
+    a long cadence; the right next actor for the remainder is the operator (or a dedicated, non-autonomous session), not
+    a forced autonomous change.

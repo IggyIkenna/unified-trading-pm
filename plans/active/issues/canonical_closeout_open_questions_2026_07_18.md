@@ -155,8 +155,41 @@ residual).
 **5 operator-rulings** (C2, +the SSOT §7 self-correction) parked here. routed_to_operator == parked. agent skips: 0. 4
 items = scope/time/history (not findings — durability sweeps still running, foreign-tfvars-blocked flip).
 
+## D — NEW parked decision (2026-07-19): market/event lending DATA_TYPE canonical keying
+
+**Context**: the DeFi close-out shipped the operator-ruled lending SSOT — aToken/debtToken as the canonical type for
+lending **HOLDINGS** (IS adapters `@1af1be34`, all 7-adapter guards + the builder bake). Wave B then also retired flat
+`InstrumentType.LENDING` in the UAC id-builder to `UNSUPPORTED_BY_DESIGN` (`@e319864f`). That over-reached: it made
+`build_instrument_id(...LENDING...)` RAISE, which silently broke **5+ MTDS market/event lending writers**
+(`lending_indices` for 6 EVM venues, `liquidation_events`, `flash_loan_events`, `position_data`, `solana_defi`) — each
+caught by a shard-level `except ValueError` → `record_failed` → **attempted_failed, zero data** — and the partial
+A_TOKEN work-around created a **shard-atom desync** (GCS `instrument_type=a_token` vs manifest `lending`). Reversed via
+`wn12e7itc` (un-retire LENDING; keep POOL-3seg + SPOT-validator + GMX). Interim state = **uniform `LENDING` for
+market/event lending data_types** (working, consistent); **holdings stay A_TOKEN/DEBT_TOKEN** (unaffected).
+
+**THE DECISION (operator)**: how should the market/event lending DATA_TYPES — `lending_indices` (per-reserve supply +
+borrow rate index), `liquidation_events`, `flash_loan_events`, `position_data` — be canonically keyed? These are NOT
+per-token holdings; they are metrics/events about a lending market (which has an aToken supply side + a debtToken borrow
+side).
+
+- **Option A — keep `LENDING` as a market-level instrument_type** (current interim). Not the holdings-duplication the
+  operator's ruling targeted (different grain). Simplest, no data re-key, historical rows unchanged. **[WORKER REC]** —
+  least-bad, reversible, avoids a coarse/wrong per-side mapping across 4 heterogeneous data_types.
+- **Option B — key each to the reserve's `A_TOKEN`** (aToken = reserve representative). Uniform with "A_TOKEN/DEBT_TOKEN
+  only", but coarse: loses the debt side for `liquidation_events`/`position_data`/`flash_loan_events`, and forces a
+  ~N-row historical re-key + a manifest shard-atom migration.
+- **Option C — split per side** (supply-index/collateral → A_TOKEN; borrow-index/debt/flash-loan → DEBT_TOKEN). Most
+  semantically precise, biggest change (row-shape + doubling for indices + historical re-key).
+
+**If the operator picks B or C**: re-activate the UTL consumer #3 todo + a full MTDS writer migration (all 5+ writers,
+NOT the partial 3) + a Wave-D historical re-key, and fix the shard-atom on both axes. If A: mark the UAC LENDING-retire
+item holdings-only-done and drop the UTL/MTDS market-level migration.
+
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous)** — Appended parked decision D (market/event lending data_type keying) after the
+  Wave-B LENDING-retire was found to over-reach + break 5+ MTDS writers; reversed to the working interim, decision
+  routed to the operator.
 - **2026-07-18 (slot-4, /autonomous)** — Authored as the consolidated question list per the operator's "list all
   questions you have" + the /autonomous park-don't-block contract. A/B above are decided-in-shape; C fills from the
   running /plan-reconcile sweep (`wf_9458e3be`).

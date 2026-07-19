@@ -209,21 +209,24 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 
 ### R3 — Historical migration: batch → per-instrument, column+row UNION · P0 (gated on R1+R2)
 
-- [ ] [DATA] P0. **Fork `migrate_defi_full_v9_canonical`** — cell grain `(venue,chain,day)` → `(instrument_id,day)` and
-      **replace winner-pick with column+row UNION**. **AUTHORED + 22 unit tests PASSING + leaf byte-match with R1
-      PROVEN** (`migrate_defi_batch_to_per_instrument.py`, untracked, isolation-clean: ruff/basedpyright green, 559 L).
-      **NOT YET SHIPPED — the adversarial verify (safe_to_dry_run=FALSE) caught 2 CONFIRMED silent-data-loss defects
-      that MUST be fixed before `--apply`** (this is exactly why R3 is verify-gated): **(1)** `_needs_attribution` is
-      written with a blind `wb` truncate to the BYTE-IDENTICAL path v9 used (`_migrate_defi_walk.py:572`) → destroys the
-      prior v9 unattributed corpus (runtime-proven: seeded 2 v9 rows → GONE after `--apply`); **(2)** the per-instrument
-      leaf is a blind `wb` overwrite with no existence-check → clobbers a pre-existing R1 forward-written
-      `{symbol}.parquet` with STALER bundle data (runtime-proven: fresh `forward_only_col` regressed). Fix both =
-      read-existing+event-key merge OR skip-if-exists-fail-loud; never truncate a shared path R3 didn't author this run.
-      Non-blocking: correct the "instrument_id already stamped" docstring (v9 only carries it through) + add a
-      `needs_attribution/total` ratio pre-apply HARD gate; add the legacy glued-venue bundle pattern if any survive v9.
-      **REFUTED (R3 correct)**: leaf byte-match, true outer-union, no row loss, path/manifest parity — all
-      runtime-proven. Blocked-alongside: the MTDS tree is QG-RED (`solana_lst_archival.py` 905 L > 900 cap, shipped by
-      R2 `@8746708c`) → fix that first to unblock any MTDS ship. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P0 (code SHIPPED + verified; `--apply` run = R3-run below). **SHIPPED
+      `market-tick-data-service@2dca03fa`** — `migrate_defi_batch_to_per_instrument.py` (32 tests) forks the v9
+      migration to per-instrument, column+row UNION. **THREE adversarial verify rounds** hardened it (this is why R3 is
+      verify-gated): round 1 caught 2 silent-data-loss overwrites (blind `wb` truncate of the shared
+      `_needs_attribution` path + per-instrument leaf clobber of R1-forward files); round 2 caught the FIX's own bug
+      (event-key-subset dedup collapses distinct rows on the SHARED multi-instrument needs_attribution object); round 3
+      (`2dca03fa`) CONFIRMED the per-call `dedup_key` fix (`leaf=_EVENT_KEY_COLS`, `needs_attribution=None` full-row) —
+      `"blocking":[]`, Q1-Q4 preserve all distinct v9+R3 rows, idempotent. **REFUTED (R3 correct)**: leaf byte-match,
+      outer-union, no row loss, manifest parity. **ONE non-blocking pre-existing caveat for the run**: a leaf
+      sanitise-collision (two distinct ids whose symbols differ only in `[:/\ ]` chars → one leaf) can drop a sibling on
+      a merge onto a PRE-EXISTING R1-forward leaf sharing an event key — bites ONLY in the R1-forward/R3 overlap window
+      → **scope `--apply` to the pre-R1 historical batch days (R3's actual target) OR add a single-instrument-per-leaf
+      guard first.** (repo: market-tick-data-service)
+- [ ] [DATA] P0 (R3-run — the actual migration on the corpus). Once the lending un-retire reconciliation lands (MTDS
+      green): `--dry-run` recon over the DeFi batch corpus (report needs_attribution/total ratio + per-shard counts) →
+      inspect → scope `--apply` to pre-R1 historical days (or land the single-instrument-per-leaf guard) → `--apply` →
+      `rebuild_defi_manifest` → verify per-instrument manifest atoms. Real infra, manifest-verified. (repo:
+      market-tick-data-service)
 
 ### R4 — Coverage against the IS denominator · P1 (gated on R1+R2+R3) → then RESUME capture
 
@@ -566,20 +569,24 @@ Discriminator = **does a manifest row exist**.
       two-token BASE-QUOTE; single-token rejected; CeFi untouched; two-token-AMM guarded at adapter type-selection, not
       the validator). ethfi needed on-chain fields added (SPOT_ASSET is a DEFI_ONCHAIN type). **Data reclass of affected
       rows → Wave D.** (repos: instruments-service, unified-api-contracts)
-- [x] ✅ [BACKEND] P1 (UAC id-builder half). **SHIPPED `unified-api-contracts@e319864f`**: flat `LENDING` →
-      `UNSUPPORTED_BY_DESIGN` (A_TOKEN/DEBT_TOKEN only; enum member KEPT for legacy reads); GMX pinned `PERPETUAL` (no
-      chain). **CONSUMER MIGRATION (the breaking half) — 3 repos**: IS adapters DONE (`@1af1be34`); **MTDS market-level
-      lending handlers IN FLIGHT** (`w151kuw70` → A_TOKEN, unblocking the QG-red tree this retire caused); **UTL
-      `_derive_instrument_id.py:76-77` `(defi,lending)`/`(defi,lending_position)`→LENDING is a NEW latent break**
-      (raises once UTL bumps this UAC) → repoint to A_TOKEN/DEBT_TOKEN consistently with the MTDS decision (tracked
-      below). (repo: unified-api-contracts)
+- [x] ✅ [BACKEND] P1 (UAC id-builder — HOLDINGS retire only; LENDING-raise REVERSED). **NET SHIPPED**: GMX pinned
+      `PERPETUAL` (no chain) + the POOL-3seg/SPOT-validator (`@e319864f`) STAND. **But flat-`LENDING`-as-RAISE was
+      REVERSED** (un-retire `wn12e7itc`): making `build_instrument_id(...LENDING...)` raise OVER-REACHED — it silently
+      broke **5+ MTDS market/event lending writers** (liquidation_events/flash_loan_events/position_data/evm_defi-6-EVM-
+      venues/solana_defi → `except ValueError`→`record_failed`→**attempted_failed, zero data**) AND the partial A_TOKEN
+      work-around created a **shard-atom desync** (GCS `instrument_type=a_token` vs manifest `lending`). The operator's
+      ruling — aToken/debtToken as the SSOT for lending **HOLDINGS** — is on the **IS adapter side and STANDS**
+      (`@1af1be34`, unaffected). Whether market/event lending **DATA_TYPES**
+      (indices/liquidations/flash_loans/positions) should ALSO adopt A_TOKEN/DEBT_TOKEN is a genuine data-model decision
+      the operator has NOT ruled on → **PARKED** (`issues/canonical_closeout_open_questions_2026_07_18.md`); interim =
+      uniform `LENDING` (working). The UTL consumer #3 below is therefore MOOT unless the operator picks full-retire.
+      (repo: unified-api-contracts, market-tick-data-service)
 
-- [ ] [BACKEND] P1 (LENDING-retire consumer #3 — completes the e2e). **Repoint UTL `_derive_instrument_id.py:76-77`**
-      `_DISPATCH[('defi','lending')]` / `[('defi','lending_position')]` off `InstrumentType.LENDING` (now
-      `UNSUPPORTED_BY_DESIGN` in `@e319864f`) → the same mapping the MTDS reconciliation lands (A_TOKEN for market-level
-      / the position side for `lending_position`). LATENT today (UTL pins an older UAC → fail-loud only once UTL bumps),
-      so do it AFTER the MTDS A_TOKEN decision settles (`w151kuw70`) to keep the canonical derivation consistent across
-      UTL+MTDS+IS. Verify: derive a `(defi, lending)` partition through UTL and assert it no longer raises. (repo:
+- [ ] [BACKEND] P2 (LENDING-retire consumer #3 — **MOOT under the interim; only if operator picks full-retire**). UTL
+      `_derive_instrument_id.py:76-77` `_DISPATCH[('defi','lending')]`/`[('defi','lending_position')]`→`LENDING` was a
+      latent break ONLY while UAC raised on LENDING; the `wn12e7itc` un-retire restored LENDING as a supported build
+      type, so this no longer breaks. **Re-activate ONLY if the parked operator decision chooses full
+      market/event-lending retire** — then repoint UTL+MTDS+IS to the chosen mapping together. (repo:
       unified-trading-library)
 
 ### DOC-alignment sweep (IS + MTDS docs, ~33 rows)
@@ -626,6 +633,28 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — R3 SHIPPED + verified-safe; LENDING-retire OVER-REACH reversed; decision
+  parked).** `w151kuw70` outcomes + my reconciliation:
+  - **R3 SHIPPED** `market-tick-data-service@2dca03fa` (QG green, 6362 tests). The 3rd verify round CONFIRMED the
+    per-call `dedup_key` fix (`"blocking":[]`): shared multi-instrument `_needs_attribution` now full-row dedup →
+    distinct v9+R3 rows all survive, idempotent. One non-blocking pre-existing leaf sanitise-collision (only in the
+    R1-forward/R3 overlap window) → scope `--apply` to pre-R1 historical days or add a single-instrument-per-leaf guard.
+    R3-run added as its own gated todo.
+  - **⚠️ BIG FINDING — the Wave-B flat-LENDING RAISE over-reached** (verify_lending, empirically proven): beyond the 9
+    tests, **5+ MTDS market/event lending writers silently break**
+    (`except ValueError`→`record_failed`→attempted_failed, zero data: liquidation_events / flash_loan_events /
+    position_data / evm_defi's 6 EVM venues / solana_defi) AND the partial A_TOKEN work-around introduced a **shard-atom
+    desync** (GCS `a_token` vs manifest `lending` — a HARD-RULE break). These are DIVERSE data_types with no clean
+    single A_TOKEN mapping. Capture is HALTED so no live loss now.
+  - **DECISION (least-bad, reversible, documented — dispatched `wn12e7itc`)**: **un-retire flat LENDING** (keep the good
+    POOL-3seg + SPOT-validator + GMX) + **revert the partial A_TOKEN handler migration** → uniform working `LENDING` for
+    market/event lending data_types; **holdings stay A_TOKEN/DEBT_TOKEN (IS, operator-ruled, unaffected)**. The genuine
+    market/event-lending keying question (Option A keep-LENDING / B all-A_TOKEN / C per-side-split) is **PARKED for the
+    operator** — `issues/canonical_closeout_open_questions_2026_07_18.md` § D, worker-rec = A. **META-LESSON**: a
+    "retire a type from the id-builder" is a BREAKING contract change — it must enumerate + migrate ALL consumers
+    (IS+MTDS-all-writers +UTL) in ONE atomic wave, or not raise at all; my Wave-B scope (UAC+IS only) caused the
+    cascade.
 
 - **2026-07-19 (slot-4, /autonomous — Wave B canonical-id SHIPPED + CONFIRMED-correct).** `w5vyalvcc` →
   `unified-api-contracts@e319864f` + `instruments-service@c31d37c3` (QG green both). Adversarial verify **REFUTED
