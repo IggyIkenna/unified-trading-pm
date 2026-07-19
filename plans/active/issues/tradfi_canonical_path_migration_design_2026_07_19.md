@@ -164,7 +164,18 @@ canonical-shape code changes proceed autonomously.
     (`--purge-massive` + `--massive-backfill-verified` sentinel); quarantine → `_quarantine/` (never deletes/fake-
     canonicalizes). Local `_canonical_target` = the reference spec the writer lockstep change must match.
 
-## Open finding — the per-contract options_chain REBUNDLE (a required SECOND pass, not the 1:1 executor)
+## REBUNDLE — the per-contract options_chain SECOND pass ✅ BUILT `mtds@e243460c`
+
+**RESOLVED (tooling)**: `market-tick-data-service/scripts/rebundle_tradfi_chains_2026_07.py` (dry-run default, `--apply`
+gated, +20 tests, QG-green). Dry-run over the full enumeration: **140,138 non-massive per-contract sources → 2,841
+per-root bundles + 4 quarantine** (`_unknown_` empty-symbol; never fake-bundled), 0 unclassified. Byte-identical to the
+1:1 executor (`imports` `_canonical_chain_path`) + the manifest rebuild parser; content-authoritative root
+(`classify_databento_symbol`→`EXCHANGE_CODE_TO_NAME`), quarantine on root-disagreement, bundle-level VM sharding (each
+bundle whole on one VM). `--apply` is part of the GATED migration execution. Note: I defaulted
+`options_chain`-_data-type_ to per-root bundling (matches cefi + the futures/options ruling) — flag if a different
+granularity is wanted.
+
+Original finding (for provenance):
 
 The dry-run surfaced **149,521 per-contract chain objects** (chain itype, NO `underlying=`, per-contract stem like
 `ESZ4_P4200`): **148,524 are CME `instrument_type=options_chain/data_type=options_chain`** (140,135 `batch_databento` +
