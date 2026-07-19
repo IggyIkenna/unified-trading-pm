@@ -241,12 +241,16 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 > `_manifests/data_manifest.json`. Definitive reconciliation `wwkp5q6le` running (verifies legacy dup-vs-unique BEFORE
 > any delete; maps every R3 shape-miss; checks raw-shape drift; produces the clean-homes worklist).
 
-- [~] [DATA] P0. **gas_fees `{data_type}_{blk}_{blk}` block-range discovery fix — IN FLIGHT (`a286c20c`).** The gap is
-  PARTIAL/data-dependent (not corpus-wide): `_BUNDLED_TAIL_RE` branch-1 (`\d{4}\d{2}\d{2}.*`) ACCIDENTALLY matches a
-  block-range whose start ≥8 digits (treated as a YYYYMMDD-lookalike → migrated by luck), but a start ≤7 digits (block
-  height <10M: AVALANCHE 2330158 / BSC 8303485 in 2021-22, early L2s, ETH's earliest 2020 slice) matches NEITHER branch
-  → silently un-migrated. Fix = add a `\d{5,}_\d{5,}` block-range branch (precision-guarded to not match per-instrument
-  symbol leaves). Ship → targeted `--apply` gas_fees re-run in the R5 cleanup. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P0 (code SHIPPED `market-tick-data-service@b4177dc6`; targeted `--apply` re-run remains for R5 cleanup).
+      Added a `\d{5,}_\d{5,}` block-range branch to `_BUNDLED_TAIL_RE` (now
+      `^(?:\d{4}[-_]?\d{2}[-_]?\d{2}.*|\d{8,}|\d{5,}_\d{5,})$`). The gap was PARTIAL — a block-range start ≥8 digits
+      matched branch-1 by luck (migrated), a start ≤7 digits (AVALANCHE 2330158 / BSC 8303485 2021-22, early L2s, ETH's
+      2020 slice) matched NEITHER → silently un-migrated. Real-GCS proof: before=0→after discovers the ≤7-digit
+      AVAX/BSC/ETH gas_fees; ≥8-digit no regression; per-instrument leaves + `_migrated_` markers still excluded;
+      `LOST=[]`; +2 precision unit tests; QG green. **The R5 gas_fees `--apply` re-run (queued, post main migration)
+      MUST cover ALL block-height ranges** — the running R3 VM is pinned to the OLD regex so it misses ≤7-digit gas_fees
+      in EVERY year; the new-code re-run is idempotent over the already-split ≥8-digit ones. (repo:
+      market-tick-data-service)
 - [ ] [DATA] P0. **⚠️ Legacy `dex_pools/`/`lending_indices/` = PARTIAL-OVERLAP, FOLD-not-delete (the verify OVERTURNED
       the DUP verdict — a delete would have LOST real data).** Only 8 objects/2.4 MiB (SOLANA/2026-04-14; `lst_rates/`
       already gone), but content-verify found **`dex_pools/raydium/SOLANA/2026-04-14` has 32 legacy-only high-TVL pools
