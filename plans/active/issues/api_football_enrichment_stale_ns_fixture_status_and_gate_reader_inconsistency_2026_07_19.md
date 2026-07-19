@@ -84,6 +84,7 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+sequential: true
 ---
 
 # api_football enrichment: stale-NS fixture status + gate reader inconsistency
@@ -223,3 +224,26 @@ shared by every consumer of every instruments-\* manifest bucket.
 - [ ] [DATA] P2. Audit other consumers of FIXTURES `status_short`/`status_long` (match-outcome features, any
       live-vs-settled dashboard/report) for downstream impact from the pre-fix corpus-wide `NS` mis-stamping — flag
       anything that silently treated "NS" as "not yet played" when the match may actually have concluded.
+
+## Process note — 2026-07-19T16:30Z (slot-6, data_engineering)
+
+`sequential: true` was missing from this doc's frontmatter, so `regen_backlog_from_plan.py`'s `_wire_sequential_prereqs`
+never chained this doc's own todos to each other. Result: all 4 derived tasks (`-001..-004`) dispatched simultaneously
+(to slots 4/3/5/6) even though `-004`'s own text explicitly reads "Once the P2 reader fix lands" — i.e. it requires
+`-003` (`unified-trading-library` reader fix) to be `done` first, and `-003` was still `dispatched`/in-progress when
+`-004` landed on slot-6. Doing the re-audit now would mean re-examining 20+ historical gate readings using a reader that
+is STILL the broken, column-selection-sensitive one this doc's root-cause-2 describes — i.e. the re-audit's own
+methodology would be unreliable, exactly the failure mode this todo exists to fix.
+
+Fix applied: added `sequential: true` to this doc's frontmatter (chains each task's `prereqs.completed_tasks` to the
+PREVIOUS task in `plan_order` on the next regen tick — `server/regen_backlog_from_plan.py:488-524` /
+`unified-trading-pm/plans/PLAN_FORMAT.md`). This doesn't recall the 4 already-dispatched tasks, but it does mean: if
+`-004` is skipped/re-queued (as slot-6 is about to do, since `-003` genuinely isn't done), the NEXT regen tick will gate
+it on `-003` (and by the linear chain, `-002`/`-001`) actually completing before re-dispatching it to any slot.
+
+Slot-6 action: `/skip-current-task` on `-004` with reason "prereq -003 (P2 reader fix) not done yet — doing this now
+would re-audit using the still-broken reader". Broader lesson for issue-doc authoring: any issue doc whose todos have a
+"once X lands, do Y" dependency written in prose (not just `depends_on` cross-plan links) needs `sequential: true` set
+at creation time, or the same premature-dispatch pattern recurs on the next multi-todo issue doc with an in-doc
+fix→verify/audit chain. Recommend adding this to `plans/active/task_template.md`'s authoring checklist if not already
+covered.
