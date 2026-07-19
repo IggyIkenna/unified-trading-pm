@@ -634,6 +634,21 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — LENDING un-retire reconciliation SHIPPED + CONFIRMED; MTDS green; code phase
+  COMPLETE).** `wn12e7itc` → `unified-api-contracts@ad4886ae` (UNSUPPORTED_BY_DESIGN back to `frozenset()`; LENDING
+  restored to SUPPORTED + `_DEFI_TYPES`; POOL-3seg/SPOT-validator/GMX KEPT — runtime-proven) +
+  `market-tick-data-service@acfb76ca` (3-handler A_TOKEN→LENDING revert; solana_defi kamino/marginfi/solend
+  `LENDING`→`SOLANA_LENDING` alignment; solana-split
+  - R3 kept). Verify CONFIRMED: `no_raising_writer_remains=true`, `shard_atom_consistent=true`,
+    `good_parts_intact=true`, `holdings_ssot_intact=true` — all 5 formerly-silently-broken writers build via the REAL
+    path (no attempted_failed). **DeFi canonical CODE phase is now COMPLETE + consistent**: holdings=A_TOKEN/DEBT_TOKEN,
+    market/event=LENDING/ SOLANA_LENDING, POOL-3seg, SPOT taxonomy, GMX=PERPETUAL, per-instrument writer + acquisition +
+    coverage-honesty all in. **2 pre-existing non-blocking items → Wave D**: (i) `liquidations_handler` manifest tag
+    `"liquidation"` (:534, from 02e50cb2) vs GCS path `lending` (:644) — latent atom divergence, align in a dedicated
+    fix; (ii) solana_defi kamino/marginfi/solend objects previously written at `instrument_type=lending` are now
+    orphaned vs the aligned `solana_lending` path → migrate them. **Next (parallel)**: R3-run (dry-run recon → scoped
+    apply → rebuild manifest) + Wave C (docs describe the now-final model).
+
 - **2026-07-19 (slot-4, /autonomous — R3 SHIPPED + verified-safe; LENDING-retire OVER-REACH reversed; decision
   parked).** `w151kuw70` outcomes + my reconciliation:
   - **R3 SHIPPED** `market-tick-data-service@2dca03fa` (QG green, 6362 tests). The 3rd verify round CONFIRMED the
