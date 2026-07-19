@@ -20,7 +20,7 @@ status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, unified-trading-pm]
+repos: [agent-orchestrator, unified-trading-pm, deployment-ui]
 scope: [engineer, admin]
 tags:
   [
@@ -147,6 +147,16 @@ NOT AO and are deliberately out of scope here.
       the designed behaviour and make `regen`/docs say it explicitly) or whether regen re-derives them under other ids.
       **Do NOT close by re-reopening** (decayed twice). Source: doc #8 todo 5. **Gate**: doc #8's stated gate — a
       recorded explanation, and either correct rows or a recorded by-design decision.
+- [ ] [BACKEND] P2. **`audit_false_done` false-positive class — the AO/regen lesson from studying the sports rows.**
+      (Operator 2026-07-18: the sports work itself is its owner's; but any AO/regen improvement surfaced by studying it
+      belongs here.) `sports_cf8…-002`'s plan checkbox IS already `[x]` — the audit flags it ONLY because the row's
+      cited `done_sha` isn't the commit that flipped the checkbox. Decide the intended contract: should
+      `audit_false_done` / `verify.check_plan_flip` treat a checkbox that is currently `[x]` as HONEST regardless of
+      which commit flipped it (checkbox state = truth), or must the `done_sha` itself be the flip-commit (provenance =
+      truth)? A "checkbox `[x]` but wrong sha" false-positive pollutes the gate's signal. Trace both consumers, pick the
+      rule, and make the audit + the done-gate agree on it. Source: sports_cf8 study, this session. **Gate**: a recorded
+      decision; `audit_false_done` no longer flags an already-`[x]` row whose work is genuinely complete (or explicitly
+      does, by ruling, with the reason documented).
 
 ### Phase 2 — worker lifecycle (code)
 
@@ -230,9 +240,14 @@ NOT AO and are deliberately out of scope here.
       silent. Make the streak per-repo (repo X `[skip:dirty]`/`[skip:ff-failed]` N consecutive ticks → WARN naming the
       repo). NOTE (operator 2026-07-18): the "UI surface" agent doc #7 mentioned is a DIFFERENT scope — the backlog
       details pop-up (what tasks exist, their prerequisites, how tasks/plans connect) — and has not started (UI design
-      not final). It does NOT cover this `slot-cron-ff-pull.sh` alerting, so this is a **standalone AO task — build it**
-      (no cross-agent dependency). Source: doc #7 todo 3. **Gate**: doc #7's gate — a deliberately-frozen clone WARNs
-      within N ticks.
+      not final). It does NOT cover this, so this is a standalone task with no cross-agent dependency. **SURFACE
+      (operator 2026-07-18): NOT a Slack alert — feed the per-repo/per-slot freeze signal into the `deployment-ui` FLEET
+      TAB (where clone/slot status is already shown) so a SINGLE stuck repo on a SINGLE slot is obvious at a glance, and
+      improve that page to make the state easy to check on demand.** So the work spans two repos: (1)
+      `agent-orchestrator` `slot-cron-ff-pull.sh` emits a per-repo/per-slot freeze-streak signal (behind-origin N
+      consecutive ticks); (2) `deployment-ui` fleet tab renders it (per repo × slot, not one global flag). Source: doc
+      #7 todo 3 + operator 2026-07-18. **Gate**: a deliberately-frozen single clone shows as stuck in the deployment-ui
+      fleet tab within N ticks (naming the repo + slot).
 - [ ] [INFRA] P2. **Fleet-wide frozen-clone sweep.** hk-host root repos measured behind=0 today, but the VM's SLOT
       clones + any other hosts were not swept. One pass: every host's root + slot clones, `HEAD..origin/LDR > 0` with
       untracked-only dirt → unfreeze (plain FF, per the doc's recipe). Source: doc #7 todo 4. **Gate**: sweep output
@@ -350,13 +365,15 @@ NOT AO and are deliberately out of scope here.
 
 > **These are MY OWN findings** from a fresh pass over the AO codebase, the live DB/activity-log, and the codex AO docs
 > — kept deliberately SEPARATE from Phases 0–6 (which trace to issue docs or operator reports) so the operator can
-> review them on their own merits. **None of these todos is ratified until the operator reviews them** — treat each as a
-> proposal with evidence, not settled work. Scope honesty: codex claims were SPOT-checked (alerting, governor, paused
-> semantics, recovery Layer-1 — the last two via Phases 0–6 work), not exhaustively diffed; the deep codex↔code diff
-> belongs to the Phase-5 `ao_docs_reconciliation` close-out. One false lead corrected along the way: an early probe
-> reported `qg-host-governor.sh` missing from the VM — wrong path (it lives in `scripts/quality-gates-base/`, not
-> `scripts/dev/`); at the real path it answers `MODE=token K=2` (drift already recorded on the governor plan, no new
-> item).
+> review them on their own merits. **REVIEWED + RATIFIED 2026-07-18**: AF-1 (ratified + root-cause-why-they-fail added),
+> AF-2 (folded into the Phase-6 plan_health throttle — no separate work), AF-3 (LOW priority — 40 MB is not big; only
+> unbounded growth matters), AF-4 (ratified — build the snapshot-age assertion), AF-5 (ratified + EXPANDED to
+> per-account/agent/slot token+message usage), AF-6 (done, ao@c03ccce). Scope honesty: codex claims were SPOT-checked
+> (alerting, governor, paused semantics, recovery Layer-1 — the last two via Phases 0–6 work), not exhaustively diffed;
+> the deep codex↔code diff belongs to the Phase-5 `ao_docs_reconciliation` close-out. One false lead corrected along the
+> way: an early probe reported `qg-host-governor.sh` missing from the VM — wrong path (it lives in
+> `scripts/quality-gates-base/`, not `scripts/dev/`); at the real path it answers `MODE=token K=2` (drift already
+> recorded on the governor plan, no new item).
 
 - [ ] [BACKEND] P1. **(AF-1) CI-wall escalator burn: 189 dispatches / 7d for 50 escalations, 83 UNRESOLVED (43%).**
       Measured from `activity_log` (7d, wall_type=`ldr_qg_failure`): `escalation_queued=50`, `escalation_dispatched=189`
@@ -365,8 +382,13 @@ NOT AO and are deliberately out of scope here.
       codex governs how escalations PAGE, not whether they WORK. Proposal: (a) an unresolved-escalation triage pass
       (what are the 83 — one recurring wall or many?); (b) a redispatch cap + backoff per escalation_id — **implemented
       ON the ONE fleet-scoped cooldown store from the Phase-6 blocked-task item, not a separate escalator engine**; (c)
-      a resolved:dispatched efficacy KPI in the daily digest. **Gate**: the 83 are explained; redispatch per escalation
-      capped; KPI visible.
+      a resolved:dispatched efficacy KPI in the daily digest; **(d) RATIFIED (operator 2026-07-18) — root-cause WHY the
+      escalators fail: sample the 83 unresolved and classify the cause — boot prompt too shallow / missing context, the
+      QG-failure payload handed to them is insufficient, OR the failures are genuinely too hard for the cicd role+model
+      (→ needs a model bump / human hand-off). Route the fix by class (prompt hardening vs richer failure context vs
+      model tier vs escalate-to-operator).** **Gate**: the 83 are explained WITH a cause-class breakdown; redispatch per
+      escalation capped; efficacy KPI visible; the prompt/context/model fix (whichever the classification points to) is
+      applied or a follow-up filed.
 - [ ] [INFRA] P2. **(AF-2) plan_health true daily volume is 55 dispatches/24h — 13 of which produced NO result.**
       `plan_health_dispatched=55`, `plan_health_result=42`, `plan_health_dispatch_failed=4` in the last 24h — worse than
       the 5.5h sample in Phase 6, and each run is a **haiku** worker (`agents/plan_health.md` `model: haiku` — NOT
@@ -379,9 +401,13 @@ NOT AO and are deliberately out of scope here.
 - [ ] [BACKEND] P3. **(AF-3) `activity_log` has NO retention policy — unbounded growth on the hot DB.** 83,813 rows
       spanning 20 days (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC;
       `activity_log` has nothing (grepped `state_store/` — no delete/prune path). Fine today, but it is silent unbounded
-      growth on the dispatch-hot SQLite file, and the log IS the fleet's audit stream. Proposal: age-based retention
-      (e.g. 90d) with optional archive-to-S3 via the existing snapshot loop before delete. **Gate**: a retention
-      decision recorded + implemented or explicitly declined with WHY.
+      growth on the dispatch-hot SQLite file, and the log IS the fleet's audit stream. CONTEXT (operator asked
+      2026-07-18): **83k rows / 40 MB is NOT big for SQLite** (it handles millions of rows comfortably) — there is NO
+      problem today; the only real risk is UNBOUNDED growth over MONTHS (write-latency creep on the write-hot DB). So
+      this stays **low priority**: a simple age-based prune (90d) OR just a growth alarm suffices — not urgent, no
+      redesign. Proposal: age-based retention (e.g. 90d) with optional archive-to-S3 via the existing snapshot loop
+      before delete. **Gate**: a retention decision recorded + implemented (or explicitly deferred with the growth-alarm
+      in place).
 - [ ] [INFRA] P2. **(AF-4) Disaster-recovery snapshots are wired but their RECENCY is unverified — silent-by-absence
       risk.** `gcs_sync.SnapshotLoop` runs and `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set
       (systemd env; GCS unset by design on the AWS host). But no local `state.json` was found at the expected path
@@ -390,10 +416,12 @@ NOT AO and are deliberately out of scope here.
       FIRST (2026-07-18) — the "no local state.json at the expected path" evidence is likely a PROBE ARTIFACT**: the
       probe ran as `ubuntu` without the systemd env, so it checked the in-repo default, not
       `/var/lib/orchestrator/state.json` (same root as the Phase-4 DB_PATH bug). Once Phase-4 moves state in-repo to
-      `data/state/`, the default path IS correct and the artifact disappears. Proposal: (a) re-measure the S3 object's
-      last-modified NOW (the REAL signal, independent of local path); (b) add a snapshot-age assertion (digest line or
-      health endpoint: last successful snapshot < N hours, alert on breach); (c) one documented restore drill. **Gate**:
-      measured snapshot age recorded; the age assertion alerts when the loop is deliberately stopped in a test.
+      `data/state/`, the default path IS correct and the artifact disappears. **RATIFIED (operator 2026-07-18: "decide
+      yourself" → BUILD it)** — a silent snapshot failure = eventual data loss, and the age assertion is cheap.
+      Proposal: (a) re-measure the S3 object's last-modified NOW (the REAL signal, independent of local path); (b) add a
+      snapshot-age assertion (digest line or health endpoint: last successful snapshot < N hours, alert on breach); (c)
+      one documented restore drill. **Gate**: measured snapshot age recorded; the age assertion alerts when the loop is
+      deliberately stopped in a test.
 - [ ] [BACKEND] P2. **(AF-5) Dispatch→done conversion is ~18% and NO surfaced metric tracks fleet efficiency.** 24h: 310
       boots / 154 dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task even with the spawn budget
       fixed (the leaks are 117 skips + 96 session-losses, i.e. Phases 2/3/6 mechanics). The OBSERVABILITY gap is
@@ -401,8 +429,13 @@ NOT AO and are deliberately out of scope here.
       "looks busy" while ~4 of 5 dispatches produce no completion, and nobody sees a regression until an operator
       manually reads the activity log (how every incident in this plan was found). Proposal: daily-digest + dashboard
       KPIs (spawns, dispatches, done, conversion %, boots-per-done, top skip reasons) with a wow-level alert on sharp
-      regression. **Gate**: the KPIs render; the 2026-07-12-class degradation (spawn:dispatch 0.6:1→44:1) would have
-      been visible within one digest cycle.
+      regression. **RATIFIED + EXPANDED (operator 2026-07-18): ALSO attribute USAGE per slot / agent / account —
+      tokens + messages consumed — so it is visible WHERE the account budget goes.** Today nothing shows which
+      agent/slot/account burned the quota, yet the fleet hits usage limits even across 4 accounts; add per-account +
+      per-agent token/message counters (sourced from the usage-poller / transcript sizes) and a "usage by account" view
+      on the same surface, so an account nearing its cap and the agent driving it are both visible before failover
+      fires. **Gate**: the efficiency KPIs render; a per-account usage breakdown is visible; the 2026-07-12-class
+      degradation (spawn:dispatch 0.6:1→44:1) would have been caught within one digest cycle.
 - [x] [REVIEW] P3. ✅ **(AF-6) `ENV_VARS.md` residual multi-VM framing — DONE (ao@c03ccce).** Resolved as part of the
       `ao_config_env_var_consolidation_2026_07_18` Phase-4 rewrite: ENV_VARS.md was rewritten to the two-class shape,
       dropping the retired `tab/<vm_id>/<slot>` branch example and the "Fleet VM (epic worker)" section header for the
@@ -427,6 +460,16 @@ NOT AO and are deliberately out of scope here.
 
 ## Progress Log
 
+- **2026-07-18 — Phase-7 ratification + measured plan_health**: operator reviewed the audit findings. plan_health
+  MEASURED on the live VM: **~59 dispatches/24h (one every ~24 min)** — far above the 4–8h target; run duration median
+  280s; 7d = 204 results (110 with findings, 94 empty). Its output is GENUINELY useful (real catches this session:
+  data_completion_defi/tradfi stale-fork contradictions vs the newer consolidated closeouts; a CLAUDE.md Tardis
+  doc_drift where the "16/4 defaults ~93% idle → scale up" guidance is contradicted by the 350x-collapse issue doc) —
+  but it re-reports the SAME unresolved findings every cycle because the consumer side isn't closing them; the Phase-6
+  throttle + close-the-loop is the fix. Ratifications: AF-1 (+root-cause-why-escalators-fail), AF-3 low-pri (40 MB is
+  not big), AF-4 build snapshot-age assertion, AF-5 +per-account/agent token+message usage attribution. Added a Phase-1
+  todo for the `audit_false_done` false-positive class surfaced by the sports rows. Freeze-streak re-routed to the
+  deployment-ui fleet tab (per-repo×slot), not Slack (+deployment-ui added to `repos`). Plan-only.
 - **2026-07-18 — Cross-cutting review pass (operator-requested drift/regression check)**: read the whole plan for
   contradictions + regression risks and patched 9 points. (1) Phase-4 `DB_PATH`/`STATE_JSON` two-places → **one in-repo
   source** (operator ruling: AO state in the repo, not `/var`) + a HARD deploy-preservation guard replacing the reversed

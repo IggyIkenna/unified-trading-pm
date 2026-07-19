@@ -270,10 +270,16 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
       needs a re-fetch. (repo: market-tick-data-service)
-- [ ] [BACKEND] P0. **Catalogue-venue gap.** The catalogue regen (`prod/catalog.parquet` 2026-07-19T04:40Z) has
-      `force_include` but MISSING all 26 new venues (35 venues, LST/STAKING/YIELD_BEARING still 3/3/1, +39 rows not
-      +85); checkout `_DEFI_VENUES`=89. Deploy-lag vs runtime-silent-`[]` diagnosis+fix+re-run dispatched (`a5f19b07`).
-      Required for the R4 coverage denominator. (repo: instruments-service)
+- [~] [BACKEND] P0. **Catalogue-venue gap — ROOT CAUSE FOUND, fix in flight (`ab71a0d8`).** NOT
+  deploy-lag/creds/silent-[] (deployed image HAS 89 venues + adapters DO emit). The 26 new venues are REJECTED at UAC
+  `validate_instrument_records` — **R2 wired them into the FETCH list (`_DEFI_VENUES`) but NOT the VALIDATION allowlist
+  (`instrument_validation.py::_DEFI_VENUE_PREFIXES` line 22)** → "unknown venue 'RENZO-ETHEREUM'" → they never reach
+  `by_date/`, EU-seeded as `expected_unattempted`. There's an in-code comment about this EXACT bug recurring
+  (VENUS/RADIANT 2026-07-12). Fix = +15 collision-free prefixes (unblocks 22/26) + chain-aware COINBASE/BINANCE
+  disambiguation for cbETH/wBETH (3 more; must NOT misclassify COINBASE-SPOT/BINANCE-FUTURES as defi) + IS
+  `SOLANA-NATIVE-SOLANA` tag fix. **DEPLOY-GATED**: after ship → LDR→main → IS-image rebuild → then `is-daily-enum-defi`
+  re-enum + `lifecycle-catalogue-full-defi` re-rollup + verify (a later tick). Original catalogue snapshotted
+  `prod/_snapshots/catalog.pre-rollup.20260719T040600Z.parquet`. (repo: unified-api-contracts, instruments-service)
 
 ### R4 — Coverage against the IS denominator · P1 (gated on R1+R2+R3+R5) → then RESUME capture
 
@@ -686,6 +692,20 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — migration PARALLELIZED per operator; catalogue ROOT CAUSE found + fix shipped).**
+  - **Operator asked for 30-60 min not hours → parallelizing** (`a9d66cf09d` re-orchestrating): stop the serial VM +
+    recovery loop → relaunch as PARALLEL per-QUARTER VMs over the FULL 2020..today range (~26 SPOT VMs; quota is a
+    non-issue = 60k preemptible vCPU). Wall-time = slowest quarter (~30-60 min). Pinned to the CURRENT code **`b4177dc6`
+    (NOT the old 37ac8a64)** — so the parallel run ALSO catches the ≤7-digit gas_fees the old code skipped everywhere,
+    OBVIATING the separate R5 gas_fees re-run. Disjoint quarters → disjoint days → no needs_attribution/leaf races.
+    Single `rebuild_defi_manifest` after all quarters + verify.
+  - **Catalogue-missing-venues ROOT CAUSE (a5f19b07, empirically proven — NOT deploy-lag/creds/silent-[])**: R2 wired
+    the 89 venues into the FETCH list but NOT the UAC VALIDATION allowlist (`_DEFI_VENUE_PREFIXES`) → all 26 new venues
+    rejected as "unknown venue" at `validate_instrument_records` → EU-seeded `expected_unattempted`, never reach the
+    catalogue. Recurrence of a documented bug (VENUS/RADIANT 2026-07-12). Complete fix dispatched `ab71a0d8` (15 safe
+    prefixes + chain-aware COINBASE/BINANCE for cbETH/wBETH + IS SOLANA-NATIVE tag). Deploy-gated re-enum+re-rollup is a
+    later tick. This was MY R2 e2e gap.
 
 - **2026-07-19 (slot-4, /autonomous tick — canon reconciliation LANDED; serious findings; R5 refined).** `wwkp5q6le` (5
   agents, adversarial). **The verify-before-delete gate paid off**: it OVERTURNED an inventory "DUP/safe-to-delete"
