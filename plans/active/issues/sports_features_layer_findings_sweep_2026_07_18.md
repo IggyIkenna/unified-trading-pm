@@ -1671,3 +1671,40 @@ is the same — **validate that a progress metric can ever be non-zero before tr
 - [ ] [CODE] P2. Fix the post-backfill hint in `deployment-service/scripts/vm/launch-features-vm.sh` to resolve the
       bucket via `resolve_bucket_name` (never string-interpolate an env-split bucket name) and to name the real
       `sports_features/` prefix.
+
+### Z (2026-07-19) — pilot VALIDATES the re-run; separate `matchday` persistence defect found (NOT root-caused)
+
+Pilot VM `features-sports-sports-20260719-063104` (2024 chunk, SPOT, bounded). Same day, same 17 rows, local recompute
+vs what the VM actually wrote:
+
+| column              | LOCAL recompute | WRITTEN by VM |
+| ------------------- | --------------: | ------------: |
+| `competition_phase` |            4/17 |    **4/17 ✓** |
+| `games_remaining`   |            4/17 |    **4/17 ✓** |
+| `round_name`        |           17/17 |   **17/17 ✓** |
+| `matchday`          |           16/17 |    **0/17 ✗** |
+
+**The re-run is doing its job**: the three features this sweep was about match the local recompute exactly, which
+confirms the VM is running the § S + § V code. Across the 7 days written so far, `competition_phase` is 60.5% populated
+overall and **66.2% of the rows whose round actually carries a matchday number** — against ~100% UNKNOWN in the original
+issue.
+
+**Separate defect: `matchday` is computed and then lost before persistence.** It cannot be a calculator bug — the same
+code populates it 16/17 locally, and `competition_phase` (which is DERIVED from matchday) persists correctly. So the
+value is dropped between the calculator and the writer.
+
+**My first hypothesis was WRONG and is recorded as such**: I suspected `_run_calc`'s first-writer-wins rule
+(`new_cols = [c for c in df.columns if c not in existing_cols]`) was discarding season_context's `matchday` in favour of
+an empty one already on `result`. Measured: the base fixtures frame does **not** carry `matchday` (nor any other
+season_context column), so that is not the mechanism. Some earlier calculator must introduce the column, but I have not
+identified which — **this is an open lead, not a diagnosis.**
+
+**Why this does not block the fan-out**: `round_name` persists at 100%, and `matchday` is a pure regex over it
+(`r"(\d+)$"`). The field is therefore recoverable by a light targeted pass with **no features re-run required**, so
+baking it into the remaining year-chunks costs nothing that a cheap follow-up cannot fix.
+
+- [ ] [DIAG] P2. Root-cause where `matchday` is dropped between `_compute_season_features` and the writer. Start by
+      logging `result.columns` immediately before the `season_context` `_run_calc` to identify which earlier calculator
+      introduces the colliding empty column. Do NOT assume the base frame is the source — measured, it is not.
+- [ ] [DATA] P3. Once root-caused, recover `matchday` from the persisted `round_name` (regex) rather than re-running the
+      whole features corpus.
