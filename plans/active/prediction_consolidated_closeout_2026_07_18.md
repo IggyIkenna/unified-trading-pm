@@ -973,3 +973,32 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     the smoke writes fresh to `-test-` and re-surfaces item-2 at the WRITER (per-CID null) — consistent, not
     contradictory. Phase-D closes green only after Class A fix + a decision on item 2 (per-CID writer) for the canonical
     leg. Do NOT tick Phase-D as passed until the triage lands.
+
+- **2026-07-19 (slot-2, autonomous tick 20) — operator authorized FIXING the smoke RED + items 2+3 + casing; triage
+  landed, Class A FIXED, remaining fixes dispatched.** Casing question RESOLVED (not an ambiguity): canonical manifest
+  `instrument_type` = UPPERCASE `PREDICTION_MARKET` — the prod catalogue SSOT is 100% uppercase (2,900,318 rows) and
+  every `InstrumentType.*.value` is uppercase; the GCS path-partition lowercase (`instrument_type=prediction_market`) is
+  a separate path convention. The migration used the correct value; item-2 stamps uppercase.
+  - **CLASS A (IS 404) — ✅ FIXED `instruments-service@5a99eef7`** (verified on LDR). Root cause = the HARNESS resolver
+    `scripts/smoke_matrix.py::resolve_test_bucket` passed an explicit `project_id` to `get_bucket_name`, forcing the
+    legacy long fallback `instruments-store-prediction-test-*` (404); the IS WRITE path was already correct. Fixed to
+    `resolve_bucket_name(kind="instruments-store-prediction", deployment_env="test")` → abbreviated `pred` (exists);
+    RULE-11 (cefi/tradfi/defi/sports byte-unchanged). All 14 IS 404s cascade-resolved.
+  - **CLASS A next layer (NEW, distinct — was masked by the 404): `expected_write_prefix` mismatch** — the harness
+    expects `instrument_availability/by_date/day=/venue=/` but the IS writer writes CQG-FIRST
+    `by_date/canonical_question_group={CQG}/day=/venue=/instruments.parquet` (57 real objects confirmed at the CQG path
+    for POLYMARKET 2026-06-28). **Dispatched** an IS-harness fix (day=/venue= substring post-filter over `by_date/`).
+  - **CLASS B / writer-root item 2 — confirmed + dispatched.** Per-CID prediction shard itype is null at
+    `market-tick-data-service/.../engine/orchestrator/venue_fetch.py:460-469` (shard_key itype index 3 = `count_key[0]`,
+    null for prediction; canonical `PREDICTION_MARKET` lives in the wrapped `instrument_id`), stamped verbatim by
+    `manifest_finalize.py:360-367`. **Dispatched** the MTDS fix (stamp uppercase `PREDICTION_MARKET` for prediction
+    per-CID shards, RULE-11-safe + test) — this is the per-CID durability fix.
+  - **CLASS C — IS-cqg GREEN** (was downstream of the Class-A 404); **MTDS `no_parquet` RED** — the `-test-` bucket has
+    only `_index/`, zero `raw_tick_data/` (force VM recorded a manifest shard but wrote no tick parquet). **Dispatched**
+    an MTDS investigation (real fetch/write bug vs test-mode limitation needing live venue API access).
+  - **Item 3 (`prediction_trades` dual-seed retirement) — dispatched** (UAC, adversarially verified: captured emits
+    `trades` since 2026-04-19; only a features read-fallback references it (harmless when empty); retiring the seed
+    aligns the `expected_unattempted` denominator). Agent instructed to STOP if any live consumer hard-requires it.
+  - Fixes dispatched 2-at-a-time (shared-host ≤2-QG rule): MTDS (item2+ClassC) + UAC (item3) first; IS-harness next.
+    Phase-D re-run to GREEN after they land. Item 2+3 landing makes the Phase-B cleanup DURABLE (closes the tick-17
+    transient-drift caveat).
