@@ -2985,3 +2985,47 @@ this session used the `instruments-service` `.venv`'s `google-cloud-compute`/`go
 directly. `/skip-current-task` — same resume criteria as the 18:23Z entry; additionally resume if a future dispatch
 traces the orchestrator's per-day loop order and confirms/refutes the "hasn't reached the flagged dates yet" hypothesis
 above.
+
+### 2026-07-19T19:00-19:42Z — data_engineering slot-4 (same `-001` dispatch, continued — investigated a suspected reader/dedup bug, REFUTED it with targeted evidence; refined (not confirmed) the "hasn't reached the flagged dates yet" hypothesis)
+
+Continued holding on the same dispatch. Directly inspected each fleet VM's own per-VM shard object
+(`_index/per_vm/{instance}.parquet`, per `unified-trading-library/manifest_writer/_state.py::_PER_VM_PATH_TEMPLATE`) —
+confirmed all 4 shards exist, are fresh (mtime ~19:34-19:35Z), and contain REAL captured/empty_confirmed rows for the
+dates each VM has processed so far (e.g. `af-backfill-20260719-180603` FIXTURE_STATS shard: 4,037 rows spanning
+`2020-06-06..2020-07-22`, `{'empty_confirmed': 3889, 'captured': 148}`, **zero** `expected_unattempted` rows) — the
+writer is correctly persisting outcomes. Cross-referenced this against the flagged pending cluster
+(`FIXTURE_STATS 2020-06-14..2020-06-20`, which VM `-180603`'s `[[VM_PROGRESS]] last_completed_date=` checkpoints show it
+walked through over an hour before this check) and momentarily suspected a manifest-reader dedup bug — since a fresh,
+correctly-falling-back-to-shards gate read (19:32Z, `consolidated blob age 342.7s > 120s`) still showed that exact
+cluster 100% pending, byte-identical to 3 earlier reads spanning 80min. Hypothesized the optional dedup key
+(`_OPTIONAL_DEDUP_COLS` includes `league_id`) might be stranding a coarse date-only `expected_unattempted` seed row
+against granular per-league captured writes (mirroring this issue's own repeatedly-rediscovered "reader/writer grain
+mismatch" bug class). **This hypothesis is REFUTED by direct evidence**: a targeted read
+(`date, data_type, source, capture_status, error_reason, league_id` columns) for
+`date=2020-06-14, data_type=FIXTURE_STATS` returned 95 rows — 82 `empty_confirmed` + 10 `captured` + only **3**
+`expected_unattempted`, and those 3 pending rows carry SPECIFIC `league_id` values (`AUSTRIAN_BUNDESLIGA`,
+`AUSTRIAN_2_LIGA`, `GREEK_SUPER_LEAGUE`), not an empty/coarse key — i.e. the pending rows are genuine per-league
+granular cells, not a stranded coarse seed. **Not a merge/dedup bug.**
+
+Broadened the check corpus-wide: total pending across all 6 api_football data_types (including INJURIES/TEAMS, which the
+gate script's `_ENTITIES` list excludes) = 17,513, and the 4 gate-tracked entities sum to EXACTLY 5,515
+(1,559+1,549+1,517+890 — matches the gate script's own total precisely, confirming the targeted read and the gate script
+agree). `league_id` breakdown of the pending rows shows a BROAD spread — ~20+ leagues each carrying 250-500 residual
+pending date-cells (`A_LEAGUE` 494, `BRASILEIRAO`/`ALLSVENSKAN`/`ELITESERIEN`/`K_LEAGUE_1` 357 each, down to `MLS` 272),
+NOT a small number of systematically-stuck leagues. `error_reason` is blank for all 17,513 pending rows (expected —
+nothing has been attempted yet on them).
+
+**Revised conclusion**: the flat 5,515 across 4 reads spanning ~80min is most likely explained by the ORIGINAL
+"sequential wide-window walk hasn't reached most flagged cells yet" hypothesis, not a bug — the sampled date's 96.8%
+closure (92/95 cells) most plausibly predates THIS session's fleet entirely (an earlier fleet/session's work), since
+this fleet's own `[[VM_PROGRESS]]` checkpoints show it's only ~40-70 calendar days into a 2,170-day window as of this
+check — nowhere near covering the full pending-date spread. Did NOT confirm this positively (would need to correlate a
+specific cell's `attempted_at`/`written_at` timestamp against the fleet's own launch time, not attempted this session).
+**No operator escalation filed** — the suspected "big finding" from the 19:00Z entry does not hold up under targeted
+verification; retracting that framing here rather than letting it stand uncorrected in the log for the next dispatch.
+
+**Not flipping this checkbox** — gate still at 5,515 pending, no new safe launch target (same conclusion as prior
+entries). `/skip-current-task` — same resume criteria as before; a future dispatch could usefully correlate a specific
+pending cell's history against fleet launch timestamps to definitively confirm/refute "hasn't reached it yet" vs. some
+other per-cell-specific stall (e.g. the same season-cache-0-fixtures bug class `-009` is investigating, extended beyond
+its current scope).

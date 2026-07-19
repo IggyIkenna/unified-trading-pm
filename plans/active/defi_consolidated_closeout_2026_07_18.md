@@ -696,6 +696,16 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — finer re-shard LIVE: 30 sub-shard VMs; ETA ~1-1.5h; 24 quarters already done).**
+  Owner executed the finer date-shard: stopped the 6 heavy quarter-VMs, launched **30 date-disjoint sub-shards**
+  (2025q1-4 = 6×~2-week each = 24; 2026q1-2 = 3×per-month each = 6), all RUNNING on **e2-standard-4 on-demand**
+  (WORKERS=16, `--force`, pin b1a23cbf, idempotent resume skips earlier `_migrated_*`). Quota OK (120 of 600 E2 vCPU).
+  Date-disjoint → no cell/needs_attribution races. **New ETA ≈ 1-1.5h (done ~21:45-22:15 UTC)** vs the ~03:00 UTC
+  single-VM projection — recovers the operator's speed goal via their explicit parallelization mandate. All pre-2025
+  quarters done; corpus completes when the 30 sub-shards finish → then the perp re-migration (@35c87d66) + whole-corpus
+  rebuild. NOTE: sandbox `date -u` runs ~57min SLOW vs real UTC (VM-name/run.log timestamps are real UTC — use those);
+  this also explains the earlier 2024q2/q4 "fast" completion (really ~1h, and boundary-verified complete).
+
 - **2026-07-19 (slot-4, /autonomous — migration is CORRECT + progressing but GIL-bound SLOW; ETA ~7h not 2.5h;
   FLAGGED).** Deep liveness check on 2025q1od (SSH + the migration's own run.log, not just the fleet heartbeat): NOT
   stalled — the migrate proc is alive (load ~1.0-1.4 on an e2-standard-16 = the GIL-bound ~1.3-core ceiling the owner
