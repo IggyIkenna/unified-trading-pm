@@ -407,15 +407,20 @@ fixture-linked before MVP backfill.
       `book_snapshot_5` now honest live-only skip. Formal all-green still blocked ONLY by the `trades` catalogue-gating
       (next todo). The orphaned re-run produced no formal report (VM cleaned up); re-run cleanly once the
       catalogue-order follow-up lands.
-- [ ] [DATA] P1. **Smoke-orchestration follow-up — `trades` `-test-` catalogue-gating (blocks Phase-D formal green)
-      (surfaced tick 22).** The MTDS batch `trades` adapter enumerates its market universe from the
-      `instruments-store-prediction` catalogue via ambient `DEPLOYMENT_ENV_SHORT`; on the `IS_TEST_RUN` smoke VM it read
-      the empty `-test-` catalogue → 0 trades fetched → force/skip RED. Fix EITHER by (a) ordering the smoke so the IS
-      force leg (which now populates the `-test-` catalogue — 182 objects proven tick 22) runs before the MTDS `trades`
-      leg AND making the adapter's catalogue read `IS_TEST_RUN`-aware (`deployment_env="test"`), OR (b) accepting the
-      prod-catalogue read as canonical (arguably more correct) and marking the `-test-` trades universe as
-      prod-catalogue-sourced. NOT a data-correctness bug. Then re-run both skills for a formal all-green Phase-D.
-      (repos: market-tick-data-service)
+- [x] [DATA] P1. **✅ DONE 2026-07-19 (tick 23) — `market-tick-data-service@7b0768d9`: pinned `deployment_env="prod"` on
+      the 3 prediction universe-enumeration catalogue reads (`_polymarket_helpers.py` load + JSON fallback,
+      `base_prediction_adapter.py::_load_market_lifecycle_for_date` = Kalshi's universe) — option (a): the market
+      universe is global PROD reference data, so under `IS_TEST_RUN` the smoke reads the real prod universe (was empty
+      `-test-` → 0 trades). Tick WRITES still isolated to `-test-` (separate bucket kind `market-data-tick-prediction`,
+      test-aware, untouched); PROD byte-unchanged; RULE-11. +6 tests; QG green. Smoke-orchestration follow-up — `trades`
+      `-test-` catalogue-gating (blocks Phase-D formal green) (surfaced tick 22).** The MTDS batch `trades` adapter
+      enumerates its market universe from the `instruments-store-prediction` catalogue via ambient
+      `DEPLOYMENT_ENV_SHORT`; on the `IS_TEST_RUN` smoke VM it read the empty `-test-` catalogue → 0 trades fetched →
+      force/skip RED. Fix EITHER by (a) ordering the smoke so the IS force leg (which now populates the `-test-`
+      catalogue — 182 objects proven tick 22) runs before the MTDS `trades` leg AND making the adapter's catalogue read
+      `IS_TEST_RUN`-aware (`deployment_env="test"`), OR (b) accepting the prod-catalogue read as canonical (arguably
+      more correct) and marking the `-test-` trades universe as prod-catalogue-sourced. NOT a data-correctness bug. Then
+      re-run both skills for a formal all-green Phase-D. (repos: market-tick-data-service)
 - [ ] [DATA] P0. **MVP backfill readiness gate** — only after A–D green: run the prediction MVP backfills and verify
       manifest-counted canonical rows for each MVP cell (Polymarket + Kalshi × trades + book_snapshot_5, CQG cluster).
 
@@ -1084,3 +1089,25 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     resolved end-to-end; `book_snapshot_5` now honest (live-only skip); `trades` formal-green pending the
     catalogue-ordering follow-up. The operator's "fix these" (smoke RED classes A/B/C + writer-root items 2+3 + casing)
     is COMPLETE; the residual is a smoke-harness orchestration nicety, not a code defect.
+
+- **2026-07-19 (slot-2, autonomous tick 23) — the two documented follow-ups CLOSED (Workflow orchestrated, each
+  adversarially verified); Phase-D formal-green blockers all removed.**
+  - **Trades `-test-` catalogue-gating — ✅ `market-tick-data-service@7b0768d9`** (verified on LDR by an independent
+    adversarial pass). Pinned `deployment_env="prod"` on ALL 3 prediction universe-enumeration catalogue reads
+    (`_polymarket_helpers.py` parquet load L58 + JSON fallback L117;
+    `base_prediction_adapter.py::_load_market_lifecycle_for_date` L253 = Kalshi's universe + both venues' lifecycle).
+    The market universe is global PROD reference data; a test WRITE run should read it from prod. So under `IS_TEST_RUN`
+    the smoke now enumerates the real universe (was empty `-test-` catalogue → 0 instruments → 0 trades → RED). Tick
+    WRITES stay `-test-`-isolated (separate bucket kind `market-data-tick-prediction`, test-aware, untouched); PROD
+    byte-for-byte unchanged; RULE-11. +6 tests, QG green. (Non-blocking obs from verify: `live/websocket_runner.py:451`
+    universe read stays ambient — correct, live ambient IS prod; out of scope for the batch smoke.)
+  - **Catalogue `base_asset` whitespace (migration target d) — ✅ `instruments-service@49ff29ea`** (verified). The
+    prediction catalogue writer is `scripts/build_instrument_catalogue.py::build_prediction_catalogue_dataframe`; added
+    `.strip()` at the base_asset extraction (L1892), BEFORE the `(venue, conditionId)` lifecycle dedup + emit, so the
+    209 whitespace-only variants collapse to one clean value. Daily cron `lifecycle-catalogue-regen-prediction-daily`
+    propagates it (both incremental + weekly full rebuild route prediction through this producer) — NO one-time regen
+    needed. `base_asset` is display/reference (shard identity is `venue::instrument_id::data_type`), so pure hygiene;
+    prediction is the ONLY caller (cefi/tradfi/defi use `build_catalogue_dataframe`, untouched — RULE-11).
+  - **Phase-D formal green now unblocked** — all blockers fixed (Class A bucket+prefix, item 2 per-CID, book_snapshot_5
+    xfail, and now trades universe). A clean re-run of both prediction skills should go green (book_snapshot_5 = skipped
+    live-only). Re-run next.
