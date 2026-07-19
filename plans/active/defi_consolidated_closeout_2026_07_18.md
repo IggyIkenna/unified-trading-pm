@@ -634,6 +634,20 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — R3-run RECON caught a discovery bug BEFORE apply; fix dispatched; Wave C
+  running).** Live dry-run recon on the real corpus (`market-data-tick-defi-prd-central-element-323112`, ADC) — this is
+  why recon-before-apply is non-negotiable:
+  - **R3 silently MISSES the `{data_type}_{ts}.parquet` batch shape.** CHAINLINK `oracle_prices_{ts}.parquet` is
+    MULTI-instrument (probed: 22 distinct feeds/file, `CHAINLINK-ETHEREUM:SPOT_ASSET:ETH/USD` …) but the R3 dry-run
+    `--venue CHAINLINK --data-type oracle_prices` returns `files_scanned=0` → its `is_bundled_batch_leaf` doesn't match
+    the data_type-prefixed filename → oracle data would stay batched (the exact tracking pain). R3 DOES handle
+    `{venue}_{chain}_{ts}.parquet` (uniswap dex, multi-ts/day) + no-ops already-per-instrument `{SYMBOL}_{FEE}.parquet`
+    (aerodrome). Also found: the default `BUCKET_TEMPLATE` omits `-prd-` → 404s (shared with rebuild_defi_manifest.py).
+  - **Fix dispatched `wl8j6kjdl`**: map every data_type filename shape, extend discovery to the `{data_type}_{ts}`
+    batch, fix the bucket-template default, re-dry-run to prove oracle_prices now splits into canonical per-instrument
+    leaves, adversarial verify it doesn't regress the working shapes → apply gated on `safe_to_apply=true`.
+  - **Wave C** (doc/codex alignment to the now-final model) running in parallel `wzpkcw6h6`.
+
 - **2026-07-19 (slot-4, /autonomous — LENDING un-retire reconciliation SHIPPED + CONFIRMED; MTDS green; code phase
   COMPLETE).** `wn12e7itc` → `unified-api-contracts@ad4886ae` (UNSUPPORTED_BY_DESIGN back to `frozenset()`; LENDING
   restored to SUPPORTED + `_DEFI_TYPES`; POOL-3seg/SPOT-validator/GMX KEPT — runtime-proven) +
