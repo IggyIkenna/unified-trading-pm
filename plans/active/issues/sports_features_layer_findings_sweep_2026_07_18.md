@@ -1585,3 +1585,126 @@ otherwise — the pilot is what distinguishes them, not the classifier.
 - [x] [DIAG] P2. ✅ Cup pilot run — hypothesis REFUTED, the pairs are fetchable leagues (1,751 rows would-fill on 5).
 - [ ] [DATA] P1. 159-pair blank-league backfill RUNNING (16,828 rows targeted); verify against a corpus re-scan, not the
       script log, per the § T P1 precedent.
+
+### Round work — TERMINAL STATE (2026-07-19)
+
+| stage                                    | rows closed | verification                              |
+| ---------------------------------------- | ----------: | ----------------------------------------- |
+| § Q derivation (ZERO api-football calls) |     115,715 | populated eras 40-66% -> 90-99%           |
+| § T 194-pair backfill                    |      10,438 | corpus re-scan; 191/194 pairs cleared     |
+| § W 159-pair blank-league backfill       |      16,435 | corpus re-scan; delta 0 vs claim; 158/159 |
+
+Corpus blank-round rows **161,034 -> 134,140** across the two backfills (26,894 closed), on top of the 115,715 the
+derivation had already closed for free.
+
+**Every remaining in-window blank is accounted for — nothing is unexplained:**
+
+| remaining in-window blanks         |       rows | status                                                          |
+| ---------------------------------- | ---------: | --------------------------------------------------------------- |
+| § U pairs absent from UAC registry |     10,869 | **operator decision** — unreachable by any number of calls      |
+| residue in reached pairs           |        407 | fixtures the fresh fetch did not cover — untouched, not guessed |
+| **total**                          | **11,276** | reconciles exactly to the measured 11,276                       |
+
+The pre-2019 blanks (122,864 rows) sit outside the stated 2019-01-01..2026-07-17 window and are covered by the § T open
+decision, not by this work.
+
+**What this cost in api-football calls: 353** (194 + 159 bulk (league,season) fetches). The § Q derivation closed 4.3x
+more rows than both backfills combined at ZERO call cost — the ordering (derive first, fetch only the residue) is what
+kept this to hours instead of the multi-day run the original per-fixture framing implied.
+
+### X (2026-07-19) — end-to-end chain VALIDATED on real data before committing a fleet
+
+Ran the real read + season-context path against a **pre-cutover** date (2024-03-09 — the case § V was about) rather than
+launching multi-day VMs on the assumption it works.
+
+**§ V confirmed live in the real read path**, not just in unit tests: instrumenting
+`gcs_reader._read_split_fixtures_fallback` shows `read_reference_entity` now takes the SPLIT leg
+(`used the SPLIT leg: True`), with `round` at **193/193 = 100%**.
+
+Chain output for that day:
+
+| column                                | populated       |
+| ------------------------------------- | --------------- |
+| `round_name`                          | 193/193 (100%)  |
+| `matchday`                            | 185/193 (95.9%) |
+| `competition_phase`                   | 149/193 (77.2%) |
+| `games_remaining` / `points_at_stake` | 149/193 (77.2%) |
+
+`competition_phase` distribution `{late: 118, early: 31, None: 44}`. **The original issue's headline was
+`competition_phase` ~100% UNKNOWN** — it is now 77.2% populated with real values. The 44 `None` are league-seasons
+absent from the § S season-length map, i.e. the deliberate honest-NaN path, not a failure.
+
+**A row-count heuristic nearly produced a false verdict here.** The split leg has 373 RAW parquet rows but returns 193
+after the schedule/outcomes join + normalize, so a "did we get >340 rows?" check reported "STALE LEGACY LEG" when the
+fix was in fact working. Counts across a join/normalize boundary are not comparable; instrumenting the actual call is.
+Same failure mode as the § W misclassification — inferring a property from an aggregate instead of measuring the thing
+itself.
+
+- [ ] [INFRA] P0. Fan out the features re-run. **HARD RULE interaction**: the re-run needs `FORCE=true` (otherwise
+      presence-skip makes it a no-op), and `--force` on SPOT is NOT replayable — `RelaunchPreemptedVm` replays the
+      original params and force disables the skip the resume relies on, so a preempted run restarts at day one FOREVER
+      (`codex/05-infrastructure/spot-vms-for-backfill.md`). Drive it as **bounded per-year chunks** (2019..2026) so a
+      preemption replays one year, not the whole corpus. Use the consolidated
+      `launch-features-vm.sh --feature-family sports --asset-group SPORTS` (the sports-specific launcher carries a
+      deprecation note for new backfills).
+
+### Y (2026-07-19) — P2: `launch-features-vm.sh` prints a post-backfill hint naming a bucket that does not exist
+
+The launcher's closing instructions tell the operator to run:
+
+```
+rebuild_manifest_from_canonical_paths('features-sports-sports-central-element-323112', ...)
+```
+
+That bucket **404s**. The real one is `features-sports-prd-central-element-323112`
+(`resolve_bucket_name(cloud="gcp", kind="features", asset_group="sports")`) — the hint interpolates
+`<family>-<asset_group>` and omits the `-prd-` env segment. The data prefix in the hint is wrong too: objects live under
+`sports_features/`, not `features/by_date/`.
+
+**This bit me immediately and is worth recording as a monitoring hazard, not just a typo.** I armed the launch watchdog
+on the hinted bucket, so its progress metric read `shard_days=0` for 20 minutes — indistinguishable from a genuinely
+stalled backfill. A 404 bucket does not error in a `| wc -l` pipeline; it silently returns zero forever. This is the
+exact class the async-wait discipline warns about (a run that "logged and heartbeated healthily while writing ZERO
+target artifacts"), only inverted: here the artifacts may be fine and the MONITOR is lying. Either direction, the lesson
+is the same — **validate that a progress metric can ever be non-zero before trusting a zero reading.**
+
+- [ ] [CODE] P2. Fix the post-backfill hint in `deployment-service/scripts/vm/launch-features-vm.sh` to resolve the
+      bucket via `resolve_bucket_name` (never string-interpolate an env-split bucket name) and to name the real
+      `sports_features/` prefix.
+
+### Z (2026-07-19) — pilot VALIDATES the re-run; separate `matchday` persistence defect found (NOT root-caused)
+
+Pilot VM `features-sports-sports-20260719-063104` (2024 chunk, SPOT, bounded). Same day, same 17 rows, local recompute
+vs what the VM actually wrote:
+
+| column              | LOCAL recompute | WRITTEN by VM |
+| ------------------- | --------------: | ------------: |
+| `competition_phase` |            4/17 |    **4/17 ✓** |
+| `games_remaining`   |            4/17 |    **4/17 ✓** |
+| `round_name`        |           17/17 |   **17/17 ✓** |
+| `matchday`          |           16/17 |    **0/17 ✗** |
+
+**The re-run is doing its job**: the three features this sweep was about match the local recompute exactly, which
+confirms the VM is running the § S + § V code. Across the 7 days written so far, `competition_phase` is 60.5% populated
+overall and **66.2% of the rows whose round actually carries a matchday number** — against ~100% UNKNOWN in the original
+issue.
+
+**Separate defect: `matchday` is computed and then lost before persistence.** It cannot be a calculator bug — the same
+code populates it 16/17 locally, and `competition_phase` (which is DERIVED from matchday) persists correctly. So the
+value is dropped between the calculator and the writer.
+
+**My first hypothesis was WRONG and is recorded as such**: I suspected `_run_calc`'s first-writer-wins rule
+(`new_cols = [c for c in df.columns if c not in existing_cols]`) was discarding season_context's `matchday` in favour of
+an empty one already on `result`. Measured: the base fixtures frame does **not** carry `matchday` (nor any other
+season_context column), so that is not the mechanism. Some earlier calculator must introduce the column, but I have not
+identified which — **this is an open lead, not a diagnosis.**
+
+**Why this does not block the fan-out**: `round_name` persists at 100%, and `matchday` is a pure regex over it
+(`r"(\d+)$"`). The field is therefore recoverable by a light targeted pass with **no features re-run required**, so
+baking it into the remaining year-chunks costs nothing that a cheap follow-up cannot fix.
+
+- [ ] [DIAG] P2. Root-cause where `matchday` is dropped between `_compute_season_features` and the writer. Start by
+      logging `result.columns` immediately before the `season_context` `_run_calc` to identify which earlier calculator
+      introduces the colliding empty column. Do NOT assume the base frame is the source — measured, it is not.
+- [ ] [DATA] P3. Once root-caused, recover `matchday` from the persisted `round_name` (regex) rather than re-running the
+      whole features corpus.
