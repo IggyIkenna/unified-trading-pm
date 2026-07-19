@@ -19,7 +19,7 @@ summary:
   STANDARD→COLDLINE@14d lifecycle rule exists on 78 live buckets incl. every -prd tick bucket — no in-repo
   terraform/script applies it and codex gcs-lifecycle-policies.md says those buckets are intentionally NOT lifecycle'd
   (untracked config drift, cost-relevant for backfill re-reads of COLDLINE objects)."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [data, meta]
@@ -47,7 +47,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm:
-resolved_by:
+resolved_by: "2026-07-19 bucket_fold_closeout tail-item sweep — all GCP directions (a/b/c/d) + tail items done"
 ---
 
 # Terraform bucket estate drift — cleanup deletions resurrected by apply
@@ -178,3 +178,26 @@ operator-deprioritized; and one orthogonal residual `tofu plan` diff remains —
 `google_bigquery_table.feature_external["defi__onchain_features"]` `require_partition_filter=false→true` (pre-existing,
 applying risks breaking partition-filter-less consumer queries — left un-applied, not a bucket concern). Close when
 (c)+(d) land.
+
+## 2026-07-19 (tail-item sweep) — RESOLVED
+
+Operator asked to clear the remaining tail. On inspection most were already resolved; the rest are now done, so this
+issue is CLOSED (`status: resolved`). Verifications:
+
+- **(c) lifecycle single-source — DONE.** `canonical_buckets.tf` encodes `STANDARD→COLDLINE@60d` (read straight, not a
+  NEARLINE ladder — the ruling ambiguity is resolved in-code); live sampling of a canonical folded bucket
+  (`features-cefi-prd`), a Group-A raw bucket (`market-data-tick-cefi-prd`), and `instruments-store-sports-prd` all show
+  uniform COLDLINE@60d — the untracked @14d is gone estate-wide; `gcs-lifecycle-policies.md` documents it. The four
+  contradictory declarations are reconciled to one.
+- **(d) `setup-buckets.py`/`bucket_config.yaml` + e2e polluter — DONE.** `setup-buckets.py` was rewritten 2026-07-14 to
+  derive every service/data bucket name from the UTL resolver (the stale `{category_lower}` 4th-scheme is gone);
+  `bucket_config.yaml` is now only the genuine-infra registry. `e2e-testing/scripts/common/setup-gcp-fixtures.sh` no
+  longer exists (the non-canonical-name polluter is gone).
+- **Resurrected empties — DONE** (moot): `terraform plan` is 0-create/0-destroy and no long-env/retired blocks remain in
+  `main.tf`, so nothing resurrects; the once-flagged `us-central1aa` run-sources cruft bucket is already deleted.
+- **BQ residual — DONE.** No code SQL-queries the external table (readers hit GCS parquet), so the config's intended
+  `require_partition_filter=true` is safe — applied via targeted `tofu apply` (1 changed, 0 destroyed). `tofu plan` is
+  now truly 0-change on this resource.
+- **AWS fold-completion** is operator-deprioritized and tracked separately (GCP is where the live data is); the
+  `_KIND_ALIASES` consumer migration for the 11 coupled retired kinds is tracked in `bucket_fold_closeout_2026_07_17.md`
+  todo 1 (not this issue). Neither is a GCP terraform-drift-resurrection blocker.

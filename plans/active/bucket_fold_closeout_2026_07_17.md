@@ -77,13 +77,22 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       window has closed and is grep-clean (no `resolve_bucket_name` caller, no
       `READER_FELL_BACK_TO_LEGACY_PATH`-equivalent), hard-remove its `_KIND_ALIASES` entry (UTL `bucket_naming.py`) +
       any residual retired yaml key. "No double SSOT." Verify `terraform plan` (derived-from-yaml drift detector) stays
-      green after removals. (Absorbs each fold plan's deferred P3 alias-sunset todo.) **2026-07-19 PARTIAL: the yaml-key
-      side is DONE** — all 13 residual retired yaml keys removed from every copy
-      (ds@a91e520/UAC@a8e7f46d/PM@cb1fb1916/UTL@45957afa) and `terraform plan` stays 0-create/0-destroy, so the yaml-key
-      gate is cleared. **Remaining = the `_KIND_ALIASES` entry hard-removal**, still gated on the harness/migration
-      coupling (features e2e harness + v8 migration resolve retired kinds → removing the alias would break them);
-      `positions-store` (alias-only, no yaml key) stays the one trivially-removable follow-up. See Progress Log
-      2026-07-19 (cont.).
+      green after removals. (Absorbs each fold plan's deferred P3 alias-sunset todo.) **2026-07-19: yaml-key side DONE +
+      3 grep-clean aliases removed.** (a) All 13 residual retired yaml keys removed from every copy
+      (ds@a91e520/UAC@a8e7f46d/PM@cb1fb1916/UTL@45957afa), `terraform plan` stays 0-create/0-destroy → yaml-key gate
+      cleared. (b) **3 grep-clean portfolio-state aliases hard-removed** (UTL@384e0b28): `positions-store` (dead
+      `cloud_constants` map), `archetype-state` (only a `tenderly_budget` object-key PREFIX, not a resolve kind),
+      `position-store-sports` (yaml-key gate cleared same day); cell-sweep test repointed to the folded
+      `portfolio-state` kind; UTL QG green. **Remaining = 11 COUPLED aliases** (still live `resolve_bucket_name`
+      callers, a consumer migration not a delete): `features-{delta-one,volatility,onchain}` (features-service
+      `run_pipeline_e2e.py` `_test_bucket`/`_delta_one_test_bucket` + `smoke_matrix.py` SMOKE_INPUT_KIND +
+      data-status-drilldown service→kind maps); `ml-{models,predictions,configs,training-artifacts,artifacts}-store`
+      (deployment-api `deployment_api_config.py` resolvers + ml-service); `features-{xinstrument,mtf}` +
+      `execution-store-prediction` (the still-present `upgrade_manifest_to_v8.py` loop resolver — delete the dead
+      migration OR repoint). Each needs its caller repointed to the folded kind
+      (`features`/`ml-store`/`execution-store`) + explicit object-key prefix BEFORE the alias is removed. **KEEP
+      permanently**: `tick-data`, `features-cross-instrument`, `features-multi-timeframe` (live consumer vocabulary, not
+      retired). See Progress Log 2026-07-19 (tail-items).
 - [x] ✅ [DOCS] P3. **Post-phase codex audit (all folds)** — **DONE 2026-07-19: PM@8ea8abd89** (promote-PR #1177 → main,
       v2 auto-merge). Ground truth taken from the live UTL resolver (`resolve_bucket_name`, run-it-don't-read-it), not
       the yaml. Updated `bucket-isolation-model.md` §2 Group-B table → folded shapes (`features-{ag}` per-AG; `ml-store`
@@ -366,3 +375,25 @@ can only land once they're all done. Kept as a separate gated plan so no single 
     one trivially-removable follow-up. Issue [[terraform_bucket_estate_drift_resurrection_2026_07_13]] annotated: bucket
     estate + yaml-sync + job/cron/IAM/governance drift DONE; tail items (setup-buckets.py retire, e2e fixture polluter,
     broader lifecycle single-source) remain.
+- **2026-07-19, `/autonomous` (tail-items) — operator asked to clear the remaining terraform-drift-issue tail; most were
+  already resolved, the rest done.** Findings on the six tail items:
+  - **us-central1aa cruft bucket**: already GONE (404; only the correct `run-sources-…-us-central1` remains). No action.
+  - **`setup-buckets.py` / `bucket_config.yaml` retirement**: already RESOLVED — both were rewritten 2026-07-14
+    (`bucket_estate_consolidation_to_sub100` Deferred #8): `setup-buckets.py` derives names from the UTL resolver (not
+    the stale `{category_lower}` scheme), `bucket_config.yaml` is now only the genuine-infra registry (terraform-state,
+    build-metadata, …). The issue's premise (4th stale scheme) is stale. No action.
+  - **`setup-gcp-fixtures.sh` e2e polluter**: file no longer exists (already removed). No action.
+  - **Single-source lifecycle**: already DONE — `canonical_buckets.tf` encodes the operator ruling
+    `STANDARD→COLDLINE@60d` (read straight, NOT a NEARLINE ladder); live sampling (canonical `features-cefi`, Group-A
+    `market-data-tick-cefi`, `instruments-store-sports`) shows uniform COLDLINE@60d — the untracked @14d is gone;
+    `gcs-lifecycle-policies.md` documents it. The 4 contradictory declarations are reconciled.
+  - **BQ `require_partition_filter` residual**: no code SQL-queries `feature_external["defi__onchain_features"]`
+    (readers hit GCS parquet directly), so the config's intended `true` is safe — **applied** (targeted `tofu apply`: 1
+    changed, 0 destroyed). The perpetual 1-change plan is now gone.
+  - **Alias `_KIND_ALIASES` hard-removal**: per-kind caller analysis (grep-then-READ each site) → **3 grep-clean aliases
+    removed** (UTL@384e0b28: positions-store/archetype-state/position-store-sports; cell-sweep test repointed to
+    `portfolio-state`; QG green). The other **11 are genuinely coupled** live `resolve_bucket_name` callers (features-*
+    via the features-service e2e harness `_test_bucket`; ml-* via deployment-api/ml-service resolvers; xinstrument/mtf +
+    execution-store-prediction via the still-present `upgrade_manifest_to_v8.py` loop) — a consumer migration (repoint
+    each caller to the folded kind + object-key prefix) that must NOT be rushed; inventory captured in todo 1. 3 aliases
+    (tick-data, features-cross-instrument, features-multi-timeframe) are permanent consumer vocabulary, never removed.
