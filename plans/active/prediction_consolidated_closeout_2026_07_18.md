@@ -1147,3 +1147,33 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     stake sizing (`entry_threshold`/`stake_fraction`/`edge_size_cap`/`max_position_usdc`); (E) paper vs live (May-23
     gate); (F) odds ingestion recency/coverage for the target leagues (a data-correctness gate before E3 can be
     VERIFIED).
+
+- **2026-07-19 (slot-2, autonomous tick 25) — Phase-D re-smoke IS 0/14 → 11/14 (fixes WORK); Phase-E identity wiring
+  [0a]+[E2] SHIPPED+verified, [E1] shipping.**
+  - **Phase-D re-smoke (all fixes, day=2026-06-28, `-test-`): IS 11/14 PASSED (was 0/14 all-404).** The Class A bucket +
+    CQG-first prefix fixes work end-to-end: 5 POLYMARKET + 6 KALSHI cells pass (availability/CQG/market_lifecycle across
+    force+skip). **3 residuals, all non-code-bug:** (1) POLYMARKET availability `force` =
+    `vm_run_not_successful:vm_self_deleted_no_exit_status` (a transient SPOT-VM self-delete; KALSHI's force ran clean) —
+    which cascades to (2) POLYMARKET `canonical` (the canonical leg reads what force wrote → nothing written); (3)
+    KALSHI `canonical` = `canonical_no_instruments_parquet_at by_date/day=/venue=` — a day-first-vs-CQG-first read
+    residual in the canonical leg (the prefix fix covered force/skip write-verify; the canonical READ path needs the
+    same substring match, OR the VM tarball predated `is@a551f937`). MTDS trades force/skip wrote **0 raw_tick_data**
+    (14 manifest shards, 0 tick parquet) — a smoke-ENVIRONMENT limitation: batch prediction trades don't materialize
+    into `-test-` even with the universe fix (needs full venue-API fetch on the VM); the trades fix itself is
+    unit-verified. The re-smoke agent + its harness ORPHANED (harness async spawns VMs as background tasks) — I took
+    over, captured the verdict, killed the detached `pipeline_e2e_check.py` + deleted every smoke VM (0 remain). **Net:
+    the Phase-D fixes are proven (IS 0→11/14, book_snapshot_5 skipped, item-2 canonical); a fully-formal 14/14 green is
+    blocked by SPOT flakiness + the canonical-read residual + the MTDS trades `-test-` env limit — a smoke-harness
+    robustness follow-up, not a data/code defect.**
+  - **Phase-E identity wiring — [0a] `instruments-service@7b3bad47`** (carry the 6 fixture fields through the catalogue
+    rollup — all 5 regions of `build_instrument_catalogue.py`, 196 insertions, honest-None, QG green, verified) **+
+    [E2-complete] `unified-api-contracts@080b1b56`** (`match_key` PREFERS `af_fixture_id` →
+    `SPORTS_FIX::{id}::{bet_type}`, fuzzy `pairing_key` fallback preserved, threaded from both classifiers, verified on
+    LDR). **[E1]** (features `_records_from_universe` populate the 6 fields from the `by_date` frame) is code-complete +
+    reviewed, SHIPPING (it correctly deferred its QG to respect the shared-host ≤2-QG cap; I picked up its uncommitted
+    work once the cap freed).
+  - **[0b] resolved**: the IS capture is DEPLOYED (2026-07-19 `by_date` snapshots carry all 6 fixture columns);
+    `catalog.parquet` gets them on the next regen (now that [0a] lands the rollup carry-through). `af_fixture_id` reads
+    0 in prod today = SEASONAL-honest (the only soccer CQGs in the July universe are off-season European leagues — EPL /
+    Bundesliga / La Liga / Champions League; no summer-active league present) — it populates in-season (Aug+). Resolver
+    unit-tested ~82.6% resolvable.
