@@ -78,17 +78,21 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       `READER_FELL_BACK_TO_LEGACY_PATH`-equivalent), hard-remove its `_KIND_ALIASES` entry (UTL `bucket_naming.py`) +
       any residual retired yaml key. "No double SSOT." Verify `terraform plan` (derived-from-yaml drift detector) stays
       green after removals. (Absorbs each fold plan's deferred P3 alias-sunset todo.)
-- [ ] [DOCS] P3. **Post-phase codex audit (all folds)** — update `bucket-isolation-model.md` (Group-B naming table →
-      folded shapes: `ml-store`, `features-{ag}`, `execution-store`, `strategy-store` tiered, `portfolio-state`);
-      `manifest-consolidator-ssot.md` (target set — the collapsed job counts); `gcs-lifecycle-policies.md` (supersede
-      the "intentionally NOT lifecycle'd" claim with the STANDARD→COLDLINE@60d + prefix exceptions actually applied).
-      Add SUPERSEDED banners where the folds invalidated prior contracts.
+- [x] ✅ [DOCS] P3. **Post-phase codex audit (all folds)** — **DONE 2026-07-19: PM@8ea8abd89** (promote-PR #1177 → main,
+      v2 auto-merge). Ground truth taken from the live UTL resolver (`resolve_bucket_name`, run-it-don't-read-it), not
+      the yaml. Updated `bucket-isolation-model.md` §2 Group-B table → folded shapes (`features-{ag}` per-AG; `ml-store`
+      / `execution-store` [ag→`{category}/` prefix] / `strategy-store` / `portfolio-state` cross-asset flat) +
+      object-key prefix column + `_KIND_ALIASES` soft-window note + SUPERSEDED banner + §3 examples + §10 usage;
+      `manifest-consolidator-ssot.md` "Coverage gap" → SUPERSEDED banner with the folded consolidator target set
+      (features N→5 per-AG, execution 3→1 single-root, ml 5→1, strategy 1, portfolio-state none) + direct-gcloud
+      retarget note; `gcs-lifecycle-policies.md` "intentionally NOT lifecycle'd" → updated: folded buckets provisioned
+      `STANDARD→COLDLINE@60d`, portfolio-state confirm-before-COLDLINE. All 3 prettier-clean, QG-green.
 - [x] ✅ [DATA] P3. **Final estate recount** — **DONE 2026-07-19: GCP = 114 total buckets** (down from ~140+ pre-fold;
       ~30 source buckets removed by the 5 folds). NO folded source bucket lingers (grep clean: execution-store-{ag},
-      features-{delta-one,volatility,onchain,xinstrument,mtf}-*, positions-store, pnl-attribution-store, archetype-state,
-      position-store-sports, strategy-store-flat all gone). The 114-vs-59-TF-tracked gap is PRE-EXISTING estate drift
-      (market-data/billing buckets not in canonical TF) — separate from the folds, operator-aware. AWS recount deferred
-      (operator deprioritized AWS; GCP is where the real data is).
+      features-{delta-one,volatility,onchain,xinstrument,mtf}-*, positions-store, pnl-attribution-store,
+      archetype-state, position-store-sports, strategy-store-flat all gone). The 114-vs-59-TF-tracked gap is
+      PRE-EXISTING estate drift (market-data/billing buckets not in canonical TF) — separate from the folds,
+      operator-aware. AWS recount deferred (operator deprioritized AWS; GCP is where the real data is).
 - [ ] [DOCS] P3. **Parent-plan + issue-doc bookkeeping** — flip [[bucket_estate_consolidation_to_sub100_2026_07_13]]'s
       W3 execute todo to done (cite this plan + the four fold plans); flip [[bucket_estate_fold_design_2026_07_13]] §3
       remaining todos; close the three audit issue docs (terraform drift / recon / strategy-store split-brain) if the
@@ -105,11 +109,28 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   consolidator retarget via direct gcloud → source delete → TF import folded + state-rm sources. Plus keystone unblock
   (UAC -USD contract drift misdiagnosis corrected) + 2 operator-flagged flakes fixed (VaR golden cents-quantize; UTL CI
   stale-PM-yaml). **Estate recount DONE (114 GCP, ~30 removed); parent W3 plan flipped.** DEFERRED (this Progress Log):
-  (1) **_KIND_ALIASES sunset** — soft window NOT closed (services still promoting→cloudbuild with the folded kinds; the
+  (1) **\_KIND_ALIASES sunset** — soft window NOT closed (services still promoting→cloudbuild with the folded kinds; the
   aliases + retained yaml keys must stay until every consumer redeploys + is grep-clean). (2) **Codex audit** —
   bucket-isolation-model.md / manifest-consolidator-ssot.md / gcs-lifecycle-policies.md folded-shape updates. (3)
   **Issue-doc close + hygiene sweep**. (4) **Loose ends**: execution-service `tenderly_budget.py` archetype-state root
   prefix (empty bucket, internally symmetric); deployment-api C+D display + Fold-B ml-store + data_status axis-census +
-  Fold-A batch_config (tangled tree, scoped commits); UAC replay/source-capability WIP (~8 files stashed, finish/revert);
-  UTL/UAC dormant un-tiered id_conventions helpers; consolidator job renames (uts-…-execution-cefi→execution, feature
-  per-kind→per-AG); AWS consolidator 404 cleanup + AWS bucket recount.
+  Fold-A batch_config (tangled tree, scoped commits); UAC replay/source-capability WIP (~8 files stashed,
+  finish/revert); UTL/UAC dormant un-tiered id_conventions helpers; consolidator job renames
+  (uts-…-execution-cefi→execution, feature per-kind→per-AG); AWS consolidator 404 cleanup + AWS bucket recount.
+- **2026-07-19, `/autonomous` closeout tick — CODEX AUDIT DONE (PM@8ea8abd89, promote-PR #1177).** All 3 codex docs
+  updated to the folded shapes, ground-truthed against the live UTL `resolve_bucket_name` resolver (not the yaml, which
+  still carries the retired per-kind keys during the soft window). **CI verification**: UTL `quality-gates-v2` GREEN on
+  main. **Incidental (not mine, fixed to unblock)**: my PM QG sentinel was blocked by a NEW `workflow-template-parity`
+  drift — a peer updated the `major-bump-issue-handler.yml` template SSOT 2026-07-18 (REPO-non-empty guard) and rolled
+  it to strategy-service/UTL/deployment-service/agent-orchestrator but `deployment-api`'s copy lagged. Completed the
+  straggler via scoped `rollout-workflow-templates.sh --repo deployment-api --template …`; on the pull it turned out a
+  peer had ALSO just shipped the identical rollout to origin (my local copy was redundant, discarded via FF).
+  **Loose-end status shift (item 4c)**: the deployment-api data_status **axis-census** WIP was SHIPPED by a peer on
+  origin (`_axis_census.py` + `test_route_data_status_axis_census.py` now committed) — my local dirty copy of that
+  concern is superseded. My remaining unique deployment-api WIP (the C+D-display / Fold-B-ml-store edits origin did NOT
+  touch: `services.py`, `batch_config_utils.py`, `deployment_api_config.py`, `service_status_execution.py`,
+  `data_status_drilldown/_core.py`, `path_combinatorics.py`, `pipeline_uat.py`, `consolidator_catalog.generated.json`)
+  is preserved in deployment-api `git stash@{0}` ("slot3-deployment-api-wip-superseded-check-2026-07-19") — a later tick
+  must reconcile it against origin's new axis-census versions (verify no overlap-conflict on `data_status/__init__.py` +
+  `services/data_status/manifest.py`), gate, and ship as scoped commits OR discard if origin already covers it. Do NOT
+  blind-pop (origin shipped overlapping files).
