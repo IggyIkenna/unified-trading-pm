@@ -356,11 +356,11 @@ Discriminator = **does a manifest row exist**.
 - **Close-out criterion**: all four surfaces agree for POOL / SPOT_ASSET / perp / lending rows; the POOL policy is
   pinned by one authoritative test; C2–C12 idempotency-clean.
 
-- [ ] [BACKEND] P0. **Fix the POOL-id policy contradiction (Option A).** Correct the
-      `backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py` docstring (POOL carve-out), verify the CODE path
-      doesn't enforce convergence on POOL rows, and add ONE pinning test that POOL rows diverge
-      (`instrument_id`=pool_address, `canonical_instrument_id`=3-segment glued key). Retire the 4-segment
-      `DefiPoolIdentity.glued_pair_id` form → 3-segment. (repos: instruments-service, unified-api-contracts)
+- [x] ✅ [BACKEND] P0. **SHIPPED (Option A pinned) `instruments-service@c31d37c3` + `unified-api-contracts@e319864f`.**
+      Backfill docstring POOL carve-out corrected + CODE-path-doesn't-converge-POOL verified + pinning test
+      `test_pool_rows_diverge_option_a_and_backfill_does_not_enforce_convergence` (IS): POOL rows DIVERGE —
+      `instrument_id`=pool_address, `canonical_instrument_id`=3-seg glued key. 4-seg `DefiPoolIdentity.glued_pair_id`
+      retired → 3-seg (verify `two_id_model_intact=true`). (repos: instruments-service, unified-api-contracts)
 - [ ] [DATA] P0. **Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN.** **Builder-bake DONE `instruments-service@1af1be34`**
       (FIX 2, runtime-proven): the split is now INTRINSIC to `build_instrument_catalogue.py` row-construction — the
       canonical_id's `VENUE:TYPE:SYMBOL` segment is AUTHORITATIVE over a stale `LENDING` column for the
@@ -550,20 +550,37 @@ Discriminator = **does a manifest row exist**.
 
 ### CODE (migration — folds into Track 1)
 
-- [ ] [BACKEND] P0. **POOL glued-key 3-segment convergence** —
-      `unified-api-contracts/.../canonical/crosscutting/defi.py:313` `glued_pair_id` emits 4-segment
-      `…:POOL:AAVE-USDC:100`, diverging from the MTDS 3-segment producer → **live data-join breakage**; converge to
-      `…:POOL:BASE-QUOTE-FEE_BPS` + fix `parse_glued_pool_id`; confirm `defi.py:300` writes the SYMBOLIC 3-seg key into
-      `canonical_instrument_id` (address stays in the machine `instrument_id`). (repo: unified-api-contracts)
-- [ ] [BACKEND] P1. **SPOT taxonomy hard-enforce + reclassify** (the SPOT_PAIR-misuse fix, operator-agreed) — single
-      tokens EIGEN/ETHFI (`eigenlayer.py`/`ethfi.py`) mint SPOT_PAIR → **SPOT_ASSET**; Solana AMM pools (`meteora.py`/
-      `lifinity.py`) mint SPOT_PAIR → **DEX_POOL/SOLANA_AMM_POOL**; route all through `build_canonical_instrument_id`;
-      fix the `:SPOT:`/`:PERP:`/`:STAKE:` shorthand-vs-enum key mismatches (`pyth.py`/`phoenix.py`/`marinade.py`). **ADD
-      a validator**: for defi, `SPOT_PAIR` REQUIRES a two-token `BASE-QUOTE` symbol (single token → SPOT_ASSET; AMM →
-      POOL). Data reclass migration for the affected rows. (repos: instruments-service, unified-api-contracts)
-- [ ] [BACKEND] P1. **Lending type-guard + retire LENDING from the builder** — the 7-adapter guard bug above; plus
-      `canonical_id_builder.py:84/146/194/967` drop/UNSUPPORTED-mark the `LENDING` example + type-set entries
-      (A_TOKEN/DEBT_TOKEN only); GMX typed `perpetual` (not POOL/lending). (repo: unified-api-contracts)
+- [x] ✅ [BACKEND] P0. **SHIPPED `unified-api-contracts@e319864f` (QG green; verify verdict `pool_3seg_parity=true` +
+      `two_id_model_intact=true`, REFUTED assume-wrong).** `glued_pair_id` converged 4-seg `…:POOL:AAVE-USDC:100` →
+      3-seg **byte-identical to the live MTDS producer** (`_dex_pool_symbol.build_symbol` / `dex_swap_uniswap_v3_ws`;
+      grep-verified, not invented): `VENUE-CHAIN:POOL:BASE-QUOTE[-FEE_BPS]` (fee hyphen-glued into the symbol segment,
+      never a 4th colon). `parse_glued_pool_id` round-trips BOTH 3-seg + legacy 4-seg (Curve `DAI-USDC-USDT` not
+      mis-peeled). Two-id model intact: `instrument_id` = `pool_address.lower()` (machine, MTDS joins on it —
+      deliberately NOT inverted), symbolic 3-seg → `canonical_instrument_id` column. (repo: unified-api-contracts)
+- [x] ✅ [BACKEND] P1. **SHIPPED `instruments-service@c31d37c3` + `unified-api-contracts@e319864f` (QG green;
+      `spot_taxonomy_correct=true`).** All adapters now route through `build_canonical_instrument_id`: eigenlayer/ethfi
+      `SPOT_PAIR`→**SPOT_ASSET** (`EIGENLAYER-ETHEREUM:SPOT_ASSET:EIGEN`); meteora/lifinity→**SOLANA_AMM_POOL**
+      (`METEORA-SOLANA:SOLANA_AMM_POOL:SOL-USDC`, per the operator target table + MTDS `dex_pools_handler` mapping);
+      pyth/phoenix key `:SPOT:`→`:SPOT_PAIR:`; marinade `:STAKE:`→`:STAKING:`. **Validator**
+      `validate_defi_spot_pair_symbol` hard-enforced at `build_canonical_instrument_id` (defi SPOT_PAIR requires
+      two-token BASE-QUOTE; single-token rejected; CeFi untouched; two-token-AMM guarded at adapter type-selection, not
+      the validator). ethfi needed on-chain fields added (SPOT_ASSET is a DEFI_ONCHAIN type). **Data reclass of affected
+      rows → Wave D.** (repos: instruments-service, unified-api-contracts)
+- [x] ✅ [BACKEND] P1 (UAC id-builder half). **SHIPPED `unified-api-contracts@e319864f`**: flat `LENDING` →
+      `UNSUPPORTED_BY_DESIGN` (A_TOKEN/DEBT_TOKEN only; enum member KEPT for legacy reads); GMX pinned `PERPETUAL` (no
+      chain). **CONSUMER MIGRATION (the breaking half) — 3 repos**: IS adapters DONE (`@1af1be34`); **MTDS market-level
+      lending handlers IN FLIGHT** (`w151kuw70` → A_TOKEN, unblocking the QG-red tree this retire caused); **UTL
+      `_derive_instrument_id.py:76-77` `(defi,lending)`/`(defi,lending_position)`→LENDING is a NEW latent break**
+      (raises once UTL bumps this UAC) → repoint to A_TOKEN/DEBT_TOKEN consistently with the MTDS decision (tracked
+      below). (repo: unified-api-contracts)
+
+- [ ] [BACKEND] P1 (LENDING-retire consumer #3 — completes the e2e). **Repoint UTL `_derive_instrument_id.py:76-77`**
+      `_DISPATCH[('defi','lending')]` / `[('defi','lending_position')]` off `InstrumentType.LENDING` (now
+      `UNSUPPORTED_BY_DESIGN` in `@e319864f`) → the same mapping the MTDS reconciliation lands (A_TOKEN for market-level
+      / the position side for `lending_position`). LATENT today (UTL pins an older UAC → fail-loud only once UTL bumps),
+      so do it AFTER the MTDS A_TOKEN decision settles (`w151kuw70`) to keep the canonical derivation consistent across
+      UTL+MTDS+IS. Verify: derive a `(defi, lending)` partition through UTL and assert it no longer raises. (repo:
+      unified-trading-library)
 
 ### DOC-alignment sweep (IS + MTDS docs, ~33 rows)
 
@@ -609,6 +626,18 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — Wave B canonical-id SHIPPED + CONFIRMED-correct).** `w5vyalvcc` →
+  `unified-api-contracts@e319864f` + `instruments-service@c31d37c3` (QG green both). Adversarial verify **REFUTED
+  assume-wrong**: `pool_3seg_parity=true` (UAC glued_pair_id byte-identical to the live MTDS producer, 4 runtime cases +
+  round-trip; the agent grepped the MTDS producer rather than inventing), `spot_taxonomy_correct=true` (EIGEN/ETHFI→
+  SPOT_ASSET, meteora/lifinity→SOLANA_AMM_POOL, key-shorthand fixes), `two_id_model_intact=true` (instrument_id=address
+  the MTDS join key — deliberately NOT inverted; symbolic 3-seg → canonical column). Flipped: POOL-3seg, SPOT-enforce,
+  POOL-id Option A, UAC LENDING-id-builder-retire. **Non-blocking follow-ups captured**: (a) 2 cosmetic 4-seg docstrings
+  → Wave C; (b) validator comment overclaims two-token-AMM coverage → Wave C; (c) **UTL `_derive_instrument_id`
+  `(defi,lending)`→LENDING = a 3rd latent consumer break** → new todo (repoint consistently with the MTDS A_TOKEN
+  decision); (d) legacy 4-seg in the catalogue `canonical_instrument_id` column → Wave-D reclass (a `--mode full` regen
+  no longer re-mints 4-seg — treadmill killed). **Retire now has 3 consumer repos: IS ✓, MTDS in-flight, UTL queued.**
 
 - **2026-07-19 (slot-4, /autonomous — ⚠️ MTDS QG-RED from a cross-repo LENDING-retire break + R3 fix re-verify failed;
   reconciliation dispatched).** Two serious findings from `w7q0vvc6l` (MTDS remediation) + the concurrent Wave B UAC
