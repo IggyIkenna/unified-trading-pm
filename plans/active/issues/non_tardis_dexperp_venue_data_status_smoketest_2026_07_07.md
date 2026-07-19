@@ -257,16 +257,35 @@ Two secondary findings:
       `BATCH_EXTENDED` (honest; EXTENDED is always self-archived, no Tardis split). +3 unit tests. **Data-migration
       note:** existing rows already stamped `batch_tardis` are not auto-corrected — a manifest re-stamp is a separate
       attended step.
-- [ ] [VERIFY] P2. **HYPERLIQUID: root-cause the batch-trades zero-rows gap** — suspected field-name mismatch in
-      `_parse_node_fills` (`hyperliquid_s3.py:403-408`) against the real S3 `node_fills` payload shape; confirm against
-      a real downloaded S3 object before assuming this is the cause, then fix.
-- [ ] [FIX] P2. **HYPERLIQUID: fix the manifest false-negative** flagging 373/540 real `live_hyperliquid` shards as
-      `phantom_captured_no_parquet_at_canonical_path` when the parquet demonstrably exists at the canonical path —
-      likely a phantom-audit path-construction bug specific to this pipeline_mode; scope may extend beyond this one
-      venue, check other `live_*` pipeline_modes too.
-- [ ] [CODE] P3. **HYPERLIQUID: delete the dead stub** `HyperliquidAdapter._download_trades_from_tardis()`
-      (`hyperliquid_adapter.py:424-427`) — confirmed never called by the real batch pipeline; leaving a known-broken
-      method around is a trap for a future engineer who assumes it's live.
+- [x] [VERIFY] P2. ✅ **ROOT-CAUSED (2026-07-19, workflow + adversarial verify against real requester-pays S3, AWS acct
+      427895769566).** The field-name-mismatch hypothesis is **REFUTED** — real fills are
+      `[address, {coin,px,sz,side,     time,hash,…}]` (legacy `node_fills/hourly`) / `{…, events:[[address,fill],…]}`
+      (live `node_fills_by_block/hourly`), EXACTLY what the CURRENT parsers read (verified end-to-end:
+      `_parse_node_fills(20250726/12)`→12,198 BTC rows, `_parse_node_fills_by_block(20250727/8)`→1,206 BTC rows). REAL
+      cause = a PREFIX bug in the pre-2026-07-13 code (`fetch_trades` built `node_fills/hourly/{date}/{hour}/` — a
+      hour-DIRECTORY prefix that never matched the real `{hour}.lz4` FILES → `list_blobs` returned ZERO blobs → the
+      parser was NEVER invoked → 100% empty_confirmed/ SOURCE_RETURNED_ZERO across 12,179 attempts). **Already fixed
+      forward `market-tick-data-service@c48096e7` (2026-07-13)** — NO parser code change needed. Remaining is
+      OPERATIONAL only (backfill re-run — see the tracked follow-up below). Secondary: `S3_TRADES_START=2025-03-22`
+      (hyperliquid_s3.py:63) overstates availability — the earliest real `node_fills` partition is 2025-05-25, so
+      2025-03-22..2025-05-24 is genuine upstream absence.
+- [x] [FIX] P2. ✅ **HEALED (2026-07-19).** The `live_hyperliquid` template gap was already fixed
+      (`possible_manifest.py` emits the `live_hyperliquid` prefix), so the false-flagged shards just needed the reverse
+      re-validation pass:
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi     --unphantom-only --venues HYPERLIQUID`
+      flipped **1,277** cefi HYPERLIQUID phantom rows (derivative_ticker 522 / book_snapshot_5 382 / trades 373) back to
+      `captured` — VERIFIED on real infra: 0 `phantom_captured_no_parquet` HL rows remain, cefi index row-count stable
+      (9,914,467, no regression). defi index re-checked = already clean (0 phantoms). **Deferred (tracked below):** the
+      remaining ~35 mis-flagged live-WS CEX shards (20 live_kraken + 15 live_binance) need a UAC extra-live-probe entry
+      for cefi, which conflicts with the deliberate RULE 11 "prediction-scoped only" invariant — an operator/attended
+      design decision, not force-changed autonomously.
+- [x] [CODE] P3. ✅ **DONE — `market-tick-data-service@ab86a214`.** Correction to the original note: the stub WAS called
+      (`hyperliquid_adapter.py:398`, the 2024-10-29..2025-03-21 Tardis-window branch of
+      `HyperliquidAdapter.fetch_trades`), but that adapter is NOT the real batch trades path
+      (`onchain_perp_batch_handler._fetch_hyperliquid` uses `HyperliquidS3Downloader` for all 3 HL data_types), and
+      every `fetch_trades` branch already returned `[]`. Deleted `_download_trades_from_tardis` + inlined an honest
+      `return []` (no behavior change — the Tardis-window trades source was never implemented; real HL trades come from
+      S3 from 2025-05-25). +tests updated.
 - [x] [DECISION] P1. ✅ **RESOLVED (operator 2026-07-18): PACIFICA STAYS DECOMMISSIONED; LIGHTER kept MVP.** The
       07-18-vs-07-16 conflict is resolved in favor of the 2026-07-16 decommission — operator: "decommission pacifica for
       now". PACIFICA remains fully removed (no MVP, no scaffold; the 07-18 keep-MVP answer is retracted), locked by
@@ -297,13 +316,53 @@ Two secondary findings:
       `BLOCKED-CREDENTIALS` live-WS stubs; `batch_capable` stays True (MVP batch scaffold real). `live_capable` gates
       only the live-readiness surface (not the coverage denominator / batch_ready / MVP scope). +2 honesty-guard tests
       (incl. a PACIFICA-stays-removed lock). Flip back per data_type when a real live connector + credentials land.
-- [ ] [VERIFY] P3. **EXTENDED-STARKNET: check whether any downstream consumer reads
-      `asset_group=defi/data_type=perp_funding`** for this venue specifically, rather than `cefi/derivative_ticker`
-      where the real funding data actually lives — if one exists, it would incorrectly conclude Extended has no funding
-      coverage.
-- [ ] [VERIFY] P3. **HYPERLIQUID: review why `perp_funding` is classified under the `defi` manifest bucket** rather than
-      `cefi`, given HYPERLIQUID is otherwise tracked as an MTDS/CeFi-style venue for its other 3 data_types — confirm
-      whether this is deliberate or a classification drift.
+- [x] [VERIFY] P3. ✅ **VERIFY-ONLY — no change (2026-07-19).** No real downstream consumer reads
+      `asset_group=defi/data_type=perp_funding` for EXTENDED-STARKNET. The real funding data is captured + read as
+      `cefi/derivative_ticker` (`funding_rate` column); `perp_funding` was retired for EXTENDED on 2026-07-08 and no
+      `perp_funding` capability / expected shard exists for it, so no coverage/denominator/strategy/execution consumer
+      can wrongly conclude Extended lacks funding coverage. (Optional non-blocking doc cleanup of a stale
+      `- (perp_funding)` annotation noted, not actioned.)
+- [x] [VERIFY] P3. ✅ **VERIFIED — classification DRIFT, not deliberate (2026-07-19).** UAC `VENUE_TO_ASSET_GROUP`
+      canonically maps `HYPERLIQUID: "cefi"` (venue_constants.py:343) and HL's other 3 data_types honor it
+      (`onchain_perp_batch_handler` writes `asset_group=cefi`), but `perp_funding_handler.py` routes HL/ASTER
+      perp_funding through `get_write_bucket_name("market_data","defi")` + the defi recorder — a legacy path frozen when
+      the standalone HL/ASTER/LIGHTER `perp_funding` shard was retired 2026-07-08. The drift left 916 HL + 642 ASTER
+      captured rows stamped `defi`, redundant with `cefi/derivative_ticker.funding_rate`. Code cleanup + the row
+      reconciliation are tracked below (the latter is operator-gated: delete-vs-re-home real GCS objects + index
+      rebuild).
+
+### Tracked follow-ups (opened 2026-07-19 from the finding closeout — larger / operator-gated)
+
+- [ ] [INFRA] P2. **HYPERLIQUID trades backfill re-run** — the parser/routing fix (`market-tick-data-service@c48096e7`)
+      is code-correct but NO HL trades backfill has re-run since, so ~12,179 stale
+      `empty_confirmed`/`SOURCE_RETURNED_ZERO` manifest rows persist. Re-run HL `trades` shards with the CURRENT code,
+      **force/overwrite** (a plain skip-if-fresh launcher would treat the stale rows as already-attempted and skip),
+      over the real-coverage window **2025-05-25.. 2025-07-27** (legacy `node_fills`) + **2025-07-28..today**
+      (`node_fills_by_block`). 2025-03-22..2025-05-24 is genuine upstream absence — do NOT expect it to populate.
+      HYPERLIQUID is exempt from the Tardis cap; use a SPOT backfill launcher, monitored (no fire-and-forget). Deferred
+      from the autonomous session as a real-infra launch that warrants an attended start + progress watch.
+- [ ] [FIX] P3. **HYPERLIQUID k-prefix coin case-sensitivity** — `catalogue_symbols_for_venue`
+      (`_onchain_perp_batch_symbols.py:132`) `.upper()`s the segment while `_fill_to_trade_row`
+      (`hyperliquid_s3.py:585`) does a case-SENSITIVE exact `coin` match, so `kPEPE`/`kBONK`/`kSHIB`/… requested via the
+      ALL-catalogue path become `KPEPE` and drop every real `kPEPE` fill → those instruments record zero even after the
+      backfill. Majors (BTC/ETH) unaffected. Fix needs the canonical-vs-native HL coin-case convention resolved (risk of
+      a shard-key mismatch), so deferred from the unattended session.
+- [ ] [CODE] P3. **Delete the retired perp_funding DeFi-routing residue** — remove the stale `hyperliquid`/`aster`/
+      `lighter` entries from `_PROTOCOL_PIPELINE_SOURCE` (perp_funding_handler.py:188-194) + `_chain_map` (:244-249) and
+      delete the spent one-off `scripts/backfill_hl_funding_from_s3_asset_ctxs_2026_06_17.py` (its `asset_group=defi`
+      hardcode is the drift source; target bucket 404s; past its own `# Delete-when:`), so a re-run can never re-stamp
+      DeFi HL/ASTER perp_funding. (Verify the `protocols` iterable no longer includes them before deleting.)
+- [ ] [INFRA] P3. **BLOCKED-OPERATOR-DECISION — reconcile the 916 HL + 642 ASTER `defi/perp_funding` legacy rows.** They
+      are redundant with `cefi/derivative_ticker.funding_rate`. Two options: (a) DELETE the orphaned defi/perp_funding
+      objects + manifest rows + rebuild the defi index (simplest, data is redundant), or (b) re-stamp `defi→cefi` + move
+      objects into the cefi bucket (preserves standalone funding history). Real GCS mutation + index rebuild — operator
+      picks delete-vs-re-home.
+- [ ] [FIX] P3. **BLOCKED-OPERATOR-DECISION — extend the live-probe mechanism to cefi CEX venues.** Adding
+      `CEFI:     ("binance","bybit","kraken","okx")` to `_EXTRA_LIVE_PROBE_SOURCES_BY_AG` (UAC `possible_manifest.py`)
+      would let the phantom-auditor find real `live_binance`/`live_kraken` shards (~35 currently mis-flagged), but it
+      CONTRADICTS the deliberate RULE 11 `test_prediction_live_union_is_prediction_scoped_only` invariant (extra-probes
+      are prediction-scoped by design). Low value (35 rows) vs a UAC design-invariant change — needs an explicit
+      operator ruling to relax RULE 11 + update the test, not an autonomous decision.
 
 ## Progress Log
 
