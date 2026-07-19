@@ -248,3 +248,24 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   repoints (behaviorally no-op renames kind="features-delta-one"→"features"; prefix stays caller-derived). The alias
   sunset is a large behaviorally-no-op refactor; Phase 1 shipped the zero-coupling safe slice. Prioritizing 4c/4d
   (operator's actual half-built functionality — higher value) next, then Phase-2 repoints.
+- **2026-07-19, LOOSE-END 4c DONE: deployment-api@ff1c691.** The deployment-api `stash@{0}` WIP was NOT half-baked —
+  it's coherent fold-awareness work, so per rule 1 it was FINISHED, not discarded. Reconciled it against origin's
+  already-shipped axis-census (popped the stash → 2 conflicts in `data_status/__init__.py` + `manifest.py`, both
+  resolved to ORIGIN which was a strict superset — origin already had my `ValueError` catch @manifest.py:585 + a
+  superset of the axis-census imports, so nothing unique lost; content-survival verified). Shipped 8 files: fold-aware
+  config-bucket docstrings (`deployment_api_config.py` — execution-store flat / ml-configs→ml-store /
+  asset_group→prefix), the **features caller repoint** `kind="features-delta-one/volatility/onchain"→"features"`
+  (`batch_config_utils.py` — ALSO advances alias-sunset Phase 2 for deployment-api), fold-aware display paths
+  (`services.py` — `{ag}/`, `configs/` prefixes), + `service_status_execution.py` / `_core.py` / `path_combinatorics.py`
+  / `pipeline_uat.py`, and the **regenerated** `consolidator_catalog.generated.json` (ran
+  `scripts/gen_consolidator_catalog.py` rather than commit the stale stashed copy → reflects the folded consolidators:
+  execution 3→1 single-root, strategy-store env-tiered). QG-green, staging-first. Consumed stash dropped. **⚠️ FINDING
+  (not mine, preserved — needs owner decision, NOT bucket-fold scope)**: deployment-service
+  `terraform/services/features-service-sports/gcp/terraform.tfvars` had an uncommitted change REVERSING the committed
+  digest-pin fix (ds@6c47fa1 "pin features-service-sports-job to verified fixed image digest") back to tag-tracking
+  `:latest`. It blocked the deployment-api dep pre-flight. Verified idle (not live — stayed clean after stash; only this
+  tab's session touches this clone; other Claude sessions are in separate `.tabs/2`/`.tabs/4` clones). Preserved in
+  deployment-service `git stash` "slot3-INHERITED-features-sports-tfvars-digest-unpin-PRESERVE"; the working tree is
+  back at the committed **pinned** (correct-per-the-fix) state. The `:latest`-vs-digest-pin tradeoff
+  (matches-other-services vs staleness-risk-that-ran-a-broken-image-5-weeks) is a real infra decision for the
+  features-service-sports owner — NOT decided autonomously.
