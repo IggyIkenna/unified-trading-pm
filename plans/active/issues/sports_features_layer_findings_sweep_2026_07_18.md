@@ -1402,9 +1402,16 @@ mid-season, which makes `games_remaining` too small and the phase too `late` —
 currently gets right. The fix needs the FULL season schedule (api-football publishes it upfront, and `fixtures_schedule`
 already carries future fixtures), or a per-league reference mapping.
 
-- [ ] [CODE] P1. Build a real per-(league, season) `total_matchdays` reference from the corpus (one walk, `round` column
-      only — the measurement above generalises to all 782 leagues) and consume it in `_compute_season_features`. Fall
-      back to **honest `None`**, never 38, when a league is absent from the map.
+- [x] [CODE] P1. ✅ Per-(league, season) `total_matchdays` reference built from the corpus and consumed in
+      `_compute_season_features` — **features-service@d9b44d46** (QG green). Ships `schemas/league_season_lengths.json`:
+      198 league-seasons + 28 stable-league fallbacks, admitted only at >=95% round coverage AND contiguous rounds (a
+      mostly-blank pair under-reports its max, so trusting it would be worse than no entry); implausible lengths (<10
+      or >60) dropped, not guessed. Unknown pair => **honest NaN, never a default**. Verified: Ligue 1 final matchday 34
+      now yields `games_remaining=0.0` (was 4.0); unknown league yields NaN, not a fabricated 38. The loader FAILS LOUD
+      on a malformed/missing file rather than degrading to an empty map (QG "empty dict/list fallback") — it ships with
+      the package, so silently NaN-ing the whole corpus would be the worse failure.
+      `test_total_matchdays_defaults_to_38` asserted `== 38` and therefore encoded the bug as the contract; rewritten to
+      pin honest-NaN, + 3 new regression tests.
 - [ ] [DATA] P1. After the fix, sports features need a re-run for the affected leagues — the currently-persisted
       `games_remaining` / `points_at_stake` / `competition_phase` are wrong wherever season length != 38.
 
