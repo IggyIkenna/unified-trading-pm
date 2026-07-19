@@ -56,11 +56,12 @@ drift_direction: advance-code
 
 > **Status: `active`** — picked up 2026-07-09. Todos 1, 3, 4, 5 implemented and verified against real prod GCS data (see
 > Progress Log); todo 6 VERIFIED SAFE / closed 2026-07-18 (no code change — raw prediction `instrument_id` embeds venue
-> by construction; all real consumers respect venue). Remaining open: todo 2 (full catalogue regen/backfill, real-scoped
-> and smoke-tested, the FULL unsupervised run intentionally NOT executed — staged-rollout, and must wait for the shared
-> canonical-identity migration to settle), todo 7 (shared UAC `gcs_paths.py` MARKET_DATA bucket — gated on MTDS
-> migration confirmation), todo 8 (MDPS stale test assertions — different repo, gated on its UAC pin bump). See the
-> 2026-07-18 Progress Log entry for the DEFERRED reasons.
+> by construction; all real consumers respect venue); todos 7 + 8 CLOSED 2026-07-19 (both were already resolved via the
+> `mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md` issue-doc lane — todo-7 `gcs_paths.py` flip landed
+> UAC@511a9c62 with the migration gate re-confirmed live, todo-8 MDPS assertions already reconciled + no UAC-pin bump
+> needed; the 2026-07-18 "DEFERRED" notes were stale — see the 2026-07-19 Progress Log entry). **Only remaining open:
+> todo 2** (full catalogue regen/backfill, real-scoped and smoke-tested, the FULL unsupervised run intentionally NOT
+> executed — staged-rollout, and must wait for the shared canonical-identity migration to settle).
 
 ## Codex SSOTs
 
@@ -138,17 +139,28 @@ being wired into the write path or persisted on the catalog. This plan is the mi
       execution-service `validation/instrument_format.py::get_venue_from_instrument_id()` returns `split(":")[0]`, which
       is the TYPE/SPORT prefix — not the venue — for prediction/sports ids; a latent venue-derivation mismatch,
       unrelated to this uniqueness question, flagged for the execution-service owner.)
-- [ ] [DECISION] P3. **Re-evaluate `gcs_paths.py`'s `(PREDICTION, MARKET_DATA)` bucket template** once
-      `market-tick-data-service/scripts/migrate_prediction_to_pred_prd_v9.py`'s Progress Log confirms
-      `market-data-tick-pred-prd-{pid}` is the sole, complete SSOT (deliberately left as the long-form
-      `market-data-tick-prediction-{env}-{project_id}` in this session's fix — see `gcs_paths.py`'s own comment). Flip
-      to the abbreviated form only after that confirmation, not before.
-- [ ] [VERIFY] P3. **Update `market-data-processing-service`'s stale test assertions** —
-      `tests/unit/test_dependency_checker_sports_prediction.py` (lines ~149, ~155) assert the OLD unabbreviated
-      `instruments-store-prediction-` value for `BucketKind.INSTRUMENTS`, which this session's `gcs_paths.py` fix
-      changed to the abbreviated `instruments-store-pred-`. Outside this session's edit scope (MDPS not touched this
-      round) — file/update once MDPS bumps its `unified-api-contracts` pin past this fix; until then its own CI will
-      catch the drift on that bump.
+- [x] [DECISION] P3. ✅ **Re-evaluated + FLIPPED `gcs_paths.py`'s `(PREDICTION, MARKET_DATA)` bucket template** to the
+      abbreviated `market-data-tick-pred-{env}-{project_id}` — **unified-api-contracts@511a9c62** (2026-07-14). The
+      migration gate is confirmed MET: `migrate_prediction_to_pred_prd_v9.py` completed
+      (`prediction_manifest_canonicalisation_2026_06_01.md` ARCHIVED), the legacy long-form bucket
+      `market-data-tick-prediction-prd-{pid}` was deleted 2026-07-12 and **re-confirmed 404 live 2026-07-19** (admin
+      ADC), while `market-data-tick-pred-prd-{pid}` EXISTS with objects (`_index/`, `_migration_backup/`) — the sole,
+      complete live SSOT. Fleet consumers reconciled in the same coordinated change (UTL@4378685 verify-only,
+      MDPS@5febb77 test assertions, MTDS@9ed52332 + IS@0a1f13e9 doc-only); full write-up in the resolved issue doc
+      `issues/mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md`. (Confirmed 2026-07-19: this todo's code change
+      had already landed via the issue-doc lane — flipping the checkbox to close the stale DEFERRED state.)
+- [x] [VERIFY] P3. ✅ **MDPS test assertions already reconciled — NO UAC-pin bump needed (assessed 2026-07-19).**
+      `tests/unit/test_dependency_checker_sports_prediction.py` now asserts the abbreviated forms:
+      `instruments-store-pred-` (line 156, since **market-data-processing-service@27bce46** 2026-07-10, following the
+      2026-07-08 INSTRUMENTS `gcs_paths.py` fix) and `market-data-tick-pred-` (lines 87/112/162/241, since
+      **market-data-processing-service@5febb77** 2026-07-14 — the coordinated MARKET_DATA flip, resolved issue doc
+      `issues/mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md` todo 4). No manual pin bump required: the MDPS→UAC
+      dependency is an in-workspace EDITABLE range-pin (`unified-api-contracts>=0.33.0,<1.0.0`,
+      `editable = "../unified-api-contracts"` in `uv.lock`) that absorbs the 0.x `gcs_paths` abbreviation flip by design
+      — re-locking internal-dep drift is banned; only a MAJOR bump acts. Residual `instruments-store-prediction` /
+      `market-data-tick-prediction` strings in MDPS are the yaml KIND KEYS (which resolve to the abbreviated `pred`
+      buckets) + one test-mock constant, NOT stale bucket-name assertions. MDPS tree clean, both commits on LDR — no
+      remaining drift for MDPS CI to catch.
 
 ## Progress Log
 
@@ -263,11 +275,32 @@ being wired into the write path or persisted on the catalog. This plan is the mi
     canonical identity infra (`canonical_id_builder`, tradfi/cefi canonicalizers) that `build_instrument_catalogue.py`
     imports — running a full regen mid-migration would bake transitional/half-migrated canonical ids into the persisted
     catalogue. Schedule after the canonical-identity migration settles.
-  * **Todo 7 (`gcs_paths.py` MARKET_DATA bucket template) — still open, DEFERRED.** `gcs_paths.py` is a shared UAC file
-    (not prediction-specific) and the flip is explicitly gated on the MTDS `migrate_prediction_to_pred_prd_v9.py`
-    Progress Log confirming `market-data-tick-pred-prd-{pid}` is the sole complete SSOT. Shared file + external gate →
-    operator/owner decision, out of this session's scope.
-  * **Todo 8 (MDPS stale test assertions) — still open, DEFERRED.** Lives in `market-data-processing-service` (not
-    instruments-service / UAC-predictions), gated on MDPS bumping its `unified-api-contracts` pin past the
-    `gcs_paths.py` abbreviation; its own CI catches the drift on that bump. Out of the prediction-file scope this
-    session was restricted to.
+  * **Todo 7 (`gcs_paths.py` MARKET_DATA bucket template) — RESOLVED (closed 2026-07-19).** The flip was already landed
+    on 2026-07-14 via the shared UAC lane (unified-api-contracts@511a9c62) once the migration gate was met — this
+    2026-07-18 "DEFERRED" note was stale (the flip had already happened via the
+    `mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md` issue-doc lane, not this prediction-scoped session).
+    Re-verified 2026-07-19 (admin ADC): legacy `market-data-tick-prediction-prd-*` 404s, `market-data-tick-pred-prd-*`
+    is the sole live SSOT with objects. Checkbox flipped to close the stale state; no new code change needed.
+  * **Todo 8 (MDPS stale test assertions) — RESOLVED (assessed/closed 2026-07-19).** This 2026-07-18 "DEFERRED" note was
+    stale. The MDPS assertions were already reconciled: `instruments-store-pred-` since
+    market-data-processing-service@27bce46 (2026-07-10) and `market-data-tick-pred-` since
+    market-data-processing-service@5febb77 (2026-07-14, the coordinated flip). No UAC-pin bump is needed — the MDPS→UAC
+    dep is an in-workspace editable range-pin that absorbs the 0.x flip by design (re-locking internal drift is banned).
+    MDPS tree clean, both commits on LDR; no remaining drift for MDPS CI to catch. See todo 8 above for full evidence.
+- **2026-07-19** — Prediction close-out A2-residual sweep (operator-authorized). Verified + closed todos 7 and 8; both
+  the 2026-07-18 "DEFERRED" notes were STALE — the work had already landed via the
+  `mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md` issue-doc lane on 2026-07-14, not tracked back here.
+  - **Todo 7** — the `gcs_paths.py` `(PREDICTION, MARKET_DATA)` flip to the abbreviated `market-data-tick-pred-` token
+    landed unified-api-contracts@511a9c62 (2026-07-14), gated correctly on the completed migration. Migration gate
+    re-confirmed live this session (admin ADC, 2026-07-19): `market-data-tick-prediction-prd-central-element-323112`
+    **404s** (deleted), `market-data-tick-pred-prd-central-element-323112` **exists with objects** (`_index/`,
+    `_migration_backup/`) = sole complete SSOT. Fleet consumers were reconciled in the same coordinated change
+    (UTL@4378685 verify-only, MDPS@5febb77 tests, MTDS@9ed52332 + IS@0a1f13e9 doc-only). Checkbox flipped.
+  - **Todo 8** — ASSESSED: no MDPS UAC-pin bump needed. The MDPS→UAC dep is an in-workspace editable range-pin
+    (`unified-api-contracts>=0.33.0,<1.0.0`, `editable = "../unified-api-contracts"`) that absorbs the 0.x flip by
+    design; the flagged assertions in `test_dependency_checker_sports_prediction.py` were already reconciled
+    (`instruments-store-pred-` @27bce46 2026-07-10; `market-data-tick-pred-` @5febb77 2026-07-14). No remaining drift.
+    Checkbox flipped.
+  - **Related (separate item, this same authorized batch):** UTL `get_write_bucket_name` now honours `IS_TEST_RUN` for
+    prediction (routes to `market-data-tick-pred-test-*`, mirroring `get_tick_data_bucket(test_aware=True)`) —
+    unified-trading-library@1f35ec41; tracked + flipped in `data_pipeline_e2e_check_2026_07_10.md` todo 13, not here.

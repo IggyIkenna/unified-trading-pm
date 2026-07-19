@@ -267,10 +267,14 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       apply locally. `get_write_bucket_name` stays PROD-only for prediction even under `IS_TEST_RUN`. **CORRECTED
       2026-07-18:** `market-data-tick-pred-test-central-element-323112` DOES exist (the earlier "does not exist" reading
       was wrong); the prediction TICK-write paths were migrated to it (mtds@2e50851d/86d70de9, verify-read b06d1e6b), so
-      `get_write_bucket_name` staying PROD-only is now an un-migrated NON-tick-write path (follow-up), not a
-      missing-bucket constraint. 2 new regression tests (`TestGetBucketName`/`TestGetWriteBucketName` in
-      `test_cloud_constants.py`) + functional verification (`gcloud` confirmed no test bucket;
-      `get_bucket_name`/`get_write_bucket_name` both resolve correctly now, no crash).
+      `get_write_bucket_name` staying PROD-only was an un-migrated NON-tick-write path, not a missing-bucket constraint.
+      2 new regression tests (`TestGetBucketName`/`TestGetWriteBucketName` in `test_cloud_constants.py`) + functional
+      verification (`gcloud` confirmed no test bucket; `get_bucket_name`/`get_write_bucket_name` both resolve correctly
+      now, no crash). **FOLLOW-UP SHIPPED 2026-07-19 (A2 residual):** `get_write_bucket_name` now honours `IS_TEST_RUN`
+      for prediction and routes to `market-data-tick-pred-test-*`, EXACTLY mirroring
+      `get_tick_data_bucket(test_aware=True)` — the PROD-only special-case (premised on the now-false "no `-test-`
+      sibling") is removed — unified-trading-library@1f35ec41; guard test flipped to
+      `test_market_data_prediction_routes_to_test_bucket_under_test_run` (asserts `-test-` routing). QG green.
 
 - [x] 14. ✅ [DATA] P1. Re-run `market-tick-data-service/scripts/pipeline_e2e_check.py --legs force,skip` against a real
       MVP shard/day post-`tardis_adapter.py` fix to confirm the CEFI Tardis force-leg genuinely writes to the TEST
@@ -416,17 +420,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                  full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                  is NOT a tooling bug or an adapter regression.
-                  `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-                  under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-                  `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-                  sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                  (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                  full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                  the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                  pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                          full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                          is NOT a tooling bug or an adapter regression.
+                          `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+                          under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+                          `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+                          sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                          `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                          (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                          full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                          the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                          pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -686,9 +690,10 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
     (derived from `cloud-providers.yaml` `canonical_tiers=["prd","test"]`) — the "no `-test-` sibling provisioned"
     rationale below is superseded. The prediction TICK-write paths were migrated to honour `IS_TEST_RUN`:
     `get_tick_data_bucket(test_aware=True)` (`market-tick-data-service@2e50851d`) + the live twin `_resolve_live_bucket`
-    (`mtds@86d70de9`), plus the verify-read `_test_bucket` (`mtds@b06d1e6b`). `get_write_bucket_name` (UTL) still stays
-    PROD-only for prediction — but as an un-migrated NON-tick-write path (no prediction tick-write routes through it),
-    NOT because a `-test-` bucket is missing; tracked as a follow-up.
+    (`mtds@86d70de9`), plus the verify-read `_test_bucket` (`mtds@b06d1e6b`). **FOLLOW-UP SHIPPED 2026-07-19 (A2
+    residual):** `get_write_bucket_name` (UTL) now honours `IS_TEST_RUN` for prediction too — routes to
+    `market-data-tick-pred-test-*`, exactly mirroring `get_tick_data_bucket(test_aware=True)`; the PROD-only
+    special-case is removed — unified-trading-library@1f35ec41 (guard test flipped to assert `-test-` routing).
   - **Todo 15** (consolidator scheduling gap) — unified-trading-pm PR #916 (748f1c8e), document-only. Investigated the
     real Terraform scheduling mechanism and decided `document-exempt` over `extend` — extending is mechanically easy but
     works against this same doc's own cron-count-reduction goal for buckets that only see occasional smoke-check
