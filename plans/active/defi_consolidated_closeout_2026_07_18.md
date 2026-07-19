@@ -619,10 +619,15 @@ Discriminator = **does a manifest row exist**.
     (code reaches LDR via quickmerge ONLY). The code is QG-green (6 unit tests + lint) and can't be cleanly
     trailer-fixed without a banned force-push, so it's ACCEPTED-as-shipped but flagged. Root cause = FINDING 2. The
     prerequisite drift-fix `@593327a` DID go via quickmerge (trailer present).
-  - **FINDING 2 (root cause, tracked)**: `deployment-api/tests/unit/test_route_deployments_inventory_aws.py` makes REAL
-    GCP calls that `pytest-socket` blocks locally → intermittent `JSONDecodeError` → fails the LOCAL quickmerge QG gate
-    (passes on networked CI). This flaky test pushed the agent to bypass quickmerge. Should be mocked → issue-doc
-    candidate (deployment-api infra, tangential to the DeFi close-out).
+  - **FINDING 2 (root cause) — RESOLVED `deployment-api@df530dcad` (via quickmerge, no bypass).** The inventory route
+    `_compute_inventory` fans out ~12 GCP censuses; the tests mocked only the PRIMARY seams, leaving 8 SECONDARY ones
+    (`list_cloud_run_services`/`list_cloud_functions`/`list_scheduler_jobs`/`get_disk_details`/`list_reserved_addresses`/
+    `list_unattached_disk_names`/`object_delta_for_asset_group`/`CostObservabilityService`) firing real transpacific GCP
+    calls → intermittent `JSONDecodeError` on a partially-reachable host. Fix = a reusable
+    `patch_inventory_secondary_census` fixture (`tests/mocks.py`) → deterministic offline (29.9s→0.5s, zero socket
+    warnings), QG exit 0. **RESIDUAL (out of scope, warnings-only, non-blocking)**:
+    `tests/unit/api/test_cost_observability.py` makes its own real Google socket connects — flag for a follow-up if
+    fully socket-silent QG is wanted.
   - **LESSON (cross-repo drift)**: R2c adding `EXPECTED_ACQUISITION_PENDING` to UAC `EMPTY_CONFIRMED_REASONS` silently
     broke `deployment-api::EMPTY_REASON_KEYS` (a mirror of the closed set) → any UAC closed-set member add must update
     the deployment-api mirror. Caught + fixed here (`@593327a`).
