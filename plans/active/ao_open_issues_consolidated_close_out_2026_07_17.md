@@ -302,13 +302,16 @@ NOT AO and are deliberately out of scope here.
       `*/15`, PM is busy — today's session alone drove ~10 promotions), and the server endpoint has NO cooldown, NO
       already-running coalesce (only the failure-page cooldown is deduped; the singleton reaper kills stragglers after
       the fact, which is where the `superseded-plan_health` churn comes from). Fix to implement: (a) server-side
-      min-interval gate on `/api/plan-health/dispatch` (default 4h, `mode=reconcile` exempt, explicit `force=true` for
-      operator/CI-emergency use) + at-most-one-live coalesce (a dispatch while one is active returns the active
-      dispatch_id, HTTP 200, no spawn); (b) keep the promotion ping as a TRIGGER but let the server gate absorb the
-      frequency (trigger-rich, execution-throttled); (c) operator to ratify the interval (4h vs 8h). Also noted: every
-      plan_health boot logs `boot_read_unconfirmed` for `agents/worker.md` (the file exists — the worker just never
-      confirms it), a per-boot noise line worth one look while in the file. **Gate**: measured dispatch rate ≤ 1 per
-      interval over a 24h window with promotions still flowing; zero `superseded-plan_health` exits in that window.
+      min-interval gate on `/api/plan-health/dispatch` (**default 2h — operator RATIFIED 2026-07-18; "adjust later"**;
+      the value is an env-free `TuningDefaults` knob so it's a code-edit-and-redeploy, not an env var), `mode=reconcile`
+      exempt, explicit `force=true` for operator/CI-emergency use) + at-most-one-live coalesce (a dispatch while one is
+      active returns the active dispatch_id, HTTP 200, no spawn); (b) keep the promotion ping as a TRIGGER but let the
+      server gate absorb the frequency (trigger-rich, execution-throttled). NOTE: 2h is the value the gate SHIPS with —
+      there is no live knob today (the driver is the per-promotion backmerge ping), so the rate only drops once this
+      gate lands. Also noted: every plan_health boot logs `boot_read_unconfirmed` for `agents/worker.md` (the file
+      exists — the worker just never confirms it), a per-boot noise line worth one look while in the file. **Gate**:
+      measured dispatch rate ≤ 1 per interval over a 24h window with promotions still flowing; zero
+      `superseded-plan_health` exits in that window.
 - [ ] [BACKEND] P1. **Blocked-task redispatch cooldown + change-triggered re-eligibility + worker ETA (operator policy,
       new mechanism).** Today a skip-as-blocked only blocks the SKIPPING slot (24h slot-scoped TTL); any other idle
       same-role slot re-claims the task within ~minutes (measured: 117 `slot_task_skipped`/24h; the mvp thrash doc

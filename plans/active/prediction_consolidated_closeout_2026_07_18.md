@@ -303,17 +303,22 @@ fixture-linked before MVP backfill.
       snapshot `_index/backups/pre_prediction_canonicalize_20260719T103301075148Z.parquet`; consolidator paused→resumed
       (ENABLED). Manifest targets (a)(b)(c) DONE; catalogue `base_asset` (d) = the separate A2 catalogue regen (below).
       Durability caveat: per-CID + `prediction_trades` re-accumulate until the items-2+3 follow-up lands.**
-- [ ] [DATA] P1. **Writer-root durability COMPLETION (items 2+3 of the migration checklist step 0) — the Phase-B
-      `--apply` cleanup is DURABLE for the CQG bundle (item 1 SHIPPED `market-tick-data-service@1ec415f8`) but TRANSIENT
-      for per-CID + `prediction_trades` until these land** (surfaced tick 17): (2) canonicalize the prediction per-CID
-      `instrument_type` at the **shard-key construction** UPSTREAM of the generic per-CID writer (which stamps
-      `itype_key` verbatim, RULE-11 — do NOT canonicalize in the generic writer; 640,701 per-CID null rows re-accumulate
-      otherwise); (3) retire the legacy `prediction_trades` seed key — `PREDICTION_MVP_SEED_INSTRUMENTS` dual-seeds
-      `("VENUE","trades")` + `("VENUE","prediction_trades")` "during rollout" (retired 2026-04-19); rollout-completion
-      across 6 UAC files (`defi_prediction_instrument_seeds`, `data_type_capability`, `schema_spec`,
-      `_schema_spec_prediction`, `expected_coverage`, `market_data_categories`) — DELICATE (breaks un-migrated callers;
-      affects the `expected_unattempted` denominator) → verify no live consumer still emits/expects `prediction_trades`
-      before removing. Until both land, a periodic re-run of
+- [x] [DATA] P1. **✅ DONE 2026-07-19 (tick 21) — item 2 `market-tick-data-service@71761d7f` (per-CID shard-key itype
+      folds to canonical `PREDICTION_MARKET`, prediction-venue-gated RULE-11, +tests; note the writer actually carried
+      lowercase `prediction_market` not null, so the fold is unconditional) + item 3 `unified-api-contracts@1794f3e5`
+      (`prediction_trades` dual-seed retired across 7 files, +34/−186; adversarially verified no live consumer requires
+      it; QG green). The Phase-B `--apply` cleanup is now DURABLE (per-CID no longer re-accumulates; the phantom
+      `prediction_trades` expected rows are gone). Writer-root durability COMPLETION (items 2+3 of the migration
+      checklist step 0) — the Phase-B `--apply` cleanup is DURABLE for the CQG bundle (item 1 SHIPPED
+      `market-tick-data-service@1ec415f8`) but TRANSIENT for per-CID + `prediction_trades` until these land** (surfaced
+      tick 17): (2) canonicalize the prediction per-CID `instrument_type` at the **shard-key construction** UPSTREAM of
+      the generic per-CID writer (which stamps `itype_key` verbatim, RULE-11 — do NOT canonicalize in the generic
+      writer; 640,701 per-CID null rows re-accumulate otherwise); (3) retire the legacy `prediction_trades` seed key —
+      `PREDICTION_MVP_SEED_INSTRUMENTS` dual-seeds `("VENUE","trades")` + `("VENUE","prediction_trades")` "during
+      rollout" (retired 2026-04-19); rollout-completion across 6 UAC files (`defi_prediction_instrument_seeds`,
+      `data_type_capability`, `schema_spec`, `_schema_spec_prediction`, `expected_coverage`, `market_data_categories`) —
+      DELICATE (breaks un-migrated callers; affects the `expected_unattempted` denominator) → verify no live consumer
+      still emits/expects `prediction_trades` before removing. Until both land, a periodic re-run of
       `canonicalize_prediction_manifest_2026_07_18.py --remove-stragglers --apply` closes the drift. (repos:
       market-tick-data-service, unified-api-contracts)
 - [ ] [DATA] P0. **Backfill the fixture-match attributes (A4 columns) across historical Polymarket + Kalshi soccer** —
@@ -1002,3 +1007,36 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   - Fixes dispatched 2-at-a-time (shared-host ≤2-QG rule): MTDS (item2+ClassC) + UAC (item3) first; IS-harness next.
     Phase-D re-run to GREEN after they land. Item 2+3 landing makes the Phase-B cleanup DURABLE (closes the tick-17
     transient-drift caveat).
+
+- **2026-07-19 (slot-2, autonomous tick 21) — ALL FOUR "fix these" code fixes SHIPPED + VERIFIED; Class C proven
+  ARCHITECTURAL (not a bug); one honesty harness fix (book_snapshot_5 batch xfail) remaining.**
+  - **Item 2 (per-CID itype) — ✅ `market-tick-data-service@71761d7f`** (verified on LDR).
+    `venue_fetch.py::_record_venue_shard_counts` shard-key itype slot folds to `InstrumentType.PREDICTION_MARKET.value`
+    when `_is_prediction_market_venue(venue)` (True only POLYMARKET/KALSHI; cefi/tradfi/defi/sports byte-unchanged,
+    RULE-11). **Refinement:** the writer actually carried LOWERCASE `prediction_market` (not null) for captured per-CID
+    rows — the 640k nulls are historical — so the fold is UNCONDITIONAL for prediction venues (a `not itype` gate would
+    have been a no-op on the real lowercase re-accumulation). +2 test files (per-CID trades/book_snapshot_5 + end-to-end
+    manifest stamp). QG green (6421 passed, 110s).
+  - **Item 3 (`prediction_trades` retirement) — ✅ `unified-api-contracts@1794f3e5`** (verified). 7 files, +34/−186;
+    `("VENUE","prediction_trades")` seed keys dropped, `trades` intact; 11 capability entries + schema specs removed.
+    Adversarial safety: no live consumer requires it (MDPS emits `trades`; features probe is a harmless legacy fallback;
+    the prod migration already folded captured `prediction_trades`→`trades`). QG green (364s). Aligns the
+    `expected_unattempted` denominator with captured reality.
+  - **Class A next layer (harness CQG-first prefix) — ✅ `instruments-service@a551f937`** (verified). Prediction
+    write-verify now matches the CQG-first availability layout via a `day=`+`venue=` substring post-filter
+    (layout-agnostic: handles CQG-first AND legacy day-first). RULE-11 (non-prediction byte-unchanged). VM-free
+    re-verify: POLYMARKET day=2026-07-15 BEFORE ok=False n=0 → AFTER ok=True **n=62**. (Note: day 2026-06-28 predates
+    the CQG-first migration, so that specific day holds legacy day-first objects — the fix covers both.)
+  - **Casing — RESOLVED** (uppercase `PREDICTION_MARKET` canonical: catalogue 100% + enum uppercase; path lowercase is a
+    separate convention). Item 2 stamps uppercase accordingly.
+  - **Class C — proven ARCHITECTURAL (no MTDS code bug).** MTDS write/routing + `-test-` bucket re-homing are correct;
+    zero ticks were FETCHED, not misplaced. (i) `book_snapshot_5` is **live-only** — the batch book fetch hits the
+    venue's LIVE order-book endpoint (no date param) → a past day yields an empty book → 0 rows; NO batch prediction day
+    in prod ever contains `book_snapshot_5` (only `trades`). This leg can NEVER pass via batch on a historical day. (ii)
+    `trades` is **catalogue-gated** — the batch trades adapter enumerates its universe from the
+    `instruments-store-prediction` catalogue (ambient `DEPLOYMENT_ENV_SHORT`), which was 404/empty in `-test-` at smoke
+    time (downstream of Class A). The canonical-leg `[None]` came from zero-tick SENTINEL rows (UTL
+    `PerLeafFailureRouter`, 0 raw parquet), a different path than the captured write item-2 fixes. **Remaining
+    actionable (dispatched):** xfail/skip the batch `book_snapshot_5` prediction legs in the smoke harness (live-only,
+    not a failure) — the honest completion of Class C. `trades` green in `-test-` additionally needs the `-test-`
+    catalogue populated (a smoke-orchestration follow-up; reading the prod catalogue is arguably more correct).

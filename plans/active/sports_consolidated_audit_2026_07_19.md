@@ -191,8 +191,11 @@ years, all leagues, `source=api_football`. Suspicious — PINNACLE/MATCHBOOK cap
 
 ### 2.6 Other measured findings
 
-- **Legacy bare `entity=fixtures/` write path still active today** (no `pipeline_mode=`, 5-league subset) parallel to
-  the canonical split writer — dual-write never eliminated. (P2)
+- **Legacy bare `entity=fixtures/` path is STALE, not actively written** (CORRECTED — contradiction sweep measured every
+  sampled file incl. today's `day=2026-07-19` partition at `Creation Time 2026-05-23T20:35:42Z`, zero writes since). The
+  files remain VISIBLE under forward `day=` partitions because they are pre-fetched future-dated schedule objects
+  written back in May, not an ongoing dual-write. My earlier "still active today" wording conflated presence with active
+  writing — there is no live dual-write hazard; the dead code path should still be culled. (P2)
 - **Dead `sports_reference_v2/` dual-layout** (frozen 2026-04-20, no entities) — cull. (P2/CLEANUP)
 - **27 leaked legacy post-kickoff T-0 odds shards** on the § B2 dates (100% post-kickoff, unprefixed path B1 never
   touched) — live leak surface if any reader consumes the unprefixed path. (P1)
@@ -238,7 +241,8 @@ DONE→archive: `sports_odds_bookmaker_coverage_enumeration_2026_06_20`. SUPERSE
 `sports_pipeline_to_100pct_golden_window_first_2026_06_27` (coordinator, absorb 2 remaining children).
 
 **Issue docs (58)**: ~30 DONE-but-unflipped (need `status: resolved`); 2 SUPERSEDED; ~17 FOLD; 1 KEEP (cross-AG). Full
-disposition list in the reconciliation bank; the closeout's CODEX+CLEANUP tracks carry the flips.
+disposition list is in the closeout's Track X + the Contradiction Resolution section; the CODEX+CLEANUP tracks carry the
+status-flips. (Corrected: the earlier "reconciliation bank" reference named a scratch artifact that is not a repo doc.)
 
 ---
 

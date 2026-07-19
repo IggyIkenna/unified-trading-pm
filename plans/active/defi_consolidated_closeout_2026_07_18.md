@@ -270,16 +270,19 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
       needs a re-fetch. (repo: market-tick-data-service)
-- [~] [BACKEND] P0. **Catalogue-venue gap — ROOT CAUSE FOUND, fix in flight (`ab71a0d8`).** NOT
-  deploy-lag/creds/silent-[] (deployed image HAS 89 venues + adapters DO emit). The 26 new venues are REJECTED at UAC
-  `validate_instrument_records` — **R2 wired them into the FETCH list (`_DEFI_VENUES`) but NOT the VALIDATION allowlist
-  (`instrument_validation.py::_DEFI_VENUE_PREFIXES` line 22)** → "unknown venue 'RENZO-ETHEREUM'" → they never reach
-  `by_date/`, EU-seeded as `expected_unattempted`. There's an in-code comment about this EXACT bug recurring
-  (VENUS/RADIANT 2026-07-12). Fix = +15 collision-free prefixes (unblocks 22/26) + chain-aware COINBASE/BINANCE
-  disambiguation for cbETH/wBETH (3 more; must NOT misclassify COINBASE-SPOT/BINANCE-FUTURES as defi) + IS
-  `SOLANA-NATIVE-SOLANA` tag fix. **DEPLOY-GATED**: after ship → LDR→main → IS-image rebuild → then `is-daily-enum-defi`
-  re-enum + `lifecycle-catalogue-full-defi` re-rollup + verify (a later tick). Original catalogue snapshotted
-  `prod/_snapshots/catalog.pre-rollup.20260719T040600Z.parquet`. (repo: unified-api-contracts, instruments-service)
+- [~] [BACKEND] P0. **Catalogue-venue gap — ROOT CAUSE FIXED + SHIPPED (`unified-api-contracts@f7314dc2`, 9/9
+  acceptance: 7 new venues + cbETH/wBETH ACCEPT, COINBASE-SPOT/BINANCE-FUTURES stay CEFI; whole defi universe validates,
+  was 26 rejected). SOLANA-NATIVE kept (documented canonical spelling; validator now parses the TRAILING chain segment).
+  DEPLOY-GATED re-enum+re-rollup remains.** NOT deploy-lag/creds/silent-[] (deployed image HAS 89 venues + adapters DO
+  emit). The 26 new venues are REJECTED at UAC `validate_instrument_records` — **R2 wired them into the FETCH list
+  (`_DEFI_VENUES`) but NOT the VALIDATION allowlist (`instrument_validation.py::_DEFI_VENUE_PREFIXES` line 22)** →
+  "unknown venue 'RENZO-ETHEREUM'" → they never reach `by_date/`, EU-seeded as `expected_unattempted`. There's an
+  in-code comment about this EXACT bug recurring (VENUS/RADIANT 2026-07-12). Fix = +15 collision-free prefixes (unblocks
+  22/26) + chain-aware COINBASE/BINANCE disambiguation for cbETH/wBETH (3 more; must NOT misclassify
+  COINBASE-SPOT/BINANCE-FUTURES as defi) + IS `SOLANA-NATIVE-SOLANA` tag fix. **DEPLOY-GATED**: after ship → LDR→main →
+  IS-image rebuild → then `is-daily-enum-defi` re-enum + `lifecycle-catalogue-full-defi` re-rollup + verify (a later
+  tick). Original catalogue snapshotted `prod/_snapshots/catalog.pre-rollup.20260719T040600Z.parquet`. (repo:
+  unified-api-contracts, instruments-service)
 
 ### R4 — Coverage against the IS denominator · P1 (gated on R1+R2+R3+R5) → then RESUME capture
 
@@ -692,6 +695,19 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — parallel migration fleet UP + healthy; gas_fees fix CONFIRMED active).**
+  `a9d66cf09d` executed cleanly: killed recovery loop `bd014y3c2` → stopped the serial VM → launched **27 parallel
+  per-quarter SPOT VMs** (`canonical-migration-defi-pi-range-…-<YYYYqN>`, 2020q1..2026q3), pinned **`b1a23cbf`** (LDR
+  HEAD, descendant of `b4177dc6` — carries the gas_fees `\d{5,}_\d{5,}` fix; SHA self-verified in VM metadata). Fleet
+  recovery+monitor `b7vaiegfp` armed (5-min; preempted→idempotent restart, done→cleanup). **gas_fees fix PROVEN
+  active**: completed quarters write `data_type=gas_fees/GAS.parquet` for AVALANCHE/POLYGON (≤7-digit block bundles the
+  old `37ac8a64` code silently skipped), 0 errors, needs_attribution=0 → **the R5 gas_fees `--apply` re-run is now
+  OBVIATED** (folded into the main run). Progress: 11/27 complete (fast 2020-2022 idempotent+gas_fees quarters), 16
+  running, 0 preemptions. On all-terminal → `rebuild_defi_manifest` ONCE → verify per-instrument atoms + gas_fees
+  spot-check. Deferred (non-blocking): the `defi-pi-range` launcher-category quickmerge is blocked by FOREIGN dirty deps
+  (the in-flight UAC `instrument_validation.py` fix `ab71a0d8` + an untracked mtds file) — ships once those clear; first
+  category already landed `deployment-service@e07c40b`.
 
 - **2026-07-19 (slot-4, /autonomous — migration PARALLELIZED per operator; catalogue ROOT CAUSE found + fix shipped).**
   - **Operator asked for 30-60 min not hours → parallelizing** (`a9d66cf09d` re-orchestrating): stop the serial VM +
