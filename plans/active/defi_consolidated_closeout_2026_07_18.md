@@ -696,6 +696,18 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-20 (slot-4, /autonomous — OOM DISASTER: 22/23 sub-shards HUNG on the 16GB downsizing; RECOVERING on 64GB).**
+  The e2-standard-4 (16GB) downsizing I recommended ("GIL-bound → small VMs") FAILED on giant Solana `dex_pool_state`
+  cells >~13GB: 22 of 23 running shards OOM-thrashed into an unresponsive-hung state (heartbeats 21-155min stale, SSH
+  dead, VMs show RUNNING but ZERO progress — that was the flat 7/30 convergence, NOT a giant-cell grind as I'd assumed
+  last tick). Caught via heartbeat-freshness (SSH-independent). Only 2025q4s3 stayed alive; 7 shards had completed
+  cleanly before hanging. **Root cause:** a single cell can need >13GB; 16GB leaves no headroom → thrash. The ORIGINAL
+  quarter VMs were e2-standard-16 (**64GB**) and did NOT hang → 64GB is proven-sufficient. **RECOVERY (owner):** delete
+  the 22 hung VMs, relaunch same ranges on **e2-highmem-8 (64GB, WORKERS=8)** — idempotent resume skips their
+  `_migrated_*` cells + retries the giant cell (now fits); 2025q4s3 + the 7 done are untouched. **ETA slips ~1.5-3h**
+  (retry the giant cells on 64GB) → done ~02:00-04:00 UTC. **Lesson:** GIL→small-VM logic ignored MEMORY; giant-cell
+  data migrations need RAM headroom, not just cores. Operator flagged.
+
 - **2026-07-19 (slot-4, /autonomous — completed shards verified CLEAN; OOM risk not materialised; residual-scan
   refined).** Convergence 5/30 shards done (~2.5h). Ran the residual-bundle scan on a COMPLETED shard's range (2025q3s1,
   2025-07-05/11): 24.9k-26k per-instrument atoms/day + 168 clean R3 `_migrated_*` markers + **ZERO true R3 residual
