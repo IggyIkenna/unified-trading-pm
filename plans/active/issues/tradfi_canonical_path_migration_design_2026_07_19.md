@@ -179,13 +179,23 @@ per-contract sources. The 1:1 executor records these as content-needed (never lo
 ## Will new backfills STAY canonical post-migration? (operator Q, 2026-07-19)
 
 Not automatically — **only if the WRITER emits byte-identical canonical paths to the migration target** (batch=live).
-Status by shape: SINGLE ✅ (writer full-id shipped `mtds@d257b7be`); CHAIN ❌ regresses (writer still emits
-`underlying=/ticks.parquet`, no quote/margin — the chain lockstep change is NOT shipped); MASSIVE ❌ could reappear
-(routing/`SOURCE_PRIORITY` not yet stripped); legacy hyphen/non-Hive/corrupt ✅ won't reappear (superseded writers). So
-backfills must NOT resume until: (1) chain shard-atom change (writer chain branch + UAC `build_tradfi_partition_path` +
-manifest + reader/checker), (2) Massive routing removal, (3) manifest-rebuild casing normalization (`EQUITY`/`equity` is
-a rebuild-pass inconsistency; physical paths are lowercase). ENFORCEMENT (not hope): add a **write-time canonical
-guard** — extend `partition_paths.py::canonical_path_violations`/`is_canonical` to REJECT any non-canonical tradfi write
-(wrong filename shape, chain missing quote/margin, `batch_massive`, non-Hive) — folded into the chain lockstep change;
-the **Phase-D gate** force-writes fresh data + asserts canonical shape, so a regressing backfill fails there. Net:
-writer-in-lockstep + write-time guard + Phase-D assertion, all before backfill-resume.
+Status by shape (updated 2026-07-19):
+
+- **SINGLE** ✅ writer full-id shipped `mtds@d257b7be`.
+- **CHAIN WRITE** ✅ shipped `uac@ad28e55a` + `mtds@145e4aae` — writer emits `underlying=/quote=/margin=/ticks.parquet`,
+  manifest shard-atom carries quote/margin (5-tuple count-key), **byte-identical to the migration executor**
+  (test-verified atom==path). ⚠️ **CHAIN READ still pending**: `reader.py::_build_shard_bases`,
+  `candidate_parquet_paths`, `pipeline_e2e_check` don't yet probe the new chain tail — a fresh chain shard would be
+  WRITTEN canonical but not READ via the old probe paths. **Required before chain reads / backfill-resume / the
+  migration --apply is read back.**
+- **WRITE-TIME GUARD** ✅ shipped in the same change — `canonical_path_violations` rejects non-canonical tradfi writes
+  (chain missing quote/margin, single bare-symbol filename, `batch_massive`, non-Hive) and is CALLED (raises) in the W1
+  writer path. So a regressing tradfi write now fails loud at the source.
+- **MASSIVE** ❌ still could reappear (routing/`SOURCE_PRIORITY` not yet stripped).
+- legacy hyphen/non-Hive/corrupt ✅ won't reappear (superseded writers).
+
+Remaining before backfills resume: (1) **reader/checker companion** (chain READ path), (2) Massive routing removal, (3)
+manifest-rebuild casing normalization (`EQUITY`/`equity` is a rebuild-pass inconsistency; physical paths are lowercase).
+The **Phase-D gate** force-writes fresh data + asserts canonical shape, so a regressing backfill fails there. Net:
+writer-in-lockstep ✅ + write-time guard ✅ + reader companion (pending) + Phase-D assertion, all before
+backfill-resume.
