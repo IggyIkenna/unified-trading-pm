@@ -222,13 +222,43 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       a merge onto a PRE-EXISTING R1-forward leaf sharing an event key — bites ONLY in the R1-forward/R3 overlap window
       → **scope `--apply` to the pre-R1 historical batch days (R3's actual target) OR add a single-instrument-per-leaf
       guard first.** (repo: market-tick-data-service)
-- [ ] [DATA] P0 (R3-run — the actual migration on the corpus). Once the lending un-retire reconciliation lands (MTDS
-      green): `--dry-run` recon over the DeFi batch corpus (report needs_attribution/total ratio + per-shard counts) →
-      inspect → scope `--apply` to pre-R1 historical days (or land the single-instrument-per-leaf guard) → `--apply` →
-      `rebuild_defi_manifest` → verify per-instrument manifest atoms. Real infra, manifest-verified. (repo:
-      market-tick-data-service)
+- [~] [DATA] P0 (R3-run — RUNNING, partial). Dry-run recon validated + scoped `--apply` proven on real GCS (CHAINLINK
+  oracle_prices → 22 canonical leaves + `_migrated_*`, 0 err). **FULL migration on SPOT VM
+  `canonical-migration-defi-per-instrument-20260719-053435`** (in-region, chunked per-year, preemption-recovery loop
+  `bd014y3c2` armed): **2020 ✓ (2,241→4,694), 2021 ✓ (30,513→607,867 instr, 18M rows, 0 err)**, 2022 applying,
+  2023–2026 + `rebuild_defi_manifest` remain (~8-12h). **INCOMPLETE — see R5**: it walks ONLY `raw_tick_data/by_date/`
+  and MISSES (a) the gas_fees `{data_type}_{blk}_{blk}` block-range shape (discovery regex gap), (b) the legacy
+  top-level prefixes entirely. (repo: market-tick-data-service)
 
-### R4 — Coverage against the IS denominator · P1 (gated on R1+R2+R3) → then RESUME capture
+### R5 — Full-corpus canon reconciliation (operator-caught 2026-07-19; R3-as-scoped is NOT the whole job) · P0
+
+> **Operator, 2026-07-19**: R3 was launched on a partial model without first inventorying the bucket + defining the
+> clean path/manifest homes. Three trees exist in `market-data-tick-defi-prd`: **`raw_tick_data/`** (canonical raw,
+> split venue/chain, per-instrument symbolic-id leaf — R3's target), **`processed_candles/`** (MDPS-owned OHLCV, 7
+> timeframes, glued venue-chain + address-id leaf — canonical per `per-asset-group-bucket-layouts.md:166`, OUT of raw
+> scope), **legacy `dex_pools/`+`lending_indices/`+`lst_rates/`** (`{venue}/{chain}/date=` orphans, code stopped writing
+> 2026-04-14 per `defi-data-pipeline.md` D2). Manifest home = `_index/availability_index.parquet` +
+> `_manifests/data_manifest.json`. Definitive reconciliation `wwkp5q6le` running (verifies legacy dup-vs-unique BEFORE
+> any delete; maps every R3 shape-miss; checks raw-shape drift; produces the clean-homes worklist).
+
+- [ ] [DATA] P0. **gas_fees (+ any other `{data_type}_{blk}_{blk}` block-range) discovery fix.** `_BUNDLED_TAIL_RE`
+      (`^(?:\d{4}[-_]?\d{2}[-_]?\d{2}.*|\d{8,})$`) matches a single number/date but NOT a `{blk}_{blk}` range → gas_fees
+      silently un-migrated corpus-wide (confirmed: `is_bundled_batch_leaf('gas_fees_9198245_9203901','gas_fees')`=False,
+      dry-run discovered 0). Extend the tail regex, ship, targeted `--apply` re-run for the missed data_types. (repo:
+      market-tick-data-service)
+- [ ] [DATA] P0. **Legacy prefix reconcile (`dex_pools/`/`lending_indices/`/`lst_rates/`).** Per `wwkp5q6le`'s VERIFIED
+      dup/unique split: fold UNIQUE cells into `raw_tick_data/by_date/` canonically → then R3-split; delete only
+      VERIFIED duplicates (snapshot-first; NEVER delete UNCERTAIN). The `raydium/SOLANA/2026-04-14` cell is known-unique
+      (0 canonical counterpart). (repo: market-tick-data-service)
+- [ ] [DATA] P1. **Raw-shape drift sweep** (from `wwkp5q6le`): any residual glued-venue cells / address-form leaves /
+      missing `pipeline_mode=` / non-canonical itype-case in `raw_tick_data/` → canon-walk to the clean home. (repo:
+      market-tick-data-service)
+- [ ] [BACKEND] P0. **Catalogue-venue gap.** The catalogue regen (`prod/catalog.parquet` 2026-07-19T04:40Z) has
+      `force_include` but MISSING all 26 new venues (35 venues, LST/STAKING/YIELD_BEARING still 3/3/1, +39 rows not
+      +85); checkout `_DEFI_VENUES`=89. Deploy-lag vs runtime-silent-`[]` diagnosis+fix+re-run dispatched (`a5f19b07`).
+      Required for the R4 coverage denominator. (repo: instruments-service)
+
+### R4 — Coverage against the IS denominator · P1 (gated on R1+R2+R3+R5) → then RESUME capture
 
 - [ ] [DATA] P1. **Score coverage per-instrument** against the IS `available_from/to` window; the ~1.04M stuck
       `expected_unattempted` / false `EXPECTED_INSTRUMENT_DELISTED` rows resolve once the seed (R2) + migrated
@@ -639,6 +669,28 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — R3 migration RUNNING; catalogue + THREE operator-caught corpus gaps; R5 opened).**
+  (Journaling ~5h of work the todo-list tracked but the plan hadn't captured — Commit-Push-Flip catch-up.)
+  - **R3 full migration LAUNCHED + running** on SPOT VM `canonical-migration-defi-per-instrument-20260719-053435`
+    (in-region, chunked/year). **Preemption-recovery gap the operator flagged: CLOSED** — the launcher never wired the
+    PREEMPTED-blob shutdown-script (VM is `instance-termination-action=STOP`, `automaticRestart=false`), so the fleet
+    `exit_code_fleet_monitor` auto-relaunch wouldn't fire; agent recovery loop `bd014y3c2` now restarts the VM if
+    stopped-but-incomplete + distinguishes preemption from the `VM_SHUTDOWN_ON_COMPLETION` self-stop via line-anchored
+    terminal markers. Migration is idempotent → resumes from progress, never replays day-one. 2020 ✓, 2021 ✓ (607,867
+    instr, 0 err), 2022 applying.
+  - **Wave E (IS) catalogue REGRESSION caught**: regen landed (`prod/catalog.parquet` 04:40Z, force_include present) but
+    MISSING all 26 new venues (35 venues, LST/STAKING/YIELD_BEARING still 3/3/1) though checkout `_DEFI_VENUES`=89 →
+    stale-deployed-image OR runtime silent-`[]`; fix dispatched `a5f19b07`. → R5 todo.
+  - **THREE corpus gaps the OPERATOR caught by reading the bucket (I had NOT inventoried it before launching R3 — a real
+    miss)**: (1) **gas_fees** in `raw_tick_data/` but silently un-migrated (block-range `{blk}_{blk}` regex gap); (2)
+    **legacy top-level orphan prefixes** `dex_pools/`+`lending_indices/`+`lst_rates/` (`{venue}/{chain}/date=`, code
+    stopped 2026-04-14) that R3 never walks — `raydium/SOLANA/2026-04-14` has 0 canonical counterpart = unique; (3)
+    **`processed_candles/`** = MDPS-owned OHLCV (canonical per codex, OUT of raw scope — correctly placed, confirmed).
+  - **Established the CLEAN HOMES** (bucket walked + codex-cross-checked) + opened **R5** (full-corpus canon
+    reconciliation) with the gap todos. Definitive reconciliation `wwkp5q6le` running — VERIFIES legacy dup-vs-unique
+    before ANY delete, maps every R3 shape-miss, checks raw-shape drift, produces the clean-homes worklist. **R4 now
+    gated on R5** (coverage denominator must reflect the reconciled corpus + the new-venue catalogue).
 
 - **2026-07-19 (slot-4, /autonomous — audit-residual fixes SHIPPED + verified).** `w14cdgtmr` → all 3 code residuals
   CONFIRMED resolved: **MTDS `@e4dab8c2`** (aave_v3 lending_indices A_TOKEN→LENDING — all 7 EVM now LENDING-consistent
