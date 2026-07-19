@@ -269,3 +269,25 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   back at the committed **pinned** (correct-per-the-fix) state. The `:latest`-vs-digest-pin tradeoff
   (matches-other-services vs staleness-risk-that-ran-a-broken-image-5-weeks) is a real infra decision for the
   features-service-sports owner — NOT decided autonomously.
+- **2026-07-19, LOOSE-END 4d — RESOLVED (bucket-fold UAC leg already DONE; replay stashes are a SEPARATE feature,
+  out-of-scope).** The bucket-fold UAC leg (the `strategy_store_split_brain` UAC leg) is **already cut over**:
+  `scripts/enumerate_envelope.py:1061` = `f"strategy-store-prd-{_PROJECT_ID}"` and
+  `unified_api_contracts/canonical/gcs_paths.py:124` both use the folded flat env-tiered `strategy-store-prd` bucket
+  (Fold D, 2026-07-18) — grep-clean of any per-AG `strategy-store-cefi` code hardcode (only explanatory comments
+  remain). The UAC working tree is CLEAN. The 4 UAC stashes (`uac-replay-source-capability-wip-part3/part2`,
+  `cascade-64579`, a "sibling WIP round 2") are a **DIFFERENT feature** (replay / source-capability / pipeline-mode —
+  e.g. stash@{0} = `test_possible_manifest.py`, 5 replay lines / 0 bucket-fold lines), NOT bucket-fold; possibly a
+  sibling's WIP. Per findings-triage they're annotated + LEFT (not finished/reverted — deciding a different feature's
+  WIP is out of the bucket-fold closeout's scope + collision-risk). They don't block bucket-fold UAC ships (all landed;
+  tree clean).
+- **2026-07-19, LOOSE-END AWS recount — DONE + FINDING.** AWS (acct 427895769566) = **230 S3 buckets** (vs GCP 114). The
+  AWS side of the Wave-3 folds is **INCOMPLETE by operator deprioritization** ("AWS deprioritized; GCP is where the real
+  data is"): the folded TARGETS exist (`features-{ag}-{prd,test}`, `execution-store-pred-prd`) but the fold SOURCE
+  buckets still linger EMPTY/unused — `features-delta-one-{cefi,defi,tradfi,pred}`, `features-volatility/onchain-*`,
+  `ml-models-store-{prd,dev,stg}`, `ml-training-artifacts`, `execution-store-{cefi,defi,tradfi}`,
+  `positions-store-defi-*`, `archetype-state-prd`. The code cutover repointed writers to the folded kinds (same yaml
+  resolves the folded AWS buckets), so the sources are producer-less. **NOT autonomously deleting AWS buckets**:
+  operator-descoped + irreversible
+  - entangled with the terraform derived-from-yaml destroys ([[terraform_bucket_estate_drift_resurrection_2026_07_13]],
+    do-NOT-tofu-apply). AWS fold-completion (source deletion) is an operator-gated follow-up on the terraform-drift
+    issue.
