@@ -1703,8 +1703,49 @@ identified which — **this is an open lead, not a diagnosis.**
 (`r"(\d+)$"`). The field is therefore recoverable by a light targeted pass with **no features re-run required**, so
 baking it into the remaining year-chunks costs nothing that a cheap follow-up cannot fix.
 
-- [ ] [DIAG] P2. Root-cause where `matchday` is dropped between `_compute_season_features` and the writer. Start by
-      logging `result.columns` immediately before the `season_context` `_run_calc` to identify which earlier calculator
-      introduces the colliding empty column. Do NOT assume the base frame is the source — measured, it is not.
+- [ ] [DIAG] P2. Root-cause where `matchday` is dropped. **Three candidates ELIMINATED by measurement — do not re-run
+      these:** 1. _Base-frame collision_ — the normalized fixtures frame carries NO season_context column (`matchday`,
+      `competition_phase`, `games_remaining`, `points_at_stake`, `round_name`, `total_matchdays` all absent). 2. _A
+      competing emitter_ — `rg '"matchday"'` over `features_service/sports/` shows `season_context` is the ONLY
+      producer; nothing else can introduce a colliding empty column, so `_run_calc`'s first-writer-wins rule is not
+      reachable here. 3. _The `_run_calc` merge itself_ — exercised in isolation on the real 2024-01-03 frame:
+      season_context emits `matchday` 16/17 and **16/17 survives the merge**
+      (`quality_tracker: status=ok, 20 columns, 0 all-NaN`). So the loss is AFTER the merge, at or just before
+      persistence. `writer.py`'s `matchday` entry is an **expected-sparse allowlist** (suppresses all-NaN validation
+      failures), NOT a drop list — but that also means a column silently going all-null here is _by design_ not loud,
+      which is likely why this survived unnoticed. Next step: instrument the real exporter end-to-end for one day and
+      bisect between the season_context merge and the parquet write. Note a dtype smell worth checking there:
+      season_context emits `fixture_id` as `object` while the result spine is `Int64`.
 - [ ] [DATA] P3. Once root-caused, recover `matchday` from the persisted `round_name` (regex) rather than re-running the
       whole features corpus.
+
+### AA (2026-07-19) — the § Y monitoring lesson, generalised: a metric must be able to MOVE for the operation you are running
+
+The 8-VM features re-run reported `day_partitions=3462`, **flat across three consecutive 10-minute readings**. Read
+naively that is a textbook stall (flat progress metric → STOP and diagnose). It was not. The fleet was writing normally:
+288 objects created under `day=2019-*` in the same window.
+
+The metric counted **day partitions that already existed**. A `--force` re-run OVERWRITES existing `day=` directories
+rather than creating new ones, so the partition count is structurally incapable of increasing — it would have read 3462
+forever whether the fleet was healthy, hung, or dead.
+
+This is the second metric-design failure in two ticks, with different mechanisms but one root cause:
+
+| §   | metric                            | why it could never signal progress           |
+| --- | --------------------------------- | -------------------------------------------- |
+| Y   | object count on the hinted bucket | the bucket 404s; `\| wc -l` yields 0 forever |
+| AA  | `day=` partition count            | overwrite-in-place cannot grow the count     |
+
+**The rule the async-wait discipline should carry** (it currently says progress must be a count of TARGET artifacts and
+that flat = stall): that is necessary but not sufficient. Before trusting a reading, confirm the metric **can move for
+the operation actually being run** — a creation-time count moves under overwrite, a partition count does not; a count on
+a real bucket can be non-zero, one on a 404 cannot. **Otherwise a broken monitor is indistinguishable from a broken job,
+and the flat-means-stall rule fires on the monitor's own defect.** Both times here the honest-looking reading argued for
+killing healthy work.
+
+Fleet watchdog re-armed on creation-time counts across two independent chunks (2019 and 2025), which move under
+overwrite.
+
+- [ ] [DOC] P2. Fold this into `codex/12-agent-workflow/async-wait-and-poll-discipline.md`: add a metric-validity
+      precondition ("prove the metric can move for THIS operation before trusting flat/zero"), with the 404-bucket and
+      overwrite-blind cases as the two worked examples.
