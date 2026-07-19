@@ -144,3 +144,13 @@ can only land once they're all done. Kept as a separate gated plan so no single 
   C+D-display/Fold-B WIP (stashed, 4c — reconcile vs origin's new axis-census), UAC replay WIP (4d), UTL/UAC dormant
   un-tiered helpers (4e), consolidator job renames (cosmetic — documented in the codex SUPERSEDED banner, not
   executing), AWS recount.
+- **2026-07-19, `/autonomous` closeout tick (cont.) — HYGIENE VERIFIED.** Ran `run_hygiene_sweep.sh` (**0 hard
+  failures**, 1 soft warning = a plan's 500-line soft cap, non-blocking) + `regenerate_active_plan_inventory.py` (**114
+  plans, 0 orphans, 0 TBD** — orphan count 0 satisfies the review-blocking threshold). The inventory-table refresh was
+  NOT committed (the main-orchestrator owns that regen on its morning/EOD cadence; my run was verification-only,
+  restored to avoid off-cadence churn on ~30 non-mine plans' recomputed cal-left). Parent W3 "execute the folds" todo
+  already flipped (`bucket_estate_consolidation_to_sub100` line 331). **Still open in bookkeeping todo 4** (deferred to
+  a later tick): flip `bucket_estate_fold_design_2026_07_13` §3 remaining todos; close the 3 audit issue docs
+  (terraform-drift / recon / strategy-store-split-brain) IF the folds resolved them (needs per-doc read); the parent
+  plan's own broader codex-audit todo (line 355 — `bucket-naming-and-config.md` superseded-pointer fix +
+  `per-asset-group-bucket-layouts.md`).
