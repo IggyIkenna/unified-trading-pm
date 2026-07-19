@@ -696,6 +696,18 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — migration is CORRECT + progressing but GIL-bound SLOW; ETA ~7h not 2.5h;
+  FLAGGED).** Deep liveness check on 2025q1od (SSH + the migration's own run.log, not just the fleet heartbeat): NOT
+  stalled — the migrate proc is alive (load ~1.0-1.4 on an e2-standard-16 = the GIL-bound ~1.3-core ceiling the owner
+  measured; 64 threads but the GIL caps it at ~1 core). Real progress log: preflight OK 17:23 (needs_attribution 0.3%),
+  then `processed 500/8542 cells` @17:57 → `1000/8542` @18:30 → `1500/8542` @19:04 = **~15 cells/min/VM**, constant. The
+  recent pure-`PIPELINE_HEARTBEAT` window is just the every-500-cells log cadence (next mark ~19:37), NOT a stall.
+  **Implication:** 2025q1 = **8542 cells** at 15/min = ~9.5h/quarter (~7h remaining); the heavy 2025 quarters dominate,
+  so fleet ETA ≈ done ~03:00 UTC, NOT the 2.5h estimate. More WORKERS don't help (GIL); the fix for speed is finer
+  DATE-sharding (more on-demand VMs, each fewer cells — same date-disjoint safety as the quarter shards) OR a
+  ProcessPoolExecutor code change (root-cause, riskier on a live data migration). FLAGGED to operator: finer-shard to
+  ~1.5h tonight vs let it finish overnight — their call (kept the 6 VMs running meanwhile; migration is data-correct).
+
 - **2026-07-19 (slot-4, /autonomous — PRE-REBUILD adversarial verification caught 2 manifest defects; both FIXED @mtds
   35c87d66).** Ran a read-only verification workflow (wtyf6ac6u, 5 Opus agents) over the 19 DONE migration quarters
   BEFORE firing the whole-corpus rebuild — the reshape is data-CORRECT (zero row loss, no improper dedup collapse, gas
