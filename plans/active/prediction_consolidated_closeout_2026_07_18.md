@@ -298,6 +298,19 @@ fixture-linked before MVP backfill.
       leaves ~652k OLD rows as stragglers (doubling); reaching the target % needs an old-row sweep = the "naive direct
       `_index` rewrite" that resurrects on `--force` rebuild → the run needs a tombstone/removal strategy. Both
       documented in the script docstring + printed by dry-run.
+- [ ] [DATA] P1. **Writer-root durability COMPLETION (items 2+3 of the migration checklist step 0) — the Phase-B
+      `--apply` cleanup is DURABLE for the CQG bundle (item 1 SHIPPED `market-tick-data-service@1ec415f8`) but TRANSIENT
+      for per-CID + `prediction_trades` until these land** (surfaced tick 17): (2) canonicalize the prediction per-CID
+      `instrument_type` at the **shard-key construction** UPSTREAM of the generic per-CID writer (which stamps
+      `itype_key` verbatim, RULE-11 — do NOT canonicalize in the generic writer; 640,701 per-CID null rows re-accumulate
+      otherwise); (3) retire the legacy `prediction_trades` seed key — `PREDICTION_MVP_SEED_INSTRUMENTS` dual-seeds
+      `("VENUE","trades")` + `("VENUE","prediction_trades")` "during rollout" (retired 2026-04-19); rollout-completion
+      across 6 UAC files (`defi_prediction_instrument_seeds`, `data_type_capability`, `schema_spec`,
+      `_schema_spec_prediction`, `expected_coverage`, `market_data_categories`) — DELICATE (breaks un-migrated callers;
+      affects the `expected_unattempted` denominator) → verify no live consumer still emits/expects `prediction_trades`
+      before removing. Until both land, a periodic re-run of
+      `canonicalize_prediction_manifest_2026_07_18.py --remove-stragglers --apply` closes the drift. (repos:
+      market-tick-data-service, unified-api-contracts)
 - [ ] [DATA] P0. **Backfill the fixture-match attributes (A4 columns) across historical Polymarket + Kalshi soccer** —
       resolve `af_fixture_id` per market from the fixtures parquet (canonical `home_id`/`away_id` + `af_league_id` +
       `fixture_date`) OR by parsing the human-readable canonical name, stamping `af_fixture_match_status`. Honest nulls
@@ -868,3 +881,46 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     AFTER the writer-root fix lands**, via the script's checklist (pause the prediction consolidator cron → snapshot to
     `_index/backups/` → CAS rewrite → verify → resume). The migration pauses ONLY the prediction consolidator (not a
     fleet drain), so no collision with the tradfi/cefi slots.
+
+- **2026-07-19 (slot-2, autonomous tick 17) — writer-root fix + captured-cell guard SHIPPED; 709-drop cleared SAFE;
+  `--apply` prerequisites met; writer-root items 2+3 surfaced as a durability follow-up; running `--apply` now.**
+  - **Writer-root fix (checklist step 0, item 1) SHIPPED `market-tick-data-service@1ec415f8`** — `manifest_finalize`
+    `_finalize_prediction_bundles` + `_finalize_prediction_unclassified` now stamp
+    `InstrumentType.PREDICTION_MARKET.value` (was lowercase `"prediction"`), so a `--force` rebuild reproduces exactly
+    what `--bundle-mode normalize` writes and does NOT resurrect the removed stragglers. Generic per-CID writer keeps
+    verbatim `instrument_type` pass-through (RULE-11 test asserts no `PREDICTION_MARKET` leak into
+    cefi/tradfi/defi/sports). 145 lines tests. Verified `InstrumentType.PREDICTION_MARKET.value == "PREDICTION_MARKET"`
+    == the migration's canonical target.
+  - **Captured-cell guard fix SHIPPED `market-tick-data-service@e7cec308`.** The dry-run `--remove-stragglers` flagged a
+    captured-cell drop (45,988→45,279) as a STOP-ON-SURPRISE. A read-only live re-compute (using the script's own
+    functions) proved it **SAFE: 0 canonical cells lose captured status** — the 709 are duplicate captured ROWS across
+    260 canonical cells folding into their still-captured sibling (each split only by a non-canonical
+    `instrument_type`/`data_type`). The guard measured the wrong quantity (raw captured rows IN vs deduped
+    1-row-per-cell OUT) → would FALSE-abort a correct migration. Fixed: `captured_rows_*`→`captured_cells_*` +
+    `_distinct_captured_cells` (mirrors `dedup_consolidator_order` key normalization), so `in==out` is the invariant and
+    `out<in` now truly means a cell lost captured (impossible under the capture-status-preferring dedup). +test locks
+    the 2-captured-rows-same-cell fold at `cells_in==cells_out==1`.
+  - **A2 residuals + UTL VERIFIED on LDR**: `unified-trading-library@1f35ec41` (`get_write_bucket_name` honours
+    `IS_TEST_RUN` for prediction) + `pm@9a31d4d51` + `pm@dd09cc29` (gcs_paths flip already landed `uac@511a9c62`; MDPS
+    editable range-pin needs no bump). Legacy `market-data-tick-prediction-prd-*` 404s; abbreviated `pred` bucket is
+    sole SSOT.
+  - **Dry-run 2 (`--remove-stragglers --bundle-mode normalize`, live 757,631 rows) — verified migration plan:** #1
+    `prediction_trades`→`trades` 3,385 rows (`data_type` 99.55%→100%); #2 `instrument_type`→`PREDICTION_MARKET` 668,257
+    in-scope rows (all-rows 11.80%→**100%**; bundle-normalize stamps 19,641 bundle rows); #3 2 empty-source→
+    `polymarket_clob`. Straggler CAS-REPLACE: 757,631 in → 745,107 out, **12,524 stragglers removed**, captured cells
+    45,279 in == 45,279 out (0 lost).
+  - **Migration `--apply` UNBLOCKED** (item-1 writer-root landed + 709-drop cleared) — executing via the operator
+    checklist: pause `uts-prod-manifest-consolidator-market-data-prediction-cron` (verified ENABLED, `*/1`) → snapshot →
+    CAS REPLACE → verify → resume. (The sibling `...instruments-prediction-cron` is the catalogue manifest, untouched.)
+  - **⚠️ BIG-FINDING (data-correctness / cross-repo / SSOT-contradiction) — the writer-root fix is item-1-ONLY, so the
+    migration cleanup is DURABLE for the CQG bundle but TRANSIENT for per-CID + `prediction_trades` until 2 more items
+    land** (see the new Phase-B "writer-root durability completion" follow-up todo): (2) the per-CID prediction writer
+    stamps `instrument_type=itype_key` verbatim (640,701 per-CID rows null) → new per-CID rows re-accumulate
+    non-canonical; fix is at the prediction per-CID **shard-key construction** upstream of the generic writer, NOT the
+    generic writer (RULE-11). (3) UAC `PREDICTION_MVP_SEED_INSTRUMENTS` deliberately dual-seeds BOTH
+    `("VENUE","trades")` AND `("VENUE","prediction_trades")` "to future-proof callers that haven't migrated during
+    rollout" (`prediction_trades` retired 2026-04-19); retiring the legacy key is a **rollout-completion** step across 6
+    UAC files and is DELICATE (premature removal breaks un-migrated callers; affects the `expected_unattempted`
+    denominator). The operator scoped the writer-root prereq to `_finalize_prediction_bundles` (item 1); items 2+3 are
+    the tracked durability follow-up. `prediction_trades` re-accumulation is small (3,385 rows A0); per-CID null is the
+    larger drift. A periodic migration re-run closes the gap until 2+3 land.
