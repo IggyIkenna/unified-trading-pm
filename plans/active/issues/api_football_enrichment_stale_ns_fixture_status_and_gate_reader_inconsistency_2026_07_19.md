@@ -481,3 +481,48 @@ columns, and if (b), whether it gates a real filtering/classification decision o
 **Verdict**: one genuine, confirmed, corpus-wide-impacting consumer bug found (features-service H2H history filter),
 tracked as a new todo above. All other surveyed consumers either read live data (unaffected) or treat the persisted
 status field as display-only / not-yet-wired (no silent decision corruption).
+
+## Root cause 1b — RESOLVES the "594 unchanged" anomaly flagged in the backfill-correction todo above
+
+**2026-07-19T~17:10Z (slot-8, data_engineering, same session as root cause 1's fix)**
+
+Traced `366aaefd`'s flagged anomaly ("spot-check COPA_CHILE af_fixture_id=1544424 shows the live API + flatten function
+both correctly return FT, yet the on-disk parquet still reads NS"). It is NOT a concurrent-write confound — it is a
+THIRD bug, distinct from (and downstream of) root cause 1's write-path fix.
+
+The `254fb843` entity-split (2026-06-24) moved FIXTURES schedule + status columns to `entity=fixtures_schedule/`, and
+`_write_fixtures_per_league` has written ONLY `fixtures_schedule` + `fixtures_outcomes` ever since — it has NO fallback
+write to the old bare `entity=fixtures/` entity. But THREE read helpers in `sports_fixtures.py` still read
+`entity=fixtures` directly: `_read_fixture_ids_from_gcs` (root cause 1's own enrichment-completed-fixture lookup),
+`_find_stale_fixture_leagues_for_date` (the staleness scan `366aaefd`'s script and the `7d07e2a4` periodic trigger both
+depend on), and `_build_fixture_league_map_from_gcs` (the fixture-id→league mapping for per-fixture enrichment writes).
+Every GCS object under `entity=fixtures/` checked is frozen at a `2026-06-22`/`2026-06-27` timestamp — weeks old, never
+touched since — regardless of how many times a date is re-fetched with `--force`, because the CURRENT write path
+physically cannot write there anymore. Verified end-to-end via a real VM run (`af-backfill-20260719-164510`,
+`2026-07-01`, on the fixed tarball): the live fetch correctly reported `187/205` fixtures completed, the SAME run's
+`entity=fixtures_schedule` output showed the correct `4 FT / 1 CANC / 166 NS` breakdown, while `entity=fixtures` for
+that exact date remained byte-for-byte unchanged from its `2026-06-22` snapshot.
+
+This fully explains `366aaefd`'s anomaly: its spot-check almost certainly read the dead `entity=fixtures` path (via
+`_find_stale_fixture_leagues_for_date`), which can never show a fresh write no matter how many times the date is
+re-fetched — not a race with a concurrent slot.
+
+**Fixed**: instruments-service@`e1524d21` — added `_read_fixtures_entity_with_schedule_fallback` (tries
+`fixtures_schedule` first, falls back to the legacy `fixtures` entity for pre-2026-06-24 dates never re-touched since)
+and wired it into all three call sites. 7 new/updated unit tests, full `quality-gates.sh` green.
+
+**Verified the fix closes the loop**: re-ran `366aaefd`'s scan script post-fix — stale-cell count for cluster 1
+(2026-02-21..2026-03-22) dropped to 1 (from its prior unchanging 594-total baseline), cluster 2 (2026-06-24..2026-07-14)
+at 394. Ran `--apply`: 9 more `(date, league)` cells genuinely re-fetched + written (26 rows) — small because most of
+the remaining "stale" dates' targeted `league_ids=` season-cache lookup returned 0 fixtures for that specific
+league/date (a narrower, distinct gap — see new todo below). A second scan afterward still shows ~394 total for cluster
+2 — expected, since most of that cluster's mass sits in dates the season-cache lookup isn't currently resolving, not
+because the entity-path fix failed (the 9 cells that DID have resolvable data correctly flipped).
+
+- [ ] [DATA] P1. Investigate why `run_sports_fixture_status_refresh`'s targeted `league_ids=` season-cache fetch returns
+      0 fixtures for the majority of the still-stale `(date, league)` cells in the 2026-06-24..2026-07-14 cluster (e.g.
+      `2026-03-17`, `2026-07-05`, `2026-06-27` all logged "Fetched 0 fixtures (with raw)" during the `--apply` run above
+      despite `_find_stale_fixture_leagues_for_date` having flagged those exact leagues as non-terminal). Check whether
+      the trigger's `today` boundary or the season-year resolution (`_effective_season_for_league`) is computed from the
+      CLUSTER's end date rather than the real current date — that would cause `_fetch_season_fixtures_with_raw` to query
+      the wrong season for some leagues. (repo: instruments-service)

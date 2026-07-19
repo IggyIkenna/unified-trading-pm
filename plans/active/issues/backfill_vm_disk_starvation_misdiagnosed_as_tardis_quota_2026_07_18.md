@@ -337,6 +337,33 @@ is lifted.
 **The one durable win of this whole thread remains the disk fix (4.7x, 2.36 -> 11.09 MB/s).** Best sustained config is
 single-process 64/32 at ~13.5 MB/s; the overnight backfill runs there.
 
+### Disk-vs-source disambiguation (2026-07-19): a bigger disk does NOT help — directly tested
+
+The operator asked the right question: at 11 MB/s RX the pd-balanced 250GB disk was measured writing 67 of its ~70 MB/s
+ceiling (96%), and 70 MB/s / ~6x write-amplification = ~11.7 MB/s RX = exactly the observed sustained rate. That made
+the disk a live suspect for the binding constraint (which would mean a bigger disk lifts throughput). The earlier
+"source-side" conclusion had NOT ruled it out.
+
+**Tested directly on a 1TB pd-ssd (~480 MB/s write capacity — 7x the 250GB disk).** Single-process, and again in --force
+mode (continuous real download, no skip-scan confound). Result: the **disk sits IDLE at 0.1-0.3 MB/s writes, 0-1ms
+latency, 2-8% util** — three orders of magnitude of headroom, unused — and **throughput did NOT rise** (sustained RX
+8-13 MB/s, same as or below the 250GB baseline). Removing the disk constraint entirely changed nothing.
+
+**This reconciles the 67-of-70 red flag.** Writes are BURSTY, not sustained: ~0 MB/s while a shard fetches, then a brief
+burst to ~67 when it finalizes to parquet and uploads. The 250GB pd-balanced ABSORBS those bursts (it queues — w_await
+21ms, aqu-sz 6 — but keeps up); the AVERAGE write rate is far below the ceiling. So the disk was never the SUSTAINED
+bottleneck on either disk; the 67 was a transient the disk handles.
+
+**Conclusion, now properly verified (constraint removed, throughput unchanged): the disk is not the limit; a
+bigger/faster disk does not help.** Combined with the multi-process result (N processes sharing one IP do not multiply
+sustained throughput) and the earlier concurrency/pool sweeps, the binding constraint is upstream of everything we
+control — the Tardis/Wasabi source inbound rate per account/IP (~13 MB/s). 30 MB/s is not reachable by any
+infrastructure lever measured (disk size/type, concurrency, connection pool, fetch/parse decoupling, or multi-process).
+The remaining path is commercial: better Tardis account terms / a faster storage tier.
+
+**Cost footnote:** the 250GB pd-balanced default the disk-fix gate enforces is correct and sufficient — it absorbs the
+write bursts with headroom, and a larger disk buys nothing for this workload. Keep it at 250GB.
+
 ## Original (WRONG) analysis — kept as a record
 
 # Tardis account-level volume quota — ~7-8 GB, then ~2 MB/s
