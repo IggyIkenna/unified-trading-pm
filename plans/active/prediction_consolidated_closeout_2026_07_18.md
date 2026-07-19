@@ -1111,3 +1111,39 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   - **Phase-D formal green now unblocked** — all blockers fixed (Class A bucket+prefix, item 2 per-CID, book_snapshot_5
     xfail, and now trades universe). A clean re-run of both prediction skills should go green (book_snapshot_5 = skipped
     live-only). Re-run next.
+
+- **2026-07-19 (slot-2, autonomous tick 24) — Phase E investigated + identity-wiring implementation dispatched; E3 (odds
+  venue + football slot) SURFACED to the operator (money-risk decisions, not guessed).**
+  - **Root cause `af_fixture_id` absent from `prod/catalog.parquet` (measured):** BOTH (i) the catalogue ROLLUP drops it
+    — `scripts/build_instrument_catalogue.py` `CATALOG_COLUMNS` (L275-429) is a fixed 32-col set with NONE of the 6
+    fixture fields; the terminal `pd.DataFrame(rows, columns=CATALOG_COLUMNS)` (prediction L2081) reindexes extras away
+    (+ `_PredLifecycle`/`_merge_lifecycle`/`_emit` carry none) — HEAD-code gap; AND (ii) the `by_date` snapshots lack
+    them too — DEPLOY LAG: the UAC fields + IS `_records_to_dataframe` join `e3ffc613` landed 2026-07-18 evening, AFTER
+    that day's 06:13 capture/catalogue write. The write-path WIRING is complete at HEAD (Kalshi `kalshi.py:899` +
+    Polymarket `polymarket/parsing.py:178` `register_fixture_match` → side-table → `_records_to_dataframe` join
+    `process_write.py:226-233`) — so the source is **redeploy-not-rewrite**; the resolver only stamps a value on an
+    actual API-Football fixture MATCH (~82.6% Kalshi-soccer resolvable).
+  - **Ordered plan + dispatched [0a]/[E1]/[E2] as clean autonomous code (Workflow, adversarially verified):** [0a] carry
+    the 6 fields through the IS catalogue rollup; [E1] `features` `_records_from_universe`
+    (`prediction_cross_venue_dispatch.py:173-214`) populate the 6 fields from the `by_date` frame (honest-None when
+    absent); [E2-complete] UAC `cross_venue_mapping.py::match_key` (L376-402) PREFER `af_fixture_id`
+    (`SPORTS_FIX::{af_fixture_id}::{bet_type}`) over the fuzzy `SportsFixtureKey.pairing_key`, threaded from both
+    classifiers, with the fuzzy path preserved as fallback when null. All three are backward/forward-compatible (safe
+    when columns absent / af_fixture_id None). E2 was NOT previously complete (ec8633ac shipped the Kalshi title→id
+    RESOLVER; match_key still keyed only on the fuzzy pairing).
+  - **[0b] (ops): redeploy the IS prediction capture (running `e3ffc613`) + a fresh regen** so `by_date` (then
+    `catalog.parquet`) carry the columns for matched soccer markets — pending verification of current deploy state (a
+    2026-07-19 by_date soccer snapshot post-deploy may already carry them).
+  - **⚠️ [E3] SURFACED FOR OPERATOR DECISION (money-risk — NOT implemented autonomously).** Odds IS already ingested (IS
+    FootyStats `data_type=ODDS` `canonical_fixture_id`-keyed; UAC `BOOKMAKER_REGISTRY`/`ODDS_API_KEY_TO_VENUE`/
+    `CANONICAL_TO_ODDS_API_EPL`/`_BUNDESLIGA`; MTDS live bookmaker venues ODDS_API/PINNACLE/BETFAIR/DRAFTKINGS/FANDUEL).
+    The features kernel (`prediction_cross_venue_dispersion.py`) + strategy helper (`prediction_venue_dispersion.py`
+    L59-60) + engine (`price_dispersion.py::_on_tick_cross_venue_prediction` L274-343) are hardcoded 2-venue
+    (Kalshi↔Polymarket). Decisions the operator must make before E3: **(A) is odds a TRADEABLE 3rd leg or a
+    REFERENCE/fair-value anchor?** — NO bookmaker execution adapter exists (cannot SELL YES on Pinnacle/FanDuel), so
+    odds most naturally becomes a fair-value REFERENCE that filters/sizes the Kalshi↔Polymarket box, a materially
+    different strategy shape than a 3-way tradeable arb **[recommend: reference-only]**; (B) odds source — FootyStats
+    `ODDS` (IS-owned, ingested) vs live MTDS bookmaker venues; (C) leagues (only EPL + Bundesliga maps exist today); (D)
+    stake sizing (`entry_threshold`/`stake_fraction`/`edge_size_cap`/`max_position_usdc`); (E) paper vs live (May-23
+    gate); (F) odds ingestion recency/coverage for the target leagues (a data-correctness gate before E3 can be
+    VERIFIED).
