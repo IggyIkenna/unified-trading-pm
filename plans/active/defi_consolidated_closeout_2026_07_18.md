@@ -241,18 +241,31 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 > `_manifests/data_manifest.json`. Definitive reconciliation `wwkp5q6le` running (verifies legacy dup-vs-unique BEFORE
 > any delete; maps every R3 shape-miss; checks raw-shape drift; produces the clean-homes worklist).
 
-- [ ] [DATA] P0. **gas_fees (+ any other `{data_type}_{blk}_{blk}` block-range) discovery fix.** `_BUNDLED_TAIL_RE`
-      (`^(?:\d{4}[-_]?\d{2}[-_]?\d{2}.*|\d{8,})$`) matches a single number/date but NOT a `{blk}_{blk}` range → gas_fees
-      silently un-migrated corpus-wide (confirmed: `is_bundled_batch_leaf('gas_fees_9198245_9203901','gas_fees')`=False,
-      dry-run discovered 0). Extend the tail regex, ship, targeted `--apply` re-run for the missed data_types. (repo:
-      market-tick-data-service)
-- [ ] [DATA] P0. **Legacy prefix reconcile (`dex_pools/`/`lending_indices/`/`lst_rates/`).** Per `wwkp5q6le`'s VERIFIED
-      dup/unique split: fold UNIQUE cells into `raw_tick_data/by_date/` canonically → then R3-split; delete only
-      VERIFIED duplicates (snapshot-first; NEVER delete UNCERTAIN). The `raydium/SOLANA/2026-04-14` cell is known-unique
-      (0 canonical counterpart). (repo: market-tick-data-service)
-- [ ] [DATA] P1. **Raw-shape drift sweep** (from `wwkp5q6le`): any residual glued-venue cells / address-form leaves /
-      missing `pipeline_mode=` / non-canonical itype-case in `raw_tick_data/` → canon-walk to the clean home. (repo:
-      market-tick-data-service)
+- [~] [DATA] P0. **gas_fees `{data_type}_{blk}_{blk}` block-range discovery fix — IN FLIGHT (`a286c20c`).** The gap is
+  PARTIAL/data-dependent (not corpus-wide): `_BUNDLED_TAIL_RE` branch-1 (`\d{4}\d{2}\d{2}.*`) ACCIDENTALLY matches a
+  block-range whose start ≥8 digits (treated as a YYYYMMDD-lookalike → migrated by luck), but a start ≤7 digits (block
+  height <10M: AVALANCHE 2330158 / BSC 8303485 in 2021-22, early L2s, ETH's earliest 2020 slice) matches NEITHER branch
+  → silently un-migrated. Fix = add a `\d{5,}_\d{5,}` block-range branch (precision-guarded to not match per-instrument
+  symbol leaves). Ship → targeted `--apply` gas_fees re-run in the R5 cleanup. (repo: market-tick-data-service)
+- [ ] [DATA] P0. **⚠️ Legacy `dex_pools/`/`lending_indices/` = PARTIAL-OVERLAP, FOLD-not-delete (the verify OVERTURNED
+      the DUP verdict — a delete would have LOST real data).** Only 8 objects/2.4 MiB (SOLANA/2026-04-14; `lst_rates/`
+      already gone), but content-verify found **`dex_pools/raydium/SOLANA/2026-04-14` has 32 legacy-only high-TVL pools
+      ABSENT from canon** (XMR/USDC $47M, BNB/USDC $18M, USD1/USDC $9.9M, ZEC/USDC $7.5M, …; legacy=98 pools, canon=99,
+      intersection only 66). Canon was re-materialised 2026-07-13 from a DIVERGENT subgraph snapshot that dropped them.
+      **UNION-merge each legacy cell into canon** (per-instrument symbolic leaf, address-in-column; keep canon's richer
+      59-col schema on the 66-intersection, ADD the 32 legacy-only, keep canon's 33 extras); the 2 known-UNIQUE cells
+      (solend lending, kamino dex_pool) fold too. **DELETE legacy ONLY after the union is content-verified present in
+      canon + manifest-registered — NEVER blind-delete.** (repo: market-tick-data-service)
+- [ ] [DATA] P0. **Legacy GLUED-VENUE FLAT tree INSIDE `raw_tick_data/` — R3 never sees it.**
+      `raw_tick_data/by_date/day=<D>/asset_group=defi/venue=<VENUE>-<CHAIN>/ticks_migrated_<ISO8601>.parquet` (e.g.
+      `venue=UNISWAPV3-ETHEREUM/`, `AAVEV3-ETHEREUM/`) — pipeline_mode MISSING, venue+chain GLUED, FLAT (no
+      chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump. `parse_defi_object._PAT_DEFI`
+      requires the hive segments → returns None → R3 discovery=0. FIRST determine if these are superseded `_migrated_`
+      leftovers (a prior migration already split them → delete-after-verify) or un-split sources (→ parse + split to
+      canonical). (repo: market-tick-data-service)
+- [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
+      2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
+      needs a re-fetch. (repo: market-tick-data-service)
 - [ ] [BACKEND] P0. **Catalogue-venue gap.** The catalogue regen (`prod/catalog.parquet` 2026-07-19T04:40Z) has
       `force_include` but MISSING all 26 new venues (35 venues, LST/STAKING/YIELD_BEARING still 3/3/1, +39 rows not
       +85); checkout `_DEFI_VENUES`=89. Deploy-lag vs runtime-silent-`[]` diagnosis+fix+re-run dispatched (`a5f19b07`).
@@ -669,6 +682,19 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous tick — canon reconciliation LANDED; serious findings; R5 refined).** `wwkp5q6le` (5
+  agents, adversarial). **The verify-before-delete gate paid off**: it OVERTURNED an inventory "DUP/safe-to-delete"
+  verdict on `dex_pools/raydium/SOLANA/2026-04-14` — content-verify found **32 legacy-only high-TVL pools absent from
+  canon** ($47M XMR/USDC, $18M BNB/USDC, …); a blind delete would have permanently lost them. So legacy = FOLD (union),
+  not delete. Findings + refined R5: (1) gas_fees gap is PARTIAL — ≤7-digit block-range starts silently missed
+  (AVALANCHE/BSC 2021-22, early ETH); fix in flight `a286c20c`. (2) Legacy top-level prefixes are TINY (8 objs/2.4 MiB,
+  SOLANA/2026-04-14; `lst_rates/` gone) but PARTIAL-OVERLAP → union-merge + delete-only-after-content-verify. (3) A
+  legacy GLUED-VENUE FLAT tree (`ticks_migrated_*`) sits INSIDE `raw_tick_data/` that R3's `_PAT_DEFI` parser never
+  discovers → separate handling. (4) Canon dex_pool_state was re-materialised 2026-07-13 from a divergent subgraph
+  snapshot (dropped 32 pools) → RCA to know if it's trustworthy for other DEX days. **These change the plan**: R3-as-
+  running is NOT sufficient + there's a data-preservation concern → operator PushNotified. gas_fees discovery fix
+  dispatched; the folds/RCA are P0 R5 items (careful, fold-not-delete, mostly after the main migration completes).
 
 - **2026-07-19 (slot-4, /autonomous — R3 migration RUNNING; catalogue + THREE operator-caught corpus gaps; R5 opened).**
   (Journaling ~5h of work the todo-list tracked but the plan hadn't captured — Commit-Push-Flip catch-up.)
