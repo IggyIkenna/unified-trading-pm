@@ -793,8 +793,12 @@ this session (legacy IS bucket deleted), so it now targets partly-nonexistent in
 
 Migrating rows without fixing writers guarantees regression on the next capture. Fix emission, then migrate.
 
-- [ ] [CODE] P1. Make every sports writer emit the CF-7 canonical `data_type` (lower-case) — audit each
-      `record_captured/record_empty/record_failed` sports call-site for upper-case literals.
+- [ ] [CODE] P1. **DIRECTION CORRECTED — emit UPPER, not lower.** Make every sports writer emit UPPER-CASE `data_type`,
+      auditing each `record_captured/record_empty/record_failed` sports call-site for **lower-case** literals. This todo
+      previously said "(lower-case) … audit for upper-case literals", which K0-DECISION (b) **reversed** on 2026-07-18:
+      sports is UPPER everywhere. Left as written it would have driven the migration of a ~2M-row prod bucket in exactly
+      the wrong direction, and K2 below depends on this shipping first — so the stale wording was a live trap, not a
+      typo. CF-7's `_CF7_DATA_TYPE_NORMALISE` (UPPER→lower) is **superseded for sports** and must not be reused here.
 - [ ] [CODE] P1. Make MDPS odds writers stamp `venue = <bookmaker_key>` and `source = odds_api`, instead of
       `venue=ODDS_API`. `_SPORTS_VENUES = frozenset({"ODDS_API"})`
       (`market_tick_data_service/adapters/umi_tick_provider.py:110`) is the declaration to change.
@@ -802,8 +806,9 @@ Migrating rows without fixing writers guarantees regression on the next capture.
       vocabulary (betting market: match_odds / over_under / btts / spread). NOTE `canonical_writer_shaping.py:218`
       asserts _"the correct instrument_type IS 'odds'"_ — that claim must be reconciled against the shard atom
       (`instrument_type` is an INSTRUMENT axis, and `odds` is a data_type) BEFORE changing it. Read it in full first.
-- [ ] [CODE] P1. QG assertion: sports `data_type` ∈ the UAC lower-case vocabulary, `venue` ∉ {vendor names}, and
-      `instrument_type` ∈ the declared sports vocabulary — so this class cannot silently return.
+- [ ] [CODE] P1. QG assertion: sports `data_type` ∈ the UAC **UPPER-case** sports vocabulary (per K0-DECISION (b) —
+      corrected from "lower-case" for the same reason as above), `venue` ∉ {vendor names}, and `instrument_type` ∈ the
+      declared sports vocabulary — so this class cannot silently return.
 
 ### K2. Phase 2 — MIGRATE the -prd- rows (only after K1 ships)
 
@@ -1746,6 +1751,9 @@ killing healthy work.
 Fleet watchdog re-armed on creation-time counts across two independent chunks (2019 and 2025), which move under
 overwrite.
 
-- [ ] [DOC] P2. Fold this into `codex/12-agent-workflow/async-wait-and-poll-discipline.md`: add a metric-validity
-      precondition ("prove the metric can move for THIS operation before trusting flat/zero"), with the 404-bucket and
-      overwrite-blind cases as the two worked examples.
+- [x] [DOC] P2. ✅ Folded into `codex/12-agent-workflow/async-wait-and-poll-discipline.md` as **rule 1a** (SSOT):
+      "VALIDATE THE METRIC BEFORE YOU TRUST A ZERO OR A FLAT READING", with both measured failures as worked examples
+      and the test to apply at arm time — _"what reading would this show if the job were healthy, and is that different
+      from what it shows if the job is dead?"_ Plus the three concrete guards: resolve buckets via `resolve_bucket_name`
+      (never trust a launcher's printed hint), prefer creation-time counts over inventory counts (inventory is blind to
+      overwrite), and take a baseline at arm time so "flat" is measured against a known-live number.

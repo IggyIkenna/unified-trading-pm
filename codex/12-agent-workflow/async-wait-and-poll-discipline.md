@@ -53,6 +53,27 @@ whole window before anyone looks.
    `≥STAGING_GREEN`, PRs merged, rows backfilled, files migrated) and log it each tick. A **flat** metric across several
    ticks = a **STALL**, which is an action signal, not a longer wait. "Done" alone is blind to stalls.
 
+   **1a. VALIDATE THE METRIC BEFORE YOU TRUST A ZERO OR A FLAT READING (HARD RULE).** Rule 1 is necessary but not
+   sufficient: it assumes the metric _can_ move for the operation you are actually running. Prove that first — otherwise
+   a broken monitor is **indistinguishable from a broken job**, and rule 1 fires on the monitor's own defect and argues
+   for killing healthy work. Two measured failures, same root cause, different mechanisms (2026-07-19, sports features
+   re-run):
+
+   | metric                                          | why it could NEVER signal progress                                   |
+   | ----------------------------------------------- | -------------------------------------------------------------------- |
+   | object count on a bucket from a launcher's hint | the bucket **404s**; `gcloud storage ls … \| wc -l` yields 0 forever |
+   | count of `day=` partitions                      | the run **overwrites in place**, so the partition count cannot grow  |
+
+   The first read `0` for 20 minutes on a VM that was writing fine; the second read a flat `3462` across three ticks
+   while 288 objects/window were landing. Both looked exactly like a stall.
+
+   Before arming, answer: **"what reading would this show if the job were healthy, and is that different from what it
+   shows if the job is dead?"** If the answer is the same, the metric is useless. Concretely: resolve buckets via
+   `resolve_bucket_name` (never string-interpolate an env-split name, and never trust a launcher's printed hint — verify
+   the path returns objects at all); prefer **creation-time counts in the run window** over inventory counts, because
+   inventory is blind to overwrite; and take a baseline reading at arm time so "flat" is measured against a number you
+   know was live.
+
 2. **Short-interval first, then EXPAND.** When the cadence is unknown, start at **~30–45 s** ticks to (a) confirm the
    mechanism actually moves and (b) catch a stall fast. Once you have ≥2 ticks of real progress, **lengthen** the
    interval (cache-window aware: stay <5 min to keep the prompt cache warm while actively polling; go to 20–30 min only
