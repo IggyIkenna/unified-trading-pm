@@ -1261,3 +1261,20 @@ blanks; a file with no blanks returns early and is left unstamped. So the invari
       fixture count. Retarget that script to `entity=fixtures_schedule` first (§ O todo).
 - [ ] [DATA] P1. Then rebuild the catalogue and verify `competition_phase` — with raw now at 90-99% on populated eras,
       this is the real test of the § O "the 3.2% was the stale rollup" hypothesis.
+
+### L-COMPLETE (2026-07-19 00:45Z) — lineups re-derive FINISHED and verified at scale
+
+`fts-backfill-20260718-184352` completed cleanly: `DEPLOYMENT_COMPLETED exit_code=0`, deployment archived, VM
+self-deleted per `VM_SHUTDOWN_ON_COMPLETION`.
+
+| metric                     | before               | after                                           |
+| -------------------------- | -------------------- | ----------------------------------------------- |
+| lineup shards materialised | 356 (stale, pre-fix) | **2,022**                                       |
+| `coach_name` populated     | **0/40 (0%)**        | **3,778/3,983 (94.9%)** — random 6-shard sample |
+| rows per day               | ~40                  | ~660 (3,983 over 6 shards)                      |
+
+Closes the A1 chain end-to-end: normalizer flat-shape fix + dedupe + coach emission (features-service@cf10b931),
+delivered over history by the `--redo-all` launcher gap fix (deployment-service). **Zero api-football calls** — the
+entire restoration came from raw already on disk.
+
+The residual ~5% `coach_name` nulls are fixtures that genuinely carry no coach upstream — honest absence, not a defect.
