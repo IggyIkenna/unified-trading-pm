@@ -2827,5 +2827,24 @@ fixes shipped and verified for both original root causes plus this session's roo
 backfill-correction mechanism now works correctly), but per-cell correction across the full residual corpus is still in
 progress (cluster 2's season-cache gap needs its own fix first). `/skip-current-task` — resume once (a) the new
 season-cache-0-fixtures todo lands, then re-run the backfill-correction sweep to closure, or (b) a fresh
-`read_availability_index`/`query_api_football_pending_clusters_2026_07_18.py` read (now trustworthy post root-cause-2
-fix) shows genuine convergence toward 0 pending for the two residual clusters.
+
+### 2026-07-19T~17:4xZ — data_engineering slot-8 (same session, resumed — investigated the season-cache-0-fixtures follow-up, narrowed but did not close it)
+
+Picked the same todo back up (`dispatch_reason: "resume"`). Fresh-pulled all repos clean. Investigated my own follow-up
+todo from the last entry: ruled out the numeric-vs-canonical `league_id` hypothesis (the raw numeric string
+`_find_stale_fixture_leagues_for_date` returns DOES resolve correctly via `get_league()` — confirmed via log evidence,
+"648 season fixtures for league=129" was fetched successfully). The real gap is deeper: a full-season cache fetch for a
+flagged league returns zero fixtures on the exact date the manifest itself claims one exists. Spot-checked
+`2026-06-27`'s raw `fixtures_schedule` data directly and found hundreds of non-terminal rows across 150+ distinct league
+ids with mixed live-match statuses (`NS`/`1H`/`HT`/`2H`/`TBD`) — the true scope of this cluster's residual staleness may
+be materially larger than the 394-cell count the scan currently reports, and/or the scan may be double-counting the same
+league under different `league_id` representations across the entity-split boundary. Documented this narrowing in the
+issue doc (`unified-trading-pm@d66dd9a9`/PR #1209) rather than attempting a fix on uncertain footing — this needs its
+own focused investigation session (per-league numeric/canonical id reconciliation
+
+- why the season-cache fetch misses a manifest-confirmed fixture), not a quick continuation.
+
+**Not flipping this checkbox** — no further quick progress available on the residual-cluster closure path this dispatch.
+`/skip-current-task` — same resume criteria as above, plus (c) the newly-narrowed season-cache investigation todo in the
+issue doc lands. `read_availability_index`/`query_api_football_pending_clusters_2026_07_18.py` read (now trustworthy
+post root-cause-2 fix) shows genuine convergence toward 0 pending for the two residual clusters.

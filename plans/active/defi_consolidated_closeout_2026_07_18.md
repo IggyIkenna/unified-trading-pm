@@ -696,6 +696,37 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — PRE-REBUILD adversarial verification caught 2 manifest defects; both FIXED @mtds
+  35c87d66).** Ran a read-only verification workflow (wtyf6ac6u, 5 Opus agents) over the 19 DONE migration quarters
+  BEFORE firing the whole-corpus rebuild — the reshape is data-CORRECT (zero row loss, no improper dedup collapse, gas
+  block-range fix works, idempotency markers present) but found TWO defects that would have re-polluted the manifest
+  with the exact garbage-`instrument_id` rows R3 was built to kill:
+  - **Defect A (HIGH):** `rebuild_defi_manifest.parse_hive_path` MATCHED the `_migrated_{stem}.parquet` retirement
+    markers (the migration renames each split source bundle in-place; delete-old not used → markers persist at full hive
+    paths) → seeded phantom `instrument_id='_migrated_…'` rows + double-counted the split leaves. **FIX:** the rebuild
+    walk now skips every `_`-prefixed leaf (`skipped_markers` counter). Un-migrated bundles are STILL manifested (the
+    rebuild deliberately covers un-migrated cells — the earlier "skip is_bundled_batch_leaf" idea OVER-reached: it would
+    have dropped legit `{venue}_{chain}_{date}` un-migrated cells + broke the existing test).
+  - **Defect B (MED-HIGH):** `is_bundled_batch_leaf` recognized only `{venue}_{chain}_`, `{venue}-{chain}_`,
+    `{data_type}_` prefixes → the venue-only PERP bundle `{venue}_{ingestion_ts}` (aster_/hyperliquid_/gmx_, 64-80
+    instruments each) was NEVER fanned out → the rebuild would collapse it into one garbage row. **FIX:** added the
+    venue-only `{venue}_` prefix (tail-guarded so it can't match a `{venue}_{chain}_` leaf or a real symbol). GMX = a
+    legit in-scope DeFi perp; ASTER/HYPERLIQUID cefi-misfiling is a SEPARATE parked item. Both fixes unit-tested (perp
+    positive/precision cases + a rebuild marker-skip dry-run test) + QG-green (6452 passed) + verified by direct
+    `scan_and_rebuild` (skipped_markers=1, total_shards=1, curve bundle still manifested).
+  - **--force RESOLVED from code:** the migration's `--force` gates ONLY the pre-apply needs_attribution-ratio
+    dry-measure (line 667) — it disables NO skip; idempotency is discovery-STRUCTURAL (`_`-prefix exclusion +
+    bundle-shape match + rename-to-`_migrated_*`), independent of force. CLAUDE.md's "force replays day-one" preemption
+    rule is a NAMING COLLISION (true for capture/refetch launchers, FALSE for this reshape script). `--force` is SAFE on
+    the on-demand resume; only removes the >50%-unattributable safety refusal. [supersedes my earlier "--force
+    DECLINED".]
+  - **07-13 divergence RCA:** the 32 raydium high-TVL pools were dropped by the DeFi CATALOGUE-AS-FILTER
+    (`_catalogue_filter.py`, ~07-09) intersecting raydium's top-100-by-liquidity fetch with the IS
+    `prod/catalog.parquet` allowlist + per-date availability window — NOT a TVL threshold or enum change. **R3 does NOT
+    consult the catalogue** (pure reshape, lossless-merge) → R3 neither drops nor resurrects them. NUANCE: if a running
+    quarter's canonical INPUT was itself a catalogue-filtered re-materialization, the gap already lives in R3's input
+    and R3 carries it forward — an UPSTREAM IS-catalogue completeness fix (parked for operator), not an R3 bug.
+
 - **2026-07-19 (slot-4, /autonomous — R3 migration switched to ON-DEMAND; GIL/data-volume-bound; --force declined).**
   After 4 SPOT preemptions (2025q1/q2, 2024q4, + one recovered) blowing past the speed goal + eating recovery ticks,
   relaunched the 8 remaining quarters ON-DEMAND (`PROVISIONING_MODEL=STANDARD`, `preemptible=false`,

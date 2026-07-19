@@ -312,7 +312,7 @@ shared by every consumer of every instruments-\* manifest bucket.
       `deployment-api/_fixtures_pools.py` [display-only], `instruments-service/sports/     fixture_completeness.py`
       [docstring-only mention, not wired into any filter]) — none of these gate a real decision on
       `status_short`/`status_long` in a way the mis-stamping bug would corrupt.
-- [ ] [DATA] P1. Fix
+- [x] ✅ [DATA] P1. Fix
       `features-service/features_service/sports/exporters/derived_features_helpers.py::_filter_completed_before` (feeds
       `_build_h2h_history`, used for match-outcome H2H features): the status-based exclusion
       (`df[~has_status | df["status"].isin({"FT","AET","PEN","Match Finished"})]`) silently dropped every
@@ -321,7 +321,22 @@ shared by every consumer of every instruments-\* manifest bucket.
       `home_goals.notna()`, the status check is redundant AND wrong for this source — either drop it for api_football
       rows or widen it to trust a populated score as sufficient evidence of completion. Sequence AFTER the P1
       backfill-correction pass above lands (recompute H2H history against corrected data, not the still-`NS` historical
-      rows) to avoid a second patch. (repo: features-service)
+      rows) to avoid a second patch. (repo: features-service) — **features-service@c4727e56**: widened
+      `completed_statuses` to include `"NS"` (rather than dropping the status filter outright) since `_KIND_TO_FAMILY`-
+      style blanket removal would have wrongly re-included genuinely non-terminal statuses (Cancelled/Postponed/
+      Abandoned/in-play) — those are unaffected by the mis-stamping bug (root cause 1 only ever writes the wrong value
+      as `"NS"`, never any other status) and an existing test already encoded that exclusion as intentional
+      (`test_filters_by_status_completed`, Cancelled+goals excluded). By the time the status check runs,
+      `home_goals.notna()` has already gated the row, so treating a populated score + `"NS"` as completed is safe and
+      trustworthy. Added 3 new unit tests (`test_ns_status_with_goals_is_included`,
+      `test_ns_status_without_goals_still_excluded`, `test_cancelled_status_with_goals_still_excluded`); full
+      `features-service` `quality-gates.sh` green (17702 passed, 0 failed, 209 skipped; sentinel matches shipped SHA).
+      Note: hit + resolved a false-positive repo-blocker along the way — STEP 5.104 (asset-group parity gate) prints a
+      red ❌ for a real, pre-existing, unrelated defect (see
+      `plans/active/issues/features_service_qg_red_asset_group_parity_stale_kind_mapping_2026_07_19.md`) but its
+      `log_fail()` call has no `exit 1`, so it never actually failed the script (exit 0, sentinel written) — filed the
+      issue doc + declared `RB-00065170` before discovering this, which the orchestrator's watcher auto-resolved; the
+      underlying finding is still real and tracked in that issue doc, just non-blocking.
 
 ## Process note — 2026-07-19T16:30Z (slot-6, data_engineering)
 
