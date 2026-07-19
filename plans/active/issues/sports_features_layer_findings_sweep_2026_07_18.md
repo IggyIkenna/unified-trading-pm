@@ -1746,6 +1746,9 @@ killing healthy work.
 Fleet watchdog re-armed on creation-time counts across two independent chunks (2019 and 2025), which move under
 overwrite.
 
-- [ ] [DOC] P2. Fold this into `codex/12-agent-workflow/async-wait-and-poll-discipline.md`: add a metric-validity
-      precondition ("prove the metric can move for THIS operation before trusting flat/zero"), with the 404-bucket and
-      overwrite-blind cases as the two worked examples.
+- [x] [DOC] P2. ✅ Folded into `codex/12-agent-workflow/async-wait-and-poll-discipline.md` as **rule 1a** (SSOT):
+      "VALIDATE THE METRIC BEFORE YOU TRUST A ZERO OR A FLAT READING", with both measured failures as worked examples
+      and the test to apply at arm time — _"what reading would this show if the job were healthy, and is that different
+      from what it shows if the job is dead?"_ Plus the three concrete guards: resolve buckets via `resolve_bucket_name`
+      (never trust a launcher's printed hint), prefer creation-time counts over inventory counts (inventory is blind to
+      overwrite), and take a baseline at arm time so "flat" is measured against a known-live number.
