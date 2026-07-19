@@ -41,6 +41,15 @@ code_refs:
 
 # TradFi Databento Sourcing — Subscription Universe + Billing-Safety SSOT
 
+> **🔴 2026-07-19 — MASSIVE (formerly Polygon.io) REMOVED as a tradfi source** (operator ruling: Databento = batch SoT,
+> Yahoo = daily candles). `massive` is **no longer in `SOURCE_PRIORITY`** — the 6 `("tradfi", …)` cells (trades, tbbo,
+> ohlcv_1m, ohlcv_15m, options_chain, futures_chain) are now `["databento"]` / `["databento","yahoo"]` only, and the
+> runtime routing (`_umi_massive`, the two vendor adapters, `massive-futures-backfill`, `--source massive`) is DELETED
+> (`uac@a2beed46` + `mtds@362a487e`). **Everything below that says `["databento","massive"]` / "massive live-capable" /
+> "massive-first" is HISTORICAL** — read it for provenance, not current state. `batch_massive` `PipelineMode` +
+> `possible_manifest` recognition are DELIBERATELY KEPT until the ~1.47M historical `pipeline_mode=batch_massive/` GCS
+> objects are purged (gated). Full plan: `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`.
+
 > **Status:** authoritative (operator decision 2026-06-18). **Code SSOT:**
 > `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py` (exported from
 > `unified_api_contracts.registry`). **Plan:**
