@@ -196,27 +196,34 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       IS-listed-but-unfetched venue becomes a typed `empty_confirmed`, never a dangling `expected_unattempted`. (repo:
       instruments-service, unified-api-contracts)
 
-- [ ] [BACKEND] P0 (R2d — honest-completion of R2 acquisition). **Register the new staking/restaking/vault venues in UAC
-      `expected_coverage.py::_DEFI` for `lst_rates`** so the rows the shipped acquisition writes are EXPECTED, not
-      `captured-but-unexpected` (dishonest coverage the other way). Scope = only the venues whose acquisition actually
-      lands real rows (the RPC-verified set: binance/wBETH, kelpdao/rsETH, renzo/ezETH, yearn_v3, beefy, idle,
-      pendle-SY, sanctum/jupSOL — NOT the honest-empty set). Cross-ref the tracked
-      `defi_coverage_capability_alignment_2026_05_22.md` + the deferred `vault_share_price/native_staking_rates` note at
-      `expected_coverage.py:371-376`. VERIFY: enumerate expected for one new venue-day and confirm the acquired
-      `lst_rates` row matches an expected key (not unexpected). (repo: unified-api-contracts)
+- [x] ✅ [BACKEND] P0 (R2d). **SHIPPED `unified-api-contracts@238b45d2` (QG green; all 8 runtime-verified
+      `is_expected=True`/`SHOULD_HAVE_DATA`).** Registered the RPC-verified acquiring venues in
+      `expected_coverage._DEFI` for **`lst_rates` ONLY** (FLAT manifest venue keys, chain a separate dimension):
+      `BINANCE` (wBETH ETH+BSC), `KELPDAO`, `RENZO`, `YEARN_V3`, `BEEFY`, `IDLE`, `PENDLE` (SY), `SANCTUM` (jupSOL
+      SOLANA). Sharp correctness calls: **coinbase/rocketpool/puffer NOT added — already registered** as
+      COINBASE/ROCKETPOOL/PUFFER (they acquire via the pre-existing `_EVM_LST_ABI_METADATA` path, not the new
+      `_lst_extended_rates.py`); **`lst_rates`-only, not `staking_yields`** — the staking_yields handler only covers
+      LIDO/ETHERFI/EIGENLAYER, so registering it would manufacture a false MISSING (the reverse dishonesty);
+      honest-empty siblings (karak/symbiotic/convex/PENDLE-PT-YT/ etc.) stay `NOT_IN_SCOPE`. Representative acquired
+      shard `(defi, SANCTUM, SOLANA, lst_rates)` (jupSOL) confirmed EXPECTED. (repo: unified-api-contracts)
 
 ### R3 — Historical migration: batch → per-instrument, column+row UNION · P0 (gated on R1+R2)
 
 - [ ] [DATA] P0. **Fork `migrate_defi_full_v9_canonical`** — cell grain `(venue,chain,day)` → `(instrument_id,day)` and
-      **replace winner-pick with column+row UNION** (a sparse RPC-fallback batch may hold columns a fat batch lacks;
-      max-rows-wins silently drops schema — THIS is why target=UNION, not winner-pick). Reuse verbatim: single-walk
-      `_list_objects`, footer-only `discover_union` + baked `_CANONICAL_UNION`, the LOUD-FAIL `_conform` guard.
-      Per-column canonical resolution (coalesce name-drift old→new; `resolve_pool_symbol` 3-tier id;
-      venue/chain/instrument_type). Dedupe rows on the natural event key (swaps `tx_hash`; state `block_number`; oracle
-      `round_id`), keep the most-populated/canonical. Unresolvable → `_needs_attribution/` (never drop). DRY-RUN
-      default. Write `{sanitized_symbol}.parquet` into the same `day=…/data_type=…` partition; then
-      `rebuild_defi_manifest` re-derives `instrument_id=stem` via `parse_hive_path` → per-instrument manifest by
-      construction. (repo: market-tick-data-service)
+      **replace winner-pick with column+row UNION**. **AUTHORED + 22 unit tests PASSING + leaf byte-match with R1
+      PROVEN** (`migrate_defi_batch_to_per_instrument.py`, untracked, isolation-clean: ruff/basedpyright green, 559 L).
+      **NOT YET SHIPPED — the adversarial verify (safe_to_dry_run=FALSE) caught 2 CONFIRMED silent-data-loss defects
+      that MUST be fixed before `--apply`** (this is exactly why R3 is verify-gated): **(1)** `_needs_attribution` is
+      written with a blind `wb` truncate to the BYTE-IDENTICAL path v9 used (`_migrate_defi_walk.py:572`) → destroys the
+      prior v9 unattributed corpus (runtime-proven: seeded 2 v9 rows → GONE after `--apply`); **(2)** the per-instrument
+      leaf is a blind `wb` overwrite with no existence-check → clobbers a pre-existing R1 forward-written
+      `{symbol}.parquet` with STALER bundle data (runtime-proven: fresh `forward_only_col` regressed). Fix both =
+      read-existing+event-key merge OR skip-if-exists-fail-loud; never truncate a shared path R3 didn't author this run.
+      Non-blocking: correct the "instrument_id already stamped" docstring (v9 only carries it through) + add a
+      `needs_attribution/total` ratio pre-apply HARD gate; add the legacy glued-venue bundle pattern if any survive v9.
+      **REFUTED (R3 correct)**: leaf byte-match, true outer-union, no row loss, path/manifest parity — all
+      runtime-proven. Blocked-alongside: the MTDS tree is QG-RED (`solana_lst_archival.py` 905 L > 900 cap, shipped by
+      R2 `@8746708c`) → fix that first to unblock any MTDS ship. (repo: market-tick-data-service)
 
 ### R4 — Coverage against the IS denominator · P1 (gated on R1+R2+R3) → then RESUME capture
 
@@ -595,6 +602,23 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — R2d SHIPPED; R3 authored but verify caught 2 data-loss defects; MTDS QG-red
+  found).** `wj9qqu5ry` outcomes:
+  - **R2d** `unified-api-contracts@238b45d2` (QG green, 8 venues `SHOULD_HAVE_DATA`) — flipped. Sharp calls:
+    coinbase/rocketpool/puffer already-registered (pre-existing ABI path); `lst_rates`-only (no false `staking_yields`
+    MISSING); honest-empty siblings excluded.
+  - **R3 author**: script + 22 passing tests + leaf-byte-match-with-R1 PROVEN, isolation-clean — but **the adversarial
+    verify returned `safe_to_dry_run=FALSE`**: 2 CONFIRMED silent-data-loss defects (blind `wb` truncate of the shared
+    `_needs_attribution` path v9 owns → v9 rows destroyed; blind `wb` per-instrument leaf overwrite → clobbers R1
+    forward files with staler bundle data). Both runtime-proven. **The verify gate did its job — R3 will NOT `--apply`
+    until fixed.** REFUTED (R3 correct): leaf byte-match, outer-union, no row loss, manifest parity.
+  - **MTDS tree is QG-RED**: `solana_lst_archival.py` = 905 L > 900 cap (shipped by R2 `@8746708c` — the acquisition's
+    jupSOL wiring pushed it over; the agent's "exactly 900" was pre-final-edit). This blocks EVERY MTDS quickmerge →
+    must split the file (not baseline — never raise the cap) first.
+  - **Next (one MTDS remediation wave)**: split solana_lst_archival.py <900 (unblock repo) + fix R3's 2 overwrite
+    defects (merge/skip-if-exists) + docstring + needs_attribution pre-apply gate → re-verify attack #4 → ship both → R3
+    dry-run recon.
 
 - **2026-07-19 (slot-4, /autonomous — IS lending code P0 SHIPPED + verified).** `w2bkwrb74` →
   `instruments-service@1af1be34` (QG green, 979 tests; adversarial verdict CONFIRMED all_seven_correct + fix2_durable).
