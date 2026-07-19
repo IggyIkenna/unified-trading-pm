@@ -93,10 +93,19 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       archetype-state, position-store-sports, strategy-store-flat all gone). The 114-vs-59-TF-tracked gap is
       PRE-EXISTING estate drift (market-data/billing buckets not in canonical TF) — separate from the folds,
       operator-aware. AWS recount deferred (operator deprioritized AWS; GCP is where the real data is).
-- [ ] [DOCS] P3. **Parent-plan + issue-doc bookkeeping** — flip [[bucket_estate_consolidation_to_sub100_2026_07_13]]'s
-      W3 execute todo to done (cite this plan + the four fold plans); flip [[bucket_estate_fold_design_2026_07_13]] §3
-      remaining todos; close the three audit issue docs (terraform drift / recon / strategy-store split-brain) if the
-      folds resolved them. Run `run_hygiene_sweep.sh` + `regenerate_active_plan_inventory.py` (orphan count must be 0).
+- [ ] [DOCS] P3. **Parent-plan + issue-doc bookkeeping** — **MOSTLY DONE 2026-07-19 (one sub-item left).** ✅ Parent W3
+      execute todo already flipped ([[bucket_estate_consolidation_to_sub100_2026_07_13]] line 331). ✅
+      [[bucket_estate_fold_design_2026_07_13]] §3 draft skeleton flipped (all executed-via-split-plan todos → done +
+      pointers; IAM re-gating + alias-sunset left honestly open with tracking pointers). ✅ Hygiene sweep (0 hard
+      failures) + inventory (0 orphans) verified. ✅ 3 audit issue docs ASSESSED — **none fully fold-resolved, all stay
+      OPEN** with a "Wave-3 fold assessment" note added: (1) `terraform_bucket_estate_drift_resurrection` — per-fold TF
+      import/state-rm + COLDLINE@60d done, BROADER main.tf reconcile (32-destroy drift, yaml-mirror sync, e2e polluter)
+      remains; (2) `strategy_store_split_brain` — bucket side resolved (Fold D + 07-14 delete), reader-code legs
+      (deployment-api defaults + UAC enumerate_envelope) remain = closeout 4c/4d; (3)
+      `recon_bucket_missing_nightly_recon_failing` — OUT of fold scope (recon bucket fixed separately
+      blrs@2f0380b/ds@ccfaca26; upstream producer chain is its own lifecycle). **STILL OPEN**: the parent plan's OWN
+      broader codex-audit todo (line ~355 — `bucket-naming-and-config.md` superseded-pointer fix + CLAUDE.md
+      archived-plan pointer + `per-asset-group-bucket-layouts.md` folded shapes).
 
 ## Progress Log
 

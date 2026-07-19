@@ -333,55 +333,55 @@ lifecycle'd" claim per the parent Wave-0 todo.
       Authored 5 successor plans: [[bucket_fold_ml_2026_07_17]], [[bucket_fold_features_2026_07_17]],
       [[bucket_fold_execution_strategy_2026_07_17]], [[bucket_fold_portfolio_state_2026_07_17]] +
       [[bucket_fold_closeout_2026_07_17]] (cross-cutting, `depends_on` all four).
-- [ ] [INFRA] P0. **Alias + yaml scaffold (shared prerequisite)** — add the folded keys to `cloud-providers.yaml` (all 3
-      copies) + `_KIND_ALIASES` entries for every retired kind (§2.D soft-transition); no bucket deletes yet. Verify
-      `terraform plan` (derived-from-yaml) shows the new folded buckets as the only creates.
 
-- [ ] [DATA] P0. **ml — provision** `ml-store-{prd,test}-{pid}` (GCP + AWS) via the derived-from-yaml `for_each`; no
-      dev/stg twins.
-- [ ] [CODE] P0. **ml — cutover** — parity-verify each source vs `ml-store/{prefix}/`; cut over all writers/readers
-      (Fold B sites) to `kind="ml-store"` + kind path-prefix; ship per-repo QG-green (ml-service, UTL, deployment-api,
-      deployment-service).
-- [ ] [INFRA] P0. **ml — redeploy + delete** — redeploy ml-service, verify the new path is genuinely exercised (not just
-      deployed); retarget the ml consolidator job(s) 5→1; delete the 5 source buckets + remove their TF/yaml keys in the
-      same change.
+> **✅ EXECUTED 2026-07-19 — this draft skeleton was carried out via the 5 split plans (all flipped DONE); the two
+> genuinely-open items below (IAM re-gating, alias sunset) are tracked in their owning plans, NOT re-opened here.**
 
-- [ ] [DATA] P1. **features — provision** `features-{cefi,defi,tradfi,sports,pred}-{prd,test}-{pid}`; reconcile the
-      `features-onchain-defi` flat(~712)-vs-`-prd`(~76) twins BEFORE migrate (copy only flat objects absent from prd).
-- [ ] [CODE] P1. **features — cutover** — parity-verify; cut over writers (delta_one/volatility/onchain/xinstrument/mtf
-      `feature_writer.py`) + readers (`batch_config_utils.py`, ml consumers, `trace_all_carry_archetypes.py`) to
-      `features-{ag}` + kind prefix; re-mount the BQ `feature_external` external tables at the new prefix (§2.B); ship.
-- [ ] [INFRA] P1. **features — redeploy + delete** — redeploy features-service, verify exercised; retarget the feature
-      consolidator jobs → 5 per-AG-bucket jobs; delete the ~20 source buckets + TF/yaml removal same change.
+- [x] ✅ [INFRA] P0. **Alias + yaml scaffold (shared prerequisite)** — DONE 2026-07-19 (executed per-fold as each split
+      plan's provision step): folded keys + `_KIND_ALIASES` entries added across the yaml copies; `terraform plan`
+      showed the folded buckets as the only creates.
 
-- [ ] [DATA] P1. **execution + strategy — provision** `execution-store-{prd,test}-{pid}`; add `-{env}-` to the
-      `strategy-store` flat key (this wave carries both — strategy is name-tier-only).
-- [ ] [CODE] P1. **execution + strategy — cutover** — DEPENDS_ON parent W2 [[strategy_store_split_brain_2026_07_13]]
-      repoint landed; parity-verify; cut over execution-store per-AG → flat + AG path-prefix (Fold C sites, incl.
-      `nautilus-catalog-cache/`); re-tier strategy-store writers (Fold D sites) + the UAC `strategy_store_bucket`
-      facade; ship.
-- [ ] [INFRA] P1. **execution + strategy — redeploy + delete** — redeploy execution-service + strategy-service, verify
-      exercised; delete source buckets + TF/yaml.
+- [x] ✅ [DATA] P0. **ml — provision** — DONE via [[bucket_fold_ml_2026_07_17]] (`ml-store-{prd,test}` provisioned).
+- [x] ✅ [CODE] P0. **ml — cutover** — DONE via [[bucket_fold_ml_2026_07_17]] (Fold B sites → `kind="ml-store"` + kind
+      path-prefix; per-repo QG-green).
+- [x] ✅ [INFRA] P0. **ml — redeploy + delete** — DONE via [[bucket_fold_ml_2026_07_17]] (consolidator 5→1; 5 source
+      buckets deleted + TF/yaml removed).
 
-- [ ] [DATA] P2. **portfolio-state — provision** `portfolio-state-{prd,test}-{pid}`; note the heterogeneous sources (UTL
-      PATH_REGISTRY flat trio gains its tier for the first time; `archetype-state` + `position-store-sports` already
-      tiered).
-- [ ] [CODE] P2. **portfolio-state — cutover** — parity-verify each of the 6 sources; cut over UTL PATH_REGISTRY
-      (`registry.py:152,159,166`) + the `pnl-attribution-output` bare default (`pnl/config.py:15`) + the two yaml kinds
-      → `portfolio-state` + per-domain prefixes; ship (UTL + strategy-service + deployment-service).
-- [ ] [INFRA] P2. **portfolio-state — redeploy + delete (LAST)** — redeploy the real writers (strategy-service pnl +
-      position modules), verify exercised end-to-end (this is live-trading-adjacent — diff real output, do not rush);
-      delete the 6 source buckets + TF/yaml removal LAST.
+- [x] ✅ [DATA] P1. **features — provision** — DONE via [[bucket_fold_features_2026_07_17]] (`features-{ag}-{prd,test}`;
+      onchain-defi flat/prd twin reconciled).
+- [x] ✅ [CODE] P1. **features — cutover** — DONE via [[bucket_fold_features_2026_07_17]] (writers/readers →
+      `features-{ag}` + kind prefix; BQ `feature_external` re-mounted, 766k rows verified).
+- [x] ✅ [INFRA] P1. **features — redeploy + delete** — DONE via [[bucket_fold_features_2026_07_17]] (consolidator N→5
+      per-AG; ~15 source buckets deleted + TF/yaml).
 
-- [ ] [INFRA] P2. **IAM + lifecycle** — per fold, join each new `-prd-` bucket to
-      [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase 2; apply STANDARD→COLDLINE@60d whole-bucket +
-      prefix-scoped STANDARD exceptions (§2.E) in the derived-from-yaml terraform.
-- [ ] [CODE] P3. **Alias sunset** — after each fold's reader-fallback window closes and
-      `READER_FELL_BACK_TO_LEGACY_PATH`-equivalent is grep-clean, hard-remove the `_KIND_ALIASES` entries + retired yaml
-      keys ("no double SSOT"); `terraform plan` stays green.
-- [ ] [DOCS] P3. **Post-phase codex audit + estate recount** — update `bucket-isolation-model.md` (Group B naming table
-      → folded shapes), `manifest-consolidator-ssot.md` (target set), `gcs-lifecycle-policies.md`; final estate recount
-      vs the §4 target; flip the parent plan's W3 execute todo + close the audit issue docs.
+- [x] ✅ [DATA] P1. **execution + strategy — provision** — DONE via [[bucket_fold_execution_strategy_2026_07_17]]
+      (`execution-store-{prd,test}`; `strategy-store` gained `-{env}-`).
+- [x] ✅ [CODE] P1. **execution + strategy — cutover** — DONE via [[bucket_fold_execution_strategy_2026_07_17]]
+      (execution per-AG → flat + AG path-prefix incl `nautilus-catalog-cache/`; strategy re-tier + UAC facade;
+      adversarial-verify caught a silent-P&L reader bucket-mismatch bug before ship).
+- [x] ✅ [INFRA] P1. **execution + strategy — redeploy + delete** — DONE via
+      [[bucket_fold_execution_strategy_2026_07_17]] (single-root consolidator 3→1; source buckets deleted + TF/yaml).
+
+- [x] ✅ [DATA] P2. **portfolio-state — provision** — DONE via [[bucket_fold_portfolio_state_2026_07_17]]
+      (`portfolio-state-{prd,test}`).
+- [x] ✅ [CODE] P2. **portfolio-state — cutover** — DONE via [[bucket_fold_portfolio_state_2026_07_17]] (PATH_REGISTRY
+      trio + `pnl-attribution-output` bare default + 2 yaml kinds → `portfolio-state` + per-domain prefixes;
+      execution-service `tenderly_budget` archetype-state prefix closed 2026-07-19 @9a1f4f1d).
+- [x] ✅ [INFRA] P2. **portfolio-state — redeploy + delete (LAST)** — DONE via
+      [[bucket_fold_portfolio_state_2026_07_17]] (1-object migration parity-verified; 6 source buckets deleted LAST +
+      TF/yaml). Nothing traded (test/dev) so no live end-to-end diff was required (operator full-send).
+
+- [ ] [INFRA] P2. **IAM + lifecycle** — **LIFECYCLE DONE** (all folded `-prd-` buckets provisioned
+      STANDARD→COLDLINE@60d; `portfolio-state` flagged confirm-before-COLDLINE). **IAM write-protection re-gating**
+      (join the new `-prd-` buckets to Phase 2) is TRACKED in [[bucket_iam_write_protection_per_tier_2026_06_09]] — not
+      part of these folds' completion; the portfolio-state plan keeps its own IAM todo open there.
+- [ ] [CODE] P3. **Alias sunset** — **STILL GATED** (soft window not closed; services still redeploying with the folded
+      kinds). Tracked in [[bucket_fold_closeout_2026_07_17]] todo 1 — do NOT hard-remove the `_KIND_ALIASES` entries +
+      retired yaml keys until every `resolve_bucket_name` caller of each retired kind is grep-clean.
+- [x] ✅ [DOCS] P3. **Post-phase codex audit + estate recount** — DONE 2026-07-19: codex audit (PM@8ea8abd89, PR #1177 —
+      `bucket-isolation-model.md` / `manifest-consolidator-ssot.md` / `gcs-lifecycle-policies.md` to folded shapes) +
+      estate recount (114 GCP, 0 orphans); parent W3 execute todo flipped; audit issue-doc closes tracked in
+      [[bucket_fold_closeout_2026_07_17]].
 
 ---
 
