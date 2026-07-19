@@ -3029,3 +3029,46 @@ entries). `/skip-current-task` — same resume criteria as before; a future disp
 pending cell's history against fleet launch timestamps to definitively confirm/refute "hasn't reached it yet" vs. some
 other per-cell-specific stall (e.g. the same season-cache-0-fixtures bug class `-009` is investigating, extended beyond
 its current scope).
+
+### 2026-07-19T20:11-20:29Z — data_engineering slot-4 (same `-001` dispatch, continued — LIKELY FOUND THE STRUCTURAL ROOT CAUSE of this task's 20+-dispatch bounce: the 4 enrichment entities have no off-season/no-fixture-that-date gap-closer)
+
+Continued holding, fleet confirmed 2+ hours in, healthy. Re-ran the gate script — **still byte-identical (5,515
+pending)**, but this time with STRONG proof it isn't "hasn't reached it yet": VM `af-backfill-20260719-180520`
+(FIXTURE_EVENTS)'s own `[[VM_PROGRESS]] last_completed_date=2020-08-26` checkpoint shows it walked PAST the flagged
+`FIXTURE_EVENTS 2020-08-16..19` cluster, yet that cluster still reads 100% pending in the gate. Targeted read
+(`date=2020-08-16..19, data_type=FIXTURE_EVENTS`, `league_id` included) shows the SAME shape as the earlier
+`FIXTURE_STATS 2020-06-14` sample: 380 total cells, 378 already closed, only 2 genuinely pending — specific leagues
+`UEL` (2020-08-16) and `A_LEAGUE` (2020-08-19).
+
+Traced this to a likely STRUCTURAL cause (not yet live-confirmed): the 4 enrichment entities'
+(`FIXTURE_EVENTS`/`FIXTURE_LINEUPS`/`FIXTURE_STATS`/`PLAYER_STATS`) per-fixture write loop
+(`instruments_service/engine/orchestrator/sports_reference_fixtures.py`) is keyed ENTIRELY off `af_fid_to_league` —
+leagues that ACTUALLY HAD a completed fixture that date. A league with genuinely zero fixtures that date never appears
+in this map, so it never reaches ANY terminal write (`record_captured`/`record_empty`/`record_failed`) for these 4
+entities. Contrast `instruments_service/engine/orchestrator/process_write.py:315-360`, which DOES have an off-season
+closer (`_expected_af_lids - _captured_lids` → `record_empty(..., EXPECTED_PAUSED_LEAGUE)`) — but that's scoped to the
+core `FIXTURES` entity only, added `api_football_fixtures_stuck_612_residual_2026_07_15`. If the original seed process
+stamped `expected_unattempted` across the FULL (date × 94-league) cross-product for these 4 entities too (matching how
+TEAMS/INJURIES were seeded per this issue doc's own history), a (date, league) cell where that league had zero fixtures
+is then STRUCTURALLY UNCLOSABLE by any amount of re-fetching — no code path ever visits that key. This would explain
+precisely why THIS task (and its predecessors) has bounced 20+ times without the gate ever reaching 0 despite massive
+cumulative fetch effort across many sessions.
+
+**Filed as a new P1 todo** in the existing issue doc
+(`plans/active/issues/api_football_enrichment_stale_ns_fixture_status_and_gate_reader_inconsistency_2026_07_19.md`,
+`unified-trading-pm@34a12efae`) rather than attempting the fix in this dispatch — this write path is shared/high-blast-
+radius (every date × every league) and this exact plan's history shows a wrong empty-reason/grain choice here has
+previously caused expensive-to-diagnose false-empty corruption (`sports_index_recency_masked_captured_atoms_2026_07_13`,
+`legacy_seed_captured_outranks_resurrection_risk_2026_07_15`). The new todo lists concrete next steps: live-confirm the
+4 sampled leagues genuinely had 0 fixtures on their flagged dates, check whether ALL 5,515 residual cells fit this
+shape, then design + ship the mirror fix carefully with a live spot-check gate before shipping.
+
+**This changes the resume calculus for `-001` itself**: continuing to relaunch fetch fleets against this gate is
+unlikely to ever close it to 0 while this structural gap remains — a fleet can run indefinitely and the residual will
+never fully clear, no matter how much wall-clock/API-budget is spent, for exactly the (date, league) cells that hit this
+gap. The RIGHT next step for `-001`'s own gate is landing the new todo's fix, not more fleet launches.
+
+**Not flipping this checkbox** — gate still 5,515 pending; the actual unlock is now a separate, filed, well-scoped fix.
+`/skip-current-task` — resume once the new off-season-gap-closer todo lands (instruments-service), then re-run the gate
+script; the existing 4-VM fleet can keep running in the meantime (harmless, makes real incremental progress on non-gap
+cells) but should not be treated as sufficient on its own to close this gate.
