@@ -640,6 +640,24 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-19 (slot-4, /autonomous — completeness audit CONFIRMED the model + caught residuals; fix wave dispatched).**
+  `wt2isqehe` (11 agents, adversarial audit of the SHIPPED code+docs, independent of the mid-flight R3 migration).
+  **ACHIEVED / confirmed-correct** (the close-out's proven state): SPOT/AMM taxonomy 10/10 claims REFUTED (EIGEN/ETHFI=
+  SPOT_ASSET, meteora/lifinity=SOLANA_AMM_POOL, pyth/phoenix/jupiter=only SPOT_PAIR-two-token, marinade=STAKING,
+  GMX=PERPETUAL); the SPOT_PAIR validator enforced at the single UAC entry point, no adapter dodges it; POOL two-id
+  model correct (instrument_id=address, glued_pair_id=3-seg canonical; retired 4-seg only on the tracked interim
+  mirror); lending holdings=A_TOKEN/DEBT_TOKEN + 6/7 EVM protocols LENDING-consistent both sides; DRIFT/PACIFICA fully
+  culled from CODE; canonical GCS path venue-before-chain + pipeline_mode in the writer. **RESIDUALS (fix wave
+  `w14cdgtmr`)**: P1 aave_v3 lending_indices keyed A_TOKEN in `evm_defi_handler` (crosses the interim boundary +
+  partition-split vs lending_indices_handler + shard-atom desync) → aave_v3→LENDING (all 7 EVM consistent) +
+  record_captured resolve-type; P1 coverage denominator inflation (5 new lst_rates venues
+  KELPDAO/RENZO/BEEFY/IDLE/PENDLE lack launch-date/coverage-start clips → false MISSING to 2018) → add sourced launch
+  clips; P1 several stale DeFi CODEX docs Wave C MISSED (instrument-pipeline-defi.md:55 +
+  defi-venue-protocol-catalogue.md + pipeline-coverage-matrix.md: chain-before-venue + active-DRIFT/PACIFICA) → codex
+  sweep; P2 orca/raydium 4-seg POOL → 3-seg, uniswap discovery @CHAIN key → canonical resolver. Historical aave_v3
+  a_token lending_indices re-key + the duplicate-handler concern → Wave D. **Four-surface DATA audit still DEFERRED
+  until the R3 migration completes.**
+
 - **2026-07-19 (slot-4, /autonomous — R3 discovery-fix + scoped-apply VALIDATED; Wave C SHIPPED; IS catalogue rollup
   running).**
   - **R3 discovery fix SHIPPED `market-tick-data-service@d3e38bfe` (verify `safe_to_apply=true`)**: R3 was silently
