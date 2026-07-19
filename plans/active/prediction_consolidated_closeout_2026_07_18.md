@@ -413,13 +413,23 @@ fixture-linked before MVP backfill.
 
 ### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
 
-- [ ] [BACKEND] P2. **Unify the disconnected arb paths onto `af_fixture_id`.** Today: features-service
-      `cross_venue_arb_detector` does Kalshi↔Polymarket (crypto-oriented in practice) and the e2e `live_arb_scanner.py`
-      does bookmakers+Betfair+Polymarket (no Kalshi, heuristic team-name match, prototype) — neither keys on
-      `af_fixture_id`. Give both a shared fixture-keyed join so a single comparison spans bookmakers ∧ Polymarket ∧
-      Kalshi on one fixture; wire Kalshi into the scanner (needs the Kalshi API key in Secret Manager — currently 401).
-      Fold the predictions-ML arb half: `predictions_ml_walk_forward_and_arb_2026_06_20.md` (5 open; GATED on
-      `sports_master:Group     E` FSS ≥95% non-NULL). (repos: features-service, e2e-testing, market-tick-data-service)
+- [ ] [BACKEND] P1. **Wire the arb engine to CONSUME `af_fixture_id` — VERIFIED the NEXT GAP (trace 2026-07-19).** The 6
+      materialized columns (`uac@e7ed754e` + `is@e3ffc613`) are an UNCONSUMED landing spot — the `InstrumentRecord`
+      docstring says materialization is "downstream + deferred", and strategy-service + features-service
+      `cross_instrument/` READ ZERO of them; `price_dispersion.py` (`ARBITRAGE_PRICE_DISPERSION`) pairs on VENUE NAME
+      (`candidate_venues`) and just ASSUMES "same instrument". Concrete 3-step gap (dependency order): **(1)**
+      features-service `prediction_cross_venue_dispatch.py::_records_from_universe` (L173-214) reads only
+      key/symbol/expiry → add the 6 `_COL_*` + populate `InstrumentRecord.af_fixture_id` / `af_league_id` / home+away
+      canonical ids / `fixture_date` / `af_fixture_match_status` (today they stay `None` even when the parquet has
+      them). **(2)** UAC `predictions/cross_venue_mapping.py::match_key` (L376-409) — accept + PREFER `af_fixture_id` as
+      the sports `canonical_event_id` join key (exact/deterministic) over the fuzzy `SportsFixtureKey.pairing_key()`
+      team-name/title parse, when `af_fixture_match_status==MATCHED` — this is the single point a Polymarket + Kalshi
+      row for one fixture collapse to one `xv_instrument_id`. **(3)** 3rd venue (bookmaker odds): generalize
+      `build_cross_venue_mapping` beyond its pairwise Kalshi↔Polymarket shape, OR resolve `SportsArbDutchingEngine`'s
+      `decimal_odds_<outcome>_<venue>` features per `af_fixture_id`, so live-odds ∧ Polymarket ∧ Kalshi pair on ONE
+      fixture. Also: the ONLY wired prediction-arb slots today are CRYPTO (`btc/eth/spx UP_DOWN_DAILY`) — a FOOTBALL
+      prediction-arb slot must be added. Fold: `predictions_ml_walk_forward_and_arb_2026_06_20.md`. (repos:
+      features-service, unified-api-contracts, strategy-service, e2e-testing)
 - [ ] [BACKEND] P2. **3-way arb correctness guards** — prediction-market "lay" is the NO-side complement, not a real
       exchange lay (exclude from back-lay arbs; include in 3-way with exchange_meta validation); keep the honest gate
       that a real two-sided book must exist on BOTH venues before emitting an arb row.
@@ -840,3 +850,21 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     an operator `--day`; (3) minor A2 residuals (catalog regen / gcs_paths.py / MDPS) + the UTL `get_write_bucket_name`
     non-tick path. Loop STOPPED (rule 12e — the climbing metric cannot advance further without an operator
     decision/authorization; it resumes the instant any is given).
+
+- **2026-07-19 (slot-2, autonomous tick 16) — operator authorized ALL held work + a wiring trace; execution underway.**
+  - **WIRING TRACE (operator question — DONE, verified read-only):** the arb engine is NOT wired to `af_fixture_id`
+    today — the 6 materialized columns are an UNCONSUMED schema landing spot (the `InstrumentRecord` docstring itself
+    says materialization is "downstream + deferred"). `price_dispersion.py` (`ARBITRAGE_PRICE_DISPERSION`) pairs on
+    VENUE NAME and ASSUMES same-instrument; strategy-service + features-service `cross_instrument/` read ZERO of the 6
+    columns; the Kalshi↔Polymarket matcher keys `canonical_event_id` on the fuzzy team-name/title
+    `SportsFixtureKey.pairing_key()`, NOT `af_fixture_id`; 2 venues only (no odds leg); only CRYPTO arb slots are wired
+    (no football slot). **The precise 3-step wiring gap is now the E3 item** (populate the fields in
+    `_records_from_universe` → prefer `af_fixture_id` in UAC `match_key` → add the bookmaker-odds 3rd venue + a football
+    arb slot). This is the bridge from the identity layer I shipped to a live football arb.
+  - **EXECUTION UNDERWAY (operator authorized 2026-07-19):** writer-root fix (`_finalize_prediction_bundles` →
+    PREDICTION_MARKET, PREREQ for the migration --apply), A2 residuals + UTL `get_write_bucket_name`, and the Phase-D
+    prediction smoke RUN (against `-test-` buckets) all dispatched. Migration DRY-RUN
+    (`--remove-stragglers --bundle-mode normalize`) running to confirm the plan; **the irreversible `--apply` runs only
+    AFTER the writer-root fix lands**, via the script's checklist (pause the prediction consolidator cron → snapshot to
+    `_index/backups/` → CAS rewrite → verify → resume). The migration pauses ONLY the prediction consolidator (not a
+    fleet drain), so no collision with the tradfi/cefi slots.
