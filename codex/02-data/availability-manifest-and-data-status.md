@@ -452,7 +452,7 @@ class AvailabilityRecord:
                                     # Features: 1m, 5m, 1h, T-24h..HT (sports horizons)
     league_id: str = ""             # SPORTS only: EPL, BUNDESLIGA, LA_LIGA, etc.
     chain: str = ""                 # DeFi only: ETHEREUM, ARBITRUM, BASE, SOLANA, etc.
-    instrument_type: str = ""       # spot, perpetuals, equity, pool, a_token, debt_token, prediction_market
+    instrument_type: str = ""       # spot, perpetuals, equity, pool, a_token/debt_token (lending holdings), lending (market/event lending data_types — interim), prediction_market
     underlying: str = ""            # Options/futures: BTC, ETH, ES, NQ — base for per-underlying shards
 
     # ─────────────────────────────────────────────────────────────────────

@@ -543,13 +543,16 @@ Discriminator = **does a manifest row exist**.
 
 ### Blocker + codex-SSOT / UAC-contract doc fixes (must clear BEFORE the SSOT reference — an agent following them mints wrong ids)
 
-- [ ] [DOCS] P0. **Fix the codex/UAC SSOT-source contradictions**: `mvp-scope-canonical.md:56` PACIFICA-as-MVP
-      (**BLOCKING**) + `:69` LENDING→A_TOKEN/DEBT_TOKEN; `defi-canonical-naming-ssot.md:72/82/106` `lending` canonical +
-      PACIFICA/DRIFT live; `availability-manifest-and-data-status.md:739/666/398` GMX/DRIFT under the cefi axis +
-      LENDING + PROTOCOL-CHAIN venue; `per-asset-group-bucket-layouts.md:137` + `defi-data-type-taxonomy.md:197`
-      chain-before-venue + combined venue; `unified-api-contracts/docs/canonical-instrument-ids.md:68/70/72` underscore
-      venue + DERIBIT-no-quote + LENDING row + tradfi-no-`-USD`; `shard-granularity-cefi.md:106/207` ASTER=USDC + legacy
-      DERIBIT grammar. (repos: unified-trading-pm, unified-api-contracts)
+- [x] ✅ [DOCS] P0 (Wave C). **SHIPPED codex/UAC contradiction fixes** (PM codex `@4060741a1` + prior `@709274a5c`; UAC
+      `@fa60d5b4`). PACIFICA-as-MVP already purged; DRIFT confirmed CULLED (the agent grep-verified + kept DRIFT out —
+      my handoff's "DRIFT=defi" was WRONG, agent correctly ignored it; GMX is the only defi perp). **LENDING model
+      aligned to the FINAL two-layer reality** (a prior pass had over-retired it): holdings=A_TOKEN/DEBT_TOKEN SSOT;
+      market/event lending DATA_TYPES key to LENDING/SOLANA_LENDING (interim, § D) — corrected across
+      defi-canonical-naming-ssot.md, defi-data-type-taxonomy.md, availability-manifest-and-data-status.md,
+      mvp-scope-canonical.md, UAC canonical-instrument-ids.md + the validator comment (narrowed to single-token
+      SPOT_PAIR). GMX/DRIFT-cefi-axis + chain-before-venue already fixed by the prior pass. cefi/tradfi lines
+      (ASTER=USDC, tradfi-no-`-USD`, DERIBIT grammar) already correct / passed to siblings. (repos: unified-trading-pm,
+      unified-api-contracts)
 
 ### CODE (migration — folds into Track 1)
 
@@ -591,18 +594,21 @@ Discriminator = **does a manifest row exist**.
 
 ### DOC-alignment sweep (IS + MTDS docs, ~33 rows)
 
-- [ ] [DOCS] P1. **Align the IS + MTDS docs to the target** — {DEFI,CEFI,TRADFI}_INSTRUMENTS.md (Deribit-drops-quote →
-      keep quote; tradfi FUTURE/EQUITY → `-USD`; EIGEN/ETHFI SPOT_PAIR → SPOT_ASSET; LENDING emitted-list;
-      PACIFICA/DRIFT/`pacifica.py`/`drift.py` listed), ADAPTER_ARCHITECTURE.md, GCS_PATHS.md / DEFI_DOWNLOAD_STRATEGY.md
-      / DEPLOYMENT_GUIDE.md (Shape-B path order + HYPERLIQUID/ASTER-as-defi), the DATABENTO_* / OPTIONS_CHAIN id
-      examples. (repos: instruments-service, market-tick-data-service)
+- [x] ✅ [DOCS] P1 (Wave C). **SHIPPED `instruments-service@dbf856ca` + `market-tick-data-service@e9764b38`**:
+      DEFI_INSTRUMENTS.md (EIGEN/ETHFI→SPOT_ASSET SHIPPED, meteora/lifinity→SOLANA_AMM_POOL SHIPPED, on-chain-perp CLOBs
+      =cefi-not-defi, LENDING emitted-list corrected to holdings-A_TOKEN/DEBT_TOKEN + market/event-LENDING-interim),
+      ADAPTER_ARCHITECTURE.md (LENDING IS a real member — market/event interim), GCS_PATHS.md +
+      DEFI_DOWNLOAD_STRATEGY.md (lending path `instrument_type=lending` matching the shipped `evm_defi_handler`;
+      HYPERLIQUID/ASTER=cefi; ASTER per-symbol quote; DRIFT culled). cefi/tradfi-specific lines passed to siblings.
+      (repos: instruments-service, market-tick-data-service)
 
 ### PLAN/ISSUE stale-claim fixes
 
-- [ ] [PM] P2. **SUPERSEDED banners** — `gcs_hive_partition_malformed_paths_remediation_2026_06_01.md:145` (inverted
-      path as "SSOT"), `defi_perp_funding_mvp_scope_contradiction_2026_06_29.md` (DRIFT-is-MVP),
-      `instruments_foundation_completeness_2026_06_24.md:1254` (PACIFICA active), + the two MTDS
-      DEFI-ASTER/HYPERLIQUID-LOG-REVIEW `category=DEFI` labels. (repo: unified-trading-pm)
+- [x] ✅ [PM] P2 (Wave C — verified already-clean). SUPERSEDED banners: `gcs_hive_partition_malformed_paths…:145`
+      already carries 2 banners + venue-before-chain fixed (`@709274a5c`); `defi_perp_funding_mvp_scope_contradiction`
+      already banner + `status: resolved`; `instruments_foundation_completeness:1254` PACIFICA already corrected inline;
+      the two MTDS ASTER/HYPERLIQUID docs already `asset_group: [cefi]`/`[cross-cutting]` (no stale `category=DEFI`
+      found). (repo: unified-trading-pm)
 
 ### Operator decisions applied (2026-07-18)
 
@@ -633,6 +639,92 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-19 (slot-4, /autonomous — completeness audit CONFIRMED the model + caught residuals; fix wave dispatched).**
+  `wt2isqehe` (11 agents, adversarial audit of the SHIPPED code+docs, independent of the mid-flight R3 migration).
+  **ACHIEVED / confirmed-correct** (the close-out's proven state): SPOT/AMM taxonomy 10/10 claims REFUTED (EIGEN/ETHFI=
+  SPOT_ASSET, meteora/lifinity=SOLANA_AMM_POOL, pyth/phoenix/jupiter=only SPOT_PAIR-two-token, marinade=STAKING,
+  GMX=PERPETUAL); the SPOT_PAIR validator enforced at the single UAC entry point, no adapter dodges it; POOL two-id
+  model correct (instrument_id=address, glued_pair_id=3-seg canonical; retired 4-seg only on the tracked interim
+  mirror); lending holdings=A_TOKEN/DEBT_TOKEN + 6/7 EVM protocols LENDING-consistent both sides; DRIFT/PACIFICA fully
+  culled from CODE; canonical GCS path venue-before-chain + pipeline_mode in the writer. **RESIDUALS (fix wave
+  `w14cdgtmr`)**: P1 aave_v3 lending_indices keyed A_TOKEN in `evm_defi_handler` (crosses the interim boundary +
+  partition-split vs lending_indices_handler + shard-atom desync) → aave_v3→LENDING (all 7 EVM consistent) +
+  record_captured resolve-type; P1 coverage denominator inflation (5 new lst_rates venues
+  KELPDAO/RENZO/BEEFY/IDLE/PENDLE lack launch-date/coverage-start clips → false MISSING to 2018) → add sourced launch
+  clips; P1 several stale DeFi CODEX docs Wave C MISSED (instrument-pipeline-defi.md:55 +
+  defi-venue-protocol-catalogue.md + pipeline-coverage-matrix.md: chain-before-venue + active-DRIFT/PACIFICA) → codex
+  sweep; P2 orca/raydium 4-seg POOL → 3-seg, uniswap discovery @CHAIN key → canonical resolver. Historical aave_v3
+  a_token lending_indices re-key + the duplicate-handler concern → Wave D. **Four-surface DATA audit still DEFERRED
+  until the R3 migration completes.**
+
+- **2026-07-19 (slot-4, /autonomous — R3 discovery-fix + scoped-apply VALIDATED; Wave C SHIPPED; IS catalogue rollup
+  running).**
+  - **R3 discovery fix SHIPPED `market-tick-data-service@d3e38bfe` (verify `safe_to_apply=true`)**: R3 was silently
+    missing the `{data_type}_{ts}` batch (oracle_prices) — now discovered+split; `{venue}_{chain}_{ts}` unregressed
+    (full-corpus predicate diff = 0 regressions/1250 objs); 0 leaf byte-mismatches vs R1; bucket-template `-prd-` fixed
+    in R3 + rebuild_defi_manifest; gas_fees now in-apply-scope (noted). **Scoped `--apply` VALIDATED on REAL GCS**:
+    CHAINLINK/ETHEREUM oracle_prices 2026-07-16 → 22 canonical per-instrument leaves (`ETH_USD`/`cbETH_ETH`/`WBTC_BTC`…)
+    - source retired to `_migrated_*`, `errors=0`. The write+rename path works e2e.
+  - **Wave C doc/codex alignment SHIPPED** (PM `@4060741a1`+`@709274a5c`, UAC `@fa60d5b4`, IS `@dbf856ca`, MTDS
+    `@e9764b38`): all DeFi docs aligned to the final model. **Agent caught an error in my handoff** ("DRIFT=defi" —
+    DRIFT is CULLED; agent kept it culled, GMX-only). Corrected a prior pass's LENDING over-retire to the two-layer
+    interim.
+  - **Wave E (IS half) RUNNING**: the catalogue regen job was triggered on the deployed image (a monitor is armed; the
+    stale 2026-07-18 catalogue will refresh — will notify at terminal).
+  - **NEXT**: R3 FULL migration (VM, monitored, all days/venues/data_types) → rebuild_defi_manifest → verify.
+
+- **2026-07-19 (slot-4 — Wave C DeFi doc/codex alignment SHIPPED).** Aligned docs to the now-final model; the key
+  correction was the prior pass's (`@709274a5c`) **LENDING over-retire** — the Wave-B UAC `LENDING`-raise (`@e319864f`)
+  was reversed (MTDS `@acfb76ca` "revert partial A_TOKEN migration of market/event lending writers back to LENDING";
+  `evm_defi_handler` writes `instrument_type=LENDING`), so docs now state the **two-layer** model: HOLDINGS =
+  `A_TOKEN`/`DEBT_TOKEN` (operator SSOT); market/event lending DATA_TYPES (`lending_indices`/`liquidation_events`/
+  `flash_loan_events`/`position_data`) = `LENDING`/`SOLANA_LENDING` **interim** (PARKED, `issues/…open_questions…` § D)
+  — NOT "LENDING retired". Ships: **PM codex `unified-trading-pm@4060741a1`** (naming-ssot instrument_type row +
+  dex_pool_state union note; data-type-taxonomy lending_indices shard key `a_token/debt_token`→`lending` + interim note;
+  availability-manifest AvailabilityRecord comment; mvp-scope clarifier). **UAC `unified-api-contracts@fa60d5b4`**
+  (canonical-instrument-ids LENDING two-layer note; canonical_id_builder validator comment narrowed to single-token
+  SPOT_PAIR misuse — the `glued_pair_id` docstring was already 3-seg via `@e319864f`). **IS
+  `instruments-service@dbf856ca`** (DEFI_INSTRUMENTS EIGEN/ETHFI→SPOT_ASSET + meteora/lifinity→SOLANA_AMM_POOL marked
+  SHIPPED `@c31d37c3`, HYPERLIQUID/ASTER cefi-classified note, emitted-types LENDING caveat; ADAPTER_ARCHITECTURE
+  "LENDING not a real member"→corrected). **MTDS `market-tick-data-service@e9764b38`** (GCS_PATHS + DEFI_DOWNLOAD
+  lending path `instrument_type=a_token`→`lending` + interim caveat; DRIFT-as-defi-perp removed, GMX-only). **Verified
+  vs shipped code**: DRIFT fully culled (UAC registries + `solana_perp_dex_cull…` — so the handoff note "DRIFT=defi" is
+  WRONG, docs keep DRIFT culled); GMX in `DEFI_PERP_VENUES`; UAC id-builder supports LENDING/A_TOKEN/DEBT_TOKEN/
+  SOLANA_LENDING. **Flagged for siblings (cross-AG, not fixed here)**: `shard-granularity-cefi.md:106` ASTER=USDC (cefi;
+  already per-symbol-quote in the v6 symbol table but the Non-goals example line is cefi-scope) + `:207` DERIBIT grammar
+  (cefi); tradfi FUTURE/EQUITY `-USD` and DERIBIT-keeps-quote lines in `canonical-instrument-ids.md`/DATABENTO docs
+  (cefi/tradfi). The two ASTER/HYPERLIQUID issue docs already carry `asset_group: [cefi]`/`[cross-cutting]` (no stale
+  `category=DEFI` label found); `gcs_hive_partition_…` already carries SUPERSEDED banners + the venue-before-chain path
+  fix.
+- **2026-07-19 (slot-4, /autonomous — R3-run RECON caught a discovery bug BEFORE apply; fix dispatched; Wave C
+  running).** Live dry-run recon on the real corpus (`market-data-tick-defi-prd-central-element-323112`, ADC) — this is
+  why recon-before-apply is non-negotiable:
+  - **R3 silently MISSES the `{data_type}_{ts}.parquet` batch shape.** CHAINLINK `oracle_prices_{ts}.parquet` is
+    MULTI-instrument (probed: 22 distinct feeds/file, `CHAINLINK-ETHEREUM:SPOT_ASSET:ETH/USD` …) but the R3 dry-run
+    `--venue CHAINLINK --data-type oracle_prices` returns `files_scanned=0` → its `is_bundled_batch_leaf` doesn't match
+    the data_type-prefixed filename → oracle data would stay batched (the exact tracking pain). R3 DOES handle
+    `{venue}_{chain}_{ts}.parquet` (uniswap dex, multi-ts/day) + no-ops already-per-instrument `{SYMBOL}_{FEE}.parquet`
+    (aerodrome). Also found: the default `BUCKET_TEMPLATE` omits `-prd-` → 404s (shared with rebuild_defi_manifest.py).
+  - **Fix dispatched `wl8j6kjdl`**: map every data_type filename shape, extend discovery to the `{data_type}_{ts}`
+    batch, fix the bucket-template default, re-dry-run to prove oracle_prices now splits into canonical per-instrument
+    leaves, adversarial verify it doesn't regress the working shapes → apply gated on `safe_to_apply=true`.
+  - **Wave C** (doc/codex alignment to the now-final model) running in parallel `wzpkcw6h6`.
+
+- **2026-07-19 (slot-4, /autonomous — LENDING un-retire reconciliation SHIPPED + CONFIRMED; MTDS green; code phase
+  COMPLETE).** `wn12e7itc` → `unified-api-contracts@ad4886ae` (UNSUPPORTED_BY_DESIGN back to `frozenset()`; LENDING
+  restored to SUPPORTED + `_DEFI_TYPES`; POOL-3seg/SPOT-validator/GMX KEPT — runtime-proven) +
+  `market-tick-data-service@acfb76ca` (3-handler A_TOKEN→LENDING revert; solana_defi kamino/marginfi/solend
+  `LENDING`→`SOLANA_LENDING` alignment; solana-split
+  - R3 kept). Verify CONFIRMED: `no_raising_writer_remains=true`, `shard_atom_consistent=true`,
+    `good_parts_intact=true`, `holdings_ssot_intact=true` — all 5 formerly-silently-broken writers build via the REAL
+    path (no attempted_failed). **DeFi canonical CODE phase is now COMPLETE + consistent**: holdings=A_TOKEN/DEBT_TOKEN,
+    market/event=LENDING/ SOLANA_LENDING, POOL-3seg, SPOT taxonomy, GMX=PERPETUAL, per-instrument writer + acquisition +
+    coverage-honesty all in. **2 pre-existing non-blocking items → Wave D**: (i) `liquidations_handler` manifest tag
+    `"liquidation"` (:534, from 02e50cb2) vs GCS path `lending` (:644) — latent atom divergence, align in a dedicated
+    fix; (ii) solana_defi kamino/marginfi/solend objects previously written at `instrument_type=lending` are now
+    orphaned vs the aligned `solana_lending` path → migrate them. **Next (parallel)**: R3-run (dry-run recon → scoped
+    apply → rebuild manifest) + Wave C (docs describe the now-final model).
 
 - **2026-07-19 (slot-4, /autonomous — R3 SHIPPED + verified-safe; LENDING-retire OVER-REACH reversed; decision
   parked).** `w151kuw70` outcomes + my reconciliation:

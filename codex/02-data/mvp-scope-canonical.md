@@ -69,7 +69,10 @@ MVP-tag-all today (`defi_mvp_tag_all_2026_06_26`): the IS catalogue tags ALL DeF
 `MVP_SCOPE` rule is the narrower Uniswap-V3/Curve/Orca/… venue + POOL/DEX_POOL/LST/A_TOKEN/DEBT_TOKEN set used by
 `is_mvp`, but the production catalogue is wider, so `_add_mvp_column` short-circuits DeFi to all-MVP until a real
 per-instrument DeFi screen lands). data_types:
-dex_pool_state/dex_pool_swaps/lst_rates/lending_indices/perp_funding/oracle_prices.
+dex_pool_state/dex_pool_swaps/lst_rates/lending_indices/perp_funding/oracle_prices. (Lending: the HOLDINGS screen keys
+on `A_TOKEN`/`DEBT_TOKEN` — the operator-ruled SSOT; market/event lending data_types such as `lending_indices` key to
+the interim `LENDING`/`SOLANA_LENDING` instrument_type, PARKED per
+`issues/canonical_closeout_open_questions_2026_07_18.md` § D — NOT "LENDING retired".)
 
 ### TradFi
 

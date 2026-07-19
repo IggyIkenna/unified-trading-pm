@@ -1353,8 +1353,146 @@ Without the derivation the repoint would have surfaced ~50%; without the repoint
 second half is NOT closed by this: `round` is now present and rich, but nothing derives the phase from it at catalogue
 level.
 
-- [ ] [CODE] P0. Project `competition_phase` / `round_name` / `is_promotion_relegation` in the catalogue rollup,
-      deriving them from `round` via `classify_competition_phase`. `round` is now 70.6% populated, so the classifier
-      finally has real input — this is the last link between the § Q derivation and the ML features.
+- [x] [CODE] P0. ~~Project `competition_phase` in the catalogue rollup~~ — **RETRACTED, wrong layer.** These are UAC
+      **`features_sports`** fields (`internal/domain/features_sports/__init__.py:138-142`), not catalogue columns, so
+      "the rollup never projects them" was true but irrelevant. The real producer already exists:
+      `features_service/sports/calculators/season_context.py`, fed by
+      `derived_features_helpers.py:_compute_season_features`, which **already** extracts matchday from the round string
+      (`r"(\d+)$"` on `round`) and maps `round -> round_name`. So the chain was never missing — it was **starved of
+      input**, because `round` was blank. Populating `round` (§ Q + § R) is what unblocks it; **no new projection code
+      is needed, only a features RE-RUN.** Note there are two unrelated `competition_phase` derivations:
+      instruments-service `classify_competition_phase(round_name)` (NORMAL_LEAGUE / PLAYOFF / TOURNAMENT …) and the
+      features one (`early|mid|late` from matchday progress). The UAC field is the features one.
 - [ ] [DIAG] P0. The other ~9 stale-entity consumers (§ R list) are still reading the frozen corpus. Each needs the same
       repoint + a re-run; anything reporting stale sports data since 2026-05-23 is suspect.
+
+### S (2026-07-19) — P1 MEASURED: `total_matchdays` is hardcoded **38 for every league on earth**
+
+`features-service/features_service/sports/exporters/derived_features_helpers.py:735`:
+
+```python
+if "total_matchdays" not in enriched.columns:
+    enriched["total_matchdays"] = 38          # <- every league, every season
+```
+
+This is a **silent placeholder** in the sense the codex bans: it is not flagged, not provenance-stamped, and it produces
+confidently wrong numbers rather than honest absence. Measured against the live corpus (819 `fixtures_schedule`
+parquets, 2023-08..2024-06, distinct `Regular Season - N`):
+
+| league     | true season length   | hardcoded 38 |
+| ---------- | -------------------- | ------------ |
+| EPL        | 38                   | correct      |
+| LA_LIGA    | 38                   | correct      |
+| SERIE_A    | 38                   | correct      |
+| BUNDESLIGA | **34**               | off by −4    |
+| EREDIVISIE | **34**               | off by −4    |
+| LIGUE_1    | **34**               | off by −4    |
+| MLS        | **50** (36 distinct) | off by +12   |
+
+**Correct for only 3 of 7 leagues measured.** Three consumers inherit the error:
+
+- `games_remaining = total - matchday` — on Ligue 1's FINAL matchday (34) this reports **4 games remaining**, not 0.
+- `points_at_stake = games_remaining x 3 x multiplier` — inherits it directly, so end-of-season stakes are inflated
+  exactly when they matter most (relegation/title run-ins are the signal these features exist to capture).
+- `competition_phase = f(matchday / total)` — the frac is wrong, so `early|mid|late` boundaries land in the wrong place:
+  Ligue 1 reads 34/38 = 0.89 at season END; MLS reads 50/38 = 1.32, pinning it to `late` all season.
+
+**Do NOT "fix" this with max-observed-matchday.** Deriving the total from matchdays seen so far under-estimates
+mid-season, which makes `games_remaining` too small and the phase too `late` — strictly worse than 38 for the leagues 38
+currently gets right. The fix needs the FULL season schedule (api-football publishes it upfront, and `fixtures_schedule`
+already carries future fixtures), or a per-league reference mapping.
+
+- [x] [CODE] P1. ✅ Per-(league, season) `total_matchdays` reference built from the corpus and consumed in
+      `_compute_season_features` — **features-service@d9b44d46** (QG green). Ships `schemas/league_season_lengths.json`:
+      198 league-seasons + 28 stable-league fallbacks, admitted only at >=95% round coverage AND contiguous rounds (a
+      mostly-blank pair under-reports its max, so trusting it would be worse than no entry); implausible lengths (<10
+      or >60) dropped, not guessed. Unknown pair => **honest NaN, never a default**. Verified: Ligue 1 final matchday 34
+      now yields `games_remaining=0.0` (was 4.0); unknown league yields NaN, not a fabricated 38. The loader FAILS LOUD
+      on a malformed/missing file rather than degrading to an empty map (QG "empty dict/list fallback") — it ships with
+      the package, so silently NaN-ing the whole corpus would be the worse failure.
+      `test_total_matchdays_defaults_to_38` asserted `== 38` and therefore encoded the bug as the contract; rewritten to
+      pin honest-NaN, + 3 new regression tests.
+- [ ] [DATA] P1. After the fix, sports features need a re-run for the affected leagues — the currently-persisted
+      `games_remaining` / `points_at_stake` / `competition_phase` are wrong wherever season length != 38.
+
+### T (2026-07-19) — residual round blanks SCOPED by measurement; my "early-2019 era" claim was WRONG
+
+One walk of the live `fixtures_schedule` corpus (2,031 league-seasons, `round`/`season`/`af_league_id` projected only),
+which also produced the § S season-length reference — **single walk, both answers**.
+
+**CORRECTION.** I earlier characterised the residual as "231,910 no-sibling blanks, early-2019 era". Both halves were
+wrong:
+
+- The count is **161,034**, not 231,910. The 231,910 figure counted rows in the day-wide BARE parquets too; the
+  orchestrator's reader (`_read_per_league_entity_df`) documents "there is no bare" and reads **only** `/league=` paths,
+  so bare rows are not part of the live read path.
+- It is not the "2019 era" — it is **pre-2019**, which the 2019-01-01..2026-07-17 backfill window does not even cover:
+
+| seasons                   | pairs |  blank rows | share     |
+| ------------------------- | ----: | ----------: | --------- |
+| 2013–2018 (OUT of window) |   915 | **122,864** | **76.3%** |
+| 2019–2027 (IN window)     |   842 |  **38,170** | 23.7%     |
+
+**The in-window job is ~4x smaller than I said, and it is bounded:**
+
+| coverage of in-window blanks |   rows | (league,season) fetches |
+| ---------------------------- | -----: | ----------------------: |
+| 50%                          | 19,168 |                  **70** |
+| 80%                          | 30,536 |                 **221** |
+| 95%                          | 36,270 |                     455 |
+| 100%                         | 38,170 |                     842 |
+
+So complete in-window coverage is **842 bulk calls**, and 80% is **221** — hours, not the multi-day run implied by the
+earlier 1,757-pair figure. Fetches must be scoped to the IN-WINDOW pair list, not fanned across 782 leagues x 8 seasons.
+
+**Do not assume a fetch fixes the cup competitions.** 648 of the 842 in-window pairs (27,718 rows) carry NO
+`Regular Season - N` round at all. Those are cups/knockouts whose round is a different vocabulary ("Round of 16",
+"Quarter-finals") or is simply not published — a bulk fetch may legitimately return nothing for them, which is honest
+absence, not a gap. Verify on a pilot pair before spending 648 calls on the assumption.
+
+- [x] [DATA] P1. ✅ Retargeted backfill RUNNING against the 194 reachable in-window league pairs (10,452 blank rows),
+      scoped via the new `--pairs-file` — **instruments-service@34ada099** (QG green). `--leagues` x `--seasons` is a
+      cross product that would have spent ~800 calls on 194 pairs' work; a pairs-file spends one call per pair. **Pilot
+      verified the scan as a scoping instrument, not just the fetch**: the scan predicted 662 blank rows for 129:2026
+      (ARGENTINA_PRIMERA_NACIONAL) and the apply filled **exactly 662** across 1,297 parquets from 648 fetched fixtures,
+      each write re-downloaded and verified. Launched only after re-confirming 0 running af-* VMs, so the api-football
+      singleton rule holds.
+- [ ] [DIAG] P2. Pilot ~5 of the 648 cup pairs before committing the remaining calls; if the API returns no round for
+      them, record it as explained-absence rather than an open gap.
+- [ ] [DECISION] P2. Pre-2019 (122,864 rows) is outside the stated window — confirm whether the corpus is meant to cover
+      2013–2018 at all before spending 915 fetches on it.
+
+### U (2026-07-19) — the round backfill can only REACH 353 of the 842 in-window pairs
+
+Piloting the retargeted backfill against a real blank pair returned `0 rows would-fill across 0 scanned` — not a bug in
+the fetch, a **structural reach limit**. The script builds its league universe from the UAC registry
+(`get_leagues_by_classification` over `prediction` / `reference` / `features`), which enumerates **94 leagues**. The
+corpus has **782 leagues with parquets**. Anything outside the registry is skipped before a call is ever made.
+
+| in-window (2019–2027) blank pairs  | pairs | blank rows |
+| ---------------------------------- | ----: | ---------: |
+| total                              |   842 |     38,170 |
+| **reachable** (league in registry) |   353 |     27,301 |
+| **not in the registry universe**   |   489 |     10,869 |
+
+Split of the reachable half:
+
+| reachable subset                        | pairs | blank rows |
+| --------------------------------------- | ----: | ---------: |
+| has `Regular Season - N` (real leagues) |   194 |     10,452 |
+| no regular rounds (cups / unpublished)  |   159 |     16,849 |
+
+**This reframes "backfill to 100%".** 489 in-window league-seasons holding 10,869 blank rows sit in leagues the pipeline
+CAPTURED but the registry does not enumerate. That is either (a) capture reaching beyond the intended universe, or (b) a
+registry gap — and until it is settled, those rows can be neither filled nor honestly called complete. They are not an
+api-football problem; no number of calls touches them.
+
+A first measurement of the registry universe returned **0** leagues because I guessed the classification names
+(`tier1`/`tier2`/…) instead of reading the script's actual `("prediction", "reference", "features")`. The numbers above
+are from the corrected probe — the 0-league result was discarded, not reported.
+
+- [ ] [DECISION] P1. Settle the 489 non-registry in-window pairs: extend the registry to cover what is being captured,
+      or stop capturing them. "Backfill at 100%" cannot be asserted for sports until this is decided one way or the
+      other — the gap is a definition problem, not a data-fetch problem.
+- [ ] [DATA] P2. The 159 reachable cup pairs (16,849 rows) still need the pilot from § T before spending their calls — a
+      cup's round vocabulary is "Quarter-finals", not "Regular Season - N", and a fetch may honestly return nothing.

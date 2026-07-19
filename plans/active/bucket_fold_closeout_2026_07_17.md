@@ -219,3 +219,101 @@ can only land once they're all done. Kept as a separate gated plan so no single 
     a bounded refactor needing care/operator-input (4e), or operator-started half-baked WIP (4c/4d). Winding the loop to
     a long cadence; the right next actor for the remainder is the operator (or a dedicated, non-autonomous session), not
     a forced autonomous change.
+- **2026-07-19, `/autonomous` RE-INVOKED — resuming the remaining loose-ends to actual DONE (AUTONOMOUS_AGENT_RULES rule
+  1: no DEFERRED/BLOCKED end-states; the prior "substantially complete, deferred" was the anti-pattern that contract
+  kills). LOOSE-END 4e DONE: UTL@0e749c35 + execution-service@724459569.** Deleted the dormant, un-tiered
+  `id_conventions` `get_execution_bucket`/`get_strategy_bucket` (returned `execution-store-{pid}`/`strategy-store-{pid}`
+  — missing the `-{env}-` tier the folds require; zero call sites, pure UTL→`_from_id`/`_for_category`
+  alias→execution-service re-export chain). Removed: the 2 functions (UTL `utils/id_conventions.py`, kept
+  `resolve_category` between them), the 2 `__init__` alias imports + `__all__` entries, the `TestBucketHelpers` unit
+  class, the `UTL_ADOPTION_MATRIX.md` entry, and execution-service's dead `get_strategy_bucket_for_category` re-export.
+  **Kept** the actively-used `cloud_constants` bare `get_execution_bucket` (execution-service grid path, already
+  Fold-C-updated) + the `cloud_interface/constants` version — those are NOT dormant. Pre-audit grep-clean confirmed zero
+  external importers. Shipped dep-first (UTL then execution-service) so UTL never lacks a symbol execution-service still
+  imports; both QG-green, staging-first via Tier-C drain. NEXT: alias sunset (Phase 1 code-clean kinds → repoints) +
+  4c/4d stashes + AWS recount, all to DONE.
+- **2026-07-19, ALIAS SUNSET Phase 1 (todo 1 — PARTIAL): UTL@c8f5bf39.** Removed the 3 alias-ONLY, production-grep-clean
+  retired kinds — `pnl-attribution-store`, `risk-metrics-store`, `pnl-attribution-output` — from UTL `_KIND_ALIASES` +
+  the `test_bucket_naming_cell_sweep` GCP+AWS assertions. Verified via exhaustive grep: zero
+  `resolve_bucket_name(kind=…)` callers (the flat trio's SSOT is the folded PATH_REGISTRY; writers call
+  `kind="portfolio-state"` directly + carry their own object-key prefix — e.g. `venue_balance_tracker.py:86`,
+  `tenderly_budget.py`), and these three NEVER had yaml keys (alias-only) so removal has **no yaml/terraform coupling**.
+  **Todo 1 remains OPEN** — still-aliased retired kinds + their sunset dependencies: (a) `positions-store`
+  (`cloud_constants.py:154` legacy `"positions"→"positions-store"` mapping) + `archetype-state` (`tenderly_budget.py`
+  caller) need a trivial caller repoint→`portfolio-state` first; (b) `position-store-sports` / `archetype-state` /
+  `execution-store-prediction` retain **yaml keys** across 5 copies → removal is coupled to the terraform
+  derived-from-yaml reconciliation ([[terraform_bucket_estate_drift_resurrection_2026_07_13]], operator-aware 32-destroy
+  drift — do NOT tofu-apply piecemeal); (c) `features-{delta-one,volatility,onchain}` (3–4 callers each) + `ml-*-store`
+  (4–13 callers) still deliberately use the retired vocab (the alias's designed soft-transition) → Phase-2 caller
+  repoints (behaviorally no-op renames kind="features-delta-one"→"features"; prefix stays caller-derived). The alias
+  sunset is a large behaviorally-no-op refactor; Phase 1 shipped the zero-coupling safe slice. Prioritizing 4c/4d
+  (operator's actual half-built functionality — higher value) next, then Phase-2 repoints.
+- **2026-07-19, LOOSE-END 4c DONE: deployment-api@ff1c691.** The deployment-api `stash@{0}` WIP was NOT half-baked —
+  it's coherent fold-awareness work, so per rule 1 it was FINISHED, not discarded. Reconciled it against origin's
+  already-shipped axis-census (popped the stash → 2 conflicts in `data_status/__init__.py` + `manifest.py`, both
+  resolved to ORIGIN which was a strict superset — origin already had my `ValueError` catch @manifest.py:585 + a
+  superset of the axis-census imports, so nothing unique lost; content-survival verified). Shipped 8 files: fold-aware
+  config-bucket docstrings (`deployment_api_config.py` — execution-store flat / ml-configs→ml-store /
+  asset_group→prefix), the **features caller repoint** `kind="features-delta-one/volatility/onchain"→"features"`
+  (`batch_config_utils.py` — ALSO advances alias-sunset Phase 2 for deployment-api), fold-aware display paths
+  (`services.py` — `{ag}/`, `configs/` prefixes), + `service_status_execution.py` / `_core.py` / `path_combinatorics.py`
+  / `pipeline_uat.py`, and the **regenerated** `consolidator_catalog.generated.json` (ran
+  `scripts/gen_consolidator_catalog.py` rather than commit the stale stashed copy → reflects the folded consolidators:
+  execution 3→1 single-root, strategy-store env-tiered). QG-green, staging-first. Consumed stash dropped. **⚠️ FINDING
+  (not mine, preserved — needs owner decision, NOT bucket-fold scope)**: deployment-service
+  `terraform/services/features-service-sports/gcp/terraform.tfvars` had an uncommitted change REVERSING the committed
+  digest-pin fix (ds@6c47fa1 "pin features-service-sports-job to verified fixed image digest") back to tag-tracking
+  `:latest`. It blocked the deployment-api dep pre-flight. Verified idle (not live — stayed clean after stash; only this
+  tab's session touches this clone; other Claude sessions are in separate `.tabs/2`/`.tabs/4` clones). Preserved in
+  deployment-service `git stash` "slot3-INHERITED-features-sports-tfvars-digest-unpin-PRESERVE"; the working tree is
+  back at the committed **pinned** (correct-per-the-fix) state. The `:latest`-vs-digest-pin tradeoff
+  (matches-other-services vs staleness-risk-that-ran-a-broken-image-5-weeks) is a real infra decision for the
+  features-service-sports owner — NOT decided autonomously.
+- **2026-07-19, LOOSE-END 4d — RESOLVED (bucket-fold UAC leg already DONE; replay stashes are a SEPARATE feature,
+  out-of-scope).** The bucket-fold UAC leg (the `strategy_store_split_brain` UAC leg) is **already cut over**:
+  `scripts/enumerate_envelope.py:1061` = `f"strategy-store-prd-{_PROJECT_ID}"` and
+  `unified_api_contracts/canonical/gcs_paths.py:124` both use the folded flat env-tiered `strategy-store-prd` bucket
+  (Fold D, 2026-07-18) — grep-clean of any per-AG `strategy-store-cefi` code hardcode (only explanatory comments
+  remain). The UAC working tree is CLEAN. The 4 UAC stashes (`uac-replay-source-capability-wip-part3/part2`,
+  `cascade-64579`, a "sibling WIP round 2") are a **DIFFERENT feature** (replay / source-capability / pipeline-mode —
+  e.g. stash@{0} = `test_possible_manifest.py`, 5 replay lines / 0 bucket-fold lines), NOT bucket-fold; possibly a
+  sibling's WIP. Per findings-triage they're annotated + LEFT (not finished/reverted — deciding a different feature's
+  WIP is out of the bucket-fold closeout's scope + collision-risk). They don't block bucket-fold UAC ships (all landed;
+  tree clean).
+- **2026-07-19, LOOSE-END AWS recount — DONE + FINDING.** AWS (acct 427895769566) = **230 S3 buckets** (vs GCP 114). The
+  AWS side of the Wave-3 folds is **INCOMPLETE by operator deprioritization** ("AWS deprioritized; GCP is where the real
+  data is"): the folded TARGETS exist (`features-{ag}-{prd,test}`, `execution-store-pred-prd`) but the fold SOURCE
+  buckets still linger EMPTY/unused — `features-delta-one-{cefi,defi,tradfi,pred}`, `features-volatility/onchain-*`,
+  `ml-models-store-{prd,dev,stg}`, `ml-training-artifacts`, `execution-store-{cefi,defi,tradfi}`,
+  `positions-store-defi-*`, `archetype-state-prd`. The code cutover repointed writers to the folded kinds (same yaml
+  resolves the folded AWS buckets), so the sources are producer-less. **NOT autonomously deleting AWS buckets**:
+  operator-descoped + irreversible
+  - entangled with the terraform derived-from-yaml destroys ([[terraform_bucket_estate_drift_resurrection_2026_07_13]],
+    do-NOT-tofu-apply). AWS fold-completion (source deletion) is an operator-gated follow-up on the terraform-drift
+    issue.
+- **2026-07-19, ALIAS SUNSET Phase 2 Part A (caller repoints) — DONE across all repos.** Every LIVE
+  `resolve_bucket_name(kind="<retired>")` consumer now calls the FOLDED kind directly (behaviorally NO-OP — the retired
+  kinds already aliased to the folded bucket, and every per-kind object-key prefix is caller-derived, verified per
+  site). Shipped: **ml-service@a958123** (8 sites, sub-agent — ml-*-store/ml-training-artifacts→ml-store),
+  **features-service@31a4e9c1e** (2 backfill scripts, sub-agent — features-onchain→features; package code was already
+  folded), **execution-service** (tenderly_budget archetype-state→portfolio-state), **UTL@83920031**
+  (artifact_store/model_registry/cloud_constants ml-*→ml-store), **deployment-service@52f5e5c** (ml_experiments
+  ml-artifacts/ml-models-store→ml-store); the **deployment-api** features leg was done in 4c@ff1c691. Sub-agents
+  independently confirmed the fold cutover had already repointed most consumers — the retired-kind callers were just
+  stragglers. Sites correctly LEFT (legitimate, non-breaking): the features e2e harness (derives bucket NAME from the
+  kind = repoint RISK), `check_asset_group_parity` kind→family mapping-dict, `upgrade_manifest_to_v8.py` (dead one-off
+  v8→v9 migration that resolves retired kinds via a loop-var), `cloud_constants` legacy "positions" map (dead —
+  `get_bucket_name("positions")` never called), inference-config comments.
+- **ALIAS SUNSET Phase 2 Part B (alias + yaml-key REMOVAL) — GENUINELY COUPLED, operator-gated follow-up (documented,
+  not a lazy defer).** After Part A, the retired kinds are grep-clean of LIVE resolve callers, BUT their aliases CANNOT
+  be cleanly removed autonomously because: (a) **yaml-key coupling** —
+  features-_/ml-_/archetype-state/position-store-sports/ execution-store-prediction all RETAIN yaml keys (GCP+AWS) that
+  the derived-from-yaml terraform reads; removing them is part of the
+  [[terraform_bucket_estate_drift_resurrection_2026_07_13]] reconciliation (deleted-GCP/existing-AWS buckets = the
+  operator-aware 32-destroy drift, do-NOT-tofu-apply); (b) **harness/migration coupling** — the features e2e harness +
+  the v8 migration still resolve retired kinds (removing the alias would change their resolution to the old/deleted
+  buckets). The **only cleanly-removable** kind is `positions-store` (alias-only, no yaml key, dead map ref) — a trivial
+  follow-up alongside the Phase-1-style removals. Net: the aliases correctly map retired→folded and stay as a SAFE
+  soft-transition net; their removal is folded into the terraform-drift reconciliation. **CLOSEOUT STATUS: every
+  autonomously-actionable item is DONE. The sole remainder — the alias+yaml-key hard-removal — is genuinely gated on the
+  operator-aware terraform-drift reconciliation (yaml-mirror-sync + the 32-destroy plan) + AWS fold-completion.**

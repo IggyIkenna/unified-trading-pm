@@ -280,7 +280,12 @@ fixture-linked before MVP backfill.
       catalogue `base_asset` whitespace-strip + dedupe (leading-space title variants). Additive per-VM-shard write
       (race-free vs the ~10-min consolidator). Fold: the prediction slice of `data_completion_prediction_2026_07_15.md`
       (23 open). (repos: market-tick-data-service, instruments-service, unified-trading-library) **SCRIPT WRITTEN +
-      dry-run measured — `market-tick-data-service@5392b20b`**
+      dry-run measured — `market-tick-data-service@5392b20b`** (initial) **+ `@916dd992`** (COMPLETE — now handles both
+      findings: `--bundle-mode {normalize,leave}` default normalize, and `--remove-stragglers` design =
+      pause-consolidator + snapshot + in-place `_index` CAS rewrite, guarded, NOT run). The 916dd992 agent found the
+      WRITER ROOT of finding (i): `engine/orchestrator/manifest_finalize._finalize_prediction_bundles` stamps lowercase
+      `instrument_type="prediction"` on every bundle row — so the bundle is emitted lowercase, not null; the writer-root
+      fix is on the operator-review checklist (else a `--force` rebuild resurrects stragglers).
       (`scripts/canonicalize_prediction_manifest_2026_07_18.py`, `--dry-run` DEFAULT, `--apply` behind
       `--confirm-prod-write`; prod RUN HELD per operator). Live dry-run (756,817 rows): #1 `prediction_trades`→`trades`
       3,385 rows (99.55%→100%); #2 per-CID `instrument_type`→`PREDICTION_MARKET` 648,616 rows (per-CID 4.16%→100%,
@@ -348,21 +353,27 @@ fixture-linked before MVP backfill.
       `data_pipeline_e2e_check_2026_07_10.md` (L267-269 / 341-342 / 1025 / 1623 now false — "prediction stays
       PROD-only"), and UTL `get_write_bucket_name` still has a prediction-PROD-only branch (not a tick-write path, but a
       live inconsistency worth a follow-up). (repos: market-tick-data-service ✅)
-- [ ] [DATA] P1. **Reconcile the `book_snapshot_5` MVP-scope disagreement** — it is in `VENUE_DATA_TYPE_CAPABILITIES` +
-      `expected_coverage` (so a plain MTDS matrix gives 4 shards) but is ABSENT from `PredictionMvpRule.data_types`
-      (`_mvp_scope_rules.py`), so an `--mvp-only` run silently tests only `trades` (2 shards). Decide the canonical set
-      and align the registries. (repos: unified-api-contracts)
-- [ ] [DATA] P1. **Add force/skip smoke coverage for the CQG cluster grain + `market_lifecycle`** — today MTDS enumerate
-      explicitly excludes `prediction_canonical_question_group` and IS collapses its atom to `(asset_group, venue)`, so
-      neither is smoke-tested as a distinct shard. Extend the prediction adaptation so the CQG bundle + lifecycle grains
-      get a genuine force/skip proof (post the Phase-B wipe fix). (repos: unified-trading-pm, market-tick-data-service)
-- [ ] [DATA] P0. **Adapt `data-pipeline-check-mtds` + `data-pipeline-check-is` to prediction** — iterate every
-      prediction shard (IS 2, MTDS 4 above). Per shard: force-refetch + skip-if-fresh proof
-      (`--require-captured --auto-day` so a day before `book_snapshot_5` onset 2026-06-22 yields a GENUINE not ambiguous
-      skip) + a **canonical regression cell** asserting the written shard's `instrument_id` / `canonical_question_group`
-      is canonical (0 raw, 0 whitespace, 0 non-canonical variant) and, for soccer rows, that `af_fixture_match_status`
-      is stamped. Build on the shared engine in `data_pipeline_e2e_check_2026_07_10.md`. (repos: unified-trading-pm,
-      market-tick-data-service, instruments-service)
+- [x] ✅ [DATA] P1. **`book_snapshot_5` MVP-scope RECONCILED — `unified-api-contracts@53bf01d6`.** It was in all THREE
+      data registries (`DATA_TYPES_BY_ASSET_GROUP`, `VENUE_DATA_TYPE_CAPABILITIES`, `expected_coverage`) but absent from
+      `PredictionMvpRule.data_types` — verified NOT a deliberate trades-only exclusion (only COINBASE + Deribit-OPTION
+      have such decisions; prediction cited none; all 3 registries re-added it 2026-06-23 when both CLOB venues began
+      emitting it — the MVP rule was the un-updated outlier). Added `book_snapshot_5` to `PredictionMvpRule.data_types`
+      (captured: 399,713 rows) + bumped `MVP_SCOPE_CONFIG_VERSION` 17→18; rule-11 cross-AG-unchanged test added
+      (cefi/tradfi/defi/sports MVP sets pinned). `--mvp-only` prediction now tests all 4 shards. Operator can narrow
+      back to trades-only if that was the intent (documented in the code). (repos: unified-api-contracts ✅)
+- [x] ✅ [DATA] P1. **CQG cluster grain + `market_lifecycle` smoke coverage SHIPPED — `instruments-service@a3abd7a3`.**
+      Added on the IS side — the genuine PRODUCER of both grains (the CQG bundle is written by IS `process_write`;
+      `market_lifecycle` by IS `writers._write_market_lifecycle`). Correctly NOT faked on MTDS: MTDS only READS
+      `market_lifecycle` as a pre-fetch gate + the CQG bundle is a manifest-only atom with no MTDS producer path, so a
+      force/skip cell there would be fiction (documented in the MTDS smoke engine). (repos: instruments-service ✅)
+- [x] ✅ [DATA] P0. **Prediction smoke adaptation + canonical regression cell SHIPPED (code-ready) —
+      `market-tick-data-service@c805e6cb` + `instruments-service@a3abd7a3`.** Per-shard canonical regression cell added
+      (prediction-scoped, mirrors `assert_tradfi_derivative_ids_canonical`): asserts per-CID
+      `instrument_type == PREDICTION_MARKET` (the single equality catches every A0 drift — lowercase dupes,
+      underlying-leakage, empty) + canonical `instrument_id` (non-empty, whitespace-free, PREDICTION_MARKET
+      type-segment); soccer rows checked for `af_fixture_match_status`. Cross-AG byte-unchanged (cefi/tradfi/defi/sports
+      pinned). Skills already accept `--asset-group PREDICTION`; the RUN (below) needs an operator `--day`. (repos:
+      market-tick-data-service ✅, instruments-service ✅)
 - [ ] [DATA] P0. **Run `data-pipeline-check-is` for prediction-only, all shards, post-migration** — real operator-given
       `--day` against `-test-` buckets; both prediction IS shards prove force/skip + canonical shape; report path cited.
 - [ ] [DATA] P0. **Run `data-pipeline-check-mtds` for prediction-only, all shards, post-migration** — same day, all 4
@@ -800,3 +811,32 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     operator-given `--day`; (3) minor follow-ups: UTL `get_write_bucket_name` prediction-PROD-only non-tick path,
     `book_snapshot_5` prediction-MVP-rule reconcile, and the A2 residuals (catalog regen / gcs_paths.py / MDPS). Loop
     stopped — the metric can't climb further without an operator decision/authorization; resumes on any of them.
+
+- **2026-07-19 (slot-2, autonomous tick 14) — operator resumed /autonomous; two code-ready follow-ups.**
+  - **`book_snapshot_5` MVP-scope RECONCILED — `unified-api-contracts@53bf01d6`** (flipped its P1). It was an un-updated
+    outlier (in all 3 data registries, absent from `PredictionMvpRule`); added it + config-version bump + rule-11
+    cross-AG-unchanged tests. `--mvp-only` prediction now tests all 4 shards.
+  - **Phase-B script completion IN FLIGHT** (MTDS retry-loop) — a sub-agent wrote the `--bundle-mode {normalize,leave}`
+    flag (finding 1) + the straggler-removal design/code (finding 2, `--remove-stragglers`: pause-consolidator +
+    snapshot + in-place `_index` CAS rewrite, guarded, NOT run) + found the writer ROOT:
+    `manifest_finalize. _finalize_prediction_bundles` stamps lowercase `instrument_type="prediction"` on bundle rows (so
+    the bundle is emitted lowercase, not null — explains the inconsistency; the writer-root-fix is on the operator
+    checklist so a `--force` rebuild doesn't resurrect stragglers). Landing via retry-loop; prod RUN still HELD.
+  - **Reminder — the prod-migration RUN + its two decisions remain operator-gated** (bundle-mode choice;
+    straggler-removal mechanism review). The script now SUPPORTS both, defaulting to my recommendations, one
+    authorization away.
+
+- **2026-07-19 (slot-2, autonomous tick 15) — Phase-D smoke adaptation LANDED; ALL CODE-READY WORK COMPLETE.**
+  - **Prediction smoke canonical-regression cell + CQG/lifecycle coverage SHIPPED** —
+    `market-tick-data-service@c805e6cb` (per-shard canonical gate: per-CID `instrument_type == PREDICTION_MARKET`
+    catches every A0 drift + canonical `instrument_id`; soccer `af_fixture_match_status`) +
+    `instruments-service@a3abd7a3` (the CQG bundle + `market_lifecycle` coverage on their genuine IS producer). The
+    agent correctly did NOT fake MTDS cells for the IS-produced grains (MTDS only reads `market_lifecycle`; the CQG
+    bundle is manifest-only) — honest-absence over fiction. Cross-AG byte-unchanged. Both Phase-D code-ready items
+    flipped.
+  - **STATE: every implementable unit of the prediction close-out is now SHIPPED + verified.** What remains is
+    exclusively OPERATOR-GATED: (1) the Phase-B prod-migration RUN + its decisions (bundle-mode; straggler-removal
+    mechanism; the `_finalize_prediction_bundles` writer-root fix) — script fully ready; (2) the Phase-D smoke RUN needs
+    an operator `--day`; (3) minor A2 residuals (catalog regen / gcs_paths.py / MDPS) + the UTL `get_write_bucket_name`
+    non-tick path. Loop STOPPED (rule 12e — the climbing metric cannot advance further without an operator
+    decision/authorization; it resumes the instant any is given).
