@@ -1456,3 +1456,38 @@ absence, not a gap. Verify on a pilot pair before spending 648 calls on the assu
       them, record it as explained-absence rather than an open gap.
 - [ ] [DECISION] P2. Pre-2019 (122,864 rows) is outside the stated window — confirm whether the corpus is meant to cover
       2013–2018 at all before spending 915 fetches on it.
+
+### U (2026-07-19) — the round backfill can only REACH 353 of the 842 in-window pairs
+
+Piloting the retargeted backfill against a real blank pair returned `0 rows would-fill across 0 scanned` — not a bug in
+the fetch, a **structural reach limit**. The script builds its league universe from the UAC registry
+(`get_leagues_by_classification` over `prediction` / `reference` / `features`), which enumerates **94 leagues**. The
+corpus has **782 leagues with parquets**. Anything outside the registry is skipped before a call is ever made.
+
+| in-window (2019–2027) blank pairs  | pairs | blank rows |
+| ---------------------------------- | ----: | ---------: |
+| total                              |   842 |     38,170 |
+| **reachable** (league in registry) |   353 |     27,301 |
+| **not in the registry universe**   |   489 |     10,869 |
+
+Split of the reachable half:
+
+| reachable subset                        | pairs | blank rows |
+| --------------------------------------- | ----: | ---------: |
+| has `Regular Season - N` (real leagues) |   194 |     10,452 |
+| no regular rounds (cups / unpublished)  |   159 |     16,849 |
+
+**This reframes "backfill to 100%".** 489 in-window league-seasons holding 10,869 blank rows sit in leagues the pipeline
+CAPTURED but the registry does not enumerate. That is either (a) capture reaching beyond the intended universe, or (b) a
+registry gap — and until it is settled, those rows can be neither filled nor honestly called complete. They are not an
+api-football problem; no number of calls touches them.
+
+A first measurement of the registry universe returned **0** leagues because I guessed the classification names
+(`tier1`/`tier2`/…) instead of reading the script's actual `("prediction", "reference", "features")`. The numbers above
+are from the corrected probe — the 0-league result was discarded, not reported.
+
+- [ ] [DECISION] P1. Settle the 489 non-registry in-window pairs: extend the registry to cover what is being captured,
+      or stop capturing them. "Backfill at 100%" cannot be asserted for sports until this is decided one way or the
+      other — the gap is a definition problem, not a data-fetch problem.
+- [ ] [DATA] P2. The 159 reachable cup pairs (16,849 rows) still need the pilot from § T before spending their calls — a
+      cup's round vocabulary is "Quarter-finals", not "Regular Season - N", and a fetch may honestly return nothing.
