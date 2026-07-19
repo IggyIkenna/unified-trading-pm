@@ -31,8 +31,8 @@ summary:
   the Q5/Q6 lifecycle overlay, and wiring it into the row dict ahead of the old `fx.status` fallback (preserved for
   legacy/no-af_response callers). 4 new unit tests added; all 29 existing + new tests in
   test_orchestrator_fixture_flattener.py / test_fixture_lifecycle_columns.py pass. Shipped:
-  instruments-service@<TODO-SHA-AT-COMMIT>. This is a forward-fix only — every FIXTURES row captured BEFORE this fix
-  (the entire history via the live/daily write path) still carries the wrong `status_short=NS` on disk and needs a
+  instruments-service@4ef4cfeb. This is a forward-fix only — every FIXTURES row captured BEFORE this fix (the entire
+  history via the live/daily write path) still carries the wrong `status_short=NS` on disk and needs a
   backfill-correction pass; a `--force` re-fetch of an affected date will now correctly persist the real status **as
   fetched at re-fetch time** (not retroactively correct for matches whose real-time status has since changed, but
   correct going forward). Root cause 2 (reader inconsistency, UNCHANGED, still open): read_availability_index's manifest
