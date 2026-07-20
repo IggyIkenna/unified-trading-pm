@@ -325,3 +325,29 @@ this corpus today. `BARCHART` → quarantine-with-tracking (same-day operator ru
 quarantine (operator ruling). `KALSHI_PERP`/`POLYMARKET_PERP` → KEEP (operator ruling + real captured funding rows).
 sports `UNKNOWN` → normalize-in-place (~6 phantom rows; blank is by-design at league grain). `odds_horizon_bucket_*` →
 re-stamp, delete blocked by seed resurrection. `options_chain` → REFUTED, is canonical.
+
+### 2026-07-20 — LIVE row-count evidence (tradfi `_index/availability_index.parquet`, 5,208,647 rows)
+
+Read directly from `market-data-tick-tradfi-prd-central-element-323112` to settle the open remedies with measured counts
+rather than inference:
+
+| Query                          | Rows        | capture_status         |
+| ------------------------------ | ----------- | ---------------------- |
+| `data_type == 'options_chain'` | **242,210** | 100% `captured`        |
+| `data_type == 'futures_chain'` | **8**       | 100% `captured`        |
+| `instrument_type == 'UNKNOWN'` | 77          | 100% `empty_confirmed` |
+| `venue == 'BARCHART'`          | 9,119       | 100% `empty_confirmed` |
+
+**Consequences:**
+
+- **`options_chain` — the REFUTED verdict is vindicated with a hard number.** The original finding proposed relabelling
+  it to trades/ohlcv; that would have mislabelled **242,210 rows of REAL captured** options-chain snapshots (the
+  greeks/IV-surface cohort the registry's operator PRESERVE decision exists to protect). Do not touch.
+- **`futures_chain` (data_type) = 8 captured rows.** A tiny genuine legacy cohort — NOT a zero-row non-issue and NOT a
+  registry gap. Remedy = a documented carve-out exactly parallel to `options_chain`'s T-OLD-2b exception, or a re-stamp
+  of 8 rows. Do NOT add it to `DATA_TYPES_BY_ASSET_GROUP['tradfi']` (it is an instrument_type; the data_type for those
+  rows is `trades`), and do NOT delete captured rows.
+- **`BARCHART` (9,119) and tradfi `UNKNOWN` (77) are 100% `empty_confirmed`** — zero captured rows, so no real trading
+  data was ever at risk; both counts match the audit's estimates exactly. This CONFIRMS the walked-back purge verdicts
+  on the facts, and the standing operator rulings (quarantine / classify-or-quarantine) govern the remedy. Deleting
+  honest-absence rows would still convert KNOWN-ABSENT → UNKNOWN, the recurring hazard.
