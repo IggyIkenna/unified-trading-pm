@@ -493,3 +493,48 @@ contract in-code so nobody "helpfully" re-adds carry-forward.
       inverse-phantom is caught the same way the phantom is.
 - [ ] NEW todo. [DOC] P2. Promote the two-signal table above into `codex/02-data/honest-absence-downstream-handling.md`
       at the post-phase codex audit (SSOT direction: codex, not this plan).
+
+### 2026-07-20 — MEASURED throughput overturns the codex's compute-bound assumption (ETA input)
+
+Authoritative VM summaries (e2-standard-8, pd-balanced 250GB, cefi DERIBIT, one day, 7 timeframes each):
+
+| run                                 | per-instrument-day | writes        | evidence                                       |
+| ----------------------------------- | ------------------ | ------------- | ---------------------------------------------- |
+| `trades` (writes SUCCEEDED)         | **25,948 ms**      | ✅ 14 objects | `cefi 51.9s 2 success 0 failed 15,230 candles` |
+| `derivative_ticker` (writes FAILED) | 2,105 ms           | ❌ 0 objects  | 12x "faster" ONLY because it never wrote       |
+
+**The candle pipeline is WRITE/IO-BOUND, not compute-bound.** Of the ~25.9s per instrument-day, the polars aggregation
+is only **~1.5s** (measured: the `POLARS AGGREGATED: 1440 1m … 1 24h` cascade spans 13:52:30.763→13:52:32.235). The
+other ~94% is GCS write + manifest. Per instrument-day the writer emits **7 separate small parquet objects** (one per
+timeframe) — small-object overhead dominates.
+
+**This CONTRADICTS `codex/06-coding-standards/performance-targets.md`**, which classifies `mdps_compute` as
+"compute-bound, sublinear-70%" and recommends `c2-standard-16` for the <6h target. On this measurement a bigger CPU SKU
+buys almost nothing. **Correct optimization levers, re-ranked by the measurement:**
+
+1. **Write parallelism** — MDPS `max_workers` auto-resolves to `min(cpu_count,16)` = 8 on e2-standard-8, but the
+   observed instrument cascade ran effectively serial (`25,948ms/instrument x 2 = 51.9s total`, i.e. sum == total). **If
+   the 8 workers are not actually overlapping the writes, that is the single biggest win available** — verify and fix
+   before sizing any fleet. (Explains why the codex's serial-day estimate is so large.)
+2. **Disk throughput** — pd-balanced 250GB gives ~70 MB/s; `BOOT_DISK_TYPE=pd-ssd` (0.48 MB/s per GB vs 0.28) or a
+   larger pd-balanced buys proportionally more write bandwidth. Directly attacks the dominant cost.
+3. **Fewer/larger objects** — 7 small parquets per instrument-day is small-object-overhead-heavy. Batching timeframes
+   (or instruments) per object would cut write count materially. NOTE: any such change interacts with the chain-bundle
+   rule and the canonical path shape — do not change layout without the operator's A/B/C canonical ruling.
+4. **Fleet width** — still the reliable multiplier (MDPS is NOT Tardis-capped), but it multiplies a write-bound unit, so
+   per-VM disk/write-parallelism must be fixed first or you just buy N x the same bottleneck.
+5. **Rust / faster libs** — LOWEST priority for candles on this evidence: the compute is already polars and is only ~6%
+   of wall-clock. (The Python-loop hot spots B1 found — whale-detection O(n_intervals x n_ticks), `_carry_forward_ohlc`
+   — matter for the `trades` HFT-feature path specifically, not the write-bound aggregate.)
+
+**ETA caveat (honest):** a defensible DeFi-MVP ETA needs (a) the P0 derivative_ticker fix landed (that data_type
+currently writes nothing), (b) confirmation of whether the 8 workers actually overlap writes (item 1 — it changes the
+answer by up to ~8x), and (c) the DeFi MVP instrument x data_type shard count. Items (a) and (b) are in flight; the
+per-instrument-day unit cost above (25.9s serial, write-bound) is the measured input to plug in. Quoting an ETA before
+(b) is resolved would be guessing at the dominant term.
+
+- [ ] NEW todo. [DATA] P0. Verify whether MDPS `max_workers` (8 on e2-standard-8) actually OVERLAPS the GCS writes.
+      Measured `25,948ms/instrument x 2 == 51.9s total` implies SERIAL. If writes are not overlapped, fixing that is the
+      single largest backfill speedup available and it changes the ETA by up to ~8x.
+- [ ] NEW todo. [DOC] P2. Correct `codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
+      (measured ~94% write, ~6% polars), not compute-bound; the c2-standard-16 recommendation does not follow.
