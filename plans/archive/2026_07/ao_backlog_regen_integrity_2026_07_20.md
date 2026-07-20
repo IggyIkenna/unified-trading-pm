@@ -6,7 +6,7 @@ summary:
   hand-tuned parking dropped on every id shift, an unbounded NULL brief_hash tail, and an audit that false-positives on
   honest work. Fix them, close the two live false-done rows, and record the two rulings already made. The
   preserve-by-brief fix is a prerequisite for durable auto-park.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,6 +35,11 @@ source:
 ---
 
 # AO backlog/regen integrity
+
+> **🟢 COMPLETE 2026-07-20** — all 7 todos landed. Keystone (todo 2) and NULL-brief_hash-tail (todo 6) needed no new
+> code (already covered by prior/sibling work, re-verified rather than re-done); todo 5 found both named false-done rows
+> had already self-resolved. Doc #4 closed + archived as this plan's own last todo. See the Progress Log for the full
+> account of each todo.
 
 > **Provenance**: Phases 0-1 of `ao_open_issues_consolidated_close_out_2026_07_17.md` (docs #4, #5, #6, #8). That plan
 > keeps the audit record; this plan holds the work. **Do not action those entries there.**
@@ -164,12 +169,19 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
       todo's ask verbatim (BLOCKED-\* never ingested, prune_stale GC of orphans, done/dispatched rows never touched, "a
       missing row is never by itself evidence"). **Gate met** — no new commit needed under this plan; flagging the
       cross-plan duplication here so a future reader doesn't wonder why this todo has no code of its own.
-- [ ] [REVIEW] P1. **Close doc #4 (`backlog_task_done_status_diverges…`) for real.** It left `status: open` awaiting "an
-      independent skeptical audit"; that audit happened and found the two rows above, so the doc closes only AFTER todo
-      5 lands. Record the corollary: the "no periodic sweep needed" ruling holds for the gated mechanism, but the
-      UNAUDITABLE→auditable transition (regen backfilling `brief_hash` onto a legacy row) can surface old poison at any
-      time — so `audit_false_done.py` runs once per close-out session, **not** on a cron. **Gate**: doc flipped
-      `resolved`, `resolved_by` filled, archived per the 5-step ritual.
+- [x] ✅ [REVIEW] P1. **Close doc #4 (`backlog_task_done_status_diverges…`) for real.** — this commit. **Codex-alignment
+      check first** (per the archival ritual): found TWO stale contracts and fixed both before closing —
+      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` still described the pre-todo-4
+      file-touch-vs-checkbox-diff gate only (no mention of the checkbox-currently- checked fallback) and still called
+      the sibling-reset guard's positional-id gap "not eliminated" citing the now-narrowed issue doc; both updated to
+      the current, shipped contracts. **Recorded the corollary this todo asks for**: added a new § "Auditing
+      `status=done` honesty — `audit_false_done.py` cadence" to
+      `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the gated mechanism needs no periodic
+      sweep, but the UNAUDITABLE→auditable transition can surface old poison at any time, so the tool runs once per
+      close-out session, not on a cron. **Resolved doc #4**: `status: resolved`, `resolved_by` filled (cites this plan's
+      todo 5 investigation), `last_updated` bumped, a `🟢 RESOLVED` banner added, moved `plans/active/issues/` →
+      `plans/archive/issues/` via `git mv`. **Gate met**: doc flipped `resolved`, `resolved_by` filled, archived, codex
+      alignment checked and 2 stale sections fixed.
 
 ## Safeguards
 
@@ -185,6 +197,13 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Progress Log
 
+- **2026-07-20 — Todo 7 (close doc #4) landed — all 7 todos complete, plan archived.** Codex-alignment check found +
+  fixed 2 stale contracts (`agent-orchestrator-single-vm-architecture.md`'s done-gate section and its sibling-reset
+  "known sharp edge" bullet); recorded the audit-cadence corollary as a new section in
+  `agent-orchestrator-backlog-state-alignment.md`. Doc #4 resolved (`resolved_by` filled, banner added, moved to
+  `plans/archive/issues/`). Since every todo here is now `[x]` with no deferred items, archiving this plan too
+  (`status: complete`, moved to `plans/archive/2026_07/`) rather than leaving it sitting in `active/` — the
+  codex-alignment step above already covers this plan's own archival ritual.
 - **2026-07-20 — Todo 3 (NULL brief_hash tail) landed** (`agent-orchestrator@aaa2db8`). Decision (c) accept permanently.
   Re-measured count is 38, not the plan's own cited 54 (bucket shrinks over time, as expected) — 0 in-flight, ruling's
   precondition holds. WHY documented in `sync_backlog_to_db`'s docstring; growth-alarm script added (baseline=38) with

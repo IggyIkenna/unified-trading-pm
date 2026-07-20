@@ -178,7 +178,13 @@ task no live worker can complete does not churn the fleet.
   (`ORCHESTRATOR_DONE_REQUIRE_CLEAN`), AND — since `check_plan_flip` was upgraded to diff the checkbox, not just the
   file touch (`server/verify.py::_diff_flips_checkbox`) — rejects a `done_sha` that touched the plan file without
   flipping the task's `- [ ]`→`- [x]`. This is what keeps `status=done` honest against `/skip-current-task` "declining"
-  commits.
+  commits. **Checkbox state = truth** (`ao_backlog_regen_integrity_2026_07_20` todo 4): the diff-based check proves a
+  SPECIFIC commit did the flip, but a `done_sha` can be the wrong commit for honest reasons (predates the M3-hard gate,
+  reassigned by a squash/rebase) without the completion itself being untrue. `check_plan_flip` falls back to reading the
+  CURRENT plan text — if the brief is genuinely `- [x]` today, it accepts
+  (`reason="checkbox_currently_checked_sha_mismatch"`) rather than 409ing an honestly-done task on a provenance gap.
+  `audit_false_done.py` (the periodic false-`done` sweep) already worked this way — it was `check_plan_flip` that needed
+  to catch up.
 - **Skip / park**: a worker that reads the plan and finds the task blocked calls `/skip-current-task` with a reason; the
   skip is recorded per-slot (`slot_skips`, 24h TTL). A durably-blocked task is _parked_ (false prerequisite /
   `priority_override`) so it leaves the dispatchable set until its blocker clears.
@@ -219,9 +225,15 @@ the fleet's work, and a task's identity is stable across regens.
 - **Reconcile, not append**: regen updates a matched task's `model`/`effort`/`thinking`/`assigned_role`/`priority`/
   `plan_order` in place (dedup key = `BacklogTask.brief` == raw todo line); a removed-while-dispatched task becomes
   terminal `cancelled`; hand-tuned park fields survive via `priority_override` / `brief_hash`.
-- **Known sharp edge**: task ids are POSITIONAL (`slug + next index`), so a completed todo re-read as `- [ ]` under a
-  shifted index can collide with a sibling's id — guarded by `brief_hash` but not eliminated. Tracked in
-  `plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`.
+- **Known sharp edge, narrowed** (`ao_backlog_regen_integrity_2026_07_20` todo 1): task ids are POSITIONAL
+  (`slug + next index`), so a completed todo re-read as `- [ ]` under a shifted index can still collide with a sibling's
+  id — `TaskRow.brief_hash` detects the mismatch, but `sync_backlog_to_db` now REFUSES to reset a row that is `done`
+  with a `done_sha` (a done row is audit history, never silently recycled) instead of blindly resetting it. Accepted
+  trade-off: this also blocks the legitimate "id genuinely reused for a brand-new todo" case — that todo will read as
+  `done` and never dispatch until someone notices. The real fix (content-derived ids) remains deliberately out of scope;
+  re-open only if this guard proves insufficient. Tracked in
+  `plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (still open — one todo, the
+  content-derived-id follow-up, is deliberately deferred, not resolved).
 
 ## Deploy currency — `ao-self-pull.sh`
 
