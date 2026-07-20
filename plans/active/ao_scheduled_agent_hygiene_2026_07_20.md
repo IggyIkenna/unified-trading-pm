@@ -207,22 +207,78 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
       explicitly NOT corroborated by today's run, and today's failure raises the open question of whether a SEPARATE,
       restart-related race is also in play. Leaving this ticked (the Gate's ask — "each of the three has a named cause"
       — is met for the three ORIGINAL incidents on their own evidence) but flagging the open question for whoever picks
-      up the retry. **✅ TODAY'S OPEN QUESTION ANSWERED 2026-07-20 from the agent's own JSONL transcript** (a source
-      neither earlier pass used — `/home/ubuntu/.claude-configs/orch-slot-5/projects/…/b1a0f68f-….jsonl`, 83 entries,
-      436 KB): `agt-751738` was **alive and productively working when it was killed**. Its final entries at
-      **07:32:29Z** show it reading its plan-hygiene sweep output and analysing the Phase-0 inventory — mid-task, no
-      error, no exit — roughly 60s before `tmux_session_lost` at 07:33:30Z. It is not dying; it is being **reaped
-      mid-work**. The mechanism is `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions`, and the arithmetic is
-      exact: it never calls `/boot` (that is a fleet-worker step its role doc does not ask for), so its SlotRow stays
-      `idle`; `boot_grace_seconds` (300s) + `watchdog_idle_session_ticks` (2) × `watchdog_interval_seconds` (60s) =
-      **420s**, against a measured 07:25:50→07:33:30 = **7m40s**. Its long startup phase (reading role docs, running the
-      hygiene sweep) outlasts the grace window, and its first `/progress` heartbeat comes AFTER that phase — so it never
-      gets to prove liveness. **This is a DISTINCT sub-case from the three above**, which did log `slot_progress`; do
-      not merge the two conclusions. **The architectural point (this is what settles the path-1-vs-path-2 question in
-      the new uniform-liveness plan): the AgentRow typed-agent guard shipped in `1e7fec0` protects the PREREQ reaper
-      only. `_reclaim_idle_lingering_sessions` is a different function that never learned about typed agents, so it kept
-      killing them. Per-subsystem carve-outs do not compose** — which is the case for one uniform liveness contract
-      rather than teaching each reaper about roles one at a time.
+      up the retry. **⚠️ RETRACTED 2026-07-20 — a conclusion posted here earlier was WRONG and is withdrawn in full.**
+      It claimed `agt-751738` was reaped by `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` because a one-off
+      "never calls `/boot`, so its SlotRow stays `idle`". **Every load-bearing part of that is false** — see the
+      DISPROVEN list in the new P0 investigation todo below. It was built by matching an arithmetic coincidence
+      (`boot_grace` 300s + 2 ticks x 60s = 420s vs a measured 7m40s) and reasoning backwards to a mechanism that fit the
+      number, without checking the slot's actual status, without looking for a reclaim event, and without checking
+      whether `tmux_session_lost` is an action or an observation. It is the grep-then-conclude failure this workspace
+      warns about. **The 7-min death class is NOT explained. Treat it as OPEN** — the new P0 below carries the real
+      handoff. (`agent-orchestrator@f641968` was shipped on that wrong premise: it is defensively harmless and its
+      regression test is real, but it did NOT fix this and its commit message's stated motivation is wrong.)
+- [ ] [BACKEND] P0. **ROOT-CAUSE why every plan_reconciler run dies 6-8 minutes in — SELF-CONTAINED HANDOFF, read this
+      whole todo before touching anything.** You are on the central planning VM (`i-0c9b283b31d6b5ca7`), so everything
+      below is LOCAL — no SSM needed.
+
+      **SYMPTOM.** Five reconcile-mode dispatches exist for all time (07-15 `agt-2d8441`, 07-17 `agt-55b581`, 07-18
+          `agt-c02414`, 07-19 `agt-722a19`, 07-20 `agt-751738`). **Zero have ever produced a `plan_health_result` row, a
+          pushed `plan_reconciler/*` branch, or a PR** — against a contract (`unified-trading-pm/agents/plan_reconciler.md`
+          §258/§334) that requires pushing a branch and POSTing a result even when it finds nothing. 07-19 never spawned (a
+          slot race, since fixed). The other four all died 6-8 min after boot.
+
+          **BEST-DOCUMENTED INSTANCE — `agt-751738`, 2026-07-20, slot 5.** Timeline, all from `activity_log` (payload column
+          is `details_json`, NOT `detail`/`payload`):
+          `07:24:53 plan_health_dispatch_initiated` → `07:25:50 plan_health_dispatched` → `07:27:03 slot_boot` (opus,
+          account `sub-a-ikenna`) → `07:28:18 slot_progress` ("plan_reconciler boot: read RULES + role + sub-agent rules;
+          investigating slot git state before STEP 1 FF", phase=working) → `07:33:30 tmux_session_lost`. Its JSONL
+          transcript (`/home/ubuntu/.claude-configs/orch-slot-5/projects/-home-ubuntu-unified-trading-system-repos--tabs-5/b1a0f68f-a649-415f-9b46-13903afd9228.jsonl`,
+          83 entries, 436 KB) has its LAST entry at **07:32:29Z** — reading its plan-hygiene sweep output, mid-task, no
+          error, no exit message.
+
+          **PROVEN.** (a) It boots normally. (b) It heartbeats at least once. (c) It was doing real work at 07:32:29. (d)
+          Its session was gone by 07:33:30. (e) It produced no work product.
+
+          **DISPROVEN — do NOT re-walk these, each was checked and killed:**
+          1. *"It never calls `/boot`"* — false, `slot_boot` at 07:27:03.
+          2. *"It never heartbeats"* — false, `slot_progress` at 07:28:18.
+          3. *"`_reclaim_idle_lingering_sessions` reaped it"* — no reclaim event exists for slot 5 in the window, and the
+             reclaimer needs 2 consecutive idle/stale ticks it never had. The `boot_grace 300s + 2x60s = 420s` vs 7m40s
+             match is an **arithmetic coincidence** — it is what produced the earlier wrong conclusion. Do not reuse it.
+          4. *"`tmux_session_lost` = the orchestrator killed it"* — false. It is emitted by the TmuxPruner
+             (`server/tmux_pruner.py:266`) when it DETECTS a session already gone. Observation, not action.
+          5. *"An `orchestrator.service` restart killed it"* — false. `KillMode=process` (verify: `systemctl show
+             orchestrator -p KillMode`), so systemd kills only the main process, never the workers — that is exactly what
+             *"Unit process (claude) remains running after unit stopped"* means. Also: zero restarts within 30 min of the
+             07-18 death.
+          6. *"OOM"* — false, `journalctl -k` clean across the window; the box has ~23 GB available.
+
+          **CONCLUSION SO FAR: the claude process exited on its own and nothing in the orchestrator killed it. The cause is
+          genuinely UNKNOWN.**
+
+          **WHERE TO LOOK NEXT (unchecked leads, cheapest first).**
+          1. **The transcript tail past 07:32:29** — read the raw last lines of that JSONL (not just `type`/`text`; dump
+             whole objects, including any `isApiErrorMessage`, `stop_reason`, `error`, or `result` records). A usage-limit
+             or API error would appear here.
+          2. **Account `sub-a-ikenna` usage at 07:32-07:33.** The reconciler is the ONLY spawn in the fleet using
+             opus + `--effort max` + thinking-on, and both of today's runs used this account, which was simultaneously
+             running ~5 plan_health workers and 3 cicd agents. Check the usage-poller data / `server/usage_tracker.py`
+             records and any rotation/limit events around that timestamp.
+          3. **Reproduce it directly** — spawn a reconciler manually and WATCH the pane live
+             (`tmux attach -t orch-slot-N`, or `tmux capture-pane -p -S -200` on a loop) through the 6-8 min mark. This is
+             the highest-information move and the cheapest way to see an error the logs never captured.
+          4. **tmux server view** — `tmux show-messages`, and whether the tmux server itself restarted.
+
+          **RULES.** Read-only until you have a cause. Never write to the live DB, never stop the timer, never restart the
+          orchestrator without asking. **State plainly if you cannot establish the cause** — an honest "unknown, here is
+          what I eliminated" is the required answer, and is worth more than a mechanism that merely fits the timing. Two
+          confident wrong conclusions have already been posted on this exact question; both came from pattern-matching a
+          number instead of verifying state.
+
+          **Gate**: a named cause supported by evidence that survives the DISPROVEN list above, OR an explicit
+          "cause not established" with the new leads eliminated and the next step named. Then update this plan AND
+          `ao_uniform_agent_liveness_contract_2026_07_20.md`, whose premise depends on the answer.
+
 - [x] ✅ [DOC] P3. **Record that the tasks table is a projection, not a completion ledger.** In the regen docs
       (`server/regen_backlog_from_plan.py` module docstring + wherever regen behaviour is documented for operators),
       state explicitly: the tasks table holds currently-OPEN DISPATCHABLE todos plus dispatched history. `BLOCKED-*`
