@@ -160,8 +160,8 @@ identical conclusion.
   confirmation loop exists back to this session; whoever picks up AF-1b next closes that half. **Not done, deliberately
   out of scope**: mechanism-level enforcement of "no park exists without a named LIVE flipper" (todo 4's closing
   sentence) — asserted in prose on the mvp-defi park specifically, not built into `auto_park.py` generically, since a
-  manual RULES.md §4 park doesn't register through this store at all today; worth a follow-up plan if a second
-  silent-park incident recurs.
+  manual RULES.md §4 park doesn't register through this store at all today. Tracked, not dropped:
+  `plans/active/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md`.
 - **🟢 2026-07-20 — KEYSTONE DEPENDENCY UNBLOCKED (notification from `ao_backlog_regen_integrity_2026_07_20.md` todo
   2).** Your durable auto-park's preserve-by-`brief` prerequisite is resolved — and it turns out no production code
   change was needed: the RC-1 brief-keyed reconcile (`agent-orchestrator@ff6100a`, 2026-07-07) already predates and
