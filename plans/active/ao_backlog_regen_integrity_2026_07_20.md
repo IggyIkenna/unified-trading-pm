@@ -60,11 +60,23 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Sibling-reset guard: never silently recycle a `done` row.** `bootstrap.py`'s brief_hash-mismatch
-      reset must REFUSE to reset a row that is `done` with a `done_sha`, logging an ERROR naming both briefs — a done
-      row is audit history, not reusable space. **Gate**: a unit test where a done row's id is claimed by a different
-      brief asserts the row SURVIVES and an error is emitted; bug-inject to prove the test bites (break the guard,
-      confirm red, restore green). Source: doc #6 todo 2.
+- [x] ✅ [BACKEND] P1. **Sibling-reset guard: never silently recycle a `done` row.** — `agent-orchestrator@9c7a0fd`
+      (LDR). `bootstrap.py`'s `sync_backlog_to_db` brief_hash-mismatch branch now checks
+      `existing_row.status == "done" and existing_row.done_sha is not None` FIRST — if true, REFUSES the reset, logs an
+      ERROR naming the new incoming brief + both hashes (the old brief's plaintext isn't stored, only its hash —
+      `brief_hash` predates this fix), and leaves every terminal field untouched. **Trade-off surfaced, not hidden**:
+      this also refuses the LEGITIMATE "id reused for a genuinely new todo" case the 2026-07-15 fix was built for — the
+      guard cannot distinguish that from "a stale reader shifted an old todo onto this id" from `brief_hash` alone, so a
+      new todo landing on a stale done+done_sha id will now silently read as `done` and never dispatch until manually
+      fixed. This is the plan's own explicit ruling (protect audit history over correct routing); proper disambiguation
+      is content-derived ids, deliberately out of scope per `regen_positional_task_ids_not_content_stable_2026_07_17.md`
+      todo 3. **Gate**: added `test_sync_refuses_to_reset_a_done_row_on_id_reuse` (row survives + ERROR logged, asserts
+      new brief + both hashes appear in the message) and updated the two existing tests whose scenarios this ruling
+      inverts (`test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox` narrowed to a non-done row — the
+      case where reset still applies; `test_regen_id_slot_reuse_inherits_stale_terminal_status`'s tick-3 assertion
+      flipped from "resets to queued" to "done row survives + ERROR logged", with an inline comment explaining why).
+      **Bug- injected**: short-circuited the guard condition, confirmed both dependent tests go RED (2 failed),
+      restored, confirmed GREEN (1428 passed). Source: doc #6 todo 2.
 - [x] ✅ [BACKEND] P1. **Hand-tuned-field preservation across positional-ID shift — KEYSTONE, land this first.** —
       `agent-orchestrator@a650ee4` (LDR). **Finding: no production code change was needed — re-verify before assuming
       the "keyed by task id" framing.** Grepped every `priority_override` read/write site fleet-wide
@@ -140,6 +152,12 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Progress Log
 
+- **2026-07-20 — Todo 1 (sibling-reset guard) landed** (`agent-orchestrator@9c7a0fd`). Refuses to reset a
+  `done`+`done_sha` row on brief_hash mismatch; ERROR logged; regression test + bug-injection both confirmed
+  load-bearing. **Flagging a real trade-off, not just a fix**: this guard also blocks the legitimate "id reused for a
+  genuinely new todo" case — such a todo will now silently look `done` and never dispatch until someone notices and
+  manually intervenes. That cost is the plan's own explicit ruling (protect audit history over correct auto-routing);
+  the proper fix is content-derived ids, deliberately out of scope. Worth watching for in practice.
 - **2026-07-20 — Todo 2 (KEYSTONE) landed** (`agent-orchestrator@a650ee4`). No production code change needed — the RC-1
   brief-keyed reconcile (`agent-orchestrator@ff6100a`, 2026-07-07) already predates and prevents the reported mechanism.
   Regression test added + live park (`mvp_backfill_defi_onchain_v10-001`) re-verified holding 3 days / ~140 ticks after

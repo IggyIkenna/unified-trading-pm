@@ -155,12 +155,14 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
       `select count(*) from tasks where status='done' and brief_hash is null` is either 0, or non-zero with a recorded
       decision AND a check that alarms if it GROWS — growth is the real signal, since a NEW unhashed row would mean the
       backfill path has regressed.
-- [ ] [BACKEND] P3. **Make the sibling-reset case impossible or loud.** The guard resets a row whose content it does not
-      recognise; it cannot tell "this id was reused for a NEW todo" (reset is right) from "a stale reader shifted an OLD
-      todo onto this id" (reset destroys history). Cheapest honest fix: refuse to reset a row that is already `done`
-      with a `done_sha`, and log an ERROR naming both briefs — a done row is audit history and should never be silently
-      recycled. **Gate**: a unit test where a done row's id is claimed by a different brief asserts the done row
-      SURVIVES and an error is emitted; bug-inject to prove the test is load-bearing.
+- [x] ✅ [BACKEND] P3. **Make the sibling-reset case impossible or loud.** — `agent-orchestrator@9c7a0fd`
+      (`ao_backlog_regen_integrity_2026_07_20.md` todo 1). `sync_backlog_to_db` now refuses to reset a row that is
+      `done` with a `done_sha` on brief_hash mismatch, logging an ERROR (new brief + both hashes — the old plaintext
+      isn't stored). **Accepted cost**: this also blocks the legitimate "id reused for a NEW todo" case — such a todo
+      will silently read as `done` and never dispatch until manually fixed. That's the deliberate trade-off (protect
+      audit history over correct auto-routing); todo below (content-derived ids) is the real fix if this proves
+      insufficient. **Gate**: `test_sync_refuses_to_reset_a_done_row_on_id_reuse` (new) + 2 existing tests updated to
+      the new contract; bug-injected (guard disabled → both dependent tests red; restored → green).
 - [ ] [BACKEND] P3. **Content-derived ids — the real fix, deliberately NOT scoped here.**
       `ao_dispatch_hardening_2026_07_16` ruled the content-hash rewrite out (blast radius: `existing_ids` bookkeeping,
       `slot_skips` keyed by task_id, dashboard/API id refs, `done_sha` history). That ruling stands. Re-open ONLY if the
@@ -168,6 +170,9 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
 
 ## Progress Log
 
+- **2026-07-20** — Sibling-reset guard todo landed (`agent-orchestrator@9c7a0fd`, via
+  `ao_backlog_regen_integrity_2026_07_20.md` todo 1). See the fix-todo checkbox above for the guard's behavior and its
+  accepted trade-off (blocks legitimate id-reuse-for-new-todo too).
 - **2026-07-17** — Filed as R7's successor home during `ao_dispatch_hardening_2026_07_16` Phase 4 close-out. R7's
   original one-line framing ("a checked-off `[x]` todo can be re-derived under a fresh task id and re-dispatched") was
   **checked against code and is imprecise**: the brief-keyed reconcile (`:1217`) and cross-plan skip (`:1271`) mean a
