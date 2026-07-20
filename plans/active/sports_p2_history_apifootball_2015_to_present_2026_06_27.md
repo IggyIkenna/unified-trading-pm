@@ -3178,3 +3178,31 @@ evidence violation, `2c85218c`); applied the corrected fix — **5,288 cells clo
 durably verified correct** — the single largest confirmed movement on this todo's entire 20+-dispatch history.
 `/skip-current-task` — resume criteria unchanged from the previous entry, PLUS the new consolidator-merge- source
 question above as the priority investigation before assuming "wait longer" will resolve the aggregate gate.
+
+### 2026-07-20T02:27-05:44Z — data_engineering slot-4 (same `-001` dispatch, continued — 2 of the 4 fleet VMs stopped unexpectedly (~year 2021, not job completion); PROGRESS.json checkpoint contract confirmed intact for auto-resume; did NOT intervene)
+
+Continued fleet-health monitoring (bounded watchers, no gate re-checks this stretch — no new information to gain given
+the already-documented consolidator-lag finding). At ~05:27Z, `af-backfill-20260719-180520` (FIXTURE_EVENTS) and
+`af-backfill-20260719-180603` (FIXTURE_STATS) both went `GONE (NotFound)` — no longer resolvable via
+`compute_v1.InstancesClient`. **This was NOT graceful job completion**: both VMs' `run.log`s cut off abruptly mid-fetch
+(no `COMPLETED`/shutdown message) with `[[VM_PROGRESS]] last_completed_date=` checkpoints at `2021-05-01` / `2021-03-19`
+respectively — nowhere near the fleet's `2020-06-06..2026-05-10` window end. Consistent with SPOT preemption or a crash,
+not a designed self-delete-on-completion. **Did NOT investigate deletion attribution further or take any
+deletion/relaunch action myself** — per the VM-delete guardrail HARD RULE (`data_engineering.md` STEP 0.55, codified
+after 3 same-day incidents on this EXACT `af-backfill`/sports entity), and because this task's scope is "extend the
+fetch fleet," not fleet lifecycle management. **Confirmed the auto-resume contract is intact before moving on**: both
+terminated VMs have a fresh, correct `vm-logs/{vm}/PROGRESS.json`
+(`{"last_completed_date": "2021-05-01"/ "2021-03-20", "monotonic": true, ...}`, updated at their last-alive timestamp) —
+per CLAUDE.md's shipped PROGRESS-checkpoint contract, any relaunch should resume from this checkpoint, not replay from
+`START_DATE`. No `PREEMPTED` marker was written by either VM (that hook requires GCP's preemption notice window to fire;
+its absence is inconclusive between "abrupt kill before the hook could run" and "a non-preemption crash," not evidence
+against preemption). The other 2 VMs (`af-backfill-20260719-180545` FIXTURE_LINEUPS, `af-backfill-20260719-180620`
+PLAYER_STATS) remain healthy and `RUNNING` continuously since launch (~11.5h uptime at this check).
+
+**Not flipping this checkbox** — same reasons as prior entries; this new finding doesn't change the gate math (the 2
+terminated VMs' shard writes are already durably captured in their per-VM shards up to their last checkpoint — real,
+non-lost progress — but they're no longer advancing). `/skip-current-task` — resume criteria unchanged, PLUS: if a
+future dispatch notices these 2 VM slots (FIXTURE_EVENTS/FIXTURE_STATS coverage west of 2021) still show as
+not-relaunched after a reasonable window, that's worth a `/blocked` to the operator/main agent (self-heal watchdog
+possibly not covering this VM class) rather than a unilateral relaunch — per the same guardrail, confirming genuine
+staleness (not a sibling's in-flight work) is required before any VM-lifecycle action.
