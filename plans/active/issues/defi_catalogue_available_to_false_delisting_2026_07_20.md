@@ -33,7 +33,13 @@ tags:
     ssot-contradiction,
     not-enough-tvl,
   ]
-related: [instruments_foundation_and_catalogue_completeness, defi-completeness-oracle]
+related:
+  [
+    instruments_foundation_and_catalogue_completeness,
+    defi-completeness-oracle,
+    defi_consolidated_closeout_2026_07_18,
+    defi_master,
+  ]
 created: 2026-07-20
 priority: P1
 parent_epic: instruments_master

@@ -479,7 +479,8 @@ Discriminator = **does a manifest row exist**.
 
 - **Sources**: `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` (measured 63.9M via the v2 enumerator),
   `issues/defi_manifest_consolidator_duplicate_race_2026_07_10.md`, `defi-completeness-oracle.md`,
-  `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
+  `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
+  `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`.
 - **Close-out criterion**: fresh single-walk yields zero silent-`M` rows; denominator honest.
 
 - [ ] [DATA] P0. **PURGE first, then seed.** Purge the 1.79M duplicate + ~219.5K phantom rows (re-verify the 219,529
@@ -489,6 +490,17 @@ Discriminator = **does a manifest row exist**.
       `attempted_failed` → honest-empty; reconcile `spot_asset` absence from the enumerated catalogue (the v2 corpus
       predates SPOT_ASSET population; `spot_pair` 143K is partly the culled DRIFT SPOT leak). (repos:
       unified-api-contracts, instruments-service)
+- [ ] [DATA] P1. **DeFi catalogue `available_to` false-delisting** — the CATALOGUE twin of the subgraph-deindex reclass
+      above (same root cause: a subgraph/seed pool-set change misread as a mass delisting). Root fix SHIPPED
+      `instruments-service@c37d4f96` (defi drop-outs never last-seen-delist; gated `asset_group=="defi"`, both full +
+      incremental paths; truth-gate `delisted_at`/`expiry` preserved). PROVEN on real prod data: 947 clustered
+      false-delistings (06-26/07-06/07-08 across TRADER_JOE_V2/PANCAKESWAP_V3/AAVE_V3/MORPHO) → 0. Remaining to close:
+      **(a)** `--mode full` defi catalogue regen to purge the frozen stamps + verify; **(b)** historical manifest
+      un-delist + `NOT_ENOUGH_TVL` re-capture over the affected `(protocol,chain,date)` cells (reverse/supersede
+      `reclassify_defi_postdelist_eu_2026_06_24.py`; gate `validate_defi_no_delisted_on_live_pool`); **(c)** Option B
+      §12 on-chain factory/RPC truth-gate probe (feeds `delisted_at` for genuine removals). SSOT:
+      `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`. (repos: instruments-service,
+      market-tick-data-service, unified-api-contracts)
 
 ## Track 4 — CAP: zero-capture protocols · P2
 
