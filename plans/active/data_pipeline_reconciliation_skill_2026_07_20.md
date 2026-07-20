@@ -435,3 +435,33 @@ Scratchpad root:
 **Ordering constraint discovered:** todo 21 (remove the C2a refusal from `SKILL.md` + the taxonomy) must run **after**
 Phase C's acceptance review, because that review also edits `SKILL.md`. Editing it while five agents are mid-read makes
 their critiques reference a moving target.
+
+### 2026-07-20 (cont.) — Phase A/B/D shipped; C + consistency in flight
+
+**Shipped since the last log entry:**
+
+- `b1be58824` — todo 10 (P1-10: `canonical-write-guard-contract.md` + bucket-isolation "resolution authority" section),
+  todos 20/22/23 (D1 corrections, D2 §5 banner, `defi_lending_writer_retire_prerequisite_2026_07_20.md`). Two hygiene
+  gates caught real defects before landing: an unquoted `: ` in the new plan's `summary:` folded scalar broke YAML, and
+  `nature: refactor` was invalid (the sub-agent conflated `nature` with `estimate_class`; corrected to `process`).
+- `ea5636e9d` — cleared residual D2 `PARKED/UNRULED` staleness at cross-asset SSOT §5 (`<details>` block) and §11 log
+  line, both flagged by the todo-23 agent.
+
+**Finding worth keeping: the "5+ MTDS lending writers" figure is an UNDERCOUNT** — the real count is **8** (7 emit flat
+`LENDING`, 1 emits `SOLANA_LENDING`). The failure mode is **silent**: `build_instrument_id` raises, each handler's broad
+`except ValueError` → `record_failed`, so the manifest fills with `attempted_failed`/zero-data rows that render as an
+honest failure, not a crash. Also independent of the retire: `liquidations_handler` is **already** shard-atom-desynced
+in prod (manifest `liquidation` vs GCS path `LENDING`). Both captured in the new prerequisite plan.
+
+**In flight (self-tracked workflows; run IDs recorded for restart-safety):**
+
+| Run ID            | Script               | Covers                                                                            |
+| ----------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `wf_10a81bb8-42e` | `dpr-phase-c.js`     | Phase C — 5 per-AG reconciliation runs + skill acceptance review (todos 16/17/18) |
+| `wf_dd6c0ce3-40b` | `dpr-consistency.js` | Post-phase codex audit (todo 19) — ruling-drift + cross-SSOT + skill-ref checks   |
+
+**Remaining after those land:** todo 21 (remove the now-obsolete C2a refusal from `SKILL.md` §3e + the taxonomy REFUSED
+section — D1 ruled it, so the skill enforces UPPERCASE instead of refusing) — sequenced AFTER Phase C's acceptance
+review because both edit `SKILL.md`. Todos 24/25 (D3 fold → repoint execution-service) are genuine defi-migration
+execution work with prod blast radius; they remain tracked todos here, to be executed as their own effort (the prod
+delete in 25 is human-only regardless).
