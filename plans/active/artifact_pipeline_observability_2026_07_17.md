@@ -85,14 +85,14 @@ real cross-cloud build/deploy feed, so the deployment estate's final stage becom
 Every field the target shape needs can be produced, it is cheap, and ~60–72 days of history already exists free. Numbers
 below are measured against GCP `central-element-323112` + AWS `427895769566`, not assumed.
 
-| Source                      | Depth (measured)                      | Carries                                                 | Read cost |
-| --------------------------- | ------------------------------------- | ------------------------------------------------------- | --------- |
-| **Cloud Run revisions**     | back to **2026-05-06** (72d; 192/svc) | image, **resolved digest**, deploy time, deployer       | free      |
-| **Cloud Build history**     | back to **2026-05-19** (60d; 2000+)   | SHA, trigger, branch, **structured failureInfo**, steps | free      |
-| **AWS CodeBuild**           | 400+ builds/project                   | SHA, phases[].contexts[] failure, initiator             | free      |
-| **Artifact Registry / ECR** | all live images                       | digest, tags, pushed-at, size                           | free      |
-| **App Runner / ECS**        | operation history incl. **FAILED**    | image (by tag), deploy status + time                    | free      |
-| **Tarball manifests (GCS)** | 3645 manifests (outlive 158 tarballs) | commit_sha (full), pyproject_version, created_at, clean | free      |
+| Source                      | Depth (measured)                                                                                                                | Carries                                                            | Read cost |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------- |
+| **Cloud Run revisions**     | back to **2026-05-06** (72d; 192/svc)                                                                                           | image, **resolved digest**, deploy time, deployer                  | free      |
+| **Cloud Build history**     | back to **2026-05-19** (60d; 2000+)                                                                                             | SHA, trigger, branch, **structured failureInfo**, steps            | free      |
+| **AWS CodeBuild**           | 400+ builds/project                                                                                                             | SHA, phases[].contexts[] failure, initiator                        | free      |
+| **Artifact Registry / ECR** | all live images                                                                                                                 | digest, tags, pushed-at, size                                      | free      |
+| **App Runner / ECS**        | operation history incl. **FAILED**                                                                                              | image (by tag), deploy status + time                               | free      |
+| **Tarball manifests (GCS)** | **4064 manifests / 163 tarballs**, from 2026-05-17, **no lifecycle rule on `code/`** (unlimited retention; cleanup cron PAUSED) | commit_sha (full), pyproject_version, created_at, git_status_clean | free      |
 
 - **The existing `unified-trading-cicd-events` ledger is a red herring for builds** — no TTL, but today-only partitions
   and rows are QG-state transitions (`MAIN_GREEN`, `SIT_VALIDATED`), not build records (only ~1 `cloud-build-router` row
@@ -157,8 +157,13 @@ never a fabricated green (the `_image_signal` principle).
     of breaking something that is working right now." Therefore (A) is **gated on a blast-radius audit** (Phase 3c) that
     must return a YES / YES-WITH-CONDITIONS verdict, enumerate every consumer of `git_commit`/`image_digest`, and
     confirm the tarball naming/pathing does not have to change. A NO verdict means ship (B) only and escalate.
-- **AWS tarball lane** — structurally broken: uploader defaults to `uts-prod-deployment-state` (0 objects in `code/`);
-  the EC2 launcher expects `unified-trading-deployment-scripts-427895769566` which does not exist. Separate infra bug.
+- **AWS tarball lane — broken at TWO independent points** (re-verified 2026-07-17; an earlier draft of this plan framed
+  this wrongly as an uploader/launcher bucket disagreement — the uploader and the AWS setup script actually **agree** on
+  `uts-prod-deployment-state`). The real findings: (1) `s3://uts-prod-deployment-state/code/` is **EMPTY** (0 objects;
+  only a `scratch/` prefix exists) — the AWS uploader lane appears never to have run, or its output was deleted; and (2)
+  `launch-ec2-vm.sh:272` resolves via `lc_aws_code_bucket` → `unified-trading-deployment-scripts-427895769566`, which
+  **does not exist** (head-bucket 404), and 9 AWS launchers use that path. **The GCP lane is entirely unaffected.** Out
+  of scope here — do NOT conflate it with the GCP stamp change.
 - **AWS runtime is thinner than GCP** — image resolved by tag not digest; e.g. `uts-deployment-api-prod` (App Runner)
   runs `:latest` and is **PAUSED** today after 2 failed deploys; `uts-defi-prod` (ECS) has 3 services but **0 running
   tasks**. Show honestly.
@@ -179,7 +184,13 @@ never a fabricated green (the `_image_signal` principle).
 
 ## Constraints (from the OOM remediation plan — binding)
 
-- 4 GiB ceiling, `WORKERS=2` → any process-local cache exists 2×. Use `deployment_api/utils/bounded_cache.py`
+- **CORRECTED 2026-07-17 (measured from `deployment-api/cloudbuild.yaml:427-429`)**: the deployed ceiling is **16 GiB /
+  `--cpu 4` / `WORKERS=2`**, raised from 8 GiB on 2026-07-17 after an OOM (8585 MiB vs an 8192 limit) driven by the
+  **data-status** page, not the deployments inventory. An earlier draft of this plan said "4 GiB", quoting decision D2
+  of the OOM remediation plan — **that plan is now stale against the deployed config**; trust `cloudbuild.yaml`. (Drift
+  worth raising separately against that plan.) The discipline below still stands — the budget is just not the binding
+  constraint it was assumed to be.
+- `WORKERS=2` → any process-local cache exists 2×. Use `deployment_api/utils/bounded_cache.py`
   `BoundedCache(maxsize, ttl)`, never an unbounded dict.
 - No Redis / cross-instance tier. The ONE sanctioned shape for an expensive multi-cloud source is **expensive-source →
   periodic GCS snapshot (parquet/JSONL) → cheap local DuckDB/TTL read** (the cost-observability worker). A builds page
@@ -270,29 +281,71 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 - [ ] [BACKEND] P1. Carry the image/tarball version on the Deployments inventory row so it can be filtered on.
       **Additive only** — `DeploymentItem` today carries no image URI / digest / commit; adding fields must not break
       any existing consumer or field-set assertion. Respect the 45s SWR cache + the 4 GiB / WORKERS=2 budget (report the
-      payload delta before shipping).
-- [ ] [UI] P1. Deployments view accepts a **pre-loaded filter via URL param** (e.g. `?image=<digest|tag>`), so an
-      /ops/artifacts version row deep-links to exactly the hosts running that artifact. Reuse the existing
-      URL-param-backed filter mechanism; do not change existing filter behavior or param names.
+      payload delta before shipping). **AUDITED 2026-07-17 — cheaper than assumed: the data is already in hand.**
+      `DeploymentRegistryEntry` already declares `image_digest`/`git_commit`
+      (`unified_trading_library/deployment_registry.py:205-206`) and `_vm_item()` (`deployments_inventory.py:689-721`)
+      **already receives that entry object** — it simply never copies the fields onto the row. So this is a ~2-line
+      addition with **zero new I/O / census cost**; no join to write. Payload delta measured at **<20 KB** across ~200
+      targets. `_unmanaged_vm_item` (live-GCE-but-unregistered) correctly stays `None`. **No test anywhere asserts a
+      closed field set**, so additive fields are safe.
+- [ ] [UI] P1. Deployments view accepts a **pre-loaded filter via URL param** (e.g. `?git_commit=<sha>`), so an
+      /ops/artifacts version row deep-links to exactly the hosts running that artifact. **AUDITED — the page was built
+      for this**: every filter already reads `useSearchParams()` via one `setParam` helper, and the module docstring
+      states the intent ("ALL filters are URL-backed … so alert deep-links and shareable filtered views work"). Taken
+      params: `umbrella / cloud / status / asset_group / kind / launched_by / region / detail` — pick a fresh name and
+      follow the `kind` filter pattern (`Deployments.tsx:1202-1226`). Note **no page currently deep-links into the
+      Deployments LIST with a preset filter** — this would be the first consumer of an existing-but-unused capability.
+      Also surface `git_commit`/`dep_versions` in `VmDeploymentDetails.tsx`, which today renders neither despite the
+      wire model carrying them (dead fields).
 - [ ] [UI] P2. **Console deep-links** out to where the build ran + its logs — GCP Cloud Build (`logUrl` is on the build
       record), Artifact Registry, AWS CodeBuild (CloudWatch `deepLink`), ECR, and the GCE instance — so the operator can
-      verify an artifact is the right one. Reuse any existing URL helper (`RepoCi` already renders a build `log_url`)
-      rather than reinventing.
+      verify an artifact is the right one. **AUDITED — reuse `consoleUrl(item)` at `DeploymentDetail.tsx:216-262`**: an
+      existing pure-URL-construction helper with a `switch (item.kind)` already covering VM (GCE + EC2), Cloud Run
+      job+service, Cloud Function, ECS, Lambda across both clouds. Build log URLs come straight off the build API
+      (`log_url`), not hand-built. **Gap: no Artifact Registry / ECR link builder exists** — write that one fresh,
+      following `consoleUrl`'s pattern.
 
 ### Phase 3c — tarball commit tracking (AUDIT-GATED — must not break CD)
 
-- [ ] [REVIEW] P0. **Blast-radius audit BEFORE any code** (operator: "do the proper audit first … we don't have to do it
-      at the cost of breaking something that is working right now"): map the tarball CD flow end-to-end, enumerate every
-      consumer of `git_commit`/`image_digest`, prove the tarball naming/pathing need NOT change, cover the
-      refresh-between-launch-and-download race and stamp-failure-must-not-block-boot, and return an explicit YES /
-      YES-WITH-CONDITIONS / NO verdict. Also re-verify the unverified Lane-B claims (empty provenance on live VMs, the
-      `0.99.0` constant, manifest/tarball counts, the broken AWS tarball lane).
-- [ ] [INFRA] P1. **(A) measured stamp** — record the real commit on the registry entry at launch, additive and
-      non-breaking, only if the audit verdict allows. Boot must still succeed if the stamp step fails.
-      **BLOCKED-OPERATOR-DECISION if the audit returns NO.**
-- [ ] [BACKEND] P1. **(B) inferred fallback** for historic/in-flight VMs — join launch time against the tarball manifest
-      timeline (`commit_sha` + `created_at`); render **explicitly as inferred, never measured**, and stop applying it to
-      launches once (A) is live.
+- [x] [REVIEW] P0. ✅ Blast-radius audit DONE 2026-07-17 — **VERDICT: YES, WITH CONDITIONS.** Blast radius measured as
+      **zero**: `git_commit` is a write-mostly string with no validating, alerting, reconciling, deduplicating, or QG
+      consumer anywhere in the workspace (all 56 candidate files grep-then-READ); `deployment-ui` has **zero** reads of
+      it. The populated round-trip is already covered by a passing test
+      (`deployment-api/tests/unit/test_vm_deployment_bom.py:73-87`); nothing relies on emptiness except two
+      defaults-tests and one cosmetic `"unknown"` on an unrelated registry (`monitor.short_commit`). **Key finding — the
+      commit is already measured and then thrown away**: `setup-data-pipeline-vm.sh:613-615` parses and logs
+      `_tarball_actual_sha` at boot, but `/var/log/vm-setup.log` only reaches GCS via the failure EXIT trap
+      (early-returns on `rc == 0`), so on a SUCCESSFUL boot it is discarded (probe: recent `vm-logs/<vm>/` hold only
+      `run.log`). **No naming/path change is required** — SHA-pinned immutable tarballs (`<name>@<sha>.tar.gz`, selected
+      by `*_TARBALL_SHA` VM metadata, fail-closed) ALREADY exist and 5 launchers already use them.
+- [ ] [INFRA] P1. **(A) measured stamp** — 2 additive shell edits in `setup-data-pipeline-vm.sh`, **zero Python
+      changes**: accumulate `_tarball_actual_sha` in the download loop (`:604-648`), then `export GIT_COMMIT` inside
+      `_launch_with_tee()` (`:876-948`) next to the existing `VM_NAME`/`VM_TASK` exports. `GIT_COMMIT` is already the
+      first `AliasChoices` entry on `DeploymentConfig.git_commit`, so `resolve_deployment_bom()` picks it up unchanged.
+      **CONDITIONS (all binding):** (1) 🔴 the file runs under `set -euo pipefail` — write
+      `if [[ -n … ]]; then export     …; fi`, **never** a trailing `[[ … ]] && export` as a function's last statement
+      (returns non-zero → propagates → would break EVERY VM boot at once); place it mid-block. (2) Set `GIT_COMMIT`
+      only; leave `IMAGE_DIGEST` unset — there is no image on this path and `bom.py:58-69` deliberately refuses to
+      invent a digest. (3) Never abort a boot on a missing/garbage SHA — degrade to today's `""`. (4) Do NOT use
+      `extras` as the carrier — `vm_deployments.py:114` pops it, making it invisible to the API and both UIs. (5)
+      Document the semantics precisely: on the floating path the value means "the manifest `commit_sha` this VM read at
+      boot", **not an attestation of the running bytes** (the `*/30` refresh cron can land between the tarball and
+      manifest `gsutil cp` calls). (6) Keep inferred values out of this field. (7) Do NOT touch the AWS lane in the same
+      change. **VERIFICATION GATE — no existing CI covers this file** (bash uploaded straight to GCS, never executed in
+      CI; `deployment-service/quality-gates.sh` will NOT catch a `set -e` regression). Must verify with a **live
+      launch**: fire one cheap `EPHEMERAL_BATCH` VM, run the codex T+10min check, and assert a registry row appears in
+      `deployments/active/` with a **non-empty `git_commit`**. Add a unit test that `resolve_deployment_bom` reads
+      `GIT_COMMIT` from env (covers the Python half; the real risk is the shell half).
+- [ ] [BACKEND] P2. **(B) inferred fallback — WEAKER THAN ASSUMED; confirm with the operator before building.** The
+      audit put the honest ceiling at _"probably this commit, ±one 30-minute refresh window, per repo, for VMs launched
+      in the last 30 days."_ Four measured limits: (i) `started_at` is written **after** the download, so the join uses
+      the wrong timestamp and is biased toward the wrong answer; (ii) the floating manifest is **overwritten** each
+      rebuild, so reconstruction only works where a pinned copy also exists; (iii) a VM installs **several** tarballs →
+      a per-repo vector, each independently ambiguous; (iv) `deployments/archive/` expires at **30 days**, so the VM
+      side of the join vanishes beyond that. Also `--allow-dirty-tarball` builds carry a `commit_sha` that does not
+      describe the shipped bytes. **MUST go in a separately-named field — never `git_commit`** (mixing inferred with
+      measured destroys the field's meaning). Given (A) is cheap and non-breaking, (B) may not be worth building at all.
+      Render **explicitly as inferred, never measured**, and stop applying it to launches once (A) is live.
 
 ### Phase 4 — absorb + retire
 
@@ -309,6 +362,18 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 
 ### Phase 6 — later / optional (stretch)
 
+- [ ] [INFRA] P3. _(stretch, optional)_ **Fleet-wide SHA-pinning — upgrades the tarball answer from _plausible_ to
+      _proven_.** The pin lane already exists and is fail-closed (`<name>@<sha>.tar.gz` + self-verifying manifest check,
+      `setup-data-pipeline-vm.sh:620-644`), with 5 launchers using it. Extending it fleet-wide makes the recorded commit
+      an attestation of the running bytes rather than "what the manifest said at boot". **Hazard**: the codex documents
+      a 2026-06-01 incident where pinned fan-out tarballs were pruned seconds after upload, killing 20 VMs (exit 2).
+      Currently dormant — `uts-prod-tarball-cleanup-cron` is PAUSED and there is no lifecycle rule on `code/` — but any
+      revival of pruning must be reconciled with this first. Separate, larger change; do NOT bundle with (A).
+- [ ] [REVIEW] P3. _(stretch, optional)_ Issue doc — **the whole VM tarball path bypasses `resolve_bucket_name()`** and
+      hardcodes `deployment-scripts-central-element-323112` (`setup-data-pipeline-vm.sh:47`,
+      `create-code-tarballs.sh:45`, ~48 launchers), contradicting both the workspace storage rule and the codex SSOT's
+      own description of this path. Combine with the two-point AWS-lane breakage into one deployment-bucket-resolution
+      issue doc.
 - [ ] [BACKEND] P3. _(stretch, optional)_ "Built but never deployed" + build→deploy latency (join build digest to the
       first revision that ran it).
 - [ ] [INFRA] P3. _(stretch, optional)_ Image vulnerability-scan status (AR + ECR native scanning) + orphaned-image GC
@@ -335,4 +400,19 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
   for verification. Tarball commit tracking moved **into scope**: (A) measured stamp going forward + (B) inferred from
   the manifest timeline for historic only — **gated on a blast-radius audit** (Phase 3c) under the operator's hard
   constraint that the working latest-tarball CD flow must not break. Two read-only audits dispatched (tarball
-  blast-radius; Deployments filter support). **No page code started; mock rebuild pending.**
+  blast-radius; Deployments filter support).
+- **2026-07-17 — BOTH AUDITS LANDED.** Tarball verdict **YES-WITH-CONDITIONS**: blast radius measured zero, the change
+  is 2 shell lines + 0 Python, no naming/path change, and the commit is _already_ parsed at boot and thrown away. The
+  single real risk is a `set -e` regression in `setup-data-pipeline-vm.sh` — which **no CI gate covers** (bash uploaded
+  straight to GCS, never executed in CI), so the verification gate is a live `EPHEMERAL_BATCH` launch, not a test run.
+  Option (B) came back **weaker than assumed** (±30-min window, wrong-side timestamp, per-repo vector, 30-day archive
+  expiry) and may not be worth building now that (A) is cheap. Deployments audit: the cross-link is **cheaper than
+  assumed** — provenance is already in hand in `_vm_item()` (~2 lines, zero new I/O), the page is already fully
+  URL-param-backed by design, and `consoleUrl()` already exists to reuse.
+- **2026-07-17 — three corrections to earlier claims in this plan** (all fixed above): (1) the memory ceiling is **16
+  GiB**, not 4 — I had quoted a stale decision from the OOM plan instead of the deployed `cloudbuild.yaml`; (2) the AWS
+  tarball lane's uploader and setup script **agree** on the bucket — the real breakage is an empty `code/` prefix plus a
+  _different_ nonexistent bucket in the EC2 launcher; (3) manifest/tarball counts corrected to **4064 / 163**. Also: the
+  `0.99.0` `dep_versions` value is an **honest** report of a deliberately-pinned `SETUPTOOLS_SCM_PRETEND_VERSION`
+  constant (`setup-data-pipeline-vm.sh:703`, because tarballs ship without `.git`) — it carries zero provenance, but the
+  BoM is not lying; the mock's wording must reflect that distinction. **No page code started; mock rebuild pending.**
