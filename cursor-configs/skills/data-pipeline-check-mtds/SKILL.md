@@ -51,15 +51,36 @@ other synthetic date. A smoke check silently run against the wrong day proves no
 `-test-` sibling for `market-data-tick-*` is not pre-declared in `bucket_config.yaml`. Verify all 5 asset groups before
 targeting any of them for the first time (prediction uses the short `pred` form in the bucket name):
 
+> **⛔ NEVER gate on `gcloud storage buckets describe` / `gsutil ls -b` (2026-07-19).** Both need `storage.buckets.get`,
+> which the `unified-trading-sa` service account does NOT have — it holds OBJECT-level read/write only. Measured
+> 2026-07-19: bucket-metadata calls return `AccessDeniedException: 403` for EVERY bucket including
+> `market-data-tick-cefi-prd-*`, which the same session had been reading objects from continuously. So a describe-based
+> gate reports "GAP MISSING" for all 5 asset groups even when every bucket exists, and following it literally provisions
+> 5 DUPLICATE buckets — directly against `bucket_estate_consolidation_to_sub100_2026_07_13`. `gcloud storage ls` (bucket
+> list) is equally blind: it returns **0 buckets** for this project.
+>
+> **Use an OBJECT-level probe instead** — it distinguishes MISSING (404) from EXISTS-but-EMPTY, which is the state a
+> fresh `-test-` sibling is legitimately in:
+
 ```bash
 PROJECT_ID="central-element-323112"
 for ag in cefi defi tradfi sports prediction; do
   mtds_ag="${ag}"; [ "${ag}" = "prediction" ] && mtds_ag="pred"
   bucket="market-data-tick-${mtds_ag}-test-${PROJECT_ID}"
-  if gcloud storage buckets describe "gs://${bucket}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
-    echo "OK   gs://${bucket}"
-  else
-    echo "GAP  gs://${bucket} — MISSING, provisioning gate fails for ${ag}"
+  out=$(gsutil ls "gs://${bucket}/**" 2>&1 | head -1)
+  case "$out" in
+    *NotFound*|*404*|*"does not exist"*)  echo "GAP  gs://${bucket} — MISSING, provisioning gate fails for ${ag}" ;;
+    *"matched no objects"*|"")            echo "OK   gs://${bucket} (exists, empty — normal for an unwritten test sibling)" ;;
+    *AccessDenied*|*403*)                 echo "??   gs://${bucket} — 403 on objects too; escalate, do NOT provision blind" ;;
+    *)                                    echo "OK   gs://${bucket} (exists, has objects)" ;;
+  esac
+done
+
+# Legacy describe-based form — DO NOT USE (false-negatives without storage.buckets.get):
+#   if gcloud storage buckets describe "gs://${bucket}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+#     echo "OK   gs://${bucket}"
+#   else
+#     echo "GAP  gs://${bucket} — MISSING, provisioning gate fails for ${ag}"
   fi
 done
 ```
