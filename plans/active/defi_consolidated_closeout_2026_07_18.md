@@ -267,8 +267,16 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
+<<<<<<< Updated upstream
                                   these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
                                   un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+||||||| Stash base
+                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+=======
+                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+>>>>>>> Stashed changes
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -811,6 +819,53 @@ Discriminator = **does a manifest row exist**.
     **DEFERRED-bespoke (flag, not MVP-blocking):** GMX POOL-vs-PERPETUAL shape; HYPERLIQUID-L1 gas (no EVM chain_id);
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
+
+- **2026-07-20 (slot-4, /autonomous — ✅ FULL DeFi LOCKSTEP SHIPPED (UAC+IS+MTDS); MIGRATION/NO-ORPHANS VERIFIED on the
+  live index via ADC).**
+
+  - **The whole catalogue lockstep is now LANDED across all three repos:** `uac@3f79489f`+`ae83689b` (venues incl.
+    CHAINLINK re-declared live), `is@793125ad`+`6506b505`+`9267e0ea` (adapters + venues + goldens, IS 98 == UAC 98), and
+    **`mtds@75cf4c3c`** (METEORA/LIFINITY collectors + date-aware oracle-feed resolution + RULE-11 DEFI 2646 + SPORTS
+    308). The MTDS half took **6 ship attempts** — 4 lost to the QG-sentinel ship-race (a full MTDS QG is ~10-15 min
+    queued behind `[qg-governor] all 2 tokens busy`, and any peer commit in that window invalidates the sentinel), 1 to
+    a genuine pin-churn (2646->2511->2646 as CHAINLINK flipped), 1 to a sports pin drift a peer introduced
+    (`uac@b6a1d83a` +20 ODDS_API bookmakers, 88->308). Every pin was re-MEASURED against the live registry, never
+    derived on paper.
+  - **✅ "all migrations done, no orphans" — VERIFIED by direct ADC read** of
+    `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (gcloud CLI auth is
+    expired but ADC still works, so Python `google.cloud.storage` reads the index directly):
+    - **51,917,421 rows** — grown 45.8M -> 51.9M as the rebuild + consolidator accrete per-instrument CAPTURED rows.
+    - **capture_status:** captured **25,343,488** (up from 18.6M — the per-instrument grain is landing), empty_confirmed
+      14,713,729, expected_unattempted **11,632,059** (pending backfill VISIBLE = honest coverage, not hidden),
+      attempted_failed 228,145.
+    - **Cell-level (blank instrument_id) absence rows: 6,256,921** — the CF-11 corpus is present and grew (4.6M ->
+      6.26M), confirming both the UPSERT preservation AND the CF-11 fix's cell-level emission are working.
+    - **Orphans: `_migrated_` = 0, `ticks_migrated_` = 0** ✅ — the two migration-artifact orphan classes are clean.
+  - **⚠️ One NEW small finding, filed + triaged (NOT my scope):** 73 distinct `{protocol}_{chain}_{daily_epoch}`
+    timestamp-glued ids (`ethena_ETHEREUM_1782648000`, `oracle_prices_1782388800`, ...), all `lst_rates` +
+    `oracle_prices`, all `captured`, ~6 days of late-June captures. The `lst_rates`/`oracle_prices` write path glues a
+    capture epoch into the id instead of a stable `{PROTOCOL}-{CHAIN}` id — the same anti-pattern the R3 migration
+    removed elsewhere. Tiny blast radius (78/51.9M) but an ACTIVE write-path pattern. Filed
+    `plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md` (P2, LST/oracle workstream owns
+    the fix). The `_solana_stake_pool.py` untracked LST artifact in the MTDS tree is likely the same workstream.
+  - **⛔ gcloud CLI AUTH EXPIRED mid-session
+    (`Reauthentication failed. cannot prompt during non-interactive execution`).** ADC still works (GCS read/write via
+    Python), but the gcloud CLI account is needed for `gcloud compute` (VM launches/monitoring), `gcloud run`
+    (consolidator/job triggers), and `gcloud storage`. This HARD-BLOCKS: (a) `/data-pipeline-check-mtds` on the 6 MVP
+    shards (needs the `-test-` buckets provisioned via CLI), (b) any new backfill/canary VM, (c) the 2-VM TheGraph
+    canary the perf bundle REQUIRES before a wide wave. Needs an interactive `gcloud auth login` from the operator. NOT
+    escalated as a code failure — it is an environment credential expiry.
+  - **DELIVERABLE STATUS for the 6h mandate:** (1) migrations done / no orphans — ✅ VERIFIED (bar the 2 operator-gated
+    data-semantics items below + the small LST finding). (2) backfill code ready + ETA — the T3 design + 3 correctness
+    defects + demolished premises are DONE and the ETA methodology + provisional band exist (N=8 ~3.7d baseline / ~1.0d
+    aspirational at W=11.65M defi-MVP); the perf-bundle CODE is the risky rewrite whose gain needs the auth-blocked
+    canary, so it is designed-not-shipped by deliberate risk choice. (3) `/data-pipeline-check-mtds` all shards — ⛔
+    auth-blocked.
+  - **TWO items genuinely need an operator RULING (both flagged, neither freelanced — "data pipeline correctness is the
+    heartbeat" is exactly where not to invent semantics):** (i) `available_at` clobbered by wall-clock `now()` (BIG
+    FINDING `defi_available_at_clobbered_by_wallclock_2026_07_20.md`); (ii) the rebuild re-emit's
+    `UnprovenHonestAbsenceError` — whether to grandfather legacy pre-FetchEvidence absence, drop the
+    (measured-redundant) re-emit, or map unprovable->record_failed.
 
 - **2026-07-20 (slot-4, /autonomous — ✅✅ CHAINLINK FULLY FIXED end-to-end; the adapter-first bet paid off).**
 
