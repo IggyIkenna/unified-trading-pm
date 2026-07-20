@@ -102,12 +102,20 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
       3, **deliberately out of scope** ("re-open ONLY if the two todos above prove insufficient"). **Notified**: added a
       note to `ao_dispatch_cooldown_and_park_2026_07_20.md`'s Progress Log — their auto-park dependency is UNBLOCKED
       (verified, not just assumed). Source: doc #5 fix-todo 3.
-- [ ] [BACKEND] P2. **Bound the NULL-`brief_hash` tail — RULED 2026-07-20: accept permanently + a growth alarm.** 54
-      rows, all `done`, 0 in-flight (re-measured this session). The ruling (operator A1): do NOT backfill — it is write
-      risk against audit history for no gain — and do NOT blanket-reset. Instead document the WHY in the docstring and
-      add a **growth alarm**, because growth is the real signal: a rising count means the backfill path regressed.
-      **Gate**: the exemption is documented with its reason, and a growth check exists that fires if the count rises
-      above today's 54. Source: doc #6 todo 1.
+- [x] ✅ [BACKEND] P2. **Bound the NULL-`brief_hash` tail — RULED 2026-07-20: accept permanently + a growth alarm.** —
+      `agent-orchestrator@aaa2db8` (LDR). **Re-measured before implementing** (per this doc's own "re-measure, never
+      cite a fixed number" warning): 38 rows today, not 54 — down from 56-58 across 07-16/17 and 54 at this plan's own
+      authoring earlier today, confirming the bucket SHRINKS under normal operation (legacy rows pruned), it does not
+      grow. All 38 `done`, 0 in-flight — the ruling's precondition still holds. Documented the WHY directly in
+      `sync_backlog_to_db`'s docstring (`server/bootstrap.py`): unrecoverable plaintext (cites the full source search
+      from `backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`'s final todo), why backfill-from-diff
+      was rejected (ambiguous which removed line belongs to which row without the lost brief text — a wrong heuristic
+      match would manufacture false confidence), and the two self-healing paths whose regression the alarm actually
+      watches for. **Gate**: added `scripts/orchestrator/check_null_brief_hash_growth.py` (mirrors
+      `audit_false_done.py`'s conventions — `--db`/`--json`, exit 1 on alarm) with baseline=38 recorded at today's
+      measurement; 6 unit tests (at/below/above baseline, non-done NULL rows excluded from the growth count but reported
+      separately, hashed rows excluded, JSON output shape) plus a live smoke-test via read-only SSM against the real
+      orchestrator DB — reports `OK: at or below baseline` (38 ≤ 38) today. Source: doc #6 todo 1.
 - [x] ✅ [BACKEND] P2. **`audit_false_done` contract — RULED 2026-07-20: checkbox state = truth.** —
       `agent-orchestrator@64ecd57` (LDR). **Traced both consumers first**: `audit_false_done.py` was ALREADY
       checkbox-authoritative — its `_still_unchecked` never reads `done_sha`, only whether a `- [ ]` line still hashes
@@ -174,6 +182,10 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Progress Log
 
+- **2026-07-20 — Todo 3 (NULL brief_hash tail) landed** (`agent-orchestrator@aaa2db8`). Decision (c) accept permanently.
+  Re-measured count is 38, not the plan's own cited 54 (bucket shrinks over time, as expected) — 0 in-flight, ruling's
+  precondition holds. WHY documented in `sync_backlog_to_db`'s docstring; growth-alarm script added (baseline=38) with
+  unit tests + a live smoke-test against the real VM via SSM (`OK: 38 ≤ 38` today).
 - **2026-07-20 — Todo 5 (clear the 2 live false-done rows) landed — finding: no reopen needed, both already
   self-resolved.** `-001` now `queued` (matches its open checkbox); `-002` no longer exists (id recycled at least twice
   since 07-17). Re-verified `false_done: 0` fleet-wide by replicating `audit_false_done.py`'s logic locally (the live
