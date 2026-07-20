@@ -100,6 +100,46 @@ gs://market-data-tick-sports-prd-central-element-323112/processed/by_date/day=..
    `delta_one/by_date/day={date}/feature_group=/timeframe=/` (with `by_date/`, no version) while the real writer emits
    `delta_one/day={D}/feature_group={fg}/feature_group_version={N}/timeframe={tf}/{id}.parquet`.
 
+## MEASURED 2026-07-20 (bounded day-prefix listings — NOT a corpus walk)
+
+### (i) Zero-length instrument stems are ONGOING, not historical
+
+| corpus                  | candle objects | empty-stem `/.parquet` | share |
+| ----------------------- | -------------- | ---------------------- | ----- |
+| cefi `day=2019-05-08`   | 56             | **14**                 | 25%   |
+| cefi `day=2020-01-01`   | 3,318          | 0                      | 0%    |
+| tradfi `day=2020-01-01` | 8,546          | 50                     | 0.6%  |
+| cefi `day=2026-04-14`   | 20,734         | 168                    | 0.8%  |
+
+Mechanism (read from `output_path_helpers.py::candle_output_filename`): a bundle written under an `underlying=`
+partition for a data_type that is NOT in `CEFI_CHAIN_INSTRUMENT_TYPES` (e.g. DERIBIT `data_type=trades` grouped by
+underlying) takes the `f"{instrument_id}.parquet"` branch, but a bundle has no single `instrument_id` → the stem is
+EMPTY. Measured example:
+`processed_candles/by_date/day=2019-05-08/pipeline_mode=batch_tardis/timeframe=15m/data_type=trades/venue=DERIBIT/underlying=BTC/.parquet`
+
+**This is the chain-bundle rule leaking**: the operator's contract is "one bundled file per (date, root)" =
+`ticks.parquet`. These objects are bundles that never got the bundled NAME because the data_type gate is keyed on
+`{options_chain, futures_chain}` only, while the WRITER bundles by `underlying=` for more data_types than that. Fix
+direction: make the bundled-name decision follow "is this write bundled by `underlying=`?", not "is the data_type in the
+chain set". Objects with an empty stem cannot be attributed to an instrument and should be repaired or purged.
+
+### (ii) BIG: candle objects exist WITHOUT manifest rows (object↔manifest disconnect)
+
+cefi `day=2026-04-14` holds **20,734 candle objects**, yet the whole cefi availability index carries only **6** rows
+with `service_name=="market-data-processing-service"` (measured via slim read, §B3 of the parent plan). A ~3,400×
+disconnect on a single day. Consequences, all real:
+
+- **skip-if-fresh is driven by the manifest** (`check_shard_freshness`) → it sees "not fresh" and RE-DERIVES candles
+  that already exist, wasting the exact compute the ~386-serial-day backfill is trying to budget.
+- **honest coverage / data-status** report candles as absent while 20k+ objects sit on disk — the "invisible by
+  declaration" pattern the honest-coverage codex warns about, inverted.
+- **features input-coverage** (and the new `/data-pipeline-check-features` `--require-captured`) will report
+  `no_captured_input_for_window` for candle-dependent families even though the candles exist.
+
+This is the INVERSE of `PHANTOM_CAPTURED_NO_OBJECT` (manifest row, no object): here it is object, no manifest row.
+Root-cause it before the full-history backfill — either MDPS is not calling `record_captured` on these paths, or the
+rows are stranded in un-consolidated per-VM shards.
+
 ## Decision required (operator) — which shape is canonical?
 
 **(A) [RECOMMENDED] The declared template is canonical → migrate the writers.** Add `instrument_type=` to the candle
@@ -141,3 +181,10 @@ measured shape (so the pipeline mechanism is provable and every shard gets teste
 DECLARED template as a **separate** `content_check=non_canonical` verdict collected into a greppable
 `## Migration worklist (canonical-shape gaps)` section. Three failure modes on one cell never collapse into one bit.
 `rg 'non_canonical|content_check' <report>` yields the worklist.
+
+- [ ] 7. [DATA] P0. **Root-cause the object↔manifest disconnect** (20,734 cefi candle objects on 2026-04-14 vs 6 MDPS
+      manifest rows corpus-wide). Either `record_captured` is not firing on the candle write path or per-VM shards never
+      consolidated. Blocks trustworthy skip-if-fresh, honest coverage, and features input-gating.
+- [ ] 8. [DATA] P1. **Fix the bundled-name rule**: decide the leaf by "is this write bundled by `underlying=`?" rather
+      than "is data_type in CEFI_CHAIN_INSTRUMENT_TYPES", so every `underlying=`-bundled write gets `ticks.parquet`
+      instead of an empty stem. Then repair/purge the existing empty-stem objects (measured 0.6-25% depending on day).
