@@ -19,7 +19,7 @@ summary: >-
   proof would have been a false green.
 status: open
 nature: issue
-asset_group: [crosscutting]
+asset_group: [cross-cutting]
 stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]

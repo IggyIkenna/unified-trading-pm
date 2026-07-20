@@ -104,9 +104,9 @@ WOULD kill, and get approval before any real reap.**
       minutes instead of accumulating for days); all 8 unique PIDs confirmed GONE via direct `ps` on the VM; post-sweep
       fleet health clean (0 `watchdog_slot_killed`/`stale_dispatch_reclaimed` regressions, slot 4's actual live worker —
       task `sports_p2_history_apifootball_2015_to_present-001` — untouched with a fresh ping seconds after the sweep,
-      service `NRestarts=0`). **Follow-up worth a look, not actioned this session**: slot 4 producing short-lived
-      orphans repeatedly (2 fresh ones within ~15 min of the sweep going live) suggests a root cause on that slot
-      specifically, beyond this plan's scope.
+      service `NRestarts=0`). **Follow-up filed, not actioned this session**: slot 4 producing short-lived orphans
+      repeatedly (2 fresh ones within ~15 min of the sweep going live) suggests a root cause on that slot specifically,
+      beyond this plan's scope — tracked at `plans/active/issues/slot4_recurring_short_lived_orphans_2026_07_20.md`.
 - [ ] [BACKEND] P1. **Stale-dispatch invariant (Defect A), resume-path aware.** The pruner's requeue (`ao@5b07bd3`)
       releases on a "requeue" verdict, but a `resume-pending` verdict keeps the task bound — and when the resume never
       happens (07-17: slots went `killed` still holding tasks), nothing reconciles. Add: a task `dispatched` to a slot
