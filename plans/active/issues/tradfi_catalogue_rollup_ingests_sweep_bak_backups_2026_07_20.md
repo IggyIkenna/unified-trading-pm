@@ -37,6 +37,8 @@ resolved_by:
 locked_by: live-defi-rollout
 audited_scope: data-correctness
 execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Tradfi catalogue roll-up re-contaminates from the sweep's own `.bak` backups
