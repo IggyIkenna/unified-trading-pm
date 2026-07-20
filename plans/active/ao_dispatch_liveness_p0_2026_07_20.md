@@ -88,31 +88,75 @@ last for that reason, not for convenience.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Invalidate the prereq timer when a new agent occupies the slot.** In
+- [x] [BACKEND] P0. **Invalidate the prereq timer when a new agent occupies the slot.** In
       `server/worker_liveness_watchdog.py`, pop `self._prereq_blocked_since[sid]` on every spawn into that slot — or,
       preferably, key the timer by slot + session/agent identity so a new occupant re-arms from zero rather than
       inheriting its predecessor's clock. Prefer whichever shape makes the invalidation impossible to forget at a future
       call site. **Gate**: a regression test that arms `_prereq_blocked_since` past `prereq_block_release_seconds`,
       spawns a NEW session into that slot, ticks the watchdog, and asserts the session SURVIVES + no
-      `slot_released_prereq_blocked` is logged.
-- [ ] [BACKEND] P0. **Exclude non-backlog typed agents from the reaper entirely.** A slot hosting a `plan_health` /
+      `slot_released_prereq_blocked` is logged. — `agent-orchestrator@1e7fec089`. Keyed the dict by
+      `(slot_id, SlotRow.assigned_at)` instead of `slot_id` alone — `assigned_at` is already stamped fresh on every
+      re-occupation path (`assign_task_to_slot`, `claim_slot_for_typed_agent`), so a new occupant's key naturally misses
+      the dict and re-arms from zero with no future call site needing to remember an explicit pop. Gate test
+      `test_new_occupant_survives_matured_predecessor_timer` in `tests/test_prereq_blocked_release.py` — verified it
+      fails against pre-fix code (reproduces the exact `released after Ns ... killed_session=True` log line) and passes
+      against the fix.
+- [x] [BACKEND] P0. **Exclude non-backlog typed agents from the reaper entirely.** A slot hosting a `plan_health` /
       `plan_reconciler` / escalation agent must never be selected by queue-prereq release logic, independent of todo 1.
       Identify the occupant by agent kind (`agents.agent_kind` / the slot's live agent), not by guessing from slot
       state. **Gate**: a test asserting a `plan_reconciler`-kind occupant is never selected, even with a fully matured
-      timer AND a fully prereq-blocked queue.
-- [ ] [BACKEND] P1. **Make the plan_health/escalation slot race retry instead of failing the dispatch.** On 2026-07-19
+      timer AND a fully prereq-blocked queue. — `agent-orchestrator@1e7fec089`. Backlog workers never get an `AgentRow`
+      (only main/review/custom-chat + typed/scheduled agents do — confirmed via `register_agent` call sites), so "a live
+      (non-archived) `AgentRow` exists for this slot's tmux session" is a hardcode-free discriminator — no kind-list to
+      maintain as new typed-agent kinds are added. Gate test `test_typed_agent_occupant_never_selected` derives the
+      timer dict's real key shape from the code (not a hardcoded literal) so it can't pass vacuously; verified it fails
+      against pre-fix code and passes against the fix.
+- [x] [BACKEND] P1. **Make the plan_health/escalation slot race retry instead of failing the dispatch.** On 2026-07-19
       the daily reconcile never spawned: `plan_health_dispatch_failed` —
       `"benign: session already exists (raced by another spawn path)"` — after the escalation dispatcher claimed the
       same slot 2 eight seconds earlier (`escalation_dispatch_initiated` 01:03:06 → reconcile initiated 01:03:14). Make
       `_pick_free_slot` + spawn atomic, or retry on the race with a different slot. **Also drop the `"benign:"` label**
       — a silently-skipped daily reconcile is not benign, and that wording is why this went unnoticed for a day.
       **Gate**: a test simulating a concurrent claim of the chosen slot asserts the dispatch lands on ANOTHER slot
-      rather than failing; the failure path (genuinely no free slot) still returns 503.
-- [ ] [BACKEND] P2. **Audit for other slot-keyed timers with the same inherit-the-predecessor's-clock defect.** The
+      rather than failing; the failure path (genuinely no free slot) still returns 503. —
+      `agent-orchestrator@390cdde24`. Retry (not lock/atomic) per the gate's own "lands on ANOTHER slot" framing;
+      bounded at `_MAX_SLOT_PICK_ATTEMPTS=5` in both `plan_health.py` and `escalation.py` (duplicated, matching the
+      pre-existing `_pick_free_slot` duplication convention between the two files). The `"benign:"` prefix is stripped
+      from the reported error/alert/raised-exception text only once every retry is exhausted (still benign mid-retry —
+      the AutoSpawnLoop's OWN batch-tick semantics, where `_do_spawn`'s pre-check TOCTOU message originates, are
+      untouched). For escalation.py specifically: a residual benign collision after all retries still pages (real
+      capacity signal for a dispatcher with no next tick) but does NOT quarantine the slot (it isn't a slot defect, just
+      occupied). Gate tests `test_dispatch_retries_on_a_different_slot_after_benign_collision` +
+      `test_dispatch_exhausted_retries_drops_benign_label` (plan_health) and
+      `test_escalate_retries_on_a_different_slot_after_benign_collision` +
+      `test_escalate_exhausted_retries_drops_benign_label_and_does_not_quarantine` (escalation) — all 4 verified to fail
+      against pre-fix code and pass against the fix; `_pick_free_slot() is None` (genuinely no free slot) still raises
+      immediately, untouched by the retry loop.
+- [x] [BACKEND] P2. **Audit for other slot-keyed timers with the same inherit-the-predecessor's-clock defect.** The
       reaper bug's shape — per-slot mutable state that outlives the occupant — is a class, not an instance. Grep the
       watchdog/pruner/autospawn loops for dicts keyed by `slot_id` holding timestamps or counters, and for each one
       state whether a new occupant resets it. **Gate**: a written list of every such structure with a
-      resets-on-new-occupant verdict; any that does NOT reset is either fixed or filed as its own todo with evidence.
+      resets-on-new-occupant verdict; any that does NOT reset is either fixed or filed as its own todo with evidence. —
+      Full written list + verdicts in the Progress Log below. One real gap found + fixed (`_heartbeat_resume_count`,
+      `agent-orchestrator@1e7fec089`, regression test `test_kill_slot_clears_heartbeat_resume_count` in
+      `tests/test_self_healing_hardening.py`, verified fails pre-fix/passes post-fix). One partially-mitigated residual
+      risk filed as its own todo below (`_idle_session_ticks`) rather than fixed in this sitting, per the gate's "fixed
+      or filed" latitude. Everything else verified self-healing (content/task/signature-diff gated) or intentionally
+      slot-scoped action rate-limiting — not occupant state, correctly persists across occupants.
+- [ ] [BACKEND] P2. **Fix `_idle_session_ticks` the same way as `_prereq_blocked_since` (todo-4 audit followup).** In
+      `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` (`server/worker_liveness_watchdog.py`), the lingering-
+      session counter is keyed by `slot_id` alone. It already has a partial mitigation the prereq timer lacked — a
+      fresh-spawn boot-grace check (`spawned_at` within `_BOOT_GRACE_SECONDS` → pop + skip) — which closes the exact
+      race the P0 bug exploited (a just-spawned occupant caught mid-transaction while `status` still reads idle/stale).
+      The residual gap: if a NEW occupant's status stays idle/stale for longer than the boot-grace window without
+      `spawned_at`/`tmux_session` reflecting the true reoccupation (a narrower, more contrived scenario than the P0 bug
+      — would itself indicate a separate stuck-transaction bug), it could inherit tick progress toward
+      `_IDLE_SESSION_RECLAIM_TICKS` from an unrelated predecessor. Apply the same `(slot_id, assigned_at)` — or
+      `(slot_id, tmux_session)` — keying used for `_prereq_blocked_since`, updating the pop/cleanup call sites
+      (`_reclaim_idle_lingering_sessions` lines ~1101-1160) to match. **Gate**: a regression test mirroring
+      `test_new_occupant_survives_matured_predecessor_timer` — arm the counter near `_IDLE_SESSION_RECLAIM_TICKS` under
+      a stale key, land a new occupant (fresh `assigned_at`, live session, status still idle/stale past the boot-grace
+      window), tick, and assert the session survives.
 - [ ] [BACKEND] P1. **Ship it and prove it landed on the live VM.** Commit via
       `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` from a `quality-gates.sh`-green tree. Then confirm
       the running orchestrator actually picked the change up — `ao-self-pull.sh` FF-pulls the AO checkout and restarts
@@ -145,3 +189,26 @@ last for that reason, not for convenience.
 
 - **2026-07-20 — plan created** from the B4 audit. Root causes verified in code before filing (not inferred from the
   symptom): the timer-keying defect at `worker_liveness_watchdog.py` and the race at the plan_health dispatch path.
+- **2026-07-20 — todos 1-4 shipped to LDR**: `agent-orchestrator@1e7fec089` (todos 1, 2, 4) +
+  `agent-orchestrator@390cdde24` (todo 3), both `quality-gates.sh`-green before commit. Todo 5 (deploy verification on
+  the live VM) still open below. Todo 4's audit — every `dict[int, ...]` in `worker_liveness_watchdog.py` /
+  `autospawn.py` / `escalation.py` keyed by `slot_id`, with a resets-on-new-occupant verdict:
+
+  | Structure                                                                                                            | File                           | Verdict                             | Why                                                                                                                                                                                                                                                                                                                                                                                                                                |
+  | -------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | `_prereq_blocked_since`                                                                                              | worker_liveness_watchdog.py    | **FIXED (todo 1)**                  | was slot_id-only; now `(slot_id, assigned_at)`                                                                                                                                                                                                                                                                                                                                                                                     |
+  | `_heartbeat_resume_count`                                                                                            | worker_liveness_watchdog.py    | **FIXED (this todo)**               | `_kill_slot` (shared teardown for every kill trigger) never popped it — a resume-episode count from one trigger (e.g. heartbeat-silent) survived a LATER kill via a different trigger (stuck_at_prompt/context_full/usage_cap) and was inherited by the next occupant, degrading its resume budget. Fixed by popping inside `_kill_slot` itself, closing every caller at once.                                                     |
+  | `_idle_session_ticks`                                                                                                | worker_liveness_watchdog.py    | **PARTIAL — filed as its own todo** | has a fresh-spawn boot-grace mitigation (`spawned_at` within `_BOOT_GRACE_SECONDS` → pop+skip) that closes the exact P0 race, but remains slot_id-keyed — a narrower residual risk remains if status stays idle/stale past the boot-grace window without a fresh `spawned_at`.                                                                                                                                                     |
+  | `_stuck_ticks` / `_api_error_ticks`                                                                                  | worker_liveness_watchdog.py    | resets — self-healing               | both are gated on `pane == prev_pane` (unchanged content across ticks); a new occupant's pane content differs from its predecessor's frozen content by construction, so the "unchanged" condition can't hold across an occupant change — counter can't inherit a matured streak.                                                                                                                                                   |
+  | `_prev_panes`                                                                                                        | worker_liveness_watchdog.py    | resets — always overwritten         | holds "last observed pane," rewritten every relevant tick; not a maturing timer.                                                                                                                                                                                                                                                                                                                                                   |
+  | `_realign_last_task`                                                                                                 | worker_liveness_watchdog.py    | resets — correct either way         | tracks last-seen task_id to detect a task boundary; a new occupant's (different) task_id naturally reads as a boundary, and the rare same-task-id case (task requeued to the same slot) is correctly treated as mid-task too.                                                                                                                                                                                                      |
+  | `_nudges_today` / `_last_nudge_at`                                                                                   | worker_liveness_watchdog.py    | intentionally persists              | per-SLOT daily nudge-rate budget (bounds nudges on a slot number regardless of occupant), not per-occupant session state — global daily reset already exists. `_last_nudge_at`'s stale-grace risk (shielding a new occupant from heartbeat-silent kill for a few extra seconds) is the OPPOSITE failure direction of the P0 bug (over-protective, not destructive) and self-corrects once the grace window elapses — not actioned. |
+  | `_last_kill_at`                                                                                                      | worker_liveness_watchdog.py    | intentionally persists              | rate-limits the KILL ACTION on a slot (flap-window detection), not occupant state.                                                                                                                                                                                                                                                                                                                                                 |
+  | `_BRANCH_QUARANTINE_ALERTED` / `_SPAWN_FAILED_ALERTED`                                                               | autospawn.py                   | resets — signature dedup            | keyed by slot_id → error signature; explicitly cleared on next successful spawn / naturally mismatches on a different failure. Not a maturing timer — worst case is a missed re-alert, never a wrongful kill.                                                                                                                                                                                                                      |
+  | `_last_attempt_at` / `_recent_attempts` / `_flap_backoff_until` / `_last_failure_logged` / `_tier_upgrade_killed_at` | autospawn.py (`AutoSpawnLoop`) | intentionally persists              | all rate-limit the SPAWN/KILL ACTION on a slot (attempt cooldown, flap history, tier-upgrade cooldown) — correctly slot-scoped regardless of occupant, same class as `_last_kill_at`.                                                                                                                                                                                                                                              |
+  | `_recently_quarantined`                                                                                              | escalation.py                  | intentionally persists              | tracks a WORKTREE/branch-state defect, which is a property of the slot's worktree, not the occupant — correctly persists across occupants until the TTL/operator fix clears it.                                                                                                                                                                                                                                                    |
+
+  Verdict: 2 real findings, both closed this session (1 fixed directly, 1 fixed + 1 filed as a followup todo per the
+  gate's "fixed or filed" latitude — `_idle_session_ticks`'s existing boot-grace mitigation made a same-sitting fix
+  lower-priority than keeping this session's diff focused and reviewable). Everything else is either self-healing by
+  construction or intentionally slot-scoped rate-limiting, not occupant state.

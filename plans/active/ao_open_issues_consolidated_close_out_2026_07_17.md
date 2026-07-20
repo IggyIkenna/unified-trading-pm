@@ -82,20 +82,33 @@ source:
 
 ## Split-out child plans (2026-07-20) — work MOVED out of this plan
 
-Six todos were split into three focused plans so separate agents can work them in parallel. They are **LOCAL**
-(`assigned_vm: NA`, `execution_scope: local-only`) — operator-assigned agents on this host, never AO-dispatched. Items
-that moved are marked `➡️ MOVED` inline below and **must not be actioned here**.
+**29 of this plan's 34 todos have been split into eight focused plans** so separate agents can work them in parallel.
+All are **LOCAL** (`assigned_vm: NA`, `execution_scope: local-only`) — operator-assigned agents on this host, never
+AO-dispatched. Moved items are marked `➡️ MOVED` inline below and **must not be actioned here**; this plan keeps their
+audit record only.
 
-| Plan                                           | Scope                                                                        | Owns from here                                         |
-| ---------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race; slot-timer audit | the reaper P0                                          |
-| `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate; regen doc note    | reconciler-daily, boot-gate, 7-min death class         |
-| `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove the untested paths     | failover dead-code question, paused-slot failover half |
+| #   | Plan                                           | Scope                                                                | Depends on             |
+| --- | ---------------------------------------------- | -------------------------------------------------------------------- | ---------------------- |
+| 1   | `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race           | —                      |
+| 2   | `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate            | #1 (deployed)          |
+| 3   | `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove untested paths | —                      |
+| 4   | `ao_backlog_regen_integrity_2026_07_20.md`     | P1 — regen/bootstrap data-integrity defects + the two rulings        | —                      |
+| 5   | `ao_worker_lifecycle_reap_2026_07_20.md`       | P1 — orphan-process reap + stale-dispatch reclaim                    | #1                     |
+| 6   | `ao_dispatch_cooldown_and_park_2026_07_20.md`  | P1 — the ONE fleet cooldown store + durable auto-park                | #4 (preserve-by-brief) |
+| 7   | `ao_fleet_infra_hardening_2026_07_20.md`       | P1 — one state home, env-var sweep, frozen-clone visibility, QG cap  | —                      |
+| 8   | `ao_fleet_observability_kpis_2026_07_20.md`    | P1 — efficiency KPIs, escalator efficacy, plan_health throttle       | #6 (backoff only)      |
 
-**Cross-plan ordering**: all three run in parallel (no file overlap). The one real dependency is the hygiene plan's
-end-to-end reconcile proof, which needs the liveness P0 **deployed** first — the reaper is what killed the 07-20 run, so
-proving it before the fix is live teaches nothing. This plan's `tmux_session_lost` root-cause todo is likewise gated
-behind the liveness plan's re-measure.
+**Start immediately, fully parallel**: #1, #3, #4, #7 — no file overlap, no dependencies.
+
+**The keystone is #4's preserve-by-`brief` todo** — an id-keyed park is silently dropped on the next id-shift regen, so
+#6's durable auto-park is not durable until it lands. And **#6 builds the ONE fleet-scoped cooldown store** that #8's
+escalator backoff must reuse; the master's own risk note is that three consumers each build their own engine and
+diverge. #2's end-to-end reconcile proof needs #1 **deployed** (not merely merged — the reaper is what killed the 07-20
+run). #5 waits on #1 because both touch the lifecycle loops.
+
+**What deliberately REMAINS here** (5 todos, all correctly gated or last): the `tmux_session_lost` root-cause hunt
+(gated on #1's re-measure), the 07-12 degradation onset, the two `[REVIEW]` doc close-out/archival passes (they fire as
+each source doc's last todo lands), and the operator-sequenced Layer-1 producer rewire.
 
 ## Verified classification of the 10 open docs (2026-07-17, this session)
 
@@ -131,33 +144,37 @@ NOT AO and are deliberately out of scope here.
       `done_sha` isn't the commit that flipped the checkbox. AO scope here shrinks to: notify the sports/data owner to
       verify + flip (or reopen), then RE-RUN the audit. **Gate**: `audit_false_done.py --db … --pm …` reports
       `false_done: 0` after the sports owner's ruling is applied; the per-row decision is recorded on
-      `backlog_task_done_status_diverges…`. Source: doc #4 + this session's probe.
+      `backlog_task_done_status_diverges…`. Source: doc #4 + this session's probe. **➡️ MOVED 2026-07-20 to
+      `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
 - [ ] [BACKEND] P1. **Close doc #4 (`backlog_task_done_status_diverges…`) for real.** Its todos are all `[x]` and it
       left `status: open` awaiting "an independent skeptical audit" — this session's audit found the 2 rows above, so
       the doc closes only after Phase-0 todo 1 lands. Also record the corollary amendment: the "no periodic sweep
       needed" ruling holds for the gated mechanism, but the UNAUDITABLE→auditable transition (regen backfilling
       `brief_hash` onto a legacy row) can SURFACE old poison at any time — so `audit_false_done.py` runs once per
       close-out/audit session (cheap, already scripted), not on a cron. **Gate**: doc flipped `resolved` + `resolved_by`
-      filled + archived per ritual.
+      filled + archived per ritual. **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action
+      here.**
 
 ### Phase 1 — backlog/regen integrity (code)
 
 - [ ] [BACKEND] P1. **Sibling-reset guard: never silently recycle a `done` row.** `bootstrap.py` brief_hash-mismatch
       reset must refuse to reset a row that is `done` with a `done_sha`, logging an ERROR naming both briefs (a done row
       is audit history). Unit test where a done row's id is claimed by a different brief → row SURVIVES + error emitted;
-      bug-inject to prove the test bites. Source: doc #6 todo 2. **Gate**: test green + bug-injection proof.
+      bug-inject to prove the test bites. Source: doc #6 todo 2. **Gate**: test green + bug-injection proof. **➡️ MOVED
+      2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
 - [ ] [BACKEND] P1. **Hand-tuned-field preservation across positional-ID shift.** The regen preserves
       `priority`/`priority_override`/`prereqs.prerequisites` keyed by task id — an id shift (sibling completes →
       suffixes renumber) silently drops a park (measured: the mvp-defi park was lost exactly this way on 07-17,
       re-applied under `-001`). Key the preservation by `brief` (the same key the reconcile path already uses), not by
       id. Regression test: park a task, remove a sibling todo, regen → park survives under the new id. Source: doc #5
       fix-todo 3 (the NEW [CODE] P1). **Gate**: test green; the live park survives the next real regen tick after a
-      todo-count change.
+      todo-count change. **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
 - [ ] [BACKEND] P2. **Bound the NULL-`brief_hash` tail (54 rows, all `done`).** Decide + implement ONE of: backfill from
       `git show <done_sha>:<plan_ref>` where recoverable; age the exemption out (no in-flight NULL rows exist —
       re-measured 0 this session); or accept permanently with the WHY in the docstring + a growth alarm (growth =
       backfill regression, the real signal). Do NOT blanket-reset. Source: doc #6 todo 1. **Gate**: the doc's stated
-      gate — count 0, or recorded decision + growth check.
+      gate — count 0, or recorded decision + growth check. **➡️ MOVED 2026-07-20 to
+      `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
 - [ ] [BACKEND] P2. **Explain the l2_book absent rows.** `l2_book…-005/-007`: plan todos open (`BLOCKED-*` markers) on
       an ingested plan, no task rows (re-measured: only 4 l2_book rows, all done). Trace whether the orphan-GC pruned
       them (correct-ish: `BLOCKED-*` todos are non-dispatchable by design and SHOULD have no row — if so, record that as
@@ -182,7 +199,8 @@ NOT AO and are deliberately out of scope here.
       treats a task id as a stable handle on a plan todo. **Residual doc work only** (the "make `regen`/docs say it
       explicitly" half): state in the regen docs that the tasks table is a projection of currently OPEN DISPATCHABLE
       todos plus dispatched history — **not** a durable ledger of plan completion — so a missing row is never by itself
-      evidence of a lost task.
+      evidence of a lost task. **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action
+      here.**
 - [ ] [BACKEND] P2. **`audit_false_done` false-positive class — the AO/regen lesson from studying the sports rows.**
       (Operator 2026-07-18: the sports work itself is its owner's; but any AO/regen improvement surfaced by studying it
       belongs here.) `sports_cf8…-002`'s plan checkbox IS already `[x]` — the audit flags it ONLY because the row's
@@ -192,7 +210,8 @@ NOT AO and are deliberately out of scope here.
       truth)? A "checkbox `[x]` but wrong sha" false-positive pollutes the gate's signal. Trace both consumers, pick the
       rule, and make the audit + the done-gate agree on it. Source: sports_cf8 study, this session. **Gate**: a recorded
       decision; `audit_false_done` no longer flags an already-`[x]` row whose work is genuinely complete (or explicitly
-      does, by ruling, with the reason documented).
+      does, by ruling, with the reason documented). **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md`
+      — do NOT action here.**
 
 ### Phase 2 — worker lifecycle (code)
 
@@ -207,7 +226,7 @@ NOT AO and are deliberately out of scope here.
       config.py boot_grace_seconds exists precisely for this)**; dry-run mode; log every kill with slot + PID + age.
       Source: doc #3 Defect B. **Gate**: the doc's regression — simulated `tmux_session_lost` leaves zero detached
       claude processes for that slot; live sweep on the VM reports 0 orphans (one-time cleanup of the current ~10
-      included).
+      included). **➡️ MOVED 2026-07-20 to `ao_worker_lifecycle_reap_2026_07_20.md` — do NOT action here.**
 - [ ] [BACKEND] P1. **Stale-dispatch invariant (Defect A, resume-path aware).** The pruner's requeue (`ao@5b07bd3`)
       already releases on a "requeue" verdict, but a `resume-pending` verdict keeps the task bound — and when the resume
       never happens (07-17 incident: slots went `killed` holding tasks), nothing reconciles. Add the reconciler
@@ -218,7 +237,8 @@ NOT AO and are deliberately out of scope here.
       window (spot-checked); **AND an explicit no-double-dispatch assertion — a task released by this invariant is NEVER
       simultaneously live on a resumed worker. The release fires strictly AFTER `resume_lifecycle` marks resume
       exhausted/impossible (order the two so the same task can never reach two agents); test the exact race (resume
-      in-flight when the invariant tick fires → invariant defers, no release).**
+      in-flight when the invariant tick fires → invariant defers, no release).** **➡️ MOVED 2026-07-20 to
+      `ao_worker_lifecycle_reap_2026_07_20.md` — do NOT action here.**
 - [ ] [INFRA] P3. **Root-cause the 96/day `tmux_session_lost` rate** (or record it as accepted churn). The 07-17
       incident was 5 losses in one second (backend/tmux blip); today's rate is 96/24h with 158 `worker_polling_dead`.
       Either find the driver (backend restarts? host pressure? tmux server?) or record the rate as expected with the
@@ -242,7 +262,8 @@ NOT AO and are deliberately out of scope here.
       auto-park is NOT durable until that lands — sequence Phase 1 first.** **Park = the ≥N-skips escalation of the ONE
       fleet-scoped cooldown store built in Phase-6 (blocked-task cooldown); reuse that store, do not build a second
       park-specific cooldown.** Sources: doc #1 todo 2, doc #5 fix-todo 3(design). **Gate**: a fleet-skipped task
-      auto-parks with a visible reason; clearing the condition unparks it; test-pinned.
+      auto-parks with a visible reason; clearing the condition unparks it; test-pinned. **➡️ MOVED 2026-07-20 to
+      `ao_dispatch_cooldown_and_park_2026_07_20.md` — do NOT action here.**
 - [ ] [ADMIN] P2. **Wire the mvp-defi unpark.** `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` (still
       `false`) must be flipped by whoever lands the seed-chain/backfill progress (`data_completion_defi_2026_07_15`'s
       owner), or the park outlives its reason. Add the pointer on that plan + a line in the park's prereq description
@@ -254,6 +275,7 @@ NOT AO and are deliberately out of scope here.
       the unpark to the `defi_consolidated_closeout` owner, or park it EXPLICITLY (documented) until the DeFi
       re-architecture resumes. Source: doc #5 fix-todo 2 + plan_health contradiction output. **Gate**: the owning plan
       (whichever it now is) carries the flip instruction; condition documented; no park without a named live flipper.
+      **➡️ MOVED 2026-07-20 to `ao_dispatch_cooldown_and_park_2026_07_20.md` — do NOT action here.**
 
 ### Phase 4 — infra/ops hardening
 
@@ -271,7 +293,8 @@ NOT AO and are deliberately out of scope here.
       clone), and the SnapshotLoop S3/GCS archive stays the DR fallback. Migration (operator-gated, live): move the
       running `/var/lib/orchestrator/*.db` → `data/state/` on the VM, then restart. Source: doc #8 todo 2 + operator
       2026-07-18. **Gate**: `config.db_path()` as `ubuntu` with no env prints the in-repo path; service + a CLI audit
-      tool resolve the SAME db; a simulated redeploy (FF-pull + `git clean -fd`) leaves `data/state/` intact.
+      tool resolve the SAME db; a simulated redeploy (FF-pull + `git clean -fd`) leaves `data/state/` intact. **➡️ MOVED
+      2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.**
 - [ ] [INFRA] P2. **Duplicate-purpose env-var sweep (verify-consumer-then-remove).** Audit 2026-07-18: (1)
       `ORCHESTRATOR_OPERATOR` is written `= ORCHESTRATOR_VM_ID` by `bootstrap_vm.sh` on every host, but
       `host_operator()` already DERIVES operator from `vm_id` when unset → pure redundancy; stop writing it in bootstrap
@@ -281,7 +304,8 @@ NOT AO and are deliberately out of scope here.
       reads `google_cloud_project or gcp_project_id` — different consumers). (4) CHECKED & **KEEP** — the
       `WORKSPACE_ROOT`/`UNIFIED_TRADING_WORKSPACE_ROOT`/`ORCHESTRATOR_WORKSPACE_ROOT` trio is deliberately separate
       (own-config vs ambient passthrough, documented in `config.py`). **Gate**: `OPERATOR` no longer written by
-      bootstrap + a host with only `VM_ID` set resolves the same operator; keep-decisions recorded in ENV_VARS.md.
+      bootstrap + a host with only `VM_ID` set resolves the same operator; keep-decisions recorded in ENV_VARS.md. **➡️
+      MOVED 2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.**
 - [ ] [INFRA] P2. **Per-repo freeze-streak alert in `slot-cron-ff-pull.sh`.** Verified still absent: the dirty-streak
       WARN fires only when EVERY repo in a sweep skips — a single frozen clone (the exact 2-day outage mode) stays
       silent. Make the streak per-repo (repo X `[skip:dirty]`/`[skip:ff-failed]` N consecutive ticks → WARN naming the
@@ -294,11 +318,13 @@ NOT AO and are deliberately out of scope here.
       `agent-orchestrator` `slot-cron-ff-pull.sh` emits a per-repo/per-slot freeze-streak signal (behind-origin N
       consecutive ticks); (2) `deployment-ui` fleet tab renders it (per repo × slot, not one global flag). Source: doc
       #7 todo 3 + operator 2026-07-18. **Gate**: a deliberately-frozen single clone shows as stuck in the deployment-ui
-      fleet tab within N ticks (naming the repo + slot).
+      fleet tab within N ticks (naming the repo + slot). **➡️ MOVED 2026-07-20 to
+      `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.**
 - [ ] [INFRA] P2. **Fleet-wide frozen-clone sweep.** hk-host root repos measured behind=0 today, but the VM's SLOT
       clones + any other hosts were not swept. One pass: every host's root + slot clones, `HEAD..origin/LDR > 0` with
       untracked-only dirt → unfreeze (plain FF, per the doc's recipe). Source: doc #7 todo 4. **Gate**: sweep output
-      recorded; zero frozen clones remain.
+      recorded; zero frozen clones remain. **➡️ MOVED 2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT
+      action here.**
 - [ ] [INFRA] P2. **Dispatch-time full-QG throttle (coordinate, don't duplicate).** The shared-host "≤2 full QG" cap is
       unenforced at dispatch — 4-6 concurrent full-QG pytests saturated the VM on 07-17 (doc #2). The RAM/CPU admission
       governor (`qg_host_adaptive_resource_governor_2026_07_14`, active P1) is the natural enforcement point but was
@@ -306,7 +332,8 @@ NOT AO and are deliberately out of scope here.
       QG admission on the orchestrator host), (b) if the governor's Phase-3 ledger is not landing soon, implement the
       minimal dispatcher-side stagger (cap simultaneous ship-phase tasks per host). Do NOT build a second governor.
       Source: doc #2 fix-direction 1. **Gate**: concurrent full-QG on the VM measurably capped (via governor or
-      stagger), evidence cited.
+      stagger), evidence cited. **➡️ MOVED 2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action
+      here.**
 
 ### Phase 5 — doc close-outs + audits
 
@@ -392,7 +419,8 @@ NOT AO and are deliberately out of scope here.
       gate lands. Also noted: every plan_health boot logs `boot_read_unconfirmed` for `agents/worker.md` (the file
       exists — the worker just never confirms it), a per-boot noise line worth one look while in the file. **Gate**:
       measured dispatch rate ≤ 1 per interval over a 24h window with promotions still flowing; zero
-      `superseded-plan_health` exits in that window.
+      `superseded-plan_health` exits in that window. **➡️ MOVED 2026-07-20 to
+      `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
 - [ ] [BACKEND] P1. **Blocked-task redispatch cooldown + change-triggered re-eligibility + worker ETA (operator policy,
       new mechanism).** Today a skip-as-blocked only blocks the SKIPPING slot (24h slot-scoped TTL); any other idle
       same-role slot re-claims the task within ~minutes (measured: 117 `slot_task_skipped`/24h; the mvp thrash doc
@@ -413,7 +441,8 @@ NOT AO and are deliberately out of scope here.
       `orphaned_task_reclaim_grace_seconds`, `dispatch_ack_timeout_seconds`). Sources: operator 2026-07-17 + doc #5's
       fleet-wide-cooldown gap. **Gate**: regression tests (skip-blocked → no cross-slot redispatch inside base cooldown;
       prereq flip → immediate re-eligibility; no change → 1h; ETA honoured); measured redispatch-of-declined-task rate
-      drops to the policy curve on the live VM.
+      drops to the policy curve on the live VM. **➡️ MOVED 2026-07-20 to `ao_dispatch_cooldown_and_park_2026_07_20.md` —
+      do NOT action here.\*\*
 - [ ] [INFRA] P1. **plan_reconciler daily 01:00 UTC was NOT RUNNING — part (a) DONE 2026-07-18 window armed; (b)/(c) +
       two NEW defects remain.** **(a) ✅ RE-ENABLED 2026-07-17T18:03Z (operator request, this session)**: ran
       `install-plan-reconciler-timer.sh --operator ubuntu --time 01:00` via SSM; verified `is-enabled=enabled`,
@@ -530,7 +559,8 @@ NOT AO and are deliberately out of scope here.
       (→ needs a model bump / human hand-off). Route the fix by class (prompt hardening vs richer failure context vs
       model tier vs escalate-to-operator).** **Gate**: the 83 are explained WITH a cause-class breakdown; redispatch per
       escalation capped; efficacy KPI visible; the prompt/context/model fix (whichever the classification points to) is
-      applied or a follow-up filed.
+      applied or a follow-up filed. **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action
+      here.**
 - [ ] [INFRA] P2. **(AF-2) plan_health true daily volume is 55 dispatches/24h — 13 of which produced NO result.**
       `plan_health_dispatched=55`, `plan_health_result=42`, `plan_health_dispatch_failed=4` in the last 24h — worse than
       the 5.5h sample in Phase 6, and each run is a **haiku** worker (`agents/plan_health.md` `model: haiku` — NOT
@@ -539,7 +569,7 @@ NOT AO and are deliberately out of scope here.
       min. The result-less dispatches are pure waste (superseded/died mid-run). This is EVIDENCE strengthening the
       Phase-6 cooldown item, plus one addition: the cooldown gate should also require the PREVIOUS dispatch to have
       posted its result (or timed out) before a new one spawns. **Gate**: folded into the Phase-6 plan_health item's
-      acceptance.
+      acceptance. **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
 - [ ] [BACKEND] P3. **(AF-3) `activity_log` has NO retention policy — unbounded growth on the hot DB.** 83,813 rows
       spanning 20 days (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC;
       `activity_log` has nothing (grepped `state_store/` — no delete/prune path). Fine today, but it is silent unbounded
@@ -549,7 +579,7 @@ NOT AO and are deliberately out of scope here.
       this stays **low priority**: a simple age-based prune (90d) OR just a growth alarm suffices — not urgent, no
       redesign. Proposal: age-based retention (e.g. 90d) with optional archive-to-S3 via the existing snapshot loop
       before delete. **Gate**: a retention decision recorded + implemented (or explicitly deferred with the growth-alarm
-      in place).
+      in place). **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
 - [ ] [INFRA] P2. **(AF-4) Disaster-recovery snapshots are wired but their RECENCY is unverified — silent-by-absence
       risk.** `gcs_sync.SnapshotLoop` runs and `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set
       (systemd env; GCS unset by design on the AWS host). But no local `state.json` was found at the expected path
@@ -563,7 +593,8 @@ NOT AO and are deliberately out of scope here.
       Proposal: (a) re-measure the S3 object's last-modified NOW (the REAL signal, independent of local path); (b) add a
       snapshot-age assertion (digest line or health endpoint: last successful snapshot < N hours, alert on breach); (c)
       one documented restore drill. **Gate**: measured snapshot age recorded; the age assertion alerts when the loop is
-      deliberately stopped in a test.
+      deliberately stopped in a test. **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT
+      action here.**
 - [ ] [BACKEND] P2. **(AF-5) Dispatch→done conversion is ~18% and NO surfaced metric tracks fleet efficiency.** 24h: 310
       boots / 154 dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task even with the spawn budget
       fixed (the leaks are 117 skips + 96 session-losses, i.e. Phases 2/3/6 mechanics). The OBSERVABILITY gap is
@@ -577,7 +608,8 @@ NOT AO and are deliberately out of scope here.
       per-agent token/message counters (sourced from the usage-poller / transcript sizes) and a "usage by account" view
       on the same surface, so an account nearing its cap and the agent driving it are both visible before failover
       fires. **Gate**: the efficiency KPIs render; a per-account usage breakdown is visible; the 2026-07-12-class
-      degradation (spawn:dispatch 0.6:1→44:1) would have been caught within one digest cycle.
+      degradation (spawn:dispatch 0.6:1→44:1) would have been caught within one digest cycle. **➡️ MOVED 2026-07-20 to
+      `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
 - [x] [REVIEW] P3. ✅ **(AF-6) `ENV_VARS.md` residual multi-VM framing — DONE (ao@c03ccce).** Resolved as part of the
       `ao_config_env_var_consolidation_2026_07_18` Phase-4 rewrite: ENV_VARS.md was rewritten to the two-class shape,
       dropping the retired `tab/<vm_id>/<slot>` branch example and the "Fleet VM (epic worker)" section header for the
@@ -758,4 +790,5 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   07-16 sweep; (2) ~10 orphaned claude workers currently alive (the 3 doc-named PIDs plus a detached PPID-1 tree) —
   Defect B is an active bleed, promoted to the plan's top code priority. Churn metrics confirm R1 works (spawn:dispatch
   184:154 vs 1014:217 pre-fix) — the remaining spawn:done gap (184:27) is the lifecycle + park visibility classes, not
-  the budget. Source docs each carry a consolidation banner pointing here.
+  the budget. Source docs each carry a consolidation banner pointing here. **➡️ MOVED 2026-07-20 to
+  `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
