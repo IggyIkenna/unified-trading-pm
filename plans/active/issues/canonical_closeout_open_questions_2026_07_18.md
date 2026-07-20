@@ -74,9 +74,24 @@ The operator sequenced code+data changes AFTER the SSOT. These are ready; each n
   A_TOKEN/DEBT_TOKEN, and bake the split into `build_instrument_catalogue.py` (kills the `--mode full` revert landmine).
 - **A5 [P1, WRITE-VOLUME GATE] — the ~63.9M `expected_unattempted` seed.** Apply ONLY after purging the ~1.79M
   duplicate + ~219.5K phantom rows first. Operator write-volume gate. (market-tick-data-service)
-- **A6 [P1, IRREVERSIBLE — snapshot-first] — GCS deletes**: the dead Shape-B `dex_pools/`+`lending_indices/` top-level
-  prefixes; the culled-venue (DRIFT/PACIFICA/…) manifest+GCS data; the lending-indices legacy bucket (C0f). All
-  snapshot-before-delete per the VM runbook. **REC: authorize as a batch with the pre-delete snapshot.**
+- **A6 [P1, IRREVERSIBLE — snapshot-first] — GCS deletes**: ~~the dead Shape-B `dex_pools/`+`lending_indices/` top-level
+  prefixes~~ **← WITHDRAWN, see correction below**; the culled-venue (DRIFT/PACIFICA/…) manifest+GCS data; the
+  lending-indices legacy bucket (C0f). All snapshot-before-delete per the VM runbook. ~~**REC: authorize as a batch with
+  the pre-delete snapshot.**~~ **REC WITHDRAWN for the Shape-B prefixes.**
+
+  > **⛔ corrected 2026-07-20 — do NOT authorize the `dex_pools/`+`lending_indices/` prefix delete; it DESTROYS DATA.**
+  > The "dead Shape-B" premise was **overturned by R5 in `defi_consolidated_closeout_2026_07_18.md:254-262`**, authored
+  > AFTER this A6 item: content-verify found PARTIAL-OVERLAP, not duplication — legacy=98 pools, canon=99,
+  > **intersection only 66**, with **32 legacy-only high-TVL raydium pools ABSENT from canon** ($47M XMR/USDC, $18M
+  > BNB/USDC, …). A live GCS probe on 2026-07-20 confirms that for **KAMINO `dex_pool_state` and SOLEND** there is **no
+  > canonical twin at all** — the legacy objects are the only copy. Snapshot-first is NOT sufficient protection here.
+  > Additionally, `execution-service/execution_service/providers/solana_amm_depth_provider.py:41` **still READS this
+  > legacy shape at runtime**. **This withdrawal also voids the A6 leg of the A8 start-order authorization question
+  > below** — the other A6 legs (culled-venue data, the C0f legacy bucket) are unaffected and may still be authorized.
+  > **Required order: (1) content-UNION into canon; (2) repoint execution-service to `data_type=dex_pool_state` and fix
+  > its broken `resolve_bucket_name` call; (3) only then consider delete.** Full evidence + resolution criteria:
+  > `defi_dex_pools_delete_order_stale_2026_07_20.md`.
+
 - **A7 [P1] — restore the raw distinct-values data-status enumeration view** (deployment-api/ui) — the SSOT-alignment
   tool the operator asked for.
 - **A8 [meta] — start order**: A1 (safe now) → A2/A4 (builder+data) → A3 → A5 (after purge) → A6 (snapshot-first) → A7.

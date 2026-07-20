@@ -464,10 +464,25 @@ Discriminator = **does a manifest row exist**.
 - **Close-out criterion**: one pinned path shape; zero dedicated-bucket refs; TF state matches live estate;
   lending-indices legacy bucket deleted (snapshot-first).
 
-- [ ] [DATA] P0. **Pin the flat canonical path shape** (venue-before-chain, lowercase itype, `pipeline_mode=`); DELETE
-      the dead top-level Solana `dex_pools/`+`lending_indices/` prefixes (frozen 2026-04-14, "Shape-B") and kill the
-      second dexpool writer path. **Snapshot-before-delete** (pre-migration drain per the VM runbook). (repos:
-      market-tick-data-service)
+> **⛔ corrected 2026-07-20 — the DELETE clause in the first todo below is STALE and executing it DESTROYS DATA.
+> Disposition is now FOLD-not-delete.** The "dead prefixes" premise was **overturned by R5 in this same plan**
+> (`:254-262`) — content-verify found PARTIAL-OVERLAP, not duplication: legacy=98 pools, canon=99, **intersection only
+> 66**, with **32 legacy-only high-TVL raydium pools ABSENT from canon** (XMR/USDC $47M, BNB/USDC $18M, USD1/USDC
+> $9.9M, ZEC/USDC $7.5M). A live GCS probe on 2026-07-20 corroborates and sharpens this: on `day=2026-04-14` the
+> canonical twin **does** exist for ORCA (14,094 objs) / RAYDIUM (100 objs) / KAMINO lending_indices (47 objs) under
+> `instrument_type=solana_amm_pool`, but **KAMINO `dex_pool_state` = 0 and SOLEND = 0** — for those two cells the legacy
+> objects are the **only copy in existence**. A snapshot-first delete is NOT adequate protection. **Required order: (1)
+> content-UNION the 32 legacy-only pools + the 2 twin-less cells into canon; (2) repoint
+> `execution-service/execution_service/providers/solana_amm_depth_provider.py:41` — which STILL READS this legacy shape
+> at runtime — to the canonical `data_type=dex_pool_state` path AND fix its broken `resolve_bucket_name` call at
+> `:248-254` (`kind="market-data-tick-defi"` is a bucket-name FRAGMENT with no yaml key, and `env=`/`project_id=` are
+> not parameters, so it RAISES uncaught); (3) ONLY THEN consider the delete.** Full evidence + resolution criteria:
+> `issues/defi_dex_pools_delete_order_stale_2026_07_20.md`.
+
+- [ ] [DATA] P0. **Pin the flat canonical path shape** (venue-before-chain, lowercase itype, `pipeline_mode=`); ~~DELETE
+      the dead top-level Solana `dex_pools/`+`lending_indices/` prefixes (frozen 2026-04-14, "Shape-B")~~ **← DELETE
+      CLAUSE SUPERSEDED — see the ⛔ correction banner directly above** and kill the second dexpool writer path.
+      **Snapshot-before-delete** (pre-migration drain per the VM runbook). (repos: market-tick-data-service)
 - [ ] [INFRA] P1. **Correct the STALE codex path docs** — `codex/02-data/per-asset-group-bucket-layouts.md` (documents
       chain-before-venue + omits pipeline_mode) and `market-tick-data-service/docs/GCS_PATHS.md` (shows dead Shape-B) →
       match the operator-locked SSOT + live writer. (repos: unified-trading-pm, market-tick-data-service)
