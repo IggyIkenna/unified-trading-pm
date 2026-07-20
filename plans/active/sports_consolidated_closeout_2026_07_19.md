@@ -393,7 +393,26 @@ All four resolved in interactive chat. These are now actionable, not gated:
 
 ### Newly-actionable todos from these decisions
 
-- [ ] [DIAG] P1. Root-cause the cross-AG emitter (decision 1), then purge the 4,097 `asset_group=prediction` rows.
+- [ ] [DIAG] P1. Root-cause the cross-AG emitter (decision 1), then purge. **MEASURED 2026-07-20 — it is LIVE and
+      GROWING, and larger than the audit said**: 4,097 (audit, 07-19) → **6,597 now**, +2,500 added TODAY alone (07-17:
+      1,756 · 07-19: 2,341 · 07-20: 2,500, newest `written_at` 00:54:58Z). So a DAILY job is still writing. Fingerprint
+      (from a direct read of `instruments-store-sports-prd/_index/availability_index.parquet`):
+      `service_name=market-tick-data-service`, `pipeline_mode` batch_kalshi (6,562) / batch_polymarket_clob (35),
+      `venue` KALSHI/POLYMARKET, `data_type` trades (6,484) + prediction_canonical_question_group (113),
+      `capture_status` captured (6,567) / empty_confirmed (30), schema_version 9, DATA dates 2026-07-16..07-19
+      (forward/recent, i.e. the LIVE capture path — not a historical migration). Plus 1 cefi + 1 defi row
+      (BITGET-FUTURES / UNISWAP_V3-BASE, service=instruments-service). **RULED OUT**: (a)
+      `ingest_kalshi_bulk_to_canonical.py` and `canonicalize_prediction_manifest_2026_07_18.py` both resolve
+      `market-data-tick-prediction` correctly; (b) `websocket_runner.py:451` resolves `instruments-store-prediction`;
+      (c) the current per-VM shards in the sports bucket — they contain only sports + blank-`asset_group` rows, NO
+      prediction rows. **FALSE LEAD, discarded (do not re-chase)**: the two live `af-backfill-*` per-VM shards hold
+      ~100k rows with EMPTY-STRING `asset_group` — that is BENIGN, the consolidator fills asset_group from bucket
+      context on merge (consolidated index has **0** blank-asset_group rows). Blank `venue` is likewise normal (4.3M
+      sports reference rows have none). **NEXT**: the emitter writes to the sports instruments-store manifest on a DAILY
+      cadence from the live Kalshi/Polymarket capture path, bypassing the per-VM shard route. Find the live prediction
+      capture job's ManifestWriter bucket resolution (anything resolving `kind="instruments-store"` with a
+      defaulted/sports asset_group while writing prediction rows), fix it, THEN purge (purging first = they return
+      tomorrow).
 - [ ] [CODE] P1. Narrow sports capture/enumeration to the UAC registry universe (decision 2) so captured == intended.
 - [ ] [DATA] P2. Dispose of the already-captured non-registry rows (decision 2): exclude from the denominator; purge if
       confirmed out-of-universe. Snapshot before any delete.
