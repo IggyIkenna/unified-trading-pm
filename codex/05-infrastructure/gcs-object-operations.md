@@ -105,6 +105,21 @@ subprocess.run(["gcloud", "storage", "objects", "describe", uri], ...)
 
 ## Migration-script performance contract (HARD RULE — codified 2026-06-01)
 
+> **♻️ SINGLE-WALK DISCIPLINE — read this FIRST (cross-reference added 2026-07-20, doc-reconciliation P1-11).** This
+> section governs **HOW** a whole-corpus walk executes. It does **NOT** authorise opening one. Whether you may walk at
+> all is governed by
+> [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) § 9
+> "Single-walk discipline", and the reconciled rule is:
+>
+> **ONE walk per corpus per campaign, with every pass bundled onto that ONE snapshot.** Opening a NEW, SEPARATE
+> whole-corpus walk for a single fix is **review-blocking**. Bundle into the campaign's existing walk, or use a
+> sanctioned no-walk route (manifest-driven prefix-scoped listing · delimiter-based child-prefix listing · reuse of an
+> existing single walk).
+>
+> The two docs previously never referenced each other and read as contradictory ("walks are review-blocking" vs a
+> six-point contract _for_ walks). They compose: § 9 = WHETHER, this section = HOW. **Once a walk is sanctioned, all six
+> points below are mandatory.**
+
 **Every whole-corpus GCS migration / backfill / reconciler script MUST be parallel + observable + shardable from day
 one.** This is the cross-service SSOT for the contract (the per-AG + per-service canonicalisation plans —
 `{defi,cefi,tradfi,sports,prediction}_manifest_canonicalisation_2026_06_01.md` + `instruments_…` +

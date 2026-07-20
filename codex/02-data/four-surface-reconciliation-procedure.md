@@ -44,7 +44,12 @@ authoritative_for:
     surface-unavailability handling during reconciliation,
     the three sanctioned no-walk routes for reconciliation reads,
   ]
-referenced_by: []
+referenced_by:
+  [
+    codex/02-data/reconciliation-finding-taxonomy.md,
+    codex/02-data/orphan-object-detection.md,
+    codex/02-data/non-canonical-path-inventory.md,
+  ]
 owner:
 last_reviewed: 2026-07-20
 code_refs:
@@ -66,10 +71,12 @@ code_refs:
 > obtain each of the four surface values, in what order, what to do when a surface is unavailable, and where the
 > resulting disagreement gets classified.
 >
-> **What this doc is NOT.** It does not define the finding types. The closed, named set (phantom · orphan · true_gap ·
-> missing_row · divergent_empty · masked-stale · drift-axis-false-positive), their detection methods, safe remediations,
-> and the operator-accepted exception list live in **`codex/02-data/reconciliation-finding-taxonomy.md`**. Classify
-> there; compare here.
+> **What this doc is NOT.** It does not define the finding types. The closed, named set — its exact type names, their
+> detection methods, default severities, safe remediations, delete-eligibility, and the operator-accepted exception list
+> — lives in **`codex/02-data/reconciliation-finding-taxonomy.md`**, which is authoritative for all of them. Classify
+> there; compare here. **Do not restate the type names here**: a second enumeration is precisely how the two docs drift
+> (this paragraph previously carried three names — `orphan`, `masked-stale`, `drift-axis-false-positive` — that the
+> taxonomy does not use, one of which it had explicitly rejected).
 
 ---
 
@@ -186,8 +193,9 @@ consecutive runs undiffable.
 
 **Step 8 — report the number with its formula named.** Any coverage figure must name its formula. The live,
 CK3-certified one is `reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)` with
-`empty_confirmed` EXCLUDED (`honest-coverage-model.md:219`). Two superseded v1 formulas are still present in
-`status: current` docs — see §7 open question **O4**.
+`empty_confirmed` EXCLUDED (`honest-coverage-model.md:219`) — this is **settled**, not contested (§7 O4). The two v1
+sites now carry ⛔ SUPERSEDED banners pointing at it. Name the formula anyway: a bare percentage is unfalsifiable even
+when the formula is not in doubt.
 
 ### 3.1 When a surface is unavailable
 
@@ -268,28 +276,29 @@ template-less here … Returned as an empty list for `sports` so a caller treats
 ## 5. The single-walk constraint
 
 **HARD RULE — no new whole-corpus GCS walk; it is review-blocking**
-(`availability-manifest-and-data-status.md:1640-1656`). Default reconciliation mode is **manifest-driven**: read the
+(`availability-manifest-and-data-status.md:1748-1750`). Default reconciliation mode is **manifest-driven**: read the
 index (Step 1), derive prefixes from the rows.
 
 Where object listing is unavoidable, only these three no-walk routes are sanctioned:
 
 1. **Prefix-scoped listing per unique `(date, venue[, chain])` derived from manifest rows** — the shape the phantom
-   auditor uses. `availability-manifest-and-data-status.md:1644` explicitly permits _"Per-shard / per-bucket targeted
+   auditor uses. `availability-manifest-and-data-status.md:1759` explicitly permits _"Per-shard / per-bucket targeted
    reads (not walking the full corpus)"_.
 2. **Delimiter-based child-prefix listing** — `deployment_api/utils/storage_facade.py:323` `list_prefixes(...)`, which
    enumerates child prefixes rather than objects.
 3. **Reuse of the existing single walk** in `instruments-service/scripts/migration_orphan_sweep.py`, bundling every pass
-   onto that ONE snapshot. §9's standing rule: _"bundle any new schema change, partition-rename, or column-backfill into
-   the ongoing … single walk. Do NOT open a separate corpus walk for a single fix."_
-   (`availability-manifest-and-data-status.md:1640-1641`).
+   onto that ONE snapshot. The standing rule: _"bundle any new schema change, partition-rename, or column-backfill into
+   the campaign's single walk. Do NOT open a separate corpus walk for a single fix."_
+   (`availability-manifest-and-data-status.md:1752-1755`).
 
-Manifest-index reads are **not** corpus walks and are exempt (`:1655-1656`).
-
-> **Open cross-reference defect (tracked, not resolved here).** §9's exemption rationale names
-> `reconcile_phantom_manifest_rows_all.py` as reading "the manifest index, not the parquet corpus", and §9 never
-> cross-references `codex/05-infrastructure/gcs-object-operations.md`'s six-point contract _for_ walks, so the two read
-> as contradictory. Reconciling both statements is P1-11 of
-> `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`.
+> **The exemption test is PREFIX-SCOPING, not "it reads the index".** Corrected 2026-07-20 (P1-11,
+> `availability-manifest-and-data-status.md:1769-1775`). The older rationale — that phantom-audit scripts are exempt
+> because they "read the manifest index, not the parquet corpus" — is **factually false of the very script it named**:
+> `reconcile_phantom_manifest_rows_all.py` calls `client.list_blobs(bucket, prefix=…)` at `:311` and `:425`. It is
+> exempt because every listing is prefix-scoped. Never claim an exemption on the grounds that a script "reads the
+> index"; claim it on the grounds that every listing it issues is prefix-bounded. For HOW to walk once you are permitted
+> to, see [`../05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md) — that doc
+> governs mechanics, this one governs WHETHER.
 
 ---
 
@@ -328,14 +337,31 @@ path per AG.**
 
 ## 7. Open questions — UNRULED, stated not decided
 
-The reconciliation procedure **must surface these with both sides cited and refuse to migrate the affected axis**. It
-must not silently pick a side. Escalation is P0-02 of `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`.
+**O2 and O3 are genuinely UNRULED and BLOCKING — they need an OPERATOR.** The reconciliation procedure **must surface
+them with both sides cited and refuse to migrate the affected axis**. It must not silently pick a side. Escalation is
+P0-02 of `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`.
 
-- **O1 — defi leaf filename.** `cross-asset-canonical-target-ssot.md:227-229` (§8) gives the template as
-  `{venue}_{chain}_{capture_ts}.parquet`, while the same doc's §1 pattern-#4 row (`:99`) declares the capture-batch
-  model RETIRED with `filename == manifest key == symbolic canonical id`. A stale template inside the designated
-  tie-breaker doc contradicts that doc's own §1. **The reconciler must not flag defi leaf filenames as non-canonical in
-  either direction until ruled** (P1-09).
+**O1 and O4 are RESOLVED** and are retained below only as an audit trail of how each was closed. Neither was ever a real
+operator question: both were doc drift — one stale template in the tie-breaker doc, and one formula stated three ways —
+and both were closed by evidence (a shipped operator ruling plus a completed migration; a formula the shipping code
+already implements). Do not re-open them. The distinction is the point of this section: **an axis blocked on a human
+looks nothing like an axis blocked on a doc nobody had updated**, and conflating the two is how a reconciler either
+stalls forever or migrates something it had no mandate to touch.
+
+- **O1 — defi leaf filename. ✅ RESOLVED 2026-07-20 — was intra-doc drift, not an operator question.** §8 of
+  `cross-asset-canonical-target-ssot.md` carried the RETIRED capture-batch template
+  `{venue}_{chain}_{capture_ts}.parquet` while the same doc's §0/§1 pattern-#4 declared that model retired and folded
+  into pattern #1. §1 won and §8 has been corrected: the canonical defi leaf is **`{canonical_instrument_id}.parquet`**
+  (`filename == manifest key == symbolic canonical id`). Evidence: the operator ruling 2026-07-18
+  ([`defi-canonical-naming-ssot.md`](defi-canonical-naming-ssot.md) § WRITE-MODEL SUPERSEDED banner, `:57-65`) **and**
+  the completed R3 migration — MIGRATION ALL-TERMINAL 30/30, full 2020q1–2026q2 corpus on per-instrument
+  ([`defi_consolidated_closeout_2026_07_18.md`](../../plans/active/defi_consolidated_closeout_2026_07_18.md):1033-1035).
+  Both verified 2026-07-20.
+  - **Operative caution — a KNOWN RESIDUAL, not a finding.** PERP re-migration is explicitly DEFERRED: the
+    `{venue}_{ts}` bundles for ASTER / HYPERLIQUID / GMX remain on disk in the old bundle shape and surface as coarse
+    manifest rows, bundled with the pending ASTER/HYPERLIQUID cefi-misfiling decision (same doc `:1041-1044`). **The
+    reconciler must NOT emit these as `legacy_duplicate` and must NEVER suggest deleting them** — they are the only copy
+    of that data, and their re-migration is gated on an operator decision that has not been made.
 - **O2 — manifest `instrument_type` COLUMN case.** `cross-asset-canonical-target-ssot.md:212-214` (§7) says LOWERCASE in
   the path segment and the manifest column; the tradfi close-out Phase B says UPPERCASE with the catalogue as SSOT,
   **both citing the same operator on the same date (2026-07-18)**, and shipped cefi/tradfi scripts already uppercase the
@@ -345,9 +371,19 @@ must not silently pick a side. Escalation is P0-02 of `plans/active/data_pipelin
   in favour of the A_TOKEN/DEBT_TOKEN split; the retire was **reversed in code** because it broke MTDS lending writers
   into `attempted_failed`/zero-data. Codex currently asserts a state the code deliberately does not implement. **Do not
   flag flat `lending` on market/event data_types as non-canonical** until ruled.
-- **O4 — honest-coverage formula.** Three incompatible definitions exist across three `status: current` codex docs. The
-  live CK3-certified one is `honest-coverage-model.md:219`. Until SUPERSEDED banners land on the other two (P1-09), any
-  percentage printed is unfalsifiable — print the formula name alongside every number (§3, Step 8).
+- **O4 — honest-coverage formula. ✅ RESOLVED 2026-07-20 — not an open question.** This one was never genuinely unruled:
+  it was doc drift, and it is now closed in favour of [`honest-coverage-model.md`](honest-coverage-model.md) § Coverage
+  formula — `reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)`, `empty_confirmed`
+  **EXCLUDED** (CK3-certified 2026-06-29; shipping implementation
+  `instruments-service/scripts/measure_honest_coverage.py:600-603`). The two superseded v1 sites now carry ⛔ SUPERSEDED
+  banners pointing here — `availability-manifest-and-data-status.md` (:117, :1027, :1968) and
+  `../05-infrastructure/manifest-consolidator-ssot.md` (:296), all verified present 2026-07-20. **The reconciler uses
+  the `honest-coverage-model.md` formula and does not treat coverage as contested.** Step 8's name-the-formula
+  discipline still stands — not because the formula is in doubt, but because a bare percentage is unfalsifiable
+  regardless.
+  - _Residual, and it is a CODE question rather than a doc contradiction:_ `compute_honest_coverage()` is still a live
+    UAC function carrying the v1 shape. Whether it is deleted, re-pointed, or kept as a deliberately distinct all-shards
+    metric is unresolved and tracked in P1-09. This does not reopen the formula ruling above.
 
 ---
 

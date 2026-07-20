@@ -50,7 +50,7 @@ authoritative_for:
   ]
 referenced_by: []
 owner:
-last_reviewed: 2026-07-18
+last_reviewed: 2026-07-20
 code_refs:
   [
     unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py,
@@ -179,9 +179,35 @@ Decision rule (a validator SHOULD enforce this for defi — none exists yet, tra
 
 ## 5. Lending — the A_TOKEN/DEBT_TOKEN split (ONE SSOT)
 
-Legacy flat `LENDING` is **RETIRED**. Every lending position = one **`A_TOKEN`** (supply leg) + one **`DEBT_TOKEN`**
-(borrow leg) — because `net_value = supply − borrow` needs both. `instrument_type` is uniform across all 11 protocols;
-the **symbol** has two conventions (both canonical):
+> **🟡 CORRECTION BANNER — added 2026-07-20, doc-reconciliation P1-09 (contradiction "DeFi flat `LENDING` — RETIRED vs
+> interim-KEPT"). The blanket "RETIRED" below is NOT what the code implements. DO NOT re-execute the retire.**
+>
+> The scope of the retire is **HOLDINGS ONLY**. Wave B additionally retired flat `InstrumentType.LENDING` in the UAC
+> id-builder to `UNSUPPORTED_BY_DESIGN` (`@e319864f`); that **over-reached** — it made `build_instrument_id(…LENDING…)`
+> RAISE, which silently broke **5+ MTDS market/event lending writers** (`lending_indices` for 6 EVM venues,
+> `liquidation_events`, `flash_loan_events`, `position_data`, `solana_defi`), each caught by a shard-level
+> `except ValueError` → `record_failed` → **`attempted_failed`, zero data**; the partial A_TOKEN work-around then
+> created a **shard-atom desync** (GCS `instrument_type=a_token` vs manifest `lending`). **Reversed via `wn12e7itc`.**
+>
+> **Interim implemented reality (VERIFIED in code 2026-07-20)** — `unified-api-contracts` `canonical_id_builder.py`
+> carries `InstrumentType.LENDING` in both the SUPPORTED set (:148) and `_DEFI_TYPES` (:196), and
+> `UNSUPPORTED_BY_DESIGN` is an **empty frozenset** (:182):
+>
+> - **HOLDINGS** → `A_TOKEN` / `DEBT_TOKEN` split, exactly as this section describes. Unaffected by the reversal.
+> - **market/event data_types** (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) →
+>   uniform flat **`LENDING`**. Working and self-consistent across GCS path, column and manifest.
+>
+> **The ruling is PARKED / UNRULED — this doc does NOT pick a side.** Options A (keep market-level `LENDING`; current
+> interim; worker-recommended), B (key each to the reserve's `A_TOKEN`), and C (split per side) are stated with their
+> costs in
+> [`issues/canonical_closeout_open_questions_2026_07_18.md`](../../plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+> § D (:173-202). B or C each require a full 5+-writer MTDS migration, a Wave-D historical re-key and a shard-atom fix
+> on both axes. Until the operator rules: `lending` on a market/event data_type is **NOT a canonicalisation finding**,
+> and the §11 operator-log line "retire legacy LENDING → A_TOKEN/DEBT_TOKEN" reads **holdings-only**.
+
+Legacy flat `LENDING` is **RETIRED** _(holdings only — see the correction banner above)_. Every lending **holding** =
+one **`A_TOKEN`** (supply leg) + one **`DEBT_TOKEN`** (borrow leg) — because `net_value = supply − borrow` needs both.
+`instrument_type` is uniform across all 11 protocols; the **symbol** has two conventions (both canonical):
 
 - **Pooled** (AAVE_V3 / SPARK / COMPOUND_V3): the **real on-chain token symbol** — `aUSDC` / `variableDebtUSDC`. Rate is
   asset-global (collateral-independent) → one instrument per asset.
@@ -209,8 +235,25 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 
 ## 7. instrument_type case + venue spelling
 
+> **⛔ SCOPE CORRECTION 2026-07-20, doc-reconciliation — the manifest COLUMN casing below is CONTESTED and this doc does
+> NOT pick a side.** The **GCS path segment** is settled lowercase (both sides agree). The **manifest `instrument_type`
+> COLUMN** is not:
+>
+> - **Side A — lowercase**: the bullet below, restated in the §11 operator log.
+> - **Side B — UPPERCASE, catalogue is SSOT**: `plans/active/tradfi_consolidated_closeout_2026_07_18.md:375`
+>   (`{FUTURE, OPTION, EQUITY, ETF, INDEX, COMBO, SPOT_PAIR}`), with an **already-executed** migration reporting
+>   **3,300,155 UPPERCASE case re-stamps** under an operator ruling (`:698`), plus shipped cefi/tradfi writers that
+>   uppercase the column.
+>
+> Both sides cite the same operator on the same date (2026-07-18). This determines the direction of a **>12M row
+> rewrite**, so the phrase "drift to fold" below **must NOT be read as authorising a casing migration** — it predates
+> the discovery of Side B. Tracked as [C2a] in
+> [`reconciliation-finding-taxonomy.md`](reconciliation-finding-taxonomy.md) §5.1, which requires every reconciler to
+> emit `REFUSED — awaiting operator ruling` on this axis and to report NO finding on column casing.
+
 - **case**: LOWERCASE in the GCS path segment + the manifest `instrument_type` column (writer grain); **UPPER** only in
-  the id middle segment (`:POOL:`). Mixed case in the manifest is drift to fold.
+  the id middle segment (`:POOL:`). Mixed case in the manifest is drift to fold. **[COLUMN leg CONTESTED — see the
+  banner above; path-segment leg is settled.]**
 - **venue**: cefi = single HYPHENATED spelling (`BINANCE-FUTURES`, not `BINANCE_FUTURES`). defi = bare canonical
   PROTOCOL (`AAVE_V3` not `AAVEV3`/`AAVE`; `UNISWAP_V3` not bare `UNISWAP`; `COMPOUND_V3` not `COMPOUND`) + a **separate
   `chain=`** path segment (never the combined `PROTOCOL-CHAIN` overload in the path; the id joins them as
@@ -222,11 +265,40 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{src}/asset_group={ag}/venue={V}/instrument_type={it}/data_type={dt}/{instrument_id}.parquet`
 - **cefi bundle**:
   `…/instrument_type={options_chain|futures_chain}/data_type={dt}/underlying={U}/quote={Q}/margin={M}/ticks.parquet`
-- **tradfi bundle**: `…/instrument_type={…_chain}/data_type={dt}/{PRODUCT_ROOT}.parquet` (flat stem — kept per the
-  tradfi plan, deliberately different from cefi's `underlying=/ticks.parquet` for now)
+- **tradfi bundle**:
+  `…/instrument_type={futures_chain|options_chain|combo}/data_type={dt}/underlying={BASE}/quote={QUOTE}/margin={MODE}/ticks.parquet`
+  — **matches cefi 1:1** (tradfi = `quote=USD` / `margin=linear`; `@LIN` ↔ `margin=linear`). tradfi SINGLE types
+  (`equity`/`etf`/`spot_pair`) keep the flat `{FULL_CANONICAL_ID}.parquet` stem.
+
+  > **⛔ corrected 2026-07-20, doc-reconciliation P1-09 (contradiction "TradFi chain-bundle tail").** ~~Was:
+  > `…/data_type={dt}/{PRODUCT_ROOT}.parquet` (flat stem — kept per the tradfi plan, deliberately different from cefi's
+  > `underlying=/ticks.parquet` for now)~~. **SHIPPED CODE WINS.** §8 was written 2026-07-18 and superseded by the
+  > 2026-07-19 operator ruling "match cefi's TWO shapes exactly"
+  > ([`issues/tradfi_canonical_path_migration_design_2026_07_19.md`](../../plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md):37-45).
+  > The writer is shipped (`uac@ad28e55a` + `mtds@145e4aae`, same doc :196) and the definitive 0-ORPHAN reconcile over
+  > the full 2,734,646-object tradfi corpus classifies **528,961 objects as `MIGRATE_CHAIN_ADDQM`** — i.e. under the NEW
+  > shape (same doc :61-62). A flat product-root tradfi chain stem is therefore **NON-canonical**.
+
 - **defi**:
-  `…/day={D}/pipeline_mode={mode}_{source}/asset_group=defi/venue={PROTOCOL}/chain={CHAIN}/instrument_type={it_lower}/data_type={dt}/{venue}_{chain}_{capture_ts}.parquet`
-  — **venue BEFORE chain** (operator-locked, `defi-canonical-naming-ssot.md`)
+  `…/day={D}/pipeline_mode={mode}_{source}/asset_group=defi/venue={PROTOCOL}/chain={CHAIN}/instrument_type={it_lower}/data_type={dt}/{canonical_instrument_id}.parquet`
+  — **venue BEFORE chain** (operator-locked, `defi-canonical-naming-ssot.md`); leaf stem == the symbolic canonical id ==
+  the manifest key (§0, §1 pattern #1).
+
+  > **⛔ corrected 2026-07-20, doc-reconciliation P1-09 (contradiction "DeFi leaf FILENAME").** ~~Was:
+  > `{venue}_{chain}_{capture_ts}.parquet`~~ — the RETIRED capture-batch leaf. **This template contradicted §0 and §1
+  > pattern #4 of THIS SAME DOC**, which state that capture-batch is RETIRED → folded into pattern #1. A stale template
+  > inside the corpus's designated TIE-BREAKER doc is the single most dangerous doc defect in the corpus: every
+  > downstream reader resolves conflicts by consulting §8, so this one line could re-authorise a retired write shape
+  > across every defi writer. §1 wins — it matches the operator ruling 2026-07-18
+  > ([`defi-canonical-naming-ssot.md`](defi-canonical-naming-ssot.md) § WRITE-MODEL SUPERSEDED banner) **and** the
+  > completed R3 historical migration (**MIGRATION ALL-TERMINAL 30/30**, full 2020q1–2026q2 corpus migrated to
+  > per-instrument,
+  > [`defi_consolidated_closeout_2026_07_18.md`](../../plans/active/defi_consolidated_closeout_2026_07_18.md):1033-1035).
+  >
+  > **Known residual (do NOT read as canonical)**: the same entry defers PERP re-migration — the `{venue}_{ts}` bundles
+  > for ASTER / HYPERLIQUID / GMX are still on disk in the old bundle shape and surface as coarse manifest rows, bundled
+  > with the pending ASTER/HYPERLIQUID cefi-misfiling decision (same doc :1041-1044). They are a known gap, not a second
+  > canonical form.
 
 ## 9. empty_confirmed vs out-of-scope (the denominator basis)
 
@@ -254,7 +326,9 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 Equity `-USD` on all four surfaces · cefi venue = HYPHEN · ASTER = per-symbol real quote (mostly USDT, tail USD1/USDC —
 NOT hardcoded) · cefi & tradfi bundle path shapes kept per-AG · tradfi daily = `ohlcv_24h` · DERIBIT quote = gating P0 ·
 POOL key = 3-segment fee-in-symbol · defi two-id model kept (Option A, no mass rewrite) · retire legacy LENDING →
-A_TOKEN/DEBT_TOKEN · instrument_type lowercase in path/column / UPPER in id · culled-venue purge dead-only +
+A_TOKEN/DEBT_TOKEN **[HOLDINGS ONLY — scope corrected 2026-07-20; the market/event lending data_type keying is
+PARKED/UNRULED, see the §5 correction banner]** · instrument_type lowercase in path/column / UPPER in id **[the COLUMN
+leg is CONTESTED — see the §7 scope-correction banner; path leg settled]** · culled-venue purge dead-only +
 snapshot-first
 
 - keep LIGHTER/EXTENDED/KALSHI-PERP/POLYMARKET-PERP/BINANCE-DELIVERY · combos = leg-aware signed-weight · restore the

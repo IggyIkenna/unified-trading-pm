@@ -57,7 +57,13 @@ authoritative_for:
     operator-accepted reconciliation exception list,
     axes the reconciliation skill must refuse to report on,
   ]
-referenced_by: []
+referenced_by:
+  [
+    codex/02-data/four-surface-reconciliation-procedure.md,
+    codex/02-data/orphan-object-detection.md,
+    codex/02-data/non-canonical-path-inventory.md,
+    codex/02-data/cross-asset-canonical-target-ssot.md,
+  ]
 owner:
 last_reviewed: 2026-07-20
 code_refs:

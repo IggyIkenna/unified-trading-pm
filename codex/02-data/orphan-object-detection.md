@@ -32,7 +32,7 @@ authoritative_for:
     orphan detection coverage gaps in existing tooling,
     orphan detection under single-walk discipline,
   ]
-referenced_by: [codex/02-data/canonical-cutover-register.md]
+referenced_by: [codex/02-data/canonical-cutover-register.md, codex/02-data/four-surface-reconciliation-procedure.md]
 owner:
 last_reviewed: 2026-07-20
 code_refs:
@@ -194,8 +194,9 @@ disk listing** — so an object outside the oracle's expected set cannot produce
 orphan has no manifest row. You cannot enumerate orphans from the index, by construction, at any cost.
 
 This collides head-on with single-walk discipline: any new whole-corpus GCS walk is **review-blocking**
-(`availability-manifest-and-data-status.md:1635-1642`). Manifest-index reads are exempt (`:1655-1656`) — but they are
-exactly what does not work here.
+(`availability-manifest-and-data-status.md:1748-1750`). Prefix-scoped and per-shard targeted reads are permitted
+(`:1759`) — but they are exactly what does not work here, because a prefix derived from manifest rows cannot reach an
+object that has no manifest row.
 
 The three sanctioned no-walk routes are enumerated in
 [`four-surface-reconciliation-procedure.md`](four-surface-reconciliation-procedure.md) §5 and are not restated. Their
