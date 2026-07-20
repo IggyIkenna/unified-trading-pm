@@ -181,11 +181,24 @@ contract under the SOURCE key as an alias. The workflow chooses + verifies befor
 - [ ] 3. [DATA] P1. Sweep the OTHER candle data_types for the same class of contract drift before the backfill
       (`trades`, `book_snapshot_5`, `liquidations`, `options_chain`, `futures_chain`, the DeFi set). A scoped
       `/data-pipeline-check-mdps --legs force --require-captured --auto-day` per data_type is exactly the tool.
-- [ ] 4. [SCRIPT] P2. `/data-pipeline-check-mdps` driver improvement: the force-leg manifest verify currently reads the
-      CONSOLIDATED index and reported the uninformative `no_matching_row`, when the leg VM's own per-VM shard held
-      `attempted_failed/SCHEMA_VALIDATION_FAILED` (Phase-0 consolidated at 13:05; the VM wrote its shard at 13:12). Read
-      the leg VM's OWN per-VM shard first (concurrency-immune), exactly as the MTDS twin's `_read_per_vm_batch_row`
-      does, so the report surfaces the actionable error_reason.
+- [ ] 4. [SCRIPT] P2. `/data-pipeline-check-mdps` driver improvement — **EXACT root cause + fix pinned 2026-07-21** (now
+      the ONLY reason the skill reports "failed" on a fully-successful write). The force-leg manifest verify
+      (`_verify_tf_output`, scripts/pipeline_e2e_check.py:1057) calls the engine
+      `verify_manifest_row(bucket, match, day)` which reads the **MERGED** index (`read_availability_index` merges
+      consolidated + ALL per-VM shards) and takes `.iloc[-1]` — so when a cell has BOTH a stale `attempted_failed` row
+      (pre-fix runs 205051/213641) AND the fresh `captured` row (this run), the dedup/ordering can return the STALE one
+      → `manifest_status_invalid:attempted_failed` even though 140 objects wrote and this VM's OWN per-VM shard is
+      140/140 `captured` (proven 2026-07-21). The canonical leg already avoids this by reading the leg VM's own shard
+      via `_canonical_leg_frame(bucket, force_vm_name)` → `_read_per_vm_shard_frame`. **FIX**: (a) add a public engine
+      helper `verify_manifest_row_in_frame(frame, match,     date)` in
+      `unified_trading_library/pipeline_e2e_check/shard_verify.py` (refactor the existing match+status body of
+      `verify_manifest_row` into it, so the SSOT match logic + `_ACCEPTABLE_CAPTURE_STATUSES` stay in one place); (b) in
+      `_verify_tf_output`, thread `force_vm_name` (available as `force.vm_name`, exactly as `_run_canonical_leg` does at
+      :1486) and read `_read_per_vm_shard_frame(bucket, force_vm_name)` FIRST — if non-empty, use
+      `verify_manifest_row_in_frame`; else fall back to `verify_manifest_row`. Verifiable with a UNIT test (mock a
+      per-VM frame `captured` + the consolidated `attempted_failed`, assert the force leg returns ok=True) — NO VM
+      re-run needed. Same fix retroactively fixes the trades-smoke `no_matching_row` (consolidated hadn't consolidated
+      the fresh shard yet). MTDS twin's `_read_per_vm_batch_row` is the reference pattern.
 - [x] 5. ✅ [DATA] P0. DONE — mdps@d4052e20b. The workflow (w6kkdobay) CORRECTED the hypothesis: it was NOT a
       source-vs-aggregated key mismatch but the MDPS pre-upload validator (`candle_write_mixin.py:604` +
       `data_sink.py:118` via `get_schema_for_data_type`) gating OHLC-nullability on CATEGORY (prediction/sports only),
