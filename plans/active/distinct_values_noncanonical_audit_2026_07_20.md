@@ -454,3 +454,29 @@ VOCABULARY, never the phase-gated capability subset.
 pre-commit hook performs its own pull/rebase ("files were modified by this hook"), which resets an UNCOMMITTED working
 file to origin's version mid-commit. Lesson: in this repo, `git pull --ff-only` FIRST, then edit, then commit
 immediately — never append while behind origin.
+
+### 2026-07-20 15:46 local — MTDS still NOT shippable; index hazard found + neutralised
+
+Re-checked whether market-tick-data-service had gone quiet enough to ship the venue-as-chain fix. It has **not** — the
+repo is in a worse state than at the first check:
+
+1. **Orphaned merge conflict.** `tests/unit/test_pipeline_e2e_prediction_canonical.py` is `UU` with 4 conflict markers,
+   but there is NO `.git/MERGE_HEAD`, `REBASE_HEAD`, `rebase-merge` or `rebase-apply`. A merge/rebase died mid-conflict
+   and left the index wedged; nobody is actively resolving it. Committing anything from this index would commit an
+   unresolved conflicted file.
+2. **A `git add -A`-style sweep staged EVERYTHING**, including this session's two unrelated venue-as-chain files. All 10
+   modified files were `M ` (staged). Had any agent, hook, or cron committed from that index, the venue-as-chain fix
+   would have been swept into an unrelated aster/cefi-migration commit — wrong attribution, no gate run on it, bundled
+   with a conflicted file. This is exactly the failure the "stage by name, never `git add .`/`-A`" rule prevents.
+
+**Action taken (surgical, non-destructive):** `git restore --staged` on ONLY the two files owned by this session
+(`cli/handlers/onchain_perp_batch_handler.py`, `tests/unit/test_onchain_perp_batch_handler.py`). Working-tree content is
+unchanged and still present; the other 9 staged files and the conflicted file were left exactly as found — the other
+agent's work and its resolution remain entirely theirs. Verified after: 0 of my files staged, 9 of theirs still staged,
+my change still in the working tree, `UU` state preserved.
+
+**Ship gate for the venue-as-chain fix (unchanged, all must hold):** (a) `UU` conflict resolved by its owner and the
+index clean of foreign staged files; (b) MTDS dirty set quiet; (c) `quality-gates.sh` green; (d) commit ONLY the two
+named files; (e) then the paired manifest re-stamp with snapshot → dry-run → **collision pre-flight HARD GATE** → CAS →
+HOLD-verify across 2 consolidator cycles incl. one `--force`. Recovery if the working tree is ever clobbered: dangling
+commit `dded7f544` (tag `wip-slot3-venue-chain-fix`) + copies under the session scratchpad `wip-mtds/`.
