@@ -527,3 +527,27 @@ would have bundled their substantive, possibly-unfinished content under my commi
 `summary: >-`) is still sitting on disk (uncommitted), which was enough to make the corpus-wide frontmatter gate pass
 locally for verification — it will naturally be swept into whoever commits that file next. Given the just-observed
 index-collision risk, no further commit attempt was made against that file this session.
+
+### 2026-07-20 ~20:28 UTC — MTDS venue-as-chain fix: ALREADY SHIPPED (bundled), + a REPEATED collision pattern
+
+**Shipped, verified, on origin — no further action needed on the code fix.** `mtds@accd8aa4` carries both
+`onchain_perp_batch_handler.py` (the `_venue_chain()` fix) and its test, functionally re-verified post-commit:
+`_venue_chain('HYPERLIQUID') == ''`, `_venue_chain('ASTER') == ''` (both previously stamped `chain=<venue>`).
+
+**Second bundling incident in ~40 minutes, same identity, different repo.** Like `pm@eddeb32d6` earlier, this fix landed
+inside an 18-file / 645-line commit ("fix(mtds): ASTER per-IP rate limiting + SPORTS sentinel expectation-axis fix +
+databento warmup test-isolation") that never mentions it — spanning ASTER rate-limiting, sentinel/sports-adapter work,
+databento test isolation, none of which this session touched. Both incidents: author `ikennaigboaka [slot-3·laptop]`,
+both on origin already, both roughly 20:27-20:28 local. **This is now a PATTERN, not a one-off** — two independent large
+commits, ~40 min apart, in two different repos, both swallowing this session's uncommitted work under the same slot
+identity. Strongly suggests a CONCURRENT process is also operating as slot-3 on this host and staging broadly
+(`git add -A`-style) rather than by name. Not something this session can diagnose further (can't see other processes'
+intent) or fix (rewriting pushed shared commits is banned) — flagged for the operator to investigate the slot-3
+identity/process assignment on this host.
+
+**Remaining: the paired manifest re-stamp is NOT attempted this session.** The writer fix is live; existing rows still
+carry `chain=<venue>` for these 4 cefi on-chain-perp venues. Given `chain` is a row-key column and this is real
+production GCS manifest data (snapshot → dry-run → **collision pre-flight hard gate** → CAS-apply → hold-verify across
+≥2 consolidator cycles incl. one `--force`), and given the just-observed git-identity instability on this exact host,
+proceeding to a production-data mutation right now is deliberately deferred — flagged to the operator rather than run
+autonomously while this collision pattern is active. Sequence + gates restated above under "Ship gate", unchanged.
