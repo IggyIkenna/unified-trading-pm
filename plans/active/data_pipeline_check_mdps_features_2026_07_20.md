@@ -1114,3 +1114,19 @@ VALIDATION key; the object path still uses source data_type, manifest the aggreg
 this fix incidentally makes the EXIT_STATUS=0-while-0-written class less likely for the honest-absence case (the write
 now succeeds), though the broader exit-code-lies P0 (sibling todo 2) is still open for genuine failures. Dispatching a
 focused MDPS implementation agent with this exact spec.
+
+### 2026-07-20 ~23:20Z — Nullability fix SHIPPED (mdps@d4052e20b) + tarball rebuilt + verified; loop-close re-run #2 launched
+
+Verified the implementation agent's fix (read all 5 diffs, EXECUTED the resolver —
+`mdps_ohlc_is_nullable(CEFI, perpetual, derivative_ticker, 15s, DERIBIT)` = **True**, trades = True, **book5 = False**,
+uppercase PERPETUAL = True; QG green 15s) and SHIPPED via quickmerge (mdps@d4052e20b). Design: the pre-upload validator
+now inherits OHLC nullability from the UAC per-type SSOT (`mdps_ohlc_is_nullable[_for_frame]` → `lookup_mdps_contract` →
+`open.nullable`), NOT category — book5/state stay non-nullable automatically (zero regression), lookup-miss → category
+fallback (never raises, shard isolation). 12 new tests incl. book5-stays-non-nullable + empty-window-passes.
+
+Rebuilt the MDPS tarball via `refresh_code_tarballs.sh` (clones committed LDR → foreign-WIP-immune): MDPS tarball now
+`d4052e20b456`, EXTRACTED + verified it contains the fix (output_schemas `ohlc_nullable`, canonical_writer_shaping
+`mdps_ohlc_is_nullable`, both validators threaded). Setup script still byte-intact (md5 f242a3aa). Launched loop-close
+re-run #2 (CEFI DERIBIT derivative_ticker, legs force,skip,canonical). EXPECTED: the force leg now WRITES objects
+(was 0) because the pre-upload validator resolves nullable=True for derivative_ticker. Awaiting the VM report to close
+the P0 end-to-end.
