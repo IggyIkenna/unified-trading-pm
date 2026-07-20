@@ -80,19 +80,33 @@ WOULD kill, and get approval before any real reap.**
       matcher only touches the target slot's PID (a same-age PID on a different slot is left untouched), honours
       `boot_grace_seconds` anchored on the OS process's own start time, and includes one real `/proc` scan against an
       actual subprocess (not just mocked seams).
-- [ ] [BACKEND] P1. **Orphan-process reap, half (b): a periodic orphan sweep (config-dir → PID → slot liveness)**
+- [x] [BACKEND] P1. **Orphan-process reap, half (b): a periodic orphan sweep (config-dir → PID → slot liveness)**
       catching residue the pruner misses, including PPID-1 trees that have no surviving parent to notice them.
       **Required guards, all three**: (i) never kill a PID belonging to a live session; (ii) **honour
       `boot_grace_seconds` — NEVER reap inside a slot's fresh-spawn grace window**; (iii) a `--dry-run` mode that is the
       DEFAULT until the operator approves a live run. Log every kill with slot + PID + age. **Gate**: dry-run on the VM
       lists the current orphans and nothing else; after operator approval, a live sweep reports 0 orphans remaining (the
-      one-time cleanup of the current ~10 included). — Code shipped `agent-orchestrator@aa81706`:
-      `server/orphan_reap.sweep_orphan_processes()`, wired into `TmuxPruner`'s existing periodic loop, gated by
-      `tuning.orphan_sweep_dry_run` (default `True`). All three required guards verified LOCALLY (unit tests: never
-      touches a PID `has_session()` still reports live, honours `boot_grace_seconds`, dry-run never signals a process).
-      **Still open**: the VM-side half of this gate — a dry-run pass against the live VM's actual orphans, operator
-      review of that output, then an approved live sweep confirming 0 orphans remaining. Not run yet; needs an explicit
-      go-ahead before any real kill on the VM (per this plan's own Execution-environment note above).
+      one-time cleanup of the current ~10 included). — Code shipped `agent-orchestrator@aa81706`, VM verification done
+      2026-07-20. **Dry-run pass** (read-only SSM against `i-0c9b283b31d6b5ca7`): correctly flagged the same PID (slot 9
+      / 1863748 / session `6cf84cea` — the exact orphan named in the 07-17 incident doc) on every one of ~16 ticks, zero
+      false positives, zero signals sent. **Found + fixed a real gap surfaced by the dry-run itself**: a slot's
+      `CLAUDE_CONFIG_DIR` is reused across respawns, so "a session named `orch-slot-N` currently exists" is not proof
+      every process under that dir belongs to the CURRENT occupant — confirmed live when slot 9 got a fresh dispatch
+      (new session, new pane pid) while the 07-17 orphan kept running underneath, invisible to a bare `has_session()`
+      check. Fixed to match per-PID against the live session's pane-process tree
+      (`tmux_spawn.pid_belongs_to_live_session`, reusing the existing ancestry helpers) — `agent-orchestrator@ebe2ae3`,
+      regression test added reproducing the exact reused-config-dir scenario. **Operator reviewed + approved a live
+      run** (2026-07-20 chat) after the fixed dry-run surfaced the TRUE scope: 7 orphans across 6 slots (ages 21min-72h;
+      three matched the 07-17 incident's named PIDs, still alive 3 days later) — the old coarse check had been masking 6
+      of these 7 the moment their slots were reused. Flipped `tuning.orphan_sweep_dry_run` default to `False` —
+      `agent-orchestrator@95fdf9d`. **Live sweep verified**: 9 `orphan_process_reaped` events (the original 7 + 2 more
+      caught fresh on slot 4, ages 338s/473s — confirming an actively recurring leak on that slot, now caught within
+      minutes instead of accumulating for days); all 8 unique PIDs confirmed GONE via direct `ps` on the VM; post-sweep
+      fleet health clean (0 `watchdog_slot_killed`/`stale_dispatch_reclaimed` regressions, slot 4's actual live worker —
+      task `sports_p2_history_apifootball_2015_to_present-001` — untouched with a fresh ping seconds after the sweep,
+      service `NRestarts=0`). **Follow-up worth a look, not actioned this session**: slot 4 producing short-lived
+      orphans repeatedly (2 fresh ones within ~15 min of the sweep going live) suggests a root cause on that slot
+      specifically, beyond this plan's scope.
 - [ ] [BACKEND] P1. **Stale-dispatch invariant (Defect A), resume-path aware.** The pruner's requeue (`ao@5b07bd3`)
       releases on a "requeue" verdict, but a `resume-pending` verdict keeps the task bound — and when the resume never
       happens (07-17: slots went `killed` still holding tasks), nothing reconciles. Add: a task `dispatched` to a slot
@@ -158,3 +172,18 @@ WOULD kill, and get approval before any real reap.**
   **Deliberately NOT run against the live VM this session** — the periodic orphan sweep (todo 1b) stays dry-run-only by
   default (`tuning.orphan_sweep_dry_run=True`) and the invariant's 24h live spot-check needs the fix live for a full day
   first; both are flagged open above, pending operator go-ahead for the VM-side half.
+- **2026-07-20 (same day, later) — todo 1b's VM leg run to completion, operator-approved.** Dry-run against the live
+  central VM (read-only SSM) worked exactly as designed, then immediately exposed a real gap in its own detection logic:
+  a slot's `CLAUDE_CONFIG_DIR` is reused across respawns, so a coarse `has_session()` check goes permanently blind to a
+  stale orphan the moment its slot is reused by a fresh occupant — confirmed live (slot 9's original 07-17 orphan, PID
+  1863748, still running underneath a session created seconds earlier). Fixed to a per-PID pane-tree-membership check
+  (`agent-orchestrator@ebe2ae3`), which then surfaced the TRUE scope the coarse check had been hiding: 7 orphans across
+  6 slots, not the 1 the naive check could see, three of them the exact PIDs named in the 07-17 incident doc, still
+  alive 3 days later. Operator reviewed and approved a live run in-chat; `orphan_sweep_dry_run` flipped to `False` by
+  default (`agent-orchestrator@95fdf9d`). Verified via SSM: 9 `orphan_process_reaped` events (the 7 plus 2 more caught
+  fresh on slot 4 within 15 minutes, ages 338s/473s), all 8 unique PIDs confirmed gone via `ps`, zero regressions (no
+  unexpected `watchdog_slot_killed`/`stale_dispatch_reclaimed`, slot 4's actual live worker untouched with a fresh ping
+  seconds after the sweep, service healthy). Todo 1b fully closed. Worth flagging for a future session: slot 4 is
+  producing short-lived orphans repeatedly — a root cause specific to that slot, outside this plan's scope, but the
+  periodic sweep is now catching them within minutes regardless. Todo 3's live 24h spot-check remains the only open item
+  on this plan.
