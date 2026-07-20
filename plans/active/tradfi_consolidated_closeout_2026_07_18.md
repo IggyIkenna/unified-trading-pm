@@ -215,8 +215,31 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       **consolidator throughput/backlog monitor** (`consolidator_throughput_backlog_monitor_2026_07_09.md`). (repos:
       deployment-service, market-tick-data-service)
 - [ ] [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) — add
-      source-scoped `…-tradfi-databento-t1-recon` (+ massive) Cloud Run jobs; live coverage erodes daily without it.
-      (repos: deployment-service, market-tick-data-service)
+      source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
+      deployment-service, market-tick-data-service) **INFRA SHIPPED + APPLIED 2026-07-20 — deployment-service@11bed3c;
+      execution BLOCKED on a fleet-wide image bug (NOT this job's defect).** Terraform landed + `tofu apply [prod]`
+      clean (**2 add / 0 change / 0 destroy**): Cloud Run job
+      `uts-prod-market-tick-data-service-tradfi-databento-t1-recon`
+      (`--operation download --mode batch --asset-group TRADFI --source databento --data-types ohlcv_1m ohlcv_1s`,
+      2cpu/8Gi) + scheduler `uts-prod-market-tick-data-tradfi-databento-t1-schedule` (`35 0 * * *`, ENABLED) — both
+      verified present via `gcloud run jobs list` / `gcloud scheduler jobs list`. **The inherited WIP's
+      `--source massive` job + scheduler entry were REMOVED, not shipped**: the WIP predated the 2026-07-19 Massive
+      removal, and `--source` is now `choices=["databento"]` (`mtds cli/main.py:197`) with `umi_tick_provider` failing
+      closed on non-databento and a `source='massive'` manifest write raising — so it would have failed argparse on
+      EVERY run. Databento covers everything Massive served (DBEQ.BASIC equities, GLBX.MDP3 CME) plus CBOE/VX and
+      ohlcv_1s, so ZERO coverage gap. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`. **Still `- [ ]` because
+      rows-written is UNPROVEN**: two real executions exited 1 at interpreter start —
+      `ImportError: cannot import name 'is_recognized_tradfi_underlying' from 'unified_api_contracts'`. Root cause is a
+      stale UAC bundled in the MTDS image, which kills **every** MTDS Cloud Run job (cefi-t1-recon failing since
+      ≥2026-07-19, fast-t1-recon 4× today) — filed P0
+      `issues/mtds_image_uac_dep_skew_breaks_all_cloud_run_jobs_2026_07_20.md`. Tick this todo once that image is
+      rebuilt and one execution writes T-1 rows.
+- [ ] [INFRA] P0. **MTDS image ships a stale unified-api-contracts — ALL MTDS Cloud Run jobs fail at import**
+      (`issues/mtds_image_uac_dep_skew_breaks_all_cloud_run_jobs_2026_07_20.md`). Stage UAC at the same ref as the MTDS
+      commit being built, add a `python -m market_tick_data_service --help` import smoke to the in-image quality-gates
+      step (would have caught this at build time instead of at 00:35 cron time), rebuild `:latest`, then re-run
+      cefi/fast/tradfi-databento T+1 and confirm `succeededCount=1`. (repos: market-tick-data-service,
+      unified-api-contracts, deployment-service)
 - [ ] [BACKEND] P1. **Massive dual-source shape parity + consolidator dedup-key omits `source`**
       (`tradfi_massive_dual_source_2026_05_28.md` Phase 4b — a silent last-write-wins loss risk the moment a cell goes
       dual-source). (repos: unified-trading-library, market-tick-data-service)
