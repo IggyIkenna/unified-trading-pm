@@ -252,8 +252,12 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track X — CLEANUP + plan reconciliation · P2
 
-- [ ] [SCRIPT] P2. Flip `status: resolved` on the ~30 fully-checked-but-open sports issue docs (list in the audit's
-      reconciliation) — pure hygiene.
+- [x] [SCRIPT] P2. ✅ Flipped 10 sports issue docs `open` → `resolved` (PM@b659c768d) — every one re-verified as 0 open
+      todos / >0 done / citing a real commit, with `resolved_by` populated from the cited `<repo>@<sha>`. **Zero
+      resolved-but-open sports issue docs remain.** (The sweep's "~30" was the estimate; the measured set with genuinely
+      zero remaining todos is 10 — the rest still have open items and are correctly left open.) ~~Flip
+      `status: resolved` on the ~30 fully-checked-but-open sports issue docs~~ (list in the audit's reconciliation) —
+      pure hygiene.
 - [ ] [PLAN] P1. Archive the fold-in plans as superseded-by this closeout
       (`sports_manifest_canonicalisation_2026_06_01`, `sports_pipeline_to_100pct_golden_window_first`) once their live
       items land here; keep the 2 near-done KEEP-ACTIVE plans standalone.
