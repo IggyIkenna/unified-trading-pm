@@ -121,11 +121,21 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
 
 ## Todos
 
-- [ ] 1. [SCRIPT] P1. Launcher edits (deployment-service): add `--vm-name` to `launch-mdps-backfill-vm.sh` +
-      `launch-features-vm.sh`; add test-bucket routing (`--test-run` → IS_TEST_RUN + PROTOCOL_DATA_SINK_BUCKET_{AG}) to
-      `launch-features-vm.sh`. Additive, mirror MTDS. QG deployment-service green.
-- [ ] 2. [SCRIPT] P1. UTL engine edit: add `data_pipeline_e2e_check_mdps` + `_features` to `report.py::_SERVICE_REPOS`;
-      add shared benchmark/projection helpers if reusable. QG unified-trading-library green.
+- [x] 1. ✅ [SCRIPT] P1. Launcher edits (deployment-service) — `deployment-service@f0b3f14`. `--vm-name` added to
+      `launch-mdps-backfill-vm.sh` (VM_NAME_OVERRIDE; single-category only — the `all` fan-out must not set it) and to
+      `launch-features-vm.sh`; features also gained `--sink-bucket`/`--source-bucket` which bake
+      `IS_TEST_RUN=true PROTOCOL_DATA_SINK_BUCKET_{AG}=<b> [PROTOCOL_DATA_SOURCE_BUCKET=<b>]` into `VM_BACKFILL_CMD`
+      (env contract verified against delta_one `FeatureWriter._get_sink_bucket` + `run_pipeline_e2e.py:338`). Chose
+      `--sink-bucket` over `--test-run` so the canonical `resolve_bucket_name` stays in Python, not bash. **Evidence:
+      deployment-service QG ✅ ALL QUALITY GATES PASSED (139s), incl. the backfill-disk gate (100 launchers on adequate
+      disks); shipped via quickmerge --agent, landed on live-defi-rollout.**
+- [x] 2. ✅ [SCRIPT] P1. UTL engine edit — `unified-trading-library@82c3c336`. `report.py::_SERVICE_REPOS` +=
+      `data_pipeline_e2e_check_mdps`→[market-data-processing-service, deployment-service] and `_features`→
+      [features-service, deployment-service], so emitted audit-result frontmatter carries the right `repos:`. No shared
+      benchmark/projection helper was needed — the projection math lives in the two SKILL.md (the drivers only measure).
+      **Evidence: UTL QG ✅ ALL QUALITY GATES PASSED (360s); shipped via quickmerge --agent, landed on
+      live-defi-rollout. Shipped BEFORE deployment-service per dep-order (UTL is T0; the dirty-dep pre-flight gate
+      correctly blocked the downstream quickmerge until UTL was clean).**
 - [ ] 3. [SCRIPT] P1. Build `market-data-processing-service/scripts/pipeline_e2e_check.py` (candle MVP shards:
       cefi/defi/ tradfi via `mdps_mvp_universe` + sports/prediction via candle-processed data_types; per-timeframe
       verify; self-contained skip; live=honest-gap; benchmark leg). QG MDPS green.
@@ -137,9 +147,11 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       benchmark/projection/cost/parallelization/ orphan-lineage sections + coverage-aware day/window selection.
 - [ ] 6. [SCRIPT] P2. Wire both drivers into their consumer `quality-gates.sh` + lifecycle markers
       (`# Epic:`/`# Lifecycle:`/`# Delete-when:`).
-- [ ] 7. [DATA] P1. Provision `-test-` buckets (object-probe, never `buckets describe`) — MDPS
-      `market-data-tick-{ag}-     test-{pid}` (shared w/ MTDS), features `features-{ag}-test-{pid}` +
-      `features-sports-test`/`features-calendar-test`.
+- [x] 7. ✅ [DATA] P1. `-test-` buckets — **ALL EXIST, no provisioning needed** (object-level probe 2026-07-20; never
+      `buckets describe`, which 403s without `storage.buckets.get`). MDPS candles are CO-LOCATED in the MTDS tick
+      buckets: `market-data-tick-{cefi,defi,tradfi,sports}-test-*` + `market-data-tick-pred-test-*` (all have objects).
+      features: `features-{cefi,defi,tradfi,pred,sports,calendar}-test-*` all exist (cefi has objects, rest empty — the
+      legitimate state of an unwritten `-test-` sibling).
 - [ ] 8. [DATA] P0. RUN + VALIDATE `/data-pipeline-check-mdps` e2e: auto-select high-coverage day per AG, prove
       force+skip for every MVP candle shard (all AGs × venues × data_types × timeframes). Report written.
 - [ ] 9. [DATA] P0. RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove

@@ -215,8 +215,31 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       **consolidator throughput/backlog monitor** (`consolidator_throughput_backlog_monitor_2026_07_09.md`). (repos:
       deployment-service, market-tick-data-service)
 - [ ] [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) — add
-      source-scoped `…-tradfi-databento-t1-recon` (+ massive) Cloud Run jobs; live coverage erodes daily without it.
-      (repos: deployment-service, market-tick-data-service)
+      source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
+      deployment-service, market-tick-data-service) **INFRA SHIPPED + APPLIED 2026-07-20 — deployment-service@11bed3c;
+      execution BLOCKED on a fleet-wide image bug (NOT this job's defect).** Terraform landed + `tofu apply [prod]`
+      clean (**2 add / 0 change / 0 destroy**): Cloud Run job
+      `uts-prod-market-tick-data-service-tradfi-databento-t1-recon`
+      (`--operation download --mode batch --asset-group TRADFI --source databento --data-types ohlcv_1m ohlcv_1s`,
+      2cpu/8Gi) + scheduler `uts-prod-market-tick-data-tradfi-databento-t1-schedule` (`35 0 * * *`, ENABLED) — both
+      verified present via `gcloud run jobs list` / `gcloud scheduler jobs list`. **The inherited WIP's
+      `--source massive` job + scheduler entry were REMOVED, not shipped**: the WIP predated the 2026-07-19 Massive
+      removal, and `--source` is now `choices=["databento"]` (`mtds cli/main.py:197`) with `umi_tick_provider` failing
+      closed on non-databento and a `source='massive'` manifest write raising — so it would have failed argparse on
+      EVERY run. Databento covers everything Massive served (DBEQ.BASIC equities, GLBX.MDP3 CME) plus CBOE/VX and
+      ohlcv_1s, so ZERO coverage gap. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`. **Still `- [ ]` because
+      rows-written is UNPROVEN**: two real executions exited 1 at interpreter start —
+      `ImportError: cannot import name 'is_recognized_tradfi_underlying' from 'unified_api_contracts'`. Root cause is a
+      stale UAC bundled in the MTDS image, which kills **every** MTDS Cloud Run job (cefi-t1-recon failing since
+      ≥2026-07-19, fast-t1-recon 4× today) — filed P0
+      `issues/mtds_image_uac_dep_skew_breaks_all_cloud_run_jobs_2026_07_20.md`. Tick this todo once that image is
+      rebuilt and one execution writes T-1 rows.
+- [ ] [INFRA] P0. **MTDS image ships a stale unified-api-contracts — ALL MTDS Cloud Run jobs fail at import**
+      (`issues/mtds_image_uac_dep_skew_breaks_all_cloud_run_jobs_2026_07_20.md`). Stage UAC at the same ref as the MTDS
+      commit being built, add a `python -m market_tick_data_service --help` import smoke to the in-image quality-gates
+      step (would have caught this at build time instead of at 00:35 cron time), rebuild `:latest`, then re-run
+      cefi/fast/tradfi-databento T+1 and confirm `succeededCount=1`. (repos: market-tick-data-service,
+      unified-api-contracts, deployment-service)
 - [ ] [BACKEND] P1. **Massive dual-source shape parity + consolidator dedup-key omits `source`**
       (`tradfi_massive_dual_source_2026_05_28.md` Phase 4b — a silent last-write-wins loss risk the moment a cell goes
       dual-source). (repos: unified-trading-library, market-tick-data-service)
@@ -959,3 +982,61 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     orphans → catalogue `by_date` sweep + rebuild (KRX names + MVP-stamp) + manifest force-rebuild → 571 Massive-only
     backfill (single-IP capped) → Massive purge → MVP backfill code ready + ETA → `data-pipeline-check-mtds` all tradfi
     shards green.
+
+- **2026-07-20 (slot-1, tick 22) — ✅ MVP BACKFILL READINESS + ETA DELIVERED (operator deliverable); 1 readiness gap
+  FIXED; 2 assumptions CORRECTED; 3 findings raised.**
+  - **ETA to backfill all remaining tradfi MVP** (measured anchor: 820,639 rows / 17.5 min on 16-vCPU `e2-highmem-16`
+    conc=20 ≈ 46.9k rows/min/VM): **optimistic 4–7 h** (equity re-sharded + fleet cap ~40 + all `e2-highmem-16`) ·
+    **expected ~13–33 h, centre ~20 h** (launchers as-shipped) · **with SPOT preemption ~26–45 h**. On the DEFAULT
+    `e2-highmem-4` multiply ×3–4 → 60–130 h, so **machine size dominates the ETA more than any other choice — launch
+    with `TRADFI_OHLCV_MACHINE=e2-highmem-16`.**
+  - **READINESS GAP FIXED — `deployment-service@4eb50a4`:** the 1.56× `--batch-date-concurrency` lever existed in UTL
+    but was **OFF** for the tradfi launchers (`_tradfi-ohlcv-launcher-lib.sh:88` defaulted empty). Now defaults ON for
+    databento-sourced tradfi, machine-derived (~1.25 dates in flight per vCPU, clamped [2,80]): `e2-highmem-4`→5,
+    **`e2-highmem-16`→20 (exactly the config the 1.56× was measured on)**, `e2-standard-96`→80. FX/Yahoo untouched.
+    SPOT + PROGRESS.json monotonic resume + retry-429 + dedicated Databento executor + OOM sizing all verified OK.
+    **Still OPEN:** per-date freshness/manifest op batching is not implemented anywhere (known dominant small-candle
+    cost).
+  - **CORRECTION 1 — Databento is rate-limited PER-IP, not per-key** (`databento_key_cache.py:152-180`,
+    `MAX_CONCURRENT=100`, ~80 effective) and every backfill VM gets its OWN ephemeral external IP (no
+    `--no-address`/NAT). The ~80 budget is **per-VM, not fleet-wide** — **structurally UNLIKE the Tardis cap-1 storm**
+    (one shared contended IP). `OHLCV_FLEET_CONCURRENCY_CAP=20` is a courtesy cap, not a rate-limit guard; 18 concurrent
+    VMs empirically ran with zero 429s. **More VMs is SAFE here.**
+  - **CORRECTION 2 — the binding constraint is EQUITY SHARD GRANULARITY, not API concurrency or VM count.**
+    `launch-tradfi-bf-{nasdaq,nyse}-ohlcv-1m.sh` create ONE VM PER YEAR covering ALL tickers, so 207,856 equity cells
+    (46% of remaining work) compress onto ~4 year-shards/venue → **~30,106 cells on the single longest NASDAQ VM**
+    (12.5–33 h critical path). CME shards 47 roots × 7 years (~329 VMs) and is embarrassingly parallel. **Splitting the
+    equity launchers by ticker-group is worth MORE than the 1.56× lever** — dispatched. NOTE: this is the OPPOSITE
+    direction to the open P1 "bundle roots into fewer larger VMs" (right for CME, wrong for equities).
+  - **REMAINING WORK:** 638,440 todo cells, of which **182,407 (29%) are BELOW the vendor discovery floor** (Databento
+    XNAS.ITCH/XNYS.PILLAR have no pre-2023-04-15 data; launchers already clamp) → permanently unfillable. **456,033
+    genuinely backfillable**: CME ohlcv_1s 168,045 · NASDAQ ohlcv_1m 80,390 · NYSE ohlcv_1m 64,817 · CME ohlcv_1m 60,210
+    · NASDAQ ohlcv_1s 40,034 · NYSE ohlcv_1s 22,615 · NASDAQ/NYSE ohlcv_24h 8,968 · KRX ohlcv_24h 8,318 · CBOE 2,489 ·
+    FX/KRX 147.
+  - **FINDINGS RAISED (issue docs dispatched):** (a) **P1 DATA-CORRECTNESS — 1,135,339 of 1,615,859 `captured` cells
+    (70%) carry `row_count` = 0 or null** (CME/NYSE/NASDAQ ohlcv; **ALL 4,266 FX `ohlcv_24h` captured cells are zero**)
+    — either `row_count` is not stamped at the per-instrument atom, or these are the banned
+    "empty-rows-that-look-populated" honest-absence violation; re-measure post-migration before concluding. (b) P2 —
+    reclassify the 182,407 below-floor cells as `expected_unattempted` so dashboards stop showing unchaseable gaps. (c)
+    **`attempted_failed` on equities is ALPHABETICALLY CLUSTERED A–C** (56 NASDAQ + 50 NYSE, ~770 failure-days each, all
+    `WithinBoundsTradfiSourceZero`) — a **TRUNCATION signature, not data absence**; a blind re-run will re-fail until
+    root-caused (dispatched). Minor: tradfi launchers don't set `STALL_PROGRESS_REGEX`.
+
+- **2026-07-20 (slot-1, tick 23) — 🎯 CANONICAL-PATH MIGRATION COMPLETE + VERIFIED (operator deliverable #1): 20/20
+  shards, ORPHAN = 0.**
+  - **Run `20260720-120911`** (20 SPOT shards, fixed tarball `mtds-code@5581dcf9` pinned, ~55 min wall clock). EVERY
+    shard reports **`ORPHAN count = 0 (PASS — total map)`** and **`match=True`** (SUM(dispositions) == TOTAL) — the
+    operator's "no orphans whether MVP or not" requirement, proven 20/20, not sampled.
+  - **Aggregate over 2,649,469 objects classified:** MIGRATE **848,886** → canonical · PURGE_MASSIVE **1,701,414** (left
+    in place, gated — closely matches the design's 1,696,166 estimate, confirming purge scope) ·
+    **DEFER_CHAIN_TO_RECOVERY 98,006** (garbage-root chains LEFT IN PLACE — the RECOVER-1 fix working at scale; the
+    pre-fix code would have destroyed these) · QUARANTINE 1,163.
+  - **Pre-flight safety held:** a canary dry-run verified the fixed DEFER/NOOP dispositions on a live-garbage day before
+    any `--apply`; the launcher's 2-min foreground timeout produced a partial 3-shard fan-out on the first attempt,
+    which was deleted and relaunched cleanly in the background (exactly 20 VMs verified, zero strays).
+  - **Data-loss incident CLOSED:** 0 permanent loss. True victim set = **95**, not the ~1–1.4K first estimated — 385,341
+    twins were benign **rename-to-live** (CL→CRUDE / NG→NATGAS / MES→MICRO-SP500); all 95 restored at their canonical
+    paths and VERIFIED LIVE, well ahead of the 2026-07-27T03:33Z hard-delete.
+  - **NEXT:** recovery pass for the 95 restored victims (restored AFTER the shard walks, so absent from their
+    enumerations) → catalogue sweep (moved in-region; the laptop run was decelerating badly) + rebuild → manifest
+    force-rebuild → 571 Massive-only backfill → purge the 1,701,414 → Phase-D all-shards.

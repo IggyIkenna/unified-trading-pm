@@ -62,13 +62,23 @@ source:
       reimplemented against `services/manifest_source.read_manifest_index` predicate-pushdown reader + the current
       `services/data_status/` package layout — NOT Harsh's own index_cache/mock modules. Honest-absence + in-process TTL
       cache like the sibling endpoints. Unit-test. Ship+flip.
-- [ ] [UI] P1. B — deployment-ui: verify light-mode rendering via a playwright screenshot with
-      `prefers-color-scheme: light` FIRST. If the app washes out (light palette auto-applies, no `.theme-light` opt-in,
-      no toggle exists — confirmed present in `src/index.css`), apply Harsh's ~10-line fix (default dark; light explicit
-      opt-in). If light-mode is intended and renders fine, LEAVE IT and record why. pw:L2. Ship+flip.
-- [ ] [UI] P2. A — deployment-ui: build a "Needs Attention" triage panel (ranked recent failures / missing-date gaps /
-      stale captures) at the top of the Data Status surface, wired to prod's CURRENT data shapes/endpoints (do NOT port
-      the stale `redesignData.ts` adapter). `[UI]` + `pw:L2 ✓` + cited regression spec. Ship+flip.
+- [x] [UI] P1. ✅ B — deployment-ui: dark-theme default. **FIXED** — deployment-ui@2c4e950. Playwright-verified the real
+      defect first (`emulateMedia({colorScheme:'light'})`): `--color-bg-primary` resolved to `#ffffff` on a light-OS
+      context with ZERO opt-out (no `.theme-light` consumer, no toggle anywhere). Note the light palette is itself
+      well-crafted — NOT visually "washed out" as the source commit claimed; the genuine bug is behavioural (OS
+      preference silently overrides the app's dark-first identity, unrecoverable). Fix mirrors `1d99062`: light palette
+      moved from `@media (prefers-color-scheme: light)` to a plain `.theme-light` opt-in (+ same pattern on the
+      cost-breakdown resizer hover icon). Verified both directions post-fix. pw:L2 ✓
+      `tests/smoke/theme-dark-default.spec.ts` (2 tests).
+- [x] [UI] P2. ✅ A — deployment-ui: Needs Attention triage panel. **SHIPPED** — deployment-ui@615bddf. Derived purely
+      from the ALREADY-fetched `/api/data-status/manifest`/`turbo` response
+      (`capture_status_counts.     attempted_failed`, `dates_missing`, `dates_found_list`) — no new backend endpoint,
+      stale `redesignData.ts` NOT ported. `src/lib/needs-attention.ts` (`deriveNeedsAttention`, ranks
+      failures>gaps>stale, **per-kind** cap after a real starvation bug was caught in test: a flat global cap let a
+      noisy gap bucket crowd out every stale item) + `src/components/NeedsAttention.tsx` wired above the Data Coverage
+      card; row click filters + scrolls. Documented scope boundary: `venue_summary.expected_but_missing` not surfaced
+      (name-only, would need fabricated severity). 12 Vitest cases + pw:L2 ✓ `tests/smoke/needs-attention-panel.spec.ts`
+      (4 tests).
 
 ## Progress Log
 

@@ -750,8 +750,59 @@ Discriminator = **does a manifest row exist**.
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
-- **2026-07-20 (slot-4, /autonomous — UAC catalogue SHIPPED; CF-11 re-run PROVEN necessary; 4 QG failures
-  root-caused).**
+- **2026-07-20 (slot-4, /autonomous — ⛔ CORRECTION: the "CF-11 re-run is necessary" claim below is MEASURED-FALSE;
+  orphan checks GREEN; new gas_fees orphans found).**
+
+  - **⛔ RETRACTION of the entry below.** I claimed the unfixed rebuild "silently DROPS the ~4.5M cell-level absence
+    rows", so all 7 years had to re-run. **Ground truth says otherwise.** I downloaded the live
+    `_index/availability_index.parquet` (1.14GB, 44,730,321 rows) and counted directly: **4,604,591 rows carry a
+    blank/null `instrument_id` (cell-level grain), of which 4,465,805 are `empty_confirmed`.** The absence corpus is
+    PRESENT. **Why my inference was wrong:** consolidation is `drop_duplicates(subset=dedup_cols, keep="last")` — an
+    **UPSERT into the pre-existing index** (`_writer_io.py:1161`), NOT a replace-from-shards. The legacy cell-level rows
+    were therefore never at risk from a reemit that fails to re-write them; nothing deletes them. **Consequence: NO
+    7-year re-run.** That would have burned most of the operator's 6h window on a false premise. The CF-11 row_key fix
+    is still a REAL latent bug (the reemit errors per-row on blank ids whenever it does run) and still ships — it is
+    simply not a data-loss emergency. _Lesson: I reasoned from the code path to a data conclusion; the index was one
+    query away. Measure the artifact, don't infer it._
+  - **Index status (44,730,321 rows):** captured 19,793,291 · empty_confirmed 13,041,544 · expected_unattempted
+    11,664,056 · attempted_failed 231,430. (T3 measured 43.56M at 10:20; +1.17M captured since = the 2023 VM's
+    consolidation landing, so the rebuild IS accreting per-instrument captured rows correctly.)
+  - **✅ ORPHAN CHECKS GREEN on the live index** (the operator's "no orphans" deliverable, measured not asserted):
+    `_migrated_*` phantom ids **0** (Defect-A holding), `ticks_migrated_*` **0**, glued `{venue}_{epoch10}` bundle ids
+    **0**. Per-year captured: 2020 9,709 · 2021 645,395 · 2022 1,833,079 · 2023 3,401,052 · 2024 4,492,152 · 2025
+    4,608,214 · 2026 4,803,690. **2020's sparsity is CORRECT, not a gap** — 2020 captured is UNISWAP_V2 7,675 + CURVE
+    1,246 + chain gas 359/206/116/85 + LIDO 20; UNISWAP_V2 launched May-2020, so a Jan-2020 day holding only gas is the
+    honest answer to the operator's earlier question.
+  - **🔴 NEW ORPHANS FOUND (`gas_fees`, 60,109 rows) — real cleanup work, was not on the list:** alongside the correct
+    canonical `GAS` id there are **malformed ids `gas_fees_117_866` / `gas_fees_17_17` / `gas_fees_18_18` /
+    `gas_fees_190_190`** (a `{dt}_{n}_{n}` shape), **LST tokens misfiled under `gas_fees`**
+    (`LIDO-ETHEREUM:LST:STETH`/`:WSTETH`, `ETHERFI-ETHEREUM:LST:WEETH`), and **non-chain venues** in the gas venue set
+    (ALCHEMY = a PROVIDER, plus ETHERFI/LIDO = protocols). Gas is chain-level only, so all three are orphan classes.
+  - **R5 targets quantified:** the legacy data_types are still live in the index — `dex_pools` **517,005** rows (454,077
+    captured) and `dex_swaps` **2,709,473** (2,642,483 captured) = **~3.23M legacy rows** to fold-then-delete, spanning
+    AAVE_V3/BALANCER/CURVE/GMX/KAMINO/JITO/... (canonical siblings `dex_pool_state` 20.14M / `dex_pool_swaps` 8.99M).
+  - **Rebuild VM liveness (heartbeat-freshness, NOT GCE status — the masking trap again):** at 11:39:00Z — **2023 DEAD**
+    (hb 08:34:29Z = 3h05m stale, 2.875M entries, GCE still says RUNNING); 2024 alive (15s, 4.24M, scan 2024-12-27); 2025
+    alive (23s, 4.17M, scan 2025-05-31); **2026 wedging** (hb 8m15s stale, scan 2026-07-18). 2023's tail days ARE
+    populated (12-30: 9,876 · 12-31: 6,084 vs ~10k norm) so 2023 needs at most a tail re-scan, not a year. **Suspected
+    mechanism for the wedge:** the reemit does `download_bytes()` of the whole 1.14GB index then `pd.read_parquet`
+    (string-heavy expansion) on a **16GB e2-standard-4** — every per-year VM pays it redundantly. Fix forward = relaunch
+    rebuild VMs on e2-highmem-8 (the proven migration-OOM remedy) and/or add column-projection + date-predicate pushdown
+    to the reemit read. Logged, not yet done.
+  - **MTDS QG: 4 failures -> 0.** Tests now **6520 passed / 0 failed**. En route I hit a 5th, unrelated blocker and
+    fixed it: `[5.70/6] IS-MTDS CONTRACT INTEGRITY` failed `0 contract calls < baseline` for
+    `massive_futures_backfill_handler.py` (8) and `massive_tradfi_rest_connector.py` (9) — both **deleted** by the
+    2026-07-19 Massive/Polygon.io source removal without their baseline entries being dropped, which blocked **every**
+    MTDS ship that got past tests, fleet-wide. Removed both entries per the checker's own documented remedy
+    (`check_adapter_contract_regression.py:175`); IS's `tradfi/massive.py` still exists so its entry is KEPT. Shipped
+    `pm@5cb2191ef`.
+  - **Also corrected in-flight:** my first dry-run fix (early-return before the index read) was WRONG — it broke
+    `test_rebuild_defi_manifest_cf11.py::test_dry_run_counts_but_does_not_write`, which intentionally requires a dry-run
+    to READ the index and COUNT what it would re-emit. Reverted; the dry-run tests now mock `read_availability_index`
+    instead, matching the CF-11 test's own pattern. Both contracts preserved.
+
+- **2026-07-20 (slot-4, /autonomous — UAC catalogue SHIPPED; ~~CF-11 re-run PROVEN necessary~~ [RETRACTED ABOVE]; 4 QG
+  failures root-caused).**
 
   - **T2 UAC SHIPPED `uac@3f79489f`** (on `origin/live-defi-rollout`, NOT yet on `main`). 9 venue-chains added in
     drift-guard lockstep (METEORA/LIFINITY/PHOENIX-SOLANA + CHAINLINK x5 + PYTH-SOLANA) across
