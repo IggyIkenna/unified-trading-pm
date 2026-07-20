@@ -94,9 +94,15 @@ audit record only.
 | 3   | `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove untested paths | ✅ **ARCHIVED** — 8/8, no residual          |
 | 4   | `ao_backlog_regen_integrity_2026_07_20.md`     | P1 — regen/bootstrap data-integrity defects + the two rulings        | ✅ **ARCHIVED** — 7/7                       |
 | 5   | `ao_worker_lifecycle_reap_2026_07_20.md`       | P1 — orphan-process reap + stale-dispatch reclaim                    | ✅ **ARCHIVED** — residual → Phase 8        |
-| 6   | `ao_dispatch_cooldown_and_park_2026_07_20.md`  | P1 — the ONE fleet cooldown store + durable auto-park                | 🔵 IN FLIGHT — code landed `ao@cfb211c`     |
+| 6   | `ao_dispatch_cooldown_and_park_2026_07_20.md`  | P1 — the ONE fleet cooldown store + durable auto-park                | ✅ **ARCHIVED** — 5/5, no residual          |
 | 7   | `ao_fleet_infra_hardening_2026_07_20.md`       | P1 — one state home, env-var sweep, frozen-clone visibility, QG cap  | 🟡 OPEN — overclaimed gate + operator-gated |
-| 8   | `ao_fleet_observability_kpis_2026_07_20.md`    | P1 — efficiency KPIs, escalator efficacy, plan_health throttle       | 🔵 IN FLIGHT — 5/6, AF-1b unblocked         |
+| 8   | `ao_fleet_observability_kpis_2026_07_20.md`    | P1 — efficiency KPIs, escalator efficacy, plan_health throttle       | 🟡 OPEN — AF-1b real code work (unblocked)  |
+
+**Live thread after this round**: `ao_fleet_observability_kpis`'s **AF-1b** (cap escalation redispatch per
+`escalation_id` on the now-shipped cooldown store) is genuine unblocked code work — no consumer keys
+`f"escalation:{id}"` onto the store yet, so `retry_queued_escalations()` still redispatches every queued escalation each
+AutoSpawnLoop tick with no per-id backoff before the `MAX_REESCALATIONS=1` ceiling. That plan stays active until AF-1b
+lands. Its other open item (AF-1a-followup) is a pure ~2026-07-27 re-measurement with an already-built tool.
 
 Also archived from this plan's lineage: `ao_config_env_var_consolidation_2026_07_18.md` (12/12 verified; its two
 operator-gated `.env.local` residuals → Phase 8).

@@ -136,6 +136,12 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       ≥`fleet_kpi_regression_multiple`× (default 5x) the prior-24h baseline — 73x clears that with wide margin, and the
       alert renders as a `:rotating_light:` line at the TOP of the very next digest post (interval default 24h,
       operator-configurable via `TuningDefaults.daily_summary_interval_seconds`).
+- [ ] [UI] P3. **(AF-5-followup) Wire the fleet-KPI dashboard React card.** The backend is done and tested
+      (`GET /api/fleet-kpis` returns dashboard-ready JSON, `agent-orchestrator@572bf25`); only the frontend card is
+      unbuilt. Deferred at ship time because `dashboard/` had no `node_modules` in that environment and the UI rule
+      requires a cited Playwright regression spec before a UI tick counts. **Converted from prose to a tracked todo
+      2026-07-20** (was a Progress-Log-only deferral — the workspace HARD RULE is that every deferral is a `- [ ]`).
+      **Gate**: the card renders the KPI JSON on the dashboard + a cited `pw:L2 ✓` regression spec.
 - [x] [INFRA] P2. ✅ **(AF-4) Assert disaster-recovery snapshot RECENCY.** — `agent-orchestrator@3fd6129` (2026-07-20).
       **(a) Re-measured S3 last-modified LIVE** (`aws s3api head-object` against `uts-orchestrator-state-427895769566`,
       this session, not a probe): the light `state.json` snapshot (`upload_state_to_s3`, ~30min cadence) is HEALTHY (~3
