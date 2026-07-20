@@ -426,6 +426,16 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > additive per-VM-shard writes (the EU floor-clip only "got lucky on timing" —
 > `tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`).
 
+> **✅ CASING FREEZE LIFTED 2026-07-20, operator ruling D1.** The Phase-B `instrument_type` case-migration script's
+> `--apply` was frozen pending the contested manifest COLUMN-case axis (C2a) — this plan's Phase-B said UPPERCASE while
+> `codex/02-data/cross-asset-canonical-target-ssot.md` §7/§11 said lowercase, both citing the same operator on
+> 2026-07-18. **D1 ruled UPPERCASE (catalogue wins)**, recorded in
+> [`data_pipeline_reconciliation_skill_2026_07_20.md`](data_pipeline_reconciliation_skill_2026_07_20.md) § "OPERATOR
+> DECISIONS — ALL THREE RULED 2026-07-20"; the codex has been corrected to match. The Phase-B script is **RATIFIED** and
+> its casing freeze is **LIFTED**. The pre-migration DRAIN gate above is a **separate, still-live** operational
+> precondition — D1 does not lift that one. Scope: manifest **COLUMN only** (path segment stays lowercase, id middle
+> segment stays UPPER).
+
 > **Phase-B design (empirically grounded, scoping workflow `wf_2f2c9a39-164`, full design in scratchpad `scope_B.md`):**
 > The old `migrate_tradfi_single_leg_product_root_lin_2026_07_09.py` is a **CONFIRMED NO-OP** — its `_ID_RE` matches an
 > intermediate `CME:FUTURE:GOLD-20260821` shape that NEVER persisted; every real raw id (`CME:OPTION:E1AF0 C1600`,
@@ -622,8 +632,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   `build_instrument_catalogue.py` self-refresh durability fix. **Open sub-nuance**: the top-level combo id being
   strategy-named (`CME:COMBO:SP500-BUTTERFLY-…` from `build_combo_id`) vs the operator's "no separate strategy field,
   infer from legs" spec — resolve when combos are worked; doesn't block.
-- **ETF** — keep `etf` as a distinct canonical instrument_type (ETF ≠ equity; IBIT/ETHA are MVP crypto-ETFs); case-fold
-  `ETF`→`etf`. (Flag if you'd rather fold ETF into `equity` — 270,460 rows either way.)
+- **ETF** — keep ETF as a distinct canonical instrument_type (ETF ≠ equity; IBIT/ETHA are MVP crypto-ETFs); case-fold
+  the manifest COLUMN **UP** to `ETF`. (Flag if you'd rather fold ETF into `EQUITY` — 270,460 rows either way.)
+
+  > **⛔ corrected 2026-07-20, operator ruling D1.** ~~Was: "keep `etf` … case-fold `ETF`→`etf` … fold ETF into
+  > `equity`"~~ — that ordered the fold DOWN, contradicting this same plan's Phase-B decision at :466-468 (UPPERCASE
+  > enum, catalogue is SSOT). D1 ratifies UPPERCASE for the manifest COLUMN; the fold direction is **UP**. The GCS
+  > **path** segment stays lowercase (`instrument_type=etf`) and the id middle segment stays UPPER — neither changed.
+
 - **~591k instrument_type MISLABELS** (options/combos stamped `future`/`FUTURE`) → re-stamp from the classifier by BODY,
   not the stored column (the plan's cited "~400k" is the lowercase-`future` subset; the 206,200 `FUTURE` calendar
   spreads are an additional cohort).
@@ -631,11 +647,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 **Live manifest worklist (`market-data-tick-tradfi-prd`, 5.55M rows; canonical id ≈0.02%, ZERO derivative ids carry
 `@LIN/@INV`)** — venue/data_type/source/pipeline_mode are CLEAN; instrument_type + instrument_id are the work:
 
+> **⛔ CASE DIRECTION CORRECTED 2026-07-20, operator ruling D1** — recorded in
+> [`data_pipeline_reconciliation_skill_2026_07_20.md`](data_pipeline_reconciliation_skill_2026_07_20.md) § "OPERATOR
+> DECISIONS — ALL THREE RULED 2026-07-20". **This table previously ordered the `instrument_type` case-fold DOWN to
+> lowercase** (row 1: `FUTURE`/`EQUITY`/`SPOT_PAIR`/`FUTURES` → "lowercase", 750,715 rows; row 3: `etf`/`ETF` → `etf`,
+> 270,460 rows) — **directly contradicting this same plan's own Phase-B decision at :466-468**, which ordered the
+> migration UP to the UPPERCASE catalogue enum. The row counts are unchanged and preserved below; **only the direction
+> is corrected — the fold is UP.** This applies to the manifest `instrument_type` **COLUMN only**: the GCS **path**
+> segment stays lowercase and the instrument-id **middle** segment stays UPPER. Neither was ever in question.
+
 | dimension       | non-canonical                                   | canonical target                                 |     ~rows | action                          |
 | --------------- | ----------------------------------------------- | ------------------------------------------------ | --------: | ------------------------------- |
-| instrument_type | `FUTURE`/`EQUITY`/`SPOT_PAIR`/`FUTURES`         | lowercase                                        |   750,715 | case-fold                       |
+| instrument_type | `future`/`equity`/`spot_pair`/`futures`         | UPPERCASE enum ~~lowercase~~ (D1)                |   750,715 | case-fold **UP**                |
 | instrument_type | `combo` (null id + null combo_type)             | leg-aware `VENUE:COMBO:…` + `leg_weights`        | 1,154,976 | synthesize (see combo decision) |
-| instrument_type | `etf`/`ETF`                                     | `etf` (case-fold)                                |   270,460 | case-fold                       |
+| instrument_type | `etf`/`ETF`                                     | `ETF` ~~`etf`~~ (D1)                             |   270,460 | case-fold **UP**                |
 | instrument_type | `NULL`/`''`                                     | populate from writer grain                       |   596,851 | resolve                         |
 | instrument_type | MISLABEL `future`=option/combo, `FUTURE`=spread | relabel from id                                  |   591,183 | relabel                         |
 | instrument_id   | prefixed missing `-USD` (`NYSE:EQUITY:DUK`)     | `…-USD`                                          | 1,762,272 | append quote                    |
