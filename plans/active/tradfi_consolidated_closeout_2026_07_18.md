@@ -1518,8 +1518,29 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Deferred work after 2026-07-20 (tick 26)
 
-| Item                                                                       | Why deferred                                             | Tracked in                                                     |
-| -------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------- |
-| Drop 686,005 stale `batch_massive` manifest rows + re-stamp 16,389 phantom | force-rebuild won't drop; live index contended by a peer | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
-| Object-walk id re-derivation for (c) blank-id ↓ + (d) `-USD@LIN`           | needs `rebuild_tradfi_manifest.py`; coordinate with peer | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
-| manifest-vs-disk consistency check (captured with no object = loud fail)   | P1 hardening, prevents phantom-row recurrence            | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| Item                                                                               | Why deferred                                                                                                           | Tracked in                                                     |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| ✅ ~~Drop 686,005 stale `batch_massive` + phantom manifest rows~~ **DONE tick 27** | applied surgically (see tick 27)                                                                                       | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| Object-walk id re-derivation for (c) blank-id ↓ + (d) `-USD@LIN`                   | needs `rebuild_tradfi_manifest.py` + 2nd surgical drop (id ∈ dedup key); largely mooted by catalogue rebuild + enum-v2 | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| manifest-vs-disk consistency check (captured with no object = loud fail)           | P1 hardening, prevents phantom-row recurrence                                                                          | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+
+- **2026-07-20 (slot-1, tick 27) — ✅ Post-purge tradfi tick `_index` surgical cleanup (a)+(b) APPLIED +
+  durability-proven; (c)/(d) scoped.**
+  - **Field was CLEAR for the tick `_index`** (the only in-flight peer rebuild, `rebuild_gated.py` PID 78208, writes the
+    instruments-store CATALOGUE, not this tick bucket; only per-VM shard = frozen `_legacy_seed`). Consolidator PAUSED
+    (`uts-prod-manifest-consolidator-market-data-tradfi-cron`) → snapshot
+    `_index/snapshots/pre_manifest_surgical_cleanup_20260720T200716Z.parquet` (gen `1784578000150929`) → CAS write
+    (`if_generation_match`) → RESUMED + watched **2 clean no-op cycles** (no resurrection, no
+    `ManifestConsolidatorStaleError`).
+  - **CRITICAL: the "16,389 phantom" was CONTAMINATED.** On-disk re-verification of all 2,393 candidate `(venue,day)`
+    prefixes found 79 shards actually HAVE `batch_databento` objects (CME = databento-native GLBX) carrying **12,790
+    real captured rows**. TRUE phantom = **3,615** rows (3,413 zero-object shards). Blind-dropping the stale list would
+    have deleted 12,790 rows of real coverage.
+  - **Applied**: dropped **686,005** `batch_massive` (GCS re-verified 0 objects, 12 sampled days) + **3,615**
+    disk-verified phantom → 5,209,585 → **4,519,965**; `schema_version` preserved **int64**; markers preserved. New gen
+    `1784578157569319`.
+  - **(c)/(d) scoped, not forced**: (d) already **91.08% `-USD@LIN`** (the "0%" was pre-migration); (c) real defect is
+    ~82k blank-no-underlying (1.76M "blank" are legit Option-A bundle atoms). Object-walk re-derivation is entangled
+    (`instrument_id` ∈ `_OPTIONAL_DEDUP_COLS` → new key, not a flip) → P1 follow-up.
+  - **Ships (docs)**: `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL"; issue doc
+    `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md` (a)+(b) → RESOLVED.

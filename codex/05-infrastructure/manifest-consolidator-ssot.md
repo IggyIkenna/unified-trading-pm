@@ -516,6 +516,41 @@ sports IS canonical, reopening the L6/E8 data-loss gate
   consolidator's own `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` (0.1%, observability-only) is the sibling check on the
   merge side.
 
+## Surgical ROW REMOVAL from the canonical — a paused-consolidator CAS drop, never a force-rebuild (2026-07-20)
+
+**A force-rebuild does NOT drop rows — a DELETION correction survives it trivially (the deletion-resurrection gap).**
+`consolidate(force=True)` re-scans 100% of the canonical's CURRENT state; a row you removed from the canonical is simply
+the ONLY row for its key on the next rebuild, so it survives (`manifest_consolidator.py:850-862`,
+`legacy_seed_captured_outranks_resurrection_risk_2026_07_15`). Additive per-VM-shard rebuilds
+(`rebuild_tradfi_manifest.py`) also can't drop — the consolidator MERGES them with the stale canonical. **The only way
+to remove rows is a SURGICAL in-place rewrite of `_index/availability_index.parquet`.** The recipe (validated live on
+the tradfi tick `_index`, 2026-07-20 — dropped 686,005 `batch_massive` + 3,615 disk-verified phantom rows, 5,209,585 →
+4,519,965):
+
+1. **PAUSE** the bucket's consolidator Cloud Scheduler cron
+   (`gcloud scheduler jobs pause <job>-cron --location asia-northeast1`); record the resume command; verify no in-flight
+   execution (no `_index/consolidator.lock`, last write settled).
+2. **SNAPSHOT** the exact generation to `_index/snapshots/pre_<slug>_<ts>.parquet`
+   (`gcloud storage cp <index>#<gen> <snapshot>`) — soft-delete gives a 7-day restore window on top.
+3. **Re-derive the drop set against LIVE DISK, never a stale heuristic list.** A "captured with no object" list goes
+   stale the moment a backfill fills a cell — a 2026-07-20 phantom list was **22% contaminated** (CME is a
+   databento-native GLBX venue that genuinely holds historical tbbo/trades), so a blind drop would have deleted ~12,790
+   real captured rows. Verify EACH candidate shard on disk; drop only genuinely-zero-object shards (safe
+   under-approximation).
+4. **Edit at the Arrow level to preserve the EXACT schema** — especially `schema_version` **int64** (do not regress
+   `mtds@ac051bfe`). `pq.read_table` → boolean `.filter` → `pq.write_table`; assert `schema.equals(source)` +
+   residual-drop-target == 0.
+5. **CAS write** with `if_generation_match=<snapshotted gen>` (mirror `_write_consolidated`); ABORT on drift, never
+   blind-overwrite. **Preserve `consolidator_content_write_at`** (keeps the next cycle a no-op) and refresh
+   `consolidator_run_at`.
+6. **RESUME** the cron; watch ≥2 cycles — a durable drop shows `verdict=empty, shards_changed=0, rows_added=0` and the
+   row count holds. **Durability holds because `_legacy_seed` is EXCLUDED from every merge path once a canonical
+   exists** (`manifest_consolidator.py:783` marker-strip branch, `:873-875` force branch; the incremental path never
+   reaches its old mtime). Any OTHER standing per-VM shard would re-add its rows on merge, so this recipe is safe only
+   when the drop target lives solely in the canonical + `_legacy_seed`. Even a marker strip is now recoverable — a
+   missing `consolidator_content_write_at` fails CLOSED (merge, prune nothing), never a silent drop. SSOT for the
+   finding: `plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`.
+
 ## Composes with
 
 - CLAUDE.md § "Manifest + Honest Absence" — every row in canonical OR per_vm shard is either `captured` /
