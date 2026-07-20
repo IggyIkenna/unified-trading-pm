@@ -771,10 +771,10 @@ Discriminator = **does a manifest row exist**.
     corpus rebuild is therefore self-throttling as it grows. Options: chunk shards per (year, quarter), append-only
     row-group writes, or a periodic shard roll. **Not attempted here — it is a UTL writer change with fleet-wide blast
     radius.**
-  - **✅ SHIPPED `mtds@<see next entry>`: CF-11 row_key + the `_index` projection + the dry-run test contract.** MTDS QG
-    green (**6520 passed / 0 failed**, `MTDS_QG6_EXIT=0`). Note the ship took 7 QG cycles — the tree is hot (peers
-    pushed `service_config.py` / `test_library_contracts.py` / the RULE-11 re-pin mid-run), so each cycle raced a
-    sentinel invalidation.
+  - **✅ SHIPPED `mtds@2c88b269`: CF-11 row_key + the `_index` projection + the dry-run test contract.** MTDS QG green
+    (**6520 passed / 0 failed**, `MTDS_QG6_EXIT=0`). Note the ship took 7 QG cycles — the tree is hot (peers pushed
+    `service_config.py` / `test_library_contracts.py` / the RULE-11 re-pin mid-run), so each cycle raced a sentinel
+    invalidation.
   - **Another agent independently shipped the same RULE-11 re-pin** (`mtds@e639c71f`, agt-966a47, "DEFI 2403→2646
     (uac@3f79489f added 9 DeFi venues)") — it cites MY UAC commit. My identical local edit became a stash-pop conflict;
     I resolved in favour of the committed version (theirs carries the same 98x27 arithmetic) and dropped mine. **No
