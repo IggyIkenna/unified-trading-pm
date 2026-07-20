@@ -264,14 +264,19 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   oracle answers PATH STRUCTURE ONLY — it does NOT validate the filename instrument_id** (drops the last segment; stem
   rule is tradfi-gated), so ~811,200 wire-named cefi objects read CANONICAL — structure and id-form are ORTHOGONAL,
   neither alone proves canonical; check id-form separately or say it wasn't checked →
-  `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`. **An absence result is evidence ONLY
-  once you confirm you probed the vocabulary the WRITER emits** (Solana AMM writes `instrument_type=solana_amm_pool`,
-  not `pool` — this exact slip produced a false "twin absent" verdict 2026-07-20). **`dex_pools/` + `lending_indices/`
-  are DO-NOT-DELETE** (stale delete order; no twin for KAMINO/SOLEND) →
+  `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`. The oracle is ALSO **value-blind**
+  (never checks `instrument_type`/`data_type`/`venue`/`chain` VALUES vs their enums) — the **distinct-value CENSUS**
+  (manifest via deployment-api `_axis_census.py`; GCS via delimiter descent) is the cheap vocabulary complement; heavy
+  **per-datapoint id+schema** validation runs on a **Tier-2 SPOT VM** (one sanctioned single-walk), NEVER in-session →
+  `…/reconciliation-census-and-compute-tiers.md`. **C2a instrument_type COLUMN casing + defi market/event `LENDING` are
+  RULED (D1/D2 2026-07-20) but `migration_pending`** — compare case-insensitively, do NOT flag, do NOT refuse. **An
+  absence result is evidence ONLY once you confirm you probed the vocabulary the WRITER emits** (Solana AMM writes
+  `instrument_type=solana_amm_pool`, not `pool` — this exact slip produced a false "twin absent" verdict 2026-07-20).
+  **`dex_pools/` + `lending_indices/` are DO-NOT-DELETE** (stale delete order; no twin for KAMINO/SOLEND) →
   `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`. SSOTs:
   `codex/02-data/four-surface-reconciliation-procedure.md`, `…/reconciliation-finding-taxonomy.md`,
   `…/gcs-and-manifest-delete-safety-protocol.md`, `…/non-canonical-path-inventory.md`,
-  `…/canonical-cutover-register.md`, `…/orphan-object-detection.md`.
+  `…/canonical-cutover-register.md`, `…/orphan-object-detection.md`, `…/reconciliation-census-and-compute-tiers.md`.
 - **`pipeline_mode` / sourcing?** SOURCE-AWARE `{mode}_{source}[_{transport}]` (`source`=VENDOR only; GCS paths carry it
   left of `asset_group=`, readers PREFIX-MATCH) → `codex/02-data/pipeline-mode-partition.md`. **TradFi/Databento** (3
   datasets billing-fail-closed; `SOURCE_PRIORITY` databento-first; backfill silent-0-row gotchas; VIX=VX-futures via

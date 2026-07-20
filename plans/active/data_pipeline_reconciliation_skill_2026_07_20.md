@@ -352,9 +352,9 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       read-recognition carve-out are handled without flagging accepted exceptions.
 - [ ] 18. [DATA] P1. Run for **prediction** and **sports**; confirm the CQG manifest-only grain and the
       no-`asset_group=` sports tree produce zero structural false positives.
-- [ ] 19. [REVIEW] P1. **Post-phase codex audit** — verify every new/edited codex doc is internally consistent and that
-      no plan↔codex drift remains; add the one-liner + conditional-domain pointer to `cursor-configs/CLAUDE.md` (honour
-      the 40 KB cap — condense, never raise it).
+- [x] 19. ✅ [REVIEW] P1. **Post-phase codex audit** — verify every new/edited codex doc is internally consistent and
+      that no plan↔codex drift remains; add the one-liner + conditional-domain pointer to `cursor-configs/CLAUDE.md`
+      (honour the 40 KB cap — condense, never raise it).
 
 ### Phase D — apply the 2026-07-20 operator rulings (D1 / D2 / D3)
 
@@ -363,9 +363,10 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       UPPER — neither was in question), with a dated ruling annotation. Correct the tradfi closeout's self-contradicting
       worklist (it orders a case-fold in the opposite direction, 750,715 rows) to fold UP. Record that the DRAIN-GATED
       freeze on `instruments-service@555ddf1c` + the tradfi Phase-B script is **lifted** (they are now ratified).
-- [ ] 21. [SCRIPT] P0. **D1 — stop refusing the axis in the skill.** Remove the C2a refusal from `SKILL.md` § 3e and the
-      taxonomy's REFUSED-axes section; replace with the enforced rule (column = UPPERCASE) plus a `migration_pending`
-      exception entry for the defi rows not yet migrated UP. The case-insensitive comparison workaround comes out.
+- [x] 21. ✅ [SCRIPT] P0. **D1 — stop refusing the axis in the skill.** Remove the C2a refusal from `SKILL.md` § 3e and
+      the taxonomy's REFUSED-axes section; replace with the enforced rule (column = UPPERCASE) plus a
+      `migration_pending` exception entry for the defi rows not yet migrated UP. The case-insensitive comparison
+      workaround comes out.
 - [x] 22. ✅ [DATA] P0. **D2 — banner codex §5 with the prerequisite.** §5's "flat `LENDING` is RETIRED" is now the
       correct TARGET; add a dated banner stating it is **not yet implemented**, that the first attempt was reversed
       after breaking 5+ MTDS lending writers, and that the mandatory order is **fix-writers → migrate ~16.7M rows →
@@ -501,17 +502,17 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 
 - [x] 26. ✅ [DATA] P1. **Codex SSOT for census + per-datapoint + compute tiers** —
       `codex/02-data/reconciliation-census-and-compute-tiers.md` landed. Provenance: G1–G4 operator ask.
-- [ ] 27. [SCRIPT] P1. **Wire § 3f distinct-value census into the skill.** Manifest via `get_axis_value_census`, GCS via
-      delimiter descent, three comparisons, suppression — reusing `_axis_census.py` +
+- [x] 27. ✅ [SCRIPT] P1. **Wire § 3f distinct-value census into the skill.** Manifest via `get_axis_value_census`, GCS
+      via delimiter descent, three comparisons, suppression — reusing `_axis_census.py` +
       `_distinct_values._comparison_set`; no endpoint change. Codex SSOT § 1.
-- [ ] 28. [DATA] P0. **Taxonomy delta — add the three new finding-types** (`non_canonical_axis_value`,
+- [x] 28. ✅ [DATA] P0. **Taxonomy delta — add the three new finding-types** (`non_canonical_axis_value`,
       `shard_atom_vocab_desync`, `non_canonical_id`) to `reconciliation-finding-taxonomy.md`; update the count line +
       delete-eligibility table. Do this in the SAME taxonomy pass as todo 21 (the C2a + decision-D refusal removals).
       Blocks 27/30.
 - [ ] 29. [DATA] P1. **Extend four-surface procedure § 5 with route-#3 usage + Tier-2 note** — the Tier-2 VM IS the
       sanctioned single walk for S2 content; skill read-back is a manifest-index read (exempt); G2/G3 bundle onto the
       one walk. Codex SSOT § 3.
-- [ ] 30. [SCRIPT] P1. **Wire § 3g + § 7 compute tiers into the skill** (id/schema legs; Tier-1 ≤500-sample smoke;
+- [x] 30. ✅ [SCRIPT] P1. **Wire § 3g + § 7 compute tiers into the skill** (id/schema legs; Tier-1 ≤500-sample smoke;
       Tier-2 read from the `datapoint-validation` results index). Depends on 28.
 - [ ] 31. [INFRA] P1. **Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind BEFORE any launch**
       (real `VmPrefixSpec` EPHEMERAL_BATCH entries in `vm_prefix_registry.py`, the `datapoint-validation`
@@ -519,5 +520,5 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 - [ ] 32. [SCRIPT] P1. **Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py`** — modeled on
       `launch-manifest-recon-all-vm.sh`; SPOT + PROGRESS.json resume; reuses `validate_dataframe` +
       `build_canonical_instrument_id`; writes the results manifest. Depends on 31. Lifecycle marker required.
-- [ ] 33. [DATA] P2. **Per-AG reference-sheet census nuance line** (defi chain axis + case-insensitive; cefi EXACT +
+- [x] 33. ✅ [DATA] P2. **Per-AG reference-sheet census nuance line** (defi chain axis + case-insensitive; cefi EXACT +
       dual chain-tail; tradfi batch_massive suppress; prediction conditionId; sports entity-keyed).
