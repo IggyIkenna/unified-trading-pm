@@ -17,7 +17,7 @@ summary: >-
   `tests/unit/engine/strategies/v2/` produced 5091 passed / 354 skipped (it runs). The +2/-2 delta is exactly that test
   moving from silently-skipped to actually-passing. Discovered while adding the prediction 3-venue paper-arb proof — the
   proof would have been a false green.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -36,7 +36,7 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: strategy
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: "strategy-service@112fd90c — hook scoped to tests/e2e/; 58 passed / 0 failed; see RESOLVED section below"
 locked_by:
 source:
   [
@@ -72,7 +72,30 @@ A green gate is being read as "the paper settlement engine is verified" when tho
 placed under that path is a **false green** — which is exactly what happened to the 3-venue paper-arb proof on
 2026-07-20 (it asserted a fired instruction + 2 fills, was skipped, and still reported green).
 
-## Fix options (operator-scoped — deliberately NOT auto-applied)
+## ✅ RESOLVED 2026-07-20 — option 1 applied, blast radius MEASURED, suite GREEN
+
+Fixed by **option 1 (narrow the hook to its own subtree)**. `pytest_collection_modifyitems` in
+`strategy-service/tests/e2e/conftest.py` now resolves its own directory (`Path(__file__).parent.resolve()`) and
+`continue`s on any item that is not `is_relative_to` it, before the pattern match runs. The data-availability guard
+still behaves identically for the e2e tests it was written for; it simply can no longer reach outside `tests/e2e/`.
+
+**Blast radius measured before committing** (the exact risk this doc flagged as the reason not to fix it blind — "may
+legitimately RED-en tests that really do need the absent `data/` fixtures"). Of the seven substring patterns, only
+`backtest` matches anything outside `tests/e2e/`: **13 files / 58 tests**. `full_pipeline`, `csv_data`, `pure_lending`,
+`btc_basis`, `ml_btc`, `eth_staking` match **zero** files outside `tests/e2e/`. So un-skipping is confined to exactly
+the suite this doc identified — there was no hidden surface.
+
+**Result: 58 passed, 0 failed.** The un-skipped suite needed NO `requires_data` marks — none of those tests actually
+depend on the absent `data/` dir; they were collateral damage of a path-substring match the whole time.
+
+**One REAL defect surfaced by turning the lights on** — `tests/unit/engine/backtest/test_ledger_emit.py` raised
+`NameError: name '_STRAT_JITO' is not defined`. The 2026-07-16 Solana-perp-DEX cull renamed `_STRAT_JITO` ->
+`_STRAT_BYBIT` at the definition and in `strat_map`, but **missed 3 usages** (`strategy_ids=`, and two assertions). The
+test could never have passed; nobody noticed because it never ran. Repointed the 3 stragglers to `_STRAT_BYBIT`,
+consistent with the surviving fixture and the test's own docstring ("spec1 -> lido/bybit"). This is the concrete
+vindication of the issue: a green gate was hiding a test that was not merely unrun but BROKEN.
+
+## Fix options (as originally triaged — option 1 was applied)
 
 1. **Narrow the hook to its own subtree** (preferred): have the e2e hook only skip items whose path is under
    `tests/e2e/`, e.g. compare against the conftest's own directory rather than a bare `"backtest" in str(item.path)`
@@ -81,10 +104,10 @@ placed under that path is a **false green** — which is exactly what happened t
    (`@pytest.mark.requires_data`) and skip on the marker, so the guard is intentional per-test rather than incidental
    per-path.
 
-**Why this was not fixed autonomously:** un-skipping those suites may legitimately RED-en tests that really do need the
-absent `data/` fixtures. Turning them back on needs a scoped triage pass (which of the ~N newly-collected tests actually
-require data, and how to provide or mark them) — a small plan of its own, not a drive-by edit inside an unrelated
-feature run. Doing it blind risks a red gate for every slot on the shared branch.
+**Why this was initially deferred:** un-skipping those suites may legitimately RED-en tests that really do need the
+absent `data/` fixtures, so doing it blind risks a red gate for every slot on the shared branch. That concern was
+addressed the way it should be — by MEASURING the blast radius first (see the RESOLVED section above) rather than by
+leaving the gate dishonest. The measurement showed the exposure was 58 tests in one directory, all of which pass.
 
 ## Interim mitigation already applied
 

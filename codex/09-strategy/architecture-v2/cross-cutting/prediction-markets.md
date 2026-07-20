@@ -2,22 +2,40 @@
 doc_type: codex-ssot
 title: Prediction Markets — Cross-Cutting Concern
 summary:
-  'Prediction markets (Polymarket/Kalshi) as a three-role surface — feature source, execution venue, arb surface — plus
-  a three-tier classification (use-case × domain × equivalent-instrument), the `canonical_question_group` recurring-market
-  SSOT, and per-market lifecycle timestamps. Kalshi API host is now `api.elections.kalshi.com`.'
+  "Prediction markets (Polymarket/Kalshi) as a three-role surface — feature source, execution venue, arb surface — plus
+  a three-tier classification (use-case × domain × equivalent-instrument), the `canonical_question_group`
+  recurring-market SSOT, and per-market lifecycle timestamps. Kalshi API host is now `api.elections.kalshi.com`."
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [prediction, strategy, features, execution, arbitrage, instruments, uac]
 related:
-  [../../operational/prediction-markets-codification-gaps.md, ../../../02-data/prediction-schema-paths.md,
-  ../../../04-architecture/instruments-live-architecture.md]
+  [
+    ../../operational/prediction-markets-codification-gaps.md,
+    ../../../02-data/prediction-schema-paths.md,
+    ../../../04-architecture/instruments-live-architecture.md,
+  ]
 created: 2026-03-27
-authoritative_for: [prediction-markets three-role model (feature/execution/arb) + three-tier market classification framework]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/operational/prediction-markets-codification-gaps.md, plans/epics/predictions_master.md]
+authoritative_for:
+  [prediction-markets three-role model (feature/execution/arb) + three-tier market classification framework]
+referenced_by:
+  [
+    codex/09-strategy/README.md,
+    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    codex/09-strategy/operational/prediction-markets-codification-gaps.md,
+    plans/epics/predictions_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-22
 code_refs:
@@ -290,6 +308,15 @@ Polymarket CLOB adapter (`polymarket_clob.py`) or Kalshi adapter (`kalshi.py`).
 
 The Polymarket CLOB adapter uses `py-clob-client` for order placement on the CLOB (Central Limit Order Book) -- not the
 legacy Gamma API. Kalshi adapter uses the Kalshi REST API with authenticated trading endpoints.
+
+> **⚠️ This section describes the LEGACY `prediction_arb/` strategy — NOT the v2 archetype.** The v2 cross-venue
+> detector is a separate, currently-shipping code path: `features-service` `cross_venue_arb_detector.py` +
+> `strategy-service` `arbitrage_structural/prediction_venue_dispersion.py`. It differs in three ways that matter: (1) it
+> is an **N-venue best-pair scan** over Kalshi / Polymarket / **Betfair** (odds de-vigged to probabilities), not a fixed
+> venue pair; (2) it gates on **NET-of-fees** edge (`gross − fee(buy_leg) − fee(sell_leg) >= entry_threshold`), so the
+> "~2.5% after fees" rule of thumb above is superseded by an explicit per-venue fee model; (3) Betfair is
+> **BUY-YES-only** today because persisted odds are BACK-side only. **SSOT:**
+> [`../../../04-architecture/cross-venue-prediction-arb-detection.md`](../../../04-architecture/cross-venue-prediction-arb-detection.md).
 
 **Cross-platform matching** uses `CanonicalPredictionMarket` from `prediction_mapping.py` to normalize event
 descriptions across venues into matchable canonical forms.

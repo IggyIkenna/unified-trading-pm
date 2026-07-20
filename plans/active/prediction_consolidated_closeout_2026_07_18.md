@@ -1344,3 +1344,88 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     marks) and the matched-leader compensation offset (`cancel_bet` is a no-op on an already-MATCHED leader, so the
     report could claim `naked_position=False` over real exposure — replacing it with a genuine offsetting bet, and
     reporting naked+reason honestly if the offset itself fails). Plus the post-phase CODEX audit the operator asked for.
+
+- **2026-07-20 (slot-2, autonomous tick 31) — POST-PHASE CODEX AUDIT shipped + the two "operator-scoped" leftovers FIXED
+  and verified. The autonomous scope is now CLOSED; only the three genuinely operator-gated items remain.**
+  - **Codex audit (the operator's explicit ask: "is this documented in codex strategy docs archetypes etc" — the answer
+    at the time was NO, and that was a real review-blocking omission: the work lived in plans + issue docs, which
+    ARCHIVE, never in codex, which is the durable SSOT).** Four docs now match shipped reality:
+    - `codex/04-architecture/cross-venue-prediction-arb-detection.md` — rewritten as the N-venue SSOT
+      (Kalshi/Polymarket/Betfair): the Betfair de-vig via book-sum overround normalization, **Betfair is BUY-YES-ONLY
+      today** flagged as "the load-bearing limitation", the net-of-fees entry gate with pseudo-code
+      (`net = gross − fee(buy_leg) − fee(sell_leg)`; fire iff `net >= entry_threshold AND buy_venue != sell_venue`),
+      null-skip so a phantom edge cannot win, the GCS arb store, and `code_refs` pointing at the execution bridge.
+    - `codex/04-architecture/strategy-execution-protocol.md` — NEW subsection under `ATOMIC` recording what the protocol
+      ACTUALLY implements today vs what the schema merely declares: the `atomic_leg_executor` LEADER_HEDGE semantics,
+      the PAPER-by-default safety property (`create_sports_adapter(mode)`, a missing/None mode is PAPER and never live),
+      and — stated plainly rather than left implied — **that the LIVE runtime seam is still ABSENT** and why the T4 tier
+      ban means it needs a transport decision rather than a direct call.
+    - `codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md` — Variant C
+      (cross-venue-prediction-dispersion, N-venue best-pair scan gated on NET-of-fees edge).
+    - `codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md` — its arb section documents the LEGACY
+      `prediction_arb/` strategy, which is a DIFFERENT code path from the v2 archetype. Rather than rewrite a doc I do
+      not own, added a scoped banner marking it as not-the-v2-path and pointing at the detector SSOT, and noting its
+      "~2.5% after fees" rule of thumb is superseded by the explicit per-venue fee model.
+  - **Matched-leader compensation offset — FIXED (`execution-service`, 23/23 green).** `cancel_bet` is a NO-OP at the
+    venue on already-matched stake, so the report could have claimed `naked_position=False` over a real open position —
+    a false clean report on the real-money path. The unwind is now STATUS-AWARE (resting -> cancel · MATCHED -> a real
+    opposite-side bet sized to the **FILLED** stake · PARTIALLY_MATCHED -> cancel the remainder then offset the fill ·
+    SETTLED/REJECTED/CANCELLED -> no exposure). `naked_position=False` is now reported ONLY on a venue-confirmed unwind;
+    a rejected offset, a venue that cannot express the opposite side, or a partial fill with no `filled_stake` to size
+    against all fail safe to naked+reason. **Reviewed the inherited work rather than trusting it** and found two
+    `BetStatus` members left unclassified (`REJECTED`, `CANCELLED`) falling through to "exposure UNKNOWN" — which would
+    have raised a FALSE naked alarm; now classified. Honest scope note: that particular path is defensive, not currently
+    reachable, since compensation only runs on a successfully-placed leader.
+  - **CI integrity — FIXED (`strategy-service`), and it caught a genuinely broken test.** The e2e conftest hook is now
+    scoped to its own subtree, so `tests/unit/engine/backtest/` actually RUNS: **58 passed, 0 failed**, no
+    `requires_data` marks needed — those tests never depended on the absent `data/` dir, they were collateral damage of
+    a path-substring match. **Measured the blast radius BEFORE committing** (the exact risk the issue doc flagged as the
+    reason not to fix it blind): of the seven patterns only `backtest` reaches outside `tests/e2e/` (13 files / 58
+    tests); the other six match zero. Turning the lights on exposed `NameError: _STRAT_JITO` in `test_ledger_emit.py` —
+    the 2026-07-16 Solana-perp-DEX cull renamed it to `_STRAT_BYBIT` at the definition and in `strat_map` but missed 3
+    usages, so the test could NEVER have passed and nobody noticed because it never ran. Fixed. Swept the fleet for the
+    same class: `execution-service`'s global hook keys on MARKERS not path substrings, so it is correct;
+    strategy-service was the only instance.
+  - **PROCESS LESSON (third variant of the same family this run): quickmerge can exit 0 having committed NOTHING.** The
+    codex ship hit a Pass-1 sentinel race — a peer's commits changed 3871 files under me, so the sentinel was no longer
+    valid for the tree — and quickmerge bailed with a "re-run quality-gates" instruction and **exit code 0**. Verifying
+    the sha (`git log --grep` -> `merge-base --is-ancestor origin/live-defi-rollout`) is what caught it; trusting exit 0
+    would have recorded a tick that never landed. The family so far: (1) `2>/dev/null` hiding a hook rejection, (2)
+    untracked files silently not staged, (3) a sentinel race exiting 0. **Never treat quickmerge exit 0 as proof —
+    always verify the sha contains the files AND is an ancestor of `origin/live-defi-rollout`.**
+  - **Collateral unblock (not mine, fixed because it blocked EVERY slot): `plan-health-bot`'s own auto-fix left
+    `plans/active/issues/defi_available_at_clobbered_by_wallclock_2026_07_20.md` with INVALID YAML** —
+    `docs(plans): auto-fix plan hygiene at the gate [plan-health-autofix]` (`44e1fb449`, committed to LDR ~26 min before
+    I hit it) rewrote `summary:` as an unquoted multi-line plain scalar containing `...backfill: the shipped...`, and a
+    colon-space inside a plain scalar parses as a mapping key. That fails `check_frontmatter_schema` corpus-wide, so it
+    was blocking the PM QG — and therefore any PM ship — for every slot on the branch, not just mine. Fixed to
+    `summary: >-` (a folded block scalar, where colons are literal — the form 36 other issue docs already use). Two
+    further violations were HIDDEN BEHIND the parse error and surfaced only once YAML parsed (`source:`
+    required-missing, `resolved_by:` must be present-but-empty); both added. Corpus back to **1672 docs / zero
+    violations**. Ownership checked before touching it per multi-agent safety: committed shared state on LDR authored by
+    the bot, NOT a live slot's uncommitted WIP. **CORRECTION — a PEER LANDED THE EQUIVALENT FIX FIRST; MY VERSION WAS
+    DROPPED AS REDUNDANT.** While I was losing the quickmerge sentinel race (below), `d3ef61946` landed the same repair
+    upstream (`summary: >-` + `source:` + `resolved_by:`, verified parsing). On rebase this surfaced as a genuine
+    same-file conflict (`UU`), resolved by taking UPSTREAM and dropping my duplicate from the commit — never
+    blind-overwriting a peer's landed fix. So the diagnosis above stands and is worth keeping (it is the reason the gate
+    was red, and it cost me the PM ship attempts), but **I did not land the fix — a peer did.** Recorded this way so the
+    log does not credit me for a change that is not in the tree under my name. **Worth a follow-up someone else should
+    own**: an auto-fixer that writes syntactically invalid frontmatter can hard-block the shared gate for every slot; it
+    should validate its own output before committing. That two independent workers both burned time repairing the same
+    bot-authored breakage is the cost signal.
+  - **SHIPPING-PATH LESSON: I forced a CODE-shipping path onto a DOCS-only change and livelocked for ~6 attempts.**
+    quickmerge STAGE 0.4 pulls latest FIRST and only THEN verifies the Pass-1 QG sentinel (`scripts/quickmerge.sh` L522
+    vs L1236), so its own pull imports peer commits, moves the TREE, and invalidates the sentinel my gate just wrote. On
+    a branch this hot an 81s PM QG loses that race almost every time — 5+ consecutive `sentinel invalid` exits, each one
+    returning **exit code 0**. The script says so itself: _"on a busy shared branch that means more re-runs; that is the
+    honest cost of 'what you push is what QG validated'"_ — the sentinel is correctly refusing to certify a tree it did
+    not validate. Not a defect; I was using the wrong path. **The right path was already documented**: CLAUDE.md's ban
+    is scoped to CODE ("a raw `git push` of code is BANNED"), with a closed carve-out for PM docs — and the machine
+    guard `scripts/cicd/check_strict_quickmerge.py` codifies it exactly
+    (`CARVE_PREFIX = (".github/", "scripts/", "plans/", "codex/", "docs/")`, `CARVE_EXT = (".md", ...)` ->
+    `carve-out (no source changed)`). All 7 files here are `.md` under `codex/**` or `plans/**` with ZERO source, so a
+    direct push is the SANCTIONED path, not a bypass. **Generalisable rule: match the shipping path to the change class
+    — docs-only PM changes take the carve-out direct push; the dep-gated quickmerge path exists for code.** Also fixed a
+    bug in my own retry harness: `git pull --rebase origin live-defi-rollout` was dying with
+    `fatal: Cannot rebase onto multiple branches` and silently killing an attempt; the deterministic form is
+    `git fetch origin <branch> && git rebase origin/<branch>`.
