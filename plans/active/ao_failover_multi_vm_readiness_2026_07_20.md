@@ -24,6 +24,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
 assigned_role: backend_engineer
+model_tier: sonnet-doable # test-writing against one existing module + a docs/runbook deliverable
 drift_direction: advance-code
 locked_by:
 locked_since:

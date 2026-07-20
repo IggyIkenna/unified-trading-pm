@@ -24,6 +24,8 @@ estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
 assigned_role: backend_engineer
+model_tier: sonnet-doable # single-repo, root cause already diagnosed in the plan body; no 1M context needed
+thinking_tier: high # concurrency/lifetime reasoning + tests that must actually bite — worth the effort bump, still Sonnet
 drift_direction: advance-code
 locked_by:
 locked_since:
