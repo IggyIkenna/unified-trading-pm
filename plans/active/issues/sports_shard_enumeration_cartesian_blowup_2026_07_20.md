@@ -1,21 +1,24 @@
 ---
 doc_type: issue
 title: >-
-  SPORTS shard enumeration is a full venue x data_type CARTESIAN product — it emits trades for fixed-odds sportsbooks
-  that have no order book, and the manifest holds 1,267,113 false empty_confirmed rows for cells that cannot exist (+
-  case-duplicate odds data_types)
+  SPORTS odds expectation gap — the manifest asserts confirmed-absence for (venue, league) pairs that have NEVER
+  captured anything (296/1,626 = 18.2%, incl. 8 venues 100% dead across 33 leagues each), inflating the sports coverage
+  denominator (+ case-duplicate odds data_types)
 summary: >-
-  The MTDS sports shard enumeration produces 28 venues x 11 data_types = 308 cells with no applicability filter. UAC
-  already knows better: AUDITED_BOOKMAKERS marks only 2 of 21 audited venues as `is_exchange` (BETFAIR_EX, MATCHBOOK) —
-  the other 19 are fixed-odds sportsbooks with no order book, so `trades`/`trades_inplay` are structurally impossible
-  for them; and SPORTS_CAPABILITIES declares only 15 SOURCES, not 28 venues. Neither is consulted. The result is
-  recorded as fact in prod: the sports availability_index holds 1,974,679 rows of which 1,806,553 are `trades`, and
-  1,267,113 of those are `empty_confirmed` — the manifest asserting "we confirmed there are no trades" for
-  bookmaker-trades cells that can never exist (PINNACLE alone has 155,797 trades rows despite being is_exchange=False).
-  Same false-honest-absence class as the 2026-07-20 ASTER 429 incident, but structural rather than transient. Separately
-  the data_type vocabulary carries case-duplicates that split one logical stream across two keys — ODDS (22,145) vs odds
-  (20,331), ODDS_SNAPSHOT vs odds_snapshot, ODDS_MOVEMENT vs odds_movement — plus odds_horizon_bucket (124,294)
-  coexisting with odds_horizon_bucket_15m/1h/4h/1d.
+  Sports odds are recorded at (venue, league_id, date) grain under data_type=trades with instrument_type=odds, sourced
+  from api_football (1,396,916) / odds_api (388,852) / polymarket_clob (20,785). Measured in prod 2026-07-20: of 1,626
+  (venue, league) pairs, 296 (18.2%) have NEVER had a single `captured` row, yet are enumerated and marked
+  empty_confirmed — i.e. the manifest asserts "we looked and confirmed there is nothing" for bookmaker/competition
+  combinations that appear to produce no data at all. EIGHT venues are 100% dead across 33 leagues each (BETFAIR,
+  PROPHETX, KALSHI, ODDS_API, ONEXBET, POLYMARKET, NOVIG, BETOPENLY — note KALSHI/POLYMARKET are PREDICTION venues and
+  ODDS_API is an aggregator SOURCE, not a bookmaker); MATCHBOOK is 20.3% dead and PINNACLE 17.2% dead (plausibly
+  competitions they do not price); SPORT888 and SMARKETS are 0% dead. Overall capture_status across the 1,806,553
+  odds-carrying rows: empty_confirmed 1,267,113 / captured 427,163 / attempted_failed 112,277. There is no per-(venue,
+  league) coverage declaration gating the expected universe. Separately the data_type vocabulary carries case-duplicates
+  splitting one logical stream across two keys — ODDS (22,145) vs odds (20,331), ODDS_SNAPSHOT vs odds_snapshot,
+  ODDS_MOVEMENT vs odds_movement — plus odds_horizon_bucket (124,294) coexisting with odds_horizon_bucket_15m/1h/4h/1d.
+  NOTE an earlier version of this issue mis-diagnosed these rows as impossible order-book trades via
+  AUDITED_BOOKMAKERS.is_exchange; that framing is WRONG (instrument_type=odds) and is corrected in the body banner.
 status: open
 nature: issue
 asset_group: [sports]
