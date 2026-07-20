@@ -679,3 +679,49 @@ commit.
 - [ ] NEW todo. [DOC] P1. Correct `codex/05-infrastructure/spot-vms-for-backfill.md`: the preemption signal was NOT
       wired fleet-wide via `launcher_common.sh`; it is now installed by `setup-data-pipeline-vm.sh` as a systemd unit.
 - [ ] NEW todo. [SCRIPT] P1. Close residual risk 1 — make arg-required launchers relaunchable (features especially).
+
+### 2026-07-20 — my manifest-flush hypothesis was REFUTED by measurement; the real cost is 1000x bigger
+
+**I was wrong, and the correction is more valuable than the original hypothesis.** I suspected the per-shard manifest
+flush was doing an O(n^2) read-modify-write. **Measurement refuted it:**
+
+- `ManifestWriter.flush()` deliberately does NOT force the per-VM rewrite — it DEBOUNCES (50 entries OR 5.0s,
+  `_writer_io.py:291` -> `_state.py:706`); only `close()`/atexit force it. Shipped 2026-06-21 as `utl@6b6d53bd`.
+- The live log line `(8 total entries, 7 new)` **proves the debounce worked** — 7 rows coalesced into ONE rewrite,
+  not 7.
+- Measured on the actual shard the profiled run produced: **14 rows / 23,438 bytes**, `to_parquet` = **0.010s**, ~2
+  rewrites for the whole run, **~47 KB total rewritten**. The manifest WRITE is ~**0.02s** of a 51.9s run.
+- => "Batch the flush" (my Option E) was ALREADY SHIPPED; per-shard-object / WAL / async-flush (A/B/C) would optimise
+  **0.02s** while adding durability-relevant moving parts. **All rejected on evidence.** The operator's instinct that
+  there must be a better way was right — but the better way is not on the write path at all.
+
+**The REAL cost is a READ amplification** (filed `issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`):
+`_publish_emission_check` -> `compute_completeness_fraction` -> `_build_capture_status_map(index)` builds a
+**full-corpus python dict over EVERY manifest row x 25 key columns** to serve a lookup whose `upstream_window` is a
+literal **1-element list** — **3x per instrument** (ohlcv_1m/1h/1d are policy-gated from `trades`), **unmemoized**, and
+each flush calls `_invalidate_index_cache` forcing the next check to re-merge.
+
+Measured scaling: 22,719 rows 0.11s -> 1,454,016 rows **13.14s** (super-linear, 9.04 us/row).
+
+**I VERIFIED the prod index sizes myself** (`gcloud storage ls -l`): **defi 1,579.3 MB**, cefi 159.1 MB, tradfi 77.4 MB,
+sports 46.1 MB — against the **0.44 MB TEST index every timing was measured on**.
+
+**⚠️ THIS INVALIDATES MY OWN ETA INPUT.** The 25.9s/instrument-day was measured against a **0.44 MB** index; defi-prd is
+**3,614x** larger. On cefi-prd the same path projects to ~75-100s per policy-gated timeframe ~= **4-5 minutes per
+instrument**. **Any backfill ETA built on the 25.9s number is optimistic by roughly 10x until this is fixed or the
+projection is disproved.** Do not quote the 25.9s-derived ETA to anyone without this caveat.
+
+**Fix is read-path ONLY** (so durability/honest-absence/layout are untouched): F1 filter-then-build instead of
+full-corpus map; F2 memoize by index identity; F3 thread the ALREADY-EXISTING `manifest_index=` kwarg so 3 timeframes
+share one read. Crash-loss bound identical to today.
+
+**SECOND STANDALONE P0: the defi-prd availability index is 1.58 GB.** Any `read_availability_index` caller on defi
+without a column/filter projection is one cache-miss from an OOM. Independent of the above.
+
+- [ ] NEW todo. [DATA] P0. VERIFY the prod projection on a real prod-bucket MDPS run before sizing the win (is the
+      emission check actually firing in prod, or short-circuited?). It is INFERRED from a measured curve + measured
+      sizes, not observed on a prod VM. **This is the single biggest unknown in the ETA.**
+- [ ] NEW todo. [SCRIPT] P0. Implement F1+F2 (UTL `manifest_completeness.py`) + F3 (MDPS `_publish_emission_check`),
+      with the 1.4M-row perf guard (<0.5s vs 13.14s today).
+- [ ] NEW todo. [DATA] P0. Audit every `read_availability_index` caller on defi for a missing column/filter projection
+      (1.58 GB index, OOM risk).
