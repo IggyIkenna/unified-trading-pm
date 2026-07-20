@@ -116,3 +116,56 @@ dispatcher (the core; also unblocks 2-venue live) → `[3]` register kalshi/poly
 extend `cross_venue_arb_detector` + the runner to fee-net + size the Betfair leg → `[5]` two-sided back+lay odds
 persistence for SELL-Betfair. `[1]`–`[3]` deliver a live 2-venue (and BUY-Betfair) arb; `[4]`–`[5]` complete the full
 3-way. Gate the whole thing behind paper→live promotion + the operator's account/credential/jurisdiction sign-off.
+
+---
+
+## UPDATE 2026-07-20 (autonomous run) — items [1]–[4] SHIPPED; the LIVE seam is now the single blocker
+
+Operator answered the gating questions (**paper-only, no Betfair account yet**, all soccer, `entry_threshold` 0.03,
+`stake_fraction` 0.05, `max_position_usdc` 1000, `edge_size_cap` 0.10) and authorised building the bridge. Shipped +
+adversarially verified since:
+
+- **[1] BetOrder LAY + lay-capable odds model + Betfair fee** — `unified-api-contracts@de6409e5`
+  (`BetOrder.side: BetSide=BACK`, `CanonicalOdds.*_lay_odds`, `BETFAIR_COMMISSION_FRACTION=0.05` + `betfair_fee()`).
+- **[2]+[3] the leg dispatcher + venue registration** — `execution-service@db75d51d`: new `v2/atomic_leg_executor.py`
+  (`atomic_leg_to_bet_order` + `AtomicLegExecutor.execute` honouring LEADER_HEDGE: leader first, hedge within
+  `hedge_deadline_ms`, `CLOSE_LEADER_IF_HEDGE_FAILS` → leader unwound, `naked_position=False`), adapter obtained via
+  `create_sports_adapter(mode)` **defaulting to `OperationalMode.PAPER` → `PaperBettingAdapter`** (paper-safe by
+  construction), plus kalshi/polymarket added to `_LIVE_VENUE_CONFIGS`.
+- **[4] detector fee-net + 3-venue sizing** — `features-service@158515f3` (Betfair commission expr, best-pair net edge,
+  Betfair back-only ⇒ BUY-side-only, no false-executable).
+- **Entry gate GROSS→NET** — `strategy-service@31d6bb0d`: `select_prediction_arb_direction` now gates on
+  `net_edge = edge − fee(buy_leg) − fee(sell_leg)` via the public UAC fee helpers; `signal.edge` stays GROSS (sizing +
+  attestations) with a new `net_edge` field, pinned by test to equal `net_edge_sell_kalshi` / `net_edge_sell_polymarket`.
+- **PAPER BACKTEST IS PROVEN WORKING** — `test_prediction_arb_3venue_paper_proof.py`: a crossed
+  Kalshi/Polymarket/Betfair box **fires one LEADER_HEDGE `AtomicInstruction` and settles TWO benchmark fills with
+  non-zero P&L** through the real paper runtime (`GroupBRunner` + `BenchmarkFillEngine`), plus a determinism test
+  (identical fills across re-runs, `execution_alpha_bps == 0`). Config: `strategy-service@d07e7240` (all-soccer PAPER
+  template, operator values).
+
+### The single remaining LIVE blocker (needs an OPERATOR-DIRECTED architectural decision)
+
+**There is no paper-LIVE / live tick runtime that routes an emitted `AtomicInstruction` to `AtomicLegExecutor`.** Traced
+end-to-end: `emit_instructions` (`base.py:336-340`) only records; `V2EngineOrchestrator.on_tick` returns the list "for
+the caller to forward to execution-service"; the ONLY realized caller is `GroupBRunner._process_tick`
+(`backtest/runner.py:234-254`) → `BenchmarkFillEngine.settle` (the backtest/paper path, now proven). `AtomicLegExecutor`
+and `V2InstructionRouter` are both **unwired** in production, and the legacy `live_execution_handler` speaks the old
+single-`BET` `Instruction`, not `AtomicInstruction`/LEADER_HEDGE. **Tier rules forbid strategy-service importing
+execution-service**, so the seam cannot be a direct call — it needs a transport decision (the UTL `EventTransport`
+event-log seam is the architecturally-indicated option: strategy publishes envelopes, execution subscribes and routes
+each atomic to the executor). That decision is the operator's; the cross-repo integration test belongs in
+`e2e-testing`/`system-integration-tests` (which may import both).
+
+### Smaller open items (documented, not blocking paper)
+
+- **Compensation for a MATCHED leader**: the unwind currently issues `cancel_bet`, which does not offset an
+  already-matched leader — live fails safe to naked+alert, but a real offsetting bet is required before live.
+- **Two-sided Betfair odds ([5])**: persisted odds remain BACK-only, so `betfair_yes_bid` is always None → Betfair is
+  BUY-YES-only; SELL-Betfair lights up automatically once a back+lay exchange book is persisted (kernel edge already
+  wired). Needs a Betfair-exchange book source (the Odds-API aggregator is back-only).
+- **Betfair fee proxy**: `betfair_fee` takes *net winnings*; entry-time code passes the YES-bid premium as the proxy —
+  a documented deterministic approximation, operator-tunable.
+- **`entry_threshold` semantics moved**: values were calibrated against GROSS edge and now gate on NET, so the same
+  number is strictly more selective (0.03 = 3% NET). Intended, but re-tune with eyes open.
+- **CI integrity**: a global pytest hook silently skips the whole unit backtest suite — see
+  `strategy_global_pytest_hook_skips_backtest_suite_2026_07_20.md` (P2).
