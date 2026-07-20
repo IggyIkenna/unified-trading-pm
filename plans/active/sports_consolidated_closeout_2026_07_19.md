@@ -428,15 +428,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       this job (TRADFI already excluded for the analogous mis-stamp reason; CEFI/DEFI have dedicated jobs). Downstream:
       prediction readers looking only at the prediction bucket are BLIND to this data. **The 1 cefi + 1 defi rows are a
       DIFFERENT cause** (`service_name=instruments-service`) — own look, do not assume shared root cause.
-- [ ] [INFRA] P0. **Stop the bleeding**: split `mtds_fast_t1_recon_job` into two jobs (`--asset-group SPORTS` and
-      `--asset-group PREDICTION` separately), mirroring the existing `mtds_cefi_t1_recon_job` isolation. Config-only.
-- [ ] [CODE] P1. **Prevent recurrence**: resolve data+manifest buckets **per-venue** in `process_ticks()` (reuse the
-      per-venue `_resolve_asset_group(venue, asset_groups)` at `venue_fetch.py:614`) instead of one run-level bucket.
-- [ ] [DATA] P1. **⚠️ PURGE IS NOT SAFE YET** — deleting the 6,597 manifest rows first would ORPHAN ~6,454 real parquet
-      files (phantom data). Corrected sequence: (a) ship both fixes; (b) relocate the misplaced `venue=KALSHI`/
-      `venue=POLYMARKET` parquet from the sports tick bucket to `market-data-tick-prediction-*` for 2026-07-16/18/19 —
-      and re-check 07-17 (manifest rows exist, listing showed 0 files); (c) manifest rescan so the PREDICTION manifest
-      gets real rows; (d) only then purge the stray sports rows + orphans. Snapshot before any delete.
+- [ ] [INFRA] P2. **Defense-in-depth (no longer urgent — the code fix removes the need)**: split
+      `mtds_fast_t1_recon_job` into two jobs (`--asset-group SPORTS` and `--asset-group PREDICTION` separately),
+      mirroring the existing `mtds_cefi_t1_recon_job` isolation. Config-only.
+- [x] [CODE] P1. ✅ **FIXED — market-tick-data-service@5581dcf9** (QG green). Resolves data buckets **per-venue** in
+      `process_ticks()` (reuse the per-venue `_resolve_asset_group(venue, asset_groups)` at `venue_fetch.py:614`)
+      instead of one run-level bucket.
+- [x] [DATA] P1. ✅ **CROSS-AG DATA REMEDIATION COMPLETE (2026-07-20)** — executed in the safe order, every step
+      verified, nothing orphaned: (a) **Snapshotted both manifests** first →
+      `_index/backups/pre_crossag_remediation_20260720T103143Z.parquet` in BOTH `instruments-store-sports-prd` and
+      `market-data-tick-pred-prd`. (b) **Relocated 6,454 objects** (6,451 KALSHI + 3 POLYMARKET, days 2026-07-16/18/19)
+      sports→prediction tick bucket via UTL `gcs_copy_object` (server-side): **6,454/6,454 crc32c-VERIFIED, 0 missing, 0
+      mismatch, 0 fail**. (c) **Upgraded the PREDICTION manifest**: wrote per-VM shard
+      `_index/per_vm/crossag_relocation_20260720.parquet` with **6,560 genuinely-new rows** (37 of the 6,597 already
+      existed and were correctly deduped on `date/venue/data_type/instrument_type/instrument_id`) — read-back verified
+      (KALSHI 6,526 / POLYMARKET 34). (d) **Purged the sports manifest**: 6,597 `asset_group=prediction` rows removed,
+      **0 remaining** (5,377,593 → 5,370,996). The 1 `cefi` + 1 `defi` rows were deliberately LEFT — different root
+      cause (`service_name=instruments-service`), purging them blind could mask a separate bug. (e) **Deleted the
+      sports-bucket duplicates**: 6,454 removed, **0 skipped**, with a per-file re-verify that the prediction copy
+      existed with matching crc32c immediately before each delete. Final sweep: **0 `asset_group=prediction` objects
+      remain in the sports tick bucket.** Ordering mattered: prediction manifest rows were written BEFORE deleting the
+      sports originals, so the data was never unlisted in either direction.
 - [ ] [CODE] P1. Narrow sports capture/enumeration to the UAC registry universe (decision 2) so captured == intended.
 - [ ] [DATA] P2. Dispose of the already-captured non-registry rows (decision 2): exclude from the denominator; purge if
       confirmed out-of-universe. Snapshot before any delete.
