@@ -90,17 +90,15 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
       `ENV_VARS.md` under new "Retired" / "Checked — NOT a duplicate" sections. **Gate**: verified no other write site
       for `ORCHESTRATOR_OPERATOR` exists in `scripts/`/`docs/` (grepped); `host_operator()`'s existing vm_id-fallback
       (unchanged) means a host with only `VM_ID` set resolves the identical operator it always did.
-- [ ] [INFRA] P2. **Per-repo freeze-streak signal (AO half).** The dirty-streak WARN fires only when EVERY repo in a
-      sweep skips, so **a single frozen clone — the exact 2-day outage mode — stays silent.** Make the streak per-repo
-      in `slot-cron-ff-pull.sh`: repo X `[skip:dirty]` / `[skip:ff-failed]` for N consecutive ticks emits a
-      per-repo/per-slot freeze signal. **Gate**: a deliberately-frozen single clone produces the signal within N ticks,
-      naming the repo and the slot.
-- [ ] [UI] P2. **Per-repo freeze-streak surface (deployment-ui half) — NOT a Slack alert.** Operator ruling 2026-07-18:
-      feed the signal into the **`deployment-ui` FLEET TAB** where clone/slot status already renders, so one stuck repo
-      on one slot is obvious at a glance, and improve that page to make the state easy to check on demand. Render per
-      repo × slot, not one global flag. Note: the backlog-details-popup UI work is a DIFFERENT scope with no dependency
-      here. **Gate**: the frozen clone from the previous todo is visibly stuck in the fleet tab, naming repo + slot; per
-      the UI testing rule this needs `[UI]` + `pw:L2 ✓` + a cited regression spec.
+- [ ] [INFRA] P2. **Per-repo freeze-streak signal (AO half).** ➡️ **MOVED 2026-07-20 to
+      `monitoring_control_plane_master_2026_06_10.md`** § "Smart extras" (operator ruling this session — deployment-ui
+      fleet-tab work already has a home plan; don't build this standalone). **Do NOT action here.** Was: the
+      dirty-streak WARN fires only when EVERY repo in a sweep skips, so a single frozen clone — the exact 2-day outage
+      mode — stays silent; make the streak per-repo in `slot-cron-ff-pull.sh`.
+- [ ] [UI] P2. **Per-repo freeze-streak surface (deployment-ui half) — NOT a Slack alert.** ➡️ **MOVED 2026-07-20 to
+      `monitoring_control_plane_master_2026_06_10.md`** § "Smart extras" (same ruling as the previous todo — both move
+      together since the UI consumes the AO half's signal shape). **Do NOT action here.** Was: operator ruling
+      2026-07-18 — feed the signal into the `deployment-ui` FLEET TAB where clone/slot status already renders.
 - [ ] [INFRA] P2. **Fleet-wide frozen-clone sweep (one pass).** hk-host root repos measured behind=0, but the VM's SLOT
       clones and any other hosts were never swept. Check every host's root + slot clones for `HEAD..origin/LDR > 0` with
       untracked-only dirt, and unfreeze with a plain FF. **Unfreezing is a write — dry-run and report first, then get
