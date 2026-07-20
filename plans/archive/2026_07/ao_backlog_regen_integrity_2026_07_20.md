@@ -197,6 +197,21 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Progress Log
 
+- **2026-07-20 (post-archival follow-up) — the operator-authorized VM fix from todo 4's entry is now DONE.** Todo 4's
+  entry below flagged `audit_false_done.py` as non-functional on the live VM (git "dubious ownership" on the PM sibling
+  clone, breaking every `git show` read) and deliberately left the fix for the operator since it's a VM-side write.
+  Operator authorized it; applied
+  `git config --global --add safe.directory /home/ubuntu/unified-trading-system-repos/unified-trading-pm` for **root**
+  specifically (SSM Run Command executes as root on this VM; `ubuntu` owns the clones and never hit the bug). Verified
+  by re-running the actual script live: now correctly reports `false_done: []`, `unresolved: []`, `honest`/`unauditable`
+  populated — matching this plan's own manual-replication finding. **Root cause of the drift, for whoever looks next**:
+  `scripts/bootstrap_vm.sh` has configured this exact safe.directory entry for root since 2026-05-21 — this VM's root
+  gitconfig had simply lost that entry at some point after initial provisioning (cause unknown; a sibling entry for
+  `agent-orchestrator` was still present). No code change needed — bootstrap already does the right thing for any
+  future/re-provisioned VM. One residual, non-blocking note: root has no GitHub SSH key, so the script's own `git fetch`
+  step fails ("Host key verification failed") when run as root via SSM — it still works correctly off the already-synced
+  ref from the regular `ubuntu`-owned fetch cron, but a future reader re-running this via SSM should expect that stderr
+  line and not mistake it for the fix having failed.
 - **2026-07-20 — Todo 7 (close doc #4) landed — all 7 todos complete, plan archived.** Codex-alignment check found +
   fixed 2 stale contracts (`agent-orchestrator-single-vm-architecture.md`'s done-gate section and its sibling-reset
   "known sharp edge" bullet); recorded the audit-cadence corollary as a new section in

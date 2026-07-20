@@ -215,16 +215,30 @@ runs.)
       `Evidence: cloudbuild=<id>` + the regen job execution.
 - [ ] [DATA] P1. **Historical manifest un-delisting + `NOT_ENOUGH_TVL` re-capture.** The catalogue reset to `None` alone
       does not fix data already written: the defi manifest `_index` still carries `EXPECTED_INSTRUMENT_DELISTED`
-      empty_confirmed rows for the clustered dates. Reverse/supersede `reclassify_defi_postdelist_eu_2026_06_24.py` (it
-      currently flips EU→DELISTED past `available_to`), then run a targeted MTDS `dex_pools` + `dex_swaps` re-capture
-      over the affected `(protocol, chain, date)` cells so the re-seeded `expected_unattempted` cells convert to
-      `EXPECTED_NOT_ENOUGH_TVL` (capture-path-only reason). Gate with `validate_defi_no_delisted_on_live_pool`. Until
-      this runs the re-seeded cells sit as honest-pending `expected_unattempted` (visible, drags the denominator — NOT a
-      masking false gap).
-- [ ] [DEFI] P2. **Option B truth-gate — build the §12 on-chain factory/registry probe** and feed confirmed on-chain
-      removals into `delisted_at` (branch-1) so genuinely-removed pools close while below-TVL/source-set drops stay
-      `None`. This is the codex `defi-completeness-oracle` §12 "follow-on plan item" (Tier-A factory subgraph / Tier-B
-      RPC). Its own plan — adds a network dependency to the roll-up; needs per-protocol factory registry + creds.
+      empty_confirmed rows for the clustered dates. **Un-delist script WRITTEN** (`instruments-service/scripts/`
+      `undelist_defi_false_postdelist_eu_2026_07_20.py`) — the exact inverse of
+      `reclassify_defi_postdelist_eu_2026_06_24.py` (which has NO `--revert`), instrument_type-AGNOSTIC, selects
+      "manifest says DELISTED **and** post-regen catalogue says live-on-that-date", resets → pending EU (blank
+      `error_reason` = NOT skip-worthy), backup-then-write, `--dry-run`/`--apply`. **Order is load-bearing**: regen →
+      un-delist → re-capture → validate (manifest-freshness SKIPS `empty_confirmed`, so un-delist MUST precede
+      re-capture). Scope measured: 4 protocols × 19 (venue,chain,date) tuples = 2,519 rows, ~12-24 day forward window.
+      **SCOPE GAP (discovered):** `dex_pools`/`dex_swaps` re-capture + `validate_defi_no_delisted_on_live_pool` are
+      POOL-ONLY, but the false rows are mostly SPOT_ASSET/LENDING/A_TOKEN/DEBT_TOKEN — the agnostic un-delist fixes all
+      of them (→ honest-pending EU), while full `NOT_ENOUGH_TVL` conversion for non-POOL needs the sibling handlers
+      (`collect-lending-indices` / `collect-evm-defi`). Un-delist alone already removes the DISHONESTY.
+- [ ] [DEFI] P2. **Option B truth-gate — BUILT (ship pending tree-green).** `instruments_service/oracle/`
+      `defi_removal_probe.py` + `scripts/run_defi_removal_probe.py` + roll-up integration (`_apply_defi_removals` /
+      `_load_defi_removal_map` applied to the FINAL frame of BOTH `build_catalogue_dataframe` and `_merge_incremental`,
+      so full/incremental never disagree) + `tests/unit/oracle/` + deployment (`deployment-service`
+      `cloud_run_job_registry` `defi-removal-probe` + `terraform/gcp/defi_removal_probe_scheduler.tf`, daily 00:30 UTC
+      before the 01:00 catalogue regen). CONSERVATIVE: records a removal ONLY on a positive `eth_getCode`-absent
+      confirmation; unresolvable RPC / non-EVM / error → stays live, so it can never re-create a false delisting. Reuses
+      `evm_creation_resolver` primitives; writes `_cache/defi_removals.json` (mirrors the genesis
+      `_cache/*_creation_timestamps.json` seam). **RUNTIME-VERIFIED on prod 2026-07-20**: 11,827 catalogue rows → 30
+      live EVM targets probed via Alchemy → **0/30 confirmed gone** (correct — DeFi contracts persist on-chain, so
+      Option A stays and the truth-gate fires only on a genuine SELFDESTRUCT). My tests pass in the QG (4675 passed);
+      SHIP is blocked only by an unrelated fleet UAC drift (`unified-api-contracts@6bcff215` narrowed the defi
+      denominator → 5 pre-existing golden/producer-set failures another agent is reconciling).
 
 ## Scope boundary
 

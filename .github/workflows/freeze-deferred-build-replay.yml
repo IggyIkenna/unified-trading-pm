@@ -46,6 +46,8 @@ jobs:
     runs-on: [self-hosted, glue]
     outputs:
       replayed_count: ${{ steps.drain.outputs.replayed_count }}
+      stale: ${{ steps.stale.outputs.stale }}
+      stale_detail: ${{ steps.stale.outputs.stale_detail }}
     steps:
       - name: Checkout PM (freeze calendar)
         uses: actions/checkout@v5
@@ -149,6 +151,74 @@ jobs:
           done <<< "$ARTS"
           echo "replayed_count=$COUNT" >> "$GITHUB_OUTPUT"
           echo "=== freeze-deferred replay: $COUNT build(s) re-dispatched (dry_run=$DRY_RUN) ==="
+
+      # ── STALE-DEFERRAL GUARD (added 2026-07-20 with the freeze-block alert removal) ────────────
+      # change-freeze-check.yml no longer pages on a routine block, on the operator's reasoning that
+      # the windows are short and a genuinely stuck deferral "comes up under a separate alert anyway".
+      # That was NOT true when the advisory was removed: the notify below fires only when a replay
+      # SUCCEEDS (replayed_count != 0), so a deferral that never drains was completely unalerted —
+      # exactly the silent-failure shape that let UTL's main sit red for 9h on 2026-07-20.
+      # This closes it: page when a deferred build outlives every plausible window + drain cycle.
+      #
+      # Threshold 6h, not 1h. Windows are <= 30 min and this cron is hourly, so a healthy deferral
+      # drains within ~1-2 ticks — BUT GitHub delivers only ~37% of scheduled runs under load
+      # (measured, see ldr-to-main-promote-fleet.yml), so an "hourly" job can really tick every
+      # ~2-3h. 6h is comfortably past legitimate slowness while still catching a genuine wedge the
+      # same working day. Runs even while frozen (no `if:` on the freeze gate) — a marker aging out
+      # DURING a long freeze cluster is precisely the case worth knowing about.
+      - name: Stale-deferral guard — page if a deferred build never drained
+        id: stale
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          STALE_HOURS: "6"
+        shell: bash
+        run: |
+          set -uo pipefail
+          NOW=$(date -u +%s)
+          OLDEST_H=0
+          OLDEST_NAME=""
+          # Re-list AFTER the drain so anything successfully replayed is already gone.
+          while IFS=$'\t' read -r created name; do
+            [ -n "${created:-}" ] || continue
+            C=$(date -u -d "$created" +%s 2>/dev/null || echo "$NOW")
+            AGE_H=$(( (NOW - C) / 3600 ))
+            if [ "$AGE_H" -gt "$OLDEST_H" ]; then OLDEST_H=$AGE_H; OLDEST_NAME="$name"; fi
+          done <<< "$(gh api --paginate "repos/${OWNER}/unified-trading-pm/actions/artifacts" \
+            --jq '.artifacts[] | select(.name | startswith("deferred-build-")) | select(.expired == false) | "\(.created_at)\t\(.name)"' 2>/dev/null || true)"
+
+          echo "oldest deferred-build artifact: ${OLDEST_NAME:-<none>} (${OLDEST_H}h old; threshold ${STALE_HOURS}h)"
+          if [ -n "$OLDEST_NAME" ] && [ "$OLDEST_H" -ge "$STALE_HOURS" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "stale_detail=${OLDEST_NAME} has been deferred ${OLDEST_H}h (threshold ${STALE_HOURS}h)" >> "$GITHUB_OUTPUT"
+            echo "::warning::STALE DEFERRAL — ${OLDEST_NAME} deferred ${OLDEST_H}h and still not replayed"
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # The ONLY actionable alert on this path (2026-07-20). change-freeze-check.yml deliberately no
+  # longer pages on a routine block — a short, self-resolving window is not news. A deferral that
+  # has NOT drained after 6h is: either the freeze calendar is wedged, the drain is failing, or the
+  # dispatch is being rejected — and in every case a repo is sitting without the prod image it was
+  # supposed to get. Paged as a real failure (conclusion: failure) because unlike a freeze block,
+  # nothing self-heals this. Deduped so a persistent wedge re-reminds rather than spams each tick.
+  notify-stale-deferral:
+    name: Slack — STALE freeze deferral
+    needs: [replay]
+    if: always() && needs.replay.outputs.stale == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "STALE FREEZE DEFERRAL: ${{ needs.replay.outputs.stale_detail }} — a prod build has been deferred far longer
+        than any freeze window. Check the freeze calendar for a wedged window and this workflow's drain step."
+      severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: "stale-freeze-deferral"
+      cooldown_min: 720
+    secrets: inherit
 
   notify:
     name: Slack — freeze-deferred replay

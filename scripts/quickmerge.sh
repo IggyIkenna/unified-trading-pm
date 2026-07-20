@@ -1182,6 +1182,11 @@ if [ -z "${ENVIRONMENT:-}" ]; then
 fi
 
 # ── EARLY EXIT: identical to main (skip when --no-pr) ─────────────────────────────────────────────
+# GOTCHA (found 2026-07-20, ao_fleet_infra_hardening_2026_07_20.md): `git diff <ref>` is BLIND to
+# untracked files regardless of ref -- a brand-new file you haven't `git add`ed yet produces an EMPTY
+# diff here even though it's genuinely new content, so this early-exit fires and silently skips
+# STAGE 3-5 (the file never gets committed, no error). `git add` the new file BEFORE invoking
+# quickmerge to avoid this; once staged, `git diff <ref>` correctly includes it.
 git fetch origin main --quiet 2>/dev/null || true
 if [ "$NO_PR" != "true" ]; then
   if git rev-parse origin/main &>/dev/null && [ -z "$(git diff origin/main 2>/dev/null)" ]; then

@@ -164,30 +164,25 @@ jobs:
           echo "reason=" >> "$GITHUB_OUTPUT"
           echo "::notice::No active freeze window — $CHECK_TYPE operations allowed"
 
-  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
-  notify-freeze-block:
-    name: Slack — Change Freeze Block
-    needs: [check]
-    if: always() && needs.check.outputs.blocked == 'true'
-    uses: ./.github/workflows/notify-slack.yml
-    with:
-      message:
-        "CHANGE FREEZE BLOCK [${{ inputs.check_type }}]: ${{ needs.check.outputs.reason }} — deploy deferred (expected;
-        auto-replays when the window lifts)"
-      severity: "WARNING"
-      # conclusion is intentionally EMPTY (advisory), NOT "failure". A freeze block is an
-      # expected, scheduled control outcome — passing conclusion:failure made notify-slack's
-      # truthful-severity rule force it to CRITICAL :x: (the recurring daily US/EU-open spam in
-      # #ci-failures). With no conclusion, severity (WARNING) drives the icon → :warning:. The
-      # `check` job still exit-1s as the gate (cloud-build-router relies on that) — only the
-      # human-facing alert is reclassified from a CRITICAL failure to a WARNING advisory.
-      conclusion: ""
-      workflow_name: "Change Freeze Check"
-      run_url: ""
-      # One advisory per window per check-type, not one per deferred attempt (measured
-      # 2026-07-17: 4 identical WARNINGs in a single 5-min US-open window). 30 min covers
-      # every configured window; the reason string names the window either way, and the
-      # per-key dedup marker (notify-slack 2026-07-17 fix) makes this actually stick.
-      dedup_key: "freeze-block-${{ inputs.check_type }}"
-      cooldown_min: 30
-    secrets: inherit
+  # ── NO SLACK NOTIFY ON A FREEZE BLOCK (operator ruling 2026-07-20) ────────────────────────────
+  #
+  # A freeze block is NOT actionable: the window is short (every window is now capped at <= 30 min,
+  # see scripts/ops/generate-freeze-calendar.py) and the deferred prod build is PERSISTED and
+  # auto-replayed by freeze-deferred-build-replay.yml once the window lifts. Nobody does anything
+  # with the advisory, so it is pure noise on a channel whose value depends on everything in it
+  # being worth reading — the same actionable-only principle the AO alert channel already follows
+  # (codex/04-architecture/agent-orchestrator-alerting.md).
+  #
+  # The block itself is NOT silent: the `check` job still exit-1s as the gate (cloud-build-router
+  # depends on that), still emits a ::notice:: naming the window, and the deferral is recorded for
+  # replay. What is removed is only the human page for an expected, self-resolving control outcome.
+  #
+  # The FAILURE mode — a deferral that never replays — is covered by the stale-deferral guard in
+  # freeze-deferred-build-replay.yml, which pages when a marker outlives every window. That guard
+  # was ADDED alongside this removal: before it, a stuck deferral was genuinely unalerted, so
+  # deleting this job on its own would have gone dark on the one case that actually matters.
+  #
+  # Previous history, kept so it is not re-litigated: this alert was first a CRITICAL (conclusion:
+  # failure forced notify-slack's truthful-severity rule to :x:), then downgraded to a WARNING
+  # advisory with a 30-min dedup on 2026-07-17 after 4 identical alerts fired in a single 5-min
+  # US-open window. Silencing it entirely is the end of that same arc, not a new judgement.
