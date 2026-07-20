@@ -6,7 +6,7 @@ summary:
   branches, 0 PRs — and its monitoring cannot tell success from failure because the dispatch curl times out before the
   endpoint answers. Fix the false-failure, add a real liveness assertion, fix the boot gate that 428s every typed agent,
   and prove one run end-to-end.
-status: draft # NOT ingested — awaiting operator review (2026-07-20). Flip to `active` to dispatch.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,8 +17,8 @@ related: [ao_open_issues_consolidated_close_out_2026_07_17.md, ao_dispatch_liven
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: orchestrator_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)
+execution_scope: local-only
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
@@ -57,6 +57,25 @@ journal.
 **Read that before designing the fix**: the lesson is that a success signal a subsystem reports about itself is worth
 less than the artifact it is contractually required to produce.
 
+## Execution environment — LOCAL (read this first)
+
+Executed by **operator-assigned agents on this host**, not AO dispatch (`assigned_vm: NA`,
+`execution_scope: local-only`). Tick checkboxes by hand.
+
+**Local-only work**: todos 3 (boot gate) and 6 (docs) — code + tests, `bash scripts/quality-gates.sh` to verify.
+
+**Needs the live central VM** (read-only SSM; pattern in `scripts/orchestrator/check-ao-backlog-status.sh`): todo 2's
+real-world confirmation, todo 4 (the end-to-end proof), todo 5 (the 7-min class), and closing todo 1's residual — the
+deployed unit on the VM must be regenerated before a real timer fire reflects the shipped fix. For DB reads run
+`sudo python3` and open `sqlite3.connect("file:/var/lib/orchestrator/state.db?mode=ro", uri=True)` — **there is no
+`sqlite3` CLI on the VM**, and a probe run as `ubuntu` does not inherit the unit's `Environment=`, so pass the DB path
+explicitly or you will silently read the wrong database. **Never write to the live DB, never stop the live timer, and
+never restart the service without asking.**
+
+**Todo 4 is time-gated as well as dependency-gated**: the reconciler only fires at 01:00 UTC daily, so proving one run
+end-to-end means waiting for a real fire (or asking the operator to trigger `systemctl start plan-reconciler.service`).
+Budget for that — it is not closeable in one sitting.
+
 ## Scope boundary
 
 The 07-20 run was killed by the prereq reaper — that fix is **`ao_dispatch_liveness_p0_2026_07_20.md`**, not this plan.
@@ -78,8 +97,11 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
       `is-active` AND a computed next-elapse exists AND the last SUCCESSFUL dispatch is < 26h old — alert on breach.
       **`systemctl is-enabled` is NOT sufficient**: the original outage was an `enabled` timer that was INACTIVE, which
       `is-enabled` does not detect and `list-timers` omits. Route per the actionable-only alerting rule — this is a real
-      failure, so it may page. **Gate**: deliberately stop the timer in a test and confirm the assertion fires;
-      re-enable and confirm it clears.
+      failure, so it may page. **Gate**: the assertion fires on a STOPPED-timer condition and clears on a running one,
+      proven with a **mocked/fixture systemctl state in a local test — do NOT stop the live timer on the central VM to
+      test this.** Stopping it is a production action that silently skips a daily reconcile, which is the exact outage
+      this todo exists to detect. If you believe a live exercise is unavoidable, that is an OPERATOR decision — ask, do
+      not do it unilaterally.
 - [ ] [BACKEND] P2. **Fix the /boot read-confirmation gate for typed agents.** `server/routes/slots_worker.py` calls
       `prompts.expected_read_files("worker", req.slot_role)` with the base role hardcoded to `"worker"`, so expected =
       `[RULES.md, worker.md, <craft>]`. A plan_health/plan_reconciler worker is pointed at `RULES.md` +

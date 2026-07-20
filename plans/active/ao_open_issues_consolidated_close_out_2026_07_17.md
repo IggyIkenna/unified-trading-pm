@@ -80,6 +80,23 @@ source:
 > `quickmerge.sh --agent --files`; each shippable unit flips its todo here AND updates its source issue doc in the same
 > turn; a source doc archives (5-step ritual) when its last todo here lands.
 
+## Split-out child plans (2026-07-20) — work MOVED out of this plan
+
+Six todos were split into three focused plans so separate agents can work them in parallel. They are **LOCAL**
+(`assigned_vm: NA`, `execution_scope: local-only`) — operator-assigned agents on this host, never AO-dispatched. Items
+that moved are marked `➡️ MOVED` inline below and **must not be actioned here**.
+
+| Plan                                           | Scope                                                                        | Owns from here                                         |
+| ---------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race; slot-timer audit | the reaper P0                                          |
+| `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate; regen doc note    | reconciler-daily, boot-gate, 7-min death class         |
+| `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove the untested paths     | failover dead-code question, paused-slot failover half |
+
+**Cross-plan ordering**: all three run in parallel (no file overlap). The one real dependency is the hygiene plan's
+end-to-end reconcile proof, which needs the liveness P0 **deployed** first — the reaper is what killed the 07-20 run, so
+proving it before the fix is live teaches nothing. This plan's `tmux_session_lost` root-cause todo is likewise gated
+behind the liveness plan's re-measure.
+
 ## Verified classification of the 10 open docs (2026-07-17, this session)
 
 | #   | Issue doc                                         | Verdict                                                | Evidence (measured this session)                                                                                                                                                                                                                                                                                                                                                                                |
@@ -206,7 +223,12 @@ NOT AO and are deliberately out of scope here.
       incident was 5 losses in one second (backend/tmux blip); today's rate is 96/24h with 158 `worker_polling_dead`.
       Either find the driver (backend restarts? host pressure? tmux server?) or record the rate as expected with the
       lifecycle machinery absorbing it. Source: doc #3 timeline + this session's measurement. **Gate**: a named cause
-      with evidence, or a recorded accepted-churn decision with the measured baseline.
+      with evidence, or a recorded accepted-churn decision with the measured baseline. **⛔ SEQUENCED 2026-07-20 — do
+      NOT start this before the prereq-reaper P0 lands.** That reaper (`ao_dispatch_liveness_p0_2026_07_20.md`) kills
+      freshly-spawned sessions and is a live candidate for a share of this churn; its last todo re-measures the rate
+      against the 192-events-since-07-18 baseline. **This todo stays HERE and owns the root-cause hunt** — it resumes
+      only if the re-measure shows the rate did not drop. Starting now means measuring the same churn twice and possibly
+      chasing a driver that the P0 fix removes.
 
 ### Phase 3 — spawn/park visibility (code + policy)
 
@@ -335,7 +357,11 @@ NOT AO and are deliberately out of scope here.
       `{"running": false, "status": "stopped"}`, and there are **0 `failover_rerouted` events for all time**. It is
       armed to bite the moment failover is switched on, though — **slot 0 is paused right now** and would be the
       preferred target. Fix is one predicate in `_pick_least_loaded_slot` (exclude `paused`/`killed`/review), plus the
-      (a) all-paths regression test gaining a failover case.
+      (a) all-paths regression test gaining a failover case. **➡️ THE FAILOVER HALF MOVED 2026-07-20 to
+      `ao_failover_multi_vm_readiness_2026_07_20.md`** (the `_pick_least_loaded_slot` fix + the failover case of the
+      all-paths test). **What REMAINS here**: the (a) all-paths regression test for the NON-failover paths (dispatch,
+      autospawn, plan_health, escalation) and the (b) dashboard paused-rendering check. Do not write the failover
+      predicate here.
 - [ ] [BACKEND] P3. **Is `server/failover.py` dead code under the single-VM architecture? (raised by B3, 2026-07-20)**
       Its entire premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never
       dispatch"), but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based
@@ -464,7 +490,9 @@ NOT AO and are deliberately out of scope here.
       The 07-20 kill has a NAMED cause (prereq reaper); these three do not, and 7 min is far too short for an opus/max
       full-corpus reconcile when the haiku REPORT pass alone medians 280s. Do NOT assume the prereq-reaper fix covers
       them — verify by watching the next run, or by pulling those sessions' tmux/agent rows. **Gate**: each of the three
-      has a named cause, or the next clean run proves the class is closed.
+      has a named cause, or the next clean run proves the class is closed. **➡️ MOVED 2026-07-20 to
+      `ao_scheduled_agent_hygiene_2026_07_20.md` — do NOT action here** (it was briefly duplicated in both plans; the
+      hygiene plan owns it because the end-to-end reconcile run there is what will resolve or refute the class).
 
 ### Phase LAST — operator-sequenced
 

@@ -6,7 +6,7 @@ summary:
   earlier delete ruling). It has never fired once, has zero fleet-registry entries, and prefers paused slots as re-route
   targets — untested resilience machinery is worse than none. Fix the slot-selection bug and prove the offline-reroute
   and rollback paths before anyone relies on them.
-status: draft # NOT ingested — awaiting operator review (2026-07-20). Flip to `active` to dispatch.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,8 +17,8 @@ related: [ao_open_issues_consolidated_close_out_2026_07_17.md, ao_dispatch_liven
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: orchestrator_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)
+execution_scope: local-only
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
@@ -52,6 +52,18 @@ on 2026-07-20 now reads as a warning rather than an obituary:
 That is the profile of resilience machinery nobody has ever exercised. **Untested failover is worse than no failover**:
 it invites reliance during exactly the incident where its first-ever execution will be discovered to be broken. The work
 below makes it dormant-but-trustworthy.
+
+## Execution environment — LOCAL (read this first)
+
+Executed by **operator-assigned agents on this host**, not AO dispatch (`assigned_vm: NA`,
+`execution_scope: local-only`). Tick checkboxes by hand.
+
+**This plan is almost entirely local** — todos 1-3 and 5-7 are code, tests and docs in the `agent-orchestrator`
+checkout, verified with `bash scripts/quality-gates.sh`. Todo 4 (the `fleet_registry_entries: 0` trace) starts as a
+local code read; only confirming the live registry state needs read-only SSM (pattern in
+`scripts/orchestrator/check-ao-backlog-status.sh`).
+
+**Do not enable failover anywhere** — see Safeguards. Everything here is provable with tests against the loop directly.
 
 ## The slot-selection bug (the concrete defect)
 

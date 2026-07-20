@@ -6,7 +6,7 @@ summary:
   so any dispatch landing on a matured-timer slot is killed within one watchdog tick — measured killing the 2026-07-20
   plan_reconciler 19s after boot. Fix the timer invalidation, exclude non-backlog typed agents from the reaper, and make
   the escalation/plan_health slot race retry instead of silently failing.
-status: draft # NOT ingested — awaiting operator review (2026-07-20). Flip to `active` to dispatch.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,8 +17,8 @@ related: [ao_open_issues_consolidated_close_out_2026_07_17.md, ao_scheduled_agen
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: orchestrator_master
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)
+execution_scope: local-only
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
@@ -60,6 +60,23 @@ are wanted — the timer invalidation is the correctness fix, the typed-agent ex
 
 It is also a live candidate for a chunk of the fleet's unexplained churn: 192 `tmux_session_lost` events since 07-18. Do
 not treat that as proven — it is measured AFTER this lands (see the last todo).
+
+## Execution environment — LOCAL (read this first)
+
+This plan is executed by **operator-assigned agents on this host**, not by AO dispatch (`assigned_vm: NA`,
+`execution_scope: local-only` — regen never ingests it). Tick the checkboxes here by hand as you land each item.
+
+**Todos 1-4 are pure local work** — code + tests in the `agent-orchestrator` checkout, `bash scripts/quality-gates.sh`
+to verify. No VM access needed.
+
+**Todos 5-6 REQUIRE the live central VM** (`i-0c9b283b31d6b5ca7`, ap-northeast-1) and cannot be closed from a local
+checkout. Access is read-only via AWS SSM — the working pattern is in
+`agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` (document `AWS-RunShellScript`,
+`--parameters "commands=[\"…\"]"` as a JSON list, base64-encode any non-trivial remote script). For DB probes use
+`sudo python3` with `sqlite3.connect("file:/var/lib/orchestrator/state.db?mode=ro", uri=True)` — **`sqlite3` CLI is not
+installed on the VM**, and a probe run as `ubuntu` does NOT inherit the systemd unit's `Environment=`, so pass the DB
+path explicitly or you will silently read the wrong database. **Never write to the live DB or restart the service.** If
+you lack SSM credentials, do the code work, leave 5-6 open, and say so — do not tick them on inference.
 
 ## Ordering note
 
