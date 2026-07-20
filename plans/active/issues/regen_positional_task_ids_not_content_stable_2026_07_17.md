@@ -144,17 +144,13 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Bound the NULL-`brief_hash` tail.** Decide and record ONE of: (a) backfill the hash from a
-      trustworthy source (the plan text at each row's `done_sha` — `git show <done_sha>:<plan_ref>` shows what was
-      `[x]`'d at completion, which is the same first-line text the brief stores), (b) age the exemption out (rows past N
-      days can never be in-flight, so a mismatch is safe to reset), or (c) accept permanently with a WHY recorded in the
-      docstring + a count that is monitored, not merely known. **Do not simply reset them** — every completed task in
-      the tail would re-dispatch. **Start from the measured fact that every unhashed row is `done`** (there are no
-      in-flight NULL rows left): the docstring's stated reason for the exemption is half about not wiping an in-flight
-      task's live status, and that half no longer applies, so (b) is cheaper than it looks. **Gate**:
-      `select count(*) from tasks where status='done' and brief_hash is null` is either 0, or non-zero with a recorded
-      decision AND a check that alarms if it GROWS — growth is the real signal, since a NEW unhashed row would mean the
-      backfill path has regressed.
+- [x] ✅ [BACKEND] P2. **Bound the NULL-`brief_hash` tail.** — `agent-orchestrator@aaa2db8`
+      (`ao_backlog_regen_integrity_2026_07_20.md` todo 3). Chose **(c) accept permanently** — re-measured first (38 rows
+      today, down from 56-58, confirming the bucket shrinks, not grows, under normal operation; 0 in-flight, the
+      precondition holds) rather than trusting this doc's own cited number. WHY recorded in `sync_backlog_to_db`'s
+      docstring; a `check_null_brief_hash_growth.py` alarm (baseline=38) added + tested + live smoke-tested against the
+      real DB via SSM. **Gate met**: decision recorded, growth check exists and fires above baseline. (repo:
+      agent-orchestrator)
 - [x] ✅ [BACKEND] P3. **Make the sibling-reset case impossible or loud.** — `agent-orchestrator@9c7a0fd`
       (`ao_backlog_regen_integrity_2026_07_20.md` todo 1). `sync_backlog_to_db` now refuses to reset a row that is
       `done` with a `done_sha` on brief_hash mismatch, logging an ERROR (new brief + both hashes — the old plaintext
@@ -170,6 +166,9 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
 
 ## Progress Log
 
+- **2026-07-20** — NULL-`brief_hash` tail todo landed, decision (c) accept-permanently (`agent-orchestrator@aaa2db8`,
+  via `ao_backlog_regen_integrity_2026_07_20.md` todo 3). Re-measured count is 38 (down from 56-58), confirming the
+  bucket shrinks under normal operation. Growth alarm + docstring WHY + tests. See the fix-todo checkbox above.
 - **2026-07-20** — Sibling-reset guard todo landed (`agent-orchestrator@9c7a0fd`, via
   `ao_backlog_regen_integrity_2026_07_20.md` todo 1). See the fix-todo checkbox above for the guard's behavior and its
   accepted trade-off (blocks legitimate id-reuse-for-new-todo too).
