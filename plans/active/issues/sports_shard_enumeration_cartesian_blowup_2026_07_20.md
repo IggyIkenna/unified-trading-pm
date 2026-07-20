@@ -46,8 +46,39 @@ source:
 
 # SPORTS shard enumeration: cartesian blowup + false honest-absence
 
+> **⚠️ CORRECTION 2026-07-20 — the original framing of this issue was WRONG. Read this first.**
+>
+> The first version of this doc claimed the 1,806,553 `data_type=trades` rows were impossible ORDER-BOOK trades for
+> fixed-odds sportsbooks (reasoning from UAC `AUDITED_BOOKMAKERS.is_exchange`). **That is incorrect.** Those rows carry
+> `instrument_type=odds` (1,806,527 of 1,806,553) and come from `source=api_football` (1,396,916) / `odds_api` (388,852)
+> / `polymarket_clob` (20,785) — i.e. the `trades` data_type is carrying **ODDS**, not an exchange trade tape. The
+> `is_exchange` lens does not apply, and no claim in this doc should be built on it.
+>
+> **What IS measured and does hold** (prod, 2026-07-20), and what the operator's question was really about — whether we
+> record odds per bookmaker where a bookmaker does not cover that competition at all:
+>
+> - Grain is (venue, league_id, date). 35 venues x 93 leagues appear.
+> - **296 of 1,626 (venue, league) pairs — 18.2% — have NEVER had a single `captured` row.**
+> - **EIGHT venues are 100% dead** (33 leagues each, zero captures ever): BETFAIR, PROPHETX, KALSHI, ODDS_API, ONEXBET,
+>   POLYMARKET, NOVIG, BETOPENLY. (KALSHI/POLYMARKET are PREDICTION venues; ODDS_API is an aggregator SOURCE, not a
+>   bookmaker — both smell like enumeration errors, pending verification.)
+> - MATCHBOOK 16/79 leagues dead (20.3%), PINNACLE 16/93 dead (17.2%) — plausibly competitions they do not price.
+> - SPORT888 and SMARKETS are 0% dead.
+> - Overall `capture_status`: empty_confirmed 1,267,113 / captured 427,163 / attempted_failed 112,277.
+>
+> So the concern stands — we appear to assert confirmed-absence daily for (venue, league) combinations that have never
+> produced data — but the mechanism is a **(venue x league) expectation gap**, NOT an is_exchange/order-book mismatch.
+>
+> A second correction: `scripts/pipeline_e2e_check.py::enumerate_mtds_shards` (the source of the 308) is a **smoke-sweep
+> scope** whose own comment says the cross-product is DELIBERATE for non-PREDICTION/TRADFI groups ("probing beyond the
+> expected set is part of the sweep's over/under-declaration coverage"). It is therefore probably NOT the writer of
+> these manifest rows. The real writer is under investigation; do not "fix" the smoke script assuming it is the cause.
+>
+> Sections below this banner predate the correction and are retained only for the measured numbers they cite; their
+> is_exchange-based reasoning is superseded.
+
 The operator asked why SPORTS enumerates 308 shards and whether per-bookmaker recording is meaningful given not every
-bookmaker offers every market. It is not — and prod confirms it.
+bookmaker offers every market. The concern is valid; the original explanation below is not.
 
 ## What the enumeration produces
 
