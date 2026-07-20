@@ -186,3 +186,27 @@ now** and would be today's preferred target.
     `test_start_does_not_warn_when_fleet_registry_populated` in `tests/test_failover.py`. This is a small, safe addition
     beyond the todo's literal "written answer" gate — it never enables/starts anything on its own, just makes an
     already-enabled-but-inert state loud instead of silent, which is exactly the risk the todo was raised to close.
+- **2026-07-20 — todo 8 done** (`agent-orchestrator@3dff4d7`) — GCP branch added to `bootstrap_vm.sh` STEP 10
+  self-registration, closing the gap todo 4's trace surfaced. All 8 todos now complete; plan is functionally done, left
+  `status: active` pending the operator's own archival call rather than self-archived here.
+
+## Notes for the plan writer
+
+Flagging two things noticed while executing this plan, for future plan authoring — not blockers, both already resolved
+here:
+
+- **This plan was independently executed START-TO-FINISH by two separate operator sessions running concurrently** (this
+  session, and `harshkantariya [slot-23·harsh_pc]`, minutes apart) — neither aware of the other until the background
+  FF-pull cron merged the other's already-shipped commits mid-session. Both converged on near-identical fixes for todos
+  1-7 (same eligibility filters, same test structure, even the same todo-8 finding), so the duplicated effort didn't
+  produce conflicting work this time, but it was pure waste — two full implementation passes for one plan. **Root
+  cause**: `assigned_vm: NA` / `execution_scope: local-only` plans have no claim signal visible to a second operator
+  before they start — AO-dispatched plans get backlog-level claim protection, local ones don't. Worth a lightweight
+  convention (e.g. the first Progress Log line being "starting now — <operator/slot>", or a `claimed_by`/`claimed_at`
+  frontmatter stamp) so a second operator opening the same local plan sees it's already in flight before duplicating the
+  work, not after.
+- **Todo 4's gate — "a written answer covering (a)/(b)/(c)..." — was read by both sessions as license to also
+  _implement_ (c)**, not just answer it in prose (both added the loud-warning code + tests, unprompted by the gate
+  text). Worked out fine here since the answer was "yes, and it's cheap and safe," but if a future todo genuinely wants
+  documentation-only output with no code changes, say so explicitly (e.g. "a written recommendation only — do not
+  implement") — "a written answer covering whether X should happen" reads as an invitation to just do X.
