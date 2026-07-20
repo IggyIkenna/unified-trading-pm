@@ -99,13 +99,32 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
   bookkeeping; the re-run reads fixture PARQUETS (already correct via §Q/T/W round + §V split-read), so it is gated only
   on the §Z code fix + a fresh tarball (both done). 2024 pilot chunk launched; verify its shards show a real
   early/mid/late competition_phase spread before fanning out the remaining years. Verify via corpus re-scan (matchday
-  non-null ≈ round non-null; phase NOT 100% 'late'). **VERIFIED 2026-07-19/20 (corpus-wide, not just pilot): 2021-2026
-  CLEAN (matchday populated, real early/mid/late spread); 2019 + 2020 were NOT re-run — the SPOT VMs hit the `--force` ×
-  SPOT preemption-replay hazard WITHIN the year** (log shows repeated restart at YYYY-01-01; never reached mid-year;
-  exited 0 having covered ~48/366 of ~4000/2900 shards). **Per-YEAR chunking was not fine-grained enough against
-  within-year preemption.** Fix: re-ran 2019+2020 **ON-DEMAND** (`--on-demand` FLAG — the `ON_DEMAND=true` ENV is
-  overridden by the launcher's internal default, a foot-gun) so they can't be preempted. Verify 2019/2020 clean on
-  terminal, then this is DONE.
+  non-null ≈ round non-null; phase NOT 100% 'late'). 2019 + 2020 initially failed to re-run — the SPOT VMs hit the
+  `--force` × SPOT preemption-replay hazard WITHIN the year (log shows repeated restart at YYYY-01-01; never reached
+  mid-year; exited 0 having covered ~48/366 of ~4000/2900 shards). **Per-YEAR chunking was not fine-grained enough
+  against within-year preemption.** Fix: re-ran 2019+2020 **ON-DEMAND** (`--on-demand` FLAG — the `ON_DEMAND=true` ENV
+  is overridden by the launcher's internal default, a foot-gun) so they can't be preempted. **⚠️ CORRECTION 2026-07-20 —
+  the earlier "VERIFIED corpus-wide: 2021-2026 CLEAN" claim on this line was OVERSTATED and is RETRACTED.** It sampled
+  days, and the sampled days were ones the re-run had rewritten. A creation-time census of all 124,554
+  `derived_features` objects + a 250-object stratified content sample measured a **100% fabrication rate among ALL
+  pre-fix objects (249/250)** — i.e. "pre-fix" means fabricated, not merely suspect — totalling **35,045 fabricated
+  parquet objects**, of which **2,821 sit inside the supposedly-clean 2021-2026**. Two structural gaps: (a) this task's
+  scope is "2019→present" but the corpus starts `day=2017-02-02`, so **2017+2018 (26,089 files — 2018 is the LARGEST
+  year in the corpus) were never in scope**; (b) `--force` only overwrites days the run PRODUCES output for, so
+  fabricated objects survive on days that yield nothing (observed: `day=2019-04-20`, passed at 12:42Z, still 100%
+  `'late'`). Full evidence + required remediation:
+  `issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`. This todo is NOT done — see the three
+  follow-ups below.
+- [ ] [DATA] P0. **Re-run 2017 + 2018 `derived_features`** — never in this plan's "2019→present" scope, and measured
+      100% fabricated (26,089 parquet objects; 2018 alone is 22,077, the largest year in the corpus). ON-DEMAND, same
+      per-year chunking + `--force` as the 2019/2020 recovery.
+- [ ] [DATA] P0. **PURGE the fabricated remainder — overwriting is provably insufficient.** After the re-runs, every
+      `derived_features` parquet still carrying a PRE-`2026-07-19` GCS creation timestamp is fabricated by measurement
+      and must be DELETED, not left to a re-run that never rewrites a day it produces no output for. Honest absence
+      beats an invented `competition_phase` (`codex/02-data/honest-absence-downstream-handling.md`). Snapshot the delete
+      list first; the bucket has GCS soft-delete (7-day recovery).
+- [ ] [DATA] P0. **Re-verify by CENSUS, not sampling** — the terminal check is "zero pre-fix-dated `derived_features`
+      objects remain", decidable from object metadata alone. Sampling is what produced the retracted CLEAN claim above.
 - [ ] [DIAG] P1. `sfi_progressive_features` is corpus-empty (1 manifest row) despite a documented 2020→today window —
       find why the backfill never ran, then run it. Without it every HT/progressive-SFI ML feature is unavailable.
 - [ ] [DIAG] P2. `is_promotion_relegation` is hardcoded `False` (dead) — wire it from the standings relegation-zone
@@ -239,11 +258,16 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track K — SMOKE + SPEED + right-days · P1
 
-- [ ] [CODE] P0. Extend `features-service/scripts/sports/smoke_matrix.py` beyond `feature_group="odds"` to assert
-      `fixture_features`/`derived_features` (`round_name`, `matchday`, `competition_phase` spread, `coach_id` non-null)
-      on a pinned pre-cutover date (`2024-03-09`) — the only way §V/§Z-class bugs get caught in CI.
-- [ ] [CODE] P1. Pin a `SPORTS_SMOKE_DATES` constant (busy `2025-12-20` / thin `2025-12-24` / known-buggy `2025-12-18` +
-      `2024-03-09`) instead of `resolve_latest_captured_date()`; only allow `empty_confirmed` to PASS on the thin date.
+- [x] [CODE] P0. ✅ CONTENT assertion shipped — **features-service@84cb4613 + @0ae9f460**.
+      `_verify_sports_feature_content()` asserts `matchday` populated on numbered rounds, `competition_phase` not
+      single-valued (§Z), and `round_name` / `coach_id` not 100% null (§V, checked first so it fails on its own).
+      **@0ae9f460 also fixed a path bug in my own @84cb4613**: the layout is `day=<D>/league=<N>/feature_group=<G>/` —
+      the league segment sits BETWEEN day and feature_group, so the original `day=<D>/feature_group=<G>/` prefix matched
+      nothing and the check passed vacuously. Measured against the live bucket.
+- [x] [CODE] P1. ✅ `SPORTS_SMOKE_DATES` pinned — **features-service@84cb4613 + @0ae9f460** (busy `2025-12-20` / thin
+      `2025-12-24` / known_buggy_odds `2025-12-18` / known_buggy_fixtures `2024-03-09`; league-shard counts measured
+      2026-07-19). @0ae9f460 added the enforcement half: for SPORTS, `empty_confirmed` PASSes only on the pinned thin
+      date — a busy slate returning empty is now a FAIL.
 - [ ] [CODE] P1. Promote the existing golden window (2025-09-01…11-30) to a shared "right days" SSOT module both smoke
       tests and backfill launches import — the "speed / right days" pillar.
 - [ ] [CODE] P1. Build a sports pipeline-check for the tick/MDPS middle leg (none exists) covering IS→tick→MDPS→features
@@ -475,27 +499,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                  | -------------------------- | ---------------------- |
-                  | `PREMIER_LEAGUE`           | `EPL`                  |
-                  | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                  | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                  | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                  | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                          | -------------------------- | ---------------------- |
+                                          | `PREMIER_LEAGUE`           | `EPL`                  |
+                                          | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                          | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                          | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                          | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                  Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                  written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                  attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                  `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                  `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                          Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                          written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                          attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                          `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                          `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                  **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                  DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                  they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                  namespace is reconciled.
+                                          **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                          DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                          they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                          namespace is reconciled.
 
-                  NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                  registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                  §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                          NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                          registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                          §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [ ] [CODE] P0. Reconcile the namespace: either canonicalise `league_id` at the manifest WRITE path (raw api-football
       name → registry slug) or publish an authoritative alias map and apply it at every registry-membership check. Until
