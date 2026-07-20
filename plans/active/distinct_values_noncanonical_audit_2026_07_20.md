@@ -104,9 +104,11 @@ market-type suffixes (the composite IS the venue) and cefi matched 22/24.
    instrument_type, bet-market as chain, `KALSHI_PERP` as a defi chain/venue, `futures_chain` as instrument_type,
    `BARCHART`/source as venue). Root cause is upstream (writer/consolidator). Fix the writer if clearly a bug we own;
    otherwise file/annotate.
-4. **Genuine junk to PURGE** — decommissioned (`DECOMMISSIONED_VENUE_BASES = {DRIFT,FLASH,MANGO,PACIFICA,ZETA}`),
-   retired (`BARCHART`), or garbage (`UNKNOWN`). Manifest+catalogue deletion = destructive-beyond-local = **human-only
-   hard-stop** → verified worklist, gated `BLOCKED-OPERATOR-DECISION`.
+4. **Genuine junk to PURGE** — decommissioned (`DECOMMISSIONED_VENUE_BASES = {DRIFT,FLASH,MANGO,PACIFICA,ZETA}`) or
+   garbage. Manifest+catalogue deletion = destructive-beyond-local = **human-only hard-stop** → verified worklist, gated
+   `BLOCKED-OPERATOR-DECISION`. **NOTE (corrected 2026-07-20):** the original framing above cited `BARCHART`/`UNKNOWN`
+   as cat-4 examples while ALSO citing `BARCHART` as a cat-3 wrong-axis example — an internal contradiction caught by
+   adversarial verification. Both resolved to cat-3-with-quarantine, NOT purge; see the Progress Log verdicts.
 
 ## Codex SSOTs
 
@@ -117,9 +119,10 @@ market-type suffixes (the composite IS the venue) and cefi matched 22/24.
 
 ## Todos
 
-- [ ] [DATA] P0. Run the classification fan-out (Workflow) over the full ground truth: per (asset_group), classify every
-      non-canonical value into category 1–4 with root cause, owning in-flight plan (grep `plans/active` + `issues/`),
-      exact action, owner repo/file, and safety class. Verify the wrong-axis + purge calls adversarially.
+- [x] [DATA] P0. ✅ Run the classification fan-out (Workflow) over the full ground truth — 47 agents, **175 findings**
+      classified cat1-4 with root cause + owning plan + safety class; every cat3/cat4 call adversarially verified (8
+      rate-limited verifiers re-run separately). Evidence: workflow `wf_4d089da8-4db`; synthesis + per-finding JSON in
+      the Progress Log. Outcome: 22 owned / 105 detector-SSOT-gap / 41 wrong-axis / **0 executable purges**.
 - [ ] [BACKEND] P0. Detector fix (deployment-api `_distinct_values.py`): DeFi `venues` axis compares the bare manifest
       venue against the bare bases of `VENUES_BY_ASSET_GROUP['defi']` (keep other axes/AGs exact). Unit-test the
       bare-base reduction (76 → ~28). Ship + flip.
@@ -178,3 +181,72 @@ sports.data_types (7): ARBITRAGE_OPPORTUNITY, ODDS_MOVEMENT, ODDS_SNAPSHOT, odds
 sports.chains (3): H2H, MATCH_ODDS, SPREADS
 (prediction: clean — 0 non-canonical on every axis)
 ```
+
+### 2026-07-20 — classification fan-out COMPLETE (175 findings) + adversarial verification
+
+**Method.** 5 per-asset_group classifier agents over the full ground truth → adversarial verify on every cat-3/cat-4
+(wrong-axis / purge) call → synthesis. 47 agents, 175 findings. 8 verify agents died on API rate-limiting and were
+RE-RUN separately (they covered the 3 most consequential purge calls — see verdicts below).
+
+**Counts.** cat1 (owned by an in-flight plan) 22 · cat2 (detector/SSOT gap) 105 · cat3 (wrong-axis mis-stamp) 41 · cat4
+(junk) 5 claimed → **0 survive as executable purges**.
+
+#### RESULT 1 — the detector grain bug is the dominant root cause (SHIPPED FIX)
+
+~75 of 175 findings are FALSE ALARMS from one file comparing at the wrong grain. Fixed two of the four grains
+(`_distinct_values.py::_comparison_set`), **measured** against the live rollup: **175 → 115 non-canonical (60 false
+badges cleared, 34%)**; defi venues 76→25, defi instrument_types 11→2.
+
+- **D1 defi venues bare-base** — canonical is chain-qualified, manifest is bare (operator-locked
+  `defi-canonical-naming-ssot.md`). ⚠️ The synthesis proposed `v.split('-')[0]`, which is WRONG — it maps canonical
+  `SOLANA-NATIVE-SOLANA` to `SOLANA`. Implemented as "strip a trailing `-{CHAIN}` validated against
+  `MAINNET_CHAIN_IDS`".
+- **D3 defi instrument_types case-insensitive** — the DeFi SSOT declares canonical itypes in LOWER case (`pool`,
+  `a_token`, `lst`, `spot_asset`, `perpetual`, `lending`) while the enum is UPPER. Scoped to defi ONLY: cefi/tradfi are
+  canonically UPPERCASE and their lowercase spellings are REAL drift owned by in-flight migrations. An existing test
+  asserting defi `lending` was drift encoded a stale assumption and was updated with the SSOT citation.
+- **D4 (gate the `chains` axis to defi-only) DELIBERATELY NOT APPLIED** — verification proved the cefi chain values are
+  a LIVE WRITER BUG, so gating the axis would have HIDDEN a production defect. See RESULT 3.
+- D2 (cefi `_CEFI_VENUE_FOLD`) deferred: correct fix is a UAC registry export first — hardcoding the fold map in
+  deployment-api would violate the "canonical sets imported from UAC, never hardcoded" contract.
+
+#### RESULT 2 — the PURGE worklist is EMPTY. Every purge call was walked back.
+
+Adversarial verification refuted or downgraded **all** of them; several contradicted standing operator rulings:
+
+| Value                                                                                                              | Original call   | Verified verdict                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `BARCHART` (tradfi.venues)                                                                                         | cat4 purge      | **REVISED → quarantine-with-tracking.** Same-day operator ruling (`tradfi_consolidated_closeout` Progress Log 2026-07-20): "barchart + ICE qualifier variants quarantine-with-tracking". Rows are 100% `empty_confirmed`/captured=0. |
+| `UNKNOWN` (tradfi.instrument_types)                                                                                | cat4 purge      | **REVISED → classify-or-quarantine.** Operator ruling 2026-07-18: "`<null>`/`''`/`UNKNOWN` classify or quarantine". 77 rows; precedent verified-then-reclassified, never blind-dropped.                                              |
+| `KALSHI_PERP` (defi.chains)                                                                                        | cat3/cat4 purge | **REFUTED.** Explicit operator KEEP ruling + REAL captured funding rows written 2026-07-12/13/14 (39/39/26). A chain-scoped delete would destroy live data.                                                                          |
+| `POLYMARKET_PERP`, `EXTENDED`, `LIGHTER`, sports `UNKNOWN`, `odds_horizon_bucket_{15m,1d}`                         | purge           | REVISED → re-stamp / migrate / already-executed / keep.                                                                                                                                                                              |
+| `odds_horizon_bucket_1h`                                                                                           | purge           | **BLOCKED — verified unsafe**: `_legacy_seed.parquet` resurrection re-supplies deleted atoms.                                                                                                                                        |
+| `options_chain` (tradfi.data_types)                                                                                | relabel         | **REFUTED** — live `SchemaContract` keyed on it under an operator PRESERVE decision.                                                                                                                                                 |
+| **Standing rule confirmed across AGs: the default disposition for a wrong-axis value is RE-STAMP, never DELETE.**  |
+| Recurring blockers: `_legacy_seed.parquet` resurrection · `empty_confirmed` honest-absence rows (deleting converts |
+| KNOWN-ABSENT → UNKNOWN) · raw-name collisions (ASTER↔ASTEROID, `odds_horizon_bucket*`↔the 124k aggregate,          |
+| `UNKNOWN`↔by-design `""`).                                                                                         |
+
+#### RESULT 3 — genuine live writer bug found (cefi chain axis)
+
+UAC `SHARD_AXIS_MATRIX[("market-tick-data-service","cefi")]` has **no `chain` axis**, so `chain` is meaningless for
+cefi. instruments-service already excised this defect (`writers.py::_canonical_manifest_venue_chain` short-circuits cefi
+→ `chain=""`, with regression tests). **MTDS never got the fix**:
+`market-tick-data-service/.../cli/handlers/onchain_perp_batch_handler.py:131-139` `_VENUE_CHAIN` stamps each venue as
+its own chain (HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC), mirrored in the live-WS recorder + perp_funding
+handler. → tracked as a P1 writer fix mirroring the IS pattern.
+
+#### RESULT 4 — corrections to the synthesis (verified against the live registry)
+
+- `CHAINLINK`, `PYTH`, `PHOENIX` are **already in** `VENUES_BY_ASSET_GROUP['defi']` (98 entries, not 89) — RC-4 listed
+  them as missing. No UAC action needed; D1 makes them canonical for free.
+- Genuinely absent: ANKR, FRAX, MAKER, STADER, STAKEWISE, SWELL, MANTLE, ACROSS, STARGATE, FLASHBOTS, ALCHEMY, JUPITER,
+  BLAZESTAKE, KAMINO_LENDING, MORPHOVAULTS.
+- **UAC canonical-set additions are NOT "safe-code"** (synthesis mislabel).
+  `instruments-service/scripts/ enumerate_expected_universe.py` builds the coverage DENOMINATOR from
+  `VENUES_BY_ASSET_GROUP`, and `measure_honest_coverage.py` derives `denominator_complete`/`completeness_pct` from it —
+  adding venues EXPANDS the denominator and DROPS measured coverage fleet-wide (rule-11 blast radius). → operator-gated,
+  not autonomous.
+- `futures_chain` in tradfi.data_types: the naive "add to the registry" fix is WRONG (`futures_chain` is an
+  `instrument_type`; the data_type for those rows is `trades`). `options_chain` has a documented T-OLD-2b carve-out;
+  `futures_chain` has none. Needs a live row-count to choose registry-exception vs writer-fix.
