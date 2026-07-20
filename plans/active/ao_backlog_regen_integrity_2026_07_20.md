@@ -154,13 +154,16 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
       38 are the already-ruled-permanently-unauditable NULL-`brief_hash` tail, and all 6 auditable rows are honest —
       **false_done: 0**. **Gate met**. Per-row decision + full investigation recorded on
       `backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`'s Progress Log.
-- [ ] [DOC] P2. **Record that the tasks table is a projection, not a completion ledger.** In the regen docs
-      (`server/regen_backlog_from_plan.py` module docstring + the operator-facing regen doc), state: the table holds
-      currently-OPEN DISPATCHABLE todos plus dispatched history. `BLOCKED-*` todos are deliberately never ingested
-      (`_parse_open_todos` skips them alongside `[x]`), and a todo checked off outside the dispatch loop has its
-      still-queued row garbage-collected by `_prune_stale` (done/dispatched rows are never touched). **A missing row is
-      therefore never by itself evidence of a lost task.** Provenance: the B1 audit, where this question decayed twice
-      because each re-measurement read normal projection churn as instability. **Gate**: the docs say it plainly.
+- [x] ✅ [DOC] P2. **Record that the tasks table is a projection, not a completion ledger.** — **already landed by a
+      sibling plan before this todo was reached; verified complete, not re-done.** Both required locations already carry
+      this exact content (same B1-audit provenance, same wording — `ao_scheduled_agent_hygiene_2026_07_20.md`'s own todo
+      6, same underlying finding, split from the same 2026-07-17 consolidated close-out): (1)
+      `server/regen_backlog_from_plan.py`'s module docstring — `agent-orchestrator@fd09764`; (2) the operator-facing
+      codex doc, `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` § "The tasks table is a
+      projection, not a completion ledger" — `unified-trading-pm@b5e184357`. Read both in full: content matches this
+      todo's ask verbatim (BLOCKED-\* never ingested, prune_stale GC of orphans, done/dispatched rows never touched, "a
+      missing row is never by itself evidence"). **Gate met** — no new commit needed under this plan; flagging the
+      cross-plan duplication here so a future reader doesn't wonder why this todo has no code of its own.
 - [ ] [REVIEW] P1. **Close doc #4 (`backlog_task_done_status_diverges…`) for real.** It left `status: open` awaiting "an
       independent skeptical audit"; that audit happened and found the two rows above, so the doc closes only AFTER todo
       5 lands. Record the corollary: the "no periodic sweep needed" ruling holds for the gated mechanism, but the
@@ -186,6 +189,10 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
   Re-measured count is 38, not the plan's own cited 54 (bucket shrinks over time, as expected) — 0 in-flight, ruling's
   precondition holds. WHY documented in `sync_backlog_to_db`'s docstring; growth-alarm script added (baseline=38) with
   unit tests + a live smoke-test against the real VM via SSM (`OK: 38 ≤ 38` today).
+- **2026-07-20 — Todo 6 (projection-not-ledger doc) found already done by a sibling plan.**
+  `ao_scheduled_agent_hygiene_2026_07_20.md` todo 6 shipped the identical content (same B1-audit provenance) to both
+  required locations before this todo was reached — verified both read exactly what this todo asked for, no new commit
+  needed. Recorded for traceability.
 - **2026-07-20 — Todo 5 (clear the 2 live false-done rows) landed — finding: no reopen needed, both already
   self-resolved.** `-001` now `queued` (matches its open checkbox); `-002` no longer exists (id recycled at least twice
   since 07-17). Re-verified `false_done: 0` fleet-wide by replicating `audit_false_done.py`'s logic locally (the live
