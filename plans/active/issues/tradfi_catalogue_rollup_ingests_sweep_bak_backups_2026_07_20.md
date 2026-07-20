@@ -13,7 +13,7 @@ summary: >-
   served catalogue from 82.90% toward ~50% and roughly double F/O rows with twins. The by_date sweep itself is CORRECT
   and durable; the roll-up cannot realise it until the .bak backups (plus old-layout futures_contracts.parquet) are
   excluded from the walk or removed from the prefix.
-status: open
+status: resolved
 nature: notes
 asset_group: [tradfi]
 stage: [data]
@@ -33,10 +33,12 @@ parent_epic: infrastructure_master
 priority: P1
 source: tradfi catalogue rebuild + durability verification 2026-07-20 (agent task)
 assigned_vm:
-resolved_by:
+resolved_by: instruments-service@1a73082e
 locked_by: live-defi-rollout
 audited_scope: data-correctness
 execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Tradfi catalogue roll-up re-contaminates from the sweep's own `.bak` backups
@@ -105,3 +107,26 @@ re-verify F/O canonical lands ~99.83%.
 Denominator mismatch, as suspected: the sweep counts ROWS in the 27,100 `instruments.parquet` files (correctly swept);
 the roll-up counts INSTRUMENTS aggregated from EVERY parquet in the prefix (swept + raw backups + old files). The sweep
 did its job; the roll-up's over-broad file selection re-injects the raw ids the sweep removed.
+
+## RESOLUTION (2026-07-20) — shipped Option A + verified
+
+Fix shipped `instruments-service@1a73082e`: `_iter_by_date_snapshots` now filters `endswith("/instruments.parquet")` (+
+regression test asserting `.bak`/`futures_contracts.parquet` litter excluded, `instruments.parquet` included).
+Blast-radius verified read-only for all asset groups before shipping — only tradfi's `futures_contracts.parquet` is a
+legitimately-written non-`instruments.parquet` snapshot and it carries NO instrument-id column (`_row_id` -> None,
+already dropped by `build_catalogue_dataframe`), so excluding it is a strict no-op; cefi/defi carry only
+`instruments.parquet` (+ `.bak` litter); sports/prediction use their own iterators (prediction already filtered
+`instruments.parquet`).
+
+Re-ran `build_instrument_catalogue.py --asset-group tradfi --mode full --allow-catalogue-shrink` (the shrink override is
+a ONE-TIME need to drop the old raw twins; subsequent runs are stable/growing). SERVED `prod/catalog.parquet`
+(generation 1784577660080452, 2026-07-20T20:01:00):
+
+- Rows 1,391,725 -> **836,956** (the 226k+ raw twins collapsed onto their canonical instrument).
+- F/O canonical **82.9006% -> 99.8359%** (770,694 / 771,961); **0 raw+canonical twins**.
+- Residual non-canonical = **1,267 rows, ALL `QUARANTINE_UNPARSEABLE`** (the legitimate quarantine-by-design floor).
+- KRX display names now populate on the served artifact (Samsung Electronics / SK Hynix / Hyundai Motor).
+
+Durable: the filtered walk means future nightly incremental + weekly full runs re-derive only from the swept
+`instruments.parquet`, so the 99.83% holds — the `.bak` litter can be left in place as harmless storage (no prod delete
+needed).
