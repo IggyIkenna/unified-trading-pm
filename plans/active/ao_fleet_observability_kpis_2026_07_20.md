@@ -1,0 +1,146 @@
+---
+doc_type: plan
+title: AO fleet observability — make efficiency, escalator efficacy and account burn visible
+summary:
+  Roughly four of five dispatches produce no completion and nothing surfaces it, 43% of CI escalations go unresolved
+  after ~3.8 dispatches each, plan_health burns 55 haiku runs a day of which 13 return nothing, snapshot recency is
+  unasserted, and no view shows which account or agent is burning the quota. Add the KPIs, throttle plan_health, and
+  root-cause why the escalators fail rather than only capping them.
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer]
+tags: [agent-orchestrator, observability, kpi, escalation, plan-health, usage, snapshots]
+related:
+  [
+    ao_open_issues_consolidated_close_out_2026_07_17.md,
+    ao_dispatch_cooldown_and_park_2026_07_20.md,
+    ao_fleet_infra_hardening_2026_07_20.md,
+  ]
+created: 2026-07-20
+last_updated: 2026-07-20
+parent_epic: orchestrator_master
+assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)
+execution_scope: local-only
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 3.5
+estimate_calibrated_ai_days: 2.8
+assigned_role: backend_engineer
+model_tier: sonnet-doable # measurement + surfacing work; each item is bounded to a known subsystem
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: [ao_dispatch_cooldown_and_park_2026_07_20.md]
+source:
+---
+
+# AO fleet observability — KPIs, escalator efficacy, account burn
+
+> **Provenance**: Phase 7 (AF-1…AF-5) + the Phase-6 plan_health cadence item of
+> `ao_open_issues_consolidated_close_out_2026_07_17.md`. That plan keeps the audit record; this plan holds the work.
+
+## The through-line
+
+**Every incident in the consolidated plan was found by an operator manually reading the activity log.** That is the
+actual finding here. The fleet looks busy while ~4 of 5 dispatches produce no completion, and nothing surfaces a
+regression until a human goes looking. This plan closes that gap in the specific places it has already cost us.
+
+## ⚠️ Dependency — do not build a second backoff engine
+
+`depends_on: ao_dispatch_cooldown_and_park_2026_07_20.md`. AF-1's escalator redispatch cap **must sit on the ONE
+fleet-scoped cooldown store** built there — the master plan's explicit risk is three separate cooldown/backoff engines
+that diverge. The **analysis** half of AF-1 (triaging the 83 unresolved) needs no dependency and can start now; only the
+cap waits. If you find yourself writing a second backoff, stop and talk to that plan's owner.
+
+## Execution environment — LOCAL
+
+Operator-assigned agents on this host (`assigned_vm: NA`, `execution_scope: local-only`). Tick checkboxes by hand. Code
+is local (`bash scripts/quality-gates.sh`). **Most measurement here needs read-only live-VM access** via SSM (pattern:
+`scripts/orchestrator/check-ao-backlog-status.sh`); for DB reads use `sudo python3` with
+`sqlite3.connect("file:/var/lib/orchestrator/state.db?mode=ro", uri=True)` — no `sqlite3` CLI on the VM, and a probe run
+as `ubuntu` does not inherit the unit's `Environment=`, so pass the path explicitly. The `activity_log` payload column
+is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name returns nothing and looks like "no data".
+**Never write to the live DB.**
+
+## Todos
+
+- [ ] [BACKEND] P1. **(AF-1a) Triage the 83 unresolved escalations and root-cause WHY they fail.** Measured over 7d
+      (`wall_type=ldr_qg_failure`): `escalation_queued=50`, `escalation_dispatched=189` (≈3.8 per escalation — pure
+      redispatch churn), `escalation_resolved=108`, `escalation_unresolved=83` (43%). Every dispatch is a full cicd
+      agent session. **Operator-ratified 2026-07-18**: do not just cap it — sample the 83 and classify the cause into
+      (i) boot prompt too shallow / missing context, (ii) the QG-failure payload handed to them is insufficient, or
+      (iii) genuinely too hard for the cicd role+model (→ model bump or human hand-off). Route the fix by class.
+      **Gate**: the 83 are explained WITH a cause-class breakdown, and the indicated fix (prompt hardening / richer
+      failure context / model tier / escalate-to-operator) is applied or filed as a follow-up.
+- [ ] [BACKEND] P2. **(AF-1b) Cap escalation redispatch — on the shared cooldown store, not a new one.** Per
+      `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Blocked on the dependency above.** **Gate**: a
+      test showing repeat dispatches for the same escalation_id back off; no second cooldown engine exists in the tree.
+- [ ] [BACKEND] P1. **(AF-2 + Phase-6) Throttle plan_health — server-side min-interval gate + at-most-one-live
+      coalesce.** MEASURED: 55 dispatches/24h of which only 42 produced a result and 4 failed (~65% yield); over 6 days
+      288 dispatched / 186 result / 59 failed; run duration median 280s, p90 6.5 min. Root cause found:
+      `main-backmerge-to-ldr.yml` § "Ping plan-health agent" POSTs `/api/plan-health/dispatch` on EVERY LDR→main
+      promotion that lands PM content (fleet promote runs `*/15`), and the endpoint has NO cooldown and NO
+      already-running coalesce — the singleton reaper kills stragglers after the fact, which is where the
+      `superseded-plan_health` churn comes from. Implement: (a) a min-interval gate, **default 2h (operator RATIFIED
+      2026-07-18, "adjust later")**, as an env-free `TuningDefaults` knob — `mode=reconcile` exempt, explicit
+      `force=true` for operator/CI-emergency; (b) at-most-one-live coalesce (a dispatch while one is active returns the
+      active dispatch_id, HTTP 200, no spawn); (c) **also require the PREVIOUS dispatch to have posted its result or
+      timed out** before a new one spawns — that is what kills the 13/day result-less waste; (d) keep the promotion ping
+      as a TRIGGER and let the gate absorb the frequency (trigger-rich, execution-throttled). **Gate**: measured
+      dispatch rate ≤1 per interval over 24h with promotions still flowing; **zero** `superseded-plan_health` exits in
+      that window.
+- [ ] [BACKEND] P2. **(AF-5) Fleet-efficiency KPIs + per-account usage attribution.** 24h measured: 310 boots / 154
+      dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task. Surface daily-digest + dashboard KPIs:
+      spawns, dispatches, done, conversion %, boots-per-done, top skip reasons, with an alert on sharp regression.
+      **Operator-ratified + EXPANDED 2026-07-18**: ALSO attribute USAGE per slot / agent / account — tokens and messages
+      consumed — so it is visible WHERE the account budget goes. Today nothing shows which agent/slot/account burned the
+      quota, yet the fleet hits usage limits even across 4 accounts. Source the counters from the usage-poller /
+      transcript sizes and add a "usage by account" view on the same surface, so an account nearing its cap and the
+      agent driving it are both visible **before** failover fires. **Gate**: the efficiency KPIs render; a per-account
+      usage breakdown is visible; and the 2026-07-12-class degradation (spawn:dispatch 0.6:1 → 44:1) would have been
+      caught within one digest cycle — state how.
+- [ ] [INFRA] P2. **(AF-4) Assert disaster-recovery snapshot RECENCY.** `gcs_sync.SnapshotLoop` runs and
+      `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set, but **nothing asserts snapshot age** — a
+      broken snapshot loop looks exactly like a working one until the day `state.db` is lost. Same silent-by-absence
+      class as the reconciler timer. **RE-VERIFY FIRST**: the earlier "no local state.json" evidence was a PROBE
+      ARTIFACT (the probe ran as `ubuntu` without the unit env, so it checked the in-repo default) — measure the **S3
+      object's last-modified** instead, which is the real signal and path-independent. **Operator-ratified: BUILD it.**
+      (a) re-measure S3 last-modified now; (b) add a snapshot-age assertion (digest line or health endpoint: last
+      successful snapshot < N hours, alert on breach); (c) one documented restore drill. **Gate**: measured snapshot age
+      recorded; the assertion alerts when the loop is deliberately stopped **in a test** (not by stopping the live
+      loop). Note: `ao_fleet_infra_hardening_2026_07_20.md` moves state in-repo, which removes the artifact class
+      entirely — coordinate rather than duplicate.
+- [ ] [BACKEND] P3. **(AF-3) `activity_log` retention — low priority, decide and record.** 83,813 rows over 20 days
+      (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC; `activity_log` has
+      nothing. **Operator context 2026-07-18: 83k rows / 40 MB is NOT big for SQLite — there is no problem today**; the
+      only real risk is unbounded growth over MONTHS (write-latency creep on the write-hot DB). So: a simple age-based
+      prune (90d) OR just a growth alarm suffices — no redesign, and explicitly deferring is an acceptable outcome if
+      the alarm exists. Optionally archive-to-S3 via the existing snapshot loop before any delete. **Gate**: a retention
+      decision recorded and implemented, or explicitly deferred WITH the growth alarm in place.
+
+## Safeguards
+
+- Never `git reset --hard` / `git clean -fd` / `git checkout` a dirty tree — other agents share this repo.
+- Commit only from a `quality-gates.sh`-green tree.
+- **Do not stop a live loop or timer to test an assertion** — prove it with a fixture. Stopping the snapshot loop or a
+  timer on the central VM is a production action and an operator decision.
+- **Report the honest number.** Several gates here are measurements; if a KPI shows the fleet is worse than expected,
+  that is the deliverable, not a problem to smooth over.
+
+## Codex SSOTs
+
+- `codex/04-architecture/agent-orchestrator-alerting.md` — actionable-only alerting; state-transition dedup for any
+  alarm added here.
+- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured terminal verdicts, not activity signals.
+- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch/spawn model behind the KPIs.
+
+## Progress Log
+
+- **2026-07-20 — plan created** from Phase 7 + the Phase-6 plan_health item, merged because AF-2 was already recorded as
+  "folded into the Phase-6 plan_health item's acceptance" — keeping them apart would have split one fix across two
+  agents.
