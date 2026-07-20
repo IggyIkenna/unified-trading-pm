@@ -263,3 +263,40 @@ fixed in this pass (attempted_at preservation); the historical-row restore is a 
 production-data-mutation follow-up appropriately deferred rather than forced. No operator notification triggered — this
 is not a cross-repo/SSOT-contradiction/kill-switch class finding, and the underlying data was already correctly
 classified as `attempted_failed` (Part B), just mis-timestamped.
+
+## CORRECTION 2026-07-20 — the soft-delete "retention cliff" was a false deadline
+
+The closeout plan escalated this as ⏰ TIME-CRITICAL: recover the true `attempted_at` from soft-deleted generation
+`_index/availability_index.parquet#1783986822147154` before it hard-deletes at 2026-07-21T00:19:26Z, via
+`gcloud storage restore`. Operator approved the controlled-window restore. **Measuring before executing showed the
+premise was wrong on two counts, so it was not run.**
+
+**1. That generation is itself clobbered.** The v9 rebuild ran FOUR times, each pass re-stamping the previous stamp:
+
+| index state                                                                                     | `attempted_at` window (BETFAIR/MATCHBOOK/PINNACLE) | verdict    |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---------- |
+| `_index/snapshots/pre_migration_v9_2026-07-12_availability_index.parquet` (07-12T22:19Z)        | 2026-06-21 14:23:10 → 22:41:51 (29,922s spread)    | ✅ TRUE    |
+| `pre_migration_v9_2026-07-13_availability_index` / `pre_force_consolidate_2026-07-13T06_36_00Z` | 2026-07-12 23:17:54 → 23:18:04 (10s)               | clobber #1 |
+| `pre_cf8_backfill_20260713T210725Z`                                                             | 2026-07-13 06:16:02 → 06:16:12 (10s)               | clobber #2 |
+| `pre_cf8_backfill_retry_20260713T233900Z`                                                       | 2026-07-13 21:23:42 → 21:23:49 (7s)                | clobber #3 |
+| LIVE `availability_index.parquet`                                                               | 2026-07-13 23:56:41 → 23:56:48 (7s)                | clobber #4 |
+
+Generation `#1783986822147154` was created 2026-07-13T23:53:42Z — **between clobber #3 and #4**. Restoring it would have
+recovered the 21:23 window: a clobbered value, mistaken for the truth.
+
+**2. No restore is needed.** The true values survive in an ordinary LIVE object with no soft-delete and no retention
+deadline: `_index/snapshots/pre_migration_v9_2026-07-12_availability_index.parquet` (112,278 triplet rows, 8.3h spread).
+A plain `cp` reads it. **There is no deadline on this work.**
+
+**3. The approved operation would also have paged.** `unified_trading_library/monitors/consolidator_liveness.py` has an
+explicit `REASON_SCHEDULER_PAUSED` branch — "deterministically dead, will NOT self-recover" — evaluated by a `*/2`
+watchdog wired to PagerDuty/Telegram. Pausing the `*/1` consolidator cron (the documented first step of the controlled
+window) fires an ERROR-level page. Suppressing it would have meant disabling the safety net around a live 5.3M-row index
+with the operator away.
+
+**Still true / unchanged**: the schema-drift complexity flagged in step 5 above is real — the 07-12 snapshot carries 40
+columns vs the live index's 41, so the `(row_key) -> attempted_at` join still needs the normalization work described,
+and the restore remains a freshness-accuracy improvement rather than a data-correctness emergency. What changed is only
+that it is **no longer time-boxed** and no longer requires a risky in-place soft-delete restore.
+
+Evidence: `scratchpad/verify_preclobber.py`, `scratchpad/ladder.py` (2026-07-20).

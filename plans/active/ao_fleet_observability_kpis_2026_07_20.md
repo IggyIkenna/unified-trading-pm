@@ -69,14 +69,28 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
 
 ## Todos
 
-- [ ] [BACKEND] P1. **(AF-1a) Triage the 83 unresolved escalations and root-cause WHY they fail.** Measured over 7d
-      (`wall_type=ldr_qg_failure`): `escalation_queued=50`, `escalation_dispatched=189` (≈3.8 per escalation — pure
-      redispatch churn), `escalation_resolved=108`, `escalation_unresolved=83` (43%). Every dispatch is a full cicd
-      agent session. **Operator-ratified 2026-07-18**: do not just cap it — sample the 83 and classify the cause into
-      (i) boot prompt too shallow / missing context, (ii) the QG-failure payload handed to them is insufficient, or
-      (iii) genuinely too hard for the cicd role+model (→ model bump or human hand-off). Route the fix by class.
-      **Gate**: the 83 are explained WITH a cause-class breakdown, and the indicated fix (prompt hardening / richer
-      failure context / model tier / escalate-to-operator) is applied or filed as a follow-up.
+- [x] [BACKEND] P1. ✅ **(AF-1a) Triage the 83 unresolved escalations and root-cause WHY they fail.** —
+      `unified-trading-pm@a35c6996` (2026-07-20). RE-MEASURED live via read-only SSM (`escalation_queue` +
+      `activity_log`, not the 7d snapshot): 246 total `ldr_qg_failure` rows, 200 resolved / **46 unresolved**. Sampled +
+      classified ALL 46 by activity-log narrative (not just the terminal `last_error`, which is uniformly the generic
+      "re-escalation cap hit" — uninformative on its own): **65% (30/46) NEVER_FOUND_ROOT_CAUSE** (last heartbeat is
+      "reproducing quality-gates.sh failure", i.e. died mid-reproduction), **33% (15/46) FOUND_ROOT_CAUSE_THEN_SILENT**
+      (correctly diagnosed — several within 3-5 min — sometimes even applied the fix, then went silent before shipping),
+      **2% (1/46) hit a `/blocked` question**. **Root cause (bucket i, boot-prompt-too-shallow — NOT ii or iii,
+      diagnosis quality was fine)**: `cicd.md`'s `ldr_qg_failure` handler instructs a BLOCKING foreground
+      `bash scripts/quality-gates.sh`, whose documented runtime is 8-15+ min
+      (`codex/06-coding-standards/quality-gates.md` — one measured CI run: 715s/778s) — at/over the
+      WorkerLivenessWatchdog's 15-min heartbeat-silence kill (`server/worker_liveness_watchdog.py`), with zero
+      instruction to background it or heartbeat during the run. One worker's own note confirms it directly: "running
+      full quality-gates.sh in background (took >10min on first attempt)". This also explains the SAME bug re-escalating
+      from a fresh PR shortly after (e.g. market-data-processing-service `perp_trades`/ `NEEDS_CANDLE_PROCESSING`,
+      features-service transfermarkt-date coverage floor) — the fix was correctly found but never actually landed, so
+      LDR stayed red for the next promotion. **Fix applied**: hardened `agents/cicd.md` with a background-run + poll +
+      heartbeat-every-180s recipe, referenced from every `quality-gates.sh` invocation in the file (merge_conflict /
+      sit_failure / ldr_qg_failure / plan_health), not just ldr_qg_failure. Shipped via quickmerge, PR
+      IggyIkenna/unified-trading-pm#1247 (auto-merge to main). **Follow-up filed, not blocking**: worth re-measuring the
+      unresolved rate ~1 week post-fix to confirm the hypothesis (a KPI AF-5 will make this an ongoing measurement, not
+      a one-off).
 - [ ] [BACKEND] P2. **(AF-1b) Cap escalation redispatch — on the shared cooldown store, not a new one.** Per
       `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Blocked on the dependency above.** **Gate**: a
       test showing repeat dispatches for the same escalation_id back off; no second cooldown engine exists in the tree.
@@ -144,3 +158,9 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
 - **2026-07-20 — plan created** from Phase 7 + the Phase-6 plan_health item, merged because AF-2 was already recorded as
   "folded into the Phase-6 plan_health item's acceptance" — keeping them apart would have split one fix across two
   agents.
+- **2026-07-20 — AF-1a done** (`unified-trading-pm@a35c6996`, PR #1247). Headline finding: the 43%-unresolved number was
+  NOT a diagnosis-quality problem — cicd workers correctly root-caused 98% of the sampled unresolved escalations (often
+  in under 5 minutes) but 100% of those samples then went silent, because the boot prompt's own instructed step
+  (`bash scripts/quality-gates.sh`, blocking foreground, 8-15+ min documented runtime) sits at/over the
+  WorkerLivenessWatchdog's 15-min heartbeat-silence kill with no backgrounding/heartbeat guidance. Fixed by hardening
+  `agents/cicd.md`. Full cause-class breakdown + evidence in the AF-1a todo above.

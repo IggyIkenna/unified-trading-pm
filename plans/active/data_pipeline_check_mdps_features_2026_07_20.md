@@ -298,3 +298,56 @@ operator keep/delete decision (self-heal + registered-live-launcher blast radius
 rows), S1-c `mdps-sports-` prefix unregistered (monitoring blind spot). Safe: S2-a features-backfill dead lower-half,
 S2-b stale SERVICE_TARBALLS keys, S3-a MDPS one-offs past Delete-when (NOT benchmark_fullmonth — reusing it). Do NOT
 autonomously delete registered launchers / rebind self-heal (operator returns to this fleet) — document + notify.
+
+### 2026-07-20 — drivers finalized + a DESIGN CORRECTION (canonical verdict split) + verified canonical divergence
+
+- **Both drivers finalized + QG-green.** MDPS `scripts/pipeline_e2e_check.py` (~1793 lines) + features (~997+). The
+  finalize pass added canonical enforcement, the MDPS adversarial review that had been rate-limited, the features
+  coverage-aware day/window selection (`--require-captured`/`--auto-day` over each family's full lookback window), and a
+  real driver gate in each repo's `quality-gates.sh` (features: also FIXED three pre-existing broken `${REPO_ROOT}` path
+  vars at lines 174/204/205 that made the e2e/resolve_lookback/run_backfill smoke steps silently take the "not found"
+  branch — now proven executing).
+- **DESIGN CORRECTION (mine, decided + documented per autonomous rule 2).** The finalize pass made canonical-ness a
+  FORCE-leg pass predicate, which would skip essentially every cell (all existing candle data diverges) → the skills
+  could never prove force/skip and could not "test all shards". That violates the operator's other explicit requirement.
+  Split per the MTDS rule that "three different failure modes on the same cell must never collapse into one pass/fail
+  bit": **force/skip verify against the writer's REAL measured shape** (mechanism provable, green achievable today);
+  **the canonical leg reports divergence from the DECLARED SSOT template as its own `content_check=non_canonical`
+  verdict + migration worklist** (nothing non-canonical silently passes). Correction workflow `wf_763e4b73-af0`.
+- **VERIFIED canonical divergence (I ground-truthed with `gsutil ls`, not agent-reported)** → issue doc
+  `issues/candle_feature_canonical_path_divergence_2026_07_20.md`:
+  - cefi candle object:
+    `…/timeframe=15m/data_type=derivative_ticker/venue=DERIBIT/DERIBIT:PERPETUAL:BTC-PERPETUAL.parquet` → `data_type=`
+    is the **SOURCE** type (manifest carries aggregated `deriv_ohlcv_15m`), and **NO `instrument_type=` segment exists**
+    though the declared template requires it. So path==manifest does NOT hold on data_type; the two SSOTs (PATH_REGISTRY
+    vs `docs/GCS_PATHS.md:42`) themselves disagree.
+  - tradfi leaves are non-canonical migration artifacts (`E1AF0_C3200_migrated_20260418T131054Z.parquet`) where cefi's
+    ARE canonical; and a **zero-length-stem object** exists (`venue=CME/.parquet`) — a genuine defect.
+  - sports has NO `processed_candles/` at all — it writes `processed/…/league_id=…/timeframe=T-10m/bucketed.parquet`
+    (legitimately different, not a violation).
+  - features: **volatility writer bypasses its own path SSOT** (`get_data_sink` built with no `prefix=` → writes at the
+    BUCKET ROOT, missing `volatility/by_date/`); UTL paths-registry `delta_one` entry is stale vs the real writer.
+  - **Operator ruling needed (A/B/C in the issue doc) BEFORE the full-history backfill** — ~386 serial-compute-days
+    would otherwise bake the current shape into the whole corpus. Candles are greenfield today (cefi 6 rows), so
+    migrating now is cheap; migrating after the backfill is not.
+
+### 2026-07-20 — operator clarification: CHAIN-BUNDLE RULE (HARD, tradfi + cefi, both drivers)
+
+- Operator: "bundles futures and options across tradfi and cefi need to be processed per files still output one bundled
+  file processing per instrument." **Confirmed as the already-implemented SSOT contract** (read
+  `market_data_processing_service/app/core/output_path_helpers.py` first-hand, 2026-07-20):
+  - chain data_types = UAC `CEFI_CHAIN_INSTRUMENT_TYPES` = `{options_chain, futures_chain}`; its docstring states the
+    tokens "apply identically to TradFi (CME ES options, ETFs)" → BOTH asset_groups, as the operator said.
+  - OUTPUT = ONE bundled file per (date, root): `CHAIN_BUNDLE_FILENAME = "ticks.parquet"` →
+    `…/venue={V}/underlying={U}/ticks.parquet`; non-chain stays `…/venue={V}/{instrument_id}.parquet`.
+  - PROCESSING iterates PER-INSTRUMENT within the bundle: `_process_chain_timeframe` groups by `instrument_key`;
+    `_iter_chain_symbol_dfs` "lazily reads ONE symbol at a time" — the memory-safe path (vs `_read_tick_data`'s eager
+    whole-blob read, which is the OOM driver B1 flagged).
+  - HISTORICAL BUG the rule fixed (P1.5 SP500 master plan 2026-05-05): output named `{instrument_id}.parquet` from the
+    FIRST strike's id. **This gives the drivers a real regression check.**
+- **ENFORCE in both drivers (post-correction pass):** (1) chain shard atom = one underlying-root, never per-strike; (2)
+  force/skip verify must expect `underlying={U}/ticks.parquet` for chain data_types — looking for a per-instrument leaf
+  on a chain cell is a guaranteed FALSE `no_candle`; (3) canonical leg treats the bundled leaf as CANONICAL and flags a
+  per-strike leaf under a chain data_type as `content_check=non_canonical: chain_leaf_not_bundled` (the 2026-05-05
+  regression re-firing); (4) benchmark/ETA must not extrapolate a chain rate from a spot/perp cell — DERIBIT options
+  chains run ~2-3M rows/shard.

@@ -1,14 +1,16 @@
 ---
 doc_type: issue
 title:
-  "P1: MTDS quality gate is RED on LDR — rebuild_defi_manifest's honest-absence re-emit crashes FileNotFoundError on a
-  missing availability_index (blocks every MTDS agent's commit/quickmerge)"
+  "P1 (RESOLVED): MTDS quality gate RED — rebuild_defi_manifest dry-run tests fail from a STALE per-VM shard left in the
+  SHARED local-storage temp dir, not from an unguarded index read"
 summary:
-  reemit_defi_honest_absence_rows reads _index/availability_index.parquet unguarded, so it raises FileNotFoundError
-  instead of treating a missing index as honest absence. The 3 tests in test_rebuild_defi_manifest_dry_run.py fail on a
-  clean LDR checkout, so scripts/quality-gates.sh exits 1, never writes the .qg_last_passed_sha sentinel, and
-  quickmerge's agent fast-path refuses — no agent can ship market-tick-data-service until this is green.
-status: open
+  CORRECTED root cause. The 3 test_rebuild_defi_manifest_dry_run.py failures were NOT an unguarded index read. UTL
+  read_availability_index fail-closes with ManifestConsolidatorStaleError whenever per-VM shards exist without a fresh
+  consolidated _index; a stray shard from an unrelated 2026-07-14 SPORTS backfill test, left in the SHARED
+  /tmp/local-storage bucket, made _per_vm_shards_exist() true so the guard fired correctly. Production code was right
+  all along. Cleared by removing the stale artifact; slot-4 separately shipped mtds@2c88b269 (CF-11 row_key + PROJECTed
+  _index read) fixing the related rebuild-VM OOM. Tests now 0 failed / 6529 passed.
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -26,7 +28,50 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm:
-resolved_by:
+resolved_by: mtds@2c88b269 + stale-local-storage-artifact removal
+---
+
+> **⚠️ ROOT CAUSE CORRECTED 2026-07-20 — read this before the original analysis below, which was WRONG.**
+>
+> The original diagnosis ("`reemit_defi_honest_absence_rows` reads the index unguarded → `FileNotFoundError`") was only
+> the FIRST frame of the traceback. The `FileNotFoundError` **is** already caught (`:411`); what actually escaped was
+> raised by the FALLBACK `read_availability_index(bucket_name)` at `:413`:
+>
+> ```
+> ManifestConsolidatorStaleError: Consolidated availability_index for bucket=... is stale or missing
+> (older than MANIFEST_CONSOLIDATED_STALENESS_SEC=120s) while per-VM shards exist — the manifest
+> consolidator is behind or DOWN. Refusing to fall back to the per-VM shard merge (can OOM on large buckets).
+> ```
+>
+> **That raise is CORRECT, deliberate fail-closed behaviour** (`_read_index.py:229-254`; codex: the manifest
+> consolidator "loud-fails on stale index"). It fires when `shards_exist and not MANIFEST_ALLOW_STALE_FALLBACK`.
+> `MANIFEST_FAIL_ON_STALE_FALLBACK` was unset, so the trigger was **`_per_vm_shards_exist() == True`**.
+>
+> **Why shards "existed" on a supposedly fresh test bucket**: the local-storage provider backs `-test-` buckets with a
+> **SHARED, non-per-test** temp dir. It contained one stray leftover:
+>
+> ```
+> /…/T/local-storage/market-data-tick-defi-prd-test-project/_index/per_vm/
+>     sports-cf8-captured-available-at-backfill-2026-07-14.parquet
+> ```
+>
+> — a 6-day-old artifact from an unrelated **SPORTS** backfill test, with **no** consolidated blob beside it
+> (`consolidated_age_sec = -1.0`). So UTL saw "shards present + consolidated missing ⇒ consolidator DOWN" and correctly
+> refused. **No production code was broken**; this never reproduces on a clean machine or in CI.
+>
+> **Do NOT "fix" this by catching `ManifestConsolidatorStaleError` in `rebuild_defi_manifest.py`** — that would defeat a
+> deliberate loud-fail AND re-introduce the exact CF-11 bug this function exists to prevent (silently dropping the
+> absence corpus, 2026-06-11). A guard was drafted, proven ineffective against the real exception, and **reverted**;
+> slot-4's file is untouched.
+>
+> **Resolution**: stale artifact removed (quarantined, not deleted) → the 3 tests pass; slot-4 independently shipped
+> `mtds@2c88b269` (CF-11 honest-absence `row_key` + PROJECTed `_index` read, fixing the OOM that wedged 3 rebuild VMs).
+> Measured after: **0 failed / 6529 passed**.
+>
+> **Residual worth tracking (P3, not re-opened here)**: the local-storage test provider using a **shared** temp dir
+> rather than a per-test path lets any test leak state that later fails an unrelated suite. That is the real, durable
+> weakness this episode exposed.
+
 ---
 
 # P1 — MTDS quality gate RED on LDR: `rebuild_defi_manifest` crashes on a missing availability index

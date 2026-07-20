@@ -750,6 +750,78 @@ Discriminator = **does a manifest row exist**.
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
+- **2026-07-20 (slot-4, /autonomous — REBUILD-VM OOM ROOT-CAUSED + FIXED; gas_fees orphans quantified; UAC on main but
+  PUBLISH PATH DORMANT → IS blocked upstream).**
+
+  - **🔴 ROOT CAUSE of the rebuild-VM deaths (this is the real blocker, and it is now FIXED in code).** All four
+    per-year rebuild VMs wedged at **exactly the same lifecycle point**: the moment the object scan ended and the CF-11
+    re-emit began — 2023 @08:34:29Z, 2026 @11:30:44Z, 2024 @11:44:45Z; only 2025 (still mid-scan) stayed alive.
+    `cf11_lines=0` on every one, because the box thrashes before the log uploader can flush the line. **Mechanism:**
+    `reemit_defi_honest_absence_rows` did `download_bytes()` of the whole consolidated `_index` (1.14GB parquet /
+    44,730,321 rows / **42 columns**) and then `pd.read_parquet` with NO projection — materialising 42 string-heavy
+    columns as pandas objects on a **16GB e2-standard-4**, on top of the 1.14GB raw bytes and the writer's ~4M-entry
+    state. **MEASURED on the live index: projecting to the 12 columns the pass actually consumes = 2.08GB peak RSS for
+    the same 44.7M rows.** Fix shipped (below): a `_REEMIT_COLUMNS` projection + `del` of the downloaded bytes before
+    the row loop. **GCE reported RUNNING for all four the whole time** — heartbeat-freshness was again the only signal
+    that exposed it (the same masking trap as the 16GB migration OOM).
+  - **🔴 SECOND, SEPARATE scaling defect (diagnosed, NOT fixed — needs an operator/plan decision).** The per-VM
+    ManifestWriter re-serialises the **entire** shard parquet on every 5,000-entry flush, so cost is O(n²) in entries.
+    Measured drag: 2025 went 2025-05-31→2025-06-07 in ~29min ≈ **0.28 days/min** at 4.3M entries, i.e. ~12h for its
+    remaining ~207 days, versus 2023/2024 completing whole years in ~1.5-2h earlier at lower entry counts. A whole-
+    corpus rebuild is therefore self-throttling as it grows. Options: chunk shards per (year, quarter), append-only
+    row-group writes, or a periodic shard roll. **Not attempted here — it is a UTL writer change with fleet-wide blast
+    radius.**
+  - **✅ SHIPPED `mtds@2c88b269`: CF-11 row_key + the `_index` projection + the dry-run test contract.** MTDS QG green
+    (**6520 passed / 0 failed**, `MTDS_QG6_EXIT=0`). Note the ship took 7 QG cycles — the tree is hot (peers pushed
+    `service_config.py` / `test_library_contracts.py` / the RULE-11 re-pin mid-run), so each cycle raced a sentinel
+    invalidation.
+  - **Another agent independently shipped the same RULE-11 re-pin** (`mtds@e639c71f`, agt-966a47, "DEFI 2403→2646
+    (uac@3f79489f added 9 DeFi venues)") — it cites MY UAC commit. My identical local edit became a stash-pop conflict;
+    I resolved in favour of the committed version (theirs carries the same 98x27 arithmetic) and dropped mine. **No
+    duplicate work shipped, but worth noting two agents converged on the same fix from the same upstream cause.**
+  - **🔴 gas_fees orphans QUANTIFIED (60,109 rows total)** — canonical `GAS` **10,417** ✅; **84** malformed
+    `gas_fees_{n}_{n}` ids (all `captured` — real data under garbage ids); **6,053** LST tokens misfiled under
+    `gas_fees` (3 ids: `LIDO-ETHEREUM:LST:STETH`/`:WSTETH`, `ETHERFI-ETHEREUM:LST:WEETH`), of which **5,045 are
+    `expected_unattempted`** = phantom backlog atoms for a combination that can never be captured (an LST token has no
+    gas fee); **43,555** cell-level blank-id rows under venue **ALCHEMY — an RPC PROVIDER, not a chain** (gas is
+    chain-level). The genuine chain venues (ETHEREUM/POLYGON/BSC/AVALANCHE/ARBITRUM/OPTIMISM/LINEA/MANTLE/BASE/AURORA)
+    are correct. **NOT purged autonomously** — data deletion is operator-gated + snapshot-first per this plan's PARKED
+    DATA-ops list. Recommend folding into the same operator-gated purge as the R5 legacy trees.
+  - **⚠️ UAC IS ON MAIN, BUT THE PUBLISH PATH IS DORMANT → IS SHIP IS BLOCKED-UPSTREAM (not a code problem).** I had to
+    trigger the promote manually: the **fleet** promoter (`ldr-to-main-promote-fleet.yml`) is the one that handles UAC —
+    `ldr-to-main-promote.yml` promotes ONLY `unified-trading-pm` itself (`REPO: unified-trading-pm`), which is the wrong
+    workflow and cost me a cycle. On the fleet run all gates passed (`READY (no deps)` ·
+    `TIER A PASS ci_status= MAIN_GREEN` · `CONTENT GATE PASS` · `SIT GATE PASS non-breaking` · `LABEL-CHECK PASS minor`)
+    → **PR #675 opened and MERGED 12:04:43Z**, `quality-gates-v2` green on main. **CONTENT-verified my change is on
+    `origin/main`** (squash merge, so the original SHA is NOT an ancestor — check by content, never `ahead_by`). **But
+    no version bump fired:** `git describe origin/main` is still **v0.71.0**; `version-bump.yml` has not run since
+    **2026-03-16**, and the `Semver Agent` historically fires on **staging** pushes — which the LDR→main DIRECT model
+    bypasses. So a direct-promote repo appears to land on main without ever cutting/publishing a wheel. **I did NOT
+    hand-bump** — CLAUDE.md makes manual version bumps a HARD RULE violation (semver-agent owns it). **Operator decision
+    needed.** Until a wheel publishes, IS cannot go drift-guard-green (IS resolves UAC via `--no-sources`), so the
+    IS→deploy→enum→rollup chain is parked. MTDS was unaffected (it resolves UAC by local path).
+  - **VM cleanup + SURGICAL RELAUNCH on the fixed code.** Deleted all four prior rebuild VMs after confirming their scan
+    output is already persisted (the writer flushes every 5,000 entries, so only a <5,000-row tail is lost). **Key
+    realisation that avoided a wasteful full re-run:** 2020/2021/2023/2024/2026 scans DID COMPLETE — those VMs wedged at
+    the _re-emit_, which runs AFTER the scan. So the only genuine scan gaps are **2022 (~95%, local run stopped
+    @Dec-12)** and **2025 (stopped ~Jun-07)**. Relaunched ONLY those two ranges, pinned to the fix
+    (`MTDS_TARBALL_SHA=2c88b269`) on **e2-highmem-8 (64GB)** for writer headroom, SPOT:
+    - ✅ `canonical-migration-defi-rebuild-20260720-133735-2025d` — 2025-06-01..2025-12-31 (RUNNING)
+    - ✅ `canonical-migration-defi-rebuild-20260720-133819-2022d` — 2022-12-01..2022-12-31 (RUNNING) **Two launch
+      attempts failed FIRST, and the guard was right both times:** (a) the SHA-pinned tarball did not exist
+      (`create-code-tarballs.sh` had not been run at 2c88b269) — the VM REFUSED a floating fallback rather than silently
+      running stale code; (b) `MTDS_TARBALL_SHA` must be the **FULL 40-char SHA**
+      (`2c88b26973044108d8fa5c9f86db781181c56625`) — an 8- or 12-char pin resolves to no object. Building the tarball
+      also required a CLEAN MTDS tree, so the T2 handler WIP was stashed by pathspec and restored after
+      (`slot4-T2-defi-handlers-hold`, popped cleanly). **MEASURED SPEEDUP:** 2025d scans a day every ~4s (25,629 shards
+      @2025-06-11, 254,950 entries in ~3min) versus the old 16GB VM's ~0.28 days/min — i.e. the remaining ~200 days is
+      ~15min, not ~12h. The 64GB box removed the memory-thrash that was ALSO causing the O(n^2)-looking slowdown, so
+      that second defect is far less urgent than it looked (still worth fixing, but it was largely a symptom of thrash,
+      not pure writer cost). **After these terminate: run the consolidator `--once`, then re-verify** (orphan classes =
+      0, per-year captured monotonic, cell-level absence still ~4.6M). **NOTE the clock trap:** the sandbox `date -u`
+      runs ~57min SLOW; VM names / run.log timestamps are REAL UTC — these launched 13:27Z/13:28Z real, not the ~12:30Z
+      the shell reported.
+
 - **2026-07-20 (slot-4, /autonomous — ⛔ CORRECTION: the "CF-11 re-run is necessary" claim below is MEASURED-FALSE;
   orphan checks GREEN; new gas_fees orphans found).**
 

@@ -351,3 +351,18 @@ rather than inference:
   data was ever at risk; both counts match the audit's estimates exactly. This CONFIRMS the walked-back purge verdicts
   on the facts, and the standing operator rulings (quarantine / classify-or-quarantine) govern the remedy. Deleting
   honest-absence rows would still convert KNOWN-ABSENT → UNKNOWN, the recurring hazard.
+
+### 2026-07-20 — OPERATOR DECISIONS (unblocks the three gated items)
+
+1. **`restaking` → ADD `RESTAKING` to the `InstrumentType` enum.** Rationale accepted: liquid restaking carries
+   genuinely distinct risk (EigenLayer AVS slashing stacked on base ETH staking slashing; ezETH depegged 2024), so
+   folding ezETH/rsETH/pufETH into `lst` would lose real signal for collateral/risk modelling. Downstream consumers must
+   handle the new member.
+2. **MTDS venue-as-chain → writer fix + re-stamp in ONE pass.** Mirror `instruments-service`'s
+   `_canonical_manifest_venue_chain` (cefi → `chain=""`). Mechanism: snapshot the `_index` first, CAS-apply, then verify
+   the change HOLDS across 2 consolidator cycles including one `--force`. Leaves a single consistent row identity.
+3. **UAC venue additions → BOTH (15 defi protocols + 19 sports bookmakers).** Operator accepts the coverage-denominator
+   expansion: measured coverage % will visibly DROP because the denominator becomes honest — the underlying data does
+   not change. The sports half SUPERSEDES the 2026-05-12 scraper deferral. **EXCLUDED from the addition either way:**
+   `ALCHEMY` (unreconciled ALCHEMY-vs-ALCHEMIX spelling across chain_env/venue_launch_dates/manifest — reconcile to ONE
+   form first) and `JUPITER` (UAC registry comment says "not integrated"; confirm capture-integration first).

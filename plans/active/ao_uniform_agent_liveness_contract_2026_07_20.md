@@ -46,27 +46,30 @@ source:
 > agent follow the same register/boot/heartbeat protocol with role-appropriate backend responses — **path 2 is chosen**.
 > This plan implements it.
 
-## The evidence that settled it
+## ⚠️ READ FIRST — the evidence this plan was built on has been RETRACTED (2026-07-20)
 
-The daily `plan_reconciler` has been killed mid-work on every run since it was installed. Its JSONL transcript
-(`b1a0f68f-…`, 83 entries, 436 KB) shows it **actively working at 07:32:29Z** — reading its plan-hygiene sweep output,
-analysing the Phase-0 inventory — roughly 60 seconds before its session was destroyed. It was never crashing. It was
-being reaped.
+This plan originally opened with a confident mechanism: that one-off agents never call `/boot`, so their slot stays
+`idle` and `_reclaim_idle_lingering_sessions` reaps them mid-work. **That was wrong and is withdrawn.** The
+plan_reconciler demonstrably DOES call `/boot` (`slot_boot` 07:27:03) and DOES heartbeat (`slot_progress` 07:28:18); no
+reclaim event ever fired; and `tmux_session_lost` is the TmuxPruner OBSERVING an already-dead session, not killing one.
+Full disproven list + the live handoff: `ao_scheduled_agent_hygiene_2026_07_20.md`, the P0 root-cause todo.
 
-The mechanism, with exact arithmetic: a one-off never calls `/boot` (a fleet-worker step its role doc does not ask for),
-so its `SlotRow.status` stays `idle` for its entire run. Then `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions`
-counts it as a lingering session: `boot_grace_seconds` (300s) + `watchdog_idle_session_ticks` (2) ×
-`watchdog_interval_seconds` (60s) = **420s**, against a measured 07:25:50→07:33:30 = **7m40s**.
+**Consequence: the motivating bug is NOT diagnosed, so this plan must not be started as an implementation.** Its
+destination may well still be right — three separate per-subsystem carve-outs for "typed agents are special" do exist
+(`1e7fec0`, `f641968`, `5907317`), and that duplication is real and independently worth removing. But the _route_ and
+the _urgency_ both depend on a root cause nobody has established yet.
 
-**The decisive part is what happened next.** On 2026-07-20 the _prereq_ reaper was taught about typed agents
-(`agent-orchestrator@1e7fec0`, via a live-AgentRow discriminator). The idle-lingering reclaimer — a different function
-in the same file — never learned it, and kept killing the reconciler. A third carve-out was then shipped for that
-function (`agent-orchestrator@f641968`). **Three carve-outs, same fact, three places to forget it.** A fourth reaper
-would need a fourth.
+**What is still independently true** (verified, not inferred):
 
-That is the architectural argument, demonstrated rather than asserted: **per-subsystem role carve-outs do not compose.**
-If instead every agent proves liveness the same way, "is this slot alive?" has one answer and no reaper needs to know
-what kind of agent occupies it.
+- Typed agents already get `status="working"` on claim (`plan_health.py:283`, `escalation.py:476`) — so any future
+  argument based on "their slot reads idle" is false and must not be reintroduced.
+- Three carve-outs teach three different subsystems the same fact; a fourth reaper would need a fourth.
+- `agent-orchestrator@f641968` was shipped on the retracted premise. It is defensively harmless and its regression test
+  is real, but it did not fix the reconciler.
+
+**Do not flip this to `active` until the root-cause investigation lands.** If the cause turns out to be unrelated to
+liveness signalling (an API/usage cutoff, a crash), this plan becomes a pure de-duplication refactor at much lower
+priority — and should be re-scoped accordingly rather than executed as written.
 
 ## What "uniform" means here — and what it does not
 

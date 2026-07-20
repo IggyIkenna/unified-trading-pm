@@ -67,7 +67,15 @@ targeting any of them for the first time:
 ```bash
 PROJECT_ID="central-element-323112"
 for ag in cefi defi tradfi sports prediction; do
-  bucket="instruments-store-${ag}-test-${PROJECT_ID}"
+  # PREDICTION's instruments store is the abbreviated `pred` token, NOT `prediction`
+  # (dedicated flat yaml kind `instruments-store-prediction` ->
+  # `instruments-store-pred-${DEPLOYMENT_ENV_SHORT}-${pid}`). Probed 2026-07-20:
+  # instruments-store-pred-test-* EXISTS with 177 objects; the long
+  # instruments-store-prediction-test-* does NOT exist — so using `${ag}` verbatim
+  # reports a false GAP and provisioning on it creates a DUPLICATE bucket against
+  # bucket_estate_consolidation_to_sub100_2026_07_13.
+  is_ag="${ag}"; [ "${ag}" = "prediction" ] && is_ag="pred"
+  bucket="instruments-store-${is_ag}-test-${PROJECT_ID}"
   # OBJECT-level probe (2026-07-19): NEVER gate on `gcloud storage buckets describe` / `gsutil ls -b` —
   # both need storage.buckets.get, which unified-trading-sa does NOT have (object read/write only).
   # Measured: metadata calls 403 for EVERY bucket incl. ones being actively read, so a describe-based
@@ -79,8 +87,8 @@ for ag in cefi defi tradfi sports prediction; do
     *NotFound*|*404*|*"does not exist"*)  echo "GAP  gs://${bucket} — MISSING, provisioning gate fails for ${ag}" ;;
     *"matched no objects"*|"")            echo "OK   gs://${bucket} (exists, empty)" ;;
     *AccessDenied*|*403*)                 echo "??   gs://${bucket} — 403 on objects too; escalate, do NOT provision blind" ;;
-    *)                                    echo "OK   gs://${bucket} (exists, has objects)"
-  fi
+    *)                                    echo "OK   gs://${bucket} (exists, has objects)" ;;
+  esac
 done
 ```
 

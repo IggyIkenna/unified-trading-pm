@@ -208,11 +208,20 @@ runs.)
 
 ## Follow-on work (tracked)
 
-- [ ] [DEPLOY] P1. Rebuild `instruments-service:latest` (c37d4f96 → LDR→main→cloudbuild) and run a **`--mode full`**
-      defi catalogue regen (`lifecycle-catalogue-full-defi`, or manual `--mode full`). Incremental will NOT purge the
-      frozen 2026-06-26 / 07-06 / 07-08 stamps. Verify: regenerated `prod/catalog.parquet` has the cross-protocol
-      single-date clusters converted to `available_to=None` (re-run the measurement in Reproduction). Cite
-      `Evidence: cloudbuild=<id>` + the regen job execution.
+- [x] ✅ [DEPLOY] P1. **DONE — prod defi catalogue CORRECTED + verified (2026-07-20).** Ran the `--mode full` regen
+      locally at `c37d4f96` against prod: 11,827 rows, **monotonic guard ACCEPT (new=11827 current=11827** — the fix
+      changes `available_to` VALUES, not row count), `CATALOGUE_PROMOTED` →
+      `gs://instruments-store-defi-prd-central-element-323112/prod/catalog.parquet`, exit_code=0. **Discovery — the
+      regen alone was NOT sufficient:** the full rebuild's frozen-tail merge (`close_absent=False`) copies through
+      UNCHANGED every prev row absent from the `by_date` corpus (log: "9482 walked rows + 11827 prev → 11827
+      preserved"), so 2,345 rows kept their PRE-FIX stamps. Post-regen measurement: 2,349 non-blank `available_to`, of
+      which **2,244 (95.5%) sat on the three proven-false cluster dates**. Fixed with a targeted one-off
+      `scripts/purge_defi_false_available_to_2026_07_20.py --apply` (clears ONLY the three proven-false cluster dates;
+      leaves the 105 non-cluster rows alone as possibly-genuine; row count unchanged; backup →
+      `prod/catalog.20260720-122732.falsedelist.bak.parquet`). **VERIFIED FINAL STATE:** non-blank `available_to` 2,349
+      → **105**, and **0 on the cluster dates**; the residual 105 spread across many dates (38 / 30 / then 2-4 each) — a
+      healthy genuine-delisting distribution with NO cross-protocol single-date cluster. The false-delisting is gone
+      from prod.
 - [ ] [DATA] P1. **Historical manifest un-delisting + `NOT_ENOUGH_TVL` re-capture.** The catalogue reset to `None` alone
       does not fix data already written: the defi manifest `_index` still carries `EXPECTED_INSTRUMENT_DELISTED`
       empty_confirmed rows for the clustered dates. **Un-delist script WRITTEN** (`instruments-service/scripts/`
