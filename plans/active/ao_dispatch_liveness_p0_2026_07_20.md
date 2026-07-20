@@ -228,3 +228,31 @@ last for that reason, not for convenience.
   cadence means a same-tick check will very likely observe that gap, not close it. Todo 6 remains open — it needs a time
   window comparable to the 192-event/~2-day baseline (07-18→07-20) before a re-measurement means anything; closing it
   minutes after deploy would not be an honest number.
+
+## Flags for the plan writer
+
+Two things found while executing that are worth your eyes, neither blocking, both left as-is (not silently edited):
+
+1. **Todo-numbering prose is now stale.** "Execution environment" (§ above) says "Todos 1-4 are pure local work" /
+   "Todos 5-6 REQUIRE the live central VM," and "Ordering note" says "Todo 6 is a MEASUREMENT that is only meaningful
+   after 1-2 are deployed." Both were written against the original 6-item list. The todo-4 audit inserted a new followup
+   todo (`_idle_session_ticks` fix) between the audit and "Ship it," so the list is now 7 items and the by-number
+   references in those two prose sections point at the wrong items (the by-number description still describes the RIGHT
+   things, just under the WRONG numbers now — e.g. "todo 6" in the Ordering note means the re-measure todo, which is
+   actually the 7th item in the current list). Also worth noting: the new `_idle_session_ticks` followup is itself pure
+   local work (code + tests, no VM) like todos 1-4, so if you renumber, it slots in with that group, not the
+   VM-requiring one.
+2. **Todo 3's gate text ("the failure path ... still returns 503") is only accurate for `plan_health.py` now, not
+   `escalation.py`.** Confirmed: `PlanHealthError` → HTTP 503 at `routes/agents.py:359` (`/api/plan-health/dispatch`),
+   so that half holds. But `/api/escalate` (`routes/agents.py:267`) stopped calling `escalation.escalate()`
+   synchronously back on `f20195a` (2026-06-16, "enqueue + return fast — never spawn inline," Issue A) — it calls
+   `escalation.enqueue()` instead, whose own docstring says "No 503 path — enqueue is a fast DB write that always
+   succeeds." The ONLY two remaining live callers of `escalate()` (both inside `retry_queued_escalations`, a background
+   async drain loop, not a request handler) pass `queue_on_no_capacity=False` explicitly — so `escalate()`'s DEFAULT
+   `queue_on_no_capacity=True` and its "no free slot" → `EscalationError` → HTTP-503 path appear to be unreachable from
+   any live production code path today, only exercised by direct/test callers. This doesn't affect what shipped here —
+   the retry-on-collision + benign-label fix is exercised by both live call sites regardless of the
+   `queue_on_no_capacity` value — but it's pre-existing plan text (not something I rewrote) describing an architecture
+   that already drifted before this plan was even written, and it raises a real question for you: is
+   `queue_on_no_capacity=True`/its default now dead code worth removing, or intentionally kept as a public API surface?
+   Left for you to decide rather than assuming either answer.
