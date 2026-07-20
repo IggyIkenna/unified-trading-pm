@@ -765,6 +765,31 @@ Discriminator = **does a manifest row exist**.
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
+- **2026-07-20 (slot-4, /autonomous — ✅ CHAINLINK ADAPTER LANDED `is@6506b505`; only the DECLARATION remains).**
+
+  - **Shipped `ChainlinkOracleReferenceDataAdapter` + factory registration** — QG GREEN (4709 passed), landed on LDR,
+    tree 0-dirty. This resolves the exact precondition the peer recorded in `factory.py`: _"CHAINLINK-* stays out of
+    this table: **no adapter class exists yet**, see factory._ADAPTERS + venue_adapter_keys.py, BLK-0c7b82fe"_. The
+    class now exists, is registered in `_ADAPTERS`, is in the chain-aware ctor set, and was **verified constructing on
+    all 5 chains** (ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON).
+  - **The "speculative adapter" objection was MEASURED, not argued away.** All **45** aggregator addresses are a strict
+    SUBSET of the **52** in MTDS's production `cli/handlers/_oracle_prices_constants.py` — the exact set MTDS already
+    fetches via `latestRoundData()`. **Set-diff IS-only = 0.** Static enumeration, no discovery-time network call
+    (mirrors `pyth.py`). So it emits the same reference data MTDS already trusts — not invented data.
+  - **Why this could NOT re-break the gate — verified by READING the code, not assuming.** I had _inferred_ registration
+    would move the denominator; that was WRONG. `_build_defi_venues()` derives from `_SUBGRAPH_PROTOCOL_TO_VENUE_PREFIX`
+    × chains + `_STATIC_DEFI_VENUES` + `_SOLANA_DEFI_VENUES` — **not** from `_ADAPTERS`. So registration is
+    denominator-neutral. **Measured post-ship: IS 93 == UAC 93, guard EQUAL=True, chainlink routable=True.** _This is
+    the second time today that checking an assumption instead of acting on it changed the plan — the first being the
+    4.6M absence rows that made a 7-year re-run unnecessary._
+  - **REMAINING (one coordinated step, deliberately NOT taken solo):** declare `CHAINLINK-*` live in UAC (`phase=live` +
+    `VENUE_TO_ADAPTER_KEY` entries) **and** add it to IS `_STATIC_DEFI_VENUES`, then re-pin RULE-11 93 -> 98 and regen
+    the golden 227 -> 237. Adapter-first ordering means the IS adapter-routing invariant now holds at every intermediate
+    commit. **I stopped short of firing it** because those two repos cannot land atomically — there is a transient
+    window where UAC declares 98 while IS still produces 93, which is precisely the fleet-wide RED
+    (`instruments-service#873`) another slot had just finished cleaning up. Re-opening that window unilaterally, while a
+    peer is actively shipping in the same files, is how you cause the same outage twice. **Operator call.**
+
 - **2026-07-20 (slot-4, /autonomous — REBUILD RE-EMIT now HARD-FAILS on the honest-coverage evidence guard; the +4 IS
   half was landed by a PEER).**
 
