@@ -1023,3 +1023,31 @@ auto-resolved and pinned a UAC that is a DESCENDANT of the `nullable_ohlcv=True`
 the contract that permits NaN OHLC on derivative_ticker; combined with Fix 2 (editable beats wheel cache) + Fix 3 (boot
 assert), the force leg should now WRITE objects (was 0 due to the stale non-nullable contract). Awaiting the VM
 EXIT_STATUS + report to close derivative_ticker end-to-end (issue todo 4) and measure the prod write rate.
+
+### 2026-07-20 ~22:45Z — LOOP-CLOSE re-run OUTCOME: derivative_ticker STILL fails — a DEEPER, SEPARATE bug (enforcer key mismatch), NOT propagation
+
+Honest result: the re-run VM (`…-213641-a63425`, force leg) STILL failed
+`SCHEMA_VALIDATION_FAILED: Column 'open' has N NaN/null values but is NOT NULLABLE for data_type=derivative_ticker`
+(open/high/low/close, "Skipping upload"), 0 objects written, EXIT_STATUS=0, "20/20 succeeded". So the derivative_ticker
+P0 is **NOT closed**.
+
+**But this is NOT a propagation failure — the propagation fix (deployment@e978f32d) is correct and independently
+verified**: the VM's metadata pinned `UAC_TARBALL_SHA=ad317c32` (git-proven descendant of the nullable fix 8e58b009),
+the boot assertion did NOT fire (workload ran → UAC resolved editable, Fix 3 passed), so the VM ran the CORRECT UAC that
+DOES have `nullable_ohlcv=True`. The write still failed for a **different, deeper reason**:
+
+**ROOT CAUSE (hypothesis under adversarial workflow verification — w6kkdobay):** the enforcer
+(`unified_trading_library/core/parquet_schema_enforcer.py`) resolves OHLC nullability by
+`SchemaDefinition.get_nullable_columns(dimensions)` keyed on `dimensions["data_type"]`, and the error is keyed
+`data_type=derivative_ticker` (the SOURCE type). But `uac@8e58b009` set `nullable_ohlcv=True` on the registration keyed
+`_deriv_key(_tf)` = `deriv_ohlcv_{tf}` (the AGGREGATED type, `_candle_contracts.py:186,318`). So the MDPS candle writer
+hands the enforcer the SOURCE data_type, the aggregated-key nullable contract is never matched, OHLC stays non-nullable,
+and the honest-absence NaN rows are rejected. **The UAC fix was applied to a key the writer never queries.** This is the
+SAME path≠manifest divergence (canonical issue finding #2) biting the VALIDATION path.
+
+Launched Workflow **w6kkdobay** (ultracode) to exhaustively trace: (A1) what data_type MDPS passes to the enforcer for
+EVERY candle source type, (A2) the registered UAC candle keys + nullable status, (A3) how get_nullable_columns handles a
+miss, (A4) rule propagation in/out definitively — then synthesize the minimal correct fix + blast radius (does
+trades/book/liq/chain also mis-key?) + regression risk, with adversarial verification before any code change. Fix
+direction (align MDPS to pass the aggregated key vs. register a source-key alias) is DELIBERATELY not yet chosen — the
+workflow decides. Also RE-CONFIRMED the "EXIT_STATUS=0 while 0 objects written" P0 (sibling issue todo 2) on this run.

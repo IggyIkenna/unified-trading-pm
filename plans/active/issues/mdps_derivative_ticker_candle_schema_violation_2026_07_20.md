@@ -134,10 +134,35 @@ the exit code and the summary line do not.
 
 ## Todos
 
-- [ ] 1. [DATA] P0. Root-cause the missing `funding_rate_mean` / `mark_price_mean` / `index_price_mean` in the
-      `derivative_ticker` candle aggregation (CeFi `DerivativeTickerAdapter` → `write_candle_parquet` →
-      `StreamingParquetWriter` strict validation vs the `CEFI_PERPETUAL_DERIVATIVE_TICKER` contract). Either restore the
-      columns in the aggregator or reconcile the contract. **Blocks the derivative_ticker candle backfill.**
+- [~] 1. [DATA] P0. PARTIALLY FIXED (mdps@beea161) — the adapter now emits `funding_rate_mean`/`mark_price_mean`/
+  `index_price_mean` + leaves empty-window OHLC NaN (LOCF removed) per the operator's honest-absence ruling; the error
+  changed from "column funding_rate_mean missing" to "Column 'open' has NaN but is NOT NULLABLE". **STILL BLOCKED by a
+  DEEPER, SEPARATE bug — see the addendum below.** Root-cause the missing columns in the aggregation (done) AND the
+  nullability key mismatch (open).
+
+## ADDENDUM 2026-07-20 ~22:45Z — the write STILL fails after the adapter + UAC fix: an ENFORCER KEY MISMATCH
+
+A loop-closing real-VM re-run (VM `…-213641-a63425`, UAC pinned to `ad317c32`, a git-proven descendant of the
+`nullable_ohlcv=True` fix `uac@8e58b009`; boot assertion did NOT fire → correct editable UAC installed) STILL failed:
+`SCHEMA_VALIDATION_FAILED: Column 'open' has N NaN/null values but is NOT NULLABLE for data_type=derivative_ticker`
+(open/high/low/close, "Skipping upload"), 0 objects written, EXIT_STATUS=0, "20/20 succeeded". **Not a propagation
+failure** — the correct UAC is on the VM.
+
+**The nullable_ohlcv fix was applied to a contract key the writer never queries.** The enforcer
+(`unified_trading_library/core/parquet_schema_enforcer.py`) resolves OHLC nullability via
+`SchemaDefinition.get_nullable_columns(dimensions)` keyed on `dimensions["data_type"]`; the failing dimension is
+`data_type=derivative_ticker` (the SOURCE type). But `uac@8e58b009` set `nullable_ohlcv=True` on the registration keyed
+`_deriv_key(_tf)` = `deriv_ohlcv_{tf}` (the AGGREGATED type — `_candle_contracts.py:186,318`). So the MDPS candle write
+path hands the enforcer the SOURCE `data_type`, the aggregated-key nullable contract is never matched, OHLC is enforced
+non-nullable, and the honest-absence NaN rows are rejected. This is the SAME path≠manifest divergence
+(`candle_feature_canonical_path_divergence_2026_07_20.md` finding #2) manifesting on the VALIDATION path.
+
+The precise fix + blast radius (does `trades`/`book_snapshot_5`/`liquidations`/chain ALSO mis-key, or only
+derivative_ticker? why do trades candles currently succeed?) is under adversarial workflow investigation (w6kkdobay).
+Two candidate fixes: (A) MDPS passes the AGGREGATED key `mdps_data_type_key(src,tf)` as the enforcer `data_type`
+dimension (aligns validation with the manifest key + registered contract); (B) UAC also registers the nullable candle
+contract under the SOURCE key as an alias. The workflow chooses + verifies before any code change.
+
 - [ ] 2. [DATA] P0. Make a run whose every write failed EXIT NON-ZERO (and fix the `N success / 0 failed` summary to
       count _written_, not _processed_). Today a 100%-failed shard reports `rc=0` + "20 success".
 - [ ] 3. [DATA] P1. Sweep the OTHER candle data_types for the same class of contract drift before the backfill
@@ -148,3 +173,9 @@ the exit code and the summary line do not.
       `attempted_failed/SCHEMA_VALIDATION_FAILED` (Phase-0 consolidated at 13:05; the VM wrote its shard at 13:12). Read
       the leg VM's OWN per-VM shard first (concurrency-immune), exactly as the MTDS twin's `_read_per_vm_batch_row`
       does, so the report surfaces the actionable error_reason.
+- [ ] 5. [DATA] P0. **ENFORCER KEY MISMATCH (addendum above) — the actual remaining blocker.** The MDPS candle write
+      path passes the SOURCE `data_type` (`derivative_ticker`) to `get_nullable_columns`, but the nullable candle
+      contract is registered under the AGGREGATED key (`deriv_ohlcv_{tf}`). Fix per workflow w6kkdobay's verified
+      verdict (align MDPS to pass `mdps_data_type_key(src,tf)` to the enforcer, OR register a source-key alias), sweep
+      the same class across all candle types/AGs (subsumes todo 3), then re-run the loop-close to confirm the force leg
+      WRITES objects. Blocks the derivative_ticker candle backfill end-to-end.

@@ -125,7 +125,11 @@ blocks the derivative_ticker candle backfill (the fix is correct but cannot take
       an editable install resolves `__file__` under the project dir (`direct_url` editable:true) — so it passes on a
       correct VM and fires only in the bug case (no fleet-brick risk). QG green (--no-fix, 22s) + 2 new
       `test_tarball_pins.py` assertions.
-- [~] 4. [DATA] P0. Re-run the derivative_ticker loop-close after (1)+(2) — confirm the force leg now WRITES objects
-(was 0), closing the derivative_ticker P0 end-to-end on a real VM. IN PROGRESS — re-run launched now that the setup
-script (Fix 2+3) is published byte-identical on GCS and the local launcher (Fix 1) auto-pins UAC.
+- [x] 4. ✅ [DATA] P0. Re-run DONE — and it DISENTANGLED propagation from the residual bug. The re-run VM
+    (`…-213641-a63425`) pinned `UAC_TARBALL_SHA=ad317c32` (git-proven descendant of the nullable fix), the boot
+    assertion did NOT fire (correct editable UAC installed), so **THIS propagation P0 is CONFIRMED FIXED** — the correct
+    UAC now reaches the VM. The force leg still wrote 0 objects, but for a SEPARATE reason (an enforcer key mismatch:
+    `nullable_ohlcv` is on the aggregated `deriv_ohlcv_{tf}` key while the writer queries the source `derivative_ticker`
+    key) tracked in `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 5 + workflow w6kkdobay — NOT a
+    propagation problem. Close this issue once the sibling key-mismatch fix lands and a re-run writes objects.
 </content>
