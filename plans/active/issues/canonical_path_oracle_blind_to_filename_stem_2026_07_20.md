@@ -10,12 +10,12 @@ summary:
   venue wire stems (`ADAF0:USTF0.parquet`) and double-wrapped catalogue-miss ids
   (`BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet`) returned 0 violations == CANONICAL at both `require_pipeline_mode`
   settings. Anyone following the rule to assess CeFi surface-A canonicality would report the corpus CLEAN while
-  independent measurement put the CeFi filename surface at 20.82% canonical by id-form. A fix classifying violations
-  STRUCTURAL vs ID_FORM, with BOTH reported by default, is implemented and verified but NOT LANDED -- the caller audit
-  found that the two CeFi write-time guards build filenames with `_sanitize_symbol`, which strips the canonical id's
-  literal colon, so default-on ID_FORM makes them raise on EVERY live CeFi write even for correctly-resolved
-  instruments. No caller was softened; the impact is reported here for the separate fail-hard enforcement design to
-  decide. The docs are corrected NOW so the machine-oracle rule cannot mislead a reconciliation in the meantime.
+  independent measurement put the CeFi filename surface at 20.82% canonical by id-form. SHIPPED 2026-07-20: violations
+  are now classified STRUCTURAL vs ID_FORM with BOTH reported by default (uac@d40c5d7d), and the caller-audit blocker was
+  fixed at root -- the two CeFi write-time guards now build filenames with sanitize_file_stem (preserves the id's literal
+  colon), so they emit canonical stems and the default all-class guard passes (mtds@953679de). No caller was softened.
+  Migration population measured 0; reader tolerates the legacy sanitized stem. The batch=live filename divergence this
+  exposed is tracked as its own finding.
 status: open
 nature: issue
 asset_group: [cefi, tradfi, meta]
@@ -52,7 +52,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by:
+resolved_by: "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback); residual followups tracked in § 7 and the batch=live divergence issue"
 ---
 
 # The canonical-path machine oracle was blind to the filename stem
@@ -61,10 +61,13 @@ resolved_by:
 > before 2026-07-20 is **structure-only**. A "0 violations == canonical" result from that period says nothing about
 > whether the objects carry canonical instrument_ids in their filenames, and must not be cited as evidence that they do.
 
-> **🛑 THE UAC FIX IS BUILT AND VERIFIED BUT NOT LANDED — two blockers, § 6.1 and § 9.** Default-on `ID_FORM` makes the
-> two CeFi write-time guards raise on **every live CeFi write**, including for correctly-resolved canonical instruments,
-> because the writers sanitize the id's colons (§ 6.2). **No caller was softened** — per instruction the impact is
-> reported, not papered over. Landing the UAC change without first fixing § 6.2 is a live-write outage.
+> **✅ SHIPPED 2026-07-20 — the fix landed WITH its blocker resolved, not around it.** The UAC default-on stem check
+> (`unified-api-contracts@d40c5d7d`) and the MTDS writer fix (`market-tick-data-service@953679de`) landed together on
+> `live-defi-rollout`. The § 6.1 live-write blocker was fixed at root (§ 6.2): the two CeFi write-time guards now build
+> filenames with `sanitize_file_stem` (preserves the id's literal `:`), so they emit canonical stems and the default
+> all-class oracle call passes — **no caller was softened.** The migration population was measured at **0** (§ 6.1a).
+> The batch=live filename divergence this exposed is tracked as its own finding:
+> `plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`.
 
 ## 1. Measured evidence (reproduced before any change)
 
@@ -173,32 +176,50 @@ Non-test call sites of `canonical_path_violations` / `is_canonical` outside UAC 
 | #   | caller (file:line)                                                                                          | behaviour             | asset groups | impact under default-on                                                                   |
 | --- | ----------------------------------------------------------------------------------------------------------- | --------------------- | ------------ | ----------------------------------------------------------------------------------------- |
 | 1   | `market-tick-data-service/.../engine/orchestrator/partitioned_writer.py:93` `_assert_canonical_tradfi_path` | **RAISES**            | tradfi only  | **NONE** — tradfi is outside the new CeFi id-form check; its own stem rules already fired |
-| 2   | `market-tick-data-service/.../live/websocket_runner.py:128` `live_tick_blob_path`                           | **RAISES**            | cefi + defi  | **🛑 BLOCKER — raises on EVERY live CeFi write** (defi unaffected; not id-form-checked)   |
-| 3   | `market-tick-data-service/.../cli/handlers/book_microstructure_handler.py:188` `_microstructure_blob_path`  | **RAISES**            | cefi         | **🛑 BLOCKER — raises on every microstructure shard write**                               |
+| 2   | `market-tick-data-service/.../live/websocket_runner.py:128` `live_tick_blob_path`                           | **RAISES**            | cefi + defi  | **✅ RESOLVED — now emits canonical `:` stems via `sanitize_file_stem`; guard passes**    |
+| 3   | `market-tick-data-service/.../cli/handlers/book_microstructure_handler.py:188` `_microstructure_blob_path`  | **RAISES**            | cefi         | **✅ RESOLVED — same fix**                                                                |
 | 4   | `e2e-testing/scripts/audit/manifest_hygiene_daily.py:197`                                                   | counts / WARN finding | all          | reports MORE findings (wire stems now surface) — **the desired outcome, no crash**        |
 
 No other production caller exists. `deployment-api/.../_distinct_values.py` and the `pipeline_e2e_check.py` scripts
 matched a grep on unrelated local identifiers (`_input_row_is_canonical`), not on this API.
 `instruments-service-agentwork-sports-2026-07-13/` is a stale duplicate worktree, not a shipping repo.
 
-### 6.1 The BLOCKER, measured against the real functions
+### 6.1 The blocker was measured, then fixed at root (rows 2 & 3 RESOLVED)
 
-Both CeFi guards build their filename as `_sanitize_symbol(instrument_id)`, and
-`market-tick-data-service/.../engine/orchestrator/symbol_rules.py:368-380` rewrites `[/\\:\s]` to `_`. So the canonical
-id `HYPERLIQUID:PERPETUAL:BTC-USD@LIN` reaches the oracle as `HYPERLIQUID_PERPETUAL_BTC-USD@LIN.parquet` — which
-correctly fails the id-form check. Measured by calling the real functions with the fixed oracle installed:
+Before the fix both CeFi guards built their filename as `_sanitize_symbol(instrument_id)`, and `symbol_rules.py:368-380`
+rewrites `[/\\:\s]` to `_`. So the canonical id `HYPERLIQUID:PERPETUAL:BTC-USD@LIN` reached the oracle as
+`HYPERLIQUID_PERPETUAL_BTC-USD@LIN.parquet` — which correctly fails the id-form check. Measured by calling the real
+functions with the fixed oracle installed:
 
 ```
 RAISES HYPERLIQUID      -> live_tick_blob_path built a non-canonical GCS path ... 'HYPERLIQUID_PERPETUAL_BTC-USD@LIN.parquet'
-RAISES BINANCE-FUTURES  -> live_tick_blob_path built a non-canonical GCS path ... 'BINANCE-FUTURES_PERPETUAL_BTC-USDT.parquet'
-RAISES ASTER            -> live_tick_blob_path built a non-canonical GCS path ... 'ASTER_PERPETUAL_BTC-USDT.parquet'
+RAISES BINANCE-FUTURES  -> ... 'BINANCE-FUTURES_PERPETUAL_BTC-USDT.parquet'
 RAISES _microstructure_blob_path -> ... 'BITFINEX-FUTURES_PERPETUAL_ADA-USDT.parquet'
 ```
 
-**This is not the fail-hard the operator asked for.** Failing hard on a wire-named / catalogue-miss id is correct;
-crashing a _correctly-resolved canonical instrument_ because the writer sanitized its colons is a writer bug surfacing
-as an outage. It is the **2026-06-23 live-VM freeze pattern exactly** (an over-broad write-time guard silently froze the
-deribit/hyperliquid/binance live VMs for hours) — see the standing warning comment at `partition_paths.py:740-749`.
+Failing hard on a wire-named / catalogue-miss id is correct; crashing a _correctly-resolved canonical instrument_
+because the writer sanitized its colons is a writer bug (the **2026-06-23 live-VM freeze pattern**). **FIXED**: the two
+builders now call `sanitize_file_stem` (preserves `:`, still escapes `/\\`+whitespace), so the same instrument produces
+`HYPERLIQUID:PERPETUAL:BTC-USD@LIN.parquet` and the default all-class guard passes — verified by calling the real
+functions (`market-tick-data-service@953679de`).
+
+### 6.1a Migration blast radius — measured 0 (bounded GCS listing, cefi+defi)
+
+The manifest has no path column, so the object NAME was read directly from a **bounded listing of the live pipeline_mode
+dirs** (not a corpus walk). **No object on disk carries the colon-stripped form the fix targets**: the
+`_sanitize_symbol` colon-strip landed 2026-07-09, but the last persisted live cefi object is day=2026-06-29 (zero live
+cefi objects exist on any day 2026-07-08..07-20), and the microstructure handler has never persisted an object. What IS
+on disk (a DIFFERENT, pre-existing surface-A id-form population, not this fix's target): **1,697** cefi live objects,
+all `colon_wire` (`BINANCE-FUTURES:PERP:BTCUSDT` — non-canonical `PERP`/raw-symbol, the oracle's new ID_FORM class flags
+all 1,697); **3,366** defi live objects (legit pool/oracle ids, correctly not id-form-flagged). The idempotent migration
+`scripts/migrate_live_sanitized_stem_to_canonical_2026_07_20.py` runs as a verified no-op and is kept as a safety net.
+
+### 6.1b Reader resolves BOTH forms — proven by execution
+
+Before the fix, `CanonicalParquetReader._cefi_candidate_stems` did NOT probe the sanitized form (proven:
+`sanitized in stems` was `False`), so a narrow read would have silently lost any sanitized object. The reader now
+appends the legacy sanitized stem LAST (canonical → wire → sanitized), for all asset groups — it also resolves the real
+DeFi oracle case (`eth/usd` → `eth_usd`). Ordered last so a canonical/wire object always wins.
 
 ### 6.2 The real defect this exposed — live filenames diverge from batch
 
@@ -208,19 +229,20 @@ filenames carry literal `:`"_. The **live** runner and the **microstructure** ha
 batch write the same instrument to **different object names**. This is both a canonicality defect and a **batch=live
 determinism** concern (`codex/09-strategy/operational/paper-batch-live-reconciliation.md`).
 
-**Fixing § 6.2 is what makes § 6.1 disappear** — it is the canonical-SSOT-and-migrate move, not a softening.
+**Fixing § 6.2 is what makes § 6.1 disappear** — it is the canonical-SSOT-and-migrate move, not a softening. **DONE.**
+Full write-path treatment (the verbatim-write + no-guard + `validate=False` family) is tracked in
+`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`.
 
-## 7. Residual risk / open work (owned by the separate fail-hard enforcement design)
+## 7. Residual risk / open work
 
-- [ ] [SERVICE] P0. Remove the `_sanitize_symbol` call from `live_tick_blob_path` + `_microstructure_blob_path` so live
-      filenames carry the literal-colon canonical id (matching batch). Requires a migration decision for already-written
-      sanitized live objects. **This unblocks default-on ID_FORM at the write boundary.** (Provenance: caller audit §
-      6.1, 2026-07-20.)
+- [x] [SERVICE] P0. Remove the `_sanitize_symbol` call from `live_tick_blob_path` + `_microstructure_blob_path` so live
+      filenames carry the literal-colon canonical id (matching batch) — `market-tick-data-service@953679de`
+      (`sanitize_file_stem`). Migration population measured 0 (§ 6.1a); reader tolerates the legacy form (§ 6.1b).
 - [ ] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints the
       double-wrapped `VENUE:ITYPE:<raw wire>` ids — tolerance is the mechanism that polluted the corpus. (Provenance:
-      operator ruling 2026-07-20.)
+      operator ruling 2026-07-20. Tracked in the batch=live divergence issue doc.)
 - [ ] [DATA] P1. Re-run CeFi surface-A reconciliation with the fixed oracle and restate the verdict; every
-      pre-2026-07-20 surface-A verdict is structure-only.
+      pre-2026-07-20 surface-A verdict is structure-only. (The 1,697 colon_wire live objects in § 6.1a are now flagged.)
 - [ ] [DATA] P2. Decide the id grammar for `defi` / `prediction` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; until
       then those AGs report "not checked".
 - [ ] [DATA] P2. The legitimately-unresolvable objects need a quarantine / honest-absence disposition (separate design).
@@ -232,18 +254,16 @@ determinism** concern (`codex/09-strategy/operational/paper-batch-live-reconcili
 - `cursor-configs/skills/data-pipeline-reconciliation/SKILL.md` § 3a — two-question statement
 - `cursor-configs/CLAUDE.md` — reconciliation one-liner
 
-## 9. Why the UAC change was NOT landed (both blockers are external to the change)
+## 9. How it shipped (both original blockers resolved)
 
-1. **Live-write outage (§ 6.1)** — landing default-on `ID_FORM` before removing the `_sanitize_symbol` call (§ 6.2)
-   raises on every live CeFi write. Fixing § 6.2 changes live object NAMES, which is a migration decision, not a
-   unilateral one. **Decision required.**
-2. **UAC quality gates are RED from another agent's in-flight work** —
-   `tests/unit/test_venue_adapter_keys.py:: test_every_canonical_venue_has_an_entry` fails because an uncommitted
-   working-tree change adds `VENUES_BY_ASSET_GROUP` sports venues (BETMGM, BETWAY, BOVADA, …) with no
-   `VENUE_TO_ADAPTER_KEY` entries. **Proven foreign**: the symbol `VENUES_BY_ASSET_GROUP` does not exist at `HEAD`
-   (`AttributeError` on a clean detached worktree), and the failing test does not import `partition_paths` at all. A
-   commit cannot be made from a red tree, so quickmerge is blocked until that agent lands or reverts.
-   `market-tick-data-service` is separately unshippable — 6 files in an unresolved merge state (`UU`/`UD`).
+1. **Live-write outage (§ 6.1)** — fixed at root by `sanitize_file_stem` (§ 6.2); the guards now emit canonical stems,
+   so default-on `ID_FORM` passes for correctly-resolved instruments. The migration decision it required was measured to
+   be a **no-op** (§ 6.1a: 0 objects on disk in the colon-stripped form). Shipped `market-tick-data-service@953679de`.
+2. **Foreign red in both dep trees was transient** — the UAC `test_venue_adapter_keys` failure (an uncommitted foreign
+   `VENUES_BY_ASSET_GROUP` change) and the MTDS `venue_fetch` sports WIP both cleared when those agents committed. Each
+   change was isolated in a dedicated worktree (own venv, sibling-symlinked deps) and QG-proven green before landing, so
+   nothing shipped on top of another agent's red. Landed: `unified-api-contracts@d40c5d7d`,
+   `market-tick-data-service@953679de` — both on `live-defi-rollout`.
 
 The UAC diff (`partition_paths.py`, `__init__.py`, `tests/unit/test_partition_path_is_canonical.py`) is complete and its
 own tests pass (178 passed across the four canonical-path test modules).
