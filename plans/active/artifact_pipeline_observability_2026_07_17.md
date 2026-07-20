@@ -147,16 +147,22 @@ never a fabricated green (the `_image_signal` principle).
 - **Tarball VM runtime SHA — NOW IN SCOPE** (operator 2026-07-17, supersedes the earlier "issue-doc only" call). Today
   `git_commit`/`image_digest` are `""` on every live VM, so the fragmentation view — the single most valuable thing for
   the VM fleet — is unresolvable. Operator approved **both** paths, with a clear split:
-  - **(A) MEASURED, going forward** — stamp the real commit on the registry entry at launch. This is the target state;
-    the page must show measured values, not inferred ones, for anything launched after it lands.
-  - **(B) INFERRED, for historic/in-flight VMs only** — reconstruct the commit by joining a VM's launch time against the
-    tarball manifest timeline (manifests carry `commit_sha` + `created_at`). **A stopgap, explicitly rendered as
-    _inferred_, never as measured**, and retired for new launches once (A) is live.
-  - 🔴 **HARD CONSTRAINT (operator)**: (A) must NOT break the CD flow that works today — VMs boot and pull the _current
-    latest_ tarball, and that must keep working unchanged. "Making changes for this feature is okay, but not at the cost
-    of breaking something that is working right now." Therefore (A) is **gated on a blast-radius audit** (Phase 3c) that
-    must return a YES / YES-WITH-CONDITIONS verdict, enumerate every consumer of `git_commit`/`image_digest`, and
-    confirm the tarball naming/pathing does not have to change. A NO verdict means ship (B) only and escalate.
+  - **(A) MEASURED, going forward — THE ONLY PATH** (audit-cleared, Phase 3c). Stamp the real commit on the registry
+    entry at launch. Anything launched after it lands shows a measured value.
+  - ❌ **(B) INFERRED — EVALUATED AND DROPPED (operator decision 2026-07-17).** The proposal was to reconstruct a commit
+    by joining a VM's launch time against the tarball manifest timeline. The audit put the honest ceiling at _"probably
+    this commit, ±one 30-minute refresh window, per repo, for VMs launched in the last 30 days"_, and found a
+    disqualifying flaw: `started_at` is recorded **after** the tarball download, so the join runs against the wrong
+    timestamp and is biased toward the wrong answer. Compounding limits: the floating manifest is overwritten each
+    rebuild, a VM installs several tarballs (a per-repo vector, each independently ambiguous), `deployments/archive/`
+    expires at 30 days, and `--allow-dirty-tarball` builds carry a `commit_sha` that does not describe the shipped
+    bytes. **Decision: do not build it.** A number that looks precise and isn't is worse than an honest blank — so
+    pre-(A) VMs render as ⚪ **unknown**, with the reason, and simply age out as the fleet recycles.
+  - 🔴 **HARD CONSTRAINT (operator), SATISFIED**: (A) must NOT break the CD flow that works today — VMs boot and pull
+    the _current latest_ tarball, and that must keep working unchanged. "Making changes for this feature is okay, but
+    not at the cost of breaking something that is working right now." The Phase 3c audit returned
+    **YES-WITH-CONDITIONS** and confirmed structurally that **no tarball naming or path change is required** — the
+    change only reads a value the boot already downloads, parses, and currently discards.
 - **AWS tarball lane — broken at TWO independent points** (re-verified 2026-07-17; an earlier draft of this plan framed
   this wrongly as an uploader/launcher bucket disagreement — the uploader and the AWS setup script actually **agree** on
   `uts-prod-deployment-state`). The real findings: (1) `s3://uts-prod-deployment-state/code/` is **EMPTY** (0 objects;
@@ -336,16 +342,10 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
       launch**: fire one cheap `EPHEMERAL_BATCH` VM, run the codex T+10min check, and assert a registry row appears in
       `deployments/active/` with a **non-empty `git_commit`**. Add a unit test that `resolve_deployment_bom` reads
       `GIT_COMMIT` from env (covers the Python half; the real risk is the shell half).
-- [ ] [BACKEND] P2. **(B) inferred fallback — WEAKER THAN ASSUMED; confirm with the operator before building.** The
-      audit put the honest ceiling at _"probably this commit, ±one 30-minute refresh window, per repo, for VMs launched
-      in the last 30 days."_ Four measured limits: (i) `started_at` is written **after** the download, so the join uses
-      the wrong timestamp and is biased toward the wrong answer; (ii) the floating manifest is **overwritten** each
-      rebuild, so reconstruction only works where a pinned copy also exists; (iii) a VM installs **several** tarballs →
-      a per-repo vector, each independently ambiguous; (iv) `deployments/archive/` expires at **30 days**, so the VM
-      side of the join vanishes beyond that. Also `--allow-dirty-tarball` builds carry a `commit_sha` that does not
-      describe the shipped bytes. **MUST go in a separately-named field — never `git_commit`** (mixing inferred with
-      measured destroys the field's meaning). Given (A) is cheap and non-breaking, (B) may not be worth building at all.
-      Render **explicitly as inferred, never measured**, and stop applying it to launches once (A) is live.
+
+> ❌ **Option (B) — inferred-from-manifest-timeline — is DROPPED** (operator decision 2026-07-17). Rationale recorded
+> under "Honest gaps" above. Pre-(A) VMs render as ⚪ **unknown with the reason**, and age out as the fleet recycles. Do
+> not reintroduce an inferred commit into `git_commit`.
 
 ### Phase 4 — absorb + retire
 
@@ -415,4 +415,7 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
   _different_ nonexistent bucket in the EC2 launcher; (3) manifest/tarball counts corrected to **4064 / 163**. Also: the
   `0.99.0` `dep_versions` value is an **honest** report of a deliberately-pinned `SETUPTOOLS_SCM_PRETEND_VERSION`
   constant (`setup-data-pipeline-vm.sh:703`, because tarballs ship without `.git`) — it carries zero provenance, but the
-  BoM is not lying; the mock's wording must reflect that distinction. **No page code started; mock rebuild pending.**
+  BoM is not lying; the mock's wording must reflect that distinction.
+- **2026-07-17 — operator DROPPED option (B) entirely.** Only (A), the measured stamp, gets built. Pre-(A) VMs render as
+  ⚪ unknown-with-reason rather than carrying a falsely-precise inferred commit, and age out as the fleet recycles. **No
+  page code started; running-tab mock rebuild in progress.**
