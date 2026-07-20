@@ -147,9 +147,10 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       between VMs). Driver smoke wired into `scripts/quality-gates.sh`. **Shipped under the dirty-deps carve-out** (UTL
       had another agent's LIVE uncommitted WIP, mtime <120s → PROTECT, which blocked the quickmerge pre-flight); commit
       touches only MDPS files.
-- [ ] 4. [SCRIPT] P1. Build `features-service/scripts/pipeline_e2e_check.py` (feature-family MVP shards, per-family CLI
-      divergence, multi-day lookback windows via resolve_lookback, self-contained skip, benchmark leg). QG features
-      green.
+- [x] 4. ✅ [SCRIPT] P1. `features-service@d92c700a` — built, QG-green (278s), measured-vs-declared split +
+      coverage-aware windows + canonical migration worklist; also fixed 3 broken REPO_ROOT path vars in the repo QG.
+      Build `features-service/scripts/pipeline_e2e_check.py` (feature-family MVP shards, per-family CLI divergence,
+      multi-day lookback windows via resolve_lookback, self-contained skip, benchmark leg). QG features green.
 - [x] 5. ✅ [SKILL] P1. Both SKILL.md written in the canonical `cursor-configs/skills/` (auto-registered; both now
       appear in the harness skill list). Mirror the MTDS Phase 0/1/2 + report shape and ADD: the canonical-paths
       principle (§3a/§3b — non-canonical is skipped/flagged, never legacy-passed, and IS the migration worklist),
@@ -158,7 +159,9 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       parallelization headroom (fleet-wide since MDPS/features are NOT Tardis-capped), the known orphan/structural
       cells, and the throughput-measurement traps. MDPS §3 carries the hard scoping warning: an unscoped run is 447
       cells all-AG → ~447 force + ~447 skip VMs, so `--require-captured` is mandatory.
-- [ ] 6. [SCRIPT] P2. Wire both drivers into their consumer `quality-gates.sh` + lifecycle markers
+- [x] 6. ✅ [SCRIPT] P2. Wired: MDPS quality-gates.sh has a --help+dry-enumerate gate; features quality-gates.sh has the
+      e2e/resolve_lookback/run_backfill smoke (REPO_ROOT->PROJECT_ROOT fix) + a --help gate. Lifecycle markers present.
+      Wire both drivers into their consumer `quality-gates.sh` + lifecycle markers
       (`# Epic:`/`# Lifecycle:`/`# Delete-when:`).
 - [x] 7. ✅ [DATA] P1. `-test-` buckets — **ALL EXIST, no provisioning needed** (object-level probe 2026-07-20; never
       `buckets describe`, which 403s without `storage.buckets.get`). MDPS candles are CO-LOCATED in the MTDS tick
