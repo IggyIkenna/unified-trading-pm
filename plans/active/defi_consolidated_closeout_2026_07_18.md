@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -812,6 +812,31 @@ Discriminator = **does a manifest row exist**.
     **DEFERRED-bespoke (flag, not MVP-blocking):** GMX POOL-vs-PERPETUAL shape; HYPERLIQUID-L1 gas (no EVM chain_id);
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
+
+- **2026-07-20 (slot-4, /autonomous — auth RESTORED; `/data-pipeline-check-mtds` PROVEN-WORKING but blocked on manifest
+  freshness; 2025d re-emit is HANGING).**
+
+  - **gcloud CLI auth came back** (operator reauth after the account reset), unblocking VM ops + the check. Re-verified
+    fleet: the per-instrument migration VM is TERMINATED (migration done); only `…-2025d` rebuild remains.
+  - **`/data-pipeline-check-mtds` RAN and is PROVEN-WORKING** (Phase-0 defi `-test-` bucket exists; day 2025-03-12
+    data-verified at 26,402 captured rows). On the representative `DEFI:AAVE_V3-ETHEREUM:lending_indices` cell it
+    correctly **refused to emit false verdicts** — both legs `skipped/no_captured_data_for_cell` because
+    `--require-captured` could not read a FRESH consolidated manifest ("falling back to per-VM shards"). This is the
+    check DOING ITS JOB, not a pipeline failure: the consolidated `_index` is stale (updated 18:59, ~20min old; needs
+    <120s) because a rebuild is mid-rewrite. **The check is ready; it just needs a settled manifest** — re-run once the
+    consolidator lands a fresh index. (Also needed `GCP_PROJECT_ID` set for the non-interactive invocation.)
+  - **🔴 2025d rebuild is HANGING on the redundant re-emit.** Its date-scan finished at 2025-12-31 by 18:54; per-VM
+    shard writes continued to 5.34M entries then the run.log went SILENT at 19:19:36 (~60min, no heartbeat/no new
+    entries) — the same `UnprovenHonestAbsenceError` re-emit path 2022d hit, but 2025 is denser so the re-emit's 45M-row
+    index read + 13M-absence emit is likely OOM-hanging (the pre-fix OOM class, now on the re-emit leg). **Its useful
+    work is SAFE** — the 2025 per-instrument captured rows are already flushed to its per-VM shard, so the consolidator
+    will pick them up on its next run regardless of whether 2025d ever exits cleanly. This STRENGTHENS the re-emit
+    ruling case: the re-emit isn't just failing, it HANGS — another reason to make it opt-in/off for sharded rebuilds
+    (measured-redundant + now demonstrably a liveness risk). The consolidated index is stale because the consolidator
+    hasn't RUN since 18:59, NOT because 2025d blocks it (the consolidator reads per-VM shards independently).
+  - **Loop armed** to re-check manifest freshness + re-run `/data-pipeline-check-mtds` on the representative defi shards
+    (AAVE_V3 lending_indices, UNISWAP_V3 dex_pool_state/swaps, ORCA/KAMINO dex_pool_state [giant-cell], PYTH
+    oracle_prices, GMX perp_funding — the T3-designed all-pipeline-modes set) once the consolidator lands a fresh index.
 
 - **2026-07-20 (slot-4, /autonomous — SESSION SUMMARY + deferred-work handoff).**
 
