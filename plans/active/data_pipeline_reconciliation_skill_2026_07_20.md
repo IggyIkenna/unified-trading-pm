@@ -109,6 +109,66 @@ Prod-bucket deletes, legacy-after-copy deletes, the tradfi `batch_massive` 1.47M
 
 ---
 
+## 🟠 OPERATOR DECISIONS REQUESTED (todo 2 — the deliverable of P0-02)
+
+These three cannot be adjudicated from documents — in two of them, both sides cite the **same operator on the same
+date** in opposite directions. The skill is built to refuse these axes, so **the build is not blocked**; the estate's
+convergence is. Each is stated as an option-set with a recommendation.
+
+### D1 — manifest `instrument_type` COLUMN case (audit ref C2a) · direction of >12M row rewrites
+
+_Settled and NOT in question_: the **path** segment is lowercase; the **id** middle segment is UPPER. Only the manifest
+**column** is disputed.
+
+| Option                             | What it means                                                                                                                                                      | Cost                                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| **A — LOWERCASE (codex wins)** ⭐  | Fold the column to lowercase; matches `cross-asset-canonical-target-ssot.md` §7/§11 and the defi closeout. **Revert** the two shipped uppercase migration scripts. | Rewrite the cefi 7.58M + tradfi 750,715 rows already uppercased; 2 script reverts. |
+| **B — UPPERCASE (catalogue wins)** | Column matches the catalogue enum; ratifies what cefi + tradfi **already shipped**. Correct codex §7/§11 instead.                                                  | Migrate defi's ~16.7M rows UP; correct 2 codex sections + the defi closeout.       |
+| **C — case-insensitive contract**  | Declare the column case-**insensitive**, normalise on read, stop migrating either way.                                                                             | Cheapest now; every consumer must normalise, forever.                              |
+
+**Recommendation: B.** Not because it is more correct in principle, but because it is the only option where the shipped
+code and the migrated rows already agree — A requires un-shipping two migrations that have already rewritten >8M rows,
+and C pushes an unbounded normalisation obligation onto every future reader. If you prefer A on principle, say so and
+the revert is mechanical; it is the cost, not the correctness, that drives this recommendation.
+
+**Frozen pending ruling**: the two DRAIN-GATED `--apply` runs (`instruments-service@555ddf1c` + the tradfi Phase-B
+script). Do not let either run before this is decided — they move rows in the disputed direction.
+
+### D2 — DeFi market/event `LENDING` keying (audit ref decision D)
+
+Codex §5 says flat `LENDING` is RETIRED (A_TOKEN/DEBT_TOKEN split, ~16.7M rows). The retire was **reversed in code**
+because it broke 5+ MTDS lending writers into `attempted_failed`/zero-data and desynced the shard atom (GCS
+`instrument_type=a_token` vs manifest `lending`).
+
+| Option                              | What it means                                                                                                                                                                                  |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A — ratify the interim** ⭐       | `holdings` uses A_TOKEN/DEBT_TOKEN; market/event data_types (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) keep uniform `LENDING`. Correct codex §5 to match. |
+| **B — complete the full retire**    | Re-execute the split across all lending data_types; requires fixing the 5+ writers first, then re-syncing the atom.                                                                            |
+| **C — split by data_type formally** | Make the holdings-vs-market/event distinction an explicit documented rule rather than an interim.                                                                                              |
+
+**Recommendation: A** (with C as the tidy-up). The reversal was driven by measured writer breakage, not by preference —
+codex currently asserts a state the code deliberately does not implement, and that gap is what re-invites a repeat of
+the reversed retire. A correction banner has already been added to §5 so no agent re-executes it meanwhile.
+
+### D3 — DeFi `dex_pools/` + `lending_indices/` disposition (B1)
+
+| Option                                  | What it means                                                                                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A — fold, repoint, then delete** ⭐   | (1) content-UNION the 32 legacy-only pools into canonical; (2) repoint `execution-service` + fix its broken `resolve_bucket_name` call; (3) only then delete. |
+| **B — retain indefinitely**             | Leave the legacy prefixes in place; cheapest, but the non-canonical relic persists and keeps re-surfacing in audits.                                          |
+| **C — delete now (the ORIGINAL order)** | ❌ **Destroys data.** KAMINO/SOLEND `dex_pool_state` have no canonical copy at all. Listed only for completeness.                                             |
+
+**Recommendation: A.** Track 2 and §A6 have already been amended in place to A, with the original text preserved and
+struck through, so the stale instruction can no longer be executed by a worker reading it cold.
+
+> **Sub-question that changes urgency, not the verdict** (recorded by the P0-01 agent, unresolved): the
+> `resolve_bucket_name` call in `solana_amm_depth_provider.py:248` sits **outside** the `try:` at `:262`, so it raises
+> uncaught through `load_date()`. That provider may therefore have been **dead-on-arrival** since that call regressed,
+> rather than being an active consumer. Worth confirming — it determines whether the repoint is urgent or merely
+> correct.
+
+---
+
 ## Design — what the skill actually does
 
 **Shard atom** =
@@ -166,7 +226,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       carry a dated `⛔ corrected 2026-07-20` banner with the original text preserved via strikethrough. Re-probe
       measured ORCA 14,094 · RAYDIUM 100 canonical objects on `day=2026-04-14` under `instrument_type=solana_amm_pool`;
       KAMINO/SOLEND `dex_pool_state` = 0.
-- [ ] 2. [DATA] P0. **Escalate B2/B3/B4 to the operator as structured option-sets** (A/B/C + Other per the escalation
+- [x] 2. ✅ [DATA] P0. **Escalate B2/B3/B4 to the operator as structured option-sets** (A/B/C + Other per the escalation
       rule). Until ruled: the skill MUST NOT report `instrument_type` column casing as a finding, MUST NOT propose any
       casing migration, and MUST NOT flag `lending` on market/event data_types as non-canonical. Freeze the two
       DRAIN-GATED `--apply` runs (`instruments-service@555ddf1c` + the tradfi Phase-B script).
@@ -191,13 +251,14 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       the audit's **29 entries** (location · why · canonical twin · still-written-by · delete disposition), grouped by
       the five dispositions. This IS the input to the delete-suggestion feature; re-deriving it per run costs a walk,
       and keeping it in plans loses it at archival.
-- [ ] 7. [DATA] P1. **NEW SSOT** `codex/02-data/canonical-cutover-register.md` — per-AG effective-from dates for
+- [x] 7. ✅ [DATA] P1. **NEW SSOT** `codex/02-data/canonical-cutover-register.md` — per-AG effective-from dates for
       `require_pipeline_mode`, instrument_type case, tradfi chain tail, defi leaf filename, sports data_type case.
       Without it the skill cannot separate "legitimately historical" from "non-canonical" and will either flood false
       positives on pre-cutover data or silently pass post-cutover regressions.
-- [ ] 8. [DATA] P1. **NEW SSOT** `codex/02-data/orphan-object-detection.md` — the inverse case no current tool covers: a
-      parquet on GCS with **no manifest row AND outside the oracle's expected set** is invisible to every existing tool
-      (all are manifest-row- or oracle-driven). The delete-suggestion feature is precisely orphan detection.
+- [x] 8. ✅ [DATA] P1. **NEW SSOT** `codex/02-data/orphan-object-detection.md` — the inverse case no current tool
+      covers: a parquet on GCS with **no manifest row AND outside the oracle's expected set** is invisible to every
+      existing tool (all are manifest-row- or oracle-driven). The delete-suggestion feature is precisely orphan
+      detection.
 - [ ] 9. [DATA] P1. **Correct the stale/contradictory codex** (each with a dated correction annotation, not a silent
       edit): `cross-asset-canonical-target-ssot.md` §8 defi leaf filename → `{canonical_instrument_id}.parquet` (a stale
       template inside the designated tie-breaker doc is the corpus's most dangerous defect) · §8 tradfi chain tail →
@@ -224,7 +285,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
 
 ### Phase B — author the skill
 
-- [ ] 12. [SCRIPT] P0. Author `cursor-configs/skills/data-pipeline-reconciliation/SKILL.md` matching the two sibling
+- [x] 12. ✅ [SCRIPT] P0. Author `cursor-configs/skills/data-pipeline-reconciliation/SKILL.md` matching the two sibling
       skills **exactly**: frontmatter is exactly `name` + `description` (one prose blob naming the phases, the hard
       constraints, /autonomous composition, and an explicit `Trigger on …` clause); body follows the numbered skeleton
       (H1 · purpose · bolded **Shard atom** line · `## 0.` required-input gate · `## 1.` composing with /autonomous ·
@@ -233,7 +294,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       rules live in codex and are **referenced**, never restated. No re-linking step is needed — `.claude/skills` is a
       single directory symlink to `cursor-configs/skills/` since 2026-07-17, so a new skill dir surfaces fleet-wide on
       `git pull`.
-- [ ] 13. [SCRIPT] P0. **Report contract** — emit a markdown + sibling JSON pair at
+- [x] 13. ✅ [SCRIPT] P0. **Report contract** — emit a markdown + sibling JSON pair at
       `plans/audit/results/data_pipeline_reconciliation_<AG>_<YYYY_MM_DD>.md` and **PRINT the full rendered markdown to
       stdout** (§5 of the sibling skills mandates relaying printed content directly, never "done, see the report").
       Include the auto-generated **Bucket paths** table naming which bucket each read targeted, a per-surface verdict
