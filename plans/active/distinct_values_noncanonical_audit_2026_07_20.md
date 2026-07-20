@@ -376,3 +376,81 @@ rather than inference:
 | **Detector D1b** (defi venues vs `ALL_DEFI_VENUES` vocabulary, not the phase-gated live subset)                                                                    | NOT STARTED                                                                                                                                                                                                                                                                                                          | Discovered late in the session while executing the (invalid) defi venue additions.                                                                                                                                                                                                                                                         | Tracked as a todo above. No registry/denominator impact — pure detector change.                                                                                                                                                                                                                  |
 | **IS `_LEGACY_INSTRUMENT_TYPE_ALIASES`** add `'options_chain': 'OPTION'`                                                                                           | NOT STARTED                                                                                                                                                                                                                                                                                                          | instruments-service also has foreign WIP (catalogue + enumerate_expected_universe + a new dedup script).                                                                                                                                                                                                                                   | Single-line addition + test; ship when IS is quiet.                                                                                                                                                                                                                                              |
 | **MDPS `_type_token_from_canonical_id` `parts[1]` parse**                                                                                                          | NOT STARTED — annotate only                                                                                                                                                                                                                                                                                          | Owned by `sports_consolidated_closeout_2026_07_19.md` Track C F1/F2; do NOT fork the fix.                                                                                                                                                                                                                                                  | Annotate the finding on that plan.                                                                                                                                                                                                                                                               |
+
+### 2026-07-20 — UAC additions SHIPPED, and RC-4's "missing defi venues" premise was WRONG
+
+**Shipped:** `uac@bb42d8ee` (RESTAKING enum) + `uac@b6a1d83a` (20 ODDS_API bookmakers). Runtime-verified against the
+shipped registry: `InstrumentType.RESTAKING` resolves; `VENUES_BY_ASSET_GROUP['sports']` 8 → 28.
+
+Adding an enum member / venue is never a one-line change here — the registry's own guards caught **two** consumers I had
+missed, each a test failure rather than a silent gap: `INSTRUMENT_TYPE_FOLDER_MAP` (RESTAKING), then
+`VENUE_TO_ADAPTER_KEY` + the declared `EXPECTED_SENTINEL_VENUES` set (bookmakers). All 20 bookmakers map to
+`NO_ADAPTER_YET` with the reason stated, because their odds arrive via the ODDS_API aggregator (Decision C, MTDS-owned)
+and no per-bookmaker IS adapter exists or is planned — sentineling is a decision the guard forces you to declare.
+
+**The defi half was CANCELLED as invalid.** RC-4 claimed 15 defi protocols were "missing from
+`VENUES_BY_ASSET_GROUP['defi']`". They are not missing — every one already exists in
+`registry/defi_venues.py::ALL_DEFI_VENUES` (170 entries) with `phase="pipeline"`. That key is DERIVED and phase-gated:
+
+```python
+"defi": list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if _DEFI_VENUE_PHASE.get(v) == "live"))
+```
+
+Measured: 170 total = 93 `live` + 42 `pipeline`. ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/ACROSS/STARGATE/FLASHBOTS/
+MANTLE-ETHEREUM are ALL present, all `pipeline`. `defi_venues.py:424` states the invariant:
+
+> `# INVARIANT: phase=="live" ⟺ venue is IS-producible (in _build_defi_venues()).`
+
+`phase` is a CAPABILITY assertion, not a naming one. Flipping these to `live` would assert instruments-service can
+produce them when it cannot (no adapter), break the `set(_build_defi_venues()) == VENUES_BY_ASSET_GROUP['defi']` guard
+(`instruments-service/.../orchestrator/defi.py:107`), and pad the honest-coverage denominator with venues that CANNOT be
+captured — making that coverage permanently unachievable, the opposite of the honest-denominator intent.
+
+**INDEPENDENT CONFIRMATION (same day, different agent).** While this was being shipped, `uac@83f17c46` landed:
+
+> `fix(defi): revert CHAINLINK-* to phase=pipeline, no adapter key — chainlink.py was never built in instruments-service, breaking the IS adapter-routing invariant on the LDR->main promotion gate (instruments-service#873, quality-gates-v2 red).`
+> Exactly the predicted failure mode, reached independently: a defi venue flipped to `live` without a real IS adapter
+> turned **quality-gates-v2 RED on the promotion gate** and had to be reverted. Executing RC-4 as filed would have
+> reproduced that breakage fifteen-fold. Corrected remedy stays **detector D1b** — compare the manifest against the
+> `ALL_DEFI_VENUES` VOCABULARY, never the phase-gated capability subset.
+
+### 2026-07-20 — UAC additions SHIPPED, and RC-4's "missing defi venues" premise was WRONG
+
+**Shipped:** `uac@bb42d8ee` (RESTAKING enum) + `uac@b6a1d83a` (20 ODDS_API bookmakers). Runtime-verified against the
+shipped registry: `InstrumentType.RESTAKING` resolves; `VENUES_BY_ASSET_GROUP['sports']` 8 → 28.
+
+Adding an enum member / venue is never a one-line change here — the registry's guards caught **two** consumers missed on
+the first pass, each as a test failure rather than a silent gap: `INSTRUMENT_TYPE_FOLDER_MAP` (RESTAKING), then
+`VENUE_TO_ADAPTER_KEY` + the declared `EXPECTED_SENTINEL_VENUES` set (bookmakers). All 20 bookmakers map to
+`NO_ADAPTER_YET` with the reason stated — their odds arrive via the ODDS_API aggregator (Decision C, MTDS-owned), no
+per-bookmaker IS adapter exists or is planned; the guard forces sentineling to be a declared decision.
+
+**The defi half was CANCELLED as invalid.** RC-4 claimed 15 defi protocols were "missing from
+`VENUES_BY_ASSET_GROUP['defi']`". They are NOT missing — every one already exists in
+`registry/defi_venues.py::ALL_DEFI_VENUES` (170 entries) with `phase="pipeline"`. That key is DERIVED and phase-gated:
+
+```python
+"defi": list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if _DEFI_VENUE_PHASE.get(v) == "live"))
+```
+
+Measured: 170 total = 93 `live` + 42 `pipeline`. ANKR / FRAX / MAKER / STADER / STAKEWISE / SWELL / ACROSS / STARGATE /
+FLASHBOTS / MANTLE (-ETHEREUM) are ALL present, all `pipeline`. `defi_venues.py:424` states the invariant:
+
+> `# INVARIANT: phase=="live" <=> venue is IS-producible (in _build_defi_venues()).`
+
+`phase` is a CAPABILITY assertion, not a naming one. Flipping these to `live` would assert instruments-service can
+produce them when it cannot (no adapter), break the `set(_build_defi_venues()) == VENUES_BY_ASSET_GROUP['defi']` guard
+(`instruments-service/.../orchestrator/defi.py:107`), and pad the honest-coverage denominator with venues that CANNOT be
+captured — permanently unachievable coverage, the opposite of the honest-denominator intent.
+
+**INDEPENDENT CONFIRMATION (same day, different agent).** While this shipped, `uac@83f17c46` landed:
+`fix(defi): revert CHAINLINK-* to phase=pipeline, no adapter key — chainlink.py was never built in instruments-service, breaking the IS adapter-routing invariant on the LDR->main promotion gate (instruments-service#873, quality-gates-v2 red).`
+Exactly the predicted failure mode, reached independently: a defi venue flipped to `live` without a real IS adapter
+turned quality-gates-v2 RED on the promotion gate and had to be reverted. Executing RC-4 as filed would have reproduced
+that breakage fifteen-fold. Corrected remedy stays **detector D1b** — compare the manifest against the `ALL_DEFI_VENUES`
+VOCABULARY, never the phase-gated capability subset.
+
+**Process note:** three earlier attempts to record this were silently lost. Root cause = the `check-branch-drift`
+pre-commit hook performs its own pull/rebase ("files were modified by this hook"), which resets an UNCOMMITTED working
+file to origin's version mid-commit. Lesson: in this repo, `git pull --ff-only` FIRST, then edit, then commit
+immediately — never append while behind origin.
