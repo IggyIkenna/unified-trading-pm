@@ -514,27 +514,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                                                                                          | -------------------------- | ---------------------- |
-                                                                                          | `PREMIER_LEAGUE`           | `EPL`                  |
-                                                                                          | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                                                                                          | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                                                                                          | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                                                                                          | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                                                                                      | -------------------------- | ---------------------- |
+                                                                                                      | `PREMIER_LEAGUE`           | `EPL`                  |
+                                                                                                      | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                                                                                      | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                                                                                      | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                                                                                      | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                                                                                          Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                                                                                          written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                                                                                          attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                                                                                          `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                                                                                          `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                                                                                      Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                                                                                      written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                                                                                      attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                                                                                      `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                                                                                      `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                                                                                          **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                                                                                          DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                                                                                          they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                                                                                          namespace is reconciled.
+                                                                                                      **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                                                                                      DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                                                                                      they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                                                                                      namespace is reconciled.
 
-                                                                                          NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                                                                                          registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                                                                                          §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                                                                                      NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                                                                                      registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                                                                                      §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [x] [CODE] P0. ✅ **WRITE PATH CANONICALISED — operator chose canonicalise-at-write (2026-07-20); shipped
       market-tick-data-service@ad4f1872.** `_canonical_league_id()` resolves via the NUMERIC `api_football_id`; all 30
@@ -569,23 +569,14 @@ All four resolved in interactive chat. These are now actionable, not gated:
       `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` instead of surfacing as a real gap — a standing coverage false-negative
       TODAY, independent of the relocation. Fix: regenerate the registry JSON from `ODDS_API_DISPLAY_TO_CANONICAL` (or
       re-run `refresh_sports_bookmaker_league_coverage_2026_06_21.py` after the manifest is canonical).
-- [~] [CODE] P1. instruments-service per-fixture path — **CODE WRITTEN + TESTS GREEN, ship BLOCKED on a peer.**
-  `sports_reference_fixtures.py` always took the `fx.league.league_id` branch, making the numeric-id `elif` dead code
-  (`CanonicalLeague` always carries `league_id`, so the first branch always won). Precedence inverted to resolve by
-  numeric `api_football_id` first, falling back to the raw value only for an unregistered league (honest absence, not a
-  vanished map entry). 2 regression tests pin the precedence; 95 sports-pipeline tests + both new tests pass. **NOT
-  shipped — blocked by a CLONE-LEVEL conflict, not by this change (measured 2026-07-20 14:55Z).** (a) IS QG shows 4
-  failures (`expected_universe golden[defi]` + `golden[sports]`, `rule11_per_ag_dedup`,
-  `defi_set_equals_uac_denominator`) — **proven NOT mine** by stashing only these two files BY NAME and re-running: the
-  identical 4 fail without the change. (b) The `golden[sports]` drift (27→47 bookmaker venue triples) is **already fixed
-  upstream** — `793125ad`/`6506b505` regenerate every `expected_universe/*.json` incl. `sports.json`, so it resolves on
-  pull. (c) quickmerge could not rebase: `QUICKMERGE_BLOCKED code=AUTOSTASH_POP_CONFLICT`, 3 behind. Cause = **divergent
-  foreign WIP sitting in this clone**: `adapters/defi/chainlink.py` is 329 lines locally vs 260 upstream (229 diff
-  lines) and `factory.py` 724 vs 717 — a NEWER local iteration than what landed, i.e. real unique work. Those files are
-  **PROTECTED, not reconciled by me**: resolving another worker's divergence against upstream is their call, and
-  discarding it would destroy the only copy. All 3 incoming commits leave my two files untouched, so the rebase is clean
-  once only mine are dirty. Working tree verified intact (no unmerged paths); change also backed up outside the repo.
-  **Unblocks the moment the foreign WIP here is committed or reconciled.**
+- [x] [CODE] P1. ✅ instruments-service per-fixture path — **SHIPPED instruments-service@815ad06c.**
+      `sports_reference_fixtures.py` always took the `fx.league.league_id` branch, making the numeric-id `elif` dead
+      code (`CanonicalLeague` always carries `league_id`, so the first branch always won). Precedence inverted to
+      resolve by numeric `api_football_id` first, falling back to the raw value only for an unregistered league (honest
+      absence, not a vanished map entry). 2 regression tests pin the precedence. Earlier blocked by another worker's
+      divergent defi WIP in the clone (AUTOSTASH_POP_CONFLICT); verified green on the clean origin base via a sibling
+      worktree (160 tests incl. the previously-foreign golden/dedup failures now fixed upstream), then shipped once the
+      clone reconciled — foreign WIP never touched. Companion to the write-path fix mtds@ad4f1872.
 - [ ] [DATA] P2. Dispose of the genuinely-out-of-universe rows (decision 2): exclude from the denominator; purge only
       once confirmed. **STILL BLOCKED on the historical migration above** — until the 214,842 raw-named rows are
       canonicalised, a registry-membership test on the symbolic `league_id` still classifies Premier League / La Liga /
