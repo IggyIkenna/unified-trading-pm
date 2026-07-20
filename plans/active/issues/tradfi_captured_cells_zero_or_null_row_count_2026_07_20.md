@@ -62,6 +62,21 @@ resolved_by:
 | FX `ohlcv_24h`                |          4,266 |               4,266 |  100% |
 | CME / NYSE / NASDAQ `ohlcv_*` |    (remainder) |         (remainder) |     — |
 
+**Re-measured 2026-07-20 (tick 26) on a post-force-rebuild manifest — the defect is CONFIRMED and slightly worse on the
+MVP slice.** Snapshot T1 `2026-07-20T14:47:40Z`, re-measured T2 `2026-07-20T15:09:03Z` (peer force-rebuild landed
+between; both agree): restricted to the MVP data types `{ohlcv_1m, ohlcv_1s, ohlcv_24h}`, **680,088 of 919,180
+`captured` cells = 74.0%** carry `row_count` 0/null. So the defect is not an artifact of the in-flight canonical-path
+migration the original snapshot was taken during — it survives a full manifest rebuild unchanged, which **retires the
+"re-measure on a quiesced bucket first" caveat** and promotes hypothesis (A) further.
+
+**Scope correction — this issue does NOT invalidate the tradfi backfill ETA.** The tick-22 remaining-work inventory was
+audited at tick 26 and already used `capture_status ∈ {expected_unattempted, attempted_failed}` as its predicate;
+`row_count` appears nowhere in that derivation. Re-running it reproduced 638,446 todo / 182,407 below-floor / 456,039
+backfillable against the reported 638,440 / 182,407 / 456,033 (delta +6 cells from intervening writes). The ETA was
+superseded at tick 26 for an unrelated reason (the `resolved[:cap]` denominator truncation + a measured per-date cost
+model) — see `tradfi_consolidated_closeout_2026_07_18` tick 26. What this issue DOES still invalidate is any
+coverage/completeness percentage computed from `row_count`.
+
 FX `ohlcv_24h` at a clean 100% is the most diagnostic slice in the table: a uniform 100% is the signature of a CODE PATH
 that never stamps the field, not of a market that happened to be empty. A genuine-absence explanation would have to
 argue that every FX daily candle ever captured had zero rows, which is false on its face — FX daily candles are the one

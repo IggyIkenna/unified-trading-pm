@@ -304,7 +304,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       `source`) · SUPERSEDED-banner `data-catalogue-schema.md` (documents an artifact, writer, reader, updater and
       validating plan that **do not exist**) and replace with `service-shard-status-catalogue.md` describing the
       `shard_status[AG][VENUE].start_date` shape deployment-api actually consumes.
-- [ ] 10. [CODE] P1. **NEW SSOT** `codex/06-coding-standards/canonical-write-guard-contract.md` — which lanes call
+- [x] 10. ✅ [CODE] P1. **NEW SSOT** `codex/06-coding-standards/canonical-write-guard-contract.md` — which lanes call
       `canonical_path_violations`, with which `require_pipeline_mode`, and which are deliberately unguarded (today
       tradfi-W1 + cefi-live + microstructure guarded; cefi-batch, prediction, sports unguarded with no stated intent).
       Absorbs the dangling pointer to the non-existent `canonical-write-conventions.md`. **Plus**: extend
@@ -358,7 +358,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
 
 ### Phase D — apply the 2026-07-20 operator rulings (D1 / D2 / D3)
 
-- [ ] 20. [DATA] P0. **D1 UPPERCASE — correct the docs and unfreeze.** Flip `cross-asset-canonical-target-ssot.md`
+- [x] 20. ✅ [DATA] P0. **D1 UPPERCASE — correct the docs and unfreeze.** Flip `cross-asset-canonical-target-ssot.md`
       §7/§11 lowercase→UPPERCASE **for the manifest COLUMN only** (path segment stays lowercase, id middle segment stays
       UPPER — neither was in question), with a dated ruling annotation. Correct the tradfi closeout's self-contradicting
       worklist (it orders a case-fold in the opposite direction, 750,715 rows) to fold UP. Record that the DRAIN-GATED
@@ -366,15 +366,15 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
 - [ ] 21. [SCRIPT] P0. **D1 — stop refusing the axis in the skill.** Remove the C2a refusal from `SKILL.md` § 3e and the
       taxonomy's REFUSED-axes section; replace with the enforced rule (column = UPPERCASE) plus a `migration_pending`
       exception entry for the defi rows not yet migrated UP. The case-insensitive comparison workaround comes out.
-- [ ] 22. [DATA] P0. **D2 — banner codex §5 with the prerequisite.** §5's "flat `LENDING` is RETIRED" is now the correct
-      TARGET; add a dated banner stating it is **not yet implemented**, that the first attempt was reversed after
-      breaking 5+ MTDS lending writers, and that the mandatory order is **fix-writers → migrate ~16.7M rows → re-sync
-      the shard atom**. Reclassify market/event flat `LENDING` from `refused/unruled` to `migration_pending` in the
-      taxonomy so the skill neither flags it nor treats it as an open question.
-- [ ] 23. [DATA] P1. **D2 — scope the writer fix (prerequisite for the migration).** Identify and enumerate the 5+ MTDS
-      lending writers that broke into `attempted_failed`/zero-data on the reversed attempt; file the fix as its own plan
-      (this plan does not own MTDS writer work). **The migration must not start until that plan is green** — this is the
-      step whose omission caused the reversal.
+- [x] 22. ✅ [DATA] P0. **D2 — banner codex §5 with the prerequisite.** §5's "flat `LENDING` is RETIRED" is now the
+      correct TARGET; add a dated banner stating it is **not yet implemented**, that the first attempt was reversed
+      after breaking 5+ MTDS lending writers, and that the mandatory order is **fix-writers → migrate ~16.7M rows →
+      re-sync the shard atom**. Reclassify market/event flat `LENDING` from `refused/unruled` to `migration_pending` in
+      the taxonomy so the skill neither flags it nor treats it as an open question.
+- [x] 23. ✅ [DATA] P1. **D2 — scope the writer fix (prerequisite for the migration).** Identify and enumerate the 5+
+      MTDS lending writers that broke into `attempted_failed`/zero-data on the reversed attempt; file the fix as its own
+      plan (this plan does not own MTDS writer work). **The migration must not start until that plan is green** — this
+      is the step whose omission caused the reversal.
 - [ ] 24. [DATA] P1. **D3 — fold before anything else.** Content-UNION the 32 legacy-only Raydium pools into the
       canonical tree, and confirm the KAMINO/SOLEND `dex_pool_state` cells (canonical count **zero** — legacy is the
       only copy) are covered by the fold. Verify by count + content, not by path existence.
@@ -435,3 +435,33 @@ Scratchpad root:
 **Ordering constraint discovered:** todo 21 (remove the C2a refusal from `SKILL.md` + the taxonomy) must run **after**
 Phase C's acceptance review, because that review also edits `SKILL.md`. Editing it while five agents are mid-read makes
 their critiques reference a moving target.
+
+### 2026-07-20 (cont.) — Phase A/B/D shipped; C + consistency in flight
+
+**Shipped since the last log entry:**
+
+- `b1be58824` — todo 10 (P1-10: `canonical-write-guard-contract.md` + bucket-isolation "resolution authority" section),
+  todos 20/22/23 (D1 corrections, D2 §5 banner, `defi_lending_writer_retire_prerequisite_2026_07_20.md`). Two hygiene
+  gates caught real defects before landing: an unquoted `: ` in the new plan's `summary:` folded scalar broke YAML, and
+  `nature: refactor` was invalid (the sub-agent conflated `nature` with `estimate_class`; corrected to `process`).
+- `ea5636e9d` — cleared residual D2 `PARKED/UNRULED` staleness at cross-asset SSOT §5 (`<details>` block) and §11 log
+  line, both flagged by the todo-23 agent.
+
+**Finding worth keeping: the "5+ MTDS lending writers" figure is an UNDERCOUNT** — the real count is **8** (7 emit flat
+`LENDING`, 1 emits `SOLANA_LENDING`). The failure mode is **silent**: `build_instrument_id` raises, each handler's broad
+`except ValueError` → `record_failed`, so the manifest fills with `attempted_failed`/zero-data rows that render as an
+honest failure, not a crash. Also independent of the retire: `liquidations_handler` is **already** shard-atom-desynced
+in prod (manifest `liquidation` vs GCS path `LENDING`). Both captured in the new prerequisite plan.
+
+**In flight (self-tracked workflows; run IDs recorded for restart-safety):**
+
+| Run ID            | Script               | Covers                                                                            |
+| ----------------- | -------------------- | --------------------------------------------------------------------------------- |
+| `wf_10a81bb8-42e` | `dpr-phase-c.js`     | Phase C — 5 per-AG reconciliation runs + skill acceptance review (todos 16/17/18) |
+| `wf_dd6c0ce3-40b` | `dpr-consistency.js` | Post-phase codex audit (todo 19) — ruling-drift + cross-SSOT + skill-ref checks   |
+
+**Remaining after those land:** todo 21 (remove the now-obsolete C2a refusal from `SKILL.md` §3e + the taxonomy REFUSED
+section — D1 ruled it, so the skill enforces UPPERCASE instead of refusing) — sequenced AFTER Phase C's acceptance
+review because both edit `SKILL.md`. Todos 24/25 (D3 fold → repoint execution-service) are genuine defi-migration
+execution work with prod blast radius; they remain tracked todos here, to be executed as their own effort (the prod
+delete in 25 is human-only regardless).

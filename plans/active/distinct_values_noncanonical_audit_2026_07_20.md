@@ -480,3 +480,26 @@ index clean of foreign staged files; (b) MTDS dirty set quiet; (c) `quality-gate
 named files; (e) then the paired manifest re-stamp with snapshot → dry-run → **collision pre-flight HARD GATE** → CAS →
 HOLD-verify across 2 consolidator cycles incl. one `--force`. Recovery if the working tree is ever clobbered: dangling
 commit `dded7f544` (tag `wip-slot3-venue-chain-fix`) + copies under the session scratchpad `wip-mtds/`.
+
+### 2026-07-20 ~19:30 UTC — watcher v1 retired (wrong metric), v2 armed (functional check)
+
+v1 gated on `foreign_dirty==0`. Measured wrong: MTDS's dirty set grew 1→14→21 files under a live multi-file refactor
+(orchestrator `__init__.py`/`venue_fetch.py`/`symbol_rules.py`, live connectors, 3 new scripts) — exact-zero foreign
+dirt may never occur on a shared branch, and it doesn't even measure what matters. Confirmed HEAD (last landed commit)
+imports cleanly; the noise is uncommitted WIP, not a broken base. **v2 replaces the file-count proxy with a functional
+check**: `unmerged==0 AND staged==0 AND` my own test module (`tests/unit/test_onchain_perp_batch_handler.py`) COLLECTS
+AND PASSES. That's false exactly when someone's mid-refactor break the shared package import (observed once:
+`_SPORTS_TIER2_BOOKMAKER_CATEGORIES` transiently missing from `venue_fetch.py`, self-resolved within minutes) and true
+the moment it clears, regardless of how many unrelated files are still dirty. Re-armed, same 15-min cadence, 8h cap.
+
+**Found and left untouched:** `git stash list` carries 3 stale `autostash` entries (2026-07-09, 2026-07-10,
+2026-07-20T15:45+01:00) — all pre-date or are unrelated to this session's work, none contain venue-as-chain content.
+Likely orphaned by `check-branch-drift`/`git pull --rebase --autostash` cycles from other agents over the past ~11 days.
+NOT dropped or popped (destructive, not mine to judge whose WIP that is) — flagged for awareness only. Separately
+confirmed my OWN stash/pop cycle (used to verify HEAD importability) completed cleanly with no leftover.
+
+**Caution logged:** an accidental `bash scripts/quality-gates.sh --help` (unrecognized flag) started a REAL gate run
+without `--no-fix` before being cut short by a `| head -40` SIGPIPE. Verified no harm: process confirmed dead, no
+unexpected diffs, package still imports, `git stash list` shows nothing new. It died in the ENVIRONMENT phase, well
+before any lint/format auto-fix stage. Lesson: never invoke this project's `quality-gates.sh` with an unrecognized flag
+expecting a no-op `--help` — it silently runs the real gate.

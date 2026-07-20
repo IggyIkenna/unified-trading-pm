@@ -19,6 +19,7 @@ authoritative_for:
     four-tier bucket isolation model (mock/dev/stg/prd/test),
     Group A vs Group B bucket classification,
     mock-tier scenario/grid prefix routing,
+    bucket-name resolution authority (resolve_bucket_name vs UTL PATH_REGISTRY),
   ]
 referenced_by:
   [
@@ -30,8 +31,14 @@ referenced_by:
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
   ]
 owner:
-last_reviewed: 2026-06-29
+last_reviewed: 2026-07-20
 code_refs:
+  [
+    unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py,
+    unified-trading-library/unified_trading_library/config_interface/paths/registry.py,
+    unified-trading-library/unified_trading_library/domain_client/clients/market_data.py,
+    deployment-service/configs/cloud-providers.yaml,
+  ]
 ---
 
 # Bucket Isolation Model — Four-Tier Architecture
@@ -42,6 +49,11 @@ SSOT: `unified-trading-library` `resolve_bucket_name()` (`unified_trading_librar
 > **Stale pointer removed**: the old SSOT was `unified-cloud-interface/unified_cloud_interface/constants.py`
 > (`get_bucket_environment`, `get_bucket_name`). That module is retired; all bucket resolution now routes through UTL
 > `resolve_bucket_name()` + the YAML.
+
+> **⚠️ A SECOND bucket-name registry still exists and disagrees with this one.** UTL
+> `config_interface/paths/registry.py`'s `PATH_REGISTRY` / `build_bucket()` produces **un-tiered** names with no env
+> axis, and several of them resolve to buckets that **no longer exist**. It is not a documentation-only drift — it is
+> reached at runtime. **See § 11 before trusting any bucket name that did not come from `resolve_bucket_name()`.**
 
 ---
 
@@ -71,16 +83,37 @@ Resolution: UTL `_DEPLOYMENT_ENV_SHORT_FORM` dict (`dev→dev`, `staging→stg`,
 
 Raw data is environment-tiered in GCS name. The naming convention adds the env short form after the AG suffix.
 
-| Domain              | Bucket prefix                                                             |
-| ------------------- | ------------------------------------------------------------------------- |
-| `instruments-store` | `instruments-store`                                                       |
-| `market-data`       | `market-data-tick`                                                        |
-| `features-calendar` | `features-calendar`                                                       |
-| `data-catalogue`    | `data-catalogue`                                                          |
-| DeFi raw on-chain   | `dex-pools`, `dex-swaps`, `evm-defi`, `eigenlayer-rewards`, `solana-defi` |
+| yaml `kind`                    | Bucket prefix       | Per-AG?                       |
+| ------------------------------ | ------------------- | ----------------------------- |
+| `instruments-store`            | `instruments-store` | yes (CEFI/DEFI/TRADFI/SPORTS) |
+| `market-data`                  | `market-data-tick`  | yes (CEFI/DEFI/TRADFI/SPORTS) |
+| `instruments-store-prediction` | `instruments-store` | no — `-pred-` infix           |
+| `market-data-tick-prediction`  | `market-data-tick`  | no — `-pred-` infix           |
+| `features-calendar`            | `features-calendar` | no (cross-asset)              |
 
 Naming: `{prefix}-{ag}-{env_short}-{project_id}` (e.g. `market-data-tick-cefi-prd-central-element-323112`). Cross-asset
 kinds (no AG): `{prefix}-{env_short}-{project_id}` (e.g. `features-calendar-prd-central-element-323112`).
+
+> **⛔ CORRECTED 2026-07-20** — two rows were removed from the table above because neither is a live Group-A kind:
+>
+> - **`data-catalogue`** — there is **no `data-catalogue` key in `cloud-providers.yaml`** (verified: grep returns zero
+>   matches in the file). `resolve_bucket_name(kind="data-catalogue")` therefore **raises** `BucketNamingError`
+>   (`bucket_naming.py:426`, the `yaml_kind not in storage_section_d` branch). The only workspace references hardcode a
+>   flat, un-tiered name outside the resolver — `unified-trading-pm/scripts/catalogue/sync-to-mock.py:178` builds
+>   `f"data-catalogue-{project_id}"`, and `scripts/catalogue/sync-catalogue-yaml.py:34` sets
+>   `CATALOGUE_BUCKET_PREFIX = "data-catalogue"`. This is the same defect class as § 11. § 7 below is annotated
+>   accordingly.
+> - **DeFi raw on-chain** (`dex-pools`, `dex-swaps`, `evm-defi`, `eigenlayer-rewards`, `solana-defi`) — **all five kinds
+>   are REMOVED from `cloud-providers.yaml`**, each with a dated in-file removal comment: `dex-swaps` / `evm-defi` /
+>   `solana-defi` 2026-07-10 (`cloud-providers.yaml:117-118`), `eigenlayer-rewards` 2026-07-16 (`:127-129`), `dex-pools`
+>   2026-07-13 (`:130-134`). Every writer/reader was repointed to `kind="tick-data"` — the shared
+>   `market-data-tick-defi-{env}-{pid}` bucket — and the dedicated buckets were verified empty and deleted. The AWS
+>   section mirrors the removals (`:238`, `:243`, `:245`).
+>
+> **Do not read the deleted DeFi prefixes as a delete authorisation for GCS object trees.** The `dex_pools/` and
+> `lending_indices/` **object prefixes inside the consolidated defi bucket** are a separate question and are
+> **DO-NOT-DELETE** — see `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`. Deleted _bucket kinds_
+> ≠ deletable _object prefixes_.
 
 ### Group B — Derived Data (env-tiered, Wave-3 folded)
 
@@ -149,16 +182,28 @@ features-cefi-mock-central-element-323112
 ## 4. Env-to-Tier Mapping (UTL)
 
 ```python
-# unified_trading_library.cloud_interface.bucket_naming
-_DEPLOYMENT_ENV_SHORT_FORM = {
+# unified_trading_library/cloud_interface/bucket_naming.py:142-152 (verbatim, verified 2026-07-20)
+_DEPLOYMENT_ENV_SHORT_FORM: Final[dict[str, str]] = {
     "dev": "dev",
     "development": "dev",
-    "staging": "stg",     # staging → stg (NOT dev)
+    "staging": "stg",
+    "stg": "stg",         # ← already-short form accepted
     "prod": "prd",
+    "prd": "prd",         # ← already-short form accepted
     "production": "prd",
-    "test": "test",
+    "test": "test",       # 4 chars — the E2E `-test-` variant; well under the cap.
+    "ci": "ci",           # ← CI tier
 }
 ```
+
+> **⛔ CORRECTED 2026-07-20** — the previous quote listed **6** keys and omitted `stg`, `prd` and `ci`. The code has
+> **9**. The omission mattered in both directions: it hid the `ci` tier entirely, and it made the already-short forms
+> (`stg`, `prd`) look like they would fail resolution when they resolve fine.
+
+Resolution order (`_resolve_deployment_env_short`, `bucket_naming.py:155-177`): explicit `deployment_env=` argument →
+`DEPLOYMENT_ENV` env var → `ENVIRONMENT` env var → `"prod"` default. **Pass `deployment_env=` explicitly to reach a
+specific tier — never mutate the process env** (`:387-390`; env mutation is the banned config-env write). An env with no
+known short form raises `BucketNamingError` rather than falling back (`:167-168`).
 
 `CLOUD_MOCK_MODE=true` forces `mock` tier regardless of `DEPLOYMENT_ENV`.
 
@@ -209,7 +254,20 @@ data-catalogue-prd-{project_id}/
 
 Each manifest records what data was written, when, and to which bucket/path.
 
-The catalogue bucket is Group A (env-tiered). Each deployment env has its own catalogue.
+> **⛔ CORRECTED 2026-07-20 — the `-prd-` tier shown above is aspirational, not what the code does.** There is no
+> `data-catalogue` key in `cloud-providers.yaml`, so this bucket is **not resolvable via `resolve_bucket_name()`** (it
+> raises). The two live consumers hardcode the **flat, un-tiered** name outside the resolver:
+> `unified-trading-pm/scripts/catalogue/sync-to-mock.py:178` (`f"data-catalogue-{project_id}"`) and
+> `scripts/catalogue/sync-catalogue-yaml.py:34`. So the real name in use is `data-catalogue-{project_id}`, and the claim
+> "each deployment env has its own catalogue" is **not implemented**.
+>
+> **UNVERIFIED**: whether either flat or `-prd-` bucket currently exists. A live `gcloud storage ls` probe of both names
+> failed on 2026-07-20, but the failure did not distinguish 404 from a permissions denial, and project-wide
+> `storage.buckets.list` is denied for `unified-trading-sa` — so absence is **not** established. Do not act on this as a
+> confirmed 404 without a re-probe that distinguishes the two.
+>
+> Resolution is the same as § 11: either add a `data-catalogue` key to `cloud-providers.yaml` and repoint both scripts,
+> or retire the scripts. Not decided here.
 
 ---
 
@@ -267,3 +325,117 @@ resolve_bucket_name(cloud="gcp", kind="positions-store")           # → "portfo
 Services must never hardcode bucket names. `resolve_bucket_name()` handles Group A/B classification, tier resolution,
 and project ID injection automatically. The YAML (`cloud-providers.yaml`) is the SSOT for kind→template mappings;
 `resolve_bucket_name()` is the SSOT for resolution.
+
+---
+
+## 11. Bucket-name resolution authority
+
+_Added 2026-07-20. Two bucket-name registries exist in the workspace and they disagree. This section states which one
+wins, records the live defect the other one carries, and states what is still unknown._
+
+### 11.1 The ruling
+
+**`cloud-providers.yaml` via UTL `resolve_bucket_name(cloud, kind, asset_group, deployment_env)` is the SSOT for every
+bucket name. It is the only authority.** Everything in §§ 1–10 above describes it.
+
+Two properties make it the authority rather than merely the preferred option:
+
+- **It has an env axis.** Names carry the tier: `market-data-tick-{ag}-prd-{pid}`, `instruments-store-{ag}-prd-{pid}`,
+  `features-calendar-prd-{pid}`.
+- **It raises rather than falling back.** An unknown cloud (`bucket_naming.py:406-407`), unknown asset_group
+  (`:408-409`), missing yaml key (`:426`) or unresolvable env (`:167-168`) all raise `BucketNamingError`. A wrong input
+  fails loud; it never silently yields a plausible-looking name.
+
+### 11.2 The shadow registry — UTL `PATH_REGISTRY` / `build_bucket()`
+
+`unified-trading-library/unified_trading_library/config_interface/paths/registry.py` carries a **second, independent**
+bucket-name registry that produces **un-tiered** names. `build_bucket()` (`:307-314`) substitutes only `{project_id}`
+and `{category}` — **there is no env parameter at all**:
+
+```python
+def build_bucket(name: str, *, project_id: str, asset_group: str = "") -> str:
+    spec = get_spec(name)
+    return spec.bucket_template.format(project_id=project_id, category=asset_group)
+```
+
+The file states the gap in its own comments (`:48-50`, on the `delta_one_features` row): _"The `-prd-` env tier is
+hardcoded because this registry has no env axis (build_bucket substitutes only {project_id}/{category})."_
+
+The Wave-3 folds (§ 2, Group B) repointed **only the Group-B rows** — those rows now carry a literal `-prd-` baked into
+the template (`features-{category}-prd-{project_id}` at `:56`, `ml-store-prd-{project_id}` at `:105`,
+`execution-store-prd-{project_id}` at `:183`, `portfolio-state-prd-{project_id}` at `:207`, and ~20 more). The **Group-A
+rows were left un-tiered**:
+
+| Row                 | Line  | `bucket_template`                           |
+| ------------------- | ----- | ------------------------------------------- |
+| `raw_tick_data`     | `:20` | `market-data-tick-{category}-{project_id}`  |
+| `processed_candles` | `:27` | `market-data-tick-{category}-{project_id}`  |
+| `instruments`       | `:34` | `instruments-store-{category}-{project_id}` |
+| `calendar_features` | `:63` | `features-calendar-{project_id}`            |
+
+### 11.3 The live defect — these names resolve to buckets that no longer exist
+
+This is not documentation drift. Probed live 2026-07-20 (`gcloud storage ls`, project `central-element-323112`):
+
+| Bucket name                                        | Produced by                   | Probe          |
+| -------------------------------------------------- | ----------------------------- | -------------- |
+| `market-data-tick-cefi-central-element-323112`     | `PATH_REGISTRY` (`:20`/`:27`) | **FAIL / 404** |
+| `market-data-tick-defi-central-element-323112`     | `PATH_REGISTRY` (`:20`/`:27`) | **FAIL / 404** |
+| `instruments-store-cefi-central-element-323112`    | `PATH_REGISTRY` (`:34`)       | **FAIL / 404** |
+| `features-calendar-central-element-323112`         | `PATH_REGISTRY` (`:63`)       | **FAIL / 404** |
+| `market-data-tick-cefi-prd-central-element-323112` | `resolve_bucket_name()`       | **OK**         |
+
+The un-tiered names were the pre-env-split estate; they were migrated and deleted. `PATH_REGISTRY` still resolves to
+them.
+
+**They are reached at runtime.** `unified-trading-library/unified_trading_library/domain_client/clients/market_data.py`
+imports `build_bucket` (`:13`) and calls it in `MarketTickDomainClient`:
+
+- `:56` — `MarketTickDomainClient.get_tick_data()` (class at `:43`):
+  `build_bucket("raw_tick_data", project_id=..., asset_group=asset_group)`, then `self._read_parquet(bucket, path)`
+- `:71` — `get_available_dates()` (def `:69`): same call, then `self._list_blobs(bucket, "raw_tick_data/by_date/")`
+
+`MarketCandleDomainClient` (class at `:82`) does the same for `processed_candles` at `:96` and `:112`. All four call
+sites feed the resolved name straight into a storage operation.
+
+### 11.4 Resolution
+
+**`PATH_REGISTRY`'s bucket-naming responsibility is retired in favour of `resolve_bucket_name()`.** Its `path_template`
+/ `partition_keys` / `file_template` responsibilities are a separate concern and are **not** in scope here — only
+`bucket_template` + `build_bucket()` are superseded.
+
+Two implementations satisfy the ruling; the choice between them is not made here:
+
+- **(a) Retire `build_bucket()`** — rewrite each caller to `resolve_bucket_name(cloud=..., kind=..., asset_group=...)`,
+  delete `bucket_template` from `DataSetSpec`. Cleanest; one registry survives. Cost: every `build_bucket` /
+  `build_full_uri` caller changes, and `build_full_uri()` (`:322`) composes bucket + path, so it needs the resolver
+  threaded through it.
+- **(b) Give `PATH_REGISTRY` an env axis** — add `deployment_env` to `build_bucket()` and a `${DEPLOYMENT_ENV_SHORT}`
+  placeholder to each template. Smaller diff. Cost: two registries survive, and they will drift again — this is the
+  second time the Group-A rows have been left behind by a fold.
+
+Until one lands, **any bucket name that did not come from `resolve_bucket_name()` is suspect** and must be probed before
+use.
+
+### 11.5 OPEN QUESTION — are UTL market-data domain-client reads currently failing in production?
+
+**Unresolved, and it decides the severity.** The two possibilities are materially different and the evidence to date
+does not separate them:
+
+- **Live breakage** — a production consumer calls `MarketTickDomainClient.get_tick_data()` / `get_available_dates()` and
+  has been getting 404s or empty reads since the un-tiered buckets were deleted. Severity P0.
+- **Dead code** — `MarketTickDomainClient` / `MarketCandleDomainClient` have no live production caller, and the 404 is
+  latent: harmless today, a trap for the next person who wires them up. Severity P2, fix-when-touched.
+
+What is established: the names are produced (§ 11.2), the buckets are gone (§ 11.3), and the call sites feed them
+directly to storage (§ 11.3). What is **NOT** established: whether any production code path reaches those methods.
+
+Answering it requires a caller census of `MarketTickDomainClient` and `MarketCandleDomainClient` across all repos —
+**grep-then-READ, not grep-then-conclude**: zero grep hits does not settle it, because domain clients are commonly
+resolved at runtime through a registry or factory rather than imported by name. Also check `get_available_dates()`
+specifically — `_list_blobs` on a missing bucket may return empty rather than raising, which would surface as a **silent
+wrong-answer** (reported "no data available") rather than an error, and would be invisible in logs.
+
+Note that `get_available_dates()` also performs a `_list_blobs(bucket, "raw_tick_data/by_date/")` — a whole-corpus
+prefix listing. If that method does turn out to be live, it is a single-walk-discipline concern as well as a 404
+concern.

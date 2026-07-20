@@ -725,3 +725,79 @@ without a column/filter projection is one cache-miss from an OOM. Independent of
       with the 1.4M-row perf guard (<0.5s vs 13.14s today).
 - [ ] NEW todo. [DATA] P0. Audit every `read_availability_index` caller on defi for a missing column/filter projection
       (1.58 GB index, OOM risk).
+
+### 2026-07-20 — my SECOND hypothesis refuted, and a P0 concurrency bug that BLOCKS the speed lever
+
+**Refuted (again, by measurement — recording plainly):** I claimed `25,948ms x 2 == 51.9s` was a "smoking gun" for
+serial execution. **It is an arithmetic identity.** `processing_stats.py:468`:
+`avg_time = stats.duration_seconds / stats.total_instruments * 1000` — the log line is `total/N` by construction, true
+for ANY N. It proves nothing about serial-vs-parallel. **Verified by direct read.** Two of my hypotheses have now been
+killed by measurement (the O(n^2) flush, and this) — both times the corrected answer was more valuable.
+
+**What is ACTUALLY true (measured from code):**
+
+- The `ThreadPoolExecutor` IS used (`batch_workers.py:370`) and was **UNDER-FED, not serialised** — 2 futures into 8
+  slots, 6 workers idle.
+- Parallel axis is the instrument FILE only. **Dates, asset_groups, data_types and TIMEFRAMES are all serial loops.**
+- **The 7 timeframe writes per instrument ARE strictly sequential** (`live_workers_chain.py:314`) — each iteration does
+  encode -> finalize -> read-back -> upload -> manifest -> flush before the next starts. **That is the 10.7s gap.**
+- Serialisation points found: S1 timeframe loop (dominant) · S2 a process-global per-VM manifest shard LOCK (one path
+  per VM, so every worker thread contends on ONE lock; critical section = download+read_parquet+merge+to_parquet+upload)
+  · S3 a fresh ManifestWriter + flush per (instrument x timeframe) · S4 a full parquet READ-BACK per write (14x on this
+  run) · S5 the GIL at the pandas adapter boundary · S6 a hard cap of 2 on venue-file listing regardless of MAX_WORKERS
+  (`cloud_data_provider.py:277`) · S7 the emission-policy manifest lookup on 3 of 7 timeframes — **independently
+  corroborating the other agent's `compute_completeness_fraction` finding**.
+
+**🔴 P0 CONCURRENCY BUG — filed `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`. I VERIFIED BOTH HALVES BY
+DIRECT READ.** `candle_write_mixin.py:406-411` `_set_prior_seed_context` writes
+`self._seed_category / _seed_date_str / _seed_input_venue / _seed_underlying / _seed_pipeline_mode / _seed_frame_cache`
+onto the **SHARED** orchestrator instance, while `batch_workers.py:332-335` submits `self._process_instrument_file` to
+the pool. With `max_workers>1` over a HETEROGENEOUS file list (multiple venues/underlyings/pipeline_modes in one
+data_type — the NORMAL backfill shape) a thread reads another thread's context and resolves the prior-day carry seed
+from the **WRONG GCS path**. **SILENT** — wrong leading-bin prices, no crash, no `attempted_failed`, no manifest signal.
+
+**Why this matters more than a normal bug: it BLOCKS the primary speed lever.** The pool being under-fed means the
+obvious fix is "raise concurrency" — and raising concurrency is EXACTLY what triggers this corruption. So the
+correctness fix is a hard PREREQUISITE for the throughput work, not a parallel task. It was invisible in my own smoke
+run only because both files were DERIBIT/same-day/same-mode, so the clobbered values were identical — any homogeneous
+single-venue test passes. The adapter itself is safe (`base_adapter.py:802` returns a fresh adapter per call).
+
+**Biggest lever (R1, from the probe):** run K **date-subprocesses** concurrently (`process_handler.py:783-807` is a
+serial `while` over dates). ~K x wall-clock, and **LOW risk precisely because separate processes sidestep the shared-
+`self` bug entirely** while keeping the C-arena reclaim `--subprocess-per-date` exists for. That is the months->weeks
+lever, and it does NOT require raising in-process `max_workers` first.
+
+- [ ] NEW todo. [SCRIPT] P0. Fix the shared seed context (per-call immutable value object + collision-proof frame-cache
+      key) + a regression test that FAILS today (heterogeneous file list, assert each instrument resolves its OWN seed
+      path). PREREQUISITE for raising in-process concurrency.
+- [ ] NEW todo. [DATA] P1. Blast radius: did any PAST prod MDPS run use max_workers>1 over a heterogeneous list? If so
+      those shards may carry wrong leading-bin seeds and need re-derivation.
+- [ ] NEW todo. [SCRIPT] P0. Implement R1 (concurrent date-subprocesses) — the months->weeks lever that is SAFE today.
+
+### 2026-07-20 — ✅ P0 derivative_ticker FIXED + shipped (`uac@…_candle_contracts` + `market-data-processing-service@beea161`)
+
+The P0 the skill found on its first run is fixed to the operator's exact semantics and shipped.
+
+- **Root cause (two-part):** the deriv candle contract `_DERIV_EXT` REQUIRED `funding_rate_mean`/`mark_price_mean`/
+  `index_price_mean`, but the adapter emitted them UNSUFFIXED (`CandleOutput.to_dataframe()` drops `None` fields) →
+  every write failed `StreamingParquetWriter` strict validation. Independently, LOCF + `_finalize_session_grid`
+  fabricated a price for empty windows.
+- **Fix (operator semantics):** value = LAST-observation-in-window; empty window → NaN price + 0 volume (LOCF removed;
+  `supports_prior_day_seed=False`); all-NaN input → 0 rows → `empty_confirmed` + typed reason, NEVER an all-NaN
+  `captured` parquet. Emit the `*_mean` names (documented as a MISNOMER — last-in-window, not a mean; a future
+  `*_mean`→`*_last` cross-repo rename is the correct migration). Also caught+fixed a real ordering bug (`groupby.last()`
+  was positional; now sorts by `processing_dt` — MTDS tick parquets aren't guaranteed timestamp-sorted).
+- **Two-signal contract implemented** exactly as the operator specified: parquet per-bin NaN/0 = "covered window,
+  nothing to aggregate"; manifest `empty_confirmed`+typed reason = "no ticks at all".
+- **Runtime-proven** against the REAL `StreamingParquetWriter` for all 7 timeframes + a sparse frame; MDPS QG 251s /
+  2058 passed, UAC QG 617s / 124 passed. `book_snapshot_5` checked — no equivalent defect (its "quote always exists" is
+  true for book data; still LOCF by design, a separate operator decision if honest-absence is wanted there too).
+- **Shipped dep-ordered**: UAC contract change (`nullable_ohlcv=True`) FIRST via quickmerge, then MDPS via direct-push
+  under the dirty-deps carve-out (UAC concurrently mid-edit by the oracle agent). Staged exactly my 8 MDPS files by name
+  after a full-index hygiene check.
+- **NEXT (loop-closing proof):** re-run `/data-pipeline-check-mdps --data-types derivative_ticker` on a real VM once the
+  tarball rebuilds, and confirm it now WRITES objects (was 0) where it failed before. Until then the fix is
+  local-runtime-proven, not yet re-proven on the VM tarball path.
+- **Bonus finding from the fix:** because deriv is now `supports_prior_day_seed=False`, it no longer reads the shared
+  seed context → deriv is REMOVED from the set of adapters exposed to the P0 concurrency bug
+  (`issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`). The bug remains for trades/book/tbbo/defi.

@@ -183,7 +183,20 @@ jobs:
               repo = next((subs[k] for k in REPO_KEYS if subs.get(k)), "")
               sha = next((subs[k] for k in SHA_KEYS if subs.get(k)), "")
 
-              if not repo and not sha:
+              # A build that RAN steps is NOT a config rejection, however few substitutions it
+              # carries (fixed 2026-07-20). Absent repo/sha was the only signal before, but a
+              # manual `gcloud builds submit` (storageSource, not a repoSource trigger) also has
+              # no REPO_NAME/COMMIT_SHA — so a real step failure got reported as
+              # "cloudbuild.yaml failed validation; no build ran, GitHub shows nothing".
+              # MEASURED 2026-07-20: build 7c7aedaf (market-tick-data-service) ran 14 steps and
+              # died at step 6 on an invalid docker tag, and was alerted as a silent config
+              # rejection — sending triage to look for a malformed YAML that did not exist.
+              # A genuine validation rejection never reaches a build step, so classify on the
+              # authoritative signal: failureInfo.type (USER_BUILD_STEP == steps ran) and the
+              # presence of a steps list.
+              failure_type = str((build.get("failureInfo") or {}).get("type", ""))
+              ran_steps = bool(build.get("steps")) or failure_type == "USER_BUILD_STEP"
+              if not repo and not sha and not ran_steps:
                   # Silent config-rejection signature: the trigger never got far
                   # enough to stamp repo/sha — the push's cloudbuild.yaml was
                   # rejected at validation and GitHub shows NOTHING.
@@ -193,6 +206,18 @@ jobs:
                           ":rotating_light: Cloud Build CONFIG REJECTED (silent class) — "
                           "a push's cloudbuild.yaml failed validation; no build ran, "
                           f"GitHub shows nothing — build {build_id} ({status}) — {log_url}",
+                      )
+                  )
+              elif not repo and not sha:
+                  # Ran steps but carries no repo/sha => a MANUAL submit. Name it as such so
+                  # nobody hunts for a trigger/commit that does not exist, and surface the
+                  # failing step, which is the only useful handle on this class.
+                  detail = str((build.get("failureInfo") or {}).get("detail", ""))[:160]
+                  failed.append(
+                      (
+                          False,
+                          ":x: Cloud Build FAILURE (manual submit — no trigger/commit) — "
+                          f"build {build_id} ({status}) — {detail or 'see log'} — {log_url}",
                       )
                   )
               else:

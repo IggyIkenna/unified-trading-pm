@@ -55,6 +55,19 @@ resolved_by:
 | NASDAQ | XNAS.ITCH         | 2023-04-15      | none exists    |
 | NYSE   | XNYS.PILLAR       | 2023-04-15      | none exists    |
 
+**RE-VERIFIED EXACTLY, 2026-07-20 (tick 26).** Independently re-derived on manifest snapshot T1 `2026-07-20T14:47:40Z`
+and again at T2 `2026-07-20T15:09:03Z` (after the peer force-rebuild) — **182,407 on both**, so the figure is stable
+across a full manifest rebuild. Per (venue, data_type), the breakdown the P1 todo below asks for is already available
+from that run: **NASDAQ `ohlcv_1m` 97,475** (of 177,865 todo) · **NYSE `ohlcv_1m` 79,130** (of 143,947) · **CME
+`ohlcv_1m` 5,802** (of 66,012, against the CME floor `2020-01-01`) · all other (venue, data_type) slices **0**. Total
+todo 638,446 → **456,039 genuinely backfillable**. Note the CME 5,802 — the pre-floor class is NOT equity-only, so a
+reclassification pass scoped to NASDAQ/NYSE alone would miss it.
+
+**Interaction with the tick-26 ETA correction:** this 182,407 exclusion is unaffected by the `resolved[:cap]`
+denominator-truncation fix. The truncation suppressed `expected_unattempted` rows for tickers ABOVE the cap on dates
+AT-OR-AFTER the floor; the pre-floor cells counted here are a disjoint, correctly-enumerated set. Both corrections
+therefore apply independently and are additive.
+
 ## Why they are permanently unfillable
 
 The floor is already enforced end-to-end on the WRITE side, and correctly so:

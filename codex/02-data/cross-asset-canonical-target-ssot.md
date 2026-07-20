@@ -119,8 +119,16 @@ Corollaries:
 
 ## 2. Canonical instrument-id grammar
 
-`instrument_type` is always the **UPPER** middle segment of the id (`VENUE:TYPE:BODY`); it is **lowercase** in the GCS
-path segment and manifest column (see §7). Builder SSOT + full per-type grammar:
+`instrument_type` carries **three independent cases** — do not collapse them (see §7): the **id middle segment** is
+**UPPER** (`VENUE:TYPE:BODY`), the **GCS path segment** is **lowercase**, and the **manifest `instrument_type` COLUMN**
+is **UPPERCASE**. Builder SSOT + full per-type grammar:
+
+> **⛔ corrected 2026-07-20, operator ruling D1** — recorded in
+> [`plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`](../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md)
+> § "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20". ~~Was: "it is **lowercase** in the GCS path segment and manifest
+> column".~~ That sentence bundled the path segment and the manifest column into one case. The **COLUMN is UPPERCASE**;
+> only the **path segment** is lowercase. The id middle segment was never in question.
+
 `unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py` +
 `unified-api-contracts/docs/canonical-instrument-ids.md`. The decided shapes:
 
@@ -179,8 +187,58 @@ Decision rule (a validator SHOULD enforce this for defi — none exists yet, tra
 
 ## 5. Lending — the A_TOKEN/DEBT_TOKEN split (ONE SSOT)
 
+> **🟡 STATUS BANNER — RULED 2026-07-20 (operator, D2). Supersedes the "PARKED / UNRULED" framing of the earlier
+> correction banner preserved below.** The retire IS the target — **but it is NOT YET IMPLEMENTED.** Two failure modes,
+> both explicit:
+>
+> 1. **DO NOT re-execute the retire naively.** Doing it in the original order reproduces a measured outage (see the
+>    preserved banner below). The prerequisite is a writer fix, not a migration.
+> 2. **DO NOT "fix" the interim state as if it were drift.** Market/event flat `LENDING` is **`migration_pending`** — it
+>    is **NOT** a fresh non-canonical finding, and it is **NOT** an unruled/refused axis either. Any tooling that reads
+>    this doc (incl. the reconciliation skill + finding taxonomy) MUST NOT flag it as a violation.
+>
+> **TARGET (ruled 2026-07-20, operator D2 — deliberately AGAINST the worker recommendation to ratify the interim):**
+> flat `LENDING` is retired **everywhere**, not holdings-only. Every lending position = one **`A_TOKEN`** (supply leg) +
+> one **`DEBT_TOKEN`** (borrow leg), across every lending data_type.
+>
+> **CURRENT IMPLEMENTED REALITY (verified in code 2026-07-20, unchanged by the ruling):** uniform flat **`LENDING`** for
+> the market/event data_types (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`); **only
+> `holdings`** uses the `A_TOKEN`/`DEBT_TOKEN` split.
+>
+> **WHY THE GAP EXISTS — verified history, not hearsay:** the retire was attempted once (Wave B, UAC `@e319864f`) and
+> **REVERSED** (`wn12e7itc` → `unified-api-contracts@ad4886ae`) because it broke **5+ MTDS lending writers** into
+> `attempted_failed`/zero-data and **desynced the shard atom** (GCS `instrument_type=a_token` vs manifest `lending`).
+> Cited sources actually read:
+> [`plans/active/defi_consolidated_closeout_2026_07_18.md`](../../plans/active/defi_consolidated_closeout_2026_07_18.md)
+> :685 ("REVERSED (un-retire `wn12e7itc`): making `build_instrument_id(...LENDING...)` raise OVER-REACHED"), :698, :1469
+> and :1496;
+> [`issues/canonical_closeout_open_questions_2026_07_18.md`](../../plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+> :177-182 (the break + the un-retire), :64 (the `marginfi`/`fluid` guard `if instrument_type not in (None, LENDING)`
+> minting A_TOKEN/DEBT_TOKEN → returning **zero** rows) and :73 (the **~16.7M** `lending` rows to migrate); and the
+> already-accepted-exception rationale in
+> [`reconciliation-finding-taxonomy.md`](./reconciliation-finding-taxonomy.md):429.
+>
+> **MANDATORY ORDER — the ruling is on the destination, not on skipping the sequence. Steps are gates, not phases:**
+>
+> 1. **Fix the 5+ MTDS lending writers first and PROVE them green** (`lending_indices` for the 6 EVM venues,
+>    `liquidation_events`, `flash_loan_events`, `position_data`, `solana_defi`) — each currently survives only because
+>    UAC still builds flat `LENDING`; each fails shard-level `except ValueError` → `record_failed` the moment it does
+>    not. Green = real captured rows, not an absence of exceptions.
+> 2. **THEN migrate the ~16.7M rows** to `A_TOKEN`/`DEBT_TOKEN`.
+> 3. **THEN re-sync the shard atom** across GCS path / manifest / data-status / UI so all four surfaces agree — the
+>    partial A_TOKEN work-around's desync is exactly what step 3 exists to prevent.
+>
+> Until step 2 completes, this section's "RETIRED" text describes the **target**, not the estate.
+
+<details>
+<summary>Preserved superseded banner — added 2026-07-20, doc-reconciliation P1-09 (pre-ruling; retained for the record)</summary>
+
 > **🟡 CORRECTION BANNER — added 2026-07-20, doc-reconciliation P1-09 (contradiction "DeFi flat `LENDING` — RETIRED vs
 > interim-KEPT"). The blanket "RETIRED" below is NOT what the code implements. DO NOT re-execute the retire.**
+>
+> <!-- was: "The scope of the retire is HOLDINGS ONLY." — corrected 2026-07-20, operator ruling D2: holdings-only is the
+> CURRENT reality, not the scope of the target; the target scope is ALL lending data_types. Superseded text preserved
+> verbatim below. -->
 >
 > The scope of the retire is **HOLDINGS ONLY**. Wave B additionally retired flat `InstrumentType.LENDING` in the UAC
 > id-builder to `UNSUPPORTED_BY_DESIGN` (`@e319864f`); that **over-reached** — it made `build_instrument_id(…LENDING…)`
@@ -197,17 +255,27 @@ Decision rule (a validator SHOULD enforce this for defi — none exists yet, tra
 > - **market/event data_types** (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) →
 >   uniform flat **`LENDING`**. Working and self-consistent across GCS path, column and manifest.
 >
-> **The ruling is PARKED / UNRULED — this doc does NOT pick a side.** Options A (keep market-level `LENDING`; current
-> interim; worker-recommended), B (key each to the reserve's `A_TOKEN`), and C (split per side) are stated with their
-> costs in
+> **⛔ SUPERSEDED 2026-07-20 (operator ruling D2 — see the STATUS BANNER at the top of §5).** ~~The ruling is PARKED /
+> UNRULED — this doc does NOT pick a side.~~ The operator RULED the FULL retire (all lending data_types). The option
+> analysis below is retained as history. Options A (keep market-level `LENDING`; current interim; worker-recommended), B
+> (key each to the reserve's `A_TOKEN`), and C (split per side) are stated with their costs in
 > [`issues/canonical_closeout_open_questions_2026_07_18.md`](../../plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
 > § D (:173-202). B or C each require a full 5+-writer MTDS migration, a Wave-D historical re-key and a shard-atom fix
 > on both axes. Until the operator rules: `lending` on a market/event data_type is **NOT a canonicalisation finding**,
 > and the §11 operator-log line "retire legacy LENDING → A_TOKEN/DEBT_TOKEN" reads **holdings-only**.
 
-Legacy flat `LENDING` is **RETIRED** _(holdings only — see the correction banner above)_. Every lending **holding** =
-one **`A_TOKEN`** (supply leg) + one **`DEBT_TOKEN`** (borrow leg) — because `net_value = supply − borrow` needs both.
-`instrument_type` is uniform across all 11 protocols; the **symbol** has two conventions (both canonical):
+</details>
+
+<!-- was: "Legacy flat `LENDING` is **RETIRED** _(holdings only — see the correction banner above)_." — corrected
+2026-07-20, operator ruling D2: the retire is the target EVERYWHERE, and "holdings only" is the current implemented
+reality rather than the scope. Rewritten as target-vs-reality below; see the status banner for the mandatory order. -->
+
+Legacy flat `LENDING` is **RETIRED — this is the TARGET (operator D2, 2026-07-20), implemented TODAY for `holdings`
+only** (market/event data_types are `migration_pending` on uniform flat `LENDING` — see the status banner above for the
+mandatory writer-fix-first order; do not re-execute the retire naively and do not report the interim as drift). Every
+lending position = one **`A_TOKEN`** (supply leg) + one **`DEBT_TOKEN`** (borrow leg) — because
+`net_value = supply − borrow` needs both. `instrument_type` is uniform across all 11 protocols; the **symbol** has two
+conventions (both canonical):
 
 - **Pooled** (AAVE_V3 / SPARK / COMPOUND_V3): the **real on-chain token symbol** — `aUSDC` / `variableDebtUSDC`. Rate is
   asset-global (collateral-independent) → one instrument per asset.
@@ -235,25 +303,35 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 
 ## 7. instrument_type case + venue spelling
 
-> **⛔ SCOPE CORRECTION 2026-07-20, doc-reconciliation — the manifest COLUMN casing below is CONTESTED and this doc does
-> NOT pick a side.** The **GCS path segment** is settled lowercase (both sides agree). The **manifest `instrument_type`
-> COLUMN** is not:
+> **✅ RULED 2026-07-20 — operator ruling D1 (UPPERCASE column, catalogue wins).** Recorded in
+> [`plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`](../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md)
+> § "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20". The axis previously carried a `⛔ SCOPE CORRECTION 2026-07-20`
+> banner declaring the manifest COLUMN case CONTESTED (Side A lowercase = this doc; Side B UPPERCASE =
+> `plans/active/tradfi_consolidated_closeout_2026_07_18.md:375`, both citing the same operator on 2026-07-18). **Side B
+> wins.** That banner is SUPERSEDED and the axis is no longer refused.
 >
-> - **Side A — lowercase**: the bullet below, restated in the §11 operator log.
-> - **Side B — UPPERCASE, catalogue is SSOT**: `plans/active/tradfi_consolidated_closeout_2026_07_18.md:375`
->   (`{FUTURE, OPTION, EQUITY, ETF, INDEX, COMBO, SPOT_PAIR}`), with an **already-executed** migration reporting
->   **3,300,155 UPPERCASE case re-stamps** under an operator ruling (`:698`), plus shipped cefi/tradfi writers that
->   uppercase the column.
+> The ruling was explicitly a **COST argument, not a correctness one**: UPPERCASE is the only option where the shipped
+> code and the >8M already-migrated rows agree. **The revert is mechanical** if the operator ever reverses it.
 >
-> Both sides cite the same operator on the same date (2026-07-18). This determines the direction of a **>12M row
-> rewrite**, so the phrase "drift to fold" below **must NOT be read as authorising a casing migration** — it predates
-> the discovery of Side B. Tracked as [C2a] in
-> [`reconciliation-finding-taxonomy.md`](reconciliation-finding-taxonomy.md) §5.1, which requires every reconciler to
-> emit `REFUSED — awaiting operator ruling` on this axis and to report NO finding on column casing.
+> **Precision — three separate cases, never one rule:**
+>
+> 1. **manifest `instrument_type` COLUMN → UPPERCASE** (this is the ONLY leg the ruling changed; the catalogue enum
+>    `{FUTURE, OPTION, EQUITY, ETF, INDEX, COMBO, SPOT_PAIR}` is SSOT for it).
+> 2. **GCS path segment `instrument_type=` → lowercase** — unchanged, never in question, both sides always agreed.
+> 3. **id middle segment (`VENUE:TYPE:BODY`) → UPPER** — unchanged, never in question.
+>
+> Consequences: the two already-shipped uppercase migration scripts (`instruments-service@555ddf1c` + the tradfi Phase-B
+> script) are **RATIFIED** and their DRAIN-GATED `--apply` freeze is **LIFTED**. The defi rows not yet migrated UP are
+> `migration_pending`, not a fresh non-canonical finding. Reconcilers stop emitting the [C2a]
+> `REFUSED — awaiting operator ruling` verdict from
+> [`reconciliation-finding-taxonomy.md`](reconciliation-finding-taxonomy.md) §5.1 and enforce UPPERCASE for the column.
 
-- **case**: LOWERCASE in the GCS path segment + the manifest `instrument_type` column (writer grain); **UPPER** only in
-  the id middle segment (`:POOL:`). Mixed case in the manifest is drift to fold. **[COLUMN leg CONTESTED — see the
-  banner above; path-segment leg is settled.]**
+- **case — three independent legs, stated separately (do not collapse them):**
+  - **manifest `instrument_type` COLUMN**: **UPPERCASE**. _(⛔ corrected 2026-07-20, operator ruling D1 — ~~was
+    "LOWERCASE … + the manifest `instrument_type` column (writer grain)"~~; the original bundled the column with the
+    path segment. Mixed case in the manifest COLUMN is drift to fold **UP**.)_
+  - **GCS path segment** (`instrument_type={it}`): **lowercase** — unchanged.
+  - **id middle segment** (`:POOL:`, `VENUE:TYPE:BODY`): **UPPER** — unchanged.
 - **venue**: cefi = single HYPHENATED spelling (`BINANCE-FUTURES`, not `BINANCE_FUTURES`). defi = bare canonical
   PROTOCOL (`AAVE_V3` not `AAVEV3`/`AAVE`; `UNISWAP_V3` not bare `UNISWAP`; `COMPOUND_V3` not `COMPOUND`) + a **separate
   `chain=`** path segment (never the combined `PROTOCOL-CHAIN` overload in the path; the id joins them as
@@ -326,13 +404,35 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 Equity `-USD` on all four surfaces · cefi venue = HYPHEN · ASTER = per-symbol real quote (mostly USDT, tail USD1/USDC —
 NOT hardcoded) · cefi & tradfi bundle path shapes kept per-AG · tradfi daily = `ohlcv_24h` · DERIBIT quote = gating P0 ·
 POOL key = 3-segment fee-in-symbol · defi two-id model kept (Option A, no mass rewrite) · retire legacy LENDING →
-A_TOKEN/DEBT_TOKEN **[HOLDINGS ONLY — scope corrected 2026-07-20; the market/event lending data_type keying is
-PARKED/UNRULED, see the §5 correction banner]** · instrument_type lowercase in path/column / UPPER in id **[the COLUMN
-leg is CONTESTED — see the §7 scope-correction banner; path leg settled]** · culled-venue purge dead-only +
-snapshot-first
+A_TOKEN/DEBT_TOKEN **[⛔ RULED 2026-07-20, operator ruling D2 — ~~was "HOLDINGS ONLY; market/event keying
+PARKED/UNRULED"~~; the operator ruled the FULL retire (all lending data_types, not holdings-only). It is the TARGET, NOT
+yet implemented — gated on the MTDS lending-writer fix
+(`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`) → migrate → re-sync atom; see the §5 banner.
+Market/event flat `LENDING` is `migration_pending`, not a finding.]** · instrument_type **COLUMN UPPERCASE / path
+segment lowercase / id middle segment UPPER** **[⛔ corrected 2026-07-20, operator ruling D1 — ~~was "lowercase in
+path/column / UPPER in id"~~; see the §7 ruling banner]** · culled-venue purge dead-only + snapshot-first
 
 - keep LIGHTER/EXTENDED/KALSHI-PERP/POLYMARKET-PERP/BINANCE-DELIVERY · combos = leg-aware signed-weight · restore the
   raw distinct-values data-status enumeration view · prediction is shard-grain pattern #3 (CQG bundle).
+
+### 11a. Operator decisions log — 2026-07-20
+
+- **D1 — manifest `instrument_type` COLUMN case = UPPERCASE.** Ruled 2026-07-20 by the operator ("uppercase is fine"),
+  recorded in
+  [`plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`](../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md)
+  § "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20". Supersedes the 2026-07-18 log line above, which stated the column
+  was lowercase.
+  - **Scope — the COLUMN only.** The **GCS path segment** stays **lowercase** and the **id middle segment** stays
+    **UPPER**; neither was ever in question. Do not read this ruling as a path-segment or id migration. Full statement
+    of the three legs: §7.
+  - **Basis — explicitly a COST argument, not a correctness one.** UPPERCASE was chosen because it is the only option
+    where the shipped code and the >8M already-migrated rows agree; lowercase would require un-shipping two migrations
+    that have already rewritten those rows. It was NOT ruled more correct in principle.
+  - **The revert is mechanical** if the operator ever reverses it — nothing downstream is designed around UPPERCASE
+    being semantically privileged.
+  - **Effect**: the two already-shipped uppercase migration scripts (`instruments-service@555ddf1c` + the tradfi Phase-B
+    script) are RATIFIED and their DRAIN-GATED `--apply` freeze is **LIFTED**. The defi rows not yet folded UP are
+    `migration_pending`, not a fresh non-canonical finding.
 
 ## 12. Where the work lives
 
