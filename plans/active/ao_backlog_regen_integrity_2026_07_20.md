@@ -132,15 +132,20 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
       direct DB inspection (read-only SSM) shows `-002` no longer exists as a task row at all (its id has since been
       recycled at least once more since the 07-17 audit; see todo 5 for the full timeline) — the specific row this todo
       names is stale, but the FIX (and its tests) covers the general contract regardless. Source: sports_cf8 study.
-- [ ] [BACKEND] P0. **Clear the 2 live false-`done` rows — AO's part is notify + re-verify, NOT the fix.**
-      `sports_cf8_available_at_backfill_regression-001` (`done_sha=utl@f5f15e3a`) and `-002` (`utl@0f55cc2b`). **The
-      underlying work is NOT AO's** (operator 2026-07-18): it belongs to
-      `sports_cf8_available_at_backfill_regression_2026_07_13.md` (epic `mtds_mdps_master`, role `data_engineering`).
-      `-001` (`:348`) is a `[ ]`-open DATA re-emit task whose backlog row says `done`; `-002` (`:856`) is genuinely
-      `[x]` and should stop being flagged once todo 4 lands. AO scope: notify that plan's owner to verify + flip (or
-      reopen), then RE-RUN the audit. **Gate**: `audit_false_done.py --db … --pm …` reports `false_done: 0` after the
-      owner's ruling; the per-row decision is recorded on `backlog_task_done_status_diverges…`. **Do NOT flip a sports
-      checkbox yourself** — that is the false-done pattern this plan exists to stop.
+- [x] ✅ [BACKEND] P0. **Clear the 2 live false-`done` rows — AO's part is notify + re-verify, NOT the fix.** —
+      **finding: both rows already self-resolved before any notify action was needed.** Re-verified CURRENT state via
+      read-only SSM against the live `state.db` before acting (per this todo's own "re-verify" instruction — the 07-17
+      snapshot is 3 days stale): `-001` is now `status: queued` (not `done`) — matches its genuinely still-open `[ ]`
+      checkbox; something already corrected it between 07-17 and today (predates this session's sibling-reset guard).
+      `-002` no longer exists as a task row — its id was reassigned to a later todo that legitimately completed
+      2026-07-18 (`sha=22738f6`, gate-verified), which has SINCE also vanished (the id was reused again under the
+      pre-fix behavior). **Neither named row exists to reopen or flip today** — did NOT flip a sports checkbox, per this
+      todo's own hard constraint. **Broader gate check**: `audit_false_done.py` is currently non-functional on the live
+      VM (git "dubious ownership" blocks every `git show` read — separate finding, flagged on todo 4, not fixed here).
+      Replicated its exact logic locally against a working PM clone + the live DB's raw rows instead: of 44 `done` rows,
+      38 are the already-ruled-permanently-unauditable NULL-`brief_hash` tail, and all 6 auditable rows are honest —
+      **false_done: 0**. **Gate met**. Per-row decision + full investigation recorded on
+      `backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`'s Progress Log.
 - [ ] [DOC] P2. **Record that the tasks table is a projection, not a completion ledger.** In the regen docs
       (`server/regen_backlog_from_plan.py` module docstring + the operator-facing regen doc), state: the table holds
       currently-OPEN DISPATCHABLE todos plus dispatched history. `BLOCKED-*` todos are deliberately never ingested
@@ -169,6 +174,11 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Progress Log
 
+- **2026-07-20 — Todo 5 (clear the 2 live false-done rows) landed — finding: no reopen needed, both already
+  self-resolved.** `-001` now `queued` (matches its open checkbox); `-002` no longer exists (id recycled at least twice
+  since 07-17). Re-verified `false_done: 0` fleet-wide by replicating `audit_false_done.py`'s logic locally (the live
+  VM's copy is currently broken — see todo 4's entry). No sports checkbox flipped. Full writeup on
+  `backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`'s Progress Log — unblocks todo 7.
 - **2026-07-20 — Todo 4 (checkbox state = truth) landed** (`agent-orchestrator@64ecd57`). `audit_false_done.py` was
   already checkbox-authoritative; the real fix is in `verify.check_plan_flip` (consumed by `/done`'s hard-409 and
   warn-escalation paths). Both new tests + bug-injection confirmed load-bearing. **Two findings surfacing beyond the
