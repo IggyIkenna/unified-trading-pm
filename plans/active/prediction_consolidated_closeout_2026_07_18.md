@@ -1320,3 +1320,27 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     decision), two-sided Betfair back+lay odds for SELL-Betfair, matched-leader compensation offset, and the live flip
     itself (`mode=LIVE` + Betfair account/credentials/jurisdiction). All documented in
     `issues/prediction_arb_live_execution_bridge_2026_07_20.md`.
+
+- **2026-07-20 (slot-2, autonomous tick 30) — ALL THREE PAPER PROOF LAYERS LANDED; the cross-repo seam is closed.**
+  - **E(c) cross-repo loop proof — `e2e-testing@7665a027`** (verified on LDR). This is the proof neither service can
+    write alone (T4 tier ban forbids strategy↔execution imports; `e2e-testing` declares both as editable deps): it
+    drives the strategy engine on a crossed Kalshi/Polymarket/Betfair YES box so it EMITS exactly one LEADER_HEDGE
+    `AtomicInstruction`, then feeds THAT instruction to `AtomicLegExecutor` in PAPER mode and asserts the resulting
+    `BetOrder`s (BACK for BUY, LAY for SELL, `fixture_id == native_market_id`) + a clean 2-leg completion. So the
+    instruction the engine ACTUALLY emits is proven to be the one the executor ACTUALLY consumes.
+  - **The three layers together:** `strategy@31d6bb0d` (box fires + settles 2 benchmark fills, non-zero P&L,
+    deterministic) · `execution@5ed8a029` (executor paper path incl. hedge-fail unwind) · `e2e@7665a027` (the seam).
+  - **Two defects found + fixed while landing it:** RUF002 ambiguous Unicode (`−`/`×`) in a docstring + import order;
+    and `RuntimeError: Event logging not initialized` — the engine calls `log_event` at runtime, so the test needed an
+    autouse credential-free `setup_events(mode="test")` fixture (mirrors strategy-service's own conftest). 3/3 pass.
+  - **PROCESS LESSON (cost ~3 failed ship attempts): `quickmerge` does NOT stage UNTRACKED files.** A new file that is
+    never `git add`ed leaves an empty index, so quickmerge reports "No differences from main — nothing to merge" and
+    exits 0 — a SUCCESS-looking no-op. Always `git add` a new file before quickmerge, and verify the commit sha actually
+    contains the file + is an ancestor of `origin/live-defi-rollout` rather than trusting exit 0. (Same family as the
+    earlier finding that `2>/dev/null` on a commit hides a hook rejection.)
+  - **Also in flight this tick (upgraded from "operator-scoped" to autonomous):** the CI-integrity fix (narrow the
+    global pytest hook so `tests/unit/engine/backtest/` — the benchmark-fill settlement suite underwriting the paper
+    determinism spine — actually RUNS in the gate, triaging any newly-surfaced failures into explicit `requires_data`
+    marks) and the matched-leader compensation offset (`cancel_bet` is a no-op on an already-MATCHED leader, so the
+    report could claim `naked_position=False` over real exposure — replacing it with a genuine offsetting bet, and
+    reporting naked+reason honestly if the offset itself fails). Plus the post-phase CODEX audit the operator asked for.
