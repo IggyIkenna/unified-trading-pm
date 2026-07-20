@@ -55,6 +55,14 @@ the `day=` partition + the manifest `date` column — NOT the capture timestamp 
 This is the same timestamp-glued anti-pattern the R3 per-instrument migration removed for `dex_pool_state` etc. — it
 survived in the `lst_rates` + `oracle_prices` write path.
 
+## Update 2026-07-20 — the pattern is BROADER than lst_rates/oracle
+
+Sampling a real PROD instrument for the `/data-pipeline-check-mtds` run surfaced `aave_v3_ARBITRUM_20260622_072851` at
+`…/venue=AAVE_V3/chain=ARBITRUM/instrument_type=lending/data_type=lending_indices/aave_v3_ARBITRUM_20260622_072851.parquet`
+— i.e. **AAVE_V3 `lending_indices` ALSO uses `{protocol}_{chain}_{YYYYMMDD}_{HHMMSS}` (capture-datetime) ids**, not just
+lst_rates/oracle_prices. So the glued-id anti-pattern spans lending as well. Widen the fix scope + the re-scan
+accordingly (the `_<10-digit>$` regex in the original measurement under-counts the `_YYYYMMDD_HHMMSS` form).
+
 ## Blast radius
 
 Small NOW (78 / 51.9M rows, ~6 days of late-June captures across ~12 LST protocols + 1 PYTH oracle row) but the WRITE
