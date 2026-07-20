@@ -417,18 +417,44 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
       (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s.
 - [ ] [BACKEND] P1. **KRX (Korean) equities carry a human-readable NAME across catalogue + manifest + data-status
-      (operator, 2026-07-20).** KRX equities are identified by the 6-digit exchange code (`KRX:EQUITY:000660` = SK
-      Hynix, `005930` = Samsung Electronics, `005380` = Hyundai Motor) — the code is the stable/unique official ticker
-      (kept as the canonical `instrument_id`, analogous to `NASDAQ:EQUITY:AAPL`), but it is NOT human-readable. Add a
-      first-class reference-data `name` field (romanized company name) resolved from a KRX code→name mapping (source:
-      provider security description — Yahoo `.KS` / Databento — else a maintained KRX listing reference in
-      instruments-service), and SURFACE it on every read surface: (1) deployment-api Catalogue Explorer + download-CSV
-      (`instrument_id` + `name`), (2) the availability manifest (`name` column carried by the WRITER, never re-derived
-      downstream), (3) the data-status dimensions view. GCS object PATHS keep the stable code id (paths must be
-      stable/unique; names change on rebrand/merger) — the readable name rides as metadata/column, not in the path.
-      Audit whether any other venue shares the numeric-code pattern. Regenerate catalogue + manifest so the name lands
-      live; verify the Catalogue Explorer shows `SK Hynix` / `Samsung Electronics` next to the code. (repos:
-      instruments-service, market-tick-data-service, deployment-api, deployment-ui)
+      (operator, 2026-07-20).** _**CODE 3/4 LANDED 2026-07-20** — read-surface chain is complete and shipped:
+      **UAC@f7e0301d** (first-class optional `InstrumentRecord.name` + `KRX_EQUITY_NAMES` bare-code→issuer-name SSOT,
+      derived from the EXISTING `KrxEquityDef.name` — no new mapping invented, no provider re-fetch needed),
+      **deployment-api@65f5593** (`name` on the Catalogue Explorer JSON route + the download-CSV, schema-aware read so a
+      pre-`name` catalogue degrades to blank rather than raising), **deployment-ui@2ff1e61** (Name column, em-dash for
+      honest-absent; `pw:L2 ✓` `tests/e2e/data-status-catalogue-name-column.spec.ts`). **instruments-service is
+      CODE-COMPLETE BUT BLOCKED, NOT SHIPPED** (`name` in `CATALOG_COLUMNS` + `_add_instrument_name` on-the-fly stamp
+      mirroring `_add_mvp_column`/`_add_equity_tags`, + `name=eq.name` on the KRX records): its `quality-gates.sh` is
+      RED on **5 PRE-EXISTING failures that are NOT from this work** — proven by stash-isolation on the clean
+      integration tree (clean = 5 failed/4663 passed; with this work = the SAME 5 failed/**4666** passed, i.e. +3 new
+      passing tests and zero new failures). The 5 are UAC↔IS DeFi drift from UAC@3f79489f (METEORA/LIFINITY/PHOENIX +
+      CHAINLINK/PYTH venues added without the matching IS adapter classes):
+      `test_every_uac_adapter_key_resolves_to_a_class`, `test_expected_matches_golden[defi]`,
+      `test_adapter_data_sources_covers_all_adapters`, `test_defi_set_equals_uac_denominator_drift_guard`,
+      `test_rule11_per_ag_dedup_target_counts_byte_unchanged`. **IS ships the moment that drift clears** (owned by the
+      DeFi agent — adding the adapter classes is out of this deliverable's scope and would collide). **Verified on a
+      SAMPLE (no full regen):** `_add_instrument_name` stamps `KRX:EQUITY:005930`→"Samsung Electronics",
+      `KRX:EQUITY:000660`→"SK Hynix", `KRX:EQUITY:005380`→"Hyundai Motor", and also catches the legacy
+      `KRX:EQUITY:005930.KS-USD` variant (same `base_asset`); non-KRX rows stay honestly blank. Live tradfi
+      `prod/catalog.parquet` today has 10 KRX rows and NO `name` column — it appears on the next roll-up. **STILL
+      OPEN:** (a) the availability-manifest `name` column (item 2 below) — deliberately NOT done here, the manifest is
+      availability data and its shard-atom/writer is owned by another agent; catalogue-as-SSOT + display-time join is
+      preferred; (b) the catalogue regeneration that makes the name land LIVE (main agent). **Audit of other
+      opaque-coded venues:** KRX is the only venue needing this — DeFi pool addresses already carry human-readable
+      `glued_pair_id` + `base_asset`, prediction conditionIds already carry `question`, sports fixtures already carry
+      team names, and CME/CBOE/NASDAQ/NYSE roots are already readable._ KRX equities are identified by the 6-digit
+      exchange code (`KRX:EQUITY:000660` = SK Hynix, `005930` = Samsung Electronics, `005380` = Hyundai Motor) — the
+      code is the stable/unique official ticker (kept as the canonical `instrument_id`, analogous to
+      `NASDAQ:EQUITY:AAPL`), but it is NOT human-readable. Add a first-class reference-data `name` field (romanized
+      company name) resolved from a KRX code→name mapping (source: provider security description — Yahoo `.KS` /
+      Databento — else a maintained KRX listing reference in instruments-service), and SURFACE it on every read surface:
+      (1) deployment-api Catalogue Explorer + download-CSV (`instrument_id` + `name`), (2) the availability manifest
+      (`name` column carried by the WRITER, never re-derived downstream), (3) the data-status dimensions view. GCS
+      object PATHS keep the stable code id (paths must be stable/unique; names change on rebrand/merger) — the readable
+      name rides as metadata/column, not in the path. Audit whether any other venue shares the numeric-code pattern.
+      Regenerate catalogue + manifest so the name lands live; verify the Catalogue Explorer shows `SK Hynix` /
+      `Samsung Electronics` next to the code. (repos: instruments-service, market-tick-data-service, deployment-api,
+      deployment-ui)
 
 ## Phase D — re-smoke-test the backfills, TradFi-only, ALL shards (the post-migration completion gate)
 
