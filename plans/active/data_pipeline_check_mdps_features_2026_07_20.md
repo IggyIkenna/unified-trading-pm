@@ -1008,3 +1008,18 @@ avoided `create-code-tarballs.sh` which would have entangled other agents' uncom
 Flipped propagation-issue todos 1-3 ✅. Launching the derivative_ticker loop-close re-run now (issue todo 4): the setup
 script the VM boots is my byte-verified version, and the local launcher auto-pins UAC, so the VM should install the
 nullable_ohlcv=True contract and the force leg should WRITE objects (was 0).
+
+### 2026-07-20 22:38Z — CHECKPOINT: two real VMs running, Fix 1 UAC auto-pin CONFIRMED on a live VM
+
+Both loop-close VMs are RUNNING (GCE-verified, not fire-and-forget):
+
+- `mdps-backfill-cefi-pipelinecheck-20260720-213641-a63425` — derivative_ticker re-run (CEFI DERIBIT, auto-day
+  2024-02-08).
+- `mdps-backfill-cefi-pipelinecheck-20260720-213744-a84603` — trades→candles green-write smoke (CEFI BINANCE-FUTURES).
+
+**Fix 1 (launcher UAC auto-pin) CONFIRMED working on a real VM**: the re-run VM's metadata carries
+`UAC_TARBALL_SHA=ad317c32e8db…`, and `git merge-base --is-ancestor 8e58b009 ad317c32` = TRUE — i.e. the launcher
+auto-resolved and pinned a UAC that is a DESCENDANT of the `nullable_ohlcv=True` fix (8e58b009). So the VM will install
+the contract that permits NaN OHLC on derivative_ticker; combined with Fix 2 (editable beats wheel cache) + Fix 3 (boot
+assert), the force leg should now WRITE objects (was 0 due to the stale non-nullable contract). Awaiting the VM
+EXIT_STATUS + report to close derivative_ticker end-to-end (issue todo 4) and measure the prod write rate.
