@@ -806,11 +806,21 @@ Discriminator = **does a manifest row exist**.
     the _re-emit_, which runs AFTER the scan. So the only genuine scan gaps are **2022 (~95%, local run stopped
     @Dec-12)** and **2025 (stopped ~Jun-07)**. Relaunched ONLY those two ranges, pinned to the fix
     (`MTDS_TARBALL_SHA=2c88b269`) on **e2-highmem-8 (64GB)** for writer headroom, SPOT:
-    - `canonical-migration-defi-rebuild-20260720-132730-2025b` — 2025-06-01..2025-12-31
-    - `canonical-migration-defi-rebuild-20260720-132810-2022b` — 2022-12-01..2022-12-31 **After these terminate: run the
-      consolidator `--once`, then re-verify** (orphan classes = 0, per-year captured monotonic, cell-level absence still
-      ~4.6M). **NOTE the clock trap:** the sandbox `date -u` runs ~57min SLOW; VM names / run.log timestamps are REAL
-      UTC — these launched 13:27Z/13:28Z real, not the ~12:30Z the shell reported.
+    - ✅ `canonical-migration-defi-rebuild-20260720-133735-2025d` — 2025-06-01..2025-12-31 (RUNNING)
+    - ✅ `canonical-migration-defi-rebuild-20260720-133819-2022d` — 2022-12-01..2022-12-31 (RUNNING) **Two launch
+      attempts failed FIRST, and the guard was right both times:** (a) the SHA-pinned tarball did not exist
+      (`create-code-tarballs.sh` had not been run at 2c88b269) — the VM REFUSED a floating fallback rather than silently
+      running stale code; (b) `MTDS_TARBALL_SHA` must be the **FULL 40-char SHA**
+      (`2c88b26973044108d8fa5c9f86db781181c56625`) — an 8- or 12-char pin resolves to no object. Building the tarball
+      also required a CLEAN MTDS tree, so the T2 handler WIP was stashed by pathspec and restored after
+      (`slot4-T2-defi-handlers-hold`, popped cleanly). **MEASURED SPEEDUP:** 2025d scans a day every ~4s (25,629 shards
+      @2025-06-11, 254,950 entries in ~3min) versus the old 16GB VM's ~0.28 days/min — i.e. the remaining ~200 days is
+      ~15min, not ~12h. The 64GB box removed the memory-thrash that was ALSO causing the O(n^2)-looking slowdown, so
+      that second defect is far less urgent than it looked (still worth fixing, but it was largely a symptom of thrash,
+      not pure writer cost). **After these terminate: run the consolidator `--once`, then re-verify** (orphan classes =
+      0, per-year captured monotonic, cell-level absence still ~4.6M). **NOTE the clock trap:** the sandbox `date -u`
+      runs ~57min SLOW; VM names / run.log timestamps are REAL UTC — these launched 13:27Z/13:28Z real, not the ~12:30Z
+      the shell reported.
 
 - **2026-07-20 (slot-4, /autonomous — ⛔ CORRECTION: the "CF-11 re-run is necessary" claim below is MEASURED-FALSE;
   orphan checks GREEN; new gas_fees orphans found).**
