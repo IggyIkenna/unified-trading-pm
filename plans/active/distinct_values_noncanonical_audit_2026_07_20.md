@@ -503,3 +503,27 @@ without `--no-fix` before being cut short by a `| head -40` SIGPIPE. Verified no
 unexpected diffs, package still imports, `git stash list` shows nothing new. It died in the ENVIRONMENT phase, well
 before any lint/format auto-fix stage. Lesson: never invoke this project's `quality-gates.sh` with an unrecognized flag
 expecting a no-op `--help` — it silently runs the real gate.
+
+### 2026-07-20 ~19:45 UTC — quality-gates.sh --help shipped; a commit-bundling incident found + a live-claim doc protected
+
+**`--help`/`-h` shipped** in the shared `scripts/quality-gates-base/base-service.sh` (sourced by every repo's
+`quality-gates.sh` — one fix, fleet-wide). Prints usage for all 13 recognized flags + exits 0 in ~50ms, no gate phases
+run. Verified functionally from `market-tick-data-service` AND `deployment-api` after shipping.
+
+**Landed inside a mis-attributed commit — flagged, not rewritten.** The fix ended up bundled into `pm@eddeb32d6`
+("docs(plans): file instruments-service codex-compliance ceiling drift (unrelated to defi work)") alongside a new
+103-line issue doc this session never wrote. Diffstat confirms exactly 2 unrelated files: the new doc + my 43-line
+`base-service.sh` change. This means ANOTHER process staged broadly (`git add -A`-style) while my uncommitted fix was
+sitting in the same shared working tree and swept it into its own commit — a real "stage by name, never `-A`" hazard,
+and possibly evidence of a concurrent process running under the SAME slot-3 identity on this host (worth the operator's
+attention independent of this session). **Not rewritten**: the content is correct and already safely on origin (verified
+`--help` works post-ship); rewriting a pushed shared-branch commit to fix attribution is far riskier than the cosmetic
+issue itself.
+
+**The tarball-rotation frontmatter fix was deliberately left UNCOMMITTED.** While preparing to commit it, its content
+grew from a short "open decision" stub to a full "what shipped" section with commit shas between when I read it and when
+I staged it — clear evidence of an actively-writing author (a live claim, not stale WIP). Committing the current file
+would have bundled their substantive, possibly-unfinished content under my commit. The 1-line syntax fix (`summary:` →
+`summary: >-`) is still sitting on disk (uncommitted), which was enough to make the corpus-wide frontmatter gate pass
+locally for verification — it will naturally be swept into whoever commits that file next. Given the just-observed
+index-collision risk, no further commit attempt was made against that file this session.
