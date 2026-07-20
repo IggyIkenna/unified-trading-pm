@@ -97,6 +97,32 @@ subclassed Binance WS connector classes), but the HOST is correctly ASTER everyw
   history that is Astherus-pre-rebrand data mirroring Binance values. Any backfill of 2021-08-30→2023-07-22 ingests
   Binance-origin values tagged `venue=ASTER`. Clip trades genesis to the native 2023-07-22.
 
+## INCIDENT 2026-07-20 — the first fix attempt caused manifest corruption (resolved)
+
+A 33-VM ASTER trades backfill (RUN_TS 20260720-122739) captured **zero** rows and wrote **412,697 FALSE
+`empty_confirmed` manifest rows** across 2024-01-01→2026-07-20 — the manifest asserting "confirmed no trades" for
+instrument-days that actually traded. Detected by verifying GCS output rather than trusting the clean VM exit (all 33
+shards self-shut-down "successfully").
+
+**Corrected root cause** (the first hypothesis — "33 VMs caused a cross-IP storm" — was WRONG): the 429 body names the
+limit explicitly, `current limit of IP(34.85.20.67) is 2400 requests per minute`. The limit is **PER IP**, and each VM
+had its own ephemeral external IP (launcher passes no `--no-address`; project has no Cloud NAT). So parallel VMs were
+never the problem — **each single VM blew its own budget in ~5s** (measured ~200 req/s vs the 40 req/s budget) because:
+
+1. `OnchainPerpBatchHandler._fetch_aster` built a **NEW `AsterAdapter` per instrument**, so the adapter's 6h
+   exchangeInfo cache never survived → `/fapi/v1/exchangeInfo` refetched 1:1 with every trades call (**11,100
+   exchangeInfo 429s vs 11,100 trades 429s**), doubling request volume.
+2. The symbol cache is populated **only on success**, so once throttled it never cached and every instrument retried
+   exchangeInfo — a self-perpetuating spiral.
+3. No client-side pacing anywhere in the adapter.
+4. A 429/transport failure returned `[]`, which the shard recorded as `empty_confirmed` — the "never silent
+   placeholders" violation that minted the false rows.
+
+**Remediation (done):** 31 poisoned per-VM shards deleted; the 412,697 canonical rows removed via generation-matched CAS
+with the consolidator paused (10,259,899 → 9,847,687 rows), verified durable across consolidator cycles; pre-existing
+rows (34,449, written 2026-04-23..07-16) and real `captured` rows (1,041) left intact. **Lesson:** a rate-limited venue
+REST API needs per-PROCESS request discipline; VM count is irrelevant when the budget is per-IP.
+
 ## Fix plan (mirror the HL playbook this session)
 
 - ⬜ **A. Trades pagination fix** — page aggTrades past `limit=1000` (loop on `fromId`/time until day complete) in
