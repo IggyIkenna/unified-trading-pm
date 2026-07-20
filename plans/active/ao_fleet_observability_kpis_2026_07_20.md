@@ -92,22 +92,25 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       unresolved rate ~1 week post-fix to confirm the hypothesis (a KPI AF-5 will make this an ongoing measurement, not
       a one-off).
 - [ ] [BACKEND] P2. **(AF-1b) Cap escalation redispatch — on the shared cooldown store, not a new one.** Per
-      `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Blocked on the dependency above.** **Gate**: a
-      test showing repeat dispatches for the same escalation_id back off; no second cooldown engine exists in the tree.
-- [ ] [BACKEND] P1. **(AF-2 + Phase-6) Throttle plan_health — server-side min-interval gate + at-most-one-live
-      coalesce.** MEASURED: 55 dispatches/24h of which only 42 produced a result and 4 failed (~65% yield); over 6 days
-      288 dispatched / 186 result / 59 failed; run duration median 280s, p90 6.5 min. Root cause found:
-      `main-backmerge-to-ldr.yml` § "Ping plan-health agent" POSTs `/api/plan-health/dispatch` on EVERY LDR→main
-      promotion that lands PM content (fleet promote runs `*/15`), and the endpoint has NO cooldown and NO
-      already-running coalesce — the singleton reaper kills stragglers after the fact, which is where the
-      `superseded-plan_health` churn comes from. Implement: (a) a min-interval gate, **default 2h (operator RATIFIED
-      2026-07-18, "adjust later")**, as an env-free `TuningDefaults` knob — `mode=reconcile` exempt, explicit
-      `force=true` for operator/CI-emergency; (b) at-most-one-live coalesce (a dispatch while one is active returns the
-      active dispatch_id, HTTP 200, no spawn); (c) **also require the PREVIOUS dispatch to have posted its result or
-      timed out** before a new one spawns — that is what kills the 13/day result-less waste; (d) keep the promotion ping
-      as a TRIGGER and let the gate absorb the frequency (trigger-rich, execution-throttled). **Gate**: measured
-      dispatch rate ≤1 per interval over 24h with promotions still flowing; **zero** `superseded-plan_health` exits in
-      that window.
+      `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Still blocked on the dependency above**
+      (`ao_dispatch_cooldown_and_park_2026_07_20`'s shared cooldown store — verified 2026-07-20, its own P1 "Build the
+      ONE fleet-scoped cooldown store" todo is still unchecked). **Gate**: a test showing repeat dispatches for the same
+      escalation_id back off; no second cooldown engine exists in the tree.
+- [x] [BACKEND] P1. ✅ **(AF-2 + Phase-6) Throttle plan_health — server-side min-interval gate + at-most-one-live
+      coalesce.** — `agent-orchestrator@d098970` (2026-07-20). Implemented exactly as specified: (a)
+      `TuningDefaults.plan_health_min_interval_seconds` (default 7200s/2h) + `plan_health_dispatch_timeout_seconds`
+      (default 1800s/30min, the dead-dispatch fallback — above the measured p90 6.5min runtime with margin, well below
+      the interval); (b) `_report_dispatch_gate()` in `server/plan_health.py` — at-most-one-live coalesce (no result
+      posted yet AND inside the dead-dispatch timeout → coalesce, HTTP 200, no spawn); (c) the interval half only allows
+      a new spawn once the previous dispatch is done (result posted OR timed out) AND the min-interval has elapsed; (d)
+      `mode="reconcile"` is exempt by construction (disjoint `agent_kind`, gate only runs for `mode="report"`);
+      `force=true` (new `PlanHealthDispatchRequest.force` field, threaded through the route) skips the interval half but
+      still never double-spawns onto a live dispatch. `main-backmerge-to-ldr.yml`'s promotion ping is UNCHANGED (still
+      fires every promotion) — it's now a trigger the gate absorbs, per spec (d). 15 new unit tests (gate logic +
+      `dispatch()` wiring), full `agent-orchestrator` `quality-gates.sh` green (1474 passed). **Gate verification
+      deferred (honest — this needs live traffic)**: the "measured dispatch rate ≤1/interval over 24h, zero
+      `superseded-plan_health` exits" gate can only be confirmed once this code is running on the live orchestrator VM
+      and a 24h window has elapsed post-deploy — filed as a follow-up re-measurement, not claimed here.
 - [ ] [BACKEND] P2. **(AF-5) Fleet-efficiency KPIs + per-account usage attribution.** 24h measured: 310 boots / 154
       dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task. Surface daily-digest + dashboard KPIs:
       spawns, dispatches, done, conversion %, boots-per-done, top skip reasons, with an alert on sharp regression.
@@ -164,3 +167,9 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   (`bash scripts/quality-gates.sh`, blocking foreground, 8-15+ min documented runtime) sits at/over the
   WorkerLivenessWatchdog's 15-min heartbeat-silence kill with no backgrounding/heartbeat guidance. Fixed by hardening
   `agents/cicd.md`. Full cause-class breakdown + evidence in the AF-1a todo above.
+- **2026-07-20 — AF-2 done** (`agent-orchestrator@d098970`). Server-side throttle for `/api/plan-health/dispatch`
+  report-mode: 2h min-interval + at-most-one-live coalesce + wait-for-previous-result-or-timeout, `mode=reconcile`
+  exempt, `force=true` escape hatch. 15 new tests, full QG green. The dispatch-rate/zero-superseded-exits acceptance
+  gate itself needs a live 24h window post-deploy to confirm — noted as deferred verification on the todo, not silently
+  claimed. Also re-verified AF-1b's dependency is still open (its cooldown-store P1 todo unchecked as of this session) —
+  AF-1b stays blocked, correctly.
