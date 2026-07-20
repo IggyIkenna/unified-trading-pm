@@ -115,9 +115,13 @@ escalator backoff must reuse; the master's own risk note is that three consumers
 diverge. #2's end-to-end reconcile proof needs #1 **deployed** (not merely merged — the reaper is what killed the 07-20
 run). #5 waits on #1 because both touch the lifecycle loops.
 
-**What deliberately REMAINS here** (5 todos, all correctly gated or last): the `tmux_session_lost` root-cause hunt
-(gated on #1's re-measure), the 07-12 degradation onset, the two `[REVIEW]` doc close-out/archival passes (they fire as
-each source doc's last todo lands), and the operator-sequenced Layer-1 producer rewire.
+**What deliberately REMAINS here**: originally 5 gated/last todos — the `tmux_session_lost` root-cause hunt (gated on
+#1's re-measure), the 07-12 degradation onset, the two `[REVIEW]` doc close-out/archival passes (they fire as each
+source doc's last todo lands), and the operator-sequenced Layer-1 producer rewire — **plus the 4 Phase-8 residuals
+inherited from the archived children** (2 calendar-time re-measurements + 2 operator-gated `.env.local` actions), for a
+genuine remainder of **9**. Separately, **14 `- [ ]` MOVED items stay open** because their child plan is still active
+(`ao_scheduled_agent_hygiene` ×3, `ao_fleet_infra_hardening` ×5, `ao_fleet_observability_kpis` ×6); the **15 MOVED items
+whose child is archived were flipped `- [x]` on 2026-07-20** with a per-item `DONE via <child>` pointer.
 
 ## Verified classification of the 10 open docs (2026-07-17, this session)
 
@@ -141,7 +145,8 @@ NOT AO and are deliberately out of scope here.
 
 ### Phase 0 — DB-state corrections (no code, operator-gated live changes)
 
-- [ ] [BACKEND] P0. **Reopen the 2 live false-`done` rows found by this session's audit** —
+- [x] [BACKEND] P0. **Reopen the 2 live false-`done` rows found by this session's audit** — ✅ **DONE via
+      `ao_backlog_regen_integrity_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.**
       `sports_cf8_available_at_backfill_regression-001` (`done_sha=utl@f5f15e3a`) and `-002` (`utl@0f55cc2b`). Both
       done_shas are REAL UTL fixes whose plan checkboxes (`sports_cf8…_2026_07_13.md:348` and `:856`) never flipped;
       both predate the `@86b8b8b` checkbox-flip gate, so this is legacy poison the 07-16 sweep missed (they were likely
@@ -155,42 +160,46 @@ NOT AO and are deliberately out of scope here.
       `false_done: 0` after the sports owner's ruling is applied; the per-row decision is recorded on
       `backlog_task_done_status_diverges…`. Source: doc #4 + this session's probe. **➡️ MOVED 2026-07-20 to
       `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
-- [ ] [BACKEND] P1. **Close doc #4 (`backlog_task_done_status_diverges…`) for real.** Its todos are all `[x]` and it
-      left `status: open` awaiting "an independent skeptical audit" — this session's audit found the 2 rows above, so
-      the doc closes only after Phase-0 todo 1 lands. Also record the corollary amendment: the "no periodic sweep
-      needed" ruling holds for the gated mechanism, but the UNAUDITABLE→auditable transition (regen backfilling
-      `brief_hash` onto a legacy row) can SURFACE old poison at any time — so `audit_false_done.py` runs once per
-      close-out/audit session (cheap, already scripted), not on a cron. **Gate**: doc flipped `resolved` + `resolved_by`
-      filled + archived per ritual. **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action
-      here.**
+- [x] [BACKEND] P1. **Close doc #4 (`backlog_task_done_status_diverges…`) for real.** Its todos are all `[x]` and it ✅
+      **DONE via `ao_backlog_regen_integrity_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** left
+      `status: open` awaiting "an independent skeptical audit" — this session's audit found the 2 rows above, so the doc
+      closes only after Phase-0 todo 1 lands. Also record the corollary amendment: the "no periodic sweep needed" ruling
+      holds for the gated mechanism, but the UNAUDITABLE→auditable transition (regen backfilling `brief_hash` onto a
+      legacy row) can SURFACE old poison at any time — so `audit_false_done.py` runs once per close-out/audit session
+      (cheap, already scripted), not on a cron. **Gate**: doc flipped `resolved` + `resolved_by` filled + archived per
+      ritual. **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
 
 ### Phase 1 — backlog/regen integrity (code)
 
-- [ ] [BACKEND] P1. **Sibling-reset guard: never silently recycle a `done` row.** `bootstrap.py` brief_hash-mismatch
-      reset must refuse to reset a row that is `done` with a `done_sha`, logging an ERROR naming both briefs (a done row
-      is audit history). Unit test where a done row's id is claimed by a different brief → row SURVIVES + error emitted;
+- [x] [BACKEND] P1. **Sibling-reset guard: never silently recycle a `done` row.** `bootstrap.py` brief_hash-mismatch ✅
+      **DONE via `ao_backlog_regen_integrity_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** reset must refuse
+      to reset a row that is `done` with a `done_sha`, logging an ERROR naming both briefs (a done row is audit
+      history). Unit test where a done row's id is claimed by a different brief → row SURVIVES + error emitted;
       bug-inject to prove the test bites. Source: doc #6 todo 2. **Gate**: test green + bug-injection proof. **➡️ MOVED
       2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
-- [ ] [BACKEND] P1. **Hand-tuned-field preservation across positional-ID shift.** The regen preserves
+- [x] [BACKEND] P1. **Hand-tuned-field preservation across positional-ID shift.** The regen preserves ✅ **DONE via
+      `ao_backlog_regen_integrity_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.**
       `priority`/`priority_override`/`prereqs.prerequisites` keyed by task id — an id shift (sibling completes →
       suffixes renumber) silently drops a park (measured: the mvp-defi park was lost exactly this way on 07-17,
       re-applied under `-001`). Key the preservation by `brief` (the same key the reconcile path already uses), not by
       id. Regression test: park a task, remove a sibling todo, regen → park survives under the new id. Source: doc #5
       fix-todo 3 (the NEW [CODE] P1). **Gate**: test green; the live park survives the next real regen tick after a
       todo-count change. **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
-- [ ] [BACKEND] P2. **Bound the NULL-`brief_hash` tail (54 rows, all `done`).** Decide + implement ONE of: backfill from
+- [x] [BACKEND] P2. **Bound the NULL-`brief_hash` tail (54 rows, all `done`).** Decide + implement ONE of: backfill from
+      ✅ **DONE via `ao_backlog_regen_integrity_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.**
       `git show <done_sha>:<plan_ref>` where recoverable; age the exemption out (no in-flight NULL rows exist —
       re-measured 0 this session); or accept permanently with the WHY in the docstring + a growth alarm (growth =
       backfill regression, the real signal). Do NOT blanket-reset. Source: doc #6 todo 1. **Gate**: the doc's stated
       gate — count 0, or recorded decision + growth check. **➡️ MOVED 2026-07-20 to
       `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action here.**
-- [ ] [BACKEND] P2. **Explain the l2_book absent rows.** `l2_book…-005/-007`: plan todos open (`BLOCKED-*` markers) on
-      an ingested plan, no task rows (re-measured: only 4 l2_book rows, all done). Trace whether the orphan-GC pruned
-      them (correct-ish: `BLOCKED-*` todos are non-dispatchable by design and SHOULD have no row — if so, record that as
-      the designed behaviour and make `regen`/docs say it explicitly) or whether regen re-derives them under other ids.
-      **Do NOT close by re-reopening** (decayed twice). Source: doc #8 todo 5. **Gate**: doc #8's stated gate — a
-      recorded explanation, and either correct rows or a recorded by-design decision. **✅ EXPLAINED 2026-07-20 (B1) —
-      BY DESIGN, on two independent mechanisms; recording the decision, NOT reopening.** (1) `_parse_open_todos`
+- [x] [BACKEND] P2. **Explain the l2_book absent rows.** `l2_book…-005/-007`: plan todos open (`BLOCKED-*` markers) on
+      ✅ **DONE via `ao_backlog_regen_integrity_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** an ingested
+      plan, no task rows (re-measured: only 4 l2_book rows, all done). Trace whether the orphan-GC pruned them
+      (correct-ish: `BLOCKED-*` todos are non-dispatchable by design and SHOULD have no row — if so, record that as the
+      designed behaviour and make `regen`/docs say it explicitly) or whether regen re-derives them under other ids. **Do
+      NOT close by re-reopening** (decayed twice). Source: doc #8 todo 5. **Gate**: doc #8's stated gate — a recorded
+      explanation, and either correct rows or a recorded by-design decision. **✅ EXPLAINED 2026-07-20 (B1) — BY DESIGN,
+      on two independent mechanisms; recording the decision, NOT reopening.** (1) `_parse_open_todos`
       (`server/regen_backlog_from_plan.py:925`) skips **both** already-done `- [x]` checkboxes **and** `BLOCKED-*` /
       stretch-optional lines (`_NON_DISPATCHABLE_RE`). The l2_book plan today is 6 × `[x]` + 2 × `- [ ] BLOCKED-*`
       (`BLOCKED-OPERATOR-DECISION`, `BLOCKED-DATA-CORRECTNESS`) — so it contributes **ZERO current briefs**, and the two
@@ -210,44 +219,47 @@ NOT AO and are deliberately out of scope here.
       todos plus dispatched history — **not** a durable ledger of plan completion — so a missing row is never by itself
       evidence of a lost task. **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT action
       here.**
-- [ ] [BACKEND] P2. **`audit_false_done` false-positive class — the AO/regen lesson from studying the sports rows.**
-      (Operator 2026-07-18: the sports work itself is its owner's; but any AO/regen improvement surfaced by studying it
-      belongs here.) `sports_cf8…-002`'s plan checkbox IS already `[x]` — the audit flags it ONLY because the row's
-      cited `done_sha` isn't the commit that flipped the checkbox. Decide the intended contract: should
-      `audit_false_done` / `verify.check_plan_flip` treat a checkbox that is currently `[x]` as HONEST regardless of
-      which commit flipped it (checkbox state = truth), or must the `done_sha` itself be the flip-commit (provenance =
-      truth)? A "checkbox `[x]` but wrong sha" false-positive pollutes the gate's signal. Trace both consumers, pick the
-      rule, and make the audit + the done-gate agree on it. Source: sports_cf8 study, this session. **Gate**: a recorded
-      decision; `audit_false_done` no longer flags an already-`[x]` row whose work is genuinely complete (or explicitly
-      does, by ruling, with the reason documented). **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md`
-      — do NOT action here.**
+- [x] [BACKEND] P2. **`audit_false_done` false-positive class — the AO/regen lesson from studying the sports rows.** ✅
+      **DONE via `ao_backlog_regen_integrity_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** (Operator
+      2026-07-18: the sports work itself is its owner's; but any AO/regen improvement surfaced by studying it belongs
+      here.) `sports_cf8…-002`'s plan checkbox IS already `[x]` — the audit flags it ONLY because the row's cited
+      `done_sha` isn't the commit that flipped the checkbox. Decide the intended contract: should `audit_false_done` /
+      `verify.check_plan_flip` treat a checkbox that is currently `[x]` as HONEST regardless of which commit flipped it
+      (checkbox state = truth), or must the `done_sha` itself be the flip-commit (provenance = truth)? A "checkbox `[x]`
+      but wrong sha" false-positive pollutes the gate's signal. Trace both consumers, pick the rule, and make the
+      audit + the done-gate agree on it. Source: sports_cf8 study, this session. **Gate**: a recorded decision;
+      `audit_false_done` no longer flags an already-`[x]` row whose work is genuinely complete (or explicitly does, by
+      ruling, with the reason documented). **➡️ MOVED 2026-07-20 to `ao_backlog_regen_integrity_2026_07_20.md` — do NOT
+      action here.**
 
 ### Phase 2 — worker lifecycle (code)
 
-- [ ] [BACKEND] P1. **Orphan-process reap (Defect B) — the biggest live bleed.** ~10 orphaned `claude` workers are alive
-      right now on the VM (16 procs vs 4 live sessions; 3 are the doc's named PIDs, ~4h old, one tree fully detached at
-      PPID 1), burning CPU + account budget and racing re-dispatched work. Implement BOTH halves: (a) the TmuxPruner
-      kills the worker process tree whose slot config-dir maps to a dead/absent session (match by
-      `claude_session_id`/config dir, never by name-grep alone); (b) a periodic orphan sweep (config-dir → PID → slot
-      liveness) catching residue incl. PPID-1 trees. Guards: never kill a PID belonging to a live session; **honor
-      `boot_grace_seconds` — NEVER reap a slot's process inside its fresh-spawn grace window (a booting worker's tmux
-      session isn't registered yet; this is the exact 6/6-AutoSpawn-workers-killed-56-120s-post-spawn incident class —
-      config.py boot_grace_seconds exists precisely for this)**; dry-run mode; log every kill with slot + PID + age.
-      Source: doc #3 Defect B. **Gate**: the doc's regression — simulated `tmux_session_lost` leaves zero detached
-      claude processes for that slot; live sweep on the VM reports 0 orphans (one-time cleanup of the current ~10
-      included). **➡️ MOVED 2026-07-20 to `ao_worker_lifecycle_reap_2026_07_20.md` — do NOT action here.**
-- [ ] [BACKEND] P1. **Stale-dispatch invariant (Defect A, resume-path aware).** The pruner's requeue (`ao@5b07bd3`)
-      already releases on a "requeue" verdict, but a `resume-pending` verdict keeps the task bound — and when the resume
-      never happens (07-17 incident: slots went `killed` holding tasks), nothing reconciles. Add the reconciler
-      invariant: a task `dispatched` to a slot with `worker_alive=false` AND `tmux_session IS NULL` for > one pruner
-      tick beyond `resume_attempts` exhaustion → auto-release + `stale_dispatch_reclaimed` activity event. Must NOT
-      fight the resume path — only fire after resume is exhausted/impossible. Source: doc #3 Defect A + doc #2
-      symptom 1. **Gate**: doc #3's regression test; live `dispatched` count equals live-worker-held count across a 24h
-      window (spot-checked); **AND an explicit no-double-dispatch assertion — a task released by this invariant is NEVER
-      simultaneously live on a resumed worker. The release fires strictly AFTER `resume_lifecycle` marks resume
-      exhausted/impossible (order the two so the same task can never reach two agents); test the exact race (resume
-      in-flight when the invariant tick fires → invariant defers, no release).** **➡️ MOVED 2026-07-20 to
+- [x] [BACKEND] P1. **Orphan-process reap (Defect B) — the biggest live bleed.** ~10 orphaned `claude` workers are alive
+      ✅ **DONE via `ao_worker_lifecycle_reap_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** right now on the
+      VM (16 procs vs 4 live sessions; 3 are the doc's named PIDs, ~4h old, one tree fully detached at PPID 1), burning
+      CPU + account budget and racing re-dispatched work. Implement BOTH halves: (a) the TmuxPruner kills the worker
+      process tree whose slot config-dir maps to a dead/absent session (match by `claude_session_id`/config dir, never
+      by name-grep alone); (b) a periodic orphan sweep (config-dir → PID → slot liveness) catching residue incl. PPID-1
+      trees. Guards: never kill a PID belonging to a live session; **honor `boot_grace_seconds` — NEVER reap a slot's
+      process inside its fresh-spawn grace window (a booting worker's tmux session isn't registered yet; this is the
+      exact 6/6-AutoSpawn-workers-killed-56-120s-post-spawn incident class — config.py boot_grace_seconds exists
+      precisely for this)**; dry-run mode; log every kill with slot + PID + age. Source: doc #3 Defect B. **Gate**: the
+      doc's regression — simulated `tmux_session_lost` leaves zero detached claude processes for that slot; live sweep
+      on the VM reports 0 orphans (one-time cleanup of the current ~10 included). **➡️ MOVED 2026-07-20 to
       `ao_worker_lifecycle_reap_2026_07_20.md` — do NOT action here.**
+- [x] [BACKEND] P1. **Stale-dispatch invariant (Defect A, resume-path aware).** The pruner's requeue (`ao@5b07bd3`) ✅
+      **DONE via `ao_worker_lifecycle_reap_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** already releases on
+      a "requeue" verdict, but a `resume-pending` verdict keeps the task bound — and when the resume never happens
+      (07-17 incident: slots went `killed` holding tasks), nothing reconciles. Add the reconciler invariant: a task
+      `dispatched` to a slot with `worker_alive=false` AND `tmux_session IS NULL` for > one pruner tick beyond
+      `resume_attempts` exhaustion → auto-release + `stale_dispatch_reclaimed` activity event. Must NOT fight the resume
+      path — only fire after resume is exhausted/impossible. Source: doc #3 Defect A + doc #2 symptom 1. **Gate**: doc
+      #3's regression test; live `dispatched` count equals live-worker-held count across a 24h window (spot-checked);
+      **AND an explicit no-double-dispatch assertion — a task released by this invariant is NEVER simultaneously live on
+      a resumed worker. The release fires strictly AFTER `resume_lifecycle` marks resume exhausted/impossible (order the
+      two so the same task can never reach two agents); test the exact race (resume in-flight when the invariant tick
+      fires → invariant defers, no release).** **➡️ MOVED 2026-07-20 to `ao_worker_lifecycle_reap_2026_07_20.md` — do
+      NOT action here.**
 - [ ] [INFRA] P3. **Root-cause the 96/day `tmux_session_lost` rate** (or record it as accepted churn). The 07-17
       incident was 5 losses in one second (backend/tmux blip); today's rate is 96/24h with 158 `worker_polling_dead`.
       Either find the driver (backend restarts? host pressure? tmux server?) or record the rate as expected with the
@@ -261,23 +273,25 @@ NOT AO and are deliberately out of scope here.
 
 ### Phase 3 — spawn/park visibility (code + policy)
 
-- [ ] [BACKEND] P2. **Durable auto-park for fleet-skipped tasks (the visibility half R1 exposed).** R1 made
-      fleet-skipped tasks count 0 toward the spawn budget — which silenced the churn but also the SIGNAL (nothing tells
-      anyone the task is stuck). Auto-park at ≥N distinct within-TTL skips carrying a `BLOCKED|PARKED|GATED` reason via
-      the durable `priority_override`/false-prereq recipe (`ao@8dd5763`), WITH an unpark path when the condition clears,
-      and an operator-visible surface (activity event + dashboard flag — the same class as `needs_operator_count`). This
-      closes doc #1's last todo AND doc #5's auto-park design todo in one mechanism. **DEPENDS ON Phase-1
-      preserve-by-`brief` (Phase 1 todo 2): an id-keyed park is silently dropped on the next id-shift regen, so
-      auto-park is NOT durable until that lands — sequence Phase 1 first.** **Park = the ≥N-skips escalation of the ONE
-      fleet-scoped cooldown store built in Phase-6 (blocked-task cooldown); reuse that store, do not build a second
-      park-specific cooldown.** Sources: doc #1 todo 2, doc #5 fix-todo 3(design). **Gate**: a fleet-skipped task
-      auto-parks with a visible reason; clearing the condition unparks it; test-pinned. **➡️ MOVED 2026-07-20 to
+- [x] [BACKEND] P2. **Durable auto-park for fleet-skipped tasks (the visibility half R1 exposed).** R1 made ✅ **DONE
+      via `ao_dispatch_cooldown_and_park_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** fleet-skipped tasks
+      count 0 toward the spawn budget — which silenced the churn but also the SIGNAL (nothing tells anyone the task is
+      stuck). Auto-park at ≥N distinct within-TTL skips carrying a `BLOCKED|PARKED|GATED` reason via the durable
+      `priority_override`/false-prereq recipe (`ao@8dd5763`), WITH an unpark path when the condition clears, and an
+      operator-visible surface (activity event + dashboard flag — the same class as `needs_operator_count`). This closes
+      doc #1's last todo AND doc #5's auto-park design todo in one mechanism. **DEPENDS ON Phase-1 preserve-by-`brief`
+      (Phase 1 todo 2): an id-keyed park is silently dropped on the next id-shift regen, so auto-park is NOT durable
+      until that lands — sequence Phase 1 first.** **Park = the ≥N-skips escalation of the ONE fleet-scoped cooldown
+      store built in Phase-6 (blocked-task cooldown); reuse that store, do not build a second park-specific cooldown.**
+      Sources: doc #1 todo 2, doc #5 fix-todo 3(design). **Gate**: a fleet-skipped task auto-parks with a visible
+      reason; clearing the condition unparks it; test-pinned. **➡️ MOVED 2026-07-20 to
       `ao_dispatch_cooldown_and_park_2026_07_20.md` — do NOT action here.**
-- [ ] [ADMIN] P2. **Wire the mvp-defi unpark.** `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` (still
-      `false`) must be flipped by whoever lands the seed-chain/backfill progress (`data_completion_defi_2026_07_15`'s
-      owner), or the park outlives its reason. Add the pointer on that plan + a line in the park's prereq description
-      naming the flipper. ⚠️ **OPEN QUESTION (found 2026-07-20 via plan_health output): the named flipper plan may be
-      STALE.** `plan_health` flagged `data_completion_defi_2026_07_15` as CONTRADICTED/superseded by
+- [x] [ADMIN] P2. **Wire the mvp-defi unpark.** `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` (still ✅
+      **DONE via `ao_dispatch_cooldown_and_park_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** `false`) must
+      be flipped by whoever lands the seed-chain/backfill progress (`data_completion_defi_2026_07_15`'s owner), or the
+      park outlives its reason. Add the pointer on that plan + a line in the park's prereq description naming the
+      flipper. ⚠️ **OPEN QUESTION (found 2026-07-20 via plan_health output): the named flipper plan may be STALE.**
+      `plan_health` flagged `data_completion_defi_2026_07_15` as CONTRADICTED/superseded by
       `defi_consolidated_closeout_2026_07_18` — which declares the per-instrument re-architecture supersedes the
       batch-model tracks, DeFi capture STOPPED, and backfill GATED on T1–T3 canonicalisation. If that plan never
       progresses, this park **outlives its reason forever** (a permanent silent park). Operator ruling needed: re-point
@@ -364,9 +378,10 @@ NOT AO and are deliberately out of scope here.
 > Reported verbally by the operator 2026-07-17; each item below was VERIFIED against code + the live VM before being
 > written down. Per the operator's instruction these are RECORDED, not fixed, in this session.
 
-- [ ] [BACKEND] P2. **Paused-slot semantics — verified CORRECT in code; pin it with tests + close the one unchecked
-      path.** Findings (2026-07-17): `dispatch.pick_next_task` excludes paused via `_slot_configured` (`dispatch.py:186`
-      — "paused: an explicit operator 'do not use this slot'"); AutoSpawn excludes paused (`autospawn.py:631`
+- [x] [BACKEND] P2. **Paused-slot semantics — verified CORRECT in code; pin it with tests + close the one unchecked ✅
+      **DONE via `ao_failover_multi_vm_readiness_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** path.**
+      Findings (2026-07-17): `dispatch.pick_next_task` excludes paused via `_slot_configured` (`dispatch.py:186` —
+      "paused: an explicit operator 'do not use this slot'"); AutoSpawn excludes paused (`autospawn.py:631`
       spawnability + `:2031` review/paused guard); `plan_health._pick_free_slot` and `escalation._pick_free_slot` both
       skip `paused`/`killed`; a paused slot's `/heartbeat` only refreshes ping + drains messages, never dispatches
       (`slots_worker.py:316`); the TmuxPruner never overwrites `paused` and never releases a paused slot's task
@@ -398,17 +413,18 @@ NOT AO and are deliberately out of scope here.
       all-paths test). **What REMAINS here**: the (a) all-paths regression test for the NON-failover paths (dispatch,
       autospawn, plan_health, escalation) and the (b) dashboard paused-rendering check. Do not write the failover
       predicate here.
-- [ ] [BACKEND] P3. **Is `server/failover.py` dead code under the single-VM architecture? (raised by B3, 2026-07-20)**
-      Its entire premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never
-      dispatch"), but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based
-      dispatch (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈
-      `{planning,     NA}`). Live state agrees: failover is stopped, has never fired, and `fleet_registry_entries: 0` —
-      it has no registry data to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the
-      honest resolution may be to DELETE the module + its config knobs rather than fix the paused-slot bug above.
-      **Decide before doing the P2 fix** — no point hardening a module that should not exist. **Gate**: an explicit
-      keep-or-delete ruling; if keep, a named scenario under single-VM that still needs it. **✅ RULED 2026-07-20 (A5) —
-      KEEP.** The named scenario the gate asked for: **multi-VM returns for resilience/backup** (operator, 2026-07-20).
-      So the module stays and the paused-slot P2 above is **live work, not superseded**. **➡️ BOTH MOVED to
+- [x] [BACKEND] P3. **Is `server/failover.py` dead code under the single-VM architecture? (raised by B3, 2026-07-20)**
+      ✅ **DONE via `ao_failover_multi_vm_readiness_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** Its entire
+      premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never dispatch"),
+      but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based dispatch
+      (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈ `{planning,     NA}`).
+      Live state agrees: failover is stopped, has never fired, and `fleet_registry_entries: 0` — it has no registry data
+      to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the honest resolution may be
+      to DELETE the module + its config knobs rather than fix the paused-slot bug above. **Decide before doing the P2
+      fix** — no point hardening a module that should not exist. **Gate**: an explicit keep-or-delete ruling; if keep, a
+      named scenario under single-VM that still needs it. **✅ RULED 2026-07-20 (A5) — KEEP.** The named scenario the
+      gate asked for: **multi-VM returns for resilience/backup** (operator, 2026-07-20). So the module stays and the
+      paused-slot P2 above is **live work, not superseded**. **➡️ BOTH MOVED to
       `ao_failover_multi_vm_readiness_2026_07_20.md`** — which also covers the larger risk this audit exposed: the
       re-route and rollback paths have NEVER executed in production (0 events for all time), so the resilience feature
       is unproven, not merely off. Do NOT action either here.
@@ -430,8 +446,9 @@ NOT AO and are deliberately out of scope here.
       measured dispatch rate ≤ 1 per interval over a 24h window with promotions still flowing; zero
       `superseded-plan_health` exits in that window. **➡️ MOVED 2026-07-20 to
       `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
-- [ ] [BACKEND] P1. **Blocked-task redispatch cooldown + change-triggered re-eligibility + worker ETA (operator policy,
-      new mechanism).** Today a skip-as-blocked only blocks the SKIPPING slot (24h slot-scoped TTL); any other idle
+- [x] [BACKEND] P1. **Blocked-task redispatch cooldown + change-triggered re-eligibility + worker ETA (operator policy,
+      ✅ **DONE via `ao_dispatch_cooldown_and_park_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** new
+      mechanism).** Today a skip-as-blocked only blocks the SKIPPING slot (24h slot-scoped TTL); any other idle
       same-role slot re-claims the task within ~minutes (measured: 117 `slot_task_skipped`/24h; the mvp thrash doc
       recorded 3 re-derivations of the same verdict in ~35 min). Operator policy to implement, verbatim: (1) when a
       worker declines a task as BLOCKED after reading the plan, the task is not re-dispatchable to ANY slot for a base
@@ -492,8 +509,9 @@ NOT AO and are deliberately out of scope here.
       "re-armed". **➡️ REMAINING WORK MOVED 2026-07-20 to `ao_scheduled_agent_hygiene_2026_07_20.md` (AO-dispatched) —
       the curl fix, the (b) liveness assertion and the end-to-end verification gate live there now. Do NOT action here;
       this entry is kept as the audit record.**
-- [ ] [BACKEND] P0. **The prereq-blocked reaper KILLS freshly-spawned agents that land on a previously-blocked slot
-      (generic; it is what killed the 07-20 reconcile run).** `server/worker_liveness_watchdog.py:1180-1265` keeps
+- [x] [BACKEND] P0. **The prereq-blocked reaper KILLS freshly-spawned agents that land on a previously-blocked slot ✅
+      **DONE via `ao_dispatch_liveness_p0_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** (generic; it is what
+      killed the 07-20 reconcile run).** `server/worker_liveness_watchdog.py:1180-1265` keeps
       `self._prereq_blocked_since[sid]` keyed by **slot id only**, and never invalidates it when a NEW agent spawns into
       that slot. The early-out `if held_task is None and not had_session: continue` only skips when the slot has NO
       session — so once a fresh session appears on a slot whose timer already matured, the reaper kills it and logs the
