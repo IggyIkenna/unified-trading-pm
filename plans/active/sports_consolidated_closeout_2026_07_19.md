@@ -99,7 +99,13 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
   bookkeeping; the re-run reads fixture PARQUETS (already correct via §Q/T/W round + §V split-read), so it is gated only
   on the §Z code fix + a fresh tarball (both done). 2024 pilot chunk launched; verify its shards show a real
   early/mid/late competition_phase spread before fanning out the remaining years. Verify via corpus re-scan (matchday
-  non-null ≈ round non-null; phase NOT 100% 'late').
+  non-null ≈ round non-null; phase NOT 100% 'late'). **VERIFIED 2026-07-19/20 (corpus-wide, not just pilot): 2021-2026
+  CLEAN (matchday populated, real early/mid/late spread); 2019 + 2020 were NOT re-run — the SPOT VMs hit the `--force` ×
+  SPOT preemption-replay hazard WITHIN the year** (log shows repeated restart at YYYY-01-01; never reached mid-year;
+  exited 0 having covered ~48/366 of ~4000/2900 shards). **Per-YEAR chunking was not fine-grained enough against
+  within-year preemption.** Fix: re-ran 2019+2020 **ON-DEMAND** (`--on-demand` FLAG — the `ON_DEMAND=true` ENV is
+  overridden by the launcher's internal default, a foot-gun) so they can't be preempted. Verify 2019/2020 clean on
+  terminal, then this is DONE.
 - [ ] [DIAG] P1. `sfi_progressive_features` is corpus-empty (1 manifest row) despite a documented 2020→today window —
       find why the backfill never ran, then run it. Without it every HT/progressive-SFI ML feature is unavailable.
 - [ ] [DIAG] P2. `is_promotion_relegation` is hardcoded `False` (dead) — wire it from the standings relegation-zone
