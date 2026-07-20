@@ -11,8 +11,8 @@ summary: >-
   cascade-qg-ordering.yml — the one component designed for this fan-out — dispatches `quality-gate-run`, an event NO
   repo declares a repository_dispatch listener for, so it fails GREEN by reading the pre-existing ci_status. Instance 1
   (uac@a2beed46, massive removed from SOURCE_PRIORITY) reddened UTL main for ~9h undetected and was then laundered green
-  by SIT. Instance 2 (uac@1ff91e5b, SPORTS key dropped from cloud-providers.yaml) is LATENT — it breaks
-  test_bucket_naming_cell_sweep locally against UAC-LDR but has not reached UAC main yet.
+  by SIT. Instance 2 (SPORTS key dropped from cloud-providers.yaml) is FIXED in utl@c26a5297 — and on investigation was
+  intra-workspace fixture drift rather than a UAC-ref divergence. The CLASS (todos 2-5) remains open.
 status: open
 nature: issue
 asset_group: [cross-cutting]
@@ -52,16 +52,16 @@ never re-runs and nothing notices.
 
 ## Instances (all authored by UAC within 24h of each other)
 
-| #   | UAC commit | Change                                           | Downstream effect                                                          | State                        |
-| --- | ---------- | ------------------------------------------------ | -------------------------------------------------------------------------- | ---------------------------- |
-| 1   | `a2beed46` | `massive` removed from tradfi `SOURCE_PRIORITY`  | 10 UTL manifest-writer tests fail                                          | FIXED (fixtures repointed)   |
-| 2   | `1ff91e5b` | `SPORTS` key dropped from `cloud-providers.yaml` | 2 `test_bucket_naming_cell_sweep` cells fail (`gcp`/`aws:features:sports`) | **OPEN — latent, see below** |
+| #   | UAC commit | Change                                           | Downstream effect                                                          | State                      |
+| --- | ---------- | ------------------------------------------------ | -------------------------------------------------------------------------- | -------------------------- |
+| 1   | `a2beed46` | `massive` removed from tradfi `SOURCE_PRIORITY`  | 10 UTL manifest-writer tests fail                                          | FIXED (fixtures repointed) |
+| 2   | `1ff91e5b` | `SPORTS` key dropped from `cloud-providers.yaml` | 2 `test_bucket_naming_cell_sweep` cells fail (`gcp`/`aws:features:sports`) | **FIXED** — utl@c26a5297   |
 
 Instance 1 timeline: UTL v2 green 07-19 17:22Z → UAC `a2beed46` lands 17:34Z → overnight audit 07-20 02:20Z finds 10
 failures. UTL main was red for ~9h with nothing detecting it, then SIT stamped `SIT_VALIDATED` at 05:21Z and erased the
 red entirely (that laundering is separately fixed — see `ci_status_store.resolve_status`'s main-red provenance guard).
 
-## Instance 2 — the open one
+## Instance 2 — RESOLVED (kept for the diagnostic trail)
 
 `resolve_bucket_name(cloud='gcp', kind='features', asset_group='sports')` raises
 `BucketNamingError: Kind 'features' on cloud 'gcp' has no entry for asset_group='sports'. Available: ['CEFI', 'DEFI', 'PREDICTION', 'TRADFI']`.
@@ -72,9 +72,34 @@ Priority-setting facts measured 2026-07-20:
 - The sweep **did not run at all** in the 02:20Z CI slice (0 occurrences in that run's log), so CI has not seen it.
 - It **does** reproduce locally against the sibling UAC-LDR checkout.
 
-So it fires when the UAC SPORTS removal promotes to main, not before.
+That framing was superseded — see the RESOLVED section immediately below.
 
-### The actual defect is a discovery-precedence mismatch, not a stale fixture
+### RESOLVED 2026-07-20 — `unified-trading-library@c26a5297`
+
+**Two corrections to the diagnosis above, both measured.**
+
+1. **The UAC attribution was imprecise.** `_candidate_yaml_paths()` probes `deployment-service/configs/` FIRST and UAC's
+   packaged copy LAST, so locally the operative file is deployment-service's — UAC is never reached. The same SPORTS
+   removal is present in the deployment-service and PM copies too, so the failure reproduces without UAC's LDR commit at
+   all. UAC's copy only becomes operative in a standalone clone with no siblings. Instance 2 is therefore NOT a
+   UAC-LDR-vs-main divergence; it is intra-workspace fixture drift.
+2. **The mechanism was a deliberate `delenv`, not a passive shadow.** `tests/conftest.py` set
+   `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` to the fixture process-wide before collection, and the sweep's own body does
+   `monkeypatch.delenv(...)` + `_clear_yaml_cache()`. So collection read the fixture and execution read the real config
+   — by construction, in one test.
+
+**Fix shipped:** deleted the conftest override + the fixture (its standalone-clone rationale was obsolete —
+`_packaged_uac_yaml_path()` is the always-available fallback now), repointed the 6 direct consumers at UAC's packaged
+copy, and added a cross-copy parity pin (`tests/cloud_interface/unit/test_cloud_providers_yaml_parity.py`) because the
+sweep is inherently self-referential and cannot catch a key REMOVAL. Parity verified to detect removed/added/changed
+keys and stay silent on identical; the three live copies are in exact parity at 62 keys.
+
+**Explicitly NOT changed:** `test_bucket_naming.py`'s `_SNAPSHOT_YAML` still carries `features.SPORTS`. An earlier
+analysis called that a false pass; it is not. The snapshot is deliberately synthetic and says so in its own comment
+("exercises resolver mechanics, not the live estate ... Do not treat it as a copy"), so pinning a historical shape there
+is correct.
+
+### Original diagnosis (superseded by the two corrections above)
 
 `test_bucket_naming_cell_sweep._build_sweep_params()` (`tests/cloud_interface/unit/`) is correctly written to derive its
 cells from the live YAML rather than hardcoding them — it iterates `_load_cloud_providers_yaml()` and keeps only keys in
@@ -114,9 +139,10 @@ change.
 
 ## Todos
 
-- [ ] [DEVOPS] P0. Establish which `cloud-providers.yaml` the bucket-naming sweep is authoritative against, fix the
+- [x] [DEVOPS] P0. Establish which `cloud-providers.yaml` the bucket-naming sweep is authoritative against, fix the
       collection-vs-runtime precedence mismatch, and make instance 2 green — do NOT just delete the fixture's `SPORTS`
-      lines without resolving precedence first.
+      lines without resolving precedence first. ✅ unified-trading-library@c26a5297 — deleted the conftest override +
+      fixture, repointed 6 consumers at UAC's packaged copy, added a cross-copy parity pin. UTL quality-gates green.
 - [ ] [DEVOPS] P0. Add a `repository_dispatch: types: [quality-gate-run]` listener to consumer `quality-gates-v2.yml` so
       `cascade-qg-ordering.yml`'s fan-out actually lands, and make `poll_level` distinguish "the dependent really
       re-ran" from "a stale ci_status was already green" (the current false-green is dangerous independently of the

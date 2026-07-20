@@ -62,18 +62,48 @@ perps; likewise kBONK/kSHIB/kFLOKI/kNEIRO/kLUNC are the only representation of t
 capture means no market data for a chunk of HL's most-liquid meme book. The k-prefix fetch fix (mtds@50b6406e) was
 shipped to recover them but is inert while they stay non-MVP.
 
-## Decision needed (operator)
+## Decision (made 2026-07-20): ADD the 6 k-coins to capture
 
-Are the HL multiplier k-coins in scope for capture?
+Operator approved adding all 6 (kPEPE/kBONK/kSHIB/kFLOKI/kLUNC/kNEIRO). This is now an execution checklist, not an open
+question — resume from the first unchecked step below.
 
-- **If YES** (recommended given "all instruments" intent): add them to the MVP capture universe. Fix path:
-  1. UAC `is_in_mvp_capture_universe` — include the HL k-coin bases (or drop the rule that excludes them). This is the
-     authoritative gate.
-  2. IS catalogue rollup — tag these rows `mvp=True` (or set `force_include=True`), so `list_instruments` surfaces them.
-  3. Re-run the HL trades backfill (the shipped k-prefix fix + parse-once perf then capture them correctly; verify a
-     fresh `KPEPE-USD@LIN.parquet` lands with real rows).
-- **If NO**: the current 172-instrument backfill is complete + correct; close the k-prefix fetch work as inert-by-scope
-  and record that HL k-coins are deliberately out of the capture universe.
+## Resolution plan + live state — RESUME HERE if context is lost (update boxes as steps land)
 
-Interim state (2026-07-20): the finer-sharded HL trades backfill (21 VMs, deployment-service@00886fe) is capturing the
-full **172 mvp=True** HL universe over 2025-05-25→2026-07-20. It does NOT include the k-coins pending this decision.
+- ✅ **STEP 1 — UAC universe (the SSOT gate).** Added the 6 canonical bases (KPEPE/KBONK/KSHIB/KFLOKI/KLUNC/KNEIRO) to
+  `CEFI_BASE_ASSET_UNIVERSE` (`unified_api_contracts/registry/cefi_instrument_universe.py`) →
+  `is_in_mvp_capture_universe(HYPERLIQUID, KPEPE)=True` (was False). SHIPPED **UAC@7eb1cecb** (2026-07-20), universe
+  540→546, full gate green.
+- ✅ **STEP 2 — 172-universe backfill finished** (2026-07-20 ~10:03Z). All 21 finer shards (deployment-service@00886fe,
+  RUN_TS 20260720-094957) over 2025-05-25→2026-07-20 self-shut-down. VERIFIED: sampled days across the whole range hold
+  ~143-169 per-instrument trades parquets, essentially all `time_created` today (FORCE rewrite), count rising over time
+  as HL listed more perps (≤172 mvp=True). k-coins NOT included (expected — they land in STEP 5). Safe to proceed to
+  STEP 3.
+- ⬜ **STEP 3 — rebuild the IS catalogue so the stored `mvp` column flips True for the 6 k-coins.** REQUIRED because
+  `CeFiCatalogReader._row_in_mvp_capture_universe` PREFERS the catalogue's pre-computed `mvp` column over the live
+  `is_in_mvp_capture_universe` gate — so `list_instruments` keeps excluding the k-coins until a rebuild recomputes `mvp`
+  from the new UAC. Depends on UAC@7eb1cecb being deployed to the IS build service (CI/CD: LDR→main promote → IS Cloud
+  Run redeploy). Then trigger the cefi catalogue regen (Cloud Scheduler, region asia-northeast1:
+  `uts-prod-instruments-cefi-t1-schedule` @06:00Z daily, or `lifecycle-catalogue-full-cefi-weekly` Sat @03:00Z, or
+  un-pause + run `instrument-catalogue-regen-nightly`). VERIFY: raw `prod/catalog.parquet` shows `mvp=True` for
+  `HYPERLIQUID:PERPETUAL:KPEPE-USD@LIN` (+ the other 5).
+- ⬜ **STEP 4 — rebuild + upload the UAC code tarball.** `git archive` UAC@7eb1cecb →
+  `unified-api-contracts-code.tar.gz` → `gs://deployment-scripts-central-element-323112/code/` (same pattern as the MTDS
+  tarball rebuild this session). VMs install UAC from THIS tarball at boot (NOT from LDR), so a freshly-launched
+  backfill VM must have the new universe or its manifest expected-universe will mis-classify the k-coin cells.
+- ⬜ **STEP 5 — supplementary k-coin backfill.**
+  `bash deployment-service/scripts/vm/launch-cefi-hl-aster-historical-backfill.sh` with
+  `VENUES=HYPERLIQUID DATA_TYPES=trades FORCE=true SHARD_DAYS=21 OVERRIDE_START_DATE=2025-05-25` and either
+  `SYMBOLS="KPEPE;KBONK;KSHIB;KFLOKI;KLUNC;KNEIRO"` (surgical) or `SYMBOLS=ALL` (now that they're mvp=True). The shipped
+  k-prefix fetch fix (mtds@50b6406e) + parse-once (mtds@a6e974b6) capture them.
+- ⬜ **STEP 6 — verify + close.** Confirm fresh `HYPERLIQUID:PERPETUAL:KPEPE-USD@LIN.parquet` (+ other 5) land with real
+  rows + today's `time_created`, and the manifest marks the k-coin cells captured/expected. Then flip this issue
+  `status: resolved` + `resolved_by:`.
+
+Sequencing note: STEP 5 needs BOTH STEP 3 (catalogue mvp=True → universe path + downstream features/strategy see the
+coins) AND STEP 4 (new UAC on the VM → correct manifest expected-universe). Explicit `SYMBOLS=` bypasses the catalogue
+universe gate, so if STEP 3 lags, an explicit-symbols run with the STEP-4 tarball still lands the DATA + correct
+manifest coverage; downstream wiring then follows on the STEP-3 catalogue rebuild.
+
+Live state (2026-07-20): STEP 1 done (UAC@7eb1cecb). The finer-sharded 172-universe HL trades backfill
+(deployment-service@00886fe) is running/finishing over 2025-05-25→2026-07-20 and does NOT include the k-coins — they
+land in the STEP 5 supplementary pass.

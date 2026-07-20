@@ -171,6 +171,55 @@ instruments-service / UTL / MTDS / deployment-api, so the approach is an operato
 Recommendation: **A** — it matches the documented §1.3 model directly and is the smallest correctness surface; layer B's
 on-chain gate later where genuine delisting truth is needed.
 
+## Resolution — Option A shipped (2026-07-20, operator-approved "A by default unless truth-gated B")
+
+**Code fix — `instruments-service@c37d4f96`** (`scripts/build_instrument_catalogue.py` +
+`tests/unit/scripts/test_build_instrument_catalogue.py`; QG green, 4668 tests pass):
+
+- `build_catalogue_dataframe` gained an `asset_group` kwarg + a DeFi carve-out branch: for `asset_group == "defi"` a
+  drop-out that fails the venue-last-full-day liveness check keeps `available_to=None` (never stamps last-seen). The
+  duplicate close in `_merge_incremental` Branch 3 is gated identically so full-rebuild and incremental stay in lockstep
+  (guarded by `test_incremental_matches_full_rebuild_defi`). Both prod call sites in `run_rollup` pass `asset_group`.
+- **Truth-gate seam preserved (this IS the "B when available" hook):** branches 1-2 (`delisted_at` / `expiry`) are
+  untouched, so a genuine venue-/on-chain-declared removal still closes a DeFi pool. Option B just needs to FEED
+  `delisted_at` from the §12 probe.
+- **Gate is `asset_group == "defi"`, NOT `instrument_type == "pool"`** — a critical correction found by re-measuring
+  prod: the false-delisting clusters are overwhelmingly `SPOT_ASSET` / `LENDING` / `A_TOKEN` / `DEBT_TOKEN` rows (0 of
+  TRADER_JOE_V2's 305, 0 of MORPHO's, 0 of AAVE_V3's are `POOL`), so a pool-only predicate would have fixed almost
+  nothing. DeFi has zero dated instrument types, so the asset_group gate is unambiguous and future-proof.
+
+**Probe status (Option B):** the §12 on-chain factory/RPC probe is NOT implemented — codex `defi-completeness-oracle`
+§12 labels it "a follow-on plan item" and there is no callable probe outside the sports agentwork checkout. So B is a
+tracked follow-on below; A ships now as the correct default with the truth-gate seam ready.
+
+**Verified on real prod data (2026-07-20, in-memory A/B, no prod write):** ran the fixed `build_catalogue_dataframe`
+over 2,292 live defi `by_date` snapshots (since 2026-06-20), `asset_group="defi"` vs `"cefi"`. Non-expiring rows
+carrying a non-blank `available_to`: LEGACY (cefi) **1,037** (947 on the 06-26/07-06/07-08 cluster dates) → FIXED (defi)
+**4** (0 on cluster dates). The 4 residual are genuine `delisted_at`/`expiry` truth-gate rows, correctly retained.
+MORPHO 858→0, PANCAKESWAP_V3 74→0 on cluster dates. The carve-out converts the false-delistings to `None` and preserves
+the truth-gate exactly as designed. (Prod `catalog.parquet` still carries the stamps until the `--mode full` regen below
+runs.)
+
+## Follow-on work (tracked)
+
+- [ ] [DEPLOY] P1. Rebuild `instruments-service:latest` (c37d4f96 → LDR→main→cloudbuild) and run a **`--mode full`**
+      defi catalogue regen (`lifecycle-catalogue-full-defi`, or manual `--mode full`). Incremental will NOT purge the
+      frozen 2026-06-26 / 07-06 / 07-08 stamps. Verify: regenerated `prod/catalog.parquet` has the cross-protocol
+      single-date clusters converted to `available_to=None` (re-run the measurement in Reproduction). Cite
+      `Evidence: cloudbuild=<id>` + the regen job execution.
+- [ ] [DATA] P1. **Historical manifest un-delisting + `NOT_ENOUGH_TVL` re-capture.** The catalogue reset to `None` alone
+      does not fix data already written: the defi manifest `_index` still carries `EXPECTED_INSTRUMENT_DELISTED`
+      empty_confirmed rows for the clustered dates. Reverse/supersede `reclassify_defi_postdelist_eu_2026_06_24.py` (it
+      currently flips EU→DELISTED past `available_to`), then run a targeted MTDS `dex_pools` + `dex_swaps` re-capture
+      over the affected `(protocol, chain, date)` cells so the re-seeded `expected_unattempted` cells convert to
+      `EXPECTED_NOT_ENOUGH_TVL` (capture-path-only reason). Gate with `validate_defi_no_delisted_on_live_pool`. Until
+      this runs the re-seeded cells sit as honest-pending `expected_unattempted` (visible, drags the denominator — NOT a
+      masking false gap).
+- [ ] [DEFI] P2. **Option B truth-gate — build the §12 on-chain factory/registry probe** and feed confirmed on-chain
+      removals into `delisted_at` (branch-1) so genuinely-removed pools close while below-TVL/source-set drops stay
+      `None`. This is the codex `defi-completeness-oracle` §12 "follow-on plan item" (Tier-A factory subgraph / Tier-B
+      RPC). Its own plan — adds a network dependency to the roll-up; needs per-protocol factory registry + creds.
+
 ## Scope boundary
 
 - **cefi / tradfi**: NOT affected — verified clean for cefi; tradfi non-expiring rows are negligible (mostly dated

@@ -412,7 +412,31 @@ All four resolved in interactive chat. These are now actionable, not gated:
       cadence from the live Kalshi/Polymarket capture path, bypassing the per-VM shard route. Find the live prediction
       capture job's ManifestWriter bucket resolution (anything resolving `kind="instruments-store"` with a
       defaulted/sports asset_group while writing prediction rows), fix it, THEN purge (purging first = they return
-      tomorrow).
+      tomorrow). **✅ ROOT-CAUSED 2026-07-20 — NOT manifest-only: REAL TRADE PARQUET BYTES are in the wrong bucket.**
+      Emitter = Cloud Run Job `mtds_fast_t1_recon_job`
+      (`deployment-service/terraform/gcp/audit03_cron_provisioning.tf:69`, daily `30 0 * * *` per
+      `t1_batch_scheduler.tf:128-131` — matches the newest write 2026-07-20T00:54:58Z), which runs
+      `--asset-group SPORTS PREDICTION` in ONE invocation. Bug:
+      `market_tick_data_service/engine/orchestrator/__init__.py:680-682` sets `primary_asset_group = next(...)` =
+      **"SPORTS" (first element) for the WHOLE run**; `_manifest_bucket.py:49-52`'s sports carve-out then routes the
+      manifest to instruments-store-sports for EVERY venue incl. KALSHI/POLYMARKET. Worse, `venue_fetch.py:506,633-635`
+      writes the DATA to that same run-level `state.bucket`, so parquet lands in `market-data-tick-sports-prd-*`. The
+      row's `asset_group` COLUMN is stamped correctly by the per-venue `_resolve_asset_group` (`venue_fetch.py:614`) —
+      so **bucket resolution is PER-RUN while asset_group resolution is PER-VENUE. That inconsistency is the whole
+      bug.** CONFIRMED LIVE: 6,451 KALSHI + 3 POLYMARKET real trade parquet files physically under
+      `gs://market-data-tick-sports-prd-.../raw_tick_data/by_date/day=2026-07-16|18|19/.../venue=KALSHI/`. Isolated to
+      this job (TRADFI already excluded for the analogous mis-stamp reason; CEFI/DEFI have dedicated jobs). Downstream:
+      prediction readers looking only at the prediction bucket are BLIND to this data. **The 1 cefi + 1 defi rows are a
+      DIFFERENT cause** (`service_name=instruments-service`) — own look, do not assume shared root cause.
+- [ ] [INFRA] P0. **Stop the bleeding**: split `mtds_fast_t1_recon_job` into two jobs (`--asset-group SPORTS` and
+      `--asset-group PREDICTION` separately), mirroring the existing `mtds_cefi_t1_recon_job` isolation. Config-only.
+- [ ] [CODE] P1. **Prevent recurrence**: resolve data+manifest buckets **per-venue** in `process_ticks()` (reuse the
+      per-venue `_resolve_asset_group(venue, asset_groups)` at `venue_fetch.py:614`) instead of one run-level bucket.
+- [ ] [DATA] P1. **⚠️ PURGE IS NOT SAFE YET** — deleting the 6,597 manifest rows first would ORPHAN ~6,454 real parquet
+      files (phantom data). Corrected sequence: (a) ship both fixes; (b) relocate the misplaced `venue=KALSHI`/
+      `venue=POLYMARKET` parquet from the sports tick bucket to `market-data-tick-prediction-*` for 2026-07-16/18/19 —
+      and re-check 07-17 (manifest rows exist, listing showed 0 files); (c) manifest rescan so the PREDICTION manifest
+      gets real rows; (d) only then purge the stray sports rows + orphans. Snapshot before any delete.
 - [ ] [CODE] P1. Narrow sports capture/enumeration to the UAC registry universe (decision 2) so captured == intended.
 - [ ] [DATA] P2. Dispose of the already-captured non-registry rows (decision 2): exclude from the denominator; purge if
       confirmed out-of-universe. Snapshot before any delete.
