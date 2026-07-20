@@ -28,6 +28,7 @@ execution_scope: local-only
 priority: P0
 assigned_role: data_engineering
 drift_direction: advance-code
+depends_on: []
 ---
 
 # sports `league_id` namespace — write path canonical, history still raw
