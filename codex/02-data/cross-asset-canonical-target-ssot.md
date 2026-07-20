@@ -255,9 +255,10 @@ Decision rule (a validator SHOULD enforce this for defi — none exists yet, tra
 > - **market/event data_types** (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) →
 >   uniform flat **`LENDING`**. Working and self-consistent across GCS path, column and manifest.
 >
-> **The ruling is PARKED / UNRULED — this doc does NOT pick a side.** Options A (keep market-level `LENDING`; current
-> interim; worker-recommended), B (key each to the reserve's `A_TOKEN`), and C (split per side) are stated with their
-> costs in
+> **⛔ SUPERSEDED 2026-07-20 (operator ruling D2 — see the STATUS BANNER at the top of §5).** ~~The ruling is PARKED /
+> UNRULED — this doc does NOT pick a side.~~ The operator RULED the FULL retire (all lending data_types). The option
+> analysis below is retained as history. Options A (keep market-level `LENDING`; current interim; worker-recommended), B
+> (key each to the reserve's `A_TOKEN`), and C (split per side) are stated with their costs in
 > [`issues/canonical_closeout_open_questions_2026_07_18.md`](../../plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
 > § D (:173-202). B or C each require a full 5+-writer MTDS migration, a Wave-D historical re-key and a shard-atom fix
 > on both axes. Until the operator rules: `lending` on a market/event data_type is **NOT a canonicalisation finding**,
@@ -403,10 +404,13 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 Equity `-USD` on all four surfaces · cefi venue = HYPHEN · ASTER = per-symbol real quote (mostly USDT, tail USD1/USDC —
 NOT hardcoded) · cefi & tradfi bundle path shapes kept per-AG · tradfi daily = `ohlcv_24h` · DERIBIT quote = gating P0 ·
 POOL key = 3-segment fee-in-symbol · defi two-id model kept (Option A, no mass rewrite) · retire legacy LENDING →
-A_TOKEN/DEBT_TOKEN **[HOLDINGS ONLY — scope corrected 2026-07-20; the market/event lending data_type keying is
-PARKED/UNRULED, see the §5 correction banner]** · instrument_type **COLUMN UPPERCASE / path segment lowercase / id
-middle segment UPPER** **[⛔ corrected 2026-07-20, operator ruling D1 — ~~was "lowercase in path/column / UPPER in
-id"~~; see the §7 ruling banner]** · culled-venue purge dead-only + snapshot-first
+A_TOKEN/DEBT_TOKEN **[⛔ RULED 2026-07-20, operator ruling D2 — ~~was "HOLDINGS ONLY; market/event keying
+PARKED/UNRULED"~~; the operator ruled the FULL retire (all lending data_types, not holdings-only). It is the TARGET, NOT
+yet implemented — gated on the MTDS lending-writer fix
+(`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`) → migrate → re-sync atom; see the §5 banner.
+Market/event flat `LENDING` is `migration_pending`, not a finding.]** · instrument_type **COLUMN UPPERCASE / path
+segment lowercase / id middle segment UPPER** **[⛔ corrected 2026-07-20, operator ruling D1 — ~~was "lowercase in
+path/column / UPPER in id"~~; see the §7 ruling banner]** · culled-venue purge dead-only + snapshot-first
 
 - keep LIGHTER/EXTENDED/KALSHI-PERP/POLYMARKET-PERP/BINANCE-DELIVERY · combos = leg-aware signed-weight · restore the
   raw distinct-values data-status enumeration view · prediction is shard-grain pattern #3 (CQG bundle).
