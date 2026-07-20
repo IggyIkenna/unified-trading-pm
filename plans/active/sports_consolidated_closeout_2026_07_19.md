@@ -170,18 +170,30 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track O — ODDS-LEAK: post-kickoff contamination + the B2 dead-zone · P1
 
-- [ ] [OPERATOR] P0. **⏰ TIME-CRITICAL — retention cliff ~2026-07-20.** The 112,277 `attempted_failed` BETFAIR/
-      MATCHBOOK/PINNACLE rows (Track O below / audit §2.5) are NOT an unexplained gap — already root-caused in
-      `sports_trades_venue_fetch_failed_2026_07_15`: `rebuild_sports_manifest_v9.py`'s E4 apply-pass clobbered
-      `attempted_at` to a 2026-07-13T23:56:41Z 8-second window on years-old rows (writer fix landed,
-      market-tick-data-service@6fad6565). The true pre-rebuild generation
-      (`_index/availability_index.parquet#1783986822147154`) is soft-delete-recoverable ONLY until ~2026-07-20, and
-      recovery REQUIRES `gcloud storage restore` (recreates the object live at the same path — no restore-to-backup
-      primitive), a racy in-place op on a live index the consolidator rewrites every ~11 min. **OPERATOR DECISION**: run
-      the controlled-window restore (pause consolidator → restore → capture → restore-current → resume) before the
-      cliff, or accept permanent loss of the true `attempted_at` on these rows. NOT done autonomously — low impact
-      (wrong timestamp on failed-attempt metadata, status correct, zero ML impact) vs high risk (corrupting the live
-      5.3M-row index). The prior author explicitly declined a blind time-pressure restore; escalated to operator.
+- [x] [DATA] P0. ✅ **RETENTION CLIFF DISSOLVED — the restore was never the right recovery, and no deadline applies.**
+      Operator approved the controlled-window restore (2026-07-20); executing it measured-first showed the premise was
+      **wrong on two counts**, so it was NOT run. **(1) The soft-deleted generation does not hold the true values.** The
+      v9 clobber ran FOUR times, each rebuild re-stamping the previous stamp — measured across the live index + 8
+      `_index/snapshots/` objects: | index state | `attempted_at` window (BETFAIR/MATCHBOOK/PINNACLE) | verdict | | ---
+      | --- | --- | | `pre_migration_v9_2026-07-12_availability_index.parquet` (07-12T22:19Z) | 2026-06-21 14:23:10 →
+      22:41:51 (29,922s) | ✅ TRUE | | `pre_migration_v9_2026-07-13…` / `pre_force_consolidate_…06_36` | 2026-07-12
+      23:17:54 → 23:18:04 (10s) | clobber #1 | | `pre_cf8_backfill_20260713T210725Z` | 2026-07-13 06:16:02 → 06:16:12
+      (10s) | clobber #2 | | `pre_cf8_backfill_retry_20260713T233900Z` | 2026-07-13 21:23:42 → 21:23:49 (7s) | clobber
+      #3 | | LIVE `availability_index.parquet` | 2026-07-13 23:56:41 → 23:56:48 (7s) | clobber #4 | The soft-deleted
+      generation `#1783986822147154` was created 2026-07-13T23:53:42Z — **between clobber #3 and #4** — so restoring it
+      would have yielded the 21:23 window: another clobbered value mistaken for the truth. **(2) The true values need no
+      restore at all.** They survive in `_index/snapshots/pre_migration_v9_2026-07-12_availability_index.parquet` — an
+      ordinary LIVE object (112,278 triplet rows, 8.3h spread), no soft-delete, no retention deadline, readable with a
+      plain `cp`. **Also measured**: pausing the consolidator cron would have fired an ERROR-level page —
+      `consolidator_liveness.py` has an explicit `REASON_SCHEDULER_PAUSED` branch ("deterministically dead, will NOT
+      self-recover") on a `*/2` watchdog, wired to PagerDuty/Telegram. The approved op would have paged an away
+      operator, risked a live 5.3M-row index, and recovered nothing. Evidence: `scratchpad/verify_preclobber.py`,
+      `scratchpad/ladder.py`.
+- [ ] [DATA] P1. **Repair `attempted_at` on the 112,277 rows from the named pre-clobber snapshot** (source above).
+      DELIBERATELY NOT done unsupervised: the write races the same every-60s consolidator, and with the cliff gone there
+      is no longer any reason to take that risk without a human watching. Do it in a normal window: verify whether the
+      consolidator carries forward existing index rows (it merges per-VM shards; these rows have no new shards) — if it
+      does, the edit persists and no pause is needed at all.
 - [ ] [DATA] P0. Run `reprocess_sports_odds.py --force` for 2025-12-18/24/31 through the REAL script so the manifest
       coarse row flips off the stale `captured` (from the legacy-path leak) to `attempted_failed` (18,31) /
       `empty_confirmed` (24) — the B2 diagnosis was never persisted.
@@ -463,27 +475,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-          | -------------------------- | ---------------------- |
-          | `PREMIER_LEAGUE`           | `EPL`                  |
-          | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-          | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-          | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-          | `FIRST_DIVISION_A`         | (no registry entry)    |
+                  | -------------------------- | ---------------------- |
+                  | `PREMIER_LEAGUE`           | `EPL`                  |
+                  | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                  | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                  | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                  | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-          Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-          written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-          attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-          `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-          `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                  Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                  written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                  attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                  `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                  `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-          **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-          DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-          they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-          namespace is reconciled.
+                  **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                  DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                  they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                  namespace is reconciled.
 
-          NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-          registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-          §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                  NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                  registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                  §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [ ] [CODE] P0. Reconcile the namespace: either canonicalise `league_id` at the manifest WRITE path (raw api-football
       name → registry slug) or publish an authoritative alias map and apply it at every registry-membership check. Until
