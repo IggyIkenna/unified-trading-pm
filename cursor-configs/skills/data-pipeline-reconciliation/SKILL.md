@@ -32,10 +32,12 @@ statically audit those skills' write paths (§ 4c) but never runs them.
 `underlying` is a KEY **only** in this pattern; elsewhere it is display-only) · `canonical_question_group` (prediction —
 **manifest-only, never a path segment**). Keying prediction on `instrument_id` is how CQG bundle rows get wiped.
 
-**The four surfaces**: (1) GCS object path + filename · (2) parquet **content** columns (`instrument_id`, plus
-`canonical_instrument_id` for defi) · (3) the manifest `_index` shard-atom key · (4) the catalogue / data-status render.
-A shard is canonical only when all four agree at atom grain. Agreement on three of four is the interesting case — that
-is where silent data loss lives.
+**The four surfaces**: (1) GCS object path + filename · (2) parquet **content** columns (`instrument_id`) · (3) the
+manifest `_index` shard-atom key · (4) the catalogue / data-status render. **defi note (measured 2026-07-20):** the
+symbolic `canonical_instrument_id` is **not** a raw-tick S2 content column — raw-tick content carries only the composite
+`instrument_id`; `canonical_instrument_id` lives in the **catalogue (S4)**. Do not read it from S2 (it is a `KeyError`
+there) — see reference-defi's two-id model. A shard is canonical only when all four agree at atom grain. Agreement on
+three of four is the interesting case — that is where silent data loss lives.
 
 **Durable rules live in codex, not here.** This file is a runbook that _references_ its SSOTs; when they change, it
 inherits the change. Read these before trusting any verdict:
@@ -80,12 +82,22 @@ phantom-audit `--apply` false-flag real captured rows as phantom.
 
 ## 2. Phase 0 — resolution gate (a real check, not an assumption)
 
-Three things must be true before any finding is trustworthy. Prove each; do not assume.
+Four things must be true before any finding is trustworthy. Prove each; do not assume.
+
+> **Run from a venv that imports BOTH UTL and UAC.** `resolve_bucket_name` (UTL) and the UAC oracle/templates must both
+> import in the same interpreter. UAC's own `.venv` **cannot** import `unified_trading_library` — use a service venv
+> that carries both (e.g. `market-tick-data-service/.venv`, MTDS/IS/UTL). Measured by a first-run AG that hit an
+> `ImportError` from UAC's venv. Also: manifest downloads can be large (below) — `/tmp` is often a small tmpfs shared
+> across slots; download the `_index` to a roomy filesystem (`$HOME`) to avoid `ENOSPC`.
 
 **(a) Resolve the prod buckets from the registry, never by hand.** Every bucket via
-`resolve_bucket_name(cloud, kind, asset_group, deployment_env)` over `cloud-providers.yaml`. Never an inline `gs://` (QG
-5.69). Never a bucket-name **fragment** as a `kind` — `market-data-tick-defi` is a fragment, not a yaml key, and the
-resolver raises on it. Never mutate process env to reach a tier: pass `deployment_env=` explicitly.
+`resolve_bucket_name(cloud, kind, asset_group=…, deployment_env=…)` (keyword-only) over `cloud-providers.yaml`. Never an
+inline `gs://` (QG 5.69). Never a bucket-name **fragment** as a `kind` — `market-data-tick-defi` is a fragment, not a
+yaml key, and the resolver raises on it. Never mutate process env to reach a **tier**: pass `deployment_env=`
+explicitly. **BUT `GCP_PROJECT_ID` is a separate, REQUIRED env read** — the resolver substitutes `${GCP_PROJECT_ID}`
+from process env for the project-id segment and **raises `BucketNamingError` if it is unset** (`bucket_naming.py:354`;
+measured by 4/5 first-run AGs against a clean env). That project-id read is **not** the banned tier-mutation — the two
+are orthogonal. Set `GCP_PROJECT_ID=central-element-323112` in env; still pass the tier via `deployment_env=`.
 
 > ⚠️ **Do not use UTL `PATH_REGISTRY` / `build_bucket` for Group-A datasets.** Its rows are un-tiered and resolve to 15
 > flat-named buckets that are **already deleted (404 on live probe)**. `cloud-providers.yaml` + `resolve_bucket_name` is
@@ -101,6 +113,14 @@ and the other axes per-AG — pre-cutover data is _legitimately historical_, not
 list in `codex/02-data/reconciliation-finding-taxonomy.md`. **Suppression is required, not optional** — re-reporting an
 operator-accepted exception as a fresh finding destroys the report's signal and trains the reader to skim.
 
+**(d) Read the cheap manifest status files — they are decisive, and 4/5 first-run AGs only found them by accident.**
+Before any surface-3 verdict, read the `_index/*.json` status objects in the raw-tick bucket: `_index/latest.json`
+(consolidator freshness / last run), `_index/phantom_audit_latest.json` (the published phantom count — **read it here,
+never re-run the auditor**), and any `consolidator.lock` / `consolidator_stall_state.json`. **A locked or stale index
+makes every surface-3 verdict `unavailable` (§ 3.1) and every count a lower bound** — a stale per-VM-shard fallback read
+(vs a consolidated read) silently under-counts, which materially changed one AG's cross-bleed number. Record the
+freshness/lock state in the report; it is a Phase-0 gate item alongside reachability.
+
 **Refuse to proceed against a `-test-` bucket.** This skill's scope is prod. If a resolved name carries `-test-`, that
 is a resolution bug — stop and report it rather than auditing the wrong estate.
 
@@ -115,7 +135,10 @@ inspection is unavoidable, use only the three sanctioned no-walk routes:
 1. **prefix-scoped listing** per unique `(date, venue[, chain])` derived from manifest rows (what the phantom auditor
    does);
 2. **delimiter-based child-prefix listing** (`list_blobs(..., delimiter='/')` / the deployment-api storage facade's
-   `list_prefixes`);
+   `list_prefixes`). ⚠️ **The UTL facade drops `.prefixes`** — `get_storage_client().list_blobs(...)` yields
+   `BlobMetadata` and swallows the delimiter's child-prefixes (measured on sports). For child-prefix listing reach the
+   native handle: `client._client.bucket(b).list_blobs(delimiter='/')`, then read `.prefixes`; or use a
+   confirmed-working `storage_facade.list_prefixes`;
 3. **reuse of an existing single walk** (`migration_orphan_sweep.py`), bundling every pass onto that ONE snapshot.
 
 The reconciled rule is **one walk per corpus per campaign**, with all passes bundled onto that snapshot — see the shared
@@ -143,10 +166,24 @@ For each shard in scope: classify the path via the oracle; where the grain is fl
 stem equals the `instrument_id` content column byte-for-byte**. Stem-vs-column divergence is the highest-value finding
 this skill produces, because both surfaces look individually valid.
 
+> **defi two-id carve-out — do NOT byte-compare for defi POOL.** The defi filename stem is the machine `instrument_id`
+> (a raw pool **address** / UUID), while the content `instrument_id` column is the **symbolic composite**
+> (`ORCA-SOLANA:SOLANA_AMM_POOL:<addr>`). They differ **by design** (the two-id model, reference-defi) — a byte-for-byte
+> stem check flags every defi POOL shard as a false regression. The symbolic-leaf writer is **not yet shipped** (cutover
+> register § 5), so today's on-disk leaf is the address, not the symbolic id shown in some examples. Skip the stem
+> byte-compare for defi; compare the machine key to the manifest key instead.
+
 ### 3b. Surface 3 — manifest
 
 Compare the manifest `_index` shard-atom key against the path-derived atom. Report `capture_status` in the 4-state model
 and honour `expected_unattempted` as **materialised by the writer** — never re-derive it.
+
+**Read the `_index` efficiently — it is one multi-GiB / multi-M-row file, not a directory.** The consolidated
+`_index/availability_index.parquet` can be ~1.66 GiB / ~52M rows (defi) down to ~74 MiB / ~5.2M rows (tradfi); a naive
+`read_table` of all columns OOM'd a 15 GB box and a naive row-by-row aggregation over 10M rows burned ~5 min for several
+first-run AGs. Read it with **pyarrow predicate pushdown on `(date, asset_group)` + column projection** (`columns=`
+slim, `filters=` date), never a full load and never a walk. Where pre-computed `_index/audit/*.parquet` sweeps already
+exist (e.g. `orphan_sweep_<ag>`), READ them rather than re-deriving.
 
 **Report a number only with its formula named.** Three incompatible honest-coverage formulas exist in the corpus; the
 live, CK3-certified one is `honest-coverage-model.md`'s
@@ -160,6 +197,12 @@ derived from the 1.38M denominator — the real one is 63.9M.
 Which catalogue applies depends on the layer under audit: **instruments** (the per-AG instruments-store catalogue),
 **features**, **ml**, **strategy**. Compare the catalogue's identity fields against the canonical instrument-id grammar
 and the canonical paths.
+
+**If the catalogue mechanism is categorically absent for the whole AG** — no reader and no entry in the consumer's
+`_CATALOG_ASSET_GROUPS` (prediction is absent; no `prediction_catalog_reader.py` exists) — surface 4 is `UNAVAILABLE`
+for the **entire AG by construction**. Report it **once** as a declared coverage gap, not `unavailable` per shard, and
+do not synthesize a surface-4 verdict that has no mechanism behind it. The "four surfaces = four bits, never collapse"
+rule still holds per shard; a whole-AG missing surface is a single declared gap, not a collapse.
 
 > ⚠️ `codex/02-data/data-catalogue-schema.md` is SUPERSEDED — it documents an artifact, writer, reader, updater and
 > validating plan that do not exist. The shape deployment-api actually consumes is `shard_status[AG][VENUE].start_date`
@@ -185,6 +228,12 @@ directions. Reporting either as a finding would be picking a side silently:
 - **manifest `instrument_type` COLUMN case (C2a)** — do not report casing, do not propose or execute any casing
   migration. The **path** segment (lowercase) and the **id** middle segment (UPPER) _are_ settled and must still be
   enforced. Compare the column case-insensitively.
+  > ⚠️ **The codex SSOTs currently DISAGREE on C2a (4/5 first-run AGs hit this).** `reconciliation-finding-taxonomy.md`
+  > § 5.1 says C2a is **UNRULED → REFUSE**, while `canonical-cutover-register.md` § 3c, `four-surface-…procedure.md` § 7
+  > (O2) and `gcs-and-manifest-delete-safety-protocol.md` § 4 say **RULED UPPERCASE 2026-07-20 (D1) → ENFORCE**. **Until
+  > the codex is reconciled, this skill REFUSES** (follow the taxonomy) and surfaces the contradiction with both
+  > citations — do NOT enforce a casing migration off the register alone. This is a flagged codex contradiction for the
+  > orchestrator, not an executor decision.
 - **defi market/event `LENDING` keying (decision D)** — do not flag `lending` on market/event data_types
   (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) as non-canonical. Only `holdings` uses
   the `A_TOKEN`/`DEBT_TOKEN` split.
@@ -198,8 +247,12 @@ Surface the contradiction with both citations and a severity; **do not resolve i
 Reconcile the live estate against `codex/02-data/non-canonical-path-inventory.md`. Two directions, both required:
 
 - **Register → reality**: for each inventory entry scoped to this AG, re-verify its disposition still holds.
-- **Reality → register**: any non-canonical location found that is _not_ in the register is a **new finding** and must
-  be added to the register (that is the doc's maintenance contract), not just mentioned in the report.
+- **Reality → register**: any non-canonical location found that is _not_ in the register is a **new finding** for the
+  register (the doc's maintenance contract). **Concurrency clause (2/5 first-run AGs blocked on this):** under multi-AG
+  / `/autonomous` execution with orchestrator-owned git, do **NOT** edit the shared `non-canonical-path-inventory.md`
+  inline — sibling AGs touch the same file and this skill does not run git. Instead **emit a register-patch stanza in
+  the report** (the exact row to append, with its disposition) for the orchestrator to apply serially. A single
+  interactive run may edit the register directly.
 
 Detect orphans per `codex/02-data/orphan-object-detection.md` — an object with no manifest row **and** outside the
 oracle's expected set is invisible to every manifest-driven tool, which is exactly why it needs its own oracle.
@@ -255,10 +308,13 @@ Emit a markdown + sibling JSON pair at `plans/audit/results/data_pipeline_reconc
 **Relay the printed content directly to the operator in your response — do not say "done, see the report" and make them
 open the file.** The report must carry:
 
-- a **Bucket paths** table (auto-generated, not hand-built) naming exactly which bucket each read targeted, and flagging
-  any it could not reach;
+- a **Bucket paths** table naming exactly which bucket each read targeted, and flagging any it could not reach (built
+  from probe output — there is no generator, despite older "auto-generated" wording);
+- the **index freshness / lock state** of every manifest read (consolidated vs per-VM-shard fallback, consolidator
+  healthy vs locked/stale) — a stale/fallback read makes every count a lower bound (§ 2d);
 - a **per-surface verdict per shard** — four surfaces means four bits, never collapsed into one pass/fail (three
-  different failure modes on one cell must not become one);
+  different failure modes on one cell must not become one); for a manifest-only-key AG (prediction, sports) whose per
+  shard rows don't materialise, report at shard-**class** grain `(venue, data_type, pipeline_mode)` and say so;
 - **typed findings** using the names in `codex/02-data/reconciliation-finding-taxonomy.md`, so consecutive runs diff
   cleanly;
 - **suppressed** accepted-exception counts, shown as a count with a pointer — proving suppression happened without

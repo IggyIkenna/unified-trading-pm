@@ -12,9 +12,16 @@ raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group=defi/
 
 **defi is the only AG with a `chain=` key, and it sits AFTER `venue=`** (operator-locked ordering). `venue=` is the
 **bare protocol** — `AAVE_V3`, never `AAVE_V3-ETHEREUM`, never `AAVEV3`. One parquet per instrument (target ruled
-2026-07-18); filename == manifest key == symbolic `canonical_instrument_id`.
+2026-07-18); filename == manifest key == the machine `instrument_id`.
 
-Example:
+> ⚠️ **On-disk leaf is the MACHINE id (a raw address / UUID), NOT the symbolic `canonical_instrument_id` (measured
+> 2026-07-20).** The symbolic-leaf writer is **NOT YET shipped** (cutover register § 5) — today an ORCA pool leaf is a
+> raw base58 address (`122FD4qsy8….parquet`) and a KAMINO lending leaf is a UUID. The symbolic
+> `UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500.parquet` form below is the **target grammar, not current reality** — do not
+> flag every address-named POOL leaf as a leaf-shape regression, and do not byte-compare the stem to the content
+> `instrument_id` column (`SKILL.md` § 3a defi carve-out).
+
+Example (TARGET grammar — not yet on disk):
 `raw_tick_data/by_date/day=2026-07-01/pipeline_mode=batch_thegraph/asset_group=defi/venue=UNISWAP_V3/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_state/UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500.parquet`
 
 Segment shape: `_AG_SEGMENT_SHAPE[DEFI]` —
@@ -74,17 +81,24 @@ in the same bucket (note `prd/` vs `prod/`). Read the `prod/` one; report the sh
 This exact slip produced a **false "twin absent" verdict** during the 2026-07-20 audit.
 
 ```python
+"kamino": "solana_vault",      # ← NOT solana_amm_pool, NOT pool
 "orca": "solana_amm_pool",
 "raydium": "solana_amm_pool",
 "phoenix": "solana_amm_pool",
 ```
 
-— `market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py:231-233`.
+— `market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py:229-233`
+(`_SOLANA_DEX_ITYPE_STR`, verified 2026-07-20).
 
 A probe using `instrument_type=pool` returns **ZERO** for ORCA / RAYDIUM even though **14k+ canonical objects exist**
-(measured 2026-07-20). Because a delete suggestion's five-part proof turns on "does the canonical twin resolve", a
-wrong-vocabulary zero converts directly into a **destructive** `yes-twin-confirmed`→ delete recommendation for data that
-was never duplicated. Enumerate the instrument_type vocabulary from `canonical_path_templates("defi")`; never assume it.
+(measured 2026-07-20). **And KAMINO's dex-pool twin is under `instrument_type=solana_vault`, not `solana_amm_pool` and
+not `pool`** — a probe set missing `solana_vault` reproduces the exact false-absence this hazard exists to prevent (H2:
+KAMINO/SOLEND are DO-NOT-DELETE). Because a delete suggestion's five-part proof turns on "does the canonical twin
+resolve", a wrong-vocabulary zero converts directly into a **destructive** `yes-twin-confirmed`→ delete recommendation
+for data that was never duplicated. Enumerate the full instrument_type vocabulary from the **writer map**
+(`_SOLANA_DEX_ITYPE_STR`) **and** the manifest's observed `instrument_type` distribution — never from
+`canonical_path_templates("defi")`, which hands you `{instrument_type}` **placeholders**, not values (see the known-good
+spot-check).
 
 ### H2 — `dex_pools/` + `lending_indices/` are DO-NOT-DELETE
 
@@ -151,7 +165,22 @@ mark it a lower bound.
   DEPLOY-GATED behind an IS Dockerfile UTL base-image pin bump.
 - `gas-fees` + `lst-rates` manifest/bucket split: the writer targets `market-data-tick-defi-prd` while the scanner
   resolved `kind="gas-fees"` (a confirmed-EMPTY dedicated bucket) — root-caused, not fixed.
-- `source=` write-wiring is a RED gap (cells land `source=""`).
+- `source=` write-wiring is a RED gap in principle, but **date-qualify it** — the general blank-source claim was **NOT
+  reproduced** on the 2026-07-20 sampled day (0 blank `source` of 64,009 rows on day=2026-04-14). Report it as
+  cell-specific / historical, not the current general state, unless you measure blanks on your own sampled day.
+
+### H9 — expected-universe vocabulary desync (H1 on the EXPECTED side)
+
+RAYDIUM `instrument_type=pool` / `POOL` rows sit `expected_unattempted` in the manifest while the writer emits
+`instrument_type=solana_amm_pool` (`captured`). The `pool`/`POOL` expected rows are therefore **permanently
+unsatisfiable** and inflate the coverage **denominator** (a lower-bound-worsening artifact, on the expected side).
+Report it; do not treat the unsatisfiable expected rows as a capture failure.
+
+### H10 — manifest `pipeline_mode` ↔ `source` desync
+
+Measured rows carry `pipeline_mode=batch_onchain_rpc` with `source=onchain_subgraph` — the SOURCE-AWARE
+`{mode}_{source}` invariant (`codex/02-data/pipeline-mode-partition.md`) is broken for these rows. Report as a typed
+finding; do not silently "correct" either field.
 
 ## Known-good spot-check — run BEFORE trusting any absence result
 
@@ -160,8 +189,11 @@ mark it a lower bound.
 1. Enumerate from `canonical_path_templates("defi")` —
    `unified-api-contracts/unified_api_contracts/registry/possible_manifest.py:352`. It appends the defi-specific legacy
    shapes (`:185-195`) that no other AG has, and emits both `batch_` and `live_` prefixes per source (`:315-336`).
-2. From that output, read off the **actual `instrument_type` vocabulary** the writer emits. Confirm `solana_amm_pool` is
-   in your probe set alongside `pool`. If it is not, every ORCA / RAYDIUM result you get is a false zero.
+2. Read the **actual `instrument_type` vocabulary** from the **writer map** (`_SOLANA_DEX_ITYPE_STR`,
+   `dex_pools_handler.py:229-233`) **plus** the manifest's observed `instrument_type` distribution — the templates give
+   STRUCTURE (`{instrument_type}` placeholders), never values, so this step is **not** doable from
+   `canonical_path_templates` alone. Confirm both `solana_amm_pool` (ORCA/RAYDIUM/PHOENIX) **and** `solana_vault`
+   (KAMINO) are in your probe set alongside `pool`. If any is missing, those venues' results are false zeros.
 3. Confirm your probe places `chain=` **after** `venue=`. A `chain=`-first probe returns zero everywhere.
 4. Pick one `(date, venue, chain)` known-captured from the manifest and confirm your probe returns non-zero.
 5. Only then treat a zero as a finding — and even then, a delete suggestion needs the full five-part proof, including a

@@ -15,7 +15,9 @@ raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group=tradfi/
 | singles (equity, etf, index, currency, bond, cds, commodity, future, option, spot_pair) | `{FULL_CANONICAL_ID}.parquet`                                 |
 
 Example (chain):
-`raw_tick_data/by_date/day=2026-07-01/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/instrument_type=futures_chain/data_type=trades/underlying=SP500/quote=USD/margin=lin/ticks.parquet`
+`raw_tick_data/by_date/day=2026-07-01/pipeline_mode=batch_databento/asset_group=tradfi/venue=CME/instrument_type=futures_chain/data_type=trades/underlying=SP500/quote=USD/margin=linear/ticks.parquet`
+(the margin token is the word-form **`linear`** / `inverse`, verified in the writer scripts — not the `lin` abbreviation
+of the id `@LIN` suffix.)
 
 Segment shape: `_AG_SEGMENT_SHAPE[TRADFI]` —
 `unified-api-contracts/unified_api_contracts/registry/possible_manifest.py:157` (identical to cefi; no `chain=`).
@@ -52,8 +54,13 @@ Verified in `unified-trading-pm/configs/cloud-providers.yaml:93-102` and `:59-63
 
 ## Catalogue (surface 4)
 
-`instruments-store-tradfi-prd-{pid}/prod/catalog.parquet` — measured **0 of 1,111,322 rows canonical** (raw/bare ids).
-Expect surface 4 to fail wholesale; report it once, not once per shard.
+`instruments-store-tradfi-prd-{pid}/prod/catalog.parquet`.
+
+> ⛔ **STALE — RE-MEASURED 2026-07-20.** The old "**0 of 1,111,322 rows canonical / expect surface 4 to fail
+> wholesale**" claim is no longer true: the catalogue was **rebuilt 2026-07-20T01:05** and measures **1,391,725 rows,
+> ~92% space-free structured canonical ids** (e.g. `CBOE:FUTURE:VIX-USD@LIN-20210120`, VX→VIX resolved). Measure the
+> current canonical fraction yourself; do not carry the "0 canonical" figure. (The same stale figure lives in
+> `canonical-cutover-register.md` § 4 — a flagged **codex contradiction** for the orchestrator, not an executor fix.)
 
 ## HAZARDS
 
@@ -80,11 +87,15 @@ Massive (formerly Polygon.io) was removed as a tradfi **source** 2026-07-19, but
 - Pointer: `codex/02-data/tradfi-databento-sourcing-ssot.md`,
   `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`.
 
-### H3 — the `combo` bare-underlying carve-out is DOCUMENTED, not drift
+### H3 — `combo` is EXCLUDED from the full-id filename guard, but the live writer emits the FULL chain tail
 
-`combo` is deliberately excluded from both the chain tail set and the singles full-id filename guard: it keeps the bare
-`underlying=/ticks.parquet` fan-in because the leg-id shape is unsettled (parked axis B2). Treat a bare-underlying
-`combo` path as an **accepted exception**, never a finding.
+The UAC builder deliberately excludes `combo` from both the chain-tail set and the singles full-id filename guard
+(leg-id shape is unsettled, parked axis B2). **But the live writer does NOT emit a bare `underlying=/ticks.parquet`
+fan-in for combo — measured day=2026-07-01 it writes the FULL chain tail
+`underlying=/quote=USD/margin=linear/ticks.parquet`, identical to chains.** The oracle accepts both shapes, so it is not
+a `non_canonical_path`. The load-bearing consequence is the **writer/reader disagreement**: the writer partitions combo
+by `underlying=` while the reader probes it as a single — that is the **HIGH cross-repo finding (AE-2 adjacent), NOT a
+suppressed exception**. Do not describe combo on disk as "bare underlying"; report the writer/reader mismatch.
 
 ### H4 — QUARANTINE classes: never fake-canonicalize, never delete
 
@@ -106,8 +117,10 @@ Physical enumeration is complete: **2,734,646 objects across 95 legacy path shap
 920 · `MIGRATE_SINGLE_NOOP` 907). Writer lockstep is SHIPPED; the executor is **dry-run only**. Reconcile against this
 map — do not re-enumerate the corpus (single-walk discipline, `SKILL.md` § 3).
 
-**tradfi is canonical on FILENAMES only.** The manifest measures **0 canonical across all years**. Report the four
-surfaces separately or you will collapse a real filename-vs-manifest divergence into one misleading verdict.
+Report the four surfaces separately or you will collapse a real filename-vs-manifest divergence into one misleading
+verdict. **Do NOT carry the stale "manifest measures 0 canonical across all years" claim** — re-measured 2026-07-20 the
+manifest non-null ids are ~81% structured (`NASDAQ:EQUITY:NVDA-USD`) and the catalogue ~92% (above). Measure the current
+fraction per surface; the "0 canonical" figure is stale (codex contradiction, above).
 
 ### H6 — parked axes: report the block, do not pick a side
 

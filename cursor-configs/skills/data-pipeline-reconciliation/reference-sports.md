@@ -77,26 +77,47 @@ Sports has no venue-composed instrument id in the cefi/tradfi/defi sense. Identi
 The `entity=` folder name is a source-shaped label, not a semantic data_type. Mapping one to the other silently
 mis-classifies the whole tree:
 
-| Semantic data_type | Actual `entity=` folder       |
-| ------------------ | ----------------------------- |
-| `ODDS_SNAPSHOT`    | `entity=footystats_odds`      |
-| `FIXTURE_STATS`    | `entity=fixture_statistics`   |
-| `WEATHER`          | `entity=open_meteo_forecasts` |
+| Semantic data_type | Actual `entity=` folder         |
+| ------------------ | ------------------------------- |
+| `ODDS`             | `entity=footystats_odds`        |
+| `PREDICTIONS`      | `entity=footystats_predictions` |
+| `FIXTURE_STATS`    | `entity=fixture_stats`          |
+| `XG`               | `entity=understat_xg`           |
+| `PLAYER_VALUES`    | `entity=player_values`          |
+| `WEATHER`          | `entity=weather`                |
+
+> **Folder-map SSOT = `unified_api_contracts/canonical/domain/sports/gcs_paths.py::SPORTS_DATA_TYPE_TO_FOLDER` — READ
+> it, do not trust example folder names verbatim.** The prior version of this table was wrong on all three examples
+> (`ODDS_SNAPSHOT`→ there is no such key, it is `ODDS`; `FIXTURE_STATS`→`fixture_stats` not `fixture_statistics`;
+> `WEATHER`→`weather` not `open_meteo_forecasts`) — verified against the SSOT 2026-07-20. Probing a wrong folder is the
+> exact false-absence this hazard warns against.
 
 `entity=fixtures` is **FROZEN**, split into `fixtures_schedule` + `fixtures_outcomes` (2026-05-23) — see H2 for why that
 split is a live divergence.
 
 ### H2 — LIVE manifest-atom mismatch: the 2026-05-23 fixtures split never reached the writer
 
-The fixtures writer still emits the hardcoded umbrella `data_type="FIXTURES"` — **333,594 rows, last written
-2026-07-19T10:11:33Z** — with **ZERO** `FIXTURES_SCHEDULE` / `FIXTURES_OUTCOMES` rows. This is an active writer defect,
-not historical residue. Report it; do not fix it here (it belongs to that service's plan — `SKILL.md` § 4c).
+The fixtures writer still emits the hardcoded umbrella `data_type="FIXTURES"` — **333,697 rows, last written
+2026-07-20T18:01Z** (re-measured; still active today) — with **ZERO** `FIXTURES_SCHEDULE` / `FIXTURES_OUTCOMES` rows.
+This is an active writer defect, not historical residue. Report it; do not fix it here (it belongs to that service's
+plan — `SKILL.md` § 4c).
+
+> Note: the UAC `gcs_paths.py::SPORTS_DATA_TYPE_TO_FOLDER` code comment (`:40-46`) asserts the writer "cut FIXTURES
+> over" on 2026-07-14 with "zero `fixtures` objects" — that comment is **stale/aspirational**; the measured writer never
+> cut over. `canonical-cutover-register.md` § 6 (which records this as a live regression) is correct; the UAC docstring
+> is not. Flagged doc-vs-reality contradiction for the orchestrator.
 
 ### H3 — ACCEPTED EXCEPTION: 19,274 pre-2026-07-08 rows with blank `pipeline_mode` + `source`
 
 Operator-accepted as **permanently untyped** — **BLK-d48acae4, decision A**. These are `instruments-store-sports` rows
 predating 2026-07-08. A cleanliness gate must treat them as a **known exception, not a fresh finding**. Suppress with a
 count + pointer per `SKILL.md` § 5; re-reporting them destroys the report's signal.
+
+> The **19,274** is a baseline ceiling — the count can only DECREASE under the exit rule. Measured **13,903 on
+> 2026-07-20** (≤ baseline, no alarm). Also: the AE-1 exit trigger `attempted_at >= 2026-07-08` is imprecise — the
+> migration's own tail writes land 2026-07-08 00:00–01:30 UTC and trip a false "exception broken" alarm on ~18 boundary
+> rows; gate on `> 2026-07-08T02:00Z` (or a fresh `written_at`), not the bare partition boundary. Boundary-wording is a
+> flagged codex fix for the taxonomy/register.
 
 ### H4 — cross-AG bleed INTO this bucket
 
@@ -141,6 +162,29 @@ regressions fail entirely silent.
   in a data bucket**. Report as a finding; it is neither canonical data nor an orphan object in the usual sense.
 - Also open: T2.9 MDT schema drift, T2.10 47,253 phantom rows, and the RED `source=` write-wiring gap.
 
+### H9 — `pipeline_mode=` interposition + `fetched_at_hour=` wildcard (the #1 sports false-absence generator)
+
+The canonical reference layout interposes `pipeline_mode={mode}` **between** `day=` and `entity=`:
+`…/day={D}/pipeline_mode={m}/entity={E}/…`. `candidate_parquet_paths(...)` **defaults `pipeline_mode=None`**, which
+emits the PRE-cutover paths and **MISSES all post-cutover data** — ALWAYS pass the manifest row's `pipeline_mode`. This
+exact slip produced FOUR false absences in the 2026-07-20 run.
+
+- **`entity=fixtures` is the exception** — the FIXTURES umbrella (H2) still writes at the **bare** `entity=fixtures/`
+  path with NO `pipeline_mode=` segment, so a single generic pass mis-handles it either way. Probe fixtures bare and
+  everything else under `pipeline_mode=`.
+- **`footystats_odds` / `footystats_predictions` add a `fetched_at_hour=*` sub-partition.** `candidate_parquet_paths`
+  emits a literal `fetched_at_hour=*` string that `blob.exists()` **cannot** expand — you MUST **prefix-list** those,
+  not call `exists()` on the wildcard.
+
+### H10 — WEATHER layout drift: UAC says `PER_DAY_BARE`, the writer emits `PER_DAY_PER_LEAGUE` (drift_axis_false_positive)
+
+`SPORTS_DATA_TYPE_LAYOUT["WEATHER"] = PER_DAY_BARE` (`gcs_paths.py:139`), but the writer emits
+`entity=weather/league={L}/weather.parquet` (PER_DAY_PER_LEAGUE) — verified across 3 days 2026-07-20. So
+`candidate_parquet_paths` **false-absents every captured WEATHER shard** and the phantom auditor manufactures phantoms
+for it. Report as `drift_axis_false_positive`; the cross-repo fix is the UAC layout table or the IS writer (do not fix
+here). Precedent: the PLAYER_VALUES layout had the identical drift (see the `gcs_paths.py:70-79` comment) and was
+realigned to the writer's truth — WEATHER is the same class, unfixed.
+
 ## Known-good spot-check — run BEFORE trusting any absence result
 
 **Sports has its own dispatcher — `canonical_path_templates` will hand you an EMPTY LIST and that is correct.**
@@ -163,8 +207,9 @@ equivalent of the defi `solana_amm_pool` false negative.
 2. **Iterate the FULL returned list.** Its docstring warns: "Callers MUST iterate the full list — early-return on
    `cands[0]` only is wrong for layouts that emit multiple plausible paths (PER_DAY_PER_SEASON probes 3 seasons)"
    (`:186-188`). Early-return is how you manufacture a false absence across three of the four layouts.
-3. Confirm your `entity=` value is the **actual folder name**, not the semantic data_type (H1). Probing
-   `entity=ODDS_SNAPSHOT` returns zero; the folder is `entity=footystats_odds`.
+3. Confirm your `entity=` value is the **actual folder name** from `SPORTS_DATA_TYPE_TO_FOLDER`, not the semantic
+   data_type (H1). Probing `entity=ODDS` returns zero; the folder is `entity=footystats_odds`. Also pass the row's
+   `pipeline_mode=` (H9) and, for `footystats_*`, prefix-list the `fetched_at_hour=*` sub-partition.
 4. Confirm you are comparing `data_type` in **UPPER** case for sports (K0-DECISION (b)).
 5. Pick one `(day, entity, league)` known-captured from the manifest and confirm your probe returns non-zero.
 6. Only then treat a zero as a finding.
