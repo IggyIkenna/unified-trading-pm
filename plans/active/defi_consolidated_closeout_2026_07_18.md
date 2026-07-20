@@ -765,6 +765,33 @@ Discriminator = **does a manifest row exist**.
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
+- **2026-07-20 (slot-4, /autonomous — CHAINLINK: another slot REVERTED it in UAC; the correct fix is ADAPTER-FIRST).**
+
+  - **State changed under me: `uac@83f17c46` REVERTED CHAINLINK x5 to `phase=pipeline`, no adapter key.** Reason given:
+    "chainlink.py was never built in instruments-service, breaking the IS adapter-routing invariant on the LDR->main
+    promotion gate (instruments-service#873, quality-gates-v2 red)". **That revert was CORRECT** — it unblocked the
+    promotion gate rather than waiting on me. Live defi venues are now **93**, not 98: METEORA/LIFINITY/PHOENIX-SOLANA
+    - PYTH-SOLANA stayed live (real IS adapters exist), CHAINLINK came out entirely (no venue, no `VENUE_TO_ADAPTER_KEY`
+      entry — both verified by running the UAC registry).
+  - **Operator asked "can we fix chainlink" — answer: yes, and the adapter is real, but the ORDER matters.**
+    `chainlink.py` exists in my tree and I **measured** slot-3's central objection ("a speculative adapter would emit
+    unverifiable reference data — strictly worse than a loud failure"): **all 45 aggregator addresses are a strict
+    SUBSET of the 52 already in MTDS's production `cli/handlers/_oracle_prices_constants.py`** — the exact set MTDS
+    already fetches via `latestRoundData()`. **Zero IS-only addresses** (set-diff). Enumeration is static, no
+    discovery-time network call, mirroring `pyth.py`. So it is NOT invented reference data.
+  - **Therefore the sequence is ADAPTER FIRST, DECLARATION SECOND** — the exact inverse of the mistake that caused the
+    original block. This IS commit lands (a) the +4 registrations UAC currently declares live and (b) `chainlink.py` as
+    an AVAILABLE artifact. CHAINLINK then gets re-declared live in UAC **with** its adapter key as a follow-up, at which
+    point the RULE-11 pin goes 93 -> 98 and the golden 227 -> 237. Doing it in that order means the IS adapter-routing
+    invariant is satisfied at every intermediate commit, so the promotion gate never goes red again.
+  - **My earlier IS work had to be realigned, not just retried.** The first two ship attempts failed the QG sentinel
+    race, and the third correctly SELF-ABORTED on QG RED — the failures were 3 tests all downstream of the UAC revert
+    (golden expecting 237, pin expecting 98, and the `test_defi_set_equals_uac_denominator_drift_guard`). Realigned to
+    the current truth: pin **93**, golden regenerated to **227** tuples (+5 = METEORA/LIFINITY/PHOENIX
+    `pool/dex_pool_state` + PYTH `spot_asset`/`spot_pair` `oracle_prices`), **zero CHAINLINK tuples**, other four AG
+    goldens metadata-stamp-only. _Guarding the ship on `if QG != 0: abort` is what stopped a red tree from being pushed
+    — worth keeping as the standard chain._
+
 - **2026-07-20 (slot-4, /autonomous — ⚠️ MY SHIP ORDERING BLOCKED THE FLEET; backfill-optimization design workflow
   landed 3 correctness findings incl. a BIG one).**
 
