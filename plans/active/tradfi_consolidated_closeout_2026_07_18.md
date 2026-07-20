@@ -1021,3 +1021,22 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     **`attempted_failed` on equities is ALPHABETICALLY CLUSTERED A–C** (56 NASDAQ + 50 NYSE, ~770 failure-days each, all
     `WithinBoundsTradfiSourceZero`) — a **TRUNCATION signature, not data absence**; a blind re-run will re-fail until
     root-caused (dispatched). Minor: tradfi launchers don't set `STALL_PROGRESS_REGEX`.
+
+- **2026-07-20 (slot-1, tick 23) — 🎯 CANONICAL-PATH MIGRATION COMPLETE + VERIFIED (operator deliverable #1): 20/20
+  shards, ORPHAN = 0.**
+  - **Run `20260720-120911`** (20 SPOT shards, fixed tarball `mtds-code@5581dcf9` pinned, ~55 min wall clock). EVERY
+    shard reports **`ORPHAN count = 0 (PASS — total map)`** and **`match=True`** (SUM(dispositions) == TOTAL) — the
+    operator's "no orphans whether MVP or not" requirement, proven 20/20, not sampled.
+  - **Aggregate over 2,649,469 objects classified:** MIGRATE **848,886** → canonical · PURGE_MASSIVE **1,701,414** (left
+    in place, gated — closely matches the design's 1,696,166 estimate, confirming purge scope) ·
+    **DEFER_CHAIN_TO_RECOVERY 98,006** (garbage-root chains LEFT IN PLACE — the RECOVER-1 fix working at scale; the
+    pre-fix code would have destroyed these) · QUARANTINE 1,163.
+  - **Pre-flight safety held:** a canary dry-run verified the fixed DEFER/NOOP dispositions on a live-garbage day before
+    any `--apply`; the launcher's 2-min foreground timeout produced a partial 3-shard fan-out on the first attempt,
+    which was deleted and relaunched cleanly in the background (exactly 20 VMs verified, zero strays).
+  - **Data-loss incident CLOSED:** 0 permanent loss. True victim set = **95**, not the ~1–1.4K first estimated — 385,341
+    twins were benign **rename-to-live** (CL→CRUDE / NG→NATGAS / MES→MICRO-SP500); all 95 restored at their canonical
+    paths and VERIFIED LIVE, well ahead of the 2026-07-27T03:33Z hard-delete.
+  - **NEXT:** recovery pass for the 95 restored victims (restored AFTER the shard walks, so absent from their
+    enumerations) → catalogue sweep (moved in-region; the laptop run was decelerating badly) + rebuild → manifest
+    force-rebuild → 571 Massive-only backfill → purge the 1,701,414 → Phase-D all-shards.
