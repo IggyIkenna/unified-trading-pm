@@ -1425,6 +1425,42 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       it from existing `vm-logs/tradfi-bf-cme-ohlcv-1m-<root>-<year>-*/run.log` — no new VM launch required. (repo:
       unified-trading-pm)
 
+- **2026-07-20 (slot-1·laptop) — P0 nightly tradfi T+1 collection RESTORED (schema_version string regression) + P1
+  yfinance disposition.** The live tradfi `_index/availability_index.parquet` carried `schema_version` as the STRING
+  `"9"` across all 5,209,585 rows (arrow `string`, dtype object), so UTL `check_shard_freshness`
+  (`manifest_writer/_queries.py:130/165`) hit `"9" < 9` → `TypeError`, crash-looping every UN-FORCED T+1 run (a
+  `--force` run bypasses the freshness skip, which masked it).
+  - **Root cause (proven, not timing):** writer
+    `market-tick-data-service/scripts/restamp_tradfi_schema_v9_tail_2026_07_16.py:427`
+    (`shard_df["schema_version"] = "9"`, a str) → the consolidator's DuckDB `read_parquet(union_by_name=true)` merge
+    promotes an int64∪VARCHAR column to VARCHAR for the WHOLE corpus. Same class as
+    `tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12` (row_count VARCHAR). Proof: the pre-restamp
+    snapshot `_index/snapshots/pre_tradfi_schema_v9_tail_restamp_20260716T070255Z.parquet` ALREADY shows
+    `schema_version` as arrow `string` — a direct causal artifact of the string-stamping writer. Ruled out:
+    `migrate_tradfi_manifest_usd_lin` (never touches schema_version), the `tradfi-catalogue-canon` VM (instruments-store
+    only, never the tick `_index`), `_rebuild_tradfi_cf11` (stamps int via record_empty/failed).
+  - **Writer fix + regression test:** `market-tick-data-service@ac051bfe` — `restamp:427` now stamps int
+    `MANIFEST_SCHEMA_VERSION` via new `stamp_v9_shard` helper;
+    `tests/unit/scripts/test_restamp_tradfi_schema_v9_tail.py` asserts integer dtype + non-string arrow roundtrip.
+    QG-green (`6550 passed`).
+  - **Data repair (route: targeted in-place CAS re-stamp, NOT waiting on the blocked force-rebuild peer):** re-stamped
+    the live `_index` schema_version → int64 (pre-snapshot
+    `_index/snapshots/pre_schema_version_int64_restamp_20260720T184042Z.parquet`; gen `...840535586`→`...895173237`).
+    **Held** across the next consolidator merge (post-merge gen `...598529744`, arrow int64, all rows int 9).
+    **COORDINATION:** the `_index` is the shared object the manifest force-rebuild peer also targets — the re-stamp is a
+    dtype-only change (0 rows added/dropped), so their subsequent object-scan rebuild (writes int schema_version via the
+    manifest writer) is compatible + idempotent.
+  - **Verified un-forced:** `check_shard_freshness` returns clean tuples on the int64 index; the exact nightly caller
+    `TickDataHandler._apply_freshness_skip(date, ["tradfi"], None)` (`_force=False`) completes with real verdicts
+    (`PARTIAL date=2026-07-19: 6/7 venues need processing … [CBOE, NASDAQ, NYSE, ICE, FX, KRX]`), not a TypeError.
+  - **P1 yfinance:** ICE/FX/KRX fail every run because `Dockerfile:189 uv pip install -e . --no-deps` skips MTDS's
+    declared deps and the base image lacks `yfinance` (lazy import in `yahoo_finance_adapter.py` dodges the import
+    smoke). Ruled TOO RISKY to co-ship with the P0 (removing `--no-deps` re-resolves the whole image; a targeted install
+    needs a Cloud Build to verify, and gcloud CLI reauth was broken this session). Filed with a concrete targeted-fix
+    recommendation → `issues/mtds_image_missing_yfinance_no_deps_2026_07_20.md`.
+  - Full write-up: `issues/tradfi_schema_version_string_regression_2026_07_20.md` (incl. a P2 consolidator
+    `TRY_CAST(schema_version AS BIGINT)` defense-in-depth recommendation).
+
 ## Deferred work after 2026-07-20 (tick 25)
 
 | Item                                                               | Why deferred                                   | Tracked in                                                        |
