@@ -86,6 +86,32 @@ curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
 The WorkerLivenessWatchdog kills sessions silent >15 min (heartbeat-silent) — your spawn stamps the anchor, so silence
 is measured from spawn, not first post. When your context fills (>~70% used), run /compact before continuing.
 
+**NEVER run `quality-gates.sh` (or `run-all-quality-gates.sh`) as a blocking foreground call (HARD RULE, 2026-07-20 —
+AF-1a triage of unresolved `ldr_qg_failure` escalations).** Its documented runtime is 8-15+ min for a full sequential
+run (one measured CI run: 715s/778s for the "Run quality gates" step alone) — that sits at or over the 15-min
+heartbeat-silence kill above, and a synchronous shell call blocks you from posting a heartbeat until it returns. 98% of
+sampled unresolved `ldr_qg_failure` escalations (45/46, 2026-07-20 measurement) show the worker's session reaped mid-run
+— either during the initial reproduce step (65%, never even reached a diagnosis) or during the final pre-push re-verify
+(33%, diagnosis + fix found, then silently lost) — not a diagnosis-quality problem. Background it, heartbeat every poll,
+only read the result once the PID exits:
+
+```bash
+nohup bash scripts/quality-gates.sh > /tmp/qg_$$.log 2>&1 &
+QG_PID=$!
+while kill -0 "$QG_PID" 2>/dev/null; do
+  sleep 180
+  curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/progress \
+    -H 'Content-Type: application/json' \
+    -d '{"task_id": "'"$ESCALATION_ID"'", "message": "quality-gates.sh still running (pid '"$QG_PID"')", "phase": "working"}'
+done
+wait "$QG_PID"; QG_EXIT=$?
+tail -80 /tmp/qg_$$.log   # EXIT 0, or diagnose the failure from here
+```
+
+Applies to every `bash scripts/quality-gates.sh` / `run-all-quality-gates.sh` invocation below (merge_conflict's
+re-gate, sit_failure's local reproduction, ldr_qg_failure's reproduce-and-verify, plan_health's hygiene sweep) — not
+just ldr_qg_failure.
+
 STEP 0 — read `unified-trading-pm/agents/RULES.md` AND `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
 before any git work. They are the floor: named-file staging, conditional FF-push, never touch foreign dirty files,
 findings triage. You MUST internalize them before your first commit.
@@ -116,9 +142,10 @@ WHAT TO DO BY wall type:
       onto the PR base branch, push, and re-run. Verify the v2 check goes green on the CURRENT head before declaring
       done.
 - **ldr_qg_failure**: the target repo's `quality-gates-v2` is RED on `live-defi-rollout` (a plain test/lint/type break
-  someone pushed — no PR). `cd $REPO`; `bash scripts/quality-gates.sh` to reproduce; diagnose root cause (is the CODE
-  wrong or the TEST wrong? read BOTH sides — never lower a coverage floor or pragma-skip to go green); fix the wrong
-  side; re-run to EXIT 0; ship the fix to `live-defi-rollout` via `quickmerge --agent --files '<paths>'` (Path-B — the
+  someone pushed — no PR). `cd $REPO`; `bash scripts/quality-gates.sh` (BACKGROUNDED — see the pattern above, this is
+  the step that has been reaping workers) to reproduce; diagnose root cause (is the CODE wrong or the TEST wrong? read
+  BOTH sides — never lower a coverage floor or pragma-skip to go green); fix the wrong side; re-run (BACKGROUNDED again)
+  to EXIT 0; ship the fix to `live-defi-rollout` via `quickmerge --agent --files '<paths>'` (Path-B — the
   tab-branch→mirror model is RETIRED 2026-06-08). `#$PR_NUMBER` is `#0` for this wall (there is no PR). AFTER your fix
   lands + the gate is green, fast-path any open repo-blocker so its registered waiters resume immediately instead of at
   the next watcher poll: `curl -sS $SERVER_URL/api/repo-blockers` → for each open entry whose `repo` is `$REPO`,
