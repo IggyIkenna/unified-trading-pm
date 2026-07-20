@@ -496,3 +496,28 @@ actually deferred into todo 21's edit). Todo 21 now owns removing both.
 
 Phase E authors a new codex SSOT (`reconciliation-census-and-compute-tiers.md`) + returns SKILL.md/taxonomy/reference
 integration text (not applied — SKILL.md is owned by the in-flight Phase C). Phase-E plan todos land as 26+.
+
+### Phase E — census + per-datapoint validation + two-tier compute (operator G1–G4 ask, 2026-07-20)
+
+- [x] 26. ✅ [DATA] P1. **Codex SSOT for census + per-datapoint + compute tiers** —
+      `codex/02-data/reconciliation-census-and-compute-tiers.md` landed. Provenance: G1–G4 operator ask.
+- [ ] 27. [SCRIPT] P1. **Wire § 3f distinct-value census into the skill.** Manifest via `get_axis_value_census`, GCS via
+      delimiter descent, three comparisons, suppression — reusing `_axis_census.py` +
+      `_distinct_values._comparison_set`; no endpoint change. Codex SSOT § 1.
+- [ ] 28. [DATA] P0. **Taxonomy delta — add the three new finding-types** (`non_canonical_axis_value`,
+      `shard_atom_vocab_desync`, `non_canonical_id`) to `reconciliation-finding-taxonomy.md`; update the count line +
+      delete-eligibility table. Do this in the SAME taxonomy pass as todo 21 (the C2a + decision-D refusal removals).
+      Blocks 27/30.
+- [ ] 29. [DATA] P1. **Extend four-surface procedure § 5 with route-#3 usage + Tier-2 note** — the Tier-2 VM IS the
+      sanctioned single walk for S2 content; skill read-back is a manifest-index read (exempt); G2/G3 bundle onto the
+      one walk. Codex SSOT § 3.
+- [ ] 30. [SCRIPT] P1. **Wire § 3g + § 7 compute tiers into the skill** (id/schema legs; Tier-1 ≤500-sample smoke;
+      Tier-2 read from the `datapoint-validation` results index). Depends on 28.
+- [ ] 31. [INFRA] P1. **Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind BEFORE any launch**
+      (real `VmPrefixSpec` EPHEMERAL_BATCH entries in `vm_prefix_registry.py`, the `datapoint-validation`
+      `resolve_bucket_name` kind in `configs/cloud-providers.yaml`; ship via quickmerge). Unregistered = invisible.
+- [ ] 32. [SCRIPT] P1. **Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py`** — modeled on
+      `launch-manifest-recon-all-vm.sh`; SPOT + PROGRESS.json resume; reuses `validate_dataframe` +
+      `build_canonical_instrument_id`; writes the results manifest. Depends on 31. Lifecycle marker required.
+- [ ] 33. [DATA] P2. **Per-AG reference-sheet census nuance line** (defi chain axis + case-insensitive; cefi EXACT +
+      dual chain-tail; tradfi batch_massive suppress; prediction conditionId; sports entity-keyed).
