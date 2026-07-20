@@ -987,3 +987,24 @@ folded into `issues/candle_feature_canonical_path_divergence_2026_07_20.md` (add
 objects is out of scope until that ruling lands (a prod-bucket layout change is human-gated). This turn's job was to
 GROUND-TRUTH the orphans with machine-checked evidence and point at the durable fix, which is done. Full corpus-wide
 counts of the split (issue todo 9) need a bounded per-day sweep, deferred with the ruling.
+
+### 2026-07-20 — UAC contract-propagation P0 SHIPPED (deployment@e978f32d) + published; loop-close re-run launched
+
+Verified the dispatched deployment fix (read all 5 diffs, ran QG myself = GREEN --no-fix 22s, confirmed editable
+`__file__` resolution locally to de-risk the fleet-wide boot assertion) and SHIPPED it via quickmerge
+(deployment-service@e978f32d, staging-routed). Three fixes closing the stale-UAC gap fleet-wide:
+
+1. Launcher auto-pins `UAC_TARBALL_SHA` (`lc_resolve_tarball_sha`, floats-not-bricks) into VM metadata + pin record.
+2. `setup-data-pipeline-vm.sh` purges internal-package wheels from the find-links cache (editable source wins).
+3. Boot assertion: `unified_api_contracts.__file__` under `$WORKSPACE` else `exit 1`.
+
+**Published to GCS** (VMs read scripts from GCS, not the tarball; my fix is shell-only so no tarball rebuild needed —
+avoided `create-code-tarballs.sh` which would have entangled other agents' uncommitted WIP via the dirty-tree override):
+
+- `gs://…/vm/setup-data-pipeline-vm.sh` = byte-identical to my committed version (md5 f242a3aa…) — Fix 2+3 LIVE on boot.
+- `gs://…/code/deployment-service/scripts/vm/{lib/launcher_common.sh,launch-mdps-backfill-vm.sh,launch-features-vm.sh}`
+  = my committed versions (Fix 1 live for cron-VM launcher consumers; my local loop-close uses the local launcher).
+
+Flipped propagation-issue todos 1-3 ✅. Launching the derivative_ticker loop-close re-run now (issue todo 4): the setup
+script the VM boots is my byte-verified version, and the local launcher auto-pins UAC, so the VM should install the
+nullable_ohlcv=True contract and the force leg should WRITE objects (was 0).

@@ -109,12 +109,23 @@ blocks the derivative_ticker candle backfill (the fix is correct but cannot take
 
 ## Todos
 
-- [ ] 1. [SCRIPT] P0. Pin `UAC_TARBALL_SHA` in `launch-mdps-backfill-vm.sh` (+ the shared launcher lib so all service
-      launchers do it), stamped to the current UAC LDR tip. Mirror the UTL/MDPS passthrough exactly.
-- [ ] 2. [SCRIPT] P0. Ensure the editable code-repo install shadows the GCS wheel cache for internal packages
-      (`--reinstall`/exclude from cache), so a same-`0.x.y`-version contract change is actually reinstalled.
-- [ ] 3. [SCRIPT] P1. Boot-time UAC-SHA assertion (installed UAC commit == launch-pinned `UAC_TARBALL_SHA`), fail loud
-      on mismatch.
-- [ ] 4. [DATA] P0. Re-run the derivative_ticker loop-close after (1)+(2) — confirm the force leg now WRITES objects
-    (was 0), closing the derivative_ticker P0 end-to-end on a real VM.
+- [x] 1. ✅ [SCRIPT] P0. SHIPPED deployment-service@e978f32d + published to GCS. `launch-mdps-backfill-vm.sh` +
+      `launch-features-vm.sh` auto-pin `UAC_TARBALL_SHA` via new `lc_resolve_tarball_sha` (shared
+      `lib/launcher_common.sh`) — reads the floating tarball manifest's `commit_sha`, emits it ONLY when the `@<sha>`
+      pair provably exists (else floats, never bricks boot), stamps it into VM metadata + the durable pin record.
+      Mirrors the UTL/MDPS passthrough.
+- [x] 2. ✅ [SCRIPT] P0. SHIPPED @e978f32d + published. `setup-data-pipeline-vm.sh` `_purge_internal_wheels` deletes
+      internal-package wheels (UAC/UTL/service, computed from the editable dirs' pyproject names + uac/utl anchors) from
+      the GCS find-links cache BOTH after the cache download (before the editable install) AND after `uv pip wheel`
+      (before re-upload), so a static-0.99.0 stale wheel can no longer shadow the `-e` source. External C-extension
+      wheels untouched. Published setup script is byte-identical on GCS (md5 f242a3aa…).
+- [x] 3. ✅ [SCRIPT] P1. SHIPPED @e978f32d + published. Boot-time assertion: `unified_api_contracts.__file__` MUST
+      resolve under `$WORKSPACE` (editable source), else `exit 1`. Chose editable-vs-wheel provenance over SHA-equality
+      because internal packages carry no per-commit SHA (`SETUPTOOLS_SCM_PRETEND_VERSION=0.99.0`). Verified LOCALLY that
+      an editable install resolves `__file__` under the project dir (`direct_url` editable:true) — so it passes on a
+      correct VM and fires only in the bug case (no fleet-brick risk). QG green (--no-fix, 22s) + 2 new
+      `test_tarball_pins.py` assertions.
+- [~] 4. [DATA] P0. Re-run the derivative_ticker loop-close after (1)+(2) — confirm the force leg now WRITES objects
+(was 0), closing the derivative_ticker P0 end-to-end on a real VM. IN PROGRESS — re-run launched now that the setup
+script (Fix 2+3) is published byte-identical on GCS and the local launcher (Fix 1) auto-pins UAC.
 </content>
