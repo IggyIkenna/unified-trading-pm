@@ -765,6 +765,50 @@ Discriminator = **does a manifest row exist**.
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
+- **2026-07-20 (slot-4, /autonomous — REBUILD RE-EMIT now HARD-FAILS on the honest-coverage evidence guard; the +4 IS
+  half was landed by a PEER).**
+
+  - **🔴 NEW BLOCKER, and the guard is RIGHT.** `2022d` finished its scan and then died with **`EXIT_STATUS=1`**:
+    ```
+    UnprovenHonestAbsenceError: record_empty(reason=SOURCE_RETURNED_ZERO) requires FetchEvidence proving a clean
+    200+empty fetch (http_status in 2xx AND response_received AND rows_in_response == 0 AND error_signal == "").
+    The supplied evidence does NOT prove honest absence (no FetchEvidence supplied) ... call record_failed instead.
+    [row_key={'date': '2020-02-14', 'venue': 'SUSHISWAP_V3', 'data_type': 'dex_pool_state', ...}]
+    ```
+    (`REBUILD_DEFI_MANIFEST_RUN_FAILED`, elapsed 1183.5s, `rebuild_defi_manifest.py:547`.) **My OOM fix worked** — it
+    got through the 45.8M-row read (`12 projected cols`) and 13.27M absence rows before this. The re-emit re-asserts
+    LEGACY `empty_confirmed / SOURCE_RETURNED_ZERO` rows that PREDATE the FetchEvidence requirement, and UTL refuses to
+    let an unprovable absence claim be re-written. **That refusal is correct** — an unproven `SOURCE_RETURNED_ZERO` is
+    exactly the "auth / rate-limit / 5xx masquerading as honest absence" case the guard exists to catch.
+  - **The scan value is NOT lost.** The writer flushes every 5,000 entries, so `2022d`'s per-VM shard persisted at
+    **30,995,019 bytes** before the failure; `2025d` is still scanning healthily (2025-09-12, 2.6M entries) and will
+    deliver its scan then hit the same wall. The rebuild's PURPOSE — re-deriving per-instrument CAPTURED rows from the
+    migrated tree — completes; only the trailing absence re-emit fails.
+  - **This reinforces the earlier measured conclusion: the re-emit is REDUNDANT here.** Consolidation is UPSERT
+    (`_merge_dataframes`: `concat(existing, new)` + `drop_duplicates(keep="last")`; cross-shard `_merge_shard_frames`
+    resolves by **latest `attempted_at`, independent of shard load order**, with a captured-outranks tie-break). The
+    legacy absence rows therefore PERSIST whether or not they are re-emitted — which is precisely what I measured
+    directly: **4,604,591 cell-level absence rows (4,465,805 `empty_confirmed`) are already in the index.** The
+    re-emit's stated purpose ("without this a pure object-scan rebuild silently DROPS the absence corpus") is a
+    REPLACE-model concern; under the UPSERT model actually in use it is at best a no-op and at worst — as now — a hard
+    failure re-asserting claims it cannot prove.
+  - **PROPOSED FIX (NOT applied — this is manifest-absence semantics, operator territory):** make the CF-11 re-emit
+    OPT-IN and leave it OFF for sharded/upsert rebuilds. The two alternatives are both worse: mapping unprovable legacy
+    reasons to `record_failed` would relabel genuinely-empty cells as failures (corrupting coverage in the other
+    direction), and bypassing the evidence gate would defeat a correctness guard that is doing its job. **Not
+    freelanced** — "data pipeline correctness is the heartbeat" is exactly where I should not invent semantics.
+  - **The IS +4 half was landed by a PEER while I was realigning** (`is@793125ad` "wire meteora/lifinity/phoenix/pyth
+    adapters into factory + regen goldens"), and their result is IDENTICAL to what I had staged: pin **93**, golden
+    **227** tuples, no chainlink. My duplicate edits became `UU` conflicts (which is why a QG showed collection errors
+    and 10.1% coverage — conflict markers, not real failures). I resolved by taking THEIR landed version wholesale and
+    kept only my unique artifact, `chainlink.py`. **Two slots converged on the same fix twice today** (this and the
+    RULE-11 2646 re-pin) — a signal that a shared "who owns this fix" signal is missing when a UAC change fans out.
+  - **Why `chainlink.py` ships UNREGISTERED:** the drift guard is strict SET-EQUALITY both directions
+    (`is_defi == uac_defi`, `test_defi_set_equals_uac_denominator_drift_guard`). Registering the adapter while UAC
+    declares 93 would make IS produce 98 → "Extra in IS (not in UAC)" → guard RED. So the artifact lands first, and
+    factory registration + the UAC `phase=live` + adapter-key re-declaration land TOGETHER as one follow-up. That
+    ordering keeps the IS adapter-routing invariant satisfied at every intermediate commit.
+
 - **2026-07-20 (slot-4, /autonomous — CHAINLINK: another slot REVERTED it in UAC; the correct fix is ADAPTER-FIRST).**
 
   - **State changed under me: `uac@83f17c46` REVERTED CHAINLINK x5 to `phase=pipeline`, no adapter key.** Reason given:
