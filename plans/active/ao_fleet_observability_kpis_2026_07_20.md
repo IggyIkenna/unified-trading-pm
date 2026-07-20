@@ -111,16 +111,28 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       deferred (honest — this needs live traffic)**: the "measured dispatch rate ≤1/interval over 24h, zero
       `superseded-plan_health` exits" gate can only be confirmed once this code is running on the live orchestrator VM
       and a 24h window has elapsed post-deploy — filed as a follow-up re-measurement, not claimed here.
-- [ ] [BACKEND] P2. **(AF-5) Fleet-efficiency KPIs + per-account usage attribution.** 24h measured: 310 boots / 154
-      dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task. Surface daily-digest + dashboard KPIs:
-      spawns, dispatches, done, conversion %, boots-per-done, top skip reasons, with an alert on sharp regression.
-      **Operator-ratified + EXPANDED 2026-07-18**: ALSO attribute USAGE per slot / agent / account — tokens and messages
-      consumed — so it is visible WHERE the account budget goes. Today nothing shows which agent/slot/account burned the
-      quota, yet the fleet hits usage limits even across 4 accounts. Source the counters from the usage-poller /
-      transcript sizes and add a "usage by account" view on the same surface, so an account nearing its cap and the
-      agent driving it are both visible **before** failover fires. **Gate**: the efficiency KPIs render; a per-account
-      usage breakdown is visible; and the 2026-07-12-class degradation (spawn:dispatch 0.6:1 → 44:1) would have been
-      caught within one digest cycle — state how.
+- [x] [BACKEND] P2. ✅ **(AF-5) Fleet-efficiency KPIs + per-account usage attribution — BACKEND done, dashboard CARD
+      deferred (honest partial).** — `agent-orchestrator@572bf25` (2026-07-20). New `server/fleet_kpis.py`:
+      `compute_fleet_efficiency_kpis` (boots=`slot_boot`, dispatches=`task_dispatched`, done=`slot_done` — event-type
+      recon citations in the module docstring; NOT `autospawn_succeeded`/`slot_spawned`, which are the same physical
+      boot's upstream trigger and would double-count) → conversion %, boots-per-done, boots:dispatch ratio (division-
+      by-zero-safe: undefined ratios are `None`, never a misleading 0 or ∞); `compute_fleet_efficiency_kpis_for_range`
+      for a bounded day-before baseline; `detect_sharp_regression` (day-over-day boots:dispatch, new
+      `TuningDefaults.     fleet_kpi_regression_multiple` default 5x); `compute_usage_by_account` (transcript-file-size
+      proxy per the operator's lightweight-option ruling, grouped by account). **Surfaced on TWO real surfaces**: the
+      Slack daily digest (`notify_daily_summary` — efficiency line + regression alert + usage-by-account, best-effort so
+      a KPI computation failure never breaks the digest post itself) and `GET /api/fleet-kpis` (dashboard-ready JSON).
+      24 new tests, full `agent-orchestrator` `quality-gates.sh` green (1519 passed). **Top skip reasons — honest gap
+      noted, not padded**: only `autospawn_skipped_session_exists` + `spawn_gate_fallback_engaged` persist to
+      `activity_log` today; most autospawn skip branches are `logger.info`-only (recorded in `_SKIP_COVERAGE_NOTE`,
+      surfaced in the API response, not silently hidden). **DEFERRED**: the dashboard REACT card itself — `dashboard/`
+      has no `node_modules` in this environment and CLAUDE.md's UI rule requires a cited Playwright regression spec
+      before a UI tick counts; the endpoint is ready and tested, wiring the card is a small, clearly-scoped follow-up,
+      not fabricated as done here. **Gate answer** — how would the 2026-07-12-class degradation (spawn:dispatch
+      0.6:1→44:1, ~73x) be caught within one digest cycle: `detect_sharp_regression` fires when today's ratio is
+      ≥`fleet_kpi_regression_multiple`× (default 5x) the prior-24h baseline — 73x clears that with wide margin, and the
+      alert renders as a `:rotating_light:` line at the TOP of the very next digest post (interval default 24h,
+      operator-configurable via `TuningDefaults.daily_summary_interval_seconds`).
 - [ ] [INFRA] P2. **(AF-4) Assert disaster-recovery snapshot RECENCY.** `gcs_sync.SnapshotLoop` runs and
       `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set, but **nothing asserts snapshot age** — a
       broken snapshot loop looks exactly like a working one until the day `state.db` is lost. Same silent-by-absence
@@ -173,3 +185,10 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   gate itself needs a live 24h window post-deploy to confirm — noted as deferred verification on the todo, not silently
   claimed. Also re-verified AF-1b's dependency is still open (its cooldown-store P1 todo unchecked as of this session) —
   AF-1b stays blocked, correctly.
+- **2026-07-20 — AF-5 backend done** (`agent-orchestrator@572bf25`). Efficiency KPIs + day-over-day regression
+  detection + per-account usage (transcript-size proxy) surfaced in the Slack digest and via `GET /api/fleet-kpis`. 24
+  new tests, full QG green. Dashboard React card explicitly DEFERRED (no `node_modules` in this environment +
+  CLAUDE.md's playwright-gate requirement for any UI tick) — the endpoint is ready, wiring the card is a small
+  follow-up, not claimed done. **Heads up for the next session**: `ao_dispatch_cooldown_and_park_2026_07_20@cfb211c`
+  landed its fleet-scoped cooldown store WHILE this session was running — AF-1b (still marked blocked above) may now be
+  unblockable; re-check that plan before starting AF-1b.
