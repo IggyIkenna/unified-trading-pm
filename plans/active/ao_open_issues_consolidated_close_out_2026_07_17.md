@@ -300,7 +300,32 @@ NOT AO and are deliberately out of scope here.
       stuck one. NOTE (2026-07-18): the cited line numbers (`dispatch.py:186`, `autospawn.py:631/:2031`,
       `slots_worker.py:316`, etc.) DRIFTED after the config `.tuning.` call-site refactor — **verify by SYMBOL**
       (`_slot_configured`, `pick_next_task`, `_pick_free_slot`), not line. **Gate**: the all-paths test exists +
-      bug-injection proves it bites; spill-path verdict recorded.
+      bug-injection proves it bites; spill-path verdict recorded. **✅ SPILL-PATH VERDICT RECORDED 2026-07-20 (B3) — the
+      answer splits: the PULL spills are safe, the PUSH spill is NOT.** The two affinity spills
+      (`dispatch._task_is_routable_to` R5 high-affinity dead-target spill + the `medium` timeout spill) are **safe by
+      construction** — they only ever answer "may the slot that is ASKING claim this task?", and a paused slot never
+      asks (`_slot_configured` gates `pick_next_task`). But `failover._pick_least_loaded_slot` **PUSHES**: it sets
+      `task.target_slot = best_slot` directly, and it selects over `select(SlotRow)` filtered ONLY by `exclude_slots` (=
+      the offline HOST's slots). It does **not** filter `status == "paused"` — nor `killed`, nor review slots. Worse,
+      the metric is "fewest queued-and-undispatched tasks pinned to it", and a paused slot has **zero** by definition
+      (nothing dispatches to it) — so `min()` picks a paused slot **preferentially**. Net effect: failover would re-pin
+      tasks onto the one slot guaranteed never to run them, stranding them invisibly — re-introducing the exact
+      stranding class R5 was written to fix (see the `dispatch.py` R5 comment naming the two tasks stuck this way on
+      2026-07-14), through a different door. **Severity P2 = LATENT, NOT LIVE, measured 2026-07-20**:
+      `ORCHESTRATOR_FAILOVER_ENABLED` is unset (default `False`), `/api/ops/failover/status` reports
+      `{"running": false, "status": "stopped"}`, and there are **0 `failover_rerouted` events for all time**. It is
+      armed to bite the moment failover is switched on, though — **slot 0 is paused right now** and would be the
+      preferred target. Fix is one predicate in `_pick_least_loaded_slot` (exclude `paused`/`killed`/review), plus the
+      (a) all-paths regression test gaining a failover case.
+- [ ] [BACKEND] P3. **Is `server/failover.py` dead code under the single-VM architecture? (raised by B3, 2026-07-20)**
+      Its entire premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never
+      dispatch"), but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based
+      dispatch (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈
+      `{planning,     NA}`). Live state agrees: failover is stopped, has never fired, and `fleet_registry_entries: 0` —
+      it has no registry data to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the
+      honest resolution may be to DELETE the module + its config knobs rather than fix the paused-slot bug above.
+      **Decide before doing the P2 fix** — no point hardening a module that should not exist. **Gate**: an explicit
+      keep-or-delete ruling; if keep, a named scenario under single-VM that still needs it.
 - [ ] [BACKEND] P1. **plan_health cadence — MEASURED 21 dispatches in 5.5h (11:02→16:30Z), overlapping instances
       confirmed (`superseded-plan_health` exit reasons + one ACTIVE at probe time).** Operator policy: once per 4–8h
       unless CI-triggered — NOT every 15–30 min. Root cause found: `main-backmerge-to-ldr.yml` § "Ping plan-health
@@ -517,12 +542,12 @@ just unfinished investigation**, and records the standing recommendation so the 
 
 **B — open investigations (no decision needed; just unfinished)**
 
-| #   | Investigation                               | Note                                                                                                                                                                   |
-| --- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B1  | `l2_book-005/007` absent rows (Phase 1)     | Trace orphan-GC-pruned (by-design for `BLOCKED-*`) vs regen re-deriving under other ids.                                                                               |
-| B2  | 96/day `tmux_session_lost` driver (Phase 2) | **Likely candidate found by B4** — the prereq reaper (new P0) kills fresh sessions. Re-measure AFTER that fix before hunting further; measured 192 events since 07-18. |
-| B3  | Paused-slot SPILL path (Phase 6)            | The ONE path never verified; every other paused-slot path was confirmed correct in code.                                                                               |
-| B4  | plan_reconciler daily runs (Phase 6)        | ✅ **CLOSED 2026-07-20** — audited; verdict: 5 dispatches, **0 completions ever**. Spawned 3 new todos (P0 reaper, P2 boot-gate, P2 7-min-death).                      |
+| #   | Investigation                               | Note                                                                                                                                                                                                |
+| --- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | `l2_book-005/007` absent rows (Phase 1)     | Trace orphan-GC-pruned (by-design for `BLOCKED-*`) vs regen re-deriving under other ids.                                                                                                            |
+| B2  | 96/day `tmux_session_lost` driver (Phase 2) | **Likely candidate found by B4** — the prereq reaper (new P0) kills fresh sessions. Re-measure AFTER that fix before hunting further; measured 192 events since 07-18.                              |
+| B3  | Paused-slot SPILL path (Phase 6)            | ✅ **CLOSED 2026-07-20** — pull-spills safe; `failover._pick_least_loaded_slot` PREFERS paused slots. Latent (failover off, 0 events ever). Spawned a P3: is failover.py dead code under single-VM? |
+| B4  | plan_reconciler daily runs (Phase 6)        | ✅ **CLOSED 2026-07-20** — audited; verdict: 5 dispatches, **0 completions ever**. Spawned 3 new todos (P0 reaper, P2 boot-gate, P2 7-min-death).                                                   |
 
 **Recommended NEXT: the P0 prereq-reaper fix** (Phase 6, filed by the B4 audit). B4 is closed and it turned up a bug
 bigger than the thing it was checking: the reaper kills ANY freshly-spawned agent that lands on a slot with a matured
@@ -555,6 +580,15 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 
 ## Progress Log
 
+- **2026-07-20 — B3 CLOSED by code-read + a live severity probe.** The unverified spill path splits cleanly on **pull vs
+  push**: a pull-based spill can never violate paused (a paused slot never asks), a push-based one is where the bug
+  always was. That is the reusable question for any future "does X respect paused?" audit — ask which direction the
+  assignment travels, not which module it lives in. Found `failover._pick_least_loaded_slot` not only failing to exclude
+  paused but PREFERRING it (load metric = pinned-task count, which is 0 for a paused slot by definition — the guard's
+  absence and the metric's bias compound). Severity was settled by MEASURING rather than assuming: failover is stopped,
+  never fired, 0 events for all time → latent P2, not a live P0. The probe also showed `fleet_registry_entries: 0`,
+  which raised the better question (new P3): the module is cross-host machinery in an architecture that went single-VM
+  on 2026-06-27, so deleting it may beat fixing it — sequence the ruling BEFORE the fix.
 - **2026-07-20 — B4 CLOSED by read-only SSM audit; verdict inverted the assumption.** The question was "did the
   07-18/19/20 daily runs fire?" The answer is that firing was never the constraint: the timer is healthy and HAS fired
   every night, but **no reconcile run has ever completed, going back to the first install** — 5 dispatches, 0
