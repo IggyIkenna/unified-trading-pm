@@ -982,3 +982,42 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     orphans → catalogue `by_date` sweep + rebuild (KRX names + MVP-stamp) + manifest force-rebuild → 571 Massive-only
     backfill (single-IP capped) → Massive purge → MVP backfill code ready + ETA → `data-pipeline-check-mtds` all tradfi
     shards green.
+
+- **2026-07-20 (slot-1, tick 22) — ✅ MVP BACKFILL READINESS + ETA DELIVERED (operator deliverable); 1 readiness gap
+  FIXED; 2 assumptions CORRECTED; 3 findings raised.**
+  - **ETA to backfill all remaining tradfi MVP** (measured anchor: 820,639 rows / 17.5 min on 16-vCPU `e2-highmem-16`
+    conc=20 ≈ 46.9k rows/min/VM): **optimistic 4–7 h** (equity re-sharded + fleet cap ~40 + all `e2-highmem-16`) ·
+    **expected ~13–33 h, centre ~20 h** (launchers as-shipped) · **with SPOT preemption ~26–45 h**. On the DEFAULT
+    `e2-highmem-4` multiply ×3–4 → 60–130 h, so **machine size dominates the ETA more than any other choice — launch
+    with `TRADFI_OHLCV_MACHINE=e2-highmem-16`.**
+  - **READINESS GAP FIXED — `deployment-service@4eb50a4`:** the 1.56× `--batch-date-concurrency` lever existed in UTL
+    but was **OFF** for the tradfi launchers (`_tradfi-ohlcv-launcher-lib.sh:88` defaulted empty). Now defaults ON for
+    databento-sourced tradfi, machine-derived (~1.25 dates in flight per vCPU, clamped [2,80]): `e2-highmem-4`→5,
+    **`e2-highmem-16`→20 (exactly the config the 1.56× was measured on)**, `e2-standard-96`→80. FX/Yahoo untouched.
+    SPOT + PROGRESS.json monotonic resume + retry-429 + dedicated Databento executor + OOM sizing all verified OK.
+    **Still OPEN:** per-date freshness/manifest op batching is not implemented anywhere (known dominant small-candle
+    cost).
+  - **CORRECTION 1 — Databento is rate-limited PER-IP, not per-key** (`databento_key_cache.py:152-180`,
+    `MAX_CONCURRENT=100`, ~80 effective) and every backfill VM gets its OWN ephemeral external IP (no
+    `--no-address`/NAT). The ~80 budget is **per-VM, not fleet-wide** — **structurally UNLIKE the Tardis cap-1 storm**
+    (one shared contended IP). `OHLCV_FLEET_CONCURRENCY_CAP=20` is a courtesy cap, not a rate-limit guard; 18 concurrent
+    VMs empirically ran with zero 429s. **More VMs is SAFE here.**
+  - **CORRECTION 2 — the binding constraint is EQUITY SHARD GRANULARITY, not API concurrency or VM count.**
+    `launch-tradfi-bf-{nasdaq,nyse}-ohlcv-1m.sh` create ONE VM PER YEAR covering ALL tickers, so 207,856 equity cells
+    (46% of remaining work) compress onto ~4 year-shards/venue → **~30,106 cells on the single longest NASDAQ VM**
+    (12.5–33 h critical path). CME shards 47 roots × 7 years (~329 VMs) and is embarrassingly parallel. **Splitting the
+    equity launchers by ticker-group is worth MORE than the 1.56× lever** — dispatched. NOTE: this is the OPPOSITE
+    direction to the open P1 "bundle roots into fewer larger VMs" (right for CME, wrong for equities).
+  - **REMAINING WORK:** 638,440 todo cells, of which **182,407 (29%) are BELOW the vendor discovery floor** (Databento
+    XNAS.ITCH/XNYS.PILLAR have no pre-2023-04-15 data; launchers already clamp) → permanently unfillable. **456,033
+    genuinely backfillable**: CME ohlcv_1s 168,045 · NASDAQ ohlcv_1m 80,390 · NYSE ohlcv_1m 64,817 · CME ohlcv_1m 60,210
+    · NASDAQ ohlcv_1s 40,034 · NYSE ohlcv_1s 22,615 · NASDAQ/NYSE ohlcv_24h 8,968 · KRX ohlcv_24h 8,318 · CBOE 2,489 ·
+    FX/KRX 147.
+  - **FINDINGS RAISED (issue docs dispatched):** (a) **P1 DATA-CORRECTNESS — 1,135,339 of 1,615,859 `captured` cells
+    (70%) carry `row_count` = 0 or null** (CME/NYSE/NASDAQ ohlcv; **ALL 4,266 FX `ohlcv_24h` captured cells are zero**)
+    — either `row_count` is not stamped at the per-instrument atom, or these are the banned
+    "empty-rows-that-look-populated" honest-absence violation; re-measure post-migration before concluding. (b) P2 —
+    reclassify the 182,407 below-floor cells as `expected_unattempted` so dashboards stop showing unchaseable gaps. (c)
+    **`attempted_failed` on equities is ALPHABETICALLY CLUSTERED A–C** (56 NASDAQ + 50 NYSE, ~770 failure-days each, all
+    `WithinBoundsTradfiSourceZero`) — a **TRUNCATION signature, not data absence**; a blind re-run will re-fail until
+    root-caused (dispatched). Minor: tradfi launchers don't set `STALL_PROGRESS_REGEX`.
