@@ -621,3 +621,61 @@ the ones already in candles) and do features service across all shards too"_
       ALREADY have candles vs which do not. Drives both "which AGs to run" and the ETA denominator.
 - [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-mdps` across all relevant AGs NOT already in candles.
 - [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs).
+
+### 2026-07-20 — ✅ SPOT preemption auto-recovery was NOT fleet-wide; now it is (`deployment-service@c79f984`)
+
+Operator: _"vms are SPOT and need to recover themselves if they go down via auto recovery think we have that for some
+vms already so propagate if not there."_ **They were right to doubt it — and the gap was much wider than "some".**
+
+**MEASURED (I verified the headline myself, independently of the agent): 58 launchers pass `--provisioning-model=SPOT`;
+only ~10 emitted the `vm-logs/{vm}/PREEMPTED` blob. ~48 SPOT launchers were preemption-BLIND.** The
+`RelaunchPreemptedVm` machinery is well-built and correct — but its **trigger** was missing, so a preempted VM
+classified as `EXIT_NONZERO`/`GONE_NO_CAPTURE` and **PAGED a human** instead of auto-recovering.
+`codex/05-infrastructure/spot-vms-for-backfill.md` asserts the signal is "wired fleet-wide via `launcher_common.sh`" —
+**that claim is false and the codex is now stale** (todo below).
+
+**The mechanism (verified end-to-end):** VM shutdown checks `instance/preempted` → writes `PREEMPTED` blob →
+`_gcs.is_vm_preempted` + `read_launch_params` + `read_progress_checkpoint` → `classify_terminated_vm` checks `preempted`
+BEFORE exit_code → `DP_VM_PREEMPTED` (AUTO_RECOVER, DP-VM-007) → `RelaunchPreemptedVm.relaunch()` replays
+`LAUNCH_PARAMS.json`, re-resolves `*_TARBALL_SHA` pins, budget 48/day/prefix. Resume overrides `START_DATE` to
+`last_completed_date` **only if `monotonic=true`**; a `--force` run with non-monotonic/absent checkpoint still **PAGEs**
+`force_run_not_replayable` — never silent. `PROGRESS.json` emission was ALREADY fleet-wide (UTL `record_vm_progress` +
+`vm-exec-with-gcs-tee.sh`), which is why only the trigger was missing.
+
+**Fix:** `setup-data-pipeline-vm.sh` now installs `uts-preemption-signal.service`, a systemd unit mirroring Google's own
+`google-shutdown-scripts.service`, writing the same blob with the same `preempted=true` gate. Chosen because gcloud
+accepts only ONE metadata `shutdown-script`, so a unit **composes** with the ~10 launchers already emitting it inline
+rather than colliding. Every blind launcher boots from this one seam — including **both launchers I extended for these
+skills** (`launch-mdps-backfill-vm.sh`, `launch-features-vm.sh`) and `launch-mdps-sharded-backfill.sh`. Also registered
+**`mdps-sports-`** in BOTH registries (previously emitted by the sharded launcher but registered in neither →
+unmonitored AND unrecoverable; sports confirmed genuinely in scope via its dedicated `STALL_TIMEOUT_SEC` +
+`STALL_PROGRESS_REGEX` against a live run.log). New guard test: **no SPOT launcher may be preemption-blind**. **Safety
+is structural** — inert on live/forward/cron/paper VMs because they are on-demand and GCE never sets `preempted=true` on
+them; no exclusion list needed. QG GREEN (339s, 2781 passed/5 skipped).
+
+**Shipped by DIRECT PUSH under the closed dirty-deps carve-out** (UAC concurrently mid-edit by my own P0 agent, so
+quickmerge's dep pre-flight could not pass). **Multi-agent hazard hit and handled**: a concurrent agent had staged 13
+foreign files into the shared index (17 staged, 1,556 insertions); caught it via the mandatory no-path-arg
+`git status`/`git diff --cached --stat`, `git reset`, re-staged ONLY my 4 by name. Foreign work never entered the
+commit.
+
+**RESIDUAL RISKS (carried forward, not swept):**
+
+1. **Arg-required launchers still cannot actually recover** — `launch-features-vm.sh` exits 2 without
+   `--feature-family`/`--asset-group`, and the relauncher passes ENV only. Result is a loud CRITICAL
+   `DP_VM_PREEMPTED_NO_RELAUNCH`, not silence — but not recovery either. **This directly affects the features backfill**
+   and is the next thing to close (needs `lc_write_launch_params` adoption or env-arg support).
+2. **Manual delete ≈ preemption exposure now spans ~48 more launchers.** A prior incident (manual delete → relaunch →
+   two VMs 469ms apart → Tardis 403 lockout, 1181 rejections) is the precedent. Mitigated by the `preempted=true`
+   metadata gate (a manual delete does not set it), the Tardis guard, and the 48/day budget — but worth review before
+   the next wide SPOT wave.
+3. **Relaunch scope amplification**: `launch-mdps-sharded-backfill.sh` with no args defaults to all 5 AGs x all years —
+   a preempted shard could relaunch dozens of VMs. Absorbed by presence-skip (cost, not corruption); real fix is the
+   `lc_write_launch_params` rollout.
+4. **Not runtime-proven**: `bash -n` clean + guard tests pass, but only a live SPOT reclaim proves the unit fires.
+5. `launch-prediction-features-vm.sh` (broken: packages a deleted repo, no SPOT, 50GB disk) deliberately NOT touched —
+   it is operator-gated A/B/C in `issues/mdps_features_deadcode_consolidation_2026_07_20.md`.
+
+- [ ] NEW todo. [DOC] P1. Correct `codex/05-infrastructure/spot-vms-for-backfill.md`: the preemption signal was NOT
+      wired fleet-wide via `launcher_common.sh`; it is now installed by `setup-data-pipeline-vm.sh` as a systemd unit.
+- [ ] NEW todo. [SCRIPT] P1. Close residual risk 1 — make arg-required launchers relaunchable (features especially).
