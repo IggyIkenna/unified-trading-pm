@@ -1193,3 +1193,30 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     `batch_massive` read-recognition permanent); **(C)** operator accepts permanent data loss and authorizes the full
     purge in writing (not recommended). Purge stays HELD until one is chosen — per this plan's own standing rule, "never
     purge-and-lose-data".
+
+- **2026-07-20 (slot-1, tick 24) — 🔓 OPERATOR RULING: Massive purge AUTHORIZED under accepted-permanent-loss (Option
+  C). The blocked-purge issue is resolved by DECISION, not by recovery.**
+  - **Operator's words (2026-07-20, verbatim):** _"acept loss of massive. its partial anyway and our subscription is
+    terminated. we wont expend databento ohlcv_1m is more than enough for our goals"_ — i.e. Option **C** of the three
+    presented in `massive_purge_blocked_databento_l1_entitlement_2026_07_20.md`. Option A (buy Databento historical
+    `trades`+`tbbo` entitlement) is explicitly DECLINED; Option B (retain as archive of record) is declined.
+  - **Informed consent is on the record**: the operator was given the measured numbers BEFORE deciding — **1,032,672
+    `trades`/`tbbo` objects (60.69% of the massive corpus) are the ONLY copy** (Databento has never written a single
+    `trades`/`tbbo` object to this bucket — 12 days sampled inside the free window, all zero), 481/482 Massive-only
+    shards sit behind a 365-day L1 entitlement wall, and the L0 remainder is only partially duplicated. The operator's
+    rationale: the corpus is partial anyway, the **Massive subscription is TERMINATED** (so it can never be extended or
+    re-fetched), they will not spend on Databento L1, and **`ohlcv_1m` granularity is sufficient for the trading goals**
+    — tick-level `trades`/`tbbo` is not required.
+  - **PURGE SCOPE: 1,701,422 `pipeline_mode=batch_massive` objects** (exact, full physical enumeration of all 2,040
+    `day=` prefixes, 0 unparsed; reconciles with the migration's 1,701,414, delta +8).
+  - **HONESTY REQUIREMENT (do not fake the gate):** the executor's double-gate takes a
+    `--massive-backfill-verified <sentinel>` file. **No backfill happened and none ever will**, so the sentinel MUST NOT
+    assert backfill-verification. It records the operator's **accepted-permanent-loss authorization** (this tick + the
+    verbatim quote) as the basis. The flag's help/docstring is clarified accordingly — the gate's purpose is "authorized
+    by an explicit operator basis", of which backfill-verified was only the originally-anticipated one.
+  - **Safety net:** bucket soft-delete confirmed ACTIVE at 604800s (7 days), so the purge stays reversible until
+    ~2026-07-27 even though the underlying data is otherwise unrecoverable.
+  - **Downstream:** with the purge no longer pending, the manifest force-rebuild is UNBLOCKED and now also drops the
+    stale massive slice in the same pass — and, critically, re-deriving the index from objects on disk is the fix for
+    the **16,389 phantom `captured` rows** (3,488 shards, zero backing objects) that would have mis-classified ~826,159
+    unique objects as safe-to-delete had the purge been validated against the manifest instead of GCS.
