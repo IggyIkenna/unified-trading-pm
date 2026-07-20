@@ -453,7 +453,41 @@ All four resolved in interactive chat. These are now actionable, not gated:
       existed with matching crc32c immediately before each delete. Final sweep: **0 `asset_group=prediction` objects
       remain in the sports tick bucket.** Ordering mattered: prediction manifest rows were written BEFORE deleting the
       sports originals, so the data was never unlisted in either direction.
-- [ ] [CODE] P1. Narrow sports capture/enumeration to the UAC registry universe (decision 2) so captured == intended.
+- [x] [CODE] P1. ✅ **ALREADY SHIPPED (2026-07-13) — no new work needed.** `_is_in_canonical_write_universe`
+      (`orchestrator/sports.py`) already gates per-league captured writes to the registry universe and is WIRED at 9+
+      live call sites (`sports_reference_core.py:431,507,594`, `footystats.py:203,613,991`, `sports_fixtures.py:431`,
+      `understat.py:190,470`). The 2026-07-13 24-league de-registration ruling set "the sports universe is EXACTLY the
+      registered-league set" and the catalogue gates on `_sports_league_registered` too. Decision 2's _forward_ half is
+      done.
+- [ ] [DIAG] **P0 — ⛔ BLOCKS decision 2's purge half. LEAGUE_ID NAMESPACE MISMATCH, measured 2026-07-20.** The
+      manifest's `league_id` namespace does NOT match the canonical registry's:
+
+      | manifest `league_id` (raw) | canonical registry key |
+          | -------------------------- | ---------------------- |
+          | `PREMIER_LEAGUE`           | `EPL`                  |
+          | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+          | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+          | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+          | `FIRST_DIVISION_A`         | (no registry entry)    |
+
+          Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+          written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+          attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+          `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+          `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+
+          **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+          DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+          they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+          namespace is reconciled.
+
+          NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+          registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+          §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+
+- [ ] [CODE] P0. Reconcile the namespace: either canonicalise `league_id` at the manifest WRITE path (raw api-football
+      name → registry slug) or publish an authoritative alias map and apply it at every registry-membership check. Until
+      then, EVERY registry-based gate/denominator/coverage number keyed on symbolic `league_id` is wrong.
 - [ ] [DATA] P2. Dispose of the already-captured non-registry rows (decision 2): exclude from the denominator; purge if
       confirmed out-of-universe. Snapshot before any delete.
 - [ ] [DOC] P3. Document pre-2019 (2013–2018) as an intentional, explained exclusion (decision 3) in the audit's gap

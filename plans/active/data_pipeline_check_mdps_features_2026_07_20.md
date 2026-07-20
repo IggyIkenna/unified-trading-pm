@@ -200,3 +200,89 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
   in flight; findings to be journaled on completion.
 - NEXT: launcher edits → engine edit → MDPS driver → features driver → skills → e2e → benchmark → orphan migration →
   ETA.
+
+### 2026-07-20 — build phase kicked off
+
+- **Todo 1 (launcher edits) code-complete (pending QG+quickmerge):** `launch-mdps-backfill-vm.sh` +`--vm-name`
+  (VM_NAME_OVERRIDE, single-cat only); `launch-features-vm.sh` +`--vm-name` +`--sink-bucket`/`--source-bucket` (bakes
+  `IS_TEST_RUN=true PROTOCOL_DATA_SINK_BUCKET_{AG}=<b> [PROTOCOL_DATA_SOURCE_BUCKET=<b>]` into VM_BACKFILL_CMD —
+  verified env contract via delta_one feature_writer `_get_sink_bucket` + run_pipeline_e2e.py:338). Both additive;
+  registered prefixes unchanged. **Engine env caveat**: MDPS 250GB boot disk + features 250GB already DEFAULT
+  (operator's "250GB" ask already satisfied).
+- **Todo 2 (engine edit) code-complete (pending QG+quickmerge):** `report.py::_SERVICE_REPOS` +=
+  `data_pipeline_e2e_check_mdps`→[market-data-processing-service,deployment-service],
+  `_features`→[features-service,deployment-service].
+- **Todo 7 (test buckets) DONE:** object-probe — ALL exist. MDPS shares MTDS tick buckets `market-data-tick-{ag}-test-*`
+  (cefi/defi/tradfi/sports/pred, have objects). features `features-{cefi,defi,tradfi,pred,sports,calendar}-test-*` all
+  exist (cefi has objects, rest empty — normal). NO provisioning needed.
+- **Todos 3+4 (drivers) IN FLIGHT:** workflow `wf_7ebc53e5-dd1` (build→adversarial-review pipeline, 2 drivers, opus).
+  Each agent reads DESIGN blueprint + MTDS reference + engine + (edited) launcher, writes
+  `scripts/pipeline_e2e_check.py`, QG-greens, does NOT ship. Live/benchmark legs: MDPS live=honest-gap
+  (mdps-features-live not wired); benchmark leg opt-in default OFF.
+- **Pass-2 audit IN FLIGHT:** workflow `wf_12a59c39-cf6` (benchmark tooling / historical floors / cross-repo lineage-
+  orphan / cost model). Feeds todos 10-13 (benchmark/ETA/orphan-migration/optimization).
+- Shipping plan: QG+quickmerge deployment(launchers)+UTL(engine)+MDPS+features in ONE controlled batch (≤2 QG at once)
+  once the driver workflow completes, then flip todos 1-4. Reason to batch: avoid 4-way QG contention while build agents
+  are QG-ing their repos.
+
+### 2026-07-20 — operator clarification: CANONICAL-PATHS PRINCIPLE (HARD — affects todos 3,4,5,8,9,11)
+
+- Operator: "ensure everything is built off expected canonical paths/names etc for all AGs even if some of the data
+  doesn't follow that (in which case would be skipped)." Both drivers + both SKILL.md MUST:
+  1. Enumerate the shard universe from canonical SSOT ONLY (mdps_mvp_universe/is_mvp/FeatureFamily × canonical
+     TIMEFRAMES/data_types), for ALL 5 AGs.
+  2. Verify OUTPUT against the CANONICAL path template ONLY — canonical hive key `asset_group=` (DROP the MTDS driver's
+     legacy `category=` coarse-fallback), canonical `data_type={mdps_dt}`, canonical `timeframe` (24h→1d), canonical
+     instrument_id shape. A parquet present only under a legacy/non-canonical prefix →
+     `skipped: non_canonical_object_path` (NOT failed, NOT legacy-pass) = migration signal.
+  3. INPUT coverage counts only canonically-shaped captured rows; non-canonical-only input →
+     `skipped: non_canonical_input`.
+  4. Add a CANONICAL-SHAPE CHECK leg (mirror MTDS `canonical`): assert derived candle/feature ids+paths are canonical
+     per AG; non-canonical → `content_check=non_canonical` (distinct verdict). Safe alongside any AG.
+  5. The set of `skipped/non_canonical_*` shards IS the migration worklist for todo 11 (migrate existing data →
+     canonical, no orphans MVP-or-not).
+- ENFORCEMENT: the running build workflow (`wf_7ebc53e5`) predates this note; enforce canonical-only verify +
+  non_canonical→skip + the canonical-shape leg in the POST-BUILD review pass on both drivers before shipping, and encode
+  it in both SKILL.md. Design blueprint updated (scratchpad `DESIGN_...md` § CANONICAL-PATHS PRINCIPLE).
+
+### 2026-07-20 — PASS-2 AUDIT SYNTHESIS (benchmark/floors/lineage/orphan/cost) — feeds ETA + migration + optimization
+
+**HISTORICAL FLOORS (live-measured raw ticks, B3):** cefi raw **2019-03-30→today** (~2670d), tradfi **2020-01-01→**
+(~2392d), prediction raw **2021-06-30** (candles anchor 2025-03-14 — divergence flagged), defi ~**2020-01-01**
+(documented; live blocked on stale consolidator). Flat-2019 window = **2757/2758 days**. **CRITICAL: derived CANDLES
+barely exist** — cefi 6 rows, tradfi 139, prediction 168 (2026-04 only). So candle backfill is GREENFIELD across full
+history; "migrate existing candle data" is nearly a no-op — the real work is the optimized backfill + ETA. Honest
+per-shard floor = `min(date where capture_status=='captured')` per (venue,data_type,timeframe) via slim read (do NOT
+trust declared constants — provably late). Per-cell floors clip (HYPERLIQUID 2023-05, NASDAQ/NYSE 2023-04-15, etc.).
+
+**COST MODEL (B5):** e2-standard-8 on-demand **$0.268/hr** → SPOT **~$0.024–0.107/hr** (60-91% off; credits exhausted
+2026-06-20 so on-demand = real cash). Intra-region GCS egress =
+**$0** (all VMs pinned asia-northeast1). MDPS auto
+workers = min(cpu,16)=8 on e2-standard-8; features intra-pool default 4 (176-way fan-out possible). **MDPS/features NOT
+Tardis-capped → fleet-wide scaling is THE lever** (N date-shard VMs ≈ N×; MANIFEST_PER_VM_SHARDS already set). Disk
+pd-balanced 250GB = 70MB/s (pd-ssd faster). Formula: VM_hours = serial_hours/(workers×fleet); cost = VM_hours×$/hr.
+Codex perf-targets (LOW-conf, unmeasured): mdps_compute ≈**386 serial-days** (<6h on c2-standard-16/100-conc),
+features_compute ≈**2700 serial-days** (<2h on c3-highcpu-176/176-way). → NEED real benchmark to firm up (todo 10/12).
+
+**OPTIMIZATION TARGETS learning-from-cefi (B1/B2, for todo 14):** MDPS candle kernel = polars core groupby (fast) BUT
+HFT/whale/carry-forward stay pandas Python loops (whale detect O(n_intervals×n_ticks) `for` loop; `_carry_forward_ohlc`
+Python `for i in range`; HFT `grouped.apply`). `_read_tick_data` does `pl.read_parquet(BytesIO(download_all))` — full
+blob to RAM (OOM driver), no scan_parquet pushdown. USE_POLARS toggles only the core groupby. → optimize: vectorize the
+Python loops / Rust kernel (operator OK'd Rust), scan_parquet pushdown, scale workers to cpu, fleet-wide date-shard,
+pd-ssd. Existing bench tool `scripts/benchmark_fullmonth_binance.py` (measures wall/RSS/bytes across current-vs-polars ×
+mdps-vs-features) — REUSE for the steady-state benchmark; features `scripts/profile_compute_costs.py` similarly.
+
+**ORPHANS (B4 lineage, verified):** feature families — **performance_features + strategy_pnl_archetype** = ORPHAN
+(unwired StrategyPnlStreamEvent → always empty_confirmed EXPECTED_NO_PNL_STREAM; consumers NO-OP/post-cutover) → honest
+by-design; skill records skipped/expected_no_upstream, NOT migrate. candle cells produced-but-unconsumed: TRADFI
+`ohlcv_1s`, DEFI `book_snapshot_5/market_state/liquidity/fx_rates` (verify — lineage-doc drift), SPORTS
+`arbitrage_opportunity` (verify); upstream trap TRADFI `mbp_10` (needs_candle_processing defaults True, no adapter/not
+captured → pin False). CONSUMED-CANDLE SET (safe): trades, book_snapshot_5(cefi), derivative_ticker, liquidations,
+options_chain, futures_chain, ohlcv_1m/15m/24h, tbbo, dex_pool_swaps.
+
+**DEAD-CODE (B6) → issue doc `issues/mdps_features_deadcode_consolidation_2026_07_20.md` (filed):** BIG findings need
+operator keep/delete decision (self-heal + registered-live-launcher blast radius) — S1-a broken
+`launch-prediction-features-vm.sh` (bound to self-heal), S1-b non-runnable `launch-mdps-features-live.sh` (+5 registry
+rows), S1-c `mdps-sports-` prefix unregistered (monitoring blind spot). Safe: S2-a features-backfill dead lower-half,
+S2-b stale SERVICE_TARBALLS keys, S3-a MDPS one-offs past Delete-when (NOT benchmark_fullmonth — reusing it). Do NOT
+autonomously delete registered launchers / rebind self-heal (operator returns to this fleet) — document + notify.

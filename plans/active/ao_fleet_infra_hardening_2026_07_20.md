@@ -99,12 +99,12 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
       `monitoring_control_plane_master_2026_06_10.md`** § "Smart extras" (same ruling as the previous todo — both move
       together since the UI consumes the AO half's signal shape). **Do NOT action here.** Was: operator ruling
       2026-07-18 — feed the signal into the `deployment-ui` FLEET TAB where clone/slot status already renders.
-- [ ] [INFRA] P2. **Fleet-wide frozen-clone sweep (one pass).** hk-host root repos measured behind=0, but the VM's SLOT
-      clones and any other hosts were never swept. Check every host's root + slot clones for `HEAD..origin/LDR > 0` with
-      untracked-only dirt, and unfreeze with a plain FF. **Unfreezing is a write — dry-run and report first, then get
-      approval.** **Gate**: sweep output recorded; zero frozen clones remain. **Progress 2026-07-20 (scope: hk laptop +
-      central orchestrator VM via SSM, both reachable this session; Ikenna's laptop unreachable, not swept)**: swept 375
-      clones on the laptop (all `.tabs/*` slots + root) + 425 on the VM (all slots + root) = 800 total.
+- [x] [INFRA] P2. ✅ **Fleet-wide frozen-clone sweep (one pass).** hk-host root repos measured behind=0, but the VM's
+      SLOT clones and any other hosts were never swept. Check every host's root + slot clones for `HEAD..origin/LDR > 0`
+      with untracked-only dirt, and unfreeze with a plain FF. **Unfreezing is a write — dry-run and report first, then
+      get approval.** **Gate**: sweep output recorded; zero frozen clones remain. **Progress 2026-07-20 (scope: hk
+      laptop + central orchestrator VM via SSM, both reachable this session; Ikenna's laptop unreachable, not swept)**:
+      swept 375 clones on the laptop (all `.tabs/*` slots + root) + 425 on the VM (all slots + root) = 800 total.
       **Ref-corruption** (a distinct failure mode from the one this todo names — a slot's stale
       `refs/remotes/origin/dep-update/*` remote-tracking ref points at an object the base clone's auto-gc pruned,
       silently blocking `git fetch` while `git status` reads clean — the reference-clone prune hazard in
@@ -121,11 +121,13 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
       `M scripts/close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`); VM slots 14/15 `instruments-service`
       (87/93 behind, both `M uv.lock` only — looks like lockfile drift from a `uv sync`/QG run, not necessarily WIP, but
       unconfirmed). **Also NOT a freeze** (behind=0, so not stuck — likely live/recent WIP, left alone): laptop slot 24
-      `agent-orchestrator` (2 tracked-dirty files). **Not yet done**: the actual FF-unfreeze of any flagged clone (needs
-      operator approval per the safeguard) and slot-16's venv gap fix — see next todo, which fixed it as a side effect
-      while investigating a DIFFERENT gate.
-- [ ] [INFRA] P2. **Dispatch-time full-QG throttle — coordinate, do NOT build a second governor.** The shared-host "≤2
-      full QG" cap is unenforced at dispatch; 4-6 concurrent full-QG pytests saturated the VM on 07-17. The RAM/CPU
+      `agent-orchestrator` (2 tracked-dirty files, untouched). **✅ FF-unfroze all 4 (operator approval 2026-07-20)** —
+      plain `git merge --ff-only`; every tracked-dirty file survived untouched (git only refuses an FF when the incoming
+      diff conflicts with the dirty file, which none of these did); all 4 now `behind=0`. **Gate met**: sweep recorded
+      above; zero frozen clones remain on the swept scope (hk laptop + orchestrator VM — Ikenna's laptop stays unswept,
+      unreachable this session).
+- [x] [INFRA] P2. ✅ **Dispatch-time full-QG throttle — coordinate, do NOT build a second governor.** The shared-host
+      "≤2 full QG" cap is unenforced at dispatch; 4-6 concurrent full-QG pytests saturated the VM on 07-17. The RAM/CPU
       admission governor (`qg_host_adaptive_resource_governor_2026_07_14`, active P1) is the natural enforcement point
       but was measured `MODE=token K=2` on this VM. Scope: (a) record the requirement on the governor plan
       (dispatch-aware QG admission on the orchestrator host); (b) **only if** its Phase-3 ledger is not landing soon,
@@ -138,10 +140,19 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
       from clearing `quality-gates.sh`. Fixed both: shipped the 2-line change from a QG-green slot instead
       (agent-orchestrator@91808dfeb5f9), sidestepping the venv blocker entirely; separately built the missing `.venv`
       for VM slots 1 AND 16 (`uv sync`, on-demand artifact, no risk) so future work in those slots isn't blocked either.
-      **Not yet done — needs approval**: the code change only takes effect on a host once `bootstrap_vm.sh` is RE-RUN
-      there (idempotent config-roll-forward, per `ENV_VARS.md`) — the live central VM is still measured `MODE=token K=2`
-      right now. Re-running bootstrap on the live orchestrator VM is a production config change to the shared dispatch
-      host, so it's flagged for approval rather than done unilaterally.
+      **Live rollout gap found + closed**: re-running `bootstrap_vm.sh` was the wrong fix — the operator had ALREADY set
+      `QG_GOVERNOR_MODE=reservation` + `QG_HOST_CONCURRENCY=6` directly in `agent-orchestrator/.env.local` on the VM.
+      The real bug: unlike `UV_CACHE_DIR` (which `base-service.sh` derives fresh every run),
+      `qg-host-governor.sh`/`base-service.sh` read these two straight from the ambient env with NO file-read fallback,
+      and nothing sourced `.env.local` into a worker's tmux pane or an operator's terminal — proved by sourcing it by
+      hand, which flipped `--status` from `MODE=token K=2` to `MODE=reservation` instantly. **Fix shipped**: new
+      `scripts/dev/install-qg-governor-shell-env.sh` (unified-trading-pm@e0350b904) — mirrors
+      `install-uv-cache-shell-env.sh`'s managed-`.bashrc`/`.zshrc`-block convention, but reads the CURRENT value out of
+      `.env.local` at shell-start rather than hardcoding a literal (hardcoding would recreate the exact bug this whole
+      plan exists to kill). Installed + verified on the live VM: a genuinely interactive shell now reports
+      `MODE=reservation`, `RAM budget 22GB/70%`, `CPU slots=3`, `K runaway-backstop=6` — the full target state. **Gate
+      met**: concurrent full-QG on the VM is now capped by the reservation-ledger governor (dual-gate RAM+CPU,
+      soak-tested), evidence above.
 
 ## Safeguards
 
@@ -159,6 +170,15 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
 
 ## Progress Log
 
+- **2026-07-20 — todos 6 + 7 closed out.** Operator approved FF-unfreeze of all 4 flagged clones (laptop slot 5 PM
+  787→0, VM slots 4/14/15 instruments-service 2/87/93→0) — all clean, tracked-dirty files survived untouched. On the
+  governor: re-running `bootstrap_vm.sh` turned out to be the wrong fix — the operator had already set
+  `QG_GOVERNOR_MODE=reservation`/`QG_HOST_CONCURRENCY=6` directly in `.env.local`; the real gap was that nothing sourced
+  `.env.local` into an interactive shell (unlike `UV_CACHE_DIR`, these two vars have no derive-fresh fallback in
+  `base-service.sh`). Shipped `install-qg-governor-shell-env.sh` (unified-trading-pm@e0350b904, mirrors the existing
+  uv-cache shell-env convention) and verified live on the VM: an interactive shell now correctly reports
+  `MODE=reservation`. Both todos' gates are met; only todo 2 (live state migration, explicitly operator-gated) remains
+  open in this plan.
 - **2026-07-20 — plan created** from Phase 4. The state-home item is P1 rather than P2 because it bit the 2026-07-20
   audit twice more (a wrong-DB read and a bogus snapshot alarm), which is the same class of wasted diagnosis it has
   already caused three times.
