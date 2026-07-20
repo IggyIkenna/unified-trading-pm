@@ -21,6 +21,9 @@ execution_scope: local-only
 priority: P2
 estimate_class: refactor
 drift_direction: worsening-slowly
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # lst_rates + oracle_prices write timestamp-glued instrument_ids
