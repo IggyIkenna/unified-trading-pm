@@ -22,7 +22,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-05-30
+last_reviewed: 2026-07-20
 code_refs:
 ---
 
@@ -44,6 +44,25 @@ The orchestrator maintains two task stores:
 **Drift** occurs when rows exist in `state.db` that are no longer in `backlog.yaml` (zombies from completed plans), or
 when `backlog.yaml` contains stale tasks whose plan-todo lines have been edited or removed. Without cleanup, zombie rows
 accumulate and inflate queue counts, causing false "work available" signals.
+
+---
+
+## The `tasks` table is a projection, not a completion ledger
+
+**Provenance**: the B1 audit, where this item decayed TWICE because each re-measurement read normal projection churn as
+instability (`ao_scheduled_agent_hygiene_2026_07_20` todo 6) — a future reader must not repeat that mistake.
+
+The `tasks` table holds currently-OPEN DISPATCHABLE todos plus dispatched/done history — it is **not** a historical
+record of every todo that ever existed. Two entirely normal, non-alarming ways a row disappears or never appears:
+
+- **`BLOCKED-*` todos are deliberately never ingested** (`BLOCKED-CREDENTIALS` / `-OPERATOR-DECISION` / `-BILLING` / …)
+  — they wait on an external unblock, not on dispatch, so regen skips them on every tick by design.
+- **A todo checked off (or edited) OUTSIDE the dispatch loop** — by hand, or by a different agent — has its still-
+  `queued` row garbage-collected as an orphan on the next `prune_stale` tick (its `brief` no longer matches any live
+  plan line; see "Brief-mutation accumulation" below).
+
+**A missing row is therefore never by itself evidence of a lost or dropped task.** Check the plan file's own checkbox
+state first — that is the actual source of truth — before treating an absent backlog/DB row as an incident.
 
 ---
 
@@ -258,6 +277,8 @@ once on the affected VM.
   every plan → every VM's backlog = entire fleet's backlog.
 - **Never set `ORCHESTRATOR_REGEN_PRUNE_STALE=false` when zombie count is high** — disable prune only for one-off
   diagnostics, then re-enable.
+- **Never treat a missing `tasks` row as evidence of a lost task on its own** — see "The `tasks` table is a projection,
+  not a completion ledger" above; check the plan file's checkbox first.
 
 ---
 
