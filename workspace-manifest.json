@@ -1265,8 +1265,8 @@
       "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "pytest",
-        "coverage_pct": 87.88,
         "large_file_count": 6,
+        "coverage_pct": 87.89,
         "warn_file_count": 21
       }
     },
@@ -1300,9 +1300,9 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": null,
         "qg_red_reason": "ruff",
         "large_file_count": 0,
+        "coverage_pct": 75.84,
         "warn_file_count": 0
       }
     },
