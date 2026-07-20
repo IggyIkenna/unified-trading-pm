@@ -62,9 +62,10 @@ related:
     mvp_backfill_defi_onchain_v10_2026_06_27.md,
     master_to_live_defi_2026_05_23.md,
     canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    ao_dispatch_cooldown_and_park_2026_07_20.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-07-20
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -263,10 +264,12 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 - [ ] [DATA] P0. **Legacy GLUED-VENUE FLAT tree INSIDE `raw_tick_data/` — R3 never sees it.**
       `raw_tick_data/by_date/day=<D>/asset_group=defi/venue=<VENUE>-<CHAIN>/ticks_migrated_<ISO8601>.parquet` (e.g.
       `venue=UNISWAPV3-ETHEREUM/`, `AAVEV3-ETHEREUM/`) — pipeline_mode MISSING, venue+chain GLUED, FLAT (no
-      chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump. `parse_defi_object._PAT_DEFI`
-      requires the hive segments → returns None → R3 discovery=0. FIRST determine if these are superseded `_migrated_`
-      leftovers (a prior migration already split them → delete-after-verify) or un-split sources (→ parse + split to
-      canonical). (repo: market-tick-data-service)
+      chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
+
+      `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
+                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
       needs a re-fetch. (repo: market-tick-data-service)
@@ -535,9 +538,31 @@ Discriminator = **does a manifest row exist**.
   10/10 SKIP → RE-RUN), `defi_onchain_derivable_values_and_date_drift_2026_06_20.md` (2 P1).
 - **Close-out criterion**: manifest-counted canonical rows for every MVP cell; carry tracer green on real data.
 
+> **mvp-defi backlog unpark condition — re-pointed here 2026-07-20 (`ao_dispatch_cooldown_and_park_2026_07_20` todo
+> 4).** The agent-orchestrator backlog task `mvp_backfill_defi_onchain_v10-001` carries a durable park (`priority: 999`
+> / `priority_override: true`) gated on the named prerequisite
+> `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` (condition currently `false`).
+>
+> Its original owner, `data_completion_defi_2026_07_15.md` (todos B0/C0, seed-then-backfill framing), is dead under the
+> per-instrument re-architecture above — that plan never re-derives the condition and its seed-chain premise no longer
+> matches how backfill actually runs (shard key = symbolic `canonical_instrument_id`, not the old seed-chain).
+>
+> **Flip instruction**: set `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` **true**
+> (`POST /api/prerequisites/defi_onchain_v10_universe_v2_seed_or_backfill_progressed {"value": true, "set_by": "<you>"}`)
+> the first time the todo below shows REAL manifest-counted progress on the per-instrument shard key — i.e. once R1→R3
+> above have landed (writer + denominator + historical migration) and this track's backfill has actually started writing
+> canonical rows, not merely been unblocked to start.
+>
+> Until then the park is intentional, not stale: Track 5 is explicitly gated C-GREEN on T1→T3, and R3 (the historical
+> migration this backfill depends on) is still `RUNNING, partial` as of this writing. No park exists without a named
+> LIVE flipper — this note + this track ARE that flipper; if Track 5 is ever archived/superseded before flipping the
+> condition, migrate this note to whatever supersedes it rather than letting the park go silent again.
+
 - [ ] [DATA] P1. **Run the DeFi MVP backfill to 100%** on the canonical/migrated corpus (SPOT VMs; the DRIFT/Velocity
       historical grind is now CULL residue — DRIFT is out of target, so its gap is dropped not filled); re-run the
-      Phase-D historical carry tracer on real data; resolve the 2 derivable-values P1s. (repos: deployment-service,
+      Phase-D historical carry tracer on real data; resolve the 2 derivable-values P1s. On first real progress, flip
+      `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` true per the unpark note above — that is what releases
+      the parked `mvp_backfill_defi_onchain_v10-001` backlog task back to the fleet. (repos: deployment-service,
       market-tick-data-service, features-service)
 
 ## Track 6 — RENDER: data-status surface #4 + RESTORE the enumeration view · P1
@@ -1319,11 +1344,12 @@ Discriminator = **does a manifest row exist**.
   canon** ($47M XMR/USDC, $18M BNB/USDC, …); a blind delete would have permanently lost them. So legacy = FOLD (union),
   not delete. Findings + refined R5: (1) gas_fees gap is PARTIAL — ≤7-digit block-range starts silently missed
   (AVALANCHE/BSC 2021-22, early ETH); fix in flight `a286c20c`. (2) Legacy top-level prefixes are TINY (8 objs/2.4 MiB,
-  SOLANA/2026-04-14; `lst_rates/` gone) but PARTIAL-OVERLAP → union-merge + delete-only-after-content-verify. (3) A
-  legacy GLUED-VENUE FLAT tree (`ticks_migrated_*`) sits INSIDE `raw_tick_data/` that R3's `_PAT_DEFI` parser never
-  discovers → separate handling. (4) Canon dex_pool_state was re-materialised 2026-07-13 from a divergent subgraph
-  snapshot (dropped 32 pools) → RCA to know if it's trustworthy for other DEX days. **These change the plan**: R3-as-
-  running is NOT sufficient + there's a data-preservation concern → operator PushNotified. gas_fees discovery fix
+  SOLANA/2026-04-14; `lst_rates/` gone) but PARTIAL-OVERLAP → union-merge + delete-only-after-content-verify.
+
+  (3) A legacy GLUED-VENUE FLAT tree (`ticks_migrated_*`) sits INSIDE `raw_tick_data/` that R3's `_PAT_DEFI` parser
+  never discovers → separate handling. (4) Canon dex_pool_state was re-materialised 2026-07-13 from a divergent subgraph
+  snapshot (dropped 32 pools) → RCA to know if it's trustworthy for other DEX days. **These change the plan**:
+  R3-as-running is NOT sufficient + there's a data-preservation concern → operator PushNotified. gas_fees discovery fix
   dispatched; the folds/RCA are P0 R5 items (careful, fold-not-delete, mostly after the main migration completes).
 
 - **2026-07-19 (slot-4, /autonomous — R3 migration RUNNING; catalogue + THREE operator-caught corpus gaps; R5 opened).**
@@ -1428,9 +1454,12 @@ Discriminator = **does a manifest row exist**.
   - **R3 silently MISSES the `{data_type}_{ts}.parquet` batch shape.** CHAINLINK `oracle_prices_{ts}.parquet` is
     MULTI-instrument (probed: 22 distinct feeds/file, `CHAINLINK-ETHEREUM:SPOT_ASSET:ETH/USD` …) but the R3 dry-run
     `--venue CHAINLINK --data-type oracle_prices` returns `files_scanned=0` → its `is_bundled_batch_leaf` doesn't match
-    the data_type-prefixed filename → oracle data would stay batched (the exact tracking pain). R3 DOES handle
-    `{venue}_{chain}_{ts}.parquet` (uniswap dex, multi-ts/day) + no-ops already-per-instrument `{SYMBOL}_{FEE}.parquet`
-    (aerodrome). Also found: the default `BUCKET_TEMPLATE` omits `-prd-` → 404s (shared with rebuild_defi_manifest.py).
+    the data_type-prefixed filename → oracle data would stay batched (the exact tracking pain).
+
+    R3 DOES handle `{venue}_{chain}_{ts}.parquet` (uniswap dex, multi-ts/day) + no-ops already-per-instrument
+    `{SYMBOL}_{FEE}.parquet` (aerodrome). Also found: the default `BUCKET_TEMPLATE` omits `-prd-` → 404s (shared with
+    rebuild_defi_manifest.py).
+
   - **Fix dispatched `wl8j6kjdl`**: map every data_type filename shape, extend discovery to the `{data_type}_{ts}`
     batch, fix the bucket-template default, re-dry-run to prove oracle_prices now splits into canonical per-instrument
     leaves, adversarial verify it doesn't regress the working shapes → apply gated on `safe_to_apply=true`.

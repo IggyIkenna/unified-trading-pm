@@ -3,7 +3,7 @@ doc_type: issue
 title:
   "DeFi `available_at` — the on-chain stamp is computed and then CLOBBERED with wall-clock `now()` on the write path
   (breaks the batch==live ε=0 determinism contract)"
-summary:
+summary: >-
   Several DeFi handlers call `stamp_available_at_onchain_tick(df)` (which sets `available_at` = the on-chain block /
   snapshot timestamp — the deterministic, replayable value) and then immediately overwrite that column with
   `datetime.now(UTC)` before upload. In `gas_fee_handler` the stamp and its clobber are ADJACENT lines (507→508, and
@@ -49,6 +49,8 @@ drift_direction: none
 depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+source: [found while designing the DeFi backfill optimization, 2026-07-20]
+resolved_by:
 ---
 
 # `available_at` is clobbered with wall-clock `now()` after the on-chain stamp

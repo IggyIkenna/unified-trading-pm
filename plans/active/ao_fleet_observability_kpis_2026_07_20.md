@@ -92,10 +92,13 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       unresolved rate ~1 week post-fix to confirm the hypothesis (a KPI AF-5 will make this an ongoing measurement, not
       a one-off).
 - [ ] [BACKEND] P2. **(AF-1b) Cap escalation redispatch — on the shared cooldown store, not a new one.** Per
-      `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Still blocked on the dependency above**
-      (`ao_dispatch_cooldown_and_park_2026_07_20`'s shared cooldown store — verified 2026-07-20, its own P1 "Build the
-      ONE fleet-scoped cooldown store" todo is still unchecked). **Gate**: a test showing repeat dispatches for the same
-      escalation_id back off; no second cooldown engine exists in the tree.
+      `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Unblocked 2026-07-20 — the store shipped**
+      (`agent-orchestrator@cfb211c`, `server/state_store/cooldown.py`; contract in
+      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle"). A same-day check
+      moments earlier had this correctly marked still-blocked (the store's own todo was unchecked at that point) —
+      superseded by the shipment. Namespace keys `f"escalation:{escalation_id}"` and call `register_cooldown` directly.
+      **Gate**: a test showing repeat dispatches for the same escalation_id back off; no second cooldown engine exists
+      in the tree.
 - [x] [BACKEND] P1. ✅ **(AF-2 + Phase-6) Throttle plan_health — server-side min-interval gate + at-most-one-live
       coalesce.** — `agent-orchestrator@d098970` (2026-07-20). Implemented exactly as specified: (a)
       `TuningDefaults.plan_health_min_interval_seconds` (default 7200s/2h) + `plan_health_dispatch_timeout_seconds`
@@ -206,7 +209,7 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   exempt, `force=true` escape hatch. 15 new tests, full QG green. The dispatch-rate/zero-superseded-exits acceptance
   gate itself needs a live 24h window post-deploy to confirm — noted as deferred verification on the todo, not silently
   claimed. Also re-verified AF-1b's dependency is still open (its cooldown-store P1 todo unchecked as of this session) —
-  AF-1b stays blocked, correctly.
+  AF-1b stays blocked, correctly **as of this check** (superseded within the same day — see below).
 - **2026-07-20 — AF-5 backend done** (`agent-orchestrator@572bf25`). Efficiency KPIs + day-over-day regression
   detection + per-account usage (transcript-size proxy) surfaced in the Slack digest and via `GET /api/fleet-kpis`. 24
   new tests, full QG green. Dashboard React card explicitly DEFERRED (no `node_modules` in this environment +
@@ -232,3 +235,14 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   AF-5's dashboard React card (backend + API shipped + tested; the card itself needs `dashboard/` `node_modules` +
   CLAUDE.md's playwright regression-spec gate, neither available in this session). Every commit landed via quickmerge
   with a green `quality-gates.sh` run cited; every plan-flip cites the shipping commit.
+- **🟢 2026-07-20 — DEPENDENCY UNBLOCKED, store published (notification from `ao_dispatch_cooldown_and_park_2026_07_20`,
+  answering both the AF-5 and session-wrap-up entries' re-verify note directly above).** The ONE fleet-scoped cooldown
+  store AF-1b must sit on is built + shipped (`agent-orchestrator@cfb211c`, `server/state_store/cooldown.py`) — landing
+  after the AF-2 entry's dependency check, which is why that entry (accurately, at the time) still read blocked. It is
+  generic over an opaque `key` string specifically so AF-1b does not need a second engine: namespace escalation
+  dispatches as `f"escalation:{escalation_id}"` (today's two consumers use `f"task:{task_id}"`) and call the same
+  `register_cooldown`/`get_cooldown`/`clear_cooldown` primitives. Full contract — key namespacing, window semantics
+  (base/extended/ETA-override), change-triggered re-eligibility, and the durable-auto-park pattern built on top of it —
+  documented in `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip /
+  cooldown / park"), which is now the SSOT for this mechanism. **AF-1b is unblocked** — build the escalation backoff
+  directly on `register_cooldown`, do not write a second cooldown/backoff engine.

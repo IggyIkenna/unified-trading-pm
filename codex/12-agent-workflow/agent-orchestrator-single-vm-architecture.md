@@ -25,6 +25,8 @@ tags:
     regen,
     worker-lifecycle,
     task-lifecycle,
+    fleet-cooldown,
+    auto-park,
   ]
 related:
   [
@@ -45,10 +47,12 @@ authoritative_for:
     assigned-vm-semantics,
     ao-deploy-currency,
     ao-read-only-status-check,
+    fleet-dispatch-cooldown,
+    durable-auto-park,
   ]
 referenced_by: [cursor-configs/CLAUDE.md, cursor-configs/skills/check-agent-orchestrator/SKILL.md]
 owner:
-last_reviewed: 2026-07-18
+last_reviewed: 2026-07-20
 code_refs:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
@@ -58,6 +62,9 @@ code_refs:
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/plan_health.py,
     agent-orchestrator/server/tmux_pruner.py,
+    agent-orchestrator/server/state_store/cooldown.py,
+    agent-orchestrator/server/auto_park.py,
+    agent-orchestrator/server/auto_park_reconcile.py,
     agent-orchestrator/scripts/ao-self-pull.sh,
     agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh,
   ]
@@ -185,9 +192,45 @@ task no live worker can complete does not churn the fleet.
   (`reason="checkbox_currently_checked_sha_mismatch"`) rather than 409ing an honestly-done task on a provenance gap.
   `audit_false_done.py` (the periodic false-`done` sweep) already worked this way — it was `check_plan_flip` that needed
   to catch up.
-- **Skip / park**: a worker that reads the plan and finds the task blocked calls `/skip-current-task` with a reason; the
-  skip is recorded per-slot (`slot_skips`, 24h TTL). A durably-blocked task is _parked_ (false prerequisite /
-  `priority_override`) so it leaves the dispatchable set until its blocker clears.
+- **Skip / cooldown / park** (`ao_dispatch_cooldown_and_park_2026_07_20`): a worker that reads the plan and finds the
+  task blocked calls `/skip-current-task` with a reason. Two INDEPENDENT exclusions are recorded, not one:
+  - `slot_skips` (per-SLOT, 24h TTL, `slot_skip_ttl_hours`) — this slot specifically never re-claims the task; other
+    slots are unaffected. Unchanged since 2026-07-07 (RC-3).
+  - **The fleet-scoped dispatch cooldown store** (`server/state_store/cooldown.py`, `CooldownRow`/`dispatch_cooldowns`
+    table) — ONLY armed when the skip's `reason_code ∈ {BLOCKED, PARKED, GATED}` (a plain scope/craft-mismatch skip,
+    `reason_code=OTHER`, stays slot-scoped-only, unchanged). Holds the task un-dispatchable to **every** slot — closing
+    the cross-slot thrash `slot_skips` alone could not (measured: 117 `slot_task_skipped`/24h, the same verdict
+    re-derived 3x in ~35min, each a full worker boot). Base window `tuning.dispatch_cooldown_base_minutes` (default
+    12min, operator range 10-15min); a repeat decline with NO detected relevant change steps out to
+    `tuning.dispatch_cooldown_extended_minutes` (default 60min); a worker-supplied `estimated_unblock_minutes` overrides
+    either when plausible. **Change-triggered re-eligibility**: a prerequisite flip, or a priority/brief edit on the
+    task, grants immediate re-eligibility regardless of the window (`dispatch._cooldown_snapshot` fingerprints the
+    watched state; compared at check time by the FLEET-scope `fleet_cooldown` dispatch filter — a pure read, all arming
+    happens at write time in `register_cooldown`).
+  - **Public contract, generic over an opaque `key` string** (not just `task_id`) — the store is meant to be REUSED,
+    never re-implemented: `register_cooldown(session, key, *, reason_code, snapshot, eta_minutes=None)` arms/re-arms and
+    returns the row (read `.skip_count` for an N-skip escalation); `get_cooldown`/`clear_cooldown` read/release;
+    `mark_parked`/`mark_unparked`/`parked_rows`/`count_parked` back the durable-park escalation below. A second consumer
+    namespaces its OWN key prefix (e.g. `f"escalation:{escalation_id}"` for a future escalator backoff) rather than
+    building a second cooldown/backoff engine — that divergence is exactly the failure mode this store exists to
+    prevent.
+  - **Durable auto-park** (`server/auto_park.py`) is the N-skip escalation of the SAME store:
+    `>= tuning.dispatch_cooldown_auto_park_skip_threshold` (default 3) distinct BLOCKED/PARKED/GATED declines within the
+    counting window (`tuning.dispatch_cooldown_park_window_hours`, default 24h — mirrors `slot_skip_ttl_hours`)
+    auto-parks the task via the SAME manual recipe an operator would apply by hand (below): `priority: 999` +
+    `priority_override: true` + a synthetic `prereqs.prerequisites` condition named `auto_unpark__<task_id>`, created
+    `false`. **Unpark is condition-driven, not blocker-driven** — the module deliberately does not try to detect that
+    the ORIGINAL blocker resolved (the store's snapshot is generic, not semantic); instead, whoever/whatever sets the
+    synthetic condition `true` (an operator, or another system, via the existing `POST /api/prerequisites/{name}`) is
+    the trigger, and `AutoParkReconciler` (`server/auto_park_reconcile.py`,
+    `tuning.auto_park_reconcile_interval_seconds` default 300s) notices on its next tick and reverts `priority_override`
+    (letting the next `PlanRegenLoop` tick restore the plan-derived `priority` — the reconciler never guesses the
+    pre-park value). Operator-visible surface: `task_auto_parked`/`task_auto_unparked` activity events + the
+    `/api/state` `backlog_summary.auto_parked` dashboard count (same class as `AgentView.needs_operator_count`) + a
+    manual override, `POST /api/backlog/{task_id}/unpark`.
+  - A hand-set park (an operator applying the recipe directly, not via auto-park) is unaffected — it still leaves the
+    dispatchable set purely via the `prereqs` FLEET filter (false named prerequisite), independent of the cooldown
+    store.
 - **Prerequisite vs blocked-question** (do NOT conflate): a task gated by EARLIER tasks WAITS on a `prerequisite`; a
   task needing a human/main answer raises a `BlockedRow` with `authority ∈ {main_agent, operator}`. Full contract + the
   `condition`→`prerequisite` rename:
