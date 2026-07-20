@@ -393,6 +393,19 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       historical objects + 153 duplicate KRX row_keys
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
       (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s.
+- [ ] [BACKEND] P1. **KRX (Korean) equities carry a human-readable NAME across catalogue + manifest + data-status
+      (operator, 2026-07-20).** KRX equities are identified by the 6-digit exchange code (`KRX:EQUITY:000660` = SK
+      Hynix, `005930` = Samsung Electronics, `005380` = Hyundai Motor) — the code is the stable/unique official ticker
+      (kept as the canonical `instrument_id`, analogous to `NASDAQ:EQUITY:AAPL`), but it is NOT human-readable. Add a
+      first-class reference-data `name` field (romanized company name) resolved from a KRX code→name mapping (source:
+      provider security description — Yahoo `.KS` / Databento — else a maintained KRX listing reference in
+      instruments-service), and SURFACE it on every read surface: (1) deployment-api Catalogue Explorer + download-CSV
+      (`instrument_id` + `name`), (2) the availability manifest (`name` column carried by the WRITER, never re-derived
+      downstream), (3) the data-status dimensions view. GCS object PATHS keep the stable code id (paths must be
+      stable/unique; names change on rebrand/merger) — the readable name rides as metadata/column, not in the path.
+      Audit whether any other venue shares the numeric-code pattern. Regenerate catalogue + manifest so the name lands
+      live; verify the Catalogue Explorer shows `SK Hynix` / `Samsung Electronics` next to the code. (repos:
+      instruments-service, market-tick-data-service, deployment-api, deployment-ui)
 
 ## Phase D — re-smoke-test the backfills, TradFi-only, ALL shards (the post-migration completion gate)
 
@@ -911,3 +924,38 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     → manifest rebuild + catalogue MVP-stamping → Databento-backfill 571 Massive-only shards → gated Massive purge →
     re-run backfills + Phase D terminal gate. A full claimed-vs-live-measured "what's left" audit is running to lock the
     exact ordered remainder + surface any un-tracked gap.
+
+- **2026-07-20 (slot-1, tick 21) — OPERATOR MANDATE (6h away): complete everything autonomously. Data-loss quantified =
+  0 permanent. Decisions taken + execution sequence armed.**
+  - **Quantification (measured read-only, HIGH conf):** permanent loss = **0** (0 of 311 sampled deleted leaves
+    gone-with-no-twin; guaranteed by the un-expired 7-day soft-delete, earliest hard-delete 2026-07-26T10:16Z). The
+    82,574 `RECOVER_ERROR:NotFound` ≈ **99.4% benign** (objects earlier passes already MOVED to
+    canonical/`_quarantine/`, live+intact); **~0.6% (~1–1.4K objects)** are soft-only DEFECT-1 victims → curated restore
+    before 2026-07-26. Catalogue 82.9% + manifest 35.5%-blank confirmed but partly-legitimate; 4.1M object count =
+    massive-still-live + transient mid-migration coexistence, NOT loss.
+  - **Operator mandate (2026-07-20):** all migrations DONE, 0 orphans (MVP + non-MVP); Massive FULLY PURGED; backfill
+    code READY (cefi-optimized downloads/processing/uploads) + an ETA to backfill remaining tradfi MVP; all shards
+    tested green under `data-pipeline-check-mtds`; **+ KRX equities human-readable-named across catalogue/manifest/
+    data-status (new Phase-C todo above).** → This IS the explicit **A8 authorization** + **Massive-purge go-ahead**.
+  - **DECISIONS taken (documented, operator away, all reversible):**
+    - **CME shard-atom = OPTION A** — per-root chain bundle (`underlying=/quote=/margin=`, blank `instrument_id` is the
+      valid shard-atom keyed by underlying); **FIX THE CHECKER** to accept it. Rationale: consistency with the shipped
+      CeFi v6 chain layout + the operator's explicit "learning from cefi" + enables completion (no writer change / no
+      content re-migration). Shard-atom kept identical across writer/manifest/checker/UI (hard rule).
+    - **Massive purge = backfill-571-first-then-purge** (data-correctness heartbeat: never purge unique data; the 571
+      Massive-only shards Databento-backfilled to canonical first, then purge the redundant ~1.7M). If the 571 backfill
+      cannot finish in-window → purge HELD + ETA (never purge-and-lose-data).
+    - **KRX naming = stable code stays the id, human-readable `name` field surfaced on catalogue+manifest+data-status**
+      (ids must be stable/unique; the 6-digit code IS the official KRX ticker). Reversible if the operator wants the
+      symbol itself changed.
+    - Smaller rulings (least-bad, no-loss): etf distinct; combos resolved-or-quarantine-tracked; barchart + ICE
+      qualifier variants quarantine-with-tracking.
+  - **SAFETY posture (no 2nd incident):** fixed tarball (mtds@5588bdf8) deployed BEFORE any re-run; verified DRY-RUN
+    reconcile (0 orphans, garbage deferred) before each `--apply`; restore executed first; ONE sharded `SHARD_OF`
+    fan-out (never an un-sharded loop — the earlier runaway), SPOT, monitored T+10min + heartbeat watchdog; post-audit 0
+    legacy / 0 orphan / 0 garbage-root / garbage-preserved.
+  - **Execution sequence (armed):** restore soft-only → deploy fixed tarball + CME-checker(A) + durability guards
+    (fail-on-raw QG + reject numeric/empty underlying) + KRX name mapping → migrate/rebundle/recover `--apply` to 0
+    orphans → catalogue `by_date` sweep + rebuild (KRX names + MVP-stamp) + manifest force-rebuild → 571 Massive-only
+    backfill (single-IP capped) → Massive purge → MVP backfill code ready + ETA → `data-pipeline-check-mtds` all tradfi
+    shards green.
