@@ -169,13 +169,25 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       archive-before-delete correctness) for a P3 item the operator explicitly said not to redesign. Built the growth
       alarm instead: `TuningDefaults.activity_log_growth_alarm_rows` (default 500,000 — ~6x the measured 83k baseline, a
       multi-month runway before it can fire on legitimate growth), checked via
-      `DailySummaryLoop.     _check_activity_log_growth()` — **piggybacked on the ALREADY-periodic digest tick, no new
-      daemon thread**, per the "no redesign" ruling. State-transition deduped
-      (`dedup_state.activity_log_growth_alarm_path()`): pages once on crossing, not every digest cycle; clears silently
-      on drop-back-under (e.g. a future operator prune), and re-arms for the next breach. 4 new tests (fires-once,
-      silent-under-threshold, resolve+re-arm, best-effort failure isolation). Full `agent-orchestrator`
-      `quality-gates.sh` green (1548 passed). **Gate met**: retention decision recorded (defer, no prune) WITH the
-      growth alarm in place — the plan's own explicit acceptable-outcome clause.
+      `DailySummaryLoop._check_activity_log_growth()` — **piggybacked on the ALREADY-periodic digest tick, no new daemon
+      thread**, per the "no redesign" ruling. State-transition deduped (`dedup_state.activity_log_growth_alarm_path()`):
+      pages once on crossing, not every digest cycle; clears silently on drop-back-under (e.g. a future operator prune),
+      and re-arms for the next breach. 4 new tests (fires-once, silent-under-threshold, resolve+re-arm, best-effort
+      failure isolation). Full `agent-orchestrator` `quality-gates.sh` green (1548 passed). **Gate met**: retention
+      decision recorded (defer, no prune) WITH the growth alarm in place — the plan's own explicit acceptable-outcome
+      clause.
+- [ ] [BACKEND] P3. **(AF-1a-followup) Re-measure the unresolved-escalation classification ~1 week post-fix.** AF-1a's
+      cicd.md backgrounding fix (`unified-trading-pm@a35c6996`) landed 2026-07-20; the 65%/33%/2%
+      NEVER_FOUND_ROOT_CAUSE/FOUND_ROOT_CAUSE_THEN_SILENT/HIT_BLOCKED_QUESTION split was measured the SAME session the
+      fix shipped, so it cannot yet reflect the fix's effect — a re-check too soon would just re-confirm pre-fix
+      escalations still working through the queue. Correction to the earlier Progress Log note: AF-5's fleet-wide
+      efficiency KPIs (boots/dispatches/done ratios) do NOT reproduce this specific classification — they're a
+      different, coarser measurement; this is a genuinely separate re-run, not automated by AF-5. **Tool**:
+      `agent-orchestrator/scripts/orchestrator/check-escalation-unresolved-classification.sh ldr_qg_failure` (built +
+      validated live this session, read-only via SSM — reproduced the exact 46/65%/33%/2% figures on a live re-run).
+      **Target date**: ~2026-07-27. **Gate**: re-run recorded with the new percentages; if
+      NEVER_FOUND_ROOT_CAUSE/FOUND_ROOT_CAUSE_THEN_SILENT haven't dropped meaningfully, the boot-prompt-too-shallow root
+      cause was wrong or incomplete — reopen the AF-1a analysis rather than assuming the fix worked.
 
 ## Safeguards
 
