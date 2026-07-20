@@ -68,12 +68,12 @@ assigned_role: infra
 drift_direction: advance-code
 last_updated: 2026-07-20
 locked_by:
-resolved_by:
-  ao_backlog_regen_integrity_2026_07_20.md todo 7 (backend_engineer) — closed after the independent skeptical audit
-  this doc's own precedent required: the 2 poisoned rows (`sports_cf8_available_at_backfill_regression-001`/`-002`)
-  the 2026-07-17 audit found no longer exist as live false-`done` rows (re-verified via SSM, both already
-  self-resolved by prior mechanisms); `audit_false_done.py`'s equivalent logic re-run confirms `false_done: 0`
-  fleet-wide (38 unauditable + 6 honest, 0 unresolved). See that plan's todo 5 for the full investigation.
+resolved_by: >-
+  ao_backlog_regen_integrity_2026_07_20.md todo 7 (backend_engineer) — closed after the independent skeptical audit this
+  doc's own precedent required: the 2 poisoned rows (`sports_cf8_available_at_backfill_regression-001`/`-002`) the
+  2026-07-17 audit found no longer exist as live false-`done` rows (re-verified via SSM, both already self-resolved by
+  prior mechanisms); `audit_false_done.py`'s equivalent logic re-run confirms false_done=0 fleet-wide (38 unauditable +
+  6 honest, 0 unresolved). See that plan's todo 5 for the full investigation.
 depends_on: []
 ---
 
@@ -799,4 +799,8 @@ unresolved**.
 **Gate met**: `false_done: 0`, confirmed via a working equivalent of `audit_false_done.py --db … --pm …` (the sanctioned
 tool itself needs the VM-side git fix above before it can confirm this directly). No sports checkbox was flipped by this
 session — both named rows resolved via prior mechanisms, not this touch. This closes
-`ao_backlog_regen_integrity_ 2026_07_20.md` todo 5's gate and unblocks its todo 7 (closing this doc for real).
+
+> **Follow-up, same day**: the VM-side git fix flagged above is now DONE — operator-authorized, applied, and verified
+> live (`audit_false_done.py` now correctly reports `false_done: []`). Full account on
+> `ao_backlog_regen_integrity_2026_07_20.md`'s Progress Log. `ao_backlog_regen_integrity_ 2026_07_20.md` todo 5's gate
+> and unblocks its todo 7 (closing this doc for real).
