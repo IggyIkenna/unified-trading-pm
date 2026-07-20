@@ -907,3 +907,32 @@ on ~4-6 SPOT VMs**, or comfortably under 2 weeks with the de-pandas per-unit wor
 
 - [ ] NEW todo. [DATA] P0. Real-VM re-measure of end-to-end per-instrument-day rate against a PROD-sized index AFTER the
       read-path fix tarball lands — confirm prod ≈ 25.9s (not 260s), which sets the true DeFi fleet size (~4-6 vs 37).
+
+### 2026-07-20 — per-unit latency: safe wins + HFT vectorization SHIPPED; vol_clock + write-I/O floor characterized
+
+De-pandas / HFT vectorization work, all BYTE-IDENTICAL (these feed the batch=live ε=0 spine, so allclose is not enough):
+
+- `mdps@0ba3a72`: collapse redundant `to_pandas` 3->2 (schema+write share one conversion) + vectorize `_scatter_series`
+  (170x, 9 edge cases proven). Honest note: safe plumbing alone = ~0.12% — it does not move the needle.
+- `mdps@09da08c`: vectorize `_detect_whale_trades` (148x at 15s; **removes an O(n_intervals x n_ticks) throughput
+  CLIFF** — a liquid instrument's whale loop measured 1791ms and scales with ticks, a real backfill hazard, not just
+  latency) + `_calculate_tick_direction_momentum` (3.4x). 87/87 byte-identical each. **The agent caught + corrected its
+  own spec: the prescribed `np.add.at` momentum vectorization is NOT bit-exact (few-ULP drift vs np.average on nearly
+  every multi-tick group); only a per-interval numpy `.sum()` on the contiguous slice is 0-ULP.** ~2-2.5s saved per
+  liquid instrument-day.
+
+**Honest per-unit accounting (measured):** ~25.9s -> ~20-22s after the HFT vectorizations. **The 5s per-unit target is
+NOT reachable without also attacking the ~20s per-write GCS/manifest I/O floor** (batch the 7 timeframe writes into
+fewer objects) — which interacts with the canonical A/B/C ruling and is a bigger architectural change.
+`_carry_forward_ohlc` (1.9ms, coupled honest-absence logic) and `_calculate_volume_clock_features` (biggest single
+callback ~2.5s but the most intricate milestone-crossing logic) are left as REVIEWED follow-ups — deliberately not
+gambling the just-fixed working adapters for the last seconds. **The 2-week THROUGHPUT target is already met by R1 + the
+read-path fix (4-6 VMs); the 5s LATENCY target is a separate, fully-characterized optimization program (HFT done,
+write-batching + vol_clock remaining).**
+
+- [ ] NEW todo. [SCRIPT] P2 (reviewed follow-up). Vectorize `_calculate_volume_clock_features` (~2.5s, the largest
+      single HFT callback) WITH a dedicated byte-identity test for the milestone-crossing edge cases (single-tick
+      groups, zero total volume, <2 milestones). Prototype/plan in `de-pandas` agent output.
+- [ ] NEW todo. [SCRIPT] P2. Write-batching: collapse the 7 per-timeframe parquet writes per instrument-day into fewer
+      objects to attack the ~20s I/O floor (the remaining bulk of the 5s-target gap). GATED on the canonical A/B/C
+      ruling (it changes the object layout).
