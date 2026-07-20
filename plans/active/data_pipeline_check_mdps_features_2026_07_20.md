@@ -773,3 +773,31 @@ lever, and it does NOT require raising in-process `max_workers` first.
 - [ ] NEW todo. [DATA] P1. Blast radius: did any PAST prod MDPS run use max_workers>1 over a heterogeneous list? If so
       those shards may carry wrong leading-bin seeds and need re-derivation.
 - [ ] NEW todo. [SCRIPT] P0. Implement R1 (concurrent date-subprocesses) — the months->weeks lever that is SAFE today.
+
+### 2026-07-20 — ✅ P0 derivative_ticker FIXED + shipped (`uac@…_candle_contracts` + `market-data-processing-service@beea161`)
+
+The P0 the skill found on its first run is fixed to the operator's exact semantics and shipped.
+
+- **Root cause (two-part):** the deriv candle contract `_DERIV_EXT` REQUIRED `funding_rate_mean`/`mark_price_mean`/
+  `index_price_mean`, but the adapter emitted them UNSUFFIXED (`CandleOutput.to_dataframe()` drops `None` fields) →
+  every write failed `StreamingParquetWriter` strict validation. Independently, LOCF + `_finalize_session_grid`
+  fabricated a price for empty windows.
+- **Fix (operator semantics):** value = LAST-observation-in-window; empty window → NaN price + 0 volume (LOCF removed;
+  `supports_prior_day_seed=False`); all-NaN input → 0 rows → `empty_confirmed` + typed reason, NEVER an all-NaN
+  `captured` parquet. Emit the `*_mean` names (documented as a MISNOMER — last-in-window, not a mean; a future
+  `*_mean`→`*_last` cross-repo rename is the correct migration). Also caught+fixed a real ordering bug (`groupby.last()`
+  was positional; now sorts by `processing_dt` — MTDS tick parquets aren't guaranteed timestamp-sorted).
+- **Two-signal contract implemented** exactly as the operator specified: parquet per-bin NaN/0 = "covered window,
+  nothing to aggregate"; manifest `empty_confirmed`+typed reason = "no ticks at all".
+- **Runtime-proven** against the REAL `StreamingParquetWriter` for all 7 timeframes + a sparse frame; MDPS QG 251s /
+  2058 passed, UAC QG 617s / 124 passed. `book_snapshot_5` checked — no equivalent defect (its "quote always exists" is
+  true for book data; still LOCF by design, a separate operator decision if honest-absence is wanted there too).
+- **Shipped dep-ordered**: UAC contract change (`nullable_ohlcv=True`) FIRST via quickmerge, then MDPS via direct-push
+  under the dirty-deps carve-out (UAC concurrently mid-edit by the oracle agent). Staged exactly my 8 MDPS files by name
+  after a full-index hygiene check.
+- **NEXT (loop-closing proof):** re-run `/data-pipeline-check-mdps --data-types derivative_ticker` on a real VM once the
+  tarball rebuilds, and confirm it now WRITES objects (was 0) where it failed before. Until then the fix is
+  local-runtime-proven, not yet re-proven on the VM tarball path.
+- **Bonus finding from the fix:** because deriv is now `supports_prior_day_seed=False`, it no longer reads the shared
+  seed context → deriv is REMOVED from the set of adapters exposed to the P0 concurrency bug
+  (`issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`). The bug remains for trades/book/tbbo/defi.
