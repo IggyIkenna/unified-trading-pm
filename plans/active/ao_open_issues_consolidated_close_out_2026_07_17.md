@@ -146,7 +146,26 @@ NOT AO and are deliberately out of scope here.
       them (correct-ish: `BLOCKED-*` todos are non-dispatchable by design and SHOULD have no row — if so, record that as
       the designed behaviour and make `regen`/docs say it explicitly) or whether regen re-derives them under other ids.
       **Do NOT close by re-reopening** (decayed twice). Source: doc #8 todo 5. **Gate**: doc #8's stated gate — a
-      recorded explanation, and either correct rows or a recorded by-design decision.
+      recorded explanation, and either correct rows or a recorded by-design decision. **✅ EXPLAINED 2026-07-20 (B1) —
+      BY DESIGN, on two independent mechanisms; recording the decision, NOT reopening.** (1) `_parse_open_todos`
+      (`server/regen_backlog_from_plan.py:925`) skips **both** already-done `- [x]` checkboxes **and** `BLOCKED-*` /
+      stretch-optional lines (`_NON_DISPATCHABLE_RE`). The l2_book plan today is 6 × `[x]` + 2 × `- [ ] BLOCKED-*`
+      (`BLOCKED-OPERATOR-DECISION`, `BLOCKED-DATA-CORRECTNESS`) — so it contributes **ZERO current briefs**, and the two
+      BLOCKED todos SHOULD have no row. That is stated in the code in three places (the docstring's "Non-dispatchable
+      todos … wait on a human/external event", the inline comment at `:985`, and the `:1005` note covering "a worker
+      adds an in-text `BLOCKED-*` marker to an already-queued todo"). (2) `_prune_stale` deletes DB rows filtered to
+      `status='queued' AND dispatched_to IS NULL` — **done/dispatched rows are never touched** — so a todo checked off
+      OUTSIDE the dispatch loop (human/other route) has its still-queued row garbage-collected and leaves no trace,
+      while a task AO actually dispatched-and-completed keeps its row forever. **Also corrects the framing twice over**:
+      re-measured 2026-07-20 there are **3** rows, not 4 (`-001`, `-004`, `-008`, all `done`), and the absent set is
+      **`-002/-003/-005/-006/-007`** — five ids, not the two the todo names. Both mechanisms above cover the whole set,
+      so no new defect. **Answering the second branch explicitly: no, regen does NOT re-derive them under other ids
+      today — but it WOULD if unblocked.** Ids come from `next_index` (max-existing + 1) while dedup is by brief TEXT,
+      so an un-BLOCKED todo returns with a NEW id rather than its historical one — expected, worth knowing before anyone
+      treats a task id as a stable handle on a plan todo. **Residual doc work only** (the "make `regen`/docs say it
+      explicitly" half): state in the regen docs that the tasks table is a projection of currently OPEN DISPATCHABLE
+      todos plus dispatched history — **not** a durable ledger of plan completion — so a missing row is never by itself
+      evidence of a lost task.
 - [ ] [BACKEND] P2. **`audit_false_done` false-positive class — the AO/regen lesson from studying the sports rows.**
       (Operator 2026-07-18: the sports work itself is its owner's; but any AO/regen improvement surfaced by studying it
       belongs here.) `sports_cf8…-002`'s plan checkbox IS already `[x]` — the audit flags it ONLY because the row's
@@ -300,7 +319,32 @@ NOT AO and are deliberately out of scope here.
       stuck one. NOTE (2026-07-18): the cited line numbers (`dispatch.py:186`, `autospawn.py:631/:2031`,
       `slots_worker.py:316`, etc.) DRIFTED after the config `.tuning.` call-site refactor — **verify by SYMBOL**
       (`_slot_configured`, `pick_next_task`, `_pick_free_slot`), not line. **Gate**: the all-paths test exists +
-      bug-injection proves it bites; spill-path verdict recorded.
+      bug-injection proves it bites; spill-path verdict recorded. **✅ SPILL-PATH VERDICT RECORDED 2026-07-20 (B3) — the
+      answer splits: the PULL spills are safe, the PUSH spill is NOT.** The two affinity spills
+      (`dispatch._task_is_routable_to` R5 high-affinity dead-target spill + the `medium` timeout spill) are **safe by
+      construction** — they only ever answer "may the slot that is ASKING claim this task?", and a paused slot never
+      asks (`_slot_configured` gates `pick_next_task`). But `failover._pick_least_loaded_slot` **PUSHES**: it sets
+      `task.target_slot = best_slot` directly, and it selects over `select(SlotRow)` filtered ONLY by `exclude_slots` (=
+      the offline HOST's slots). It does **not** filter `status == "paused"` — nor `killed`, nor review slots. Worse,
+      the metric is "fewest queued-and-undispatched tasks pinned to it", and a paused slot has **zero** by definition
+      (nothing dispatches to it) — so `min()` picks a paused slot **preferentially**. Net effect: failover would re-pin
+      tasks onto the one slot guaranteed never to run them, stranding them invisibly — re-introducing the exact
+      stranding class R5 was written to fix (see the `dispatch.py` R5 comment naming the two tasks stuck this way on
+      2026-07-14), through a different door. **Severity P2 = LATENT, NOT LIVE, measured 2026-07-20**:
+      `ORCHESTRATOR_FAILOVER_ENABLED` is unset (default `False`), `/api/ops/failover/status` reports
+      `{"running": false, "status": "stopped"}`, and there are **0 `failover_rerouted` events for all time**. It is
+      armed to bite the moment failover is switched on, though — **slot 0 is paused right now** and would be the
+      preferred target. Fix is one predicate in `_pick_least_loaded_slot` (exclude `paused`/`killed`/review), plus the
+      (a) all-paths regression test gaining a failover case.
+- [ ] [BACKEND] P3. **Is `server/failover.py` dead code under the single-VM architecture? (raised by B3, 2026-07-20)**
+      Its entire premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never
+      dispatch"), but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based
+      dispatch (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈
+      `{planning,     NA}`). Live state agrees: failover is stopped, has never fired, and `fleet_registry_entries: 0` —
+      it has no registry data to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the
+      honest resolution may be to DELETE the module + its config knobs rather than fix the paused-slot bug above.
+      **Decide before doing the P2 fix** — no point hardening a module that should not exist. **Gate**: an explicit
+      keep-or-delete ruling; if keep, a named scenario under single-VM that still needs it.
 - [ ] [BACKEND] P1. **plan_health cadence — MEASURED 21 dispatches in 5.5h (11:02→16:30Z), overlapping instances
       confirmed (`superseded-plan_health` exit reasons + one ACTIVE at probe time).** Operator policy: once per 4–8h
       unless CI-triggered — NOT every 15–30 min. Root cause found: `main-backmerge-to-ldr.yml` § "Ping plan-health
@@ -357,13 +401,60 @@ NOT AO and are deliberately out of scope here.
       **(b)** the daily liveness assertion (digest line or guard-cron: timer `is-active` AND next-elapse exists AND last
       successful dispatch < 26h → alert on breach); **(c)** audit whether the 2026-07-15 run (`agt-2d8441`) AND today's
       `agt-55b581` COMPLETED their work product (operator suspects the 07-15 one did not): pull their
-      `plan_health_result`/`reconciler_candidate` events + any PM commits, record the verdict. **⚠️ WIDENED 2026-07-20 —
-      NOT YET CHECKED: the timer was armed 07-17 for the 01:04 UTC daily run, so the 07-18, 07-19 AND 07-20 runs are now
-      all due and NOBODY has verified any of them fired or completed.** Audit the whole window (07-15 → today), not just
-      the two named agents — if it silently stopped again, that is exactly the failure mode (b)'s liveness assertion
-      exists to catch, and we would be re-living the original bug blind. Cheap to check via read-only SSM (journal +
-      `activity_log`). **Gate**: every daily run since 07-18 accounted for (fired + completed, or a named reason it did
-      not); false-failure curl fixed; liveness check alerts when the timer is deliberately stopped in a test.
+      `plan_health_result`/`reconciler_candidate` events + any PM commits, record the verdict. **✅ (c) ANSWERED
+      2026-07-20 by read-only SSM audit of the FULL window — the verdict is worse than "a run was missed": the scheduled
+      plan_reconciler has NEVER ONCE COMPLETED A RUN since it was first installed.** Evidence: 5 reconcile-mode
+      dispatches exist in `activity_log` for all time (07-15 `agt-2d8441`, 07-17 `agt-55b581`, 07-18 `agt-c02414`, 07-19
+      `agt-722a19`, 07-20 `agt-99684d`); **0 of the 5 posted a `plan_health_result`**,
+      `git ls-remote origin     'plan_reconciler/*'` returns **0 branches**, and there are **0 PRs** — i.e. zero work
+      product against a contract (`agents/plan_reconciler.md` §258/§334) that REQUIRES pushing
+      `plan_reconciler/$DISPATCH_ID` and POSTing a result even when it finds nothing. The timer itself is HEALTHY
+      (`is-active`, `LastTrigger=2026-07-20 01:02:01`, `NextElapse=2026-07-21 01:04:31`) — arming it was never the
+      problem. Per-run causes: **07-19 never spawned** — `plan_health_dispatch_failed` "benign: session already exists
+      (raced by another spawn path)" after the escalation dispatcher took the same slot 2 eight seconds earlier
+      (`escalation_dispatch_initiated` 01:03:06 → reconcile initiated 01:03:14); **07-20 spawned then was KILLED 19s
+      after boot** by the prereq reaper (see the new P0 below); **07-15/17/18 each died 7–7.5 min after dispatch with no
+      result** (cause NOT established — sub-question below). Also CONFIRMS defect (1) empirically: dispatch latency
+      measured **55/56/55/55s** across 4 runs vs `--max-time 30`, so systemd logged `exit 1 / FAILURE` on 07-19 AND
+      07-20 — the night it genuinely failed and the night it succeeded-then-was-killed are **indistinguishable** in the
+      journal. **Gate**: (b) liveness assertion shipped; curl `--max-time` ≥180s (or 202-immediate); the two new defects
+      below fixed; and the REAL gate — **one reconcile run observed end-to-end producing a `plan_health_result` + a
+      pushed `plan_reconciler/*` branch**. Until that is seen once, treat this subsystem as NEVER-VERIFIED, not merely
+      "re-armed".
+- [ ] [BACKEND] P0. **The prereq-blocked reaper KILLS freshly-spawned agents that land on a previously-blocked slot
+      (generic; it is what killed the 07-20 reconcile run).** `server/worker_liveness_watchdog.py:1180-1265` keeps
+      `self._prereq_blocked_since[sid]` keyed by **slot id only**, and never invalidates it when a NEW agent spawns into
+      that slot. The early-out `if held_task is None and not had_session: continue` only skips when the slot has NO
+      session — so once a fresh session appears on a slot whose timer already matured, the reaper kills it and logs the
+      tell-tale `released_task: null, killed_session: true`. Measured 2026-07-20: `agt-99684d` booted on slot 3 at
+      01:03:41 and was killed at 01:04:00 with `blocked_seconds: 3604` — an hour-old timer belonging to the slot's
+      PREVIOUS occupant. **This is not reconciler-specific**: any dispatch (backlog worker, escalation, plan_health)
+      landing on a slot with a matured prereq timer is killed within one watchdog tick. Fix BOTH: (i) pop
+      `_prereq_blocked_since[sid]` on every spawn into the slot (or key the timer by slot+session/agent id so a new
+      occupant re-arms from zero), and (ii) exclude non-backlog typed agents (plan_health / plan_reconciler /
+      escalation) from this reaper entirely — its premise is "the BACKLOG queue is fully prereq-blocked so idle BACKLOG
+      workers should be released", which says nothing about a scheduled agent. **Gate**: a regression test spawning into
+      a slot with a matured `_prereq_blocked_since` asserts the new session SURVIVES; plus a test that a
+      plan_reconciler-kind agent is never selected by the reaper. Provenance: B4 audit 2026-07-20.
+- [ ] [BACKEND] P2. **The /boot read-confirmation gate demands `worker.md` from typed agents that were never pointed at
+      it — every plan_health/plan_reconciler boot is 428'd once.** `server/routes/slots_worker.py:80` calls
+      `prompts.expected_read_files("worker", req.slot_role)` with the base role **hardcoded to `"worker"`**, so expected
+      = `[RULES.md, worker.md, <craft>]`. A plan_health/plan_reconciler worker's boot stub points it at `RULES.md` +
+      `plan_reconciler.md` (never `worker.md`), so the gate rejects the first `/boot` with 428 and logs
+      `boot_read_unconfirmed {"missing": [".../agents/worker.md"], "provided": ["RULES.md", "plan_reconciler.md"]}` —
+      **176 such events since 07-18**. It self-heals (the 428 hint makes the worker re-read and retry ~10s later, then
+      `slot_boot` succeeds), so it is wasted tokens + a permanently noisy signal rather than an outage — but it is a
+      latent hard-fail for any agent that does not retry, and it makes `boot_read_unconfirmed` useless as an alert. Fix:
+      pass the ACTUAL agent kind (the spawn side already composes the right role), not the literal `"worker"`. **Gate**:
+      a plan_reconciler boot confirms on the FIRST POST; `boot_read_unconfirmed` count drops to ~0 in a 24h window.
+      Provenance: B4 audit 2026-07-20.
+- [ ] [BACKEND] P2. **Sub-question left open by the B4 audit: why did the 07-15/17/18 reconcile runs die 7–7.5 min in?**
+      Each was `plan_health_dispatched` then `tmux_session_lost … archived_lifecycle_complete: true` ~7 min later with
+      no result (07-15 `agt-2d8441` is odder still — `finished_at` 07:30, 6h25m after a session that vanished at 01:12).
+      The 07-20 kill has a NAMED cause (prereq reaper); these three do not, and 7 min is far too short for an opus/max
+      full-corpus reconcile when the haiku REPORT pass alone medians 280s. Do NOT assume the prereq-reaper fix covers
+      them — verify by watching the next run, or by pulling those sessions' tmux/agent rows. **Gate**: each of the three
+      has a named cause, or the next clean run proves the class is closed.
 
 ### Phase LAST — operator-sequenced
 
@@ -470,15 +561,19 @@ just unfinished investigation**, and records the standing recommendation so the 
 
 **B — open investigations (no decision needed; just unfinished)**
 
-| #   | Investigation                               | Note                                                                                          |
-| --- | ------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| B1  | `l2_book-005/007` absent rows (Phase 1)     | Trace orphan-GC-pruned (by-design for `BLOCKED-*`) vs regen re-deriving under other ids.      |
-| B2  | 96/day `tmux_session_lost` driver (Phase 2) | Find the driver or record accepted-churn WITH the measured baseline.                          |
-| B3  | Paused-slot SPILL path (Phase 6)            | The ONE path never verified; every other paused-slot path was confirmed correct in code.      |
-| B4  | plan_reconciler daily runs (Phase 6)        | **Most time-sensitive** — 07-18/19/20 runs all due, none verified. Cheap read-only SSM check. |
+| #   | Investigation                               | Note                                                                                                                                                                                                  |
+| --- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | `l2_book-005/007` absent rows (Phase 1)     | ✅ **CLOSED 2026-07-20** — by design, two mechanisms (BLOCKED-\* never ingested; queued rows pruned when checked off outside dispatch). Absent set is 5 ids, not 2; 3 rows, not 4. Doc-only residual. |
+| B2  | 96/day `tmux_session_lost` driver (Phase 2) | **Likely candidate found by B4** — the prereq reaper (new P0) kills fresh sessions. Re-measure AFTER that fix before hunting further; measured 192 events since 07-18.                                |
+| B3  | Paused-slot SPILL path (Phase 6)            | ✅ **CLOSED 2026-07-20** — pull-spills safe; `failover._pick_least_loaded_slot` PREFERS paused slots. Latent (failover off, 0 events ever). Spawned a P3: is failover.py dead code under single-VM?   |
+| B4  | plan_reconciler daily runs (Phase 6)        | ✅ **CLOSED 2026-07-20** — audited; verdict: 5 dispatches, **0 completions ever**. Spawned 3 new todos (P0 reaper, P2 boot-gate, P2 7-min-death).                                                     |
 
-**Recommended NEXT: B4.** The reconciler timer is the thing we just re-armed after it silently died once; if it has
-stopped again nobody would know, and every day of delay is a lost daily run. It is a read-only check, minutes of work.
+**Recommended NEXT: the P0 prereq-reaper fix** (Phase 6, filed by the B4 audit). B4 is closed and it turned up a bug
+bigger than the thing it was checking: the reaper kills ANY freshly-spawned agent that lands on a slot with a matured
+prereq timer — reconciler, escalation or backlog worker alike — within one watchdog tick. It is a silent work-destroyer
+with a clear two-line fix and a cheap regression test, and it likely accounts for an unknown share of the fleet's "agent
+vanished" churn (cf. B2's 96/day `tmux_session_lost`, which should be re-measured AFTER this lands — the two are
+plausibly the same bug).
 
 **Not an untracked finding:** plan_health's CLAUDE.md Tardis doc_drift (the "16/4 defaults ≈93% idle → scale up"
 guidance contradicted by the 350x-collapse root cause) is ALREADY an open P0 `[DOC] OPERATOR RULING NEEDED` in
@@ -504,6 +599,35 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 
 ## Progress Log
 
+- **2026-07-20 — B1 CLOSED (by design, no defect) — but the question was mis-scoped, twice.** It asked about two ids and
+  4 rows; the truth is five absent ids and 3 rows. **The framing itself was the bug**: "a plan todo should have a task
+  row" is not the contract. The tasks table is a projection of currently-open DISPATCHABLE todos plus dispatched history
+  — a `BLOCKED-*` todo is deliberately never ingested, and a todo checked off outside the dispatch loop has its
+  still-queued row garbage-collected. So **a missing row is not evidence of a lost task**, which is why this item
+  "decayed twice": each re-measurement found different numbers and read that churn as instability rather than as the
+  designed projection doing its job. Generalisable: before auditing rows-vs-todos anywhere in AO, state which direction
+  is authoritative — the plan checkbox is the SSOT (cf. A2), the row is a dispatch artifact.
+- **2026-07-20 — B3 CLOSED by code-read + a live severity probe.** The unverified spill path splits cleanly on **pull vs
+  push**: a pull-based spill can never violate paused (a paused slot never asks), a push-based one is where the bug
+  always was. That is the reusable question for any future "does X respect paused?" audit — ask which direction the
+  assignment travels, not which module it lives in. Found `failover._pick_least_loaded_slot` not only failing to exclude
+  paused but PREFERRING it (load metric = pinned-task count, which is 0 for a paused slot by definition — the guard's
+  absence and the metric's bias compound). Severity was settled by MEASURING rather than assuming: failover is stopped,
+  never fired, 0 events for all time → latent P2, not a live P0. The probe also showed `fleet_registry_entries: 0`,
+  which raised the better question (new P3): the module is cross-host machinery in an architecture that went single-VM
+  on 2026-06-27, so deleting it may beat fixing it — sequence the ruling BEFORE the fix.
+- **2026-07-20 — B4 CLOSED by read-only SSM audit; verdict inverted the assumption.** The question was "did the
+  07-18/19/20 daily runs fire?" The answer is that firing was never the constraint: the timer is healthy and HAS fired
+  every night, but **no reconcile run has ever completed, going back to the first install** — 5 dispatches, 0
+  `plan_health_result` posts, 0 `plan_reconciler/*` branches, 0 PRs. Three distinct causes, now three todos: a P0
+  prereq-reaper that kills freshly-spawned agents on a stale-timer slot (killed the 07-20 run 19s after boot), a slot
+  race that made the 07-19 run never spawn at all, and an unexplained 7-min death class on 07-15/17/18. **Method note
+  worth reusing:** the decisive evidence was NOT the journal (which lies — the 30s curl timeout makes a successful
+  dispatch and a failed one look identical, `exit 1` both nights) but the **work product**: zero pushed branches and
+  zero result rows. When a subsystem's monitoring is itself suspect, check for the artifact it is contractually required
+  to produce, not for its own success signal. **Second-order lesson:** a "verify it ran" task is worth more than it
+  looks — B4 was scoped as a cheap liveness check and surfaced a generic fleet-wide work-destroyer (the reaper) that no
+  liveness check would ever have named.
 - **2026-07-20 — Session-end (pre-compact). Lessons + corrections worth NOT re-learning:**
   - **Two claims of mine were WRONG and are corrected in-place** — (1) "bootstrap writes both dead regen vars": it
     already purged `REGEN_DB_PATH`; only `REQUIRE_VM_MATCH` lacked a purge (found by READING, not grepping —
