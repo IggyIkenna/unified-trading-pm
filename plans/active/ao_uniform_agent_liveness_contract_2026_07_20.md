@@ -49,12 +49,15 @@ source:
 ## ✅ UPDATE 2026-07-20 (slot-16 interactive) — the root cause IS now diagnosed; re-scope this plan accordingly
 
 The root-cause investigation this plan was waiting on has landed (`ao_scheduled_agent_hygiene_2026_07_20.md`, the P0
-todo — full evidence there). **Cause, proven from journalctl + code + git:** `agt-751738` was killed by
-`WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` at 07:32:30 (`kill_session`,
-worker_liveness_watchdog.py:1212), because (A) its slot read `status=idle` and (B) at that moment the idle-reclaimer had
-**no typed-agent exemption** — the `f641968` guard was committed 1h38m LATER (09:10 UTC vs the 07:32:30 kill). So the
-death is fully explained as "unguarded idle-lingering reaper reaps a typed one-off," a **liveness-signalling** cause —
-squarely in this plan's domain, NOT an unrelated API/usage cutoff.
+todo — full evidence there). **Cause (airtight on the defect, ~90% on the fatal blow):** an UNGUARDED
+`WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` reaped `agt-751738` at 07:32:30 (`kill_session`,
+worker_liveness_watchdog.py:1212), because (A) its slot read `status=idle` while claude was demonstrably alive and
+working (tick-1 ~07:31:25, a full minute before the transcript's last write) and (B) at that moment the idle-reclaimer
+had **no typed-agent exemption** — the `f641968` guard was committed 1h38m LATER (09:10 UTC vs the 07:32:30 kill). A
+reaper ticking down to kill a live typed agent is the confirmed bug; whether the 07:32:30 `kill_session` was the fatal
+blow vs. reaped a ~1s-old corpse is ~90% (`remain-on-exit on` defeats the `has_session` proof, but the self-exit
+alternative has no surviving cause — usage was 5h=5% 80s prior, no rate-limit/OOM/error). Either way this is a
+**liveness-signalling** cause — squarely in this plan's domain, NOT an unrelated API/usage cutoff.
 
 **Consequences for this plan:**
 

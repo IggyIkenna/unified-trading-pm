@@ -222,126 +222,143 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
       everything below is LOCAL — no SSM needed.
 
       **SYMPTOM.** Five reconcile-mode dispatches exist for all time (07-15 `agt-2d8441`, 07-17 `agt-55b581`, 07-18
-                  `agt-c02414`, 07-19 `agt-722a19`, 07-20 `agt-751738`). **Zero have ever produced a `plan_health_result` row, a
-                  pushed `plan_reconciler/*` branch, or a PR** — against a contract (`unified-trading-pm/agents/plan_reconciler.md`
-                  §258/§334) that requires pushing a branch and POSTing a result even when it finds nothing. 07-19 never spawned (a
-                  slot race, since fixed). The other four all died 6-8 min after boot.
+                          `agt-c02414`, 07-19 `agt-722a19`, 07-20 `agt-751738`). **Zero have ever produced a `plan_health_result` row, a
+                          pushed `plan_reconciler/*` branch, or a PR** — against a contract (`unified-trading-pm/agents/plan_reconciler.md`
+                          §258/§334) that requires pushing a branch and POSTing a result even when it finds nothing. 07-19 never spawned (a
+                          slot race, since fixed). The other four all died 6-8 min after boot.
 
-                  **BEST-DOCUMENTED INSTANCE — `agt-751738`, 2026-07-20, slot 5.** Timeline, all from `activity_log` (payload column
-                  is `details_json`, NOT `detail`/`payload`):
-                  `07:24:53 plan_health_dispatch_initiated` → `07:25:50 plan_health_dispatched` → `07:27:03 slot_boot` (opus,
-                  account `sub-a-ikenna`) → `07:28:18 slot_progress` ("plan_reconciler boot: read RULES + role + sub-agent rules;
-                  investigating slot git state before STEP 1 FF", phase=working) → `07:33:30 tmux_session_lost`. Its JSONL
-                  transcript (`/home/ubuntu/.claude-configs/orch-slot-5/projects/-home-ubuntu-unified-trading-system-repos--tabs-5/b1a0f68f-a649-415f-9b46-13903afd9228.jsonl`,
-                  83 entries, 436 KB) has its LAST entry at **07:32:29Z** — reading its plan-hygiene sweep output, mid-task, no
-                  error, no exit message.
+                          **BEST-DOCUMENTED INSTANCE — `agt-751738`, 2026-07-20, slot 5.** Timeline, all from `activity_log` (payload column
+                          is `details_json`, NOT `detail`/`payload`):
+                          `07:24:53 plan_health_dispatch_initiated` → `07:25:50 plan_health_dispatched` → `07:27:03 slot_boot` (opus,
+                          account `sub-a-ikenna`) → `07:28:18 slot_progress` ("plan_reconciler boot: read RULES + role + sub-agent rules;
+                          investigating slot git state before STEP 1 FF", phase=working) → `07:33:30 tmux_session_lost`. Its JSONL
+                          transcript (`/home/ubuntu/.claude-configs/orch-slot-5/projects/-home-ubuntu-unified-trading-system-repos--tabs-5/b1a0f68f-a649-415f-9b46-13903afd9228.jsonl`,
+                          83 entries, 436 KB) has its LAST entry at **07:32:29Z** — reading its plan-hygiene sweep output, mid-task, no
+                          error, no exit message.
 
-                  **PROVEN.** (a) It boots normally. (b) It heartbeats at least once. (c) It was doing real work at 07:32:29. (d)
-                  Its session was gone by 07:33:30. (e) It produced no work product.
+                          **PROVEN.** (a) It boots normally. (b) It heartbeats at least once. (c) It was doing real work at 07:32:29. (d)
+                          Its session was gone by 07:33:30. (e) It produced no work product.
 
-                  **DISPROVEN — do NOT re-walk these, each was checked and killed:**
-                  1. *"It never calls `/boot`"* — false, `slot_boot` at 07:27:03.
-                  2. *"It never heartbeats"* — false, `slot_progress` at 07:28:18.
-                  3. *"`_reclaim_idle_lingering_sessions` reaped it"* — no reclaim event exists for slot 5 in the window, and the
-                     reclaimer needs 2 consecutive idle/stale ticks it never had. The `boot_grace 300s + 2x60s = 420s` vs 7m40s
-                     match is an **arithmetic coincidence** — it is what produced the earlier wrong conclusion. Do not reuse it.
-                  4. *"`tmux_session_lost` = the orchestrator killed it"* — false. It is emitted by the TmuxPruner
-                     (`server/tmux_pruner.py:266`) when it DETECTS a session already gone. Observation, not action.
-                  5. *"An `orchestrator.service` restart killed it"* — false. `KillMode=process` (verify: `systemctl show
-                     orchestrator -p KillMode`), so systemd kills only the main process, never the workers — that is exactly what
-                     *"Unit process (claude) remains running after unit stopped"* means. Also: zero restarts within 30 min of the
-                     07-18 death.
-                  6. *"OOM"* — false, `journalctl -k` clean across the window; the box has ~23 GB available.
+                          **DISPROVEN — do NOT re-walk these, each was checked and killed:**
+                          1. *"It never calls `/boot`"* — false, `slot_boot` at 07:27:03.
+                          2. *"It never heartbeats"* — false, `slot_progress` at 07:28:18.
+                          3. *"`_reclaim_idle_lingering_sessions` reaped it"* — no reclaim event exists for slot 5 in the window, and the
+                             reclaimer needs 2 consecutive idle/stale ticks it never had. The `boot_grace 300s + 2x60s = 420s` vs 7m40s
+                             match is an **arithmetic coincidence** — it is what produced the earlier wrong conclusion. Do not reuse it.
+                          4. *"`tmux_session_lost` = the orchestrator killed it"* — false. It is emitted by the TmuxPruner
+                             (`server/tmux_pruner.py:266`) when it DETECTS a session already gone. Observation, not action.
+                          5. *"An `orchestrator.service` restart killed it"* — false. `KillMode=process` (verify: `systemctl show
+                             orchestrator -p KillMode`), so systemd kills only the main process, never the workers — that is exactly what
+                             *"Unit process (claude) remains running after unit stopped"* means. Also: zero restarts within 30 min of the
+                             07-18 death.
+                          6. *"OOM"* — false, `journalctl -k` clean across the window; the box has ~23 GB available.
 
-                  **CONCLUSION SO FAR: the claude process exited on its own and nothing in the orchestrator killed it. The cause is
-                  genuinely UNKNOWN.**
+                          **CONCLUSION SO FAR: the claude process exited on its own and nothing in the orchestrator killed it. The cause is
+                          genuinely UNKNOWN.**
 
-                  **WHERE TO LOOK NEXT (unchecked leads, cheapest first).**
-                  1. **The transcript tail past 07:32:29** — read the raw last lines of that JSONL (not just `type`/`text`; dump
-                     whole objects, including any `isApiErrorMessage`, `stop_reason`, `error`, or `result` records). A usage-limit
-                     or API error would appear here.
-                  2. **Account `sub-a-ikenna` usage at 07:32-07:33.** The reconciler is the ONLY spawn in the fleet using
-                     opus + `--effort max` + thinking-on, and both of today's runs used this account, which was simultaneously
-                     running ~5 plan_health workers and 3 cicd agents. Check the usage-poller data / `server/usage_tracker.py`
-                     records and any rotation/limit events around that timestamp.
-                  3. **Reproduce it directly** — spawn a reconciler manually and WATCH the pane live
-                     (`tmux attach -t orch-slot-N`, or `tmux capture-pane -p -S -200` on a loop) through the 6-8 min mark. This is
-                     the highest-information move and the cheapest way to see an error the logs never captured.
-                  4. **tmux server view** — `tmux show-messages`, and whether the tmux server itself restarted.
+                          **WHERE TO LOOK NEXT (unchecked leads, cheapest first).**
+                          1. **The transcript tail past 07:32:29** — read the raw last lines of that JSONL (not just `type`/`text`; dump
+                             whole objects, including any `isApiErrorMessage`, `stop_reason`, `error`, or `result` records). A usage-limit
+                             or API error would appear here.
+                          2. **Account `sub-a-ikenna` usage at 07:32-07:33.** The reconciler is the ONLY spawn in the fleet using
+                             opus + `--effort max` + thinking-on, and both of today's runs used this account, which was simultaneously
+                             running ~5 plan_health workers and 3 cicd agents. Check the usage-poller data / `server/usage_tracker.py`
+                             records and any rotation/limit events around that timestamp.
+                          3. **Reproduce it directly** — spawn a reconciler manually and WATCH the pane live
+                             (`tmux attach -t orch-slot-N`, or `tmux capture-pane -p -S -200` on a loop) through the 6-8 min mark. This is
+                             the highest-information move and the cheapest way to see an error the logs never captured.
+                          4. **tmux server view** — `tmux show-messages`, and whether the tmux server itself restarted.
 
-                  **RULES.** Read-only until you have a cause. Never write to the live DB, never stop the timer, never restart the
-                  orchestrator without asking. **State plainly if you cannot establish the cause** — an honest "unknown, here is
-                  what I eliminated" is the required answer, and is worth more than a mechanism that merely fits the timing. Two
-                  confident wrong conclusions have already been posted on this exact question; both came from pattern-matching a
-                  number instead of verifying state.
+                          **RULES.** Read-only until you have a cause. Never write to the live DB, never stop the timer, never restart the
+                          orchestrator without asking. **State plainly if you cannot establish the cause** — an honest "unknown, here is
+                          what I eliminated" is the required answer, and is worth more than a mechanism that merely fits the timing. Two
+                          confident wrong conclusions have already been posted on this exact question; both came from pattern-matching a
+                          number instead of verifying state.
 
-                  **Gate**: a named cause supported by evidence that survives the DISPROVEN list above, OR an explicit
-                  "cause not established" with the new leads eliminated and the next step named. Then update this plan AND
-                  `ao_uniform_agent_liveness_contract_2026_07_20.md`, whose premise depends on the answer.
+                          **Gate**: a named cause supported by evidence that survives the DISPROVEN list above, OR an explicit
+                          "cause not established" with the new leads eliminated and the next step named. Then update this plan AND
+                          `ao_uniform_agent_liveness_contract_2026_07_20.md`, whose premise depends on the answer.
 
-              **✅ ROOT CAUSE ESTABLISHED 2026-07-20 (slot-16 interactive) — the killer is the idle-lingering reclaimer, and
-              DISPROVEN #3 above is itself WRONG.** Evidence is primary (journalctl + code + git), not a pattern-match on a
-              number:
+                      **✅ ROOT CAUSE ESTABLISHED 2026-07-20 (slot-16 interactive) — an UNGUARDED idle-lingering reclaimer reaped
+                      the live reconciler (fatal-blow ~90%, see the caveat in point 1), and DISPROVEN #3 above is itself WRONG.**
+                      Evidence is primary (journalctl + code + git), not a pattern-match on a number:
 
-              1. **The killer, named and proven.** `journalctl -u orchestrator` at **07:32:30.768** logs
-                 `WorkerLivenessWatchdog slot 5: reclaiming idle lingering session orch-slot-5 (finished/wedged worker did not exit, ticks=2) -> freeing slot`
-                 — **one second after** the transcript's last write (07:32:29). That line is emitted by
-                 `_reclaim_idle_lingering_sessions` (`server/worker_liveness_watchdog.py`), and the statement immediately after
-                 it is `kill_session(sess)` (worker_liveness_watchdog.py:1212). So the reclaimer KILLED orch-slot-5. The
-                 `tmux_session_lost` at 07:33:30 (DISPROVEN #4) is the TmuxPruner OBSERVING the already-dead session ~60s later —
-                 downstream of the kill, fully consistent, not the cause.
+                      1. **The reaper fired an unguarded `kill_session` on a live, working reconciler — this part is airtight.**
+                         `journalctl -u orchestrator` at **07:32:30.768** logs
+                         `WorkerLivenessWatchdog slot 5: reclaiming idle lingering session orch-slot-5 (finished/wedged worker did not exit, ticks=2) -> freeing slot`
+                         — **one second after** the transcript's last write (07:32:29). That line is emitted by
+                         `_reclaim_idle_lingering_sessions` (`server/worker_liveness_watchdog.py`), and the statement immediately after
+                         it is `kill_session(sess)` (worker_liveness_watchdog.py:1212). The DEFECT is proven independently of the exact
+                         kill-instant: the watchdog runs every 60s (started 07:30:25), so tick-1 landed ~07:31:25 — and the transcript
+                         kept writing entries through **07:32:29**, a full minute later — so the reaper was demonstrably accumulating
+                         ticks against a **live, actively-working** reconciler whose slot the DB had mislabeled `idle`, with no
+                         typed-agent exemption (precondition B). A reaper counting down to kill a live typed agent is the confirmed bug.
 
-              2. **DISPROVEN #3 is refuted on both clauses.** It claimed "no reclaim event exists for slot 5 in the window" and
-                 "the reclaimer needs 2 consecutive idle/stale ticks it never had." The journal shows the reclaim WITH
-                 `ticks=2`. The prior author missed it because **watchdog reclaims are logged to journalctl only — they are NOT
-                 written to `activity_log`**, so `/api/activity?slot=5` (the source both prior wrong conclusions leaned on)
-                 returns nothing for it. This reclaim is also routine: on 2026-07-19 alone it reaped slot 5 ≥8× and slot 4 many
-                 times **with no restart involved** — the everyday mechanism, so the 07:30 restart (DISPROVEN #5) is not required
-                 for it to fire.
+                         **⚠️ CONFIDENCE CAVEAT (corrects an earlier over-claim in this entry).** Whether the 07:32:30 `kill_session`
+                         delivered the FATAL blow, vs. reaped a corpse that self-exited ~1s earlier, is **~90%, not proven**. `has_session`
+                         cannot decide it: worker sessions run `remain-on-exit on` (tmux_spawn.py:837), so a dead claude leaves a
+                         preserved zombie session that `has_session` still reports True — the reclaim's `has_session` gate (line 1182)
+                         therefore does NOT prove liveness at the kill. What tilts it to ~90% live-kill: the only plausible self-exit
+                         cause (account usage) is ruled out — sub-a-ikenna was at **5h=5%** at 07:31:09 (~80s prior) with zero
+                         rate-limit/429/overage/auth events in the window; OOM ruled out (journalctl -k clean); no self-exit/pane-capture
+                         event fired for slot 5 (only teardown events are the reclaim@07:32:30 + pruner@07:33:30); and a silent
+                         mid-inference stop with **no `isApiErrorMessage` in the transcript** is the signature of an external SIGHUP
+                         (`tmux kill-session`), not a graceful usage-limit (which writes an error turn and waits). The residual (an
+                         unexplained crash coinciding to the second with the reaper) has no positive evidence. Closed definitively only
+                         by observing the next run (R2). The `tmux_session_lost` at 07:33:30 (DISPROVEN #4) is the TmuxPruner observing
+                         the by-then-gone session ~60s later either way — downstream, not the cause.
 
-              3. **Why it was reapable — precondition A (status).** `_reclaim_idle_lingering_sessions` only scans slots with
-                 `status in {idle, stale}` (worker_liveness_watchdog.py:1140). The reclaim log embeds the status as its `%s`:
-                 "reclaiming **idle** lingering session" → slot 5's status column was **`idle`** at 07:32:30. But
-                 `plan_health.py:283` sets `status="working"` at spawn (07:25:50), and neither `claim_slot_for_typed_agent`
-                 (state_store/slots.py) nor `seed_worker_slots_from_tabs` (autospawn.py:739-740 — only revives killed/stale→idle,
-                 "leaves a working row untouched") flips working→idle. So something flipped it between spawn and the kill;
-                 `idle_blocker_inferred` fired for slot 5 at **07:30:34** (the fleet idle sweep right after the 07:30:25 restart),
-                 so it read idle immediately post-restart. **The exact working→idle transition line is NOT yet pinned** (checked
-                 & excluded: seed-from-tabs, claim_slot, the dispatch-ack requeue at worker_liveness_watchdog.py:1011, the health
-                 stale-timeout at health.py:186/255 — 25-min threshold, only ~6min had elapsed). Flagged honestly rather than
-                 inventing a mechanism (the trap that produced the two prior wrong answers) — see residual (R1).
+                      2. **DISPROVEN #3 is refuted on both clauses.** It claimed "no reclaim event exists for slot 5 in the window" and
+                         "the reclaimer needs 2 consecutive idle/stale ticks it never had." The journal shows the reclaim WITH
+                         `ticks=2`. The prior author missed it because **watchdog reclaims are logged to journalctl only — they are NOT
+                         written to `activity_log`**, so `/api/activity?slot=5` (the source both prior wrong conclusions leaned on)
+                         returns nothing for it. This reclaim is also routine: on 2026-07-19 alone it reaped slot 5 ≥8× and slot 4 many
+                         times **with no restart involved** — the everyday mechanism, so the 07:30 restart (DISPROVEN #5) is not required
+                         for it to fire.
 
-              4. **Why it was reapable — precondition B (no guard yet), the decisive fact.** The typed-agent exemption meant to
-                 protect the reconciler — the `typed_agent_sessions` guard in `_reclaim_idle_lingering_sessions` (`f641968`) —
-                 **did not exist in the running code at kill time.** `git show -s f641968` = committed **2026-07-20 14:40:19
-                 +0530 = 09:10 UTC**, ~1h38m **AFTER** the 07:32:30 kill. `git show 1e7fec0:` (06:26 UTC — the newest watchdog
-                 commit that could have been deployed at the kill) shows the function with `kill_session` and **no
-                 `typed_agent_sessions` guard at all**. So the reconciler — a typed one-off whose slot read idle — was reaped by
-                 an UNGUARDED idle-lingering reaper after 2 ticks. Timeline fits: boot 07:27:03 + boot-grace 300s + 2×60s
-                 watchdog ticks ≈ 07:32:30.
+                      3. **Why it was reapable — precondition A (status).** `_reclaim_idle_lingering_sessions` only scans slots with
+                         `status in {idle, stale}` (worker_liveness_watchdog.py:1140). The reclaim log embeds the status as its `%s`:
+                         "reclaiming **idle** lingering session" → slot 5's status column was **`idle`** at 07:32:30. But
+                         `plan_health.py:283` sets `status="working"` at spawn (07:25:50), and neither `claim_slot_for_typed_agent`
+                         (state_store/slots.py) nor `seed_worker_slots_from_tabs` (autospawn.py:739-740 — only revives killed/stale→idle,
+                         "leaves a working row untouched") flips working→idle. So something flipped it between spawn and the kill;
+                         `idle_blocker_inferred` fired for slot 5 at **07:30:34** (the fleet idle sweep right after the 07:30:25 restart),
+                         so it read idle immediately post-restart. **The exact working→idle transition line is NOT yet pinned** (checked
+                         & excluded: seed-from-tabs, claim_slot, the dispatch-ack requeue at worker_liveness_watchdog.py:1011, the health
+                         stale-timeout at health.py:186/255 — 25-min threshold, only ~6min had elapsed). Flagged honestly rather than
+                         inventing a mechanism (the trap that produced the two prior wrong answers) — see residual (R1).
 
-              **CONSEQUENCE FOR THE FIX (feeds `ao_uniform_agent_liveness_contract`, updated in the same session).** The claim in
-              both this plan and the uniform-liveness plan that **"`f641968` did NOT fix this" is unsound** — it was inferred
-              from `agt-751738`'s death, which PREDATES `f641968` by 1h38m; you cannot disprove a fix with an event older than
-              the fix. On inspection `f641968`'s guard exempts any slot whose session matches a live (non-archived)
-              `AgentRow.tmux_session`; `plan_health.py:296` sets that field at reconciler spawn and the AgentRow persists across
-              restart in SQLite, so it **plausibly DOES fix it — but it is UNTESTED**: there has been no reconciler run since it
-              deployed. The next run is the real test (todo 4).
+                      4. **Why it was reapable — precondition B (no guard yet), the decisive fact.** The typed-agent exemption meant to
+                         protect the reconciler — the `typed_agent_sessions` guard in `_reclaim_idle_lingering_sessions` (`f641968`) —
+                         **did not exist in the running code at kill time.** `git show -s f641968` = committed **2026-07-20 14:40:19
+                         +0530 = 09:10 UTC**, ~1h38m **AFTER** the 07:32:30 kill. `git show 1e7fec0:` (06:26 UTC — the newest watchdog
+                         commit that could have been deployed at the kill) shows the function with `kill_session` and **no
+                         `typed_agent_sessions` guard at all**. So the reconciler — a typed one-off whose slot read idle — was reaped by
+                         an UNGUARDED idle-lingering reaper after 2 ticks. Timeline fits: boot 07:27:03 + boot-grace 300s + 2×60s
+                         watchdog ticks ≈ 07:32:30.
 
-              **RESIDUALS (named, with next step — not hand-waved):**
-              - **(R1)** Pin the exact code path that flips a typed agent's slot `working`→`idle` (empirically happened at/around
-                the 07:30 restart). Matters because IF the historical 07-15/17/18 deaths truly had no restart (unverifiable now —
-                journalctl retention starts 2026-07-18 12:45, all three predate it), then either that flip happens WITHOUT a
-                restart (unifying all four deaths under this one mechanism) or those three had a different trigger. Do not assume.
-              - **(R2)** Verify `f641968` exempts live: on todo 4's next reconcile run, confirm the watchdog logs an EXEMPTION
-                for orch-slot-5 (tick popped via the `typed_agent_sessions` continue at worker_liveness_watchdog.py:1172) instead
-                of a kill, AND capture the slot's status column during the run. If it still reaps, the AgentRow guard is being
-                defeated (investigate whether the restart archives/clears the AgentRow or its tmux_session).
+                      **CONSEQUENCE FOR THE FIX (feeds `ao_uniform_agent_liveness_contract`, updated in the same session).** The claim in
+                      both this plan and the uniform-liveness plan that **"`f641968` did NOT fix this" is unsound** — it was inferred
+                      from `agt-751738`'s death, which PREDATES `f641968` by 1h38m; you cannot disprove a fix with an event older than
+                      the fix. On inspection `f641968`'s guard exempts any slot whose session matches a live (non-archived)
+                      `AgentRow.tmux_session`; `plan_health.py:296` sets that field at reconciler spawn and the AgentRow persists across
+                      restart in SQLite, so it **plausibly DOES fix it — but it is UNTESTED**: there has been no reconciler run since it
+                      deployed. The next run is the real test (todo 4).
 
-              **Method note for the next reader:** both prior wrong conclusions leaned on `/api/activity` (`activity_log`), which
-              does NOT record watchdog reclaims. For "what killed a worker", `journalctl -u orchestrator` is authoritative, not
-              the activity feed. (`agent-orchestrator@f641968` was shipped on the retracted premise; it is defensively harmless,
-              its regression test is real, and per the above it is likely the correct fix — just never confirmed live.)
+                      **RESIDUALS (named, with next step — not hand-waved):**
+                      - **(R1)** Pin the exact code path that flips a typed agent's slot `working`→`idle` (empirically happened at/around
+                        the 07:30 restart). Matters because IF the historical 07-15/17/18 deaths truly had no restart (unverifiable now —
+                        journalctl retention starts 2026-07-18 12:45, all three predate it), then either that flip happens WITHOUT a
+                        restart (unifying all four deaths under this one mechanism) or those three had a different trigger. Do not assume.
+                      - **(R2)** Verify `f641968` exempts live: on todo 4's next reconcile run, confirm the watchdog logs an EXEMPTION
+                        for orch-slot-5 (tick popped via the `typed_agent_sessions` continue at worker_liveness_watchdog.py:1172) instead
+                        of a kill, AND capture the slot's status column during the run. If it still reaps, the AgentRow guard is being
+                        defeated (investigate whether the restart archives/clears the AgentRow or its tmux_session).
+
+                      **Method note for the next reader:** both prior wrong conclusions leaned on `/api/activity` (`activity_log`), which
+                      does NOT record watchdog reclaims. For "what killed a worker", `journalctl -u orchestrator` is authoritative, not
+                      the activity feed. (`agent-orchestrator@f641968` was shipped on the retracted premise; it is defensively harmless,
+                      its regression test is real, and per the above it is likely the correct fix — just never confirmed live.)
 
 - [x] ✅ [DOC] P3. **Record that the tasks table is a projection, not a completion ledger.** In the regen docs
       (`server/regen_backlog_from_plan.py` module docstring + wherever regen behaviour is documented for operators),
@@ -399,17 +416,21 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
   See the corrected todo 4/5 entries above for the full evidence trail (including the diagnostic bug in my own first
   check — filtering `/api/activity` by `slot=5` silently excludes `tmux_session_lost`, which is always logged with
   `slot_id=null`).
-- **2026-07-20 — todo 4/5's "watchdog-restart idle-reclaim race" hedge is now RESOLVED into a proven cause; the new P0
-  is closed (slot-16 interactive, read-only investigation).** The killer of `agt-751738` is
-  `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` — journalctl shows it at 07:32:30
-  (`ticks=2 -> freeing slot`), and that function calls `kill_session` (worker_liveness_watchdog.py:1212), 1s after the
-  transcript's last write. This **overturns the P0 todo's own DISPROVEN #3**: the reclaim event is real; it was
-  invisible to the prior author only because watchdog reclaims log to journalctl, NOT to `activity_log`. The decisive
-  fact is timing: the `f641968` typed-agent guard that would exempt the reconciler was committed at 09:10 UTC — **1h38m
-  after** the 07:32:30 kill — so at kill time the idle-reclaimer had NO typed-agent exemption (`git show 1e7fec0:`
-  confirms). Two named residuals carried in the P0 todo: (R1) pin the exact `working`→`idle` slot-status flip
-  (empirically at the 07:30 restart; not yet located in code); (R2) verify `f641968` actually exempts a live reconciler
-  on todo 4's next run — it is plausibly the correct fix but is UNTESTED (no reconcile run since it deployed). The
-  uniform-liveness plan's "premise not diagnosed" banner is updated in the same session: the bug IS now diagnosed.
-  **Method lesson for the corpus: for "what killed a worker", journalctl is authoritative — `/api/activity` does not
-  record reclaims, and two confident wrong conclusions here came from trusting it.**
+- **2026-07-20 — todo 4/5's "watchdog-restart idle-reclaim race" hedge is now RESOLVED; the new P0 is closed (slot-16
+  interactive, read-only investigation).** An UNGUARDED `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` reaped
+  `agt-751738` — journalctl shows it at 07:32:30 (`ticks=2 -> freeing slot`), and that function calls `kill_session`
+  (worker_liveness_watchdog.py:1212), 1s after the transcript's last write; the reaper was demonstrably ticking against
+  a LIVE working reconciler (tick-1 ~07:31:25, a full minute before the last transcript write). **Fatal-blow-vs-corpse
+  is ~90%, NOT proven** — `remain-on-exit on` (tmux_spawn.py:837) defeats the `has_session` liveness signal, but the
+  self-exit alternative has no surviving cause (usage was 5h=5% 80s prior; no rate-limit/OOM/error; silent stop = the
+  signature of an external SIGHUP, not a graceful usage-limit). Closed definitively only by observing the next run (R2).
+  This **overturns the P0 todo's own DISPROVEN #3**: the reclaim event is real; it was invisible to the prior author
+  only because watchdog reclaims log to journalctl, NOT to `activity_log`. The decisive fact is timing: the `f641968`
+  typed-agent guard that would exempt the reconciler was committed at 09:10 UTC — **1h38m after** the 07:32:30 kill — so
+  at kill time the idle-reclaimer had NO typed-agent exemption (`git show 1e7fec0:` confirms). Two named residuals
+  carried in the P0 todo: (R1) pin the exact `working`→`idle` slot-status flip (empirically at the 07:30 restart; not
+  yet located in code); (R2) verify `f641968` actually exempts a live reconciler on todo 4's next run — it is plausibly
+  the correct fix but is UNTESTED (no reconcile run since it deployed). The uniform-liveness plan's "premise not
+  diagnosed" banner is updated in the same session: the bug IS now diagnosed. **Method lesson for the corpus: for "what
+  killed a worker", journalctl is authoritative — `/api/activity` does not record reclaims, and two confident wrong
+  conclusions here came from trusting it.**
