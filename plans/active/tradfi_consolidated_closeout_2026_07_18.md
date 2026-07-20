@@ -1220,3 +1220,47 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     stale massive slice in the same pass — and, critically, re-deriving the index from objects on disk is the fix for
     the **16,389 phantom `captured` rows** (3,488 shards, zero backing objects) that would have mis-classified ~826,159
     unique objects as safe-to-delete had the purge been validated against the manifest instead of GCS.
+
+- **2026-07-20 (slot-1, tick 25) — ✅ POST-MIGRATION AUDIT: migration VERIFIED COMPLETE. The "98,006-deferred vs
+  196-recovered gap" was an ACCOUNTING ARTIFACT of a bad aggregate — real residue was 14 objects, now recovered.**
+  - **The 196 figure was WRONG (my grep mis-parsed the reconciles).** Aggregating all 20 shards' own artifacts: recovery
+    SELECTED **209,769** (A 98,256 · B 83,169 · C 28,344). Apply outcomes: `QUARANTINED` 97,828 · `KEPT:B` 83,169 ·
+    `KEPT:C` 28,344 · `RECOVERED:combo` 428 · `SOURCE_DELETED` 428 · `RECOVER_WRITE_FAILED` **0** · `RECOVER_ERROR:*`
+    **0**. **Exact conservation, 0 unaccounted:** `A 98,256 = QUARANTINED 97,828 + RECOVERED 428`, and
+    `SOURCE_DELETED (428) == RECOVERED (428)` — a source was deleted ONLY after a verified write.
+  - **Set-diff of the 98,006 deferred vs the A-selection: 0 deferred-but-not-selected** among the 97,992 in canonical
+    layout. ~99.99% of the deferral was already terminal.
+  - **TRUE RESIDUE = 14 objects — a FILENAME predicate mismatch** (not layout, not staleness):
+    `migrate_tradfi_canonical_2026_07.py:238-239` defers on a garbage underlying with NO filename guard (the
+    `fname == "ticks.parquet"` test sits at `:240`, AFTER the defer returns), while
+    `recover_tradfi_garbage_underlying_2026_07.py:187` required exactly `ticks.parquet` — so a
+    `ticks_migrated_*.parquet` bundle with a garbage root was deferred by migrate and skipped by recovery. FIXED
+    (`_is_symbol_less_bundle_file`, mirroring migrate's `_single_file_stem` convention) + 2 regression tests; re-run on
+    a FRESH enumeration → all 14 content-recovered via the parquet `symbol` column (`RECOVERED:options_chain 14`, 0
+    quarantined, 0 errors), GCS-verified 14/14 garbage `underlying=E` gone and 14/14 canonical
+    `underlying=SP500/quote=USD/margin=linear/ticks.parquet` live.
+  - **FINAL MEASURED STATE** (26 stratified `day=` prefixes 2020→2026, 36,599 objects, shipped predicates; HIGH
+    confidence — pre-migration rows for the identical days reconcile to **zero unexplained delta**:
+    `pre 39,855 − live 36,599 = 3,256 = deferred 1,208 + rebundle reduction 2,048`):
+
+    | Metric                    | Result                                                                                              |
+    | ------------------------- | --------------------------------------------------------------------------------------------------- |
+    | Canonical (non-massive)   | **11,520 / 11,561 = 99.65%**                                                                        |
+    | Legacy/bare               | 41 = 0.35% — **all correctly GATED, not gaps**                                                      |
+    | Garbage-root live         | 788, all canonical layout; **0 in limbo** (B=372 named spreads, C=416 real roots = deliberate KEEP) |
+    | Per-contract un-rebundled | **0**                                                                                               |
+    | `_quarantine/`            | ~146K corpus-wide — garbage preserved, never deleted                                                |
+    | `batch_massive`           | delta **0** on all 26 days (25,038 == 25,038) — untouched                                           |
+
+  - **The 41 "stragglers" are CORRECTLY GATED, not defects** — do not re-chase them:
+    `launch-canonical-migration-vm.sh:193` passes `${quar_flag}` to rebundle+recover ONLY, so migrate ran with no
+    `--quarantine`/`--content-repair`/ `--purge-massive`. 18 are `QUARANTINE_REFUSED_GATED` (`migrate:690`); 23 are
+    `MIGRATE_SINGLE_RENAME` with `ticks_migrated_*` stems routed to `A_CONTENT_REPAIR` (`:432-433`) whose gate wasn't
+    passed. The SAME gate is why `batch_massive` survived — intended design, now superseded by the operator-authorized
+    purge (tick 24).
+  - **Safety re-confirmed at scale:** `_move_to_quarantine` is copy→verify→delete (`rebundle:449-454`); recover returns
+    WITHOUT deleting on a failed write (`:444-447`). A 40-object random sample of quarantined garbage: 39 preserved, 1
+    absent — which conservation proves was one of the 428 content-recovered, not a loss.
+  - **VERDICT: 0 orphan · 0 garbage-root-in-limbo · 0 per-contract un-rebundled · garbage preserved, never deleted.**
+    The recovery-selector fix is validated (6,510 tests pass) but awaiting a green-tree window (peer WIP in this shared
+    slot); patch backed up so it cannot be lost. Shipping it only prevents recurrence — the DATA is already terminal.
