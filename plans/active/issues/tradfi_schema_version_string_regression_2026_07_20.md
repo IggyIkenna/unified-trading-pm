@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: tradfi manifest schema_version stamped as STRING "9" — un-forced T+1 collection crash-loops nightly
-summary:
+summary: >-
   All ~5.2M rows of the tradfi availability index (_index/availability_index.parquet) carried schema_version as the
   STRING "9" (arrow type `string`, pandas dtype object) instead of int64. UTL check_shard_freshness
   (manifest_writer/_queries.py:130 `date_df["schema_version"] >= MANIFEST_SCHEMA_VERSION` and :165 `row.get(...) <
@@ -13,14 +13,15 @@ summary:
   as tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12 (row_count VARCHAR broke the same merge).
 status: resolved
 resolved_by:
-  "slot-1·laptop (2026-07-20) — (1) DATA REPAIR: CAS re-stamp of the live tradfi _index to int64 (5,209,585 rows,
-  gen 1784572840535586 -> 1784572895173237; pre-snapshot _index/snapshots/pre_schema_version_int64_restamp_20260720T184042Z.parquet),
-  confirmed HELD across consolidator cycles (post-merge gen 1784574598529744 still arrow int64, all rows int 9). (2)
-  WRITER FIX: market-tick-data-service@ac051bfe — restamp:427 now stamps int MANIFEST_SCHEMA_VERSION via new testable
-  helper `stamp_v9_shard`, + regression test tests/unit/scripts/test_restamp_tradfi_schema_v9_tail.py (asserts int dtype
-  + non-string arrow roundtrip). (3) VERIFIED: check_shard_freshness runs without TypeError on the int64 index; the
-  UN-FORCED TickDataHandler._apply_freshness_skip nightly path completes with real verdicts (PARTIAL date=2026-07-19:
-  6/7 venues need processing) instead of crashing."
+  "slot-1·laptop (2026-07-20) — (1) DATA REPAIR: CAS re-stamp of the live tradfi _index to int64 (5,209,585 rows, gen
+  1784572840535586 -> 1784572895173237; pre-snapshot
+  _index/snapshots/pre_schema_version_int64_restamp_20260720T184042Z.parquet), confirmed HELD across consolidator cycles
+  (post-merge gen 1784574598529744 still arrow int64, all rows int 9). (2) WRITER FIX: market-tick-data-service@ac051bfe
+  — restamp:427 now stamps int MANIFEST_SCHEMA_VERSION via new testable helper `stamp_v9_shard`, + regression test
+  tests/unit/scripts/test_restamp_tradfi_schema_v9_tail.py (asserts int dtype + non-string arrow roundtrip). (3)
+  VERIFIED: check_shard_freshness runs without TypeError on the int64 index; the UN-FORCED
+  TickDataHandler._apply_freshness_skip nightly path completes with real verdicts (PARTIAL date=2026-07-19: 6/7 venues
+  need processing) instead of crashing."
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -33,6 +34,8 @@ related:
     tradfi_manifest_row_loss_regression_2026_07_12.md,
     tradfi_consolidated_closeout_2026_07_18.md,
   ]
+parent_epic: tradfi_master
+locked_by:
 created: 2026-07-20
 source:
   - tradfi_consolidated_closeout_2026_07_18.md (P0 dispatch — nightly T+1 collection down)
