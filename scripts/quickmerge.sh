@@ -1435,7 +1435,10 @@ if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier\|prettier-autos
     # on the happy path). A non-empty diff here means Pass-1 ran on an unformatted tree.
     _pre_fmt_hash=""; [ "$AGENT_MODE" = true ] && _pre_fmt_hash=$(git diff -- $FILES_ARG | shasum 2>/dev/null | cut -d' ' -f1)
     # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
-    npx --yes prettier@3.6.2 --write --ignore-unknown $FILES_ARG >/dev/null 2>&1 || true
+    # PRETTIER_MIN_VERSION (prettier-autostage.sh, 2026-07-14): <3.9.5 deterministically
+    # corrupts markdown (underscore identifiers -> asterisks) on long/backtick-heavy
+    # paragraphs. This pin must track that hook's version — do not revert to 3.6.2.
+    npx --yes prettier@3.9.5 --write --ignore-unknown $FILES_ARG >/dev/null 2>&1 || true
     if [ "$AGENT_MODE" = true ]; then
       _post_fmt_hash=$(git diff -- $FILES_ARG | shasum 2>/dev/null | cut -d' ' -f1)
       if [ -n "$_pre_fmt_hash" ] && [ "$_pre_fmt_hash" != "$_post_fmt_hash" ]; then
@@ -1445,12 +1448,14 @@ if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier\|prettier-autos
       fi
     fi
   else
-    # Unscoped ship (caller owns the whole tree): canonical prettier@3.6.2 tree-wide.
+    # Unscoped ship (caller owns the whole tree): canonical prettier@3.9.5 tree-wide.
     # (Dropped the dead `pre-commit run prettier` probe — the hook id is prettier-autostage
     # so it never matched; prek is the canonical runner now, and the on-commit hook
     # re-formats + auto-stages anyway. npx pins the canonical version on every host.)
-    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
-    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
+    # PRETTIER_MIN_VERSION (prettier-autostage.sh, 2026-07-14): <3.9.5 deterministically
+    # corrupts markdown — this pin must track that hook's version, do not revert to 3.6.2.
+    npx --yes prettier@3.9.5 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
+    npx --yes prettier@3.9.5 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
   fi
 fi
 
