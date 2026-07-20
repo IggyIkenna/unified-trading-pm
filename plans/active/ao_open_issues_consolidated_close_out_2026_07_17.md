@@ -205,8 +205,14 @@ NOT AO and are deliberately out of scope here.
 - [ ] [ADMIN] P2. **Wire the mvp-defi unpark.** `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` (still
       `false`) must be flipped by whoever lands the seed-chain/backfill progress (`data_completion_defi_2026_07_15`'s
       owner), or the park outlives its reason. Add the pointer on that plan + a line in the park's prereq description
-      naming the flipper. Source: doc #5 fix-todo 2. **Gate**: the owning plan carries the flip instruction; condition
-      documented.
+      naming the flipper. ⚠️ **OPEN QUESTION (found 2026-07-20 via plan_health output): the named flipper plan may be
+      STALE.** `plan_health` flagged `data_completion_defi_2026_07_15` as CONTRADICTED/superseded by
+      `defi_consolidated_closeout_2026_07_18` — which declares the per-instrument re-architecture supersedes the
+      batch-model tracks, DeFi capture STOPPED, and backfill GATED on T1–T3 canonicalisation. If that plan never
+      progresses, this park **outlives its reason forever** (a permanent silent park). Operator ruling needed: re-point
+      the unpark to the `defi_consolidated_closeout` owner, or park it EXPLICITLY (documented) until the DeFi
+      re-architecture resumes. Source: doc #5 fix-todo 2 + plan_health contradiction output. **Gate**: the owning plan
+      (whichever it now is) carries the flip instruction; condition documented; no park without a named live flipper.
 
 ### Phase 4 — infra/ops hardening
 
@@ -351,9 +357,13 @@ NOT AO and are deliberately out of scope here.
       **(b)** the daily liveness assertion (digest line or guard-cron: timer `is-active` AND next-elapse exists AND last
       successful dispatch < 26h → alert on breach); **(c)** audit whether the 2026-07-15 run (`agt-2d8441`) AND today's
       `agt-55b581` COMPLETED their work product (operator suspects the 07-15 one did not): pull their
-      `plan_health_result`/`reconciler_candidate` events + any PM commits, record the verdict. **Gate**: the 2026-07-18
-      01:04 UTC run visible in the journal AND a completed result event; false-failure curl fixed; liveness check alerts
-      when the timer is deliberately stopped in a test.
+      `plan_health_result`/`reconciler_candidate` events + any PM commits, record the verdict. **⚠️ WIDENED 2026-07-20 —
+      NOT YET CHECKED: the timer was armed 07-17 for the 01:04 UTC daily run, so the 07-18, 07-19 AND 07-20 runs are now
+      all due and NOBODY has verified any of them fired or completed.** Audit the whole window (07-15 → today), not just
+      the two named agents — if it silently stopped again, that is exactly the failure mode (b)'s liveness assertion
+      exists to catch, and we would be re-living the original bug blind. Cheap to check via read-only SSM (journal +
+      `activity_log`). **Gate**: every daily run since 07-18 accounted for (fired + completed, or a named reason it did
+      not); false-failure curl fixed; liveness check alerts when the timer is deliberately stopped in a test.
 
 ### Phase LAST — operator-sequenced
 
@@ -444,6 +454,37 @@ NOT AO and are deliberately out of scope here.
       dropping the retired `tab/<vm_id>/<slot>` branch example and the "Fleet VM (epic worker)" section header for the
       single-VM `planning` reality, verified against `server/config.py`.
 
+## Open questions — state as of 2026-07-20 (read this before picking up work)
+
+Every item below is ALREADY a todo above; this section only separates **what needs an operator ruling** from **what is
+just unfinished investigation**, and records the standing recommendation so the next session does not re-derive it.
+
+**A — needs an operator ruling (do NOT decide these autonomously)**
+
+| #   | Question                                                                                                | Standing recommendation                                                                                                                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | NULL `brief_hash` tail (54 rows, all `done`) — backfill / age-out / accept-permanently? (Phase 1)       | **Accept permanently + a growth alarm.** All 54 are `done` audit history, 0 in-flight; backfilling is write-risk for no gain. Growth is the real signal (growth = backfill regression).                 |
+| A2  | `audit_false_done` contract — checkbox-state as truth, or must `done_sha` be the flip-commit? (Phase 1) | **Checkbox state = truth.** The gate answers "is the work done"; the checkbox is the SSOT. Keep the sha as provenance, but a mismatched sha must not manufacture a false-positive (that IS sports-002). |
+| A3  | mvp-defi unpark — the named flipper plan may be superseded (Phase 3)                                    | Re-point the unpark to the `defi_consolidated_closeout_2026_07_18` owner, **or** park it explicitly until the DeFi re-architecture resumes. No park may exist without a named LIVE flipper.             |
+| A4  | plan_health interval                                                                                    | **RULED 2026-07-18: 2h**, adjustable later. Ships with the Phase-6 gate; no live knob today.                                                                                                            |
+
+**B — open investigations (no decision needed; just unfinished)**
+
+| #   | Investigation                               | Note                                                                                          |
+| --- | ------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| B1  | `l2_book-005/007` absent rows (Phase 1)     | Trace orphan-GC-pruned (by-design for `BLOCKED-*`) vs regen re-deriving under other ids.      |
+| B2  | 96/day `tmux_session_lost` driver (Phase 2) | Find the driver or record accepted-churn WITH the measured baseline.                          |
+| B3  | Paused-slot SPILL path (Phase 6)            | The ONE path never verified; every other paused-slot path was confirmed correct in code.      |
+| B4  | plan_reconciler daily runs (Phase 6)        | **Most time-sensitive** — 07-18/19/20 runs all due, none verified. Cheap read-only SSM check. |
+
+**Recommended NEXT: B4.** The reconciler timer is the thing we just re-armed after it silently died once; if it has
+stopped again nobody would know, and every day of delay is a lost daily run. It is a read-only check, minutes of work.
+
+**Not an untracked finding:** plan_health's CLAUDE.md Tardis doc_drift (the "16/4 defaults ≈93% idle → scale up"
+guidance contradicted by the 350x-collapse root cause) is ALREADY an open P0 `[DOC] OPERATOR RULING NEEDED` in
+`plans/active/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md`. Do NOT file a duplicate — it is evidence for
+the close-the-loop point: plan_health keeps correctly re-reporting a real, owned, unactioned item.
+
 ## Externally blocked (tracked, not actionable here)
 
 - `/api/escalate` vs `/api/escalation/{id}` collision — **blocked on `escalation_pipeline_mvp` un-pausing** (operator
@@ -463,6 +504,27 @@ NOT AO and are deliberately out of scope here.
 
 ## Progress Log
 
+- **2026-07-20 — Session-end (pre-compact). Lessons + corrections worth NOT re-learning:**
+  - **Two claims of mine were WRONG and are corrected in-place** — (1) "bootstrap writes both dead regen vars": it
+    already purged `REGEN_DB_PATH`; only `REQUIRE_VM_MATCH` lacked a purge (found by READING, not grepping —
+    `_remove_env` lines look identical to `_upsert_env` in a grep). (2) "plan_health is a sonnet worker": it is
+    **haiku** (`agents/plan_health.md`) — the token-spend concern was overstated.
+  - **Measurement trap (bit twice, cost real time):** a read-only probe run as `ubuntu` does NOT inherit the systemd
+    unit's `Environment=`, so `config.db_path()`/`state_json_path()` resolve the IN-REPO default, not
+    `/var/lib/orchestrator/…`. This produced the wrong-DB audit AND the bogus AF-4 "no state.json found" alarm. When
+    probing the VM, pass the path EXPLICITLY (`/var/lib/orchestrator/state.db`) until Phase-4 moves state in-repo.
+  - **activity_log payload column is `details_json`** (not `detail`/`payload`); table cols are
+    `id, ts, event_type, slot_id, task_id, details_json`. A grep for common names returns nothing and looks like "no
+    data" when the data is right there.
+  - **SSM gotchas:** the document is `AWS-RunShellScript` (NOT `-Command`), `--parameters` needs `commands=["…"]` as a
+    JSON list, and any non-trivial remote script must be **base64-encoded** — raw semicolons/ quotes break the parameter
+    parser. Nested here-doc + `def` inside the payload also fails; keep remote scripts flat.
+  - **`git pull --rebase --autostash` UNSTAGES your staged files** — re-`git add` by name before committing, or the
+    commit finds nothing. PM raced repeatedly this session; a pull→stage→commit→push retry loop is the reliable shape.
+  - **QG scope:** basedpyright EXCLUDES `tests/` (`include=["server"]`) and ruff ignores F401/F841/F811 under `tests/*`
+    — so IDE diagnostics on test files are NON-gating; only runtime test-pass + `server/` lint/types gate.
+  - **Rejected approach:** making tuning knobs env-free by inheriting a plain `BaseModel` into the `BaseSettings` does
+    NOT work — pydantic-settings then reads them by BARE env name. A NESTED sub-model is the only clean way (verified).
 - **2026-07-18 — Phase-7 ratification + measured plan_health**: operator reviewed the audit findings. plan_health
   MEASURED on the live VM: **~59 dispatches/24h (one every ~24 min)** — far above the 4–8h target; run duration median
   280s; 7d = 204 results (110 with findings, 94 empty). Its output is GENUINELY useful (real catches this session:
