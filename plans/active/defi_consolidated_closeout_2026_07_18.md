@@ -708,6 +708,21 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-20 (slot-4, /autonomous — CF-11 re-emit CRASH root-caused + FIXED; manifest rebuild needs a clean fixed
+  re-run).** The 2022 rebuild + every rebuild VM crashes in the CF-11 honest-absence re-emit: `MalformedRowKeyError` —
+  UTL Phase-4 hard_schema_enforcement now REJECTS an EMPTY instrument_id in a row_key. The consolidated `_index` holds
+  **4.55M of 43.5M rows (~10%)** with blank instrument_id = legitimate CELL-LEVEL honest-absence (venue/data_type/date
+  grain, no per-instrument), across real venues (AAVE_V3 491k, COMPOUND_V3, BALANCER, PANCAKESWAP_V3) + data_types
+  (liquidations/lending_indices/vault_share_price/dex_pool_state). FIX (both emit paths): include instrument_id in the
+  row_key ONLY when non-empty — a blank keys the absence at the cell, per the error's own prescription:
+  `rebuild_defi_manifest.py::reemit_defi_honest_absence_rows` (the crash point) +
+  `_rebuild_defi_n5.py::emit_honest_absence`. Without CF-11 the rebuild silently DROPS the whole defi absence corpus
+  (its docstring says so), so the fix is required for a complete manifest (captured atoms + preserved absence). **RE-RUN
+  plan:** ship fix -> fresh tarball from LDR -> stop the current (old-pin) rebuild VMs -> relaunch 7 per-year rebuild
+  VMs on the fixed code -> consolidator --once -> VERIFY. NOTE: some blank-id rows are OVER-BROAD pre-launch (2018 dates
+  before venues existed) — a separate honest-coverage clipping refinement, NOT this fix. Other tracks (T2 catalogue
+  wn8smso5n, T3 backfill wzrlkakb0, R5 audit wsdlolwkz done) continue in parallel.
+
 - **2026-07-20 (slot-4, /autonomous — 6-HOUR FULL-COMPLETION MANDATE; operator away, doc continuously).** **SUCCESS
   CRITERIA:** (1) ALL migrations done, ZERO orphans (MVP or not); (2) catalogue + code CANONICAL for every MVP
   instrument (IS enum + MTDS fetch wired); (3) MTDS backfill code OPTIMIZED (learn from cefi download/process/upload)
