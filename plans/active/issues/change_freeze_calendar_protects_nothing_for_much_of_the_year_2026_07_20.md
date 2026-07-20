@@ -13,7 +13,7 @@ summary: >-
   encoded quarterly (4/yr) when it holds 8 policy meetings; options expiry lists deribit FIRST in affects_venues but its
   19:00-21:30Z window is ~11h away from Deribit's 08:00Z settlement. Blocks the operator's 30-min shortening directive -
   a 30-min window on an unverified date is cap-compliant, DST-correct and still protects nothing.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -36,7 +36,7 @@ source:
   ["surfaced 2026-07-20 while implementing the operator directive to cap every change-freeze window at 30 minutes"]
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: unified-trading-pm@4e71d40be
 ---
 
 # The change-freeze calendar mostly does not freeze the thing it names
@@ -95,24 +95,37 @@ Adversarial review of the shortening design raised three objections; the date-ta
 
 ## Todos
 
-- [ ] [DEVOPS] P1. Replace `FOMC_DATES` / `ECB_DATES` / `BOE_DATES` / `BOJ_DATES`
+- [x] [DEVOPS] P1. Replace `FOMC_DATES` / `ECB_DATES` / `BOE_DATES` / `BOJ_DATES`
       (`generate-freeze-calendar.py:252-273`) with the PUBLISHED schedules, each entry carrying a source citation, and
       for FOMC/BOJ explicitly the ANNOUNCEMENT day of the two-day meeting. Gating for everything below.
-- [ ] [DEVOPS] P1. Make dated rows DST-aware — resolve each occurrence's UTC offset at generation time from its local
+- [x] [DEVOPS] P1. Make dated rows DST-aware — resolve each occurrence's UTC offset at generation time from its local
       anchor (`08:30 America/New_York`, `14:00 America/New_York`, `14:15 Europe/Berlin`, `12:00 Europe/London`,
       `16:00`/`09:30 America/New_York`), and populate `dst_note` so the CSV shows its own reasoning.
-- [ ] [DEVOPS] P1. Apply the ≤30-min cap (operator directive 2026-07-20) once the two above land.
-- [ ] [DEVOPS] P2. Emit `FOMC_PRESSER` + `ECB_PRESSER` rows (each ≤30 min) so capping does not inject the deferred build
+- [x] [DEVOPS] P1. Apply the ≤30-min cap (operator directive 2026-07-20) once the two above land.
+- [x] [DEVOPS] P2. Emit `FOMC_PRESSER` + `ECB_PRESSER` rows (each ≤30 min) so capping does not inject the deferred build
       into the press conference.
-- [ ] [DEVOPS] P2. Split options expiry into Deribit-08:00Z / US-AM-SET / US-PM-close rows; fix BOJ to 8 meetings.
-- [ ] [DEVOPS] P2. Add a generator assertion that every emitted row's keys == `set(HEADER)`, and a check that every
+- [x] [DEVOPS] P2. Split options expiry into Deribit-08:00Z / US-AM-SET / US-PM-close rows; fix BOJ to 8 meetings.
+- [x] [DEVOPS] P2. Add a generator assertion that every emitted row's keys == `set(HEADER)`, and a check that every
       window CONTAINS its event anchor in both DST halves — the current calendar would have failed both.
-- [ ] [DEVOPS] P3. Decide the BOJ exception explicitly (keep a wide window as a named carve-out, target the 15:30 JST
+- [x] [DEVOPS] P3. Decide the BOJ exception explicitly (keep a wide window as a named carve-out, target the 15:30 JST
       presser and accept statement exposure, or drop it and rely on other controls).
 
 ## Progress Log
 
-- **2026-07-20** — Found while implementing the 30-min cap. The cap itself is NOT shipped: it is gated on real date
-  tables, since a precise window on a fabricated date protects nothing while looking like coverage. The alerting half of
-  the same operator instruction WAS shipped (routine freeze-block advisory removed; stale-deferral guard added so a
-  never-draining deferral pages after 6h — that path was previously unalerted entirely).
+- **2026-07-20** — Found while implementing the 30-min cap. Alerting half shipped first (`e3aea5874`): routine
+  freeze-block advisory removed; stale-deferral guard added so a never-draining deferral pages after 6h — that path was
+  previously unalerted entirely.
+- **2026-07-20 — RESOLVED, `unified-trading-pm@4e71d40be`.** All 7 todos done. Date tables replaced with published
+  schedules (each carrying its source; unpublished years ABSENT, never extrapolated — `assert_coverage` warns on the
+  gap). `utc_window()` anchors on local time and resolves the offset per occurrence via `zoneinfo`, so a 30-min window
+  lands on its event in BOTH DST halves. FOMC/ECB gained PRESSER rows so capping cannot replay a deferred build into the
+  press conference. Options expiry split into Deribit-08:00Z / US-AM-SET / US-PM-close. BOJ ruling recorded at its call
+  site: target the 15:30 JST presser, accept statement exposure (the statement has no pre-announced minute, so it cannot
+  be point-targeted — the residual is documented, not hidden). **Verified:** 97 rows / 89 dated; max window 30 min; **0
+  windows miss their anchor**; both DST halves covered for all 10 event families; dated frozen minutes/yr **5255 →
+  2670** while covering MORE real events. Guards proven by anti-masking probes — `assert_anchor_contained` REJECTS the
+  exact historical NFP bug, `assert_rows_valid` rejects the old 150/240/35-min windows and any row missing a HEADER key.
+  Rule-11 consumer check: all 97 rows re-parsed through the enforcement workflow's exact naive `IFS=, read` shell
+  parser, 0 breaks. **Residual (tracked, not deferred work):** BOJ 2027 and the ECB 2027 tail are genuinely unpublished
+  by the banks; `assert_coverage` prints the gap on every regeneration, so it surfaces rather than silently
+  under-covering. Add them when the banks release them.

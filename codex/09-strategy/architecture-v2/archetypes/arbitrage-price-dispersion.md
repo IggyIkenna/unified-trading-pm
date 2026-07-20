@@ -5,7 +5,8 @@ summary: >-
   Archetype ARBITRAGE_PRICE_DISPERSION: paired same-instrument cross-venue spread capture (cross-CEX/DEX spot-perp,
   sports cross-book, prediction, cross-venue vol, funding-rate dispersion) via ATOMIC or LEADER_HEDGE. SHIPPED: Variant
   A price_dispersion.py (requires >=2 candidate_venues) + Variant B funding-rate dispersion over 6 CeFi perps with
-  dynamic-best-long-short pair selection.
+  dynamic-best-long-short pair selection + Variant C cross-venue-prediction-dispersion, an N-venue best-pair scan over
+  Kalshi/Polymarket/Betfair gated on NET-of-fees edge.
 implementation_status: code-shipped
 status: current
 nature: ssot
@@ -21,6 +22,7 @@ related:
     ../cross-cutting/execution-policies.md,
     ../../../02-venues/unity-integration.md,
     ../cross-cutting/mev-protection.md,
+    ../../../04-architecture/cross-venue-prediction-arb-detection.md,
   ]
 created: 2026-04-17
 authoritative_for: [ARBITRAGE_PRICE_DISPERSION archetype specification]
@@ -120,16 +122,16 @@ duplicate.
 
 ## Supported scenarios + execution modes
 
-| Scenario                                                     | Execution mode                          | Notes                                                                  |
-| ------------------------------------------------------------ | --------------------------------------- | ---------------------------------------------------------------------- |
+| Scenario                                                    | Execution mode                          | Notes                                                                  |
+| ----------------------------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
 | Flash-loan DEX arb (Uniswap ↔ Balancer) single chain        | ATOMIC (flash-loan + multicall)         | Risk-free if profitable after gas                                      |
-| Cross-DEX arb same chain without flash loan                  | ATOMIC (multicall)                      | Profitable if price dispersion > gas + slippage                        |
+| Cross-DEX arb same chain without flash loan                 | ATOMIC (multicall)                      | Profitable if price dispersion > gas + slippage                        |
 | Cross-CEX arb (Binance ↔ Bybit on BTC-USDT)                 | LEADER_HEDGE                            | Different API endpoints; legs can't be atomic                          |
-| Sports cross-book via Unity                                  | ATOMIC within Unity API                 | Unity single-wallet routes bets to chosen child books; near-atomic     |
+| Sports cross-book via Unity                                 | ATOMIC within Unity API                 | Unity single-wallet routes bets to chosen child books; near-atomic     |
 | Sports cross-book direct (Betfair direct ↔ Smarkets direct) | LEADER_HEDGE                            | Different accounts; leg-then-hedge                                     |
 | Cross-venue vol arb (Deribit ↔ OKX options)                 | LEADER_HEDGE                            | Two options venues, separate wallets                                   |
-| Within-surface no-arb violation                              | ATOMIC (multi-leg bundle on same venue) | E.g., butterfly: buy wings, sell body — single Deribit multi-leg order |
-| Funding-rate dispersion arb                                  | LEADER_HEDGE (usually)                  | Enter paired position; hold until funding normalizes                   |
+| Within-surface no-arb violation                             | ATOMIC (multi-leg bundle on same venue) | E.g., butterfly: buy wings, sell body — single Deribit multi-leg order |
+| Funding-rate dispersion arb                                 | LEADER_HEDGE (usually)                  | Enter paired position; hold until funding normalizes                   |
 
 ## Config schema
 

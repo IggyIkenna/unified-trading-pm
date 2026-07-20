@@ -293,10 +293,15 @@ missing `written_at`) — an enumerator-writer gap to fix upstream, NOT a consol
 co-authored — **MTDS** writes the coverage NUMERATOR (`captured` rows for cells it fetched), **instruments-service**'s
 expected-universe enumerator writes the DENOMINATOR (`expected_unattempted` / `empty_confirmed(EXPECTED_*)` for the full
 venue × instrument × data_type × date cross-product, since only it knows the instrument lifecycle).
-`coverage % = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`. instruments-service
-dominating the row count just means the backfill is early (most expected cells not yet captured) — it is manifest
-metadata, not data, so it does not violate "MTDS owns market data". SSOT:
-`codex/02-data/availability-manifest-and-data-status.md` § "expected-universe enumerator".
+~~`coverage % = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`~~ — **⛔ SUPERSEDED
+formula, corrected 2026-07-20, doc-reconciliation P1-09**: this is the v1 shape. The live, CK3-certified (2026-06-29)
+formula is `reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)` with `empty_confirmed`
+**EXCLUDED** from the reachable denominator (retained in the all-shards completeness view). SSOT:
+`codex/02-data/honest-coverage-model.md` § Coverage formula; shipping implementation
+`instruments-service/scripts/measure_honest_coverage.py`:600-603. instruments-service dominating the row count just
+means the backfill is early (most expected cells not yet captured) — it is manifest metadata, not data, so it does not
+violate "MTDS owns market data". SSOT: `codex/02-data/availability-manifest-and-data-status.md` § "expected-universe
+enumerator".
 
 ## Deprecated paths (do NOT use)
 

@@ -27,6 +27,8 @@ import pathlib
 import re
 import sys
 
+import yaml
+
 DRY_RUN = "--dry-run" in sys.argv
 
 PM_DIR = pathlib.Path(__file__).resolve().parent.parent.parent
@@ -259,6 +261,69 @@ def get_epic_for_file(filename: str) -> str | None:
 def is_continuation_line(line: str) -> bool:
     """A line is a continuation of a multiline value if it starts with whitespace."""
     return bool(line and (line[0] in (" ", "\t")))
+
+
+def frontmatter_yaml_error(text: str) -> str | None:
+    """Return a one-line YAML error if this doc's frontmatter does NOT parse, else None.
+
+    Why this exists (2026-07-20): every parser in THIS file is line-based —
+    ``parse_frontmatter_blocks`` just locates the ``---`` delimiters and treats the span
+    between them as opaque lines. It therefore happily APPENDS fields to a doc whose YAML is
+    already broken, which is actively harmful in two ways:
+
+      1. The auto-fixer commits a change to a file that is still invalid, so the commit diff
+         makes it look like the FIXER authored the breakage. (Measured: `44e1fb449` added three
+         valid lines to `defi_available_at_clobbered_by_wallclock_2026_07_20.md`, whose
+         `summary:` was ALREADY an unquoted multi-line plain scalar containing a colon-space —
+         broken by the authoring commit `273f5a9d5`, not by the bot. A reader of the diff
+         reasonably but WRONGLY blames the bot.)
+      2. It MASKS the breakage. Appending the missing required fields makes a presence-only
+         check pass while the YAML still does not parse — so the doc looks healthier while the
+         real fault (a syntax error) survives and keeps failing the corpus-wide gate, blocking
+         every slot's quality-gates run on the shared branch.
+
+    A doc whose frontmatter cannot be parsed needs a HUMAN to fix the syntax; it must not be
+    mechanically edited. Fail loudly, change nothing.
+    """
+    blocks = parse_frontmatter_blocks(text)
+    if blocks is None:
+        return None  # no frontmatter block at all — existing SKIP path already reports this
+    _is_jammed, opening_extra, fm_lines, _body = blocks
+    raw = ("".join(fm_lines)) if not opening_extra.strip() else (opening_extra + "\n" + "".join(fm_lines))
+    try:
+        yaml.safe_load(raw)
+    except Exception as exc:
+        return " ".join(str(exc).split())[:200]
+    return None
+
+
+# Docs this run REFUSED to touch because their frontmatter does not parse. Reported at exit and
+# turned into a non-zero exit code, so an automated caller (plan-health-agent.yml runs
+# `fix_frontmatter.py || true`) cannot silently commit a corpus that still contains a broken doc.
+_REFUSED: list[tuple[pathlib.Path, str]] = []
+
+
+def _record_refusal(fp: pathlib.Path, err: str) -> None:
+    _REFUSED.append((fp, err))
+    print(f"  REFUSE {fp.name}: frontmatter is not valid YAML — {err}", file=sys.stderr)
+    print("         NOT modified. A human must fix the syntax; auto-appending fields to a", file=sys.stderr)
+    print("         broken doc masks the error and misattributes it to this fixer.", file=sys.stderr)
+
+
+def _assert_output_parses(fp: pathlib.Path, new_text: str) -> None:
+    """Round-trip guard: whatever this fixer WRITES must itself parse as YAML.
+
+    Validating the input is not enough — the fixer edits frontmatter line-by-line, so a bug in
+    field insertion could emit invalid YAML from a valid input. This makes that failure mode
+    impossible to commit: it raises before the write lands, and main() turns it into exit 2.
+    """
+    err = frontmatter_yaml_error(new_text)
+    if err is not None:
+        raise ValueError(
+            f"auto-fix would have written INVALID YAML frontmatter to {fp.name} ({err}). "
+            "Refusing to write. This is a bug in fix_frontmatter.py — the input parsed but the "
+            "output did not."
+        )
 
 
 def parse_frontmatter_blocks(
@@ -522,6 +587,14 @@ def fix_active_plan(fp: pathlib.Path) -> bool:
         print(f"  SKIP {fp.name}: no frontmatter block detected")
         return False
 
+    # REFUSE-ON-UNPARSEABLE (2026-07-20): never mechanically edit a doc whose YAML is already
+    # broken — appending fields to it masks the real syntax error and misattributes it to the
+    # fixer. See frontmatter_yaml_error() for the measured case.
+    yaml_err = frontmatter_yaml_error(text)
+    if yaml_err is not None:
+        _record_refusal(fp, yaml_err)
+        return False
+
     is_jammed, opening_extra, fm_lines, body_text = result
     changes = []
 
@@ -550,6 +623,8 @@ def fix_active_plan(fp: pathlib.Path) -> bool:
     if new_text == text:
         return False
 
+    _assert_output_parses(fp, new_text)
+
     if DRY_RUN:
         print(f"  DRY-RUN {fp.name}: {', '.join(changes)}")
         return True
@@ -564,6 +639,12 @@ def fix_epic(fp: pathlib.Path) -> bool:
     result = parse_frontmatter_blocks(text)
     if result is None:
         print(f"  SKIP {fp.name}: no frontmatter block detected")
+        return False
+
+    # REFUSE-ON-UNPARSEABLE — same contract as fix_active_plan().
+    yaml_err = frontmatter_yaml_error(text)
+    if yaml_err is not None:
+        _record_refusal(fp, yaml_err)
         return False
 
     is_jammed, opening_extra, fm_lines, body_text = result
@@ -599,6 +680,8 @@ def fix_epic(fp: pathlib.Path) -> bool:
     new_text = "---\n" + "".join(new_fm) + "---\n" + body_text
     if new_text == text:
         return False
+
+    _assert_output_parses(fp, new_text)
 
     if DRY_RUN:
         print(f"  DRY-RUN epic {fp.name}: {', '.join(changes)}")
@@ -718,6 +801,32 @@ def main() -> None:
                 sys.exit(2)
 
     print(f"\nDone: {plan_fixed} plans fixed, {epic_fixed} epics fixed")
+
+    if _REFUSED:
+        print(
+            f"\n❌ {len(_REFUSED)} doc(s) REFUSED — frontmatter is not valid YAML, so they were NOT modified:",
+            file=sys.stderr,
+        )
+        for fp, err in _REFUSED:
+            try:
+                shown = fp.relative_to(PM_DIR)
+            except ValueError:
+                shown = fp
+            print(f"  - {shown}\n      {err}", file=sys.stderr)
+        print(
+            "\n  These need a HUMAN to fix the YAML syntax. Auto-appending fields to a doc whose\n"
+            "  frontmatter does not parse masks the real error and makes the fixer's commit look\n"
+            "  like the cause. A single such doc fails the corpus-wide frontmatter gate, which\n"
+            "  blocks quality-gates.sh — and therefore every slot's ship — on the shared branch.\n"
+            "  Common cause: an unquoted multi-line `summary:`/`title:` containing a colon-space\n"
+            "  (`...backfill: the shipped...`), which YAML reads as a nested mapping key. Fix by\n"
+            "  making it a folded block scalar: `summary: >-`.",
+            file=sys.stderr,
+        )
+        # Non-zero so an automated caller cannot silently proceed. plan-health-agent.yml runs this
+        # as `fix_frontmatter.py || true`; the exit code is belt-and-braces, the stderr block above
+        # is what a human actually reads in the run log.
+        sys.exit(3)
 
 
 if __name__ == "__main__":

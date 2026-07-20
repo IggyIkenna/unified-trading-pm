@@ -32,6 +32,70 @@ resolved_by:
 
 # UAC↔IS DeFi adapter drift — 9 venues declared live, 1 actually producible
 
+## STATUS UPDATE 2026-07-20 ~15:30 — ship-blocker RESOLVED by T2; a coverage-honesty finding REMAINS
+
+The **gate blocker is cleared**. The owning track landed the lockstep while this issue was being triaged:
+
+| Repo | Commit     | What it did                                                                        |
+| ---- | ---------- | ---------------------------------------------------------------------------------- |
+| UAC  | `83f17c46` | CHAINLINK-\* → `phase="pipeline"` + **no** `VENUE_TO_ADAPTER_KEY` entry            |
+| IS   | `793125ad` | wired meteora/lifinity/phoenix/pyth into `factory._ADAPTERS` + regenerated goldens |
+| IS   | `6506b505` | added + registered `ChainlinkOracleReferenceDataAdapter`                           |
+
+Measured at `uac@b6a1d83a` + `is@6506b505`: IS defi producer **93** == UAC defi denominator **93**, and
+`{v: k for v, k in VENUE_TO_ADAPTER_KEY.items() if k != NO_ADAPTER_YET and k not in _ADAPTERS}` is now **empty**. All 5
+drift guards pass. IS quality gate: **4711 passed / 1 failed**, and the single failure is
+`test_expected_matches_golden[sports]` — an unrelated second lockstep (see below), not this issue.
+
+### Correction to Recommendation A below — `NO_ADAPTER_YET` was the WRONG mechanism
+
+Recommendation A (and this issue's original framing) proposed pointing the venues at the `NO_ADAPTER_YET` sentinel.
+**That is not what the contract means by the sentinel, and the owning track independently rejected it in `83f17c46`.**
+The sentinel's own registry in `tests/unit/test_venue_adapter_keys.py` scopes it to venues that are adapterless **by
+design** (MTDS-owned market-data venues, source-as-venue artifacts, expand-only bare forms) and says in as many words
+that it is _"never a shortcut for a missing adapter"_. It is also insufficient on its own:
+`VENUES_BY_ASSET_GROUP["defi"]` is derived as `ALL_DEFI_VENUES` filtered by `DEFI_VENUE_PHASE == "live"`, so the
+set-equality drift guard would still fail with a sentinel in place.
+
+The correct mechanism — the one `83f17c46` used and the one `JUPITER-SOLANA` has always used — is
+**`DEFI_VENUE_PHASE = "pipeline"` + omit the `VENUE_TO_ADAPTER_KEY` entry entirely**. Venue stays declared in
+`ALL_DEFI_VENUES` (knowledge
+
+- launch dates preserved), drops out of the live denominator, and no sentinel is spent.
+
+### REMAINING FINDING (P1, data-correctness) — three live venues with measured-dead upstreams
+
+T2 resolved the drift by **widening IS to match UAC** (registering the adapters) rather than narrowing UAC. For PYTH
+that is correct — its upstream is healthy (measured 10 real instruments via Hermes, HTTP 200). For the other three it
+re-creates the exact failure mode this issue was opened about. Measured at `uac@b6a1d83a`:
+
+| Venue             | `DEFI_VENUE_PHASE` | in `expected_coverage` denominator | upstream (measured 2026-07-20)     |
+| ----------------- | ------------------ | ---------------------------------- | ---------------------------------- |
+| `METEORA-SOLANA`  | `live`             | **yes**                            | `app.meteora.ag/api/pools` → 404   |
+| `LIFINITY-SOLANA` | `live`             | **yes**                            | `api.lifinity.io/pools` → 522      |
+| `PHOENIX-SOLANA`  | `live`             | **yes**                            | `api.phoenix.trade` → NXDOMAIN     |
+| `PYTH-SOLANA`     | `live`             | yes                                | Hermes 200 — **correct, leave it** |
+| `CHAINLINK-*` ×5  | `pipeline`         | **yes** ← leak                     | adapter now exists (`6506b505`)    |
+
+Two distinct problems:
+
+1. **Three venues are `phase="live"` with a populated `expected_coverage` denominator and a permanently unattainable
+   numerator** — manufactured coverage, which is precisely what `instruments_service/engine/orchestrator/defi.py`
+   forbids in its own words ("they'd emit 0 rows and pollute honest-coverage as expected-but-always-empty"). A
+   registered adapter class satisfies the _routing_ guard but says nothing about whether the upstream answers.
+2. **`expected_coverage` is not phase-gated.** `get_expected_venues_in_scope("defi")` returns every venue with a
+   non-empty list in `_DEFI` **without consulting `DEFI_VENUE_PHASE`**, so the 5 `CHAINLINK-<chain>` rows sit in the
+   coverage denominator even though `83f17c46` correctly moved them to `phase="pipeline"`. Flipping a venue to
+   `pipeline` therefore does **not** remove it from the honest-coverage denominator — a trap for anyone applying the
+   `83f17c46` pattern. Either `_DEFI` rows must be removed in the same commit as the phase flip, or
+   `get_expected_venues_in_scope` should intersect with the live set.
+
+Suggested fix (T2 / slot-4's call): re-verify each upstream, and for any that is still dead either flip back to
+`phase="pipeline"` **and** delete its `_DEFI` row, or keep it live with a `record_empty`/`empty_confirmed` path so the
+numerator is honestly attainable. A ready-made narrowing patch (phase flips + `VENUE_TO_ADAPTER_KEY` removals + `_DEFI`
+row removals, with the full evidence in comments) is preserved at
+`scratchpad/uac-defi-narrowing-ANALYSIS-slot1-2026-07-20.patch` — **not applied**, since this is T2's lane.
+
 ## Blast radius (why this is P0)
 
 `instruments-service`'s quality gate is RED at `instruments-service@367e382b` on 5 drift-guard tests. Because the commit

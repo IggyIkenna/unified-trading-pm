@@ -394,3 +394,334 @@ autonomously delete registered launchers / rebind self-heal (operator returns to
 - **RESUME POINTER for a compressed future-me**: MDPS driver = corrected/green/uncommitted; features driver = needs the
   split; nothing driver-side is committed yet (deployment-service@f0b3f14 + unified-trading-library@82c3c336 ARE
   shipped). Both SKILL.md written + uncommitted.
+
+### 2026-07-20 15:0x — REAL e2e RUNS on live VMs: the skill works, and it found a P0 on its first run
+
+**Todo 8 (MDPS e2e) — EXECUTED on real infrastructure, PROD verified untouched.** Two scoped runs, both test-bucket
+routed via the new `--output-bucket`, both using real VMs polled through the shared engine's GCS observability contract.
+
+**Run 1 — CEFI:DERIBIT:derivative_ticker (force+skip+canonical), day auto-substituted 2026-07-15 → 2024-02-08:**
+
+- Report: `plans/audit/results/data_pipeline_e2e_check_mdps_2026_07_15.md` — total=21 passed=7 failed=7 skipped=7.
+- **FOUND A P0** (filed `issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`, PM@9ef516eec): every
+  parquet write failed
+  `StreamingParquetWriter pre-write validation … [schema_violation] column 'funding_rate_mean' / 'mark_price_mean' / 'index_price_mean' missing`.
+  ZERO objects; 140 manifest rows (7tf × 20 instruments) ALL `attempted_failed/SCHEMA_VALIDATION_FAILED` row_count=0.
+  **Yet the VM exited rc=0 reporting "20 success, 0 failed, 152,300 candles"** — a backfill would burn full compute,
+  write nothing, and look green.
+- **The skill's `failed` verdict was CORRECT where the VM's own exit code lied.** That is the whole point of the check.
+
+**Run 2 — CEFI:DERIBIT:trades (force), day auto-substituted → 2026-04-17: SCOPE RESULT — `trades` WORKS.**
+
+- `POLARS AGGREGATED: 1440 1m / 288 5m / 96 15m / 24 1h / 6 4h / 1 24h` candles (counts arithmetically correct for one
+  day), no schema violation, 7 new manifest rows, EXIT_STATUS=0.
+- **14 real candle objects verified on disk** in the `-test-` bucket, on the measured template with CANONICAL leaf ids:
+  `processed_candles/by_date/day=2026-04-17/pipeline_mode=batch_tardis/timeframe=15m/data_type=trades/venue=DERIBIT/DERIBIT:PERPETUAL:BTC-PERPETUAL.parquet`
+- => **The candle pipeline is NOT globally broken. The breakage is data_type-SPECIFIC (`derivative_ticker`).** This is
+  what makes a DeFi-MVP ETA computable: budget the working data_types now, treat `derivative_ticker` as blocked on the
+  P0 fix. Todo 3 of the P0 issue (sweep the OTHER data_types) is the remaining scoping work.
+
+**VALIDATED BY THESE RUNS (the skill's core contract):** `--auto-day` correctly substituted a captured day in BOTH runs
+(the requested 2026-07-15 had no captured input); `--output-bucket` test-routing worked (parquet AND manifest both to
+`-test-`, PROD confirmed unmodified for the target day); the new `--vm-name` gave the engine a deterministic
+`vm-logs/<vm>/` to poll; force and skip legs used DISTINCT VM names (`-pipelinecheck-` vs `-pcskip-`) so they never
+collide; honest-absence held (`attempted_failed`, never a phantom `captured`).
+
+**FIRST REAL THROUGHPUT DATAPOINTS (for the ETA, per-instrument, e2-standard-8):** derivative_ticker 2105ms/instrument
+(42.1s for 20) and 2255ms/instrument (45.1s for 20) — but those runs FAILED their writes, so treat as compute-only. The
+trades run is the honest one to extrapolate from. NOTE: these are single-cell boot-dominated runs — a steady-state
+benchmark VM is still required before quoting a backfill ETA.
+
+**DRIVER IMPROVEMENTS FOUND BY RUNNING IT (todo-list, not blockers):**
+
+1. force-leg manifest verify reads the CONSOLIDATED index and reported the uninformative `no_matching_row` when the leg
+   VM's OWN per-VM shard held `attempted_failed/SCHEMA_VALIDATION_FAILED` (Phase-0 consolidated 13:05, VM wrote 13:12).
+   Fix: read the leg VM's own per-VM shard first, like the MTDS twin's `_read_per_vm_batch_row`. (P0 issue todo 4.)
+2. `--project` (or `GCP_PROJECT_ID`) is REQUIRED or `get_project_id()` raises a raw traceback — same in the MTDS twin.
+   Document in both SKILL.md.
+3. Per-cell wall-clock is ~35 min for 1 cell × 7 timeframes (2 VMs + verification); the post-VM verification alone ran
+   ~19 min, likely an unfiltered availability-index read. Worth a slim/filtered read before any wide sweep.
+
+**SSOT GAP FOUND (from another agent's concurrent work):** CLAUDE.md now mandates "canonical/non-canonical is the UAC
+`canonical_path_violations()` MACHINE ORACLE, never a re-implemented rule" — but that oracle is scoped to
+`RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` ONLY (partition_paths.py:66,681-683; ZERO mentions of
+`processed_candles`/`features/`). It CANNOT be applied to the candle or features surfaces (it would flag every object
+non-canonical). Correct fix: extend the oracle to those surfaces in UAC so my drivers and
+`/data-pipeline-reconciliation` share ONE oracle. Until then the drivers' local logic is not a duplication violation but
+WILL drift.
+
+### 2026-07-20 — OPERATOR CONTRACT: "empty window" vs "not fetched yet" are TWO signals (durable rule)
+
+Operator, verbatim: _"the key is knowing what is empty data because theres nothing to aggregate in the window vs not
+fetched yet that's where the manifest needs to help and different consumers live and batch will have different ways of
+handling depending on their needs"_
+
+**The contract (durable — belongs in `codex/02-data/honest-absence-downstream-handling.md` at the post-phase codex
+audit; journaled here so it is not lost first):**
+
+| Question a consumer asks                   | Which surface answers it        | Representation                                                                                    |
+| ------------------------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------- |
+| "Was this WINDOW active?"                  | the **parquet**, per bin        | row EXISTS on the session grid with **NaN price-like + 0 volume** = covered, nothing to aggregate |
+| "Was this SHARD-DAY ever fetched/derived?" | the **manifest**, per shard-day | 4-state `capture_status`                                                                          |
+
+- `captured` — derived, ≥1 bin had a real observation.
+- `empty_confirmed` + a **typed** `EmptyConfirmedReason` — derived, but the WHOLE shard-day legitimately had nothing.
+- `attempted_failed` + `error_reason` — we tried and it broke.
+- `expected_unattempted` / no row — **never attempted**. There is no parquet to be NaN.
+
+**Why it matters:** NaN alone cannot carry both meanings. A consumer must never infer "was this fetched?" from NaN in a
+parquet, nor "was this window active?" from the manifest alone. Live and batch consumers handle each case differently
+per their own needs, so the pipeline's job is to PRESERVE the distinction faithfully, never to paper over it. This is
+exactly why LOCF (carry-forward) is wrong for `derivative_ticker`: it fabricates an observation in a window that had
+none, destroying signal (1) and making the gap invisible.
+
+**Two failure modes this rule makes checkable (NEW checks for both skills):**
+
+1. manifest `captured` but NO parquet object = **phantom capture** (already checked — this is the MTDS-documented
+   `PHANTOM_CAPTURED_NO_OBJECT`).
+2. parquet present but **100% NaN bins** while the manifest says `captured` = should have been `empty_confirmed` with a
+   typed reason. An all-NaN "capture" is the INVERSE phantom and is equally misleading. **Add this assertion to the MDPS
+   driver's content check** (todo below).
+
+**Applied immediately to the in-flight P0 fix** (`issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`):
+the fix must (a) leave empty bins NaN/0 rather than LOCF-filling them, (b) record `empty_confirmed` + typed reason when
+the ENTIRE shard-day is empty rather than writing an all-NaN parquet as `captured`, and (c) document the two-signal
+contract in-code so nobody "helpfully" re-adds carry-forward.
+
+- [ ] NEW todo. [SCRIPT] P1. Add the all-NaN-parquet-vs-`captured` assertion to `/data-pipeline-check-mdps` (and the
+      features twin where a family can emit an all-null feature frame) as a distinct `content_check=` verdict, so the
+      inverse-phantom is caught the same way the phantom is.
+- [ ] NEW todo. [DOC] P2. Promote the two-signal table above into `codex/02-data/honest-absence-downstream-handling.md`
+      at the post-phase codex audit (SSOT direction: codex, not this plan).
+
+### 2026-07-20 — MEASURED throughput overturns the codex's compute-bound assumption (ETA input)
+
+Authoritative VM summaries (e2-standard-8, pd-balanced 250GB, cefi DERIBIT, one day, 7 timeframes each):
+
+| run                                 | per-instrument-day | writes        | evidence                                       |
+| ----------------------------------- | ------------------ | ------------- | ---------------------------------------------- |
+| `trades` (writes SUCCEEDED)         | **25,948 ms**      | ✅ 14 objects | `cefi 51.9s 2 success 0 failed 15,230 candles` |
+| `derivative_ticker` (writes FAILED) | 2,105 ms           | ❌ 0 objects  | 12x "faster" ONLY because it never wrote       |
+
+**The candle pipeline is WRITE/IO-BOUND, not compute-bound.** Of the ~25.9s per instrument-day, the polars aggregation
+is only **~1.5s** (measured: the `POLARS AGGREGATED: 1440 1m … 1 24h` cascade spans 13:52:30.763→13:52:32.235). The
+other ~94% is GCS write + manifest. Per instrument-day the writer emits **7 separate small parquet objects** (one per
+timeframe) — small-object overhead dominates.
+
+**This CONTRADICTS `codex/06-coding-standards/performance-targets.md`**, which classifies `mdps_compute` as
+"compute-bound, sublinear-70%" and recommends `c2-standard-16` for the <6h target. On this measurement a bigger CPU SKU
+buys almost nothing. **Correct optimization levers, re-ranked by the measurement:**
+
+1. **Write parallelism** — MDPS `max_workers` auto-resolves to `min(cpu_count,16)` = 8 on e2-standard-8, but the
+   observed instrument cascade ran effectively serial (`25,948ms/instrument x 2 = 51.9s total`, i.e. sum == total). **If
+   the 8 workers are not actually overlapping the writes, that is the single biggest win available** — verify and fix
+   before sizing any fleet. (Explains why the codex's serial-day estimate is so large.)
+2. **Disk throughput** — pd-balanced 250GB gives ~70 MB/s; `BOOT_DISK_TYPE=pd-ssd` (0.48 MB/s per GB vs 0.28) or a
+   larger pd-balanced buys proportionally more write bandwidth. Directly attacks the dominant cost.
+3. **Fewer/larger objects** — 7 small parquets per instrument-day is small-object-overhead-heavy. Batching timeframes
+   (or instruments) per object would cut write count materially. NOTE: any such change interacts with the chain-bundle
+   rule and the canonical path shape — do not change layout without the operator's A/B/C canonical ruling.
+4. **Fleet width** — still the reliable multiplier (MDPS is NOT Tardis-capped), but it multiplies a write-bound unit, so
+   per-VM disk/write-parallelism must be fixed first or you just buy N x the same bottleneck.
+5. **Rust / faster libs** — LOWEST priority for candles on this evidence: the compute is already polars and is only ~6%
+   of wall-clock. (The Python-loop hot spots B1 found — whale-detection O(n_intervals x n_ticks), `_carry_forward_ohlc`
+   — matter for the `trades` HFT-feature path specifically, not the write-bound aggregate.)
+
+**ETA caveat (honest):** a defensible DeFi-MVP ETA needs (a) the P0 derivative_ticker fix landed (that data_type
+currently writes nothing), (b) confirmation of whether the 8 workers actually overlap writes (item 1 — it changes the
+answer by up to ~8x), and (c) the DeFi MVP instrument x data_type shard count. Items (a) and (b) are in flight; the
+per-instrument-day unit cost above (25.9s serial, write-bound) is the measured input to plug in. Quoting an ETA before
+(b) is resolved would be guessing at the dominant term.
+
+- [ ] NEW todo. [DATA] P0. Verify whether MDPS `max_workers` (8 on e2-standard-8) actually OVERLAPS the GCS writes.
+      Measured `25,948ms/instrument x 2 == 51.9s total` implies SERIAL. If writes are not overlapped, fixing that is the
+      single largest backfill speedup available and it changes the ETA by up to ~8x.
+- [ ] NEW todo. [DOC] P2. Correct `codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
+      (measured ~94% write, ~6% polars), not compute-bound; the c2-standard-16 recommendation does not follow.
+
+### 2026-07-20 — CORRECTION: the candle write bottleneck is NOT the MTDS 50GB-disk issue (operator question)
+
+Operator asked whether the write-bound finding is the same problem as the MTDS cefi one (50GB disk throttling write
+speed, fixed by going to 250GB). **Measured answer: NO — different bottleneck, and the MTDS fix is already applied.**
+
+|                | MTDS cefi disk issue                   | MDPS candle writes (measured today)                                                                                                         |
+| -------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| volume         | GBs of `.csv.gz` + parquet, sustained  | **1.99 MB total across 14 objects** (avg 149 KB)                                                                                            |
+| effective rate | 2.36 MB/s after burst-credit depletion | **0.038 MB/s** (2.0 MB / 51.9s)                                                                                                             |
+| disk           | 50 GB **pd-standard**                  | **250 GB pd-balanced ALREADY** (`launch-mdps-backfill-vm.sh:125` `BOOT_DISK_GB:-250`, enforced by `check_backfill_vm_disk_provisioning.py`) |
+| headroom used  | saturated                              | **~0.05%** of the ~70 MB/s that 250GB pd-balanced provides                                                                                  |
+
+You cannot be disk-BANDWIDTH-bound writing 2 MB in ~52s. Raising disk size/type buys ~nothing for candles. **This
+DEMOTES "disk type/size" from lever #2 to a non-lever for MDPS** (it remains correct and load-bearing for MTDS download
+VMs, which move GBs — do not weaken that gate).
+
+**Where the time actually goes (per instrument, from run.log timestamps):**
+
+- aggregation of all 6 timeframes: `13:52:30.763 → 13:52:32.235` = **1.47s**
+- silent gap to the next manifest update: `13:52:32.235 → 13:52:42.956` = **10.7s** for 7 shards ≈ **1.5s per shard**
+
+So the cost is **per-object latency + per-shard manifest flush**, i.e. round-trips and serialization — NOT bytes.
+
+**Leading suspect (to VERIFY, not assert):** `canonical_writer_manifest.py::_flush_manifest_with_backoff` force-flushes
+the manifest after EVERY shard (deliberate — "so SIGKILL loses ≤1 shard"), each flush rewriting the growing per-VM shard
+parquet. 14 shards => 14 read-modify-write cycles. Observed in-log: the per-VM shard goes `(1 total entries, 1 new)` →
+`(8 total entries, 7 new)` → … i.e. rewritten repeatedly. If confirmed, this is a **durability-vs-throughput tradeoff**,
+not a hardware limit, and the fix is to batch the flush (per instrument / per N shards) while preserving an acceptable
+crash-loss bound — NOT to buy faster disks.
+
+**Revised optimization ranking for MDPS candles (measurement-driven):**
+
+1. **Verify + fix write parallelism** (`max_workers`=8 appears NOT to overlap: 25,948ms x 2 == 51.9s total).
+2. **Batch the per-shard manifest flush** (if confirmed as ~1.5s/shard), with an explicit crash-loss bound.
+3. **Fewer/larger objects** (7 small parquets per instrument-day) — interacts with the canonical ruling, so gated.
+4. **Fleet width** — reliable multiplier, but multiplies a latency-bound unit; fix 1+2 first or you buy N x the same
+   stall.
+5. ~~Disk type/size~~ — **NOT a lever for candles** (0.05% utilised). Keep it for MTDS download VMs.
+6. **Rust/faster libs** — lowest: polars aggregation is only ~1.5s of ~12.2s.
+
+### 2026-07-20 — operator: manifest durability is a FALSE tradeoff + scope expansion
+
+**(1) "must be a better way to do this right? without killing the data loss think hard"**
+
+My earlier framing ("durability-vs-throughput tradeoff") was WRONG and I corrected it. The cost is not flush FREQUENCY —
+it is that each flush does a **read-modify-write of a GROWING file** (`_index/per_vm/{vm}.parquet`), so total flush work
+is **O(n^2) in shards-per-VM** while STILL only guaranteeing "SIGKILL loses <= 1 shard". **The current design is
+strictly dominated: simultaneously slow AND lossy.** A better design is faster AND loses nothing. Dedicated design agent
+dispatched to validate against the code and rank:
+
+- **A. Per-shard immutable object** (`_index/per_vm/{vm}/shard-{seq}.parquet`) — O(1) per shard, O(n) total; durability
+  IMPROVES to **zero shards lost**. Extends the EXISTING `_index/per_vm/` merge-on-read pattern one level down. Key
+  check: does the consolidator/`read_availability_index` glob a PREFIX (nearly free) or expect exactly one file per VM?
+- **B. Write-ahead receipt + single materialisation** — tiny O(1) receipt per shard; full parquet once; replay on crash.
+- **C. Async flush off the critical path** — keeps per-shard durability, overlaps flush with the next shard's compute.
+  ORTHOGONAL, combinable with A/B; changes the guarantee not at all.
+- **D. Co-locate the manifest row with the candle write** (no extra round-trip) — biggest layout change, GATED on the
+  pending canonical A/B/C ruling.
+- **E. Batch per instrument** — FALLBACK only (this was my original, inferior suggestion); requires stating a new
+  crash-loss bound.
+
+HARD CONSTRAINT carried into the design: manifest COMPLETENESS is already a live problem (cefi day=2026-04-14 has 20,734
+candle objects vs 6 MDPS manifest rows corpus-wide), so the design must cut flush COST without ever reducing row COUNT
+or making rows easier to lose.
+
+**(2) Scope expansion (operator):** _"keep going and improving mdps and dont forget to do all AG that are relevant (not
+the ones already in candles) and do features service across all shards too"_
+
+- MDPS must be exercised across **ALL relevant asset_groups**, prioritising the ones that do **NOT** already have
+  candles (i.e. the REMAINING work) rather than re-proving the covered ones. Requires first enumerating the
+  candle-coverage gap per (ag, venue, data_type, timeframe) from the manifest — that enumeration is also the ETA
+  denominator, so it does double duty.
+- features-service must be exercised across **ALL shards** (all 8 families x their valid asset_groups, ~29 viable cells
+  per the launcher's `_is_viable_cell` matrix).
+- Sequencing reality: the features sweep is partly gated on candles existing (candle-dependent families will honestly
+  report `no_captured_input_for_window` until the candle backfill runs) — so MDPS coverage leads, features follows, and
+  the honest-gap verdicts in between are themselves the signal, not a failure.
+
+- [ ] NEW todo. [DATA] P0. Enumerate the candle-coverage GAP per (asset_group, venue, data_type, timeframe): which cells
+      ALREADY have candles vs which do not. Drives both "which AGs to run" and the ETA denominator.
+- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-mdps` across all relevant AGs NOT already in candles.
+- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs).
+
+### 2026-07-20 — ✅ SPOT preemption auto-recovery was NOT fleet-wide; now it is (`deployment-service@c79f984`)
+
+Operator: _"vms are SPOT and need to recover themselves if they go down via auto recovery think we have that for some
+vms already so propagate if not there."_ **They were right to doubt it — and the gap was much wider than "some".**
+
+**MEASURED (I verified the headline myself, independently of the agent): 58 launchers pass `--provisioning-model=SPOT`;
+only ~10 emitted the `vm-logs/{vm}/PREEMPTED` blob. ~48 SPOT launchers were preemption-BLIND.** The
+`RelaunchPreemptedVm` machinery is well-built and correct — but its **trigger** was missing, so a preempted VM
+classified as `EXIT_NONZERO`/`GONE_NO_CAPTURE` and **PAGED a human** instead of auto-recovering.
+`codex/05-infrastructure/spot-vms-for-backfill.md` asserts the signal is "wired fleet-wide via `launcher_common.sh`" —
+**that claim is false and the codex is now stale** (todo below).
+
+**The mechanism (verified end-to-end):** VM shutdown checks `instance/preempted` → writes `PREEMPTED` blob →
+`_gcs.is_vm_preempted` + `read_launch_params` + `read_progress_checkpoint` → `classify_terminated_vm` checks `preempted`
+BEFORE exit_code → `DP_VM_PREEMPTED` (AUTO_RECOVER, DP-VM-007) → `RelaunchPreemptedVm.relaunch()` replays
+`LAUNCH_PARAMS.json`, re-resolves `*_TARBALL_SHA` pins, budget 48/day/prefix. Resume overrides `START_DATE` to
+`last_completed_date` **only if `monotonic=true`**; a `--force` run with non-monotonic/absent checkpoint still **PAGEs**
+`force_run_not_replayable` — never silent. `PROGRESS.json` emission was ALREADY fleet-wide (UTL `record_vm_progress` +
+`vm-exec-with-gcs-tee.sh`), which is why only the trigger was missing.
+
+**Fix:** `setup-data-pipeline-vm.sh` now installs `uts-preemption-signal.service`, a systemd unit mirroring Google's own
+`google-shutdown-scripts.service`, writing the same blob with the same `preempted=true` gate. Chosen because gcloud
+accepts only ONE metadata `shutdown-script`, so a unit **composes** with the ~10 launchers already emitting it inline
+rather than colliding. Every blind launcher boots from this one seam — including **both launchers I extended for these
+skills** (`launch-mdps-backfill-vm.sh`, `launch-features-vm.sh`) and `launch-mdps-sharded-backfill.sh`. Also registered
+**`mdps-sports-`** in BOTH registries (previously emitted by the sharded launcher but registered in neither →
+unmonitored AND unrecoverable; sports confirmed genuinely in scope via its dedicated `STALL_TIMEOUT_SEC` +
+`STALL_PROGRESS_REGEX` against a live run.log). New guard test: **no SPOT launcher may be preemption-blind**. **Safety
+is structural** — inert on live/forward/cron/paper VMs because they are on-demand and GCE never sets `preempted=true` on
+them; no exclusion list needed. QG GREEN (339s, 2781 passed/5 skipped).
+
+**Shipped by DIRECT PUSH under the closed dirty-deps carve-out** (UAC concurrently mid-edit by my own P0 agent, so
+quickmerge's dep pre-flight could not pass). **Multi-agent hazard hit and handled**: a concurrent agent had staged 13
+foreign files into the shared index (17 staged, 1,556 insertions); caught it via the mandatory no-path-arg
+`git status`/`git diff --cached --stat`, `git reset`, re-staged ONLY my 4 by name. Foreign work never entered the
+commit.
+
+**RESIDUAL RISKS (carried forward, not swept):**
+
+1. **Arg-required launchers still cannot actually recover** — `launch-features-vm.sh` exits 2 without
+   `--feature-family`/`--asset-group`, and the relauncher passes ENV only. Result is a loud CRITICAL
+   `DP_VM_PREEMPTED_NO_RELAUNCH`, not silence — but not recovery either. **This directly affects the features backfill**
+   and is the next thing to close (needs `lc_write_launch_params` adoption or env-arg support).
+2. **Manual delete ≈ preemption exposure now spans ~48 more launchers.** A prior incident (manual delete → relaunch →
+   two VMs 469ms apart → Tardis 403 lockout, 1181 rejections) is the precedent. Mitigated by the `preempted=true`
+   metadata gate (a manual delete does not set it), the Tardis guard, and the 48/day budget — but worth review before
+   the next wide SPOT wave.
+3. **Relaunch scope amplification**: `launch-mdps-sharded-backfill.sh` with no args defaults to all 5 AGs x all years —
+   a preempted shard could relaunch dozens of VMs. Absorbed by presence-skip (cost, not corruption); real fix is the
+   `lc_write_launch_params` rollout.
+4. **Not runtime-proven**: `bash -n` clean + guard tests pass, but only a live SPOT reclaim proves the unit fires.
+5. `launch-prediction-features-vm.sh` (broken: packages a deleted repo, no SPOT, 50GB disk) deliberately NOT touched —
+   it is operator-gated A/B/C in `issues/mdps_features_deadcode_consolidation_2026_07_20.md`.
+
+- [ ] NEW todo. [DOC] P1. Correct `codex/05-infrastructure/spot-vms-for-backfill.md`: the preemption signal was NOT
+      wired fleet-wide via `launcher_common.sh`; it is now installed by `setup-data-pipeline-vm.sh` as a systemd unit.
+- [ ] NEW todo. [SCRIPT] P1. Close residual risk 1 — make arg-required launchers relaunchable (features especially).
+
+### 2026-07-20 — my manifest-flush hypothesis was REFUTED by measurement; the real cost is 1000x bigger
+
+**I was wrong, and the correction is more valuable than the original hypothesis.** I suspected the per-shard manifest
+flush was doing an O(n^2) read-modify-write. **Measurement refuted it:**
+
+- `ManifestWriter.flush()` deliberately does NOT force the per-VM rewrite — it DEBOUNCES (50 entries OR 5.0s,
+  `_writer_io.py:291` -> `_state.py:706`); only `close()`/atexit force it. Shipped 2026-06-21 as `utl@6b6d53bd`.
+- The live log line `(8 total entries, 7 new)` **proves the debounce worked** — 7 rows coalesced into ONE rewrite,
+  not 7.
+- Measured on the actual shard the profiled run produced: **14 rows / 23,438 bytes**, `to_parquet` = **0.010s**, ~2
+  rewrites for the whole run, **~47 KB total rewritten**. The manifest WRITE is ~**0.02s** of a 51.9s run.
+- => "Batch the flush" (my Option E) was ALREADY SHIPPED; per-shard-object / WAL / async-flush (A/B/C) would optimise
+  **0.02s** while adding durability-relevant moving parts. **All rejected on evidence.** The operator's instinct that
+  there must be a better way was right — but the better way is not on the write path at all.
+
+**The REAL cost is a READ amplification** (filed `issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`):
+`_publish_emission_check` -> `compute_completeness_fraction` -> `_build_capture_status_map(index)` builds a
+**full-corpus python dict over EVERY manifest row x 25 key columns** to serve a lookup whose `upstream_window` is a
+literal **1-element list** — **3x per instrument** (ohlcv_1m/1h/1d are policy-gated from `trades`), **unmemoized**, and
+each flush calls `_invalidate_index_cache` forcing the next check to re-merge.
+
+Measured scaling: 22,719 rows 0.11s -> 1,454,016 rows **13.14s** (super-linear, 9.04 us/row).
+
+**I VERIFIED the prod index sizes myself** (`gcloud storage ls -l`): **defi 1,579.3 MB**, cefi 159.1 MB, tradfi 77.4 MB,
+sports 46.1 MB — against the **0.44 MB TEST index every timing was measured on**.
+
+**⚠️ THIS INVALIDATES MY OWN ETA INPUT.** The 25.9s/instrument-day was measured against a **0.44 MB** index; defi-prd is
+**3,614x** larger. On cefi-prd the same path projects to ~75-100s per policy-gated timeframe ~= **4-5 minutes per
+instrument**. **Any backfill ETA built on the 25.9s number is optimistic by roughly 10x until this is fixed or the
+projection is disproved.** Do not quote the 25.9s-derived ETA to anyone without this caveat.
+
+**Fix is read-path ONLY** (so durability/honest-absence/layout are untouched): F1 filter-then-build instead of
+full-corpus map; F2 memoize by index identity; F3 thread the ALREADY-EXISTING `manifest_index=` kwarg so 3 timeframes
+share one read. Crash-loss bound identical to today.
+
+**SECOND STANDALONE P0: the defi-prd availability index is 1.58 GB.** Any `read_availability_index` caller on defi
+without a column/filter projection is one cache-miss from an OOM. Independent of the above.
+
+- [ ] NEW todo. [DATA] P0. VERIFY the prod projection on a real prod-bucket MDPS run before sizing the win (is the
+      emission check actually firing in prod, or short-circuited?). It is INFERRED from a measured curve + measured
+      sizes, not observed on a prod VM. **This is the single biggest unknown in the ETA.**
+- [ ] NEW todo. [SCRIPT] P0. Implement F1+F2 (UTL `manifest_completeness.py`) + F3 (MDPS `_publish_emission_check`),
+      with the 1.4M-row perf guard (<0.5s vs 13.14s today).
+- [ ] NEW todo. [DATA] P0. Audit every `read_availability_index` caller on defi for a missing column/filter projection
+      (1.58 GB index, OOM risk).

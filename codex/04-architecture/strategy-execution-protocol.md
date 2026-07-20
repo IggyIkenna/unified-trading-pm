@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Strategy ↔ Execution Protocol
 summary:
-  The strategy-to-execution runtime contract — 5 protocol rules (target-state not deltas, intent not algo,
-  polymorphic targets, layer separation, benchmark fills), the 11-action StrategyInstruction envelope, idempotent reconciliation.
+  The strategy-to-execution runtime contract — 5 protocol rules (target-state not deltas, intent not algo, polymorphic
+  targets, layer separation, benchmark fills), the 11-action StrategyInstruction envelope, idempotent reconciliation.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,25 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, execution, ssot, reconciliation, defi]
-related: [account-instructions.md, slow-fast-routing-split.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
+related:
+  [account-instructions.md, slow-fast-routing-split.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
 created: 2026-04-17
-authoritative_for: [strategy-execution runtime protocol (five rules + 11 polymorphic actions), StrategyInstruction target-state instruction semantics]
-referenced_by: [codex/04-architecture/account-instructions.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/oms-protocol-and-state-machine.md, codex/04-architecture/order-state-machine.md, codex/04-architecture/share-class-architecture.md]
+authoritative_for:
+  [
+    strategy-execution runtime protocol (five rules + 11 polymorphic actions),
+    StrategyInstruction target-state instruction semantics,
+  ]
+referenced_by:
+  [
+    codex/04-architecture/account-instructions.md,
+    codex/04-architecture/artifact-versioning.md,
+    codex/04-architecture/backtest-groups.md,
+    codex/04-architecture/capital-flow-model.md,
+    codex/04-architecture/capital-structure-and-regulatory.md,
+    codex/04-architecture/oms-protocol-and-state-machine.md,
+    codex/04-architecture/order-state-machine.md,
+    codex/04-architecture/share-class-architecture.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -243,6 +258,32 @@ hedge_deadline_ms: Optional[int]
 compensation_policy: Optional[CompensationPolicyEnum]
 balance_mode: Optional[BalanceModeEnum]    # MAINTAIN_NEUTRAL_DELTA_THROUGH_EXECUTION
 ```
+
+#### `ATOMIC` execution — what is IMPLEMENTED (2026-07-20)
+
+The schema above is the contract; this is the state of the code that honours it.
+
+- **Leg executor (exists, PAPER-default):** `execution-service` `execution_service/v2/atomic_leg_executor.py`
+  (`execution-service@db75d51d`) translates each `AtomicLeg` → a venue-native `BetOrder` (`side = BACK` when
+  `leg.side == "BUY"` else `LAY`; `fixture_id = leg.params["native_market_id"]`; stake = `size_units`) and places it via
+  the `SportsAdapter` facade. It implements `LEADER_HEDGE`: the `leader_leg` is placed FIRST, the hedge only on a placed
+  leader, within `hedge_deadline_ms`; on hedge failure/timeout it applies `compensation_policy`
+  (`CLOSE_LEADER_IF_HEDGE_FAILS` → unwind the leader) and reports
+  `AtomicExecutionReport{status, legs_placed, compensation_taken, naked_position}`.
+- **PAPER-safe by construction:** the adapter comes from `create_sports_adapter(mode)` and the executor **defaults to
+  `OperationalMode.PAPER`** → `PaperBettingAdapter` (simulated fills, zero network, zero credentials). A missing/None
+  mode is PAPER, never live; live requires an explicit `OperationalMode.LIVE` **and** Secret-Manager credentials.
+- **⚠️ NO LIVE RUNTIME SEAM YET (the gap):** nothing routes an emitted `AtomicInstruction` to that executor in a
+  live/paper-live tick loop. `emit_instructions` only records; `V2EngineOrchestrator.on_tick` returns the list for a
+  caller to forward, and the ONLY realized caller is the backtest/paper runtime (`GroupBRunner._process_tick` →
+  `BenchmarkFillEngine.settle`, which is what produces deterministic paper fills). The v2
+  `AtomicHandler`/`V2InstructionRouter` are typed + tested but unwired, and the legacy live handler speaks the old
+  single-`BET` `Instruction`. Because the **T4 tier ban** forbids strategy-service importing execution-service, the seam
+  cannot be a direct call — it needs a transport decision (the UTL `EventTransport` event-log seam is the
+  architecturally-indicated option). Until then ATOMIC is **paper/backtest-only**. Cross-repo proof of the seam's two
+  halves meeting lives in `e2e-testing` (`e2e-testing@7665a027`), the only repo permitted to import both services.
+- **Known incomplete:** compensation unwinds via `cancel_bet`, which does not offset an **already-matched** leader; a
+  real offsetting bet is required before live (fail-safe is naked + alert, never a false clean report).
 
 ### `CANCEL`
 

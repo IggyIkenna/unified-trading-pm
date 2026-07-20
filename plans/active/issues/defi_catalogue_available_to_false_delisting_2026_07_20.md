@@ -222,7 +222,32 @@ runs.)
       → **105**, and **0 on the cluster dates**; the residual 105 spread across many dates (38 / 30 / then 2-4 each) — a
       healthy genuine-delisting distribution with NO cross-protocol single-date cluster. The false-delisting is gone
       from prod.
-- [ ] [DATA] P1. **Historical manifest un-delisting + `NOT_ENOUGH_TVL` re-capture.** The catalogue reset to `None` alone
+- [x] ✅ [DATA] P1. **DONE (half) — manifest UN-DELIST applied + VERIFIED on prod (2026-07-20).** Wrote the inverse
+      script `instruments-service/scripts/undelist_defi_false_postdelist_eu_2026_07_20.py` (the exact mirror of
+      `reclassify_defi_postdelist_eu_2026_06_24.py`, which has NO `--revert`). Selection is purely "manifest says
+      `empty_confirmed(EXPECTED_INSTRUMENT_DELISTED)` **and** the CORRECTED catalogue says the instrument is LIVE on
+      that cell's date" — so it is **instrument_type-AGNOSTIC** (covers the SPOT_ASSET/A_TOKEN/DEBT_TOKEN/LENDING
+      majority the POOL-only `validate_defi_no_delisted_on_live_pool` gate cannot see) while genuinely-closed rows
+      (`date > available_to`) are correctly LEFT delisted. **MEASURED RESULT (live `_index`, 45,815,198 rows):
+      `EXPECTED_INSTRUMENT_DELISTED` 219,738 → 3,874** — the 215,864 false cells reset to `expected_unattempted` + blank
+      `error_reason` (honest-pending, NOT skip-worthy so a re-capture will re-attempt them), and the ~3,874
+      genuinely-delisted rows correctly retained. Backup →
+      `_index/availability_index.20260720-132755.undelist.bak.parquet`. **GOTCHA worth keeping (cost one failed run):
+      the manifest `expected` column is parquet type `string` (`'true'`/`'false'`/null), NOT bool.** Writing a Python
+      `True` raises `ArrowTypeError: Expected bytes, got a 'bool' object` at `to_parquet` time. The backup-then-write
+      ordering meant the live `_index` was never overwritten (failed SAFE — verified prod unchanged at 219,738 before
+      the re-run). The script now derives the literal from the frame itself (`_expected_true_value`) so the encoding
+      can't drift again. NOTE `reclassify_defi_postdelist_eu_2026_06_24.py:94` writes `expected = False` (a bool) and
+      carries the SAME latent bug.
+- [ ] [DATA] P1. **REMAINING half — resolve the 215,864 re-seeded pending-EU cells to a terminal honest state.** They
+      are honest-pending now (visible, drags the denominator down) which is strictly better than the false DELISTED, but
+      not terminal. **Known scope gap:** `record_catalogue_residual_empty` → `EXPECTED_NOT_ENOUGH_TVL`
+      (`_dex_swaps_queries.py:124-163`) is keyed **per POOL** (`instrument_id=pool_address.lower()`,
+      `instrument_type='pool'`) and wired only into `dex_pools_handler`/`dex_swaps_handler` — but the un-delisted
+      majority is NON-POOL (SPOT_ASSET 1,389 / A_TOKEN 473 / DEBT_TOKEN 469 / LENDING). So a dex re-capture resolves
+      only the POOL slice. Open question under investigation: whether a non-POOL residual-empty path exists, and whether
+      SPOT_ASSET/A_TOKEN/DEBT_TOKEN even HAVE a per-day capture path (if not, their honest terminal state is a reason —
+      or they should not be seeded expected at all — not an indefinite pending EU). The catalogue reset to `None` alone
       does not fix data already written: the defi manifest `_index` still carries `EXPECTED_INSTRUMENT_DELISTED`
       empty_confirmed rows for the clustered dates. **Un-delist script WRITTEN** (`instruments-service/scripts/`
       `undelist_defi_false_postdelist_eu_2026_07_20.py`) — the exact inverse of
@@ -231,10 +256,19 @@ runs.)
       `error_reason` = NOT skip-worthy), backup-then-write, `--dry-run`/`--apply`. **Order is load-bearing**: regen →
       un-delist → re-capture → validate (manifest-freshness SKIPS `empty_confirmed`, so un-delist MUST precede
       re-capture). Scope measured: 4 protocols × 19 (venue,chain,date) tuples = 2,519 rows, ~12-24 day forward window.
-      **SCOPE GAP (discovered):** `dex_pools`/`dex_swaps` re-capture + `validate_defi_no_delisted_on_live_pool` are
-      POOL-ONLY, but the false rows are mostly SPOT_ASSET/LENDING/A_TOKEN/DEBT_TOKEN — the agnostic un-delist fixes all
-      of them (→ honest-pending EU), while full `NOT_ENOUGH_TVL` conversion for non-POOL needs the sibling handlers
-      (`collect-lending-indices` / `collect-evm-defi`). Un-delist alone already removes the DISHONESTY.
+      **⛔ SUPERSEDED — the "convert to `NOT_ENOUGH_TVL`" remedy above is WRONG. Do NOT do it.** Investigation
+      `w3y86f5z8` (2026-07-20) established: `EXPECTED_NOT_ENOUGH_TVL` is a member of `OUT_OF_COVERAGE_WINDOW_REASONS`
+      (`_honest_coverage_empty_reasons.py:531`) — the **SAME clipped-from-denominator bucket as
+      `EXPECTED_INSTRUMENT_DELISTED` (:530)**. Re-stamping the un-delisted cells with it would REMOVE them from the
+      denominator again, reproducing the exact honest-coverage distortion this issue exists to fix, just under an
+      honest-sounding name. It also established that (a) no non-POOL residual emitter exists anywhere (the machinery is
+      pool-only at all three layers, incl. the `catalogue_pool_ids_for_shard` provider that hard-filters to
+      `instrument_type=='pool'`), and (b) SPOT_ASSET/A_TOKEN/DEBT_TOKEN are reference-only HOLDINGS rows with NO per-day
+      capture path under their protocol venue — so their cells are structurally unsatisfiable and a re-capture can never
+      flip them to `captured`. **The un-delist remains CORRECT and is the completion of THIS issue** (blank- reason EU
+      is byte-for-byte the IS enumerator's own seed state; the gap is now visible + scored instead of hidden). Choosing
+      the terminal state for those cells is a separate architecture decision, tracked in its own issue:
+      `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
 - [ ] [DEFI] P2. **Option B truth-gate — BUILT (ship pending tree-green).** `instruments_service/oracle/`
       `defi_removal_probe.py` + `scripts/run_defi_removal_probe.py` + roll-up integration (`_apply_defi_removals` /
       `_load_defi_removal_map` applied to the FINAL frame of BOTH `build_catalogue_dataframe` and `_merge_incremental`,
@@ -248,6 +282,55 @@ runs.)
       Option A stays and the truth-gate fires only on a genuine SELFDESTRUCT). My tests pass in the QG (4675 passed);
       SHIP is blocked only by an unrelated fleet UAC drift (`unified-api-contracts@6bcff215` narrowed the defi
       denominator → 5 pre-existing golden/producer-set failures another agent is reconciling).
+
+## Blocked: Option B ship is gated on a tree-green that is NOT this issue's defect (2026-07-20)
+
+The Option B code is built, QG-clean **in its own right** (its tests are in the 4,675 passing), and runtime-verified —
+but it cannot ship because `instruments-service` `quality-gates.sh` is red on **foreign** failures. Attribution, so the
+next agent does not re-diagnose:
+
+1. **`test_expected_matches_golden[sports]` + `test_every_canonical_venue_has_a_uac_entry`** — 20 sports **web
+   bookmakers** (BETMGM/BOVADA/BETWAY/BETRIVERS/CORAL/PADDYPOWER/SKYBET/UNIBET/WILLIAMHILL…) are IS canonical venues
+   with no UAC `VENUE_TO_ADAPTER_KEY` entry. **Operator ruling 2026-07-20: these are PURE PRICING SOURCES** — odds
+   ingested via the aggregator, never order-routed; they must NOT be registered in execution-service for trading.
+   Registry confirms: all sit in `SPORTS_BOOKMAKER_WEB_VENUES` (63 members, web-only/no direct API), vs MATCHBOOK in
+   `SPORTS_EXCHANGE_VENUES` and NOVIG/PROPHETX in `SPORTS_PREDICTION_MARKET_VENUES`. **Disambiguation:**
+   `VENUE_TO_ADAPTER_KEY` is UAC's _reference-data adapter routing_ (which IS adapter discovers instruments), NOT
+   execution registration — PINNACLE/DRAFTKINGS/FANDUEL/BETFAIR already sit there with the `NO_ADAPTER_YET` sentinel and
+   are not tradeable by virtue of it. So the real question is upstream of the test: **should web-only bookmakers be IS
+   "canonical venues" at all, or an odds DIMENSION inside the odds-api feed?** If the latter, the fix is NOT 20
+   `NO_ADAPTER_YET` entries — it is not treating them as canonical venues. Operator decision, deliberately untouched
+   here.
+2. **`test_defi_set_equals_uac_denominator_drift_guard` + `test_rule11_per_ag_dedup_target_counts_byte_unchanged`** —
+   pre-existing UAC/IS defi drift.
+
+## Finding: the 4-adapter registration is a COORDINATED change, not a one-liner (2026-07-20)
+
+Diagnosis (workflow `wqdk5dejb`): UAC `VENUE_TO_ADAPTER_KEY` names `meteora`/`lifinity`/`phoenix`/`pyth`, whose adapter
+CLASSES exist and are ctor-compatible, but the `factory._ADAPTERS` registration half was never landed — so
+`TestAdapterRoutingUACInvariant` is red fleet-wide. (`chainlink` was the 5th and is a genuinely MISSING artifact — no
+`adapters/defi/chainlink.py` exists anywhere; another agent has since correctly un-declared it with a documented "no
+entry + pipeline phase" interim state, ref BLK-0c7b82fe.)
+
+**I applied the registration, measured the blast radius, and REVERTED it** — because registering 4 venues legitimately
+WIDENS the IS-producible set and therefore requires an ATOMIC 4-part landing:
+
+1. `factory._ADAPTERS` + `ADAPTER_DATA_SOURCES` (+5 entries each) — turns
+   `test_every_uac_adapter_key_resolves_to_a_class` and `test_adapter_data_sources_covers_all_adapters` green.
+   **Verified: both invariants compute clean with it applied.**
+2. **`tests/unit/scripts/goldens/expected_universe/defi.json` regen** (+5 rows:
+   `LIFINITY/METEORA/PHOENIX-SOLANA pool/dex_pool_state` + `PYTH-SOLANA spot_asset|spot_pair/oracle_prices`) via
+   `scripts/regenerate_expected_universe_golden.py`. **Currently BLOCKED** — the regenerator deliberately refuses while
+   UAC/UTL (editable path-deps) are dirty, so another agent's in-flight edits can't be baked into the golden. UAC had 8
+   and UTL 3 dirty files at the time.
+3. **`test_rule11_per_ag_dedup_target_counts_byte_unchanged`** DEFI expected count **89 → 93**.
+4. **The IS venue-PRODUCER set** — a DIFFERENT mechanism from `_ADAPTERS` (the drift guard still reported the 4 as
+   "UAC-only" WITH the registration applied), living in `scripts/enumerate_expected_universe.py`, which another agent
+   currently owns dirty.
+
+Shipping only part 1 would repeat EXACTLY the half-landed-commit defect this issue documents (UAC declaring venues whose
+IS half never landed), and violates the rule-11 blast-radius rule (never widen a gate without proving the fleet in the
+SAME change). Hence the revert. Land parts 1-4 atomically once UAC/UTL are clean.
 
 ## Scope boundary
 

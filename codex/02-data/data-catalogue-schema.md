@@ -3,9 +3,10 @@ doc_type: codex-ssot
 title: Data Catalogue Schema
 summary:
   Canonical schema for the per-service data-catalogue.*.yaml inventory/freshness ledger (dataset_id, asset_group,
-  bucket_lookup, partition_keys, mvp_tier, status) and its Parquet ManifestWriter/ManifestReader — a distinct
-  artifact from the per-shard availability manifest despite the shared ManifestWriter name.
-status: current
+  bucket_lookup, partition_keys, mvp_tier, status) and its Parquet ManifestWriter/ManifestReader — a distinct artifact
+  from the per-shard availability manifest despite the shared ManifestWriter name.
+status: superseded
+superseded_by: service-shard-status-catalogue.md
 nature: ssot
 asset_group: [meta]
 stage: [meta]
@@ -24,11 +25,42 @@ last_verified: 2026-05-12
 
 # Data Catalogue Schema
 
-**SSOT for:** canonical schema for `unified-trading-pm/configs/data-catalogue.{service}.yaml` files (symlinked into
-`deployment-service/configs/`).
+> # ⛔ SUPERSEDED 2026-07-20 (doc-reconciliation P1-09) — THIS DOCUMENT DESCRIBES A SYSTEM THAT DOES NOT EXIST.
+>
+> **Live SSOT for the `data-catalogue.*.yaml` files:
+> [`service-shard-status-catalogue.md`](service-shard-status-catalogue.md).** Everything below is retained for history
+> only. Do not build a reader, writer, validator or skill against it.
+>
+> **Every named component was verified ABSENT from the workspace on 2026-07-20:**
+>
+> | This doc names                                                  | Reality                                                            |
+> | --------------------------------------------------------------- | ------------------------------------------------------------------ |
+> | `deployment_service.data_status.manifest_writer.ManifestWriter` | No `deployment_service/data_status/` package exists anywhere       |
+> | `deployment_service.data_status.manifest_reader.ManifestReader` | Same — the package does not exist                                  |
+> | `catalogue_updater.py` (auto-updater of `last_updated`)         | No file of that name exists in the workspace                       |
+> | `data_catalogue_refresh.plan.md` (the validating plan)          | No file of that name exists in `plans/active/` or `plans/archive/` |
+>
+> **The documented SCHEMA is also wrong.** This doc specifies a top-level `datasets:` list keyed on `dataset_id` /
+> `bucket_lookup` / `partition_keys` / `mvp_tier` / `status`. The **17 live**
+> `unified-trading-pm/configs/data-catalogue.*.yaml` files share **ZERO fields** with it — they carry `service_name` /
+> `last_updated` / `auto_refreshed` / `status` / `known_exceptions` / `catalogue_dimensions` / `shard_status`. The one
+> field a live consumer actually depends on — `shard_status[AG][VENUE].start_date`, read by deployment-api
+> `reference_scope.py` as the genesis + configured-venue universe — **does not appear in this doc at all**.
+>
+> **Consequence to be aware of before trusting any catalogue number**: the live files read `last_updated: "2026-02-06"`
+> and (for instruments-service) `auto_refreshed: null`. That is ~5.5 months stale, and it is explained by the absence
+> above — the "auto-updater" this doc promises was never built. `scripts/catalogue/sync-catalogue-yaml.py` READS
+> `gs://data-catalogue-{project_id}/**/manifest.parquet` to refresh them, but **no writer of that artifact exists in the
+> workspace**, so the sync has nothing to read.
+>
+> A sibling copy of this doc at `codex/06-coding-standards/data-catalogue-schema.md` carries the same defects and is
+> **out of scope for this correction** — it needs the same banner.
 
-All `data-catalogue.*.yaml` files must conform to this schema. Validated by
-`data_catalogue_refresh.plan.md#dc-catalogue-format-standard`.
+**SSOT for:** ~~canonical schema for `unified-trading-pm/configs/data-catalogue.{service}.yaml` files (symlinked into
+`deployment-service/configs/`)~~ — superseded, see banner.
+
+~~All `data-catalogue.*.yaml` files must conform to this schema. Validated by
+`data_catalogue_refresh.plan.md#dc-catalogue-format-standard`.~~ (The validating plan does not exist.)
 
 > ## Two distinct manifests — do NOT confuse them (clarified 2026-05-12)
 >
@@ -211,6 +243,10 @@ FROM read_parquet('gs://data-catalogue-*/instruments-service/day=*/manifest.parq
 WHERE date BETWEEN '2026-03-01' AND '2026-03-21'
 GROUP BY date
 ORDER BY date;
+```
+
+<!-- unterminated ```sql fence closed 2026-07-20, doc-reconciliation P1-09: the fence opened above was never closed,
+     so the two sections below rendered INSIDE a code block and were invisible in every rendered view of this doc. -->
 
 ---
 
@@ -231,4 +267,3 @@ PASS threshold: >= 80% of declared datasets have `status: available`.
 - `unified-trading-pm/configs/data-catalogue.*.yaml` — per-service catalogue files (canonical data; symlinked into
   `deployment-service/configs/`)
 - `00-SSOT-INDEX.md` — SSOT registry entry for data catalogue
-```

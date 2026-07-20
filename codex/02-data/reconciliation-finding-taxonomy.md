@@ -57,7 +57,13 @@ authoritative_for:
     operator-accepted reconciliation exception list,
     axes the reconciliation skill must refuse to report on,
   ]
-referenced_by: []
+referenced_by:
+  [
+    codex/02-data/four-surface-reconciliation-procedure.md,
+    codex/02-data/orphan-object-detection.md,
+    codex/02-data/non-canonical-path-inventory.md,
+    codex/02-data/cross-asset-canonical-target-ssot.md,
+  ]
 owner:
 last_reviewed: 2026-07-20
 code_refs:
@@ -219,6 +225,12 @@ emits.
   the finding either floods false positives on old data or silently passes post-cutover regressions.
 - **Known weakness to state in every report** — the oracle's `require_pipeline_mode` defaults **False**, so the machine
   gate is currently WEAKER than the codex declaration. A report must name which setting it used.
+- **Second known weakness — the oracle does NOT validate the filename instrument-id.** It drops the last path segment
+  before validating; only `asset_group=tradfi` single-instrument shards have a stem rule. So a wire-named or
+  double-wrapped CeFi object (`ADAF0:USTF0.parquet`, `BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet`) **can never raise
+  this finding** — ~811,200 such objects read as canonical. Path STRUCTURE and instrument-id FORM are orthogonal; a
+  report must either run the canonical-id check separately or state plainly that id-form was not machine-checked. SSOT:
+  `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`.
 - **Safe remediation** — migrate (copy) to the canonical path. Never in this reconciliation's own process.
 - **Delete-eligible** — **NO, not on this finding alone.** Non-canonical location is not evidence of duplication. It
   becomes delete-eligible only if it independently classifies as `legacy_duplicate` with a CONTENT-verified twin.

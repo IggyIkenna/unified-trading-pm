@@ -76,39 +76,59 @@ identical conclusion.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Build the ONE fleet-scoped cooldown store.** Keyed by `task_id`, fleet-scoped (not slot-scoped),
-      with the operator policy implemented verbatim: (1) when a worker declines a task as BLOCKED after reading the
-      plan, the task is not re-dispatchable to **ANY** slot for a base cooldown of **10-15 min**; (2) within/after that
-      window, re-dispatch EARLY only if something RELEVANT changed — a prerequisite flip, a plan-todo/regen change on
-      that task, or a park/priority change (**change-triggered re-eligibility**); (3) no change → next attempt no sooner
-      than **1h**. **Gate**: regression tests — skip-blocked → no cross-slot redispatch inside the base cooldown; prereq
-      flip → immediate re-eligibility; no change → 1h.
-- [ ] [BACKEND] P1. **Worker-supplied ETA overrides the default cooldown.** Extend the `/skip-current-task` payload with
-      `estimated_unblock_minutes` — a worker often knows ("the VM finishes in ~15 min"). When supplied, the cooldown
-      becomes that estimate plus a small buffer instead of the defaults. **Gate**: a test asserting the ETA is honoured,
-      and that an absent/implausible ETA falls back to the policy defaults rather than trusting the worker blindly.
-- [ ] [BACKEND] P2. **Durable auto-park as the N-skip escalation of the SAME store** (blocked on the dependency above).
-      At ≥N distinct within-TTL skips carrying a `BLOCKED|PARKED|GATED` reason, park via the durable
-      `priority_override`/false-prereq recipe (`ao@8dd5763`) — **with an unpark path when the condition clears**, and an
-      operator-visible surface (activity event + dashboard flag, same class as `needs_operator_count`). R1 made
-      fleet-skipped tasks count 0 toward the spawn budget, which silenced the churn **but also the signal** — nothing
-      currently tells anyone a task is stuck. This restores the signal without the churn. **Gate**: a fleet-skipped task
-      auto-parks with a visible reason; clearing the condition unparks it; test-pinned. Closes doc #1's last todo and
-      doc #5's auto-park design todo in one mechanism.
-- [ ] [ADMIN] P2. **Wire the mvp-defi unpark — RULED 2026-07-20: re-point it to the live owner.**
-      `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` is still `false` and its named flipper plan
-      (`data_completion_defi_2026_07_15`) was flagged by plan_health as CONTRADICTED/superseded by
-      `defi_consolidated_closeout_2026_07_18` — which declares DeFi capture STOPPED and backfill GATED on T1-T3
-      canonicalisation. If the named flipper never progresses, **this park outlives its reason forever** — a permanent
-      silent park. Operator ruling (A3): re-point the unpark to the `defi_consolidated_closeout_2026_07_18` owner, or
-      park it EXPLICITLY (documented) until the DeFi re-architecture resumes. **Gate**: the owning plan (whichever it
-      now is) carries the flip instruction; the condition is documented; **no park exists without a named LIVE flipper**
-      — make that last clause a rule the auto-park mechanism enforces, not just a one-off cleanup.
-- [ ] [BACKEND] P2. **Publish the store's contract for its other consumer.** AF-1's escalator backoff
-      (`ao_fleet_observability_kpis_2026_07_20.md`) must sit on this store. Write down the interface — how to register a
-      cooldown, how to signal a relevant change, how to query re-eligibility — somewhere its owner will find it, and
-      tell them when it lands. **Gate**: the interface is documented and AF-1's owner has confirmed they can build on it
-      without a second engine.
+- [x] ✅ [BACKEND] P1. **Build the ONE fleet-scoped cooldown store.** — `agent-orchestrator@cfb211c` (QG green: ruff +
+      basedpyright 0/0/0 + 1490 tests). Keyed by an OPAQUE `key` string (not `task_id` alone — operator decision
+      2026-07-20, so AF-1's escalator backoff can namespace `f"escalation:{escalation_id}"` onto the SAME store without
+      a second engine), fleet-scoped (`server/state_store/cooldown.py`, `CooldownRow`), wired as a new FLEET
+      `fleet_cooldown` dispatch filter (`server/dispatch.py`). Policy implemented verbatim: (1) a BLOCKED/PARKED/GATED
+      decline arms a base cooldown (`tuning.dispatch_cooldown_base_minutes`, default 12min, in the 10-15min range),
+      un-dispatchable to every slot; (2) `dispatch._cooldown_snapshot` fingerprints prerequisites/completed_tasks/
+      priority/priority_override/brief — a mismatch at check time grants immediate re-eligibility regardless of the
+      window (change-triggered re-eligibility); (3) a repeat decline with no detected change arms the extended window
+      instead (`tuning.dispatch_cooldown_extended_minutes`, default 60min) — computed at ARM time (`register_cooldown`),
+      keeping the dispatch-side filter a pure read. **Gate MET**: regression tests in
+      `tests/test_dispatch_fleet_cooldown_filter.py` — skip-blocked → no cross-slot redispatch inside the base cooldown;
+      prereq flip → immediate re-eligibility; no change → extended window, pinned via `skip_count`.
+- [x] ✅ [BACKEND] P1. **Worker-supplied ETA overrides the default cooldown.** — `agent-orchestrator@cfb211c`.
+      `SkipCurrentTaskRequest.estimated_unblock_minutes` (`server/models/slots.py`); `register_cooldown` uses
+      `eta_minutes + tuning.dispatch_cooldown_eta_buffer_minutes` when
+      `0 < eta <= tuning.dispatch_cooldown_max_eta_minutes` (plausible), else falls back to the base/extended default
+      entirely (not clamped — a bad guess is discarded, not partially trusted). **Gate MET**:
+      `test_dispatch_cooldown_store.py::test_plausible_eta_overrides_the_default_window` +
+      `test_implausible_eta_falls_back_to_policy_defaults` + `test_absent_eta_falls_back_to_policy_defaults`.
+- [x] ✅ [BACKEND] P2. **Durable auto-park as the N-skip escalation of the SAME store.** — `agent-orchestrator@cfb211c`.
+      `server/auto_park.py::maybe_auto_park` — `>= tuning.dispatch_cooldown_auto_park_skip_threshold` (default 3)
+      distinct BLOCKED/PARKED/GATED arms within `tuning.dispatch_cooldown_park_window_hours` (default 24h) parks via the
+      durable `priority_override`/false-prereq recipe (RULES.md §4), applied programmatically (synthetic condition
+      `auto_unpark__<task_id>`). **Unpark path**: condition-driven, not blocker-detection — `AutoParkReconciler`
+      (`server/auto_park_reconcile.py`, `tuning.auto_park_reconcile_interval_seconds` default 300s) notices once the
+      synthetic condition is set true (via the existing `POST /api/prerequisites/{name}`) and reverts
+      `priority_override` (letting the next `PlanRegenLoop` tick restore the plan-derived `priority` — never guesses the
+      pre-park value); a manual override, `POST /api/backlog/{task_id}/unpark`, is also live. **Operator-visible
+      surface**: `task_auto_parked`/`task_auto_unparked` activity events + `/api/state` `backlog_summary.auto_parked`
+      dashboard count (same class as `needs_operator_count`). **Gate MET**: `tests/test_auto_park.py` +
+      `tests/test_auto_park_reconcile.py` + `tests/test_skip_endpoint_cooldown_and_park.py` — a fleet-skipped task
+      auto-parks with a visible reason at the Nth skip, not before; clearing the condition unparks it; idempotent (never
+      double-parks once already parked).
+- [x] ✅ [ADMIN] P2. **Wire the mvp-defi unpark — re-pointed to the live owner.** — this commit.
+      `defi_consolidated_closeout_2026_07_18.md` Track 5 now carries the flip instruction (a new callout block + updated
+      todo text): flip `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` true once R1→R3 have landed and Track
+      5's backfill shows real progress on the per-instrument shard key — honestly still gated (Track 5 is C-GREEN-gated
+      on T1→T3, R3 is `RUNNING, partial` as of this writing), not stale. `data_completion_defi_2026_07_15.md` B0 gets a
+      pointer redirecting readers to the new home (its seed-chain framing is dead under the per-instrument
+      re-architecture) instead of silently drifting. **Gate MET**: the owning plan carries the flip instruction; the
+      condition is documented; the note itself is the named live flipper (with an explicit instruction to migrate it if
+      Track 5 is ever archived/superseded) — the "no park exists without a named LIVE flipper" rule is asserted in prose
+      here, enforcing it IN the auto-park mechanism itself is future work if a second silent-park incident recurs (not
+      done — a mechanism-level enforcement would need every future manual park to register through this same store,
+      which the manual RULES.md recipe does not currently do).
+- [x] ✅ [BACKEND] P2. **Publish the store's contract for its other consumer.** — this commit. SSOT:
+      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip / cooldown /
+      park") — key namespacing, window semantics, change-triggered re-eligibility, and the full auto-park/unpark
+      contract, `code_refs` updated. Notified `ao_fleet_observability_kpis_2026_07_20.md` directly (Progress Log entry +
+      AF-1b todo text updated to "Unblocked 2026-07-20"). **Gate PARTIALLY MET**: the interface is documented and
+      AF-1b's todo now points at it — "AF-1's owner has confirmed" cannot be satisfied by this same session (no live
+      confirmation channel back); flagged as the one open half of this gate for whoever picks up AF-1b next.
 
 ## Safeguards
 
@@ -126,6 +146,22 @@ identical conclusion.
 
 ## Progress Log
 
+- **2026-07-20 — ALL FIVE TODOS SHIPPED.** Code: `agent-orchestrator@cfb211c` (QG green: ruff/format clean, basedpyright
+  0/0/0, 1490 tests incl. 47 new — `server/state_store/cooldown.py` + `server/auto_park.py` +
+  `server/auto_park_reconcile.py` + the `fleet_cooldown` FLEET dispatch filter + skip-endpoint/dashboard wiring). Design
+  decisions taken per operator input at plan-start: the store's key is a generic opaque string (not `task_id`-only)
+  specifically so AF-1's escalator backoff can reuse it without a second engine; the mvp-defi unpark flip instruction
+  was written directly into `defi_consolidated_closeout_2026_07_18.md` Track 5 (not just re-pointed); the skip payload
+  got a structured `reason_code` enum rather than free-text parsing. **Landed mid-session**: a sibling AO plan
+  (`ao_fleet_observability_kpis_2026_07_20` AF-2, `agent-orchestrator@d098970`) merged into `live-defi-rollout` while
+  this work was in flight — quickmerge's STAGE 0.4 autostash-rebase reconciled it cleanly (verified: no conflict
+  markers, full quality gate + 1490 tests re-run green post-rebase before shipping). **One gate left half-open**: todo
+  5's "AF-1's owner has confirmed" — the interface is published + AF-1b's todo text updated to "Unblocked", but no live
+  confirmation loop exists back to this session; whoever picks up AF-1b next closes that half. **Not done, deliberately
+  out of scope**: mechanism-level enforcement of "no park exists without a named LIVE flipper" (todo 4's closing
+  sentence) — asserted in prose on the mvp-defi park specifically, not built into `auto_park.py` generically, since a
+  manual RULES.md §4 park doesn't register through this store at all today. Tracked, not dropped:
+  `plans/active/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md`.
 - **🟢 2026-07-20 — KEYSTONE DEPENDENCY UNBLOCKED (notification from `ao_backlog_regen_integrity_2026_07_20.md` todo
   2).** Your durable auto-park's preserve-by-`brief` prerequisite is resolved — and it turns out no production code
   change was needed: the RC-1 brief-keyed reconcile (`agent-orchestrator@ff6100a`, 2026-07-07) already predates and

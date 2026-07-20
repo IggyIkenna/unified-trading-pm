@@ -43,7 +43,13 @@ authoritative_for:
     human-only delete hard stops,
     the legacy-COPIED-not-MOVED invariant,
   ]
-referenced_by: []
+referenced_by:
+  [
+    codex/02-data/four-surface-reconciliation-procedure.md,
+    codex/02-data/reconciliation-finding-taxonomy.md,
+    codex/02-data/non-canonical-path-inventory.md,
+    codex/02-data/orphan-object-detection.md,
+  ]
 owner:
 last_reviewed: 2026-07-20
 code_refs: [unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py]

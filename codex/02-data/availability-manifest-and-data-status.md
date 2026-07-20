@@ -114,8 +114,11 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 >
 > Every downstream consumer — the data-status coverage summary + drilldown, strategy/features pre-flight — **READS**
 > `capture_status` and the honest denominator
-> (`% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`); **never re-derives** the
-> expected set or genesis/launch/IS rules per consumer. DeFi pre-launch zero-rows are demoted to
+> (~~`% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`~~ — **⛔ SUPERSEDED
+> formula, corrected 2026-07-20, doc-reconciliation P1-09**; the live formula is
+> `reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)` with `empty_confirmed`
+> **EXCLUDED** — SSOT [`honest-coverage-model.md`](honest-coverage-model.md) § Coverage formula); **never re-derives**
+> the expected set or genesis/launch/IS rules per consumer. DeFi pre-launch zero-rows are demoted to
 > `EXPECTED_PRE_VENUE_LAUNCH` by `DefiManifestRecorder.record_zero_rows` (UAC `DEFI_VENUE_LAUNCH_DATES`), enforced by
 > the A10c QG ratchet. Per-chain matters: a venue (e.g. AAVE_V3) has different launch/genesis dates per chain, so each
 > (venue, chain) shard is annotated independently — never collapse chains.
@@ -427,7 +430,20 @@ unchanged.
 `last_emission_decision_at=` / `expected_window_completeness_fraction=`) still accept `None` (defaults remain) pending
 an emission-policy callsite sweep across MTDS + instruments-service (tracked as deferred follow-up in Phase 4).
 `read_availability_index()` backfills missing v7/v8 columns to defaults until the ~2026-06-15 reader-fallback deletion
-cutoff. The runtime SSOT lives in `unified-trading-library/unified_trading_library/manifest_writer.py`.
+cutoff.
+
+> **The DATACLASS is the runtime SSOT; the block below is a PROJECTION of it (annotated 2026-07-20, doc-reconciliation
+> P1-09).** The authoritative column set is `unified-trading-library/unified_trading_library/manifest_writer/_rows.py` →
+> `class AvailabilityRecord` (:284-486; the row model was split out of the monolithic `manifest_writer.py` by the
+> file-size ratchet, so the older pointer to `manifest_writer.py` no longer resolves to the dataclass). **When the two
+> disagree, the dataclass wins and this block is the defect.** Re-derive this block from the dataclass rather than
+> hand-patching it.
+>
+> **Regenerated 2026-07-20 against `_rows.py`.** The previously-published block was drifted on two counts: (a) it
+> **omitted 7 live columns** — `feature_family` (:317), `fixture_id` + `job_id` (:365-366), `transport` (:414),
+> `cadence` (:428), `asset_group` (:433), `available_at` (:445) — and (b) it declared **`source` TWICE** (two separate
+> v9 comment blocks, byte-identical field). Both are fixed below. One type correction also landed: `pipeline_mode` is
+> `str = ""` at runtime (:400), not `str | None = None`.
 
 ```python
 MANIFEST_SCHEMA_VERSION = 9  # v9: source column added (tradfi_massive_dual_source_2026_05_28.md Phase 3, 2026-05-30)
@@ -459,6 +475,12 @@ class AvailabilityRecord:
     # Feature/ML dimensions
     # ─────────────────────────────────────────────────────────────────────
     feature_group: str = ""         # Feature services: momentum, fixture_stats, macro_sentiment, etc.
+    # Phase 1B (features_repo_consolidation_2026_05_08) — parent classification of
+    # feature_group ("onchain" / "delta_one" / "volatility" / "sports"). SIBLING-PRESENCE
+    # GUARD: any row with a non-empty feature_group MUST set feature_family (UTL raises
+    # MissingFeatureFamilyError). "" for non-features rows (MTDS / MDPS / instruments-service).
+    # Taxonomy SSOT: UAC unified_api_contracts.canonical.domain.features.registry.FeatureFamily.
+    feature_family: str = ""
     model_family: str = ""          # ML: pregame_xg, CEFI_BTC_swing-high_LIGHTGBM_1h_V1, etc.
     training_period: str = ""       # ML walk-forward: "2024-01" (month) or "2024" (season)
 
@@ -491,6 +513,18 @@ class AvailabilityRecord:
     # ─────────────────────────────────────────────────────────────────────
     quote_asset: str = ""           # "USD", "USDT", "USDC", "BTC", "ETH", "KRW"
     margin_type: str = ""           # "inverse" (coin-margined) | "linear" (stable-margined) | ""
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v7 (2026-05-06 — data_status_multi_axis_shard_propagation plan)
+    # DISPLAY-AXIS columns. NOT shard atoms.
+    #   fixture_id: sports per-fixture detail; the shard atom stays (league_id, day).
+    #   job_id:     ML / strategy / execution backtest run id (f"{RUN_TS}-{experiment}").
+    #               Old rows leave it "" and surface under a synthetic __legacy__ key
+    #               in the coverage-summary endpoint.
+    # ─────────────────────────────────────────────────────────────────────
+    fixture_id: str = ""
+    job_id: str = ""
+
     combo_type: str = ""            # "call_spread", "iron_condor", "butterfly", "" = non-combo
     leg_weights: str = ""           # JSON: [{"instrument_id": "...", "qty": 1|-1|...}]; "" = non-combo
 
@@ -502,7 +536,10 @@ class AvailabilityRecord:
     # round-trip with `SOURCE_PRIORITY` enforced via test_pipeline_mode.py.
     # See codex/02-data/pipeline-mode-partition.md for the full SSOT.
     # ─────────────────────────────────────────────────────────────────────
-    pipeline_mode: str | None = None  # "batch_databento" | "batch_tardis" | … | "live_websocket" | None (pre-migration)
+    # Runtime is `str = ""` (NOT `str | None = None`) — the empty-string default is a
+    # read-side compat shim for rows that slipped the Phase-3 backfill; writers MUST
+    # supply a valid PipelineMode via `_coerce_pipeline_mode`.
+    pipeline_mode: str = ""           # "batch_databento" | "batch_tardis" | … | "live_<source>" | "" (pre-migration)
 
     # ─────────────────────────────────────────────────────────────────────
     # v9 — universal data-source tag (uac@aab101ad / utl@0f7198f2, 2026-05-30)
@@ -524,16 +561,57 @@ class AvailabilityRecord:
     last_emission_decision_at: str | None = None  # ISO-8601 UTC timestamp of last publish_with_policy decision
     expected_window_completeness_fraction: float | None = None  # 0.0-1.0 fraction of expected per-row window populated (renamed from _pct at UAC@76f950a 2026-05-11)
 
+```
+
+> **Duplicate removed 2026-07-20 (doc-reconciliation P1-09):** a SECOND, byte-identical `source: str = ""` declaration
+> with its own v9 comment block used to sit here, after the emission-tracking columns. There is exactly ONE `source`
+> column; it is declared above. The four columns below were MISSING from the published block entirely and are now
+> restored from `_rows.py`.
+
+```python
     # ─────────────────────────────────────────────────────────────────────
-    # v9 — universal source column (uac@aab101ad / utl@0f7198f2, 2026-05-30)
-    # Identifies which upstream data source produced the rows in the parquet.
-    # Required (non-empty) for all asset groups where SOURCE_PRIORITY is
-    # registry-driven; UTL raises MissingSourceError on single-source blank.
-    # Closed-set values mirror UAC `SOURCE_PRIORITY` source strings:
-    # "databento", "massive", "yahoo", "barchart", "tardis", etc.
-    # Backfill: existing pre-v9 rows get source stamped via per-AG L3 walk.
+    # v9 (2026-06-07 — pipeline_mode_source_batch_live_replay_standardisation
+    # M8/C-TRANSPORT, operator R4). Wire transport used to SERVE this shard —
+    # a SEPARATE axis from `source` (the vendor). Stamped by the writer via
+    # UAC `default_transport_for_source(source)` unless passed explicitly;
+    # "" for computed/service + unregistered cells. Closed-set = UAC `Transport`.
+    # The transport-glued `hyperliquid_rest` source is RETIRED (R4).
     # ─────────────────────────────────────────────────────────────────────
-    source: str = ""  # "databento" | "massive" | "yahoo" | "barchart" | "tardis" | "" (pre-v9 legacy)
+    transport: str = ""               # "rest" | "websocket" | "flat_file" | ""
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v9 (2026-06-16 — GATE-0 #6a). Operational cadence / deployment topology —
+    # an OBSERVABILITY axis ORTHOGONAL to `pipeline_mode`: one Tardis endpoint
+    # serving a nightly T+1 and a long-term backfill is the SAME pipeline_mode
+    # (`batch_tardis`) but a DIFFERENT cadence. Stamped only when the caller
+    # passes it explicitly (no `default_cadence_for_source` helper exists —
+    # cadence is a property of the LAUNCH, not derivable from the vendor).
+    # A manifest COLUMN, never a GCS path key, so it never fragments the union.
+    # Closed-set = UAC `Cadence`.
+    # ─────────────────────────────────────────────────────────────────────
+    cadence: str = ""                 # "one_off_backfill" | "t1_daily" | "scheduled_recurring"
+                                      # | "continuous_live" | "recovery_replay" | ""
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v9 (2026-06-22). asset_group written DIRECTLY into the row so writers that
+    # don't derive it from a GCS hive-key (e.g. defi MTDS) stamp the correct
+    # domain at capture time. A CAPTURED market-data row missing it raises —
+    # see `MissingAssetGroupError` in `manifest_writer/_schema.py`; a blank one
+    # silently corrupts every per-asset_group coverage rollup.
+    # ─────────────────────────────────────────────────────────────────────
+    asset_group: str = ""             # "cefi" | "defi" | "tradfi" | "sports" | "prediction" | ""
+
+    # ─────────────────────────────────────────────────────────────────────
+    # v9 (2026-06-26 — sports_mtds_available_at_manifest_gap). Per-shard
+    # `available_at` envelope stamped on the INDEX row so readers can filter
+    # captured rows by recency WITHOUT opening every data parquet. Write-time
+    # stamps use `datetime.now(UTC).isoformat()`; migration/rebuild walks use
+    # the max per-row `available_at` read from the data parquet (the honest
+    # envelope). "" for pre-v9 rows — readers MUST guard with `if available_at`.
+    # Distinct from the per-ROW `available_at` column inside the data parquet,
+    # which the 4-pillar write-gate enforces via `assert_available_at_present`.
+    # ─────────────────────────────────────────────────────────────────────
+    available_at: str = ""
 ```
 
 ### Column Rules
@@ -944,10 +1022,31 @@ The manifest `capture_status` column is a **closed 4-state set**: `captured` / `
 source — `expected` / `available` / `instrument_count` are kept for backward compat but `capture_status` is what the
 data-status UI + phantom audit read first.
 
-**Coverage formula**: `coverage % = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` —
-denominator is the full expected universe. SSOT implementation: `compute_honest_coverage()` in UAC
-(`unified_api_contracts.compute_honest_coverage`). See § "Honest-coverage measurement script" below for the full formula
-including the `expected_unattempted_known_empty` vs `expected_unattempted_pending_fetch` sub-split.
+**Coverage formula**:
+
+> **⛔ SUPERSEDED — corrected 2026-07-20, doc-reconciliation P1-09 (contradiction "Honest-coverage formula — three
+> incompatible definitions across three `status: current` codex SSOTs").**
+> ~~`coverage % = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` — denominator is
+> the full expected universe. SSOT implementation: `compute_honest_coverage()` in UAC.~~ This is the **v1** shape, which
+> [`honest-coverage-model.md`](honest-coverage-model.md) explicitly labels as having "masked real holes" by mixing
+> legitimate absence into the denominator.
+>
+> **The live formula (CK3-certified 2026-06-29) is:**
+>
+> ```
+> reachable_coverage  = captured / (captured + attempted_failed + expected_unattempted)   # empty_confirmed EXCLUDED
+> all_shards_coverage = captured / (captured + attempted_failed + expected_unattempted + empty_confirmed)
+> ```
+>
+> **SSOT: [`honest-coverage-model.md`](honest-coverage-model.md) § Coverage formula.** Verified against the shipping
+> implementation `instruments-service/scripts/measure_honest_coverage.py`:600-603
+> (`reachable = counts["captured"] + counts["attempted_failed"] + counts["expected_unattempted"]`) and its module
+> docstring :21-27. `empty_confirmed` is **excluded from the reachable denominator** and preserved only in the
+> all-shards completeness view. Any reported coverage % **MUST name which of the two formulas produced it** — an unnamed
+> % is unfalsifiable.
+
+Denominator basis (`empty_confirmed` vs out-of-scope): `cross-asset-canonical-target-ssot.md` §9. See § "Honest-coverage
+measurement script" below for the `expected_unattempted_known_empty` vs `expected_unattempted_pending_fetch` sub-split.
 
 | State                         | Manifest row? | `capture_status`       | Meaning                                                                                                                                                                                                                                      |
 | ----------------------------- | ------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1632,14 +1731,28 @@ Currently-tracked temporary states relevant to the manifest:
 - Prediction empty path patched with current Polymarket per-base_asset row_key → successor: predictions Plan A migrates
   to canonical_question_group shape.
 
-### 9. Single-walk discipline — no new whole-corpus GCS walks (HARD RULE, codified Phase 2.2)
+### 9. Single-walk discipline — ONE walk per corpus per campaign (HARD RULE, codified Phase 2.2; reconciled 2026-07-20)
 
-The Phase 2.2 migration walks every parquet in the corpus **ONCE**. Any new whole-corpus GCS walk is
+> **♻️ RECONCILED 2026-07-20, doc-reconciliation P1-11.** This section and
+> [`../05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md) § "Migration-script
+> performance contract" previously **never cross-referenced each other and read as contradictory** — this one said
+> whole-corpus walks are review-blocking; that one specifies a six-point performance contract _for_ whole-corpus walks.
+> They are not in conflict once stated as one rule:
+>
+> **Walks are not banned — UNBUNDLED walks are. ONE walk per corpus per campaign, with every pass bundled onto that ONE
+> snapshot.** This section governs **WHETHER** you may open a walk (the bundling rule). `gcs-object-operations.md` §
+> "Migration-script performance contract" governs **HOW** that single sanctioned walk executes (parallel · wired knobs ·
+> server-side copy for path-only moves · observable · per-object failure isolation · tuned for the bottleneck) — **every
+> sanctioned walk MUST satisfy all six points.** Neither doc overrides the other; they compose.
+
+The Phase 2.2 migration walks every parquet in the corpus **ONCE**. Opening a **new, separate** whole-corpus GCS walk is
 **review-blocking**. This is a hard architectural constraint — a fleet-wide parquet walk is extremely expensive (I/O,
 latency, cost) and introduces the risk of race conditions with concurrent writers.
 
-**Rule**: bundle any new schema change, partition-rename, or column-backfill into the ongoing Phase 2.2 single walk. Do
-NOT open a separate corpus walk for a single fix.
+**Rule**: bundle any new schema change, partition-rename, or column-backfill into the campaign's single walk. Do NOT
+open a separate corpus walk for a single fix. This is exactly the pattern
+`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` implements — one FRESH walk, then the shipped passes
+run **in order over that ONE snapshot**.
 
 **Permitted alternatives** (do not require a review override):
 
@@ -1652,10 +1765,35 @@ NOT open a separate corpus walk for a single fix.
 - A migration script that `gsutil ls -r gs://{bucket}/raw_tick_data/` to enumerate all parquets and rewrites a column
 - A one-off backfill script that reads every parquet to stamp a new field, scheduled independently of Phase 2.2
 
-**Exemptions**: phantom-audit scripts (`reconcile_phantom_manifest_rows_all.py`) read the manifest index, not the
-parquet corpus — they are not a corpus walk and are not subject to this rule.
+**Exemptions**: phantom-audit scripts (`reconcile_phantom_manifest_rows_all.py`) are exempt because they are
+**PREFIX-SCOPED**, not because they avoid GCS.
 
-SSOT: `CLAUDE.md` § "Single-walk discipline (HARD RULE)".
+> **⛔ rationale corrected 2026-07-20, doc-reconciliation P1-11.** ~~"…read the manifest index, not the parquet corpus —
+> they are not a corpus walk"~~ is **factually false of the very script it names**, and the false rationale is the
+> dangerous part: it would exempt any script that merely _claims_ to read the index.
+> `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` demonstrably **DOES list GCS at scale** —
+> `client.list_blobs(bucket_name, prefix=prefix)` at :311 and :425, fanned out over a
+> `ThreadPoolExecutor(max_workers=workers)` with `--workers` defaulting to **32** (:1098) and the GCS HTTP pool
+> deliberately bumped to `max(workers * 2, 64)` because listing "truncates under high concurrency" (:1249-1254).
+> `manifest_hygiene_daily.py`:391 likewise labels it a "GCS walk — full mode only".
+>
+> **The correct rationale**: it never enumerates the corpus root. It derives its prefixes FROM manifest rows and issues
+> **one bounded listing per unique prefix** — `_venue_level_prefixes(asset_group, row)` (:208) builds the candidate
+> `(date, venue[, chain], hive-vocab)` prefixes per captured row, which are de-duplicated and listed once each
+> (:411-425); sports lists once per unique `date` present in the manifest (`sports_reference/by_date/day={D}/`,
+> :303-314). Cost scales with the **manifest's** distinct prefixes, not with corpus size.
+>
+> **The generalisable test for an exemption** is therefore: _is the set of prefixes listed bounded by, and derived from,
+> the manifest — rather than by the corpus?_ A script that walks from the bucket root is NOT exempt no matter what it
+> reads afterwards.
+
+**Sanctioned no-walk routes** (use these before proposing any walk): manifest-driven prefix-scoped listing per
+`(date, venue[, chain])` as above · delimiter-based child-prefix listing (enumerate one level, not all objects) · reuse
+of an existing campaign's single walk.
+
+SSOT: this section (WHETHER) +
+[`../05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md) § "Migration-script
+performance contract" (HOW). `CLAUDE.md` § "single-walk discipline" carries the one-liner pointer.
 
 ### 10. Cross-representation ("triad") agreement — data ⇄ manifest ⇄ catalogue must reconcile (HARD RULE, codified 2026-06-27)
 
@@ -1825,8 +1963,21 @@ manifest and computes coverage at three aggregation levels:
 - **Level 2 — per (asset_group, venue)**: same shape per venue
 - **Level 3 — per (asset_group, venue, data_type)**: same shape per data_type per venue
 
-**Coverage formula** — SSOT: `compute_honest_coverage()` in UAC (`unified_api_contracts.compute_honest_coverage`,
-`unified-api-contracts@a9891f9`). Do **NOT** recompute inline — import and call the canonical function.
+**Coverage formula** —
+
+> **⛔ SUPERSEDED — corrected 2026-07-20, doc-reconciliation P1-09.** The `compute_honest_coverage()` shape below is a
+> **THIRD** formula, distinct from BOTH the v1 shape banner-corrected earlier in this doc AND the live one: it puts
+> `empty_confirmed` **and** `expected_unattempted_known_empty` in the **NUMERATOR**. The live, CK3-certified formula is
+> `reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)` with `empty_confirmed` EXCLUDED
+> — SSOT [`honest-coverage-model.md`](honest-coverage-model.md) § Coverage formula, implemented at
+> `instruments-service/scripts/measure_honest_coverage.py`:600-603. The block below is **retained for history only**; do
+> not build a new consumer on it, and do not treat a number it produced as comparable to a `reachable_coverage` number.
+> Whether `compute_honest_coverage()` should be deleted, re-pointed at the reachable formula, or kept as a
+> deliberately-distinct third metric is **not settled here** — it is the residual of the same contradiction and needs a
+> ruling before any code change.
+
+Historical (SUPERSEDED) — SSOT was: `compute_honest_coverage()` in UAC (`unified_api_contracts.compute_honest_coverage`,
+`unified-api-contracts@a9891f9`).
 
 ```python
 from unified_api_contracts import CaptureStatusCounts, compute_honest_coverage

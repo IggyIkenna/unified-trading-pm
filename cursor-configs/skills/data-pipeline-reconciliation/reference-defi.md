@@ -1,0 +1,176 @@
+# reference-defi — per-AG expansion for `/data-pipeline-reconciliation --asset-group defi`
+
+Expansion of the `defi` row in [`SKILL.md`](SKILL.md) § 3d. Pointers + hazards only — the durable rules live in codex.
+
+## Path grammar (this AG)
+
+```
+raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group=defi/
+  venue={BARE_PROTOCOL}/chain={CHAIN}/instrument_type={it_lower}/data_type={dt}/
+  {SYMBOLIC_CANONICAL_ID}.parquet
+```
+
+**defi is the only AG with a `chain=` key, and it sits AFTER `venue=`** (operator-locked ordering). `venue=` is the
+**bare protocol** — `AAVE_V3`, never `AAVE_V3-ETHEREUM`, never `AAVEV3`. One parquet per instrument (target ruled
+2026-07-18); filename == manifest key == symbolic `canonical_instrument_id`.
+
+Example:
+`raw_tick_data/by_date/day=2026-07-01/pipeline_mode=batch_thegraph/asset_group=defi/venue=UNISWAP_V3/chain=ETHEREUM/instrument_type=pool/data_type=dex_pool_state/UNISWAP_V3-ETHEREUM:POOL:USDC-WETH-500.parquet`
+
+Segment shape: `_AG_SEGMENT_SHAPE[DEFI]` —
+`unified-api-contracts/unified_api_contracts/registry/possible_manifest.py:158`.
+
+## Buckets — resolve, never hand-build
+
+`resolve_bucket_name(cloud, kind, asset_group="defi", deployment_env="prd")`:
+
+| Layer     | `kind`                               | Resolves to                                   |
+| --------- | ------------------------------------ | --------------------------------------------- |
+| raw tick  | `market-data` (or alias `tick-data`) | `market-data-tick-defi-prd-{pid}`             |
+| reference | `instruments-store`                  | `instruments-store-defi-prd-{pid}`            |
+| features  | `features`                           | `features-defi-prd-{pid}` (`onchain/` prefix) |
+
+Verified in `unified-trading-pm/configs/cloud-providers.yaml:93-102` and `:59-63`.
+
+**`market-data-tick-defi-prd-{pid}` is the ONE consolidated defi bucket** — `data_type` lives in the path, not in a
+bucket name, and it is the only defi bucket with a live consolidator. The 10+ legacy per-`data_type` kinds (`dex-pools`,
+`dex-swaps`, `evm-defi`, `solana-defi`, `eigenlayer-rewards`, `gas-fees`, `lst-rates`, `perp-funding`,
+`lending-indices`, `oracle-prices`, `liquidations`) were **removed from the yaml** 2026-07-10/12/13/16 and the buckets
+deleted — see the removal comments at `cloud-providers.yaml:112-135`. Passing any of them as a `kind` now **raises**
+(`bucket_naming.py:426-431`). That is correct behaviour, not a bug to work around.
+
+## Shard atom + (KEY)
+
+`[pipeline_mode, date, asset_group, venue, chain, instrument_type, data_type, instrument_id, source]` — grain pattern #1
+(flat-per-contract), one parquet per instrument.
+
+## Instrument-id grammar — the TWO-ID model (Option A, INTENTIONAL, not a gap)
+
+defi alone composes the venue and chain into the id:
+
+| Field                     | Shape                                                                                                   | Example                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `canonical_instrument_id` | symbolic `VENUE-CHAIN:TYPE:SYMBOL` — no addresses, on-chain token case **preserved** (`aUSDC`, `stETH`) | `AAVE_V3-ETHEREUM:LENDING:aUSDC`                                              |
+| `instrument_id`           | address-anchored machine key                                                                            | POOL → `pool_address.lower()`; SPOT_ASSET → `spot_asset:{chain}:{token_addr}` |
+
+POOL canonical keys are **3-segment with the fee inside the symbol**: `…:POOL:USDC-WETH-500`.
+
+> **The divergence between the two ids is the design, not drift.** Do not report it as a finding — it is on the accepted
+> exception list (`SKILL.md` § 2c).
+
+> **6 cross-chain pool-address collisions exist.** Consumers MUST key on the chain-unique `canonical_instrument_id`; the
+> bare `instrument_id` collides **by design**. If your comparison keys on `instrument_id`, you will merge distinct
+> chains' pools into one row.
+
+## Catalogue (surface 4)
+
+`instruments-store-defi-prd-{pid}/prod/catalog.parquet` (live) — plus an **ORPHAN stale `prd/catalog.parquet` shadow**
+in the same bucket (note `prd/` vs `prod/`). Read the `prod/` one; report the shadow as an orphan finding once.
+
+## HAZARDS
+
+### H1 — CRITICAL PROBE HAZARD: Solana AMM venues write `instrument_type=solana_amm_pool`, NOT `pool`
+
+This exact slip produced a **false "twin absent" verdict** during the 2026-07-20 audit.
+
+```python
+"orca": "solana_amm_pool",
+"raydium": "solana_amm_pool",
+"phoenix": "solana_amm_pool",
+```
+
+— `market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py:231-233`.
+
+A probe using `instrument_type=pool` returns **ZERO** for ORCA / RAYDIUM even though **14k+ canonical objects exist**
+(measured 2026-07-20). Because a delete suggestion's five-part proof turns on "does the canonical twin resolve", a
+wrong-vocabulary zero converts directly into a **destructive** `yes-twin-confirmed`→ delete recommendation for data that
+was never duplicated. Enumerate the instrument_type vocabulary from `canonical_path_templates("defi")`; never assume it.
+
+### H2 — `dex_pools/` + `lending_indices/` are DO-NOT-DELETE
+
+The delete order in two live plan docs is **stale** — see
+`plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`. The canonical twin is a **partial overlap**, not
+a duplicate: ORCA / RAYDIUM have canonical objects, but **KAMINO and SOLEND have NONE** — for those the legacy objects
+are the only copy. execution-service still references the legacy shape at runtime. Executing the delete destroys data.
+This is a **human-only hard stop** (`SKILL.md` § 4b).
+
+Related precedent: an R5 **content** verify overturned a DUP verdict that would have destroyed **32 legacy-only high-TVL
+Raydium pools** (XMR/USDC ~$47M, BNB/USDC ~$18M). Path-shape similarity is not evidence of duplication.
+
+### H3 — interim flat `LENDING` on market/event data_types is NOT non-canonical
+
+Decision **D** is unruled (`SKILL.md` § 3e). Do **not** flag `lending` on `lending_indices`, `liquidation_events`,
+`flash_loan_events`, or `position_data`. Only `holdings` uses the `A_TOKEN` / `DEBT_TOKEN` split. Re-reporting this is a
+suppressed accepted exception.
+
+### H4 — capture is currently STOPPED; the manifest rebuild CRASHES
+
+- 11 collect + 3 forward crons **PAUSED ~40 days**. Recency gaps are expected; do not report them as capture failures.
+- The manifest rebuild crashes in the CF-11 honest-absence re-emit with `MalformedRowKeyError` — **4.55M of 43.5M
+  `_index` rows (~10%) carry a blank `instrument_id` as legitimate cell-level honest-absence**. A blank `instrument_id`
+  is not automatically a defect; classify per `codex/02-data/honest-absence-downstream-handling.md`.
+
+### H5 — a legacy GLUED-VENUE FLAT tree INSIDE `raw_tick_data/` that discovery cannot see
+
+```
+raw_tick_data/by_date/day={D}/asset_group=defi/venue={VENUE}-{CHAIN}/ticks_migrated_{ISO}.parquet
+```
+
+No `pipeline_mode=`, venue+chain **glued**, no `chain=` / `instrument_type=` / `data_type=` keys. `parse_defi_object`'s
+`_PAT_DEFI` returns `None`, so **discovery = 0** and the R3 reshape never saw it. Two related legacy shapes ARE in the
+templates (`possible_manifest.py:185-195`: the no-asset-group 2024-05 shape and the `venue={venue}-{chain}` overload) —
+but the flat `ticks_migrated_*.parquet` tail is not parsed. Probe for it explicitly; report as orphan-class per
+`codex/02-data/orphan-object-detection.md`.
+
+### H6 — axis-value census: the manifest carries duplicate and non-canonical vocabulary
+
+Measured (SHIPPED + LIVE): **76 venues** including `AAVE` / `AAVEV3` / `AAVE_V3` and `COMPOUND` / `COMPOUND_V3` dupes ·
+**17 instrument_types** (11 non-canonical) · **36 data_types** (10 non-canonical, incl. `dex_pools` → `dex_pool_state`)
+· **24 chains** (3 non-canonical: `HYPERLIQUID` → `HYPERLIQUID_L1`; `KALSHI_PERP` / `POLYMARKET_PERP` leaking in from
+prediction).
+
+Quantified worklist: `POOL`→`pool` 13,868 · `LENDING`→`lending` 179,164 · `PERPETUAL`→`perpetual` 4,221 ·
+`AAVEV3`/`AAVE` →`AAVE_V3` 64,218 · `MORPHOVAULTS`→`MORPHO` 50,266 · `COMPOUND`→`COMPOUND_V3` 13,904 · **`''`/NULL
+instrument_type 4.49M UNRESOLVED**.
+
+> The **case** rows here (`POOL`→`pool` etc. in the manifest **column**) are axis **C2a**, which is UNRULED — compare
+> the column case-insensitively and do **not** propose a casing migration (`SKILL.md` § 3e). The **path** segment
+> (lowercase) and the **id** middle segment (UPPER) are settled and still enforced.
+
+### H7 — coverage denominator: 63.9M, not 1.38M
+
+`expected_unattempted` seed is **63.9M** (not the historical "1M safety-cap" slug), gated behind purging 1.79M
+duplicates and ~219.5K phantoms. `instruments_completion_tracker` still derives coverage from the understated **1.38M**
+denominator. **Never quote a defi coverage % derived from 1.38M.** Name the formula
+(`reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)`, `empty_confirmed` EXCLUDED) and
+mark it a lower bound.
+
+### H8 — other open defects (report, don't fix)
+
+- 26 new defi venues (`_DEFI_VENUES` 63→89) rejected at UAC `validate_instrument_records`; fix `uac@f7314dc2` is
+  DEPLOY-GATED behind an IS Dockerfile UTL base-image pin bump.
+- `gas-fees` + `lst-rates` manifest/bucket split: the writer targets `market-data-tick-defi-prd` while the scanner
+  resolved `kind="gas-fees"` (a confirmed-EMPTY dedicated bucket) — root-caused, not fixed.
+- `source=` write-wiring is a RED gap (cells land `source=""`).
+
+## Known-good spot-check — run BEFORE trusting any absence result
+
+**This is the H1 lesson, generalised. Do not skip it on defi.**
+
+1. Enumerate from `canonical_path_templates("defi")` —
+   `unified-api-contracts/unified_api_contracts/registry/possible_manifest.py:352`. It appends the defi-specific legacy
+   shapes (`:185-195`) that no other AG has, and emits both `batch_` and `live_` prefixes per source (`:315-336`).
+2. From that output, read off the **actual `instrument_type` vocabulary** the writer emits. Confirm `solana_amm_pool` is
+   in your probe set alongside `pool`. If it is not, every ORCA / RAYDIUM result you get is a false zero.
+3. Confirm your probe places `chain=` **after** `venue=`. A `chain=`-first probe returns zero everywhere.
+4. Pick one `(date, venue, chain)` known-captured from the manifest and confirm your probe returns non-zero.
+5. Only then treat a zero as a finding — and even then, a delete suggestion needs the full five-part proof, including a
+   **content** verify (H2).
+
+## Cross-links
+
+`SKILL.md` · `codex/02-data/defi-canonical-naming-ssot.md` · `codex/02-data/defi-data-types-catalog.md` ·
+`codex/02-data/four-surface-reconciliation-procedure.md` · `codex/02-data/reconciliation-finding-taxonomy.md` ·
+`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` · `codex/02-data/non-canonical-path-inventory.md` ·
+`codex/02-data/orphan-object-detection.md` · `codex/02-data/honest-coverage-model.md` ·
+`plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`

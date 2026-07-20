@@ -276,6 +276,33 @@ orchestrator only when HEAD moved, or when the running process predates the chec
 tracked in the AO close-out plan. The `launch-epic-vm*.sh` + historical Cloud Run deploy scripts are retained for
 cloud-agnostic re-spin optionality only; no epic VMs run.
 
+### What a self-pull ACTUALLY deploys — the generator-inert boundary (HARD RULE)
+
+`ao-self-pull.sh` does exactly two things: `git merge --ff-only` and `systemctl restart orchestrator`. **It never
+re-runs an installer.** So a fix only reaches the live VM if it lives in a file the running process reads directly:
+
+| Change lands in…                                       | Live after a self-pull?                                                                                   |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| `server/**.py`                                         | **YES** — unit runs `uvicorn --reload --reload-dir server`, so it reloads even without the restart        |
+| Other in-repo Python/data the process imports at start | **YES** — on the restart                                                                                  |
+| `scripts/install-*.sh`, `scripts/bootstrap_vm.sh`      | **NO** — generator scripts; inert until re-run on that host                                               |
+| `/etc/systemd/system/orchestrator.service`             | **NO** — the installed unit is a rendered COPY; needs `install-orchestrator-service.sh` + `daemon-reload` |
+| `.env.local` on the VM                                 | **NO** — only `bootstrap_vm.sh` rewrites it                                                               |
+| `~/.bashrc` / shell-env installers                     | **NO** — one-time manual per host                                                                         |
+
+**Why this keeps biting**: a plan ticks "fixed + shipped + sha on LDR" and the fix is genuinely correct, but the live
+VM's behaviour never changes — and nothing fails loudly. Two live examples (2026-07-20): the `ORCHESTRATOR_DB_PATH`
+purge from `bootstrap_vm.sh`, and the `QG_GOVERNOR_MODE=reservation` block — both correct, both inert on an
+already-bootstrapped host.
+
+**The sharp edge**: if you migrate state (e.g. `/var/lib/orchestrator/*.db` → `data/state/`) and restart WITHOUT
+re-running `install-orchestrator-service.sh`, the restart uses the still-installed old unit, whose `Environment=` still
+points at the old — now empty — path. That reproduces the exact wrong-DB incident the migration exists to fix.
+
+**So**: when a todo's gate is "the fix is live", the evidence must be a **measured read of the running system** (SSM
+`git merge-base --is-ancestor <sha> HEAD` on the VM checkout, `systemctl show -p ExecMainStartTimestamp`, or a
+`curl localhost:8765/api/...`) — never "the sha is on LDR".
+
 ## Branch model — LDR → main (direct)
 
 `agent-orchestrator` ships via `quickmerge --agent --files` onto `live-defi-rollout` like every repo. Promotion is **LDR

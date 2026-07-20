@@ -136,7 +136,8 @@ adversarially verified since:
   Betfair back-only ⇒ BUY-side-only, no false-executable).
 - **Entry gate GROSS→NET** — `strategy-service@31d6bb0d`: `select_prediction_arb_direction` now gates on
   `net_edge = edge − fee(buy_leg) − fee(sell_leg)` via the public UAC fee helpers; `signal.edge` stays GROSS (sizing +
-  attestations) with a new `net_edge` field, pinned by test to equal `net_edge_sell_kalshi` / `net_edge_sell_polymarket`.
+  attestations) with a new `net_edge` field, pinned by test to equal `net_edge_sell_kalshi` /
+  `net_edge_sell_polymarket`.
 - **PAPER BACKTEST IS PROVEN WORKING** — `test_prediction_arb_3venue_paper_proof.py`: a crossed
   Kalshi/Polymarket/Betfair box **fires one LEADER_HEDGE `AtomicInstruction` and settles TWO benchmark fills with
   non-zero P&L** through the real paper runtime (`GroupBRunner` + `BenchmarkFillEngine`), plus a determinism test
@@ -158,14 +159,30 @@ each atomic to the executor). That decision is the operator's; the cross-repo in
 
 ### Smaller open items (documented, not blocking paper)
 
-- **Compensation for a MATCHED leader**: the unwind currently issues `cancel_bet`, which does not offset an
-  already-matched leader — live fails safe to naked+alert, but a real offsetting bet is required before live.
+- **✅ FIXED 2026-07-20 — Compensation for a MATCHED leader**: the unwind was issuing `cancel_bet`, which is a NO-OP at
+  the venue on already-matched stake — so the report could have claimed `naked_position=False` over a real open position
+  (a false clean report on the real-money path). The unwind is now **status-aware**: `PENDING`/`PLACED` -> `cancel_bet`
+  (genuinely pulls a resting order) · `MATCHED` -> a **real offsetting bet** on the opposite `BetSide` (a matched BACK
+  is closed by a LAY) sized to the **FILLED** stake, not the requested stake · `PARTIALLY_MATCHED` -> cancel the resting
+  remainder FIRST, then offset the filled portion · `SETTLED_*`/`REJECTED`/`CANCELLED` -> no open exposure, nothing to
+  unwind (classified explicitly so a rejected leg cannot raise a FALSE naked alarm). `naked_position=False` is now
+  reported **only when the venue confirmed the unwind** — a cancel returning False, a rejected offset, a venue that
+  cannot express the opposite side, or a `PARTIALLY_MATCHED` result with no `filled_stake` to size the offset all fail
+  safe to `naked_position=True` plus a reason in `compensation_detail`. Sizing is never guessed: guessing would under-
+  or over-hedge real money. Tests: 23/23 green, covering matched-offset, offset-rejection-reports-naked, and
+  partial-fill-cancel-then-offset.
 - **Two-sided Betfair odds ([5])**: persisted odds remain BACK-only, so `betfair_yes_bid` is always None → Betfair is
   BUY-YES-only; SELL-Betfair lights up automatically once a back+lay exchange book is persisted (kernel edge already
   wired). Needs a Betfair-exchange book source (the Odds-API aggregator is back-only).
-- **Betfair fee proxy**: `betfair_fee` takes *net winnings*; entry-time code passes the YES-bid premium as the proxy —
-  a documented deterministic approximation, operator-tunable.
+- **Betfair fee proxy**: `betfair_fee` takes _net winnings_; entry-time code passes the YES-bid premium as the proxy — a
+  documented deterministic approximation, operator-tunable.
 - **`entry_threshold` semantics moved**: values were calibrated against GROSS edge and now gate on NET, so the same
   number is strictly more selective (0.03 = 3% NET). Intended, but re-tune with eyes open.
-- **CI integrity**: a global pytest hook silently skips the whole unit backtest suite — see
-  `strategy_global_pytest_hook_skips_backtest_suite_2026_07_20.md` (P2).
+- **✅ FIXED 2026-07-20 — CI integrity**: the global pytest hook that silently skipped the whole unit backtest suite is
+  now scoped to its own `tests/e2e/` subtree, so `tests/unit/engine/backtest/` (GroupBRunner, BenchmarkFillEngine, the
+  paper-run suites — the settlement engine underwriting `paper(W) == batch-rerun(W)`) actually RUNS in the gate: **58
+  passed, 0 failed**, no `requires_data` marks needed. Turning the lights on immediately exposed a genuinely BROKEN test
+  (`NameError: _STRAT_JITO`, a missed 3-site rename from the 2026-07-16 Solana-perp-DEX cull) which was also fixed. See
+  `strategy_global_pytest_hook_skips_backtest_suite_2026_07_20.md` (now `status: resolved`). **This matters for the arb
+  proof specifically**: it means the green gate now genuinely covers the benchmark-fill path the 3-venue paper proof
+  depends on, instead of merely appearing to.

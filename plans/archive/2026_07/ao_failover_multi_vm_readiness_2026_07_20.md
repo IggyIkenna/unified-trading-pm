@@ -6,7 +6,7 @@ summary:
   earlier delete ruling). It has never fired once, has zero fleet-registry entries, and prefers paused slots as re-route
   targets — untested resilience machinery is worse than none. Fix the slot-selection bug and prove the offline-reroute
   and rollback paths before anyone relies on them.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,6 +35,15 @@ source:
 ---
 
 # AO failover — keep it, fix it, and prove it works
+
+> **🟢 COMPLETE 2026-07-20 — ARCHIVED.** All 8 todos landed, zero residual. Independently re-verified 2026-07-20: shas
+> `03d48e8`, `dfc948f`, `3dff4d7` all exist, are ancestors of `origin/live-defi-rollout`, and carry the
+> `Quickmerge: agent` trailer. The headline defect — `_pick_least_loaded_slot` PREFERRING a paused slot because its
+> structural zero load made it look least-loaded — is genuinely fixed (now filtered through
+> `dispatch.slot_is_spawnable()`) and pinned by a regression test that builds exactly that scenario. **Honest scope
+> note**: everything here is proven by test + code inspection. The end-to-end path (a real second host going offline, a
+> real `failover_rerouted` row in prod) has NEVER been exercised live — the plan and the re-enable runbook both say so
+> (`last_executed: NEVER`). This is dormant-but-hardened, not proven-in-production.
 
 > **Operator ruling 2026-07-20 (REVERSES the earlier A5 "delete")**: multi-VM is not running today, but it is likely to
 > return for resilience/backup, so the failover infrastructure is **KEPT**. The retirement plan drafted earlier was

@@ -366,3 +366,117 @@ rather than inference:
    not change. The sports half SUPERSEDES the 2026-05-12 scraper deferral. **EXCLUDED from the addition either way:**
    `ALCHEMY` (unreconciled ALCHEMY-vs-ALCHEMIX spelling across chain_env/venue_launch_dates/manifest — reconcile to ONE
    form first) and `JUPITER` (UAC registry comment says "not integrated"; confirm capture-integration first).
+
+## Deferred work after 2026-07-20
+
+| Item                                                                                                                                                               | State                                                                                                                                                                                                                                                                                                                | Why deferred                                                                                                                                                                                                                                                                                                                               | Recovery                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **MTDS venue-as-chain writer fix** (`onchain_perp_batch_handler.py` `_VENUE_CHAIN` → `_venue_chain()` resolving via UAC `VENUE_TO_ASSET_GROUP`, + regression test) | **WRITTEN, NOT SHIPPED.** Code complete and reviewed; the handler's own stale docstring claim was verified and corrected (neither the live-WS recorder nor `perp_funding_handler._chain_map` still mirrors the venue-as-chain convention — those dropped it 2026-07-08, so this handler is the ONLY remaining site). | market-tick-data-service is a **LIVE claim by another agent** — its dirty set GREW during this session (10 files: aster adapter/ws/client, polymarket_adapter, 2 migrate scripts, 3 test files). Running a gate there would gate their in-flight work; committing would race them. Multi-agent rule: live claim → PROTECT, do not inherit. | Working tree change is intact; also snapshotted as dangling commit `dded7f544` (tag `wip-slot3-venue-chain-fix`) + copies in the session scratchpad. Ship once MTDS is quiet: gate + commit ONLY `cli/handlers/onchain_perp_batch_handler.py` + `tests/unit/test_onchain_perp_batch_handler.py`. |
+| **Paired manifest re-stamp** for the above (operator-approved "one pass")                                                                                          | NOT STARTED                                                                                                                                                                                                                                                                                                          | Blocked on the writer fix landing. `chain` is a ROW-KEY column, so the re-stamp must run WITH the writer fix or row identity forks.                                                                                                                                                                                                        | Sequence: snapshot `_index` → dry-run counts → **collision pre-flight (HARD GATE — abort if any post-blank row_key collides)** → CAS-apply → verify HOLDS across 2 consolidator cycles incl. one `--force`.                                                                                      |
+| **Detector D1b** (defi venues vs `ALL_DEFI_VENUES` vocabulary, not the phase-gated live subset)                                                                    | NOT STARTED                                                                                                                                                                                                                                                                                                          | Discovered late in the session while executing the (invalid) defi venue additions.                                                                                                                                                                                                                                                         | Tracked as a todo above. No registry/denominator impact — pure detector change.                                                                                                                                                                                                                  |
+| **IS `_LEGACY_INSTRUMENT_TYPE_ALIASES`** add `'options_chain': 'OPTION'`                                                                                           | NOT STARTED                                                                                                                                                                                                                                                                                                          | instruments-service also has foreign WIP (catalogue + enumerate_expected_universe + a new dedup script).                                                                                                                                                                                                                                   | Single-line addition + test; ship when IS is quiet.                                                                                                                                                                                                                                              |
+| **MDPS `_type_token_from_canonical_id` `parts[1]` parse**                                                                                                          | NOT STARTED — annotate only                                                                                                                                                                                                                                                                                          | Owned by `sports_consolidated_closeout_2026_07_19.md` Track C F1/F2; do NOT fork the fix.                                                                                                                                                                                                                                                  | Annotate the finding on that plan.                                                                                                                                                                                                                                                               |
+
+### 2026-07-20 — UAC additions SHIPPED, and RC-4's "missing defi venues" premise was WRONG
+
+**Shipped:** `uac@bb42d8ee` (RESTAKING enum) + `uac@b6a1d83a` (20 ODDS_API bookmakers). Runtime-verified against the
+shipped registry: `InstrumentType.RESTAKING` resolves; `VENUES_BY_ASSET_GROUP['sports']` 8 → 28.
+
+Adding an enum member / venue is never a one-line change here — the registry's own guards caught **two** consumers I had
+missed, each a test failure rather than a silent gap: `INSTRUMENT_TYPE_FOLDER_MAP` (RESTAKING), then
+`VENUE_TO_ADAPTER_KEY` + the declared `EXPECTED_SENTINEL_VENUES` set (bookmakers). All 20 bookmakers map to
+`NO_ADAPTER_YET` with the reason stated, because their odds arrive via the ODDS_API aggregator (Decision C, MTDS-owned)
+and no per-bookmaker IS adapter exists or is planned — sentineling is a decision the guard forces you to declare.
+
+**The defi half was CANCELLED as invalid.** RC-4 claimed 15 defi protocols were "missing from
+`VENUES_BY_ASSET_GROUP['defi']`". They are not missing — every one already exists in
+`registry/defi_venues.py::ALL_DEFI_VENUES` (170 entries) with `phase="pipeline"`. That key is DERIVED and phase-gated:
+
+```python
+"defi": list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if _DEFI_VENUE_PHASE.get(v) == "live"))
+```
+
+Measured: 170 total = 93 `live` + 42 `pipeline`. ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/ACROSS/STARGATE/FLASHBOTS/
+MANTLE-ETHEREUM are ALL present, all `pipeline`. `defi_venues.py:424` states the invariant:
+
+> `# INVARIANT: phase=="live" ⟺ venue is IS-producible (in _build_defi_venues()).`
+
+`phase` is a CAPABILITY assertion, not a naming one. Flipping these to `live` would assert instruments-service can
+produce them when it cannot (no adapter), break the `set(_build_defi_venues()) == VENUES_BY_ASSET_GROUP['defi']` guard
+(`instruments-service/.../orchestrator/defi.py:107`), and pad the honest-coverage denominator with venues that CANNOT be
+captured — making that coverage permanently unachievable, the opposite of the honest-denominator intent.
+
+**INDEPENDENT CONFIRMATION (same day, different agent).** While this was being shipped, `uac@83f17c46` landed:
+
+> `fix(defi): revert CHAINLINK-* to phase=pipeline, no adapter key — chainlink.py was never built in instruments-service, breaking the IS adapter-routing invariant on the LDR->main promotion gate (instruments-service#873, quality-gates-v2 red).`
+> Exactly the predicted failure mode, reached independently: a defi venue flipped to `live` without a real IS adapter
+> turned **quality-gates-v2 RED on the promotion gate** and had to be reverted. Executing RC-4 as filed would have
+> reproduced that breakage fifteen-fold. Corrected remedy stays **detector D1b** — compare the manifest against the
+> `ALL_DEFI_VENUES` VOCABULARY, never the phase-gated capability subset.
+
+### 2026-07-20 — UAC additions SHIPPED, and RC-4's "missing defi venues" premise was WRONG
+
+**Shipped:** `uac@bb42d8ee` (RESTAKING enum) + `uac@b6a1d83a` (20 ODDS_API bookmakers). Runtime-verified against the
+shipped registry: `InstrumentType.RESTAKING` resolves; `VENUES_BY_ASSET_GROUP['sports']` 8 → 28.
+
+Adding an enum member / venue is never a one-line change here — the registry's guards caught **two** consumers missed on
+the first pass, each as a test failure rather than a silent gap: `INSTRUMENT_TYPE_FOLDER_MAP` (RESTAKING), then
+`VENUE_TO_ADAPTER_KEY` + the declared `EXPECTED_SENTINEL_VENUES` set (bookmakers). All 20 bookmakers map to
+`NO_ADAPTER_YET` with the reason stated — their odds arrive via the ODDS_API aggregator (Decision C, MTDS-owned), no
+per-bookmaker IS adapter exists or is planned; the guard forces sentineling to be a declared decision.
+
+**The defi half was CANCELLED as invalid.** RC-4 claimed 15 defi protocols were "missing from
+`VENUES_BY_ASSET_GROUP['defi']`". They are NOT missing — every one already exists in
+`registry/defi_venues.py::ALL_DEFI_VENUES` (170 entries) with `phase="pipeline"`. That key is DERIVED and phase-gated:
+
+```python
+"defi": list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if _DEFI_VENUE_PHASE.get(v) == "live"))
+```
+
+Measured: 170 total = 93 `live` + 42 `pipeline`. ANKR / FRAX / MAKER / STADER / STAKEWISE / SWELL / ACROSS / STARGATE /
+FLASHBOTS / MANTLE (-ETHEREUM) are ALL present, all `pipeline`. `defi_venues.py:424` states the invariant:
+
+> `# INVARIANT: phase=="live" <=> venue is IS-producible (in _build_defi_venues()).`
+
+`phase` is a CAPABILITY assertion, not a naming one. Flipping these to `live` would assert instruments-service can
+produce them when it cannot (no adapter), break the `set(_build_defi_venues()) == VENUES_BY_ASSET_GROUP['defi']` guard
+(`instruments-service/.../orchestrator/defi.py:107`), and pad the honest-coverage denominator with venues that CANNOT be
+captured — permanently unachievable coverage, the opposite of the honest-denominator intent.
+
+**INDEPENDENT CONFIRMATION (same day, different agent).** While this shipped, `uac@83f17c46` landed:
+`fix(defi): revert CHAINLINK-* to phase=pipeline, no adapter key — chainlink.py was never built in instruments-service, breaking the IS adapter-routing invariant on the LDR->main promotion gate (instruments-service#873, quality-gates-v2 red).`
+Exactly the predicted failure mode, reached independently: a defi venue flipped to `live` without a real IS adapter
+turned quality-gates-v2 RED on the promotion gate and had to be reverted. Executing RC-4 as filed would have reproduced
+that breakage fifteen-fold. Corrected remedy stays **detector D1b** — compare the manifest against the `ALL_DEFI_VENUES`
+VOCABULARY, never the phase-gated capability subset.
+
+**Process note:** three earlier attempts to record this were silently lost. Root cause = the `check-branch-drift`
+pre-commit hook performs its own pull/rebase ("files were modified by this hook"), which resets an UNCOMMITTED working
+file to origin's version mid-commit. Lesson: in this repo, `git pull --ff-only` FIRST, then edit, then commit
+immediately — never append while behind origin.
+
+### 2026-07-20 15:46 local — MTDS still NOT shippable; index hazard found + neutralised
+
+Re-checked whether market-tick-data-service had gone quiet enough to ship the venue-as-chain fix. It has **not** — the
+repo is in a worse state than at the first check:
+
+1. **Orphaned merge conflict.** `tests/unit/test_pipeline_e2e_prediction_canonical.py` is `UU` with 4 conflict markers,
+   but there is NO `.git/MERGE_HEAD`, `REBASE_HEAD`, `rebase-merge` or `rebase-apply`. A merge/rebase died mid-conflict
+   and left the index wedged; nobody is actively resolving it. Committing anything from this index would commit an
+   unresolved conflicted file.
+2. **A `git add -A`-style sweep staged EVERYTHING**, including this session's two unrelated venue-as-chain files. All 10
+   modified files were `M ` (staged). Had any agent, hook, or cron committed from that index, the venue-as-chain fix
+   would have been swept into an unrelated aster/cefi-migration commit — wrong attribution, no gate run on it, bundled
+   with a conflicted file. This is exactly the failure the "stage by name, never `git add .`/`-A`" rule prevents.
+
+**Action taken (surgical, non-destructive):** `git restore --staged` on ONLY the two files owned by this session
+(`cli/handlers/onchain_perp_batch_handler.py`, `tests/unit/test_onchain_perp_batch_handler.py`). Working-tree content is
+unchanged and still present; the other 9 staged files and the conflicted file were left exactly as found — the other
+agent's work and its resolution remain entirely theirs. Verified after: 0 of my files staged, 9 of theirs still staged,
+my change still in the working tree, `UU` state preserved.
+
+**Ship gate for the venue-as-chain fix (unchanged, all must hold):** (a) `UU` conflict resolved by its owner and the
+index clean of foreign staged files; (b) MTDS dirty set quiet; (c) `quality-gates.sh` green; (d) commit ONLY the two
+named files; (e) then the paired manifest re-stamp with snapshot → dry-run → **collision pre-flight HARD GATE** → CAS →
+HOLD-verify across 2 consolidator cycles incl. one `--force`. Recovery if the working tree is ever clobbered: dangling
+commit `dded7f544` (tag `wip-slot3-venue-chain-fix`) + copies under the session scratchpad `wip-mtds/`.

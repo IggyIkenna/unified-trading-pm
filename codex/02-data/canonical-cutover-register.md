@@ -46,7 +46,12 @@ authoritative_for:
     effective-from dates for canonical axes,
     historical-vs-noncanonical classification rule,
   ]
-referenced_by: [codex/02-data/orphan-object-detection.md]
+referenced_by:
+  [
+    codex/02-data/orphan-object-detection.md,
+    codex/02-data/four-surface-reconciliation-procedure.md,
+    codex/02-data/reconciliation-finding-taxonomy.md,
+  ]
 owner:
 last_reviewed: 2026-07-20
 code_refs:

@@ -62,9 +62,10 @@ related:
     mvp_backfill_defi_onchain_v10_2026_06_27.md,
     master_to_live_defi_2026_05_23.md,
     canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    ao_dispatch_cooldown_and_park_2026_07_20.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-07-20
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -263,10 +264,12 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 - [ ] [DATA] P0. **Legacy GLUED-VENUE FLAT tree INSIDE `raw_tick_data/` — R3 never sees it.**
       `raw_tick_data/by_date/day=<D>/asset_group=defi/venue=<VENUE>-<CHAIN>/ticks_migrated_<ISO8601>.parquet` (e.g.
       `venue=UNISWAPV3-ETHEREUM/`, `AAVEV3-ETHEREUM/`) — pipeline_mode MISSING, venue+chain GLUED, FLAT (no
-      chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump. `parse_defi_object._PAT_DEFI`
-      requires the hive segments → returns None → R3 discovery=0. FIRST determine if these are superseded `_migrated_`
-      leftovers (a prior migration already split them → delete-after-verify) or un-split sources (→ parse + split to
-      canonical). (repo: market-tick-data-service)
+      chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
+
+      `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
+                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
       needs a re-fetch. (repo: market-tick-data-service)
@@ -515,7 +518,19 @@ Discriminator = **does a manifest row exist**.
       `reclassify_defi_postdelist_eu_2026_06_24.py`; gate `validate_defi_no_delisted_on_live_pool`); **(c)** Option B
       §12 on-chain factory/RPC truth-gate probe (feeds `delisted_at` for genuine removals). SSOT:
       `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`. (repos: instruments-service,
-      market-tick-data-service, unified-api-contracts)
+      market-tick-data-service, unified-api-contracts) **STATUS 2026-07-20: (a) + (b) DONE + VERIFIED on prod** —
+      catalogue non-blank `available_to` 2,349 → 105 (0 on the false-cluster dates) via `--mode full` regen + a targeted
+      frozen-tail purge; manifest `EXPECTED_INSTRUMENT_DELISTED` **219,738 → 3,874** across 45.8M rows via an
+      instrument_type-agnostic un-delist. (c) built, tested + runtime-verified, ship pending tree-green.
+- [ ] [DECISION] P1. **DeFi non-POOL per-instrument EU has NO reconciliation path** (surfaced by the un-delist above).
+      The catalogue-residual → typed-empty machinery is DEX-POOL-ONLY at all three layers, and SPOT_ASSET/A_TOKEN/
+      DEBT_TOKEN are reference-only holdings with no per-day capture path — so 215,864 re-seeded cells cannot reach a
+      terminal state. **⛔ Do NOT close them with `EXPECTED_NOT_ENOUGH_TVL`** — it is in the same
+      clipped-from-denominator bucket as `EXPECTED_INSTRUMENT_DELISTED`, so it would reproduce the exclusion. Needs an
+      operator/architecture call (don't-seed vs a new in-denominator reason) + generalising
+      `catalogue_pool_ids_for_shard` beyond pools. SSOT:
+      `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`. (repos:
+      market-tick-data-service, instruments-service, unified-api-contracts)
 
 ## Track 4 — CAP: zero-capture protocols · P2
 
@@ -535,9 +550,31 @@ Discriminator = **does a manifest row exist**.
   10/10 SKIP → RE-RUN), `defi_onchain_derivable_values_and_date_drift_2026_06_20.md` (2 P1).
 - **Close-out criterion**: manifest-counted canonical rows for every MVP cell; carry tracer green on real data.
 
+> **mvp-defi backlog unpark condition — re-pointed here 2026-07-20 (`ao_dispatch_cooldown_and_park_2026_07_20` todo
+> 4).** The agent-orchestrator backlog task `mvp_backfill_defi_onchain_v10-001` carries a durable park (`priority: 999`
+> / `priority_override: true`) gated on the named prerequisite
+> `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` (condition currently `false`).
+>
+> Its original owner, `data_completion_defi_2026_07_15.md` (todos B0/C0, seed-then-backfill framing), is dead under the
+> per-instrument re-architecture above — that plan never re-derives the condition and its seed-chain premise no longer
+> matches how backfill actually runs (shard key = symbolic `canonical_instrument_id`, not the old seed-chain).
+>
+> **Flip instruction**: set `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` **true**
+> (`POST /api/prerequisites/defi_onchain_v10_universe_v2_seed_or_backfill_progressed {"value": true, "set_by": "<you>"}`)
+> the first time the todo below shows REAL manifest-counted progress on the per-instrument shard key — i.e. once R1→R3
+> above have landed (writer + denominator + historical migration) and this track's backfill has actually started writing
+> canonical rows, not merely been unblocked to start.
+>
+> Until then the park is intentional, not stale: Track 5 is explicitly gated C-GREEN on T1→T3, and R3 (the historical
+> migration this backfill depends on) is still `RUNNING, partial` as of this writing. No park exists without a named
+> LIVE flipper — this note + this track ARE that flipper; if Track 5 is ever archived/superseded before flipping the
+> condition, migrate this note to whatever supersedes it rather than letting the park go silent again.
+
 - [ ] [DATA] P1. **Run the DeFi MVP backfill to 100%** on the canonical/migrated corpus (SPOT VMs; the DRIFT/Velocity
       historical grind is now CULL residue — DRIFT is out of target, so its gap is dropped not filled); re-run the
-      Phase-D historical carry tracer on real data; resolve the 2 derivable-values P1s. (repos: deployment-service,
+      Phase-D historical carry tracer on real data; resolve the 2 derivable-values P1s. On first real progress, flip
+      `defi_onchain_v10_universe_v2_seed_or_backfill_progressed` true per the unpark note above — that is what releases
+      the parked `mvp_backfill_defi_onchain_v10-001` backlog task back to the fleet. (repos: deployment-service,
       market-tick-data-service, features-service)
 
 ## Track 6 — RENDER: data-status surface #4 + RESTORE the enumeration view · P1
@@ -764,6 +801,189 @@ Discriminator = **does a manifest row exist**.
     **DEFERRED-bespoke (flag, not MVP-blocking):** GMX POOL-vs-PERPETUAL shape; HYPERLIQUID-L1 gas (no EVM chain_id);
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
+
+- **2026-07-20 (slot-4, /autonomous — ✅✅ CHAINLINK FULLY FIXED end-to-end; the adapter-first bet paid off).**
+
+  - **The lockstep COMPLETED, across three slots, in the correct order:** (1) my adapter `is@6506b505`
+    (`ChainlinkOracleReferenceDataAdapter` + factory registration, denominator-neutral); (2) a peer's `is@9267e0ea`
+    (DERIVED citations on `chainlink.py`, `CHAINLINK-*` added to the IS venue set, goldens regenerated); (3) a peer's
+    `uac@ae83689b` (`flip CHAINLINK-* back to phase=live + real adapter key`). **Measured post-flip: IS 98 == UAC 98,
+    drift guard EQUAL=True, `UAC-only` empty.** The gate that `uac@83f17c46` had to revert this morning is now
+    satisfied.
+  - **This validates holding the declaration back rather than firing it solo.** I landed the adapter (safe,
+    denominator-neutral, verifiable) and explicitly did NOT declare the venues, because the cross-repo transient is
+    exactly what caused `instruments-service#873`. A peer then closed it from the other side — safely, _because the
+    adapter precondition was already satisfied_. The right unit of autonomous work was the half that could not break
+    anything; the half that could, wasn't mine to fire alone.
+  - **🔴 CAUGHT A FLEET-WIDE STALE PIN AS A RESULT.** The MTDS RULE-11 DEFI baseline tracks `venues x 27 data_types`, so
+    it moved THREE times today: **2403 -> 2646** (`uac@3f79489f`, 9 venues) -> **2511** (`uac@83f17c46` reverted
+    CHAINLINK x5, removing exactly 5 chains x 27 = 135) -> **2646** (`uac@ae83689b` re-declared them). **`origin` still
+    carries the stale middle value 2511**, so every MTDS tree is RED until the pin is restored — shipping 2646,
+    measured, not derived on paper.
+  - **Convergence is now a measured pattern, not an anecdote: THREE times today two slots independently produced the
+    same fix** (the IS +4 registration + goldens; the MTDS 2646 re-pin; the 2511 re-pin). Each collision cost a full
+    ~15-minute QG cycle. Root cause: a single UAC venue-set change fans out to at least four dependent artifacts (IS
+    factory, IS `_STATIC_DEFI_VENUES` + goldens, MTDS RULE-11 pin, IS RULE-11 pin) with **no ownership signal**, so
+    whoever notices first starts duplicating work already in flight elsewhere.
+  - **⚠️ SHIP-RACE IS THE REAL TAX HERE — 4 consecutive MTDS attempts lost.** A full MTDS QG is ~10-15 min
+    (`[qg-governor] all 2 tokens busy — queued 570s` on a 35-process host), and the quickmerge sentinel invalidates on
+    ANY tree change in that window, so a busy repo can starve a correct, gate-green change indefinitely. The
+    `pull -> QG -> quickmerge` chain does not fix it because the pull happens BEFORE the slow step. quickmerge has no
+    inline-QG flag (checked). _Worth raising: either quickmerge runs the gate itself under one lock, or the sentinel
+    tolerates changes that don't touch the whole-program surface._
+
+- **2026-07-20 (slot-4, /autonomous — ✅ CHAINLINK ADAPTER LANDED `is@6506b505`; only the DECLARATION remains).**
+
+  - **Shipped `ChainlinkOracleReferenceDataAdapter` + factory registration** — QG GREEN (4709 passed), landed on LDR,
+    tree 0-dirty. This resolves the exact precondition the peer recorded in `factory.py`: _"CHAINLINK-* stays out of
+    this table: **no adapter class exists yet**, see factory._ADAPTERS + venue_adapter_keys.py, BLK-0c7b82fe"_. The
+    class now exists, is registered in `_ADAPTERS`, is in the chain-aware ctor set, and was **verified constructing on
+    all 5 chains** (ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON).
+  - **The "speculative adapter" objection was MEASURED, not argued away.** All **45** aggregator addresses are a strict
+    SUBSET of the **52** in MTDS's production `cli/handlers/_oracle_prices_constants.py` — the exact set MTDS already
+    fetches via `latestRoundData()`. **Set-diff IS-only = 0.** Static enumeration, no discovery-time network call
+    (mirrors `pyth.py`). So it emits the same reference data MTDS already trusts — not invented data.
+  - **Why this could NOT re-break the gate — verified by READING the code, not assuming.** I had _inferred_ registration
+    would move the denominator; that was WRONG. `_build_defi_venues()` derives from `_SUBGRAPH_PROTOCOL_TO_VENUE_PREFIX`
+    × chains + `_STATIC_DEFI_VENUES` + `_SOLANA_DEFI_VENUES` — **not** from `_ADAPTERS`. So registration is
+    denominator-neutral. **Measured post-ship: IS 93 == UAC 93, guard EQUAL=True, chainlink routable=True.** _This is
+    the second time today that checking an assumption instead of acting on it changed the plan — the first being the
+    4.6M absence rows that made a 7-year re-run unnecessary._
+  - **REMAINING (one coordinated step, deliberately NOT taken solo):** declare `CHAINLINK-*` live in UAC (`phase=live` +
+    `VENUE_TO_ADAPTER_KEY` entries) **and** add it to IS `_STATIC_DEFI_VENUES`, then re-pin RULE-11 93 -> 98 and regen
+    the golden 227 -> 237. Adapter-first ordering means the IS adapter-routing invariant now holds at every intermediate
+    commit. **I stopped short of firing it** because those two repos cannot land atomically — there is a transient
+    window where UAC declares 98 while IS still produces 93, which is precisely the fleet-wide RED
+    (`instruments-service#873`) another slot had just finished cleaning up. Re-opening that window unilaterally, while a
+    peer is actively shipping in the same files, is how you cause the same outage twice. **Operator call.**
+
+- **2026-07-20 (slot-4, /autonomous — REBUILD RE-EMIT now HARD-FAILS on the honest-coverage evidence guard; the +4 IS
+  half was landed by a PEER).**
+
+  - **🔴 NEW BLOCKER, and the guard is RIGHT.** `2022d` finished its scan and then died with **`EXIT_STATUS=1`**:
+    ```
+    UnprovenHonestAbsenceError: record_empty(reason=SOURCE_RETURNED_ZERO) requires FetchEvidence proving a clean
+    200+empty fetch (http_status in 2xx AND response_received AND rows_in_response == 0 AND error_signal == "").
+    The supplied evidence does NOT prove honest absence (no FetchEvidence supplied) ... call record_failed instead.
+    [row_key={'date': '2020-02-14', 'venue': 'SUSHISWAP_V3', 'data_type': 'dex_pool_state', ...}]
+    ```
+    (`REBUILD_DEFI_MANIFEST_RUN_FAILED`, elapsed 1183.5s, `rebuild_defi_manifest.py:547`.) **My OOM fix worked** — it
+    got through the 45.8M-row read (`12 projected cols`) and 13.27M absence rows before this. The re-emit re-asserts
+    LEGACY `empty_confirmed / SOURCE_RETURNED_ZERO` rows that PREDATE the FetchEvidence requirement, and UTL refuses to
+    let an unprovable absence claim be re-written. **That refusal is correct** — an unproven `SOURCE_RETURNED_ZERO` is
+    exactly the "auth / rate-limit / 5xx masquerading as honest absence" case the guard exists to catch.
+  - **The scan value is NOT lost.** The writer flushes every 5,000 entries, so `2022d`'s per-VM shard persisted at
+    **30,995,019 bytes** before the failure; `2025d` is still scanning healthily (2025-09-12, 2.6M entries) and will
+    deliver its scan then hit the same wall. The rebuild's PURPOSE — re-deriving per-instrument CAPTURED rows from the
+    migrated tree — completes; only the trailing absence re-emit fails.
+  - **This reinforces the earlier measured conclusion: the re-emit is REDUNDANT here.** Consolidation is UPSERT
+    (`_merge_dataframes`: `concat(existing, new)` + `drop_duplicates(keep="last")`; cross-shard `_merge_shard_frames`
+    resolves by **latest `attempted_at`, independent of shard load order**, with a captured-outranks tie-break). The
+    legacy absence rows therefore PERSIST whether or not they are re-emitted — which is precisely what I measured
+    directly: **4,604,591 cell-level absence rows (4,465,805 `empty_confirmed`) are already in the index.** The
+    re-emit's stated purpose ("without this a pure object-scan rebuild silently DROPS the absence corpus") is a
+    REPLACE-model concern; under the UPSERT model actually in use it is at best a no-op and at worst — as now — a hard
+    failure re-asserting claims it cannot prove.
+  - **PROPOSED FIX (NOT applied — this is manifest-absence semantics, operator territory):** make the CF-11 re-emit
+    OPT-IN and leave it OFF for sharded/upsert rebuilds. The two alternatives are both worse: mapping unprovable legacy
+    reasons to `record_failed` would relabel genuinely-empty cells as failures (corrupting coverage in the other
+    direction), and bypassing the evidence gate would defeat a correctness guard that is doing its job. **Not
+    freelanced** — "data pipeline correctness is the heartbeat" is exactly where I should not invent semantics.
+  - **The IS +4 half was landed by a PEER while I was realigning** (`is@793125ad` "wire meteora/lifinity/phoenix/pyth
+    adapters into factory + regen goldens"), and their result is IDENTICAL to what I had staged: pin **93**, golden
+    **227** tuples, no chainlink. My duplicate edits became `UU` conflicts (which is why a QG showed collection errors
+    and 10.1% coverage — conflict markers, not real failures). I resolved by taking THEIR landed version wholesale and
+    kept only my unique artifact, `chainlink.py`. **Two slots converged on the same fix twice today** (this and the
+    RULE-11 2646 re-pin) — a signal that a shared "who owns this fix" signal is missing when a UAC change fans out.
+  - **Why `chainlink.py` ships UNREGISTERED:** the drift guard is strict SET-EQUALITY both directions
+    (`is_defi == uac_defi`, `test_defi_set_equals_uac_denominator_drift_guard`). Registering the adapter while UAC
+    declares 93 would make IS produce 98 → "Extra in IS (not in UAC)" → guard RED. So the artifact lands first, and
+    factory registration + the UAC `phase=live` + adapter-key re-declaration land TOGETHER as one follow-up. That
+    ordering keeps the IS adapter-routing invariant satisfied at every intermediate commit.
+
+- **2026-07-20 (slot-4, /autonomous — CHAINLINK: another slot REVERTED it in UAC; the correct fix is ADAPTER-FIRST).**
+
+  - **State changed under me: `uac@83f17c46` REVERTED CHAINLINK x5 to `phase=pipeline`, no adapter key.** Reason given:
+    "chainlink.py was never built in instruments-service, breaking the IS adapter-routing invariant on the LDR->main
+    promotion gate (instruments-service#873, quality-gates-v2 red)". **That revert was CORRECT** — it unblocked the
+    promotion gate rather than waiting on me. Live defi venues are now **93**, not 98: METEORA/LIFINITY/PHOENIX-SOLANA
+    - PYTH-SOLANA stayed live (real IS adapters exist), CHAINLINK came out entirely (no venue, no `VENUE_TO_ADAPTER_KEY`
+      entry — both verified by running the UAC registry).
+  - **Operator asked "can we fix chainlink" — answer: yes, and the adapter is real, but the ORDER matters.**
+    `chainlink.py` exists in my tree and I **measured** slot-3's central objection ("a speculative adapter would emit
+    unverifiable reference data — strictly worse than a loud failure"): **all 45 aggregator addresses are a strict
+    SUBSET of the 52 already in MTDS's production `cli/handlers/_oracle_prices_constants.py`** — the exact set MTDS
+    already fetches via `latestRoundData()`. **Zero IS-only addresses** (set-diff). Enumeration is static, no
+    discovery-time network call, mirroring `pyth.py`. So it is NOT invented reference data.
+  - **Therefore the sequence is ADAPTER FIRST, DECLARATION SECOND** — the exact inverse of the mistake that caused the
+    original block. This IS commit lands (a) the +4 registrations UAC currently declares live and (b) `chainlink.py` as
+    an AVAILABLE artifact. CHAINLINK then gets re-declared live in UAC **with** its adapter key as a follow-up, at which
+    point the RULE-11 pin goes 93 -> 98 and the golden 227 -> 237. Doing it in that order means the IS adapter-routing
+    invariant is satisfied at every intermediate commit, so the promotion gate never goes red again.
+  - **My earlier IS work had to be realigned, not just retried.** The first two ship attempts failed the QG sentinel
+    race, and the third correctly SELF-ABORTED on QG RED — the failures were 3 tests all downstream of the UAC revert
+    (golden expecting 237, pin expecting 98, and the `test_defi_set_equals_uac_denominator_drift_guard`). Realigned to
+    the current truth: pin **93**, golden regenerated to **227** tuples (+5 = METEORA/LIFINITY/PHOENIX
+    `pool/dex_pool_state` + PYTH `spot_asset`/`spot_pair` `oracle_prices`), **zero CHAINLINK tuples**, other four AG
+    goldens metadata-stamp-only. _Guarding the ship on `if QG != 0: abort` is what stopped a red tree from being pushed
+    — worth keeping as the standard chain._
+
+- **2026-07-20 (slot-4, /autonomous — ⚠️ MY SHIP ORDERING BLOCKED THE FLEET; backfill-optimization design workflow
+  landed 3 correctness findings incl. a BIG one).**
+
+  - **⚠️ I CAUSED A FLEET-WIDE BLOCK — owning it.** Shipping `uac@3f79489f` (9 defi venues) WITHOUT landing the IS half
+    in the same window left **instruments-service RED for 2+ hours**, and because quickmerge Pass-1 requires a green QG
+    sentinel, **nothing could ship from IS fleet-wide**. Slot-3 caught it and filed
+    `plans/active/issues/uac_is_defi_venue_lockstep_half_landed_2026_07_20.md` (P0), correctly diagnosing TWO distinct
+    gaps behind the 9: (a) meteora/lifinity/phoenix/pyth were pure BOOKKEEPING (adapter classes existed, just never
+    registered in `factory._ADAPTERS` / `ADAPTER_DATA_SOURCES`); (b) `chainlink.py` was a GENUINELY ABSENT artifact — it
+    existed only as uncommitted work in MY tree while UAC's own comments asserted it existed. They deliberately did NOT
+    fix it from slot-3 to avoid colliding with my in-flight files — the right call. **Lesson: a commit message saying
+    "in drift-guard lockstep" is a claim about TWO repos; it is only true once BOTH have landed. A cross-repo lockstep
+    must ship as one unit or the declaring side must wait.** Landing the IS half now closes their issue.
+  - **T3 optimization design workflow COMPLETE (`wf_c3e50e71-248`, 12 agents, 1.63M tokens; 5 of 12 lost to API
+    rate-limits, 7 completed incl. the synthesis).** It did NOT just produce a plan — it found real defects:
+    1. **🔴 BIG FINDING (issue doc filed `273f5a9d5`, operator ruling required):** `available_at` is stamped with the
+       on-chain tick and then **CLOBBERED with wall-clock `now()`**. In `gas_fee_handler` the stamp and clobber are
+       ADJACENT lines (507→508, 592→593); in `solana_defi_handler` the stamp at `:636` is clobbered inside
+       `_upload_parquet` at `:149`. On a historical backfill the shipped value is _when the backfill ran_, which is
+       non-deterministic across re-runs → **breaks the batch==live ε=0 contract** and silently corrupts any
+       point-in-time/lookahead filter. **I re-verified every line myself before filing.** →
+       `plans/active/issues/defi_available_at_clobbered_by_wallclock_2026_07_20.md`
+    2. **🔴 `evm_defi` history queries are UNPAGINATED** (`first: 1000`) over the same entity the lending path
+       explicitly paginates — a CORRECTNESS bug (silently truncated captures), not an optimization. Expect captured
+       counts to go UP on busy AAVE shards when fixed; that is the fix landing, not a regression.
+    3. **🔴 Both DeFi launchers MISS the PROGRESS-checkpoint/preemption contract** (`lc_write_preemption_signal_file` /
+       `lc_write_launch_params` / shutdown-script). That is a standing HARD-RULE gap TODAY, independent of any
+       optimization, and must land before any wide SPOT wave.
+  - **The workflow also DEMOLISHED two of my own earlier premises — good.** (a) The "#1 multi-day batched subgraph =
+    ~300× fewer round-trips" claim I carried from the T3 study is **wrong**: pools are ALREADY batched 500-at-a-time, so
+    the request-axis ceiling is **~2×**, and the item is descoped to two cheap carve-outs. (b) "Add the 3 concurrency
+    knobs" is **inert alone** — 0% gain and three unread config fields unless it ships together with the fan-out and the
+    dedicated executors. Ship `knobs + fanout + executor-offload` as ONE commit or not at all.
+  - **The `write` (streaming finalizer) spec is SOUND_WITH_FIXES but must NOT be implemented as specced:** its
+    `rows_by_instrument_id` derivation is underivable (the router keys on `shard_path`, and the design's own headline
+    fix merges colliding symbols into one path → N ids, one row_count, unsplittable) which would **corrupt
+    `record_captured` grain**; and its claimed lookahead backstop does not exist (`enforce_available_at` is opt-in and
+    defaults False). It also widens per-failure blast radius and uses an unbounded writer pool.
+  - **Biggest risk to the whole N-VM plan (flagged, not resolved):** the real ceiling may be the **shared TheGraph key
+    pool**, not the VM count — every fat DeFi venue (uniswapv3/morpho/balancer/curve/aave) draws on the same pooled
+    keys. Venue partitioning isolates blast radius but does NOT multiply quota, and **429s classify as
+    `attempted_failed`, so an over-scaled wave CORRUPTS THE MANIFEST rather than merely wasting money — the exact Tardis
+    N>1 failure shape arriving through a different door.** Canary at 2 VMs and watch the 429 rate before any wide wave.
+    Also: `MANIFEST_PER_VM_SHARDS=true` under N-VM sharding is the known cefi shard-explosion vector.
+  - **ETA remains PROVISIONAL by design.** Baseline R_vm≈6.5 atoms/s/VM gives ~29.6d (N=1) / ~3.7d (N=8) at W=11.65M; an
+    _aspirational_ post-optimization R_vm≈25 gives ~7.7d / ~1.0d. **Do not quote the optimized row to anyone until the
+    calibration protocol has actually been run** — and the calibration must count TARGET artifacts by `time_created`,
+    entity-scoped to the exact venue/chain/instrument_type/data_type, cross-checked against manifest atoms, never log
+    activity and never a first-of-month day.
+  - **⚠️ CLAUDE.md changed under me mid-session and countermands part of R5:** `dex_pools/` + `lending_indices/` are now
+    **DO-NOT-DELETE** (stale delete order, no twin for KAMINO/SOLEND). My R5 todo said "fold then delete legacy trees" —
+    that is now WRONG for those two prefixes. Nothing was deleted (deletion was operator-gated throughout), so no harm
+    done, but the todo is corrected. Also newly documented: **the Solana AMM writer emits
+    `instrument_type=solana_amm_pool`, NOT `pool`** — worth checking against the IS catalogue, which enumerates these
+    venues as `pool` (a vocabulary mismatch would produce false "absent" verdicts, which is exactly the slip that
+    produced a false twin-absent verdict on 2026-07-20).
 
 - **2026-07-20 (slot-4, /autonomous — ✅ CF-11 + PROJECTION FIX **PROVEN IN PROD**; ⛔ 2nd correction: IS was NEVER
   blocked on the wheel).**
@@ -1166,11 +1386,12 @@ Discriminator = **does a manifest row exist**.
   canon** ($47M XMR/USDC, $18M BNB/USDC, …); a blind delete would have permanently lost them. So legacy = FOLD (union),
   not delete. Findings + refined R5: (1) gas_fees gap is PARTIAL — ≤7-digit block-range starts silently missed
   (AVALANCHE/BSC 2021-22, early ETH); fix in flight `a286c20c`. (2) Legacy top-level prefixes are TINY (8 objs/2.4 MiB,
-  SOLANA/2026-04-14; `lst_rates/` gone) but PARTIAL-OVERLAP → union-merge + delete-only-after-content-verify. (3) A
-  legacy GLUED-VENUE FLAT tree (`ticks_migrated_*`) sits INSIDE `raw_tick_data/` that R3's `_PAT_DEFI` parser never
-  discovers → separate handling. (4) Canon dex_pool_state was re-materialised 2026-07-13 from a divergent subgraph
-  snapshot (dropped 32 pools) → RCA to know if it's trustworthy for other DEX days. **These change the plan**: R3-as-
-  running is NOT sufficient + there's a data-preservation concern → operator PushNotified. gas_fees discovery fix
+  SOLANA/2026-04-14; `lst_rates/` gone) but PARTIAL-OVERLAP → union-merge + delete-only-after-content-verify.
+
+  (3) A legacy GLUED-VENUE FLAT tree (`ticks_migrated_*`) sits INSIDE `raw_tick_data/` that R3's `_PAT_DEFI` parser
+  never discovers → separate handling. (4) Canon dex_pool_state was re-materialised 2026-07-13 from a divergent subgraph
+  snapshot (dropped 32 pools) → RCA to know if it's trustworthy for other DEX days. **These change the plan**:
+  R3-as-running is NOT sufficient + there's a data-preservation concern → operator PushNotified. gas_fees discovery fix
   dispatched; the folds/RCA are P0 R5 items (careful, fold-not-delete, mostly after the main migration completes).
 
 - **2026-07-19 (slot-4, /autonomous — R3 migration RUNNING; catalogue + THREE operator-caught corpus gaps; R5 opened).**
@@ -1275,9 +1496,12 @@ Discriminator = **does a manifest row exist**.
   - **R3 silently MISSES the `{data_type}_{ts}.parquet` batch shape.** CHAINLINK `oracle_prices_{ts}.parquet` is
     MULTI-instrument (probed: 22 distinct feeds/file, `CHAINLINK-ETHEREUM:SPOT_ASSET:ETH/USD` …) but the R3 dry-run
     `--venue CHAINLINK --data-type oracle_prices` returns `files_scanned=0` → its `is_bundled_batch_leaf` doesn't match
-    the data_type-prefixed filename → oracle data would stay batched (the exact tracking pain). R3 DOES handle
-    `{venue}_{chain}_{ts}.parquet` (uniswap dex, multi-ts/day) + no-ops already-per-instrument `{SYMBOL}_{FEE}.parquet`
-    (aerodrome). Also found: the default `BUCKET_TEMPLATE` omits `-prd-` → 404s (shared with rebuild_defi_manifest.py).
+    the data_type-prefixed filename → oracle data would stay batched (the exact tracking pain).
+
+    R3 DOES handle `{venue}_{chain}_{ts}.parquet` (uniswap dex, multi-ts/day) + no-ops already-per-instrument
+    `{SYMBOL}_{FEE}.parquet` (aerodrome). Also found: the default `BUCKET_TEMPLATE` omits `-prd-` → 404s (shared with
+    rebuild_defi_manifest.py).
+
   - **Fix dispatched `wl8j6kjdl`**: map every data_type filename shape, extend discovery to the `{data_type}_{ts}`
     batch, fix the bucket-template default, re-dry-run to prove oracle_prices now splits into canonical per-instrument
     leaves, adversarial verify it doesn't regress the working shapes → apply gated on `safe_to_apply=true`.

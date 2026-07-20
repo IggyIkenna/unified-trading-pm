@@ -92,10 +92,13 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       unresolved rate ~1 week post-fix to confirm the hypothesis (a KPI AF-5 will make this an ongoing measurement, not
       a one-off).
 - [ ] [BACKEND] P2. **(AF-1b) Cap escalation redispatch — on the shared cooldown store, not a new one.** Per
-      `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Still blocked on the dependency above**
-      (`ao_dispatch_cooldown_and_park_2026_07_20`'s shared cooldown store — verified 2026-07-20, its own P1 "Build the
-      ONE fleet-scoped cooldown store" todo is still unchecked). **Gate**: a test showing repeat dispatches for the same
-      escalation_id back off; no second cooldown engine exists in the tree.
+      `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Unblocked 2026-07-20 — the store shipped**
+      (`agent-orchestrator@cfb211c`, `server/state_store/cooldown.py`; contract in
+      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle"). A same-day check
+      moments earlier had this correctly marked still-blocked (the store's own todo was unchecked at that point) —
+      superseded by the shipment. Namespace keys `f"escalation:{escalation_id}"` and call `register_cooldown` directly.
+      **Gate**: a test showing repeat dispatches for the same escalation_id back off; no second cooldown engine exists
+      in the tree.
 - [x] [BACKEND] P1. ✅ **(AF-2 + Phase-6) Throttle plan_health — server-side min-interval gate + at-most-one-live
       coalesce.** — `agent-orchestrator@d098970` (2026-07-20). Implemented exactly as specified: (a)
       `TuningDefaults.plan_health_min_interval_seconds` (default 7200s/2h) + `plan_health_dispatch_timeout_seconds`
@@ -111,34 +114,80 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       deferred (honest — this needs live traffic)**: the "measured dispatch rate ≤1/interval over 24h, zero
       `superseded-plan_health` exits" gate can only be confirmed once this code is running on the live orchestrator VM
       and a 24h window has elapsed post-deploy — filed as a follow-up re-measurement, not claimed here.
-- [ ] [BACKEND] P2. **(AF-5) Fleet-efficiency KPIs + per-account usage attribution.** 24h measured: 310 boots / 154
-      dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task. Surface daily-digest + dashboard KPIs:
-      spawns, dispatches, done, conversion %, boots-per-done, top skip reasons, with an alert on sharp regression.
-      **Operator-ratified + EXPANDED 2026-07-18**: ALSO attribute USAGE per slot / agent / account — tokens and messages
-      consumed — so it is visible WHERE the account budget goes. Today nothing shows which agent/slot/account burned the
-      quota, yet the fleet hits usage limits even across 4 accounts. Source the counters from the usage-poller /
-      transcript sizes and add a "usage by account" view on the same surface, so an account nearing its cap and the
-      agent driving it are both visible **before** failover fires. **Gate**: the efficiency KPIs render; a per-account
-      usage breakdown is visible; and the 2026-07-12-class degradation (spawn:dispatch 0.6:1 → 44:1) would have been
-      caught within one digest cycle — state how.
-- [ ] [INFRA] P2. **(AF-4) Assert disaster-recovery snapshot RECENCY.** `gcs_sync.SnapshotLoop` runs and
-      `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set, but **nothing asserts snapshot age** — a
-      broken snapshot loop looks exactly like a working one until the day `state.db` is lost. Same silent-by-absence
-      class as the reconciler timer. **RE-VERIFY FIRST**: the earlier "no local state.json" evidence was a PROBE
-      ARTIFACT (the probe ran as `ubuntu` without the unit env, so it checked the in-repo default) — measure the **S3
-      object's last-modified** instead, which is the real signal and path-independent. **Operator-ratified: BUILD it.**
-      (a) re-measure S3 last-modified now; (b) add a snapshot-age assertion (digest line or health endpoint: last
-      successful snapshot < N hours, alert on breach); (c) one documented restore drill. **Gate**: measured snapshot age
-      recorded; the assertion alerts when the loop is deliberately stopped **in a test** (not by stopping the live
-      loop). Note: `ao_fleet_infra_hardening_2026_07_20.md` moves state in-repo, which removes the artifact class
-      entirely — coordinate rather than duplicate.
-- [ ] [BACKEND] P3. **(AF-3) `activity_log` retention — low priority, decide and record.** 83,813 rows over 20 days
-      (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC; `activity_log` has
-      nothing. **Operator context 2026-07-18: 83k rows / 40 MB is NOT big for SQLite — there is no problem today**; the
-      only real risk is unbounded growth over MONTHS (write-latency creep on the write-hot DB). So: a simple age-based
-      prune (90d) OR just a growth alarm suffices — no redesign, and explicitly deferring is an acceptable outcome if
-      the alarm exists. Optionally archive-to-S3 via the existing snapshot loop before any delete. **Gate**: a retention
-      decision recorded and implemented, or explicitly deferred WITH the growth alarm in place.
+- [x] [BACKEND] P2. ✅ **(AF-5) Fleet-efficiency KPIs + per-account usage attribution — BACKEND done, dashboard CARD
+      deferred (honest partial).** — `agent-orchestrator@572bf25` (2026-07-20). New `server/fleet_kpis.py`:
+      `compute_fleet_efficiency_kpis` (boots=`slot_boot`, dispatches=`task_dispatched`, done=`slot_done` — event-type
+      recon citations in the module docstring; NOT `autospawn_succeeded`/`slot_spawned`, which are the same physical
+      boot's upstream trigger and would double-count) → conversion %, boots-per-done, boots:dispatch ratio (division-
+      by-zero-safe: undefined ratios are `None`, never a misleading 0 or ∞); `compute_fleet_efficiency_kpis_for_range`
+      for a bounded day-before baseline; `detect_sharp_regression` (day-over-day boots:dispatch, new
+      `TuningDefaults.     fleet_kpi_regression_multiple` default 5x); `compute_usage_by_account` (transcript-file-size
+      proxy per the operator's lightweight-option ruling, grouped by account). **Surfaced on TWO real surfaces**: the
+      Slack daily digest (`notify_daily_summary` — efficiency line + regression alert + usage-by-account, best-effort so
+      a KPI computation failure never breaks the digest post itself) and `GET /api/fleet-kpis` (dashboard-ready JSON).
+      24 new tests, full `agent-orchestrator` `quality-gates.sh` green (1519 passed). **Top skip reasons — honest gap
+      noted, not padded**: only `autospawn_skipped_session_exists` + `spawn_gate_fallback_engaged` persist to
+      `activity_log` today; most autospawn skip branches are `logger.info`-only (recorded in `_SKIP_COVERAGE_NOTE`,
+      surfaced in the API response, not silently hidden). **DEFERRED**: the dashboard REACT card itself — `dashboard/`
+      has no `node_modules` in this environment and CLAUDE.md's UI rule requires a cited Playwright regression spec
+      before a UI tick counts; the endpoint is ready and tested, wiring the card is a small, clearly-scoped follow-up,
+      not fabricated as done here. **Gate answer** — how would the 2026-07-12-class degradation (spawn:dispatch
+      0.6:1→44:1, ~73x) be caught within one digest cycle: `detect_sharp_regression` fires when today's ratio is
+      ≥`fleet_kpi_regression_multiple`× (default 5x) the prior-24h baseline — 73x clears that with wide margin, and the
+      alert renders as a `:rotating_light:` line at the TOP of the very next digest post (interval default 24h,
+      operator-configurable via `TuningDefaults.daily_summary_interval_seconds`).
+- [x] [INFRA] P2. ✅ **(AF-4) Assert disaster-recovery snapshot RECENCY.** — `agent-orchestrator@3fd6129` (2026-07-20).
+      **(a) Re-measured S3 last-modified LIVE** (`aws s3api head-object` against `uts-orchestrator-state-427895769566`,
+      this session, not a probe): the light `state.json` snapshot (`upload_state_to_s3`, ~30min cadence) is HEALTHY (~3
+      min old at measurement time). The full SQLite backup (`backup_sqlite_to_s3`, nominal 6h cadence —
+      `snapshot_interval_seconds`(1800s) x `sqlite_backup_every_n_ticks`(12)) is NOT: real gaps up to **47 HOURS between
+      successive backups, including a ZERO-backup day (2026-07-19)** — pulled the full `backups/sqlite/planning/`
+      history to confirm this wasn't one bad reading. This is the actual artifact a restore uses, and where the real gap
+      is — **canary tracks it, not the lighter state.json**. **(b) Built `SnapshotRecencyCanary`**
+      (`server/snapshot_recency.py`, mirrors `PlanReconcilerLivenessCanary`'s exact skeleton): lists the VM-scoped
+      `backups/sqlite/<vm_id>/` prefix, HEADs the lexicographically-latest key for its authoritative `last_modified`
+      (list_blobs's own `last_modified` is unpopulated on the AWS backend — measured this session), pages via the
+      existing state-transition-dedup Slack pattern (`notify_snapshot_recency_breach`/`_resolved`) on the new
+      `TuningDefaults.snapshot_max_age_hours` (default 12h = 2x nominal, tolerates one missed cycle, still catches the
+      measured 47h class with wide margin) + `snapshot_recency_interval_seconds` (default 3600s). Also
+      `GET /api/snapshot-recency` (pull-surface companion, deliberately kept OUT of `/api/healthz` so the liveness probe
+      never gains a live S3 HEAD as a new failure mode). Wired into server startup next to `SnapshotLoop`. 30 new tests
+      — **the plan's literal Gate ("alerts when the loop is deliberately stopped IN A TEST, not by stopping the live
+      loop") is the explicit contract of every test**: all driven through mocked/fixture values, the real S3 bucket and
+      the live `SnapshotLoop` are never touched. Full `agent-orchestrator` `quality-gates.sh` green (1544 passed). **(c)
+      Restore drill — DONE, read-only, safe**: downloaded the actual latest S3 SQLite backup
+      (`live_20260720T011633Z.db`, 41.3 MB) to a scratch dir (never the live orchestrator's paths),
+      `PRAGMA integrity_check` → `ok`, confirmed all 16 expected tables present, 17 slots / 88,834 `activity_log` rows
+      queryable, and the DB's own newest row timestamp (`2026-07-20 01:16:33`) matches the S3 object's `last-modified`
+      (`01:16:34`) to the second — proves the backup is a real, consistent, restorable snapshot, not a corrupt/partial
+      upload. **Coordination check**: `ao_fleet_infra_hardening_2026_07_20`'s in-repo-state-path migration is code-done
+      but the LIVE DB move is still operator-gated/pending — the S3-backup artifact class has NOT been removed yet, so
+      this work was not duplicative.
+- [x] [BACKEND] P3. ✅ **(AF-3) `activity_log` retention — decision: DEFER pruning, growth alarm implemented.** —
+      `agent-orchestrator@a87d2d3` (2026-07-20). **Decision recorded** (of the two operator-sanctioned options): no
+      prune — 83k rows/40MB genuinely isn't a problem, and a delete path adds real risk (wrong-window deletes,
+      archive-before-delete correctness) for a P3 item the operator explicitly said not to redesign. Built the growth
+      alarm instead: `TuningDefaults.activity_log_growth_alarm_rows` (default 500,000 — ~6x the measured 83k baseline, a
+      multi-month runway before it can fire on legitimate growth), checked via
+      `DailySummaryLoop._check_activity_log_growth()` — **piggybacked on the ALREADY-periodic digest tick, no new daemon
+      thread**, per the "no redesign" ruling. State-transition deduped (`dedup_state.activity_log_growth_alarm_path()`):
+      pages once on crossing, not every digest cycle; clears silently on drop-back-under (e.g. a future operator prune),
+      and re-arms for the next breach. 4 new tests (fires-once, silent-under-threshold, resolve+re-arm, best-effort
+      failure isolation). Full `agent-orchestrator` `quality-gates.sh` green (1548 passed). **Gate met**: retention
+      decision recorded (defer, no prune) WITH the growth alarm in place — the plan's own explicit acceptable-outcome
+      clause.
+- [ ] [BACKEND] P3. **(AF-1a-followup) Re-measure the unresolved-escalation classification ~1 week post-fix.** AF-1a's
+      cicd.md backgrounding fix (`unified-trading-pm@a35c6996`) landed 2026-07-20; the 65%/33%/2%
+      NEVER_FOUND_ROOT_CAUSE/FOUND_ROOT_CAUSE_THEN_SILENT/HIT_BLOCKED_QUESTION split was measured the SAME session the
+      fix shipped, so it cannot yet reflect the fix's effect — a re-check too soon would just re-confirm pre-fix
+      escalations still working through the queue. Correction to the earlier Progress Log note: AF-5's fleet-wide
+      efficiency KPIs (boots/dispatches/done ratios) do NOT reproduce this specific classification — they're a
+      different, coarser measurement; this is a genuinely separate re-run, not automated by AF-5. **Tool**:
+      `agent-orchestrator/scripts/orchestrator/check-escalation-unresolved-classification.sh ldr_qg_failure` (built +
+      validated live this session, read-only via SSM — reproduced the exact 46/65%/33%/2% figures on a live re-run).
+      **Target date**: ~2026-07-27. **Gate**: re-run recorded with the new percentages; if
+      NEVER_FOUND_ROOT_CAUSE/FOUND_ROOT_CAUSE_THEN_SILENT haven't dropped meaningfully, the boot-prompt-too-shallow root
+      cause was wrong or incomplete — reopen the AF-1a analysis rather than assuming the fix worked.
 
 ## Safeguards
 
@@ -172,4 +221,40 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   exempt, `force=true` escape hatch. 15 new tests, full QG green. The dispatch-rate/zero-superseded-exits acceptance
   gate itself needs a live 24h window post-deploy to confirm — noted as deferred verification on the todo, not silently
   claimed. Also re-verified AF-1b's dependency is still open (its cooldown-store P1 todo unchecked as of this session) —
-  AF-1b stays blocked, correctly.
+  AF-1b stays blocked, correctly **as of this check** (superseded within the same day — see below).
+- **2026-07-20 — AF-5 backend done** (`agent-orchestrator@572bf25`). Efficiency KPIs + day-over-day regression
+  detection + per-account usage (transcript-size proxy) surfaced in the Slack digest and via `GET /api/fleet-kpis`. 24
+  new tests, full QG green. Dashboard React card explicitly DEFERRED (no `node_modules` in this environment +
+  CLAUDE.md's playwright-gate requirement for any UI tick) — the endpoint is ready, wiring the card is a small
+  follow-up, not claimed done. **Heads up for the next session**: `ao_dispatch_cooldown_and_park_2026_07_20@cfb211c`
+  landed its fleet-scoped cooldown store WHILE this session was running — AF-1b (still marked blocked above) may now be
+  unblockable; re-check that plan before starting AF-1b.
+- **2026-07-20 — AF-4 done** (`agent-orchestrator@3fd6129`). Live re-measurement found a REAL gap the earlier probe
+  evidence had missed: the light state.json snapshot is healthy, but the full SQLite DR backup has gone up to 47h
+  between uploads including one zero-backup day. `SnapshotRecencyCanary` now asserts + pages on this (mirrors
+  `PlanReconcilerLivenessCanary`'s proven pattern). Restore drill performed for real (read-only, scratch dir): the
+  latest S3 backup downloaded, integrity-checked, and queried successfully. 30 new tests, full QG green.
+- **2026-07-20 — AF-3 done** (`agent-orchestrator@a87d2d3`). Decision: defer pruning, ship the growth alarm —
+  piggybacked on the existing `DailySummaryLoop` tick per the operator's explicit no-redesign ruling, no new daemon
+  thread. 4 new tests, full QG green.
+- **2026-07-20 — session wrap-up.** Every todo except AF-1b is done: AF-1a (root-caused + fixed the CI-escalation
+  failure class), AF-2 (plan_health throttle), AF-5 (fleet efficiency KPIs + usage attribution, backend), AF-4 (DR
+  snapshot recency canary + a real restore drill), AF-3 (activity_log growth alarm). AF-1b stays the one open item —
+  genuinely blocked on `ao_dispatch_cooldown_and_park_2026_07_20`'s shared cooldown store, though that plan's own
+  keystone dependency landed mid-session (`cfb211c`) and may now unblock it; re-verify that plan's cooldown-store todo
+  before starting AF-1b next. Two items are explicit, tracked partial-completions rather than silently-dropped scope:
+  AF-2's 24h-live-traffic dispatch-rate gate (code shipped + tested, needs a real post-deploy window to confirm) and
+  AF-5's dashboard React card (backend + API shipped + tested; the card itself needs `dashboard/` `node_modules` +
+  CLAUDE.md's playwright regression-spec gate, neither available in this session). Every commit landed via quickmerge
+  with a green `quality-gates.sh` run cited; every plan-flip cites the shipping commit.
+- **🟢 2026-07-20 — DEPENDENCY UNBLOCKED, store published (notification from `ao_dispatch_cooldown_and_park_2026_07_20`,
+  answering both the AF-5 and session-wrap-up entries' re-verify note directly above).** The ONE fleet-scoped cooldown
+  store AF-1b must sit on is built + shipped (`agent-orchestrator@cfb211c`, `server/state_store/cooldown.py`) — landing
+  after the AF-2 entry's dependency check, which is why that entry (accurately, at the time) still read blocked. It is
+  generic over an opaque `key` string specifically so AF-1b does not need a second engine: namespace escalation
+  dispatches as `f"escalation:{escalation_id}"` (today's two consumers use `f"task:{task_id}"`) and call the same
+  `register_cooldown`/`get_cooldown`/`clear_cooldown` primitives. Full contract — key namespacing, window semantics
+  (base/extended/ETA-override), change-triggered re-eligibility, and the durable-auto-park pattern built on top of it —
+  documented in `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip /
+  cooldown / park"), which is now the SSOT for this mechanism. **AF-1b is unblocked** — build the escalation backoff
+  directly on `register_cooldown`, do not write a second cooldown/backoff engine.
