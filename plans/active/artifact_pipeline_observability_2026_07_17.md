@@ -54,9 +54,16 @@ drift_direction: advance-code
 
 # Artifact pipeline observability — build → artifact → deploy lineage
 
-> **Human / local plan** (`assigned_vm: NA`, never AO-ingested). Operator-driven in an interactive session. Mock-first:
-> the standalone HTML mock is agreed before any code. This plan REFERENCES the codex SSOTs below; it does not duplicate
-> them.
+> **Human / local plan** (`assigned_vm: NA`, never AO-ingested). Operator-driven in an interactive session. This plan
+> REFERENCES the codex SSOTs below; it does not duplicate them.
+
+> 🔴 **WORKING MODE — DO NOT START IMPLEMENTATION** (operator, 2026-07-20). We are **far** from building this. The
+> agreed process is: **review each tab in the mock, one at a time; a tab is only finalised when the operator signs it
+> off; real work starts only after ALL tabs are finalised.** Until then the mock is the only UI artifact, and every
+> decision/finding goes into THIS plan so nothing is forgotten. **Phases 1–6 below are BLOCKED on the Phase 0 tab review
+> completing** — they are written up in advance deliberately (so the design is captured while it is fresh), NOT because
+> they are ready to pick up. Do not begin backend or page code, and do not treat an unchecked Phase-1 todo as available
+> work.
 
 ## Why
 
@@ -246,9 +253,21 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
       the real page ships.** Iterating with operator.
 - [x] [OPERATOR] P0. Shape locked with the operator 2026-07-17 — **top-level `/ops/artifacts`** (not a cockpit tab),
       **all 5 views in v1**, **default view = What's running**.
-- [ ] [OPERATOR] P0. Rebuild the "What's running" mock on the service × version model (expandable host list,
-      cross-links, `fragmented` flag) and re-review with the operator. The current mock collapses the whole VM fleet
-      into ONE row — misleading at fleet scale; this is a known defect being fixed.
+- [x] [OPERATOR] P0. ✅ Rebuilt "What's running" on the service × version model — `deployment-ui@3fcc112` +
+      collapsible-groups follow-up. Row unit is now service × artifact version with an expandable host list, a
+      `fragmented` flag, cross-links, collapsible service groups and an expand/collapse-all control. Stat tiles are
+      computed from the data (a check caught hand-written numbers disagreeing with the table). Interactions verified in
+      a real DOM (jsdom), not just eyeballed.
+
+**Per-tab review gate — real work starts only when ALL of these are signed off:**
+
+- [x] [OPERATOR] P0. **Tab 1 — What's running** — reviewed 2026-07-20; rebuilt to service × version + collapsible.
+      _Awaiting final sign-off._
+- [ ] [OPERATOR] P0. **Tab 2 — Deploy timeline** — not yet reviewed.
+- [ ] [OPERATOR] P0. **Tab 3 — Pipeline** — not yet reviewed.
+- [ ] [OPERATOR] P0. **Tab 4 — Artifacts** — not yet reviewed.
+- [ ] [OPERATOR] P0. **Tab 5 — Health** — not yet reviewed.
+- [ ] [OPERATOR] P0. **Final sign-off on the whole mock** → unblocks Phases 1–6.
 
 ### Phase 1 — backend read + snapshot layer (deployment-api)
 
