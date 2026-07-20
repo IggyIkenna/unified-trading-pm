@@ -117,15 +117,19 @@ lives_, not _what it resolves to_.
 
 ## Todos
 
-- [ ] 1. [SCRIPT] P0. Thread the seed context as an immutable per-call value object instead of `self._seed_*`; scope or
-      lock `_seed_frame_cache` with a collision-proof key. Preserve read/write path symmetry.
-- [ ] 2. [SCRIPT] P0. Regression test that FAILS on today's code: run `_process_files_parallel` with `max_workers>1`
-      over a HETEROGENEOUS file list (>=2 venues and/or underlyings and/or pipeline_modes) and assert each instrument's
-      resolved prior-day seed path matches its OWN venue/underlying/pipeline_mode. A homogeneous list must not be used —
-      it cannot detect the bug.
+- [x] 1. ✅ [SCRIPT] P0. SHIPPED mdps@b3376b8 — frozen SeedContext threaded per-call, self._seed_* removed. Thread the
+      seed context as an immutable per-call value object instead of `self._seed_*`; scope or lock `_seed_frame_cache`
+      with a collision-proof key. Preserve read/write path symmetry.
+- [x] 2. ✅ [SCRIPT] P0. SHIPPED — test_seed_context_thread_safety.py, PROVEN failing-on-old (Barrier-forced clobber) /
+      passing-on-new + a meta-guard. Regression test that FAILS on today's code: run `_process_files_parallel` with
+      `max_workers>1` over a HETEROGENEOUS file list (>=2 venues and/or underlyings and/or pipeline_modes) and assert
+      each instrument's resolved prior-day seed path matches its OWN venue/underlying/pipeline_mode. A homogeneous list
+      must not be used — it cannot detect the bug.
 - [ ] 3. [DATA] P1. Assess blast radius on EXISTING candle data: any past MDPS run with `max_workers>1` over a
       heterogeneous file list may carry wrong leading-bin seed values. Determine whether prod backfills ran with
       concurrency and whether affected shards need re-derivation.
-- [ ] 4. [SCRIPT] P1. Only AFTER 1+2: raise the concurrency lever (the pool was measured under-fed — 2 futures into 8
-    slots) and re-measure per-instrument-day throughput.
+- [x] 4. ✅ [SCRIPT] P1. R1 SHIPPED mdps@b3376b8 — opt-in MDPS_DATE_CONCURRENCY/--date-concurrency (default 1);
+    date-level multiprocessing (measured 4.12->1.04s @N=1..4). In-date max_workers raise still a follow-up. Only AFTER
+    1+2: raise the concurrency lever (the pool was measured under-fed — 2 futures into 8 slots) and re-measure
+    per-instrument-day throughput.
 </content>
