@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                      these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                      un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -801,6 +801,36 @@ Discriminator = **does a manifest row exist**.
     **DEFERRED-bespoke (flag, not MVP-blocking):** GMX POOL-vs-PERPETUAL shape; HYPERLIQUID-L1 gas (no EVM chain_id);
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
+
+- **2026-07-20 (slot-4, /autonomous — ✅✅ CHAINLINK FULLY FIXED end-to-end; the adapter-first bet paid off).**
+
+  - **The lockstep COMPLETED, across three slots, in the correct order:** (1) my adapter `is@6506b505`
+    (`ChainlinkOracleReferenceDataAdapter` + factory registration, denominator-neutral); (2) a peer's `is@9267e0ea`
+    (DERIVED citations on `chainlink.py`, `CHAINLINK-*` added to the IS venue set, goldens regenerated); (3) a peer's
+    `uac@ae83689b` (`flip CHAINLINK-* back to phase=live + real adapter key`). **Measured post-flip: IS 98 == UAC 98,
+    drift guard EQUAL=True, `UAC-only` empty.** The gate that `uac@83f17c46` had to revert this morning is now
+    satisfied.
+  - **This validates holding the declaration back rather than firing it solo.** I landed the adapter (safe,
+    denominator-neutral, verifiable) and explicitly did NOT declare the venues, because the cross-repo transient is
+    exactly what caused `instruments-service#873`. A peer then closed it from the other side — safely, _because the
+    adapter precondition was already satisfied_. The right unit of autonomous work was the half that could not break
+    anything; the half that could, wasn't mine to fire alone.
+  - **🔴 CAUGHT A FLEET-WIDE STALE PIN AS A RESULT.** The MTDS RULE-11 DEFI baseline tracks `venues x 27 data_types`, so
+    it moved THREE times today: **2403 -> 2646** (`uac@3f79489f`, 9 venues) -> **2511** (`uac@83f17c46` reverted
+    CHAINLINK x5, removing exactly 5 chains x 27 = 135) -> **2646** (`uac@ae83689b` re-declared them). **`origin` still
+    carries the stale middle value 2511**, so every MTDS tree is RED until the pin is restored — shipping 2646,
+    measured, not derived on paper.
+  - **Convergence is now a measured pattern, not an anecdote: THREE times today two slots independently produced the
+    same fix** (the IS +4 registration + goldens; the MTDS 2646 re-pin; the 2511 re-pin). Each collision cost a full
+    ~15-minute QG cycle. Root cause: a single UAC venue-set change fans out to at least four dependent artifacts (IS
+    factory, IS `_STATIC_DEFI_VENUES` + goldens, MTDS RULE-11 pin, IS RULE-11 pin) with **no ownership signal**, so
+    whoever notices first starts duplicating work already in flight elsewhere.
+  - **⚠️ SHIP-RACE IS THE REAL TAX HERE — 4 consecutive MTDS attempts lost.** A full MTDS QG is ~10-15 min
+    (`[qg-governor] all 2 tokens busy — queued 570s` on a 35-process host), and the quickmerge sentinel invalidates on
+    ANY tree change in that window, so a busy repo can starve a correct, gate-green change indefinitely. The
+    `pull -> QG -> quickmerge` chain does not fix it because the pull happens BEFORE the slow step. quickmerge has no
+    inline-QG flag (checked). _Worth raising: either quickmerge runs the gate itself under one lock, or the sentinel
+    tolerates changes that don't touch the whole-program surface._
 
 - **2026-07-20 (slot-4, /autonomous — ✅ CHAINLINK ADAPTER LANDED `is@6506b505`; only the DECLARATION remains).**
 
