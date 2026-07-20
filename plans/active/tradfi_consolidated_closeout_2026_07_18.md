@@ -1346,6 +1346,80 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     of a purge that has not happened. The manifest force-rebuild was only ever sequenced behind the purge, not
     technically blocked by it; it can be decoupled if the phantom-row P0 needs fixing sooner.
 
+- **2026-07-20 (slot-1, tick 26) — 🔴 THE tick-22 ETA (~13–33 h expected / 4–7 h re-sharded) IS SUPERSEDED. Corrected:
+  15–30 h, expected ~22 h. The NUMBER barely moved; the REASONING was wrong in three places, and the two "levers" the
+  old estimate was sold on buy almost nothing.** Manifest snapshot **T1 = 2026-07-20T14:47:40Z**, re-measured at **T2 =
+  2026-07-20T15:09:03Z** after the peer force-rebuild landed mid-analysis — **all inventory figures IDENTICAL across
+  both** (638,446 todo / 182,407 below-floor / 456,039 backfillable), so the rebuild does not move any conclusion here.
+  - **INVALIDATOR 2 DOES NOT APPLY — the tick-22 inventory already used `capture_status`, never `row_count`.** Verified
+    by re-running the original derivation (`mvp_gap7.py`): predicate is
+    `capture_status ∈ {expected_unattempted, attempted_failed}`. Reproduced 638,446 / 182,407 / **456,039** vs the
+    reported 638,440 / 182,407 / 456,033 (delta **+6 cells**, intervening writes). **The 182,407 below-floor figure
+    re-verifies EXACTLY.** Separately re-measured the row_count defect on MVP data types: **680,088 of 919,180
+    `captured` MVP cells (74.0%) carry `row_count` 0/null** — real, still P1, but it never touched this ETA.
+  - **INVALIDATOR 1 IS REAL AND MUCH BIGGER THAN 4× IN CELLS — and costs ~1.2× in WALL-CLOCK.** Smoking gun: the
+    **median resolved tickers/date for NASDAQ `ohlcv_1m` is exactly 50** (of a 622 candidate universe) — the
+    `resolved[:cap]` signature. Corrected equity remaining = **3,685,617 cells vs 216,824 (17.0×)**; grand total
+    **456,033 → 3,924,832 (8.6×)**. **But only 1,563,611 of the equity cells are DATA-PRODUCING**; the other 2,122,006
+    are denominator rows for tickers not listed on that venue (`empty_confirmed`, no vendor fetch). Work in
+    data-producing terms = **4.0×** — matching the ~4× hypothesis — and in wall-clock terms only **~1.2×**, because the
+    Databento fetch is ONE bulk request per (date, schema) that **already covered the full universe** before the fix
+    (proven: the 2026-07-19 NASDAQ run.log uploads WDC/VRTX/TSLA/TXN — deep past the `A..BKNG` cap).
+  - **MEASURED cells/min — replaces the tick-22 unmeasured 15–40 band.** Five real equity backfill VMs (2026-07-19,
+    `vm-logs/tradfi-bf-{nasdaq,nyse}-ohlcv-1m-{2023,2024,2025}-*/run.log`), counting `StreamingParquetWriter: uploaded`
+    (= exactly one cell): **NASDAQ 37.9 / 39.3 / 54.1 cells/min · NYSE 253.3 / 288.1 cells/min.** Rows/cell measured per
+    venue×type: NASDAQ 1m **713** / 1s **3,151**; NYSE 1m **598** / 1s **1,713**; CME 1m **5,385** / 1s **18,179**.
+    **The tick-22 15–40 band was right for NASDAQ and ~7× too low for NYSE.**
+  - **🔴 THE REAL FINDING — equity cost is PER-CALENDAR-DATE, essentially INVARIANT to ticker count.** Normalising the
+    same five runs to calendar-days gives a startlingly tight constant: **NASDAQ 1.506 / 1.508 / 1.514 min/date · NYSE
+    1.807 / 1.814 min/date.** NASDAQ-2023 carries **38% more cells/day** than NASDAQ-2025 at **identical** wall-clock.
+    Fitting across the venue gap: **fixed ≈ 1.46 min/date, variable ≈ 7.1e-4 min/cell** → **~97% of NASDAQ and ~81% of
+    NYSE per-date cost is ticker-count-independent overhead.**
+  - **🔴 CONSEQUENCE — the `d85d06e` ticker-group re-shard buys ~1.0–1.2×, NOT the claimed ÷5.** Five ticker-groups each
+    re-walk the SAME 1,193 dates and each re-pays the ~1.46 min/date fixed overhead in full, so the critical path falls
+    only from 1.81 to ~1.53 min/date while total compute **rises 5×** (46 → 231 equity VM-h). The re-shard is not
+    harmful to wall-clock, but it was justified by a ÷5 that the measurement does not support. **The correct axis is
+    DATE-sharding**: 20 date-slices/venue (all tickers per VM) pays the per-date overhead ONCE → equity critical path
+    **7.1 h → 1.2 h** AND equity compute **231 → 46 VM-h**. Filed as a P1 todo below.
+  - **CORRECTED ETA — binding constraint is TOTAL VM-HOURS vs `OHLCV_FLEET_CONCURRENCY_CAP=60`, not any critical path.**
+    Equity as-shipped **231 VM-h** · **CME 758 VM-h (76% of all work)** · KRX/CBOE/FX/ICE ~10 → **~999 VM-h**. Critical
+    path is only **7.1 h** (equity 366-date year-shard) / 6.7 h (heaviest CME root-year) — **not binding**. →
+    **OPTIMISTIC ~15 h** (date-sharded, all `e2-highmem-16`, 90% packing) · **EXPECTED ~22 h** (as-shipped, 75% packing)
+    · **WITH SPOT PREEMPTION ~30 h** (+35% requeue). CME is anchored on two real run.logs — `cme-cl-2025` (heavy: 947
+    min for 365 dates = **2.59 min/date**, 29.6M rows @ 31.3k rows/min) and `cme-si-2025` (light: 36.4 min = **0.10
+    min/date**) — with 15 heavy / 54 light roots over 96,924 remaining root-dates.
+  - **TOP 2 LEVERS (both act on the throughput bound, not the critical path):** **(1) raise
+    `OHLCV_FLEET_CONCURRENCY_CAP` 60 → 150** — it is a courtesy cap and the Databento budget is per-IP-per-VM (tick-22
+    CORRECTION 1), so this is nearly linear: ~22 h → ~9 h. **(2) force `TRADFI_OHLCV_MACHINE=e2-highmem-16`** — the
+    default is still `e2-highmem-4`; the measured 31.3k → 46.9k rows/min is a 1.5× on the CME 76%.
+  - **HONEST UNCERTAINTY — the band is ±40% and CME owns all of it.** CME is 76% of total VM-hours but rests on **two**
+    per-root anchors spanning a **26× spread** (CL 2.59 vs SI 0.10 min/date), with 69 roots bucketed heavy/light by
+    name. **The single measurement that would most tighten this: per-root-date cost for ~6 more CME roots across the
+    liquidity spectrum (e.g. ES, NQ, GC, 6E, PL, CT)** — that alone would collapse the 15–30 h band to roughly ±15%.
+    Equity is now well-measured (5 VMs, 3 year-shards, two venues, σ<1% on min/date) and contributes little error.
+  - **Machine-class caveat:** the five equity run.logs report `mem_pct` consistent with a **~128 GB** host
+    (`e2-highmem-16`), not the `e2-highmem-4` launcher default — the per-date constants above should be read as
+    e2-highmem-16 numbers. Both `--batch-date-concurrency` (dep@4eb50a4) and the re-shard (dep@d85d06e) landed
+    **2026-07-20**, i.e. AFTER these 2026-07-19 runs, so the 1.56× is applied on top and is not double-counted.
+
+- [ ] [INFRA] P1. **Re-shard equity OHLCV by DATE-RANGE instead of ticker-group.** MEASURED (tick 26): per-calendar-date
+      cost is ~1.46 min fixed + 7.1e-4 min/cell, i.e. ticker-count-independent, so `d85d06e`'s 5 ticker-groups each
+      re-pay the full per-date overhead over the same 1,193 dates — 5× the compute for ~1.0–1.2× the speed. Replace
+      `ohlcv_split_ticker_groups` fan-out with N contiguous DATE slices per venue (all tickers per VM): equity critical
+      path 7.1 h → 1.2 h and equity compute 231 → 46 VM-h. Keep the ticker-group code path behind a flag for the
+      pathological case (a single VM exceeding memory on the full universe). (repo: deployment-service)
+- [ ] [INFRA] P1. **Raise `OHLCV_FLEET_CONCURRENCY_CAP` 60 → 150 and default `TRADFI_OHLCV_MACHINE=e2-highmem-16`.** The
+      corrected ETA is THROUGHPUT-bound (~999 VM-h against a cap of 60), not critical-path-bound, so the cap is the
+      single highest-leverage knob: 60 → 150 takes expected ~22 h → ~9 h. Safe for the same reason `d85d06e` gave for 20
+      → 60 (Databento limits are per-IP and every VM gets its own ephemeral IP). The machine default is still
+      `e2-highmem-4` (`_tradfi-ohlcv-launcher-lib.sh:28`) while every measurement and the shipped date-concurrency
+      derivation assume 16 vCPU. (repo: deployment-service)
+- [ ] [DATA] P2. **Re-measure CME per-root-date cost for ~6 roots across the liquidity spectrum (ES, NQ, GC, 6E, PL,
+      CT).** CME is 76% of total backfill VM-hours but is anchored on only two run.logs whose per-date costs differ 26×
+      (CL 2.59 min/date vs SI 0.10). This is the single measurement that collapses the 15–30 h ETA band to ~±15%. Read
+      it from existing `vm-logs/tradfi-bf-cme-ohlcv-1m-<root>-<year>-*/run.log` — no new VM launch required. (repo:
+      unified-trading-pm)
+
 ## Deferred work after 2026-07-20 (tick 25)
 
 | Item                                                               | Why deferred                                   | Tracked in                                                        |
