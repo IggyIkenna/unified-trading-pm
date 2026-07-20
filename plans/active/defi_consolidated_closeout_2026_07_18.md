@@ -800,9 +800,17 @@ Discriminator = **does a manifest row exist**.
     hand-bump** — CLAUDE.md makes manual version bumps a HARD RULE violation (semver-agent owns it). **Operator decision
     needed.** Until a wheel publishes, IS cannot go drift-guard-green (IS resolves UAC via `--no-sources`), so the
     IS→deploy→enum→rollup chain is parked. MTDS was unaffected (it resolves UAC by local path).
-  - **VM cleanup:** deleted the three wedged VMs (2023/2024/2026) after confirming their scan output is already
-    persisted (the writer flushes every 5,000 entries, so only a <5,000-row tail is lost). 2025 left RUNNING — it is
-    still genuinely accreting captured rows.
+  - **VM cleanup + SURGICAL RELAUNCH on the fixed code.** Deleted all four prior rebuild VMs after confirming their scan
+    output is already persisted (the writer flushes every 5,000 entries, so only a <5,000-row tail is lost). **Key
+    realisation that avoided a wasteful full re-run:** 2020/2021/2023/2024/2026 scans DID COMPLETE — those VMs wedged at
+    the _re-emit_, which runs AFTER the scan. So the only genuine scan gaps are **2022 (~95%, local run stopped
+    @Dec-12)** and **2025 (stopped ~Jun-07)**. Relaunched ONLY those two ranges, pinned to the fix
+    (`MTDS_TARBALL_SHA=2c88b269`) on **e2-highmem-8 (64GB)** for writer headroom, SPOT:
+    - `canonical-migration-defi-rebuild-20260720-132730-2025b` — 2025-06-01..2025-12-31
+    - `canonical-migration-defi-rebuild-20260720-132810-2022b` — 2022-12-01..2022-12-31 **After these terminate: run the
+      consolidator `--once`, then re-verify** (orphan classes = 0, per-year captured monotonic, cell-level absence still
+      ~4.6M). **NOTE the clock trap:** the sandbox `date -u` runs ~57min SLOW; VM names / run.log timestamps are REAL
+      UTC — these launched 13:27Z/13:28Z real, not the ~12:30Z the shell reported.
 
 - **2026-07-20 (slot-4, /autonomous — ⛔ CORRECTION: the "CF-11 re-run is necessary" claim below is MEASURED-FALSE;
   orphan checks GREEN; new gas_fees orphans found).**
