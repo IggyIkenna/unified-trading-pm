@@ -1225,3 +1225,33 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     live execution bridge (the P1 issue), in-season odds/fixtures (seasonal), and the operator's money/account/league/
     paper-vs-live decisions (captured in the EPL template). I did NOT guess any money-risk parameter or flip anything
     live.
+
+- **2026-07-20 (slot-2, autonomous tick 28) — execution-bridge build COMPLETE + verified (PAPER-default, live-gated);
+  operator answered the decisions via Q&A (paper-only, no Betfair account, all soccer, thresholds/sizing set).** All 4
+  streams landed + adversarially verified (`on_ldr`/`correct`/`paper_default` all true):
+  - **UAC foundation `unified-api-contracts@de6409e5`** — `BetOrder.side: BetSide=BACK` (LAY now expressible),
+    `CanonicalOdds` optional `*_lay_odds`, `BETFAIR_COMMISSION_FRACTION=0.05` + `betfair_fee()` + version bump.
+    Additive, backward-compatible.
+  - **Execution bridge `execution-service@db75d51d`** — new `v2/atomic_leg_executor.py`: `atomic_leg_to_bet_order`
+    (AtomicLeg→BetOrder, side=BACK if BUY else LAY, fails-fast on missing venue/native_market_id/size) +
+    `AtomicLegExecutor.execute` honouring LEADER_HEDGE (leader first; hedge within `hedge_deadline_ms` via
+    `asyncio.wait_for`; `CLOSE_LEADER_IF_HEDGE_FAILS` → unwind leader, `naked_position=False`) + adapter from
+    `create_sports_adapter(mode)` **defaulting to `OperationalMode.PAPER`** (None/missing = PAPER, never live) +
+    registered kalshi/polymarket in `_LIVE_VENUE_CONFIGS`. 17 tests (PaperBettingAdapter/mocks, zero network). Verified.
+  - **Detector 3-venue `features-service@158515f3`** — `cross_venue_arb_detector` extended to Kalshi/Polymarket/Betfair
+    (Betfair commission fee expr, best-pair net-edge, null-skipping so Betfair-absent = byte-identical, both_two_way
+    guards Betfair back-only = BUY-not-SELL). Verified (fee math hand-re-derived).
+  - **All-soccer paper config `strategy-service@d07e7240`** — cross-venue YES-dispersion PAPER template covering all
+    soccer match CQGs, operator values
+    (`entry_threshold 0.03 / stake_fraction 0.05 / max_position_usdc 1000 / edge_size_cap 0.10`), not a live slot.
+  - **KEY safety fact confirmed:** `OperationalMode.PAPER` + `PaperBettingAdapter` (`create_sports_adapter`) is the
+    dry-run substrate — the bridge is paper-safe by construction; live requires an explicit `mode=LIVE` + Secret-Manager
+    credentials that are NOT set up.
+  - **Verify concerns (autonomous-loop next items, NOT live-blocking):** (1) the STRATEGY engine entry gate is GROSS
+    (raw prob-point spread vs `entry_threshold`), never calling the UAC fee model — should enter on NET-of-fees edge (a
+    real correctness fix, affects paper P&L + avoids fee-negative live entries); (2) compensation `cancel_bet` unwind is
+    incomplete for an already-MATCHED leader (live fails-safe to naked+alert; paper fine) — needs a real offsetting bet,
+    live-only; (3) `ARB_STORE_COLUMNS` doesn't persist raw `betfair_yes_bid/ask`. Remaining code gaps to finish the
+    PAPER end-to-end: v2 router→`atomic_leg_executor` runtime wiring (paper path), the GROSS→NET entry gate, an
+    end-to-end paper backtest firing a 3-venue box; two-sided Betfair back+lay DATA source (SELL-Betfair) is an
+    enhancement. The ONLY operator-gated leftover = the live flip (`mode=LIVE` + Betfair account/credentials).
