@@ -1255,3 +1255,41 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     PAPER end-to-end: v2 router→`atomic_leg_executor` runtime wiring (paper path), the GROSS→NET entry gate, an
     end-to-end paper backtest firing a 3-venue box; two-sided Betfair back+lay DATA source (SELL-Betfair) is an
     enhancement. The ONLY operator-gated leftover = the live flip (`mode=LIVE` + Betfair account/credentials).
+
+- **2026-07-20 (slot-2) — GROSS→NET entry gate + 3-venue paper proof SHIPPED `strategy-service@31d6bb0d`.** Closes two
+  of the three "remaining code gaps" listed in the entry above.
+  - ✅ **(B) Net-of-fees entry gate** — `select_prediction_arb_direction` now gates on
+    `net_edge = edge - _venue_leg_fee(buy_venue, best_yes_ask) - _venue_leg_fee(sell_venue, best_yes_bid)` instead of
+    the raw GROSS spread. `_venue_leg_fee` delegates to the UAC SSOT via the public facade
+    `unified_api_contracts.predictions` (kalshi convex `COEFF·P·(1-P)` / polymarket 0 / betfair 5% commission) — the fee
+    model was previously imported NOWHERE in strategy-service. `PredictionArbSignal.edge` stays **GROSS** (engine sizing
+    `price_dispersion.py:308-310` + the `xv_best_edge` attestation read it); a new `net_edge: float = 0.0` field carries
+    the fee-net value.
+  - ✅ **Backward-compat PIN** — tests assert that for a kalshi/polymarket-only box `net_edge` equals the existing UAC
+    helpers `net_edge_sell_kalshi` / `net_edge_sell_polymarket` exactly (both directions, 1e-12). Plus a gate-is-
+    load-bearing test: gross 0.025 > 0.02 threshold but `kalshi_fee(0.50)=0.0175` pulls net to 0.0075 → NO signal.
+  - ✅ **(Ea) 3-venue GroupBRunner paper proof** —
+    `tests/unit/engine/strategies/v2/test_prediction_arb_3venue_paper_proof.py` drives the REAL paper runtime
+    (`GroupBRunner` → `V2EngineOrchestrator` → `ArbitragePriceDispersionEngine` → `BenchmarkFillEngine`): a crossed
+    Kalshi/Polymarket/Betfair box FIRES 1 `AtomicInstruction` (LEADER_HEDGE, `direction=sell-betfair`) and SETTLES 2
+    benchmark fills (leader BUY polymarket @0.54, hedge SELL betfair @0.66) with non-zero P&L, plus a determinism re-run
+    assertion. **Climbing metric met.**
+  - ⚠️ **Test-coverage finding (NOT fixed — surfaced only):** `tests/e2e/conftest.py`'s `pytest_collection_modifyitems`
+    is a GLOBAL hook (pytest passes it the full item list, not just its own subtree) that skips ANY test whose path
+    contains `"backtest"` when the `data/` dir is absent. That silently darkens the ENTIRE `tests/unit/engine/backtest/`
+    suite — incl. `test_runner.py`, `test_benchmark_fills.py`, `test_paper_run_*` — in both local and Cloud Build.
+    Measured: 5089 passed/356 skipped with the proof in `engine/backtest/` (skipped) vs 5091 passed/354 skipped after
+    re-homing it under `strategies/v2/` (runs). The proof is fully synthetic (needs no CSV data), so it is homed under
+    `strategies/v2/` to actually execute; the over-broad skip heuristic itself is left untouched (un-skipping those
+    suites could redden genuinely data-dependent tests — needs its own scoped plan).
+  - 🔴 **Still open — the PAPER-LIVE (live-data) runtime seam does NOT exist**: strategy emits the `AtomicInstruction`,
+    but there is no wiring from that emission to execution-service's `AtomicLegExecutor`. Backtest paper works TODAY via
+    `GroupBRunner` (proven above); a live-data paper run needs an **operator-directed event-bus decision** (which
+    transport carries strategy→execution). This is the remaining item from the "v2 router→`atomic_leg_executor` runtime
+    wiring (paper path)" gap — NOT closed by this commit.
+  - 📐 **Modeling choice to flag:** `betfair_fee` takes `net_winnings`; Betfair is only ever the rich-YES SELL/lay leg
+    here, and the entry-time code passes that leg's **YES-bid premium** as the `net_winnings` proxy. Exact settled net
+    winnings are only knowable post-settlement, so this is a documented deterministic approximation, not an exact fee.
+  - Evidence: `quality-gates.sh --no-fix` GREEN (`✅ ALL QUALITY GATES PASSED (1092s)`, sentinel
+    `.qg_last_passed_sha=b9b5a5c4`), full suite 5091 passed / 354 skipped; targeted run of the two touched test files
+    18/18 passed.
