@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -401,7 +401,11 @@ Discriminator = **does a manifest row exist**.
 - **Two-id model kept** (Option A) — no mass address→symbol rewrite; ensure symbolic `canonical_instrument_id` coexists
   on every row + downstream reads the right id.
 - **Retire legacy `LENDING`** → migrate ~16.7M rows to the A_TOKEN/DEBT_TOKEN split + bake into the catalogue builder.
-- **instrument_type case**: lowercase in the PATH + manifest COLUMN (writer grain), UPPER stays only in the id SEGMENT.
+- **instrument_type case**: **⛔ corrected 2026-07-20, operator ruling D1 — ~~"lowercase in the PATH + manifest COLUMN
+  (writer grain), UPPER stays only in the id SEGMENT"~~.** Three separate legs: manifest **COLUMN → UPPERCASE**
+  (catalogue wins, ruling D1) · GCS **path segment → lowercase** (unchanged) · **id middle segment → UPPER**
+  (unchanged). Do not bundle path and column into one case. SSOT:
+  `../../codex/02-data/cross-asset-canonical-target-ssot.md` §7.
 - **Culled-venue purge = dead-only, snapshot-first, keep LIGHTER + EXTENDED** (see Track 7).
 - **Combos = leg-aware signed-weight spec** (cross-AG) — see Track 1 + the cefi/tradfi hand-offs.
 - **Restore the removed data-status enumeration** (raw distinct-values audit view) — Track 6.
@@ -437,12 +441,18 @@ Discriminator = **does a manifest row exist**.
       v4–v8→v9; C9 object paths still carrying `category=`/no `pipeline_mode=`; C11 phantom walk; C12 `{VENUE}_V{N}`
       underscore canonicalisation (`TRADER_JOE_V2`/`VELODROME_V2`/`AERODROME_V3`). (repos: market-tick-data-service,
       instruments-service)
-- [ ] [DATA] P0. **Manifest instrument_type case + venue-spelling unify** (from the live distinct-values audit):
-      case-fold the manifest `instrument_type` column to lowercase (`POOL`→`pool` 13,868 · `LENDING`→`lending` 179,164 ·
-      `PERPETUAL`→`perpetual` 4,221 · `YIELD_BEARING`/`STAKING`/`SPOT_PAIR` → lowercase); collapse venue-spelling dups
-      (`AAVEV3`/`AAVE`→`AAVE_V3` 64,218 · `MORPHOVAULTS`→`MORPHO` 50,266 · `COMPOUND`→`COMPOUND_V3` 13,904 ·
-      `YEARNV3`→`YEARN_V3` · `KAMINO_LENDING`→`KAMINO`); resolve `''`/`NULL` instrument_type (4.49M) from the id/grain.
-      (repos: market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P0. **Manifest instrument_type case + venue-spelling unify** (from the live distinct-values audit): **⛔
+      CASE DIRECTION CORRECTED 2026-07-20, operator ruling D1 — the manifest COLUMN is UPPERCASE (catalogue wins), NOT
+      lowercase.** ~~case-fold the manifest `instrument_type` column to lowercase (`POOL`→`pool` 13,868 ·
+      `LENDING`→`lending` 179,164 · `PERPETUAL`→`perpetual` 4,221 · `YIELD_BEARING`/`STAKING`/`SPOT_PAIR` →
+      lowercase)~~; **the fold is UP — normalise the manifest `instrument_type` COLUMN to the UPPERCASE catalogue enum
+      (`POOL`/`LENDING`/`PERPETUAL`/… ); the row counts are unchanged, only the direction. The GCS path segment stays
+      lowercase and the id middle segment stays UPPER — neither changed. Note the `LENDING`→`A_TOKEN/DEBT_TOKEN` full
+      retire (ruling D2) is a separate `migration_pending` axis gated on the MTDS lending-writer fix — do not conflate
+      the case-fold with the retire.** collapse venue-spelling dups (`AAVEV3`/`AAVE`→`AAVE_V3` 64,218 ·
+      `MORPHOVAULTS`→`MORPHO` 50,266 · `COMPOUND`→`COMPOUND_V3` 13,904 · `YEARNV3`→`YEARN_V3` ·
+      `KAMINO_LENDING`→`KAMINO`); resolve `''`/`NULL` instrument_type (4.49M) from the id/grain. (repos:
+      market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **perp_funding → `derivative_ticker`** as the canonical raw-funding home for ALL perps (drop the
       Drift-only 24h/7d/30d window aggregates). Ratify enum-member DeFi grains (`lst`/`staking`/`yield_bearing`) as
       canonical (case-fold only, already `InstrumentType` members). (repos: market-tick-data-service,

@@ -71,8 +71,11 @@ MVP-tag-all today (`defi_mvp_tag_all_2026_06_26`): the IS catalogue tags ALL DeF
 per-instrument DeFi screen lands). data_types:
 dex_pool_state/dex_pool_swaps/lst_rates/lending_indices/perp_funding/oracle_prices. (Lending: the HOLDINGS screen keys
 on `A_TOKEN`/`DEBT_TOKEN` — the operator-ruled SSOT; market/event lending data_types such as `lending_indices` key to
-the interim `LENDING`/`SOLANA_LENDING` instrument_type, PARKED per
-`issues/canonical_closeout_open_questions_2026_07_18.md` § D — NOT "LENDING retired".)
+the interim `LENDING`/`SOLANA_LENDING` instrument_type. **⛔ corrected 2026-07-20, operator ruling D2 — ~~"PARKED per
+`issues/canonical_closeout_open_questions_2026_07_18.md` § D — NOT 'LENDING retired'"~~.** The full retire (all lending
+data_types) IS now the RULED TARGET, but is NOT yet implemented — it is `migration_pending`, gated on the MTDS
+lending-writer fix (`../../plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`); the interim
+`LENDING`/`SOLANA_LENDING` keying holds until the migration lands.)
 
 ### TradFi
 
