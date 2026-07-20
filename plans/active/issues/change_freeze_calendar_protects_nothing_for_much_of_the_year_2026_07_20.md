@@ -95,19 +95,19 @@ Adversarial review of the shortening design raised three objections; the date-ta
 
 ## Todos
 
-- [ ] [DEVOPS] P1. Replace `FOMC_DATES` / `ECB_DATES` / `BOE_DATES` / `BOJ_DATES`
+- [x] [DEVOPS] P1. Replace `FOMC_DATES` / `ECB_DATES` / `BOE_DATES` / `BOJ_DATES`
       (`generate-freeze-calendar.py:252-273`) with the PUBLISHED schedules, each entry carrying a source citation, and
       for FOMC/BOJ explicitly the ANNOUNCEMENT day of the two-day meeting. Gating for everything below.
-- [ ] [DEVOPS] P1. Make dated rows DST-aware — resolve each occurrence's UTC offset at generation time from its local
+- [x] [DEVOPS] P1. Make dated rows DST-aware — resolve each occurrence's UTC offset at generation time from its local
       anchor (`08:30 America/New_York`, `14:00 America/New_York`, `14:15 Europe/Berlin`, `12:00 Europe/London`,
       `16:00`/`09:30 America/New_York`), and populate `dst_note` so the CSV shows its own reasoning.
-- [ ] [DEVOPS] P1. Apply the ≤30-min cap (operator directive 2026-07-20) once the two above land.
-- [ ] [DEVOPS] P2. Emit `FOMC_PRESSER` + `ECB_PRESSER` rows (each ≤30 min) so capping does not inject the deferred build
+- [x] [DEVOPS] P1. Apply the ≤30-min cap (operator directive 2026-07-20) once the two above land.
+- [x] [DEVOPS] P2. Emit `FOMC_PRESSER` + `ECB_PRESSER` rows (each ≤30 min) so capping does not inject the deferred build
       into the press conference.
-- [ ] [DEVOPS] P2. Split options expiry into Deribit-08:00Z / US-AM-SET / US-PM-close rows; fix BOJ to 8 meetings.
-- [ ] [DEVOPS] P2. Add a generator assertion that every emitted row's keys == `set(HEADER)`, and a check that every
+- [x] [DEVOPS] P2. Split options expiry into Deribit-08:00Z / US-AM-SET / US-PM-close rows; fix BOJ to 8 meetings.
+- [x] [DEVOPS] P2. Add a generator assertion that every emitted row's keys == `set(HEADER)`, and a check that every
       window CONTAINS its event anchor in both DST halves — the current calendar would have failed both.
-- [ ] [DEVOPS] P3. Decide the BOJ exception explicitly (keep a wide window as a named carve-out, target the 15:30 JST
+- [x] [DEVOPS] P3. Decide the BOJ exception explicitly (keep a wide window as a named carve-out, target the 15:30 JST
       presser and accept statement exposure, or drop it and rely on other controls).
 
 ## Progress Log
