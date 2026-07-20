@@ -42,7 +42,7 @@ watch the 429 rate before any wide wave.**
 
 ## Correctness defects (fix these FIRST — they are bugs, not optimizations)
 
-- [ ] [SCRIPT] P0. **evm_defi history queries are UNPAGINATED (`first: 1000`)** — `_AAVE_V3_HISTORY_QUERY`,
+- [x] [SCRIPT] P0. **evm_defi history queries are UNPAGINATED (`first: 1000`)** — SHIPPED `mtds@6e2677b9` (QG green, 6544 passed; +2 tests prove 1500 rows across 2 pages vs single-shot 1000). `_paginate_history` mirrors `lending_indices_subgraph._paginate`. — `_AAVE_V3_HISTORY_QUERY`,
       `_COMPOUND_V3_MESSARI_HISTORY_QUERY`, `_COMPOUND_V3_CUSTOM_HISTORY_QUERY` in
       `market-tick-data-service/.../cli/handlers/evm_defi_handler.py` (`:333/:354/:374`) query
       `reserveParamsHistoryItems`/`marketDailySnapshots` with `first: 1000` and no `skip:`/cursor. The Graph caps
