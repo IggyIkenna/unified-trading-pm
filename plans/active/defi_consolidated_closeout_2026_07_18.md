@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                      these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                      un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -518,7 +518,19 @@ Discriminator = **does a manifest row exist**.
       `reclassify_defi_postdelist_eu_2026_06_24.py`; gate `validate_defi_no_delisted_on_live_pool`); **(c)** Option B
       §12 on-chain factory/RPC truth-gate probe (feeds `delisted_at` for genuine removals). SSOT:
       `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`. (repos: instruments-service,
-      market-tick-data-service, unified-api-contracts)
+      market-tick-data-service, unified-api-contracts) **STATUS 2026-07-20: (a) + (b) DONE + VERIFIED on prod** —
+      catalogue non-blank `available_to` 2,349 → 105 (0 on the false-cluster dates) via `--mode full` regen + a targeted
+      frozen-tail purge; manifest `EXPECTED_INSTRUMENT_DELISTED` **219,738 → 3,874** across 45.8M rows via an
+      instrument_type-agnostic un-delist. (c) built, tested + runtime-verified, ship pending tree-green.
+- [ ] [DECISION] P1. **DeFi non-POOL per-instrument EU has NO reconciliation path** (surfaced by the un-delist above).
+      The catalogue-residual → typed-empty machinery is DEX-POOL-ONLY at all three layers, and SPOT_ASSET/A_TOKEN/
+      DEBT_TOKEN are reference-only holdings with no per-day capture path — so 215,864 re-seeded cells cannot reach a
+      terminal state. **⛔ Do NOT close them with `EXPECTED_NOT_ENOUGH_TVL`** — it is in the same
+      clipped-from-denominator bucket as `EXPECTED_INSTRUMENT_DELISTED`, so it would reproduce the exclusion. Needs an
+      operator/architecture call (don't-seed vs a new in-denominator reason) + generalising
+      `catalogue_pool_ids_for_shard` beyond pools. SSOT:
+      `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`. (repos:
+      market-tick-data-service, instruments-service, unified-api-contracts)
 
 ## Track 4 — CAP: zero-capture protocols · P2
 

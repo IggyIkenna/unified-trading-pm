@@ -256,10 +256,19 @@ runs.)
       `error_reason` = NOT skip-worthy), backup-then-write, `--dry-run`/`--apply`. **Order is load-bearing**: regen →
       un-delist → re-capture → validate (manifest-freshness SKIPS `empty_confirmed`, so un-delist MUST precede
       re-capture). Scope measured: 4 protocols × 19 (venue,chain,date) tuples = 2,519 rows, ~12-24 day forward window.
-      **SCOPE GAP (discovered):** `dex_pools`/`dex_swaps` re-capture + `validate_defi_no_delisted_on_live_pool` are
-      POOL-ONLY, but the false rows are mostly SPOT_ASSET/LENDING/A_TOKEN/DEBT_TOKEN — the agnostic un-delist fixes all
-      of them (→ honest-pending EU), while full `NOT_ENOUGH_TVL` conversion for non-POOL needs the sibling handlers
-      (`collect-lending-indices` / `collect-evm-defi`). Un-delist alone already removes the DISHONESTY.
+      **⛔ SUPERSEDED — the "convert to `NOT_ENOUGH_TVL`" remedy above is WRONG. Do NOT do it.** Investigation
+      `w3y86f5z8` (2026-07-20) established: `EXPECTED_NOT_ENOUGH_TVL` is a member of `OUT_OF_COVERAGE_WINDOW_REASONS`
+      (`_honest_coverage_empty_reasons.py:531`) — the **SAME clipped-from-denominator bucket as
+      `EXPECTED_INSTRUMENT_DELISTED` (:530)**. Re-stamping the un-delisted cells with it would REMOVE them from the
+      denominator again, reproducing the exact honest-coverage distortion this issue exists to fix, just under an
+      honest-sounding name. It also established that (a) no non-POOL residual emitter exists anywhere (the machinery is
+      pool-only at all three layers, incl. the `catalogue_pool_ids_for_shard` provider that hard-filters to
+      `instrument_type=='pool'`), and (b) SPOT_ASSET/A_TOKEN/DEBT_TOKEN are reference-only HOLDINGS rows with NO per-day
+      capture path under their protocol venue — so their cells are structurally unsatisfiable and a re-capture can never
+      flip them to `captured`. **The un-delist remains CORRECT and is the completion of THIS issue** (blank- reason EU
+      is byte-for-byte the IS enumerator's own seed state; the gap is now visible + scored instead of hidden). Choosing
+      the terminal state for those cells is a separate architecture decision, tracked in its own issue:
+      `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
 - [ ] [DEFI] P2. **Option B truth-gate — BUILT (ship pending tree-green).** `instruments_service/oracle/`
       `defi_removal_probe.py` + `scripts/run_defi_removal_probe.py` + roll-up integration (`_apply_defi_removals` /
       `_load_defi_removal_map` applied to the FINAL frame of BOTH `build_catalogue_dataframe` and `_merge_incremental`,
