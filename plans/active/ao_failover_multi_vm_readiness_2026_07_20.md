@@ -77,27 +77,34 @@ now** and would be today's preferred target.
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Exclude unusable slots from failover target selection.** In `failover._pick_least_loaded_slot`,
+- [x] [BACKEND] P2. **Exclude unusable slots from failover target selection.** In `failover._pick_least_loaded_slot`,
       filter out `paused` / `killed` and review slots in addition to `exclude_slots`. **Also fix the metric bias, not
       just the guard** — "fewest pinned tasks" will keep nominating any slot that structurally cannot receive work, so
       the selection must be over ELIGIBLE slots, not all slots minus a blocklist. **Gate**: a test with a paused slot
       carrying 0 pinned tasks alongside a busy eligible slot asserts the eligible slot wins; a second test asserts
-      `None` (→ the existing "no available slot" skip) when every candidate is ineligible.
-- [ ] [BACKEND] P2. **Prove the offline-reroute path end-to-end — it has NEVER executed.** Write an integration test
+      `None` (→ the existing "no available slot" skip) when every candidate is ineligible. ✅
+      `agent-orchestrator@03d48e8` — also excludes unconfigured slots (operator-confirmed scope broadening, reuses
+      `dispatch.slot_is_spawnable`); gates in `tests/test_failover_integration.py`.
+- [x] [BACKEND] P2. **Prove the offline-reroute path end-to-end — it has NEVER executed.** Write an integration test
       that simulates a host going offline past `failover_heartbeat_threshold_seconds`, and asserts eligible tasks
       (`failover_allowed=True`, queued, undispatched, `failover_origin` NULL) are re-pointed to an eligible slot with a
       `failover_rerouted` activity row. **Gate**: the test fails if the loop is a no-op — verify by bug-injection (break
-      the re-route, confirm the test goes red).
-- [ ] [BACKEND] P2. **Prove the ROLLBACK path too.** When the offline host returns, tasks still queued and unclaimed
+      the re-route, confirm the test goes red). ✅ `agent-orchestrator@03d48e8` —
+      `tests/test_failover_integration.py::test_offline_reroute_end_to_end` (+ hard-pin / already-failovered /
+      dispatched exclusion coverage); bug-injection verified red then reverted green.
+- [x] [BACKEND] P2. **Prove the ROLLBACK path too.** When the offline host returns, tasks still queued and unclaimed
       must have `target_slot` + `failover_origin` cleared. An un-exercised rollback is how a recovered host stays
       starved after the incident. **Gate**: a test covering return-from-offline; assert already-dispatched tasks are NOT
-      rolled back (only queued+unclaimed), so a live worker is never yanked.
-- [ ] [BACKEND] P2. **Explain `fleet_registry_entries: 0` — the gap that makes failover inert even when enabled.** Trace
+      rolled back (only queued+unclaimed), so a live worker is never yanked. ✅ `agent-orchestrator@03d48e8` —
+      `tests/test_failover_integration.py::test_rollback_restores_queued_unclaimed_tasks_only`.
+- [x] [BACKEND] P2. **Explain `fleet_registry_entries: 0` — the gap that makes failover inert even when enabled.** Trace
       what populates `fleet_registry.json` and why it is empty under the single-VM topology. Failover keys "offline
       host" off that registry, so an empty registry means the loop can never fire regardless of the enable flag.
       **Gate**: a written answer covering (a) what writes the registry, (b) whether it would populate when multi-VM
       returns, (c) whether an empty registry should be a loud warning at startup when `failover_enabled=True` — silence
-      here is what would make a resilience feature fail closed without telling anyone.
+      here is what would make a resilience feature fail closed without telling anyone. ✅ answer in Progress Log below;
+      `agent-orchestrator@03d48e8` also implements (c) — `FailoverLoop.start()` now warns loudly on an empty registry.
+      (b)'s GCP self-registration gap filed as a new P3 todo below.
 - [ ] [BACKEND] P3. **Write the re-enable checklist — the deliverable that makes dormancy safe.** A short runbook
       section: what must be true before `ORCHESTRATOR_FAILOVER_ENABLED=true` (registry populated, ≥2 hosts, the tests
       above green, the paused-slot fix deployed), and how to verify the first real re-route. Declare `owner` / `cadence`
@@ -111,6 +118,12 @@ now** and would be today's preferred target.
 - [ ] [DOC] P3. **Record the dormant-infra position in codex.** Note in the recovery-layers docs that failover is kept
       deliberately, is not currently a live recovery layer, and must not be cited as one until the re-enable checklist
       passes. **Gate**: no codex doc describes FailoverLoop as an active recovery layer, and none describes it as dead.
+- [ ] [BACKEND] P3. **`bootstrap_vm.sh` STEP 10 self-registration has no GCP branch** (found while tracing todo 4 —
+      `elif [[ "${CLOUD_PROVIDER}" == "aws" ]]` with no GCP arm). A GCP-provisioned worker VM boots and never calls
+      `POST /api/vms/register`, so `fleet_registry.json` — and therefore failover, which keys "offline host" entirely
+      off that registry — would stay silently inert on GCP even after multi-VM genuinely returns with real hosts
+      running. Add the GCP metadata-server equivalent of the AWS IMDS private-IP lookup + register call. **Gate**: a
+      GCP-provisioned VM appears in `fleet_registry.json` after boot, same as an AWS one does today.
 
 ## Safeguards
 
@@ -132,3 +145,32 @@ now** and would be today's preferred target.
   return. **Lesson worth keeping**: "it has never fired" was read as evidence the code is dead, when it was equally
   evidence the code is UNTESTED. Which reading is right depends entirely on whether the capability is still wanted — a
   question about intent, not about the code. Ask it before proposing any deletion of dormant infrastructure.
+- **2026-07-20 — todo 1 done** — `agent-orchestrator/server/failover.py::_pick_least_loaded_slot` now filters to
+  ELIGIBLE slots (not in `exclude_slots`, not a review slot (`config.review_slot_ids()`), `status != "killed"`, and
+  `dispatch.slot_is_spawnable(slot)` — reused rather than reimplemented, so paused/unconfigured tracks the same SSOT
+  AutoSpawn uses). Scope confirmed with operator: also exclude unconfigured slots (worktree/branch/operator unset), not
+  just the 3 literally-named categories — an unconfigured slot is exactly as dead-end as a paused one and nothing
+  guarded it before. Gate tests in `tests/test_failover_integration.py`.
+- **2026-07-20 — todos 2 + 3 done** — `tests/test_failover_integration.py` added: real-sqlite-session integration tests
+  (not MagicMock, unlike the pre-existing `test_failover.py`) exercising `_failover_tasks_for_host` and
+  `_rollback_tasks_for_host` end-to-end, asserting on the actual `ActivityRow` table. Bug-injection verified for the
+  offline-reroute path per the todo 2 gate: neutered the `task.target_slot = best_slot` mutation, confirmed
+  `test_offline_reroute_end_to_end` went red, reverted, confirmed green again.
+- **2026-07-20 — todo 4 done** — traced `fleet_registry_entries: 0`:
+  - **(a) What writes it**: exactly one writer, `POST /api/vms/register` (`server/routes/vms.py::register_vm`), called
+    by `scripts/bootstrap_vm.sh` STEP 10 on VM boot (outbound self-registration, best-effort, non-fatal on failure). A
+    companion `POST /api/vms/{id}/heartbeat` updates `last_heartbeat` on an already-registered entry, but nothing in the
+    repo ever calls it — live endpoint, zero callers.
+  - **(b) Would it populate when multi-VM returns?** Only partially. `bootstrap_vm.sh` STEP 10's self-register call is
+    gated `elif [[ "${CLOUD_PROVIDER}" == "aws" ]]` with **no GCP branch at all** — a GCP-provisioned worker VM would
+    boot and never register. Filed as a new P3 todo above (`bootstrap_vm.sh` STEP 10 GCP gap) rather than fixed inline —
+    outside this todo's "written answer" gate, but directly adjacent, so tracked in this same plan per the findings
+    triage rule rather than left as a verbal note.
+  - **(c) Should an empty registry be a loud startup warning when `failover_enabled=True`?** Yes — implemented.
+    `FailoverLoop.start()` now logs a `logger.warning` when `self._fleet_getter()` returns empty (reuses the loop's own
+    fleet abstraction rather than re-deriving from the registry file, so it can never drift from what the loop actually
+    queries, and fires on both the lifespan-start and the `/api/ops/failover/enable` hot-enable paths since both route
+    through `start()`). Covered by `test_start_warns_when_fleet_registry_empty` /
+    `test_start_does_not_warn_when_fleet_registry_populated` in `tests/test_failover.py`. This is a small, safe addition
+    beyond the todo's literal "written answer" gate — it never enables/starts anything on its own, just makes an
+    already-enabled-but-inert state loud instead of silent, which is exactly the risk the todo was raised to close.

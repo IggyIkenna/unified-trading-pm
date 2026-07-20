@@ -92,8 +92,19 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
       and added `TimeoutStartSec=200` to the generated `plan-reconciler.service` unit — the host's
       `DefaultTimeoutStartUSec` is 90s, which would otherwise SIGTERM a legitimately-slow-but-succeeding 55-56s dispatch
       and reproduce the exact false-failure being fixed. `quality-gates.sh` green (1373 passed) before ship. Still
-      needed to close this todo's Gate: the deployed unit on the central VM must be regenerated (re-run the installer or
-      wait for `ao-self-pull`) before a real timer fire reflects this fix.
+      needed to close this todo's Gate: the deployed unit on the central VM must be regenerated before a real timer fire
+      reflects this fix. **⚠️ CORRECTION 2026-07-20 — "or wait for `ao-self-pull`" is WRONG and would have left this
+      silently inert.** `ao-self-pull.sh` FF-pulls the AO checkout and restarts `orchestrator`; it does **not** re-run
+      any installer, so generated artifacts under `/usr/local/bin` and `/etc/systemd/system` never move with the
+      checkout. **VERIFIED on the VM 2026-07-20**: checkout HEAD is `078c631` and its generator carries
+      `--max-time 180`, while the deployed `/usr/local/bin/plan-reconciler-dispatch.sh` still has `--max-time 30` and
+      `plan-reconciler.service` still has no `TimeoutStartSec` — i.e. **the fix is merged, pulled, and INERT**;
+      tonight's 01:00 UTC fire will reproduce the identical false failure. Closing this needs an explicit
+      `sudo bash scripts/install-plan-reconciler-timer.sh --operator ubuntu --time 01:00` on the central VM (a
+      PRODUCTION write — operator-gated, do not run it unilaterally), then re-verify both files. **Generalise it**: a
+      fix to a GENERATOR script is inert until the generator is re-run — the same trap applies to `bootstrap_vm.sh`,
+      every `install-*.sh`, and the workflow templates. Never treat "merged + pulled" as "deployed" for generated
+      artifacts.
 - [ ] [BACKEND] P1. **Add the daily liveness assertion (the durable answer to "did it stop again?").** Assert timer
       `is-active` AND a computed next-elapse exists AND the last SUCCESSFUL dispatch is < 26h old — alert on breach.
       **`systemctl is-enabled` is NOT sufficient**: the original outage was an `enabled` timer that was INACTIVE, which
