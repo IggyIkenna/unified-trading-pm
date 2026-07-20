@@ -750,6 +750,62 @@ Discriminator = **does a manifest row exist**.
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
+- **2026-07-20 (slot-4, /autonomous — UAC catalogue SHIPPED; CF-11 re-run PROVEN necessary; 4 QG failures
+  root-caused).**
+
+  - **T2 UAC SHIPPED `uac@3f79489f`** (on `origin/live-defi-rollout`, NOT yet on `main`). 9 venue-chains added in
+    drift-guard lockstep (METEORA/LIFINITY/PHOENIX-SOLANA + CHAINLINK x5 + PYTH-SOLANA) across
+    `ALL_DEFI_VENUES`/`DEFI_VENUE_PHASE=live`/`MTDS_DEFI_VENUES`/`VENUE_TO_ADAPTER_KEY`/`_DEFI_VENUE_PREFIXES`/capability
+    declarations/`expected_coverage`/`PROTOCOL_LAUNCH_DATES`; + `DEFI_FORCE_INCLUDE_POOLS` (the 32 high-TVL raydium
+    pools, TVL>=$4,005,367) + `is_defi_force_include_pool()`. **I fixed a top-level re-export gap the authoring agent
+    left** (`registry/__init__.py` had the two new symbols, top-level `unified_api_contracts/__init__.py` did not → IS
+    `ImportError`); 4 edits (2 imports + 2 `__all__`). Verified: 32 pools, predicate works, 9 venues in
+    `VENUES_BY_ASSET_GROUP['defi']`, ASTER/HYPERLIQUID correctly ABSENT. **Publish chain PENDING** (external,
+    ~30-60min): LDR is at v0.71.0 and never runs server QG — the `*/15` `ldr-to-main-promote` PR carries
+    `quality-gates-v2`, then semver-agent cuts v0.72.0 → AR wheel → UTL rebuild (repository_dispatch) → IS pin-refresh
+    bot. **IS ship is GATED on that wheel** (IS resolves published UAC via `--no-sources`); MTDS is NOT gated (it
+    resolves UAC by local path `[tool.uv.sources] path = "../unified-api-contracts"`).
+  - **CF-11 re-run PROVEN NECESSARY (was an assumption, now measured).** The 4 running rebuild VMs
+    (`canonical-migration-defi-rebuild-20260720-0658xx-{2023,2024,2025,2026}`, e2-standard-4, created 22:59 PDT) run
+    tarball **`1b79df96`**, and `git show 1b79df96:...rebuild_defi_manifest.py` **HAS the vulnerable
+    `"instrument_id": iid_str`** at line 467. No commit between `1b79df96..HEAD` touched that file → **HEAD is
+    identically vulnerable; my CF-11 fix is working-tree-only.** The VMs do **NOT** hard-crash (2023 VM verified
+    healthy: date=2023-12-29, 2.87M entries, fresh `PIPELINE_HEARTBEAT`, zero Traceback) — the blank-`instrument_id`
+    rows are dropped per-row, which is WHY 2020/2021 "completed". **So every per-year rebuild so far (incl. the already-
+    CONSOLIDATED 2020/2021 and the ~95% local 2022) produced a manifest MISSING the ~4.5M cell-level absence rows** →
+    all 7 years must re-run on CF-11-fixed code. Run.log lives at
+    `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` (SSH-independent).
+  - **4 MTDS QG failures found + fixed AT ROOT CAUSE** (QG was RED; I initially misread the bg-task "exit 0" wrapper —
+    the log's real verdict was `MTDS_QG_EXIT=1`). (a) 3x `test_rebuild_defi_manifest_dry_run.py`: `scan_and_rebuild`
+    calls `reemit_defi_honest_absence_rows`, which downloads the consolidated `_index` **before** consulting `dry_run` —
+    so a pure dry-run was neither credential-free (breaking the contract that test file exists to lock) nor emitting
+    anything (its internal gates suppress every `record_*`). **Fix: bail before the read when
+    `dry_run and not projection`**; the non-dry-run test now serves an EMPTY index via
+    `patch("unified_trading_library.read_availability_index")` so it isolates the writer gate. (b)
+    `test_rule11_per_ag_shard_counts_byte_unchanged` `DEFI 2646 != 2403` — **caused by my own UAC change** (MTDS picks
+    up the local UAC path). Verified the arithmetic: enumeration is a uniform venue x data_type cross-product, 89->98
+    venues x 27 data_types = 2403->2646, exactly 243 new. Baseline updated with provenance.
+  - **Finding (pre-existing, NOT introduced here, non-blocking):** `enumerate_mtds_shards` is an unfiltered venue x
+    data_type cross-product — CHAINLINK (an ORACLE venue) enumerates `dex_pool_swaps`/`eigenlayer_rewards`/
+    `bridge_events`. It applies uniformly to all 89 prior venues, and the real backlog measured by T3 has sane
+    per-venue/per-mode shape, so this is the coarse drift-guard's shape, not the capture universe. Flagged, not chased.
+  - **T3 study COMPLETE (wf `wzrlkakb0`) — ETA methodology fixed.** Structural insight: **the cefi 1-VM cap does NOT
+    apply to DeFi** (Graph gateway key-pool / RPC / DeFiLlama / Hermes are not single-egress-IP bound) → DeFi scales
+    horizontally, the divisor cefi never had. DeFi today uses almost none of the cefi machine: sequential
+    `for protocol`/`for chain` loops, **blocking** `_upload_parquet` inline on the event loop (cefi's
+    finalize-was-97%-of-wall bug, unfixed here), `write_defi_rows` materializing all shards via `groupby` (the
+    giant-cell OOM vector), and **zero** DeFi concurrency knobs. Ranked: #1 multi-day batched subgraph (attacks
+    7.37M/11.65M), #2 async fan-out via UTL `ParallelPerSymbolRunner`, #3 N-VM sharding, #4 upload offload + concurrent
+    gather, #5 streaming finalizer, #6 3-knob config split, #7 vectorize-by-unique-symbol, #8 machine-type per profile.
+    **W = 11.65M defi-MVP `expected_unattempted` atoms** (measured from `_index`; report as a BAND to the 63.9M
+    not-yet-applied v2 seed). `ETA = W / (N x R_vm x eta)`, eta~0.7; R_vm ~600 atoms/s optimized vs **~6-7 measured
+    today** (~100x intra-VM) → N=8 gives ~58min @11.65M / ~5.3h @63.9M, vs **~32 days** on the current serial path.
+    **R_vm MUST be calibrated on one venue-day before the ETA is quoted as fact.**
+  - **NEXT (ordered):** MTDS QG2 green -> ship CF-11 -> fresh tarball from LDR -> kill the 4 VMs + relaunch all 7 years
+    -> consolidator `--once` -> verify. In parallel: await UAC v0.72.0 -> ship IS -> deploy -> enum -> full rollup.
+    **Optimization work is BLOCKED on a clean MTDS tree** — #2/#4 touch `solana_defi_handler.py`/`canonical_write.py`,
+    which collide with the still-uncommitted T2 MTDS changes (meteora/lifinity/oracle handlers).
+
 - **2026-07-20 (slot-4, /autonomous — MIGRATION ALL-TERMINAL 30/30; rebuild WRITE running).** All 30 sub-shards complete
   — the full DeFi corpus (2020q1-2026q2) is migrated to per-instrument. The 64GB e2-highmem-8 recovery carried every
   shard through cleanly (the last, 2026q1s2, had 797 cells = densest Feb 2026). NOW running the manifest rebuild:
