@@ -519,7 +519,27 @@ jobs:
             # miss we BLOCK (fail-CLOSED — ldr_main has no staging backstop; part-1 breaking_pending is
             # dead for these repos) and dispatch SIT-on-LDR (STEP 5) so a later tick promotes once this
             # tree is validated. Confident-non-breaking content needs no SIT (promote, v2-gated).
-            # source-dir = repo name underscored (the fleet SOURCE_DIR convention).
+            #
+            # source-dir resolution (fixed 2026-07-20). The convention is repo-name-underscored, but
+            # 5 of the 24 ldr_main repos do not follow it, and for the 3 that are ALSO SIT-covered the
+            # mismatch was a PERMANENT promote deadlock — the same unsatisfiable-block class as the
+            # e2e-testing case documented below, reached by a different route:
+            #   dir absent -> differ scans nothing -> is_breaking=false -> fail-closed flip -> "unknown"
+            #   -> covered-repo branch -> requires sit_validated_tree == LDR tree -> but LDR keeps
+            #   moving (hourly staging-backmerge) faster than a ~156m SIT round-trip -> never matches.
+            # Measured 2026-07-20: agent-orchestrator 25 files / 7 commits un-promoted with NO open PR
+            # (blocked before PR creation), tripping branch-health every cycle; deployment-ui and
+            # unified-trading-system-ui carry the identical latent hole.
+            # `breaking_scan_dir` in workspace-manifest.json overrides the convention per repo:
+            #   absent  -> "${REPO//-/_}" (the 19 conforming repos are untouched)
+            #   "<dir>" -> scan that dir instead (agent-orchestrator=server, e2e-testing=tests, ...)
+            #   "none"  -> repo has NO Python public surface (TS/JS), so the differ is not applicable
+            #              and its empty verdict is CORRECT, not a false-negative -> skip the
+            #              fail-closed flip. Such a repo cannot break a Python sibling's import
+            #              surface, and is still gated by quality-gates-v2 (tsc/ESLint/Vitest/
+            #              Playwright) + content tree + Tier-A ci_status, as in the fail-OPEN branch.
+            SCAN_DIR=$( REPO="$REPO" DEFAULT_DIR="${REPO//-/_}" python3 -c "import json,os; print(json.load(open('workspace-manifest.json'))['repositories'].get(os.environ['REPO'],{}).get('breaking_scan_dir', os.environ['DEFAULT_DIR']))" 2>/dev/null || echo "${REPO//-/_}" )
+            echo "  SIT differ source-dir for $REPO: ${SCAN_DIR}"
             SIT_TMP="$(mktemp -d)"; BREAKING="unknown"; DIFF_JSON=""; RANGE_MSGS=""
             if git -C "$SIT_TMP" init -q && git -C "$SIT_TMP" fetch -q --no-tags \
                  "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
@@ -529,7 +549,7 @@ jobs:
               # SIT race-closer (is_breaking) and the F4 label-check gate below (export-count minor/patch),
               # so the differ runs only once per repo per tick.
               DIFF_JSON=$( cd "$SIT_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/detect_breaking_change.py" \
-                --source-dir "${REPO//-/_}" --base-ref origin/main --head-ref origin/live-defi-rollout --json 2>/dev/null ) || DIFF_JSON=""
+                --source-dir "${SCAN_DIR}" --base-ref origin/main --head-ref origin/live-defi-rollout --json 2>/dev/null ) || DIFF_JSON=""
               if [ -n "$DIFF_JSON" ]; then
                 BREAKING=$( printf '%s' "$DIFF_JSON" \
                   | python3 -c "import json,sys; print('true' if json.load(sys.stdin).get('is_breaking') else 'false')" 2>/dev/null || echo "unknown" )
@@ -540,9 +560,12 @@ jobs:
               # (→ require SIT) so a breaking change in a non-conventionally-named repo can never promote
               # ungated. (For the 5 covered repos the convention is verified-correct, so this only guards
               # the tail.) The differ stderr is no longer fully swallowed downstream of this check.
-              if [ "$BREAKING" = "false" ] \
-                 && ! git -C "$SIT_TMP" ls-tree -d --name-only origin/live-defi-rollout 2>/dev/null | grep -qx "${REPO//-/_}"; then
-                echo "  SIT differ: source-dir '${REPO//-/_}' absent from LDR tree — verdict UNKNOWN (fail-closed)"
+              if [ "$SCAN_DIR" = "none" ]; then
+                echo "  SIT differ: $REPO declares no Python public surface (breaking_scan_dir=none) — empty verdict is CORRECT, not fail-closed"
+              elif [ "$BREAKING" = "false" ] \
+                 && ! git -C "$SIT_TMP" ls-tree -d --name-only origin/live-defi-rollout 2>/dev/null | grep -qx "${SCAN_DIR}"; then
+                echo "  SIT differ: source-dir '${SCAN_DIR}' absent from LDR tree — verdict UNKNOWN (fail-closed)"
+                echo "  → if this repo simply names its package differently, set breaking_scan_dir in workspace-manifest.json rather than letting it deadlock"
                 BREAKING="unknown"
               fi
               # Range commit subjects (main..LDR), newest-first — for the F4 label-check gate below.

@@ -22,8 +22,15 @@ jobs:
   check-orchestrator:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      # Which liveness condition tripped, surfaced so Slack can say it (2026-07-20). Previously
+      # REASON was computed in four distinct branches and then DISCARDED — the notify message was a
+      # hardcoded "orchestrator did not complete", so a stale-run alert, a hung-run alert and a
+      # never-ran alert all read identically, and the job log contradicted the Slack text.
+      reason: ${{ steps.check.outputs.reason }}
     steps:
       - name: Check overnight orchestrator completion status
+        id: check
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
@@ -90,11 +97,26 @@ jobs:
                   AGE_HOURS=$((AGE_SECONDS / 3600))
                   ALERT="true"
                   REASON="Overnight orchestrator did not complete within last 24h — last run was ${AGE_HOURS}h ago"
-                elif [ "$CONCLUSION" != "success" ]; then
+                # LIVENESS, not health (fixed 2026-07-20). This is a DEAD MAN SWITCH: it exists to
+                # catch an orchestrator that never ran, hung, or died — NOT one that ran fine and
+                # reported a real failure. That case already pages from the orchestrator itself
+                # (overnight-agent-orchestrator.yml T0 Failure Escalation), so treating
+                # conclusion=failure as "did not complete" fired a SECOND page for the same event
+                # with wording that contradicted it. Measured 2026-07-20: the 01:32Z run completed
+                # and posted its T0 FAILED report at 03:27Z; the DMS then fired at 05:14Z claiming
+                # the orchestrator "did not complete".
+                #
+                # So: only conclusions that mean the run did not truly finish count here. `failure`
+                # and `success` both fall through to the all-good branch — health is somebody
+                # else's job. Every genuine liveness path is untouched: never-ran (Case 1), hung
+                # >2h (Case 1), stale >24h (above), unknown status (Case 3).
+                elif [ "$CONCLUSION" = "cancelled" ] || [ "$CONCLUSION" = "startup_failure" ] \
+                  || [ "$CONCLUSION" = "timed_out" ] || [ "$CONCLUSION" = "null" ] || [ -z "$CONCLUSION" ]; then
                   ALERT="true"
-                  REASON="Overnight orchestrator completed with conclusion=$CONCLUSION (expected success)"
+                  REASON="Overnight orchestrator did not finish — conclusion=${CONCLUSION:-<empty>}"
                 else
-                  echo "Orchestrator completed successfully within 24h. All good."
+                  echo "Orchestrator completed (conclusion=$CONCLUSION) within 24h — liveness OK."
+                  echo "  (a conclusion=failure is reported by the orchestrator's own T0 escalation, not here)"
                 fi
               else
                 ALERT="true"
@@ -112,6 +134,8 @@ jobs:
           if [ "$ALERT" = "true" ]; then
             echo ""
             echo "ALERT: $REASON"
+            # Publish the tripped condition so the notify job reports THIS reason, not a generic one.
+            echo "reason=${REASON}" >> "$GITHUB_OUTPUT"
             # Slack alert fired via notify job (Telegram retired 2026-06-02)
             # Exit non-zero so the workflow shows as failed in GHA UI
             exit 1
@@ -155,8 +179,9 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        "Overnight Dead Man Switch — orchestrator did not complete. Check GHA status: ${{ github.server_url }}/${{
-        github.repository }}/actions/workflows/overnight-agent-orchestrator.yml"
+        "Overnight Dead Man Switch — ${{ needs.check-orchestrator.outputs.reason || 'orchestrator liveness check failed
+        (reason unavailable)' }}. Check GHA status: ${{ github.server_url }}/${{ github.repository
+        }}/actions/workflows/overnight-agent-orchestrator.yml"
       severity: "WARNING"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
