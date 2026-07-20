@@ -1130,3 +1130,25 @@ Rebuilt the MDPS tarball via `refresh_code_tarballs.sh` (clones committed LDR �
 re-run #2 (CEFI DERIBIT derivative_ticker, legs force,skip,canonical). EXPECTED: the force leg now WRITES objects
 (was 0) because the pre-upload validator resolves nullable=True for derivative_ticker. Awaiting the VM report to close
 the P0 end-to-end.
+
+### 2026-07-20 ~23:50Z — ✅ derivative_ticker P0 CLOSED END-TO-END on a real VM (was 0 objects → now 140)
+
+The loop-close re-run #2 (mdps@d4052e20b, UAC ad317c32) PROVED the fix end-to-end. Run.log: **NO schema failures**,
+`✅ derivative_ticker complete: 20/20 succeeded, 0 errors, 152,300 candles`, exit 0. Ground-truth on the -test- bucket:
+
+- **140 candle objects** written for day=2024-02-08 (7 timeframes × 20 instruments) — **was 0 pre-fix**.
+- **140 fresh manifest rows, ALL `captured`** (0 attempted_failed), `data_type=deriv_ohlcv_15m` (correct aggregated
+  key), `row_count=96` (real counts) — read directly from the leg VM's per-VM shard via pyarrow.
+
+The full chain is proven: UAC propagation fix (deployment@e978f32d) → correct nullable UAC (ad317c32) on the VM → candle
+nullability fix (mdps@d4052e20b) → the MDPS pre-upload validator inherits per-type nullability → derivative_ticker
+honest-absence NaN OHLC is ACCEPTED → objects write. Three P0s found + fixed via this one loop-close, none of which a
+green-tick smoke would have surfaced.
+
+**The driver still reports the force leg "failed"** — but that is now a KNOWN DRIVER LIMITATION, not a writer bug: the
+manifest verify reads the CONSOLIDATED index (which still holds the STALE `attempted_failed` rows from the pre-fix
+failed runs 205051/213641) instead of the leg VM's OWN per-VM shard (which is all `captured`). This is exactly
+`mdps_derivative_ticker_candle_schema_violation` todo 4 (read the per-VM shard first, like the MTDS twin's
+`_read_per_vm_batch_row`). The `canonical` leg's `non_canonical` verdict (missing `instrument_type=`,
+`derivative_ticker`≠`deriv_ohlcv_15s`) is the EXPECTED, already-documented path≠manifest divergence
+(`candle_feature_canonical_path_divergence` finding #2), not a failure. Both are correctly SEPARATE verdicts by design.

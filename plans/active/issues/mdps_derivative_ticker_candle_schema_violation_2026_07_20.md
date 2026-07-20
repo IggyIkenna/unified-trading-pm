@@ -134,11 +134,24 @@ the exit code and the summary line do not.
 
 ## Todos
 
-- [~] 1. [DATA] P0. PARTIALLY FIXED (mdps@beea161) — the adapter now emits `funding_rate_mean`/`mark_price_mean`/
-  `index_price_mean` + leaves empty-window OHLC NaN (LOCF removed) per the operator's honest-absence ruling; the error
-  changed from "column funding_rate_mean missing" to "Column 'open' has NaN but is NOT NULLABLE". **STILL BLOCKED by a
-  DEEPER, SEPARATE bug — see the addendum below.** Root-cause the missing columns in the aggregation (done) AND the
-  nullability key mismatch (open).
+> ## ✅ WRITE-PATH P0 RESOLVED 2026-07-20 ~23:50Z — proven end-to-end on a real VM
+>
+> The derivative_ticker candle WRITE path is FIXED: three chained fixes (adapter `mdps@beea161` → UAC propagation
+> `deployment@e978f32d` → the pre-upload nullability fix `mdps@d4052e20b`) took a cell from **0 objects / 140
+> `attempted_failed`** to **140 objects written / 140 `captured` manifest rows / 152,300 candles / 0 errors / no schema
+> failures** (VM `…-224318-a63425`, day 2024-02-08, verified: 140 `.parquet` in the -test- bucket + the per-VM shard
+> read via pyarrow = all `captured`, `data_type=deriv_ohlcv_15m`, `row_count=96`). Root cause was NOT a UAC key mismatch
+> (my first hypothesis) but the MDPS pre-upload validator gating OHLC-nullability on category — corrected + verified by
+> adversarial workflow w6kkdobay. **Todos 1 + 5 DONE.** Remaining (lower priority, separate concerns): todo 2
+> (exit-code-lies observability), todo 3 (sweep other candle types — the fix already covers them via the shared seam,
+> but a proof-sweep is prudent), todo 4 (driver reads consolidated not per-VM shard — the ONLY reason the skill still
+> shows "failed" on a fully-successful write).
+
+- [x] 1. ✅ [DATA] P0. DONE (mdps@beea161 adapter + mdps@d4052e20b nullability). The adapter emits
+      `funding_rate_mean`/`mark_price_mean`/`index_price_mean` + leaves empty-window OHLC NaN (LOCF removed) per the
+      operator's honest-absence ruling; the pre-upload validator now inherits per-type OHLC nullability from the UAC
+      SSOT so the honest-absence NaN OHLC is accepted. Proven end-to-end: 140 objects + 140 `captured` rows (was 0). See
+      the RESOLVED banner + addendum below.
 
 ## ADDENDUM 2026-07-20 ~22:45Z — the write STILL fails after the adapter + UAC fix: an ENFORCER KEY MISMATCH
 
@@ -173,9 +186,13 @@ contract under the SOURCE key as an alias. The workflow chooses + verifies befor
       `attempted_failed/SCHEMA_VALIDATION_FAILED` (Phase-0 consolidated at 13:05; the VM wrote its shard at 13:12). Read
       the leg VM's OWN per-VM shard first (concurrency-immune), exactly as the MTDS twin's `_read_per_vm_batch_row`
       does, so the report surfaces the actionable error_reason.
-- [ ] 5. [DATA] P0. **ENFORCER KEY MISMATCH (addendum above) — the actual remaining blocker.** The MDPS candle write
-      path passes the SOURCE `data_type` (`derivative_ticker`) to `get_nullable_columns`, but the nullable candle
-      contract is registered under the AGGREGATED key (`deriv_ohlcv_{tf}`). Fix per workflow w6kkdobay's verified
-      verdict (align MDPS to pass `mdps_data_type_key(src,tf)` to the enforcer, OR register a source-key alias), sweep
-      the same class across all candle types/AGs (subsumes todo 3), then re-run the loop-close to confirm the force leg
-      WRITES objects. Blocks the derivative_ticker candle backfill end-to-end.
+- [x] 5. ✅ [DATA] P0. DONE — mdps@d4052e20b. The workflow (w6kkdobay) CORRECTED the hypothesis: it was NOT a
+      source-vs-aggregated key mismatch but the MDPS pre-upload validator (`candle_write_mixin.py:604` +
+      `data_sink.py:118` via `get_schema_for_data_type`) gating OHLC-nullability on CATEGORY (prediction/sports only),
+      so cefi honest-absence NaN OHLC was rejected BEFORE the correctly-nullable UAC write seam. Fix: the validator now
+      inherits per-type nullability from the UAC SSOT (`mdps_ohlc_is_nullable[_for_frame]` → `lookup_mdps_contract` →
+      `open.nullable`), NOT category — book5/state STAY non-nullable automatically (zero regression), lookup-miss →
+      category fallback (never raises). Since both validators share `get_schema_for_data_type`, the single seam fixes
+      the whole class (subsumes todo 3 for the write path; a proof-sweep of trades/swaps/tradfi-ohlcv is still prudent).
+      12 new tests (book5-stays-non-nullable + empty-window-passes + positive-aggregation). Proven end-to-end: 140
+      objects + 140 `captured` rows on the re-run VM.

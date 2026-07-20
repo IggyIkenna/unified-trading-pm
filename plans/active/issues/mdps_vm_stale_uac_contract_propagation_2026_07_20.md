@@ -16,7 +16,7 @@ summary: >-
   version across commits, a cached stale UAC wheel shadows the "editable, always fresh" install. Net: a UAC schema
   change can be fully shipped + tarballed and STILL not reach a service VM - a silent, correctness-critical deployment
   gap that affects every schema/contract change, not just this one.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data]
@@ -41,11 +41,24 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: deployment-service@e978f32d (launcher UAC pin + wheel-cache purge + boot editable-source assertion)
 source: >-
   loop-closing real-VM re-verify 2026-07-20 of the derivative_ticker fix; every claim below verified (tarball extracted,
   git SHAs checked, launcher + setup script read).
 ---
+
+> ## ✅ RESOLVED 2026-07-20 — fixed (deployment@e978f32d) + proven end-to-end
+>
+> The contract-propagation gap is closed: (1) `launch-mdps-backfill-vm.sh` + `launch-features-vm.sh` auto-pin
+> `UAC_TARBALL_SHA` via `lc_resolve_tarball_sha` (floats-not-bricks); (2) `setup-data-pipeline-vm.sh` purges internal
+> wheels so the editable source beats the stale GCS cache; (3) a boot-time assertion fails loud if UAC resolves from a
+> wheel instead of the editable source. Published byte-identical to GCS. **Proven on a live VM twice**: the re-run VM
+> pinned `UAC_TARBALL_SHA=ad317c32` (a git-descendant of the nullable fix), the boot assertion passed (correct editable
+> UAC installed), and — once the _separate_ sibling nullability bug was also fixed — the derivative_ticker candle write
+> succeeded (140 objects + 140 `captured` rows). The contract now reliably reaches service VMs. Todos 1-4 all ✅.
+> **Follow-up (defense-in-depth, not blocking):** apply the same one-line UAC pin to the other service launchers
+> (mtds-backfill, instruments-backfill, mdps-sharded, mtds-dex-swaps) — they are already covered fleet-wide by the
+> shared setup Fix 2/3, so this is belt-and-suspenders (noted in the deployment agent's residual_risks).
 
 # P0 — service VMs run a stale UAC schema; contract changes do not reach VMs
 
