@@ -105,19 +105,26 @@ now** and would be today's preferred target.
       here is what would make a resilience feature fail closed without telling anyone. ✅ answer in Progress Log below;
       `agent-orchestrator@03d48e8` also implements (c) — `FailoverLoop.start()` now warns loudly on an empty registry.
       (b)'s GCP self-registration gap filed as a new P3 todo below.
-- [ ] [BACKEND] P3. **Write the re-enable checklist — the deliverable that makes dormancy safe.** A short runbook
+- [x] [BACKEND] P3. **Write the re-enable checklist — the deliverable that makes dormancy safe.** A short runbook
       section: what must be true before `ORCHESTRATOR_FAILOVER_ENABLED=true` (registry populated, ≥2 hosts, the tests
       above green, the paused-slot fix deployed), and how to verify the first real re-route. Declare `owner` / `cadence`
       / `verifier` / `last_executed` per the runbook rule. **Gate**: an operator can re-enable failover from the
-      checklist alone without re-deriving any of this.
-- [ ] [BACKEND] P3. **Keep the dormant module from rotting.** Confirm `failover.py` and its tests are inside the
+      checklist alone without re-deriving any of this. ✅ `unified-trading-pm` —
+      `codex/15-runbooks/agent-orchestrator-failover-re-enable-checklist.md` (`doc_type: codex-runbook`, full
+      owner/cadence/verifier/last_executed frontmatter per the runbook schema).
+- [x] [BACKEND] P3. **Keep the dormant module from rotting.** Confirm `failover.py` and its tests are inside the
       `quality-gates.sh` scope so dormant code cannot silently drift out of type/lint compliance, and add a one-line
       note at the top of the module stating it is DORMANT-BUT-MAINTAINED for multi-VM's return — so the next person
       auditing dead code (as I did) finds the intent instead of re-proposing deletion. **Gate**: the module carries the
-      note; QG covers it.
-- [ ] [DOC] P3. **Record the dormant-infra position in codex.** Note in the recovery-layers docs that failover is kept
+      note; QG covers it. ✅ `agent-orchestrator@dfc948f` — module docstring note added; QG scope confirmed already
+      covers `server/` + `tests/` wholesale (no per-file exclusion existed).
+- [x] [DOC] P3. **Record the dormant-infra position in codex.** Note in the recovery-layers docs that failover is kept
       deliberately, is not currently a live recovery layer, and must not be cited as one until the re-enable checklist
       passes. **Gate**: no codex doc describes FailoverLoop as an active recovery layer, and none describes it as dead.
+      ✅ `unified-trading-pm` — new "Out of scope" section in `recovery-defence-in-depth-layers.md` disambiguating AO's
+      `FailoverLoop` from `failover_feed.py` (Layer 0) and stating dormant-but-kept status.
+      `autonomous-recovery-matrix.md` left untouched (grepped: zero FailoverLoop mentions, scope is live-trading error
+      classification only — the disambiguation in the doc it already defers to for the layer model is sufficient).
 - [ ] [BACKEND] P3. **`bootstrap_vm.sh` STEP 10 self-registration has no GCP branch** (found while tracing todo 4 —
       `elif [[ "${CLOUD_PROVIDER}" == "aws" ]]` with no GCP arm). A GCP-provisioned worker VM boots and never calls
       `POST /api/vms/register`, so `fleet_registry.json` — and therefore failover, which keys "offline host" entirely

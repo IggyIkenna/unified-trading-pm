@@ -196,6 +196,20 @@ Owned by `plans/active/deployment_ui_safety_ops_tab_2026_05_23.md`. DART Safety 
 Layer-0 + Layer-1 action surfaces as a button with typed-confirm-string. Manual actions flow through Incident Gateway
 with `provenance=MANUAL_OPERATOR` — full audit trail + LLM signoff applies.
 
+## Out of scope: agent-orchestrator's own FailoverLoop
+
+`agent-orchestrator/server/failover.py`'s `FailoverLoop` (re-routes AGENT dev-fleet task-worker assignments off an
+offline VM host) is **NOT** one of the 5+1 layers above and does not participate in this incident-recovery stack — it is
+a separate, orthogonal self-heal mechanism scoped to the agent-orchestrator dev fleet itself, not to
+trading/venue/service incidents. Don't confuse it with `failover_feed.py` (Layer 0, MTDS primary→backup feed failover)
+in the table above — same word, different system, different owner.
+
+**Status**: dormant-but-kept (operator ruling 2026-07-20). It has never fired in production and `fleet_registry.json` is
+empty under the current single-VM topology, so today it is not a live recovery layer for anything. It is being kept (not
+deleted) because multi-VM is expected to return. Do not cite it as an active recovery mechanism until it has been
+re-enabled per its own checklist — see
+[`codex/15-runbooks/agent-orchestrator-failover-re-enable-checklist.md`](../15-runbooks/agent-orchestrator-failover-re-enable-checklist.md).
+
 ## Failure modes covered
 
 | Failure                                            | First layer that catches                                                                          |
@@ -230,6 +244,8 @@ with `provenance=MANUAL_OPERATOR` — full audit trail + LLM signoff applies.
 - `04-architecture/incident-gateway-state-machine.md` — 13-state machine + dedup-key + audit-ack queue.
 - `04-architecture/autonomous-recovery-matrix.md` — per-failure decision tree.
 - `04-architecture/kill-switch-circuit-breaker.md` — kill-switch + circuit-breaker.
+- `15-runbooks/agent-orchestrator-failover-re-enable-checklist.md` — the DORMANT, out-of-scope agent-orchestrator
+  `FailoverLoop` (dev-fleet task re-routing, not a member of this 5+1 stack).
 - `05-infrastructure/disaster-recovery.md` — RTO/RPO targets + DR procedures.
 - `15-runbooks/physical-pager-layer.md` — Layer-4 device comparison.
 - `15-runbooks/alerting/audit-acknowledgement-flow.md` — Layer-5 ack flow.
