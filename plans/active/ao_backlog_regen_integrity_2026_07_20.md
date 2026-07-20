@@ -108,13 +108,30 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
       add a **growth alarm**, because growth is the real signal: a rising count means the backfill path regressed.
       **Gate**: the exemption is documented with its reason, and a growth check exists that fires if the count rises
       above today's 54. Source: doc #6 todo 1.
-- [ ] [BACKEND] P2. **`audit_false_done` contract — RULED 2026-07-20: checkbox state = truth.** The audit currently
-      flags a row whose plan checkbox IS `[x]` purely because the cited `done_sha` is not the commit that flipped it
-      (that is exactly `sports_cf8…-002`). The ruling (operator A2): the gate answers "is the work done", and the
-      checkbox is the SSOT; keep `done_sha` as provenance, but a sha mismatch must NOT manufacture a false positive — a
-      polluted gate signal is worse than a missing one. Trace BOTH consumers (`audit_false_done` and
-      `verify.check_plan_flip`) and make them agree on the rule. **Gate**: an already-`[x]` row with a mismatched sha is
-      no longer flagged; the rule is documented where both consumers can find it. Source: sports_cf8 study.
+- [x] ✅ [BACKEND] P2. **`audit_false_done` contract — RULED 2026-07-20: checkbox state = truth.** —
+      `agent-orchestrator@64ecd57` (LDR). **Traced both consumers first**: `audit_false_done.py` was ALREADY
+      checkbox-authoritative — its `_still_unchecked` never reads `done_sha`, only whether a `- [ ]` line still hashes
+      to the stored `brief_hash`. The actual offender is `verify.check_plan_flip` (consumed only by
+      `server/routes/slots_worker.py`'s `/done` handler, both the hard-409 and the warn-path escalation, from the SAME
+      computed `plan_flip` dict) — it hard- rejected purely on whether the CITED sha's diff flipped the checkbox, with
+      no fallback to the checkbox's CURRENT state. Added `_brief_is_currently_checked` + wired it into both single-repo
+      and cross-repo modes of `check_plan_flip`: when the sha/diff proof fails, read the live plan text — if the brief
+      is genuinely `- [x]` today, treat it as flipped (`reason="checkbox_currently_checked_sha_mismatch"`) instead of
+      rejecting. Both `slots_worker.py` call sites needed zero changes (they already read the shared dict generically).
+      **Gate**: 2 new tests (single-repo: an earlier commit flips it, a later unrelated sha is cited; cross-repo: the
+      flip commit is outside `_pm_log_commits_touching_plan_ref`'s lookback window) both accept where the old code would
+      409; bug-injected (`_brief_is_currently_checked` forced `False`) confirmed both go red, restored green. **Live
+      audit_false_done.py is currently BROKEN on the VM** (separate finding, not fixed here — flagging for the
+      operator): running it via SSM hits `fatal: detected dubious ownership in repository` on the PM worktree, so EVERY
+      `git show <ref>:<path>` call fails silently → every done row lands in `unresolved`, and `honest`/ `false_done` are
+      ALWAYS empty regardless of truth (verified: a live run returned `false_done: [], honest: []` while 44 done rows
+      exist). This needs
+      `git config --global --add safe.directory     /home/ubuntu/unified-trading-system-repos/unified-trading-pm` on the
+      VM — a client-side git trust setting, not a code/data change, but still a VM-side write, so left for the operator
+      to authorize/run rather than done unilaterally here. **Corrects the sports_cf8-002 premise this todo cited**:
+      direct DB inspection (read-only SSM) shows `-002` no longer exists as a task row at all (its id has since been
+      recycled at least once more since the 07-17 audit; see todo 5 for the full timeline) — the specific row this todo
+      names is stale, but the FIX (and its tests) covers the general contract regardless. Source: sports_cf8 study.
 - [ ] [BACKEND] P0. **Clear the 2 live false-`done` rows — AO's part is notify + re-verify, NOT the fix.**
       `sports_cf8_available_at_backfill_regression-001` (`done_sha=utl@f5f15e3a`) and `-002` (`utl@0f55cc2b`). **The
       underlying work is NOT AO's** (operator 2026-07-18): it belongs to
@@ -152,6 +169,14 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Progress Log
 
+- **2026-07-20 — Todo 4 (checkbox state = truth) landed** (`agent-orchestrator@64ecd57`). `audit_false_done.py` was
+  already checkbox-authoritative; the real fix is in `verify.check_plan_flip` (consumed by `/done`'s hard-409 and
+  warn-escalation paths). Both new tests + bug-injection confirmed load-bearing. **Two findings surfacing beyond the
+  code fix**: (1) `audit_false_done.py` is currently non-functional on the live VM — a git "dubious ownership" error on
+  the PM worktree silently breaks every `git show` read, so `honest`/`false_done` are ALWAYS empty regardless of truth
+  (needs an operator-authorized `git config --global --add safe.directory` on the VM — a client-side git-trust write,
+  not touched here). (2) The sports_cf8-002 row this todo names no longer exists in the live DB at all — see todo 5 for
+  the full investigation.
 - **2026-07-20 — Todo 1 (sibling-reset guard) landed** (`agent-orchestrator@9c7a0fd`). Refuses to reset a
   `done`+`done_sha` row on brief_hash mismatch; ERROR logged; regression test + bug-injection both confirmed
   load-bearing. **Flagging a real trade-off, not just a fix**: this guard also blocks the legitimate "id reused for a
