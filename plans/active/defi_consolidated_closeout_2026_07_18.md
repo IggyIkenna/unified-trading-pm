@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                      these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                      un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -770,6 +770,15 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-20 (slot-4, /autonomous — `/data-pipeline-check-mtds` ran e2e on DeFi → CHECKER GAP found).** The check
+  MECHANISM is proven (VM launch → poll → report → write-prefix verify) but it **cannot FETCH DeFi**: its launcher runs
+  `op=download`, which logs `Skipping 98 DeFi venues (use collect-* handlers)` + `No active venues ... ['DEFI']`, so
+  every DeFi force-leg fails `no_parquet`. Checker gap, not a pipeline failure — DeFi collection needs the
+  `collect-evm-defi`/`collect-solana-defi` route the checker never invokes. Filed + fix-designed:
+  `plans/active/issues/data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md` (P1). Also confirmed the
+  timestamp-glued instrument-id pattern extends to AAVE `lending_indices`. Report:
+  `plans/audit/results/data_pipeline_e2e_check_mtds_2025_03_12.md`.
 
 - **2026-07-20 (slot-4, /autonomous — CF-11 re-emit CRASH root-caused + FIXED; manifest rebuild needs a clean fixed
   re-run).** The 2022 rebuild + every rebuild VM crashes in the CF-11 honest-absence re-emit: `MalformedRowKeyError` —
