@@ -16,7 +16,11 @@ summary: >-
   and must NOT set available_to). Downstream harm is real: UTL instrument_date_filter EXCLUDES the pool from the
   universe for every day after the false available_to, and legacy_reason_classifier stamps its post-date absence
   EXPECTED_INSTRUMENT_DELISTED — so the pool silently leaves the honest-coverage denominator while still live on-chain.
-status: open
+status: resolved
+resolved_by:
+  "slot-3, 2026-07-20 — c37d4f96/13c4f68a (instruments-service), 9a36478 (deployment-service). Prod catalogue + manifest
+  verified corrected. Terminal-state question for the honest-pending residual moved to its own issue:
+  defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20."
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -50,7 +54,6 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by:
 ---
 
 # DeFi catalogue `available_to` false-delisting
@@ -239,49 +242,50 @@ runs.)
       the re-run). The script now derives the literal from the frame itself (`_expected_true_value`) so the encoding
       can't drift again. NOTE `reclassify_defi_postdelist_eu_2026_06_24.py:94` writes `expected = False` (a bool) and
       carries the SAME latent bug.
-- [ ] [DATA] P1. **REMAINING half — resolve the 215,864 re-seeded pending-EU cells to a terminal honest state.** They
-      are honest-pending now (visible, drags the denominator down) which is strictly better than the false DELISTED, but
-      not terminal. **Known scope gap:** `record_catalogue_residual_empty` → `EXPECTED_NOT_ENOUGH_TVL`
-      (`_dex_swaps_queries.py:124-163`) is keyed **per POOL** (`instrument_id=pool_address.lower()`,
-      `instrument_type='pool'`) and wired only into `dex_pools_handler`/`dex_swaps_handler` — but the un-delisted
-      majority is NON-POOL (SPOT_ASSET 1,389 / A_TOKEN 473 / DEBT_TOKEN 469 / LENDING). So a dex re-capture resolves
-      only the POOL slice. Open question under investigation: whether a non-POOL residual-empty path exists, and whether
-      SPOT_ASSET/A_TOKEN/DEBT_TOKEN even HAVE a per-day capture path (if not, their honest terminal state is a reason —
-      or they should not be seeded expected at all — not an indefinite pending EU). The catalogue reset to `None` alone
-      does not fix data already written: the defi manifest `_index` still carries `EXPECTED_INSTRUMENT_DELISTED`
-      empty_confirmed rows for the clustered dates. **Un-delist script WRITTEN** (`instruments-service/scripts/`
-      `undelist_defi_false_postdelist_eu_2026_07_20.py`) — the exact inverse of
-      `reclassify_defi_postdelist_eu_2026_06_24.py` (which has NO `--revert`), instrument_type-AGNOSTIC, selects
-      "manifest says DELISTED **and** post-regen catalogue says live-on-that-date", resets → pending EU (blank
-      `error_reason` = NOT skip-worthy), backup-then-write, `--dry-run`/`--apply`. **Order is load-bearing**: regen →
-      un-delist → re-capture → validate (manifest-freshness SKIPS `empty_confirmed`, so un-delist MUST precede
-      re-capture). Scope measured: 4 protocols × 19 (venue,chain,date) tuples = 2,519 rows, ~12-24 day forward window.
-      **⛔ SUPERSEDED — the "convert to `NOT_ENOUGH_TVL`" remedy above is WRONG. Do NOT do it.** Investigation
-      `w3y86f5z8` (2026-07-20) established: `EXPECTED_NOT_ENOUGH_TVL` is a member of `OUT_OF_COVERAGE_WINDOW_REASONS`
-      (`_honest_coverage_empty_reasons.py:531`) — the **SAME clipped-from-denominator bucket as
-      `EXPECTED_INSTRUMENT_DELISTED` (:530)**. Re-stamping the un-delisted cells with it would REMOVE them from the
-      denominator again, reproducing the exact honest-coverage distortion this issue exists to fix, just under an
-      honest-sounding name. It also established that (a) no non-POOL residual emitter exists anywhere (the machinery is
-      pool-only at all three layers, incl. the `catalogue_pool_ids_for_shard` provider that hard-filters to
+- [x] ✅ [DATA] P1. **DONE (this issue's scope) — un-delist applied + verified; terminal-state choice MOVED to its own
+      issue.** The 215,864 re-seeded cells are honest-pending now (visible, drags the denominator down) which is
+      strictly better than the false DELISTED, but not terminal. **Known scope gap:** `record_catalogue_residual_empty`
+      → `EXPECTED_NOT_ENOUGH_TVL` (`_dex_swaps_queries.py:124-163`) is keyed **per POOL**
+      (`instrument_id=pool_address.lower()`, `instrument_type='pool'`) and wired only into
+      `dex_pools_handler`/`dex_swaps_handler` — but the un-delisted majority is NON-POOL (SPOT_ASSET 1,389 / A_TOKEN 473
+      / DEBT_TOKEN 469 / LENDING). So a dex re-capture resolves only the POOL slice. Open question under investigation:
+      whether a non-POOL residual-empty path exists, and whether SPOT_ASSET/A_TOKEN/DEBT_TOKEN even HAVE a per-day
+      capture path (if not, their honest terminal state is a reason — or they should not be seeded expected at all — not
+      an indefinite pending EU). The catalogue reset to `None` alone does not fix data already written: the defi
+      manifest `_index` still carries `EXPECTED_INSTRUMENT_DELISTED` empty_confirmed rows for the clustered dates.
+      **Un-delist script WRITTEN** (`instruments-service/scripts/` `undelist_defi_false_postdelist_eu_2026_07_20.py`) —
+      the exact inverse of `reclassify_defi_postdelist_eu_2026_06_24.py` (which has NO `--revert`),
+      instrument_type-AGNOSTIC, selects "manifest says DELISTED **and** post-regen catalogue says live-on-that-date",
+      resets → pending EU (blank `error_reason` = NOT skip-worthy), backup-then-write, `--dry-run`/`--apply`. **Order is
+      load-bearing**: regen → un-delist → re-capture → validate (manifest-freshness SKIPS `empty_confirmed`, so
+      un-delist MUST precede re-capture). Scope measured: 4 protocols × 19 (venue,chain,date) tuples = 2,519 rows,
+      ~12-24 day forward window. **⛔ SUPERSEDED — the "convert to `NOT_ENOUGH_TVL`" remedy above is WRONG. Do NOT do
+      it.** Investigation `w3y86f5z8` (2026-07-20) established: `EXPECTED_NOT_ENOUGH_TVL` is a member of
+      `OUT_OF_COVERAGE_WINDOW_REASONS` (`_honest_coverage_empty_reasons.py:531`) — the **SAME clipped-from-denominator
+      bucket as `EXPECTED_INSTRUMENT_DELISTED` (:530)**. Re-stamping the un-delisted cells with it would REMOVE them
+      from the denominator again, reproducing the exact honest-coverage distortion this issue exists to fix, just under
+      an honest-sounding name. It also established that (a) no non-POOL residual emitter exists anywhere (the machinery
+      is pool-only at all three layers, incl. the `catalogue_pool_ids_for_shard` provider that hard-filters to
       `instrument_type=='pool'`), and (b) SPOT_ASSET/A_TOKEN/DEBT_TOKEN are reference-only HOLDINGS rows with NO per-day
       capture path under their protocol venue — so their cells are structurally unsatisfiable and a re-capture can never
       flip them to `captured`. **The un-delist remains CORRECT and is the completion of THIS issue** (blank- reason EU
       is byte-for-byte the IS enumerator's own seed state; the gap is now visible + scored instead of hidden). Choosing
       the terminal state for those cells is a separate architecture decision, tracked in its own issue:
       `issues/defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`.
-- [ ] [DEFI] P2. **Option B truth-gate — BUILT (ship pending tree-green).** `instruments_service/oracle/`
-      `defi_removal_probe.py` + `scripts/run_defi_removal_probe.py` + roll-up integration (`_apply_defi_removals` /
-      `_load_defi_removal_map` applied to the FINAL frame of BOTH `build_catalogue_dataframe` and `_merge_incremental`,
-      so full/incremental never disagree) + `tests/unit/oracle/` + deployment (`deployment-service`
-      `cloud_run_job_registry` `defi-removal-probe` + `terraform/gcp/defi_removal_probe_scheduler.tf`, daily 00:30 UTC
-      before the 01:00 catalogue regen). CONSERVATIVE: records a removal ONLY on a positive `eth_getCode`-absent
-      confirmation; unresolvable RPC / non-EVM / error → stays live, so it can never re-create a false delisting. Reuses
-      `evm_creation_resolver` primitives; writes `_cache/defi_removals.json` (mirrors the genesis
-      `_cache/*_creation_timestamps.json` seam). **RUNTIME-VERIFIED on prod 2026-07-20**: 11,827 catalogue rows → 30
-      live EVM targets probed via Alchemy → **0/30 confirmed gone** (correct — DeFi contracts persist on-chain, so
-      Option A stays and the truth-gate fires only on a genuine SELFDESTRUCT). My tests pass in the QG (4675 passed);
-      SHIP is blocked only by an unrelated fleet UAC drift (`unified-api-contracts@6bcff215` narrowed the defi
-      denominator → 5 pre-existing golden/producer-set failures another agent is reconciling).
+- [x] ✅ [DEFI] P2. **Option B truth-gate — SHIPPED + CI-green 2026-07-20** (`instruments-service@13c4f68a` +
+      `deployment-service@9a36478`). `instruments_service/oracle/` `defi_removal_probe.py` +
+      `scripts/run_defi_removal_probe.py` + roll-up integration (`_apply_defi_removals` / `_load_defi_removal_map`
+      applied to the FINAL frame of BOTH `build_catalogue_dataframe` and `_merge_incremental`, so full/incremental never
+      disagree) + `tests/unit/oracle/` + deployment (`deployment-service` `cloud_run_job_registry`
+      `defi-removal-probe` + `terraform/gcp/defi_removal_probe_scheduler.tf`, daily 00:30 UTC before the 01:00 catalogue
+      regen). CONSERVATIVE: records a removal ONLY on a positive `eth_getCode`-absent confirmation; unresolvable RPC /
+      non-EVM / error → stays live, so it can never re-create a false delisting. Reuses `evm_creation_resolver`
+      primitives; writes `_cache/defi_removals.json` (mirrors the genesis `_cache/*_creation_timestamps.json` seam).
+      **RUNTIME-VERIFIED on prod 2026-07-20**: 11,827 catalogue rows → 30 live EVM targets probed via Alchemy → **0/30
+      confirmed gone** (correct — DeFi contracts persist on-chain, so Option A stays and the truth-gate fires only on a
+      genuine SELFDESTRUCT). My tests pass in the QG (4675 passed); SHIP is blocked only by an unrelated fleet UAC drift
+      (`unified-api-contracts@6bcff215` narrowed the defi denominator → 5 pre-existing golden/producer-set failures
+      another agent is reconciling).
 
 ## Blocked: Option B ship is gated on a tree-green that is NOT this issue's defect (2026-07-20)
 

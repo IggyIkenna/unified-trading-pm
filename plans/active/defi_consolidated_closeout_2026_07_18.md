@@ -267,16 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-<<<<<<< Updated upstream
-                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
-||||||| Stash base
-                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
-=======
-                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
->>>>>>> Stashed changes
+          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -526,20 +518,21 @@ Discriminator = **does a manifest row exist**.
       `attempted_failed` → honest-empty; reconcile `spot_asset` absence from the enumerated catalogue (the v2 corpus
       predates SPOT_ASSET population; `spot_pair` 143K is partly the culled DRIFT SPOT leak). (repos:
       unified-api-contracts, instruments-service)
-- [ ] [DATA] P1. **DeFi catalogue `available_to` false-delisting** — the CATALOGUE twin of the subgraph-deindex reclass
-      above (same root cause: a subgraph/seed pool-set change misread as a mass delisting). Root fix SHIPPED
-      `instruments-service@c37d4f96` (defi drop-outs never last-seen-delist; gated `asset_group=="defi"`, both full +
-      incremental paths; truth-gate `delisted_at`/`expiry` preserved). PROVEN on real prod data: 947 clustered
-      false-delistings (06-26/07-06/07-08 across TRADER_JOE_V2/PANCAKESWAP_V3/AAVE_V3/MORPHO) → 0. Remaining to close:
-      **(a)** `--mode full` defi catalogue regen to purge the frozen stamps + verify; **(b)** historical manifest
-      un-delist + `NOT_ENOUGH_TVL` re-capture over the affected `(protocol,chain,date)` cells (reverse/supersede
-      `reclassify_defi_postdelist_eu_2026_06_24.py`; gate `validate_defi_no_delisted_on_live_pool`); **(c)** Option B
-      §12 on-chain factory/RPC truth-gate probe (feeds `delisted_at` for genuine removals). SSOT:
-      `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`. (repos: instruments-service,
-      market-tick-data-service, unified-api-contracts) **STATUS 2026-07-20: (a) + (b) DONE + VERIFIED on prod** —
-      catalogue non-blank `available_to` 2,349 → 105 (0 on the false-cluster dates) via `--mode full` regen + a targeted
-      frozen-tail purge; manifest `EXPECTED_INSTRUMENT_DELISTED` **219,738 → 3,874** across 45.8M rows via an
-      instrument_type-agnostic un-delist. (c) built, tested + runtime-verified, ship pending tree-green.
+- [x] ✅ [DATA] P1. **DeFi catalogue `available_to` false-delisting — DONE (2026-07-20).** Root fix SHIPPED + VERIFIED
+      `instruments-service@13c4f68a` (Option A: defi drop-outs never last-seen-delist, gated `asset_group=="defi"`, both
+      full + incremental paths; truth-gate `delisted_at`/`expiry` preserved for a future probe) — PROVEN on real prod
+      data: 947 clustered false-delistings (06-26/07-06/07-08 across TRADER_JOE_V2/PANCAKESWAP_V3/AAVE_V3/MORPHO) → 0.
+      **(a) prod catalogue CORRECTED + VERIFIED**: `--mode full` regen (monotonic guard ACCEPT, `CATALOGUE_PROMOTED`) +
+      a targeted frozen-tail purge (`purge_defi_false_available_to_2026_07_20.py`) — non-blank `available_to` 2,349 →
+      **105**, **0** on the 3 false-cluster dates. **(b) historical manifest un-delist DONE + VERIFIED**
+      (`undelist_defi_false_postdelist_eu_2026_07_20.py`, instrument_type-agnostic, the inverse of
+      `reclassify_defi_postdelist_eu_2026_06_24.py`) — `EXPECTED_INSTRUMENT_DELISTED` **219,738 → 3,874** across 45.8M
+      manifest rows. **(c) Option B (on-chain removal probe) SHIPPED** `instruments-service@13c4f68a` +
+      `deployment-service@9a36478` (daily Cloud Run job, `defi-removal-probe`, 00:30 UTC) — conservative by
+      construction, runtime-verified against prod (0/30 live targets confirmed gone — correct for a healthy universe).
+      CI green both repos. SSOT + full evidence: `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`.
+      **Residual, tracked separately**: the 215,864 un-delisted cells are honest-pending, not yet terminal — see the
+      next item. (repos: instruments-service, deployment-service)
 - [ ] [DECISION] P1. **DeFi non-POOL per-instrument EU has NO reconciliation path** (surfaced by the un-delist above).
       The catalogue-residual → typed-empty machinery is DEX-POOL-ONLY at all three layers, and SPOT_ASSET/A_TOKEN/
       DEBT_TOKEN are reference-only holdings with no per-day capture path — so 215,864 re-seeded cells cannot reach a
