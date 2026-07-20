@@ -117,9 +117,22 @@ below are measured against GCP `central-element-323112` + AWS `427895769566`, no
 Reuses the shipped cost-page date-range picker + segmented control; all unknowns render as explicit "unknown + why",
 never a fabricated green (the `_image_signal` principle).
 
-1. **What's running** ⭐ (default) — every workload → resolved artifact → digest → matched build → git SHA, with drift
-   flags: 🟢 digest/SHA-pinned · 🔴 floating `:latest` · 🔴 hand-deployed · 🟡 stale/behind-green · 🔴 fake-populated
-   (the `0.99.0` tarball case) · ⚪ honestly-unknown.
+1. **What's running** ⭐ (default) — **the row unit is `service × artifact version`, NOT one row per host** (operator
+   2026-07-17). The estate is an ephemeral VM fleet, so a per-host table is both noisy and a duplicate of the
+   Deployments page, which owns the host census. Each row = one code version actually live, its resolved digest, the
+   matched build → git SHA, the **host count**, and the age of the oldest host on it. **Expandable to the host list.**
+   - Drift flags: 🟢 digest/SHA-pinned · 🔴 floating `:latest` · 🔴 hand-deployed · 🟡 stale/behind-green · 🔴
+     fake-populated (the `0.99.0` tarball case) · ⚪ honestly-unknown · 🟠 **fragmented** (N versions of ONE service
+     live at once) — plus a tab-level "N services running >1 version right now".
+   - **Why fragmentation is the headline signal, not a nicety**: a Cloud Run service rolls forward, but **a VM never
+     updates itself** — a VM launched 3 days ago runs 3-day-old code for its whole life. So a fix shipped today does NOT
+     reach VMs launched before it, and they keep writing pre-fix data. That is a data-correctness concern
+     (`codex/02-data/data-pipeline-correctness-hard-rule.md`), not a tidiness one, and nothing surfaces it today.
+     MEASURED live 2026-07-17: 13 running VMs, with 4 `features-sports` VMs in two cohorts launched ~7h apart.
+   - **Cross-links (operator requirement)**: a version row deep-links into the **Deployments view with a pre-loaded
+     filter** showing only the hosts on that image/tarball, and out to the **GCP/AWS console** where that build ran (+
+     its logs) so the operator can verify it is the right artifact. Both require work on the Deployments side — see
+     Phase 3b.
 2. **Deploy timeline** — Cloud Run revisions + App Runner/ECS operations: every deploy, its digest, when, by whom;
    change-type = new-code / **config-only** (same digest) / **rollback** (digest reverted) / **failed** (deploy broke
    though the build was green). **Also answers "what was running on date X"** — revision N was live [t_N, t_{N+1}).
@@ -131,10 +144,19 @@ never a fabricated green (the `_image_signal` principle).
 
 ## Honest gaps (target ≠ producible without extra work — do NOT fake these)
 
-- **Tarball VM runtime SHA** — needs a ~1-line pipeline fix (`_launch_with_tee` exports `GIT_COMMIT` from the parsed
-  `_tarball_actual_sha` before `deployment_heartbeat.py register`, OR add a `tarball_sha` field to the registry entry).
-  Cheap, but it is CODE in `deployment-service`, not a read. **Belongs to the issue doc / Ikenna's CI area, not this
-  page.** Until it lands, the tarball "built from" column is _unknown_.
+- **Tarball VM runtime SHA — NOW IN SCOPE** (operator 2026-07-17, supersedes the earlier "issue-doc only" call). Today
+  `git_commit`/`image_digest` are `""` on every live VM, so the fragmentation view — the single most valuable thing for
+  the VM fleet — is unresolvable. Operator approved **both** paths, with a clear split:
+  - **(A) MEASURED, going forward** — stamp the real commit on the registry entry at launch. This is the target state;
+    the page must show measured values, not inferred ones, for anything launched after it lands.
+  - **(B) INFERRED, for historic/in-flight VMs only** — reconstruct the commit by joining a VM's launch time against the
+    tarball manifest timeline (manifests carry `commit_sha` + `created_at`). **A stopgap, explicitly rendered as
+    _inferred_, never as measured**, and retired for new launches once (A) is live.
+  - 🔴 **HARD CONSTRAINT (operator)**: (A) must NOT break the CD flow that works today — VMs boot and pull the _current
+    latest_ tarball, and that must keep working unchanged. "Making changes for this feature is okay, but not at the cost
+    of breaking something that is working right now." Therefore (A) is **gated on a blast-radius audit** (Phase 3c) that
+    must return a YES / YES-WITH-CONDITIONS verdict, enumerate every consumer of `git_commit`/`image_digest`, and
+    confirm the tarball naming/pathing does not have to change. A NO verdict means ship (B) only and escalate.
 - **AWS tarball lane** — structurally broken: uploader defaults to `uts-prod-deployment-state` (0 objects in `code/`);
   the EC2 launcher expects `unified-trading-deployment-scripts-427895769566` which does not exist. Separate infra bug.
 - **AWS runtime is thinner than GCP** — image resolved by tag not digest; e.g. `uts-deployment-api-prod` (App Runner)
@@ -205,7 +227,11 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
       artifacts / health) — shipped at `deployment-ui/public/design-mocks/artifact-pipeline.html`
       (deployment-ui@479f8c2), viewable at `/design-mocks/artifact-pipeline.html`. **Temporary — delete the folder when
       the real page ships.** Iterating with operator.
-- [ ] [OPERATOR] P0. Lock the shape with the operator (default tab, which views ship v1 vs later, any cuts).
+- [x] [OPERATOR] P0. Shape locked with the operator 2026-07-17 — **top-level `/ops/artifacts`** (not a cockpit tab),
+      **all 5 views in v1**, **default view = What's running**.
+- [ ] [OPERATOR] P0. Rebuild the "What's running" mock on the service × version model (expandable host list,
+      cross-links, `fragmented` flag) and re-review with the operator. The current mock collapses the whole VM fleet
+      into ONE row — misleading at fleet scale; this is a known defect being fixed.
 
 ### Phase 1 — backend read + snapshot layer (deployment-api)
 
@@ -228,13 +254,45 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 
 ### Phase 3 — UI page (deployment-ui)
 
-- [ ] [UI] P1. `/ops/artifacts` page (top-level route + NAV_GROUPS entry, or a cockpit tab — decide at shape-lock); 5
-      views; reuse the cost-page date-range picker, `Segmented`, `Card`, `Badge`, status pills, the `useRef` reqId
-      ordering guard, and the visibility-paused refresh. Unknowns render explicitly.
+- [ ] [UI] P1. `/ops/artifacts` **top-level route + NAV_GROUPS entry** (shape locked by operator 2026-07-17: top-level,
+      all 5 views in v1, default view = What's running); reuse the cost-page date-range picker, `Segmented`, `Card`,
+      `Badge`, status pills, the `useRef` reqId ordering guard, and the visibility-paused refresh. Unknowns render
+      explicitly.
+- [ ] [UI] P1. "What's running" as **service × version rows with an expandable host list** (not one row per host) + the
+      `fragmented` flag and the tab-level ">1 version live" counter.
 - [ ] [UI] P1. API client (`deploymentApi.ts` flat-function style) + mock-api handlers (route before any broad wildcard)
       with `__mock*` test hooks mirroring the cost page.
 - [ ] [UI] P1. Vitest for the page + `pw:L2` smoke spec (mock-mode) covering each view, the running-drift flags, the
       deploy change-type, and the failure drawer. No UI tick without `pw:L2 ✓` + a cited regression spec.
+
+### Phase 3b — cross-links (deployment-ui + deployment-api) — operator requirement 2026-07-17
+
+- [ ] [BACKEND] P1. Carry the image/tarball version on the Deployments inventory row so it can be filtered on.
+      **Additive only** — `DeploymentItem` today carries no image URI / digest / commit; adding fields must not break
+      any existing consumer or field-set assertion. Respect the 45s SWR cache + the 4 GiB / WORKERS=2 budget (report the
+      payload delta before shipping).
+- [ ] [UI] P1. Deployments view accepts a **pre-loaded filter via URL param** (e.g. `?image=<digest|tag>`), so an
+      /ops/artifacts version row deep-links to exactly the hosts running that artifact. Reuse the existing
+      URL-param-backed filter mechanism; do not change existing filter behavior or param names.
+- [ ] [UI] P2. **Console deep-links** out to where the build ran + its logs — GCP Cloud Build (`logUrl` is on the build
+      record), Artifact Registry, AWS CodeBuild (CloudWatch `deepLink`), ECR, and the GCE instance — so the operator can
+      verify an artifact is the right one. Reuse any existing URL helper (`RepoCi` already renders a build `log_url`)
+      rather than reinventing.
+
+### Phase 3c — tarball commit tracking (AUDIT-GATED — must not break CD)
+
+- [ ] [REVIEW] P0. **Blast-radius audit BEFORE any code** (operator: "do the proper audit first … we don't have to do it
+      at the cost of breaking something that is working right now"): map the tarball CD flow end-to-end, enumerate every
+      consumer of `git_commit`/`image_digest`, prove the tarball naming/pathing need NOT change, cover the
+      refresh-between-launch-and-download race and stamp-failure-must-not-block-boot, and return an explicit YES /
+      YES-WITH-CONDITIONS / NO verdict. Also re-verify the unverified Lane-B claims (empty provenance on live VMs, the
+      `0.99.0` constant, manifest/tarball counts, the broken AWS tarball lane).
+- [ ] [INFRA] P1. **(A) measured stamp** — record the real commit on the registry entry at launch, additive and
+      non-breaking, only if the audit verdict allows. Boot must still succeed if the stamp step fails.
+      **BLOCKED-OPERATOR-DECISION if the audit returns NO.**
+- [ ] [BACKEND] P1. **(B) inferred fallback** for historic/in-flight VMs — join launch time against the tarball manifest
+      timeline (`commit_sha` + `created_at`); render **explicitly as inferred, never measured**, and stop applying it to
+      launches once (A) is live.
 
 ### Phase 4 — absorb + retire
 
@@ -266,4 +324,15 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
   `/design-mocks/artifact-pipeline.html`; temporary, delete-when the real page ships) — real probed data; 2 fabricated
   attributions caught + fixed; bug #2 demoted to UNVERIFIED. Deploy-timeline view + churn/rollback/failed-deploy signals
   added after the feasibility grill confirmed Cloud Run revisions are a free 72-day per-deploy history. Feasibility
-  verdict: producible + cheap (cents/yr) + ~60–72d already retained. **Shape not yet locked; no page code started.**
+  verdict: producible + cheap (cents/yr) + ~60–72d already retained.
+- **2026-07-17 (later)** — **Shape LOCKED**: top-level `/ops/artifacts`, all 5 views in v1, default = What's running.
+  Operator review of the running tab surfaced a **real design defect**: the row unit was per-workload, collapsing the
+  whole VM fleet into one row — misleading at fleet scale (measured: 13 live VMs, incl. 4 `features-sports` in two
+  cohorts ~7h apart, i.e. two code versions live in one service). Row unit changed to **service × artifact version with
+  an expandable host list**, plus a `fragmented` flag; rationale is data-correctness (a VM never self-updates, so a fix
+  shipped today never reaches VMs launched before it). Operator added: deep-link a version row into **Deployments with a
+  pre-loaded filter** (needs additive Deployments-side work — Phase 3b) and out to the **GCP/AWS console + build logs**
+  for verification. Tarball commit tracking moved **into scope**: (A) measured stamp going forward + (B) inferred from
+  the manifest timeline for historic only — **gated on a blast-radius audit** (Phase 3c) under the operator's hard
+  constraint that the working latest-tarball CD flow must not break. Two read-only audits dispatched (tarball
+  blast-radius; Deployments filter support). **No page code started; mock rebuild pending.**
