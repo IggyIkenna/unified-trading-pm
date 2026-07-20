@@ -17,7 +17,7 @@ summary: >
   `fixtures_history` two lines above). The 3 VMs currently running the P2c 2015→present backfill are on a pre-fix
   tarball snapshot and will keep producing these silent NaNs on every tz-aware-kickoff fixture until relaunched or until
   a targeted gap-fill re-run picks up the fix.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [features]
@@ -41,9 +41,9 @@ drift_direction: advance-code
 depends_on:
   - sports_p2_features_history_to_ml_ready_2026_06_27.md
 gate_on_depends: true
-last_updated: 2026-07-14
+last_updated: 2026-07-20
 locked_by:
-resolved_by:
+resolved_by: features-service@d878f11a
 ---
 
 # features-service sports travel_calculator silent NaN on tz-aware kickoff_utc

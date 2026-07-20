@@ -13,7 +13,7 @@ summary: >
   skipping the row (no crash, no written_empty increment). Net effect: this CF-8 available_at backfill pass will NOT
   actually update these rows — they keep their pre-rebuild (missing available_at) state — while the overall run still
   reports success.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [data]
@@ -33,9 +33,9 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-13
+last_updated: 2026-07-20
 locked_by:
-resolved_by:
+resolved_by: market-tick-data-service@52c695d5
 ---
 
 # rebuild_sports_manifest_v9.py silently under-delivers on rows with legacy free-text EMPTY reasons

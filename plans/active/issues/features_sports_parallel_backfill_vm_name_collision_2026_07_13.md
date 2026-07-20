@@ -11,7 +11,7 @@ summary: >
   OOM-verification VM (range 2018-06-17→2019-08-11). No data was lost this time (the two critical dates it had already
   captured survived, and recovery via the collision-free consolidated launcher was straightforward) but the next
   occurrence may not be caught as fast.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [features]
@@ -34,9 +34,9 @@ execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-13
+last_updated: 2026-07-20
 locked_by:
-resolved_by:
+resolved_by: deployment-service@d3e1a3f
 ---
 
 > **🟡 Priority bumped P2→P1 (2026-07-13, operator feedback)**: already caused one live-VM deletion this session; the

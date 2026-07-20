@@ -14,7 +14,7 @@ summary: >
   `travel_fatigue_ratio`) are **uniformly, exactly 0.0** — never NaN, never nonzero — in every one of 7,641 rows sampled
   across 2017-2026 AND the freshest available day (2026-07-16, current fully-patched code). This means the travel
   feature family is effectively non-functional corpus-wide and still is today, not just in historical backfill data.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [features]
@@ -39,9 +39,9 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-17
+last_updated: 2026-07-20
 locked_by:
-resolved_by:
+resolved_by: features-service@d878f11a
 ---
 
 # features-service sports travel_calculator's home venue-coordinate lookup never resolves
@@ -205,15 +205,15 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
       produces real, varying travel data before closing this out. (repo: features-service)
 
       **DONE (2026-07-18T08:25Z, slot-6) — closed by the SAME consolidated fleet as the sibling elo issue doc's
-          -004 todo** (see that doc's completion note for the full 10-VM launch details, per-VM exit status, and the
-          `read_historical_fixtures` unrelated-bug caveat on the fleet's final date). Content-sampled
-          `day=2021-05-22/league=113/feature_group=derived_features/features.parquet` directly (not trusting a
-          single audit script): `home_travel_distance_km`/`away_travel_distance_km` and `cumulative_travel_30d`
-          columns now show a genuine MIX of NaN (honest-absence where venue history genuinely isn't resolvable) and
-          populated values, replacing the pre-fix signature this doc documented (`home_cumulative_travel_30d`/
-          `away_cumulative_travel_30d` == 0.0 in 100% of sampled rows, NEVER NaN, NEVER nonzero). This confirms the
-          str/int venue-coords fix (`6efefde2` + the deeper `9923b0d8` fixture-path fix) is reflected in the
-          re-computed corpus, not just present in the code. (repo: features-service)
+              -004 todo** (see that doc's completion note for the full 10-VM launch details, per-VM exit status, and the
+              `read_historical_fixtures` unrelated-bug caveat on the fleet's final date). Content-sampled
+              `day=2021-05-22/league=113/feature_group=derived_features/features.parquet` directly (not trusting a
+              single audit script): `home_travel_distance_km`/`away_travel_distance_km` and `cumulative_travel_30d`
+              columns now show a genuine MIX of NaN (honest-absence where venue history genuinely isn't resolvable) and
+              populated values, replacing the pre-fix signature this doc documented (`home_cumulative_travel_30d`/
+              `away_cumulative_travel_30d` == 0.0 in 100% of sampled rows, NEVER NaN, NEVER nonzero). This confirms the
+              str/int venue-coords fix (`6efefde2` + the deeper `9923b0d8` fixture-path fix) is reflected in the
+              re-computed corpus, not just present in the code. (repo: features-service)
 
 ## Progress Log
 

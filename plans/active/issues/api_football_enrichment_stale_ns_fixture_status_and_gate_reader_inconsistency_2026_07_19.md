@@ -44,7 +44,7 @@ summary:
   expected_unattempted, 0 captured/empty. Since every prior dispatch on this todo (20+) used exactly this reader/script
   to declare 'gate still failing, 6,925 pending, unchanged', and the underlying per-VM-shard-fallback merge behavior is
   column-selection-sensitive, the reliability of every one of those readings needs re-examination."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -76,7 +76,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 source: [data_engineering worker, slot 8, sports_p2_history_apifootball_2015_to_present-001 dispatch 2026-07-19]
-resolved_by:
+resolved_by: instruments-service@4ef4cfeb
 locked_by:
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -658,48 +658,48 @@ because the entity-path fix failed (the 9 cells that DID have resolvable data co
       DISCONFIRMED the naive "off-season" hypothesis exactly as the Caution above warned it might.**
 
       **(a) Live confirmation — hypothesis DISCONFIRMED for the sampled cells.** Cross-checked the 3 flagged
-          `FIXTURE_STATS 2020-06-14` leagues against (i) `is_league_entity_covered(league, "FIXTURE_STATS")` and (ii) the
-          FIXTURES entity's own manifest row for the identical (date, league): all 3 leagues are provider-COVERED for
-          FIXTURE_STATS (`True`), and FIXTURES itself is `captured` for `AUSTRIAN_2_LIGA`/`AUSTRIAN_BUNDESLIGA` on
-          2020-06-14 — a real fixture demonstrably existed. For `GREEK_SUPER_LEAGUE` the SIBLING `FIXTURE_EVENTS`/
-          `FIXTURE_LINEUPS` entities were themselves `captured` for the identical (date, league) cell, proving the
-          provider genuinely returns per-fixture data there. So the original code-traced hypothesis ("never appears in
-          `af_fid_to_league`, structurally unclosable") does NOT hold for these 3 sample cells — they are genuine
-          pending-fetch gaps (FIXTURE_STATS specifically was never attempted despite sibling entities succeeding, most
-          likely because some historical backfill run's `entities_to_fetch` scope excluded FIXTURE_STATS). A closer that
-          blindly mirrored `process_write.py`'s FIXTURES pattern (fall through to `EXPECTED_NO_FIXTURE` once coverage
-          says yes) would have stamped false-empty over a cell that provably had real data — exactly the corruption class
-          this doc's own Caution warned against.
+              `FIXTURE_STATS 2020-06-14` leagues against (i) `is_league_entity_covered(league, "FIXTURE_STATS")` and (ii) the
+              FIXTURES entity's own manifest row for the identical (date, league): all 3 leagues are provider-COVERED for
+              FIXTURE_STATS (`True`), and FIXTURES itself is `captured` for `AUSTRIAN_2_LIGA`/`AUSTRIAN_BUNDESLIGA` on
+              2020-06-14 — a real fixture demonstrably existed. For `GREEK_SUPER_LEAGUE` the SIBLING `FIXTURE_EVENTS`/
+              `FIXTURE_LINEUPS` entities were themselves `captured` for the identical (date, league) cell, proving the
+              provider genuinely returns per-fixture data there. So the original code-traced hypothesis ("never appears in
+              `af_fid_to_league`, structurally unclosable") does NOT hold for these 3 sample cells — they are genuine
+              pending-fetch gaps (FIXTURE_STATS specifically was never attempted despite sibling entities succeeding, most
+              likely because some historical backfill run's `entities_to_fetch` scope excluded FIXTURE_STATS). A closer that
+              blindly mirrored `process_write.py`'s FIXTURES pattern (fall through to `EXPECTED_NO_FIXTURE` once coverage
+              says yes) would have stamped false-empty over a cell that provably had real data — exactly the corruption class
+              this doc's own Caution warned against.
 
-          **(b) Corpus-wide check.** One manifest read (`read_availability_index`, source=api_football, restricted to
-          FIXTURES + the 4 enrichment `data_type`s — single-walk discipline, no whole-corpus GCS walk) found **5,515**
-          stuck (`expected_unattempted`, blank-`error_reason`) enrichment cells total (matches the plateau number this
-          doc already tracked). Classifying each via the SAME two independently-provable facts used in (a):
-          **645** have no provider coverage for that (league, entity) (`EXPECTED_NO_PROVIDER_COVERAGE`, safe
-          unconditionally); **4,665** have a FIXTURES row that is ITSELF `empty_confirmed` for the identical (date,
-          league) — i.e. FIXTURES already proved no fixture existed there, safe to mirror; **205** are like the sampled
-          cells above — provider-covered AND FIXTURES shows `captured` (or is itself still pending) — genuine
-          pending-fetch gaps that must NOT be closed. So **5,310 of 5,515 (96%)** of the plateau IS a genuine off-season/
-          no-coverage absence (confirming the doc's broad thesis), while **205 (4%)** are real gaps a naive closer would
-          have corrupted.
+              **(b) Corpus-wide check.** One manifest read (`read_availability_index`, source=api_football, restricted to
+              FIXTURES + the 4 enrichment `data_type`s — single-walk discipline, no whole-corpus GCS walk) found **5,515**
+              stuck (`expected_unattempted`, blank-`error_reason`) enrichment cells total (matches the plateau number this
+              doc already tracked). Classifying each via the SAME two independently-provable facts used in (a):
+              **645** have no provider coverage for that (league, entity) (`EXPECTED_NO_PROVIDER_COVERAGE`, safe
+              unconditionally); **4,665** have a FIXTURES row that is ITSELF `empty_confirmed` for the identical (date,
+              league) — i.e. FIXTURES already proved no fixture existed there, safe to mirror; **205** are like the sampled
+              cells above — provider-covered AND FIXTURES shows `captured` (or is itself still pending) — genuine
+              pending-fetch gaps that must NOT be closed. So **5,310 of 5,515 (96%)** of the plateau IS a genuine off-season/
+              no-coverage absence (confirming the doc's broad thesis), while **205 (4%)** are real gaps a naive closer would
+              have corrupted.
 
-          **(c) Shipped the SAFE mirror fix** — instruments-service@7f6a7a83:
-          `_close_stale_enrichment_expected_unattempted_cells`
-          (`instruments_service/engine/orchestrator/sports_reference_core.py`) closes a stuck cell ONLY when the
-          classification is independently provable without assuming absence: (1) `is_league_entity_covered` is `False` →
-          `EXPECTED_NO_PROVIDER_COVERAGE` (a provider-capability fact, independent of fixture existence); (2) else, the
-          FIXTURES entity's own manifest row for the SAME (date, league) is `empty_confirmed` → mirror that SAME reason;
-          (3) otherwise → **left untouched** (no `EXPECTED_NO_FIXTURE` speculation — this is the deliberate departure from
-          `process_write.py`'s FIXTURES closer, which the (a) finding above shows is unsafe to blindly reuse here). One-time
-          operational sweep script: `scripts/close_stale_enrichment_expected_unattempted_cells_2026_07_19.py` (dry-run
-          default, `--apply` to write) — dry-run against production reproduced the exact (b) counts above. 5 new unit tests
-          (`tests/unit/test_close_stale_enrichment_expected_unattempted_cells.py`) pin the safety contract, incl. a
-          regression test for the exact disconfirmed AUSTRIAN_2_LIGA/AUSTRIAN_BUNDESLIGA/GREEK_SUPER_LEAGUE case. Full
-          `quality-gates.sh` green (4,665 passed; pre-existing baseline warnings — 3 pre-existing over-length functions in
-          sports_reference_core.py/sports_reference_fixtures.py, 1 pre-existing hardcoded-project-id-in-test — confirmed
-          NOT introduced by this change via line-shift analysis before shipping).
+              **(c) Shipped the SAFE mirror fix** — instruments-service@7f6a7a83:
+              `_close_stale_enrichment_expected_unattempted_cells`
+              (`instruments_service/engine/orchestrator/sports_reference_core.py`) closes a stuck cell ONLY when the
+              classification is independently provable without assuming absence: (1) `is_league_entity_covered` is `False` →
+              `EXPECTED_NO_PROVIDER_COVERAGE` (a provider-capability fact, independent of fixture existence); (2) else, the
+              FIXTURES entity's own manifest row for the SAME (date, league) is `empty_confirmed` → mirror that SAME reason;
+              (3) otherwise → **left untouched** (no `EXPECTED_NO_FIXTURE` speculation — this is the deliberate departure from
+              `process_write.py`'s FIXTURES closer, which the (a) finding above shows is unsafe to blindly reuse here). One-time
+              operational sweep script: `scripts/close_stale_enrichment_expected_unattempted_cells_2026_07_19.py` (dry-run
+              default, `--apply` to write) — dry-run against production reproduced the exact (b) counts above. 5 new unit tests
+              (`tests/unit/test_close_stale_enrichment_expected_unattempted_cells.py`) pin the safety contract, incl. a
+              regression test for the exact disconfirmed AUSTRIAN_2_LIGA/AUSTRIAN_BUNDESLIGA/GREEK_SUPER_LEAGUE case. Full
+              `quality-gates.sh` green (4,665 passed; pre-existing baseline warnings — 3 pre-existing over-length functions in
+              sports_reference_core.py/sports_reference_fixtures.py, 1 pre-existing hardcoded-project-id-in-test — confirmed
+              NOT introduced by this change via line-shift analysis before shipping).
 
-          **Follow-up (new, not yet actioned)**: the 205 genuine pending-fetch gaps (dry-run identifies them; not yet
-          re-fetched) need a real targeted re-fetch (not a classification) — likely by re-running the standard per-fixture
-          enrichment fetch scoped to exactly those (date, entity, league) cells. Separate, smaller scope than this todo;
-          not blocking closure of the gap-closer itself. (repo: instruments-service)
+              **Follow-up (new, not yet actioned)**: the 205 genuine pending-fetch gaps (dry-run identifies them; not yet
+              re-fetched) need a real targeted re-fetch (not a classification) — likely by re-running the standard per-fixture
+              enrichment fetch scoped to exactly those (date, entity, league) cells. Separate, smaller scope than this todo;
+              not blocking closure of the gap-closer itself. (repo: instruments-service)
