@@ -157,12 +157,20 @@ last for that reason, not for convenience.
       `test_new_occupant_survives_matured_predecessor_timer` — arm the counter near `_IDLE_SESSION_RECLAIM_TICKS` under
       a stale key, land a new occupant (fresh `assigned_at`, live session, status still idle/stale past the boot-grace
       window), tick, and assert the session survives.
-- [ ] [BACKEND] P1. **Ship it and prove it landed on the live VM.** Commit via
+- [x] [BACKEND] P1. **Ship it and prove it landed on the live VM.** Commit via
       `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` from a `quality-gates.sh`-green tree. Then confirm
       the running orchestrator actually picked the change up — `ao-self-pull.sh` FF-pulls the AO checkout and restarts
       on change every ~15 min, so the fix is NOT live at merge time. **Gate**: the deployed commit sha is confirmed
       present in the orchestrator's own checkout AND the service restarted after that sha landed — cite both. "It
-      merged" is not evidence.
+      merged" is not evidence. — Verified via read-only AWS SSM (`i-0c9b283b31d6b5ca7`, ap-northeast-1). First check
+      (T+0) found the checkout already FF-pulled to `agent-orchestrator@390cdde24` but the running `orchestrator`
+      systemd process still on its PRE-fix start time (`ExecMainStartTimestamp=2026-07-20 06:15:15 UTC`, before both
+      commits landed at 06:26:40/06:28:12 UTC) — exactly the "checkout current, process stale" gap the gate exists to
+      catch. Backgrounded a 60s-interval poller; the service cycled `deactivating→active` at 06:45:20 UTC (next
+      `ao-self-pull` tick). Re-verified: `git merge-base --is-ancestor` confirms BOTH `agent-orchestrator@1e7fec089` and
+      `agent-orchestrator@390cdde24` are ancestors of the current live HEAD (which has moved further via other agents'
+      unrelated work in the interim — expected on a shared branch), and `ExecMainStartTimestamp=2026-07-20 06:45:20 UTC`
+      (`ActiveState=active`) postdates both commits. Both halves of the gate hold.
 - [ ] [BACKEND] P2. **Re-measure the `tmux_session_lost` rate AFTER the fix is live, and record the delta.** Baseline:
       **192 events since 2026-07-18** (measured 2026-07-20). Re-measure over a comparable window once the deploy is
       confirmed. Report the honest number either way — if the rate does NOT drop, say so plainly and record that the
@@ -212,3 +220,11 @@ last for that reason, not for convenience.
   gate's "fixed or filed" latitude — `_idle_session_ticks`'s existing boot-grace mitigation made a same-sitting fix
   lower-priority than keeping this session's diff focused and reviewable). Everything else is either self-healing by
   construction or intentionally slot-scoped rate-limiting, not occupant state.
+
+- **2026-07-20 — todo 5 closed**: deploy-live verified on the central orchestrator VM via read-only SSM (details in the
+  todo-5 checkbox above). The T+0 check caught the exact "checkout current, process still on the pre-fix start time"
+  window the gate is designed to catch — worth noting for future deploy-verification todos on this service: check the
+  checkout FIRST, but never stop there; the running process is the thing that matters, and `ao-self-pull`'s ~15-min
+  cadence means a same-tick check will very likely observe that gap, not close it. Todo 6 remains open — it needs a time
+  window comparable to the 192-event/~2-day baseline (07-18→07-20) before a re-measurement means anything; closing it
+  minutes after deploy would not be an honest number.
