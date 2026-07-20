@@ -260,10 +260,14 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
 - **RECONCILING an AG's estate against canonical (paths ↔ manifest ↔ catalogue)?** Use `/data-pipeline-reconciliation`
   (per-AG, PROD-only, read-only; deletes are SUGGESTIONS gated on a 5-part proof — prod-bucket deletes are human-only).
   Canonical/non-canonical is the UAC `canonical_path_violations()` MACHINE ORACLE, never a re-implemented rule; pass
-  `require_pipeline_mode` from the cutover register (it defaults FALSE = weaker than the codex declaration). **An
-  absence result is evidence ONLY once you confirm you probed the vocabulary the WRITER emits** (Solana AMM writes
-  `instrument_type=solana_amm_pool`, not `pool` — this exact slip produced a false "twin absent" verdict 2026-07-20).
-  **`dex_pools/` + `lending_indices/` are DO-NOT-DELETE** (stale delete order; no twin for KAMINO/SOLEND) →
+  `require_pipeline_mode` from the cutover register (it defaults FALSE = weaker than the codex declaration). **The
+  oracle answers PATH STRUCTURE ONLY — it does NOT validate the filename instrument_id** (drops the last segment; stem
+  rule is tradfi-gated), so ~811,200 wire-named cefi objects read CANONICAL — structure and id-form are ORTHOGONAL,
+  neither alone proves canonical; check id-form separately or say it wasn't checked →
+  `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`. **An absence result is evidence ONLY
+  once you confirm you probed the vocabulary the WRITER emits** (Solana AMM writes `instrument_type=solana_amm_pool`,
+  not `pool` — this exact slip produced a false "twin absent" verdict 2026-07-20). **`dex_pools/` + `lending_indices/`
+  are DO-NOT-DELETE** (stale delete order; no twin for KAMINO/SOLEND) →
   `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`. SSOTs:
   `codex/02-data/four-surface-reconciliation-procedure.md`, `…/reconciliation-finding-taxonomy.md`,
   `…/gcs-and-manifest-delete-safety-protocol.md`, `…/non-canonical-path-inventory.md`,

@@ -128,6 +128,15 @@ the builders change. Pass `require_pipeline_mode` from the cutover register, **n
 `False`, so the machine gate is currently _weaker_ than the codex declaration — an unparameterised call silently passes
 missing-`pipeline_mode` paths).
 
+**⚠️ The oracle answers PATH STRUCTURE only — it does NOT validate the filename instrument-id.** It drops the last path
+segment before validating; only `asset_group=tradfi` single-instrument shards have a stem rule. A CeFi corpus of
+~811,200 wire-named / double-wrapped objects returns **0 violations == CANONICAL**. Structure and id-form are
+**orthogonal — neither alone proves "canonical."** For surface-A id-form, run the canonical-id check
+(`VENUE:ITYPE:BASE-QUOTE[@LIN|@INV][-YYYYMMDD][-STRIKE-C|P]` + `COMBO`) against the stem, never count chain
+`underlying=…/ticks.parquet` fan-ins as violations, and **state in the report which of the two questions was actually
+machine-checked.** SSOT: `codex/02-data/four-surface-reconciliation-procedure.md` § 4.3 +
+`plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`.
+
 ### 3a. Surface 1+2 — path and content
 
 For each shard in scope: classify the path via the oracle; where the grain is flat-per-contract, verify the **filename

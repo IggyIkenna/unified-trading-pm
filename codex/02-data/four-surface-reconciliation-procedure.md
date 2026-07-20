@@ -219,9 +219,19 @@ named. It never rises above `unknown` confidence and never carries a delete sugg
 ## 4. The machine oracle — canonical is decided by UAC, never by a downstream rule
 
 **HARD RULE.** Whether a path is canonical is decided by **`canonical_path_violations()`** in
-`unified-api-contracts/unified_api_contracts/canonical/partition_paths.py:661`. It is the deliberate **inverse of the
+`unified-api-contracts/unified_api_contracts/canonical/partition_paths.py`. It is the deliberate **inverse of the
 `build_*_partition_path` builders**. A reconciler, skill, script, or doc that re-implements the rule downstream is
 review-blocking — that re-implementation is exactly the drift class the function exists to kill.
+
+> **⚠️ The oracle does NOT validate the filename instrument-id.** It drops the last path segment
+> (`partition_segments = segments[:-1]`, _"Last segment is the file name"_) before validating, and only
+> `asset_group=tradfi` single-instrument shards have ever carried a stem rule. A CeFi corpus of **~811,200 objects
+> carrying raw wire instrument_ids** (`ADAF0:USTF0.parquet`) and double-wrapped catalogue-miss ids
+> (`BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet`) therefore returns **0 violations == CANONICAL**, at both
+> `require_pipeline_mode` settings — a **FALSE-CLEAN verdict for surface A**, on the exact defect this procedure exists
+> to catch (independent measurement puts the CeFi filename surface at **20.82%** canonical by id-form). **Surface-A
+> id-form must be checked separately with the canonical-id check (§ 4.3); a clean oracle result is structure-only.**
+> SSOT: `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`.
 
 ```python
 def canonical_path_violations(path: str, *, require_pipeline_mode: bool = False) -> list[str]
@@ -246,7 +256,25 @@ Input is a **bucket-relative** path (no `gs://bucket/` prefix; a leading slash i
 8. **tradfi-only clauses** (`:766-823`) — `pipeline_mode=batch_massive` is forbidden outright; `underlying=` must pass
    `is_recognized_tradfi_underlying()`; a `TRADFI_CHAIN_INSTRUMENT_TYPES` shard must end
    `…/underlying=/quote=/margin=/ticks.parquet`; a `TRADFI_SINGLE_INSTRUMENT_TYPES` shard's filename must be the full
-   canonical `instrument_id` (contains `:`), never `ticks.parquet` and never a bare symbol.
+   canonical `instrument_id` (contains `:`), never `ticks.parquet` and never a bare symbol. **This is the ONLY clause
+   that reads the filename, and it is tradfi-gated — it has never covered CeFi.**
+
+### 4.3 Path STRUCTURE and instrument-id FORM are ORTHOGONAL — neither alone proves "canonical"
+
+Surface A is really **two** questions. The machine oracle answers only the first:
+
+| question                                                                                                                                                | answered by                                                                                                                             | scope today          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| Is the **path STRUCTURE** canonical? (prefix, `day=`, `key=value` hive shape, `pipeline_mode`, `asset_group` closed set, venue glue, tradfi chain tail) | `canonical_path_violations()`                                                                                                           | all asset groups     |
+| Is the **instrument-id FORM** canonical? (the filename stem, and the `instrument_id` content column)                                                    | the canonical-id regex/resolver — `_CANON_ID_RE` in `market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py` | tradfi filename only |
+
+Canonical id grammar: `VENUE:ITYPE:BASE-QUOTE[@LIN|@INV][-YYYYMMDD][-STRIKE-C|P]`, plus a `COMBO` arm.
+
+A path can be structurally perfect and carry a wire-named file; a path can carry a perfect id under a `day-2026-05-01`
+legacy prefix. **A surface-A verdict that cites only the path oracle and concludes "canonical" is wrong — it must state
+that id-form was not machine-checked, or run the canonical-id check itself and report both.** Legitimately stem-less
+shapes (chain `underlying=…/ticks.parquet` bundles, the symbol-less `ticks.parquet` fan-in) have no per-instrument stem
+and must never be counted as id-form violations.
 
 ### 4.1 CAVEAT — the machine gate is currently WEAKER than the codex declaration
 
