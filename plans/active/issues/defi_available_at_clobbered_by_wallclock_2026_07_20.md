@@ -49,7 +49,12 @@ drift_direction: none
 depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-source: [found while designing the DeFi backfill optimization, 2026-07-20]
+source:
+  [
+    "discovered 2026-07-20 during DeFi handler review; frontmatter repaired 2026-07-20 — the plan-health-autofix bot had
+    committed an unquoted multi-line summary containing ': ', which is invalid YAML and blocked PM's frontmatter-schema
+    gate for every agent",
+  ]
 resolved_by:
 ---
 
