@@ -936,3 +936,32 @@ write-batching + vol_clock remaining).**
 - [ ] NEW todo. [SCRIPT] P2. Write-batching: collapse the 7 per-timeframe parquet writes per instrument-day into fewer
       objects to attack the ~20s I/O floor (the remaining bulk of the 5s-target gap). GATED on the canonical A/B/C
       ruling (it changes the object layout).
+
+### 2026-07-20 — LOOP-CLOSE: derivative_ticker fix PROVEN CORRECT on a real VM; end-to-end blocked by a deployment gap (filed)
+
+Rebuilt the MDPS tarball to `09da08c` (all fixes) — verified the latest pointer + SHA-pinned artifact both updated. A
+cron had already kept UTL(`80d2497e`)/UAC(`ad317c32`)/deployment/features tarballs current. Re-ran
+`/data-pipeline-check-mdps --data-types derivative_ticker` on a real VM (same cell that was 100% broken: CEFI DERIBIT,
+auto-day 2024-02-08).
+
+**RESULT — the fix is CORRECT, proven by the CHANGED error:**
+
+- Pre-fix error: `column 'funding_rate_mean' missing` (old adapter didn't emit the columns).
+- Post-fix error: `Column 'open' has 2737 NaN/null values but is NOT NULLABLE for data_type=derivative_ticker`.
+- => the NEW adapter ran: it emits `funding_rate_mean`/`mark_price_mean`/`index_price_mean` (no more "missing") AND
+  leaves empty-window OHLC as NaN EXACTLY per the operator's honest-absence semantics. The fix works.
+
+**But the write still failed — NOT a code bug.** The VM validated against a STALE `deriv_ohlcv` contract (OHLC
+non-nullable) even though LDR UAC AND the current `unified-api-contracts-code.tar.gz` (extracted + verified) both have
+`nullable_ohlcv=True` at `_candle_contracts.py:318`. **Root cause = a deployment contract-propagation gap** (filed P0
+`issues/mdps_vm_stale_uac_contract_propagation_2026_07_20.md`): (1) `launch-mdps-backfill-vm.sh` pins UTL/MDPS tarball
+SHAs but NOT `UAC_TARBALL_SHA`; (2) the setup's GCS wheel cache serves a stale UAC wheel that shadows the "always fresh"
+editable install, because internal packages keep a static `0.x.y` version across commits. **This is bigger than
+derivative_ticker: any UAC schema change can be fully shipped + tarballed and STILL not reach a service VM** — a silent,
+fleet-wide correctness gap. Dispatched a deployment-service fix agent (pin UAC_TARBALL_SHA + make the editable install
+beat the wheel cache + a boot-time SHA assertion).
+
+**Loop-close status (honest):** derivative_ticker fix = CORRECT + shipped + proven-on-VM-that-it-runs; end-to-end object
+write = BLOCKED on the UAC-propagation deployment fix (in flight); re-run queued behind it (issue todo 4). The prod-rate
+measurement for the ETA is deferred to that re-run (a VM that writes 0 objects can't measure a write rate). This is
+exactly the kind of silent deployment gap the "test all shards on real infra" mandate exists to catch — and it did.
