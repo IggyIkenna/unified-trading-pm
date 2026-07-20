@@ -299,11 +299,12 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       stdout** (§5 of the sibling skills mandates relaying printed content directly, never "done, see the report").
       Include the auto-generated **Bucket paths** table naming which bucket each read targeted, a per-surface verdict
       per shard, and typed findings from the P0-04 taxonomy so consecutive runs diff cleanly.
-- [ ] 14. [SCRIPT] P1. **Per-AG reference sheets** in the skill dir — one per asset_group encoding only the _pointers_
-      and the per-AG hazards (sports' no-`asset_group=` tree + 4 layouts + non-obvious `entity=` names · prediction's
-      manifest-only CQG grain + "do not run the phantom reconciler" · defi's `chain=`-after-`venue=` + two-id model +
-      capture-STOPPED state · tradfi's raising guard + `batch_massive` carve-out · cefi's v5/v6 dual chain-tail).
-- [ ] 15. [SCRIPT] P1. **Static audit of the backfill-smoke write paths** (audit only — never run them): confirm
+- [x] 14. ✅ [SCRIPT] P1. **Per-AG reference sheets** in the skill dir — one per asset_group encoding only the
+      _pointers_ and the per-AG hazards (sports' no-`asset_group=` tree + 4 layouts + non-obvious `entity=` names ·
+      prediction's manifest-only CQG grain + "do not run the phantom reconciler" · defi's `chain=`-after-`venue=` +
+      two-id model + capture-STOPPED state · tradfi's raising guard + `batch_massive` carve-out · cefi's v5/v6 dual
+      chain-tail).
+- [x] 15. ✅ [SCRIPT] P1. **Static audit of the backfill-smoke write paths** (audit only — never run them): confirm
       `/data-pipeline-check-is` and `/data-pipeline-check-mtds` write to `-test-` buckets ONLY and that their writers
       emit the canonical grammar. Record findings as todos here or an issue doc; do **not** fix writer defects in this
       plan.
