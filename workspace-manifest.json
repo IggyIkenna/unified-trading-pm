@@ -2007,8 +2007,18 @@
     "locked_since": null,
     "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
-    "pending_repos": [],
-    "sit_retry_count": 0,
+    "pending_repos": [
+      "execution-service",
+      "market-tick-data-service",
+      "deployment-api",
+      "greeks-service",
+      "instruments-service",
+      "deployment-service",
+      "unified-trading-library",
+      "unified-api-contracts",
+      "ibkr-gateway-infra"
+    ],
+    "sit_retry_count": 1,
     "locked_alert_sent": false,
     "breaking_pending": []
   },
