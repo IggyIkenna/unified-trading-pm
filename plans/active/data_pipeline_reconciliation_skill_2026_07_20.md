@@ -411,3 +411,27 @@ Method notes for a compressed future-self: the audit ran as a resumable `Workflo
 rate-limiting on the first pass and were recovered via `resumeFromRunId` (cached dimensions replayed, only the 2
 failures + synthesis re-ran). GCS access: object listing works; project-wide `storage.buckets.list` is **denied** for
 `unified-trading-sa`, so bucket names must come from the code registry, never from enumeration.
+
+### 2026-07-20 — operator rulings + in-flight workflow handles
+
+**Rulings landed** (`unified-trading-pm@b8e0a0724`): D1 = UPPERCASE column · D2 = complete the full LENDING retire
+(against the worker recommendation, with the fix-writers-first prerequisite recorded) · D3 = fold → repoint → delete.
+Phase D (todos 20-25) added to apply them.
+
+**Resumable workflow handles** — a prior session exited mid-flight and killed two background workflows; their run IDs
+are recorded here so a restarted session resumes instead of re-running. Resume with
+`Workflow({scriptPath, resumeFromRunId})`; completed agents replay from cache.
+
+| Run ID            | Script (scratchpad) | Covers                                                                                         |
+| ----------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
+| `wf_69948fdb-535` | `dpr-phase-a.js`    | Phase A — last outstanding agent is P1-10 (write-guard contract + bucket-resolution authority) |
+| `wf_10a81bb8-42e` | `dpr-phase-c.js`    | Phase C — 5 per-AG reconciliation runs + the skill acceptance review                           |
+| `wf_5023c524-684` | `dpr-phase-d.js`    | Phase D — todos 20 / 22 / 23 (D1 corrections, D2 banner, MTDS writer-fix scoping)              |
+
+Scratchpad root:
+`/tmp/claude-1000/-home-ubuntu-unified-trading-system-repos/5697ef0c-2b5a-43bf-8008-6202d06ded45/scratchpad/`.
+**Scratchpad is not durable** — if the scripts are gone, the plan's todo text is sufficient to re-author them.
+
+**Ordering constraint discovered:** todo 21 (remove the C2a refusal from `SKILL.md` + the taxonomy) must run **after**
+Phase C's acceptance review, because that review also edits `SKILL.md`. Editing it while five agents are mid-read makes
+their critiques reference a moving target.
