@@ -124,5 +124,16 @@ identical conclusion.
 
 ## Progress Log
 
+- **🟢 2026-07-20 — KEYSTONE DEPENDENCY UNBLOCKED (notification from `ao_backlog_regen_integrity_2026_07_20.md` todo
+  2).** Your durable auto-park's preserve-by-`brief` prerequisite is resolved — and it turns out no production code
+  change was needed: the RC-1 brief-keyed reconcile (`agent-orchestrator@ff6100a`, 2026-07-07) already predates and
+  prevents the "id shift silently drops a park" mechanism the master plan flagged. Verified two ways: (1) a new
+  regression test, `test_regen_park_survives_sibling_completion_and_id_shift` (`agent-orchestrator@a650ee4`) — parks the
+  middle of 3 todos, removes the last, regens twice with `prune_stale=True` — park survives unchanged; (2) live re-check
+  via read-only SSM: the real mvp-defi park (`mvp_backfill_defi_onchain_v10-001`) still holds `priority: 999` +
+  `prereqs.prerequisites: [defi_onchain_v10_universe_v2_seed_or_backfill_progressed]`, unchanged 3 days / ~140
+  `PlanRegenLoop` ticks since its 2026-07-17 re-application. Full detail + corrected root-cause on that plan's todo 2.
+  **You can build durable auto-park on `priority_override`/`prereqs.prerequisites` as-is — no additional preservation
+  work is a prerequisite.**
 - **2026-07-20 — plan created** from Phases 3+6. Deliberately scoped around the ONE-store constraint rather than by
   phase, because the master plan's own risk note is that three consumers each build their own backoff and drift apart.

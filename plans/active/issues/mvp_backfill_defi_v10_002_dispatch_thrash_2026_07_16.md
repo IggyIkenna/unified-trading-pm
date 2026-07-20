@@ -164,23 +164,32 @@ the immediate bleed.
       agent-orchestrator)
 - [ ] [DESIGN] P3. Evaluate the fleet-wide auto-park-on-repeated-skip heuristic described above; write it up as its own
       plan item if the operator agrees it's worth building. (repo: agent-orchestrator)
-- [ ] [CODE] P1. **NEW (2026-07-17, data_engineering slot-2)**: fix `regen_backlog_from_plan.py`'s hand-tuned-field
-      preservation so it survives a task's numeric-suffix renumbering, not just a same-id regen tick. Root cause: task
-      ids are assigned positionally (`<plan-slug>-NNN` over a plan's remaining open todos via `plan_order`), so when a
-      sibling todo in the SAME plan resolves/is removed, every subsequent todo's suffix shifts down — a parked task's
-      hand-tuned `priority`/`priority_override`/`prereqs.prerequisites` are keyed to the OLD id and have nothing to
-      merge onto under the NEW id, silently reverting to plan-derived defaults. Suggested fix direction: key the
-      preservation-merge on a stable identity (e.g. `plan_ref` + a stable per-todo anchor — line-content hash or an
-      explicit todo-id comment in the plan markdown — rather than the positional numeric suffix), or at minimum detect a
-      renumbering (old id disappears + a new id appears at the same `plan_order` position with matching `brief`) and
-      carry the hand-tuning across. Repro: this exact task went `-002` (parked 2026-07-16T20:3xZ) → `-001` (found
-      reverted 2026-07-17T15:0xZ) when its sibling `-003` resolved between those two timestamps. (repo:
-      agent-orchestrator)
+- [x] ✅ [CODE] P1. **RE-VERIFIED 2026-07-20 (`ao_backlog_regen_integrity_2026_07_20.md` todo 2) — corrected root cause,
+      no code change needed.** The "positional-id" diagnosis above does not match the current mechanism: grepped every
+      `priority_override` site fleet-wide — only `_reconcile_task_fields` (reads, never writes it) and
+      `_migrate_parking_state` (`agent-orchestrator@22738f6`, 2026-07-18, brief-similarity-keyed, for a REWORDED-brief
+      orphan, a different bug) touch it; no id-keyed lookup exists to change. The RC-1 brief-keyed reconcile
+      (`agent-orchestrator@ff6100a`, **2026-07-07 — predates this incident**) mutates the SAME task object in place for
+      a same-brief todo, so hand-tuned fields survive a sibling's completion by construction — a still-open, unreworded
+      todo never gets a new id. Added a permanent regression test
+      (`test_regen_park_survives_sibling_completion_and_id_shift`, `agent-orchestrator@a650ee4`) reproducing this exact
+      repro (park middle todo, remove last, regen twice with `prune_stale=True`) — **passes on current code**.
+      Live-reverified via read-only SSM: `mvp_backfill_defi_onchain_v10-001` still holds `priority: 999` +
+      `prereqs.prerequisites: [defi_onchain_v10_universe_v2_seed_or_backfill_progressed]`, unchanged since the
+      2026-07-17 re-application (3 days / ~140 `PlanRegenLoop` ticks, zero reversion). The 07-17 loss is better
+      explained by `ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16` (stale-clone race → false-orphan
+      prune-then-recreate with zero memory) — that class + its residual ("recreated fresh" with no persistent memory
+      across ticks) belongs to `regen_positional_task_ids_not_content_stable_2026_07_17.md` todo 3, which rules it
+      explicitly out of scope pending the two guards above proving insufficient. (repo: agent-orchestrator)
 
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-20** — Fix-todo re-verified from `ao_backlog_regen_integrity_2026_07_20.md` todo 2 (KEYSTONE). Corrected
+  root cause (RC-1's brief-keyed reconcile predates this incident; no id-keyed preservation code exists to fix) +
+  regression test (`agent-orchestrator@a650ee4`) + live re-verification (park still holding, 3 days / ~140 ticks, zero
+  reversion). See the fix-todo checkbox above for full detail.
 - **2026-07-17** — data_engineering slot-2, re-dispatched to `mvp_backfill_defi_onchain_v10-001`
   (`already_in_progress: true`/`dispatch_reason: "resume"`, ~19h after the 2026-07-16 park). Fresh
   `measure_honest_coverage.py --asset-group defi` re-run confirms the gate is still nowhere close on any of the 6

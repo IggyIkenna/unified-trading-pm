@@ -65,14 +65,31 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
       row is audit history, not reusable space. **Gate**: a unit test where a done row's id is claimed by a different
       brief asserts the row SURVIVES and an error is emitted; bug-inject to prove the test bites (break the guard,
       confirm red, restore green). Source: doc #6 todo 2.
-- [ ] [BACKEND] P1. **Hand-tuned-field preservation across positional-ID shift — KEYSTONE, land this first.** Regen
-      preserves `priority` / `priority_override` / `prereqs.prerequisites` keyed by **task id**, so an id shift (a
-      sibling completes → suffixes renumber) silently drops a park. Measured: the mvp-defi park was lost exactly this
-      way on 2026-07-17 and had to be re-applied under `-001`. Key the preservation by **`brief`** — the same key the
-      reconcile path already uses. **Gate**: regression test — park a task, remove a sibling todo, regen → the park
-      survives under the new id; plus the live park survives the next real regen tick after a todo-count change. **When
-      this lands, tell the owner of `ao_dispatch_cooldown_and_park_2026_07_20.md`** — their auto-park is blocked on it.
-      Source: doc #5 fix-todo 3.
+- [x] ✅ [BACKEND] P1. **Hand-tuned-field preservation across positional-ID shift — KEYSTONE, land this first.** —
+      `agent-orchestrator@a650ee4` (LDR). **Finding: no production code change was needed — re-verify before assuming
+      the "keyed by task id" framing.** Grepped every `priority_override` read/write site fleet-wide
+      (`server/     regen_backlog_from_plan.py` only, 2 sites): `_reconcile_task_fields` reads-but-never-writes it
+      (guards against reverting a hand-set priority); `_migrate_parking_state` (`agent-orchestrator@22738f6`,
+      2026-07-18) already keys by brief-similarity for its own separate bug (a REWORDED brief/orphan case). No id-keyed
+      preservation code exists anywhere to change. The main regen loop's brief-match (`plan_tasks_by_brief`, RC-1,
+      `agent-orchestrator@ff6100a`, **2026-07-07 — predates the incident**) mutates the SAME task object in place on a
+      same-brief todo, so `priority`/`priority_override`/`prereqs.prerequisites` survive by construction regardless of
+      sibling completion — there is no id shift for a still-open, unreworded todo (`_make_task_id`'s counter only fires
+      for a brief with NO current match). **Gate 1 (regression test)**: added
+      `test_regen_park_survives_sibling_completion_and_id_shift` — parks the middle of 3 todos, removes the last
+      (mirrors mvp-defi's `-003`→gone), regen with `prune_stale=True` (production's default) twice — park survives
+      unchanged both ticks. **PASSES on current code, no fix required.** **Gate 2 (live park survives)**: verified
+      2026-07-20 via read-only SSM (`i-0c9b283b31d6b5ca7`) directly against the live `backlog.yaml` —
+      `mvp_backfill_defi_onchain_v10-001` still carries `priority: 999` +
+      `prereqs.prerequisites: [defi_onchain_v10_universe_v2_seed_or_backfill_progressed]`, unchanged since the
+      2026-07-17 re-application — **3 days / ~140 `PlanRegenLoop` ticks (30-min cadence) with zero reversion.**
+      **Corrected root cause**: the 07-17 loss is better attributed to
+      `ao_service_clone_frozen_by_untracked_checkpoint_     2026_07_16` (a stale-clone race reading `[x]` as `[ ]`,
+      causing a false-orphan prune-then-recreate with no memory) than to a genuine positional-id mechanism — that class
+      is doc #6's territory (this plan's todo 1), and its "recreated fresh, zero memory" residual is doc #6's own todo
+      3, **deliberately out of scope** ("re-open ONLY if the two todos above prove insufficient"). **Notified**: added a
+      note to `ao_dispatch_cooldown_and_park_2026_07_20.md`'s Progress Log — their auto-park dependency is UNBLOCKED
+      (verified, not just assumed). Source: doc #5 fix-todo 3.
 - [ ] [BACKEND] P2. **Bound the NULL-`brief_hash` tail — RULED 2026-07-20: accept permanently + a growth alarm.** 54
       rows, all `done`, 0 in-flight (re-measured this session). The ruling (operator A1): do NOT backfill — it is write
       risk against audit history for no gain — and do NOT blanket-reset. Instead document the WHY in the docstring and
@@ -123,5 +140,11 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Progress Log
 
+- **2026-07-20 — Todo 2 (KEYSTONE) landed** (`agent-orchestrator@a650ee4`). No production code change needed — the RC-1
+  brief-keyed reconcile (`agent-orchestrator@ff6100a`, 2026-07-07) already predates and prevents the reported mechanism.
+  Regression test added + live park (`mvp_backfill_defi_onchain_v10-001`) re-verified holding 3 days / ~140 ticks after
+  its 2026-07-17 re-application via read-only SSM. Full detail on the todo itself. Notified
+  `ao_dispatch_cooldown_and_park_2026_07_20.md`'s owner via a note on its Progress Log — their auto-park dependency is
+  UNBLOCKED.
 - **2026-07-20 — plan created** from Phases 0-1 of the consolidated close-out. Two todos ship with rulings already made
   (A1 accept-the-tail, A2 checkbox-is-truth), so they are implementation, not open questions.
