@@ -207,7 +207,22 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
       explicitly NOT corroborated by today's run, and today's failure raises the open question of whether a SEPARATE,
       restart-related race is also in play. Leaving this ticked (the Gate's ask — "each of the three has a named cause"
       — is met for the three ORIGINAL incidents on their own evidence) but flagging the open question for whoever picks
-      up the retry.
+      up the retry. **✅ TODAY'S OPEN QUESTION ANSWERED 2026-07-20 from the agent's own JSONL transcript** (a source
+      neither earlier pass used — `/home/ubuntu/.claude-configs/orch-slot-5/projects/…/b1a0f68f-….jsonl`, 83 entries,
+      436 KB): `agt-751738` was **alive and productively working when it was killed**. Its final entries at
+      **07:32:29Z** show it reading its plan-hygiene sweep output and analysing the Phase-0 inventory — mid-task, no
+      error, no exit — roughly 60s before `tmux_session_lost` at 07:33:30Z. It is not dying; it is being **reaped
+      mid-work**. The mechanism is `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions`, and the arithmetic is
+      exact: it never calls `/boot` (that is a fleet-worker step its role doc does not ask for), so its SlotRow stays
+      `idle`; `boot_grace_seconds` (300s) + `watchdog_idle_session_ticks` (2) × `watchdog_interval_seconds` (60s) =
+      **420s**, against a measured 07:25:50→07:33:30 = **7m40s**. Its long startup phase (reading role docs, running the
+      hygiene sweep) outlasts the grace window, and its first `/progress` heartbeat comes AFTER that phase — so it never
+      gets to prove liveness. **This is a DISTINCT sub-case from the three above**, which did log `slot_progress`; do
+      not merge the two conclusions. **The architectural point (this is what settles the path-1-vs-path-2 question in
+      the new uniform-liveness plan): the AgentRow typed-agent guard shipped in `1e7fec0` protects the PREREQ reaper
+      only. `_reclaim_idle_lingering_sessions` is a different function that never learned about typed agents, so it kept
+      killing them. Per-subsystem carve-outs do not compose** — which is the case for one uniform liveness contract
+      rather than teaching each reaper about roles one at a time.
 - [x] ✅ [DOC] P3. **Record that the tasks table is a projection, not a completion ledger.** In the regen docs
       (`server/regen_backlog_from_plan.py` module docstring + wherever regen behaviour is documented for operators),
       state explicitly: the tasks table holds currently-OPEN DISPATCHABLE todos plus dispatched history. `BLOCKED-*`
