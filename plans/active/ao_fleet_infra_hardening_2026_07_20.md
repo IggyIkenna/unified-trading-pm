@@ -104,14 +104,46 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
 - [ ] [INFRA] P2. **Fleet-wide frozen-clone sweep (one pass).** hk-host root repos measured behind=0, but the VM's SLOT
       clones and any other hosts were never swept. Check every host's root + slot clones for `HEAD..origin/LDR > 0` with
       untracked-only dirt, and unfreeze with a plain FF. **Unfreezing is a write — dry-run and report first, then get
-      approval.** **Gate**: sweep output recorded; zero frozen clones remain.
+      approval.** **Gate**: sweep output recorded; zero frozen clones remain. **Progress 2026-07-20 (scope: hk laptop +
+      central orchestrator VM via SSM, both reachable this session; Ikenna's laptop unreachable, not swept)**: swept 375
+      clones on the laptop (all `.tabs/*` slots + root) + 425 on the VM (all slots + root) = 800 total.
+      **Ref-corruption** (a distinct failure mode from the one this todo names — a slot's stale
+      `refs/remotes/origin/dep-update/*` remote-tracking ref points at an object the base clone's auto-gc pruned,
+      silently blocking `git fetch` while `git status` reads clean — the reference-clone prune hazard in
+      `per-tab-worktrees.md`) found + fixed in 5 laptop clones: `deployment-api` in slots 25/27/28/29/30, all masked 249
+      commits behind. Fixed by deleting the 4 dead local refs
+      (`dep-update/{deployment-service,strategy-service,     unified-api-contracts}-0.2.0`,
+      `unified-trading-library-0.4.0` — confirmed gone from the remote, safe: they're pure local cache) +
+      `reflog expire --stale-fix`; did NOT FF the resulting 249-behind (that's the "unfreeze" write this todo gates —
+      reported, not yet approved). VM clones do NOT have this corruption (checked). **Trivial drift** (dirty=0, 1-2
+      commits behind — normal 5-min ff-pull cron lag, not a freeze): ~30 instances across both hosts, all
+      `unified-trading-pm`/`strategy-service`/`market-tick-data-service`, harmless. **Genuine flagged clones needing
+      operator triage (dirt is TRACKED, not untracked-only — the safeguard above says don't touch)**: laptop slot 5
+      `unified-trading-pm` (787 behind, 1 tracked-dirty file); VM slot 4 `instruments-service` (2 behind,
+      `M scripts/close_stale_enrichment_expected_unattempted_cells_2026_07_19.py`); VM slots 14/15 `instruments-service`
+      (87/93 behind, both `M uv.lock` only — looks like lockfile drift from a `uv sync`/QG run, not necessarily WIP, but
+      unconfirmed). **Also NOT a freeze** (behind=0, so not stuck — likely live/recent WIP, left alone): laptop slot 24
+      `agent-orchestrator` (2 tracked-dirty files). **Not yet done**: the actual FF-unfreeze of any flagged clone (needs
+      operator approval per the safeguard) and slot-16's venv gap fix — see next todo, which fixed it as a side effect
+      while investigating a DIFFERENT gate.
 - [ ] [INFRA] P2. **Dispatch-time full-QG throttle — coordinate, do NOT build a second governor.** The shared-host "≤2
       full QG" cap is unenforced at dispatch; 4-6 concurrent full-QG pytests saturated the VM on 07-17. The RAM/CPU
       admission governor (`qg_host_adaptive_resource_governor_2026_07_14`, active P1) is the natural enforcement point
       but was measured `MODE=token K=2` on this VM. Scope: (a) record the requirement on the governor plan
       (dispatch-aware QG admission on the orchestrator host); (b) **only if** its Phase-3 ledger is not landing soon,
       implement the minimal dispatcher-side stagger (cap simultaneous ship-phase tasks per host). **Gate**: concurrent
-      full-QG on the VM measurably capped — via the governor or the stagger — with evidence cited.
+      full-QG on the VM measurably capped — via the governor or the stagger — with evidence cited. **Progress
+      2026-07-20**: operator ruling this session — the governor's reservation-ledger engine is already code-complete +
+      soak-tested (42-run live soak, 0 OOM per that plan's Phase 6), so a dispatcher-side stagger would be a redundant
+      second mechanism; unblock the real fix instead of building around it. Root blocker was slot-16's missing `.venv`
+      preventing THAT slot's copy of the Phase-5 rollout change (`QG_GOVERNOR_MODE=reservation` in `bootstrap_vm.sh`)
+      from clearing `quality-gates.sh`. Fixed both: shipped the 2-line change from a QG-green slot instead
+      (agent-orchestrator@91808dfeb5f9), sidestepping the venv blocker entirely; separately built the missing `.venv`
+      for VM slots 1 AND 16 (`uv sync`, on-demand artifact, no risk) so future work in those slots isn't blocked either.
+      **Not yet done — needs approval**: the code change only takes effect on a host once `bootstrap_vm.sh` is RE-RUN
+      there (idempotent config-roll-forward, per `ENV_VARS.md`) — the live central VM is still measured `MODE=token K=2`
+      right now. Re-running bootstrap on the live orchestrator VM is a production config change to the shared dispatch
+      host, so it's flagged for approval rather than done unilaterally.
 
 ## Safeguards
 
@@ -132,6 +164,14 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
 - **2026-07-20 — plan created** from Phase 4. The state-home item is P1 rather than P2 because it bit the 2026-07-20
   audit twice more (a wrong-DB read and a bogus snapshot alarm), which is the same class of wasted diagnosis it has
   already caused three times.
+- **2026-07-20 — todos 6 + 7 progress** — see the todos themselves for full detail. Summary: swept 800 clones across
+  hk-laptop + the orchestrator VM (via SSM); fixed 5 ref-corrupted `deployment-api` clones (a distinct failure mode from
+  what todo 6 named); flagged 4 clones with genuine tracked dirt for operator triage (not touched, per the safeguard);
+  shipped the governor Phase-5 flip (`agent-orchestrator@91808dfeb5f9`) by routing around the slot-16 venv blocker
+  rather than fixing it in place, then fixed that venv gap anyway (+ slot 1's) as a separate low-risk action. **Awaiting
+  operator decisions before further action**: (a) FF-unfreeze approval for the 3 flagged VM clones + laptop slot 5's PM
+  clone; (b) approval to re-run `bootstrap_vm.sh` on the live orchestrator VM so it actually picks up
+  `QG_GOVERNOR_MODE=reservation` (shipped code is inert until then).
 - **2026-07-20 — todos 1 + 3 shipped** — agent-orchestrator@0fa79bae6c1 (quality-gates.sh green, 1418 tests). Todo 2
   (live migration) intentionally NOT done here — operator-gated, to be proposed separately once approved. Operator
   answered two clarifying questions on this session's start: todo 7 becomes "unblock the governor's Phase-5 flip" (its
