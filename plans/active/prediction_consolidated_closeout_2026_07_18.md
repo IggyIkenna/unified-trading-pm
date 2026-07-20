@@ -1393,7 +1393,42 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     would have recorded a tick that never landed. The family so far: (1) `2>/dev/null` hiding a hook rejection, (2)
     untracked files silently not staged, (3) a sentinel race exiting 0. **Never treat quickmerge exit 0 as proof —
     always verify the sha contains the files AND is an ancestor of `origin/live-defi-rollout`.**
-  - **Collateral unblock (not mine, fixed because it blocked EVERY slot): `plan-health-bot`'s own auto-fix left
+  - **🔴 RETRACTION (2026-07-20, same session) — THE ENTRY DIRECTLY BELOW MISATTRIBUTES THE BREAKAGE TO
+    `plan-health-bot`. IT IS WRONG. I verified it only after the operator asked me to "fix the bot".** What the evidence
+    actually shows, read commit-by-commit:
+    - `44e1fb449` (plan-health-bot) added exactly **three valid lines** — `depends_on: []`, `locked_by:`,
+      `locked_since:`. It **never touched `summary:`**. `git show 44e1fb449 -- <doc>` is a 3-line `+` diff.
+    - The invalid YAML was **already present in the parent commit**. Reconstructed `44e1fb449^` and parsed it: it fails
+      identically. The unquoted multi-line `summary:` came from the **authoring** commit `273f5a9d5`
+      (`ikennaigboaka [slot-4·laptop]`, 2026-07-20 14:34).
+    - So the bot appended valid fields to an already-broken doc. The diff then _looks_ like the bot's fault to anyone
+      reading it — which is exactly the trap I fell into. **Why I got it wrong**: I inferred authorship from _which
+      commit the gate failure surfaced after_, not from what the commit actually changed. `git log` proximity is not
+      causation — read the diff and the PARENT. I then repeated the accusation in a commit message that is now on LDR
+      (`d522bd7ce`), where it cannot be rewritten. This correction is the record; the commit message stands uncorrected
+      and wrong. **The gate is NOT broken either** — I proved it works end-to-end: staged a convention-named doc
+      carrying the exact invalid frontmatter and ran the real pre-commit sweep → **2 hard failures, exit 1**. It has
+      been in the pre-commit path since `f1f49d017` (2026-06-16), five weeks before the doc landed. So the doc reached
+      LDR by **bypassing a working gate**, not through a tooling hole. **One near-miss worth recording**: my first probe
+      used the filename `_tmp_probe2.md` and the checker reported `0 docs, zero violations` + exit 0 — I nearly filed
+      "the gate is a no-op" as a finding. The `_`-prefixed name simply is not schema-governed. Re-running with a
+      convention-following name caught the error correctly. A green result on a file the tool silently declined to check
+      is not evidence; **check what was actually checked, not just the exit code** — the same lesson as the pytest
+      silent-skip, hit twice in one session. **What WAS genuinely wrong, and is now fixed**
+      (`scripts/plan-hygiene/fix_frontmatter.py`): every parser in that file is line-based, so it would mechanically
+      append fields to a doc whose YAML does not parse. That is harmful twice over — it misattributes the breakage to
+      the fixer's commit, and it **masks** the fault (the required fields are now present, so a presence-only check
+      passes while the syntax error survives and keeps failing the corpus gate, blocking every slot). Now:
+      `frontmatter_yaml_error()` **refuses** to touch an unparseable doc (untouched byte-for-byte, named on stderr with
+      the cause and the `summary: >-` remedy), and `_assert_output_parses()` is a **round-trip guard** asserting that
+      whatever the fixer WRITES itself parses — so a field-insertion bug can never commit invalid YAML even from a valid
+      input. `main()` exits 3 on any refusal so the agent's `fix_frontmatter.py || true` cannot swallow it. Verified:
+      refusal leaves the file byte-identical (exit 3); **corpus dry-run = 0 refusals, exit 0** (no regression across
+      1525 governed docs); round-trip guard raises on a faithful reproduction of the real defect. (My first synthetic
+      test case for the guard was itself wrong — `summary:\n  a line with colon: inside it` is _valid_ YAML, a nested
+      mapping — so the guard correctly did not fire. Rebuilt it to the real shape before trusting the result.)
+  - **⚠️ SUPERSEDED BY THE RETRACTION ABOVE — retained verbatim as the record of the error, do not cite it:**
+    **Collateral unblock (not mine, fixed because it blocked EVERY slot): `plan-health-bot`'s own auto-fix left
     `plans/active/issues/defi_available_at_clobbered_by_wallclock_2026_07_20.md` with INVALID YAML** —
     `docs(plans): auto-fix plan hygiene at the gate [plan-health-autofix]` (`44e1fb449`, committed to LDR ~26 min before
     I hit it) rewrote `summary:` as an unquoted multi-line plain scalar containing `...backfill: the shipped...`, and a
