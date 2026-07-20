@@ -46,6 +46,34 @@ source:
 > agent follow the same register/boot/heartbeat protocol with role-appropriate backend responses — **path 2 is chosen**.
 > This plan implements it.
 
+## ✅ UPDATE 2026-07-20 (slot-16 interactive) — the root cause IS now diagnosed; re-scope this plan accordingly
+
+The root-cause investigation this plan was waiting on has landed (`ao_scheduled_agent_hygiene_2026_07_20.md`, the P0
+todo — full evidence there). **Cause, proven from journalctl + code + git:** `agt-751738` was killed by
+`WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` at 07:32:30 (`kill_session`,
+worker_liveness_watchdog.py:1212), because (A) its slot read `status=idle` and (B) at that moment the idle-reclaimer had
+**no typed-agent exemption** — the `f641968` guard was committed 1h38m LATER (09:10 UTC vs the 07:32:30 kill). So the
+death is fully explained as "unguarded idle-lingering reaper reaps a typed one-off," a **liveness-signalling** cause —
+squarely in this plan's domain, NOT an unrelated API/usage cutoff.
+
+**Consequences for this plan:**
+
+- The line below "the motivating bug is NOT diagnosed, so this plan must not be started" — the **first clause is now
+  false**. The bug is diagnosed. But **do not big-bang-start this plan either**: the cheapest correct next move is to
+  verify `f641968` (already deployed) actually fixes it on todo 4's next reconcile run. The claim (in this plan and the
+  hygiene plan) that "`f641968` did NOT fix this" is **unsound** — it was inferred from a death that predates `f641968`
+  by 1h38m. `f641968`'s AgentRow-keyed guard plausibly works; it is simply UNTESTED. **If that one live run confirms the
+  guard exempts the reconciler, this plan reverts to exactly the "pure de-duplication refactor at much lower priority"
+  case it already anticipated below** — the three carve-outs are real duplication worth removing, but the urgency is
+  gone. If the guard is somehow defeated (e.g. restart clears the AgentRow), that failure mode feeds directly into this
+  plan's uniform-contract design. Either way: **gate flipping this to `active` on that single live observation, not on
+  new code.**
+- **What is still true:** "typed agents get `status='working'` on claim" (plan_health.py:283) IS the code path — but the
+  reconciler was nonetheless reaped as `idle`, which means the `working` status did NOT survive to kill time
+  (empirically flipped to `idle` around the 07:30 restart; the exact line is unpinned — residual R1 in the hygiene
+  plan). So the "their slot reads idle" framing this plan warns against is **not simply false** after all: for a typed
+  one-off it can become true in flight. That nuance belongs in the contract design (todo 1).
+
 ## ⚠️ READ FIRST — the evidence this plan was built on has been RETRACTED (2026-07-20)
 
 This plan originally opened with a confident mechanism: that one-off agents never call `/boot`, so their slot stays
@@ -154,3 +182,10 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
   hypothesis was that the reconciler was dying on spawn (an account cap or bad opus/effort flags). The transcript
   disproved it in one read — 436 KB of productive work ending mid-task. **When an agent "fails silently", read its JSONL
   before theorising about why it died; it may not have died at all.**
+- **2026-07-20 — root cause landed; "premise not diagnosed" banner updated (slot-16 interactive).** The blocking
+  investigation (hygiene plan P0 todo) is closed: `agt-751738` was killed by the idle-lingering reclaimer at 07:32:30
+  while unguarded (the `f641968` exemption postdates the kill by 1h38m). This is a liveness-signalling cause, in this
+  plan's domain. Net effect on this plan: the motivating bug is diagnosed, but the correct next step is a single live
+  verification of `f641968` (not new code) — if it confirms, this plan is a lower-priority de-dup refactor (as the plan
+  itself anticipated). Left `status: draft`; the flip-to-active gate is now that one live observation, per the ✅ UPDATE
+  section above. See `ao_scheduled_agent_hygiene_2026_07_20.md` P0 for the full evidence trail.
