@@ -22,7 +22,7 @@ summary: >
   commit): `boundary` now built with `tz=curr_date.tz` so it always matches the tz-awareness of the dates it's compared
   against. The 10 VMs currently running the 2015→present backfill (`fss-backfill-vm-1..10`) are on a pre-fix tarball
   snapshot and will keep silently flat-lining Elo for tz-aware-kickoff history rows until relaunched or gap-filled.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [features]
@@ -48,9 +48,9 @@ drift_direction: advance-code
 depends_on:
   - sports_p2_features_history_to_ml_ready_2026_06_27.md
 gate_on_depends: true
-last_updated: 2026-07-17
+last_updated: 2026-07-20
 locked_by:
-resolved_by:
+resolved_by: features-service@04274b6a
 ---
 
 # features-service sports elo_calculator silent Elo-skip on tz-aware kickoff_utc
@@ -173,69 +173,69 @@ follow-up backfill pass — same operational pattern as Todo 2 in the sibling is
       data-correctness HARD RULE's infra-cost-decision requirement. (repo: features-service)
 
       **AUTHORIZED by main via `BLK-a3149ab4` (2026-07-17T13:25Z) — launch spot fleet.** Main's final answer: "A —
-                                                              LAUNCH the gap-fill VM fleet now" — this is routine backfill compute on the already-authorized GCP project
-                                                              `central-element-323112`, within main authority, NOT the operator-reserved spend category (that reservation is
-                                                              wallet keys/trading capital, not backfill compute); the data-pipeline-correctness HARD RULE requires fixing all
-                                                              22,042 affected shards IN FULL. The "did not launch autonomously" / "operator sign-off warranted" language above
-                                                              is now STALE — written before slot-9 saw main's answer and the session died before acting on it. **This todo is
-                                                              NOT operator-gated — do not re-skip it as such.** Proceed straight to launching per main's guardrails: SPOT VMs,
-                                                              reuse the registered `features-` prefix launcher pattern, ~5 VMs sharded by the 1,844 affected dates
-                                                              (`MANIFEST_PER_VM_SHARDS=true`), no fire-and-forget, manifest-verify before flipping the checkbox.
+                                                                  LAUNCH the gap-fill VM fleet now" — this is routine backfill compute on the already-authorized GCP project
+                                                                  `central-element-323112`, within main authority, NOT the operator-reserved spend category (that reservation is
+                                                                  wallet keys/trading capital, not backfill compute); the data-pipeline-correctness HARD RULE requires fixing all
+                                                                  22,042 affected shards IN FULL. The "did not launch autonomously" / "operator sign-off warranted" language above
+                                                                  is now STALE — written before slot-9 saw main's answer and the session died before acting on it. **This todo is
+                                                                  NOT operator-gated — do not re-skip it as such.** Proceed straight to launching per main's guardrails: SPOT VMs,
+                                                                  reuse the registered `features-` prefix launcher pattern, ~5 VMs sharded by the 1,844 affected dates
+                                                                  (`MANIFEST_PER_VM_SHARDS=true`), no fire-and-forget, manifest-verify before flipping the checkbox.
 
-                                                              **CONSOLIDATION DIRECTIVE (main, 2026-07-17T13:4xZ, still `BLK-a3149ab4`-authorized) — merged with the sibling
-                                                              travel gap-fill.** `run_new_calculators` recomputes ALL Phase-4 calculators (elo, travel, manager, formation,
-                                                              european_fatigue, ...) TOGETHER in one pass per (date,league), writing ONE row — so a separate elo-only fleet
-                                                              and a separate travel-only fleet (see
-                                                              `plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` Todo 3) would be
-                                                              REDUNDANT and could RACE on overlapping (date,league) shards (two writers, one row = manifest corruption
-                                                              risk). Both fixes are shipped (elo@04274b6a, travel@6efefde2, plus a deeper travel root-cause fix
-                                                              @9923b0d8). Decision: ONE consolidated fleet fixes BOTH gap-fills. Travel's failure is near-universal
-                                                              (~86-100%, no separate bounded audit CSV exists for it — confirmed via the sibling doc's own Progress Log), so
-                                                              the union of elo-affected (1,844 dates) + travel-affected dates is effectively the FULL 2017-02-02→present
-                                                              captured `derived_features` corpus (~2,667 dates) — matching Todo 1's original `fss-backfill-vm-1..10`
-                                                              footprint. Launching via the EXISTING `launch-features-vm.sh --feature-family sports` (contiguous
-                                                              `--start-date`/`--end-date` + `FORCE=1`), split into 10 contiguous ~345-day sub-ranges spanning
-                                                              2017-02-02→2026-07-17, SPOT, matching Todo 1's precedent exactly — NOT the sparse-date custom launcher
-                                                              floated earlier (discarded, unused, never committed) since the scope is now effectively the full range
-                                                              anyway. This one fleet's completion closes BOTH this todo and the travel doc's Todo 3.
+                                                                  **CONSOLIDATION DIRECTIVE (main, 2026-07-17T13:4xZ, still `BLK-a3149ab4`-authorized) — merged with the sibling
+                                                                  travel gap-fill.** `run_new_calculators` recomputes ALL Phase-4 calculators (elo, travel, manager, formation,
+                                                                  european_fatigue, ...) TOGETHER in one pass per (date,league), writing ONE row — so a separate elo-only fleet
+                                                                  and a separate travel-only fleet (see
+                                                                  `plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md` Todo 3) would be
+                                                                  REDUNDANT and could RACE on overlapping (date,league) shards (two writers, one row = manifest corruption
+                                                                  risk). Both fixes are shipped (elo@04274b6a, travel@6efefde2, plus a deeper travel root-cause fix
+                                                                  @9923b0d8). Decision: ONE consolidated fleet fixes BOTH gap-fills. Travel's failure is near-universal
+                                                                  (~86-100%, no separate bounded audit CSV exists for it — confirmed via the sibling doc's own Progress Log), so
+                                                                  the union of elo-affected (1,844 dates) + travel-affected dates is effectively the FULL 2017-02-02→present
+                                                                  captured `derived_features` corpus (~2,667 dates) — matching Todo 1's original `fss-backfill-vm-1..10`
+                                                                  footprint. Launching via the EXISTING `launch-features-vm.sh --feature-family sports` (contiguous
+                                                                  `--start-date`/`--end-date` + `FORCE=1`), split into 10 contiguous ~345-day sub-ranges spanning
+                                                                  2017-02-02→2026-07-17, SPOT, matching Todo 1's precedent exactly — NOT the sparse-date custom launcher
+                                                                  floated earlier (discarded, unused, never committed) since the scope is now effectively the full range
+                                                                  anyway. This one fleet's completion closes BOTH this todo and the travel doc's Todo 3.
 
-          **DONE (2026-07-18T08:25Z, slot-6).** Launched 10 SPOT VMs (`features-sports-sports-20260717-135608`
-          through `-135916`) via `launch-features-vm.sh --feature-family sports --asset-group SPORTS --mode batch
-          --operation compute`, `FORCE=1`, split into 10 contiguous ~345-day ranges spanning
-          2017-02-02→2026-07-17. **9/10 exited 0 cleanly**, covering their full assigned ranges. **1/10
-          (`-135916`, range 2025-08-07→2026-07-17) exited 1 on its FINAL date (2026-07-17 only)** — root-caused to a
-          SEPARATE, unrelated pre-existing bug (`read_historical_fixtures` "truth value of a Series is ambiguous",
-          degrades the most-recent ~week of the corpus regardless of elo/travel — filed as its own issue doc:
-          `plans/active/issues/sports_read_historical_fixtures_series_ambiguous_recent_week_degraded_2026_07_18.md`).
-          Effective coverage: all dates except that one crashed on. Re-ran the elo-flat-1500 audit
-          (`scripts/sports/audit_elo_flat_1500_2026_07_17.py`) over the full corpus in 4 sequential date-range
-          chunks (background full-corpus runs kept getting killed by a session/timeout constraint; foreground
-          chunked runs completed cleanly):
+              **DONE (2026-07-18T08:25Z, slot-6).** Launched 10 SPOT VMs (`features-sports-sports-20260717-135608`
+              through `-135916`) via `launch-features-vm.sh --feature-family sports --asset-group SPORTS --mode batch
+              --operation compute`, `FORCE=1`, split into 10 contiguous ~345-day ranges spanning
+              2017-02-02→2026-07-17. **9/10 exited 0 cleanly**, covering their full assigned ranges. **1/10
+              (`-135916`, range 2025-08-07→2026-07-17) exited 1 on its FINAL date (2026-07-17 only)** — root-caused to a
+              SEPARATE, unrelated pre-existing bug (`read_historical_fixtures` "truth value of a Series is ambiguous",
+              degrades the most-recent ~week of the corpus regardless of elo/travel — filed as its own issue doc:
+              `plans/active/issues/sports_read_historical_fixtures_series_ambiguous_recent_week_degraded_2026_07_18.md`).
+              Effective coverage: all dates except that one crashed on. Re-ran the elo-flat-1500 audit
+              (`scripts/sports/audit_elo_flat_1500_2026_07_17.py`) over the full corpus in 4 sequential date-range
+              chunks (background full-corpus runs kept getting killed by a session/timeout constraint; foreground
+              chunked runs completed cleanly):
 
-          | Range | Dates | Shards | Unreadable | Affected |
-          |---|---|---|---|---|
-          | 2017-02-02→2019-06-01 | 830 | 26,953 | 4,615 | 4,884 |
-          | 2019-06-02→2021-10-26 | 768 | 10,242 | 3,194 | 1,560 |
-          | 2021-10-27→2024-03-04 | 672 | 7,975 | 0 | 1,366 |
-          | 2024-03-05→2026-07-17 | 726 | 13,485 | 6,428 | 1,536 |
-          | **TOTAL** | **2,996** | **58,655** | **14,237** | **9,346** |
+              | Range | Dates | Shards | Unreadable | Affected |
+              |---|---|---|---|---|
+              | 2017-02-02→2019-06-01 | 830 | 26,953 | 4,615 | 4,884 |
+              | 2019-06-02→2021-10-26 | 768 | 10,242 | 3,194 | 1,560 |
+              | 2021-10-27→2024-03-04 | 672 | 7,975 | 0 | 1,366 |
+              | 2024-03-05→2026-07-17 | 726 | 13,485 | 6,428 | 1,536 |
+              | **TOTAL** | **2,996** | **58,655** | **14,237** | **9,346** |
 
-          **Before → after**: 22,042/43,183 affected (55.3%) → 9,346/58,655 affected (15.9%) — the corpus also grew
-          36% (43,183→58,655 shards) since the fleet wrote many previously-uncaptured dates too, not just fixed
-          existing ones. Directly verified 2 known-affected shards from the original audit CSV are now fixed by
-          reading the parquet directly (not trusting the audit script alone): `day=2018-10-23/league=104` — was
-          exact-flat `home_elo=away_elo=1500.0`, now `home_elo=1509.12, away_elo=1512.16` (varied, non-flat).
-          `day=2021-05-22/league=113` — `home_elo`/`away_elo` show small realistic variation (1499.64/1505.98,
-          1499.46/1497.73), and `travel_distance_km`/`cumulative_travel_30d` columns show a genuine mix of NaN
-          (honest-absence) and real values — NOT the pre-fix "always exactly 0.0, never NaN" signature the sibling
-          travel issue documented. The residual 9,346 "affected" count is expected to be dominated by
-          audit-heuristic false positives (the audit flags ANY exact-1500.0 row as bug-affected, but a team's
-          genuinely-first-ever tracked match legitimately reads exactly 1500.0 — not distinguishable from the old
-          bug by this audit's methodology) rather than a remaining code defect — the fix's presence in HEAD
-          (`04274b6a`) is confirmed, and every VM ran on tarball-verified fresh code. Not chasing the residual further
-          this dispatch (would need a smarter audit that excludes genuine first-match rows); if a future dispatch
-          wants to bound this precisely, cross-reference each flagged (date,league) row against whether it's team's
-          first tracked fixture. (repo: features-service)
+              **Before → after**: 22,042/43,183 affected (55.3%) → 9,346/58,655 affected (15.9%) — the corpus also grew
+              36% (43,183→58,655 shards) since the fleet wrote many previously-uncaptured dates too, not just fixed
+              existing ones. Directly verified 2 known-affected shards from the original audit CSV are now fixed by
+              reading the parquet directly (not trusting the audit script alone): `day=2018-10-23/league=104` — was
+              exact-flat `home_elo=away_elo=1500.0`, now `home_elo=1509.12, away_elo=1512.16` (varied, non-flat).
+              `day=2021-05-22/league=113` — `home_elo`/`away_elo` show small realistic variation (1499.64/1505.98,
+              1499.46/1497.73), and `travel_distance_km`/`cumulative_travel_30d` columns show a genuine mix of NaN
+              (honest-absence) and real values — NOT the pre-fix "always exactly 0.0, never NaN" signature the sibling
+              travel issue documented. The residual 9,346 "affected" count is expected to be dominated by
+              audit-heuristic false positives (the audit flags ANY exact-1500.0 row as bug-affected, but a team's
+              genuinely-first-ever tracked match legitimately reads exactly 1500.0 — not distinguishable from the old
+              bug by this audit's methodology) rather than a remaining code defect — the fix's presence in HEAD
+              (`04274b6a`) is confirmed, and every VM ran on tarball-verified fresh code. Not chasing the residual further
+              this dispatch (would need a smarter audit that excludes genuine first-match rows); if a future dispatch
+              wants to bound this precisely, cross-reference each flagged (date,league) row against whether it's team's
+              first tracked fixture. (repo: features-service)
 
 - [x] ✅ [VERIFY] P3. **Audit whether other sports calculators build a hand-constructed
       `pd.Timestamp(year=..., month=...,     day=...)` (or similar tz-naive-by-construction Timestamp) that gets

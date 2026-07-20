@@ -15,7 +15,7 @@ summary: >
   recovery=skip`), but the pipeline still proceeds to WRITE the degraded (100+ all-NaN-column) `fixture_features` rows
   to GCS afterward on every affected date except the very last one, where a downstream assertion/exit finally aborts the
   whole process with exit_code=1.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [features]
@@ -40,9 +40,9 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 gate_on_depends: false
-last_updated: 2026-07-18
+last_updated: 2026-07-20
 locked_by:
-resolved_by:
+resolved_by: features-service@538c233e
 ---
 
 # sports read_historical_fixtures Series-ambiguous bug — recent-week degraded writes + a fatal crash

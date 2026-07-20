@@ -21,7 +21,7 @@ summary: |
   essentially unaffected (captured corpus intact: 115,782 league-day cells / ~116,149 fixtures); the damage is the
   honest-coverage denominator and gate/foundation-freeze risk. Operator approved the 4-step remediation 2026-07-13
   (executing via workflow wf_8f931d1a-08f, snapshot-gated).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -37,7 +37,7 @@ related:
     codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-14
+last_updated: 2026-07-20
 parent_epic: sports_master
 priority: P1
 source: |
@@ -50,7 +50,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: instruments-service@e95838d5
 ---
 
 # Sports FIXTURES pending-EU phantom denominator — diagnosis + approved remediation

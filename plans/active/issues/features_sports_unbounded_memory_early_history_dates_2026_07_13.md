@@ -10,7 +10,7 @@ summary:
   (likely the historical-fixtures join or a per-team/per-league rolling calculator), not a capacity problem. The wrapper
   script's EXIT trap records EXIT_STATUS=0 (false success) even though only 1 of 421 assigned dates completed — a
   silent-success signal masking a hard crash.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [features]
@@ -31,13 +31,13 @@ source:
   sports_p2_features_history_to_ml_ready-002 dispatch, slot 6, 2026-07-13 (full-history features backfill fleet);
   reopened same day by slot 12 after the shipped fix (features-service@b05f48ad) failed to reproduce-fix on real data
 assigned_vm: planning
-resolved_by:
+resolved_by: features-service@b05f48ad
 locked_by:
 audited_scope: data-correctness
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-13
+last_updated: 2026-07-20
 ---
 
 # features-service sports compute — unbounded memory growth on early-history dates
