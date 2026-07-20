@@ -298,3 +298,35 @@ operator keep/delete decision (self-heal + registered-live-launcher blast radius
 rows), S1-c `mdps-sports-` prefix unregistered (monitoring blind spot). Safe: S2-a features-backfill dead lower-half,
 S2-b stale SERVICE_TARBALLS keys, S3-a MDPS one-offs past Delete-when (NOT benchmark_fullmonth — reusing it). Do NOT
 autonomously delete registered launchers / rebind self-heal (operator returns to this fleet) — document + notify.
+
+### 2026-07-20 — drivers finalized + a DESIGN CORRECTION (canonical verdict split) + verified canonical divergence
+
+- **Both drivers finalized + QG-green.** MDPS `scripts/pipeline_e2e_check.py` (~1793 lines) + features (~997+). The
+  finalize pass added canonical enforcement, the MDPS adversarial review that had been rate-limited, the features
+  coverage-aware day/window selection (`--require-captured`/`--auto-day` over each family's full lookback window), and a
+  real driver gate in each repo's `quality-gates.sh` (features: also FIXED three pre-existing broken `${REPO_ROOT}` path
+  vars at lines 174/204/205 that made the e2e/resolve_lookback/run_backfill smoke steps silently take the "not found"
+  branch — now proven executing).
+- **DESIGN CORRECTION (mine, decided + documented per autonomous rule 2).** The finalize pass made canonical-ness a
+  FORCE-leg pass predicate, which would skip essentially every cell (all existing candle data diverges) → the skills
+  could never prove force/skip and could not "test all shards". That violates the operator's other explicit requirement.
+  Split per the MTDS rule that "three different failure modes on the same cell must never collapse into one pass/fail
+  bit": **force/skip verify against the writer's REAL measured shape** (mechanism provable, green achievable today);
+  **the canonical leg reports divergence from the DECLARED SSOT template as its own `content_check=non_canonical`
+  verdict + migration worklist** (nothing non-canonical silently passes). Correction workflow `wf_763e4b73-af0`.
+- **VERIFIED canonical divergence (I ground-truthed with `gsutil ls`, not agent-reported)** → issue doc
+  `issues/candle_feature_canonical_path_divergence_2026_07_20.md`:
+  - cefi candle object:
+    `…/timeframe=15m/data_type=derivative_ticker/venue=DERIBIT/DERIBIT:PERPETUAL:BTC-PERPETUAL.parquet` → `data_type=`
+    is the **SOURCE** type (manifest carries aggregated `deriv_ohlcv_15m`), and **NO `instrument_type=` segment exists**
+    though the declared template requires it. So path==manifest does NOT hold on data_type; the two SSOTs (PATH_REGISTRY
+    vs `docs/GCS_PATHS.md:42`) themselves disagree.
+  - tradfi leaves are non-canonical migration artifacts (`E1AF0_C3200_migrated_20260418T131054Z.parquet`) where cefi's
+    ARE canonical; and a **zero-length-stem object** exists (`venue=CME/.parquet`) — a genuine defect.
+  - sports has NO `processed_candles/` at all — it writes `processed/…/league_id=…/timeframe=T-10m/bucketed.parquet`
+    (legitimately different, not a violation).
+  - features: **volatility writer bypasses its own path SSOT** (`get_data_sink` built with no `prefix=` → writes at the
+    BUCKET ROOT, missing `volatility/by_date/`); UTL paths-registry `delta_one` entry is stale vs the real writer.
+  - **Operator ruling needed (A/B/C in the issue doc) BEFORE the full-history backfill** — ~386 serial-compute-days
+    would otherwise bake the current shape into the whole corpus. Candles are greenfield today (cefi 6 rows), so
+    migrating now is cheap; migrating after the backfill is not.
