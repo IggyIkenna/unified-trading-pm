@@ -9,7 +9,7 @@ summary:
   captures (CME/ICE/CBOE/FX). The Phase-D checker matches CME ohlcv_1m on the canonical per-contract id ->
   no_matching_row even though the fetch succeeded. Needs a shard-atom ruling (per-root chain vs per-contract) before the
   fix + the MVP backfill.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -27,7 +27,44 @@ depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 assigned_vm:
-resolved_by:
+resolved_by: mtds@8e43da75
+---
+
+> **✅ RESOLVED 2026-07-20 (OPTION A — operator ruling; checker fixed, writer UNCHANGED, no migration).** The per-root
+> chain bundle with a BLANK `instrument_id` IS the valid canonical shard-atom (shard identity = venue + underlying +
+> instrument_type∈{futures_chain,options_chain,combo} + data_type + day). The CHECKER was the only surface keying on the
+> per-contract `instrument_id`; it now matches on `underlying`.
+>
+> **Fix** (`mtds@8e43da75`): `scripts/pipeline_e2e_check.py::_is_bundled_chain_shard` (L511-546) routes TRADFI through
+> the WRITER's own resolver (`engine.orchestrator._resolve_instrument_type` — CME/ICE →`futures_chain` ∈
+> `_UNDERLYING_PARTITIONED_TYPES`), so checker and writer are keyed IDENTICALLY and cannot drift; `_shard_match`
+> (L834-840) then targets `underlying`, never the blank `instrument_id`. NASDAQ/NYSE (EQUITY) + CBOE (INDEX) resolve
+> non-chain via the SAME function and correctly stay per-`instrument_id`.
+>
+> **Verified 2026-07-20 (measured, not read)** — CME `ohlcv_1m` against a manifest row shaped exactly like the real
+> per-root bundle (`instrument_type=futures_chain, underlying=SP500, instrument_id=""`):
+>
+> | probe                                                               | result                                                          |
+> | ------------------------------------------------------------------- | --------------------------------------------------------------- |
+> | `_is_bundled_chain_shard("TRADFI","CME","ohlcv_1m")`                | `True`                                                          |
+> | `_shard_match(...)`                                                 | `{venue, data_type, underlying=SP500}` (no `instrument_id` key) |
+> | `verify_manifest_row(...)` — **post-fix**                           | **`(True, 'captured')`** ✅ PASSES                              |
+> | `verify_manifest_row(...)` — pre-fix (`instrument_id` key, `ESM26`) | `(False, 'no_matching_row')` (reproduces the bug)               |
+>
+> **Shard-atom consistency (HARD RULE) holds across all four surfaces**: the WRITER already emits the per-root blank-id
+> atom (`venue_fetch.py` `is_derivative`→`instrument_id=""`), the MANIFEST records the same 5-tuple chain atom
+> (`underlying_counts`, writer↔manifest v6 lockstep), and a repo-wide sweep found NO honest-coverage / UI / gate code
+> re-keying a tradfi chain atom on `instrument_id` — the checker was the sole mismatch, so no other surface required a
+> change.
+>
+> Regression tests: `tests/unit/test_pipeline_e2e_tradfi_canonical.py` (bug-3 block) —
+> `test_verify_manifest_row_matches_the_real_bundled_cme_manifest_shape` (blank-id bundle MUST match) +
+> `test_verify_manifest_row_on_instrument_id_reproduces_the_pre_fix_bug` (pre-fix `no_matching_row`) +
+> `test_is_bundled_chain_shard_uses_the_writers_own_resolver`.
+>
+> **Option B (per-contract ids + manifest re-migration) is REJECTED** — do not re-open it without a new operator ruling.
+> The CME/ICE MVP-backfill HOLD below is LIFTED.
+
 ---
 
 # P0 — Databento TradFi FUTURE/OPTION captures write blank `instrument_id` (futures_chain shape)
