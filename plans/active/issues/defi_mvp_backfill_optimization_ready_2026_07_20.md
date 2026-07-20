@@ -23,6 +23,9 @@ estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
 drift_direction: stable
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # DeFi-MVP backfill optimization + correctness defects — READY
