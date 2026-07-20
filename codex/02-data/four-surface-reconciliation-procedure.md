@@ -328,6 +328,18 @@ Where object listing is unavoidable, only these three no-walk routes are sanctio
 > to, see [`../05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md) — that doc
 > governs mechanics, this one governs WHETHER.
 
+### 5.1 Route #3 in practice — the Tier-2 per-datapoint VM is the sanctioned single walk for S2 (added 2026-07-20)
+
+When a **100% (not sampled) id/schema claim** on the **S2 (parquet content) surface** is required, the Tier-2
+per-datapoint validation VM IS an instance of route #3 above: the ONE fresh corpus walk per campaign, on a SPOT VM, that
+lifts the four-surface loop's sampled filename-stem/content check (Step 5) to the whole corpus. **G2 (id-canonical) and
+G3 (schema) bundle as two PASSES onto that ONE snapshot walk, run in order per object — never two separate walks, never
+two VMs.** The skill folds the results into this doc's S2 column by a **read-back of the VM's results manifest**, which
+is a slim manifest-`_index` read (single-walk-EXEMPT, exactly like Step 1) — it does **not** count as a second walk.
+Default stays Tier-1 sampled (≤500 objects/AG, reported as SAMPLED, never a 100% claim); Tier-2 is opt-in. SSOT for the
+compute-tier model, the VM launcher, and the results-manifest read-back:
+[`reconciliation-census-and-compute-tiers.md`](reconciliation-census-and-compute-tiers.md) § 3 — do not restate it here.
+
 ---
 
 ## 6. Per-asset-group deviations

@@ -509,7 +509,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       `shard_atom_vocab_desync`, `non_canonical_id`) to `reconciliation-finding-taxonomy.md`; update the count line +
       delete-eligibility table. Do this in the SAME taxonomy pass as todo 21 (the C2a + decision-D refusal removals).
       Blocks 27/30.
-- [ ] 29. [DATA] P1. **Extend four-surface procedure § 5 with route-#3 usage + Tier-2 note** — the Tier-2 VM IS the
+- [x] 29. ✅ [DATA] P1. **Extend four-surface procedure § 5 with route-#3 usage + Tier-2 note** — the Tier-2 VM IS the
       sanctioned single walk for S2 content; skill read-back is a manifest-index read (exempt); G2/G3 bundle onto the
       one walk. Codex SSOT § 3.
 - [x] 30. ✅ [SCRIPT] P1. **Wire § 3g + § 7 compute tiers into the skill** (id/schema legs; Tier-1 ≤500-sample smoke;
