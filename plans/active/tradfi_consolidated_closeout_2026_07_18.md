@@ -310,7 +310,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       via `--chunk-size`. A full single-process collapse remains optional future work if the measurement shows chunk
       cold-start is a material fraction. (repo: deployment-service)
 - [x] ✅ [INFRA] P0. **Equity OHLCV launchers re-sharded by (ticker-group × year) — SHIPPED
-      deployment-service@ac0c2b40.** Equity — not CME — was the binding constraint on the tradfi MVP backfill ETA:
+      deployment-service@d85d06e.** Equity — not CME — was the binding constraint on the tradfi MVP backfill ETA:
       `launch-tradfi-bf-{nasdaq,nyse}` created ONE VM PER YEAR carrying ALL ~622 tickers, so 207,856 equity cells (46%
       of remaining work) compressed onto ~4 year-shards/venue and the longest NASDAQ VM carried ~30,106 cells = a
       12.5–33 hr critical path (CME by contrast shards 47 roots × 7 years and is embarrassingly parallel). New
@@ -321,22 +321,24 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       More VMs is SAFE here and is NOT the Tardis case: Databento's 100-conn/100-rps limits are **per-IP**, and
       `ohlcv_create_vm` gives every VM its own ephemeral external IP (no `--no-address`/NAT), so the budget is PER VM —
       adding VMs adds budget rather than dividing one. SPOT default, `--batch-date-concurrency` (dep@4eb50a4) and
-      PROGRESS.json monotonic resume all preserved. (repo: deployment-service)
-- [x] ✅ [INFRA] P1. **`OHLCV_FLEET_CONCURRENCY_CAP` 20 → 60 — SHIPPED deployment-service@ac0c2b40.** The cap is a
+      PROGRESS.json monotonic resume all preserved. **No separate `-1s` launcher exists or is needed** — the `-1m`
+      wrappers already fetch BOTH data types (`TRADFI_OHLCV_DATA_TYPES` defaults to `ohlcv_1m;ohlcv_1s`), so the
+      re-shard covers the 1s leg automatically. (repo: deployment-service)
+- [x] ✅ [INFRA] P1. **`OHLCV_FLEET_CONCURRENCY_CAP` 20 → 60 — SHIPPED deployment-service@d85d06e.** The cap is a
       COURTESY limit, not a safety one (per-IP budget, see above); at 20 it would have refused the second equity venue
       mid-rollout now that the fan-out is ~40 equity VMs. 60 leaves headroom for a concurrent CME/ICE/CFE wave.
       Rationale comment now states explicitly that Tardis cap-1 reasoning does NOT transfer. (repo: deployment-service)
-- [x] ✅ [INFRA] P1. **`STALL_PROGRESS_REGEX` set on the tradfi launchers — SHIPPED deployment-service@ac0c2b40.**
-      TradFi was the last family still on the weak log-not-grown fallback (cefi/mdps/sfi/gas-fees all set it), which the
+- [x] ✅ [INFRA] P1. **`STALL_PROGRESS_REGEX` set on the tradfi launchers — SHIPPED deployment-service@d85d06e.** TradFi
+      was the last family still on the weak log-not-grown fallback (cefi/mdps/sfi/gas-fees all set it), which the
       `PIPELINE_HEARTBEAT` emitter defeats forever — a cefi VM hung 7+ days undetected exactly this way
       (cefi_bf_2021_heavy_vm_stalled_2026_07_12). Markers verified EMPIRICALLY against a real run.log
       (`tradfi-bf-nasdaq-ohlcv-1m-2024-20260719-112444`): `uploaded|streamed` — per-shard StreamingParquetWriter
       finalize + per-chunk DatabentoAdapter fetch. Both needed: `uploaded` alone false-trips during a long fetch phase
       on a heavy CME expiry date. (repo: deployment-service)
 - [x] ✅ [BACKEND] P0. **A–C `attempted_failed` truncation ROOT-CAUSED + FIXED — SHIPPED
-      unified-api-contracts@6cc7b547 + market-tick-data-service@<mtds-sha>.** 56 NASDAQ + 50 NYSE instruments carried
-      ~770 `attempted_failed` days each, all `WithinBoundsTradfiSourceZero`, clustered alphabetically A–C. NOT vendor
-      absence — a **silent truncation**: `get_expected_instruments_for_venue` applied `resolved = resolved[:cap]`
+      unified-api-contracts@6cc7b547 + market-tick-data-service@05f0ab17.** 56 NASDAQ + 50 NYSE instruments carried ~770
+      `attempted_failed` days each, all `WithinBoundsTradfiSourceZero`, clustered alphabetically A–C. NOT vendor absence
+      — a **silent truncation**: `get_expected_instruments_for_venue` applied `resolved = resolved[:cap]`
       (`market_data_categories.py`) to the caller-supplied `--instrument-ids` list, and since the launchers pass
       `sorted()` tickers with the MVP `_DEFAULT_PER_INSTRUMENT_SENTINEL_CAP = 50` (`preflight.py:236`), the Tier-3
       denominator was cut to a pure alphabetical prefix `A..BKNG`. **Production proof**: the 2026-07-19 NASDAQ VM
