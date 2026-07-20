@@ -36,7 +36,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [ao_backlog_regen_integrity_2026_07_20.md]
+depends_on: []
 source:
 ---
 
@@ -58,12 +58,14 @@ second one.
 2026-07-18 config split). Reuse existing knobs where they fit: `slot_skip_ttl_hours`,
 `orphaned_task_reclaim_grace_seconds`, `dispatch_ack_timeout_seconds`.
 
-## ⚠️ Dependency
+## ⚠️ Dependency — RESOLVED 2026-07-20, `depends_on` cleared
 
-`depends_on: ao_backlog_regen_integrity_2026_07_20.md` — specifically its **preserve-by-`brief`** todo. An id-keyed park
-is silently dropped on the next id-shift regen (measured: the mvp-defi park was lost exactly this way on 2026-07-17), so
-**auto-park is NOT durable until that lands**. Todo 1 (the store) can start immediately; **todo 3 (auto-park) must
-wait.**
+Was `depends_on: ao_backlog_regen_integrity_2026_07_20.md` (its preserve-by-`brief` todo). That plan's todo 2
+re-verified the concern directly: the RC-1 brief-keyed reconcile (`agent-orchestrator@ff6100a`, 2026-07-07) already
+prevents hand-tuned-field loss on a sibling-completion id shift — no code change was needed, and the real mvp-defi park
+has held live for 3+ days across ~140 regen ticks. **Todo 3 (auto-park) is unblocked** — build on
+`priority_override`/`prereqs.prerequisites` as-is. That plan is now archived:
+`plans/archive/2026_07/ao_backlog_regen_integrity_2026_07_20.md`.
 
 ## The measured problem
 

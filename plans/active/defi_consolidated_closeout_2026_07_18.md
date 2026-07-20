@@ -479,7 +479,8 @@ Discriminator = **does a manifest row exist**.
 
 - **Sources**: `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md` (measured 63.9M via the v2 enumerator),
   `issues/defi_manifest_consolidator_duplicate_race_2026_07_10.md`, `defi-completeness-oracle.md`,
-  `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
+  `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
+  `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`.
 - **Close-out criterion**: fresh single-walk yields zero silent-`M` rows; denominator honest.
 
 - [ ] [DATA] P0. **PURGE first, then seed.** Purge the 1.79M duplicate + ~219.5K phantom rows (re-verify the 219,529
@@ -489,6 +490,17 @@ Discriminator = **does a manifest row exist**.
       `attempted_failed` → honest-empty; reconcile `spot_asset` absence from the enumerated catalogue (the v2 corpus
       predates SPOT_ASSET population; `spot_pair` 143K is partly the culled DRIFT SPOT leak). (repos:
       unified-api-contracts, instruments-service)
+- [ ] [DATA] P1. **DeFi catalogue `available_to` false-delisting** — the CATALOGUE twin of the subgraph-deindex reclass
+      above (same root cause: a subgraph/seed pool-set change misread as a mass delisting). Root fix SHIPPED
+      `instruments-service@c37d4f96` (defi drop-outs never last-seen-delist; gated `asset_group=="defi"`, both full +
+      incremental paths; truth-gate `delisted_at`/`expiry` preserved). PROVEN on real prod data: 947 clustered
+      false-delistings (06-26/07-06/07-08 across TRADER_JOE_V2/PANCAKESWAP_V3/AAVE_V3/MORPHO) → 0. Remaining to close:
+      **(a)** `--mode full` defi catalogue regen to purge the frozen stamps + verify; **(b)** historical manifest
+      un-delist + `NOT_ENOUGH_TVL` re-capture over the affected `(protocol,chain,date)` cells (reverse/supersede
+      `reclassify_defi_postdelist_eu_2026_06_24.py`; gate `validate_defi_no_delisted_on_live_pool`); **(c)** Option B
+      §12 on-chain factory/RPC truth-gate probe (feeds `delisted_at` for genuine removals). SSOT:
+      `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`. (repos: instruments-service,
+      market-tick-data-service, unified-api-contracts)
 
 ## Track 4 — CAP: zero-capture protocols · P2
 
@@ -695,6 +707,33 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-20 (slot-4, /autonomous — 6-HOUR FULL-COMPLETION MANDATE; operator away, doc continuously).** **SUCCESS
+  CRITERIA:** (1) ALL migrations done, ZERO orphans (MVP or not); (2) catalogue + code CANONICAL for every MVP
+  instrument (IS enum + MTDS fetch wired); (3) MTDS backfill code OPTIMIZED (learn from cefi download/process/upload)
+  - READY to backfill remaining defi MVP; (4) ALL shards tested under `/data-pipeline-check-mtds`; (5) a concrete ETA to
+    backfill all remaining defi MVP. Deliverable = READY-to-backfill + ETA (not the backfill fully run in 6h). **STATE
+    @10:21Z:** rebuild 2020/2021 done+consolidated, 2022 local re-run @Dec-12 (~95%, shard `local-10573-2daf`),
+    2023-2026 VMs running, consolidator cron merging (manifest mtime 10:20, 40M rows). Catalogue scoped (wf w3f1fk89s
+    output on disk): A(pin)=already landed via bot (img a3fd4862 fixed base); B(ASTER/HL->cefi)=code shipped 2026-06-25,
+    GCS purge left; D1(cbETH/wBETH)=already correct. NET-NEW = raydium force-include(32), METEORA/LIFINITY/PHOENIX,
+    CHAINLINK/PYTH + BUILD adapters (IS chainlink.py new; MTDS _collect_meteora/_collect_lifinity new; register orphan
+    pyth/meteora/lifinity/phoenix). Slot git-hygiene done (stashed pin-regressing WIP). R5 legacy-tree audit wf
+    wsdlolwkz running. **TRACKS (parallel):**
+  * **T1 MIGRATIONS/CLEANUP (no orphans):** rebuild -> final consolidator --once -> VERIFY (zero _migrated_/{venue}_{ts}
+    ids, gas GAS, coverage-not-backward, ~40M rows). Then R5 fold-unique+delete-dup (dex_pools/lending_indices 8 objs;
+    fold ~32 raydium pools + orca/kamino/solend uniques; audit wsdlolwkz gates delete). ASTER/HL perp purge
+    (venue-scoped, NOT pipeline_mode; exclude ASTEROID). GMX perp {venue}_{ts} split -> per-instrument (migrate
+    @35c87d66 --venue GMX). glued-venue ticks_migrated_ cleanup.
+  * **T2 CATALOGUE CODE:** author UAC(U1-U10)+IS(I1-I4+chainlink.py)+MTDS(M1-M3+collectors) per the w3f1fk89s scope ->
+    ship UAC first -> AR wheel publish -> UTL rebuild -> IS pin bump (bot) -> ship IS+MTDS (drift-guard green) -> IS
+    prod build -> deploy jobs -> enum (is-daily-enum-defi) -> FULL rollup (lifecycle-catalogue-full-defi, batched one
+    cycle) -> verify catalogue (89+ venues + 32 raydium + METEORA/etc + oracles; ASTER/HL absent; GMX present).
+  * **T3 BACKFILL OPT + TEST + ETA:** study cefi backfill (fast download/process/upload) -> apply to defi MVP backfill
+    path -> test all MVP shards `/data-pipeline-check-mtds` -> compute ETA to backfill remaining defi MVP.
+    **DEFERRED-bespoke (flag, not MVP-blocking):** GMX POOL-vs-PERPETUAL shape; HYPERLIQUID-L1 gas (no EVM chain_id);
+    CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
+    cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
 - **2026-07-20 (slot-4, /autonomous — MIGRATION ALL-TERMINAL 30/30; rebuild WRITE running).** All 30 sub-shards complete
   — the full DeFi corpus (2020q1-2026q2) is migrated to per-instrument. The 64GB e2-highmem-8 recovery carried every

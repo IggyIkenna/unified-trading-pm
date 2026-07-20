@@ -42,7 +42,7 @@ summary: >
   audit was a one-time snapshot that cannot prevent recurrence — and demonstrably did not; the real fix is to make
   `check_plan_flip` diff the todo's checkbox state across the commit (or match the flip line), not merely detect that
   the file was touched. No todo in this doc addresses that gap; it was unrecognised until now.
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -66,11 +66,23 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
-last_updated: 2026-07-16
+last_updated: 2026-07-20
 locked_by:
 resolved_by:
+  ao_backlog_regen_integrity_2026_07_20.md todo 7 (backend_engineer) — closed after the independent skeptical audit
+  this doc's own precedent required: the 2 poisoned rows (`sports_cf8_available_at_backfill_regression-001`/`-002`)
+  the 2026-07-17 audit found no longer exist as live false-`done` rows (re-verified via SSM, both already
+  self-resolved by prior mechanisms); `audit_false_done.py`'s equivalent logic re-run confirms `false_done: 0`
+  fleet-wide (38 unauditable + 6 honest, 0 unresolved). See that plan's todo 5 for the full investigation.
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-07-20** — closed via `ao_backlog_regen_integrity_2026_07_20.md` todo 7, the independent skeptical
+> audit this doc's own last entry required before self-declaring done. All todos were already `[x]`; the remaining gate
+> was the 2 poisoned rows the 2026-07-17 consolidated close-out's audit found
+> (`sports_cf8_available_at_backfill_regression-001`/`-002`). Both re-verified NO LONGER live false-`done` (self-
+> resolved by prior id-recycling mechanisms — see that plan's todo 5 for the full trace); `audit_false_done.py`'s logic
+> re-run fleet-wide confirms `false_done: 0`. Archived to `plans/archive/issues/`.
 
 > **🟢 EXECUTION CONSOLIDATED 2026-07-17** — this doc's open items are now tracked and executed via
 > [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)

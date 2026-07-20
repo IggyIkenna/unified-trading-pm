@@ -64,6 +64,20 @@ record of every todo that ever existed. Two entirely normal, non-alarming ways a
 **A missing row is therefore never by itself evidence of a lost or dropped task.** Check the plan file's own checkbox
 state first — that is the actual source of truth — before treating an absent backlog/DB row as an incident.
 
+## Auditing `status=done` honesty — `audit_false_done.py` cadence
+
+`scripts/orchestrator/audit_false_done.py` (run on the live VM, `--db data/state/state.db --pm ../unified-trading-pm`)
+checks every `done` row with a plan_ref against its plan's actual checkbox state. Per
+`backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`'s closing ruling: the gated mechanism itself
+(`check_plan_flip`'s hard-409 at `/done`-time) needs **no periodic sweep** — it structurally prevents a NEW false-`done`
+row from being written at all. But the tool still runs **once per close-out session, not on a cron**, because the
+UNAUDITABLE→auditable transition is a live edge: a legacy row's `brief_hash` backfills silently the moment regen next
+touches it (`sync_backlog_to_db`'s NULL-hash first-touch backfill), and that transition can surface old poison — a
+pre-migration row that was ALWAYS wrong but only becomes checkable once it acquires a hash — at any time, not on a
+predictable schedule. A cron would either fire on stale state or need its own staleness logic; a close-out-session run
+is cheap and catches it exactly when someone is already looking. See `ao_backlog_regen_integrity_2026_07_20.md` todo 7
+for the audit that reached this ruling.
+
 ---
 
 ## Regen lifecycle
