@@ -137,6 +137,43 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       start running on VMs). Now degrades to GCS-only with a warning, consistent with `_mirror_firestore`'s best-effort
       policy. +2 regression tests (config raises → GCS-only; flag-on + store-build raises → GCS-only). —
       unified-trading-library@7b0dc3be.
+
+### The four links a NEW VM needs before it can write Firestore (discovered 2026-07-17, chat → todos)
+
+> The two `[x]` todos above fixed the CODE PATH. They did NOT make any VM write to Firestore. These four links are the
+> prerequisites of the `[DATA]` enable-todo below, in order. Links 1 + 2 are real work; 3 + 4 are probably fine but fail
+> SILENTLY (see the VERIFY todo) — which is exactly why they are tracked rather than assumed.
+
+- [ ] [INFRA] P1. **Link 1 — rebuild the VM code tarballs so a newly launched VM actually carries the fix.** VMs never
+      pull git: `setup-data-pipeline-vm.sh` downloads prebuilt tarballs (`NEEDED_TARBALLS` = unified-api-contracts-code,
+      unified-trading-library-code, deployment-service-code) built by `scripts/vm/create-code-tarballs.sh`. Until a
+      rebuild carries deployment-service@0676ba12 + unified-trading-library@7b0dc3be, **a VM launched today still boots
+      the stale fork** — the launch date is irrelevant, the TARBALL's build date is what counts. Determine what triggers
+      the rebuild and from which ref (LDR vs `main` — the fix landed on LDR; if tarballs build from `main`, the promote
+      must land first), then confirm the published tarball CONTAINS `unified_trading_library/deployment_registry.py`
+      with `_mirror_firestore` and does NOT contain `deployment_service/deployments_registry.py`. Evidence: the tarball
+      object's build timestamp + a grep of its extracted contents.
+- [ ] [INFRA] P1. **Link 2 — wire `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` into the VM launch env.** Measured
+      2026-07-17: **zero** launchers reference the flag. `_maybe_build_registry_store()` reads it off
+      `UnifiedCloudConfig` (pydantic `AliasChoices` → process env), while launchers pass config via GCE metadata
+      (`METADATA="${METADATA},DEPLOYMENT_ENV=..."`) — so FIRST verify metadata actually reaches the heartbeat process's
+      env, THEN thread the flag through the launcher path (+ deployment-api's env for the reaper). This is per-launcher
+      wiring, **not** a one-line Cloud Run env var. (PULLED OUT of the `[DATA]` todo below, where it was only prose.)
+- [ ] [INFRA] P1. **Link 3 — grant the VM service account Firestore write IAM.** VMs write GCS only today; Firestore
+      writes need `roles/datastore.user` (or equivalent) on the VM SA. **UNVERIFIED** — must be checked before the soak,
+      because of the silent-degradation catch below.
+- [ ] [INFRA] P1. **Link 4 — confirm `google-cloud-firestore` actually lands in the VM venv.**
+      `build_deployment_registry_store` lazily imports `google.cloud.firestore`; the VM installs deployment-service with
+      `--no-deps` and UTL normally, so whether the SDK is present on a VM is **UNVERIFIED**. Same reason as link 3.
+- [ ] [VERIFY] P1. **Verification must be POSITIVE — absence of errors proves NOTHING.** The
+      `_maybe_build_registry_store()` hardening shipped above (deliberately, to protect fleet liveness) makes links 3+4
+      fail **silently**: a missing SDK or missing IAM logs
+      `dual-write store unavailable (...) — registry writes stay     GCS-only` and the VM carries on happily on GCS. So
+      a flag flip that "looks clean" is NOT evidence of anything. Assert instead: (a) the Firestore `deployments` doc
+      count goes **0 → non-zero** and tracks the live-VM count with fresh `last_heartbeat_at`; AND (b) grep a soaking
+      VM's `run.log` and confirm that warning is **ABSENT**. Only once both hold does the `[DATA]` parity diff below
+      mean anything.
+
 - [ ] [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
       VALIDATE Firestore mirrors GCS: for N sampled live deployments, diff the Firestore doc vs the GCS blob (status,
       last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag.
@@ -148,10 +185,11 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       LDR→main promote (deployment-api revision `00174-tb6`, image `deployment-api:0b87f97`, deployed 2026-07-15T03:20Z,
       verified to CONTAIN `registry_reader.py` + `resolve_deployment_by_id`); (ii) the real blocker was never the deploy
       or the flag but the stale registry fork on the VM write path (see the two P0 todos above) — with the fork in
-      place, flipping the flag fleet-wide would have written 0 Firestore docs. Now genuinely unblocked: the flag is the
-      remaining lever, and it must be set where the writes ORIGINATE (the VM launch env for the heartbeat fleet, plus
-      deployment-api for the reaper), not on Cloud Run alone. (FOLDED IN from
-      deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15, plan-reconcile §6 operator ruling)
+      place, flipping the flag fleet-wide would have written 0 Firestore docs. **The CODE PATH is now fixed, but this
+      todo is GATED on links 1–4 above** (tarball rebuild → launcher flag wiring → VM IAM → SDK present), in that order
+      — do not start this parity diff until the `[VERIFY]` todo's positive doc-count check passes, since the hardening
+      makes links 3+4 fail silently and would make a parity diff of an empty collection look like a clean run. (FOLDED
+      IN from deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
 
@@ -196,10 +234,17 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
     repointed incl. the VM writer), unified-trading-library@7b0dc3be (hardening + 2 regression tests). QG green both,
     fresh runs with the content-sentinel cleared first (deployment-service **2664 passed**, 77s; UTL 141s, **0 type
     errors**).
-  - **Net**: the fleet write path now reaches the dual-write registry. The flag is finally the real remaining lever —
-    and it must be set where writes ORIGINATE (VM launch env for the heartbeat fleet + deployment-api for the reaper),
-    not on Cloud Run alone. No VM has been re-imaged yet, so Firestore stays at 0 docs until the fleet picks up the new
-    tarball AND the flag goes on. The P3 GCS delete remains correctly blocked per the operator's 2026-07-14 ruling.
+  - **Net**: the fleet write path now reaches the dual-write registry — but that fixed the CODE PATH only, and **no VM
+    is writing to Firestore yet** (still 0 docs). Four prerequisites stand between here and a soak, now tracked as todos
+    above rather than left in chat: (1) rebuild the VM tarballs — a VM launched today still boots the stale fork, since
+    the tarball's build date is what counts, not the launch date; (2) wire the flag into the VM launch env (zero
+    launchers reference it today); (3) VM service-account Firestore IAM; (4) `google-cloud-firestore` present in the VM
+    venv. **The catch**: the hardening in this same session makes (3) and (4) fail SILENTLY (degrade to GCS-only +
+    warning), so enabling the flag and seeing no errors is NOT evidence — verification must be a positive Firestore
+    doc-count going 0 → non-zero, plus confirming the `dual-write store unavailable` warning is absent from a soaking
+    VM's log. The P3 GCS delete remains correctly blocked per the operator's 2026-07-14 ruling — and its GO/NO-GO
+    checklist independently requires a non-empty Firestore tracking the live fleet, so nothing unsafe can slip through
+    even if someone flips the flag prematurely.
 
 - **2026-07-14 (local execution, this session)** — Pulled the whole 6-phase chain to local execution (`assigned_vm: NA`
   / `execution_scope: local-only` on all 6 plans) after 6h on AO left 3/6 P0 todos still `queued` with no slot
