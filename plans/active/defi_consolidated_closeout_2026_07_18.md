@@ -765,6 +765,63 @@ Discriminator = **does a manifest row exist**.
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
+- **2026-07-20 (slot-4, /autonomous — ⚠️ MY SHIP ORDERING BLOCKED THE FLEET; backfill-optimization design workflow
+  landed 3 correctness findings incl. a BIG one).**
+
+  - **⚠️ I CAUSED A FLEET-WIDE BLOCK — owning it.** Shipping `uac@3f79489f` (9 defi venues) WITHOUT landing the IS half
+    in the same window left **instruments-service RED for 2+ hours**, and because quickmerge Pass-1 requires a green QG
+    sentinel, **nothing could ship from IS fleet-wide**. Slot-3 caught it and filed
+    `plans/active/issues/uac_is_defi_venue_lockstep_half_landed_2026_07_20.md` (P0), correctly diagnosing TWO distinct
+    gaps behind the 9: (a) meteora/lifinity/phoenix/pyth were pure BOOKKEEPING (adapter classes existed, just never
+    registered in `factory._ADAPTERS` / `ADAPTER_DATA_SOURCES`); (b) `chainlink.py` was a GENUINELY ABSENT artifact — it
+    existed only as uncommitted work in MY tree while UAC's own comments asserted it existed. They deliberately did NOT
+    fix it from slot-3 to avoid colliding with my in-flight files — the right call. **Lesson: a commit message saying
+    "in drift-guard lockstep" is a claim about TWO repos; it is only true once BOTH have landed. A cross-repo lockstep
+    must ship as one unit or the declaring side must wait.** Landing the IS half now closes their issue.
+  - **T3 optimization design workflow COMPLETE (`wf_c3e50e71-248`, 12 agents, 1.63M tokens; 5 of 12 lost to API
+    rate-limits, 7 completed incl. the synthesis).** It did NOT just produce a plan — it found real defects:
+    1. **🔴 BIG FINDING (issue doc filed `273f5a9d5`, operator ruling required):** `available_at` is stamped with the
+       on-chain tick and then **CLOBBERED with wall-clock `now()`**. In `gas_fee_handler` the stamp and clobber are
+       ADJACENT lines (507→508, 592→593); in `solana_defi_handler` the stamp at `:636` is clobbered inside
+       `_upload_parquet` at `:149`. On a historical backfill the shipped value is _when the backfill ran_, which is
+       non-deterministic across re-runs → **breaks the batch==live ε=0 contract** and silently corrupts any
+       point-in-time/lookahead filter. **I re-verified every line myself before filing.** →
+       `plans/active/issues/defi_available_at_clobbered_by_wallclock_2026_07_20.md`
+    2. **🔴 `evm_defi` history queries are UNPAGINATED** (`first: 1000`) over the same entity the lending path
+       explicitly paginates — a CORRECTNESS bug (silently truncated captures), not an optimization. Expect captured
+       counts to go UP on busy AAVE shards when fixed; that is the fix landing, not a regression.
+    3. **🔴 Both DeFi launchers MISS the PROGRESS-checkpoint/preemption contract** (`lc_write_preemption_signal_file` /
+       `lc_write_launch_params` / shutdown-script). That is a standing HARD-RULE gap TODAY, independent of any
+       optimization, and must land before any wide SPOT wave.
+  - **The workflow also DEMOLISHED two of my own earlier premises — good.** (a) The "#1 multi-day batched subgraph =
+    ~300× fewer round-trips" claim I carried from the T3 study is **wrong**: pools are ALREADY batched 500-at-a-time, so
+    the request-axis ceiling is **~2×**, and the item is descoped to two cheap carve-outs. (b) "Add the 3 concurrency
+    knobs" is **inert alone** — 0% gain and three unread config fields unless it ships together with the fan-out and the
+    dedicated executors. Ship `knobs + fanout + executor-offload` as ONE commit or not at all.
+  - **The `write` (streaming finalizer) spec is SOUND_WITH_FIXES but must NOT be implemented as specced:** its
+    `rows_by_instrument_id` derivation is underivable (the router keys on `shard_path`, and the design's own headline
+    fix merges colliding symbols into one path → N ids, one row_count, unsplittable) which would **corrupt
+    `record_captured` grain**; and its claimed lookahead backstop does not exist (`enforce_available_at` is opt-in and
+    defaults False). It also widens per-failure blast radius and uses an unbounded writer pool.
+  - **Biggest risk to the whole N-VM plan (flagged, not resolved):** the real ceiling may be the **shared TheGraph key
+    pool**, not the VM count — every fat DeFi venue (uniswapv3/morpho/balancer/curve/aave) draws on the same pooled
+    keys. Venue partitioning isolates blast radius but does NOT multiply quota, and **429s classify as
+    `attempted_failed`, so an over-scaled wave CORRUPTS THE MANIFEST rather than merely wasting money — the exact Tardis
+    N>1 failure shape arriving through a different door.** Canary at 2 VMs and watch the 429 rate before any wide wave.
+    Also: `MANIFEST_PER_VM_SHARDS=true` under N-VM sharding is the known cefi shard-explosion vector.
+  - **ETA remains PROVISIONAL by design.** Baseline R_vm≈6.5 atoms/s/VM gives ~29.6d (N=1) / ~3.7d (N=8) at W=11.65M; an
+    _aspirational_ post-optimization R_vm≈25 gives ~7.7d / ~1.0d. **Do not quote the optimized row to anyone until the
+    calibration protocol has actually been run** — and the calibration must count TARGET artifacts by `time_created`,
+    entity-scoped to the exact venue/chain/instrument_type/data_type, cross-checked against manifest atoms, never log
+    activity and never a first-of-month day.
+  - **⚠️ CLAUDE.md changed under me mid-session and countermands part of R5:** `dex_pools/` + `lending_indices/` are now
+    **DO-NOT-DELETE** (stale delete order, no twin for KAMINO/SOLEND). My R5 todo said "fold then delete legacy trees" —
+    that is now WRONG for those two prefixes. Nothing was deleted (deletion was operator-gated throughout), so no harm
+    done, but the todo is corrected. Also newly documented: **the Solana AMM writer emits
+    `instrument_type=solana_amm_pool`, NOT `pool`** — worth checking against the IS catalogue, which enumerates these
+    venues as `pool` (a vocabulary mismatch would produce false "absent" verdicts, which is exactly the slip that
+    produced a false twin-absent verdict on 2026-07-20).
+
 - **2026-07-20 (slot-4, /autonomous — ✅ CF-11 + PROJECTION FIX **PROVEN IN PROD**; ⛔ 2nd correction: IS was NEVER
   blocked on the wheel).**
 
