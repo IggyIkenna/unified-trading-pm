@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -812,6 +812,39 @@ Discriminator = **does a manifest row exist**.
     **DEFERRED-bespoke (flag, not MVP-blocking):** GMX POOL-vs-PERPETUAL shape; HYPERLIQUID-L1 gas (no EVM chain_id);
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
+
+- **2026-07-20 (slot-4, /autonomous — SESSION SUMMARY + deferred-work handoff).**
+
+  **Shipped + verified this session (all on `origin/live-defi-rollout`):**
+  - DeFi catalogue lockstep COMPLETE across 3 repos — UAC venues (incl. CHAINLINK re-declared live), IS adapters +
+    venues + goldens (`is@6506b505`/`9267e0ea`, **IS 98 == UAC 98** verified), MTDS collectors + oracle resolution +
+    RULE-11 pins (`mtds@75cf4c3c`).
+  - CHAINLINK end-to-end (adapter-first was the right order): my `ChainlinkOracleReferenceDataAdapter` `is@6506b505` (45
+    addrs re-verified as a strict subset of MTDS's 52 production constants, zero invented) unblocked the peer's
+    re-declaration.
+  - **evm_defi pagination correctness fix `mtds@6e2677b9`** — history queries no longer truncate at The Graph's 1000 cap
+    (`_paginate_history` mirrors the proven `_paginate`; +2 tests; QG green 6544 passed).
+  - Migration/no-orphans **VERIFIED via ADC** on the live 51.9M-row `_index`: captured 18.6M->25.3M (per-instrument
+    grain landing), absence corpus present + growing (cell-level 4.6M->6.26M, expected_unattempted 11.6M visible),
+    `_migrated_`=0, `ticks_migrated_`=0.
+  - Filed: `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md` (73 glued ids, P2),
+    `defi_mvp_backfill_optimization_ready_2026_07_20.md` (the T3 workstream, dispatchable + fix-designed).
+
+  **## Deferred work after 2026-07-20 (all BLOCKED on the operator — reauth or a ruling — not on more code):**
+
+  | Item                                                    | Why deferred                                                                                             | Where it's captured                                                       |
+  | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+  | `/data-pipeline-check-mtds` on the 6 MVP shards         | gcloud CLI auth EXPIRED (account reset); needs interactive `gcloud auth login`                           | `defi_mvp_backfill_optimization_ready` § Auth block                       |
+  | Perf bundle (knobs+fanout+executor-offload, ONE commit) | risky live-write-path rewrite; REQUIRES the 2-VM TheGraph 429 canary, which is auth-blocked              | same doc § perf bundle (fix-designed, canary-gated)                       |
+  | Launcher preemption contract (defect #3)                | bash launcher; can't be VM-validated without auth; only bites when the canary-gated SPOT wave runs       | same doc, defect #3 (fix = mirror cefi `lc_write_preemption_signal_file`) |
+  | `available_at` clobbered by wall-clock `now()`          | data-semantics BIG FINDING — operator RULING needed                                                      | `defi_available_at_clobbered_by_wallclock_2026_07_20.md`                  |
+  | Rebuild re-emit `UnprovenHonestAbsenceError`            | operator ruling: grandfather legacy absence / drop the (measured-redundant) re-emit / map->record_failed | this plan, earlier entry; index is already correct via UPSERT             |
+  | LST/oracle timestamp-glued ids                          | LST/oracle workstream owns it (not catalogue scope)                                                      | `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`             |
+
+  **Handoff note:** the 3 correctness/optimization defects are a coherent workstream in
+  `defi_mvp_backfill_optimization_ready_2026_07_20.md`; defect #2 is DONE, #3 + the perf bundle are fix-designed against
+  proven in-repo patterns and gated purely on `gcloud auth login` + the 2-VM canary. The ETA is a PROVISIONAL band (N=8
+  ~3.7d baseline / ~1.0d aspirational at W=11.65M defi-MVP), unquotable-as-final until the calibration run.
 
 - **2026-07-20 (slot-4, /autonomous — ✅ FULL DeFi LOCKSTEP SHIPPED (UAC+IS+MTDS); MIGRATION/NO-ORPHANS VERIFIED on the
   live index via ADC).**
