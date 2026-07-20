@@ -136,15 +136,28 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       **Evidence: UTL QG ✅ ALL QUALITY GATES PASSED (360s); shipped via quickmerge --agent, landed on
       live-defi-rollout. Shipped BEFORE deployment-service per dep-order (UTL is T0; the dirty-dep pre-flight gate
       correctly blocked the downstream quickmerge until UTL was clean).**
-- [ ] 3. [SCRIPT] P1. Build `market-data-processing-service/scripts/pipeline_e2e_check.py` (candle MVP shards:
-      cefi/defi/ tradfi via `mdps_mvp_universe` + sports/prediction via candle-processed data_types; per-timeframe
-      verify; self-contained skip; live=honest-gap; benchmark leg). QG MDPS green.
+- [x] 3. ✅ [SCRIPT] P1. MDPS driver — `market-data-processing-service@75ebf8b` (2000 lines, QG green). Enumerates
+      cefi/defi/tradfi via `mdps_mvp_universe` + sports/prediction via
+      `DATA_TYPES_BY_ASSET_GROUP ∩     needs_candle_processing`; per-timeframe verify; SELF-CONTAINED skip (MDPS reads
+      freshness from the bucket it writes, so `--output-bucket` routes both to `-test-`); live leg = honest
+      `skipped/live_not_wired`. **TWO INDEPENDENT VERDICTS** (corrected mid-session): force/skip target the writer's
+      REAL MEASURED template so the mechanism is provable today, while a separate canonical leg reports
+      declared-template divergence as `content_check=non_canonical` with specific tokens + a greppable migration
+      worklist. Single-walk discipline (one cached day listing per (bucket,day,root) + stale-listing invalidation
+      between VMs). Driver smoke wired into `scripts/quality-gates.sh`. **Shipped under the dirty-deps carve-out** (UTL
+      had another agent's LIVE uncommitted WIP, mtime <120s → PROTECT, which blocked the quickmerge pre-flight); commit
+      touches only MDPS files.
 - [ ] 4. [SCRIPT] P1. Build `features-service/scripts/pipeline_e2e_check.py` (feature-family MVP shards, per-family CLI
       divergence, multi-day lookback windows via resolve_lookback, self-contained skip, benchmark leg). QG features
       green.
-- [ ] 5. [SKILL] P1. Write `data-pipeline-check-mdps/SKILL.md` + `data-pipeline-check-features/SKILL.md` (canonical
-      `cursor-configs/skills/`) — mirror MTDS Phase 0/1/2 + report shape + new
-      benchmark/projection/cost/parallelization/ orphan-lineage sections + coverage-aware day/window selection.
+- [x] 5. ✅ [SKILL] P1. Both SKILL.md written in the canonical `cursor-configs/skills/` (auto-registered; both now
+      appear in the harness skill list). Mirror the MTDS Phase 0/1/2 + report shape and ADD: the canonical-paths
+      principle (§3a/§3b — non-canonical is skipped/flagged, never legacy-passed, and IS the migration worklist),
+      coverage-aware day selection (MDPS) / per-family multi-day lookback windows (features, via `resolve_lookback.py`),
+      the benchmark leg + full-history projection (honest per-shard floor + flat-2019 upper bound) + SPOT cost +
+      parallelization headroom (fleet-wide since MDPS/features are NOT Tardis-capped), the known orphan/structural
+      cells, and the throughput-measurement traps. MDPS §3 carries the hard scoping warning: an unscoped run is 447
+      cells all-AG → ~447 force + ~447 skip VMs, so `--require-captured` is mandatory.
 - [ ] 6. [SCRIPT] P2. Wire both drivers into their consumer `quality-gates.sh` + lifecycle markers
       (`# Epic:`/`# Lifecycle:`/`# Delete-when:`).
 - [x] 7. ✅ [DATA] P1. `-test-` buckets — **ALL EXIST, no provisioning needed** (object-level probe 2026-07-20; never
