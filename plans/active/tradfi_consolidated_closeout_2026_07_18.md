@@ -1469,3 +1469,36 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 | Purge verification (0 massive + zero collateral)                   | Downstream of the purge                        | `massive_purge_blocked_databento_l1_entitlement_2026_07_20`       |
 | Manifest force-rebuild + phantom-row (16,389) verification (a)-(d) | Sequenced behind the purge; decouplable        | `massive_purge_blocked_databento_l1_entitlement_2026_07_20`       |
 | Operator confirmation: purge-only vs purge + estate-wide migration | Ambiguous intent; destructive either way       | `tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20` |
+
+- **2026-07-20 (slot-1, tick 26) — ✅ Massive purge EXECUTED + VERIFIED (0 collateral); launcher fixed; manifest cleanup
+  handed off for coordination.**
+  - **Purge DONE**: `RUN_TS=20260720-193849`, 20-shard fan-out (exactly 20 VMs verified — no runaway), gated
+    massive-only path (`TRADFI_PURGE_MASSIVE_ONLY=1`, `MTDS_TARBALL_SHA=1bdbb4e0`, VM-side sentinel). **1,701,414
+    PURGED** (all rc=0, 0 PURGE_REFUSED, 0 ORPHAN) **+ 8 corrupt-Hive `batch_massive` stragglers deleted directly**
+    (they classify QUARANTINE before the massive branch; 1,701,414 + 8 = 1,701,422 = full enumeration) → **batch_massive
+    → 0**.
+  - **Zero collateral (Phase 2)**: every sampled `batch_databento` count IDENTICAL before/after (191/187/189/597/612/599
+    on the 6 baseline days; 57 + 1,364 present on the 2 straggler days); `_quarantine/` intact (146,288 objects,
+    untouched); soft-delete ACTIVE 604800s (reversible ~2026-07-27); all 20 VMs self-deleted.
+  - **Ships**: `market-tick-data-service@8d7743cb` (honest sentinel docstring), `deployment-service@2c00c740` (launcher:
+    REJECT silently-dropped `MIGRATION_EXTRA_ARGS` for `cat=tradfi` + gated `TRADFI_PURGE_MASSIVE_ONLY=1` migrate-only
+    path). Pinned tarballs uploaded via ADC token (the interactive `gsutil` auth had expired): `mtds-code@1bdbb4e0` +
+    UAC/UTL/DS pins.
+  - **Manifest cleanup NOT yet applied — coordinate-before-cutover.** Post-purge the live `_index` still has 686,005
+    stale `batch_massive` rows + 16,389 phantom `batch_databento` trades/tbbo `captured` rows + 35.5% blank id + 0%
+    `-USD@LIN`. **A `consolidate(force=True)` does NOT drop them** (deletion-resurrection gap,
+    `manifest_consolidator.py:850-862`); (a)+(b) need surgical index removal, (c)+(d) need the object-walk
+    `rebuild_tradfi_manifest.py`. The live index is being rebuilt by a peer RIGHT NOW (`384f0345a`, `mtds@ac051bfe`), so
+    per the operator's Phase-3 "coordinate and announce" instruction this is handed off rather than blind-overwritten.
+    Corrected projection computed + verified locally ((a)→0, (b)→0). Full finding:
+    `plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`.
+  - Issue docs flipped RESOLVED: `massive_purge_blocked_databento_l1_entitlement_2026_07_20.md`,
+    `tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20.md`.
+
+## Deferred work after 2026-07-20 (tick 26)
+
+| Item                                                                       | Why deferred                                             | Tracked in                                                     |
+| -------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------- |
+| Drop 686,005 stale `batch_massive` manifest rows + re-stamp 16,389 phantom | force-rebuild won't drop; live index contended by a peer | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| Object-walk id re-derivation for (c) blank-id ↓ + (d) `-USD@LIN`           | needs `rebuild_tradfi_manifest.py`; coordinate with peer | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| manifest-vs-disk consistency check (captured with no object = loud fail)   | P1 hardening, prevents phantom-row recurrence            | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |

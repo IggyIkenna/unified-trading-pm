@@ -8,12 +8,15 @@ summary:
   Massive would permanently destroy over a million objects of unique data. Purge is HELD (option c). Also documents a
   separate data-correctness defect — 16,389 phantom `batch_databento` trades/tbbo `captured` manifest rows over 3,488
   shards, backed by ZERO objects on disk.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
+resolved_by:
+  "operator-decision (Option C, accepted-permanent-loss, PM@1cc566db6) + executed purge 2026-07-20
+  RUN_TS=20260720-193849 (1,701,422 batch_massive objects removed, 0 collateral); slot-1 tick 26"
 tags:
   [massive-purge, databento, entitlement, data-correctness, manifest, phantom-rows, blocked-credentials, honest-absence]
 related:
@@ -34,12 +37,103 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm:
-resolved_by:
 ---
 
 # Massive purge BLOCKED — the Massive `trades`/`tbbo` corpus is the ONLY copy
 
-## Verdict
+## 2026-07-20 RESOLVED (slot-1, tick 26) — purge EXECUTED and VERIFIED, 0 collateral
+
+**The authorized massive-only purge ran to a clean terminal state.** `RUN_TS=20260720-193849`, 20-shard fan-out on
+`launch-canonical-migration-vm.sh` with the fixed gated purge path (`TRADFI_PURGE_MASSIVE_ONLY=1`,
+`MTDS_TARBALL_SHA=1bdbb4e0` — carries the data-loss fix `5581dcf9` + honest docstring `8d7743cb` + P0 image fix
+`21733255`), sentinel staged VM-side at
+`gs://deployment-scripts-central-element-323112/canonical-migration-tradfi/sentinels/massive_purge_authorization_2026_07_20.sentinel`.
+
+**Zero-collateral BY CONSTRUCTION**: each VM built a `pipeline_mode=batch_massive`-grep-filtered enumeration, so
+non-massive objects were never in the input. Pre-flight local dry-run canary over a sample proved the filtered enum
+classifies **100% PURGE_MASSIVE, 0 ORPHAN, 0 other disposition**.
+
+**Terminal evidence (all 20 shards):**
+
+- **1,701,414 objects PURGED** (sum of per-shard `apply COMPLETE — outcomes: {'PURGED': N}`; ~84.4k–85.5k per shard),
+  all rc=0, **0 `PURGE_REFUSED_GATED`, 0 ORPHAN** on every shard.
+- **+8 `QUARANTINE_CORRUPT` stragglers**: 8 `batch_massive` objects whose path carries a reordered/corrupt Hive shape
+  (e.g. `data_type=…/instrument_type=…/venue=…` order + colon-bearing stem) classify QUARANTINE _before_ the
+  `batch_massive` branch in `_classify_disposition`, so with `--quarantine` OFF they were left in place. 1,701,414 PURGE
+  - 8 QUARANTINE = **1,701,422** = the full physical enumeration. The 8 (all `day=2024-01-01`/`2024-01-02`, all
+    unambiguously `pipeline_mode=batch_massive`, operator-authorized scope) were then **deleted directly**
+    (`gcloud storage rm`, each verified `batch_massive`), reaching **batch_massive → 0**.
+
+**Phase-2 verification (measured):**
+
+| day        | massive before → after | databento before → after (UNCHANGED) |
+| ---------- | ---------------------- | ------------------------------------ |
+| 2020-06-15 | 542 → **0**            | 191 → 191                            |
+| 2021-06-15 | 539 → **0**            | 187 → 187                            |
+| 2022-06-15 | 556 → **0**            | 189 → 189                            |
+| 2023-05-23 | 5,360 → **0**          | 597 → 597                            |
+| 2024-06-17 | 777 → **0**            | 612 → 612                            |
+| 2025-04-08 | 759 → **0**            | 599 → 599                            |
+| 2024-01-01 | (stragglers) → **0**   | 57 present                           |
+| 2024-01-02 | (stragglers) → **0**   | 1,364 present                        |
+
+- **Zero collateral**: every sampled `batch_databento` count IDENTICAL before/after; `_quarantine/` intact (146,288
+  objects, never touched — the 8 stragglers were deleted, not moved); no `_quarantine/`/`batch_databento` object was in
+  any delete operation.
+- **Reversible**: bucket soft-delete confirmed ACTIVE `retentionDurationSeconds=604800` (7d) after the purge —
+  restorable until ~2026-07-27.
+- All 20 GCE VMs self-deleted (`VM_SHUTDOWN_ON_COMPLETION=true`).
+
+**Ships that made this correct + honest:** `market-tick-data-service@8d7743cb` (sentinel docstring =
+operator-auth-basis, not backfill-only), `deployment-service@2c00c740` (launcher: REJECT silently-dropped
+`MIGRATION_EXTRA_ARGS` for `cat=tradfi` + add the gated `TRADFI_PURGE_MASSIVE_ONLY=1` migrate-pass-only path).
+
+## Manifest cleanup (phantom rows + stale massive slice) — STILL OPEN, needs coordinated rebuild
+
+The purge removed the OBJECTS; the availability manifest still carries the stale rows and is being actively rebuilt by a
+peer. **Measured post-purge manifest baseline (2026-07-20):** 5,209,585 rows — **686,005 `batch_massive` rows** (objects
+now gone) + **16,389 phantom `batch_databento` trades/tbbo `captured` rows** (zero backing objects) + 35.5% blank
+`instrument_id` + 0% derivative `-USD@LIN`. **A `consolidate(force=True)` does NOT drop these** — the consolidator
+re-scans 100% of the canonical on a full rebuild and a pure DELETION correction "survives trivially" (the documented
+deletion-resurrection gap, `manifest_consolidator.py:850-862`). See
+`tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`. Dropping (a)+(b) needs surgical index removal; fixing
+(c)+(d) needs the object-walk id re-derivation (`rebuild_tradfi_manifest.py`). Both target a LIVE index a peer is
+already rebuilding — coordinate before cutover.
+
+## 2026-07-20 UPDATE (slot-1, tick 25) — authorization GRANTED, but execution BLOCKED on a broken launcher path
+
+**The entitlement blocker below is RESOLVED BY OPERATOR DECISION** (Option C, accepted-permanent-loss) — recorded at
+`unified-trading-pm@1cc566db6`. Option A declined, Option B declined. So the _authorization_ question is closed.
+
+**The purge still did NOT run**, because a pre-flight audit of the prescribed execution path found it would do the WRONG
+THING destructively. See `tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20.md`. In short:
+
+1. `launch-canonical-migration-vm.sh`'s `tradfi` branch **silently discards `MIGRATION_EXTRA_ARGS`** — so
+   `--purge-massive --massive-backfill-verified <sentinel>` never reach the migrate pass. **Zero massive objects would
+   be purged.**
+2. That same invocation in `full` mode runs the 3-pass canonical migration with `--apply` (+ `--quarantine` on passes
+   2/3) over the WHOLE tradfi estate — copy→verify→**delete source** for every non-canonical NON-massive object. That is
+   a large unauthorized content migration of exactly the `batch_databento` objects the zero-collateral check exists to
+   protect.
+3. Independently: the sentinel is checked with `Path(...).is_file()` **on the VM**, so a sentinel written in the repo /
+   on the operator laptop does not satisfy the gate — it must be staged onto the VM at the path passed.
+
+Net: the prescribed command would have purged nothing and migrated everything. **Nothing destructive was executed.**
+
+**Shipped anyway (safe, correct regardless):** `market-tick-data-service@8d7743cb` — the `--massive-backfill-verified`
+help/docstring + the mapping-manifest target string now describe the gate honestly as an
+**operator-authorization-basis** sentinel (a completed backfill **OR** an explicit accepted-loss ruling), instead of
+implying a backfill that never happened and never will.
+
+**Measured baseline for the eventual purge (read-only, 2026-07-20):** bucket soft-delete **ACTIVE**,
+`retentionDurationSeconds=604800` (7 days). `raw_tick_data/by_date/` holds **2,041** prefixes (2,040 `day=` + 1 legacy
+`day-2026-01-01`). Stratified per-day counts — massive/databento/total-parquet: `2020-06-15` 542/191/733 · `2021-06-15`
+539/187/726 · `2022-06-15` 556/189/745 · `2023-05-23` 5,360/597/5,957 · `2024-06-17` 777/612/1,389 · `2025-04-08`
+759/599/1,358. **On every sampled day `massive + databento == total_parquet` exactly** — the two modes are cleanly
+separable at path level with no third mode, so a `pipeline_mode=batch_massive`-filtered enumeration makes
+zero-collateral provable BY CONSTRUCTION (non-massive objects are simply not in the input).
+
+## Verdict (original, 2026-07-20 — superseded on the authorization axis only)
 
 **(c) NO PURGE.** The gated `--purge-massive` is all-or-nothing over every `pipeline_mode=batch_massive` object. Running
 it today would permanently destroy **1,032,672 objects (60.69% of the corpus)** for which no other copy exists and which
