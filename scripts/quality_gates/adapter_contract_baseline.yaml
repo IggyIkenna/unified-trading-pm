@@ -370,8 +370,6 @@ baseline:
     count: 7
   market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py:
     count: 9
-  market-tick-data-service/market_tick_data_service/cli/handlers/massive_futures_backfill_handler.py:
-    count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/mev_events_handler.py:
     count: 3
   market-tick-data-service/market_tick_data_service/cli/handlers/native_staking_handler.py:
@@ -522,8 +520,6 @@ baseline:
     count: 5
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/ibkr_adapter.py:
     count: 11
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py:
-    count: 9
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:
     count: 4
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py:
