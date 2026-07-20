@@ -965,3 +965,25 @@ beat the wheel cache + a boot-time SHA assertion).
 write = BLOCKED on the UAC-propagation deployment fix (in flight); re-run queued behind it (issue todo 4). The prod-rate
 measurement for the ETA is deferred to that re-run (a VM that writes 0 objects can't measure a write rate). This is
 exactly the kind of silent deployment gap the "test all shards on real infra" mandate exists to catch — and it did.
+
+### 2026-07-20 — MIGRATION/ORPHAN ground-truth on EXISTING candle data (no-VM, read-only)
+
+Per the operator's "all migrations done on existing data, no orphans" mandate — ground-truthed the EXISTING prod candle
+estate (bounded `gsutil ls`, not a corpus walk) for canonical compliance. Verified full MDPS MVP breadth is well-defined
+(CEFI 119 + DEFI 294 + TRADFI 49 = **462 shard cells**; TRADFI timeframe-cascade correct). Two NEW verified orphan facts
+folded into `issues/candle_feature_canonical_path_divergence_2026_07_20.md` (addendum iii):
+
+1. **Split-brain candle layout** — the SAME cefi day (`day=2026-05-23`) carries BOTH a `pipeline_mode=batch_tardis/…`
+   shape AND a `pipeline_mode`-LESS `timeframe=…`-directly-under-day shape. A pipeline_mode-aware vs -blind reader see
+   disjoint subsets of the same corpus. Distinct from the missing-`instrument_type=` finding (that one is id/segment,
+   this is partition split-brain).
+2. **Root cause of unchecked candle divergence** — the UAC machine oracle `canonical_path_violations()` hardcodes
+   `RAW_TICK_DATA_PREFIX="raw_tick_data/by_date/"` and flags EVERY `processed_candles/` path as the SAME structural
+   violation (verified by running it on both a canonical and an orphan object). So NO machine oracle governs candle
+   canonical shape — which is exactly why the skill's canonical leg re-implements the check (justified) and why the
+   durable fix is to EXTEND the oracle to the `processed_candles/`+features namespace (new todo 10 on the issue).
+
+**Resolution is operator-gated** (A/B/C canonical-shape ruling — issue todo 1); autonomous migration of prod candle
+objects is out of scope until that ruling lands (a prod-bucket layout change is human-gated). This turn's job was to
+GROUND-TRUTH the orphans with machine-checked evidence and point at the durable fix, which is done. Full corpus-wide
+counts of the split (issue todo 9) need a bounded per-day sweep, deferred with the ruling.

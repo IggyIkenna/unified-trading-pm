@@ -140,6 +140,45 @@ This is the INVERSE of `PHANTOM_CAPTURED_NO_OBJECT` (manifest row, no object): h
 Root-cause it before the full-history backfill — either MDPS is not calling `record_captured` on these paths, or the
 rows are stranded in un-consolidated per-VM shards.
 
+### (iii) ADDENDUM 2026-07-20 — TWO structural candle shapes coexist on the SAME day + NO machine oracle governs candle paths
+
+Two facts verified today by bounded `gsutil ls` + running the UAC oracle directly (not inferred):
+
+**(iii-a) The writer emits BOTH a `pipeline_mode=`-partitioned shape AND a `pipeline_mode`-LESS shape into the same
+bucket on the same day.** Under `market-data-tick-cefi-prd-…/processed_candles/by_date/day=2026-05-23/` BOTH of these
+exist side by side:
+
+```
+# canonical-ish (has pipeline_mode):
+  .../day=2026-05-23/pipeline_mode=batch_tardis/timeframe=15m/data_type=…/venue=…/…parquet
+# ORPHAN (no pipeline_mode segment at all — timeframe= sits directly under day=):
+  .../day=2026-05-23/timeframe=15m/data_type=ohlcv_15m/venue=COINBASE-SPOT/COINBASE-SPOT:spot_pair:BTC-USDT.parquet
+```
+
+This is a DISTINCT orphan class from Finding 1 (missing `instrument_type=`): here the `pipeline_mode=` partition segment
+— required by `codex/02-data/pipeline-mode-partition.md` and inserted by the driver's canonical model — is present on
+some candle objects and absent on others **in the same bucket, for the same day**. A `pipeline_mode`-blind reader (glob
+`day=*/timeframe=*/…`) and a `pipeline_mode`-aware reader (glob `day=*/pipeline_mode=*/timeframe=*/…`) therefore see
+DIFFERENT, non-overlapping subsets of the same candle corpus — a silent split-brain over the candle estate. The leaf id
+itself (`COINBASE-SPOT:spot_pair:BTC-USDT.parquet`) IS canonical (VENUE:TYPE:SYMBOL), so this is purely a STRUCTURAL
+(partition-layout) orphan, not an id-form one.
+
+**(iii-b) ROOT CAUSE of why candle divergence goes unchecked: the UAC canonical oracle does not cover the
+`processed_candles/` namespace at all.** `unified_api_contracts.canonical.partition_paths.canonical_path_violations()`
+hardcodes `RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` (`partition_paths.py:67`) and returns a `structural`
+violation (`"path does not start with the canonical prefix 'raw_tick_data/by_date/'"`) for **every**
+`processed_candles/` path — the canonical shape AND the orphan shape are BOTH flagged identically, so the oracle cannot
+distinguish them. Verified by running `canonical_path_violations()` + `_classified()` on the two real objects above
+(both `require_pipeline_mode` values): identical `structural` verdict for canonical and orphan alike.
+
+Consequence: there is **no machine authority for derived-candle canonical shape** — only the PATH_REGISTRY template
+(which itself lacks `pipeline_mode` and includes `instrument_type`, i.e. matches NEITHER shape on disk) plus the prose
+pipeline-mode-partition rule. That is exactly why divergent shapes coexist unchecked, and why
+`/data-pipeline-check-mdps`'s canonical leg has to re-implement the check (a JUSTIFIED exception to "never re-implement
+the oracle" — the oracle simply doesn't cover this namespace). **The durable fix is to EXTEND the oracle to the
+`processed_candles/` (and features) namespace** so the ratified candle shape (post A/B/C ruling) becomes
+machine-checkable and the skill can call the oracle instead of a bespoke rule.
+
 ## Decision required (operator) — which shape is canonical?
 
 **(A) [RECOMMENDED] The declared template is canonical → migrate the writers.** Add `instrument_type=` to the candle
@@ -188,3 +227,13 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 - [ ] 8. [DATA] P1. **Fix the bundled-name rule**: decide the leaf by "is this write bundled by `underlying=`?" rather
       than "is data_type in CEFI_CHAIN_INSTRUMENT_TYPES", so every `underlying=`-bundled write gets `ticks.parquet`
       instead of an empty stem. Then repair/purge the existing empty-stem objects (measured 0.6-25% depending on day).
+- [ ] 9. [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
+      `pipeline_mode=…/timeframe=…` and `pipeline_mode`-less `timeframe=…` candle objects. Quantify the corpus-wide
+      split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
+      `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
+      1), not an independent decision.
+- [ ] 10. [SCRIPT] P1. **Extend the UAC canonical oracle to the `processed_candles/` (+ features) namespace** (addendum
+      iii-b): `canonical_path_violations()` today only knows `raw_tick_data/by_date/` and flags every candle path as a
+      structural violation, so it cannot govern candle shape. After the A/B/C ruling, teach the oracle the ratified
+      candle template (incl. the `pipeline_mode=` insert decision) and re-point the skill canonical legs at it (todo 6)
+      so candle canonicality becomes machine-checkable instead of bespoke.
