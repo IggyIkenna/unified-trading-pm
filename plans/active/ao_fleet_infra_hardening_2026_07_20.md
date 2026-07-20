@@ -64,28 +64,32 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
 
 ## Todos
 
-- [ ] [INFRA] P1. **State home = ONE in-repo source (`data/state/`); drop the two-places and the env overrides.** Make
-      `config.py`'s in-repo `data/state/{state.db,state.json}` the SINGLE SSOT: REMOVE the unit's
-      `Environment=ORCHESTRATOR_DB_PATH/STATE_JSON` lines and `ReadWritePaths=/var/lib/orchestrator`, and stop setting
-      those vars anywhere — the default IS the path, so there is nothing left to duplicate and service + CLI agree by
-      construction. **Gate**: `config.db_path()` run as `ubuntu` with NO env prints the in-repo path; the service and a
-      CLI audit tool resolve the SAME db; and a simulated redeploy (FF-pull + `git clean -fd`) leaves `data/state/`
-      intact. Source: doc #8 todo 2 + operator 2026-07-18.
+- [x] [INFRA] P1. ✅ **State home = ONE in-repo source (`data/state/`); drop the two-places and the env overrides.** —
+      agent-orchestrator@0fa79bae6c1. Removed the unit's `Environment=ORCHESTRATOR_DB_PATH/STATE_JSON` lines +
+      `ReadWritePaths=/var/lib/orchestrator` from `orchestrator.service`; removed the wrong-direction (repo→/var/lib)
+      one-time migration + dir provisioning from `bootstrap_vm.sh` and added `_remove_env` purges for both vars on
+      already-bootstrapped hosts (mirrors the existing `ORCHESTRATOR_REGEN_DB_PATH` retirement pattern); fixed
+      `restore_from_gcs.sh`'s hardcoded default + `audit_false_done.py`'s stale usage example to the in-repo path;
+      documented the retirement + the standing no-`git clean -fdx` requirement in `ENV_VARS.md`. **Gate evidence**:
+      `data/state/` is gitignored (confirmed) so the deploy path (FF-pull + `git clean -fd`) already left it alone —
+      proved empirically by new `tests/test_state_dir_deploy_safety.py` (clones the repo locally, writes a dummy
+      state.db, runs `git clean -fd`, asserts survival + non-dirty status); full `quality-gates.sh` green (1418 passed).
+      Original `config.db_path()`/CLI-agreement gate was already true by construction (config.py's default was never
+      wrong — only the systemd unit + bootstrap duplicated a different path). Source: doc #8 todo 2 + operator
+      2026-07-18.
 - [ ] [INFRA] P1. **Migrate the running state (operator-gated, live).** Move `/var/lib/orchestrator/*.db` →
       `data/state/` on the VM, then restart. **Do NOT run this unilaterally** — it stops the orchestrator briefly and
       moves the live database. Propose it, get approval, take a snapshot first, and verify the service comes back
       reading the new path with its task/slot counts intact. **Gate**: post-migration row counts match pre-migration;
       the service is healthy; the old path is empty and nothing recreates it.
-- [ ] [INFRA] P2. **Duplicate-purpose env-var sweep — verify consumer, THEN remove.** `ORCHESTRATOR_OPERATOR` is written
-      `= ORCHESTRATOR_VM_ID` by `bootstrap_vm.sh` on every host, but `host_operator()` already DERIVES operator from
-      `vm_id` when unset → pure redundancy. Stop writing it in bootstrap (keep the field as an optional override). **Two
-      checked KEEP decisions to record, not re-litigate**: `GOOGLE_CLOUD_PROJECT` vs `GCP_PROJECT_ID` are NOT a
-      removable duplicate (the former is a Google-SDK standard read directly by the client, the latter workspace canon;
-      `auth.py` reads `google_cloud_project or gcp_project_id` — different consumers); and the
-      `WORKSPACE_ROOT`/`UNIFIED_TRADING_WORKSPACE_ROOT`/`ORCHESTRATOR_WORKSPACE_ROOT` trio is deliberately separate
-      (own-config vs ambient passthrough, documented in `config.py`). **Gate**: `OPERATOR` no longer written by
-      bootstrap and a host with only `VM_ID` set resolves the same operator; both keep-decisions recorded in
-      `ENV_VARS.md` so the next sweep does not redo this analysis.
+- [x] [INFRA] P2. ✅ **Duplicate-purpose env-var sweep — verify consumer, THEN remove.** —
+      agent-orchestrator@0fa79bae6c1 (same commit as todo 1, landed together). `bootstrap_vm.sh` no longer
+      `_upsert_env`s `ORCHESTRATOR_OPERATOR` (now `_remove_env`s it on already-bootstrapped hosts, same pattern as the
+      DB-path retirement); the field stays on `OrchestratorConfig` as an optional override. Both KEEP decisions
+      (`GOOGLE_CLOUD_PROJECT` vs `GCP_PROJECT_ID`; the `WORKSPACE_ROOT` trio) + this retirement recorded in
+      `ENV_VARS.md` under new "Retired" / "Checked — NOT a duplicate" sections. **Gate**: verified no other write site
+      for `ORCHESTRATOR_OPERATOR` exists in `scripts/`/`docs/` (grepped); `host_operator()`'s existing vm_id-fallback
+      (unchanged) means a host with only `VM_ID` set resolves the identical operator it always did.
 - [ ] [INFRA] P2. **Per-repo freeze-streak signal (AO half).** The dirty-streak WARN fires only when EVERY repo in a
       sweep skips, so **a single frozen clone — the exact 2-day outage mode — stays silent.** Make the streak per-repo
       in `slot-cron-ff-pull.sh`: repo X `[skip:dirty]` / `[skip:ff-failed]` for N consecutive ticks emits a
@@ -128,3 +132,13 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
 - **2026-07-20 — plan created** from Phase 4. The state-home item is P1 rather than P2 because it bit the 2026-07-20
   audit twice more (a wrong-DB read and a bogus snapshot alarm), which is the same class of wasted diagnosis it has
   already caused three times.
+- **2026-07-20 — todos 1 + 3 shipped** — agent-orchestrator@0fa79bae6c1 (quality-gates.sh green, 1418 tests). Todo 2
+  (live migration) intentionally NOT done here — operator-gated, to be proposed separately once approved. Operator
+  answered two clarifying questions on this session's start: todo 7 becomes "unblock the governor's Phase-5 flip" (its
+  reservation-ledger engine is already code-complete + soaked, blocked only on an unrelated slot-16 `.venv` gap —
+  building a redundant dispatcher-side stagger was rejected in favor of fixing the real blocker); todo 6's sweep scope
+  is this laptop (hk) + the central orchestrator VM (both reachable this session) plus ref-corruption detection (broken
+  remote-tracking refs silently blocking fetch, not just the dirty/skip mode) — Ikenna's laptop is out of reach and
+  stays unswept. Also found + fixed in passing (slot 25, not part of this plan's todos): `deployment-api` was 249
+  commits behind LDR, silently masked by 4 stale `dep-update/*` remote-tracking refs pointing at objects the
+  reference-clone prune hazard had pruned from the base — same root cause class todo 6 will now sweep for.
