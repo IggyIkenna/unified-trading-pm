@@ -6,7 +6,7 @@ summary:
   so any dispatch landing on a matured-timer slot is killed within one watchdog tick — measured killing the 2026-07-20
   plan_reconciler 19s after boot. Fix the timer invalidation, exclude non-backlog typed agents from the reaper, and make
   the escalation/plan_health slot race retry instead of silently failing.
-status: active
+status: draft # NOT ingested — awaiting operator review (2026-07-20). Flip to `active` to dispatch.
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]

@@ -6,7 +6,7 @@ summary:
   branches, 0 PRs — and its monitoring cannot tell success from failure because the dispatch curl times out before the
   endpoint answers. Fix the false-failure, add a real liveness assertion, fix the boot gate that 428s every typed agent,
   and prove one run end-to-end.
-status: active
+status: draft # NOT ingested — awaiting operator review (2026-07-20). Flip to `active` to dispatch.
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
