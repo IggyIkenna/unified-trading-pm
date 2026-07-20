@@ -24,6 +24,11 @@ tags: [deployment-ui, tracker, cost, billing, filters, search, logs, alerts, res
 related:
   - deployment_observability_expansion_2026_07_08.md
   - deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md
+  - deployment_ui_cost_per_day_accuracy_2026_07_20.md
+  - deployment_ui_date_range_filter_and_search_2026_07_20.md
+  - deployment_ui_vm_log_viewer_2026_07_20.md
+  - deployment_alerts_ingestion_completeness_2026_07_20.md
+  - deployment_ui_alerts_page_rebuild_2026_07_20.md
 created: "2026-07-17"
 last_updated: "2026-07-17"
 parent_epic: observability_master
@@ -64,6 +69,11 @@ source: operator dictation 2026-07-17 (interactive session — six deployment-ui
 ---
 
 ## WS-1 — Cost/day column accuracy (root cause CONFIRMED — ready to split first)
+
+> **✅ SPLIT 2026-07-20** — all four open decisions confirmed with the operator; the executable plan is
+> [`deployment_ui_cost_per_day_accuracy_2026_07_20.md`](deployment_ui_cost_per_day_accuracy_2026_07_20.md) (kept
+> `status: draft` deliberately — operator is mid-change on AO, dispatch held until that settles). The section below
+> stays as the root-cause record; decisions + todos now live in the split plan.
 
 ### The symptom (operator, 2026-07-17)
 
@@ -186,6 +196,14 @@ Path:
 
 ## WS-2 — Deployments tab date-range filter ("what was running between dates A–B")
 
+> **✅ SPLIT 2026-07-20** — live audit run (not gated as a separate plan, per operator decision), combined with WS-3
+> into
+> [`deployment_ui_date_range_filter_and_search_2026_07_20.md`](deployment_ui_date_range_filter_and_search_2026_07_20.md)
+> (kept `status: draft` — dispatch held pending AO changes settling). Audit found the archive is 30-day-TTL'd (not the
+> endpoint's self-imposed 7-day cap), a heartbeat-staleness gap in the naive "still running" formula (219 registry rows
+> read `running` vs 12 actually running), and that `CLOUD_RUN_SERVICE` carries no timestamp field at all. Section below
+> stays as the pre-audit record.
+
 ### Operator ask (2026-07-17)
 
 Filter the Deployments table by a date range — "which services or VMs were running on this particular date / between
@@ -225,6 +243,10 @@ write clear instructions in the plan.
 
 ## WS-3 — Service filter + Target search box (Deployments tab)
 
+> **✅ SPLIT 2026-07-20** — folded into the WS-2 plan above (same filter bar, same surface):
+> [`deployment_ui_date_range_filter_and_search_2026_07_20.md`](deployment_ui_date_range_filter_and_search_2026_07_20.md).
+> Also picked up a new item from this session: the existing `kind` filter becomes multi-select.
+
 ### Operator ask (2026-07-17)
 
 A **filter on top for Service** and a **search bar for the Target column**.
@@ -248,6 +270,13 @@ A **filter on top for Service** and a **search bar for the Target column**.
 ---
 
 ## WS-4 — VM drill-down logs (populate · size · capped tail · download)
+
+> **✅ SPLIT 2026-07-20** — live repro audit run, findings reframed the whole workstream:
+> [`deployment_ui_vm_log_viewer_2026_07_20.md`](deployment_ui_vm_log_viewer_2026_07_20.md) (kept `status: draft` —
+> dispatch held pending AO changes settling). The audit found `run.log` content is **never fetched into the browser at
+> all today** — the "Live log tail" panel is a mislabeled lifecycle-events stream from a different bucket, and
+> "Download" saves those events as CSV, not the log. The archive-path lookup 404s live for real VMs (dated by
+> `completed_at`, but the archiver actually keys by cron-run date). Section below stays as the pre-audit record.
 
 ### Operator ask (2026-07-17)
 
@@ -285,6 +314,16 @@ tail should show only the last **~200–500 lines** so the UI doesn't crash. The
 ---
 
 ## WS-5 — Alerts & Logs page overhaul (filters · sort · date-range · proper view · coverage audit)
+
+> **✅ SPLIT 2026-07-20** — coverage + UX audits run live; reframed from "add filters" to "the ledger is starved." Split
+> into TWO gated plans (both `status: draft`, dispatch held pending AO settling):
+> [`deployment_alerts_ingestion_completeness_2026_07_20.md`](deployment_alerts_ingestion_completeness_2026_07_20.md)
+> (Plan A, P0 — mirror the Slack alert sources into the ledger) and
+> [`deployment_ui_alerts_page_rebuild_2026_07_20.md`](deployment_ui_alerts_page_rebuild_2026_07_20.md) (Plan B, gated on
+> A — filters/sort/date-range/drill-down). Audit headline: **181 alert rows lifetime vs thousands of real Slack alerts
+> in a 10-day window**; the entire alerting-service plane (~20 classes) is invisible to deployment-api. Operator
+> reframed the page as a **diagnostic surface** (mirror cheap-to-copy Slack sources), and **deferred all
+> agent-orchestrator alerts** (AO has its own alert machinery + UI). Section below stays as the pre-audit record.
 
 ### Operator ask (2026-07-17, near-verbatim)
 
@@ -393,13 +432,13 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
 
 ## Split map (when the operator finalises — before ANY dispatch)
 
-| Child plan                   | Contents                                                                          | Readiness                                                                                 |
-| ---------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| WS-1 cost accuracy           | the 10 WS-1 todos                                                                 | READY once the 3 decisions land — root cause fully evidenced                              |
-| WS-2 + WS-3 filters & search | date-range (audit-first) + service filter + target search — same surface          | ready to split; the WS-2 audit is the first todo                                          |
-| WS-4 VM logs                 | repro-audit-first + size/tail/download                                            | ready to split                                                                            |
-| WS-5 alerts overhaul         | coverage audit + UX audit → rebuild                                               | ready to split; if the audits grow, they become their own plan (an audit is its own plan) |
-| WS-6 resource timeline       | (c)-audit + decision doc now; build todos stay `draft` until the operator decides | capture-only — operator explicitly deferred                                               |
+| Child plan                   | Contents                                                                          | Readiness                                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                    | done — kept `draft`, dispatch held pending AO changes settling                        |
+| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`             | done — audit run live inline; kept `draft`, dispatch held pending AO changes settling |
+| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                            | done — repro audit reframed scope (no viewer existed); kept `draft`, dispatch held    |
+| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred   | done — both audits run live; reframed to ingestion-first; kept `draft`, dispatch held |
+| WS-6 resource timeline       | (c)-audit + decision doc now; build todos stay `draft` until the operator decides | capture-only — operator explicitly deferred                                           |
 
 Per task_template §4 — each child gets 10–20 todos, one plan = one agent, audits separable, draft-gated phases where a
 build depends on an audit/decision.
@@ -431,6 +470,42 @@ build depends on an audit/decision.
     earlier discussion + scale math recorded; decision explicitly BLOCKED-OPERATOR-DECISION per "not in a hurry"). Read
     `plans/active/task_template.md` before restructuring (HARD RULE) — tracker stays `draft` / never dispatched, with a
     split map; children inherit the AO frontmatter.
+- **2026-07-20 (interactive session)** — Operator confirmed `todays-work.md` (2026-07-17 dictation, pre-tracker) is
+  fully folded into this tracker except two items: "speed" (deferred by operator — caching pass planned after the
+  remaining WS land) and "image overview / does the consolidator have images" (operator already has a separate agent
+  working that page — out of this tracker's scope). Then walked WS-1's four open decisions to closure and split it out —
+  see `deployment_ui_cost_per_day_accuracy_2026_07_20.md`.
+- **2026-07-20 (interactive session, continued)** — WS-2 + WS-3: operator chose to combine both into one plan and run
+  the accuracy audit live rather than gate it as a separate plan. Audit (read-only, live ADC creds) found: archive GCS
+  lifecycle TTL is 30 days (endpoint's own read cap is a separate, tighter 7-day limit); 219 registry rows read
+  `status=running` vs only 12 GCE instances actually running — a heartbeat-staleness gap the naive
+  `completed_at: null ⇒ still running` overlap formula would have gotten wrong; `CLOUD_RUN_SERVICE` carries no timestamp
+  field at all (asymmetric vs its AWS `ECS_SERVICE` twin). Operator decided: always-on kinds get a last-deployed proxy
+  timestamp, sort last, distinct "always-on" visual treatment; `kind` filter becomes multi-select (new item, not in the
+  original dictation); approx/fallback rows reuse the WS-1 colour-only convention; out-of-range requests get an explicit
+  banner. Split out to `deployment_ui_date_range_filter_and_search_2026_07_20.md` (kept `draft`).
+- **2026-07-20 (interactive session, continued)** — WS-4: ran a live repro audit rather than gating as a separate plan.
+  Reframed the workstream — `run.log` is never fetched into the browser today; "Live log tail" is a mislabeled events
+  panel on a different bucket; "Download" saves events as CSV, not the log; the archive-path lookup 404s live for real
+  VMs (`af-backfill-20260627-151733` confirmed) because it guesses a date instead of matching the archiver's actual
+  daily-rolling-folder key. Operator decided: fix at the writer (durable single final snapshot on VM completion, no more
+  date-guessing), read `vm-logs/` first regardless of completion status (14-day TTL from last write, not from VM start),
+  keep the events panel but rename it honestly, add a genuinely new run.log panel, and use a signed URL for download.
+  Split out to `deployment_ui_vm_log_viewer_2026_07_20.md` (kept `draft`).
+- **2026-07-20 (interactive session, continued)** — WS-5: ran both operator-mandated audits live (coverage + UX), with
+  `SUB_AGENT_MANDATORY_RULES.md` injected. Reframed from "add filters" to "the ledger is starved" — 181 alert rows
+  lifetime (10 date partitions ever) vs thousands of real Slack alerts in a single 10-day export window; the entire
+  alerting-service plane (~20 classes, 29 partitions current through today) is invisible to deployment-api. Also found:
+  the `repo` field records the emitter not the subject (repo filtering currently wrong), a hardcoded-bucket QG
+  violation, a known unlocked read-modify-write row-drop race, the zombie-watchdog webhook persists nothing, and
+  cost-anomaly alerts (a tracker candidate feed) have NO emitter — a build, not a gap. An initial audit claim (persist
+  coupled to Slack-post) was self-corrected: persistence is ad-hoc, and 6 AO notifiers page CRITICAL but persist
+  nothing. Operator reframed the page as a **diagnostic surface** (mirror the Slack alert sources cheap to copy; "done"
+  = a clear page) and **deferred ALL agent-orchestrator alerts** (AO already has its own alert machinery + UI; the AO
+  findings are recorded in Plan A's Deferred section for a later workstream). Split into two gated plans:
+  `deployment_alerts_ingestion_completeness_2026_07_20.md` (Plan A, P0) and
+  `deployment_ui_alerts_page_rebuild_2026_07_20.md` (Plan B, `depends_on` A + the date-range plan, which owns the shared
+  filter/sort-primitive extraction from `Deployments.tsx`). Both kept `draft`.
 
 ## Codex SSOTs
 
