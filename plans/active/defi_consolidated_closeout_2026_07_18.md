@@ -696,6 +696,28 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-20 (slot-4, /autonomous — 64GB OOM fix CONFIRMED holding; last 16GB shard (2025q4s3) also recovered).**
+  Verified the recovery: all 22 relaunched **e2-highmem-8 (64GB)** shards have FRESH heartbeats (vs the 16GB fleet going
+  21-155min stale) — and SSH'd 2025q1s3 to prove it under load: 64GB VM, **56GB free**, into apply (252 files → 149
+  cells), load 1.66 (working). 56GB headroom means a 13GB giant cell fits with room to spare → no thrash → no hang. The
+  ONE shard I told the owner to leave on 16GB (2025q4s3) RE-HUNG exactly as predicted (33min stale) → delegated its
+  recovery to 64GB too; after this ALL remaining shards are on 64GB. Fleet: 22+1 recovering on 64GB + 7 done. ETA
+  ~1-1.5h from the ~23:41 relaunch (resume skips already-`_migrated_*` cells) → all-terminal ~01:00-01:30 UTC → then
+  residual scan + perp re-migration @35c87d66 + rebuild. **Monitoring shift:** heartbeat-freshness (SSH-independent) is
+  now the primary liveness signal, NOT the fleet RUNNING count (which masked 22 dead VMs) — a hung VM shows RUNNING.
+
+- **2026-07-20 (slot-4, /autonomous — OOM DISASTER: 22/23 sub-shards HUNG on the 16GB downsizing; RECOVERING on 64GB).**
+  The e2-standard-4 (16GB) downsizing I recommended ("GIL-bound → small VMs") FAILED on giant Solana `dex_pool_state`
+  cells >~13GB: 22 of 23 running shards OOM-thrashed into an unresponsive-hung state (heartbeats 21-155min stale, SSH
+  dead, VMs show RUNNING but ZERO progress — that was the flat 7/30 convergence, NOT a giant-cell grind as I'd assumed
+  last tick). Caught via heartbeat-freshness (SSH-independent). Only 2025q4s3 stayed alive; 7 shards had completed
+  cleanly before hanging. **Root cause:** a single cell can need >13GB; 16GB leaves no headroom → thrash. The ORIGINAL
+  quarter VMs were e2-standard-16 (**64GB**) and did NOT hang → 64GB is proven-sufficient. **RECOVERY (owner):** delete
+  the 22 hung VMs, relaunch same ranges on **e2-highmem-8 (64GB, WORKERS=8)** — idempotent resume skips their
+  `_migrated_*` cells + retries the giant cell (now fits); 2025q4s3 + the 7 done are untouched. **ETA slips ~1.5-3h**
+  (retry the giant cells on 64GB) → done ~02:00-04:00 UTC. **Lesson:** GIL→small-VM logic ignored MEMORY; giant-cell
+  data migrations need RAM headroom, not just cores. Operator flagged.
+
 - **2026-07-19 (slot-4, /autonomous — completed shards verified CLEAN; OOM risk not materialised; residual-scan
   refined).** Convergence 5/30 shards done (~2.5h). Ran the residual-bundle scan on a COMPLETED shard's range (2025q3s1,
   2025-07-05/11): 24.9k-26k per-instrument atoms/day + 168 clean R3 `_migrated_*` markers + **ZERO true R3 residual
