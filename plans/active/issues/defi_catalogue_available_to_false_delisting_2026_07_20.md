@@ -192,6 +192,14 @@ on-chain gate later where genuine delisting truth is needed.
 §12 labels it "a follow-on plan item" and there is no callable probe outside the sports agentwork checkout. So B is a
 tracked follow-on below; A ships now as the correct default with the truth-gate seam ready.
 
+**Verified on real prod data (2026-07-20, in-memory A/B, no prod write):** ran the fixed `build_catalogue_dataframe`
+over 2,292 live defi `by_date` snapshots (since 2026-06-20), `asset_group="defi"` vs `"cefi"`. Non-expiring rows
+carrying a non-blank `available_to`: LEGACY (cefi) **1,037** (947 on the 06-26/07-06/07-08 cluster dates) → FIXED (defi)
+**4** (0 on cluster dates). The 4 residual are genuine `delisted_at`/`expiry` truth-gate rows, correctly retained.
+MORPHO 858→0, PANCAKESWAP_V3 74→0 on cluster dates. The carve-out converts the false-delistings to `None` and preserves
+the truth-gate exactly as designed. (Prod `catalog.parquet` still carries the stamps until the `--mode full` regen below
+runs.)
+
 ## Follow-on work (tracked)
 
 - [ ] [DEPLOY] P1. Rebuild `instruments-service:latest` (c37d4f96 → LDR→main→cloudbuild) and run a **`--mode full`**
