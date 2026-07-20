@@ -143,7 +143,7 @@ last for that reason, not for convenience.
       risk filed as its own todo below (`_idle_session_ticks`) rather than fixed in this sitting, per the gate's "fixed
       or filed" latitude. Everything else verified self-healing (content/task/signature-diff gated) or intentionally
       slot-scoped action rate-limiting — not occupant state, correctly persists across occupants.
-- [ ] [BACKEND] P2. **Fix `_idle_session_ticks` the same way as `_prereq_blocked_since` (todo-4 audit followup).** In
+- [x] [BACKEND] P2. **Fix `_idle_session_ticks` the same way as `_prereq_blocked_since` (todo-4 audit followup).** In
       `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` (`server/worker_liveness_watchdog.py`), the lingering-
       session counter is keyed by `slot_id` alone. It already has a partial mitigation the prereq timer lacked — a
       fresh-spawn boot-grace check (`spawned_at` within `_BOOT_GRACE_SECONDS` → pop + skip) — which closes the exact
@@ -156,7 +156,18 @@ last for that reason, not for convenience.
       (`_reclaim_idle_lingering_sessions` lines ~1101-1160) to match. **Gate**: a regression test mirroring
       `test_new_occupant_survives_matured_predecessor_timer` — arm the counter near `_IDLE_SESSION_RECLAIM_TICKS` under
       a stale key, land a new occupant (fresh `assigned_at`, live session, status still idle/stale past the boot-grace
-      window), tick, and assert the session survives.
+      window), tick, and assert the session survives. — `agent-orchestrator@d84109a5`. Keyed by
+      `(slot_id, last_spawned_at)` rather than `(slot_id, assigned_at)` — this specific function already reads
+      `last_spawned_at` (as `spawned_at`) for the boot-grace check, and it's the more semantically correct field here:
+      it changes exactly when a genuine new tmux session starts (including a typed agent's claim — both `plan_health.py`
+      and `escalation.py` persist `last_spawned_at` at claim time), whereas `assigned_at` also changes on a plain task
+      reassignment to an already-running worker — a case this `idle`/`stale`-scoped query never even sees (assigning a
+      task flips status to `working` first). Gate test `test_new_occupant_survives_matured_predecessor_lingering_count`
+      in `tests/test_self_healing_hardening.py` — first attempt asserted an internal dict-shape detail
+      (`(6, None) in wd._idle_session_ticks`) that failed against pre-fix code for the wrong reason (an `int` vs `tuple`
+      key mismatch, not the actual bug); rewritten to assert purely on the BEHAVIORAL outcome (`kill_session` call
+      count), which is shape-agnostic — re-verified: against pre-fix code it fails with `kill_session` actually invoked
+      (log line `"...ticks=2 -> freeing slot"`, i.e. the bug reproduced for real), and passes clean against the fix.
 - [x] [BACKEND] P1. **Ship it and prove it landed on the live VM.** Commit via
       `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` from a `quality-gates.sh`-green tree. Then confirm
       the running orchestrator actually picked the change up — `ao-self-pull.sh` FF-pulls the AO checkout and restarts
@@ -228,3 +239,40 @@ last for that reason, not for convenience.
   cadence means a same-tick check will very likely observe that gap, not close it. Todo 6 remains open — it needs a time
   window comparable to the 192-event/~2-day baseline (07-18→07-20) before a re-measurement means anything; closing it
   minutes after deploy would not be an honest number.
+- **2026-07-20 — todo-4 followup closed**: `_idle_session_ticks` keyed by `(slot_id, last_spawned_at)`, mirroring
+  `_prereq_blocked_since`'s fix — `agent-orchestrator@d84109a5`, `quality-gates.sh`-green (1415 tests). Worth recording
+  the near-miss on the gate test: the first draft asserted an internal dict-shape detail that happened to fail against
+  pre-fix code too, but for an unrelated reason (an `int`-vs-`tuple` key mismatch) rather than reproducing the actual
+  bug. Caught by the same discipline used earlier in this plan — always read WHY a new regression test fails against
+  pre-fix code, not just THAT it fails — and fixed by asserting purely on the behavioral outcome (`kill_session` call
+  count) instead of internal representation. Re-verified against pre-fix code: `kill_session` fires for real
+  (`"...ticks=2 -> freeing slot"` in the log), confirming the test now reproduces the bug rather than merely disagreeing
+  with the old code's shape. Todo 6 (tmux_session_lost re-measure) remains the only open item.
+
+## Flags for the plan writer
+
+Two things found while executing that are worth your eyes, neither blocking, both left as-is (not silently edited):
+
+1. **Todo-numbering prose is now stale.** "Execution environment" (§ above) says "Todos 1-4 are pure local work" /
+   "Todos 5-6 REQUIRE the live central VM," and "Ordering note" says "Todo 6 is a MEASUREMENT that is only meaningful
+   after 1-2 are deployed." Both were written against the original 6-item list. The todo-4 audit inserted a new followup
+   todo (`_idle_session_ticks` fix) between the audit and "Ship it," so the list is now 7 items and the by-number
+   references in those two prose sections point at the wrong items (the by-number description still describes the RIGHT
+   things, just under the WRONG numbers now — e.g. "todo 6" in the Ordering note means the re-measure todo, which is
+   actually the 7th item in the current list). Also worth noting: the new `_idle_session_ticks` followup is itself pure
+   local work (code + tests, no VM) like todos 1-4, so if you renumber, it slots in with that group, not the
+   VM-requiring one.
+2. **Todo 3's gate text ("the failure path ... still returns 503") is only accurate for `plan_health.py` now, not
+   `escalation.py`.** Confirmed: `PlanHealthError` → HTTP 503 at `routes/agents.py:359` (`/api/plan-health/dispatch`),
+   so that half holds. But `/api/escalate` (`routes/agents.py:267`) stopped calling `escalation.escalate()`
+   synchronously back on `f20195a` (2026-06-16, "enqueue + return fast — never spawn inline," Issue A) — it calls
+   `escalation.enqueue()` instead, whose own docstring says "No 503 path — enqueue is a fast DB write that always
+   succeeds." The ONLY two remaining live callers of `escalate()` (both inside `retry_queued_escalations`, a background
+   async drain loop, not a request handler) pass `queue_on_no_capacity=False` explicitly — so `escalate()`'s DEFAULT
+   `queue_on_no_capacity=True` and its "no free slot" → `EscalationError` → HTTP-503 path appear to be unreachable from
+   any live production code path today, only exercised by direct/test callers. This doesn't affect what shipped here —
+   the retry-on-collision + benign-label fix is exercised by both live call sites regardless of the
+   `queue_on_no_capacity` value — but it's pre-existing plan text (not something I rewrote) describing an architecture
+   that already drifted before this plan was even written, and it raises a real question for you: is
+   `queue_on_no_capacity=True`/its default now dead code worth removing, or intentionally kept as a public API surface?
+   Left for you to decide rather than assuming either answer.

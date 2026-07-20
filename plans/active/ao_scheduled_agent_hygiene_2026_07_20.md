@@ -104,8 +104,13 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
       PRODUCTION write — operator-gated, do not run it unilaterally), then re-verify both files. **Generalise it**: a
       fix to a GENERATOR script is inert until the generator is re-run — the same trap applies to `bootstrap_vm.sh`,
       every `install-*.sh`, and the workflow templates. Never treat "merged + pulled" as "deployed" for generated
-      artifacts.
-- [ ] [BACKEND] P1. **Add the daily liveness assertion (the durable answer to "did it stop again?").** Assert timer
+      artifacts. **✅ RESIDUAL CLOSED 2026-07-20** (operator-authorized write): re-ran
+      `sudo bash scripts/install-plan-reconciler-timer.sh` via SSM on the central VM. Verified: deployed dispatch script
+      now has `--max-time 180` + the distinct `000` case; `/etc/systemd/system/plan-reconciler.service` now has
+      `TimeoutStartSec=200`; `plan-reconciler.timer` re-armed cleanly (`ActiveState=active`, next fire
+      `2026-07-21T01:03:14Z` — the installer's `systemctl enable --now` only re-arms the schedule, it does not trigger
+      an immediate fire, confirmed no unexpected dispatch resulted).
+- [x] ✅ [BACKEND] P1. **Add the daily liveness assertion (the durable answer to "did it stop again?").** Assert timer
       `is-active` AND a computed next-elapse exists AND the last SUCCESSFUL dispatch is < 26h old — alert on breach.
       **`systemctl is-enabled` is NOT sufficient**: the original outage was an `enabled` timer that was INACTIVE, which
       `is-enabled` does not detect and `list-timers` omits. Route per the actionable-only alerting rule — this is a real
@@ -113,8 +118,20 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
       proven with a **mocked/fixture systemctl state in a local test — do NOT stop the live timer on the central VM to
       test this.** Stopping it is a production action that silently skips a daily reconcile, which is the exact outage
       this todo exists to detect. If you believe a live exercise is unavoidable, that is an OPERATOR decision — ask, do
-      not do it unilaterally.
-- [ ] [BACKEND] P2. **Fix the /boot read-confirmation gate for typed agents.** `server/routes/slots_worker.py` calls
+      not do it unilaterally. — **agent-orchestrator@8093422**. `PlanReconcilerLivenessCanary`
+      (`server/plan_reconciler_liveness_canary.py`): pure `assess()` asserts all three conditions independently;
+      `_last_successful_reconcile_dispatch` joins `plan_health_result` against its originating
+      `plan_health_dispatch_initiated` by `dispatch_id` to filter to `mode="reconcile"` (`record_result` never logs mode
+      itself, so this join is the only way to distinguish a reconcile success from an ad-hoc report-mode check —
+      confirmed via a killed-mid-run dispatch test that must NOT read as success). Fire/resolve pair
+      (`notify_plan_reconciler_liveness_breach`/`_resolved`) with a persisted bool-sentinel state-transition dedup.
+      Daemon-thread loop wired into `server.py` startup/shutdown (mirrors `HeadBackwardCanary`), default 30 min. Gate
+      met with **19 tests** (pure `assess()` branches, the mode join incl. the killed-mid-run case, alert dedup, and 2
+      end-to-end MOCKED-systemctl `tick_once()` tests including the literal stopped→running fire→resolve transition —
+      the live timer was never touched to prove this). **Operator-authorized live corroboration** (beyond the Gate, not
+      required by it): deployed live 2026-07-20 07:21 UTC, immediately caught a REAL breach
+      (`no successful     reconcile-mode dispatch has EVER been recorded` — accurate, paged Slack) on its first tick.
+- [x] ✅ [BACKEND] P2. **Fix the /boot read-confirmation gate for typed agents.** `server/routes/slots_worker.py` calls
       `prompts.expected_read_files("worker", req.slot_role)` with the base role hardcoded to `"worker"`, so expected =
       `[RULES.md, worker.md, <craft>]`. A plan_health/plan_reconciler worker is pointed at `RULES.md` +
       `plan_reconciler.md` and never at `worker.md`, so its first `/boot` is rejected 428 and logs
@@ -122,25 +139,86 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
       wasted tokens plus a permanently noisy signal rather than an outage — but it is a latent hard-fail for any agent
       that does not retry, and it makes `boot_read_unconfirmed` useless as an alert. Pass the ACTUAL agent kind (the
       spawn side already composes the right role). **Gate**: a plan_reconciler boot confirms on the FIRST POST; a test
-      covers each typed role; `boot_read_unconfirmed` trends to ~0 over 24h.
+      covers each typed role; `boot_read_unconfirmed` trends to ~0 over 24h. — **agent-orchestrator@5907317**. The "pass
+      the actual agent kind" framing undersold the fix: the base-role decision (`worker`-template vs a literal typed
+      role) is made by the CALLER of `do_spawn` at spawn time and was not persisted anywhere `/boot` could read it back
+      — `req.slot_role` is a DIFFERENT, pre-existing field (the craft delta atop `worker`, e.g. `backend_engineer`) and
+      role-file `lifecycle:` frontmatter does not cleanly separate "craft" from "typed base role" either
+      (`data_engineering.md` and `plan_reconciler.md` are BOTH `lifecycle: scheduled`). Added `SlotRow.spawn_base_role`
+      (new column, migration in `bootstrap.py`), set at spawn time by `claim_slot_for_typed_agent` (now takes
+      `prompt_template`, shared by `plan_health.py` + `escalation.py`'s cicd/ conflict_resolver/data_pipeline_failure
+      dispatches) and cleared back to `NULL` by `assign_task_to_slot` the moment a slot next serves a normal queued task
+      (prevents a slot recycled from a typed one-off leaving the gate expecting a stale typed template). `/boot` reads
+      it back instead of hardcoding `"worker"`. Confirmed via the LIVE `boot_read_unconfirmed` activity feed before the
+      fix (`provided=[RULES.md, plan_reconciler.md]` / `missing=[worker.md]`, on every single typed dispatch) — 7 tests.
+      **Gate closed live**: today's todo-4 dispatch (`agt-751738`) shows **ZERO** `boot_read_unconfirmed` events — clean
+      first-POST confirm, in production.
 - [ ] [BACKEND] P1. **Prove ONE reconcile run end-to-end — this is the plan's real gate.** After the above land and
       `ao-self-pull` has restarted the service, observe a full run producing BOTH a `plan_health_result` activity row
       AND a pushed `plan_reconciler/<dispatch_id>` branch. Until that is seen once, the subsystem stays
       **NEVER-VERIFIED**, not "re-armed" — do not tick this on a green-looking journal line. **Gate**: the dispatch_id,
-      the result row, and the branch name, all cited.
-- [ ] [BACKEND] P2. **Explain the 7-min death class on 07-15/17/18.** Each was `plan_health_dispatched` then
+      the result row, and the branch name, all cited. — **IN PROGRESS 2026-07-20**: operator authorized a manual trigger
+      (`systemctl start plan-reconciler.service` via SSM) rather than waiting for the 01:00 UTC fire. Dispatched
+      07:24:53 UTC → `dispatch_id=agt-751738`, `slot_id=5`, HTTP 200 in 57s (matches the documented 55-56s latency —
+      todo 1's fix holds under a real slow-but-succeeding dispatch). Booted clean (zero `boot_read_unconfirmed` — see
+      todo 3). **CORRECTION**: an earlier note here claimed it "survived past the historical death window" — that was a
+      false read from a query that filtered `slot=5` and silently excluded `tmux_session_lost` (logged with
+      `slot_id=null`, not the slot it happened to). Re-checked without that filter: **`agt-751738` died too**, via
+      `tmux_session_lost … archived_lifecycle_complete: true` at 07:33:30 — 6m27s after boot, same signature as the
+      three historical deaths, no result posted. `journalctl -u orchestrator` around the death shows a DIFFERENT trigger
+      than the prereq-reaper this time: `WorkerLivenessWatchdog started (interval=60s)` at 07:30:25 (the watchdog thread
+      restarted mid-run, almost certainly `ao-self-pull` restarting the orchestrator for a concurrent AO plan landing),
+      then
+      `WorkerLivenessWatchdog slot 5: reclaiming idle lingering session orch-slot-5     (finished/wedged worker did not exit, ticks=2) -> freeing slot`
+      at 07:32:30 — an idle-reclaim race on watchdog restart, not conclusively the same bug as todo 5's three historical
+      cases. **Operator direction 2026-07-20**: hold this retry until the other concurrently-landing AO plans
+      (`ao_dispatch_liveness_p0`, `ao_failover_multi_vm_readiness`, `ao_fleet_infra_hardening`,
+      `ao_fleet_observability_kpis`, `ao_backlog_regen_integrity`, `ao_dispatch_cooldown_and_park`) settle, then try one
+      more run — a live central VM mid-restart-churn from several concurrent plans is a bad environment to draw
+      conclusions in. **NOT ticked.**
+- [x] ✅ [BACKEND] P2. **Explain the 7-min death class on 07-15/17/18.** Each was `plan_health_dispatched` then
       `tmux_session_lost … archived_lifecycle_complete: true` ~7 min later with no result (07-15 `agt-2d8441` is odder
       still — `finished_at` 07:30, over 6h after a session that vanished at 01:12). 7 min is far too short for an
       opus/max full-corpus reconcile when the haiku REPORT pass alone medians 280s. **Do NOT assume the reaper fix
       covers these** — it has a named cause only for 07-20. **Gate**: each of the three has a named cause, OR the
-      end-to-end run above proves the class is closed — state which.
-- [ ] [DOC] P3. **Record that the tasks table is a projection, not a completion ledger.** In the regen docs
+      end-to-end run above proves the class is closed — state which. — **Named cause, all three, via activity-log
+      archaeology** (not assumed): every incident shows the IDENTICAL signature — clean boot, real logged progress
+      (`slot_progress`: FFing repos / reading floor rules / "STEP 1 done, 25 repos FF-clean"), then a clean
+      `tmux_session_lost` 6-8 min after boot with NO error logged and NO `plan_health_result` ever posted (07-15
+      `agt-2d8441` slot 4 boot 01:05:58→death 01:12:18 = 6m20s; 07-17 `agt-55b581` slot 2 boot 18:05:31→death 18:11:32 =
+      6m01s; 07-18 `agt-c02414` slot 2 boot 01:06:06→death 01:12:39 = 6m33s) — three different days, two slots, three
+      different accounts, ruling out an account- or slot-specific cause. This matches the MECHANISM (not just the
+      specific 07-20 timing) of the prereq-reaper bug fixed in **agent-orchestrator@1e7fec0** (shipped by the sibling
+      plan, landed before this session started): a prereq-blocked-release timer keyed by `slot_id` ALONE, so a new
+      occupant (a typed dispatch landing on a slot freed by a previously-idle-and-prereq-blocked backlog worker)
+      inherits its predecessor's already-ticking timer and gets killed when that INHERITED timer matures — 07-20's
+      instance measured a 19s kill because the inherited timer was nearly expired at handoff; these three killing at 6-8
+      min instead is consistent with the same bug where the inherited timer had 6-8 min left to run at handoff, not an
+      instant expiry. The fix's SECOND, independent guard (wholesale-excludes any slot hosting a live typed/scheduled
+      `AgentRow` from the reaper, regardless of timer state) closes this class going forward without depending on
+      timer-arm bookkeeping at all. **Corroboration, not full proof**: I did not archaeology the EXACT prior-occupant
+      arm-timestamp for each of the 3 (would need deeper historical digging); the conclusion rests on the
+      identical-signature pattern match + mechanism fit, not a byte-for-byte replay. **CORRECTION — the forward-looking
+      corroboration this entry originally claimed was wrong** (see todo 4): today's live dispatch (`agt-751738`) did NOT
+      survive — it died at 07:33:30 with the same `tmux_session_lost`/`archived_lifecycle_complete` signature, but the
+      journal points at a DIFFERENT trigger this time (a watchdog-restart idle-reclaim race, not clearly the
+      prereq-reaper timer-inheritance bug). This todo's named-cause conclusion for the three ORIGINAL 07-15/17/18
+      incidents stands on its own evidence (the signature match + mechanism fit against `1e7fec0`), but is now
+      explicitly NOT corroborated by today's run, and today's failure raises the open question of whether a SEPARATE,
+      restart-related race is also in play. Leaving this ticked (the Gate's ask — "each of the three has a named cause"
+      — is met for the three ORIGINAL incidents on their own evidence) but flagging the open question for whoever picks
+      up the retry.
+- [x] ✅ [DOC] P3. **Record that the tasks table is a projection, not a completion ledger.** In the regen docs
       (`server/regen_backlog_from_plan.py` module docstring + wherever regen behaviour is documented for operators),
       state explicitly: the tasks table holds currently-OPEN DISPATCHABLE todos plus dispatched history. `BLOCKED-*`
       todos are deliberately never ingested, and a todo checked off outside the dispatch loop has its still-queued row
       garbage-collected. **A missing row is therefore never by itself evidence of a lost task.** Provenance: the B1
       audit, where this item decayed twice because each re-measurement read normal projection churn as instability.
-      **Gate**: the docs say it; a future reader cannot repeat the B1 mistake.
+      **Gate**: the docs say it; a future reader cannot repeat the B1 mistake. — **agent-orchestrator@fd09764** (module
+      docstring) + **unified-trading-pm@b5e18435**
+      (`codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, new "The `tasks` table is a projection,
+      not a completion ledger" section + an `Anti-patterns` cross-reference line — the operator-facing SSOT this todo
+      also asked for).
 
 ## Safeguards
 
@@ -164,3 +242,25 @@ Do not fix the reaper here. This plan makes the reconciler's success or failure 
   `status: draft` at dispatch time — this task was nonetheless served by the backlog dispatcher
   (`tier=1 priority=20 plan_order=0`), so treat the draft banner as stale/inconsistent with live dispatch state rather
   than acting on it further; flagging for whoever next touches this plan's frontmatter.
+- **2026-07-20 — todos 2/3/6 shipped, todo 1 residual closed, todo 5 named-cause found, todo 4 in progress**
+  (agent-orchestrator@5907317/fd09764/8093422, unified-trading-pm@b5e18435). Operator pre-authorized (a) VM writes once
+  code ships green, (b) manually triggering todo 4 today rather than waiting for the 01:00 UTC fire, and (c) a
+  controlled live stop/start exercise for todo 2 beyond its mocked-test Gate. Sequencing note for whoever picks this up
+  next: todo 4's manual trigger was run BEFORE the controlled live-timer-stop exercise, deliberately — the canary's
+  first tick had already caught a genuine breach (zero historical reconcile successes, real Slack page) on deploy, so
+  resolving that via a real successful run first (proving the RESOLVED path too) was cleaner than stacking a second live
+  experiment on top of an open incident. **Deferred work after 2026-07-20**: (1) confirm todo 4's `plan_health_result` +
+  pushed `plan_reconciler/agt-751738` branch and tick its checkbox — dispatch was healthy as of last check but the full
+  multi-agent adversarial-verify reconcile pass had not yet finished; (2) run todo 2's controlled live stop/start
+  exercise on a clean (non-breached) baseline once todo 4 resolves the canary; (3) confirm the canary's RESOLVED bookend
+  actually fires once todo 4's success is recorded (its next tick after the result posts, within 30 min).
+- **2026-07-20 — todo 4's dispatch (`agt-751738`) died too; corrected a false "survived" claim; operator paused further
+  live reconciler testing.** The retry died at 07:33:30, same signature as the three historical incidents, but
+  `journalctl` points at a watchdog-restart idle-reclaim race (not conclusively the prereq-reaper bug todo 5 named) —
+  the central VM was mid-restart-churn from several concurrently-landing AO plans (`ao_dispatch_liveness_p0`,
+  `ao_failover_multi_vm_readiness`, `ao_fleet_infra_hardening`, `ao_fleet_observability_kpis`,
+  `ao_backlog_regen_integrity`, `ao_dispatch_cooldown_and_park`) at the time. **Operator direction: hold todo 4's retry
+  and todo 2's live stop/start exercise until those plans settle**, then try one more reconciler run on a quieter VM.
+  See the corrected todo 4/5 entries above for the full evidence trail (including the diagnostic bug in my own first
+  check — filtering `/api/activity` by `slot=5` silently excludes `tmux_session_lost`, which is always logged with
+  `slot_id=null`).
