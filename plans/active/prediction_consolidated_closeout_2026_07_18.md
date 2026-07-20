@@ -1197,3 +1197,31 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     uses the day-first prefix (make it the same CQG-first substring match as the write-verify); SPOT self-delete should
     not fail a cell (retry/xfail on `vm_self_deleted_no_exit_status`); and the MTDS trades `-test-` force leg can't
     fetch real venue trades into `-test-` (env limit). None are data/code defects; they gate a fully-formal 14/14 smoke.
+
+- **2026-07-20 (slot-2, autonomous tick 27) — football 3-venue arb (Kalshi↔Polymarket↔Betfair) WIRED + verified
+  (PAPER-capable); the LIVE execution gap surfaced as its own P1 issue. (Operator corrected my E3 framing — odds ARE
+  tradeable: Betfair Exchange is two-sided back+lay, `is_execution_venue: True`, adapter IMPLEMENTED.)**
+  - **Betfair as the 3rd venue — SHIPPED + adversarially verified:** `features-service@ce02e093` — kernel generalized to
+    all-pairs directional edges across {kalshi, polymarket, betfair} (`betfair_yes_bid/ask`, `xv_edge_sell_betfair`,
+    `xv_best_edge = max` over all directions via null-skipping `min/max_horizontal`) + a new
+    `prediction_cross_venue_betfair.py` de-vig reader (persisted sports ODDS_API h2h BACK odds →
+    `betfair_yes_ask = (1/back_odds_r)/Σ(1/back_odds_i)`, joined by `af_fixture_id`, conservative home/away/draw
+    outcome-side resolution → honest-None on ambiguity). And `strategy-service@137604c0` — N-venue best-pair scan
+    (`prediction_venue_dispersion.py`), engine Betfair leg-routing (`price_dispersion.py`), + a PAPER-only
+    `configs/prediction_arb_epl.yaml` template (every money/league field flagged OPERATOR-DECISION). The verify pass
+    **hand-re-derived the de-vig** (back {2,3,4} → ask=0.4615, asks sum to 1.0) and confirmed **Betfair-absent ⇒
+    byte-identical to the 2-venue arb** (honest-None, no synthetic price), PAPER-only, RULE-11.
+  - **⚠️ LIVE is BLOCKED — new P1 issue `issues/prediction_arb_live_execution_bridge_2026_07_20.md`:** there is NO
+    `AtomicInstruction`→adapter execution path today (the v2 `AtomicHandler.handle` is observability-only, calls no
+    adapter) — this blocks the pre-existing 2-venue live arb too, not just Betfair; the live sports factory registers
+    only betfair+matchbook (kalshi/polymarket CLOB adapters unwired); Betfair `place_bet` is BACK-only (no LAY, so the
+    SELL-YES hedge leg is inexpressible); the downstream `cross_venue_arb_detector` fee-nets/sizes the 2-venue legs only
+    (a Betfair-BUY surfaces as non-executable `PURE_ARB` — safe, no false-executable); and the persisted odds are
+    back-only so `betfair_yes_bid` is always None (Betfair is BUY-YES-only until a lay book lands — SELL-Betfair lights
+    up automatically once it does). Suggested ordering [1] BetOrder LAY → [2] leg dispatcher → [3] register
+    kalshi/polymarket → [4] detector fee-net+size Betfair → [5] two-sided odds.
+  - **Net football-arb state:** the CANONICAL identity chain (Phase E [0a]/[E1]/[E2]) + the 3-venue SIGNAL
+    (features+strategy+config) are DONE + verified; a real football arb across the three venues additionally needs the
+    live execution bridge (the P1 issue), in-season odds/fixtures (seasonal), and the operator's money/account/league/
+    paper-vs-live decisions (captured in the EPL template). I did NOT guess any money-risk parameter or flip anything
+    live.
