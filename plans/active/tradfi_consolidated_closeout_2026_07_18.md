@@ -237,15 +237,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (`cloudbuild=2bb2c71c-c43c-4e97-9613-cacdf81b6976` SUCCESS) and rows ARE now proven — execution `…-9c9nb` wrote
       **6,782 rows** for 2026-07-17 and `…-8hfw7` wrote **5,189 rows** (CBOE/VIX ohlcv_1m) for 2026-07-16, both at
       canonical `…/pipeline_mode=batch_databento/…/ticks.parquet` with `Manifest updated`. STILL `- [ ]` for a DIFFERENT
-      reason than before: the job is not yet _working_ end-to-end — every real trading-day execution is **SIGKILLed
-      (signal 9)** at 2cpu/8Gi AFTER the write, so it self-reports FAILED daily, and 3/7 venues (ICE/FX/KRX) fail on
-      every run with `No module named 'yfinance'`. The prod-config Sunday run exited 0 only because 2026-07-19 was a
-      non-trading day (1 honest-absence row, zero fetching) — that masks both defects. Tick once a trading-day execution
-      exits 0 with all 7 venues attempted. Both blockers are tracked as their own P1 todos in § A3 above.**
+      reason than before. **FINAL 2026-07-20 state: a trading-day execution now reaches `exit(0)` AND writes rows —
+      `…-nbbkx`, date=2026-07-17, `exit(0)` + 288,958 rows / 590 shards / 4 venues (NYSE 241,821 across 522 partitions,
+      CME 2,391, + NASDAQ/CBOE), `Manifest updated`.** Still `- [ ]` because that run required `--force` and the
+      **scheduled** invocation does not pass it: the nightly cron takes the un-forced path, which now dies in
+      `check_shard_freshness` with `TypeError: '<' not supported between instances of 'str' and 'int'` because all
+      5,208,844 rows of the tradfi availability index carry a STRING `schema_version` (new P0 todo above). 3/7 venues
+      (ICE/FX/KRX) also still fail on `No module named 'yfinance'`. So the job is PROVEN CAPABLE but not yet
+      operationally green. Tick once the un-forced nightly path exits 0 with all 7 venues attempted — i.e. after the
+      `schema_version` P0 and the yfinance P1 land.**
 - [x] [INFRA] P0. **MTDS image ships a stale unified-api-contracts — ALL MTDS Cloud Run jobs fail at import**
       (`issues/mtds_image_uac_dep_skew_breaks_all_cloud_run_jobs_2026_07_20.md`). **RESOLVED 2026-07-20 —
-      `Evidence: cloudbuild=2bb2c71c-c43c-4e97-9613-cacdf81b6976` SUCCESS (all 14 steps).** Root cause was NOT the MTDS
-      build staging a stale UAC — it staged NONE. `Dockerfile:115` is
+      market-tick-data-service@21733255 + `Evidence: cloudbuild=316b0733-42e8-4b8e-82ab-4ad8f1695a84` SUCCESS (all 14
+      steps, built from the COMMITTED LDR source so the fix is proven reproducible from the branch).** Root cause was
+      NOT the MTDS build staging a stale UAC — it staged NONE. `Dockerfile:115` is
       `FROM unified-trading-library@${BASE_IMAGE_DIGEST}` and the UTL BASE IMAGE bakes
       `/app/.deps/unified-api-contracts` (UTL `cloudbuild.yaml:92` `clone-uac-source`), so UAC/UTL were frozen at the
       base image's build instant, and a UAC-only commit never triggers a UTL rebuild — which is why hand-bumping
@@ -255,11 +260,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       before the SCM-version ENV). **Durable guard**: new REQUIRED `image-import-smoke` step gating `push` imports
       `market_tick_data_service.__main__` in the built image — it also exposed that the "REQUIRED" in-image
       `quality-gates` step was a **silent no-op on every build** (`quality-gates.sh:141-145` `exit 0` when the PM base
-      script is absent), the direct reason a 2-day fleet outage shipped unnoticed. Verified live: `fast-t1-recon` **exit
-      0 + 969,536 rows / 2,494 shards**; tradfi wrote **6,782 rows** (07-17) + **5,189 rows** (07-16) at canonical
-      paths. `cefi-t1-recon` VERIFICATION-DEFERRED (Tardis hard cap 1 — a full CeFi backfill VM held the single-IP
-      budget; forcing it risks the measured 37,212-false-row manifest corruption). (repos: market-tick-data-service,
-      unified-api-contracts, deployment-service)
+      script is absent), the direct reason a 2-day fleet outage shipped unnoticed. **Tradfi verified live (the in-lane
+      criterion): execution `…-nbbkx` `exit(0)` + 288,958 rows / 590 shards / 4 venues** for date=2026-07-17 (NYSE
+      241,821 rows across 522 partitions; CME 2,391; + NASDAQ/CBOE), `Manifest updated`. Per the operator scope
+      correction, `cefi-t1-recon` was deliberately NOT run (Tardis hard cap 1 — a full CeFi backfill VM held the
+      single-IP budget; forcing it risks the measured 37,212-false-row manifest corruption) and non-tradfi verification
+      is left to the owning workstreams; `fast-t1-recon` had been run once BEFORE that correction and incidentally came
+      back exit 0 + 969,536 rows / 2,494 shards. (repos: market-tick-data-service, unified-api-contracts,
+      deployment-service)
 - [ ] [INFRA] P1. **`yfinance` missing from the MTDS image — ICE/FX/KRX fail on EVERY tradfi run** ("No module named
       'yfinance'", 3/7 venues, both trading-day executions 2026-07-20). Declared `pyproject.toml:60` but
       `Dockerfile:152` installs `-e . --no-deps`, so MTDS's declared runtime deps are never installed — they are
@@ -267,6 +275,19 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       P0 above. The import smoke does NOT catch it (yahoo_finance_adapter imports yfinance lazily inside a function).
       Fix needs a considered `--no-deps` removal / explicit dep install + a check that no OTHER declared dep is likewise
       absent — deliberately not ridden along on the P0 hotfix. (repos: market-tick-data-service)
+- [ ] [BACKEND] P0. **The ENTIRE tradfi availability index has `schema_version` typed as STRING — every un-forced MTDS
+      tradfi run dies with `TypeError: '<' not supported between instances of 'str' and 'int'`.** Measured 2026-07-20 on
+      `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`: **5,208,844/5,208,844
+      rows** carry `schema_version == "9"` (dtype `object`), so UTL `manifest_writer/_queries.py:165`
+      (`row.get("schema_version", 1) < MANIFEST_SCHEMA_VERSION`) raises out of `check_shard_freshness`
+      (`tick_data_handler.py:407` → `:178`). The UTL line is unchanged since 2026-06-24 ⇒ **data regression, not code**.
+      Bracketed by execution `…-g24t7` OK 12:44 → `…-xfrvc` crash 14:49, with
+      `canonical-migration-tradfi-catalogue-canon-20260720-132251` running in between. **The nightly T+1 cron passes no
+      `--force`, so it will fail every night until fixed.** Fix direction: find the writer that emits a string
+      `schema_version` and correct it, then re-type the index column; consider a UTL-side coercion so a string can never
+      hard-fail the freshness read. NOT touched here (this session was instructed not to touch the migration/rebundle/
+      recover scripts or catalogue tooling, and that VM is another workstream's in-flight run). (repos:
+      market-tick-data-service, unified-trading-library, instruments-service)
 - [ ] [INFRA] P1. **`tradfi-databento-t1-recon` SIGKILLs (signal 9) at 2cpu/8Gi on a real trading day, AFTER writing
       rows.** Both 2026-07-20 trading-day executions wrote parquet + manifest, then idled cpu≈0% / rss≈5,475 MiB for ~2
       min and were killed — data lands but the job self-reports FAILED every trading day. The prod Sunday run exited 0
@@ -508,24 +529,28 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       historical objects + 153 duplicate KRX row_keys
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
       (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s.
-- [ ] [BACKEND] P1. **KRX (Korean) equities carry a human-readable NAME across catalogue + manifest + data-status
-      (operator, 2026-07-20).** _**CODE 3/4 LANDED 2026-07-20** — read-surface chain is complete and shipped:
-      **UAC@f7e0301d** (first-class optional `InstrumentRecord.name` + `KRX_EQUITY_NAMES` bare-code→issuer-name SSOT,
-      derived from the EXISTING `KrxEquityDef.name` — no new mapping invented, no provider re-fetch needed),
-      **deployment-api@65f5593** (`name` on the Catalogue Explorer JSON route + the download-CSV, schema-aware read so a
-      pre-`name` catalogue degrades to blank rather than raising), **deployment-ui@2ff1e61** (Name column, em-dash for
-      honest-absent; `pw:L2 ✓` `tests/e2e/data-status-catalogue-name-column.spec.ts`). **instruments-service is
-      CODE-COMPLETE BUT BLOCKED, NOT SHIPPED** (`name` in `CATALOG_COLUMNS` + `_add_instrument_name` on-the-fly stamp
-      mirroring `_add_mvp_column`/`_add_equity_tags`, + `name=eq.name` on the KRX records): its `quality-gates.sh` is
-      RED on **5 PRE-EXISTING failures that are NOT from this work** — proven by stash-isolation on the clean
-      integration tree (clean = 5 failed/4663 passed; with this work = the SAME 5 failed/**4666** passed, i.e. +3 new
-      passing tests and zero new failures). The 5 are UAC↔IS DeFi drift from UAC@3f79489f (METEORA/LIFINITY/PHOENIX +
-      CHAINLINK/PYTH venues added without the matching IS adapter classes):
-      `test_every_uac_adapter_key_resolves_to_a_class`, `test_expected_matches_golden[defi]`,
-      `test_adapter_data_sources_covers_all_adapters`, `test_defi_set_equals_uac_denominator_drift_guard`,
-      `test_rule11_per_ag_dedup_target_counts_byte_unchanged`. **IS ships the moment that drift clears** (owned by the
-      DeFi agent — adding the adapter classes is out of this deliverable's scope and would collide). **Verified on a
-      SAMPLE (no full regen):** `_add_instrument_name` stamps `KRX:EQUITY:005930`→"Samsung Electronics",
+- [x] [BACKEND] P1. **KRX (Korean) equities carry a human-readable NAME across catalogue + manifest + data-status
+      (operator, 2026-07-20)** — **instruments-service@6780f10e** (the 4th and last code surface; gate green **4712
+      passed / 0 failed / 3 skipped**, `.qg_last_passed_sha == 9267e0ea` at ship time). _**CODE 4/4 LANDED 2026-07-20**
+      — read-surface chain is complete and shipped: **UAC@f7e0301d** (first-class optional `InstrumentRecord.name` +
+      `KRX_EQUITY_NAMES` bare-code→issuer-name SSOT, derived from the EXISTING `KrxEquityDef.name` — no new mapping
+      invented, no provider re-fetch needed), **deployment-api@65f5593** (`name` on the Catalogue Explorer JSON route +
+      the download-CSV, schema-aware read so a pre-`name` catalogue degrades to blank rather than raising),
+      **deployment-ui@2ff1e61** (Name column, em-dash for honest-absent; `pw:L2 ✓`
+      `tests/e2e/data-status-catalogue-name-column.spec.ts`). **instruments-service@6780f10e SHIPPED 2026-07-20**
+      (`name` in `CATALOG_COLUMNS` + `_add_instrument_name` on-the-fly stamp mirroring
+      `_add_mvp_column`/`_add_equity_tags`, + `name=eq.name` on the KRX records). *It was gate-blocked for ~4h on
+      failures that were NOT from this work* — first the 5 UAC↔IS DeFi drift guards from UAC@3f79489f
+      (METEORA/LIFINITY/PHOENIX + CHAINLINK/PYTH declared without matching IS adapter classes), then, once those
+      cleared, a 6th unrelated cross-repo lockstep (`test_expected_matches_golden[sports]`, golden=27 vs actual=47, from
+      uac@b6a1d83a adding 20 ODDS_API fan-out bookmakers). **Both were other agents' in-flight work and both
+      self-resolved** — DeFi via is@793125ad + is@6506b505 (adapters wired + goldens regenerated), sports via
+      is@9267e0ea (goldens regenerated). This deliverable deliberately did NOT touch either: no guard was weakened,
+      excluded, or baselined, and no foreign golden was regenerated to force green. Ship gate at is@9267e0ea: **4712
+      passed / 0 failed / 3 skipped, exit 0**. Residual DeFi coverage-honesty finding (3 live venues with measured-dead
+      upstreams + `expected_coverage` not phase-gated) is documented in
+      `plans/active/issues/uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md` and is owned by DeFi T2, NOT this plan.
+      **Verified on a SAMPLE (no full regen):** `_add_instrument_name` stamps `KRX:EQUITY:005930`→"Samsung Electronics",
       `KRX:EQUITY:000660`→"SK Hynix", `KRX:EQUITY:005380`→"Hyundai Motor", and also catches the legacy
       `KRX:EQUITY:005930.KS-USD` variant (same `base_asset`); non-KRX rows stay honestly blank. Live tradfi
       `prod/catalog.parquet` today has 10 KRX rows and NO `name` column — it appears on the next roll-up. **STILL
@@ -1266,3 +1291,41 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **VERDICT: 0 orphan · 0 garbage-root-in-limbo · 0 per-contract un-rebundled · garbage preserved, never deleted.**
     The recovery-selector fix is validated (6,510 tests pass) but awaiting a green-tree window (peer WIP in this shared
     slot); patch backed up so it cannot be lost. Shipping it only prevents recurrence — the DATA is already terminal.
+
+- **2026-07-20 (slot-1, tick 25) — 🛑 Massive purge NOT executed: the prescribed launcher invocation is broken in a
+  destructive direction. Authorization is fine; the execution path is not.**
+  - **Authorization re-verified before touching anything.** `unified-trading-pm@1cc566db6` carries the operator's
+    verbatim Option-C ruling with the loss numbers already on the record. Bucket soft-delete confirmed **ACTIVE**
+    (`retentionDurationSeconds=604800`, 7d). Both preconditions PASS.
+  - **Pre-flight audit of the prescribed command found it would purge NOTHING and migrate EVERYTHING.** The `tradfi`
+    branch of `launch-canonical-migration-vm.sh` (line 293-296) **silently discards `MIGRATION_EXTRA_ARGS`** — the only
+    appends are line 302 (`tradfi-catalogue-canon`) and line 320 (generic `else`). So
+    `--purge-massive --massive-backfill-verified <sentinel>` never reach the migrate pass (every massive object →
+    `PURGE_REFUSED_GATED`, **0 purged**), while `full` mode runs all three passes with `--apply` (+ `--quarantine` on
+    2/3), and the migrate pass's `A_COPY` is copy→verify→**delete source** over every non-canonical NON-massive object —
+    an estate-wide unauthorized migration of exactly the `batch_databento` objects the zero-collateral gate exists to
+    protect. Third blocker: the sentinel is `Path(...).is_file()` **on the VM**, so a repo/laptop-local sentinel never
+    satisfies the gate. **Nothing destructive was executed.** Issue doc:
+    `plans/active/issues/tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20.md`.
+  - **Shipped (safe + correct regardless of when the purge runs):** `market-tick-data-service@8d7743cb` — the
+    `--massive-backfill-verified` help, the module docstring, and the mapping-manifest target string now describe the
+    gate honestly as an **operator-authorization-basis** sentinel (completed backfill **OR** explicit accepted-loss),
+    instead of asserting a backfill that never happened and never will. File held at exactly 900 lines (the QG cap); QG
+    green `--no-fix` (exit 0, sentinel == HEAD).
+  - **Read-only baseline captured for whenever the purge does run:** `raw_tick_data/by_date/` = **2,041** prefixes
+    (2,040 `day=` + 1 legacy `day-2026-01-01`). Per-day massive/databento/total-parquet — `2020-06-15` 542/191/733 ·
+    `2021-06-15` 539/187/726 · `2022-06-15` 556/189/745 · `2023-05-23` 5,360/597/5,957 · `2024-06-17` 777/612/1,389 ·
+    `2025-04-08` 759/599/1,358. **`massive + databento == total_parquet` on every sampled day** — no third mode, clean
+    path-level separation, so a `batch_massive`-filtered enumeration makes zero-collateral provable BY CONSTRUCTION.
+  - **Phases 2-4 (purge verification, manifest force-rebuild, issue closeout) remain OPEN** — all three are downstream
+    of a purge that has not happened. The manifest force-rebuild was only ever sequenced behind the purge, not
+    technically blocked by it; it can be decoupled if the phantom-row P0 needs fixing sooner.
+
+## Deferred work after 2026-07-20 (tick 25)
+
+| Item                                                               | Why deferred                                   | Tracked in                                                        |
+| ------------------------------------------------------------------ | ---------------------------------------------- | ----------------------------------------------------------------- |
+| Execute the authorized `batch_massive` purge                       | Launcher drops the gate flags; would mis-scope | `tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20` |
+| Purge verification (0 massive + zero collateral)                   | Downstream of the purge                        | `massive_purge_blocked_databento_l1_entitlement_2026_07_20`       |
+| Manifest force-rebuild + phantom-row (16,389) verification (a)-(d) | Sequenced behind the purge; decouplable        | `massive_purge_blocked_databento_l1_entitlement_2026_07_20`       |
+| Operator confirmation: purge-only vs purge + estate-wide migration | Ambiguous intent; destructive either way       | `tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20` |
