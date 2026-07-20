@@ -113,9 +113,13 @@ Raydium pools** (XMR/USDC ~$47M, BNB/USDC ~$18M). Path-shape similarity is not e
 
 ### H3 — interim flat `LENDING` on market/event data_types is NOT non-canonical
 
-Decision **D** is unruled (`SKILL.md` § 3e). Do **not** flag `lending` on `lending_indices`, `liquidation_events`,
+**CORRECTION 2026-07-20 (operator D2):** Decision **D** is now **RULED** — defi market/event flat `LENDING` keying is a
+**FULL retire**. It is `migration_pending` (the retire is gated on
+`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`), **NOT an open question**. The skill does **NOT**
+REFUSE it and does **NOT** flag it — do **not** flag `lending` on `lending_indices`, `liquidation_events`,
 `flash_loan_events`, or `position_data`. Only `holdings` uses the `A_TOKEN` / `DEBT_TOKEN` split. Re-reporting this is a
-suppressed accepted exception.
+suppressed accepted exception. _(Superseded: previously logged here as "Decision D is unruled" / "PARKED — pending
+decision D".)_
 
 ### H4 — capture is currently STOPPED; the manifest rebuild CRASHES
 
@@ -147,9 +151,14 @@ Quantified worklist: `POOL`→`pool` 13,868 · `LENDING`→`lending` 179,164 · 
 `AAVEV3`/`AAVE` →`AAVE_V3` 64,218 · `MORPHOVAULTS`→`MORPHO` 50,266 · `COMPOUND`→`COMPOUND_V3` 13,904 · **`''`/NULL
 instrument_type 4.49M UNRESOLVED**.
 
-> The **case** rows here (`POOL`→`pool` etc. in the manifest **column**) are axis **C2a**, which is UNRULED — compare
-> the column case-insensitively and do **not** propose a casing migration (`SKILL.md` § 3e). The **path** segment
-> (lowercase) and the **id** middle segment (UPPER) are settled and still enforced.
+> The **case** rows here (`POOL`→`pool` etc. in the manifest **column**) are axis **C2a**. **CORRECTION 2026-07-20
+> (operator D1):** C2a is now **RULED** — the canonical TARGET is **UPPERCASE** (catalogue enum), but it is **NOT yet
+> implemented**: the column is `migration_pending` (measured 2026-07-20: mixed on disk — defi carries both cases). So
+> the skill compares the `instrument_type` column **case-INSENSITIVELY** and emits **NO** casing finding during the
+> migration_pending window (flagging lowercase-today would false-flag all un-migrated data); post-migration the column
+> is enforced UPPERCASE. Do **not** propose a casing migration from this skill (`SKILL.md` § 3e). _(Superseded:
+> previously logged here as "axis C2a, which is UNRULED".)_ The **path** segment (lowercase) and the **id** middle
+> segment (UPPER) are settled and **always** enforced.
 
 ### H7 — coverage denominator: 63.9M, not 1.38M
 
@@ -198,6 +207,21 @@ finding; do not silently "correct" either field.
 4. Pick one `(date, venue, chain)` known-captured from the manifest and confirm your probe returns non-zero.
 5. Only then treat a zero as a finding — and even then, a delete suggestion needs the full five-part proof, including a
    **content** verify (H2).
+
+## Census / vocabulary nuance
+
+Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+1).
+
+- **`chain=` is a LIVE census axis (defi is the only AG with one)** — enumerate the distinct `chain=` set from the
+  manifest column and the GCS path segment and badge each against `MAINNET_CHAIN_IDS` keys (`registry/chain_env.py:10`);
+  an out-of-vocab value (H6's `HYPERLIQUID`→`HYPERLIQUID_L1`, or the prediction-leak `KALSHI_PERP` / `POLYMARKET_PERP`)
+  is a `non_canonical_axis_value`, never delete-eligible.
+- **`instrument_type` is compared CASE-INSENSITIVELY** — C2a is RULED UPPERCASE-target but `migration_pending` (mixed on
+  disk today), so the census emits **NO** casing finding during the window (H6; `SKILL.md` § 3e).
+- **The census `instrument_type` vocabulary MUST include `solana_amm_pool` AND `solana_vault` (KAMINO), never just
+  `pool`** — see H1 (writer map `_SOLANA_DEX_ITYPE_STR`); never re-derive the values from
+  `canonical_path_templates("defi")`, which returns `{instrument_type}` placeholders, not values.
 
 ## Cross-links
 

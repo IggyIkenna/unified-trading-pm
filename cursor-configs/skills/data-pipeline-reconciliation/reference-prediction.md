@@ -137,6 +137,18 @@ evidence once you have confirmed you probed the vocabulary the writer actually e
    `conditionId` — and that `_unknown_` is a legitimate stem, not corruption.
 5. Only then treat a zero as a finding.
 
+## Census / vocabulary nuance
+
+Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+1).
+
+- **No `chain=` axis** — `chain` is defi-only; the census skips it for prediction.
+- **The GCS-side census descent is `conditionId`-keyed and the templates stop at `asset_group=prediction/`**
+  (`_AG_SEGMENT_SHAPE[PREDICTION]` is empty, H1 caveat) — derive the `venue=` / `instrument_type=` / `data_type=`
+  vocabulary from the AG grammar + manifest rows, **NOT** an `asset_group=` delimiter descent.
+- **Canonical `instrument_type` = `prediction_market` / `event_contract`** (`_instrument_enums.py:94,90`) — badge the
+  census set against those two; anything else is a `non_canonical_axis_value`.
+
 ## Cross-links
 
 `SKILL.md` · [`reference-sports.md`](reference-sports.md) (H5 bleed) · `codex/02-data/prediction-data-types-catalog.md`

@@ -1,0 +1,322 @@
+{
+  "doc_type": "audit-result",
+  "skill": "data-pipeline-reconciliation",
+  "asset_group": "tradfi",
+  "run_date": "2026-07-20",
+  "generated_at": "2026-07-20T19:00:00+00:00",
+  "read_only": true,
+  "auditor": "/data-pipeline-reconciliation (first tradfi execution + acceptance test)",
+  "status": "pass-with-findings",
+  "buckets": [
+    {
+      "layer": "raw_tick_S1_S2",
+      "kind": "market-data",
+      "resolved": "market-data-tick-tradfi-prd-central-element-323112",
+      "reachable": true,
+      "tier": "prd",
+      "test_bucket": false
+    },
+    {
+      "layer": "raw_tick_alias",
+      "kind": "tick-data",
+      "resolved": "market-data-tick-tradfi-prd-central-element-323112",
+      "reachable": true
+    },
+    {
+      "layer": "manifest_S3",
+      "kind": "market-data(_index)",
+      "resolved": "market-data-tick-tradfi-prd-central-element-323112",
+      "reachable": true,
+      "index_rows": 5209585,
+      "index_bytes": 78133406
+    },
+    {
+      "layer": "catalogue_S4",
+      "kind": "instruments-store",
+      "resolved": "instruments-store-tradfi-prd-central-element-323112",
+      "reachable": true,
+      "catalog_rows": 1391725,
+      "prd_shadow_present": false
+    },
+    {
+      "layer": "features",
+      "kind": "features",
+      "resolved": "features-tradfi-prd-central-element-323112",
+      "reachable": true,
+      "note": "only _index/ on disk; no computed features"
+    }
+  ],
+  "unreachable_buckets": [],
+  "resolver_negative_checks": {
+    "market-data-tick-tradfi": "BucketNamingError (fragment, expected)",
+    "dex-pools": "BucketNamingError",
+    "lst-rates": "BucketNamingError"
+  },
+  "oracle": {
+    "authority": "unified_api_contracts.canonical_path_violations",
+    "templates_returned": 10,
+    "batch_massive_prefix_present": true,
+    "surface_A_id_form_machine_checked": "tradfi single-instrument stem only (clause 8, tradfi-gated); chains/combo excluded",
+    "require_pipeline_mode_effective_from": "2026-05-19",
+    "chain_tail_effective_from": "2026-07-19",
+    "sampled_paths": [
+      {
+        "path": "futures_chain COPPER quote=USD/margin=linear/ticks.parquet",
+        "rpm_false": "canonical",
+        "rpm_true": "canonical"
+      },
+      { "path": "combo COPPER +quote/margin tail", "rpm_false": "canonical", "rpm_true": "canonical" },
+      { "path": "combo bare underlying (H3 doc-shape)", "rpm_false": "canonical", "rpm_true": "canonical" },
+      { "path": "single EQUITY canonical-id leaf", "rpm_false": "canonical", "rpm_true": "canonical" },
+      { "path": "single EQUITY AAPL.parquet bare", "rpm_false": "stem_violation", "rpm_true": "stem_violation" },
+      { "path": "single EQUITY ticks.parquet", "rpm_false": "stem_violation", "rpm_true": "stem_violation" },
+      {
+        "path": "legacy hyphen day-2026-01-01/data_type-tbbo",
+        "rpm_false": "3 violations",
+        "rpm_true": "4 violations"
+      },
+      {
+        "path": "batch_massive object",
+        "rpm_false": "RAISED forbidden",
+        "rpm_true": "RAISED forbidden",
+        "suppressed": "AE-4"
+      }
+    ]
+  },
+  "manifest_census": {
+    "total_rows": 5209585,
+    "capture_status": {
+      "empty_confirmed": 2897212,
+      "captured": 1616450,
+      "expected_unattempted": 388874,
+      "attempted_failed": 307049
+    },
+    "pipeline_mode": {
+      "batch_databento": 4476886,
+      "batch_massive": 686005,
+      "batch_yahoo": 41999,
+      "batch_barchart": 4655,
+      "live_databento": 40
+    },
+    "source": { "databento": 4476926, "massive": 686005, "yahoo": 41999, "barchart": 4655 },
+    "venue_top": {
+      "CME": 2494583,
+      "NYSE": 1418571,
+      "NASDAQ": 798815,
+      "ICE": 416995,
+      "KRX": 35105,
+      "CBOE": 21208,
+      "FX": 15189,
+      "BARCHART": 9119
+    },
+    "instrument_type_casing_C2a": {
+      "UPPER": {
+        "EQUITY": 1685476,
+        "COMBO": 1480449,
+        "FUTURE": 410110,
+        "ETF": 223915,
+        "OPTION": 174320,
+        "SPOT_PAIR": 48353,
+        "INDEX": 407,
+        "FUTURES": 16,
+        "UNKNOWN": 77
+      },
+      "lower": {
+        "options_chain": 269384,
+        "futures_chain": 202019,
+        "equity": 81145,
+        "future": 15913,
+        "etf": 10873,
+        "combo": 10008,
+        "index": 188,
+        "futures": 16,
+        "spot": 2
+      },
+      "null": 511564,
+      "blank": 85350
+    },
+    "instrument_id_form": {
+      "null_blank": 1851428,
+      "non_null": 3358157,
+      "structured_colon": 2712786,
+      "wire_coded_space": 206658
+    }
+  },
+  "catalogue_census": {
+    "total_rows": 1391725,
+    "contains_colon_pct": 100.0,
+    "space_free_structured_pct_approx": 92.87,
+    "ids_with_USD": 1100515,
+    "wire_coded_space": 99260,
+    "combo_rows_B2": 63319,
+    "cash_missing_usd": 636,
+    "instrument_type_upper": {
+      "OPTION": 1321220,
+      "COMBO": 63319,
+      "FUTURE": 5412,
+      "EQUITY": 1226,
+      "SPOT_PAIR": 414,
+      "ETF": 116,
+      "INDEX": 18
+    },
+    "sample_canonical_ids": [
+      "CBOE:FUTURE:VIX-USD@LIN-20210120",
+      "NASDAQ:EQUITY:NVDA-USD",
+      "CME:FUTURE:COPPER@LIN-20260717"
+    ],
+    "last_updated": "2026-07-20T01:05:28Z"
+  },
+  "manifest_status": {
+    "consolidator_last_run": "2026-07-20T18:49:45Z",
+    "consolidator_healthy": true,
+    "consolidator_stall_streak": 0,
+    "phantom_count": 1635,
+    "phantom_generated_at": "2026-07-14T07:41:33Z",
+    "reprobe_clean": true
+  },
+  "s2_content_probe": {
+    "shard": "CME futures_chain underlying=COPPER day=2026-07-01",
+    "rows": 2107,
+    "distinct_contracts": 15,
+    "instrument_id_form": "CME:FUTURE:COPPER@LIN-YYYYMMDD (canonical)",
+    "raw_symbol_retained": "symbol=HGF7"
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "type": "phantom",
+      "severity": "HIGH",
+      "surfaces": "S3-S1",
+      "delete_eligible": false,
+      "detail": "tradfi phantom_count=1635 (published audit 2026-07-14)"
+    },
+    {
+      "id": "F2",
+      "type": "non_canonical_path",
+      "severity": "MEDIUM",
+      "surfaces": "S1",
+      "delete_eligible": false,
+      "disposition": "no-migrate-first",
+      "detail": "live legacy hyphen tree day-2026-01-01/data_type-tbbo (oracle 3-4 clauses); MIGRATE_HYPHEN; date-bound legacy"
+    },
+    {
+      "id": "F3",
+      "type": "manifest_atom_axis_gap",
+      "severity": "MEDIUM",
+      "surfaces": "S1-S3",
+      "delete_eligible": false,
+      "detail": "chain manifest rows carry blank quote_asset/margin_type while the path carries quote=USD/margin=linear"
+    },
+    {
+      "id": "F4",
+      "type": "catalogue_freshness",
+      "severity": "LOW",
+      "surfaces": "S4",
+      "delete_eligible": false,
+      "detail": "deployment-api data-catalogue.instruments-service.yaml SUPERSEDED/stale (standing); prod/catalog.parquet itself is fresh 2026-07-20"
+    },
+    {
+      "id": "F5",
+      "type": "quarantine",
+      "severity": "LOW",
+      "surfaces": "S3-S1",
+      "delete_eligible": false,
+      "detail": "H4 garbage underlyings 12/13/23 + GN/VT/3W in manifest; _quarantine/raw_tick_data/ tree present; never canonicalize/delete"
+    },
+    {
+      "id": "F6",
+      "type": "expected_universe_casing_note",
+      "severity": "LOW",
+      "surfaces": "S3",
+      "delete_eligible": false,
+      "detail": "expected-universe seeds lowercase instrument_type vs captured UPPER; C2a manifestation; folded into REFUSED"
+    },
+    {
+      "id": "F7",
+      "type": "manifest_only",
+      "severity": "LOW",
+      "surfaces": "S3",
+      "delete_eligible": false,
+      "detail": "venue=BARCHART 9,119 + batch_barchart 4,655 (parked B4)"
+    },
+    {
+      "id": "F8",
+      "type": "reference_sheet_drift",
+      "severity": "MEDIUM",
+      "surfaces": "S1",
+      "delete_eligible": false,
+      "detail": "live combo emits full quote/margin tail, contradicting reference-tradfi H3 bare-underlying claim; oracle accepts both"
+    },
+    {
+      "id": "F9",
+      "type": "cross_repo_writer_reader",
+      "severity": "HIGH",
+      "surfaces": "S1-reader",
+      "delete_eligible": false,
+      "detail": "combo written underlying-partitioned but MTDS reader probes it as single-instrument (AE-2 adjacent, NOT suppressed); MTDS-plan finding"
+    },
+    {
+      "id": "F10",
+      "type": "reference_sheet_refutation",
+      "severity": "MEDIUM",
+      "surfaces": "S3-S4",
+      "delete_eligible": false,
+      "detail": "catalogue ~92% + manifest ~81% canonical id-form; refutes reference-tradfi/cutover-register 'manifest+catalogue 0 canonical'"
+    }
+  ],
+  "suppressed_exceptions": {
+    "AE-4": {
+      "condition": "batch_massive read-recognition kept until gated purge",
+      "manifest_rows": 686005,
+      "objects_inherited_approx": 1500000
+    },
+    "AE-2": {
+      "condition": "combo bare-underlying carve-out",
+      "occurrences": "all combo shards sampled + 63319 catalogue COMBO rows",
+      "note": "adjacent writer/reader defect is F9 (HIGH, NOT suppressed)"
+    },
+    "AE-1": 0,
+    "AE-3": 0,
+    "AE-5": 0
+  },
+  "refused_axes": {
+    "C2a_instrument_type_column_casing": {
+      "verdict": "REFUSED",
+      "measured": { "upper_equity": 1685476, "lower_equity": 81145, "upper_future": 410110, "lower_future": 15913 },
+      "ssot_contradiction": "taxonomy §5.1 + task = UNRULED-REFUSE; cutover-register §3c + procedure §7 O2 = RULED UPPERCASE (D1). Followed taxonomy/task; flagged."
+    },
+    "B1_etf_vs_equity": "parked",
+    "B2_combo_id_shape": "parked (63319 catalogue COMBO rows)",
+    "B4_barchart": "parked (BARCHART venue 9119 + batch_barchart 4655)"
+  },
+  "delete_suggestions": [],
+  "orphans": "NOT ASSESSED (no whole-corpus walk this run)",
+  "coverage": {
+    "formula": "reachable_coverage = captured / (captured + attempted_failed + expected_unattempted); empty_confirmed EXCLUDED",
+    "captured": 1616450,
+    "attempted_failed": 307049,
+    "expected_unattempted": 388874,
+    "empty_confirmed_excluded": 2897212,
+    "reachable_coverage_pct": 69.9,
+    "lower_bound": true,
+    "basis": "all-history manifest (5209585 rows), instrument_gates_download=true"
+  },
+  "inventory_reconcile": {
+    "row_2_prd_shadow": "REFUTED for tradfi (no prd/ object; prod/ only)",
+    "row_10_batch_massive": "CONFIRMED (686005 rows; human-only purge)",
+    "row_11_legacy_shapes": "CONFIRMED (hyphen tree live, oracle-flagged)",
+    "row_19_databento_batch_registry": "CONFIRMED present",
+    "row_22_quarantine": "CONFIRMED (garbage underlyings + _quarantine/ tree)",
+    "row_23_migration_backup": "PARTIAL (two backup dirs present)",
+    "row_24_needs_attribution": "CONFIRMED (_needs_attribution/raw_tick_data/)",
+    "row_28_configs_patches": "CONFIRMED present"
+  },
+  "hard_stops_respected": ["prod-bucket delete", "batch_massive purge", "instrument_type casing"],
+  "coverage_gaps": [
+    "orphans NOT ASSESSED (no walk)",
+    "object-level four-surface only day=2026-07-01 + 2 legacy probes",
+    "S2 content read for COPPER chain bundle only",
+    "features-tradfi top-level only (no leaf features on disk)",
+    "H5 disposition-map object counts inherited not re-measured"
+  ]
+}

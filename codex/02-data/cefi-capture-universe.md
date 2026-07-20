@@ -181,8 +181,18 @@ denominator entirely (neither `empty_confirmed` nor `expected_unattempted` — n
 universe that lacks data is `expected_unattempted` (not yet attempted) or `attempted_failed` (tried, failed).
 `empty_confirmed` is only for pre-genesis or data-type-not-available-in-batch.
 
-Coverage formula: `% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` where the
-denominator is the MVP universe, not the full IS catalogue and not all 40/44/100 coins.
+> **⛔ SUPERSEDED 2026-07-20 (acceptance review, cefi reconciliation run) — this local formula is NOT the coverage
+> SSOT.** The formula immediately below **INCLUDES `empty_confirmed` in the denominator**, which contradicts the
+> honest-coverage SSOT: [`honest-coverage-model.md`](honest-coverage-model.md) defines `reachable_coverage` and
+> **EXCLUDES `empty_confirmed`** (`honest-coverage-model.md:219`). The two disagree materially — on the cefi run the
+> included form measured **31.47%** and the SSOT (excluded) form **44.85%**. `honest-coverage-model.md` is the **sole
+> formula SSOT**; use `reachable_coverage` with `empty_confirmed` EXCLUDED. The line below is kept as history to show
+> the older (wrong) denominator — do NOT compute coverage from it.
+
+~~Coverage formula: `% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` where the
+denominator is the MVP universe, not the full IS catalogue and not all 40/44/100 coins.~~ **(SUPERSEDED — see banner
+above; the MVP-universe-as-denominator scoping still holds, but `empty_confirmed` is EXCLUDED per
+`honest-coverage-model.md`.)**
 
 ## UAC constants (single SSOT)
 

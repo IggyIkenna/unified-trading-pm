@@ -4,11 +4,13 @@ title: Reconciliation finding taxonomy (closed set · severities · delete-eligi
 summary: >-
   The CLOSED, named set of finding types the four-surface reconciliation emits — phantom, missing_row, orphan_real,
   true_gap, divergent_empty, missing_expected, non_canonical_path, legacy_duplicate, junk, manifest_infra, non_data,
-  shard_pillar_fail, catalogue_gap, manifest_only, masked_empty_row, drift_axis_false_positive — each defined in terms
-  of the four canonical surfaces, with its detection method, default severity, safe remediation, and whether it can EVER
-  justify a delete. Carries the OPERATOR-ACCEPTED EXCEPTION LIST (suppression is mandatory, not optional) and the two
-  axes the reconciliation skill must currently REFUSE to report on pending operator rulings. Without a closed set,
-  consecutive runs emit prose that cannot be diffed and the delete-suggestion feature has nothing to key off.
+  shard_pillar_fail, catalogue_gap, manifest_only, masked_empty_row, non_canonical_axis_value, shard_atom_vocab_desync,
+  non_canonical_id, drift_axis_false_positive — each defined in terms of the four canonical surfaces, with its detection
+  method, default severity, safe remediation, and whether it can EVER justify a delete. Carries the OPERATOR-ACCEPTED
+  EXCEPTION LIST (suppression is mandatory, not optional) and, for the two axes RULED 2026-07-20 but still
+  migration_pending (instrument_type COLUMN case · defi market/event LENDING), the migration-window rule that the skill
+  neither refuses NOR flags them. Without a closed set, consecutive runs emit prose that cannot be diffed and the
+  delete-suggestion feature has nothing to key off.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -55,7 +57,7 @@ authoritative_for:
     finding severity defaults,
     finding delete-eligibility,
     operator-accepted reconciliation exception list,
-    axes the reconciliation skill must refuse to report on,
+    axes ruled-but-migration_pending the reconciliation skill must not flag,
   ]
 referenced_by:
   [
@@ -112,7 +114,13 @@ Every finding below is a statement about a DISAGREEMENT between a named pair (or
 
 ## 2. The closed set
 
-Fifteen estate types plus one tool-defect type. Names are lowercase snake_case and are the literal strings a report
+<!-- CORRECTION 2026-07-20: the prior "Fifteen estate types plus one tool-defect type" line omitted `oracle_contradiction`
+(defined in §2.3 but never counted) and predated the three census/per-datapoint additions in §2.7. -->
+
+**Eighteen estate types plus two non-estate types** — the oracle-defect `oracle_contradiction` (§2.3) and the
+tool-defect `drift_axis_false_positive` (§2.6) — **twenty named types in all**. (The base was fifteen estate types;
+`non_canonical_axis_value`, `shard_atom_vocab_desync`, and `non_canonical_id` were added 2026-07-20 from
+`reconciliation-census-and-compute-tiers.md` §4.) Names are lowercase snake_case and are the literal strings a report
 emits.
 
 ### 2.1 Manifest ↔ GCS (S3 ↔ S1)
@@ -333,17 +341,79 @@ From `market-tick-data-service/scripts/validate_manifest_coverage.py:15-23`.
 - **Delete-eligible** — **NO.** A delete suggestion derived from a suspected drift-axis finding is the single most
   dangerous output this system can produce.
 
+### 2.7 Distinct-value census + per-datapoint id (from the census/compute-tier extension)
+
+> Added 2026-07-20 from `codex/02-data/reconciliation-census-and-compute-tiers.md` §4. The per-shard path oracle
+> `canonical_path_violations()` (`partition_paths.py:661`) validates path STRUCTURE only — it never checks the axis
+> segment VALUES against their enums, and it drops the filename before validating. The distinct-value census (G1) closes
+> the value blind spot in-session; the Tier-2 per-datapoint scan (G2) closes the id-form blind spot at 100%. These three
+> types name those disagreements. All three are **NOT delete-eligible** (a mis-valued or mis-keyed row is a re-stamp /
+> migration target, never a delete).
+
+#### `non_canonical_axis_value`
+
+- **Definition** — an axis value (`instrument_type` / `data_type` / `venue` / `chain`) present on a surface but OUTSIDE
+  the canonical UAC vocabulary for that axis + asset_group, grain-resolved via `_distinct_values._comparison_set`.
+  Carries a `surface` field: **S1** = a GCS path SEGMENT value, **S3** = a manifest COLUMN value.
+- **Distinct from `non_canonical_path` (§2.2)** — that type is STRUCTURE-only because the oracle is VALUE-BLIND
+  (`canonical_path_violations()` does not validate segment values, `partition_paths.py:661`). This is the value leg the
+  oracle cannot see; the two are orthogonal.
+- **Detection** — the in-session distinct-value census (G1): manifest side reuses `get_axis_value_census`
+  (`deployment-api/deployment_api/routes/data_status/_axis_census.py:134`); GCS side is delimiter child-prefix descent
+  (no whole-corpus walk). Comparisons (a) `M − C` → surface **S3**, (b) `G − C` → surface **S1**. SSOT:
+  `reconciliation-census-and-compute-tiers.md` §1.4.
+- **Severity default** — **MEDIUM**, and **date-conditional** against `canonical-cutover-register.md` (same gating as
+  `non_canonical_path`).
+- **Mandatory suppression before emitting** — C2a case-only differences route to the `migration_pending` window, NOT a
+  finding (§5.1); decision-D `lending` / `solana_lending` on defi market/event data_types (AE-5); `batch_massive` source
+  (AE-4); sports blank `pipeline_mode` / `source` sentinels (AE-1).
+- **Delete-eligible** — **NO.** A mis-spelled or mis-cased value is a re-stamp target, never a delete.
+
+#### `shard_atom_vocab_desync`
+
+- **Definition** — for one axis + asset_group, the manifest distinct set (S3) and the GCS distinct set (S1) disagree at
+  VOCABULARY level — e.g. GCS `instrument_type=pool` while the manifest carries `solana_amm_pool`. The `M △ G`
+  symmetric-diff comparison (c) of the census.
+- **Why it matters** — the vocabulary-scale early warning of the `phantom` / `missing_row` class BEFORE any per-shard
+  scan. It is the exact shape that produced the false "twin absent" verdict 2026-07-20 (probing `instrument_type=pool`
+  when the writer emits `solana_amm_pool`).
+- **Detection** — census comparison (c). SSOT: `reconciliation-census-and-compute-tiers.md` §1.4 / §1.6.
+- **Severity default** — **HIGH**.
+- **Delete-eligible** — **NO.**
+
+#### `non_canonical_id`
+
+- **Definition** — a parquet row whose `instrument_id` (and, for defi, `canonical_instrument_id`) does NOT byte-match
+  the id rebuilt through `build_canonical_instrument_id` (`canonical_id_builder.py:972`) / `build_instrument_id`
+  (`:735`) from the row's OWN structured axes. The id-FORM leg that `non_canonical_path` is structurally blind to (the
+  oracle drops the filename before validating, `partition_paths.py:661`).
+- **Judge = the UAC SSOT builder, never a regex** — a migration-heuristic `_CANON_ID_RE` is a fallback, not the oracle.
+- **Detection** — the Tier-2 SPOT-VM per-datapoint scan (G2), the ONE sanctioned single-walk; Tier-1 is a sampled
+  ≤500-object smoke that reports "SAMPLED, NOT the full corpus". SSOT: `reconciliation-census-and-compute-tiers.md` §2.1
+  / §3.
+- **N/A carve-outs (no id-form finding)** — legitimately id-less shapes: pattern-#2 bundles (`options_chain` /
+  `futures_chain`, null `instrument_id` by design), the symbol-less `ticks.parquet` fan-in, the prediction CQG
+  filename-id bundle.
+- **Suppressed by AE-3** — a defi POOL `instrument_id ≠ canonical_instrument_id` divergence is the intentional two-id
+  model, not a finding.
+- **Severity default** — **MEDIUM**, date-conditional against `canonical-cutover-register.md`.
+- **Delete-eligible** — **NO.** A wrong id is migrated / re-keyed, never deleted.
+
 ---
 
 ## 3. Delete-eligibility, consolidated
 
-Exactly **two** of the sixteen types can ever justify a delete:
+<!-- CORRECTION 2026-07-20: was "two of the sixteen ... all fourteen other" — that total omitted `oracle_contradiction`
+and predated the three 2026-07-20 additions (§2.7). Delete-eligibility is UNCHANGED: still exactly two, and all three
+new types are NOT delete-eligible. -->
 
-| Type               | Delete-eligible | Because                                                        |
-| ------------------ | --------------- | -------------------------------------------------------------- |
-| `legacy_duplicate` | **YES**         | a canonical twin may hold the same content — must be PROVEN    |
-| `junk`             | **YES**         | unparseable / zero-row / no manifest row — no recoverable data |
-| all fourteen other | **NO**          | each is either real data, a missing claim, or a tool defect    |
+Exactly **two** of the twenty named types can ever justify a delete:
+
+| Type                | Delete-eligible | Because                                                        |
+| ------------------- | --------------- | -------------------------------------------------------------- |
+| `legacy_duplicate`  | **YES**         | a canonical twin may hold the same content — must be PROVEN    |
+| `junk`              | **YES**         | unparseable / zero-row / no manifest row — no recoverable data |
+| all eighteen others | **NO**          | each is either real data, a missing claim, or a tool defect    |
 
 Three standing qualifiers:
 
@@ -437,55 +507,96 @@ Three standing qualifiers:
   shard-level `except ValueError`, and the partial A_TOKEN work-around created a shard-atom desync (GCS
   `instrument_type=a_token` vs manifest `lending`). Sources: `codex/02-data/defi-canonical-naming-ssot.md:82` and
   `:117-118`; `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md:158-171`.
-- **Ruled by / when** — reversal is shipped in code; the FORWARD decision is PARKED for the operator (decision D, parked
-  2026-07-19). Holdings are unaffected and stay `A_TOKEN`/`DEBT_TOKEN`.
-- **Suppression rule** — never flag `lending` / `solana_lending` on a market/event lending data_type as non-canonical.
+- **Ruled by / when** — reversal was shipped in code; the FORWARD decision is now **RULED 2026-07-20 (operator D2 — FULL
+  retire)** (CORRECTION 2026-07-20: was "PARKED for the operator, decision D, 2026-07-19"). The retire is gated on
+  `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`, so the interim flat `LENDING` is
+  `migration_pending` until the writer retire lands. Holdings are unaffected and stay `A_TOKEN` / `DEBT_TOKEN`.
+- **Suppression rule** — during the `migration_pending` window, never flag `lending` / `solana_lending` on a
+  market/event lending data_type as non-canonical (the axis is ruled-but-not-yet-migrated, NOT an open question).
 - **⚠ Codex contradiction to state, not resolve** — `cross-asset-canonical-target-ssot.md:182` still asserts "Legacy
-  flat `LENDING` is **RETIRED**". That doc currently asserts a state the code DELIBERATELY does not implement. Until a
-  correction banner lands there, a reconciliation citing either doc must cite BOTH.
-- **Stops being an exception when** — operator rules decision D (see §5).
+  flat `LENDING` is **RETIRED**". With D2 that is now the RULED TARGET, but the code still WRITES flat `LENDING` (the
+  retire is `migration_pending`), so that doc asserts a state the code does not YET implement. Until a correction banner
+  lands there, a reconciliation citing either doc must cite BOTH.
+- **Stops being an exception when** — the flat-`LENDING` writer retire lands per
+  `defi_lending_writer_retire_prerequisite_2026_07_20.md` (decision D2, see §5.2); post-retire, any surviving flat
+  `LENDING` on a market/event data_type is a genuine finding.
 
 ---
 
-## 5. Axes the reconciliation MUST REFUSE to report on
+## 5. Two axes RULED 2026-07-20 — now migration_pending (formerly REFUSED)
 
-Two axes are genuinely UNRULED. The reconciliation must emit a `REFUSED — awaiting operator ruling` line naming each,
-must NOT emit a finding on either, and must NOT propose a migration on either. Refusing is the correct output; picking a
-side silently is the failure mode this section exists to prevent. **Neither side below is adjudicated here.**
+> **CORRECTION 2026-07-20 (operator D1 + D2).** This section previously stated "Two axes are genuinely UNRULED" and
+> instructed the reconciliation to emit a `REFUSED — awaiting operator ruling` line for each. **Both are now RULED** —
+> C2a (instrument_type COLUMN case) by operator D1, decision-D (defi market/event `LENDING` keying) by operator D2 — and
+> NEITHER is refused any longer. Both, however, are `migration_pending`: the ruled TARGET is not yet on disk. So the
+> reconciliation neither REFUSES nor FLAGS either axis during the migration window — a finding today would false-flag
+> every un-migrated row. The superseded "UNRULED / REFUSE" framing is retained struck-through below where it aids a
+> reader; the RULED stance in each subsection is authoritative.
 
-### 5.1 [C2a] Manifest `instrument_type` COLUMN casing — UPPER vs lowercase
+Neither axis is an OPEN QUESTION any longer. The reconciliation emits NO finding and proposes NO migration on either
+during `migration_pending`; picking a side silently is still the failure mode this section prevents, and so now is
+re-opening a settled ruling.
 
+### 5.1 [C2a] Manifest `instrument_type` COLUMN case — RULED UPPERCASE target, migration_pending
+
+> **RULED 2026-07-20 (operator D1).** The canonical TARGET is UPPERCASE (the catalogue enum). It is NOT yet implemented
+> — the column is `migration_pending` (measured 2026-07-20: mixed on disk — defi both cases present, prediction 99.46%
+> UPPER, cefi ~99.41% adjusted). Therefore the reconciliation skill: **(1)** does NOT REFUSE the axis (the ruling is
+> made — the old "REFUSE — awaiting operator ruling" is REMOVED); **(2)** compares the `instrument_type` COLUMN
+> **case-INSENSITIVELY** and emits **NO** casing finding during the `migration_pending` window — flagging
+> lowercase-today would false-flag all un-migrated data; **(3)** the TARGET is UPPERCASE, and POST-migration the column
+> is enforced UPPERCASE. The GCS path SEGMENT stays lowercase and the id middle segment stays UPPER — both ALWAYS
+> enforced, never in question.
+>
+> **Gate (blocking).** The honest-coverage harness MUST be made case-robust BEFORE the migration flips writers, or the
+> flip breaks it:
+> `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
+
+**Documentary background — why a ruling was needed (retained as history; the RULED stance above supersedes the old
+"Required behaviour").**
+
+- ~~**Required behaviour (SUPERSEDED 2026-07-20)** — "do NOT report casing; do NOT propose a migration; keep the two
+  DRAIN-GATED `--apply` runs frozen."~~ Replaced by the RULED stance above: the axis is ruled UPPERCASE-target, compared
+  case-INSENSITIVELY, and not flagged during `migration_pending`. The `--apply` migration is now gated on the
+  honest-coverage harness fix, not "frozen pending a ruling".
 - **Side A — lowercase.** `codex/02-data/cross-asset-canonical-target-ssot.md:210-212`, § "instrument_type case + venue
   spelling": "**case**: LOWERCASE in the GCS path segment + the manifest `instrument_type` column (writer grain);
-  **UPPER** only in [the id]". Restated in the operator log at `:257` and in the defi plan.
+  **UPPER** only in [the id]". Restated in the operator log at `:257` and in the defi plan. (The path-segment-lowercase
+  half remains correct and enforced; only the manifest-COLUMN half is SUPERSEDED toward the UPPERCASE target by D1.)
 - **Side B — UPPERCASE, catalogue is SSOT.** `plans/active/tradfi_consolidated_closeout_2026_07_18.md:375` — "UPPERCASE
   enum, CATALOGUE is the SSOT — `{FUTURE, OPTION, EQUITY, ETF, INDEX, COMBO, SPOT_PAIR}`" — with the converge-the-
   writers todo at `:384-387` and an executed migration reporting **3,300,155 UPPERCASE case re-stamps** at `:698` and
-  `:761`.
-- **Why it is undecidable from documents** — both sides cite the SAME operator on the SAME date (2026-07-18); the
-  scripts that UPPERCASE the column have ALREADY SHIPPED on both cefi and tradfi. The issue register records this as a
-  self-caught inconsistency in the freshly-shipped SSOT
-  (`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md:111-115`, which carries a REC toward UPPERCASE —
-  a recommendation, **not a ruling**).
+  `:761`. **This is the RULED direction (D1).**
+- **Why it was undecidable from documents (before D1)** — both sides cited the SAME operator on the SAME date
+  (2026-07-18); the scripts that UPPERCASE the column had ALREADY SHIPPED on both cefi and tradfi. The issue register
+  recorded this as a self-caught inconsistency in the freshly-shipped SSOT
+  (`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md:111-115`, which carried a REC toward UPPERCASE —
+  a recommendation later ADOPTED as the D1 ruling).
 - **Stakes** — the direction determines >12M row rewrites.
-- **Required behaviour** — do NOT report `instrument_type` column casing as a finding; do NOT propose a casing
-  migration; keep the two DRAIN-GATED `--apply` runs frozen. The GCS path SEGMENT being lowercase and the id middle
-  segment being UPPER are NOT in dispute and remain reportable.
 
-### 5.2 [decision D] DeFi market/event lending data_type canonical keying
+### 5.2 [decision D] DeFi market/event `LENDING` keying — RULED full retire, migration_pending
 
-- **Side A — keep `LENDING` as a market-level `instrument_type`** (the current interim). Different grain from the
-  holdings duplication the operator's ruling targeted; simplest; no re-key; historical rows unchanged. Carried as
-  `[WORKER REC]` — "least-bad, reversible" (`canonical_closeout_open_questions_2026_07_18.md:175-177`).
+> **RULED 2026-07-20 (operator D2 — FULL retire).** Market/event flat `LENDING` is `migration_pending`: the retire is
+> gated on `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`. The reconciliation does NOT REFUSE it
+> and does NOT FLAG it — it is `migration_pending`, **NOT an open question**. The old "REFUSED — pending decision D"
+> framing is REMOVED. Holdings are unaffected and stay `A_TOKEN` / `DEBT_TOKEN`.
+
+**Documentary background — the options weighed before D2 (retained as history; superseded by the full-retire ruling).**
+
+- ~~**Required behaviour (SUPERSEDED 2026-07-20)** — "Report only that the axis is REFUSED pending decision D."~~
+  Replaced: decision D was ruled (D2, full retire); the axis is `migration_pending`, neither refused nor flagged (the
+  suppression is now AE-5's migration-window rule).
+- **Side A — keep `LENDING` as a market-level `instrument_type`** (the interim, now being retired). Different grain from
+  the holdings duplication the operator's ruling targeted; simplest; no re-key; historical rows unchanged. Was carried
+  as `[WORKER REC]` — "least-bad, reversible" (`canonical_closeout_open_questions_2026_07_18.md:175-177`).
 - **Side B — key each to the reserve's `A_TOKEN`.** Uniform with "A_TOKEN/DEBT_TOKEN only", but coarse: loses the debt
   side for `liquidation_events`/`position_data`/`flash_loan_events`, and forces a historical re-key plus a manifest
   shard-atom migration (`:178-180`).
 - **Side C — split per side** (supply-index/collateral → `A_TOKEN`; borrow-index/debt/flash-loan → `DEBT_TOKEN`). Most
   semantically precise, biggest change: row-shape change, doubling for indices, historical re-key (`:181-183`).
-- **Consequence recorded in the register** — B or C re-activates the UTL consumer todo, a full migration of all 5+ MTDS
-  writers (not the partial 3), a Wave-D historical re-key, and a shard-atom fix on both axes (`:185-`).
-- **Required behaviour** — do NOT report the interim `LENDING` keying as a finding (this is AE-5's suppression), and do
-  NOT propose any re-key. Report only that the axis is REFUSED pending decision D.
+- **Consequence recorded in the register** — the retire re-activates the UTL consumer todo, a full migration of all 5+
+  MTDS writers (not the partial 3), a Wave-D historical re-key, and a shard-atom fix on both axes (`:185-`) — which is
+  exactly why it is `migration_pending` and gated on the writer-retire prerequisite plan, not flagged today.
 
 ---
 

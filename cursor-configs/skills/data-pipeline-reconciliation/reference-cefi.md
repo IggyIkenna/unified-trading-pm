@@ -138,6 +138,20 @@ evidence once you have confirmed you probed the vocabulary the writer actually e
    the v6 tail before recording absence.
 5. Only then treat a zero as a finding.
 
+## Census / vocabulary nuance
+
+Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+1).
+
+- **`instrument_type` is compared EXACT case-sensitive** (cefi/tradfi grain rule) — but a case-ONLY difference is the
+  C2a column-casing axis (RULED UPPERCASE-target, `migration_pending`), SUPPRESSED during the window (no casing
+  finding); a non-case out-of-enum value IS a `non_canonical_axis_value`.
+- **The v5/v6 dual chain-tail (H1) means the GCS-side census descent collects `underlying=` at TWO depths** —
+  `underlying={U}/ticks.parquet` (v5) and `underlying={U}/quote=/margin=/ticks.parquet` (v6); descend both or
+  under-count the `underlying` vocabulary by a whole lane.
+- **A blank `instrument_type` is a dropped sentinel, not a finding** — the census drops blank axis values before
+  badging, never a `non_canonical_axis_value`.
+
 ## Cross-links
 
 `SKILL.md` · `codex/02-data/four-surface-reconciliation-procedure.md` ·

@@ -42,18 +42,19 @@ three of four is the interesting case — that is where silent data loss lives.
 **Durable rules live in codex, not here.** This file is a runbook that _references_ its SSOTs; when they change, it
 inherits the change. Read these before trusting any verdict:
 
-| Concern                         | SSOT                                                                                   |
-| ------------------------------- | -------------------------------------------------------------------------------------- |
-| What canonical IS (tie-breaker) | `codex/02-data/cross-asset-canonical-target-ssot.md`                                   |
-| The comparison procedure        | `codex/02-data/four-surface-reconciliation-procedure.md`                               |
-| Finding names + exception list  | `codex/02-data/reconciliation-finding-taxonomy.md`                                     |
-| Delete safety (5-part proof)    | `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`                             |
-| Known non-canonical locations   | `codex/02-data/non-canonical-path-inventory.md`                                        |
-| Per-AG effective-from dates     | `codex/02-data/canonical-cutover-register.md`                                          |
-| Orphan oracle                   | `codex/02-data/orphan-object-detection.md`                                             |
-| Manifest schema + coverage      | `codex/02-data/availability-manifest-and-data-status.md`, `…/honest-coverage-model.md` |
-| Bucket naming + resolution      | `codex/05-infrastructure/bucket-isolation-model.md`                                    |
-| GCS object ops                  | `codex/05-infrastructure/gcs-object-operations.md`                                     |
+| Concern                                | SSOT                                                                                   |
+| -------------------------------------- | -------------------------------------------------------------------------------------- |
+| What canonical IS (tie-breaker)        | `codex/02-data/cross-asset-canonical-target-ssot.md`                                   |
+| The comparison procedure               | `codex/02-data/four-surface-reconciliation-procedure.md`                               |
+| Census + per-datapoint + compute tiers | codex/02-data/reconciliation-census-and-compute-tiers.md                               |
+| Finding names + exception list         | `codex/02-data/reconciliation-finding-taxonomy.md`                                     |
+| Delete safety (5-part proof)           | `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`                             |
+| Known non-canonical locations          | `codex/02-data/non-canonical-path-inventory.md`                                        |
+| Per-AG effective-from dates            | `codex/02-data/canonical-cutover-register.md`                                          |
+| Orphan oracle                          | `codex/02-data/orphan-object-detection.md`                                             |
+| Manifest schema + coverage             | `codex/02-data/availability-manifest-and-data-status.md`, `…/honest-coverage-model.md` |
+| Bucket naming + resolution             | `codex/05-infrastructure/bucket-isolation-model.md`                                    |
+| GCS object ops                         | `codex/05-infrastructure/gcs-object-operations.md`                                     |
 
 ## 0. `--asset-group` is REQUIRED — never synthesize one
 
@@ -220,25 +221,103 @@ rule still holds per shard; a whole-AG missing surface is a single declared gap,
 | **tradfi**     | Carries the write-time raising guard; `batch_massive` **read-recognition is deliberately KEPT** until the gated purge — flagging its 1.47M objects as orphans is a false positive.                        |
 | **cefi**       | v5/v6 **dual chain-tail** hazard — W1 may emit bare `underlying=/ticks.parquet` while W2 emits the canonical `underlying=/quote=/margin=/ticks.parquet`. Scan for both; report the divergence.            |
 
-### 3e. Two axes the skill must currently REFUSE to report on
+### 3e. Two axes now RULED but `migration_pending` — do not refuse, do not flag
 
-Both are **unruled operator decisions** with the two sides citing the same operator on the same date in opposite
-directions. Reporting either as a finding would be picking a side silently:
+> **CORRECTION 2026-07-20 (D1/D2 rulings + codex reconciliation).** This section previously read _"Two axes the skill
+> must currently REFUSE to report on"_ and instructed the skill to **REFUSE** both as unruled operator decisions whose
+> codex SSOTs contradicted each other. Both are now **RULED** (operator D1/D2, 2026-07-20) and the codex is reconciled
+> in this batch. `reconciliation-finding-taxonomy.md` § 5.1 / § 5.2 is the SSOT for both stances. The old "REFUSE —
+> awaiting operator ruling" / "PARKED" framing is **REMOVED**. Neither is an open question and neither is a finding —
+> both are **`migration_pending`** (ruled TARGET, not yet on disk). Superseded pre-ruling text is kept below.
 
-- **manifest `instrument_type` COLUMN case (C2a)** — do not report casing, do not propose or execute any casing
-  migration. The **path** segment (lowercase) and the **id** middle segment (UPPER) _are_ settled and must still be
-  enforced. Compare the column case-insensitively.
-  > ⚠️ **The codex SSOTs currently DISAGREE on C2a (4/5 first-run AGs hit this).** `reconciliation-finding-taxonomy.md`
-  > § 5.1 says C2a is **UNRULED → REFUSE**, while `canonical-cutover-register.md` § 3c, `four-surface-…procedure.md` § 7
-  > (O2) and `gcs-and-manifest-delete-safety-protocol.md` § 4 say **RULED UPPERCASE 2026-07-20 (D1) → ENFORCE**. **Until
-  > the codex is reconciled, this skill REFUSES** (follow the taxonomy) and surfaces the contradiction with both
-  > citations — do NOT enforce a casing migration off the register alone. This is a flagged codex contradiction for the
-  > orchestrator, not an executor decision.
-- **defi market/event `LENDING` keying (decision D)** — do not flag `lending` on market/event data_types
-  (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) as non-canonical. Only `holdings` uses
-  the `A_TOKEN`/`DEBT_TOKEN` split.
+- **manifest `instrument_type` COLUMN case (C2a)** — **RULED 2026-07-20 (operator D1).** The canonical TARGET is
+  **UPPERCASE** (the catalogue enum). It is **NOT yet implemented** — the column is `migration_pending` (measured
+  2026-07-20: mixed on disk — defi both cases present, prediction 99.46% UPPER, cefi ~99.41% adjusted). Therefore the
+  skill: **(1)** does **NOT REFUSE** the axis (the ruling is made — the old "REFUSE" is removed); **(2)** compares the
+  `instrument_type` COLUMN **case-INSENSITIVELY** and emits **NO** casing finding during the `migration_pending` window
+  — flagging lowercase-today would false-flag every un-migrated row; **(3)** POST-migration the column is enforced
+  UPPERCASE. The **path** segment stays **lowercase** and the **id** middle segment stays **UPPER** — both ALWAYS
+  enforced, never in question. **Do not propose or execute any casing migration.** SSOT:
+  `codex/02-data/reconciliation-finding-taxonomy.md` § 5.1.
+  > **Gate:** the honest-coverage harness must be made case-robust **BEFORE** the migration flips the writers to
+  > UPPERCASE — flipping first breaks the harness on un-migrated data. See
+  > `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
+- **defi market/event `LENDING` keying (decision D)** — **RULED 2026-07-20 (operator D2 — FULL retire).** Market/event
+  flat `LENDING` is `migration_pending` (the retire is gated on
+  `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`). The skill does **NOT REFUSE** it and does **NOT
+  flag** it — it is `migration_pending`, **NOT an open question**. Do not flag `lending` on market/event data_types
+  (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) as non-canonical; only `holdings` uses
+  the `A_TOKEN`/`DEBT_TOKEN` split. SSOT: `codex/02-data/reconciliation-finding-taxonomy.md` § 5.2.
 
-Surface the contradiction with both citations and a severity; **do not resolve it.**
+<details>
+<summary>Superseded pre-ruling text (2026-07-20 — kept as history)</summary>
+
+Before the D1/D2 rulings, §3e read _"Two axes the skill must currently REFUSE to report on"_ and instructed the skill to
+REFUSE both, surfacing a **flagged codex contradiction**: `reconciliation-finding-taxonomy.md` § 5.1 said C2a was
+**UNRULED → REFUSE**, while `canonical-cutover-register.md` § 3c, `four-surface-…procedure.md` § 7 (O2) and
+`gcs-and-manifest-delete-safety-protocol.md` § 4 said **RULED UPPERCASE 2026-07-20 (D1) → ENFORCE**; decision D was
+framed as **PARKED for the operator**. That contradiction is resolved: **`migration_pending`** is the reconciled stance
+— RULED but not yet on disk, so compared case-insensitively with **no** finding until the writers flip.
+
+</details>
+
+### 3f. Distinct-value census — the check that makes the `solana_amm_pool`-vs-`pool` slip impossible
+
+The per-shard oracle validates path STRUCTURE only; it never checks the VALUES of the `instrument_type=` / `data_type=`
+/ `venue=` / `chain=` segments against their enums (§ 3, and the false "twin absent" slip in § 4b). The **distinct-value
+census** closes that vocabulary blind spot, cheaply and **in-session** (no VM, no corpus walk). SSOT:
+`codex/02-data/reconciliation-census-and-compute-tiers.md` § 1.
+
+- **Manifest side — reuse the endpoint, do not re-read.** The manifest distinct-value census already exists as
+  `get_axis_value_census(service, asset_group)` (deployment-api `routes/data_status/_axis_census.py` — **reuse, no
+  endpoint change**), over the slim column-pruned read of the ONE consolidated `_index/availability_index.parquet`
+  (single-walk-exempt). It returns `{value, count}` per axis with blanks dropped, **RAW spellings preserved, verdict
+  undecided** — the skill applies the canonical badging.
+- **GCS side — delimiter descent, never a walk.** Gather the GCS-path distinct set by delimiter child-prefix listing
+  (no-walk route #2, § 3): descend one `key=value/` level at a time via `list_blobs(..., delimiter='/')`, read only the
+  returned `prefixes`, split each on `=`. **Derive the segment/descent order from `canonical_path_templates(<ag>)`**
+  (`possible_manifest.py:352`) — never a hardcoded segment order (a hand-rolled order IS the drift-false-positive
+  class). **Two gotchas from that helper:** it returns `{date}` / `{venue}` / `{instrument_type}` / … **placeholders,
+  not values** (parse the placeholder ORDER, then read the values off the census), and it returns an **empty list for
+  sports** — which means "use the sports dispatcher `candidate_parquet_paths`", NOT "no paths". Bound the descent to a
+  small recent day-window (the vocabulary is day-stable) plus one pre-cutover day when a historical cutover is in scope.
+- **Three comparisons.** Per axis let `M` = manifest distinct set, `G` = GCS distinct set, `C` = canonical UAC set
+  (grain-resolved — defi `instrument_type` / `venue` case-folded, cefi/tradfi EXACT): `M − C` →
+  **`non_canonical_axis_value`** (surface S3); `G − C` → **`non_canonical_axis_value`** (surface S1); `M △ G` →
+  **`shard_atom_vocab_desync`** (S1 ↔ S3 — the vocabulary-scale early warning of the phantom / missing-row class before
+  any per-shard scan). All three are NEW finding-types — until the taxonomy adds them, report them under an explicit
+  **taxonomy-gap** banner.
+- **Suppress the `migration_pending` axes BEFORE emitting** (§ 3e): a value differing from a canonical value **only by
+  case** (cefi/tradfi `instrument_type`) routes to a `migration_pending — C2a casing` line, **never** a
+  `non_canonical_axis_value` finding (defi is case-folded, so no defi casing noise); never flag `lending` /
+  `solana_lending` on defi market/event data_types (decision-D); `batch_massive` (source axis) is not non-canonical;
+  sports blank `pipeline_mode` / `source` stay dropped as blank sentinels.
+
+The census prints the writer's ACTUAL token (`solana_amm_pool`) as a present, canonical value and shows `pool`
+conspicuously **absent** — so you read the real vocabulary off the census instead of guessing, and the 2026-07-20 slip
+becomes structurally impossible.
+
+### 3g. Per-datapoint id + schema validation — builder-as-judge, contract-as-schema
+
+Two per-ROW / per-PARQUET checks that lift the sampled filename-stem and content spot-checks to 100%. Both run per the
+compute tiers (§ 7): **sampled in-session**, **100% only on the VM tier**. SSOT:
+`codex/02-data/reconciliation-census-and-compute-tiers.md` § 2.
+
+- **id-canonical (G2)** — for every row, rebuild the id from the row's own structured columns through the UAC SSOT
+  builder `build_canonical_instrument_id` (`canonical_id_builder.py`) and assert byte-equality with the stored
+  `instrument_id` (and, for defi, `canonical_instrument_id`). **Never a regex** — a migration-heuristic `_CANON_ID_RE`
+  is a fallback, not the oracle. The symbol column is looked up via `SchemaContract.symbol_column` /
+  `lookup_contract(asset_group, instrument_type, data_type)`, never guessed. Legitimately id-less shapes (pattern-#2
+  chain bundles, the symbol-less `ticks.parquet` fan-in, the prediction CQG bundle) emit no id-form finding; the defi
+  two-id `instrument_id ≠ canonical_instrument_id` divergence is AE-3, suppressed. A mismatch or a builder `ValueError`
+  → **`non_canonical_id`** (NEW type; taxonomy-gap banner until added). This is the id-FORM leg that
+  `non_canonical_path` is structurally blind to (§ 3).
+- **schema (G3)** — per parquet, resolve the `SchemaContract` via `lookup_contract` and run the existing read-side
+  `validate_dataframe(df, contract)` — invent no validator. It emits the closed set: `missing_column`, `wrong_dtype`
+  (tz-naive timestamps fall out here — the contract dtype is the tz-aware `datetime64[ns, UTC]` literal),
+  `null_in_required` / `row_count_too_low`, and the placeholder-that-looks-populated check (a `captured` row over a
+  0-row / all-NaN parquet — the content-grain honest-absence rule). G3 emits the **existing** `shard_pillar_fail` (+
+  `masked_empty_row`); it needs **no** new type — a Tier-2 full scan only drops the "SAMPLED spot-check" qualifier.
 
 ## 4. Phase 2 — non-canonical sweep and delete suggestions
 
@@ -277,7 +356,8 @@ Disposition vocabulary: `yes-twin-confirmed` · `yes-after-verify` · `no-migrat
 - any **prod-bucket delete**;
 - any **legacy-object delete after copy**;
 - the tradfi `batch_massive` ~1.47M-object purge;
-- anything touching `instrument_type` casing while C2a is unruled;
+- anything touching `instrument_type` casing — the C2a UPPERCASE migration is RULED but `migration_pending` (§ 3e), and
+  its writer/estate flip is a prod-bucket write, so it is human-only (corrected 2026-07-20: was "while C2a is unruled");
 - the defi `dex_pools/` + `lending_indices/` delete — **the delete order in two live plan docs is stale**; see
   `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`. The canonical twin is a **partial overlap**,
   not a duplicate: ORCA/RAYDIUM have canonical objects, while **KAMINO and SOLEND have none** — for those the legacy
@@ -338,6 +418,39 @@ additionally **notifies the operator** in chat.
   Diagnose it; never burn ticks repeating a failing action.
 - **Contradictions do not resolve themselves on a later tick.** If an axis is blocked on an operator ruling, it stays
   blocked — record it and move to the next AG rather than re-deriving the same blocked verdict every pass.
+
+## 7. Compute tiers — in-session vs VM
+
+The census (§ 3f) is cheap and always runs in-session; the per-datapoint checks (§ 3g) read millions of parquets and
+MUST NOT run as in-session compute (done naively they also violate single-walk). Two tiers. SSOT:
+`codex/02-data/reconciliation-census-and-compute-tiers.md` § 3.
+
+- **Tier 1 — in-session, bounded, always runs (no VM, no corpus walk).** The census (one slim manifest read + delimiter
+  descent), the per-shard path oracle (unchanged from Phase 1), and a **sampled** id/schema smoke: at most 1 object per
+  distinct manifest shard-atom, **hard-capped at ≤ 500 fetched objects per asset_group** (deterministic — newest per
+  atom, atoms sorted, truncate at 500). A clean sample is reported as **"id/schema validated on a SAMPLE of ≤500, NOT
+  the full corpus"** — never a 100% claim.
+- **Tier 2 — read-only SPOT VM, the ONE sanctioned single-walk, opt-in for a 100% claim.** Per-datapoint G2 + G3 over
+  the full corpus as ONE fresh walk per corpus per campaign — G2 and G3 are two PASSES bundled onto that ONE snapshot,
+  never two walks. **REUSE, do not hand-roll a VM name** — model it on the read-only
+  `deployment-service/scripts/vm/launch-manifest-recon-all-vm.sh` (per-AG, singleton-locked, `e2-standard-4`, zone
+  `asia-northeast1-c`, `VM_SHUTDOWN_ON_COMPLETION=true`, results to a log prefix), and register a real `VmPrefixSpec`
+  (`LifecycleClass.EPHEMERAL_BATCH`, a `datapoint-validation-<ag>-` prefix) **BEFORE** first launch — an unregistered
+  name is silently invisible in deployment-ui / cockpit / Slack. **SPOT by default** (idempotent per shard —
+  presence-skip, so backfill-class): `--provisioning-model=SPOT`, `ON_DEMAND=false`; preemption **resumes from measured
+  `PROGRESS.json`**, never a replay-from-start; because it is presence-skip (not `--force`), the standard relaunch is
+  correct and the force-PAGE guard never fires. **No fire-and-forget** — arm ONE `run_in_background` heartbeat watchdog
+  (≤30-min, `kill -0` liveness, no self-match, terminal verdict on every exit path) in the SAME turn as the launch;
+  progress metric = **count of results-index rows written**, entity-scoped to `(asset_group, campaign_id)` on
+  `time_created` (never log/heartbeat activity), require ≥1 progress/hr, flat ⇒ STALL. The VM writes a **results
+  manifest** (not the data) to a `datapoint-validation` bucket resolved via `resolve_bucket_name(...)`; the skill reads
+  it back with a slim `read_availability_index` (single-walk-exempt, never a re-walk) and upgrades the S2 content column
+  from "sampled" to "100% validated, campaign={ts}". Absent a Tier-2 campaign, the report keeps the Tier-1 SAMPLED
+  verdict and says so.
+- **Autonomous boundary.** Default = Tier 1 only. **Under `/autonomous` the skill MAY autonomously DISPATCH the
+  read-only Tier-2 scan** — it READS parquets and WRITES only a results index to the `datapoint-validation` bucket,
+  provably disjoint from every prod DATA kind via `resolve_bucket_name`. A prod-DATA-bucket **WRITE or DELETE stays the
+  human-only hard stop** — the reconciliation skill's autonomous boundary (§ 4b) is otherwise unchanged.
 
 ## Extending to a new asset_group
 

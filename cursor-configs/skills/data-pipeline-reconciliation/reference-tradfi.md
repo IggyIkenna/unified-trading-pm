@@ -142,6 +142,18 @@ Per `SKILL.md` § 3e, surface these with citations and a severity; do not resolv
    `underlying=` tail (H3). One vocabulary does not cover both.
 5. Only then treat a zero as a finding.
 
+## Census / vocabulary nuance
+
+Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+1).
+
+- **`batch_massive` (source / `pipeline_mode` axis) is SUPPRESSED, never a `non_canonical_axis_value`** — the
+  read-recognition is deliberately KEPT until the gated GCS purge (H2); the census routes it to the accepted-exception
+  line with a count + pointer, not a finding.
+- **`instrument_type` is compared EXACT case-sensitive** (cefi/tradfi grain rule) — a case-ONLY diff is the C2a
+  column-casing axis (RULED UPPERCASE-target, `migration_pending`), SUPPRESSED during the window; a non-case out-of-enum
+  value IS a `non_canonical_axis_value`.
+
 ## Cross-links
 
 `SKILL.md` · `codex/02-data/four-surface-reconciliation-procedure.md` ·

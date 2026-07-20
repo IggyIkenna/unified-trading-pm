@@ -99,8 +99,13 @@ what's the canonical schema, and what cluster validation rule applies.
 > **Lending instrument_type keying (INTERIM):** the market/event lending DATA_TYPES above key to the market-level
 > `lending` (EVM) / `solana_lending` (Solana / Kamino) instrument_type — NOT the `a_token`/`debt_token` HOLDINGS split
 > (that is the operator-ruled IS reference/holdings SSOT). The Wave-B flat-`LENDING`-retire over-reached (broke 5+ MTDS
-> writers) and was reversed (`wn12e7itc`); whether these DATA_TYPES adopt A_TOKEN/DEBT_TOKEN is PARKED for the operator
-> (`issues/canonical_closeout_open_questions_2026_07_18.md` § D).
+> writers) and was reversed (`wn12e7itc`); whether these DATA_TYPES adopt A_TOKEN/DEBT_TOKEN was **RULED 2026-07-20
+> (operator D2 — FULL retire)** (⛔ corrected 2026-07-20: ~~"is PARKED for the operator
+> (`issues/canonical_closeout_open_questions_2026_07_18.md` § D)"~~). The FULL retire — market/event lending data_types
+> also adopt the split — is the RULED TARGET but is **NOT yet implemented** (`migration_pending`), gated on
+> `../../plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`; the uniform-`LENDING` interim holds until
+> then. It is neither refused nor flagged — `migration_pending`, not an open question. See
+> `defi-canonical-naming-ssot.md` (instrument_type row, D2) and `reconciliation-finding-taxonomy.md` §5.2.
 
 ### DEX (spot)
 

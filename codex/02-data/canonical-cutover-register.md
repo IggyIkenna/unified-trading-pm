@@ -113,9 +113,13 @@ the effective-from date is the same for every AG.
 
 **Sports exception (operator-ACCEPTED, do not re-report).** 19,274 `instruments-store-sports` rows predating
 **2026-07-08** carry blank `pipeline_mode` **and** blank `source`, accepted as permanently untyped under `BLK-d48acae4`.
-A reconciliation pass MUST suppress these as a known exception, not surface them as a fresh finding. _(Recorded in the
-Phase-0 audit's per-asset-group synthesis for sports; the underlying blocker id is `BLK-d48acae4`. **UNVERIFIED**: this
-agent did not read the row-level evidence behind the 19,274 count.)_
+_(**Count is a ceiling, not an exact figure — ≤ baseline; last measured 13,903 on 2026-07-20** (acceptance review,
+sports reconciliation run). 19,274 is the original baseline; the measured 13,903 is below it, consistent with the
+count-only-decreases exit rule — the population can only shrink as rows are typed/cleaned, never grow. Keep the 19,274
+baseline; treat the live count as ≤ baseline and re-measure per run.)_ A reconciliation pass MUST suppress these as a
+known exception, not surface them as a fresh finding. _(Recorded in the Phase-0 audit's per-asset-group synthesis for
+sports; the underlying blocker id is `BLK-d48acae4`. **UNVERIFIED**: this agent did not read the row-level evidence
+behind the 19,274 count.)_
 
 **The machine gate is currently WEAKER than this register.**
 `canonical_path_violations(..., require_pipeline_mode: bool = False)` defaults to `False` (`partition_paths.py:661`). A
@@ -127,7 +131,9 @@ item (plan todo P1-10).
 
 ## §3 — Axis: `instrument_type` case
 
-This axis splits into **three sub-axes** with different rulings. Two are settled; one is BLOCKING and unruled.
+This axis splits into **three sub-axes** with different rulings. ~~Two are settled; one is BLOCKING and unruled.~~ **(⛔
+corrected 2026-07-20: all three are now RULED — PATH lowercase (3a), ID middle UPPER (3b), COLUMN target UPPERCASE but
+`migration_pending` today (3c).)**
 
 ### 3a. PATH segment — SETTLED, lowercase
 
@@ -154,18 +160,29 @@ Inside the canonical instrument id the type token is **UPPER** and is part of th
 in 3c and must not be conflated with it. Grammar SSOT:
 [`cross-asset-canonical-target-ssot.md`](cross-asset-canonical-target-ssot.md).
 
-### 3c. MANIFEST COLUMN case — ✅ RULED UPPERCASE (was BLOCKING, contradiction B2)
+### 3c. MANIFEST COLUMN case — ✅ RULED UPPERCASE (TARGET), `migration_pending` today (was BLOCKING, contradiction B2)
 
-> **⛔ corrected 2026-07-20, operator ruling D1.** ~~This axis was "🔴 UNRULED (BLOCKING)"; the register refused to pick
-> a side.~~ **RULED: the manifest `instrument_type` COLUMN is UPPERCASE (catalogue wins).** Recorded in
+> **⛔ corrected 2026-07-20, operator ruling D1 — RE-RECONCILED 2026-07-20 (acceptance review).** ~~This axis was "🔴
+> UNRULED (BLOCKING)"; the register refused to pick a side.~~ ~~A reconciliation pass now ENFORCES UPPERCASE for the
+> column.~~ **RULED: the canonical TARGET for the manifest `instrument_type` COLUMN is UPPERCASE (catalogue enum
+> wins).** Recorded in
 > [`../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`](../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md)
 > § "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20", and mirrored in
 > [`cross-asset-canonical-target-ssot.md`](cross-asset-canonical-target-ssot.md) §7 / §11a. Three separate legs, never
-> collapsed: manifest **COLUMN → UPPERCASE** · GCS **path segment → lowercase** (unchanged) · **id middle segment →
-> UPPER** (unchanged). The two already-shipped uppercase scripts (`instruments-service@555ddf1c` + the tradfi Phase-B
-> script) are **RATIFIED** and their DRAIN-GATED `--apply` freeze is **LIFTED**. A reconciliation pass now ENFORCES
-> UPPERCASE for the column; defi rows not yet folded UP are `migration_pending`, not a fresh non-canonical finding. The
-> pre-ruling table + "binding consequence" text below is HISTORY — do not act on it.
+> collapsed: manifest **COLUMN → UPPERCASE (target)** · GCS **path segment → lowercase** (unchanged, ALWAYS enforced) ·
+> **id middle segment → UPPER** (unchanged, ALWAYS enforced).
+>
+> **The UPPERCASE column is the TARGET, NOT yet implemented — the column is `migration_pending` (measured 2026-07-20:
+> mixed on disk — defi both cases present, prediction 99.46% UPPER, cefi ~99.41% adjusted).** Therefore the
+> reconciliation skill: **(1)** does **NOT REFUSE** the axis (the old "REFUSE — awaiting operator ruling" is REMOVED —
+> the ruling is made); **(2)** compares the `instrument_type` COLUMN **case-INSENSITIVELY** and emits **NO** casing
+> finding during the `migration_pending` window — flagging lowercase-today would false-flag all un-migrated data;
+> **(3)** the TARGET is UPPERCASE — **POST-migration the column is enforced UPPERCASE.** The two already-shipped
+> uppercase scripts (`instruments-service@555ddf1c` + the tradfi Phase-B script) are **RATIFIED** and their DRAIN-GATED
+> `--apply` freeze is **LIFTED**; defi/other rows not yet folded UP are `migration_pending`, not a fresh non-canonical
+> finding. **Gate**: the honest-coverage harness must be made case-robust BEFORE the migration flips writers — see
+> [`../../plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`](../../plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md).
+> The pre-ruling table + "binding consequence" text below is HISTORY — do not act on it.
 
 | Side          | Claim                                                        | Citation                                             |
 | ------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
@@ -284,17 +301,19 @@ Two further sports facts a reconciliation pass needs, both from the Phase-0 audi
 
 ## §7 — Summary table
 
-| asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN | chain tail        | defi leaf                    | sports data_type case  |
-| ----------- | ------------------------------------- | -------------------- | ---------------------- | ----------------- | ---------------------------- | ---------------------- |
-| cefi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPERCASE (D1, §3c) | v5/v6 dual hazard | n/a                          | n/a                    |
-| tradfi      | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPERCASE (D1, §3c) | **2026-07-19**    | n/a                          | n/a                    |
-| defi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPERCASE (D1, §3c) | n/a               | UNKNOWN (writer not resumed) | n/a                    |
-| prediction  | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPERCASE (D1, §3c) | n/a               | n/a                          | n/a                    |
-| sports      | 2026-05-19 (+ BLK-d48acae4 exception) | n/a                  | ✅ UPPERCASE (D1, §3c) | n/a               | n/a                          | UNKNOWN (K1 unshipped) |
+| asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN                        | chain tail        | defi leaf                    | sports data_type case  |
+| ----------- | ------------------------------------- | -------------------- | --------------------------------------------- | ----------------- | ---------------------------- | ---------------------- |
+| cefi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | v5/v6 dual hazard | n/a                          | n/a                    |
+| tradfi      | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | **2026-07-19**    | n/a                          | n/a                    |
+| defi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | n/a               | UNKNOWN (writer not resumed) | n/a                    |
+| prediction  | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | n/a               | n/a                          | n/a                    |
+| sports      | 2026-05-19 (+ BLK-d48acae4 exception) | n/a                  | ✅ UPPER target · migration_pending (D1, §3c) | n/a               | n/a                          | UNKNOWN (K1 unshipped) |
 
-> **⛔ corrected 2026-07-20, operator ruling D1.** The `instrument_type COLUMN` cells above read "🔴 UNRULED (§3c)"
-> until the 2026-07-20 ruling; the column is now RULED **UPPERCASE**. defi rows not yet folded UP are
-> `migration_pending`, not a fresh finding — see §3c.
+> **⛔ corrected 2026-07-20, operator ruling D1 — RE-RECONCILED 2026-07-20 (acceptance review).** The
+> `instrument_type COLUMN` cells above read "🔴 UNRULED (§3c)" until the 2026-07-20 ruling, then briefly "RULED
+> UPPERCASE (enforce now)". The reconciled stance: the column TARGET is **UPPERCASE** but is **`migration_pending`**
+> (mixed on disk today) — the reconciliation skill compares it **case-INSENSITIVELY** and emits **NO** casing finding
+> until the migration completes; UPPERCASE is enforced POST-migration. See §3c.
 
 **cefi chain-tail hazard (not a date, a fork).** cefi has **two live write lanes emitting two different tails for the
 same shard**: MTDS W1 `PartitionedTickWriter` emits the bare v5 tail `underlying={U}/ticks.parquet` because

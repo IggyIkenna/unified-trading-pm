@@ -181,9 +181,15 @@ proposed taxonomy blocks.
 The census applies the taxonomy's accepted-exception list BEFORE emitting, or it re-reports refused/accepted axes and
 destroys report signal:
 
-- **C2a instrument_type COLUMN casing** — a value differing from a canonical value only by case (cefi/tradfi) routes to
-  a `REFUSED — C2a casing` line, never a `non_canonical_axis_value` finding, and proposes no migration. (defi is
-  case-folded by `_comparison_set`, so no defi casing noise.)
+<!-- CORRECTION 2026-07-20 (operator D1): C2a was ruled — the axis is `migration_pending`, no longer `REFUSED`. It is
+     compared case-INSENSITIVELY and emits NO casing finding during the migration window. The prior wording routed it to
+     a `REFUSED — C2a casing` line; that verdict label is retired. SSOT: reconciliation-finding-taxonomy.md §5.1. -->
+
+- **C2a instrument_type COLUMN casing** — RULED 2026-07-20 (operator D1): the TARGET is UPPERCASE but the column is
+  `migration_pending` (mixed on disk), so a value differing from a canonical value only by case (cefi/tradfi) routes to
+  a `migration_pending — C2a casing` line, never a `non_canonical_axis_value` finding, and proposes no migration — the
+  axis is compared **case-INSENSITIVELY** and emits NO casing finding during the window (was "`REFUSED — C2a casing`"
+  pre-D1). (defi is case-folded by `_comparison_set`, so no defi casing noise.)
 - **Decision-D `LENDING` keying** — never flag `lending` / `solana_lending` on defi market/event data_types.
 - **`batch_massive`** (source axis) is not non-canonical / not delete-eligible.
 - **Sports blank `pipeline_mode` / `source`** — already dropped as blank sentinels; never re-report.

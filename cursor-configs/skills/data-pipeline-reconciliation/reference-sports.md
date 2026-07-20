@@ -214,6 +214,19 @@ equivalent of the defi `solana_amm_pool` false negative.
 5. Pick one `(day, entity, league)` known-captured from the manifest and confirm your probe returns non-zero.
 6. Only then treat a zero as a finding.
 
+## Census / vocabulary nuance
+
+Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+1).
+
+- **No `asset_group=` node** — the census descends the `entity=`-keyed reference tree via `candidate_parquet_paths`;
+  `canonical_path_templates("sports")` returns `[]`, a routing signal (spot-check), **never** an `asset_group=`
+  delimiter descent.
+- **`entity=` is NEVER a census `data_type`** — resolve folder→semantic via `SPORTS_DATA_TYPE_TO_FOLDER` before badging
+  (H1); a raw `entity=` label is not a `data_type` axis value.
+- **Blank `pipeline_mode` / `source` are already dropped (AE-1, H3), never re-report** — the census drops blank
+  sentinels before badging.
+
 ## Cross-links
 
 `SKILL.md` · [`reference-prediction.md`](reference-prediction.md) (H4 bleed) ·

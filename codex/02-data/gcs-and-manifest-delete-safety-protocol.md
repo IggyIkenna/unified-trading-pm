@@ -212,9 +212,12 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
    states the scale in two mutually inconsistent forms (a "1.47M-object purge" and "1,696,166 objects"). Neither was
    independently re-measured for this doc. Treat the scale as ~1.5M and re-measure before any purge; do not cite either
    figure as settled.
-4. **Anything touching `instrument_type` casing — RULED UPPERCASE (D1), still a human-only hard stop for prod-scale
-   rewrites.** ⛔ corrected 2026-07-20: this axis was previously "unruled / this doc does not pick a side"; the operator
-   **ruled UPPERCASE for the manifest COLUMN** on 2026-07-20 (D1). The delete-safety consequence is **unchanged** — an
+4. **Anything touching `instrument_type` casing — RULED UPPERCASE (TARGET, D1), `migration_pending` today; still a
+   human-only hard stop for prod-scale rewrites.** ⛔ corrected 2026-07-20 (re-reconciled same day, acceptance review):
+   this axis was previously "unruled / this doc does not pick a side"; the operator **ruled the TARGET is UPPERCASE for
+   the manifest COLUMN** on 2026-07-20 (D1), but it is **NOT yet implemented — the column is `migration_pending` (mixed
+   on disk today)**, so a reconciliation pass compares casing **case-INSENSITIVELY** and emits **no** casing finding
+   until the migration completes (never "enforce UPPERCASE now"). The delete-safety consequence is **unchanged** — an
    object or row whose only non-canonical attribute is `instrument_type` casing is a `migration_pending` fold-UP item
    (repaired in place, **never a delete candidate**), and prod-scale casing rewrites (>12M rows, incl. defi rows not yet
    folded UP) remain a human-only hard stop. See § 4.
@@ -240,12 +243,17 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
 > `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § "OPERATOR DECISIONS"). The delete-safety consequence
 > is UNCHANGED by the rulings — neither axis ever makes an object a delete candidate — but they are no longer "open".
 
-**C2a — manifest `instrument_type` column case. ✅ RULED UPPERCASE (D1).** Was contested (both sides `status: current`,
-both dated 2026-07-18, both citing the operator: LOWERCASE = `cross-asset-canonical-target-ssot.md` §7/§11; UPPERCASE
-catalogue-as-SSOT = `plans/active/tradfi_consolidated_closeout_2026_07_18.md` Phase-B). **Operator ruled UPPERCASE for
-the manifest COLUMN**; the shipped cefi/tradfi uppercase scripts are RATIFIED. **Consequence for delete safety
-(unchanged)**: an object or row whose only "non-canonical" attribute is `instrument_type` casing is a
-`migration_pending` fold-UP item, **never a delete candidate** — a casing difference is repaired in place, not deleted.
+**C2a — manifest `instrument_type` column case. ✅ RULED UPPERCASE (TARGET, D1); `migration_pending` today.** Was
+contested (both sides `status: current`, both dated 2026-07-18, both citing the operator: LOWERCASE =
+`cross-asset-canonical-target-ssot.md` §7/§11; UPPERCASE catalogue-as-SSOT =
+`plans/active/tradfi_consolidated_closeout_2026_07_18.md` Phase-B). **Operator ruled the canonical TARGET is UPPERCASE
+for the manifest COLUMN**; the shipped cefi/tradfi uppercase scripts are RATIFIED. **Re-reconciled 2026-07-20
+(acceptance review): the UPPERCASE column is NOT yet implemented — the column is `migration_pending` (mixed on disk
+today), so the reconciliation skill compares it case-INSENSITIVELY and emits NO casing finding until the migration
+completes; UPPERCASE is enforced POST-migration. The PATH segment stays lowercase and the ID middle segment stays UPPER
+— both always enforced.** **Consequence for delete safety (unchanged)**: an object or row whose only "non-canonical"
+attribute is `instrument_type` casing is a `migration_pending` fold-UP item, **never a delete candidate** — a casing
+difference is repaired in place, not deleted.
 
 **Defi flat `LENDING` instrument_type. ✅ RULED — full retire is the TARGET, NOT yet implemented (D2).**
 `cross-asset-canonical-target-ssot.md` §5's "`LENDING` is RETIRED (A_TOKEN/DEBT_TOKEN split, ~16.7M rows)" is the

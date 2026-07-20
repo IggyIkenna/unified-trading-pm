@@ -365,13 +365,16 @@ path per AG.**
 
 ## 7. Open questions — all four now RESOLVED (O2/O3 RULED 2026-07-20)
 
-> **⛔ corrected 2026-07-20, operator rulings D1 + D2.** ~~"O2 and O3 are genuinely UNRULED and BLOCKING — they need an
-> OPERATOR … refuse to migrate the affected axis."~~ **Both were RULED 2026-07-20** (recorded in
-> `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20").
-> O2 → manifest `instrument_type` COLUMN is **UPPERCASE** (enforce, do not refuse). O3 → defi flat `LENDING` full retire
-> is the RULED **TARGET**, not yet implemented, gated on the MTDS lending-writer fix — market/event flat `LENDING` is
-> `migration_pending`, neither a fresh finding nor an open axis. The per-item text below is updated in place; nothing in
-> this section is now a live operator question.
+> **⛔ corrected 2026-07-20, operator rulings D1 + D2 — RE-RECONCILED 2026-07-20 (acceptance review).** ~~"O2 and O3 are
+> genuinely UNRULED and BLOCKING — they need an OPERATOR … refuse to migrate the affected axis."~~ **Both were RULED
+> 2026-07-20** (recorded in `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § "OPERATOR DECISIONS — ALL
+> THREE RULED 2026-07-20"). O2 → manifest `instrument_type` COLUMN TARGET is **UPPERCASE**, but is **NOT yet
+> implemented** — the column is `migration_pending` (mixed on disk today), so the reconciler does NOT refuse it,
+> compares it **case-INSENSITIVELY**, and emits **NO** casing finding until the migration completes (UPPERCASE enforced
+> POST-migration). ~~(enforce, do not refuse)~~ — "enforce UPPERCASE now" was an over-correction; the reconciled stance
+> is case-insensitive-until-migrated. O3 → defi flat `LENDING` full retire is the RULED **TARGET**, not yet implemented,
+> gated on the MTDS lending-writer fix — market/event flat `LENDING` is `migration_pending`, neither a fresh finding nor
+> an open axis. The per-item text below is updated in place; nothing in this section is now a live operator question.
 
 **O1 and O4 are RESOLVED** and are retained below only as an audit trail of how each was closed. Neither was ever a real
 operator question: both were doc drift — one stale template in the tie-breaker doc, and one formula stated three ways —
@@ -394,12 +397,20 @@ stalls forever or migrates something it had no mandate to touch.
     manifest rows, bundled with the pending ASTER/HYPERLIQUID cefi-misfiling decision (same doc `:1041-1044`). **The
     reconciler must NOT emit these as `legacy_duplicate` and must NEVER suggest deleting them** — they are the only copy
     of that data, and their re-migration is gated on an operator decision that has not been made.
-- **O2 — manifest `instrument_type` COLUMN case. ✅ RULED UPPERCASE 2026-07-20 (operator ruling D1).** Was contested —
-  `cross-asset-canonical-target-ssot.md` §7 said LOWERCASE while the tradfi close-out Phase B said UPPERCASE, both
-  citing the same operator on the same date (2026-07-18). **The operator ruled UPPERCASE for the manifest COLUMN**
-  (catalogue wins; path segment stays lowercase, id middle segment stays UPPER — neither in question). The two shipped
-  uppercase scripts (`instruments-service@555ddf1c` + tradfi Phase-B) are RATIFIED and unfrozen. **The reconciler now
-  ENFORCES UPPERCASE for the column**; defi rows not yet folded UP are `migration_pending`, not a fresh finding.
+- **O2 — manifest `instrument_type` COLUMN case. ✅ RULED UPPERCASE (TARGET) 2026-07-20 (operator ruling D1);
+  `migration_pending` today.** Was contested — `cross-asset-canonical-target-ssot.md` §7 said LOWERCASE while the tradfi
+  close-out Phase B said UPPERCASE, both citing the same operator on the same date (2026-07-18). **The operator ruled
+  the canonical TARGET is UPPERCASE for the manifest COLUMN** (catalogue enum wins; path segment stays lowercase, id
+  middle segment stays UPPER — both ALWAYS enforced, neither in question). The two shipped uppercase scripts
+  (`instruments-service@555ddf1c` + tradfi Phase-B) are RATIFIED and unfrozen. **The UPPERCASE column is NOT yet
+  implemented — the column is `migration_pending` (measured 2026-07-20: mixed on disk — defi both cases present,
+  prediction 99.46% UPPER, cefi ~99.41% adjusted).** ~~The reconciler now ENFORCES UPPERCASE for the column~~ **(⛔
+  re-reconciled 2026-07-20 — "enforce now" would false-flag all un-migrated data).** So the reconciler **(1)** does NOT
+  refuse the axis; **(2)** compares the `instrument_type` COLUMN **case-INSENSITIVELY** and emits **NO** casing finding
+  during the `migration_pending` window; **(3)** enforces UPPERCASE only POST-migration. Defi/other rows not yet folded
+  UP are `migration_pending`, not a fresh finding. **Gate**: the honest-coverage harness must be made case-robust BEFORE
+  the migration flips writers —
+  `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
 - **O3 — defi flat `LENDING` instrument_type. ✅ RULED 2026-07-20 (operator ruling D2 — full retire is the TARGET, NOT
   yet implemented).** `cross-asset-canonical-target-ssot.md` §5's "`LENDING` is RETIRED (A_TOKEN/DEBT_TOKEN split)" is
   the correct TARGET, but the first attempt was **reversed in code** because it broke 5+ (really 8) MTDS lending writers
