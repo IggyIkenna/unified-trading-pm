@@ -801,3 +801,61 @@ The P0 the skill found on its first run is fixed to the operator's exact semanti
 - **Bonus finding from the fix:** because deriv is now `supports_prior_day_seed=False`, it no longer reads the shared
   seed context → deriv is REMOVED from the set of adapters exposed to the P0 concurrency bug
   (`issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`). The bug remains for trades/book/tbbo/defi.
+
+### 2026-07-20 — GIL question ANSWERED with measurement: yes it's the GIL; the throughput fix is MULTIPROCESSING (R1)
+
+Operator: _"check if could be GIL in which case code needs refactor to use multi processes rather than concurrency
+within a single python process."_ **Measured, decisive: YES.**
+
+**The decisive benchmark** (real UTL `_build_capture_status_map` — VERIFIED a pure-Python `for` loop over
+`_ROW_KEY_COLUMNS`, `manifest_completeness.py:169 — on ThreadPool vs ProcessPool, K=1..8):**
+
+- Case A (the pure-Python map-build, GIL-HELD): **threads get WORSE with more workers — per-worker speed 0.67 → 0.11x
+  (~1/K), wall EXPLODES 6.4s→41.5s** for the same work. Processes stay near full speed (0.86→0.52x); K=4 processes 12.3s
+  vs threads 21.2s (**1.7x**). Textbook GIL. The thread-side degradation is the proof and needs no process-pool (the
+  process side just confirms the alternative works; I independently confirmed the thread-side result is unambiguous).
+- Case B (polars `group_by_dynamic`) + Case C (pandas numeric `.agg`): on the SAME thread pool, walls stay FLAT — they
+  RELEASE the GIL. **So threads help the GIL-released fraction (I/O, polars, numeric agg) and do NOTHING for the held
+  fraction.** Correction to a prior assumption: vectorized pandas numeric `.agg` RELEASES the GIL; the genuinely
+  GIL-held pandas cost is the Python-callback/loop code (`_scatter_series`, `_carry_forward_ohlc`, HFT helpers) + the
+  **3 redundant `.to_pandas()` per write** (`candle_write_mixin.py:519/571/618` — confirmed).
+
+**Architecture (recommended):**
+
+- **R1 (PRIMARY) — date-level multiprocessing:** the machinery ALREADY exists (`_run_date_as_subprocess`,
+  `process_handler.py:675`) but the date loop dispatches SERIALLY (`:785`, blocking `subprocess.run`). Change serial →
+  bounded-concurrent dispatch (Popen/ProcessPool of size K over dates). Separate processes → no cross-date GIL
+  contention; C-arena reclaimed per child; **dates (~2400 multi-year) >> cores so it saturates any VM/fleet**; LOW risk
+  (reuses tested subprocess code, only the dispatch loop changes). This is the "2 weeks" throughput lever.
+- Keep the in-date `ThreadPoolExecutor(8)` — it profitably overlaps the GIL-RELEASED work within a date (Case B proves
+  it).
+- **R2 (secondary) — instrument-level ProcessPool** at `batch_workers.py:370`, only for single-DATE-heavy latency
+  (one-day recompute), where date fan-out = 1.
+
+**⚠️ NUANCE I must correct in the GIL agent's report:** it said R1 "fixes the shared-`self` seed bug for free." That is
+only PARTLY true. R1 fixes CROSS-date races (different dates = different processes), but WITHIN one date the in-date
+thread pool still runs over the shared `self`, so a date with heterogeneous files (multi-venue/underlying) still races.
+**The seed-context fix (per-call value object) is REQUIRED independently of R1** — do not rely on R1 to cover it. (R2
+WOULD cover it, since each instrument gets its own process, but R2 isn't the backfill recommendation.)
+
+**The two operator targets are DIFFERENT problems — stated explicitly:**
+
+- **"5s PER instrument-day" (LATENCY): multiprocessing buys 0% of this.** It needs per-unit Python-cost cuts: (1) the
+  emission-check read-path fix (removes ~9-40s of GIL-held Python per PROD instrument — measured ~3-13s x ~3 calls),
+  then (2) de-pandas the adapter (collapse the 3 redundant `.to_pandas()`, vectorize `_scatter_series`/
+  `_carry_forward_ohlc`/HFT callbacks). 5s is a per-unit optimization program, reachable via those fixes.
+- **"everything in 2 weeks" (THROUGHPUT): exactly what multiprocessing buys.** R1 at K workers x M VMs → per-unit /
+  (K.M). Even at the un-optimized ~25.9s TEST residual, 16 workers ≈ 1.6s amortized; add VMs linearly. Reachable — BUT
+  the emission-check read-path fix is a PREREQUISITE, because under a process pool each of K processes rebuilds its own
+  1.45M-row dict → K copies in RAM → RAM caps K and stalls the fan-out. Multiprocessing AMPLIFIES the read-path bug.
+
+**Sequencing that follows from the measurement:** (1) emission-check read-path fix [IN FLIGHT] — prerequisite for both
+targets; (2) seed-context per-call fix — correctness prerequisite for in-date concurrency; (3) R1 concurrent
+date-subprocess dispatch — the 2-week throughput lever; (4) de-pandas the adapter — the remaining per-unit latency to
+hit 5s; (5) re-measure on a real VM against a PROD-sized index to PROVE the numbers.
+
+- [ ] NEW todo. [SCRIPT] P1. Implement R1: bounded-concurrent `_run_date_as_subprocess` dispatch (the 2-week throughput
+      lever). Gated on the seed-context fix for in-date safety.
+- [ ] NEW todo. [SCRIPT] P2. De-pandas the per-write path: collapse the 3 redundant `.to_pandas()`
+      (`candle_write_mixin.py:519/571/618`) + vectorize `_scatter_series`/`_carry_forward_ohlc`/HFT callbacks — the
+      remaining per-unit latency cut toward 5s.
