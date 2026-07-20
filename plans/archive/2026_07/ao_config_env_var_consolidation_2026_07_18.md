@@ -17,7 +17,7 @@ summary: |
   and folds in the AF-6 ENV_VARS.md residual (retired tab/<vm_id>/<slot> + "Fleet VM (epic worker)" framing). LOCAL
   track —
   operator-driven, executed interactively, never dispatched.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -32,7 +32,7 @@ related:
     ../epics/orchestrator_master.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-07-20
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -58,6 +58,17 @@ source:
 ---
 
 # AO config env-var consolidation
+
+> **🟢 COMPLETE 2026-07-20 — ARCHIVED.** All 12 code/doc todos landed and were independently re-verified 2026-07-20:
+> shas `5ad97b9`, `2d6d60b`, `c03ccce` exist and are ancestors of `origin/live-defi-rollout`; `TuningDefaults` carries
+> exactly the 81 claimed fields with zero `validation_alias`; `basedpyright server/` is clean (0/0/0); the `set_tuning`
+> fixture and bounds-assert patterns exist; zero `os.getenv()` anywhere in `server/` or `scripts/`. The two remaining
+> items are **operator-gated prod `.env.local` actions**, not code, and are now owned by
+> `ao_open_issues_consolidated_close_out_2026_07_17.md` § Phase 8.
+>
+> **Trap worth carrying**: the `bootstrap_vm.sh` `_remove_env` purges are GENERATOR-INERT on an already-bootstrapped
+> host. `ao-self-pull.sh` only does `git merge --ff-only` + `systemctl restart` — it never re-runs an installer, so
+> those purges do nothing live until `bootstrap_vm.sh` is re-run there.
 
 > **Human plan — operator session executes it interactively** (`assigned_vm: NA`, never ingested). Code ships via
 > `quickmerge.sh --agent --files`; each shippable unit flips its todo here in the SAME turn. A phase that touches
@@ -121,11 +132,12 @@ class OrchestratorConfig(UnifiedCloudConfig):   # BaseSettings — THE .env surf
       re-bootstrap never cleared the live VM's inert `REGEN_REQUIRE_VM_MATCH=true` (retired 2026-06-25, D8). Fix: added
       `_remove_env     ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH` beside the DB_PATH purge + dropped two stale comments
       (retired `tab/<VM_ID>/<slot>` framing; the `REQUIRE_VM_MATCH=true` EXTRA_ENV example). `bash -n` clean.
-- [ ] [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM `.env.local`**
-      — live on the VM (confirmed via SSM) but the field no longer exists (silently ignored via config
-      `extra="ignore"`). Two ways: a re-bootstrap now purges it (agent-orchestrator@5ad97b9), OR an SSM `sed -i`
-      backup-first + clean restart. Operator-gated: touches prod env. **BLOCKED-OPERATOR-DECISION** (no rush — inert
-      no-op today).
+- ➡️ **MIGRATED 2026-07-20 → `ao_open_issues_consolidated_close_out_2026_07_17.md` § Phase 8. NOT done; not owned
+  here.** Original item, for the record: [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from
+  the live planning-VM `.env.local`** — live on the VM (confirmed via SSM) but the field no longer exists (silently
+  ignored via config `extra="ignore"`). Two ways: a re-bootstrap now purges it (agent-orchestrator@5ad97b9), OR an SSM
+  `sed -i` backup-first + clean restart. Operator-gated: touches prod env. **BLOCKED-OPERATOR-DECISION** (no rush —
+  inert no-op today).
 - [x] [DOC] P2. ✅ **Recorded the redundant-to-default VM vars** — agent-orchestrator@c03ccce. ENV_VARS.md now has a
       "Redundant on the live VM (safe to remove)" section for `WATCHDOG_DAILY_CAP=50`, `SNAPSHOT_INTERVAL_SECONDS=1800`,
       `WORKER_HOST=local`, `REGEN_PRUNE_STALE=true` (documented, not silently changed on prod).
@@ -178,8 +190,10 @@ class OrchestratorConfig(UnifiedCloudConfig):   # BaseSettings — THE .env surf
 
 - [x] [BACKEND] P1. ✅ **Shipped each phase via `quickmerge.sh --agent --files`** from a QG-green tree, flipping todos
       in the same turn: Phase 0 ao@5ad97b9, Phases 1-3 ao@2d6d60b, Phase 4 ao@c03ccce. All landed on LDR, ahead=0.
-- [ ] [SCRIPT] P2. **(operator-gated) apply the Phase-0 P2 VM `.env.local` cleanup** once code is live + `ao-self-pull`
-      has the new config; verify `curl localhost:8765/api/mode` + a clean restart via SSM.
+- ➡️ **MIGRATED 2026-07-20 → `ao_open_issues_consolidated_close_out_2026_07_17.md` § Phase 8. NOT done; not owned
+  here.** Original item, for the record: [SCRIPT] P2. **(operator-gated) apply the Phase-0 P2 VM `.env.local` cleanup**
+  once code is live + `ao-self-pull` has the new config; verify `curl localhost:8765/api/mode` + a clean restart via
+  SSM.
 
 ---
 

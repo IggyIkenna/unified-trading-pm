@@ -6,7 +6,7 @@ summary:
   re-dispatched work, and a task dispatched to a dead slot can stay bound forever when the resume path never completes.
   Implement the orphan reap (both halves) and the stale-dispatch invariant, each with the guards that stop them killing
   healthy workers or double-dispatching a task.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -36,6 +36,18 @@ source:
 ---
 
 # AO worker lifecycle — orphan reap + stale-dispatch reclaim
+
+> **🟢 COMPLETE 2026-07-20 — ARCHIVED.** All code todos landed and were independently re-verified 2026-07-20: `aa81706`,
+> `ebe2ae3`, `95fdf9d` all exist and are ancestors of `origin/live-defi-rollout`; each diff matches its claim and every
+> cited test exists by name (incl. the real `/proc` scan, not a mock). The periodic orphan sweep is flipped LIVE
+> (`orphan_sweep_dry_run=False`). The one remaining item — the live 24h dispatched-count spot-check — is gated on
+> calendar time, not code, and is now owned by `ao_open_issues_consolidated_close_out_2026_07_17.md` § Phase 8. Do not
+> reopen this plan for it.
+>
+> **Correction worth carrying**: `f641968`'s typed-agent guard was at one point believed to rest on a retracted premise.
+> That retraction was ITSELF later overturned — `journalctl` (not `activity_log`, which is why the first pass missed it)
+> shows a real reclaim at 07:32:30 UTC. The guard stands. See `ao_scheduled_agent_hygiene_2026_07_20.md` residuals
+> R1/R2.
 
 > **Provenance**: Phase 2 of `ao_open_issues_consolidated_close_out_2026_07_17.md` (doc #3, Defects A and B). That plan
 > keeps the audit record; this plan holds the work.
@@ -107,26 +119,27 @@ WOULD kill, and get approval before any real reap.**
       service `NRestarts=0`). **Follow-up filed, not actioned this session**: slot 4 producing short-lived orphans
       repeatedly (2 fresh ones within ~15 min of the sweep going live) suggests a root cause on that slot specifically,
       beyond this plan's scope — tracked at `plans/active/issues/slot4_recurring_short_lived_orphans_2026_07_20.md`.
-- [ ] [BACKEND] P1. **Stale-dispatch invariant (Defect A), resume-path aware.** The pruner's requeue (`ao@5b07bd3`)
-      releases on a "requeue" verdict, but a `resume-pending` verdict keeps the task bound — and when the resume never
-      happens (07-17: slots went `killed` still holding tasks), nothing reconciles. Add: a task `dispatched` to a slot
-      with `worker_alive=false` AND `tmux_session IS NULL` for more than one pruner tick beyond `resume_attempts`
-      exhaustion → auto-release + a `stale_dispatch_reclaimed` activity event. **It must not fight the resume path** —
-      fire only after resume is exhausted or impossible. **Gate**: doc #3's regression test; live `dispatched` count
-      equals live-worker-held count across a 24h spot-check; **AND an explicit no-double-dispatch assertion — a task
-      released by this invariant is NEVER simultaneously live on a resumed worker.** Order the release strictly AFTER
-      `resume_lifecycle` marks resume exhausted/impossible, and test the exact race (resume in-flight when the invariant
-      tick fires → invariant defers, no release). — Code shipped `agent-orchestrator@aa81706`:
-      `server/stale_dispatch.reclaim_stale_dispatches()`, wired into `WorkerLivenessWatchdog._tick_once`. Deliberately
-      NOT gated on `resume_attempts` alone — that counter only increments on a SUCCESSFUL resume spawn, so the exact
-      07-17 incident (a slot stuck resume-pending that never once succeeds) would never hit it; instead fires on a
-      combined elapsed-time + activity-log-derived attempts-observed signal (soft: ≥30min AND ≥2 attempts observed AND
-      no flagged backend outage; hard backstop: ≥4h regardless, so a fleet-wide capacity outage — measured to record
-      ZERO attempts for every resume-pending slot it skips — can't strand a slot forever). Regression coverage +
-      no-double-dispatch assertion done: `tests/test_stale_dispatch_reclaim.py` (9 tests: soft/hard triggers, outage
-      gate, paused-slot/live-worker/no-anchor exclusions) + the explicit race test (invariant tick firing the INSTANT a
-      resume episode starts → defers, no release). **Still open**: the live 24h dispatched-count-equals-live-worker-held
-      spot-check — needs the fix live on the VM for a full day before it means anything.
+- ➡️ **MIGRATED 2026-07-20 → `ao_open_issues_consolidated_close_out_2026_07_17.md` § Phase 8. NOT done; not owned
+  here.** Original item, for the record: [BACKEND] P1. **Stale-dispatch invariant (Defect A), resume-path aware.** The
+  pruner's requeue (`ao@5b07bd3`) releases on a "requeue" verdict, but a `resume-pending` verdict keeps the task bound —
+  and when the resume never happens (07-17: slots went `killed` still holding tasks), nothing reconciles. Add: a task
+  `dispatched` to a slot with `worker_alive=false` AND `tmux_session IS NULL` for more than one pruner tick beyond
+  `resume_attempts` exhaustion → auto-release + a `stale_dispatch_reclaimed` activity event. **It must not fight the
+  resume path** — fire only after resume is exhausted or impossible. **Gate**: doc #3's regression test; live
+  `dispatched` count equals live-worker-held count across a 24h spot-check; **AND an explicit no-double-dispatch
+  assertion — a task released by this invariant is NEVER simultaneously live on a resumed worker.** Order the release
+  strictly AFTER `resume_lifecycle` marks resume exhausted/impossible, and test the exact race (resume in-flight when
+  the invariant tick fires → invariant defers, no release). — Code shipped `agent-orchestrator@aa81706`:
+  `server/stale_dispatch.reclaim_stale_dispatches()`, wired into `WorkerLivenessWatchdog._tick_once`. Deliberately NOT
+  gated on `resume_attempts` alone — that counter only increments on a SUCCESSFUL resume spawn, so the exact 07-17
+  incident (a slot stuck resume-pending that never once succeeds) would never hit it; instead fires on a combined
+  elapsed-time + activity-log-derived attempts-observed signal (soft: ≥30min AND ≥2 attempts observed AND no flagged
+  backend outage; hard backstop: ≥4h regardless, so a fleet-wide capacity outage — measured to record ZERO attempts for
+  every resume-pending slot it skips — can't strand a slot forever). Regression coverage + no-double-dispatch assertion
+  done: `tests/test_stale_dispatch_reclaim.py` (9 tests: soft/hard triggers, outage gate,
+  paused-slot/live-worker/no-anchor exclusions) + the explicit race test (invariant tick firing the INSTANT a resume
+  episode starts → defers, no release). **Still open**: the live 24h dispatched-count-equals-live-worker-held spot-check
+  — needs the fix live on the VM for a full day before it means anything.
 - [x] [BACKEND] P2. **Prove the two mechanisms cannot fight each other.** The reap kills processes; the invariant
       releases tasks; the resume path revives workers. Write one test that runs all three against the same slot and
       asserts a coherent end state — no task both released and held, no live worker reaped, no orphan surviving.

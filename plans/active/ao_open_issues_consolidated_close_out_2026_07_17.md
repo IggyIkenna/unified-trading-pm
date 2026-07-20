@@ -87,16 +87,19 @@ All are **LOCAL** (`assigned_vm: NA`, `execution_scope: local-only`) — operato
 AO-dispatched. Moved items are marked `➡️ MOVED` inline below and **must not be actioned here**; this plan keeps their
 audit record only.
 
-| #   | Plan                                           | Scope                                                                | Depends on             |
-| --- | ---------------------------------------------- | -------------------------------------------------------------------- | ---------------------- |
-| 1   | `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race           | —                      |
-| 2   | `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate            | #1 (deployed)          |
-| 3   | `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove untested paths | —                      |
-| 4   | `ao_backlog_regen_integrity_2026_07_20.md`     | P1 — regen/bootstrap data-integrity defects + the two rulings        | —                      |
-| 5   | `ao_worker_lifecycle_reap_2026_07_20.md`       | P1 — orphan-process reap + stale-dispatch reclaim                    | #1                     |
-| 6   | `ao_dispatch_cooldown_and_park_2026_07_20.md`  | P1 — the ONE fleet cooldown store + durable auto-park                | #4 (preserve-by-brief) |
-| 7   | `ao_fleet_infra_hardening_2026_07_20.md`       | P1 — one state home, env-var sweep, frozen-clone visibility, QG cap  | —                      |
-| 8   | `ao_fleet_observability_kpis_2026_07_20.md`    | P1 — efficiency KPIs, escalator efficacy, plan_health throttle       | #6 (backoff only)      |
+| #   | Plan                                           | Scope                                                                | Status (2026-07-20)                         |
+| --- | ---------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------- |
+| 1   | `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race           | ✅ **ARCHIVED** — residual → Phase 8        |
+| 2   | `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate            | 🟡 OPEN — e2e proof + R1/R2 residuals       |
+| 3   | `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove untested paths | ✅ **ARCHIVED** — 8/8, no residual          |
+| 4   | `ao_backlog_regen_integrity_2026_07_20.md`     | P1 — regen/bootstrap data-integrity defects + the two rulings        | ✅ **ARCHIVED** — 7/7                       |
+| 5   | `ao_worker_lifecycle_reap_2026_07_20.md`       | P1 — orphan-process reap + stale-dispatch reclaim                    | ✅ **ARCHIVED** — residual → Phase 8        |
+| 6   | `ao_dispatch_cooldown_and_park_2026_07_20.md`  | P1 — the ONE fleet cooldown store + durable auto-park                | 🔵 IN FLIGHT — code landed `ao@cfb211c`     |
+| 7   | `ao_fleet_infra_hardening_2026_07_20.md`       | P1 — one state home, env-var sweep, frozen-clone visibility, QG cap  | 🟡 OPEN — overclaimed gate + operator-gated |
+| 8   | `ao_fleet_observability_kpis_2026_07_20.md`    | P1 — efficiency KPIs, escalator efficacy, plan_health throttle       | 🔵 IN FLIGHT — 5/6, AF-1b unblocked         |
+
+Also archived from this plan's lineage: `ao_config_env_var_consolidation_2026_07_18.md` (12/12 verified; its two
+operator-gated `.env.local` residuals → Phase 8).
 
 **Start immediately, fully parallel**: #1, #3, #4, #7 — no file overlap, no dependencies.
 
@@ -614,6 +617,33 @@ NOT AO and are deliberately out of scope here.
       `ao_config_env_var_consolidation_2026_07_18` Phase-4 rewrite: ENV_VARS.md was rewritten to the two-class shape,
       dropping the retired `tab/<vm_id>/<slot>` branch example and the "Fleet VM (epic worker)" section header for the
       single-VM `planning` reality, verified against `server/config.py`.
+
+### Phase 8 — residuals inherited from ARCHIVED child plans (2026-07-20)
+
+> Each child plan below landed all its code and was archived; the item left here is the part that **calendar time or an
+> operator action** gates, not code. This plan now OWNS them — the child is archived and must not be reopened. Each
+> cites its source so the evidence trail survives.
+
+- [ ] [BACKEND] P2. **Re-measure the `tmux_session_lost` rate and record the delta.** Baseline **192 events since
+      2026-07-18** (measured 2026-07-20). All four fixes are confirmed LIVE on the VM (`1e7fec0`, `390cdde`, `d84109a`,
+      `f641968` all ancestors of the deployed HEAD, verified by SSM 2026-07-20 14:19 UTC; service restarted 14:15:21
+      UTC). Re-measure over a window comparable to the baseline. **Report the honest number either way** — if the rate
+      does NOT drop, record that the reaper was NOT the driver, so the churn hunt resumes with one hypothesis eliminated
+      rather than quietly assumed closed. **Gate**: before/after counts over comparable windows + an explicit verdict.
+      _Source: `ao_dispatch_liveness_p0_2026_07_20.md` (archived), todo 8._
+- [ ] [BACKEND] P1. **Stale-dispatch invariant — the live 24h spot-check.** Code + 9 regression tests shipped
+      (`agent-orchestrator@aa81706`, `server/stale_dispatch.reclaim_stale_dispatches()`), including the no-double-
+      dispatch race assertion. **Only the operational proof remains**: live `dispatched` count equals live-worker-held
+      count across a 24h window. Needs the fix live for a full day before it means anything. **Gate**: the 24h
+      comparison, stated explicitly. _Source: `ao_worker_lifecycle_reap_2026_07_20.md` (archived), todo 4._
+- [ ] [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM
+      `.env.local`.** Live on the VM but the field no longer exists (silently ignored via config `extra="ignore"`) —
+      inert no-op today, so no rush. Two routes: a re-bootstrap purges it (`agent-orchestrator@5ad97b9`), OR an SSM
+      `sed -i` backup-first + clean restart. **BLOCKED-OPERATOR-DECISION** — touches prod env. _Source:
+      `ao_config_env_var_consolidation_2026_07_18.md` (archived), Phase-0 P2._
+- [ ] [SCRIPT] P2. **Verify the `.env.local` cleanup landed** once the item above is applied —
+      `curl     localhost:8765/api/mode` + a clean restart via SSM. Pairs with, and fires after, the item above.
+      _Source: `ao_config_env_var_consolidation_2026_07_18.md` (archived), Phase-5._
 
 ## Open questions — state as of 2026-07-20 (read this before picking up work)
 

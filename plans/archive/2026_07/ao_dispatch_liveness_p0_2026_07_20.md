@@ -6,7 +6,7 @@ summary:
   so any dispatch landing on a matured-timer slot is killed within one watchdog tick — measured killing the 2026-07-20
   plan_reconciler 19s after boot. Fix the timer invalidation, exclude non-backlog typed agents from the reaper, and make
   the escalation/plan_health slot race retry instead of silently failing.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -36,6 +36,14 @@ source:
 ---
 
 # AO dispatch liveness P0 — the prereq reaper kills freshly-spawned agents
+
+> **🟢 COMPLETE 2026-07-20 — ARCHIVED.** All 7 code todos landed and were independently re-verified 2026-07-20: every
+> cited sha (`1e7fec0`, `390cdde`, `d84109a`, `f641968`) exists, is an ancestor of `origin/live-defi-rollout`, and its
+> diff does what the todo claims; every cited regression test exists by name. **Deploy confirmed by SSM** (2026-07-20
+> 14:19 UTC): all four shas are ancestors of the VM's deployed HEAD and the service restarted 14:15:21 UTC. The one
+> remaining item — re-measuring the `tmux_session_lost` rate against the 192-event baseline — is gated on calendar time,
+> not code, and is now owned by `ao_open_issues_consolidated_close_out_2026_07_17.md` § Phase 8. Do not reopen this plan
+> for it.
 
 > **Provenance**: the B4 audit (2026-07-20) of `ao_open_issues_consolidated_close_out_2026_07_17.md`. That plan holds
 > the full audit record; this plan holds the WORK. Do not action the moved entries there.
@@ -194,11 +202,13 @@ last for that reason, not for convenience.
       without the guard and GREEN with it; full `quality-gates.sh` green before ship. **This is the THIRD carve-out for
       the same fact** — which is why `ao_uniform_agent_liveness_contract_2026_07_20.md` now exists to replace all three
       with one contract; that plan's final todo deletes this guard.
-- [ ] [BACKEND] P2. **Re-measure the `tmux_session_lost` rate AFTER the fix is live, and record the delta.** Baseline:
-      **192 events since 2026-07-18** (measured 2026-07-20). Re-measure over a comparable window once the deploy is
-      confirmed. Report the honest number either way — if the rate does NOT drop, say so plainly and record that the
-      reaper was NOT the driver, so the churn investigation resumes with one hypothesis eliminated rather than being
-      quietly assumed closed. **Gate**: before/after counts over comparable windows, with the verdict stated explicitly.
+- ➡️ **MIGRATED 2026-07-20 → `ao_open_issues_consolidated_close_out_2026_07_17.md` § Phase 8. NOT done; not owned
+  here.** Original item, for the record: [BACKEND] P2. **Re-measure the `tmux_session_lost` rate AFTER the fix is live,
+  and record the delta.** Baseline: **192 events since 2026-07-18** (measured 2026-07-20). Re-measure over a comparable
+  window once the deploy is confirmed. Report the honest number either way — if the rate does NOT drop, say so plainly
+  and record that the reaper was NOT the driver, so the churn investigation resumes with one hypothesis eliminated
+  rather than being quietly assumed closed. **Gate**: before/after counts over comparable windows, with the verdict
+  stated explicitly.
 
 ## Safeguards
 
