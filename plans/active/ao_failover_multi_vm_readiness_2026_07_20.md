@@ -125,12 +125,17 @@ now** and would be today's preferred target.
       `FailoverLoop` from `failover_feed.py` (Layer 0) and stating dormant-but-kept status.
       `autonomous-recovery-matrix.md` left untouched (grepped: zero FailoverLoop mentions, scope is live-trading error
       classification only — the disambiguation in the doc it already defers to for the layer model is sufficient).
-- [ ] [BACKEND] P3. **`bootstrap_vm.sh` STEP 10 self-registration has no GCP branch** (found while tracing todo 4 —
+- [x] [BACKEND] P3. **`bootstrap_vm.sh` STEP 10 self-registration has no GCP branch** (found while tracing todo 4 —
       `elif [[ "${CLOUD_PROVIDER}" == "aws" ]]` with no GCP arm). A GCP-provisioned worker VM boots and never calls
       `POST /api/vms/register`, so `fleet_registry.json` — and therefore failover, which keys "offline host" entirely
       off that registry — would stay silently inert on GCP even after multi-VM genuinely returns with real hosts
       running. Add the GCP metadata-server equivalent of the AWS IMDS private-IP lookup + register call. **Gate**: a
-      GCP-provisioned VM appears in `fleet_registry.json` after boot, same as an AWS one does today.
+      GCP-provisioned VM appears in `fleet_registry.json` after boot, same as an AWS one does today. ✅
+      `agent-orchestrator@3dff4d7` — STEP 10 restructured to compute `_PRIV_IP` per-cloud (AWS IMDS vs GCP metadata
+      server `network-interfaces/0/ip` + `Metadata-Flavor: Google`, no token needed) then run ONE shared registration
+      POST, mirroring this script's existing EXTERNAL_IP if/else idiom rather than duplicating the curl call per branch.
+      No test harness exists for `bootstrap_vm.sh` (real-VM boot script); verified via `bash -n` + `shellcheck` (no new
+      findings in the edited region) + full `quality-gates.sh` green (1425 passed).
 
 ## Safeguards
 
