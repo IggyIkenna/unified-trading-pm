@@ -464,10 +464,25 @@ Discriminator = **does a manifest row exist**.
 - **Close-out criterion**: one pinned path shape; zero dedicated-bucket refs; TF state matches live estate;
   lending-indices legacy bucket deleted (snapshot-first).
 
-- [ ] [DATA] P0. **Pin the flat canonical path shape** (venue-before-chain, lowercase itype, `pipeline_mode=`); DELETE
-      the dead top-level Solana `dex_pools/`+`lending_indices/` prefixes (frozen 2026-04-14, "Shape-B") and kill the
-      second dexpool writer path. **Snapshot-before-delete** (pre-migration drain per the VM runbook). (repos:
-      market-tick-data-service)
+> **⛔ corrected 2026-07-20 — the DELETE clause in the first todo below is STALE and executing it DESTROYS DATA.
+> Disposition is now FOLD-not-delete.** The "dead prefixes" premise was **overturned by R5 in this same plan**
+> (`:254-262`) — content-verify found PARTIAL-OVERLAP, not duplication: legacy=98 pools, canon=99, **intersection only
+> 66**, with **32 legacy-only high-TVL raydium pools ABSENT from canon** (XMR/USDC $47M, BNB/USDC $18M, USD1/USDC
+> $9.9M, ZEC/USDC $7.5M). A live GCS probe on 2026-07-20 corroborates and sharpens this: on `day=2026-04-14` the
+> canonical twin **does** exist for ORCA (14,094 objs) / RAYDIUM (100 objs) / KAMINO lending_indices (47 objs) under
+> `instrument_type=solana_amm_pool`, but **KAMINO `dex_pool_state` = 0 and SOLEND = 0** — for those two cells the legacy
+> objects are the **only copy in existence**. A snapshot-first delete is NOT adequate protection. **Required order: (1)
+> content-UNION the 32 legacy-only pools + the 2 twin-less cells into canon; (2) repoint
+> `execution-service/execution_service/providers/solana_amm_depth_provider.py:41` — which STILL READS this legacy shape
+> at runtime — to the canonical `data_type=dex_pool_state` path AND fix its broken `resolve_bucket_name` call at
+> `:248-254` (`kind="market-data-tick-defi"` is a bucket-name FRAGMENT with no yaml key, and `env=`/`project_id=` are
+> not parameters, so it RAISES uncaught); (3) ONLY THEN consider the delete.** Full evidence + resolution criteria:
+> `issues/defi_dex_pools_delete_order_stale_2026_07_20.md`.
+
+- [ ] [DATA] P0. **Pin the flat canonical path shape** (venue-before-chain, lowercase itype, `pipeline_mode=`); ~~DELETE
+      the dead top-level Solana `dex_pools/`+`lending_indices/` prefixes (frozen 2026-04-14, "Shape-B")~~ **← DELETE
+      CLAUSE SUPERSEDED — see the ⛔ correction banner directly above** and kill the second dexpool writer path.
+      **Snapshot-before-delete** (pre-migration drain per the VM runbook). (repos: market-tick-data-service)
 - [ ] [INFRA] P1. **Correct the STALE codex path docs** — `codex/02-data/per-asset-group-bucket-layouts.md` (documents
       chain-before-venue + omits pipeline_mode) and `market-tick-data-service/docs/GCS_PATHS.md` (shows dead Shape-B) →
       match the operator-locked SSOT + live writer. (repos: unified-trading-pm, market-tick-data-service)
@@ -749,6 +764,35 @@ Discriminator = **does a manifest row exist**.
     **DEFERRED-bespoke (flag, not MVP-blocking):** GMX POOL-vs-PERPETUAL shape; HYPERLIQUID-L1 gas (no EVM chain_id);
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
+
+- **2026-07-20 (slot-4, /autonomous — ✅ CF-11 + PROJECTION FIX **PROVEN IN PROD**; ⛔ 2nd correction: IS was NEVER
+  blocked on the wheel).**
+
+  - **✅ THE FIX IS PROVEN ON REAL INFRA — this is the milestone.** `…-133819-2022d` (fixed code `mtds@2c88b269`,
+    e2-highmem-8) reached the EXACT point where three VMs died and **sailed through it**:
+    ```
+    CF-11: consolidated index loaded — 45776383 rows (12 projected cols)
+    CF-11: found 13269683 honest-absence(+processed-captured) rows in defi _index
+    ```
+    `(12 projected cols)` is the projection fix working against a live 45.8M-row index; the VM then kept climbing
+    (898,665 → 1,215,892 entries) with a fresh heartbeat, actively re-emitting the 13.27M-row absence corpus that
+    previously OOM-killed every VM at this step. **Both relaunched VMs healthy** (2025d at 2025-07-13 / 1.09M entries).
+    Note the index has GROWN 44,730,321 → 45,776,383 rows since the earlier ground-truth read — consolidation is
+    accreting the rebuild's per-instrument captured rows as designed.
+  - **⛔ SECOND CORRECTION — "IS is BLOCKED-UPSTREAM on the UAC wheel" (written one entry below) is ALSO WRONG.** IS
+    resolves UAC exactly like MTDS does — `[tool.uv.sources.unified-api-contracts] path = "../unified-api-contracts"`
+    (`instruments-service/pyproject.toml:82-83`) — i.e. the local workspace path, NOT the published wheel. **VERIFIED by
+    running the IS venv:** `METEORA-SOLANA in defi: True`, `CHAINLINK-ETHEREUM in defi: True`, `defi venue count: 98`.
+    So the drift-guard is satisfiable RIGHT NOW and **IS is shippable without waiting for any publish.** The dormant
+    publish path still matters for DEPLOYED images and for any consumer resolving `--no-sources`, but it is NOT a gate
+    on shipping IS. _That is the second time this session I inferred a blocker from a code path instead of measuring it
+    (the first was the CF-11 "data loss"). Both cost real time; both were one command away from the truth._
+  - **MTDS CI GREEN on LDR** (`quality-gates-v2` 12:45:06Z, 5m0s, success) — covers `mtds@2c88b269` AND the RULE-11 2646
+    re-pin, confirming CI resolves the workspace UAC (so the re-pin is not a CI landmine).
+  - **PUBLISH-PATH FINDING STANDS (operator decision, lower severity than first written):** UAC `main` is still
+    **v0.71.0**; no `version-bump` run since **2026-03-16**; `Semver Agent` fires on **staging** pushes, which the
+    LDR→main DIRECT model bypasses. A direct-promote repo therefore lands on main without ever cutting a wheel. **NOT
+    hand-bumped** (semver-agent owns versions — CLAUDE.md HARD RULE).
 
 - **2026-07-20 (slot-4, /autonomous — REBUILD-VM OOM ROOT-CAUSED + FIXED; gas_fees orphans quantified; UAC on main but
   PUBLISH PATH DORMANT → IS blocked upstream).**

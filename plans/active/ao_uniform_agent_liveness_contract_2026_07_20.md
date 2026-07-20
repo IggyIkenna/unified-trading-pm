@@ -46,6 +46,37 @@ source:
 > agent follow the same register/boot/heartbeat protocol with role-appropriate backend responses — **path 2 is chosen**.
 > This plan implements it.
 
+## ✅ UPDATE 2026-07-20 (slot-16 interactive) — the root cause IS now diagnosed; re-scope this plan accordingly
+
+The root-cause investigation this plan was waiting on has landed (`ao_scheduled_agent_hygiene_2026_07_20.md`, the P0
+todo — full evidence there). **Cause (airtight on the defect, ~90% on the fatal blow):** an UNGUARDED
+`WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` reaped `agt-751738` at 07:32:30 (`kill_session`,
+worker_liveness_watchdog.py:1212), because (A) its slot read `status=idle` while claude was demonstrably alive and
+working (tick-1 ~07:31:25, a full minute before the transcript's last write) and (B) at that moment the idle-reclaimer
+had **no typed-agent exemption** — the `f641968` guard was committed 1h38m LATER (09:10 UTC vs the 07:32:30 kill). A
+reaper ticking down to kill a live typed agent is the confirmed bug; whether the 07:32:30 `kill_session` was the fatal
+blow vs. reaped a ~1s-old corpse is ~90% (`remain-on-exit on` defeats the `has_session` proof, but the self-exit
+alternative has no surviving cause — usage was 5h=5% 80s prior, no rate-limit/OOM/error). Either way this is a
+**liveness-signalling** cause — squarely in this plan's domain, NOT an unrelated API/usage cutoff.
+
+**Consequences for this plan:**
+
+- The line below "the motivating bug is NOT diagnosed, so this plan must not be started" — the **first clause is now
+  false**. The bug is diagnosed. But **do not big-bang-start this plan either**: the cheapest correct next move is to
+  verify `f641968` (already deployed) actually fixes it on todo 4's next reconcile run. The claim (in this plan and the
+  hygiene plan) that "`f641968` did NOT fix this" is **unsound** — it was inferred from a death that predates `f641968`
+  by 1h38m. `f641968`'s AgentRow-keyed guard plausibly works; it is simply UNTESTED. **If that one live run confirms the
+  guard exempts the reconciler, this plan reverts to exactly the "pure de-duplication refactor at much lower priority"
+  case it already anticipated below** — the three carve-outs are real duplication worth removing, but the urgency is
+  gone. If the guard is somehow defeated (e.g. restart clears the AgentRow), that failure mode feeds directly into this
+  plan's uniform-contract design. Either way: **gate flipping this to `active` on that single live observation, not on
+  new code.**
+- **What is still true:** "typed agents get `status='working'` on claim" (plan_health.py:283) IS the code path — but the
+  reconciler was nonetheless reaped as `idle`, which means the `working` status did NOT survive to kill time
+  (empirically flipped to `idle` around the 07:30 restart; the exact line is unpinned — residual R1 in the hygiene
+  plan). So the "their slot reads idle" framing this plan warns against is **not simply false** after all: for a typed
+  one-off it can become true in flight. That nuance belongs in the contract design (todo 1).
+
 ## ⚠️ READ FIRST — the evidence this plan was built on has been RETRACTED (2026-07-20)
 
 This plan originally opened with a confident mechanism: that one-off agents never call `/boot`, so their slot stays
@@ -96,12 +127,17 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Write down the contract before changing any code.** One short design note: the states (registered
-      → booted → working → finished), which call each agent class makes, what `/boot` returns per role, the heartbeat
-      cadence expected, and — critically — **what each liveness subsystem is allowed to conclude from each state**. Name
-      every current consumer (prereq reaper, idle-lingering reclaimer, TmuxPruner, HealthMonitor, AutoSpawn,
-      `_pick_free_slot`) and state which signal it should read AFTER the change. **Gate**: the note exists and a reader
-      can answer "why won't a one-off be reaped?" without reading any reaper's source.
+- [x] ✅ [BACKEND] P1. **Write down the contract before changing any code.** — DRAFT written as the "## Design note
+      (todo 1)" section below (slot-16 interactive, `unified-trading-pm@<this commit>`). Covers all six Gate items:
+      states (§1), which call each class makes (§2), `/boot` per role (§3), heartbeat cadence (§4), what each subsystem
+      concludes after the change naming every consumer — idle-reclaim, prereq reaper, heartbeat-silent, HealthMonitor
+      working/idle-stale, stuck/context-full, TmuxPruner, AutoSpawn, `_pick_free_slot`, boot-gate (§5) — and the Gate
+      answer "why won't a one-off be reaped?" without reading any reaper's source (§6). Subsystem inputs verified
+      against live `agent-orchestrator@HEAD` (Explore map + direct reads). **Surfaced a plan-reframing finding (§0): the
+      reconciler is exposed to ≥4 reaper paths, only 2 carry a carve-out — the 15-min heartbeat-silent trigger and
+      25-min HealthMonitor working-stale flip are UNGUARDED — so `f641968` alone does NOT protect a run that goes >15
+      min between heartbeats.** **⚠️ PENDING OPERATOR DESIGN REVIEW before todos 2-7 (code) start** — this todo is
+      "write the contract first" precisely so the design is validated before implementation.
 - [ ] [BACKEND] P1. **Make `/boot` role-aware and accept a task-less boot.** A one-off POSTs `/boot` like anyone else;
       the response carries no task and the slot transitions out of `idle` into a state that means "occupied and
       working". Do NOT invent a parallel endpoint — that is path 1 wearing a different hat. **Gate**: a
@@ -132,6 +168,101 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
       its SSOT is a codex doc, not this plan. **Gate**: a codex doc describes the contract; every role doc references it
       rather than restating it; `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` links to it.
 
+## Design note (todo 1) — the uniform agent-liveness contract
+
+> **Status: DRAFT for operator review (slot-16 interactive, 2026-07-20).** Written before any code, per the plan's
+> "write down the contract first" rule. Subsystem inputs verified against live code (`agent-orchestrator@HEAD`); this is
+> the design todos 2-7 implement and todo 8 promotes to `codex/04-architecture/agent-orchestrator-worker-liveness.md`.
+> The Gate for this todo — "a reader can answer 'why won't a one-off be reaped?' without reading any reaper's source" —
+> is met by §5 + §6 below.
+
+### §0. The finding that reframes the whole plan — carve-outs are whack-a-mole (≥4 reaper paths, 2 guarded)
+
+The reconciler is not killed by ONE reaper; it is exposed to **at least four independent kill/flip paths, and only two
+carry a typed-agent carve-out today.** Every path keys off a per-slot silence/idle signal that a one-off does not
+advance the way a fleet worker does:
+
+| Subsystem (code)                                                      | Signal it reads                                           | Threshold                             | Action                                                              | Typed carve-out?                                     |
+| --------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| `_reclaim_idle_lingering_sessions` (watchdog:1103)                    | `SlotRow.status ∈ {idle,stale}` + `has_session`           | boot-grace 300s + 2 ticks ≈ **7 min** | `kill_session` + reset                                              | ✅ `f641968` (AgentRow.tmux_session)                 |
+| `_release_prereq_blocked_slots` (watchdog:1234)                       | `status ∈ {idle,stale}` + queue-prereq-blocked            | **1 h**                               | requeue + `kill_session`                                            | ✅ `1e7fec0` (same set)                              |
+| **watchdog main loop `_tick_once` → heartbeat-silent (watchdog:801)** | `effective_silence(last_ping,spawned,assigned) > timeout` | **15 min**                            | `_resume_or_fresh_respawn` (kill)                                   | ❌ **NONE** (review-slot only)                       |
+| **HealthMonitor working-slot stale-flip (health.py:186)**             | `status=='working'` + silence anchor                      | **25 min**                            | flip → `stale` (then reapable)                                      | ❌ **NONE** (agent-pass exempts, slot-pass does not) |
+| watchdog main loop → stuck-at-prompt / context-full / session-gone    | pane regex / `has_session`                                | 180s / immediate / 90s                | `kill_session`                                                      | ❌ none (pane-shielded for thinking)                 |
+| TmuxPruner (tmux_pruner.py)                                           | `has_session==False` on a set `tmux_session`              | 30s grace                             | OBSERVE: clear ref, archive one_shot/scheduled `lifecycle-complete` | n/a (archives, doesn't kill)                         |
+
+**Consequence for `f641968` (corrects the root-cause plan's "plausibly fixes it"):** `f641968` closes only the 7-min
+idle-reclaim. A reconciler that survives that then faces the **UNGUARDED** 15-min heartbeat-silent trigger and the
+25-min working-stale flip. Its ONLY protection there is its role doc's mandate to post `/progress` every ≤10 min
+(`agents/plan_reconciler.md:96`), which advances `last_ping` under the 15-min bar. That is discipline, not a contract —
+**any run that goes >15 min between heartbeats (a long STEP-5/6 sub-agent phase) is killed by an unguarded reaper.**
+(agt-751738 died at 7 min to the idle-reclaim before this mattered, and had heartbeated once at 07:28:18 — so the 07-20
+root cause remains the unguarded idle-reclaim; this §0 is the DEEPER structural problem the contract must close.)
+
+### §1. The protocol — one handshake, role-appropriate answers
+
+Four states, each entered by an HTTP call every agent class makes; `blocked` is an orthogonal axis, not a state.
+
+```
+register ──/boot──▶ working ──/progress (heartbeat, load-bearing)──▶ … ──/done──▶ finished
+                       │                                                    ▲
+                       └───────────── /blocked (orthogonal) ────────────────┘  (watchdog never reaps status=blocked)
+```
+
+### §2. Which call each agent class makes (verified)
+
+| Class                                                                                                    | `/boot`                                                                                                          | periodic `/progress`            | `/done`                                                                                      | Reaped by                              |
+| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------- |
+| **A — backlog worker**                                                                                   | yes (returns a task)                                                                                             | yes                             | yes (clean-tree+flip gated)                                                                  | normal lifecycle → idle → next         |
+| **B — one-off** (`plan_reconciler`, `plan_health`, `cicd`, `conflict_resolver`, `data_pipeline_failure`) | **yes** (reconciler DOES `/boot` — `slot_boot` 07:27:03; the plan's original "never /boot" premise is retracted) | yes (role-doc mandated ≤10 min) | **no** (Class B never `/done`; TmuxPruner/`reap_orphan_agents` archive `lifecycle-complete`) | today: the 4 paths in §0               |
+| **persistent** (`main`, review)                                                                          | yes                                                                                                              | yes                             | no                                                                                           | keeper respawns; review-slot exemption |
+
+### §3. What `/boot` returns per role (todo 2)
+
+Same endpoint, role-appropriate body — NOT a parallel endpoint (a parallel endpoint is path 1 wearing a hat):
+
+- **Fleet worker** → `{task: <TaskRow>}`; slot `idle → working`, `current_task` set.
+- **One-off** → `{task: null, ack: "no task — you already know your work from your role doc"}`; slot `idle → working`,
+  `current_task` null, `spawn_base_role` set. The transition off `idle` is the point: it removes the one-off from BOTH
+  idle-scanning reapers (idle-reclaim, idle-stale) without a carve-out.
+
+### §4. Heartbeat cadence — the load-bearing signal
+
+Every agent posts `/progress` at **≤ `watchdog_heartbeat_timeout`/2** (currently 15 min → **≤7.5 min**, so the role-doc
+"≤10 min" should tighten to ≤7 min). `/progress` (`progress_slot` → `update_slot_ping`) advances `SlotRow.last_ping`,
+which is the `max(last_ping, last_spawned_at, assigned_at, session_created)` anchor every silence-based reaper measures
+from. **`/boot` moves the slot off `idle`; the heartbeat is the ongoing proof of life** — get both uniform and every
+carve-out becomes deletable.
+
+### §5. What each subsystem may conclude AFTER the contract (the invariant)
+
+**Invariant: no reaper special-cases `agent_kind`/`lifecycle`.** Each trusts the same three uniform signals, so the role
+knowledge lives in ONE place (the `/boot` response), not scattered across reapers:
+
+- **idle-reclaim / idle-stale / prereq-release** (idle-scanners): a booted one-off is `status=working`, never `idle` →
+  out of scope by construction. The `f641968`/`1e7fec0` `typed_agent_sessions` carve-outs become dead code → deleted
+  (todo 7).
+- **heartbeat-silent (watchdog) + working-stale (HealthMonitor)**: read `effective_silence` from `last_ping`. A one-off
+  that heartbeats ≤ timeout/2 is never silent → never reaped. The carve-out these paths NEVER had is not needed, because
+  the one-off now advances the same anchor a fleet worker does.
+- **stuck-at-prompt / context-full**: pane-content triggers, kind-agnostic already — unchanged (a genuinely wedged
+  one-off SHOULD be reaped).
+- **TmuxPruner / `reap_orphan_agents`**: unchanged — on real session death they archive `lifecycle-complete`. Correct
+  for a one-off that finished without `/done`.
+- **AutoSpawn / `_pick_free_slot`**: "free" = session-less (not status) — unchanged; a `working` one-off holds a live
+  session so it is never picked. **`_pick_free_slot` MUST stay session-based** (removing that is out of scope).
+- **`/boot` read-gate**: keeps `spawn_base_role` (`5907317`) UNLESS the uniform boot subsumes it (todo 7c) — the gate is
+  about which role-doc files were read, orthogonal to liveness; delete only if the uniform boot carries the base role.
+
+### §6. Why a one-off will NOT be reaped (the Gate answer, no reaper source required)
+
+A one-off boots like everyone else (→ `working`, so the two idle-scanning reapers can't see it), heartbeats ≤ timeout/2
+like everyone else (so the two silence reapers never compute it as silent), and its finish is a real session death that
+the pruner archives cleanly. The backend encodes "this is a task-less one-off" ONCE — in the `/boot` response that moves
+it to `working` — instead of teaching each reaper to recognize its kind. A fourth reaper added tomorrow inherits the
+protection for free, because it reads `status` + `last_ping` like the others, and a live one-off looks identical to a
+live fleet worker on both.
+
 ## Safeguards
 
 - Never `git reset --hard` / `git clean -fd` / `git checkout` a dirty tree — other agents share this repo.
@@ -154,3 +285,10 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
   hypothesis was that the reconciler was dying on spawn (an account cap or bad opus/effort flags). The transcript
   disproved it in one read — 436 KB of productive work ending mid-task. **When an agent "fails silently", read its JSONL
   before theorising about why it died; it may not have died at all.**
+- **2026-07-20 — root cause landed; "premise not diagnosed" banner updated (slot-16 interactive).** The blocking
+  investigation (hygiene plan P0 todo) is closed: `agt-751738` was killed by the idle-lingering reclaimer at 07:32:30
+  while unguarded (the `f641968` exemption postdates the kill by 1h38m). This is a liveness-signalling cause, in this
+  plan's domain. Net effect on this plan: the motivating bug is diagnosed, but the correct next step is a single live
+  verification of `f641968` (not new code) — if it confirms, this plan is a lower-priority de-dup refactor (as the plan
+  itself anticipated). Left `status: draft`; the flip-to-active gate is now that one live observation, per the ✅ UPDATE
+  section above. See `ao_scheduled_agent_hygiene_2026_07_20.md` P0 for the full evidence trail.
