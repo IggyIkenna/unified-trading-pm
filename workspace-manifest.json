@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 0,
-        "large_file_count": 0,
+        "coverage_pct": 75.82,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "large_file_count": 0,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
