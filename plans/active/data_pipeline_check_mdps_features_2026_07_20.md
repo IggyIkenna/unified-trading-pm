@@ -394,3 +394,58 @@ autonomously delete registered launchers / rebind self-heal (operator returns to
 - **RESUME POINTER for a compressed future-me**: MDPS driver = corrected/green/uncommitted; features driver = needs the
   split; nothing driver-side is committed yet (deployment-service@f0b3f14 + unified-trading-library@82c3c336 ARE
   shipped). Both SKILL.md written + uncommitted.
+
+### 2026-07-20 15:0x — REAL e2e RUNS on live VMs: the skill works, and it found a P0 on its first run
+
+**Todo 8 (MDPS e2e) — EXECUTED on real infrastructure, PROD verified untouched.** Two scoped runs, both test-bucket
+routed via the new `--output-bucket`, both using real VMs polled through the shared engine's GCS observability contract.
+
+**Run 1 — CEFI:DERIBIT:derivative_ticker (force+skip+canonical), day auto-substituted 2026-07-15 → 2024-02-08:**
+
+- Report: `plans/audit/results/data_pipeline_e2e_check_mdps_2026_07_15.md` — total=21 passed=7 failed=7 skipped=7.
+- **FOUND A P0** (filed `issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`, PM@9ef516eec): every
+  parquet write failed
+  `StreamingParquetWriter pre-write validation … [schema_violation] column 'funding_rate_mean' / 'mark_price_mean' / 'index_price_mean' missing`.
+  ZERO objects; 140 manifest rows (7tf × 20 instruments) ALL `attempted_failed/SCHEMA_VALIDATION_FAILED` row_count=0.
+  **Yet the VM exited rc=0 reporting "20 success, 0 failed, 152,300 candles"** — a backfill would burn full compute,
+  write nothing, and look green.
+- **The skill's `failed` verdict was CORRECT where the VM's own exit code lied.** That is the whole point of the check.
+
+**Run 2 — CEFI:DERIBIT:trades (force), day auto-substituted → 2026-04-17: SCOPE RESULT — `trades` WORKS.**
+
+- `POLARS AGGREGATED: 1440 1m / 288 5m / 96 15m / 24 1h / 6 4h / 1 24h` candles (counts arithmetically correct for one
+  day), no schema violation, 7 new manifest rows, EXIT_STATUS=0.
+- **14 real candle objects verified on disk** in the `-test-` bucket, on the measured template with CANONICAL leaf ids:
+  `processed_candles/by_date/day=2026-04-17/pipeline_mode=batch_tardis/timeframe=15m/data_type=trades/venue=DERIBIT/DERIBIT:PERPETUAL:BTC-PERPETUAL.parquet`
+- => **The candle pipeline is NOT globally broken. The breakage is data_type-SPECIFIC (`derivative_ticker`).** This is
+  what makes a DeFi-MVP ETA computable: budget the working data_types now, treat `derivative_ticker` as blocked on the
+  P0 fix. Todo 3 of the P0 issue (sweep the OTHER data_types) is the remaining scoping work.
+
+**VALIDATED BY THESE RUNS (the skill's core contract):** `--auto-day` correctly substituted a captured day in BOTH runs
+(the requested 2026-07-15 had no captured input); `--output-bucket` test-routing worked (parquet AND manifest both to
+`-test-`, PROD confirmed unmodified for the target day); the new `--vm-name` gave the engine a deterministic
+`vm-logs/<vm>/` to poll; force and skip legs used DISTINCT VM names (`-pipelinecheck-` vs `-pcskip-`) so they never
+collide; honest-absence held (`attempted_failed`, never a phantom `captured`).
+
+**FIRST REAL THROUGHPUT DATAPOINTS (for the ETA, per-instrument, e2-standard-8):** derivative_ticker 2105ms/instrument
+(42.1s for 20) and 2255ms/instrument (45.1s for 20) — but those runs FAILED their writes, so treat as compute-only. The
+trades run is the honest one to extrapolate from. NOTE: these are single-cell boot-dominated runs — a steady-state
+benchmark VM is still required before quoting a backfill ETA.
+
+**DRIVER IMPROVEMENTS FOUND BY RUNNING IT (todo-list, not blockers):**
+
+1. force-leg manifest verify reads the CONSOLIDATED index and reported the uninformative `no_matching_row` when the leg
+   VM's OWN per-VM shard held `attempted_failed/SCHEMA_VALIDATION_FAILED` (Phase-0 consolidated 13:05, VM wrote 13:12).
+   Fix: read the leg VM's own per-VM shard first, like the MTDS twin's `_read_per_vm_batch_row`. (P0 issue todo 4.)
+2. `--project` (or `GCP_PROJECT_ID`) is REQUIRED or `get_project_id()` raises a raw traceback — same in the MTDS twin.
+   Document in both SKILL.md.
+3. Per-cell wall-clock is ~35 min for 1 cell × 7 timeframes (2 VMs + verification); the post-VM verification alone ran
+   ~19 min, likely an unfiltered availability-index read. Worth a slim/filtered read before any wide sweep.
+
+**SSOT GAP FOUND (from another agent's concurrent work):** CLAUDE.md now mandates "canonical/non-canonical is the UAC
+`canonical_path_violations()` MACHINE ORACLE, never a re-implemented rule" — but that oracle is scoped to
+`RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` ONLY (partition_paths.py:66,681-683; ZERO mentions of
+`processed_candles`/`features/`). It CANNOT be applied to the candle or features surfaces (it would flag every object
+non-canonical). Correct fix: extend the oracle to those surfaces in UAC so my drivers and
+`/data-pipeline-reconciliation` share ONE oracle. Until then the drivers' local logic is not a duplication violation but
+WILL drift.
