@@ -548,8 +548,29 @@ jobs:
               # Capture the FULL differ verdict (is_breaking + export counts) once — reused by both the
               # SIT race-closer (is_breaking) and the F4 label-check gate below (export-count minor/patch),
               # so the differ runs only once per repo per tick.
-              DIFF_JSON=$( cd "$SIT_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/detect_breaking_change.py" \
-                --source-dir "${SCAN_DIR}" --base-ref origin/main --head-ref origin/live-defi-rollout --json 2>/dev/null ) || DIFF_JSON=""
+              # HEAD-REF PIN (2026-07-20): diff the EXACT commit being gated ($LDR_SHA, captured in the
+              # single read at the content gate above), NOT the branch NAME. This fetch is a SECOND,
+              # independently-timed read of a MOVING branch — so with `--head-ref origin/live-defi-rollout`
+              # the differ could classify a DIFFERENT tree than the one the SIT gate compares and the
+              # frozen-head freezes. Under exactly the churn that makes the SIT gate miss (hourly
+              # backmerge + quickmerge traffic), that is a correctness hole in BOTH directions, and the
+              # dangerous one is silent: a breaking delta landing between the two reads is judged on a
+              # snapshot that does not contain it -> `is_breaking=false` -> SIT GATE PASS -> promoted
+              # UNGATED. The content gate above already went to the trouble of a single commit read
+              # "so STEP 1 (frozen-head) can freeze the EXACT commit whose tree the SIT gate validates
+              # — no drift between the read and the freeze"; the differ was simply never pinned to it.
+              # $LDR_SHA stays reachable in the fetched branch even if LDR advanced (it is then an
+              # ancestor of the new tip), so no extra refspec is needed. Fail CLOSED if it is unusable.
+              _DIFF_HEAD="$LDR_SHA"
+              if [ -z "$_DIFF_HEAD" ] || [ "$LDR_TREE" = "ERR_LDR" ] \
+                 || ! git -C "$SIT_TMP" cat-file -e "${_DIFF_HEAD}^{commit}" 2>/dev/null; then
+                echo "  SIT differ: pinned head '${_DIFF_HEAD:-<empty>}' unreachable in the fetched tree — verdict UNKNOWN (fail-closed)"
+                _DIFF_HEAD=""
+              fi
+              if [ -n "$_DIFF_HEAD" ]; then
+                DIFF_JSON=$( cd "$SIT_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/detect_breaking_change.py" \
+                  --source-dir "${SCAN_DIR}" --base-ref origin/main --head-ref "$_DIFF_HEAD" --json 2>/dev/null ) || DIFF_JSON=""
+              fi
               if [ -n "$DIFF_JSON" ]; then
                 BREAKING=$( printf '%s' "$DIFF_JSON" \
                   | python3 -c "import json,sys; print('true' if json.load(sys.stdin).get('is_breaking') else 'false')" 2>/dev/null || echo "unknown" )
