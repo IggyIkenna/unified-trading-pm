@@ -449,3 +449,47 @@ benchmark VM is still required before quoting a backfill ETA.
 non-canonical). Correct fix: extend the oracle to those surfaces in UAC so my drivers and
 `/data-pipeline-reconciliation` share ONE oracle. Until then the drivers' local logic is not a duplication violation but
 WILL drift.
+
+### 2026-07-20 — OPERATOR CONTRACT: "empty window" vs "not fetched yet" are TWO signals (durable rule)
+
+Operator, verbatim: _"the key is knowing what is empty data because theres nothing to aggregate in the window vs not
+fetched yet that's where the manifest needs to help and different consumers live and batch will have different ways of
+handling depending on their needs"_
+
+**The contract (durable — belongs in `codex/02-data/honest-absence-downstream-handling.md` at the post-phase codex
+audit; journaled here so it is not lost first):**
+
+| Question a consumer asks                   | Which surface answers it        | Representation                                                                                    |
+| ------------------------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------- |
+| "Was this WINDOW active?"                  | the **parquet**, per bin        | row EXISTS on the session grid with **NaN price-like + 0 volume** = covered, nothing to aggregate |
+| "Was this SHARD-DAY ever fetched/derived?" | the **manifest**, per shard-day | 4-state `capture_status`                                                                          |
+
+- `captured` — derived, ≥1 bin had a real observation.
+- `empty_confirmed` + a **typed** `EmptyConfirmedReason` — derived, but the WHOLE shard-day legitimately had nothing.
+- `attempted_failed` + `error_reason` — we tried and it broke.
+- `expected_unattempted` / no row — **never attempted**. There is no parquet to be NaN.
+
+**Why it matters:** NaN alone cannot carry both meanings. A consumer must never infer "was this fetched?" from NaN in a
+parquet, nor "was this window active?" from the manifest alone. Live and batch consumers handle each case differently
+per their own needs, so the pipeline's job is to PRESERVE the distinction faithfully, never to paper over it. This is
+exactly why LOCF (carry-forward) is wrong for `derivative_ticker`: it fabricates an observation in a window that had
+none, destroying signal (1) and making the gap invisible.
+
+**Two failure modes this rule makes checkable (NEW checks for both skills):**
+
+1. manifest `captured` but NO parquet object = **phantom capture** (already checked — this is the MTDS-documented
+   `PHANTOM_CAPTURED_NO_OBJECT`).
+2. parquet present but **100% NaN bins** while the manifest says `captured` = should have been `empty_confirmed` with a
+   typed reason. An all-NaN "capture" is the INVERSE phantom and is equally misleading. **Add this assertion to the MDPS
+   driver's content check** (todo below).
+
+**Applied immediately to the in-flight P0 fix** (`issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`):
+the fix must (a) leave empty bins NaN/0 rather than LOCF-filling them, (b) record `empty_confirmed` + typed reason when
+the ENTIRE shard-day is empty rather than writing an all-NaN parquet as `captured`, and (c) document the two-signal
+contract in-code so nobody "helpfully" re-adds carry-forward.
+
+- [ ] NEW todo. [SCRIPT] P1. Add the all-NaN-parquet-vs-`captured` assertion to `/data-pipeline-check-mdps` (and the
+      features twin where a family can emit an all-null feature frame) as a distinct `content_check=` verdict, so the
+      inverse-phantom is caught the same way the phantom is.
+- [ ] NEW todo. [DOC] P2. Promote the two-signal table above into `codex/02-data/honest-absence-downstream-handling.md`
+      at the post-phase codex audit (SSOT direction: codex, not this plan).
