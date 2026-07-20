@@ -1461,6 +1461,27 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - Full write-up: `issues/tradfi_schema_version_string_regression_2026_07_20.md` (incl. a P2 consolidator
     `TRY_CAST(schema_version AS BIGINT)` defense-in-depth recommendation).
 
+- **2026-07-20 (slot-1) — P1 yfinance MVP coverage gap RESOLVED + verified.** The MTDS image lacked `yfinance` so the
+  Yahoo-routed tradfi MVP venues (ICE / FX / KRX — KRX is an operator deliverable) failed data collection every run. Fix
+  (targeted, low blast-radius, per the issue doc): added a pinned
+  `RUN uv pip install --system --no-cache-dir "yfinance==0.2.66"` (== uv.lock resolution / pyproject floor) **after**
+  the `-e . --no-deps` line in the Dockerfile (kept `--no-deps`; did NOT `--no-deps` the yfinance install so its small
+  new transitive deps — beautifulsoup4/curl-cffi/frozendict/multitasking/peewee — come along, rest are
+  base-image-provided). Extended the cloudbuild `image-import-smoke` with `import yfinance` so a missing lazily-imported
+  dep now FAILS THE BUILD instead of silently degrading a venue. **Other-absent-deps audit:** `yfinance` is the ONLY
+  silently-absent declared runtime dep — the other lazily-imported venue deps (databento/web3/ccxt) are
+  UTL-base-image-provided (their venues collect fine); `ib_insync` is undeclared (non-MVP IBKR), `polars` is
+  benchmark-only. Shipped `market-tick-data-service@d8dc04e1` (Dockerfile + cloudbuild.yaml, quickmerge → LDR).
+  **Runtime-verified:** `Evidence: cloudbuild=ce814d53-1648-4cf4-b2dc-7ac6bffefecd` (SUCCESS, built shipped sha
+  `d8dc04e1`) — in-image smoke printed `YFINANCE OK 0.2.66` +
+  `IMPORT SMOKE OK: market_tick_data_service.__main__ imported cleanly`; the smoke gates `push`, so the image cannot
+  ship without yfinance. Live KRX/ICE/FX fetch deliberately not run (prod tick bucket + manifest under concurrent-agent
+  contention); in-image import proof is the closing evidence. Issue doc →
+  `issues/mtds_image_missing_yfinance_no_deps_2026_07_20.md` flipped `status: resolved`. (Un-blocked while shipping: the
+  MTDS gate was red at the origin tip on an unrelated concurrent-agent regression — the durability `fail-on-raw`
+  canonical-stem guard rejecting an un-updated `book_microstructure` CEFI test fixture; the peer's fix `mtds@953679de`
+  landed mid-session and I rebased onto it, then the gate went green.)
+
 ## Deferred work after 2026-07-20 (tick 25)
 
 | Item                                                               | Why deferred                                   | Tracked in                                                        |
