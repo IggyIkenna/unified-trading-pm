@@ -465,3 +465,34 @@ section — D1 ruled it, so the skill enforces UPPERCASE instead of refusing) �
 review because both edit `SKILL.md`. Todos 24/25 (D3 fold → repoint execution-service) are genuine defi-migration
 execution work with prod blast radius; they remain tracked todos here, to be executed as their own effort (the prod
 delete in 25 is human-only regardless).
+
+### 2026-07-20 (cont.) — consistency audit done; operator asked for 4 coverage additions (Phase E)
+
+**Todo 19 consistency audit (`wf_dd6c0ce3-40b`) — done, fixes shipped `5da51f358`.** The tie-breaker doc was correctly
+ruling-annotated but the rulings had NOT propagated to 6 sibling docs (cutover-register, four-surface-procedure,
+delete-safety-protocol, mvp-scope-canonical, defi-canonical-naming, and two plans), each still framing D1/D2 as
+UNRULED/PARKED — the exact pre-ruling staleness a future agent would act on. All fixed with dated banners. **One
+substantive contradiction refused-and-reported → filed as an issue** (`c3e7eb55f`,
+`issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`): the v2 coverage harness
+reads `instrument_type` **lowercase**; the D1 UPPERCASE migration will silently zero-match every migrated shard unless
+the harness is made case-robust FIRST. Same fail-closed class as the sports MDPS substring matcher.
+
+**Still open for todo 21** (the audit confirmed): the taxonomy must drop BOTH refusals — §5.1 (D1/C2a) AND §5.2 + AE-5
+(D2/decision-D). Todo 22's checkbox slightly overstated completion (it claimed the taxonomy reclassification, which was
+actually deferred into todo 21's edit). Todo 21 now owns removing both.
+
+**Operator request 2026-07-20 — 4 coverage additions the skill does NOT yet cover → Phase E (`wf_330857a4-e54`):**
+
+1. **Distinct-value census** of instrument_type/data_type/venue/chain, in the **manifest AND GCS path segments**,
+   flagged against the canonical enum — plus the manifest-vs-GCS distinct-set diff (catches the shard-atom vocabulary
+   desync, and the `solana_amm_pool`-vs-`pool` class, cheaply). Largely REUSE: deployment-api already has
+   `_axis_census.py` + `_distinct_values.py` over `read_availability_index(columns=…)`.
+2. **Per-datapoint id-canonical** validation (every row's id against the `VENUE:TYPE:SYMBOL` grammar, not just the
+   sampled stem==column check).
+3. **Per-datapoint schema** validation (columns / dtypes / UTC / non-NaN) — currently DEFERRED by the four-surface doc.
+4. **Two-tier compute model** — Tier-1 in-session (census + oracle, cheap); Tier-2 on a **SPOT VM** doing the ONE
+   sanctioned single-walk + the heavy per-datapoint checks (2+3), writing a results manifest the skill reads. Keeps
+   aggressive compute off the agent session and honours single-walk.
+
+Phase E authors a new codex SSOT (`reconciliation-census-and-compute-tiers.md`) + returns SKILL.md/taxonomy/reference
+integration text (not applied — SKILL.md is owned by the in-flight Phase C). Phase-E plan todos land as 26+.
