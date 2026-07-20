@@ -538,3 +538,86 @@ per-instrument-day unit cost above (25.9s serial, write-bound) is the measured i
       single largest backfill speedup available and it changes the ETA by up to ~8x.
 - [ ] NEW todo. [DOC] P2. Correct `codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
       (measured ~94% write, ~6% polars), not compute-bound; the c2-standard-16 recommendation does not follow.
+
+### 2026-07-20 — CORRECTION: the candle write bottleneck is NOT the MTDS 50GB-disk issue (operator question)
+
+Operator asked whether the write-bound finding is the same problem as the MTDS cefi one (50GB disk throttling write
+speed, fixed by going to 250GB). **Measured answer: NO — different bottleneck, and the MTDS fix is already applied.**
+
+|                | MTDS cefi disk issue                   | MDPS candle writes (measured today)                                                                                                         |
+| -------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| volume         | GBs of `.csv.gz` + parquet, sustained  | **1.99 MB total across 14 objects** (avg 149 KB)                                                                                            |
+| effective rate | 2.36 MB/s after burst-credit depletion | **0.038 MB/s** (2.0 MB / 51.9s)                                                                                                             |
+| disk           | 50 GB **pd-standard**                  | **250 GB pd-balanced ALREADY** (`launch-mdps-backfill-vm.sh:125` `BOOT_DISK_GB:-250`, enforced by `check_backfill_vm_disk_provisioning.py`) |
+| headroom used  | saturated                              | **~0.05%** of the ~70 MB/s that 250GB pd-balanced provides                                                                                  |
+
+You cannot be disk-BANDWIDTH-bound writing 2 MB in ~52s. Raising disk size/type buys ~nothing for candles. **This
+DEMOTES "disk type/size" from lever #2 to a non-lever for MDPS** (it remains correct and load-bearing for MTDS download
+VMs, which move GBs — do not weaken that gate).
+
+**Where the time actually goes (per instrument, from run.log timestamps):**
+
+- aggregation of all 6 timeframes: `13:52:30.763 → 13:52:32.235` = **1.47s**
+- silent gap to the next manifest update: `13:52:32.235 → 13:52:42.956` = **10.7s** for 7 shards ≈ **1.5s per shard**
+
+So the cost is **per-object latency + per-shard manifest flush**, i.e. round-trips and serialization — NOT bytes.
+
+**Leading suspect (to VERIFY, not assert):** `canonical_writer_manifest.py::_flush_manifest_with_backoff` force-flushes
+the manifest after EVERY shard (deliberate — "so SIGKILL loses ≤1 shard"), each flush rewriting the growing per-VM shard
+parquet. 14 shards => 14 read-modify-write cycles. Observed in-log: the per-VM shard goes `(1 total entries, 1 new)` →
+`(8 total entries, 7 new)` → … i.e. rewritten repeatedly. If confirmed, this is a **durability-vs-throughput tradeoff**,
+not a hardware limit, and the fix is to batch the flush (per instrument / per N shards) while preserving an acceptable
+crash-loss bound — NOT to buy faster disks.
+
+**Revised optimization ranking for MDPS candles (measurement-driven):**
+
+1. **Verify + fix write parallelism** (`max_workers`=8 appears NOT to overlap: 25,948ms x 2 == 51.9s total).
+2. **Batch the per-shard manifest flush** (if confirmed as ~1.5s/shard), with an explicit crash-loss bound.
+3. **Fewer/larger objects** (7 small parquets per instrument-day) — interacts with the canonical ruling, so gated.
+4. **Fleet width** — reliable multiplier, but multiplies a latency-bound unit; fix 1+2 first or you buy N x the same
+   stall.
+5. ~~Disk type/size~~ — **NOT a lever for candles** (0.05% utilised). Keep it for MTDS download VMs.
+6. **Rust/faster libs** — lowest: polars aggregation is only ~1.5s of ~12.2s.
+
+### 2026-07-20 — operator: manifest durability is a FALSE tradeoff + scope expansion
+
+**(1) "must be a better way to do this right? without killing the data loss think hard"**
+
+My earlier framing ("durability-vs-throughput tradeoff") was WRONG and I corrected it. The cost is not flush FREQUENCY —
+it is that each flush does a **read-modify-write of a GROWING file** (`_index/per_vm/{vm}.parquet`), so total flush work
+is **O(n^2) in shards-per-VM** while STILL only guaranteeing "SIGKILL loses <= 1 shard". **The current design is
+strictly dominated: simultaneously slow AND lossy.** A better design is faster AND loses nothing. Dedicated design agent
+dispatched to validate against the code and rank:
+
+- **A. Per-shard immutable object** (`_index/per_vm/{vm}/shard-{seq}.parquet`) — O(1) per shard, O(n) total; durability
+  IMPROVES to **zero shards lost**. Extends the EXISTING `_index/per_vm/` merge-on-read pattern one level down. Key
+  check: does the consolidator/`read_availability_index` glob a PREFIX (nearly free) or expect exactly one file per VM?
+- **B. Write-ahead receipt + single materialisation** — tiny O(1) receipt per shard; full parquet once; replay on crash.
+- **C. Async flush off the critical path** — keeps per-shard durability, overlaps flush with the next shard's compute.
+  ORTHOGONAL, combinable with A/B; changes the guarantee not at all.
+- **D. Co-locate the manifest row with the candle write** (no extra round-trip) — biggest layout change, GATED on the
+  pending canonical A/B/C ruling.
+- **E. Batch per instrument** — FALLBACK only (this was my original, inferior suggestion); requires stating a new
+  crash-loss bound.
+
+HARD CONSTRAINT carried into the design: manifest COMPLETENESS is already a live problem (cefi day=2026-04-14 has 20,734
+candle objects vs 6 MDPS manifest rows corpus-wide), so the design must cut flush COST without ever reducing row COUNT
+or making rows easier to lose.
+
+**(2) Scope expansion (operator):** _"keep going and improving mdps and dont forget to do all AG that are relevant (not
+the ones already in candles) and do features service across all shards too"_
+
+- MDPS must be exercised across **ALL relevant asset_groups**, prioritising the ones that do **NOT** already have
+  candles (i.e. the REMAINING work) rather than re-proving the covered ones. Requires first enumerating the
+  candle-coverage gap per (ag, venue, data_type, timeframe) from the manifest — that enumeration is also the ETA
+  denominator, so it does double duty.
+- features-service must be exercised across **ALL shards** (all 8 families x their valid asset_groups, ~29 viable cells
+  per the launcher's `_is_viable_cell` matrix).
+- Sequencing reality: the features sweep is partly gated on candles existing (candle-dependent families will honestly
+  report `no_captured_input_for_window` until the candle backfill runs) — so MDPS coverage leads, features follows, and
+  the honest-gap verdicts in between are themselves the signal, not a failure.
+
+- [ ] NEW todo. [DATA] P0. Enumerate the candle-coverage GAP per (asset_group, venue, data_type, timeframe): which cells
+      ALREADY have candles vs which do not. Drives both "which AGs to run" and the ETA denominator.
+- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-mdps` across all relevant AGs NOT already in candles.
+- [ ] NEW todo. [DATA] P0. Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs).
