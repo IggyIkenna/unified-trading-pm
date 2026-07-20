@@ -160,13 +160,19 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       upload. **Coordination check**: `ao_fleet_infra_hardening_2026_07_20`'s in-repo-state-path migration is code-done
       but the LIVE DB move is still operator-gated/pending — the S3-backup artifact class has NOT been removed yet, so
       this work was not duplicative.
-- [ ] [BACKEND] P3. **(AF-3) `activity_log` retention — low priority, decide and record.** 83,813 rows over 20 days
-      (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC; `activity_log` has
-      nothing. **Operator context 2026-07-18: 83k rows / 40 MB is NOT big for SQLite — there is no problem today**; the
-      only real risk is unbounded growth over MONTHS (write-latency creep on the write-hot DB). So: a simple age-based
-      prune (90d) OR just a growth alarm suffices — no redesign, and explicitly deferring is an acceptable outcome if
-      the alarm exists. Optionally archive-to-S3 via the existing snapshot loop before any delete. **Gate**: a retention
-      decision recorded and implemented, or explicitly deferred WITH the growth alarm in place.
+- [x] [BACKEND] P3. ✅ **(AF-3) `activity_log` retention — decision: DEFER pruning, growth alarm implemented.** —
+      `agent-orchestrator@a87d2d3` (2026-07-20). **Decision recorded** (of the two operator-sanctioned options): no
+      prune — 83k rows/40MB genuinely isn't a problem, and a delete path adds real risk (wrong-window deletes,
+      archive-before-delete correctness) for a P3 item the operator explicitly said not to redesign. Built the growth
+      alarm instead: `TuningDefaults.activity_log_growth_alarm_rows` (default 500,000 — ~6x the measured 83k baseline, a
+      multi-month runway before it can fire on legitimate growth), checked via
+      `DailySummaryLoop.     _check_activity_log_growth()` — **piggybacked on the ALREADY-periodic digest tick, no new
+      daemon thread**, per the "no redesign" ruling. State-transition deduped
+      (`dedup_state.activity_log_growth_alarm_path()`): pages once on crossing, not every digest cycle; clears silently
+      on drop-back-under (e.g. a future operator prune), and re-arms for the next breach. 4 new tests (fires-once,
+      silent-under-threshold, resolve+re-arm, best-effort failure isolation). Full `agent-orchestrator`
+      `quality-gates.sh` green (1548 passed). **Gate met**: retention decision recorded (defer, no prune) WITH the
+      growth alarm in place — the plan's own explicit acceptable-outcome clause.
 
 ## Safeguards
 
@@ -213,3 +219,16 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   between uploads including one zero-backup day. `SnapshotRecencyCanary` now asserts + pages on this (mirrors
   `PlanReconcilerLivenessCanary`'s proven pattern). Restore drill performed for real (read-only, scratch dir): the
   latest S3 backup downloaded, integrity-checked, and queried successfully. 30 new tests, full QG green.
+- **2026-07-20 — AF-3 done** (`agent-orchestrator@a87d2d3`). Decision: defer pruning, ship the growth alarm —
+  piggybacked on the existing `DailySummaryLoop` tick per the operator's explicit no-redesign ruling, no new daemon
+  thread. 4 new tests, full QG green.
+- **2026-07-20 — session wrap-up.** Every todo except AF-1b is done: AF-1a (root-caused + fixed the CI-escalation
+  failure class), AF-2 (plan_health throttle), AF-5 (fleet efficiency KPIs + usage attribution, backend), AF-4 (DR
+  snapshot recency canary + a real restore drill), AF-3 (activity_log growth alarm). AF-1b stays the one open item —
+  genuinely blocked on `ao_dispatch_cooldown_and_park_2026_07_20`'s shared cooldown store, though that plan's own
+  keystone dependency landed mid-session (`cfb211c`) and may now unblock it; re-verify that plan's cooldown-store todo
+  before starting AF-1b next. Two items are explicit, tracked partial-completions rather than silently-dropped scope:
+  AF-2's 24h-live-traffic dispatch-rate gate (code shipped + tested, needs a real post-deploy window to confirm) and
+  AF-5's dashboard React card (backend + API shipped + tested; the card itself needs `dashboard/` `node_modules` +
+  CLAUDE.md's playwright regression-spec gate, neither available in this session). Every commit landed via quickmerge
+  with a green `quality-gates.sh` run cited; every plan-flip cites the shipping commit.
