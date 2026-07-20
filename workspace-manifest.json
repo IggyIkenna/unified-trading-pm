@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 8,
-        "coverage_pct": 88.48,
+        "qg_red_reason": null,
+        "coverage_pct": null,
         "large_file_count": 2,
-        "qg_red_reason": null
+        "warn_file_count": 8
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": null,
         "warn_file_count": 38,
-        "large_file_count": 0,
-        "coverage_pct": 83.16,
-        "qg_red_reason": null
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "warn_file_count": 21,
+        "qg_red_reason": "pytest",
+        "coverage_pct": 87.88,
         "large_file_count": 6,
-        "coverage_pct": 87.89,
-        "qg_red_reason": "pytest"
+        "warn_file_count": 21
       }
     },
     "unified-trading-pm": {
