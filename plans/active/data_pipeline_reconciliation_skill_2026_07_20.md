@@ -109,11 +109,44 @@ Prod-bucket deletes, legacy-after-copy deletes, the tradfi `batch_massive` 1.47M
 
 ---
 
-## 🟠 OPERATOR DECISIONS REQUESTED (todo 2 — the deliverable of P0-02)
+## ✅ OPERATOR DECISIONS — ALL THREE RULED 2026-07-20
 
-These three cannot be adjudicated from documents — in two of them, both sides cite the **same operator on the same
-date** in opposite directions. The skill is built to refuse these axes, so **the build is not blocked**; the estate's
-convergence is. Each is stated as an option-set with a recommendation.
+> **RULED 2026-07-20 (operator, in-session).** All three axes below are now DECIDED. The option-sets are retained
+> underneath for the record — read the ruling first; the tables are history, not live questions.
+>
+> | Ref    | Ruling                             | Note                                                                                                                                                                                                                      |
+> | ------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | **D1** | **B — UPPERCASE** (catalogue wins) | Operator: _"uppercase is fine"_. Explicitly a **cost** argument, not a correctness one — it is the only option where the shipped code and the >8M already-migrated rows agree. The revert is mechanical if ever reversed. |
+> | **D2** | **B — complete the FULL retire**   | **Against the worker recommendation** (which was to ratify the interim). Recorded as the operator's deliberate choice.                                                                                                    |
+> | **D3** | **A — fold → repoint → delete**    | Matches the R5 overturn and the corrected Track 2 / §A6.                                                                                                                                                                  |
+>
+> **D1 consequences (UPPERCASE column):** the manifest `instrument_type` COLUMN is UPPERCASE. The **path** segment stays
+> lowercase and the **id** middle segment stays UPPER — both were never in question. This _ratifies_ the two
+> already-shipped uppercase migration scripts (`instruments-service@555ddf1c` + the tradfi Phase-B script), so the
+> DRAIN-GATED freeze on them is **lifted**. Codex `cross-asset-canonical-target-ssot.md` §7/§11 must be corrected
+> lowercase→UPPERCASE **for the column only**, and the tradfi closeout's self-contradicting worklist (which orders a
+> case-fold in the opposite direction, 750,715 rows) must be corrected to fold UP. The skill stops refusing this axis
+> and begins enforcing UPPERCASE for the column.
+>
+> **D2 consequences (full retire) — HARD PREREQUISITE, do not skip:** the retire was attempted once and **reversed**
+> because it broke 5+ MTDS lending writers into `attempted_failed`/zero-data and desynced the shard atom (GCS
+> `instrument_type=a_token` vs manifest `lending`). Re-executing it in the same order reproduces that outage. Required
+> order: **(1) fix the 5+ MTDS lending writers first and prove them green · (2) then migrate the ~16.7M rows · (3) then
+> re-sync the shard atom across GCS/manifest/status/UI.** Until step 2 completes, market/event flat `LENDING` is
+> `migration_pending` — the skill must **not** report it as a fresh non-canonical finding, and must **not** treat it as
+> an unruled/refused axis either. Codex §5's "LENDING is RETIRED" text is now the correct **target**, but needs a banner
+> stating it is not yet implemented and naming the writer-fix prerequisite.
+>
+> **D3 consequences (fold → repoint → delete):** the order is **mandatory**, not advisory — KAMINO and SOLEND have
+> **zero** canonical `dex_pool_state` objects, so for those cells the legacy objects are the **only** copy and a
+> delete-first would be unrecoverable. Track 2 and §A6 have already been amended to match (P0-01, shipped).
+
+<details>
+<summary>Original option-sets as presented (retained for the record)</summary>
+
+These three could not be adjudicated from documents — in two of them, both sides cited the **same operator on the same
+date** in opposite directions. The skill was built to refuse these axes, so the build was never blocked; the estate's
+convergence was. Each was stated as an option-set with a recommendation.
 
 ### D1 — manifest `instrument_type` COLUMN case (audit ref C2a) · direction of >12M row rewrites
 
@@ -166,6 +199,8 @@ struck through, so the stale instruction can no longer be executed by a worker r
 > uncaught through `load_date()`. That provider may therefore have been **dead-on-arrival** since that call regressed,
 > rather than being an active consumer. Worth confirming — it determines whether the repoint is urgent or merely
 > correct.
+
+</details>
 
 ---
 
@@ -320,6 +355,34 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
 - [ ] 19. [REVIEW] P1. **Post-phase codex audit** — verify every new/edited codex doc is internally consistent and that
       no plan↔codex drift remains; add the one-liner + conditional-domain pointer to `cursor-configs/CLAUDE.md` (honour
       the 40 KB cap — condense, never raise it).
+
+### Phase D — apply the 2026-07-20 operator rulings (D1 / D2 / D3)
+
+- [ ] 20. [DATA] P0. **D1 UPPERCASE — correct the docs and unfreeze.** Flip `cross-asset-canonical-target-ssot.md`
+      §7/§11 lowercase→UPPERCASE **for the manifest COLUMN only** (path segment stays lowercase, id middle segment stays
+      UPPER — neither was in question), with a dated ruling annotation. Correct the tradfi closeout's self-contradicting
+      worklist (it orders a case-fold in the opposite direction, 750,715 rows) to fold UP. Record that the DRAIN-GATED
+      freeze on `instruments-service@555ddf1c` + the tradfi Phase-B script is **lifted** (they are now ratified).
+- [ ] 21. [SCRIPT] P0. **D1 — stop refusing the axis in the skill.** Remove the C2a refusal from `SKILL.md` § 3e and the
+      taxonomy's REFUSED-axes section; replace with the enforced rule (column = UPPERCASE) plus a `migration_pending`
+      exception entry for the defi rows not yet migrated UP. The case-insensitive comparison workaround comes out.
+- [ ] 22. [DATA] P0. **D2 — banner codex §5 with the prerequisite.** §5's "flat `LENDING` is RETIRED" is now the correct
+      TARGET; add a dated banner stating it is **not yet implemented**, that the first attempt was reversed after
+      breaking 5+ MTDS lending writers, and that the mandatory order is **fix-writers → migrate ~16.7M rows → re-sync
+      the shard atom**. Reclassify market/event flat `LENDING` from `refused/unruled` to `migration_pending` in the
+      taxonomy so the skill neither flags it nor treats it as an open question.
+- [ ] 23. [DATA] P1. **D2 — scope the writer fix (prerequisite for the migration).** Identify and enumerate the 5+ MTDS
+      lending writers that broke into `attempted_failed`/zero-data on the reversed attempt; file the fix as its own plan
+      (this plan does not own MTDS writer work). **The migration must not start until that plan is green** — this is the
+      step whose omission caused the reversal.
+- [ ] 24. [DATA] P1. **D3 — fold before anything else.** Content-UNION the 32 legacy-only Raydium pools into the
+      canonical tree, and confirm the KAMINO/SOLEND `dex_pool_state` cells (canonical count **zero** — legacy is the
+      only copy) are covered by the fold. Verify by count + content, not by path existence.
+- [ ] 25. [CODE] P1. **D3 — repoint execution-service, then re-verify.** Point `providers/solana_amm_depth_provider.py`
+      at the canonical `data_type=dex_pool_state` path and fix its broken call to
+      `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`. Resolve the open sub-question first
+      (the call sits outside the `try:` so the provider may be dead-on-arrival). **Delete comes after this, never
+      before** — and the prod-bucket delete itself stays human-only.
 
 ---
 
