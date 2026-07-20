@@ -351,3 +351,33 @@ autonomously delete registered launchers / rebind self-heal (operator returns to
   per-strike leaf under a chain data_type as `content_check=non_canonical: chain_leaf_not_bundled` (the 2026-05-05
   regression re-firing); (4) benchmark/ETA must not extrapolate a chain rate from a spot/perp cell — DERIBIT options
   chains run ~2-3M rows/shard.
+
+### 2026-07-20 13:53 — MDPS canonical-verdict split DONE; features correction BLOCKED on session limit
+
+- **MDPS driver corrected + QG-green (2000 lines)** — the measured-vs-declared split landed cleanly:
+  - **force predicate = the writer's REAL measured template**:
+    `processed_candles/by_date/day={D}/pipeline_mode={pm}/ timeframe={tf_RAW}/data_type={SOURCE_dt}/venue={V}/[underlying={U}/]{leaf}.parquet`
+    — SOURCE data_type (NOT `mdps_data_type_key`), NO `instrument_type=` segment, RAW tf token (`24h` stays `24h`;
+    normalisation is the manifest's job). Sports routed to its own measured root
+    `processed/by_date/…/league_id=…/timeframe=T-10m/ bucketed.parquet`. Manifest verify UNCHANGED (canonical
+    `mdps_dt` + NORMALISED tf — the manifest genuinely carries those; only the OBJECT path diverges). Force can now
+    legitimately go GREEN on today's real data.
+  - **canonical leg = strict vs the DECLARED SSOT**, computed over real objects INDEPENDENTLY of force acceptance, so a
+    force-green cell still reports `content_check=non_canonical` with specific tokens. Verified verdicts: cefi
+    `missing_segment=instrument_type; data_type=derivative_ticker!=deriv_ohlcv_15m` (+ `timeframe=24h!=1d` at 24h);
+    tradfi `missing_segment=instrument_type; leaf=E1AF0_C3200_migrated_*(not VENUE:TYPE:SYMBOL)`; empty-stem objects get
+    a dedicated `empty_instrument_stem` token and are EXCLUDED from force evidence so they can never green a cell.
+  - Sibling-collision guard: measured data_type pinned to the SOURCE type exactly (trades+15m→ohlcv_15m would otherwise
+    collide with tradfi's SOURCE ohlcv_15m) and tf pinned to the raw token — verified a 5m object and a trades object
+    both correctly REJECT against a 15m/ohlcv_15m shard.
+- **⛔ features driver correction FAILED — "You've hit your session limit · resets 2pm (Europe/London)".** The features
+  driver therefore STILL has canonical-ness as a FORCE-leg pass predicate (from the earlier finalize pass), which would
+  skip essentially every cell. **THIS IS THE NEXT ACTION after 14:00 BST**: re-run the identical measured-vs-declared
+  split for features (same spec as MDPS; per-family REAL writer templates — delta_one
+  `delta_one/day={D}/…/ feature_group_version={N}/…` with NO by_date/, volatility currently writing at BUCKET ROOT per
+  the writer bypass).
+- Investigation workflow `wf_362e496d-a35` (5 read-only agents: P0 manifest disconnect, chain-bundle/empty-stem fix
+  spec, DeFi-MVP ETA inputs, backfill optimization runbook, orphan/migration worklist) launched 13:48 and is running.
+- **RESUME POINTER for a compressed future-me**: MDPS driver = corrected/green/uncommitted; features driver = needs the
+  split; nothing driver-side is committed yet (deployment-service@f0b3f14 + unified-trading-library@82c3c336 ARE
+  shipped). Both SKILL.md written + uncommitted.
