@@ -68,10 +68,18 @@ targeting any of them for the first time:
 PROJECT_ID="central-element-323112"
 for ag in cefi defi tradfi sports prediction; do
   bucket="instruments-store-${ag}-test-${PROJECT_ID}"
-  if gcloud storage buckets describe "gs://${bucket}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
-    echo "OK   gs://${bucket}"
-  else
-    echo "GAP  gs://${bucket} — MISSING, provisioning gate fails for ${ag}"
+  # OBJECT-level probe (2026-07-19): NEVER gate on `gcloud storage buckets describe` / `gsutil ls -b` —
+  # both need storage.buckets.get, which unified-trading-sa does NOT have (object read/write only).
+  # Measured: metadata calls 403 for EVERY bucket incl. ones being actively read, so a describe-based
+  # gate false-negatives all 5 asset groups and provisioning on it creates DUPLICATE buckets against
+  # bucket_estate_consolidation_to_sub100_2026_07_13. This form distinguishes MISSING (404) from
+  # EXISTS-but-EMPTY, which is the legitimate state of an unwritten `-test-` sibling.
+  out=$(gsutil ls "gs://${bucket}/**" 2>&1 | head -1)
+  case "$out" in
+    *NotFound*|*404*|*"does not exist"*)  echo "GAP  gs://${bucket} — MISSING, provisioning gate fails for ${ag}" ;;
+    *"matched no objects"*|"")            echo "OK   gs://${bucket} (exists, empty)" ;;
+    *AccessDenied*|*403*)                 echo "??   gs://${bucket} — 403 on objects too; escalate, do NOT provision blind" ;;
+    *)                                    echo "OK   gs://${bucket} (exists, has objects)"
   fi
 done
 ```
