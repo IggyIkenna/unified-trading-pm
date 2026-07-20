@@ -749,3 +749,42 @@ established precedent (it was previously REOPENED from a self-declared "correcte
 `status: open` / `resolved_by:` empty for an independent skeptical audit rather than self-declaring resolution. Shipping
 this plan-flip via a direct push (PM `docs(plans):` commit, per the carve-out for plan-flip commits) and calling
 `/done`.
+
+### 2026-07-20T UTC — backend_engineer (per-row decision on the 2 rows the 2026-07-17 skeptical audit found — `ao_backlog_regen_integrity_2026_07_20.md` todo 5)
+
+The independent skeptical audit this doc's last entry asked for happened on 2026-07-17 (the
+`ao_open_issues_consolidated_close_out_2026_07_17.md` session): `audit_false_done` reported **2 live false-`done`
+rows**, `sports_cf8_available_at_backfill_regression-001` (`done_sha=utl@f5f15e3a`) and `-002`
+(`done_sha=utl@0f55cc2b`), both legacy poison predating the `@86b8b8b` gate. Per that plan's own scope note — "AO's part
+is notify + re-verify, NOT the fix; do NOT flip a sports checkbox yourself" — re-verified BOTH rows' CURRENT state via
+read-only SSM against the live `state.db` before taking any notify action.
+
+**Both rows have already moved on from the 07-17 snapshot — neither is a live false-done today:**
+
+- **`-001`**: now `status: queued` (not `done`) — matches its genuinely still-open checkbox
+  (`sports_cf8_available_at_backfill_regression_2026_07_13.md`'s TARGETED re-emit `[DATA]` todo). `done_sha`/`done_at`
+  are still populated as historical residue, but the row is no longer claiming completion. Something already corrected
+  it between 07-17 and today — not this session's sibling-reset guard (that shipped today, 2026-07-20, after this state
+  was already observed), so the correction predates it. No reopen action needed; it's already queued.
+- **`-002`**: does not exist as a task row at all anymore. Traced its `activity_log` history: this id was reassigned
+  (positional-counter reuse) to a DIFFERENT, later todo — "make backlog parking gates survive plan-checkbox reordering"
+  — which genuinely completed and gate-verified on 2026-07-18 (`sha=22738f6`,
+  `slot_done_verified: applicable=true, on_origin=true`). That row has SINCE also vanished from `tasks`, meaning the id
+  was reused again and, under the pre-fix behavior, silently reset/pruned at least once more since. The specific
+  poisoned row the 2026-07-17 audit named simply no longer exists to reopen or flip.
+
+**Broader re-verification (not just the 2 named rows)**: `audit_false_done.py` is currently **non-functional on the live
+VM** — a git "dubious ownership" error on the PM sibling worktree silently fails every `git show <ref>:<path>` call, so
+a live run today returns `honest: [], false_done: []` regardless of truth (flagged separately in
+`ao_backlog_regen_integrity_2026_07_20.md` todo 4's Progress Log for operator attention — not fixed here, it needs an
+operator-authorized `git config --global --add safe.directory` on the VM). To still get a real answer, replicated the
+script's exact logic (`_brief_hash`/`_UNCHECKED_RE`/`_still_unchecked`) locally against a working PM clone fetched fresh
+to `origin/live-defi-rollout` (`c7c5c9a0a`), fed by the live DB's raw rows (read-only SSM): of 44 `done` rows carrying a
+`plan_ref`, 38 are the already-ruled-permanently-unauditable NULL-`brief_hash` tail (this doc's own final todo), and of
+the 6 with a `brief_hash`, **all 6 are honest** (checkbox genuinely flipped, hash matches) — **0 false_done, 0
+unresolved**.
+
+**Gate met**: `false_done: 0`, confirmed via a working equivalent of `audit_false_done.py --db … --pm …` (the sanctioned
+tool itself needs the VM-side git fix above before it can confirm this directly). No sports checkbox was flipped by this
+session — both named rows resolved via prior mechanisms, not this touch. This closes
+`ao_backlog_regen_integrity_ 2026_07_20.md` todo 5's gate and unblocks its todo 7 (closing this doc for real).

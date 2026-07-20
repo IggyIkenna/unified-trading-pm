@@ -367,6 +367,59 @@ are self-contradictions in THIS closeout / the audit — both now fixed** (marke
       `ingest_kalshi_bulk_to_canonical.py`, `rebuild_prediction_manifest.py`, the sentinel fan-out. Cross-repo/SSOT
       class — NOTIFY OPERATOR (done in-session 2026-07-19).
 
+## Operator decisions — ANSWERED 2026-07-20 (no longer blocking)
+
+All four resolved in interactive chat. These are now actionable, not gated:
+
+1. **Cross-AG bleed → ROOT-CAUSE FIRST, THEN PURGE.** Locate the third emitter writing `asset_group=prediction` rows
+   into the sports manifest (two paths already ruled out: MTDS Kalshi/Poly write paths resolve
+   `instruments-store-prediction` correctly; `websocket_runner.py:77` fails loud). Candidates to check:
+   `ingest_kalshi_bulk_to_canonical.py`, `rebuild_prediction_manifest.py`, the `SportsCatalogReader`/`FixtureIdResolver`
+   sentinel fan-out. Fix the writer, THEN purge the 4,097 rows — purging while the emitter is live just means they
+   return (same ordering as K1-before-K2).
+2. **§U registry gap → STOP CAPTURING NON-REGISTRY LEAGUES** (operator chose to narrow capture, NOT to extend the
+   registry). Target state is **captured == intended**: the sports capture universe is the UAC registry, full stop.
+   Implementation: narrow the capture/enumeration path to the registry universe so no non-registry league is fetched
+   again; then decide the disposition of the ALREADY-captured non-registry rows (10,869 blank-round rows across 489
+   league-seasons) — they must be excluded from the coverage denominator at minimum, and are purge candidates since they
+   are by definition out-of-universe. **Consequence: "sports backfilled 100%" becomes literally true against the
+   registry denominator**, because the unreachable rows stop being part of the universe.
+3. **§T pre-2019 → OUT OF SCOPE.** The window stays 2019-01-01..present. The 122,864 pre-2019 blank-round rows
+   (2013–2018) are **intentionally excluded** — document them as a known, explained exclusion, not a gap. No further
+   api-football spend.
+4. **K2 casing → MIGRATE ALL ~1.8M `trades` → `TRADES`.** Full canonical consistency; the bucket ends UPPER everywhere
+   per K0-(b). This supersedes the original "~20,339 rows, one bucket" scoping (which wrongly excluded `trades` = 91.5%
+   of the bucket). **K1 (live writer emits UPPER) must ship BEFORE K2** or the migration re-dirties on the next write.
+
+### Newly-actionable todos from these decisions
+
+- [ ] [DIAG] P1. Root-cause the cross-AG emitter (decision 1), then purge. **MEASURED 2026-07-20 — it is LIVE and
+      GROWING, and larger than the audit said**: 4,097 (audit, 07-19) → **6,597 now**, +2,500 added TODAY alone (07-17:
+      1,756 · 07-19: 2,341 · 07-20: 2,500, newest `written_at` 00:54:58Z). So a DAILY job is still writing. Fingerprint
+      (from a direct read of `instruments-store-sports-prd/_index/availability_index.parquet`):
+      `service_name=market-tick-data-service`, `pipeline_mode` batch_kalshi (6,562) / batch_polymarket_clob (35),
+      `venue` KALSHI/POLYMARKET, `data_type` trades (6,484) + prediction_canonical_question_group (113),
+      `capture_status` captured (6,567) / empty_confirmed (30), schema_version 9, DATA dates 2026-07-16..07-19
+      (forward/recent, i.e. the LIVE capture path — not a historical migration). Plus 1 cefi + 1 defi row
+      (BITGET-FUTURES / UNISWAP_V3-BASE, service=instruments-service). **RULED OUT**: (a)
+      `ingest_kalshi_bulk_to_canonical.py` and `canonicalize_prediction_manifest_2026_07_18.py` both resolve
+      `market-data-tick-prediction` correctly; (b) `websocket_runner.py:451` resolves `instruments-store-prediction`;
+      (c) the current per-VM shards in the sports bucket — they contain only sports + blank-`asset_group` rows, NO
+      prediction rows. **FALSE LEAD, discarded (do not re-chase)**: the two live `af-backfill-*` per-VM shards hold
+      ~100k rows with EMPTY-STRING `asset_group` — that is BENIGN, the consolidator fills asset_group from bucket
+      context on merge (consolidated index has **0** blank-asset_group rows). Blank `venue` is likewise normal (4.3M
+      sports reference rows have none). **NEXT**: the emitter writes to the sports instruments-store manifest on a DAILY
+      cadence from the live Kalshi/Polymarket capture path, bypassing the per-VM shard route. Find the live prediction
+      capture job's ManifestWriter bucket resolution (anything resolving `kind="instruments-store"` with a
+      defaulted/sports asset_group while writing prediction rows), fix it, THEN purge (purging first = they return
+      tomorrow).
+- [ ] [CODE] P1. Narrow sports capture/enumeration to the UAC registry universe (decision 2) so captured == intended.
+- [ ] [DATA] P2. Dispose of the already-captured non-registry rows (decision 2): exclude from the denominator; purge if
+      confirmed out-of-universe. Snapshot before any delete.
+- [ ] [DOC] P3. Document pre-2019 (2013–2018) as an intentional, explained exclusion (decision 3) in the audit's gap
+      table so the remaining-blanks arithmetic reads clean.
+- [ ] [DATA] P1. K2 scope is now ALL lower-case rows incl. ~1.8M `trades` (decision 4) — gated on K1 shipping first.
+
 ## Operator decisions needed (blocking)
 
 - **§U** registry-absent leagues (10,869 rows) · **§T** pre-2019 scope (122,864 rows) · **§O** the two

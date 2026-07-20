@@ -182,6 +182,18 @@ last for that reason, not for convenience.
       `agent-orchestrator@390cdde24` are ancestors of the current live HEAD (which has moved further via other agents'
       unrelated work in the interim — expected on a shared branch), and `ExecMainStartTimestamp=2026-07-20 06:45:20 UTC`
       (`ActiveState=active`) postdates both commits. Both halves of the gate hold.
+- [x] ✅ [BACKEND] P0. **Stop `_reclaim_idle_lingering_sessions` reaping typed one-off agents mid-work (found 2026-07-20
+      while verifying this plan).** The AgentRow guard added by todo 2 protects the PREREQ reaper only;
+      `_reclaim_idle_lingering_sessions` is a different function in the same file that never learned it, and it was
+      still killing the daily plan_reconciler. **Evidence it was mid-work, not crashing**: the agent's own JSONL
+      transcript (`/home/ubuntu/.claude-configs/orch-slot-5/projects/…/b1a0f68f-….jsonl`, 83 entries, 436 KB) ends at
+      07:32:29Z reading its plan-hygiene sweep output, ~60s before `tmux_session_lost` at 07:33:30Z. Arithmetic matches
+      exactly: never calls `/boot` (a fleet-worker step) → SlotRow stays `idle` → `boot_grace_seconds` 300s + 2 ticks ×
+      60s = **420s** vs measured **7m40s**. — `agent-orchestrator@f641968`, regression test
+      `test_idle_reclaimer_never_reaps_a_typed_one_off_agent` in `tests/test_self_healing_hardening.py`, verified RED
+      without the guard and GREEN with it; full `quality-gates.sh` green before ship. **This is the THIRD carve-out for
+      the same fact** — which is why `ao_uniform_agent_liveness_contract_2026_07_20.md` now exists to replace all three
+      with one contract; that plan's final todo deletes this guard.
 - [ ] [BACKEND] P2. **Re-measure the `tmux_session_lost` rate AFTER the fix is live, and record the delta.** Baseline:
       **192 events since 2026-07-18** (measured 2026-07-20). Re-measure over a comparable window once the deploy is
       confirmed. Report the honest number either way — if the rate does NOT drop, say so plainly and record that the

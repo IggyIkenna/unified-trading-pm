@@ -286,7 +286,7 @@ jobs:
             fi
           elif [ "${SIT_PASS}" = "true" ]; then
             # Explicit SIT-pass alert — SIT-green was previously only implied via promotion.
-            MSG="✅ SIT PASSED: *${REPO}* ${PREV} → *SIT_VALIDATED* (system-integration-tests green; clear to promote staging→main)"
+            MSG="✅ SIT PASSED: *${REPO}* ${PREV} → *SIT_VALIDATED* (system-integration-tests green on the LDR tree; the promote gate re-checks tree-match + ci_status before promoting)"
           else
             MSG="🟢 CI RECOVERED: *${REPO}* ${PREV} → *${STATUS}*"
           fi

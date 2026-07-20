@@ -61,6 +61,51 @@ def test_non_main_failing_cannot_clobber_main_green():
     assert resolve_status("MAIN_GREEN", "FAILING", "main") == "FAILING"
 
 
+def test_non_main_green_cannot_clear_a_main_originated_failing():
+    """The SYMMETRIC half of the ratchet fix (2026-07-20) — the incident that motivated it.
+
+    ``test_non_main_failing_cannot_clobber_main_green`` fixed the FIRST hop of the
+    MAIN_GREEN → FAILING → SIT_VALIDATED shape. The SECOND hop stayed open: FAILING is rank 0
+    on the STORED side, so ANY higher-ranked write erased it by plain rank comparison — despite
+    the header comment claiming FAILING is "never [handled] by rank comparison".
+
+    Measured 2026-07-20: UAC@a2beed46 dropped `massive` from SOURCE_PRIORITY, breaking 10 UTL
+    manifest-writer tests. UTL main went FAILING at 03:28Z; at 05:21Z the full-workspace SIT
+    stamped SIT_VALIDATED from live-defi-rollout and erased it — posting an affirmative "SIT
+    PASSED ... clear to promote" over a main nobody had fixed, and re-opening the promote gate
+    (which treats SIT_VALIDATED as on-main-eligible) into a red main.
+
+    SIT's guarantee is content-scoped to the LDR tree (`sit_validated_tree`), so it cannot speak
+    for main's tree. Only main speaks for main — in BOTH directions.
+    """
+    assert resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout", "main") == "FAILING"
+    assert resolve_status("FAILING", "STAGING_GREEN", "staging", "main") == "FAILING"
+    assert resolve_status("FAILING", "MAIN_GREEN", "live-defi-rollout", "main") == "FAILING"
+    # ...but main itself still clears its own red, which is the ONLY legitimate recovery path:
+    assert resolve_status("FAILING", "MAIN_GREEN", "main", "main") == "MAIN_GREEN"
+
+
+def test_non_main_originated_failing_is_still_clearable_by_non_main():
+    """The guard is scoped to MAIN-originated reds — it must not jam the LDR/staging axis.
+
+    An LDR red is a real signal on its own axis, but it is not main's truth, so a later LDR/
+    staging green must still clear it. Jamming here would deadlock every non-main recovery.
+    """
+    assert resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout", "live-defi-rollout") == "SIT_VALIDATED"
+    assert resolve_status("FAILING", "STAGING_GREEN", "staging", "staging") == "STAGING_GREEN"
+
+
+def test_unattributed_stored_failing_fails_open():
+    """A doc written before `branch` provenance was consulted must not jam.
+
+    `prev_branch` defaults to "" (unknown). The guard requires an explicit "main" provenance, so
+    a legacy/unattributable red keeps the pre-existing rank behaviour rather than becoming
+    permanently unclearable by anything but a main push.
+    """
+    assert resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout") == "SIT_VALIDATED"
+    assert resolve_status("FAILING", "SIT_VALIDATED", "live-defi-rollout", "") == "SIT_VALIDATED"
+
+
 def test_no_downgrade_keeps_higher_green_on_non_main_rerun():
     # the bug class: a staging/ldr v2 re-run on an already-promoted repo must NOT flap MAIN_GREEN down
     assert resolve_status("MAIN_GREEN", "STAGING_GREEN", "staging") == "MAIN_GREEN"

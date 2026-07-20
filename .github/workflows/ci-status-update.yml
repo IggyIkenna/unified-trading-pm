@@ -290,7 +290,14 @@ jobs:
             fi
           elif [ "${SIT_PASS}" = "true" ]; then
             # Explicit SIT-pass alert — SIT-green was previously only implied via promotion.
-            MSG="✅ SIT PASSED: *${REPO}* ${PREV} → *SIT_VALIDATED* (system-integration-tests green; clear to promote staging→main)"
+            # Wording fixed 2026-07-20 on two counts. (1) "staging→main" is stale: the fleet default is
+            # LDR→main DIRECT with staging BYPASSED (all 24 repos are promotion_model=ldr_main), so it
+            # named a hop that does not exist for this repo. (2) "clear to promote" was an unconditional
+            # readiness claim this workflow is not entitled to make — actual clearance additionally
+            # requires sit_validated_tree == the CURRENT LDR tree AND ci_status != FAILING, evaluated by
+            # ldr-to-main-promote-fleet.yml. SIT's guarantee is content-scoped to the tree it saw; say
+            # exactly that and let the promote gate be the arbiter.
+            MSG="✅ SIT PASSED: *${REPO}* ${PREV} → *SIT_VALIDATED* (system-integration-tests green on the LDR tree; the promote gate re-checks tree-match + ci_status before promoting)"
           else
             MSG="🟢 CI RECOVERED: *${REPO}* ${PREV} → *${STATUS}*"
           fi

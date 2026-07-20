@@ -234,19 +234,19 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > done.
 
 - [x] ✅ [BACKEND] P0. **Gated concurrent-date driver (UTL — the saturation lever) — SHIPPED utl@7b4ed95d.**
-      `service_framework/_adapter.py` `run()` now dispatches on `--batch-date-concurrency` (ServiceCLI arg, default **1**
-      = `_drive_serial`, a byte-identical extraction of the old loop). When >1, `_drive_concurrent` runs up to N dates
-      in flight via a semaphore acquired-before-task / released-on-completion (bounded, lazy pull — no task-per-date
-      explosion), all funnelling through the **process-global Databento semaphore** (≤80). Determinism-safe (each date
-      independent, own partition); regression test proves concurrent==serial results+counts incl a failing date +
-      bounded in-flight. Default-off ⇒ zero change for CeFi/sports/defi. **Both MTDS and IS get the flag for free** (both
-      use ServiceCLI `add_date_args`). (repo: unified-trading-library)
+      `service_framework/_adapter.py` `run()` now dispatches on `--batch-date-concurrency` (ServiceCLI arg, default
+      **1** = `_drive_serial`, a byte-identical extraction of the old loop). When >1, `_drive_concurrent` runs up to N
+      dates in flight via a semaphore acquired-before-task / released-on-completion (bounded, lazy pull — no
+      task-per-date explosion), all funnelling through the **process-global Databento semaphore** (≤80).
+      Determinism-safe (each date independent, own partition); regression test proves concurrent==serial results+counts
+      incl a failing date + bounded in-flight. Default-off ⇒ zero change for CeFi/sports/defi. **Both MTDS and IS get
+      the flag for free** (both use ServiceCLI `add_date_args`). (repo: unified-trading-library)
 - [x] ✅ [BACKEND] P0. **Concurrency knob plumbing (metadata → env → CLI) — SHIPPED dep@ac5d166 + utl@7b4ed95d.**
       `setup-data-pipeline-vm.sh` reads `DATABENTO_MAX_CONCURRENT_REQUESTS` + `DATABENTO_RATE_LIMIT_TARGET_UTILIZATION`
       (metadata→env, mirrors the TARDIS_* block) + appends `--batch-date-concurrency $VM_BATCH_DATE_CONCURRENCY` to the
-      mtds-backfill BASE_CLI when set; `launch-mtds-backfill-vm.sh` (+`_tradfi-ohlcv-launcher-lib.sh`) stamp the metadata
-      (opt-in/default-off). CLI flag itself is free via ServiceCLI (no per-CLI change needed — the driver ship provides
-      it to MTDS **and** IS). (repos: deployment-service, market-tick-data-service, instruments-service)
+      mtds-backfill BASE_CLI when set; `launch-mtds-backfill-vm.sh` (+`_tradfi-ohlcv-launcher-lib.sh`) stamp the
+      metadata (opt-in/default-off). CLI flag itself is free via ServiceCLI (no per-CLI change needed — the driver ship
+      provides it to MTDS **and** IS). (repos: deployment-service, market-tick-data-service, instruments-service)
 - [ ] [INFRA] P2. **~~Collapse `mtds_chunk_loop.sh`~~ — SUPERSEDED by a safer refinement (2026-07-18).** The 7-day chunk
       is a **deliberate** per-IP-429/memory-bound safety (`setup-data-pipeline-vm.sh:~L1276` comment), so collapsing it
       is risky. Instead the shipped path adds date-concurrency **within** each chunk via `--batch-date-concurrency`
@@ -259,30 +259,30 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       default (staged locally 2026-07-18). (repo: deployment-service)
 - [x] ✅ [BACKEND] P1. **Real retry-on-429 in the Databento fetch path — SHIPPED mtds@73c286a2 (`databento_retry.py`).**
       The fetch previously recorded ANY exception (incl. `RATE_LIMIT`/429) as a per-schema shard failure with no retry
-      (config `max_retries`/`backoff_factor` were log-only). Now `fetch_timeseries_range_with_retry` wraps the timeseries
-      fetch in a bounded `backoff_factor*2^attempt` (capped) loop that retries ONLY the transient whitelist
+      (config `max_retries`/`backoff_factor` were log-only). Now `fetch_timeseries_range_with_retry` wraps the
+      timeseries fetch in a bounded `backoff_factor*2^attempt` (capped) loop that retries ONLY the transient whitelist
       (429/`RATE_LIMIT`/`SERVER_ERROR`/connection/timeout via the existing `_classify_databento_exception`);
       billing/400/auth/symbology fail FAST on attempt 1 (the 3 billing-gated datasets stay fail-closed by design).
       Unit-tested (retryable retried N× / non-retryable once). (repo: market-tick-data-service)
 - [x] ✅ [BACKEND] P1. **TradFi data-pipeline skill documents the concurrency knobs — SHIPPED pm@027dd7e10.**
-      `data-pipeline-check-mtds/SKILL.md` §3c gained a note on `--batch-date-concurrency` + `DATABENTO_MAX_CONCURRENT_REQUESTS`
-      (opt-in/default-off, per-IP ~80 effective, dates are the concurrency axis) pointing at the RX-counter e2e
-      measurement method. (repo: unified-trading-pm)
+      `data-pipeline-check-mtds/SKILL.md` §3c gained a note on `--batch-date-concurrency` +
+      `DATABENTO_MAX_CONCURRENT_REQUESTS` (opt-in/default-off, per-IP ~80 effective, dates are the concurrency axis)
+      pointing at the RX-counter e2e measurement method. (repo: unified-trading-pm)
 - [x] ✅ [DATA] P0. **MEASURED the full e2e chain before/after on REAL Databento VMs (operator acceptance bar) —
-      concurrency = 1.56x on a realistic large-VM workload, "doing more not wasting" confirmed.**
-      Two runs, CME ohlcv_1m, --test-run, fetch/write wall-clock from persisted run.logs:
-      - **run-2 (the clean isolation: 16 vCPU e2-highmem-16, 6 heavy roots ES;NQ;CL;GC;ZN;6E, Jan-2024, pd-balanced,
-        conc=1 vs conc=20)**: serial **27.3 min** vs concurrent **17.5 min** for the same 820,639 rows = **1.56x**.
-        Mechanism is measured directly: serial CPU is idle **18/56** samples (~32% of the time WAITING on the Databento
-        fetch = wasting), concurrent CPU idle **0/36** (fully saturated) — the date-fanout overlaps one date's fetch
-        latency with another's parse/write, exactly the operator's "large VM doing MORE not wasting."
-      - **run-1 (small: 4 vCPU, 1 root ES, 30d)**: only ~4% + pd-standard≈pd-balanced — because ohlcv_1m's download is a
-        tiny 0.65 GB burst, the bottleneck is per-date processing overhead (freshness/manifest × dates) not download/disk,
-        and 20-way concurrency was CPU-bound on 4 vCPU. **The win scales with workload size + vCPU** (run-1→run-2).
-      - **Full picture**: disk pd-balanced = 4.7x on write-heavy download-bound data (cefi Tardis, peer-measured), ~neutral
-        on small ohlcv_1m; dedicated executor prevents the ~350x DNS-starvation collapse; date-fanout = 1.56x on a large
-        VM; retry-on-429 = reliability at concurrency. **Follow-up (the real ohlcv_1m lever): batch the per-date
-        freshness/manifest ops** — that overhead, not download, dominates small-candle e2e. (repo: deployment-service)
+      concurrency = 1.56x on a realistic large-VM workload, "doing more not wasting" confirmed.** Two runs, CME
+      ohlcv_1m, --test-run, fetch/write wall-clock from persisted run.logs: - **run-2 (the clean isolation: 16 vCPU
+      e2-highmem-16, 6 heavy roots ES;NQ;CL;GC;ZN;6E, Jan-2024, pd-balanced, conc=1 vs conc=20)**: serial **27.3 min**
+      vs concurrent **17.5 min** for the same 820,639 rows = **1.56x**. Mechanism is measured directly: serial CPU is
+      idle **18/56** samples (~32% of the time WAITING on the Databento fetch = wasting), concurrent CPU idle **0/36**
+      (fully saturated) — the date-fanout overlaps one date's fetch latency with another's parse/write, exactly the
+      operator's "large VM doing MORE not wasting." - **run-1 (small: 4 vCPU, 1 root ES, 30d)**: only ~4% +
+      pd-standard≈pd-balanced — because ohlcv_1m's download is a tiny 0.65 GB burst, the bottleneck is per-date
+      processing overhead (freshness/manifest × dates) not download/disk, and 20-way concurrency was CPU-bound on 4
+      vCPU. **The win scales with workload size + vCPU** (run-1→run-2). - **Full picture**: disk pd-balanced = 4.7x on
+      write-heavy download-bound data (cefi Tardis, peer-measured), ~neutral on small ohlcv_1m; dedicated executor
+      prevents the ~350x DNS-starvation collapse; date-fanout = 1.56x on a large VM; retry-on-429 = reliability at
+      concurrency. **Follow-up (the real ohlcv_1m lever): batch the per-date freshness/manifest ops** — that overhead,
+      not download, dominates small-candle e2e. (repo: deployment-service)
 
 ## Phase B — run the migrations (all four surfaces, gated on Phase A green)
 
@@ -842,21 +842,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **Next**: Phase D terminal gate on the optimized path (MVP ohlcv_1m + ohlcv_24h); MVP backfills; durability closure.
 
 - **2026-07-19 (slot-1, tick 17) — Phase D MTDS ran on the fixed+optimized launchers (report exit 1) — RED is dominated
-  by check-classification + chicken-egg, NOT the MVP fetch path.** `pipeline_e2e_check.py --asset-group TRADFI --mvp-only
-  --legs force,skip,canonical --auto-day --day 2026-07-13`: total=60 passed=17 **failed=36** ambiguous=4 skipped=3. The
-  fresh tarball carried the shipped driver+retry+fixed launchers; every VM launched cleanly (P0 fleet fix confirmed live
-  end-to-end). Breakdown of the 36:
-  - **`tbbo` (18) + `trades` (18) = the 3 billing-gated-by-design Databento datasets** (mbp_10/trades/tbbo, 1mo-L3/1yr-L1
-    per operator) — these MUST be **exempt** (no data by design), the check **fails** them → **CHECK BUG (P0 for the
-    gate): exempt billing-gated cells**. Plus `futures_chain`/`options_chain`/`ohlcv_15m`/`ohlcv_1s` = non-MVP cells the
-    `--mvp-only` flag failed to suppress (the `_augment_with_observed_cells` +15 PROD-observed augmentation overrides
-    `--mvp-only`) → **CHECK BUG: `--mvp-only` must suppress the observed-cell augmentation**.
-  - **MVP-cell truth**: NASDAQ ohlcv_1m ✅force · NYSE ohlcv_1m ✅force · FX ohlcv_24h ✅force+✅skip(genuine) ·
-    **CME ohlcv_1m ❌force `manifest_status_invalid:no_matching_row`** (the fetch works — measurement wrote 159k+820k
-    rows — but the manifest STATUS has no matching row; **investigate: the canonical `-USD@LIN` id migration vs the
-    check's expected manifest key / `record_captured` id**) · CBOE ohlcv_24h ⏭skipped (`no_captured_data_for_cell` —
-    needs the Yahoo daily backfill). Skip legs elsewhere = ambiguous (no PROD backfilled data — the chicken-egg the real
-    MVP backfills resolve).
+  by check-classification + chicken-egg, NOT the MVP fetch path.**
+  `pipeline_e2e_check.py --asset-group TRADFI --mvp-only --legs force,skip,canonical --auto-day --day 2026-07-13`:
+  total=60 passed=17 **failed=36** ambiguous=4 skipped=3. The fresh tarball carried the shipped driver+retry+fixed
+  launchers; every VM launched cleanly (P0 fleet fix confirmed live end-to-end). Breakdown of the 36:
+  - **`tbbo` (18) + `trades` (18) = the 3 billing-gated-by-design Databento datasets** (mbp_10/trades/tbbo,
+    1mo-L3/1yr-L1 per operator) — these MUST be **exempt** (no data by design), the check **fails** them → **CHECK BUG
+    (P0 for the gate): exempt billing-gated cells**. Plus `futures_chain`/`options_chain`/`ohlcv_15m`/`ohlcv_1s` =
+    non-MVP cells the `--mvp-only` flag failed to suppress (the `_augment_with_observed_cells` +15 PROD-observed
+    augmentation overrides `--mvp-only`) → **CHECK BUG: `--mvp-only` must suppress the observed-cell augmentation**.
+  - **MVP-cell truth**: NASDAQ ohlcv_1m ✅force · NYSE ohlcv_1m ✅force · FX ohlcv_24h ✅force+✅skip(genuine) · **CME
+    ohlcv_1m ❌force `manifest_status_invalid:no_matching_row`** (the fetch works — measurement wrote 159k+820k rows —
+    but the manifest STATUS has no matching row; **investigate: the canonical `-USD@LIN` id migration vs the check's
+    expected manifest key / `record_captured` id**) · CBOE ohlcv_24h ⏭skipped (`no_captured_data_for_cell` — needs the
+    Yahoo daily backfill). Skip legs elsewhere = ambiguous (no PROD backfilled data — the chicken-egg the real MVP
+    backfills resolve).
   - **Next steps (Phase D closeout, resumable)**: (1) fix the check `--mvp-only` to suppress augmentation + exempt
     billing-gated (tbbo/trades/mbp_10) cells; (2) diagnose CME:ohlcv_1m `manifest_status_invalid` (canonical-id key vs
     `record_captured`); (3) run the real MVP backfills (CME/NASDAQ/NYSE ohlcv_1m via the optimized large-VM concurrency,
@@ -866,15 +866,15 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - **2026-07-19 (slot-1, tick 18) — Phase D check-classification fixed + CME root-caused to a single operator decision.**
   - **SHIPPED mtds@37ac8a64** (fix(tradfi): Phase-D gate classification): `--mvp-only` now enumerates EXACTLY the 5
     `_TRADFI_MVP_SHARDS` (suppresses the `_augment_with_observed_cells` +15 PROD-observed augmentation); billing-gated
-    Databento datasets (`trades`/`tbbo`/`mbp_10`, keyed off the UAC `DATABENTO_SCHEMA_LEVEL` billing-guard SSOT) classify
-    **EXEMPT** (`skipped`/`billing_gated_by_design`), not failed. Unit-tested. This eliminates the 36-of-60 RED that was
-    dominated by billing-gated + non-MVP cells — NOT real MVP path failures.
+    Databento datasets (`trades`/`tbbo`/`mbp_10`, keyed off the UAC `DATABENTO_SCHEMA_LEVEL` billing-guard SSOT)
+    classify **EXEMPT** (`skipped`/`billing_gated_by_design`), not failed. Unit-tested. This eliminates the 36-of-60 RED
+    that was dominated by billing-gated + non-MVP cells — NOT real MVP path failures.
   - **CME:ohlcv_1m root-caused → P0 data-correctness finding (issue
     `databento_future_option_blank_instrument_id_shard_atom_2026_07_19.md`)**: `databento_adapter.py:179-185`'s static
-    `_PARTITION_INSTRUMENT_TYPE` writes EVERY Databento TradFi FUTURE/OPTION as a `futures_chain`/`options_chain`
-    (blank `instrument_id`, `underlying=<root>`), so the checker's per-contract match finds `no_matching_row`. NASDAQ/NYSE
-    pass (EQUITY, id preserved). **BLOCKED-OPERATOR-DECISION**: shard-atom for a TradFi ohlcv_1m future = per-root chain
-    (fix checker, no migration) OR per-contract `-USD@LIN-YYYYMMDD` (fix writer + re-migrate). **HELD the CME/ICE MVP
+    `_PARTITION_INSTRUMENT_TYPE` writes EVERY Databento TradFi FUTURE/OPTION as a `futures_chain`/`options_chain` (blank
+    `instrument_id`, `underlying=<root>`), so the checker's per-contract match finds `no_matching_row`. NASDAQ/NYSE pass
+    (EQUITY, id preserved). **BLOCKED-OPERATOR-DECISION**: shard-atom for a TradFi ohlcv_1m future = per-root chain (fix
+    checker, no migration) OR per-contract `-USD@LIN-YYYYMMDD` (fix writer + re-migrate). **HELD the CME/ICE MVP
     backfills** pending the ruling; NASDAQ/NYSE ohlcv_1m + CBOE/FX ohlcv_24h (Yahoo) unaffected.
   - **State**: A3.1 optimization done+measured (1.56x); P0 launcher fleet-fix live; Phase-D check meaningful. The ONLY
     open blocker to closing the MVP is the CME shard-atom ruling. Next after ruling: writer/checker fix → run MVP
@@ -885,6 +885,29 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   Per MVP cell: **FX ohlcv_24h ✅ force+✅ skip(genuine) — fully green**; NASDAQ ohlcv_1m ✅ force / ⚠️ skip ambiguous;
   NYSE ohlcv_1m ✅ force / ⚠️ skip ambiguous; CBOE ohlcv_24h ⏭ skipped (no data — needs Yahoo backfill); **CME ohlcv_1m
   ❌ force+❌ skip = the 2 hard fails (the BLOCKED shard-atom issue)**. So: the MVP FETCH PATH is proven (all non-CME
-  force-legs pass), the check is now meaningful, and the terminal gate reduces to exactly two remaining actions —
-  **(1) the CME shard-atom ruling** (unblocks CME/ICE), and **(2) run the MVP backfills** (NASDAQ/NYSE ohlcv_1m +
-  CBOE/FX ohlcv_24h) to populate PROD so the ambiguous/skipped skip-legs become genuine. Both are documented + resumable.
+  force-legs pass), the check is now meaningful, and the terminal gate reduces to exactly two remaining actions — **(1)
+  the CME shard-atom ruling** (unblocks CME/ICE), and **(2) run the MVP backfills** (NASDAQ/NYSE ohlcv_1m + CBOE/FX
+  ohlcv_24h) to populate PROD so the ambiguous/skipped skip-legs become genuine. Both are documented + resumable.
+
+- **2026-07-20 (slot-1, tick 20) — canonical GCS-PATH migration EXECUTED on VMs; post-audit caught 2 defects; RECOVER-1
+  fix SHIPPED (`market-tick-data-service@5588bdf8`).** The physical Hive-path reorg (the orphan-proof 9-disposition map
+  over the 2,734,646-object enumeration; design doc
+  `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`) ran to a clean 20-shard exit, but a
+  post-run live re-walk found 2 defects the canary day missed (canary had no garbage-root combos):
+  - **DEFECT 1 (migrate data-loss, soft-delete-recoverable):** garbage-root combos (`underlying=12/13/23`) whose
+    canonical target REL == source REL → the copy→verify→delete flow deleted the only copy (~85K,
+    `RECOVER_ERROR:NotFound`). FIX: `NOOP_TARGET_EQUALS_SOURCE` guard (never delete when dst==src) +
+    `DEFER_CHAIN_TO_RECOVERY` disposition (A_SKIP — leave non-real-root chains IN PLACE for the content-authoritative
+    recovery pass, bound to the UAC `is_recognized_tradfi_underlying` predicate).
+  - **DEFECT 2 (rebundle ~26% incomplete):** `BUNDLE_ALREADY_EXISTS_SKIPPED` abandoned still-present per-contract
+    sources without deleting, so a re-run kept skipping. FIX: `_reconcile_existing_bundle` — delete when rows provably
+    contained (symbol-set containment), CAS-merge disjoint sources (`gcs_conditional_put(if_generation_match=0)`) then
+    delete, leave partial-overlap loud.
+  - **VERIFIED GOOD throughout:** singles/chains ~99% canonical, Massive slice untouched, 0 orphans, everything
+    soft-delete-recoverable. A runaway-VM incident (an un-sharded full-apply launch loop, since corrected) was resolved
+    with 0 corruption (passes idempotent). 44/44 fix unit-tests pass; MTDS QG green; landed via quickmerge.
+  - **REMAINING (RECOVER-2 → EXEC-4/5/6):** restore soft-deleted garbage combos (scoped) + re-run fixed
+    migrate+rebundle+recovery to completion (0 legacy / 0 orphan / 0 garbage-root / garbage preserved in `_quarantine/`)
+    → manifest rebuild + catalogue MVP-stamping → Databento-backfill 571 Massive-only shards → gated Massive purge →
+    re-run backfills + Phase D terminal gate. A full claimed-vs-live-measured "what's left" audit is running to lock the
+    exact ordered remainder + surface any un-tracked gap.

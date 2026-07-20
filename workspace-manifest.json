@@ -702,7 +702,8 @@
         "large_file_count": 0,
         "qg_red_reason": null,
         "coverage_pct": null
-      }
+      },
+      "breaking_scan_dir": "ibkr_gateway_client"
     },
     "instruments-service": {
       "promotion_model": "ldr_main",
@@ -1390,7 +1391,8 @@
         "qg_red_reason": null,
         "large_file_count": 33
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "GREEN",
+      "breaking_scan_dir": "none"
     },
     "deployment-ui": {
       "promotion_model": "ldr_main",
@@ -1419,7 +1421,8 @@
         "warn_file_count": 6,
         "large_file_count": 14,
         "coverage_pct": 75.03
-      }
+      },
+      "breaking_scan_dir": "none"
     },
     "e2e-testing": {
       "promotion_model": "ldr_main",
@@ -1476,7 +1479,8 @@
         "large_file_count": 0,
         "warn_file_count": 0
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "GREEN",
+      "breaking_scan_dir": "tests"
     },
     "agent-orchestrator": {
       "promotion_model": "ldr_main",
@@ -1516,7 +1520,8 @@
         "warn_file_count": 8,
         "qg_red_reason": null
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "GREEN",
+      "breaking_scan_dir": "server"
     }
   },
   "topologicalOrder": {

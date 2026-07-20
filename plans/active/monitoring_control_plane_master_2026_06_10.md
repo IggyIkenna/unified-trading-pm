@@ -231,6 +231,24 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       digest-pin conversion status per repo. Repo: deployment-api + deployment-ui.
 - [ ] [CODE] P3. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
       Cloud Run revisions / VM heartbeats) and diff its SHA vs `main` HEAD. Repo: deployment-api + deployment-ui.
+- [ ] [INFRA] P2. **Per-repo freeze-streak signal (AO half).** Moved 2026-07-20 from
+      `ao_fleet_infra_hardening_2026_07_20.md` todo 4 (that plan's own operator ruling: this belongs with the other
+      deployment-ui fleet-tab work, not built standalone). The dirty-streak WARN in `slot-cron-ff-pull.sh` fires only
+      when EVERY repo in a sweep skips (a single global `dirty_consecutive_ticks` counter), so **a single frozen clone —
+      the exact 2-day outage mode — stays silent.** Make the streak per-repo: repo X `[skip:dirty]` / `[skip:ff-failed]`
+      for N consecutive ticks emits a per-repo/per-slot freeze signal (schema change to the
+      `ff_pull_last_result`/`dirty_consecutive_ticks` payload the cron POSTs to `/api/slots/<N>/git-status` — the next
+      todo's UI consumes this same shape, coordinate the two). **Gate**: a deliberately-frozen single clone produces the
+      signal within N ticks, naming the repo and the slot. Repo: unified-trading-pm (`slot-cron-ff-pull.sh`) +
+      agent-orchestrator (git-status endpoint).
+- [ ] [CODE] [UI] P2. **Per-repo freeze-streak surface (deployment-ui half) — NOT a Slack alert.** Moved 2026-07-20 from
+      `ao_fleet_infra_hardening_2026_07_20.md` todo 5. Operator ruling 2026-07-18: feed the previous todo's per-repo
+      signal into the **Fleet Git-Health page** (`FleetGit.tsx`, shipped by the now-archived
+      `fleet_git_health_orchestrator_2026_06_10.md`) where clone/slot status already renders, so one stuck repo on one
+      slot is obvious at a glance — render per repo × slot, not one global flag. Note: the backlog-details-popup UI work
+      is a DIFFERENT scope with no dependency here. **Gate**: the frozen clone from the previous todo is visibly stuck
+      in the fleet tab, naming repo + slot; per the UI testing rule this needs `[UI]` + `pw:L2 ✓` + a cited regression
+      spec. Repo: deployment-ui.
 
 ### Operator enhancements (2026-06-11, Harsh + Ikenna)
 

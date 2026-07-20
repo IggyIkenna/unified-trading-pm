@@ -62,7 +62,7 @@ def rank(status: str) -> int:
     return _GREEN_RANK.get(status, 0)
 
 
-def resolve_status(prev_status: str, new_status: str, branch: str) -> str:
+def resolve_status(prev_status: str, new_status: str, branch: str, prev_branch: str = "") -> str:
     """The no-downgrade compare-and-set DECISION (pure — the heart of Layer 2).
 
     Returns the status that SHOULD be persisted given the previously-stored status, the incoming
@@ -70,11 +70,19 @@ def resolve_status(prev_status: str, new_status: str, branch: str) -> str:
 
       * ``FAILING`` is persisted (a real regression must surface, even over a green) — EXCEPT a
         non-``main`` FAILING may not clobber ``MAIN_GREEN`` (see below);
+      * a STORED ``main``-originated ``FAILING`` may be cleared ONLY by another ``main`` signal
+        (the symmetric half of the carve-out above — see the ``prev_branch`` guard);
       * a ``main``-branch signal is authoritative (it is the on-main truth — never downgraded);
       * otherwise keep the previously-stored status if the incoming rank is LOWER (no-downgrade:
         a re-run of staging/ldr v2 on an already-promoted repo must not flap MAIN_GREEN→STAGING_GREEN
         and deadlock the dep-order promote gate);
       * an equal-or-higher rank advances.
+
+    Args:
+        prev_branch: the branch recorded on the STORED doc (``doc["branch"]``). Defaults to ``""``
+            (unknown provenance) so the main-red guard fails OPEN — a doc written before this field
+            was consulted keeps the pre-existing rank behaviour rather than jamming on an
+            unattributable red.
     """
     if new_status == "FAILING":
         # A non-main red must NOT clobber the on-main truth. This carve-out used to be branch-
@@ -94,6 +102,23 @@ def resolve_status(prev_status: str, new_status: str, branch: str) -> str:
         if branch != "main" and prev_status == "MAIN_GREEN":
             return prev_status
         return new_status
+    # The SYMMETRIC half of the carve-out above (2026-07-20). The block above stops a non-main red
+    # from clobbering the on-main truth; this stops a non-main GREEN from clearing a main-originated
+    # red. Without it, FAILING is rank 0 on the STORED side and therefore erasable by ANY higher-
+    # ranked write — which is exactly the ratchet the header comment claims cannot happen.
+    #
+    # Measured 2026-07-20: UAC@a2beed46 removed `massive` from SOURCE_PRIORITY and broke 10 UTL
+    # manifest-writer tests. UTL main went FAILING (branch=main) at 03:28Z. At 05:21Z the
+    # full-workspace SIT stamped SIT_VALIDATED (rank 3, branch=live-defi-rollout) → rank comparison
+    # erased main's red, ci-status-update posted an affirmative "SIT PASSED … clear to promote"
+    # all-clear, and the promote gate (which treats SIT_VALIDATED as on-main-eligible) re-opened
+    # promotion INTO a red main. Note the 2026-07-16 comment above describes this same
+    # MAIN_GREEN → FAILING → SIT_VALIDATED shape; only the FIRST hop was fixed then.
+    #
+    # SIT's guarantee is content-scoped to the LDR tree (`sit_validated_tree`), so it cannot speak
+    # for main's tree at all — only main can speak for main, in BOTH directions.
+    if prev_status == "FAILING" and prev_branch == "main" and branch != "main":
+        return prev_status
     if branch == "main":
         return new_status
     if rank(new_status) < rank(prev_status):
@@ -272,7 +297,13 @@ def set_status(
             outcome["prev"] = prev
             outcome["written"] = prev
             return None
-        written = resolve_status(prev, status, branch)
+        # noqa: qg-empty-fallback — "" is the DELIBERATE unknown-provenance sentinel: a doc written
+        # before `branch` was consulted has no attributable origin, and resolve_status's main-red
+        # guard requires an explicit "main" to engage, so "" fails OPEN (pre-existing rank
+        # behaviour) rather than jamming an unclearable red. Raising here would break every
+        # legacy doc; None would just move the same defaulting to the callee.
+        prev_branch = str(prev_dict.get("branch", ""))  # noqa: qg-empty-fallback
+        written = resolve_status(prev, status, branch, prev_branch)
         doc: dict[str, object] = {
             "status": written,
             "rank": rank(written),
