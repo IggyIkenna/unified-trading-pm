@@ -146,7 +146,26 @@ NOT AO and are deliberately out of scope here.
       them (correct-ish: `BLOCKED-*` todos are non-dispatchable by design and SHOULD have no row — if so, record that as
       the designed behaviour and make `regen`/docs say it explicitly) or whether regen re-derives them under other ids.
       **Do NOT close by re-reopening** (decayed twice). Source: doc #8 todo 5. **Gate**: doc #8's stated gate — a
-      recorded explanation, and either correct rows or a recorded by-design decision.
+      recorded explanation, and either correct rows or a recorded by-design decision. **✅ EXPLAINED 2026-07-20 (B1) —
+      BY DESIGN, on two independent mechanisms; recording the decision, NOT reopening.** (1) `_parse_open_todos`
+      (`server/regen_backlog_from_plan.py:925`) skips **both** already-done `- [x]` checkboxes **and** `BLOCKED-*` /
+      stretch-optional lines (`_NON_DISPATCHABLE_RE`). The l2_book plan today is 6 × `[x]` + 2 × `- [ ] BLOCKED-*`
+      (`BLOCKED-OPERATOR-DECISION`, `BLOCKED-DATA-CORRECTNESS`) — so it contributes **ZERO current briefs**, and the two
+      BLOCKED todos SHOULD have no row. That is stated in the code in three places (the docstring's "Non-dispatchable
+      todos … wait on a human/external event", the inline comment at `:985`, and the `:1005` note covering "a worker
+      adds an in-text `BLOCKED-*` marker to an already-queued todo"). (2) `_prune_stale` deletes DB rows filtered to
+      `status='queued' AND dispatched_to IS NULL` — **done/dispatched rows are never touched** — so a todo checked off
+      OUTSIDE the dispatch loop (human/other route) has its still-queued row garbage-collected and leaves no trace,
+      while a task AO actually dispatched-and-completed keeps its row forever. **Also corrects the framing twice over**:
+      re-measured 2026-07-20 there are **3** rows, not 4 (`-001`, `-004`, `-008`, all `done`), and the absent set is
+      **`-002/-003/-005/-006/-007`** — five ids, not the two the todo names. Both mechanisms above cover the whole set,
+      so no new defect. **Answering the second branch explicitly: no, regen does NOT re-derive them under other ids
+      today — but it WOULD if unblocked.** Ids come from `next_index` (max-existing + 1) while dedup is by brief TEXT,
+      so an un-BLOCKED todo returns with a NEW id rather than its historical one — expected, worth knowing before anyone
+      treats a task id as a stable handle on a plan todo. **Residual doc work only** (the "make `regen`/docs say it
+      explicitly" half): state in the regen docs that the tasks table is a projection of currently OPEN DISPATCHABLE
+      todos plus dispatched history — **not** a durable ledger of plan completion — so a missing row is never by itself
+      evidence of a lost task.
 - [ ] [BACKEND] P2. **`audit_false_done` false-positive class — the AO/regen lesson from studying the sports rows.**
       (Operator 2026-07-18: the sports work itself is its owner's; but any AO/regen improvement surfaced by studying it
       belongs here.) `sports_cf8…-002`'s plan checkbox IS already `[x]` — the audit flags it ONLY because the row's
@@ -542,12 +561,12 @@ just unfinished investigation**, and records the standing recommendation so the 
 
 **B — open investigations (no decision needed; just unfinished)**
 
-| #   | Investigation                               | Note                                                                                                                                                                                                |
-| --- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B1  | `l2_book-005/007` absent rows (Phase 1)     | Trace orphan-GC-pruned (by-design for `BLOCKED-*`) vs regen re-deriving under other ids.                                                                                                            |
-| B2  | 96/day `tmux_session_lost` driver (Phase 2) | **Likely candidate found by B4** — the prereq reaper (new P0) kills fresh sessions. Re-measure AFTER that fix before hunting further; measured 192 events since 07-18.                              |
-| B3  | Paused-slot SPILL path (Phase 6)            | ✅ **CLOSED 2026-07-20** — pull-spills safe; `failover._pick_least_loaded_slot` PREFERS paused slots. Latent (failover off, 0 events ever). Spawned a P3: is failover.py dead code under single-VM? |
-| B4  | plan_reconciler daily runs (Phase 6)        | ✅ **CLOSED 2026-07-20** — audited; verdict: 5 dispatches, **0 completions ever**. Spawned 3 new todos (P0 reaper, P2 boot-gate, P2 7-min-death).                                                   |
+| #   | Investigation                               | Note                                                                                                                                                                                                  |
+| --- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | `l2_book-005/007` absent rows (Phase 1)     | ✅ **CLOSED 2026-07-20** — by design, two mechanisms (BLOCKED-\* never ingested; queued rows pruned when checked off outside dispatch). Absent set is 5 ids, not 2; 3 rows, not 4. Doc-only residual. |
+| B2  | 96/day `tmux_session_lost` driver (Phase 2) | **Likely candidate found by B4** — the prereq reaper (new P0) kills fresh sessions. Re-measure AFTER that fix before hunting further; measured 192 events since 07-18.                                |
+| B3  | Paused-slot SPILL path (Phase 6)            | ✅ **CLOSED 2026-07-20** — pull-spills safe; `failover._pick_least_loaded_slot` PREFERS paused slots. Latent (failover off, 0 events ever). Spawned a P3: is failover.py dead code under single-VM?   |
+| B4  | plan_reconciler daily runs (Phase 6)        | ✅ **CLOSED 2026-07-20** — audited; verdict: 5 dispatches, **0 completions ever**. Spawned 3 new todos (P0 reaper, P2 boot-gate, P2 7-min-death).                                                     |
 
 **Recommended NEXT: the P0 prereq-reaper fix** (Phase 6, filed by the B4 audit). B4 is closed and it turned up a bug
 bigger than the thing it was checking: the reaper kills ANY freshly-spawned agent that lands on a slot with a matured
@@ -580,6 +599,14 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 
 ## Progress Log
 
+- **2026-07-20 — B1 CLOSED (by design, no defect) — but the question was mis-scoped, twice.** It asked about two ids and
+  4 rows; the truth is five absent ids and 3 rows. **The framing itself was the bug**: "a plan todo should have a task
+  row" is not the contract. The tasks table is a projection of currently-open DISPATCHABLE todos plus dispatched history
+  — a `BLOCKED-*` todo is deliberately never ingested, and a todo checked off outside the dispatch loop has its
+  still-queued row garbage-collected. So **a missing row is not evidence of a lost task**, which is why this item
+  "decayed twice": each re-measurement found different numbers and read that churn as instability rather than as the
+  designed projection doing its job. Generalisable: before auditing rows-vs-todos anywhere in AO, state which direction
+  is authoritative — the plan checkbox is the SSOT (cf. A2), the row is a dispatch artifact.
 - **2026-07-20 — B3 CLOSED by code-read + a live severity probe.** The unverified spill path splits cleanly on **pull vs
   push**: a pull-based spill can never violate paused (a paused slot never asks), a push-based one is where the bug
   always was. That is the reusable question for any future "does X respect paused?" audit — ask which direction the
