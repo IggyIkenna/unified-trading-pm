@@ -696,6 +696,19 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-20 (slot-4, /autonomous — MIGRATION ALL-TERMINAL 30/30; rebuild WRITE running).** All 30 sub-shards complete
+  — the full DeFi corpus (2020q1-2026q2) is migrated to per-instrument. The 64GB e2-highmem-8 recovery carried every
+  shard through cleanly (the last, 2026q1s2, had 797 cells = densest Feb 2026). NOW running the manifest rebuild:
+  `rebuild_defi_manifest --start-date 2020-01-01 --end-date 2026-12-31` LOCALLY from the slot's `@35c87d66` checkout (bg
+  b3flt91w9) — MUST be @35c87d66 (Defect A `_migrated_*` marker-skip); the deployed VM pin b1a23cbf lacks it + would
+  re-pollute. Write-by-default (no --apply); produces a per-VM shard (does NOT clobber the live `_index` until the
+  consolidator runs), so it's inspectable before consolidation. After: inspect summary (skipped_markers
+
+  > 0 confirms Defect A, unparseable ~0, huge total_shards) → consolidator --once → verify. **PERP re-migration
+  > DEFERRED**: the `{venue}_{ts}` bundles (ASTER/HYPERLIQUID/GMX) will show as coarse manifest rows — a small known
+  > gap, and ASTER/HYPERLIQUID are cefi-misfiled (operator decision pending), so perp re-migration is bundled with that
+  > decision + GMX. Rebuild is multi-hour (millions of atoms); measuring the rate.
+
 - **2026-07-20 (slot-4, /autonomous — 64GB OOM fix CONFIRMED holding; last 16GB shard (2025q4s3) also recovered).**
   Verified the recovery: all 22 relaunched **e2-highmem-8 (64GB)** shards have FRESH heartbeats (vs the 16GB fleet going
   21-155min stale) — and SSH'd 2025q1s3 to prove it under load: 64GB VM, **56GB free**, into apply (252 files → 149

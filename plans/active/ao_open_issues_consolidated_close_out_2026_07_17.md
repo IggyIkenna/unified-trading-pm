@@ -80,6 +80,23 @@ source:
 > `quickmerge.sh --agent --files`; each shippable unit flips its todo here AND updates its source issue doc in the same
 > turn; a source doc archives (5-step ritual) when its last todo here lands.
 
+## Split-out child plans (2026-07-20) — work MOVED out of this plan
+
+Six todos were split into three focused plans so separate agents can work them in parallel. They are **LOCAL**
+(`assigned_vm: NA`, `execution_scope: local-only`) — operator-assigned agents on this host, never AO-dispatched. Items
+that moved are marked `➡️ MOVED` inline below and **must not be actioned here**.
+
+| Plan                                           | Scope                                                                        | Owns from here                                         |
+| ---------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race; slot-timer audit | the reaper P0                                          |
+| `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate; regen doc note    | reconciler-daily, boot-gate, 7-min death class         |
+| `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove the untested paths     | failover dead-code question, paused-slot failover half |
+
+**Cross-plan ordering**: all three run in parallel (no file overlap). The one real dependency is the hygiene plan's
+end-to-end reconcile proof, which needs the liveness P0 **deployed** first — the reaper is what killed the 07-20 run, so
+proving it before the fix is live teaches nothing. This plan's `tmux_session_lost` root-cause todo is likewise gated
+behind the liveness plan's re-measure.
+
 ## Verified classification of the 10 open docs (2026-07-17, this session)
 
 | #   | Issue doc                                         | Verdict                                                | Evidence (measured this session)                                                                                                                                                                                                                                                                                                                                                                                |
@@ -206,7 +223,12 @@ NOT AO and are deliberately out of scope here.
       incident was 5 losses in one second (backend/tmux blip); today's rate is 96/24h with 158 `worker_polling_dead`.
       Either find the driver (backend restarts? host pressure? tmux server?) or record the rate as expected with the
       lifecycle machinery absorbing it. Source: doc #3 timeline + this session's measurement. **Gate**: a named cause
-      with evidence, or a recorded accepted-churn decision with the measured baseline.
+      with evidence, or a recorded accepted-churn decision with the measured baseline. **⛔ SEQUENCED 2026-07-20 — do
+      NOT start this before the prereq-reaper P0 lands.** That reaper (`ao_dispatch_liveness_p0_2026_07_20.md`) kills
+      freshly-spawned sessions and is a live candidate for a share of this churn; its last todo re-measures the rate
+      against the 192-events-since-07-18 baseline. **This todo stays HERE and owns the root-cause hunt** — it resumes
+      only if the re-measure shows the rate did not drop. Starting now means measuring the same churn twice and possibly
+      chasing a driver that the P0 fix removes.
 
 ### Phase 3 — spawn/park visibility (code + policy)
 
@@ -335,7 +357,11 @@ NOT AO and are deliberately out of scope here.
       `{"running": false, "status": "stopped"}`, and there are **0 `failover_rerouted` events for all time**. It is
       armed to bite the moment failover is switched on, though — **slot 0 is paused right now** and would be the
       preferred target. Fix is one predicate in `_pick_least_loaded_slot` (exclude `paused`/`killed`/review), plus the
-      (a) all-paths regression test gaining a failover case.
+      (a) all-paths regression test gaining a failover case. **➡️ THE FAILOVER HALF MOVED 2026-07-20 to
+      `ao_failover_multi_vm_readiness_2026_07_20.md`** (the `_pick_least_loaded_slot` fix + the failover case of the
+      all-paths test). **What REMAINS here**: the (a) all-paths regression test for the NON-failover paths (dispatch,
+      autospawn, plan_health, escalation) and the (b) dashboard paused-rendering check. Do not write the failover
+      predicate here.
 - [ ] [BACKEND] P3. **Is `server/failover.py` dead code under the single-VM architecture? (raised by B3, 2026-07-20)**
       Its entire premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never
       dispatch"), but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based
@@ -344,7 +370,12 @@ NOT AO and are deliberately out of scope here.
       it has no registry data to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the
       honest resolution may be to DELETE the module + its config knobs rather than fix the paused-slot bug above.
       **Decide before doing the P2 fix** — no point hardening a module that should not exist. **Gate**: an explicit
-      keep-or-delete ruling; if keep, a named scenario under single-VM that still needs it.
+      keep-or-delete ruling; if keep, a named scenario under single-VM that still needs it. **✅ RULED 2026-07-20 (A5) —
+      KEEP.** The named scenario the gate asked for: **multi-VM returns for resilience/backup** (operator, 2026-07-20).
+      So the module stays and the paused-slot P2 above is **live work, not superseded**. **➡️ BOTH MOVED to
+      `ao_failover_multi_vm_readiness_2026_07_20.md`** — which also covers the larger risk this audit exposed: the
+      re-route and rollback paths have NEVER executed in production (0 events for all time), so the resilience feature
+      is unproven, not merely off. Do NOT action either here.
 - [ ] [BACKEND] P1. **plan_health cadence — MEASURED 21 dispatches in 5.5h (11:02→16:30Z), overlapping instances
       confirmed (`superseded-plan_health` exit reasons + one ACTIVE at probe time).** Operator policy: once per 4–8h
       unless CI-triggered — NOT every 15–30 min. Root cause found: `main-backmerge-to-ldr.yml` § "Ping plan-health
@@ -420,7 +451,9 @@ NOT AO and are deliberately out of scope here.
       journal. **Gate**: (b) liveness assertion shipped; curl `--max-time` ≥180s (or 202-immediate); the two new defects
       below fixed; and the REAL gate — **one reconcile run observed end-to-end producing a `plan_health_result` + a
       pushed `plan_reconciler/*` branch**. Until that is seen once, treat this subsystem as NEVER-VERIFIED, not merely
-      "re-armed".
+      "re-armed". **➡️ REMAINING WORK MOVED 2026-07-20 to `ao_scheduled_agent_hygiene_2026_07_20.md` (AO-dispatched) —
+      the curl fix, the (b) liveness assertion and the end-to-end verification gate live there now. Do NOT action here;
+      this entry is kept as the audit record.**
 - [ ] [BACKEND] P0. **The prereq-blocked reaper KILLS freshly-spawned agents that land on a previously-blocked slot
       (generic; it is what killed the 07-20 reconcile run).** `server/worker_liveness_watchdog.py:1180-1265` keeps
       `self._prereq_blocked_since[sid]` keyed by **slot id only**, and never invalidates it when a NEW agent spawns into
@@ -435,7 +468,9 @@ NOT AO and are deliberately out of scope here.
       escalation) from this reaper entirely — its premise is "the BACKLOG queue is fully prereq-blocked so idle BACKLOG
       workers should be released", which says nothing about a scheduled agent. **Gate**: a regression test spawning into
       a slot with a matured `_prereq_blocked_since` asserts the new session SURVIVES; plus a test that a
-      plan_reconciler-kind agent is never selected by the reaper. Provenance: B4 audit 2026-07-20.
+      plan_reconciler-kind agent is never selected by the reaper. Provenance: B4 audit 2026-07-20. **➡️ MOVED 2026-07-20
+      to `ao_dispatch_liveness_p0_2026_07_20.md` (AO-dispatched) — do NOT action here; this entry is kept only as the
+      provenance record.**
 - [ ] [BACKEND] P2. **The /boot read-confirmation gate demands `worker.md` from typed agents that were never pointed at
       it — every plan_health/plan_reconciler boot is 428'd once.** `server/routes/slots_worker.py:80` calls
       `prompts.expected_read_files("worker", req.slot_role)` with the base role **hardcoded to `"worker"`**, so expected
@@ -447,14 +482,17 @@ NOT AO and are deliberately out of scope here.
       latent hard-fail for any agent that does not retry, and it makes `boot_read_unconfirmed` useless as an alert. Fix:
       pass the ACTUAL agent kind (the spawn side already composes the right role), not the literal `"worker"`. **Gate**:
       a plan_reconciler boot confirms on the FIRST POST; `boot_read_unconfirmed` count drops to ~0 in a 24h window.
-      Provenance: B4 audit 2026-07-20.
+      Provenance: B4 audit 2026-07-20. **➡️ MOVED 2026-07-20 to `ao_scheduled_agent_hygiene_2026_07_20.md`
+      (AO-dispatched) — do NOT action here.**
 - [ ] [BACKEND] P2. **Sub-question left open by the B4 audit: why did the 07-15/17/18 reconcile runs die 7–7.5 min in?**
       Each was `plan_health_dispatched` then `tmux_session_lost … archived_lifecycle_complete: true` ~7 min later with
       no result (07-15 `agt-2d8441` is odder still — `finished_at` 07:30, 6h25m after a session that vanished at 01:12).
       The 07-20 kill has a NAMED cause (prereq reaper); these three do not, and 7 min is far too short for an opus/max
       full-corpus reconcile when the haiku REPORT pass alone medians 280s. Do NOT assume the prereq-reaper fix covers
       them — verify by watching the next run, or by pulling those sessions' tmux/agent rows. **Gate**: each of the three
-      has a named cause, or the next clean run proves the class is closed.
+      has a named cause, or the next clean run proves the class is closed. **➡️ MOVED 2026-07-20 to
+      `ao_scheduled_agent_hygiene_2026_07_20.md` — do NOT action here** (it was briefly duplicated in both plans; the
+      hygiene plan owns it because the end-to-end reconcile run there is what will resolve or refute the class).
 
 ### Phase LAST — operator-sequenced
 
@@ -550,14 +588,18 @@ NOT AO and are deliberately out of scope here.
 Every item below is ALREADY a todo above; this section only separates **what needs an operator ruling** from **what is
 just unfinished investigation**, and records the standing recommendation so the next session does not re-derive it.
 
-**A — needs an operator ruling (do NOT decide these autonomously)**
+**A — operator rulings. A1–A4 + the new A5/A6 were RULED 2026-07-20 (operator: "go with your recommended ones"); the
+standing recommendation in each row IS now the ruling. Only A7 remains open.**
 
-| #   | Question                                                                                                | Standing recommendation                                                                                                                                                                                 |
-| --- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A1  | NULL `brief_hash` tail (54 rows, all `done`) — backfill / age-out / accept-permanently? (Phase 1)       | **Accept permanently + a growth alarm.** All 54 are `done` audit history, 0 in-flight; backfilling is write-risk for no gain. Growth is the real signal (growth = backfill regression).                 |
-| A2  | `audit_false_done` contract — checkbox-state as truth, or must `done_sha` be the flip-commit? (Phase 1) | **Checkbox state = truth.** The gate answers "is the work done"; the checkbox is the SSOT. Keep the sha as provenance, but a mismatched sha must not manufacture a false-positive (that IS sports-002). |
-| A3  | mvp-defi unpark — the named flipper plan may be superseded (Phase 3)                                    | Re-point the unpark to the `defi_consolidated_closeout_2026_07_18` owner, **or** park it explicitly until the DeFi re-architecture resumes. No park may exist without a named LIVE flipper.             |
-| A4  | plan_health interval                                                                                    | **RULED 2026-07-18: 2h**, adjustable later. Ships with the Phase-6 gate; no live knob today.                                                                                                            |
+| #   | Question                                                                                                | Standing recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | NULL `brief_hash` tail (54 rows, all `done`) — backfill / age-out / accept-permanently? (Phase 1)       | **Accept permanently + a growth alarm.** All 54 are `done` audit history, 0 in-flight; backfilling is write-risk for no gain. Growth is the real signal (growth = backfill regression).                                                                                                                                                                                                                                                                                                                                                                                                               |
+| A2  | `audit_false_done` contract — checkbox-state as truth, or must `done_sha` be the flip-commit? (Phase 1) | **Checkbox state = truth.** The gate answers "is the work done"; the checkbox is the SSOT. Keep the sha as provenance, but a mismatched sha must not manufacture a false-positive (that IS sports-002).                                                                                                                                                                                                                                                                                                                                                                                               |
+| A3  | mvp-defi unpark — the named flipper plan may be superseded (Phase 3)                                    | Re-point the unpark to the `defi_consolidated_closeout_2026_07_18` owner, **or** park it explicitly until the DeFi re-architecture resumes. No park may exist without a named LIVE flipper.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| A4  | plan_health interval                                                                                    | **RULED 2026-07-18: 2h**, adjustable later. Ships with the Phase-6 gate; no live knob today.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| A5  | `failover.py` — delete, or keep-and-fix the paused-slot guard? (new, from B3)                           | **RULED 2026-07-20: KEEP + fix.** _(An earlier same-day "DELETE" ruling was REVERSED by the operator within the hour: multi-VM is dormant but likely to return for resilience/backup, so the infra stays.)_ Work moved to `ao_failover_multi_vm_readiness_2026_07_20.md`. The paused-slot P2 below is therefore **NOT superseded — it is live work** and moves there too. Reversal lesson: "never fired" is evidence of DEAD code only if the capability is unwanted; otherwise it is evidence of UNTESTED code. That is a question about intent — ask it before proposing deletion of dormant infra. |
+| A6  | VM `.env.local` tidy (vars now redundant against code defaults)                                         | **RULED 2026-07-20: fold into the next re-bootstrap.** Do NOT hand-edit the live VM — low value, non-zero risk, no urgency.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| A7  | `escalation_pipeline_mvp` — unpause or leave paused? **STILL OPEN**                                     | **No recommendation** (operator intent for that epic is unknown to me). Ruled ONLY on the consequence: the `/api/escalate` vs `/api/escalation/{id}` route collision gets **resolved regardless of the pause**, because leaving a known collision in the API is a trap for whoever writes escalation code next.                                                                                                                                                                                                                                                                                       |
 
 **B — open investigations (no decision needed; just unfinished)**
 
@@ -598,6 +640,20 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 - `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for every gate above.
 
 ## Progress Log
+
+- **2026-07-20 — Operator process correction: do NOT push new plans before the operator has read them.** I authored
+  three plans and pushed them `status: active`, which meant AO could ingest and dispatch them before the operator saw a
+  word. Verified no harm (0 ingested tasks from any of them at the time of correction), and all new plans were flipped
+  to `status: draft`. **Standing rule from here**: a newly authored plan ships as `draft`, the operator reads it, and
+  the operator flips it to `active` — authoring is not dispatching. Applies to every new plan, not just these.
+- **2026-07-20 — A5 REVERSED within the hour (delete → keep).** The operator ruled multi-VM is likely to return for
+  resilience/backup, so failover stays. The drafted retirement plan was removed before any worker saw it. **The
+  reasoning error is worth keeping**: I read "0 failover events for all time" as evidence the module is DEAD, when the
+  same measurement is equally evidence it is UNTESTED. Which reading applies depends on whether the capability is still
+  wanted — that is a question about product intent, not about the code, and I could not have answered it from the
+  codebase. Ask it before proposing deletion of any dormant infrastructure. The reversal also improved the work: the
+  replacement plan targets the fact that failover's re-route and rollback paths have never once executed, which matters
+  far more if you intend to rely on them than if you intend to delete them.
 
 - **2026-07-20 — B1 CLOSED (by design, no defect) — but the question was mis-scoped, twice.** It asked about two ids and
   4 rows; the truth is five absent ids and 3 rows. **The framing itself was the bug**: "a plan todo should have a task
