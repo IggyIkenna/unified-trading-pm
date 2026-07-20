@@ -1080,3 +1080,37 @@ plausibly `book_snapshot_5`, `liquidations`, `funding_rate`. Note `_candle_contr
 on the TRADES contract too (under `_trades_key`), so a mis-key may exist for trades as well — it just never surfaces
 because trades has no empty-window NaN. The fix + sweep must cover EVERY empty-window-capable snapshot/event candle
 type, not just derivative_ticker.
+
+### 2026-07-20 ~23:05Z — WORKFLOW w6kkdobay VERDICT: root cause CORRECTED (my key-mismatch hypothesis was a red herring)
+
+The adversarial workflow (8 agents, 3 lenses) CORRECTED my hypothesis — exactly why it was run. VERIFIED root cause:
+
+**The failing check is MDPS's OWN pre-upload validator, NOT the UTL StreamingParquetWriter and NOT the UAC key.**
+`candle_write_mixin.py:604` (+ byte-identical copy `data_sink.py:118`) calls
+`get_schema_for_data_type(data_type, category)` (`output_schemas.py:394`), which gates OHLC nullability on
+`category == "prediction"/"sports"` ONLY (`output_schemas.py:420`) — every cefi/tradfi/defi candle falls through to the
+NON-nullable `PROCESSED_CANDLE_SCHEMA`. After the LOCF removal, empty derivative_ticker windows genuinely yield NaN OHLC
+→ the non-nullable check rejects them → `_validate_candle_schema_before_upload` returns False → upload SKIPPED (0
+objects) with NO raise → **that is exactly why EXIT_STATUS=0 with 0 objects** (the pre-upload skip short-circuits BEFORE
+the StreamingParquetWriter's strict=True raise is ever reached). The UAC write seam (`lookup_mdps_contract` → aggregated
+key `deriv_ohlcv_{tf}`) is ALREADY correctly nullable per uac@8e58b009 — but it's never reached. **So uac@8e58b009 fixed
+the wrong layer.** The source-vs-aggregated KEY distinction (my hypothesis) is a RED HERRING here — the pre-upload
+seam's nullability is category-gated, so the key never mattered at that layer.
+
+**Blast radius (verified):** the pre-upload validator mis-enforces non-nullable OHLC for EVERY nullable-OHLC candle type
+across ALL asset_groups (category-gated, never data_type): cefi trades (`ohlcv_{tf}` nullable), cefi derivative_ticker
+(observed), spot trades, tradfi ohlcv, defi `swaps_ohlcv`. Only derivative_ticker fails TODAY because LOCF removal made
+its empty windows NaN + the smoke hit one; a genuinely empty trades window would fail identically. **Correctly NOT
+affected (must STAY rejecting NaN):** book_snapshot_5 (`book5_ohlcv_{tf}` nullable=False — a NaN covered book window is
+a real defect) + liquidations (no OHLC). Fix changes NO object paths / NO manifest keys.
+
+**Verified fix (family A, survived 3 adversarial lenses):** make the pre-upload validator inherit the UAC per-type
+nullability instead of re-deciding by category — so book5 stays non-nullable automatically (zero regression), trades/
+deriv/swaps become nullable. Both copies fix via the single `get_schema_for_data_type` seam. **REJECTED** the coarse
+"blanket-nullable for cefi" patch — it would relax book5 too (data-correctness regression). **Required refinements from
+the verifiers:** (1) add a positive aggregation test — a bin with ≥1 observation MUST yield non-NaN OHLC (nullability is
+a permission gate, not a per-window guarantee); (2) do NOT claim the fix aligns path==manifest — it only aligns the
+VALIDATION key; the object path still uses source data_type, manifest the aggregated key (separate divergence). Also
+this fix incidentally makes the EXIT_STATUS=0-while-0-written class less likely for the honest-absence case (the write
+now succeeds), though the broader exit-code-lies P0 (sibling todo 2) is still open for genuine failures. Dispatching a
+focused MDPS implementation agent with this exact spec.
