@@ -1314,8 +1314,13 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     WITHOUT deleting on a failed write (`:444-447`). A 40-object random sample of quarantined garbage: 39 preserved, 1
     absent — which conservation proves was one of the 428 content-recovered, not a loss.
   - **VERDICT: 0 orphan · 0 garbage-root-in-limbo · 0 per-contract un-rebundled · garbage preserved, never deleted.**
-    The recovery-selector fix is validated (6,510 tests pass) but awaiting a green-tree window (peer WIP in this shared
-    slot); patch backed up so it cannot be lost. Shipping it only prevents recurrence — the DATA is already terminal.
+  - **✅ SHIPPED: recovery-selector filename fix landed `market-tick-data-service@1bdbb4e0` (on
+    origin/live-defi-rollout, 2026-07-20).** Green-tree window arrived after peer WIP cleared (`sentinels.py` back
+    ≤900L + the prediction-canonical SPORTS-shard expectation corrected by its owner); full QG FOREGROUND exit-0 (6,529
+    passed, 17 skipped; sentinel `8d7743cb`). Quickmerged the 2 files by name only
+    (`recover_tradfi_garbage_underlying_2026_07.py` + `test_recover_tradfi_garbage_underlying_2026_07.py`, +56/-2) — no
+    foreign files swept in. Prevents recurrence of the 14-object filename-predicate strand; the DATA was already
+    terminal (all 14 recovered + GCS-verified at tick 25).
 
 - **2026-07-20 (slot-1, tick 25) — 🛑 Massive purge NOT executed: the prescribed launcher invocation is broken in a
   destructive direction. Authorization is fine; the execution path is not.**
