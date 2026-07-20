@@ -1051,3 +1051,32 @@ miss, (A4) rule propagation in/out definitively — then synthesize the minimal 
 trades/book/liq/chain also mis-key?) + regression risk, with adversarial verification before any code change. Fix
 direction (align MDPS to pass the aggregated key vs. register a source-key alias) is DELIBERATELY not yet chosen — the
 workflow decides. Also RE-CONFIRMED the "EXIT_STATUS=0 while 0 objects written" P0 (sibling issue todo 2) on this run.
+
+### 2026-07-20 ~22:50Z — TRADES green-write smoke: PIPELINE WORKS (objects written) + write-rate + a sharp blast-radius insight
+
+The CEFI BINANCE-FUTURES trades→candles smoke (VM `…-213744-a84603`, auto-day 2026-07-05) **WROTE objects
+successfully**: run.log `✅ trades complete: 1/1 succeeded in 16.9s (7,615 candles)`,
+`cefi processing complete: 1/1 succeeded, 0 errors in 33.9s`, exit_code=0, and the driver report shows **Parquet=1** for
+every force timeframe (vs Parquet=0 for derivative_ticker). Polars aggregation (`POLARS AGGREGATED: 1440 1m … 1 24h`).
+So the **green writing path is PROVEN** — the MDPS candle pipeline works end-to-end on real data for the common case;
+derivative_ticker's failure is SPECIFIC, not a general breakage.
+
+**Write-rate data point (for the ETA):** ~16.9s per instrument-day for all 7 timeframes (33.9s incl. VM setup/manifest
+overhead) on a light 1-file instrument-day (7,615 candles). Heavier instrument-days (multi-file, HFT venues) will be
+higher; this is a floor, not the DeFi-MVP mean.
+
+**Driver-artifact verdicts (NOT pipeline failures) — matters for skill accuracy:** the trades force legs report `failed`
+with `manifest_status_invalid:no_matching_row` even though the object WROTE (Parquet=1). Root cause = the driver's
+manifest verify reads the CONSOLIDATED index while the fresh row sits in the leg VM's per-VM shard (sibling issue
+`mdps_derivative_ticker_candle_schema_violation` todo 4 — read the per-VM shard first, like the MTDS twin). The skip
+legs `failed: skip_signal_not_found_in_run_log` follow from the same manifest-not-consolidated cause (freshness check
+saw nothing to skip). Both are DRIVER limitations to fix, not writer bugs — the writer did its job.
+
+**SHARP blast-radius insight for the key-mismatch workflow (w6kkdobay):** trades succeeding does NOT prove the enforcer
+key is correct for trades. **trades OHLC is never NaN** (a trade always carries a price), so the non-nullable OHLC check
+PASSES regardless of whether the writer queries the source or aggregated key. The key mismatch only BITES candle types
+whose OHLC can be legitimately NaN in an empty window — the snapshot/event streams: `derivative_ticker` (proven), and
+plausibly `book_snapshot_5`, `liquidations`, `funding_rate`. Note `_candle_contracts.py:293` sets `nullable_ohlcv=True`
+on the TRADES contract too (under `_trades_key`), so a mis-key may exist for trades as well — it just never surfaces
+because trades has no empty-window NaN. The fix + sweep must cover EVERY empty-window-capable snapshot/event candle
+type, not just derivative_ticker.

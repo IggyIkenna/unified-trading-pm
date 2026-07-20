@@ -49,6 +49,15 @@ source: >-
 
 # P0 — service VMs run a stale UAC schema; contract changes do not reach VMs
 
+> **⚠️ CORRECTION (2026-07-20 ~22:45Z, after the fix + a loop-close re-run):** the propagation gap this issue describes
+> is REAL and is now FIXED (deployment@e978f32d — see todo 4). BUT the original framing below ("the ONLY thing wrong is
+> the VM's UAC contract copy") turned out to be INCOMPLETE. The re-run VM installed the CORRECT UAC (pinned ad317c32,
+> boot assert passed) and STILL failed the same schema validation — because the `nullable_ohlcv` fix was applied to the
+> AGGREGATED contract key (`deriv_ohlcv_{tf}`) while the writer queries the enforcer with the SOURCE key
+> (`derivative_ticker`). That is a SEPARATE bug (an enforcer key mismatch), tracked in
+> `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 5. The narrative below is preserved as the
+> historical filing; read todo 4 for the reconciled outcome.
+
 > **The GOOD news first:** the derivative_ticker candle fix (`mdps@beea161`) is CORRECT. On the re-verify VM the error
 > changed from the pre-fix `column 'funding_rate_mean' missing` (old adapter) to
 > `Column 'open' has NaN but is NOT NULLABLE` — i.e. the new adapter ran, emitted
