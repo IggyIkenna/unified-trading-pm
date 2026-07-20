@@ -294,7 +294,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       covers: a parquet on GCS with **no manifest row AND outside the oracle's expected set** is invisible to every
       existing tool (all are manifest-row- or oracle-driven). The delete-suggestion feature is precisely orphan
       detection.
-- [ ] 9. [DATA] P1. **Correct the stale/contradictory codex** (each with a dated correction annotation, not a silent
+- [x] 9. ✅ [DATA] P1. **Correct the stale/contradictory codex** (each with a dated correction annotation, not a silent
       edit): `cross-asset-canonical-target-ssot.md` §8 defi leaf filename → `{canonical_instrument_id}.parquet` (a stale
       template inside the designated tie-breaker doc is the corpus's most dangerous defect) · §8 tradfi chain tail →
       `underlying=/quote=/margin=` (shipped code wins) · §5 LENDING interim banner (B3) ·
@@ -312,7 +312,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       `cloud-providers.yaml`/`resolve_bucket_name` WINS; UTL `PATH_REGISTRY`/`build_bucket` Group-A rows resolve to
       buckets that **now 404** and are reached at runtime by `domain_client/clients/market_data.py:56` (file as a P0
       latent defect; check whether UTL market-data domain-client reads are currently failing).
-- [ ] 11. [DATA] P1. **Reconcile the single-walk rule** — `availability-manifest-and-data-status.md` §9 ("walks are
+- [x] 11. ✅ [DATA] P1. **Reconcile the single-walk rule** — `availability-manifest-and-data-status.md` §9 ("walks are
       review-blocking") and `gcs-object-operations.md` (six-point contract _for_ walks) never cross-reference and read
       as contradictory. State the reconciled rule in both: **ONE walk per corpus per campaign, all passes bundled onto
       that snapshot**, and fix §9's factually wrong exemption rationale (it claims a script "reads the index, not the
@@ -346,11 +346,12 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
 
 ### Phase C — validate per asset_group
 
-- [ ] 16. [DATA] P0. Run the skill for **defi** (the hardest: `chain=`, two-id model, capture STOPPED, the `dex_pools`
-      relic, Shape-B duplicate tree). Verify it reproduces the audit's known findings and raises no new false positives.
-- [ ] 17. [DATA] P0. Run for **cefi** and **tradfi**; confirm the v5/v6 dual chain-tail and the `batch_massive`
+- [x] 16. ✅ [DATA] P0. Run the skill for **defi** (the hardest: `chain=`, two-id model, capture STOPPED, the
+      `dex_pools` relic, Shape-B duplicate tree). Verify it reproduces the audit's known findings and raises no new
+      false positives.
+- [x] 17. ✅ [DATA] P0. Run for **cefi** and **tradfi**; confirm the v5/v6 dual chain-tail and the `batch_massive`
       read-recognition carve-out are handled without flagging accepted exceptions.
-- [ ] 18. [DATA] P1. Run for **prediction** and **sports**; confirm the CQG manifest-only grain and the
+- [x] 18. ✅ [DATA] P1. Run for **prediction** and **sports**; confirm the CQG manifest-only grain and the
       no-`asset_group=` sports tree produce zero structural false positives.
 - [x] 19. ✅ [REVIEW] P1. **Post-phase codex audit** — verify every new/edited codex doc is internally consistent and
       that no plan↔codex drift remains; add the one-liner + conditional-domain pointer to `cursor-configs/CLAUDE.md`
@@ -522,3 +523,64 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       `build_canonical_instrument_id`; writes the results manifest. Depends on 31. Lifecycle marker required.
 - [x] 33. ✅ [DATA] P2. **Per-AG reference-sheet census nuance line** (defi chain axis + case-insensitive; cefi EXACT +
       dual chain-tail; tradfi batch_massive suppress; prediction conditionId; sports entity-keyed).
+
+---
+
+## Deferred work after 2026-07-20
+
+All 15 build todos + the audit/ruling/integration work (todos 1–23, 26–30, 33) are DONE and shipped. Four todos remain —
+each is a genuine multi-repo EXECUTION/INFRA unit with prod blast radius, deliberately tracked (not half-built) with a
+ready-to-execute spec. None blocks the skill: the skill is fully functional at Tier-1 (validated against prod for all 5
+asset_groups, 2026-07-20).
+
+| Todo   | What                                                                           | Why deferred (not blocked)                                                                                                                                     | Ready-to-execute?                                                                                                             |
+| ------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **24** | D3 — content-UNION the 32 legacy-only Raydium pools into canonical             | A prod GCS write (fold). Order is mandatory (KAMINO/SOLEND have zero canonical copies). Human-gated per the delete-safety protocol.                            | Yes — spec + safe order in `issues/defi_dex_pools_delete_order_stale_2026_07_20.md`.                                          |
+| **25** | D3 — repoint execution-service + fix its `resolve_bucket_name` call            | Cross-repo code (execution-service) via quickmerge; resolve the dead-provider sub-question first (the call raises outside the `try`).                          | Yes — the fix is `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")` + data_type=dex_pool_state.       |
+| **31** | Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind   | Cross-repo config (deployment-service `vm_prefix_registry.py` + `cloud-providers.yaml`) via quickmerge; unregistered = invisible, so it lands BEFORE 32.       | Yes — spec in `codex/02-data/reconciliation-census-and-compute-tiers.md` § 3.                                                 |
+| **32** | Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py` | The Tier-2 VM runtime. Depends on 31. Reuses `launch-manifest-recon-all-vm.sh` + `validate_dataframe` + `build_canonical_instrument_id`; SPOT + PROGRESS.json. | Yes — this is the ONLY piece of the operator's "run on a VM" ask not yet built (the design + skill/doc integration ARE done). |
+
+**The operator's literal G4 ask ("otherwise these checks should be added to skills and docs") is SATISFIED** — the VM
+two-tier model is fully specified in SKILL.md § 7 and `codex/02-data/reconciliation-census-and-compute-tiers.md`. Todos
+31/32 build the runtime; they are the natural next unit of work.
+
+## FINAL REPORT — /data-pipeline-reconciliation skill build (2026-07-20)
+
+**Deliverable, shipped and validated.** A per-asset-group `/data-pipeline-reconciliation` skill that reconciles the four
+canonical surfaces (GCS path · parquet content · manifest key · catalogue) over PROD buckets, read-only, emitting typed
+findings + proof-gated delete SUGGESTIONS. Built via the operator's requested flow: **audit → plan → execute as
+workflows**, on the `/autonomous` loop.
+
+**What shipped (15 commits on `live-defi-rollout`, `4439cf429`…`f4a5700cc`):**
+
+- **The skill** — `cursor-configs/skills/data-pipeline-reconciliation/SKILL.md` + 5 per-AG reference sheets. Surfaces
+  fleet-wide via the single `.claude/skills` dir symlink (no linker run needed — that was the operator's opening
+  question; the per-skill-link era ended 2026-07-17).
+- **9 new codex SSOTs** — four-surface-reconciliation-procedure · reconciliation-finding-taxonomy ·
+  gcs-and-manifest-delete-safety-protocol · non-canonical-path-inventory · canonical-cutover-register ·
+  orphan-object-detection · service-shard-status-catalogue · canonical-write-guard-contract ·
+  reconciliation-census-and-compute-tiers. Plus corrections to ~10 existing docs.
+- **First real prod validation** — the skill ran read-only against PROD for all 5 asset_groups; each run critiqued it,
+  driving a v2 pass. 5 reports at `plans/audit/results/`.
+- **3 operator rulings** (D1 UPPERCASE · D2 full LENDING retire · D3 fold→repoint→delete) applied, propagated to every
+  sibling doc, and the resulting **C2a contradiction closed corpus-wide** (a grep sweep confirms one `migration_pending`
+  stance everywhere) — the acceptance review's single highest-value gap.
+- **6 issue docs + 1 prerequisite plan** capturing real findings: the stale dex_pools delete order (would have destroyed
+  data), the honest-coverage case-break latent on the D1 migration, the oracle's structure-only + value-blind gaps, the
+  defi expected-universe `pool` vocab desync, the sports WEATHER layout drift, the cross-AG prediction→sports bleed, and
+  the MTDS lending-writer fix that gates the D2 migration.
+
+**The two premises the audit overturned** (both would have caused harm if trusted): (1) `dex_pools` is NOT a safe-delete
+— the standing delete order in two live plans was stale, the canonical twin partial, and a live service still reads it.
+(2) The estate's real blocker was not un-canonicalisation but **documented-understanding contradiction** — 33 of them, 4
+blocking, two citing the same operator on the same date in opposite directions.
+
+**Method notes** (for the next agent): adversarial verification caught two sub-agent errors that would have become SSOT
+misinformation (a false "twin VERIFIED ABSENT" from probing `pool` not `solana_amm_pool`; a false
+"`canonical_path_templates()` doesn't exist" from grepping one module). Both were re-checked against code before
+shipping. The pre-commit hygiene gate caught three more (an unquoted `: ` breaking YAML; `nature: refactor`; an invalid
+audit-result `status`). "grep-then-READ, never grep-then-conclude" and "commit is the quality boundary" both earned
+their keep.
+
+**Loop terminated 2026-07-20** — success criteria met (skill built, validated, fit for the fleet; every finding tracked;
+the one blocker closed). The 4 deferred todos are execution/infra units, ready to execute.
