@@ -862,3 +862,48 @@ hit 5s; (5) re-measure on a real VM against a PROD-sized index to PROVE the numb
 - [ ] NEW todo. [SCRIPT] P2. De-pandas the per-write path: collapse the 3 redundant `.to_pandas()`
       (`candle_write_mixin.py:519/571/618`) + vectorize `_scatter_series`/`_carry_forward_ohlc`/HFT callbacks — the
       remaining per-unit latency cut toward 5s.
+
+### 2026-07-20 — DeFi-MVP backfill ETA (MEASURED denominator) + the read-path-fix reframes the fleet size
+
+**THE DELIVERABLE the operator asked for. Denominator MEASURED from UAC SSOT + PROD manifests; per-unit rate is the
+measured input; caveats stated.**
+
+**DeFi-MVP candle-backfill denominator ≈ 2.71M instrument-days** (unit = instrument × data_type × day; all 7 timeframes
+in ONE pass, so NOT × timeframe). Of DeFi's 27 data_types only 3 produce candles (`needs_candle_processing`):
+
+- `dex_pool_swaps` **2,703,497** (99.8% of the work; UNISWAP_V3 alone = 2.07M = **76%**, then PANCAKESWAP_V3 194k,
+  BALANCER 132k, SUSHISWAP_V3 108k, CURVE 72k, AERODROME_V3 31k)
+- `liquidations` **6,254**
+- `derivative_ticker` **16** (P0-broken → excluded until the fix's tarball lands; only 16 for DeFi anyway)
+- **Already-derived (MDPS manifest rows) = 0 → REMAINING = ALL.** (Physical candle objects exist under
+  `processed_candles/` untracked by the manifest — the object↔manifest disconnect I filed; the in-flight
+  canonical-migration-defi-rebuild may be reconciling it.)
+- The naive "instruments × flat-days" (346M) OVERSTATES by ~128× — MDPS only derives days with captured raw ticks, so
+  the measured captured-instrument-day count (2.71M) is the honest denominator. It is a GROWING lower bound (raw capture
+  still in progress; measured off an immutable mid-migration snapshot, live index ~13% larger).
+
+**CeFi reference ≈ 3.23M total / 2.06M workable** (excl. broken derivative_ticker's 1.17M), already-derived = **6**
+(confirms my earlier figure).
+
+**ETA (16 workers/VM = MDPS default; wall = N×rate/(16×fleet)):**
+
+| rate/unit                                 | DeFi 1 VM×16w | DeFi 10 VMs | **DeFi: min VMs for 2 WEEKS** |
+| ----------------------------------------- | ------------- | ----------- | ----------------------------- |
+| 25.9s (test-measured)                     | 50.8 d        | 5.1 d       | **4 VMs**                     |
+| ~260s (prod-projected, PRE read-path-fix) | 507 d         | 50.8 d      | **37 VMs**                    |
+| 5s (operator target, needs de-pandas too) | 9.8 d         | ~1 d        | **1 VM**                      |
+
+**🔑 CRITICAL REFRAME — the read-path fix I shipped today collapses this.** The ETA agent used ~260s as the "prod rate"
+BECAUSE the `compute_completeness_fraction` full-corpus map-build added ~9-40s/instrument on the prod-sized index.
+**That is exactly the term `utl@80d2497e` + `mdps@b4db0af` (16.7x, value-equivalent) removed.** So the realistic
+post-fix prod rate is ~25.9s + prod-I/O residual, NOT ~260s → **the DeFi 2-week target now needs ~4-6 VMs, not 37.**
+This MUST be confirmed by a real-VM re-measure against a prod-sized index (queued) before being quoted as final — the
+16.7x was measured on the map-build in isolation, not yet end-to-end per-instrument on a prod VM.
+
+**Practical backfill plan implied by the numbers:** shard by venue (UNISWAP_V3 is 76% → give it its own fleet lane);
+DeFi is NOT Tardis-capped so scale fleet-wide freely; land the derivative_ticker tarball before counting its cefi 1.17M;
+turn on R1 `MDPS_DATE_CONCURRENCY` per VM. At the post-fix ~25.9s rate, **all remaining DeFi MVP candles fit in ~2 weeks
+on ~4-6 SPOT VMs**, or comfortably under 2 weeks with the de-pandas per-unit work toward 5s.
+
+- [ ] NEW todo. [DATA] P0. Real-VM re-measure of end-to-end per-instrument-day rate against a PROD-sized index AFTER the
+      read-path fix tarball lands — confirm prod ≈ 25.9s (not 260s), which sets the true DeFi fleet size (~4-6 vs 37).
