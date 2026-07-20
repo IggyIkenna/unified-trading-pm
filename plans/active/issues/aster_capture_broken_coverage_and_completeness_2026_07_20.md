@@ -125,13 +125,31 @@ REST API needs per-PROCESS request discipline; VM count is irrelevant when the b
 
 ## Fix plan (mirror the HL playbook this session)
 
-- ⬜ **A. Trades pagination fix** — page aggTrades past `limit=1000` (loop on `fromId`/time until day complete) in
-  `_umi_aster.py`; ensure the batch caller passes the FULL resolved instrument list (never `instrument_ids=None` →
-  20-cap). Ship via quickmerge + rebuild MTDS tarball.
-- ⬜ **B. Universe: admit the 1000-multiplier bases** (operator scope call — same decision class as the HL k-coins,
-  which the operator approved 2026-07-20). Add `1000PEPE`/`1000BONK`/… to `CEFI_BASE_ASSET_UNIVERSE` OR normalize the
-  `1000`/`k` multiplier prefix in the base-membership check. Then catalogue rebuild → mvp=True.
-- ⬜ **C. Run the ASTER trades backfill** for the full 448-perp universe (2023-07-22→today, genesis-clipped) via
-  `launch-cefi-hl-aster-historical-backfill.sh VENUES=ASTER` with the finer sharding shipped this session; verify the
-  448-instrument coverage lands.
-- ⬜ **D. Provenance hardening** — add the host-assertion guard (footgun) + clip GAP-4 genesis to 2023-07-22.
+- ✅ **A. Trades pagination fix** — SHIPPED mtds@accd8aa4 (correction: the real batch path is
+  `market_interface/adapters/onchain_perps/aster_adapter.py`, not `_umi_aster.py` — that module is the separate
+  UMI/Tardis-side path, unused by `onchain_perp_batch_handler._fetch_aster`). `_fetch_agg_trades_response` now pages on
+  `fromId` up to `_AGG_TRADES_MAX_PAGES` until a short page or a record crossing `end_ms` signals the tail, instead of a
+  single `limit=1000` request truncating the day. Also bundled: `AsterBaseClient.throttle()` enforces the
+  previously-dead `rate_limit_per_second` config (2026-07-20 429 incident), handler-level adapter reuse, exchangeInfo
+  failure cooldown, and 429/transport → raise (not fabricated `empty_confirmed`). +4 regression tests.
+- ✅ **B. Universe: admit the 1000-multiplier bases** — SHIPPED uac@34580d92. All 10 ASTER 1000-multiplier bases
+  (1000PEPE/1000BONK/1000SHIB/1000FLOKI/1000LUNC/1000CHEEMS/1000SATS/1000WOJAK/1000NEX/1000XEC) added to
+  `CEFI_BASE_ASSET_UNIVERSE`; `is_in_mvp_capture_universe(ASTER, 1000PEPE)` verified True. Catalogue rebuild + backfill
+  still pending (folds into STEP 3 of the HL k-coin plan — same UAC-deploy-gated blocker, see
+  `hl_multiplier_kcoins_excluded_from_mvp_universe_2026_07_20.md`).
+- 🟡 **C. Run the ASTER trades backfill** — IN PROGRESS, part done:
+  - ✅ **1000-multiplier coins (the direct analog of the HL k-coin fix, fix B above): SHIPPED + VERIFIED.** Surgical run
+    `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS="1000PEPE;1000BONK;1000SHIB;1000FLOKI;1000LUNC;1000CHEEMS; 1000SATS;1000WOJAK;1000NEX;1000XEC" YEARS="2024 2025 2026" SHARD_DAYS=21`
+    (RUN_TS 20260720-205932, 32 VMs, all self-shut-down clean, real rows confirmed for 1000PEPE/1000SHIB/1000FLOKI in
+    spot-checks).
+  - 🟡 **Full 448-perp universe re-run: IN PROGRESS**, mtds@accd8aa4 (rate-limit bundle) then mtds@aa72787b (row_key
+    fix) via `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS=ALL YEARS="2024 2025 2026" SHARD_DAYS=21` (RUN_TS
+    20260720-203019, 46 VMs). Measured healthy (not stalled): ~9min/day, ~500-650k rows/day, throttle+backoff working
+    correctly on 429s (retries succeed or route to a real `attempted_failed`, no more storm). This is a genuinely
+    multi-hour operation (~3.15h/shard for a full 21-day window) — NOT yet complete as of this note.
+  - NOT yet done: genesis clip to the native 2023-07-22 (currently backfilling from ASTER's UAC start_date 2024-01-01,
+    which already excludes the pre-launch Astherus-proxied window — GAP-4's specific clip to the databento-verified date
+    is a separate, smaller, still-open item).
+- ✅ **D. Provenance hardening (host-guard half)** — SHIPPED mtds@accd8aa4. `_assert_aster_host()` guards all 3 ASTER
+  live-WS connector construction sites (`aster_book_liq_ws.py`) against the latent Binance-host footgun; +3 regression
+  tests (`test_aster_ws_connector.py::TestAsterHostGuard`). GAP-4 genesis clip to 2023-07-22 NOT yet done.
