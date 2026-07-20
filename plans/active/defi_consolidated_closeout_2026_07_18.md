@@ -750,6 +750,35 @@ Discriminator = **does a manifest row exist**.
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
 
+- **2026-07-20 (slot-4, /autonomous — ✅ CF-11 + PROJECTION FIX **PROVEN IN PROD**; ⛔ 2nd correction: IS was NEVER
+  blocked on the wheel).**
+
+  - **✅ THE FIX IS PROVEN ON REAL INFRA — this is the milestone.** `…-133819-2022d` (fixed code `mtds@2c88b269`,
+    e2-highmem-8) reached the EXACT point where three VMs died and **sailed through it**:
+    ```
+    CF-11: consolidated index loaded — 45776383 rows (12 projected cols)
+    CF-11: found 13269683 honest-absence(+processed-captured) rows in defi _index
+    ```
+    `(12 projected cols)` is the projection fix working against a live 45.8M-row index; the VM then kept climbing
+    (898,665 → 1,215,892 entries) with a fresh heartbeat, actively re-emitting the 13.27M-row absence corpus that
+    previously OOM-killed every VM at this step. **Both relaunched VMs healthy** (2025d at 2025-07-13 / 1.09M entries).
+    Note the index has GROWN 44,730,321 → 45,776,383 rows since the earlier ground-truth read — consolidation is
+    accreting the rebuild's per-instrument captured rows as designed.
+  - **⛔ SECOND CORRECTION — "IS is BLOCKED-UPSTREAM on the UAC wheel" (written one entry below) is ALSO WRONG.** IS
+    resolves UAC exactly like MTDS does — `[tool.uv.sources.unified-api-contracts] path = "../unified-api-contracts"`
+    (`instruments-service/pyproject.toml:82-83`) — i.e. the local workspace path, NOT the published wheel. **VERIFIED by
+    running the IS venv:** `METEORA-SOLANA in defi: True`, `CHAINLINK-ETHEREUM in defi: True`, `defi venue count: 98`.
+    So the drift-guard is satisfiable RIGHT NOW and **IS is shippable without waiting for any publish.** The dormant
+    publish path still matters for DEPLOYED images and for any consumer resolving `--no-sources`, but it is NOT a gate
+    on shipping IS. _That is the second time this session I inferred a blocker from a code path instead of measuring it
+    (the first was the CF-11 "data loss"). Both cost real time; both were one command away from the truth._
+  - **MTDS CI GREEN on LDR** (`quality-gates-v2` 12:45:06Z, 5m0s, success) — covers `mtds@2c88b269` AND the RULE-11 2646
+    re-pin, confirming CI resolves the workspace UAC (so the re-pin is not a CI landmine).
+  - **PUBLISH-PATH FINDING STANDS (operator decision, lower severity than first written):** UAC `main` is still
+    **v0.71.0**; no `version-bump` run since **2026-03-16**; `Semver Agent` fires on **staging** pushes, which the
+    LDR→main DIRECT model bypasses. A direct-promote repo therefore lands on main without ever cutting a wheel. **NOT
+    hand-bumped** (semver-agent owns versions — CLAUDE.md HARD RULE).
+
 - **2026-07-20 (slot-4, /autonomous — REBUILD-VM OOM ROOT-CAUSED + FIXED; gas_fees orphans quantified; UAC on main but
   PUBLISH PATH DORMANT → IS blocked upstream).**
 
