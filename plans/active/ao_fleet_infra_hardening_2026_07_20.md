@@ -170,6 +170,18 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
 
 ## Progress Log
 
+- **2026-07-20 — post-close-out alert follow-up.** A live `agent-orchestrator-alerts` page fired for slot 14
+  (`instruments-service` dirty 1 file for 2433m) after the todo-6 sweep — the sweep had fixed the BEHIND count for the 4
+  flagged clones but deliberately left their dirty files untouched (per the safeguard). Investigated all 4 via the FM8
+  liveness discriminator (`server/worktree_clean_check/_liveness.py`): slot 14's claim was expired since 2026-07-18,
+  slot 15 + laptop-slot-5 had no claim file, and VM slot 4's dirty-file mtime was 13.8h old (all classify
+  "dead"/"absent" → inherit, none "live"). Resolved by replicating the orchestrator's own `commit_and_push_dirty_repos`
+  mechanism verbatim: `chore(orphan-wip)` commit with the slot's own identity, pushed to a content-addressed
+  `wip-preserve/orchestrator-slot-<N>-<sha>` ref (never touches `live-defi-rollout` directly), then realigned each slot
+  to a clean `origin/live-defi-rollout` tip — for VM slots 4/14/15 (`instruments-service`, code/lockfile content).
+  Laptop slot 5's dirty file was PM plan content (not code) and read as complete + coherent, so it was landed properly
+  via `quickmerge` instead (`unified-trading-pm@aa20257cb`) rather than parked on a wip-preserve ref. All 4 clones now
+  measure dirty=0, behind=0.
 - **2026-07-20 — todos 6 + 7 closed out.** Operator approved FF-unfreeze of all 4 flagged clones (laptop slot 5 PM
   787→0, VM slots 4/14/15 instruments-service 2/87/93→0) — all clean, tracked-dirty files survived untouched. On the
   governor: re-running `bootstrap_vm.sh` turned out to be the wrong fix — the operator had already set
