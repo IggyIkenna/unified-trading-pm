@@ -133,17 +133,33 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       ≥`fleet_kpi_regression_multiple`× (default 5x) the prior-24h baseline — 73x clears that with wide margin, and the
       alert renders as a `:rotating_light:` line at the TOP of the very next digest post (interval default 24h,
       operator-configurable via `TuningDefaults.daily_summary_interval_seconds`).
-- [ ] [INFRA] P2. **(AF-4) Assert disaster-recovery snapshot RECENCY.** `gcs_sync.SnapshotLoop` runs and
-      `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set, but **nothing asserts snapshot age** — a
-      broken snapshot loop looks exactly like a working one until the day `state.db` is lost. Same silent-by-absence
-      class as the reconciler timer. **RE-VERIFY FIRST**: the earlier "no local state.json" evidence was a PROBE
-      ARTIFACT (the probe ran as `ubuntu` without the unit env, so it checked the in-repo default) — measure the **S3
-      object's last-modified** instead, which is the real signal and path-independent. **Operator-ratified: BUILD it.**
-      (a) re-measure S3 last-modified now; (b) add a snapshot-age assertion (digest line or health endpoint: last
-      successful snapshot < N hours, alert on breach); (c) one documented restore drill. **Gate**: measured snapshot age
-      recorded; the assertion alerts when the loop is deliberately stopped **in a test** (not by stopping the live
-      loop). Note: `ao_fleet_infra_hardening_2026_07_20.md` moves state in-repo, which removes the artifact class
-      entirely — coordinate rather than duplicate.
+- [x] [INFRA] P2. ✅ **(AF-4) Assert disaster-recovery snapshot RECENCY.** — `agent-orchestrator@3fd6129` (2026-07-20).
+      **(a) Re-measured S3 last-modified LIVE** (`aws s3api head-object` against `uts-orchestrator-state-427895769566`,
+      this session, not a probe): the light `state.json` snapshot (`upload_state_to_s3`, ~30min cadence) is HEALTHY (~3
+      min old at measurement time). The full SQLite backup (`backup_sqlite_to_s3`, nominal 6h cadence —
+      `snapshot_interval_seconds`(1800s) x `sqlite_backup_every_n_ticks`(12)) is NOT: real gaps up to **47 HOURS between
+      successive backups, including a ZERO-backup day (2026-07-19)** — pulled the full `backups/sqlite/planning/`
+      history to confirm this wasn't one bad reading. This is the actual artifact a restore uses, and where the real gap
+      is — **canary tracks it, not the lighter state.json**. **(b) Built `SnapshotRecencyCanary`**
+      (`server/snapshot_recency.py`, mirrors `PlanReconcilerLivenessCanary`'s exact skeleton): lists the VM-scoped
+      `backups/sqlite/<vm_id>/` prefix, HEADs the lexicographically-latest key for its authoritative `last_modified`
+      (list_blobs's own `last_modified` is unpopulated on the AWS backend — measured this session), pages via the
+      existing state-transition-dedup Slack pattern (`notify_snapshot_recency_breach`/`_resolved`) on the new
+      `TuningDefaults.snapshot_max_age_hours` (default 12h = 2x nominal, tolerates one missed cycle, still catches the
+      measured 47h class with wide margin) + `snapshot_recency_interval_seconds` (default 3600s). Also
+      `GET /api/snapshot-recency` (pull-surface companion, deliberately kept OUT of `/api/healthz` so the liveness probe
+      never gains a live S3 HEAD as a new failure mode). Wired into server startup next to `SnapshotLoop`. 30 new tests
+      — **the plan's literal Gate ("alerts when the loop is deliberately stopped IN A TEST, not by stopping the live
+      loop") is the explicit contract of every test**: all driven through mocked/fixture values, the real S3 bucket and
+      the live `SnapshotLoop` are never touched. Full `agent-orchestrator` `quality-gates.sh` green (1544 passed). **(c)
+      Restore drill — DONE, read-only, safe**: downloaded the actual latest S3 SQLite backup
+      (`live_20260720T011633Z.db`, 41.3 MB) to a scratch dir (never the live orchestrator's paths),
+      `PRAGMA integrity_check` → `ok`, confirmed all 16 expected tables present, 17 slots / 88,834 `activity_log` rows
+      queryable, and the DB's own newest row timestamp (`2026-07-20 01:16:33`) matches the S3 object's `last-modified`
+      (`01:16:34`) to the second — proves the backup is a real, consistent, restorable snapshot, not a corrupt/partial
+      upload. **Coordination check**: `ao_fleet_infra_hardening_2026_07_20`'s in-repo-state-path migration is code-done
+      but the LIVE DB move is still operator-gated/pending — the S3-backup artifact class has NOT been removed yet, so
+      this work was not duplicative.
 - [ ] [BACKEND] P3. **(AF-3) `activity_log` retention — low priority, decide and record.** 83,813 rows over 20 days
       (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC; `activity_log` has
       nothing. **Operator context 2026-07-18: 83k rows / 40 MB is NOT big for SQLite — there is no problem today**; the
@@ -192,3 +208,8 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   follow-up, not claimed done. **Heads up for the next session**: `ao_dispatch_cooldown_and_park_2026_07_20@cfb211c`
   landed its fleet-scoped cooldown store WHILE this session was running — AF-1b (still marked blocked above) may now be
   unblockable; re-check that plan before starting AF-1b.
+- **2026-07-20 — AF-4 done** (`agent-orchestrator@3fd6129`). Live re-measurement found a REAL gap the earlier probe
+  evidence had missed: the light state.json snapshot is healthy, but the full SQLite DR backup has gone up to 47h
+  between uploads including one zero-backup day. `SnapshotRecencyCanary` now asserts + pages on this (mirrors
+  `PlanReconcilerLivenessCanary`'s proven pattern). Restore drill performed for real (read-only, scratch dir): the
+  latest S3 backup downloaded, integrity-checked, and queried successfully. 30 new tests, full QG green.
