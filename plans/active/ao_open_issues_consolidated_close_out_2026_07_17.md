@@ -344,7 +344,10 @@ NOT AO and are deliberately out of scope here.
       it has no registry data to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the
       honest resolution may be to DELETE the module + its config knobs rather than fix the paused-slot bug above.
       **Decide before doing the P2 fix** — no point hardening a module that should not exist. **Gate**: an explicit
-      keep-or-delete ruling; if keep, a named scenario under single-VM that still needs it.
+      keep-or-delete ruling; if keep, a named scenario under single-VM that still needs it. **✅ RULED 2026-07-20 (A5) —
+      DELETE.** Both this todo and the paused-slot P2 above are now **SUPERSEDED** and MOVED to
+      `ao_failover_module_retirement_2026_07_20.md`: removing the module removes the paused-slot bug, so the guard fix
+      is never written. Do NOT action either here.
 - [ ] [BACKEND] P1. **plan_health cadence — MEASURED 21 dispatches in 5.5h (11:02→16:30Z), overlapping instances
       confirmed (`superseded-plan_health` exit reasons + one ACTIVE at probe time).** Operator policy: once per 4–8h
       unless CI-triggered — NOT every 15–30 min. Root cause found: `main-backmerge-to-ldr.yml` § "Ping plan-health
@@ -420,7 +423,9 @@ NOT AO and are deliberately out of scope here.
       journal. **Gate**: (b) liveness assertion shipped; curl `--max-time` ≥180s (or 202-immediate); the two new defects
       below fixed; and the REAL gate — **one reconcile run observed end-to-end producing a `plan_health_result` + a
       pushed `plan_reconciler/*` branch**. Until that is seen once, treat this subsystem as NEVER-VERIFIED, not merely
-      "re-armed".
+      "re-armed". **➡️ REMAINING WORK MOVED 2026-07-20 to `ao_scheduled_agent_hygiene_2026_07_20.md` (AO-dispatched) —
+      the curl fix, the (b) liveness assertion and the end-to-end verification gate live there now. Do NOT action here;
+      this entry is kept as the audit record.**
 - [ ] [BACKEND] P0. **The prereq-blocked reaper KILLS freshly-spawned agents that land on a previously-blocked slot
       (generic; it is what killed the 07-20 reconcile run).** `server/worker_liveness_watchdog.py:1180-1265` keeps
       `self._prereq_blocked_since[sid]` keyed by **slot id only**, and never invalidates it when a NEW agent spawns into
@@ -435,7 +440,9 @@ NOT AO and are deliberately out of scope here.
       escalation) from this reaper entirely — its premise is "the BACKLOG queue is fully prereq-blocked so idle BACKLOG
       workers should be released", which says nothing about a scheduled agent. **Gate**: a regression test spawning into
       a slot with a matured `_prereq_blocked_since` asserts the new session SURVIVES; plus a test that a
-      plan_reconciler-kind agent is never selected by the reaper. Provenance: B4 audit 2026-07-20.
+      plan_reconciler-kind agent is never selected by the reaper. Provenance: B4 audit 2026-07-20. **➡️ MOVED 2026-07-20
+      to `ao_dispatch_liveness_p0_2026_07_20.md` (AO-dispatched) — do NOT action here; this entry is kept only as the
+      provenance record.**
 - [ ] [BACKEND] P2. **The /boot read-confirmation gate demands `worker.md` from typed agents that were never pointed at
       it — every plan_health/plan_reconciler boot is 428'd once.** `server/routes/slots_worker.py:80` calls
       `prompts.expected_read_files("worker", req.slot_role)` with the base role **hardcoded to `"worker"`**, so expected
@@ -447,7 +454,8 @@ NOT AO and are deliberately out of scope here.
       latent hard-fail for any agent that does not retry, and it makes `boot_read_unconfirmed` useless as an alert. Fix:
       pass the ACTUAL agent kind (the spawn side already composes the right role), not the literal `"worker"`. **Gate**:
       a plan_reconciler boot confirms on the FIRST POST; `boot_read_unconfirmed` count drops to ~0 in a 24h window.
-      Provenance: B4 audit 2026-07-20.
+      Provenance: B4 audit 2026-07-20. **➡️ MOVED 2026-07-20 to `ao_scheduled_agent_hygiene_2026_07_20.md`
+      (AO-dispatched) — do NOT action here.**
 - [ ] [BACKEND] P2. **Sub-question left open by the B4 audit: why did the 07-15/17/18 reconcile runs die 7–7.5 min in?**
       Each was `plan_health_dispatched` then `tmux_session_lost … archived_lifecycle_complete: true` ~7 min later with
       no result (07-15 `agt-2d8441` is odder still — `finished_at` 07:30, 6h25m after a session that vanished at 01:12).
@@ -550,14 +558,18 @@ NOT AO and are deliberately out of scope here.
 Every item below is ALREADY a todo above; this section only separates **what needs an operator ruling** from **what is
 just unfinished investigation**, and records the standing recommendation so the next session does not re-derive it.
 
-**A — needs an operator ruling (do NOT decide these autonomously)**
+**A — operator rulings. A1–A4 + the new A5/A6 were RULED 2026-07-20 (operator: "go with your recommended ones"); the
+standing recommendation in each row IS now the ruling. Only A7 remains open.**
 
-| #   | Question                                                                                                | Standing recommendation                                                                                                                                                                                 |
-| --- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A1  | NULL `brief_hash` tail (54 rows, all `done`) — backfill / age-out / accept-permanently? (Phase 1)       | **Accept permanently + a growth alarm.** All 54 are `done` audit history, 0 in-flight; backfilling is write-risk for no gain. Growth is the real signal (growth = backfill regression).                 |
-| A2  | `audit_false_done` contract — checkbox-state as truth, or must `done_sha` be the flip-commit? (Phase 1) | **Checkbox state = truth.** The gate answers "is the work done"; the checkbox is the SSOT. Keep the sha as provenance, but a mismatched sha must not manufacture a false-positive (that IS sports-002). |
-| A3  | mvp-defi unpark — the named flipper plan may be superseded (Phase 3)                                    | Re-point the unpark to the `defi_consolidated_closeout_2026_07_18` owner, **or** park it explicitly until the DeFi re-architecture resumes. No park may exist without a named LIVE flipper.             |
-| A4  | plan_health interval                                                                                    | **RULED 2026-07-18: 2h**, adjustable later. Ships with the Phase-6 gate; no live knob today.                                                                                                            |
+| #   | Question                                                                                                | Standing recommendation                                                                                                                                                                                                                                                                                                    |
+| --- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | NULL `brief_hash` tail (54 rows, all `done`) — backfill / age-out / accept-permanently? (Phase 1)       | **Accept permanently + a growth alarm.** All 54 are `done` audit history, 0 in-flight; backfilling is write-risk for no gain. Growth is the real signal (growth = backfill regression).                                                                                                                                    |
+| A2  | `audit_false_done` contract — checkbox-state as truth, or must `done_sha` be the flip-commit? (Phase 1) | **Checkbox state = truth.** The gate answers "is the work done"; the checkbox is the SSOT. Keep the sha as provenance, but a mismatched sha must not manufacture a false-positive (that IS sports-002).                                                                                                                    |
+| A3  | mvp-defi unpark — the named flipper plan may be superseded (Phase 3)                                    | Re-point the unpark to the `defi_consolidated_closeout_2026_07_18` owner, **or** park it explicitly until the DeFi re-architecture resumes. No park may exist without a named LIVE flipper.                                                                                                                                |
+| A4  | plan_health interval                                                                                    | **RULED 2026-07-18: 2h**, adjustable later. Ships with the Phase-6 gate; no live knob today.                                                                                                                                                                                                                               |
+| A5  | `failover.py` — delete, or keep-and-fix the paused-slot guard? (new, from B3)                           | **RULED 2026-07-20: DELETE** the module + its 3 config knobs. Cross-host machinery under a single-VM architecture (deprecated 2026-06-27); stopped, never fired, `fleet_registry_entries: 0`. CLAUDE.md — delete deprecated code, no shims. This **supersedes** the paused-slot P2 fix: removing the host removes the bug. |
+| A6  | VM `.env.local` tidy (vars now redundant against code defaults)                                         | **RULED 2026-07-20: fold into the next re-bootstrap.** Do NOT hand-edit the live VM — low value, non-zero risk, no urgency.                                                                                                                                                                                                |
+| A7  | `escalation_pipeline_mvp` — unpause or leave paused? **STILL OPEN**                                     | **No recommendation** (operator intent for that epic is unknown to me). Ruled ONLY on the consequence: the `/api/escalate` vs `/api/escalation/{id}` route collision gets **resolved regardless of the pause**, because leaving a known collision in the API is a trap for whoever writes escalation code next.            |
 
 **B — open investigations (no decision needed; just unfinished)**
 
