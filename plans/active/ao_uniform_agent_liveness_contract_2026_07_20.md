@@ -195,7 +195,9 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
       disabled loop) + a backend restart. **Re-enable = remove that env override (restore the default interval) +
       restart the backend — but FIRST fix the false-red root cause** (why it reads green repos as red: likely a stale
       `ci_reconcile_etag_cache.json` or a missing/`None` conclusion treated as failing), else it immediately re-storms.
-      The 72 cancelled escalations are backed up in the session scratchpad (`escalations_cancelled_backup.json`).
+      The 72 cancelled escalations are recoverable from the live `escalation_queue` table
+      (`status='resolved', resolution='operator-cancelled-2026-07-21'`) — no re-instatement is expected (they were
+      false-red on GREEN repos; a genuinely-red repo re-escalates once CIReconcile is fixed + re-enabled).
 
 ## Design note (todo 1) — the uniform agent-liveness contract
 
@@ -336,7 +338,9 @@ one-off looks identical to a live fleet worker on both.
   which produced the reconciler's 07-21 `503 no free slot`. Cleared them live by killing the 15 lingering `orch-slot-N`
   sessions; the backend's own `tmux_pruner` archived all 15 `lifecycle-complete` within 45 s and recycled the slots
   (registry 16 → 3 non-archived: main + review [auto-relaunched] + one fresh cicd escalation; `/health` 200). All 15
-  JSONLs preserved to scratchpad before the kill.
+  JSONLs read for the post-mortem before the kill (findings below); the raw transcripts persist at their source —
+  `/home/ubuntu/.claude-configs/orch-slot-<N>/projects/-home-ubuntu-...--tabs-<N>/<claude_session_id>.jsonl` — not in a
+  scratchpad copy (which was a deliberate drop: it contained secret-shaped agent output and is not repo material).
   - **The post-mortem overturns the "one-off gets killed" framing for THIS class — the opposite happened.** Reading all
     15 transcripts: **not one agent errored or crashed. Every one COMPLETED its task and then fell into an infinite
     idle-poll loop instead of exiting.** cicd agents resolved their escalation (mostly "stale — CI already green, no fix
@@ -406,3 +410,36 @@ one-off looks identical to a live fleet worker on both.
     (1546 py + 113 vitest).
   - **Still open (the OPS todo above):** re-enabling `CIReconcileLoop` needs its false-red root cause fixed first (it
     was escalating 3 GREEN repos → wasted cicd credits; paused via env `interval=0`).
+
+## Deferred work after 2026-07-21
+
+The A→C contract is **fully landed, deployed, and verified** — nothing in workstreams A/B/C is outstanding. One
+operational follow-up remains (tracked as the `[OPS]` todo above):
+
+| Item                                                   | State / why deferred                                                                                                                                                                                                                                                      | Blocked on                                                                                                                                                               |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Fix `CIReconcileLoop` false-red, then re-enable it** | **Not done** — real work. It escalated 3 GREEN repos (`unified-trading-pm`/`unified-trading-library`/`deployment-api`) as `ldr_qg_failure`; cicd agents resolved `qg_v2_green` (wasted credits). Paused via env `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` + restart. | Nobody — pick it up. Likely a stale `ci_reconcile_etag_cache.json` or a `None`/missing-run conclusion treated as failing (see `server/ci_reconcile.py`, `ConclusionFn`). |
+
+**Recommended NEXT:** the CIReconcile false-red fix — it is the only open item, it is currently _masked_ (the loop is
+off, so nothing is broken right now), and re-enabling without the fix immediately re-storms the credit burn. To
+re-enable after fixing: remove the `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` line from the deployed
+`agent-orchestrator/.env.local` + `sudo systemctl restart orchestrator`.
+
+## Lessons (2026-07-21)
+
+- **A finished one-off does not die — "EXIT" in a role doc is non-functional.** It only ends the Claude _turn_; the tmux
+  session lingers and the Kicker re-nudges it. The real terminal transition must be an explicit `/done` signal, not an
+  inferred session death. (This was the whole plan.)
+- **Restart PRESERVES `working` — the historical "restart flipped working→idle" was a different mechanism.**
+  `seed_worker_slots_from_tabs` (autospawn.py) revives only `killed`/`stale`→`idle`; a `working` row is left untouched.
+  So deleting the idle-scanner carve-outs is safe once one-offs reliably stay `working` (A+B).
+- **`5907317` is NOT a redundant carve-out — B1 depends on it.** It is the boot-gate `spawn_base_role` recognition that
+  B1 reads to know a slot hosts a one-off. The plan's "delete all three" was wrong for (c); keep it.
+- **Don't manually `systemctl restart` when the backend runs `--reload`.** `ao-self-pull` FF + `--reload` already
+  applied the code; the redundant manual restart briefly overlapped two processes and threw a transient
+  `sqlite3.OperationalError: database is locked`. It self-recovered, but the restart was unnecessary.
+- **To push already-committed CODE via quickmerge:** `git reset --mixed origin/<branch>` (un-commit into the working
+  tree) then `quickmerge --agent --files '<paths>'`. A raw `git push` of code is blocked by the strict-quickmerge
+  pre-push hook (needs the `Quickmerge:` trailer). PM docs push directly.
+- **CIReconcile has no runtime toggle** — its interval is read at `__init__`. Disabling needs the env var +
+  `systemctl restart` (a uvicorn `--reload` will NOT re-read the systemd `EnvironmentFile`).
