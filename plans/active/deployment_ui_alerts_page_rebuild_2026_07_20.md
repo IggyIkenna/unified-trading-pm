@@ -194,9 +194,16 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       `quickmerge.sh --agent --files '<paths>'` → same-turn `docs(plans):` checkbox flip + push, individually
       (deployment-ui@17fbb72/c631ef5/e6234d16/89cf1f87/fe767f19/f47d0ac1/4aa865c4). No new commit — nothing outstanding
       to ship at this checkpoint.
-- [ ] [REVIEW] P2. Post-phase codex audit — document the rebuilt alerts-page contract (diagnostic surface, the
+- [x] ✅ [REVIEW] P2. Post-phase codex audit — document the rebuilt alerts-page contract (diagnostic surface, the
       filter/sort/date-range dimensions, the shared-primitive reuse, the drill-down link map) in
-      `codex/06-coding-standards/ui-testing-layers.md` cross-ref + `codex/04-architecture/ci-alerting.md`.
+      `codex/06-coding-standards/ui-testing-layers.md` cross-ref + `codex/04-architecture/ci-alerting.md`. —
+      unified-trading-pm@c23a8c204. `ci-alerting.md` gained a new "The `/alerts` page UI contract" subsection (filter
+      dimensions, sort, date-range + the `data.days`-derived honesty-banner pattern, the drill-down link map incl. the
+      no-runbook-field gap, shared-primitive reuse vs the local `AlertDateRangeFilter`/sort-key-union plug-ins, and the
+      Layout decision citing BLK-de39d214) + `code_refs` for `Alerts.tsx`/`alerts-page.spec.ts`. `ui-testing-layers.md`
+      gained a short cross-ref note under "Testing Ownership by Surface" clarifying deployment-ui is a separate
+      React-Router+Vite app (not the Next.js `app/**` its L2/L3a examples are written against) and pointing at
+      `alerts-page.spec.ts` as the canonical pattern example.
 
 ## Success criteria
 
