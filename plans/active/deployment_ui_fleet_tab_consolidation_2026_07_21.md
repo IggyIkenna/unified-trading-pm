@@ -214,9 +214,24 @@ Key audit facts driving the merges:
       `cockpit-navlink-vm-deployments` visible in the canonical bar, a gap left by the earlier
       `/vm-deployments`→Legacy-nav todo, BLK-7cb5bbbc — verified via `git stash` that it fails identically on pre-change
       HEAD, not a regression from this change). `pw:L2 ✓` (my own 2 touched specs both green).
-- [ ] [UI] P1. **Remove the VM-census embed + reconciliation cards** from `FleetTab` (in `Cockpit.tsx`) — after the
+- [x] [UI] P1. ✅ **Remove the VM-census embed + reconciliation cards** from `FleetTab` (in `Cockpit.tsx`) — after the
       merges above land. Optionally preserve the "expected-missing" (registered-but-not-running) count as a small
-      Deployments summary if cheap; otherwise drop.
+      Deployments summary if cheap; otherwise drop. — ✅ `deployment-ui@e2cf84b`. Removed the reconciliation
+      `useEffect`/state/cards block + the `<VmDeploymentsContent compact />` census embed from `FleetTab`; `FleetTab`
+      now renders only the orphan idle-spend surface + `FleetGitContent` (git-only is the next todo). "Expected-missing"
+      preservation: dropped (not cheap) — no existing surface on Deployments carries this concept, and preserving it
+      would mean re-wiring the whole `/api/fleet/reconciliation` endpoint I'm removing UI support for, contradicting the
+      audit's own primary verdict that reconciliation is redundant. Cleaned up the now-fully-dead
+      `getFleetReconciliation`/`FleetReconciliationResponse`/`ReconciliationRow`/`CloudReconciliation` from
+      `api/health.ts` (confirmed zero other importers) + the mock-api.ts `/api/fleet/reconciliation` handler; removed
+      the now-unused `VmDeploymentsContent` import from `Cockpit.tsx` (the standalone `/vm-deployments` page itself is
+      untouched). Fixed 3 affected tests: `cockpit.spec.ts`'s "each tab switches" test (dropped the reconciliation-card
+      assertions, added a `cockpit-fleet-git` visibility check instead), deleted its now-fully-obsolete "Fleet tab
+      renders the real VM census" test, and `Cockpit.test.tsx`'s unit test (asserts `cockpit-fleet-git` present +
+      `cockpit-fleet-card-unknown` absent). Full `quality-gates.sh` green (typecheck/lint/orphan-audit/99 test
+      files/build). Playwright: `cockpit.spec.ts` full run, 39 passed, 0 failed. `pw:L2 ✓`. Lost the quickmerge sentinel
+      race once to a concurrent unrelated `.pre-commit-config.yaml` commit — re-ran QG, retried, landed clean on the 2nd
+      attempt.
 - [ ] [UI] P1. **Fleet = FleetGit only** — `FleetTab` renders only `FleetGitContent`; update the page title + the Fleet
       nav description in `NavMenu.tsx` ("Census · orphans · git · infra" → "git health · dirty repos"). Verify FleetGit
       renders standalone (reads only `/api/repo-ci/fleet-git-health`).
