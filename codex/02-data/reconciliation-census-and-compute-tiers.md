@@ -370,3 +370,27 @@ own "a disagreement that fits no type is itself a finding" rule).
 
 Adding the two estate types raises the taxonomy's estate-type count; the taxonomy owner updates its count line and
 delete-eligibility table when adding them.
+
+---
+
+## Appendix — corrections from the shipped Tier-2 validator (2026-07-21)
+
+The Tier-2 runtime shipped (`deployment-service@00a980e` launcher + `instruments-service@ad05e34`
+`scripts/validate_datapoint_schema_id.py`). Three §3 prose points were corrected against the code — the shipped code is
+the SSOT:
+
+- **Results shard path**: `record_captured`/`AvailabilityRecord` has a FIXED schema and cannot carry `schema_verdict`/
+  `id_verdict` columns, so the validator writes its verdict shard DIRECTLY to `_index/per_vm/{VM_NAME}.parquet`
+  (`_PER_VM_PATH_TEMPLATE`) carrying `asset_group`+`campaign_id` as columns. The earlier `results/{ag}/campaign={cid}/…`
+  path and "`read_availability_index` reads them unchanged" do NOT hold — the skill reads the per-VM shards directly,
+  filtering on `campaign_id` (the standard consolidator would coerce to the AvailabilityRecord schema).
+- **Preemption resume**: `record_vm_progress` is NOT a public UTL export (emitting `PROGRESS.json` from a `scripts/`
+  file trips the import-pattern gate), so resume is **presence-skip driven** (idempotent, correctness-safe); the per-VM
+  shard is flushed on each day-frontier advance so the fleet write-progress monitor still sees growth. Public-exporting
+  `record_vm_progress` for the day-checkpoint optimization is a UTL follow-up.
+- **Violation codes**: the real `validate_dataframe` literals are `extra_required_null` / `row_count_too_low` /
+  `wrong_dtype` / `missing_column` / `null_rate_exceeded` (not `null_in_required`). `masked_empty_row` is a parquet-side
+  0-row/all-NaN check in v1.
+
+Not yet runtime-verified: a real Tier-2 campaign (launch the VM + the ≤30-min heartbeat watchdog) is the next
+operational step.

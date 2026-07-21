@@ -114,12 +114,23 @@ Full audit transcript available on request; the load-bearing facts:
       VMs + CLOUD_RUN_JOB (GCP + AWS Batch share the wire kind) + SCHEDULER; support matrix documented on
       `DeploymentItem.last_run_at`; kinds with no timestamp signal at all pass through unfiltered; 10 new unit tests;
       `quality-gates.sh` green)
-- [ ] [BACKEND] P1. Add a `last_deployed_at` field to the `CLOUD_RUN_SERVICE` list item (revision create_time) — closes
-      the asymmetry vs `ECS_SERVICE` found in the audit; needed so always-on services can be sorted/labelled per
-      decision 2.
-- [ ] [UI] P0. Date-range picker on `/deployments`, URL-backed (`?date_from=&date_to=`), wired to the new backend
-      params.
-- [ ] [UI] P0. `kind` filter → multi-select (decision 3), URL-backed, same client-side filter model as today.
+- [x] ✅ [BACKEND] P1. Add a `last_deployed_at` field to the `CLOUD_RUN_SERVICE` list item (revision create_time) —
+      closes the asymmetry vs `ECS_SERVICE` found in the audit; needed so always-on services can be sorted/labelled per
+      decision 2. — deployment-api@1ff8699 (`CloudRunServiceStatus.last_deployed_at` in `_cloud_run_services.py`,
+      sourced from the service's own `update_time`/`create_time` — a Tier-0 free win off the already-fetched list call,
+      no extra RPC; mapped onto the EXISTING `DeploymentItem.last_modified_at` field in `_cloud_run_service_item` rather
+      than a duplicate field, since it already carries "deploy time, distinct from last-invoke" for AWS Lambda; 6 new
+      unit tests; `quality-gates.sh` green)
+- [x] ✅ [UI] P0. Date-range picker on `/deployments`, URL-backed (`?date_from=&date_to=`), wired to the new backend
+      params. — deployment-ui@31d862c (`DateRangeFilter` in `Deployments.tsx`; `date_from`/`date_to` added to
+      `DeploymentInventoryFilters`/`getDeploymentInventory` in `deploymentApi.ts`; mock API filters on `last_run_at`
+      with signal-less rows always passing through, honest-absence; both bounds independently clearable via one atomic
+      `✕` — two sequential URL-param updates were found to race and clobber each other) | pw:L2 ✓ | regression:
+      tests/smoke/deployments-page.spec.ts
+- [x] ✅ [UI] P0. `kind` filter → multi-select (decision 3), URL-backed, same client-side filter model as today. —
+      deployment-ui@234130a (`KindFilterChips` toggle-chip group replaces the single `<select>`; comma-separated
+      `?kind=` URL, old single-value deep-link still works as a 1-element set; `cockpit.spec.ts`'s `.selectOption(...)`
+      updated to click the chip) | pw:L2 ✓ | regression: tests/smoke/deployments-page.spec.ts
 - [ ] [UI] P1. Approx-row colour marker (decision 4) — reuse the WS-1 partial-day colour convention for any
       `basis: "approx"` row (heartbeat-stale VMs, unmanaged fallback, single-timestamp kinds). One consistent visual
       language across the whole table.

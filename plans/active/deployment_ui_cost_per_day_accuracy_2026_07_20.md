@@ -90,19 +90,37 @@ principle, wrong in aggregation.
       added: peak-vs-most-recent-complete-day distinction (`test_per_resource_daily_three_values`, now uses a
       $30-peak/$20-recent dataset) + partial-day normalisation (`test_per_resource_daily_24h_partial_day_normalized`).
       Docs synced in `models.py` + `deployments_inventory.py`.
-- [ ] [DATA] P0. **Fix AWS attribution** (decision 3). Concrete wiring: the census carrying both `instance_id` and
+- [x] ✅ [DATA] P0. **Fix AWS attribution** (decision 3). Concrete wiring: the census carrying both `instance_id` and
       `name` (Name tag) is `deployment-service` `backends/aws_census.py` (`AwsInstanceCensus` via `list_ec2_census()`),
       consumed in `deployment-api` `routes/_aws_deployments.py::_ec2_item` — but the item currently drops `instance_id`
       before the billing join in `deployments_inventory.py:1678 _attach_costs` (which matches only on `item.name`).
       Build `{inst.instance_id: inst.name}` from the census and thread it into `_attach_costs` (new optional param) so
       an AWS CUR row's `line_item_resource_id` (ARN → parse trailing `instance/i-…`) resolves to the friendly name
-      before the join. No mapping found → stay `None`, never fabricate `$0`.
-- [ ] [BACKEND] P1. **Partial-day basis flag** (decision 4). When `cost_actual_usd` falls back to the latest PARTIAL day
-      (no complete day exists — service.py:321-322), emit a `cost_basis: "partial" | "complete"` field alongside it (or
-      equivalent) so the frontend can style it — no text label, colour only. Field doc updated.
-- [ ] [UI] P1. `CostCell` colour treatment — when `cost_basis == "partial"`, render the actual-cost figure in a visually
-      distinct colour from the normal complete-day colour (no added text/tooltip — colour is the only signal per
-      operator decision). `pw:L2 ✓` + a cited regression spec covering both partial and complete states.
+      before the join. No mapping found → stay `None`, never fabricate `$0`. — deployment-api@e73bb31:
+      `load_aws_inventory` grew an optional `instance_id_by_name` out-param (additive, backward-compatible) that
+      `_load_aws_items` populates per-region from the EC2 census and threads into `_attach_costs`, which resolves an
+      ARN's trailing `instance/i-…` segment through the map before the by-name billing join; unmapped rows stay `None`.
+      Unit tests added: `test_attach_costs_resolves_aws_arn_via_instance_census`,
+      `test_attach_costs_unmapped_aws_row_stays_honest_none`. `bash scripts/quality-gates.sh` green.
+- [x] ✅ [BACKEND] P1. **Partial-day basis flag** (decision 4). When `cost_actual_usd` falls back to the latest PARTIAL
+      day (no complete day exists — service.py:321-322), emit a `cost_basis: "partial" | "complete"` field alongside it
+      (or equivalent) so the frontend can style it — no text label, colour only. Field doc updated. —
+      deployment-api@0a14fd6: `ResourceDailyCost.cost_basis: Literal["partial", "complete"]` added in
+      `cost_observability/models.py`; `per_resource_daily()` sets it `"complete" if complete_days else "partial"`
+      (`service.py`); threaded through `_attach_costs` onto `DeploymentItem.cost_basis: str | None` (`None` = no billing
+      row yet, honest absence) in `deployments_inventory.py`. Existing `_attach_costs` unit tests updated for the new
+      required dataclass field + 2 new assertions on `per_resource_daily`'s `cost_basis` output (complete / partial
+      cases). `bash scripts/quality-gates.sh` green.
+- [x] ✅ [UI] P1. `CostCell` colour treatment — when `cost_basis == "partial"`, render the actual-cost figure in a
+      visually distinct colour from the normal complete-day colour (no added text/tooltip — colour is the only signal
+      per operator decision). `pw:L2 ✓` + a cited regression spec covering both partial and complete states. —
+      deployment-ui@6a32408: added `cost_basis?: "complete" | "partial" | null` to the `DeploymentItem` TS type
+      (`src/api/deploymentApi.ts`); `CostCell` (`src/pages/Deployments.tsx`) renders the actual-cost figure in
+      `text-amber-400` when `item.cost_basis === "partial"`, else the normal `text-[var(--color-text-primary)]` tone —
+      colour only, no added text/tooltip line. Mock fixtures (`src/lib/mock-api.ts`) updated: `defi-live-capture-1` →
+      `cost_basis: "complete"`, `cefi-live-trading-1` → `cost_basis: "partial"`. `pw:L2 ✓` | regression:
+      `tests/smoke/deployments-cost-cell.spec.ts` (two new cases: complete-day renders the normal tone, not amber;
+      partial-day renders `text-amber-400` and asserts no "partial" text is added to the visible figure).
 - [ ] [REVIEW] P1. Unit tests — (a) 1-day-in-window → avg == actual (regression for the reported symptom); (b) N active
       days → avg == sum/N; (c) 24h basis is complete-day/normalised, not `max`; (d) AWS ARN→name mapping attributes a
       known CUR row; (e) unmapped AWS row stays `None`; (f) `cost_basis` is `"partial"` iff no complete day exists.

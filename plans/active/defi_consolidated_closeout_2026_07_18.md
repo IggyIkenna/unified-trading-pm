@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                      these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                      un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -770,6 +770,20 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-21 (slot-4, /pre-compact — glued-id re-migration IN FLIGHT; operator's canonical question answered).**
+  Operator authorized the canonicalization migrations/deletes + the glued-id fix. Assessed + PROVEN + running:
+  - **Canonical answer (operator asked):** the canonical pool id IS the human `venue:TYPE:base-quote-fee`
+    (`UNISWAP_V3-ETHEREUM:POOL:COMP-WETH-100`); `…:POOL:0x<addr>`/`…:LENDING:<uuid>` is the builder's INTENDED fallback
+    for unresolvable tokens. The DATA's per-row `instrument_id` is already canonical — only the coarse glued FILENAME
+    (`{protocol}_{chain}_{capture_ts}`) is the defect.
+  - **Scale:** 1,755 glued coarse files → 406,724 groups, but MOSTLY already-present per-instrument twins (R3 made them
+    from sibling coarse files) → the migration is mostly idempotent RENAMES + ~6.5k genuinely-new twins (the Solana
+    lending/lst R3's matcher missed). Re-shard PROVEN via an oracle_prices canary (7 twins BTC_USD/ETH_USD
+    - original retired to `_migrated_`). Running in background (index+column-driven harness, decoupled write-pool).
+  - **RESUME + the forward write-path fix are fully documented** in
+    `plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md` (§ MIGRATION IN FLIGHT): confirm
+    apply done → rebuild manifest (reemit OFF) → verify 0 glued ids → delete `_migrated_` markers.
 
 - **2026-07-21 (slot-4, /pre-compact — durability checkpoint + finish-list state).**
 

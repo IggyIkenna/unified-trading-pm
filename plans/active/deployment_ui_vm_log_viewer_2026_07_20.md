@@ -88,22 +88,45 @@ source:
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Writer-side final snapshot** (decision 1) — on VM completion write one durable copy of `run.log`
-      to a fixed, deterministic path. **Locations (verified — note the completion hook lives in UTL, not
-      deployment-service):** add a new path helper `vm_run_log_final_uri(vm_name, project_id)` →
-      `gs://deployment-scripts-{project}/log-archive/final/{vm}/run.log` (no date in the path — that is the whole point;
-      no TTL, plain replace) alongside `vm_log_stream_uri`/`vm_log_archive_uri`/`vm_run_log_rolling_uri` in
-      **`unified-trading-library/unified_trading_library/deployment_registry.py`**. Invoke the write from the completion
-      path: `HeartbeatDaemon` in `unified-trading-library/.../lifecycle/daemon.py` (terminal-event emission ~L344),
-      driven by `deployment-service/deployment_service/vm/heartbeat_cli.py:389-406`; also cover the SIGKILL fallback in
-      `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh:313-339` so a hard-killed daemon still leaves a final copy.
-- [ ] [BACKEND] P0. **Read-path resolution** (decision 2) — deployment-api tries `vm-logs/{vm}/run.log` first for any VM
-      (regardless of `completed_at`); on miss, falls back to the final-snapshot path (`vm_run_log_final_uri`, from the
-      writer todo above — `sequential: true` guarantees it lands first). Removes the broken `completed_at[:10]`-keyed
-      rolling-date guess (`deployments_inventory.py:675-680`, `vm_deployments.py:133-143`) — delete that dead logic,
-      don't leave it as an unused fallback.
-- [ ] [BACKEND] P0. Log metadata endpoint — size + last-modified via `gcs_describe_object` on whichever path resolved;
-      response marks which location was used (live vs archive) so the UI can label it.
+- [x] ✅ [BACKEND] P0. **Writer-side final snapshot** (decision 1) — on VM completion write one durable copy of
+      `run.log` to a fixed, deterministic path — `unified-trading-library@af1299d5` + `deployment-service@815e8f3`.
+      Added `vm_run_log_final_uri(vm_name, project_id)` →
+      `gs://deployment-scripts-{project}/log-archive/final/{vm}/run.log` (no date, no TTL, plain replace) in
+      `unified_trading_library/deployment_registry.py`. `HeartbeatDaemon` gained a `final_log_uri` param +
+      `_write_final_log_snapshot()`, called from `_archive_terminal_state()` (terminal-event emission) alongside the
+      existing interval-uploader final flush — best-effort, shard-level-isolated. Wired in
+      `deployment-service/deployment_service/vm/heartbeat_cli.py` via
+      `final_log_uri=vm_run_log_final_uri(vm_name, project_id=config.gcp_project_id or None)`. SIGKILL fallback in
+      `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh` now also writes the final snapshot inline (bucket derived
+      from `GCS_LOG_URI`, matching the Python helper's shape) so a hard-killed daemon still leaves a final copy. Unit
+      tests added in both repos (`test_deployment_registry.py`, `test_daemon.py`, `test_vm_event_emission.py`); both
+      repos' `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P0. **Read-path resolution** (decision 2) — deployment-api tries `vm-logs/{vm}/run.log` first for any
+      VM (regardless of `completed_at`); on miss, falls back to the final-snapshot path (`vm_run_log_final_uri`, from
+      the writer todo above — `sequential: true` guarantees it lands first). Removes the broken
+      `completed_at[:10]`-keyed rolling-date guess (`deployments_inventory.py:675-680`, `vm_deployments.py:133-143`) —
+      delete that dead logic, don't leave it as an unused fallback. — `deployment-api@8ec29f0`. `_vm_item()`
+      (deployments_inventory.py) now always sets `run_log_uri = vm_log_stream_uri(entry.vm_name)` (the deterministic
+      live path, regardless of `completed_at` — previously only computed via the broken rolling-date guess and only when
+      completed). `_to_model()` (vm_deployments.py) keeps `log_uri` as the live path (already sourced from the registry
+      entry) and replaces the broken `vm_run_log_rolling_uri(vm_name, date_stamp)` call with the deterministic
+      `vm_run_log_final_uri(vm_name)` for `archive_run_log_uri` on completed entries — no date-guessing, no 404s from a
+      wrong cron-run-date guess. The serial-console rolling-archive logic (a separate, still-correct mechanism) is
+      untouched. Deliberately scoped to a pure deterministic-URI refactor with NO new GCS I/O in these two
+      background-cached bulk census paths (`_load_inventory`/`_load_vm_deployments`, both 45s SWR-cached) — the actual
+      live-vs-archive EXISTENCE check belongs in the size/metadata endpoint (next todo), which resolves for one VM at
+      request time, not for the whole fleet on every cache refresh. Unit test updated
+      (`test_route_deployments_inventory.py`); `deployment-api` `quality-gates.sh` green (4790 passed).
+- [x] ✅ [BACKEND] P0. Log metadata endpoint — size + last-modified via `gcs_describe_object` on whichever path
+      resolved; response marks which location was used (live vs archive) so the UI can label it. —
+      `deployment-api@32aad22`. New `GET /api/deployments/{name}/run-log/metadata` in `deployments_inventory.py`
+      (`RunLogMetadataResponse`: `exists`/`location`/`uri`/`size_bytes`/`last_modified`). Real live-vs-archive
+      resolution now lives in the new `deployment_api/routes/_run_log_resolution.py` (`resolve_run_log_location`): tries
+      `vm_log_stream_uri` first via `gcs_describe_object`; on miss, describes `vm_run_log_final_uri` instead —
+      `metadata=None` when neither exists (honest "no log available", never a fabricated hit). This is the per-VM,
+      request-time GCS existence check the previous todo deliberately deferred out of the bulk census paths. Unit tests:
+      `tests/unit/test_run_log_resolution.py` (resolver, mocked `gcs_describe_object`) + 2 endpoint tests added to
+      `test_route_deployments_inventory.py`. `quality-gates.sh` green (4795 passed).
 - [ ] [BACKEND] P0. Bounded tail endpoint — byte-range read of only the last ~64–256KB, split to the last 200–500 lines
       (cap configurable). Never load the full object into API memory or the response.
 - [ ] [BACKEND] P1. Signed-URL download endpoint (decision 4) — short-lived signed URL for the resolved log object; no
@@ -149,6 +172,17 @@ source:
   the writer (durable single final snapshot on completion, no more date-guessing), read `vm-logs/` first regardless of
   completion status (14-day TTL from last write, not from start), keep the events panel but rename it honestly, add a
   genuinely new run.log panel, and use a signed URL for download.
+- **2026-07-21** (slot 3) — Shipped the writer-side final snapshot (todo 1): `vm_run_log_final_uri()` helper +
+  `HeartbeatDaemon._write_final_log_snapshot()` in `unified-trading-library@af1299d5`, wired into `heartbeat_cli.py` +
+  the `vm-exec-with-gcs-tee.sh` SIGKILL fallback in `deployment-service@815e8f3`. Read-path resolution (todo 2) can now
+  consume this fixed path instead of the broken date-guessing rolling lookup.
+- **2026-07-21** (slot 5) — Shipped read-path resolution (todo 2), `deployment-api@8ec29f0`: deleted the broken
+  `completed_at[:10]`-keyed rolling-date guess in both `deployments_inventory.py::_vm_item` and
+  `vm_deployments.py::_to_model`; replaced with the deterministic live path (`vm_log_stream_uri`, always populated
+  regardless of `completed_at`) and the deterministic final-snapshot archive path (`vm_run_log_final_uri`, from todo 1).
+  Scoped as a pure URI-construction fix — no new GCS existence-check I/O added to these two 45s-SWR-cached bulk census
+  endpoints; the real live-vs-archive resolution (an actual `gcs_describe_object` existence check) belongs in the next
+  todo's per-VM size/metadata endpoint, not the fleet-wide background walk.
 
 ## Codex SSOTs
 
