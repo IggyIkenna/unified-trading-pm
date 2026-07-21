@@ -47,6 +47,7 @@ source: [pm_qg_plan_discipline_and_frontmatter_regression-006]
 resolved_by:
 locked_by:
 depends_on: [plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md]
+gate_on_depends: true
 ---
 
 # What I found
@@ -136,6 +137,15 @@ overhead.
   correctness heartbeat rule. Recorded as a formal `depends_on` in this doc's frontmatter (see above) so this todo
   re-dispatches once that migration's remaining todos land and its cutover date is recorded — do NOT implement until
   then.
+
+  **Re-dispatched + re-verified still blocked (2026-07-21, same day, slot 7)**: this todo was dispatched again despite
+  the block above — the frontmatter `depends_on` alone does NOT gate dispatch (per this workspace's plan-authoring
+  rules, only `gate_on_depends: true` machine-holds a task), which this doc never set, so it kept re-entering the queue.
+  Re-checked `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` fresh: todos 5-8 are STILL open/unchecked — the block
+  genuinely still applies, this is not stale. **Fixed the actual bug**: added `gate_on_depends: true` to this doc's
+  frontmatter so both blocked todos here (this one + the UI heatmap one below) stop being mis-dispatched until the v6
+  migration's remaining todos actually land. No feature code implemented (correctly still blocked) — escalating via
+  `/blocked` rather than fabricating progress or silently sitting idle.
 
 - [ ] [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
       them (previous todo). pw:L2 regression spec required. (repo: deployment-ui) — same `depends_on` gate as above
