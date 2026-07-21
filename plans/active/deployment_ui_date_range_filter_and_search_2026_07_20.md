@@ -186,10 +186,21 @@ Full audit transcript available on request; the load-bearing facts:
       | regression: tests/smoke/deployments-page.spec.ts, tests/smoke/deployments-wsd.spec.ts (sort-behavior tests)
       (operator decision 2026-07-20 — one agent owns `Deployments.tsx`, no same-file collision, no divergent filter
       bars).
-- [ ] [REVIEW] P1. Tests — overlap formula (fresh-running / heartbeat-stale / completed cases); archive bounded-read +
-      30-day floor behaviour; out-of-range banner trigger; per-kind `basis` assignment; kind-multi-select +
-      service/search URL param round-trip. `pw:L2 ✓` + cited regression spec for the UI pieces;
-      `bash     scripts/quality-gates.sh` green in both deployment-api and deployment-ui.
+- [x] ✅ [REVIEW] P1. Tests — overlap formula (fresh-running / heartbeat-stale / completed cases); archive
+      bounded-read + 30-day floor behaviour; out-of-range banner trigger; per-kind `basis` assignment;
+      kind-multi-select + service/search URL param round-trip. `pw:L2 ✓` + cited regression spec for the UI pieces;
+      `bash     scripts/quality-gates.sh` green in both deployment-api and deployment-ui. — VERIFIED, no gaps found: all
+      required coverage was already shipped by the prior BACKEND/UI todos (each cited SHA confirmed reachable from
+      current HEAD in both repos). Independently re-ran (not just read self-reports): deployment-api@bb13425
+      `quality-gates.sh` green (140s) — 7 `test_vm_overlap_basis_*` (truly-live/heartbeat-stale/terminal-inside/
+      terminal-before/no-interval/started-after cases), 7 archive-range tests (`test_archive_floor_date_is_29_days...`,
+      `test_load_registry_entries_for_date_range_*`, `test_inventory_route_date_range_*`), 6
+      `test_single_timestamp_overlaps_*` + `test_apply_date_range_*` per-kind basis tests. deployment-ui@6101449
+      `quality-gates.sh` green (65s, 98 unit tests, 74.24% coverage) + live pw:L2 run of the 5 cited regression specs —
+      34/34 passed (`deployments-page.spec.ts` incl. date-range URL round-trip, kind multi-select
+      union/revert/old-deeplink, service dropdown, target search debounce+deeplink; `deployments-approx-marker.spec.ts`;
+      `deployments-always-on-marker.spec.ts`; `deployments-date-range-out-of-range.spec.ts`; `deployments-wsd.spec.ts`).
+      No code changes required.
 - [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the per-kind date-filter support matrix, the approx-colour
       convention reuse, the always-on-service treatment, and the 7-day-cap-bypass/30-day-floor behaviour in
