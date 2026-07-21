@@ -182,11 +182,32 @@ source:
       `StreamingLogsPanel.test.tsx` updated to match; tsc/ESLint clean, full vitest suite green (1026 passed),
       `run-log-panel.spec.ts` + `deployments-page.spec.ts` Playwright specs pass (12/12); `deployment-ui`'s
       `quality-gates.sh` green.
-- [ ] [REVIEW] P1. Tests — (a) writer-side final-snapshot written on completion; (b) API prefers `vm-logs/` within TTL,
-      falls back correctly to the final snapshot; (c) metadata endpoint returns correct size/location; (d) tail endpoint
-      never reads past the byte-range cap; (e) signed-URL download works end to end; (f) the old rolling-date-guess code
-      path is fully removed. `pw:L2 ✓` + cited regression spec for the UI panels. `bash scripts/quality-gates.sh` green
-      in deployment-service, deployment-api, deployment-ui.
+- [x] ✅ [REVIEW] P1. Tests — (a) writer-side final-snapshot written on completion; (b) API prefers `vm-logs/` within
+      TTL, falls back correctly to the final snapshot; (c) metadata endpoint returns correct size/location; (d) tail
+      endpoint never reads past the byte-range cap; (e) signed-URL download works end to end; (f) the old
+      rolling-date-guess code path is fully removed. `pw:L2 ✓` + cited regression spec for the UI panels.
+      `bash scripts/quality-gates.sh` green in deployment-service, deployment-api, deployment-ui. — verified 2026-07-21
+      (slot 3). (a) confirmed: `test_vm_run_log_final_uri_canonical_shape` + `test_complete_writes_final_log_snapshot`/
+      `test_complete_without_final_log_uri_skips_snapshot_write` (UTL), `test_vm_event_emission.py`
+      (deployment-service). (b) confirmed:
+      `test_resolves_live_path_when_present`/`test_falls_back_to_archive_when_live_absent`/
+      `test_honest_absence_when_neither_path_exists` (`test_run_log_resolution.py`) — read `_run_log_resolution.py`
+      directly, live-first/archive-fallback/honest-absence logic is correct (2 `gcs_describe_object` calls worst case).
+      (c) confirmed:
+      `test_run_log_metadata_live_path_resolved`/`test_run_log_metadata_honest_absence_when_neither_path_exists`. (d)
+      confirmed: `test_read_run_log_tail_large_object_reads_only_the_capped_tail` + read `_run_log_tail.py` —
+      `start = max(0, size_bytes - max_bytes)` bounds every read, single `gcs_read_object_range` call. (e) confirmed:
+      `test_run_log_download_live_path_resolved`/`test_run_log_download_honest_absence_when_neither_path_exists`. (f)
+      confirmed for the read path (zero remaining imports/calls of the old `vm_run_log_rolling_uri` in deployment-api) —
+      but found the UTL helper itself still existed with **zero production callers anywhere** (the daily archival cron
+      builds its rolling-copy path inline, never called it) — deleted it from `unified-trading-library@a760fc93`
+      (`deployment_registry.py` + `__init__.py` export) and fixed a stale cross-repo invariant assertion in
+      `unified-api-contracts@21510159` (`test_deployment_service_cross_repo_invariant.py` asserted
+      `vm_run_log_rolling_uri` as an expected UTL name/deployment-api import — updated to `vm_run_log_final_uri`, what
+      deployment-api actually imports now). UI: confirmed `pw:L2` — `run-log-panel.spec.ts` (4 tests:
+      live/archive-fallback/no-log/download) + `StreamingLogsPanel.test.tsx`. Re-ran `quality-gates.sh` fresh (post
+      fresh-pull) in all 5 touched repos — deployment-service, deployment-api, deployment-ui, unified-trading-library,
+      unified-api-contracts — all green.
 - [ ] [REVIEW] P1. Verify against real VMs from this audit (`af-backfill-20260627-151733`,
       `footystats-fwd-20260620-150001`) — confirm the new path resolves correctly going forward; for VMs that completed
       BEFORE this ships (no final snapshot ever written for them), confirm the UI shows the honest "no log available"
@@ -265,6 +286,16 @@ source:
   (search placeholder, connecting/empty messages, CSV download filename) to say "events" throughout. Deliberately left
   `AlertsLogsTab.tsx`'s own headings untouched — outside this plan's audited scope. Full vitest suite + the
   run-log-panel/deployments-page Playwright specs green; `deployment-ui`'s `quality-gates.sh` green.
+- **2026-07-21** (slot 3) — Shipped the REVIEW test-verification todo (todo 8): re-verified (a)-(f) against the actual
+  code (not just re-reading prior flip claims) — read `_run_log_resolution.py` and `_run_log_tail.py` directly to
+  confirm the live-first/archive-fallback and byte-range-cap logic is correct, not just tested. Found one residual: the
+  old `vm_run_log_rolling_uri` date-guess helper in UTL had zero remaining production callers anywhere (the daily
+  archival cron builds its rolling-copy write path inline and never called it) even though deployment-api's read-path
+  call sites were already deleted in todo 2 — deleted the dead function from `unified-trading-library@a760fc93`
+  (`deployment_registry.py` + `__init__.py` export) and fixed a stale cross-repo invariant assertion in
+  `unified-api-contracts@21510159` that still expected deployment-api to import it by name (it actually imports
+  `vm_run_log_final_uri` now). Re-ran `quality-gates.sh` fresh in all 5 touched repos (deployment-service,
+  deployment-api, deployment-ui, unified-trading-library, unified-api-contracts) — all green.
 
 ## Codex SSOTs
 
