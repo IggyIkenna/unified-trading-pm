@@ -1,0 +1,59 @@
+{
+  "service": "data_pipeline_e2e_check_mtds",
+  "run_date": "2025-03-12",
+  "legs": [
+    "force",
+    "skip"
+  ],
+  "started_at": "2026-07-20T20:04:13.642182+00:00",
+  "finished_at": "2026-07-20T20:14:32.471730+00:00",
+  "total": 2,
+  "passed": 0,
+  "failed": 2,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "DEFI:AAVE_V3:lending_indices",
+      "leg": "force",
+      "status": "failed",
+      "reason": "no_parquet_under:gs://market-data-tick-defi-test-central-element-323112/raw_tick_data/by_date/day=2025-12-31/pipeline_mode=batch_onchain_subgraph/asset_group=defi/",
+      "vm_name": "mtds-backfill-defi-pipelinecheck-20260720-200415-ffe613",
+      "exit_status": 0,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-07-20T20:04:15.474456+00:00",
+      "duration_sec": 190.255497,
+      "parquet_bucket": "market-data-tick-defi-test-central-element-323112",
+      "manifest_bucket": "market-data-tick-defi-test-central-element-323112",
+      "parquet_uri": ""
+    },
+    {
+      "shard_label": "DEFI:AAVE_V3:lending_indices",
+      "leg": "skip",
+      "status": "failed",
+      "reason": "no_parquet_under:gs://market-data-tick-defi-test-central-element-323112/raw_tick_data/by_date/day=2025-12-31/pipeline_mode=batch_onchain_subgraph/asset_group=defi/; skip_signal_not_found_in_run_log; object_signature_changed_or_missing",
+      "vm_name": "mtds-backfill-defi-pipelinecheck-20260720-200729-ffe613",
+      "exit_status": 0,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "genuine",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-07-20T20:07:29.392262+00:00",
+      "duration_sec": 190.414647,
+      "parquet_bucket": "market-data-tick-defi-test-central-element-323112",
+      "manifest_bucket": "market-data-tick-defi-test-central-element-323112",
+      "parquet_uri": ""
+    }
+  ]
+}
