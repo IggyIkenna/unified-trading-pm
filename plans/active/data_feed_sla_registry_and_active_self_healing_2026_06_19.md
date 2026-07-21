@@ -281,3 +281,10 @@ two items genuinely blocked on OTHER agents' in-flight breakage (documented, own
   sanctioned remedy for a legit refactor; loosening one file, rule-11a-safe). Re-triggered v2 on all 11 dep-update PRs
   (consumer CI uses the reusable workflow `@live-defi-rollout`, so the baseline fix is live immediately). This was the
   actual drain blocker the operator flagged — owned + fixed since it traces to this plan's work.
+
+## Deferred work — migrated to:
+
+**`plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`** — the inline `[DEFERRED] P3` todo ("Drop
+the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`") is explicitly gated on the aiohttp-3.14 unblock; this issue doc is the
+real, confirmed-open tracker for that unblock (17/18 declaring repos already bumped to `aiohttp>=3.14.1,<4.0.0`), so it
+is the genuine successor for when the vcrpy ignore-vuln can be dropped.
