@@ -137,10 +137,35 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
       `plans/active/asset_class_to_asset_group_rename_2026_07_21.md` (the dedicated 6-todo phased plan that owns this
       work now — human plan, `assigned_vm: NA`, pending operator dispatch decision). Non-dispatchable — do not execute
       this line as scoped. (repo: unified-api-contracts, unified-trading-system-ui)
-- [ ] [CODE] P3. Apply `lib/strategy-display.ts` formatters (`formatFamily`/`formatArchetype`/`formatSlotLabel`) in
+- [x] [CODE] P3. ✅ Apply `lib/strategy-display.ts` formatters (`formatFamily`/`formatArchetype`/`formatSlotLabel`) in
       `StrategyCatalogueSurface.tsx`'s `AdminUniverseGrid`, `signal-history-table.tsx`, and
       `admin/strategy-universe/page.tsx` — currently render raw underscore identifiers. (repo:
-      unified-trading-system-ui)
+      unified-trading-system-ui) — `unified-trading-system-ui@0582398d`.
+
+  `StrategyCatalogueSurface.tsx` had the raw-render gap in TWO grids, not one: `AdminUniverseGrid` (the todo's named
+  target) AND `AdminEditorGrid` (same file, same `instance.family`/`instance.archetype` pattern, not named in the todo
+  but fixed in the same commit — same file, same bug). Both now call `formatFamily()`/`formatArchetype()`.
+  `signal-history-table.tsx` had it in TWO places too: the table body's `emission.slot_label` cell AND the slot-filter
+  `<Select>` dropdown's option labels — both now `formatSlotLabel()`; the raw value is kept on the table cell's `title`
+  attribute for copy-paste, matching `lib/strategy-display.ts`'s own documented admin-table convention ("may show the
+  monospace slot label as a subtitle/hover... but the primary label must be formatted"). Verified via read (not
+  grep-and-conclude) that `RealityPositionCard.tsx`/`FomoTearsheetCard.tsx` already call these formatters correctly — no
+  gap there. `admin/strategy-universe/page.tsx` itself has zero direct raw-render code — it only mounts
+  `<StrategyCatalogueSurface viewMode="admin-universe" />`, so the finding's "no slot-label column" note was about the
+  rendered _view_ (i.e. `AdminUniverseGrid`, now fixed), not literal code in that file; did not invent a separate
+  synthesized slot-label column since `StrategyInstance.instanceId` is a content hash (not an `archetype@venue-scope`
+  string `formatSlotLabel()` can parse) — that would be a distinct feature build beyond "apply the formatters," out of
+  this P3 todo's scope. Full `quality-gates.sh` green (259s: typecheck/lint/ 3284 unit tests/build/DeFi-citation all
+  passed, colour count unaffected at 96). Added 4 focused RTL/vitest assertions (2 per touched component file) asserting
+  the formatted text renders and the raw underscore identifiers do not — no Playwright spec, since this is a
+  `[CODE]`-tagged pure text-formatting fix with no CSS-var-resolution risk (unlike the `[UI]`-tagged colour-migration
+  batches), already fully typechecked; RTL asserting real rendered DOM text is the higher-precision guard for this
+  change class. **Concurrent-peer reconciliation during ship**: hit the sentinel-invalidated-by-peer-commit case twice
+  in a row (another slot landed `feat(auth): wire derivePersonaInstruments()` — this same issue doc's item E — then a
+  third slot landed Batch 5 of the colour-migration issue doc, 28 files) — re-ran `quality-gates.sh` fresh against each
+  rebased HEAD (whole-program typecheck/tests, not just my files) before retrying `quickmerge`, per the documented
+  peer-commit recipe; no conflicts, no guessing.
+
 - [x] [CODE] P3. ✅ Wire `derivePersonaInstruments()` into `personaToAuthUser()` (make it async, populate a new
       `AuthUser.instruments` field); remove the now-redundant `QUESTIONNAIRE_PRESEEDS` mock once wired. (repo:
       unified-trading-system-ui) — `unified-trading-system-ui@7967177b`
