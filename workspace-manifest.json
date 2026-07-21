@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "coverage_pct": 82.4,
+        "qg_red_reason": null,
         "large_file_count": 4,
-        "coverage_pct": 82.36,
-        "warn_file_count": 16,
-        "qg_red_reason": null
+        "warn_file_count": 16
       }
     },
     "deployment-service": {
@@ -392,8 +392,8 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
         "qg_red_reason": null,
+        "coverage_pct": 73.23,
         "large_file_count": 2,
         "warn_file_count": 11
       }
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 83.18,
+        "qg_red_reason": "ruff",
         "large_file_count": 0,
-        "coverage_pct": null,
-        "warn_file_count": 38,
-        "qg_red_reason": null
+        "warn_file_count": 38
       }
     },
     "ml-service": {
@@ -1417,10 +1417,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 75.09,
+        "qg_red_reason": null,
         "large_file_count": 14,
-        "coverage_pct": 75.08,
-        "warn_file_count": 6,
-        "qg_red_reason": null
+        "warn_file_count": 6
       },
       "breaking_scan_dir": "none"
     },
