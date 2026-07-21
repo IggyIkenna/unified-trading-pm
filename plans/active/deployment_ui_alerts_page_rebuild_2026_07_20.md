@@ -103,9 +103,13 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
 
 ## Todos
 
-- [ ] [UI] P1. **Cheap wins, independent of Plan A** — render `workflow_name` in the timeline rows; show the full date
-      (not just `HH:MM`) on timeline entries so the date component is visible. Both fields already exist in the payload.
-      `pw:L2 ✓`.
+- [x] ✅ [UI] P1. **Cheap wins, independent of Plan A** — render `workflow_name` in the timeline rows; show the full
+      date (not just `HH:MM`) on timeline entries so the date component is visible. Both fields already exist in the
+      payload. `pw:L2 ✓`. — `deployment-ui@17fbb72`: extended the existing timestamp slice to `YYYY-MM-DD HH:MM` (was
+      `HH:MM`-only) and added a `workflow_name` span next to `repo` in the timeline row (previously only rendered in the
+      streams card). New spec `tests/smoke/alerts-page.spec.ts` § "timeline entries show the full date... and the
+      workflow name" pins both on the newest-first `entry-0` row; every pre-existing assertion in that spec stays green
+      (9/9 pass). `quality-gates.sh` green.
 - [ ] [UI] P1. **Sortable columns** — make the timeline table columns sortable (timestamp, severity, source, subject)
       using the shared `useColumnSort` hook + `compareByColumn`, supplying an alert-specific sort-key union and
       `columnSortValue`. Default order stays newest-first / worst-first (regression spec); user sort overrides it.

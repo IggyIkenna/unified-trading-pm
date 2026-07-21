@@ -311,9 +311,19 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       discipline), not deferred to a single end-of-plan batch. No unshipped code or unflipped checkbox remained by the
       time this todo was reached (verified: every repo in the slot clean + 0 commits ahead of `origin/live-defi-rollout`
       across alerting-service, deployment-api, deployment-service, unified-trading-pm).
-- [ ] [REVIEW] P2. Post-phase codex audit — document the normalised alert schema, the per-source coverage matrix, the
+- [x] ✅ [REVIEW] P2. Post-phase codex audit — document the normalised alert schema, the per-source coverage matrix, the
       "diagnostic surface / mirror-cheap-Slack-sources" principle, the persist-vs-page distinction, and the retention
-      policy in `codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act.
+      policy in `codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act. —
+      `unified-trading-pm@15158123c`: added § "The unified alerts ledger (`/alerts` page) — a diagnostic surface, not a
+      paging surface" to `ci-alerting.md`, covering the persist-vs-page distinction, the normalised-schema coverage
+      table (re-derived from live shipped state, not copy-pasted from todo 1's original — several `p`→`P` upgrades as
+      todos 2/4/7/9 landed, one `p`→`P` reverted back to `p` after confirming `deployment_api`'s `_persist_alert()`
+      still has no `deployment_target` param), the subject_repo-vs-emitting_repo distinction, and the retention/
+      pagination policy. Cross-referenced the todo-11 partial-enrichment finding (~23% of alerting-service objects carry
+      the enriched shape) so the doc doesn't overclaim production completeness. **Flip Plan B**: already done —
+      `deployment_ui_alerts_page_rebuild_2026_07_20.md` was flipped `draft` → `active` (+ `gate_on_depends: true`) by a
+      prior agent turn (`ca7e7bec5`, ahead of this todo's dispatch); verified current state matches, no action needed
+      there.
 
 ## Normalised alert schema (contract)
 
@@ -537,6 +547,20 @@ Notes worth surfacing beyond the matrix:
   this todo**: measurement is genuinely complete (I did what was asked — pulled real numbers, didn't just read code);
   the numbers themselves reveal most of this plan's fixes aren't live yet, which is the correct, valuable outcome of an
   honest re-measure, not a failure to finish.
+
+- **2026-07-21 (todo 11 — RE-re-measure after the Cloud Build fix landed)**: the P0 blocker above resolved on its own
+  timeline — 3 consecutive deployment-api Cloud Build `SUCCESS` runs (18:43/18:46/19:19 UTC, `deploy` step included) and
+  the live `latestReadyRevision` (`uts-shared-deployment-api-00235-9dl`, image `7f505a7`) is confirmed serving, verified
+  independently (Cloud Build history + `git merge-base --is-ancestor` + Cloud Run API, not a self-report). **The
+  original `vendor-deps` root-cause hypothesis was wrong** — full corrected root cause + fix commit
+  (`deployment-api@e8679a3`, an automated `BASE_IMAGE_DIGEST` pin-refresh, not a hand-written code fix) is in
+  `deployment_api_cloudbuild_operability_probe_failure_2026_07_21.md`'s todo 1. All 5 previously-stale fixes
+  (subject_repo/bucket-resolution/row-drop-race/retention/kill-switch) are confirmed present in the deployed image via
+  commit ancestry, and subject_repo's writer side is confirmed producing correctly-shaped data in prod (a live row at
+  `19:19:58Z`, 36 min post-deploy, carries `subject_repo` correctly). Could not exercise the live HTTP API directly for
+  the read-path/response-shape behaviors (retention pagination, repo-filter correctness, kill-switch read results) —
+  this sandbox only has interactive-user ADC, not a service account, so no Cloud-Run-invoker ID token could be minted;
+  full detail + the honest limitation statement is in the issue doc's todo 2. Issue doc closed (`status: resolved`).
 
 ## Codex SSOTs
 

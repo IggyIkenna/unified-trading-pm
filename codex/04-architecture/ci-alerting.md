@@ -15,17 +15,31 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [alerts, slack, ci-cd, dedup, observability, notifications]
 related:
-  [../08-workflows/ci-cd-flow.md, agent-orchestrator-alerting.md, ../05-infrastructure/quickmerge-architecture.md]
+  [
+    ../08-workflows/ci-cd-flow.md,
+    agent-orchestrator-alerting.md,
+    ../05-infrastructure/quickmerge-architecture.md,
+    ../../plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md,
+  ]
 created: 2026-07-13
-authoritative_for: [ci-failures Slack alert routing, notify-slack.yml dedup contract, CI-alert cooldown selection]
+authoritative_for:
+  [
+    ci-failures Slack alert routing,
+    notify-slack.yml dedup contract,
+    CI-alert cooldown selection,
+    unified alerts ledger normalised schema,
+    alerts-page diagnostic-surface principle,
+  ]
 referenced_by:
 owner:
-last_reviewed: 2026-07-13
+last_reviewed: 2026-07-21
 code_refs:
   - .github/workflows/notify-slack.yml
   - .github/workflows/branch-health.yml
   - .github/workflows/python-quality-gates-v2.yml
   - .github/workflows/ci-status-update.yml
+  - unified_api_contracts/canonical/crosscutting/alerting/ledger.py
+  - deployment-api/deployment_api/routes/_repo_ci_alerts.py
 ---
 
 # CI Alerting — the #ci-failures channel
@@ -68,7 +82,7 @@ error. The gate suppresses only when it can PROVE the key is within its cooldown
 
 | Reporter (workflow · job)                        | Fires on                                                      | `dedup_key`                 | `cooldown_min` | Notes                                                                                                                                                                             |
 | ------------------------------------------------ | ------------------------------------------------------------- | --------------------------- | -------------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `branch-health.yml` · `lag-notify`               | promotion lag (LDR↔staging↔main stuck > threshold)          | `promotion-lag`             |            120 | re-remind ≈ every 3 real promote cycles (WS-1, 2026-07-13); see cadence note below                                                                                                |
+| `branch-health.yml` · `lag-notify`               | promotion lag (LDR↔staging↔main stuck > threshold)            | `promotion-lag`             |            120 | re-remind ≈ every 3 real promote cycles (WS-1, 2026-07-13); see cadence note below                                                                                                |
 | `branch-health.yml` · `lag-notify-resolved`      | lag cleared                                                   | `promotion-lag-cleared`     |             30 | shorter than the open cooldown so the all-clear is never swallowed                                                                                                                |
 | `branch-health.yml` · `ar-lag-notify`            | Artifact-Registry dep-publish lag                             | `ar-dep-publish-lag`        |             60 | fail-open (GCP auth errors → no lag reported)                                                                                                                                     |
 | `python-quality-gates-v2.yml` · `notify-qg-fail` | a QG slice failed / cancelled                                 | `qg-fail:<repo>:<ref_name>` |            120 | **per-branch, not per-sha** (WS-3, 2026-07-13): a still-red branch pages once per red-period, not per failing push; a new failure after the cooldown still re-alerts              |
@@ -102,6 +116,83 @@ Per-run ⊇ per-transition (a branch can fail many runs in one red episode), and
    min** (median 33, max 93). So a promotion-lag that is merely waiting for a throttled promote should not re-page
    hourly: the 120-min cooldown ≈ 3 real promote cycles. When picking a cooldown, measure the condition's true period
    first (`gh api …/actions/workflows/<wf>/runs`), don't assume the cron.
+
+## The unified alerts ledger (`/alerts` page) — a diagnostic surface, not a paging surface
+
+`#ci-failures` (above) and `#agent-orchestrator-alerts`
+([agent-orchestrator-alerting.md](agent-orchestrator-alerting.md)) are the **paging** tier — Slack, actionable-only,
+page-on-transition. The deployment-ui `/alerts` page (backed by deployment-api's `GET /api/alerts`) is a **separate,
+wider tier**: a diagnostic surface for filtering/sorting/drilling into alert history, not something meant to page
+anyone. The actionable-only rule constrains Slack; showing MORE on the page than pages Slack is the intent, not a
+violation (`deployment_alerts_ingestion_completeness_2026_07_20.md`, operator ruling 2026-07-20).
+
+**The persist-vs-page distinction**: an alert source can persist to the ledger without ever posting to Slack (e.g.
+INFO/WARN-tier `alerting-service` events — see `alerting_service/rules/data_pipeline_rules.py`, which intentionally
+keeps those Slack-channel-only and never calls `_persist_delivery_record()` for them; only `CRITICAL` reaches the
+incident/persist path). Conversely, the page's job is to show what's cheap to mirror from already-Slack-bound sources,
+not to become a new source of truth that requires its own write path. **Principle: mirror the alert sources that already
+flow to Slack and are cheap to copy** — don't build new emitters for the page; read the durable stores that already
+exist (GHA's `cicd/events/`, deployment-api's own `cicd/alerts/`, alerting-service's `alerting/history/`, the VM
+zombie-watchdog's reap events, the kill-switch audit log) into one normalised feed.
+
+### The normalised alert schema
+
+SSOT is code, not this table: `NormalizedAlertRow` / `AlertSourcePlane` / `FieldCoverage` / `FIELD_COVERAGE` in
+`unified-api-contracts` `unified_api_contracts/canonical/crosscutting/alerting/ledger.py`, imported via the
+`unified_api_contracts.alerting` facade (never the deep path). Every mirrored source writes into this union shape;
+deployment-api's `_repo_ci_alerts.py` is the reader that merges all five planes into one response.
+
+Legend: **P** = populated today · **p** = populatable (value exists at the emit site, wiring may still be catching up) ·
+**—** = structurally absent (the concept doesn't exist for that source — a permanent gap, not a bug).
+
+| field               | gha_ci_events | deployment_api | alerting_service | zombie_watchdog | kill_switch_audit |
+| ------------------- | :-----------: | :------------: | :--------------: | :-------------: | :---------------: |
+| `timestamp`         |       P       |       P        |        P         |        p        |         P         |
+| `subject_repo`      |       P       |       P        |        —         |        —        |         —         |
+| `emitting_repo`     |       —       |       P        |        p         |        p        |         p         |
+| `severity`          |       —       |       P        |        P         |        —        |         —         |
+| `alert_class`       |       —       |       P        |        P         |        P        |         P         |
+| `message`           |       —       |       P        |        P         |        P        |         P         |
+| `service`           |       —       |       —        |        p         |        —        |         p         |
+| `deployment_target` |       —       |       p        |        p         |        P        |         —         |
+| `run_url`           |       p       |       P        |        —         |        —        |         —         |
+| `dedup_key`         |       —       |       P        |        —         |        p        |         p         |
+| `resolved_state`    |       —       |       —        |        —         |        —        |         P         |
+
+Notes that don't fit the matrix:
+
+- **`gha_ci_events`** (`.github/actions/persist-event` → `cicd/events/{repo_name}/{date}/events.jsonl`): each caller
+  reports on itself, so `subject_repo` = `repo_name` with no separate `emitting_repo` concept on this plane.
+- **`deployment_api`**'s ledger (`cicd/alerts/{date}/*.jsonl`) is the reader-merge target for the other 3 non-GHA planes
+  too — `_repo_ci_alerts.py::_read_ledgers_sync()` walks `cicd/alerts/{date}/` (its own writer, `_persist_alert()`) AND
+  separately reads `alerting/history/date=…/` (alerting-service) and the kill-switch parquet audit log, merging all
+  three into one response. `subject_repo` on the GHA/ci-failures path is threaded from the caller (default: the calling
+  workflow itself; ~18 confirmed cross-repo callers pass the real subject explicitly) — see `subject_repo` vs
+  `emitting_repo` below.
+- **`subject_repo` vs `emitting_repo`**: the repo an alert is ABOUT vs the repo whose workflow emitted it. These differ
+  for ~6 fleet-wide watchers running IN `unified-trading-pm` that report on ANOTHER repo via a `repository_dispatch`
+  payload (e.g. `ci-status-update.yml`, ~14.3k runs/30d). Filtering by repo on the page filters by `subject_repo` —
+  filtering by the emitter would silently misattribute those cross-repo alerts.
+- **`P` means the code contract writes the field, not that every historical object already carries it.** A live
+  `alerting/history/` sample taken 2026-07-21 found only ~23% of that day's objects carrying the enriched
+  `alert_class`/`severity`/`message`/`service`/`deployment_target` shape — the rest are the pre-enrichment
+  delivery-status-only rows, mixed throughout the same day (not a clean before/after cutover). The reader tolerates both
+  shapes; don't assume 100% enrichment from a spot-check without re-measuring against the live bucket.
+- **`zombie_watchdog`** (`deployment-service/scripts/vm/vm_zombie_watchdog.py`) has no repo/severity concept — it's
+  VM-scoped, not repo- or paging-tier-scoped, so those fields stay structurally `—`.
+- **`kill_switch_audit`** is a read-only projection of the UTL parquet audit log (`kill_switch/audit_log.py`);
+  `resolved_state` maps naturally (null while armed, set from `recovery_mode` on disarm). Its writer path is
+  intentionally untouched by this ingestion work — the page mirrors, never alters, a write path.
+
+### Retention + pagination policy
+
+The ledger reads are **bounded day-partitioned walks** (never a whole-corpus scan — single-walk discipline applies here
+same as data pipeline reads). `/api/alerts` and `/api/repo-ci/alerts` accept `days` / `offset` / `limit` query params:
+default + max window is 30 days, default page size 400 / max 2000. A response that has more rows past the current page
+sets `capped: true` explicitly — there is no silent truncation. The per-request entries cache is keyed by the `days`
+window, so paginating within one window costs no extra reads. `health_overview`'s alerts health tile pins an explicit
+`days=2` rather than inheriting the wider default, since its "recent" semantics predate the 30-day widening and would
+otherwise read near-permanently critical.
 
 ## Cross-references
 

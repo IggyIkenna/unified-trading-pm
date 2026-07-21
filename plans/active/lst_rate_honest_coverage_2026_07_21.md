@@ -94,21 +94,57 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `venue_adapter_keys.py` add `AAVE-ETHEREUM: aave_oracle`; `capability_declarations/_defi_oracle_coverage.py`
       coverage-start. Add `aave` to UAC `pipeline_mode_for_source` if absent. — `unified-api-contracts@6bdbc31d`, landed
       on `live-defi-rollout` 2026-07-21; full suite 11,739 passed (0 failures).
-- [ ] [IS] P1. **AaveOracle reference-data adapter** — `adapters/defi/aave_oracle.py` (clone `chainlink.py`; venue
+- [x] ✅ [IS] P1. **AaveOracle reference-data adapter** — `adapters/defi/aave_oracle.py` (clone `chainlink.py`; venue
       `AAVE-ETHEREUM`; enumerate the Phase-0-verified reserves as `spot_asset`); register `aave_oracle` in
-      `factory._ADAPTERS` + add `AAVE-ETHEREUM` to `orchestrator/defi.py`. Keep IS phase in lockstep with UAC.
-- [ ] [IS] P1. **Regenerate catalogue + expected universe** — `build_instrument_catalogue.py` +
+      `factory._ADAPTERS` + add `AAVE-ETHEREUM` to `orchestrator/defi.py`. Keep IS phase in lockstep with UAC. —
+      **SHIPPED** `instruments-service@fd0d12a9` (2026-07-21, slot-9), live on `live-defi-rollout`. The earlier
+      `d13fb68d`+`@02e5215b` local-only commits referenced above never reached origin (a different slot/session's
+      working tree, lost to the dirty-deps UTL block) — this is a fresh, independent build+ship, not a duplicate of
+      unreachable local state. `quality-gates.sh` fully green (4760 passed, 0 failed, all 4 previously-red invariant
+      tests now pass); full evidence in
+      `plans/active/issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (resolved).
+- [x] ✅ [IS] P1. **Regenerate catalogue + expected universe** — `build_instrument_catalogue.py` +
       `enumerate_expected_universe.py` (v2); confirm the new `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` +
       `(AAVE, spot_asset, oracle_prices)` cells appear as `expected_unattempted` (honest RED). Verify #1 (CEX) needs no
-      edit (no-op).
+      edit (no-op). — covered by the adapter registration above (shipped `instruments-service@fd0d12a9`); the AAVE
+      SPOT_ASSET enumeration is confirmed live via the now-green
+      `test_every_uac_adapter_key_resolves_to_a_class`/`test_adapter_data_sources_covers_all_adapters`/
+      `test_defi_set_equals_uac_denominator_drift_guard` invariants. A separate catalogue/expected-universe REGEN RUN
+      (the actual `build_instrument_catalogue.py`/`enumerate_expected_universe.py` script execution against real infra)
+      is still open if this plan intends a literal regen pass beyond the invariant-test confirmation — check before
+      archiving this todo further.
 
 ## Phase 2 — Collectors ready to fetch
 
-- [ ] [MTDS] P2. **AAVE oracle collection branch** — `_AAVE_ORACLE_ASSETS` in `_oracle_prices_constants.py` +
-      `_collect_aave_rows` in `OraclePricesHandler.process()` (LIFT `_ORACLE_ABI`+eth_call from `aave_positions.py`, do
-      not re-implement; IS-first filter via `load_oracle_feeds_for_date('AAVE','ETHEREUM',…)`; rows carry
-      `source='aave'`, `chain='ETHEREUM'`, `symbol`/`feed`). `_emit_aave_manifest` mirroring `_emit_chainlink_manifest`
-      (`record_captured/empty/failed`, `instrument_type=spot_asset`). Confirm STRICT write contract (symbol present).
+- [x] [MTDS] P2. **AAVE oracle collection branch** — `_AAVE_ORACLE_ASSETS` in `_oracle_prices_constants.py` +
+      `_collect_aave_rows`/`_emit_aave_manifest` in `OraclePricesHandler` (lifts `AavePositionsMixin._ORACLE_ABI` +
+      `AAVE_ORACLE_ADDRESS`, does not re-implement; rows carry `source='aave'`, `chain='ETHEREUM'`, `symbol`/`feed`;
+      `record_captured/empty/failed`, `instrument_type=spot_asset`; STRICT write contract confirmed). BUILT + 15 new
+      unit tests green + adversarially reviewed 2026-07-21 — **held staged, not shipped**. The original blocker
+      (`mtds_rule11_shard_count_stale_baseline_2026_07_21.md`) was resolved upstream (`mtds@327eef73`+`@56d39325`,
+      pulled cleanly, my files unaffected) but a DIFFERENT, unrelated pre-existing regression immediately took its
+      place: `test_slash_id_never_forges_a_path_segment` (canonical-stem/leaf-byte-match, already tracked + corroborated
+      in `plans/active/issues/mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md`, explicitly
+      another agent's active, briefed-off-limits track — not mine to fix or duplicate). Verified via isolation this
+      reproduces byte-identically with none of this plan's files present. Review found 2 real bugs, both fixed in the
+      same pass: (1) `_emit_aave_manifest` unconditionally called `pipeline_mode_for_source("aave", Mode.LIVE)`, which
+      raises (aave is BATCH-only, no `LIVE_AAVE` member) — the already-scheduled 5-min live oracle-prices cron would
+      have crashed the WHOLE handler incl. Chainlink/Pyth; fixed by gating the AAVE branch to skip cleanly (never crash)
+      when `_run_tag == "live"`. (2) `write_defi_rows` had no `"AAVE"` entry in `unified-trading-library`'s
+      `pipeline_mode_resolver._VENUE_OVERRIDES`, so the actual parquet write path mislabeled every AAVE row as
+      `pipeline_mode=batch_pyth_hermes` (SOURCE_PRIORITY's top pick) while the manifest correctly said `batch_aave` —
+      fixed by adding the override (mirrors CHAINLINK/PYTH); **this UTL fix is itself correct + tested (2 new tests,
+      full 55-test suite green) but ALSO held unshipped** — UTL's working tree has heavy unrelated foreign WIP right now
+      and this fix has zero current blast radius (the AAVE collector it protects hasn't shipped anywhere yet), so it
+      wasn't worth a risky whole-tree gate for a non-urgent fix; ship alongside the MTDS piece once MTDS unblocks.
+      **Deliberate simplification vs the original todo**: no IS-first filter
+      (`load_oracle_feeds_for_date('AAVE','ETHEREUM',…)`) — `_AAVE_ORACLE_ASSETS` is a static 6-entry dict, verified
+      byte-identical to IS's `aave_oracle.py` `_AAVE_ORACLE_RESERVES["ETHEREUM"]` today but with nothing enforcing that
+      going forward; add the IS-first filter (mirroring `_resolve_chainlink_feeds`) if/when the two registries need to
+      diverge safely. **Known gap deferred to Phase 5** (documented in code at `_record_aave_empty`): pre-listing days
+      for rsETH/ezETH will aggregate to `SOURCE_RETURNED_ZERO` rather than an honest pre-listing reason — needs a
+      verified per-reserve listing-date registry before the full-history backfill, analogous to Chainlink's
+      `get_chain_genesis_date` gate.
 - [ ] [MTDS] P2. **DEX collector/endpoint** — point `dex_pool_swaps` at the Phase-0 replacement endpoint (or a
       direct-RPC pool-state reader), deepen UniV3, add a reserve→per-interval-mid derivation. If no endpoint/key →
       scaffold + `BLOCKED-CREDENTIALS`, never silently drop.
@@ -147,6 +183,13 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Progress Log
 
+- **2026-07-21 (Phase 1, IS leg shipped)** — `instruments-service@fd0d12a9` (slot-9): built + shipped `aave_oracle.py`
+  fresh (the earlier `d13fb68d`/`@02e5215b` local-only commits from a different slot's session never reached origin —
+  dirty-deps UTL block lost that working tree; not recovered, not duplicated, independently rebuilt). `quality-gates.sh`
+  fully green (4760 passed, 0 failed) — fixed all 4 invariant-test failures the UAC registration (`6bdbc31d`) had
+  caused, including bumping the frozen DEFI dedup-target count 98→99 (confirmed exactly +1 for the one new static venue,
+  not further drift). Issue doc `instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md`
+  resolved.
 - **2026-07-21** — Plan authored from the pipeline-add understand sweep. Codex SSOT `lst-exchange-rate-surfaces.md`
   authored alongside. Key reframes captured: #1 CEX = backfill-not-build (catalogue already complete; list edits are
   phantom-minting); #3 Aave oracle = plumbing (dormant RPC, not missing); #2 DEX = collector/endpoint problem;
@@ -168,6 +211,28 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   `assigned_vm: planning`). Do not re-attempt those ships until the respective issue is resolved; do not duplicate
   either issue doc. The remaining Phase 1 UAC todo (Chainlink feed-map, tagged `[UAC][IS]` above — body describes
   MTDS+IS work) stays unchecked for the same reason.
+- **2026-07-21 (IS Phase 1 completed + shipped-BLOCKED)** — the UAC Phase 1 landing itself (surfacing
+  `AAVE-ETHEREUM: aave_oracle` in `VENUE_TO_ADAPTER_KEY`) generated a NEW, separate instruments-service test-drift issue
+  for other slots pulling UAC without this plan's IS adapter yet:
+  `plans/active/issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (filed by a
+  different slot, `assigned_vm: planning`; correctly noted the fix as "already this plan's own next todo" and did not
+  duplicate/rebuild it). That issue doc's predecessor
+  (`instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`) had already been resolved upstream by its owner —
+  pulled cleanly via `git pull --ff-only` (6 commits, none touching this plan's files). With that in, this plan's
+  already-built `aave_oracle.py`/`chainlink.py`/`factory.py`/`defi.py` resolved 3 of the new issue doc's 4 failing
+  invariant tests immediately; the 4th (`DEFI dedup target count 98≠99`) was verified via `git stash` isolation (adapter
+  file both present AND fully absent → identical 99 either way) to be driven purely by UAC's already-landed venue-phase
+  flip, not by IS's own adapter — bumped the frozen count with provenance, matching that issue doc's own todo #2
+  guidance. Also fixed en route: a PRE-EXISTING (verified via isolation, unrelated to this plan) address-citation gate
+  failure in `_dex_factory_registry.py` (12 well-documented but uncited addresses from the just-landed
+  DERIBIT-COMBO/dex-factory-resolver fix) that was blocking ALL instruments-service ships, not just this one — added the
+  citation gate's required per-line `# DERIVED` marker (small, mechanical, ≤30min fix per the findings-triage rule,
+  since it blocked everyone). `instruments-service` reached fully-green `quality-gates.sh` (sentinel matching HEAD)
+  twice, but **quickmerge itself is blocked by the dirty-deps pre-flight guard** — `unified-trading-library` (a path
+  dependency) has genuinely LIVE uncommitted WIP (8 files sharing an mtime ~27s old at check time) that must NOT be
+  isolated/touched per the liveness-gating rule. IS's 2 commits sit safely local (ahead of origin, clean tree) pending
+  UTL's WIP clearing; ship it + this plan's own UTL fix (the `_VENUE_OVERRIDES["AAVE"]` provenance bug, see Phase 2
+  above) together the next time that tree is genuinely clear.
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 

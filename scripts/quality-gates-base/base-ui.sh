@@ -125,6 +125,7 @@ SKIP_CODEX=false
 FIX_MODE=false
 IGNORE_TIMEOUT=${IGNORE_TIMEOUT:-false}
 SKIP_VERSION_ALIGNMENT=false
+UPDATE_CODEX_BASELINE=false
 for arg in "$@"; do
   case "$arg" in
     --test)           SKIP_LINT=true;  SKIP_BUILD=true; SKIP_CODEX=true ;;
@@ -135,6 +136,7 @@ for arg in "$@"; do
     --no-fix)         FIX_MODE=false ;;
     --ignore-timeout) IGNORE_TIMEOUT=true ;;
     --skip-version-alignment) SKIP_VERSION_ALIGNMENT=true ;;
+    --update-baseline) UPDATE_CODEX_BASELINE=true ;;
   esac
 done
 
@@ -355,6 +357,56 @@ if [ "$SKIP_CODEX" = false ] && [ "${#_CODEX_ROOTS[@]}" -gt 0 ]; then
   log_section "[3.5/6] UI CODEX CHECKS"
   _CODEX_V=0
 
+  # ── Per-category baseline ratchet (2026-07-21) ──────────────────────────────
+  # A repo whose codex-violation backlog is measured far larger than believed
+  # (unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md:
+  # 1082 colour hits/100 files, 30 localhost hits, 84 console.* hits/49 files —
+  # 10-80x the original manual-audit estimate) cannot go green in one pass, and
+  # zero-tolerance blocks the WHOLE repo's pipeline for every future commit
+  # regardless of what it touches. A CODEX_*_EXCLUDE_GLOBS bypass was considered
+  # and rejected (operator decision) — it blinds whole categories so a genuinely
+  # NEW violation in the excluded tree ships silently, a gate-coverage
+  # regression. Instead: a per-repo, per-category SHRINKING baseline, identical
+  # mechanism to base-service.sh's ruff_rule_ratchet_baseline.yaml /
+  # no_empty_string_fallback_baseline.yaml — fails only on count ABOVE baseline
+  # (net-new violations); count below baseline warns to ratchet down (never
+  # raise a baseline to mask a regression). Baseline file is OPTIONAL — a repo
+  # with none (e.g. deployment-ui) keeps today's zero-tolerance behavior
+  # (baseline defaults to 0 per category), so this is purely additive.
+  _CODEX_BASELINE_FILE="codex_ui_violation_baseline.json"
+  _codex_baseline_for() {
+    # $1 = category key (console|colour|localhost). Prints the baseline count (0 if absent).
+    if [ -f "$_CODEX_BASELINE_FILE" ] && command -v jq >/dev/null 2>&1; then
+      jq -r --arg k "$1" '.[$k] // 0' "$_CODEX_BASELINE_FILE" 2>/dev/null || echo 0
+    else
+      echo 0
+    fi
+  }
+  _codex_ratchet_check() {
+    # $1=category key  $2=human label  $3=hits (newline-separated, may be empty)
+    local key="$1" label="$2" hits="$3" count baseline
+    if [ -n "$hits" ]; then
+      count=$(printf '%s\n' "$hits" | grep -c .)
+    else
+      count=0
+    fi
+    baseline=$(_codex_baseline_for "$key")
+    if [ "$count" -gt "$baseline" ]; then
+      log_fail "$label: $count > baseline $baseline (NEW violation(s) — fix them, or if the baseline itself is stale run --update-baseline after confirming no regression):"
+      # `|| true`: a large $hits piped through `head -5` can SIGPIPE the producer once head
+      # exits early (exit 141) — under this script's `set -euo pipefail` that would abort the
+      # WHOLE quality-gates run right here, before ever reaching the final exit-1 (or, under
+      # --update-baseline, before the baseline file is even written). Display-only; never let
+      # it affect control flow.
+      { printf '%s\n' "$hits" | head -5; } || true
+      _CODEX_V=$((_CODEX_V + 1))
+    elif [ "$count" -lt "$baseline" ]; then
+      log_warn "$label: $count below baseline $baseline — ratchet $_CODEX_BASELINE_FILE DOWN (re-run --update-baseline)"
+    else
+      log_success "$label: $count (at baseline, no new violations)"
+    fi
+  }
+
   # ── console.* in production code ───────────────────────────────────────────
   # Bypass: add entries to CODEX_CONSOLE_EXCLUDE_GLOBS before sourcing (e.g. "!**/lib/logger.ts")
   _CONSOLE_EXTRA=()
@@ -364,13 +416,7 @@ if [ "$SKIP_CODEX" = false ] && [ "${#_CODEX_ROOTS[@]}" -gt 0 ]; then
   _CONSOLE_HITS=$(rg "console\.(log|warn|error|debug|info)" "${_CODEX_ROOTS[@]}" \
     --glob "!**/*.test.*" --glob "!**/setupTests.*" \
     "${_CONSOLE_EXTRA[@]+"${_CONSOLE_EXTRA[@]}"}" 2>/dev/null || true)
-  if [ -n "$_CONSOLE_HITS" ]; then
-    log_fail "console.* in production code — remove or replace with structured logging:"
-    echo "$_CONSOLE_HITS" | head -5
-    _CODEX_V=$((_CODEX_V + 1))
-  else
-    log_success "No console.* in production code"
-  fi
+  _codex_ratchet_check "console" "console.* in production code" "$_CONSOLE_HITS"
 
   # ── Hardcoded hex colours / rgb() ──────────────────────────────────────────
   # Bypass: add entries to CODEX_COLOUR_EXCLUDE_GLOBS (e.g. "!**/lib/brand-colours.ts")
@@ -382,13 +428,7 @@ if [ "$SKIP_CODEX" = false ] && [ "${#_CODEX_ROOTS[@]}" -gt 0 ]; then
     --glob "!**/*.test.*" --glob "!**/chart-theme.*" \
     --glob "!**/globals.css" --glob "!**/*.css" \
     "${_COLOUR_EXTRA[@]+"${_COLOUR_EXTRA[@]}"}" 2>/dev/null || true)
-  if [ -n "$_COLOUR_HITS" ]; then
-    log_fail "Hardcoded colour values — use CSS vars (--color-*) or Tailwind classes:"
-    echo "$_COLOUR_HITS" | head -5
-    _CODEX_V=$((_CODEX_V + 1))
-  else
-    log_success "No hardcoded colours"
-  fi
+  _codex_ratchet_check "colour" "Hardcoded colour values (use CSS vars / Tailwind classes)" "$_COLOUR_HITS"
 
   # ── Hardcoded localhost URLs ────────────────────────────────────────────────
   # Bypass: add entries to CODEX_LOCALHOST_EXCLUDE_GLOBS (e.g. "!**/lib/dev-utils.ts")
@@ -399,12 +439,20 @@ if [ "$SKIP_CODEX" = false ] && [ "${#_CODEX_ROOTS[@]}" -gt 0 ]; then
   _LOCALHOST_HITS=$(rg 'http://localhost:[0-9]+' "${_CODEX_ROOTS[@]}" \
     --glob "!**/*.test.*" --glob "!**/mock-api.*" --glob "!**/mock/**" \
     "${_LOCALHOST_EXTRA[@]+"${_LOCALHOST_EXTRA[@]}"}" 2>/dev/null || true)
-  if [ -n "$_LOCALHOST_HITS" ]; then
-    log_fail "Hardcoded localhost URL — use import.meta.env.VITE_* instead:"
-    echo "$_LOCALHOST_HITS" | head -5
-    _CODEX_V=$((_CODEX_V + 1))
-  else
-    log_success "No hardcoded localhost URLs"
+  _codex_ratchet_check "localhost" "Hardcoded localhost URL (use import.meta.env.VITE_* instead)" "$_LOCALHOST_HITS"
+
+  if [ "$UPDATE_CODEX_BASELINE" = true ]; then
+    if command -v jq >/dev/null 2>&1; then
+      _CONSOLE_N=$([ -n "$_CONSOLE_HITS" ] && printf '%s\n' "$_CONSOLE_HITS" | grep -c . || echo 0)
+      _COLOUR_N=$([ -n "$_COLOUR_HITS" ] && printf '%s\n' "$_COLOUR_HITS" | grep -c . || echo 0)
+      _LOCALHOST_N=$([ -n "$_LOCALHOST_HITS" ] && printf '%s\n' "$_LOCALHOST_HITS" | grep -c . || echo 0)
+      jq -n --argjson console "$_CONSOLE_N" --argjson colour "$_COLOUR_N" --argjson localhost "$_LOCALHOST_N" \
+        '{console: $console, colour: $colour, localhost: $localhost}' >"$_CODEX_BASELINE_FILE"
+      log_success "Wrote $_CODEX_BASELINE_FILE (console=$_CONSOLE_N colour=$_COLOUR_N localhost=$_LOCALHOST_N)"
+    else
+      log_fail "--update-baseline requires jq, not found on PATH"
+      _CODEX_V=$((_CODEX_V + 1))
+    fi
   fi
 
   # ── @ts-ignore / @ts-expect-error ──────────────────────────────────────────
@@ -419,7 +467,15 @@ if [ "$SKIP_CODEX" = false ] && [ "${#_CODEX_ROOTS[@]}" -gt 0 ]; then
   fi
 
   # ── chart-theme.ts required when recharts is a dependency ──────────────────
-  _CHART_THEME_PATH="${_CODEX_ROOTS[0]}/lib/chart-theme.ts"
+  # src/-rooted repos nest lib/ under src/; App-Router repos have lib/ as its own top-level
+  # root (a sibling of app/, not nested under it) — `${_CODEX_ROOTS[0]}/lib/...` was always
+  # "app/lib/chart-theme.ts" on App-Router repos, which can never exist. Same blind-spot class
+  # as the rg-based checks above (ui_codex_gate_blind_to_app_router_layout_2026_07_21.md).
+  if [ -d "src" ]; then
+    _CHART_THEME_PATH="src/lib/chart-theme.ts"
+  else
+    _CHART_THEME_PATH="lib/chart-theme.ts"
+  fi
   if node -e "const p=require('./package.json'); process.exit(p.dependencies?.recharts ? 0 : 1)" 2>/dev/null; then
     if [ ! -f "$_CHART_THEME_PATH" ]; then
       log_fail "recharts in dependencies but $_CHART_THEME_PATH missing"

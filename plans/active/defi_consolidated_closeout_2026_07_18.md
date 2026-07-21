@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                                                      these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                                                      un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -575,7 +575,41 @@ Discriminator = **does a manifest row exist**.
       4). Filed `issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (full evidence +
       stash-baseline proof + recommended decision). **Action**: re-attempt a `quickmerge --agent --files` ship of the 3
       changed adapters + their 2 test files from instruments-service the moment that issue closes (the code is untouched
-      and ready; nothing further to do on it). (repo: instruments-service)
+      and ready; nothing further to do on it). (repo: instruments-service) - **(3) Solana LENDING
+      (`lending_indices_handler.py`/`_solana_defi_fetch.py`) — SHIPPED + MEASURED 2026-07-21 (slot-4).** Wired
+      `resolve_solana_token_symbol` into a new `_solana_defi_fetch.resolve_blank_solana_lending_symbols` (called from
+      `_collect_solana_lending`): DeFiLlama's `symbol` present → unchanged; blank → resolve the reserve's REAL on-chain
+      mint (a NEW `underlying_mint` column, extracted from DeFiLlama's own `underlyingTokens` field — verified live
+      2026-07-21, this is the actual on-chain mint, never the DeFiLlama pool UUID) via the shared UTL resolver; UUID
+      fallback (`market_id`) used ONLY when the resolver ALSO returns `None` (mint absent from the static Solana
+      token-list — genuinely unresolvable). **Critical adjacent finding**: the UAC `DEFI_SOLANA_LENDING_LENDING_INDICES`
+      SchemaContract's `symbol_column` was `"market_id"` (not `"symbol"`) — meaning `write_defi_rows` built the
+      canonical `instrument_id`/GCS leaf from the UUID for EVERY Solana-lending row regardless of what `symbol` carried,
+      so the handler-side fix alone would have been a no-op on the actual written object. Fixed the SchemaContract too
+      (`unified-api-contracts@4c049355`) — verified no other caller relies on the old default (both migration/fold
+      one-off scripts + `risk_params_handler.py` pass an explicit `symbol_column=`). market-tick-data-service@7ce100f9.
+      **Also fixed 3 pre-existing, unrelated MTDS quality-gates.sh regressions found blocking ALL quickmerges in this
+      repo** (root-caused + closed `issues/mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md` — see
+      that doc for the full writeup; 2 of the 3 converged independently with a concurrent agent's own fix,
+      `market-tick-data-service@08f15f26`). (repos: market-tick-data-service, unified-api-contracts) - **(5) Backfill
+      existing UUID-fallback LENDING rows — SHIPPED + RUN 2026-07-21 (slot-4).**
+      `scripts/one_offs/backfill_solana_lending_uuid_canonical_id_2026_07_21.py` (market-tick-data-service@7ce100f9):
+      reads the consolidated defi availability index (one bounded-chunked download — a single-shot download of this
+      ~1.86 GiB object reproducibly broke mid-transfer at the same ~1.33 GiB offset, 4/4 attempts; per-chunk ranged GETs
+      fixed it), finds captured Solana-lending manifest rows whose `instrument_id` (per-market grain key) is
+      UUID-shaped, resolves each distinct market's mint via ONE live DeFiLlama pool-list fetch + the shared resolver,
+      migrates each resolved market's object to its real-symbol leaf (idempotent — skips if already present), retires
+      (renames, never deletes) the old UUID leaf, and re-registers the (unchanged — machine grain key stays the market
+      UUID per the two-id model) shard via `DefiManifestRecorder`. **Measured (dry-run, then --apply after the dry-run
+      looked sane, per this todo's own authorization):** **103 total UUID-shaped Solana-lending manifest rows**
+      (KAMINO=44, SOLEND=59, MARGINFI=0 — all dated 2026-04-14, all pre-Gate-5 legacy captures under the BARE venue slug
+      `KAMINO`/`SOLEND`, not the post-split `KAMINO_LENDING`; both forms are now recognised). **39 distinct markets
+      RESOLVED** to a real on-chain token symbol; **64 RESIDUAL** (3 — pool no longer in DeFiLlama's live listing; 61 —
+      resolver could not resolve the mint against the static Solana token-list; a genuinely unresolvable/delisted-token
+      residual, the only acceptable kind, never silently re-embedded). **Apply**: 23 objects migrated (new
+      resolved-symbol leaf uploaded, old UUID leaf retired, manifest re-registered), 16 already-migrated (idempotent
+      skip — same symbol as an existing object from a different market on the same day), 0 errors, 0 missing sources.
+      (repo: market-tick-data-service)
 
 ### Operator decisions applied (2026-07-21, /autonomous — decided per AUTONOMOUS_AGENT_RULES.md rule 2, documented not asked)
 
@@ -1040,6 +1074,35 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-21 (slot — Track 1 "eliminate the address/UUID fallback" sub-items (3)+(5) SHIPPED + RUN.** Dispatched
+  specifically for the Solana LENDING half of this P0 (sub-items 2/4/POOL-adapters were a DIFFERENT concurrent session's
+  scope, already annotated above — no overlap). Summary (full detail in the todo annotation above):
+  - **Handler fix** (`lending_indices_handler.py`/`_solana_defi_fetch.py`): wired the shared UTL
+    `resolve_solana_token_symbol` resolver in BEFORE the DeFiLlama-pool-UUID fallback, keyed off a NEW `underlying_mint`
+    column extracted from DeFiLlama's own `underlyingTokens` field (verified live — the real on-chain mint, not the pool
+    UUID).
+  - **Critical adjacent finding + fix**: the UAC `DEFI_SOLANA_LENDING_LENDING_INDICES` SchemaContract's `symbol_column`
+    was `"market_id"`, not `"symbol"` — the handler fix alone would have been a no-op on the actual written GCS object
+    without this. Fixed (`unified-api-contracts@4c049355`).
+  - **Found + fixed 3 pre-existing, unrelated MTDS `quality-gates.sh` regressions** blocking EVERY quickmerge in
+    market-tick-data-service (root-caused the previously-open
+    `issues/ mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md` — all 3 traced to
+    `unified-api-contracts@502ef57e`'s ID-FORM/embedded-colon widening, not the 2 originally-suspected commits; 2 of the
+    3 converged independently with a concurrent agent's own fix, `market-tick-data-service@08f15f26`, kept as-is rather
+    than duplicated). Issue doc updated to `status: resolved`.
+  - **Backfill script** (`scripts/one_offs/backfill_solana_lending_uuid_canonical_id_2026_07_21.py`,
+    market-tick-data-service@7ce100f9): dry-run then `--apply` (dry-run looked sane, authority per this todo's own
+    text + AUTONOMOUS_AGENT_RULES.md — a correctness fix, not an operator-gated destructive action). **Measured scope**:
+    103 total UUID-shaped Solana-lending manifest rows (KAMINO=44, SOLEND=59, MARGINFI=0, all dated 2026-04-14, all
+    under the pre-Gate-5 bare venue slug) → 39 distinct markets resolved to a real token symbol, 64 residual (3 pool
+    delisted from DeFiLlama's live listing, 61 resolver-unresolvable mint — genuinely unresolvable, the only acceptable
+    kind). Apply: 23 objects migrated, 16 already-migrated (idempotent skip), 0 errors.
+  - **Process note**: hit a live discovery mid-download — a single-shot GCS download of the ~1.86 GiB consolidated defi
+    index reproducibly broke mid-transfer at the same ~1.33 GiB offset (4/4 attempts); switched to bounded ranged-chunk
+    reads, which completed reliably. Also discovered (via `ps`/git-log cross-checking) that this same tab/4 working
+    directory is genuinely shared by multiple concurrent agent sessions right now — reconciled per rule 4 (discarded my
+    own duplicate edits on the 2 files another agent had already fixed identically, verified content survival, never
+    touched the OTHER agent's unrelated dirty files in this same tree).
 - **2026-07-21 (slot-4 — Track 6 SHIPPED: turbo-API HYPERLIQUID/ASTER fix + capability-bundle DRIFT prune).**
   `deployment-api@427ede5` + `deployment-ui@83ec561` — see the flipped Track 6 P2 todo above for the full root-cause +
   fix + verification writeup. Two notable process points not already in the todo: (1) deployment-api shipped via the

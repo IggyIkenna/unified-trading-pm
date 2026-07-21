@@ -440,17 +440,25 @@ jobs:
           # reads. Atomic single-object overwrite — immune to the read-modify-write clobbering
           # that silently erased keys from the shared ledger and made every "dedup'd" alert
           # re-page each tick.
+          SAFE_KEY=""
           if [ -n "${INPUT_DEDUP_KEY:-}" ]; then
             SAFE_KEY="$(printf '%s' "$INPUT_DEDUP_KEY" | tr -c 'A-Za-z0-9._-' '_')"
             printf '%s' "$ALERT_JSON" | gsutil cp - "gs://${CICD_EVENTS_BUCKET}/cicd/alerts/dedup/${SAFE_KEY}.json" \
               && echo "Dedup marker written: dedup/${SAFE_KEY}.json" || true
           fi
-          # History append (best-effort; KNOWN-LOSSY under concurrency — the open D2 ledger-race
-          # decision. Dedup deliberately does NOT depend on this object.)
-          OBJECT_PATH="cicd/alerts/${DATE_PARTITION}/alerts.jsonl"
+          # History append — ONE OBJECT PER ALERT (root-cause fix, matching persist-event/action.yml's
+          # events-ledger fix and deployment-api's _persist_alert() fix, 2026-07-21): the OLD path did
+          # an unlocked cp-down -> append -> cp-up onto one shared alerts.jsonl per day, so two
+          # overlapping writers silently clobbered each other
+          # (persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md; this step's own prior
+          # comment flagged it as "KNOWN-LOSSY under concurrency" but left it deferred). The reader
+          # (deployment-api's _repo_ci_alerts.py::_read_ledgers_sync) already globs the whole
+          # cicd/alerts/{date}/ prefix and parses every blob it finds, so writing each alert straight
+          # to its OWN never-overwritten object eliminates the race with zero reader changes: no read,
+          # no local merge, no lock.
+          UNIQUE_KEY="${SAFE_KEY:-$RANDOM}-${GITHUB_RUN_ID}-$(date -u +%s%N)"
+          OBJECT_PATH="cicd/alerts/${DATE_PARTITION}/${UNIQUE_KEY}.jsonl"
           GCS_URI="gs://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
-          LOCAL_FILE="/tmp/alerts.jsonl"
-          gsutil cp "$GCS_URI" "$LOCAL_FILE" 2>/dev/null || touch "$LOCAL_FILE"
-          echo "$ALERT_JSON" >> "$LOCAL_FILE"
-          gsutil cp "$LOCAL_FILE" "$GCS_URI" || true
+          printf '%s\n' "$ALERT_JSON" | gsutil cp - "$GCS_URI" \
+            || echo "::warning::GCS write failed — alert not persisted"
           echo "Alert persisted to $GCS_URI"

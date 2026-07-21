@@ -119,27 +119,58 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
       `launch-sports-instruments-reference-vm.sh` entirely-pre-floor windows REMOVED, `launch-mdps-backfill-vm.sh`
       sports default). Codex SSOT: **`codex/02-data/sports-2020-06-data-floor.md`** (+ CLAUDE.md pointer). The 3 running
       `af-backfill-*` VMs were already floor-clamped (START=2020-06-06).
-- [ ] [SCRIPT] P0. **league_id relocation — COPY (monitored VM job, NOT inline).** Verified executor:
-      `market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`
-      (adversarially reviewed — mtds@b2a49317; full-corpus dry-run PASSED, 266,408 objects, 0 unknown). Run first
-      `--apply-prod` (no `--confirm-prod-write`, no `--index`) for the live out-of-scope census + VM guard, then
-      `--apply-prod --confirm-prod-write` (copy+verify only; never deletes; refuses while any features-sports VM runs).
-      Then the **127K DEFERRED shapes** (`odds_horizon_bucket`, `batch_footystats`). Detail:
-      `issues/sports_league_id_namespace_migration_2026_07_20.md`. **⚙️ READY (2026-07-21) — but a VM-SHARDED monitored
-      job, deliberately NOT launched at session tail.** Re-verified live: VM guard PASSES (zero
-      `features-sports-sports-*` VMs), and a timed 3-unit `--validate` wrote 5 target objects **PASS=5 FAIL=0,
-      quarantined=0, no_clobber=True** (correct LA_LIGA/PRIMEIRA_LIGA per-row splits) → executor is correct.
-      **Throughput measured ≈2.7 s/unit single-process ⇒ ~25.7 h for 34,228 units** — this is a multi-hour VM-sharded
-      job (shard by day-range with `--index`), not a single-process inline/background run. Launch it as a dedicated
-      monitored VM run (COPY is reversible + idempotent `SKIP-ALREADY-VERIFIED`; the DELETE stays a separate gated
-      pass). Everything is prepped — nothing operator-blocked here, only compute-scale.
-- [ ] [DATA] P0. **league_id relocation — MANIFEST-SWAP + DELETE.** After every shape is copied+content-verified: atomic
-      manifest-swap (reuse `deployment-service/scripts/rebuild_sports_manifest.py::_clean_stale_league_entries`), MDPS
-      reprocess of the processed surface, coverage-registry refresh, THEN the **separate irreversible delete** of the
-      old non-canonical objects (operator-authorised on the passing dry-run; snapshot first; final at-scale content
-      re-verify before deleting). **FOLD IN** `mtds_t2_6_league_case_duplicate_population`: 6,110 lowercase-`league_id`
-      objects (2025-07-31…12-31) proven 100%% content-identical to their UPPERCASE canonical twins — same casing root
-      cause; dedup/delete in THIS pass, not standalone.
+- [x] [SCRIPT] P0. ✅ **league_id relocation — COPY DONE + FULLY VERIFIED (2026-07-21).** Executed as a **24-VM SPOT
+      fleet** launched directly via `gcloud compute instances create` (VM_TASK=canonical-migration dispatch, reusing the
+      registered `canonical-migration-sports-` prefix — no new registry entry), each running the **already-committed,
+      adversarially-verified executor unmodified**
+      (`market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py`,
+      mtds@b2a49317) against a **pre-partitioned shard of the SAME single-walk index** (34,228 units / 260,298
+      raw-object rows, one fresh `enumerate_units()` walk, split by day into 24 balanced files — day-based partition
+      keeps each VM's rows exhaustive+disjoint; no code change to the executor needed, so this bypassed a live,
+      session-long QG-contention problem entirely — see the Progress Log below). **Canary (shard 0) verified clean
+      first** (441 units / 3,026 objects, PASS=3,026 FAIL=0 before fan-out), THEN all 24 shards launched. **Final result
+      — ALL 24 SHARDS, 100% CLEAN:**
+
+      | metric | value |
+          | --- | --- |
+          | target objects written | **275,136** |
+          | verify=PASS | **275,136 (100%)** |
+          | verify=FAIL | **0** |
+          | quarantined (unmapped sport_key) | **0** |
+          | no_clobber violations | **0** |
+
+          Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
+          **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
+          `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
+          Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
+          `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
+          **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
+          scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
+          separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
+          not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
+          own manifest-swap/delete (see next item).
+
+- [ ] [DATA] P0. **league_id relocation — MANIFEST-SWAP + DELETE. ⚠️ NOT STARTED — genuinely needs new tooling, do NOT
+      rush this at session depth.** Investigated 2026-07-21: **no existing script fits.**
+      `deployment-service/scripts/rebuild_sports_manifest.py::_clean_stale_league_entries` targets the WRONG bucket
+      (`market-data-tick-sports-{pid}`, the legacy/no-`-prd-` bucket — confirmed by reading `_BUCKET_TEMPLATES`).
+      `market-tick-data-service/scripts/rebuild_mtds_manifest.py` targets the right PROD bucket but uses a **deprecated
+      schema_version=2, `category=` layout with no `league_id=` dimension at all** — structurally cannot represent this
+      relocation. **The relocation executor itself never writes manifest rows (pure GCS-object copy by design)** —
+      confirmed via grep, zero `ManifestWriter`/`record_captured` calls — so the canonical manifest currently has **zero
+      rows** for the 275,136 new objects, and the OLD raw-keyed rows for the same cells are still present. **What a
+      correct fix needs (documented so a fresh session doesn't re-derive this):** a new, small, carefully-verified tool
+      that (1) reads the 24 report JSONs above (exhaustive, no new walk), (2) for each target record writes ONE captured
+      `ManifestWriter` row at the canonical `(day, venue, league_id=canon,     instrument_type=ODDS, data_type=TRADES)`
+      key with `source=ODDS_API`/`pipeline_mode=batch_odds_api`, (3) for each `source_raws` entry removes the OLD
+      manifest row at `(day, venue, league_id=<raw>, …)` — additive-write + removal in the SAME pass (Constraint 1 from
+      the namespace-migration issue doc: an additive-only write double-counts because the consolidator dedup key
+      includes `league_id`). Then: MDPS reprocess of the processed `odds_horizon_bucket` surface (regenerates it
+      canonically from the now-canonical raw — NOT a separate copy pass, per the issue doc's Step 7), coverage-registry
+      refresh, THEN the **separate, irreversible, 5-part-proof-gated delete** of the old non-canonical objects (operator
+      pre-authorised; snapshot first; final at-scale content re-verify before deleting). **FOLD IN**
+      `mtds_t2_6_league_case_duplicate_population` phantom-row prune into this SAME manifest-swap pass (already-deleted
+      6,110 objects, see the DATA-WIPE section above).
 - [ ] [DATA] P0. **Clean the ACTIVELY-GROWING cross-AG prediction bleed BEFORE reconciliation** —
       `cross_ag_prediction_rows_bleed_into_sports_instruments_index`: ≥6,597 `asset_group=prediction`
       (KALSHI/POLYMARKET) rows physically in the sports availability index, growing (4,097→6,597 in days), writer
@@ -499,18 +530,18 @@ relocation DELETE (the manifest-swap step), AND the twin delete below.
 
 **Deferred work after 2026-07-21** (each already a `- [ ]` above or below — nothing lost):
 
-| Item                                                                                     | State / why deferred                                                                                                                                                                                                                                                                                                                           | Blocked-on                                                                                                |
-| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| **Manifest pre-floor prune** (131,426 features + 944,776 instruments-store phantom rows) | _Cannot be done safely yet_ — the `_index/availability_index.parquet` is consolidator-built from `_index/per_vm/` shards and instruments-store holds an ACTIVE `consolidator.lock`; a session hand-edit is the exact corruption this plan forbids. Floor enforcement keeps these rows OUTSIDE the reported denominator, so no live dishonesty. | A consolidator-coordinated / phantom-audit rebuild (proper mechanism), run when the consolidator is idle. |
-| **league_id relocation COPY** (139K raw + 127K deferred shapes)                          | _Not done — compute-scale, not operator-blocked._ Executor verified correct; measured ~25.7 h single-process ⇒ needs a VM-SHARDED monitored run (shard by day-range via `--index`). Deliberately NOT fire-and-forgotten in the session tail.                                                                                                   | A dedicated monitored VM fleet run. COPY is reversible/idempotent; DELETE stays separately gated.         |
-| **relocation MANIFEST-SWAP + DELETE + twin-row prune**                                   | Sequenced AFTER the copy completes.                                                                                                                                                                                                                                                                                                            | The copy above.                                                                                           |
-| **cross-AG prediction bleed cleanup**                                                    | Sequenced BEFORE reconciliation (unlocated writer).                                                                                                                                                                                                                                                                                            | Writer trace.                                                                                             |
-| **/data-pipeline-reconciliation sports**                                                 | Reads the dirty denominator (bleed + phantom rows) — running it pre-relocation reports known-pending issues.                                                                                                                                                                                                                                   | Bleed cleanup + relocation.                                                                               |
-| **`is_bookmaker_league_covered` raw-name keying (P1)**                                   | Coupled to the relocation per this plan (regenerate coverage JSON post-relocation).                                                                                                                                                                                                                                                            | Relocation.                                                                                               |
+| Item                                                                                                                                             | State / why deferred                                                                                                                                                                                                                                                                                                                           | Blocked-on                                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Manifest pre-floor prune** (131,426 features + 944,776 instruments-store phantom rows)                                                         | _Cannot be done safely yet_ — the `_index/availability_index.parquet` is consolidator-built from `_index/per_vm/` shards and instruments-store holds an ACTIVE `consolidator.lock`; a session hand-edit is the exact corruption this plan forbids. Floor enforcement keeps these rows OUTSIDE the reported denominator, so no live dishonesty. | A consolidator-coordinated / phantom-audit rebuild (proper mechanism), run when the consolidator is idle.          |
+| **league_id relocation COPY** — ✅ **DONE** (see the 2026-07-21 second-wave log entry below): 275,136/275,136 objects PASS, 0 FAIL, 24-VM fleet. | N/A — complete.                                                                                                                                                                                                                                                                                                                                | —                                                                                                                  |
+| **relocation MANIFEST-SWAP + DELETE + twin-row prune**                                                                                           | ⚠️ **NOT STARTED — needs new tooling** (investigated 2026-07-21: no existing script fits the v9-canonical PROD-bucket layout; see the exact spec written into the MANIFEST-SWAP checklist item above). Deliberately not rushed at session depth — correctness-critical, irreversible-adjacent.                                                 | A dedicated build-and-verify pass for the new manifest-swap tool (spec is fully written, no re-derivation needed). |
+| **cross-AG prediction bleed cleanup**                                                                                                            | Root-caused (see log below: manifest bucket resolved per-RUN not per-venue, `__init__.py:680`); fix dispatched to a sub-agent, in progress as of session end.                                                                                                                                                                                  | Sub-agent's ship (or pick up its diff if unshipped).                                                               |
+| **/data-pipeline-reconciliation sports**                                                                                                         | Reads the dirty denominator (bleed + phantom rows) — running it pre-relocation-swap reports known-pending issues.                                                                                                                                                                                                                              | Bleed cleanup + manifest-swap.                                                                                     |
+| **`is_bookmaker_league_covered` raw-name keying (P1)**                                                                                           | Coupled to the relocation per this plan (regenerate coverage JSON post-manifest-swap).                                                                                                                                                                                                                                                         | Manifest-swap.                                                                                                     |
 
-**Recommended NEXT item:** the **league_id relocation COPY** as a monitored VM-sharded job — it's fully prepped
-(executor + maps committed `mtds@b2a49317`, guard clear, dry-run + validate green) and unblocks the manifest-swap,
-delete, coverage-registry refresh, and reconciliation that all sequence behind it.
+**Recommended NEXT item:** build + carefully verify the **manifest-swap tool** (exact spec in the MANIFEST-SWAP
+checklist item above — the 24 report JSONs are the exhaustive input, no new GCS walk needed) — it unblocks MDPS
+reprocess, coverage-registry refresh, the gated delete, and reconciliation, all sequenced behind it.
 
 **Rule-9 forced-tradeoff decisions (documented, per AUTONOMOUS rule 1):**
 
@@ -537,3 +568,86 @@ rows) plus the small cefi/defi/tradfi/prediction instruments manifests found **0
 checked. No code shipped (nothing left to fix); issue doc flipped to `status: resolved` with full evidence in its
 2026-07-21 update section; this plan's §2-C/§7/§autonomous-prompt references updated to stop treating it as a
 pre-recompute blocker.
+
+---
+
+## Progress Log — 2026-07-21 second wave ("assume they are all your work now... do till full completion")
+
+**The relocation COPY, fully executed and verified** — see the flipped checkbox above for the complete evidence table
+(275,136/275,136 PASS, 0 FAIL, 0 quarantine, 24-VM fleet). Mechanism worth recording for future migrations of this
+shape: rather than modifying the adversarially-verified executor to add VM-sharding support (which would need its own
+re-verification cycle), the SAME effect was achieved by **pre-partitioning the input data** (one fresh
+`enumerate_units()` walk → 260,298-row index → split by day into 24 files, exhaustive+disjoint by construction) and
+launching 24 VMs each pointed at its own shard file via the UNMODIFIED, already-committed `--index` flag. Zero new code
+shipped for the copy itself; zero QG risk; the only prerequisite was the index build (single walk, 28s) + upload. This
+pattern — shard the DATA, not the CODE — is reusable for any future large read-heavy migration where the executor
+already supports `--index`.
+
+**A genuine, session-long structural QG-infrastructure problem, root-caused (not fixed — out of scope for this plan):**
+two `quality-gates.sh` steps were directly proven to resolve their target paths via a path baked to the canonical
+`unified-trading-system-repos/<repo>` MAIN clone rather than respecting `cwd`/a git-worktree's own tree: (1)
+`check_backfill_vm_disk_provisioning.py` (`deployment-service/scripts/quality_gates/`) — proven by moving a foreign
+untracked launcher file out of the MAIN clone and watching the check flip clean, then back. (2) The ruff LINT step —
+proven by observing a lint failure reference a test file that does not exist anywhere in an isolated worktree, only as
+another agent's untracked WIP in the MAIN clone. **Practical consequence**: this session, with 3-6+ agents concurrently
+active in market-tick-data-service and deployment-service's SHARED MAIN clones, NO git-worktree-based isolation strategy
+could reliably produce a green QG sentinel — every attempt intermittently failed on some OTHER agent's unrelated,
+unshipped, in-progress file. Two small, verified-correct changes (a `--shard-of`/`--shard-index` filter added to the
+relocation executor — ultimately not needed, see above — and 3 launcher `START_DATE` clamps + a new VM launcher script
+`launch-sports-league-id-relocation-vm.sh`, all in `deployment-service`) remain **UNSHIPPED** as a result, parked in two
+worktrees (`market-tick-data-service-sports-wt`, `deployment-service-sports-wt`) pending either the shared clones
+quieting down or a proper fix to the QG steps' path resolution. **Not filed as its own issue doc this session**
+(time-constrained) — worth doing as a follow-up; the two proof points above are sufficient to reproduce.
+
+**7 sub-agents dispatched in parallel** (SUB_AGENT_MANDATORY_RULES.md + AUTONOMOUS_AGENT_RULES.md injected) across the
+remaining §2 LIVE-POST-FLOOR items:
+
+- ✅ **features-service red-tree de-flake** (aa#11) — already resolved 5 days prior by another commit; the test's target
+  date now derives live from the UAC floor instead of a hardcoded one. Docs-only correction shipped
+  (`unified-trading-pm@7c664986`).
+- ✅ **NULL-vs-"" dedup consolidator freshness** (ae#1) — deployed image confirmed current (content-verified by pulling
+  the running digest); the deeper incremental-merge bug was independently already fixed 2026-07-10 and never
+  cross-referenced. 0 duplicates found live across every sports + other-AG manifest checked. Shipped
+  (`unified-trading-pm@0c13eb1c9`).
+- ✅ **2025-12 fixture_round regression** (ac#13) — was a stale-catalogue measurement artifact (the legacy
+  `entity=fixtures` catalogue was frozen since 2026-05-23 while the live writer had already split); both underlying
+  writer fixes (`round`, `status_long`) confirmed live and correct via fresh GCS reads. Shipped
+  (`unified-trading-pm@a109b4437`).
+- ⏳ **Peripheral-bucket vocabulary contamination** (ae#9), **Gap-2 `--force`-can't-heal fix**, **PROGRESS.json
+  checkpoint wiring confirmation**, **cross-AG manifest-bucket routing fix** (the bleed root cause, below) — all 4 were
+  still working their own QG cycles as of session end, each independently hitting the SAME structural QG problem
+  documented above. Sent each a correction after an early overcautious suggestion on my part (retracted: "run pytest
+  directly" reads as the banned bypass; "ship without a green sentinel" contradicts the commit-only-from-green-tree hard
+  rule — both wrong of me to suggest, retracted in-thread). Their diffs, if unshipped at session end, remain in their
+  respective sub-agent working trees — check for uncommitted work in market-tick-data-service / instruments-service /
+  features-service before assuming these are undone.
+
+**Cross-AG prediction bleed — ROOT-CAUSED directly** (aa#7, growing 6,597→9,065 rows during this session alone,
+`written_at` confirmed as recent as the session's own timestamp — i.e. actively ongoing, not historical). Exact
+mechanism: `market_tick_data_service/engine/orchestrator/__init__.py:680` —
+`_manifest_bucket = _resolve_manifest_bucket(_bucket, primary_asset_group)` resolves the manifest bucket **once per
+RUN** from the run's first `--asset-group` argument, not per-venue. A prior fix (`mtds@5581dcf9`, 2026-07-20) already
+corrected the equivalent bug for the RAW DATA bucket (`_venue_data_bucket()` in `_manifest_bucket.py`, used in
+`venue_fetch.py`) — confirmed live: zero new KALSHI/POLYMARKET objects landed in the sports tick bucket after that fix's
+deploy timestamp. But the MANIFEST write path was never given the equivalent per-venue fix — every
+`market_tick_data_service/engine/orchestrator/manifest_finalize.py` helper writes through ONE shared `ManifestWriter`
+constructed from the run-level bucket, so a `--asset-group SPORTS PREDICTION` run (the daily `mtds_fast_t1_recon_job`)
+still manifests real KALSHI/POLYMARKET captures into the SPORTS bucket even though their DATA now correctly lands in the
+prediction bucket. Fix dispatched to a sub-agent (per-asset-group `ManifestWriter` routing, mirroring the
+already-shipped per-venue data fix) — see agent status above.
+
+**Rule-9 forced-tradeoff decisions this wave (per AUTONOMOUS rule 1):**
+
+- The **manifest-swap** was deliberately NOT attempted at session depth after investigation showed it needs genuinely
+  new tooling (no existing script fits) — this is correctness-critical (wrong here corrupts the honest-coverage
+  denominator) and irreversible-delete-adjacent. The full spec is written into the plan so a fresh session can execute
+  without re-deriving it, exactly matching this exact operation's own earlier documented caution ("deliberately NOT
+  started at extreme session depth; it warrants a fresh, monitored context").
+- The **shard-filter code change to the relocation executor was built, then not needed** — pure data-partitioning
+  achieved the same result with zero code risk. The code is not wasted (a reasonable future enhancement for a same-shape
+  migration) but is currently unshipped; do not assume it is live.
+- **Ship attempts for the parked mtds/deployment-service changes were abandoned after ~15 retry cycles**, not because
+  the changes are wrong (each was independently re-verified correct via targeted checks every time) but because the
+  structural QG path-resolution issue makes success non-deterministic while other agents remain active in the same
+  clones. Continuing to retry indefinitely would have been the "spinning on a flat progress metric" anti-pattern the
+  loop discipline explicitly forbids — stopping and documenting was the correct call, not giving up.
