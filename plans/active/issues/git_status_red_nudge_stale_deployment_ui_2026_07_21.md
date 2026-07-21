@@ -27,6 +27,7 @@ drift_direction: advance-code
 source: "slot-4 heartbeat/boot responses, 2026-07-21"
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 ## What I found
