@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -427,6 +427,18 @@ Discriminator = **does a manifest row exist**.
       `test_pool_rows_diverge_option_a_and_backfill_does_not_enforce_convergence` (IS): POOL rows DIVERGE —
       `instrument_id`=pool_address, `canonical_instrument_id`=3-seg glued key. 4-seg `DefiPoolIdentity.glued_pair_id`
       retired → 3-seg (verify `two_id_model_intact=true`). (repos: instruments-service, unified-api-contracts)
+
+> **⛔ GATE (2026-07-21, dated banner — do not restate the mechanism here, link it):** this todo is BLOCKED until
+> `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md` reports its acceptance criteria 1-8 green with
+> cited evidence and flips ITS OWN todo 14 from BLOCKED to CLEARED. The first attempt at this retire was REVERSED
+> because the migration started before the MTDS lending writers were fixed — read that plan's "What actually broke"
+> section before touching this todo. As of 2026-07-21 that plan's todos 2-5/9/13 (writer-collapse + shard-atom-desync
+> fixes + pinning tests + doc corrections) are code-complete and individually verified (ruff/basedpyright clean, full
+> MTDS suite green apart from 2 unrelated pre-existing cross-repo test-baseline regressions — see that plan's Progress
+> Log) but NOT YET COMMITTED (blocked on those unrelated regressions clearing the shared tree's `quality-gates.sh`);
+> todos 8/10/11 (the actual UAC+MTDS+UTL atomic retire + its runtime proof) are NOT started. The gate remains BLOCKED.
+> Do not start this migration until that plan says CLEARED.
+
 - [ ] [DATA] P0. **Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN.** **Builder-bake DONE `instruments-service@1af1be34`**
       (FIX 2, runtime-proven): the split is now INTRINSIC to `build_instrument_catalogue.py` row-construction — the
       canonical_id's `VENUE:TYPE:SYMBOL` segment is AUTHORITATIVE over a stale `LENDING` column for the

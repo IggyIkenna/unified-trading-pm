@@ -89,10 +89,11 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       MTDS `_oracle_prices_constants.py` (dict shape) and IS `chainlink.py` (tuple shape); the mirror-invariant test
       must pass. Auto-mints `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` catalogue rows on the next build. One
       quickmerge per repo.
-- [ ] [UAC] P1. **AAVE oracle venue registration** — `expected_coverage.py` `AAVE` += `oracle_prices` +
+- [x] [UAC] P1. **AAVE oracle venue registration** — `expected_coverage.py` `AAVE` += `oracle_prices` +
       `AAVE-ETHEREUM: [oracle_prices]`; `defi_venues.py` flip `AAVE-ETHEREUM` phase `pipeline`→`live`;
       `venue_adapter_keys.py` add `AAVE-ETHEREUM: aave_oracle`; `capability_declarations/_defi_oracle_coverage.py`
-      coverage-start. Add `aave` to UAC `pipeline_mode_for_source` if absent.
+      coverage-start. Add `aave` to UAC `pipeline_mode_for_source` if absent. — `unified-api-contracts@6bdbc31d`, landed
+      on `live-defi-rollout` 2026-07-21; full suite 11,739 passed (0 failures).
 - [ ] [IS] P1. **AaveOracle reference-data adapter** — `adapters/defi/aave_oracle.py` (clone `chainlink.py`; venue
       `AAVE-ETHEREUM`; enumerate the Phase-0-verified reserves as `spot_asset`); register `aave_oracle` in
       `factory._ADAPTERS` + add `AAVE-ETHEREUM` to `orchestrator/defi.py`. Keep IS phase in lockstep with UAC.
@@ -150,6 +151,23 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   authored alongside. Key reframes captured: #1 CEX = backfill-not-build (catalogue already complete; list edits are
   phantom-minting); #3 Aave oracle = plumbing (dormant RPC, not missing); #2 DEX = collector/endpoint problem;
   denominator-first honest-coverage invariant. Executing Phase 0 (reality verification) next.
+- **2026-07-21 (Phase 1, partial)** — UAC's AAVE oracle venue registration landed: `unified-api-contracts@6bdbc31d` on
+  `live-defi-rollout` (11,739 tests passed, 0 failures; two pre-existing test gaps fixed in the same commit rather than
+  left red). Took 7 ship attempts, all blocked by the sentinel-race under heavy concurrent PM/UAC push traffic on this
+  shared host, not by any real content problem — see
+  `plans/active/issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` for the pattern
+  (a peer's commit or a same-repo commit invalidates the QG sentinel between gate-pass and quickmerge; fix is
+  re-gate-then-immediately-quickmerge, never re-gate-then-wait). **MTDS and IS legs of Phase 1 remain BUILT-BUT-NOT-
+  SHIPPED**: both repos have their Phase-1 file changes staged/committed locally (MTDS `_oracle_prices_constants.py`
+  weETH/ezETH Chainlink feeds; IS `chainlink.py` mirror + `aave_oracle.py` adapter + `factory.py`/`orchestrator/defi.py`
+  registration) but their `quality-gates.sh` is blocked by pre-existing, unrelated, already-filed test-baseline drift
+  from an earlier OKX-FUTURES/OKX-SWAP venue registration + DERIBIT-COMBO deregistration (root cause
+  `unified-api-contracts@11adf279`) — not caused by this plan's work, and not this plan's to fix:
+  `plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md` (MTDS) and
+  `plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md` (IS, already operator-assigned
+  `assigned_vm: planning`). Do not re-attempt those ships until the respective issue is resolved; do not duplicate
+  either issue doc. The remaining Phase 1 UAC todo (Chainlink feed-map, tagged `[UAC][IS]` above — body describes
+  MTDS+IS work) stays unchecked for the same reason.
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 

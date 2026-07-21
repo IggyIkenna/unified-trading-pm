@@ -283,11 +283,21 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       anything, but "high diagnostic value" won't materialize until a separate effort swaps the writer — flagging so it
       isn't mistaken for already-solved. Not fixed here: swapping the writer is a WRITE-path change, explicitly out of
       this todo's scope ("Do not alter any kill-switch write path").
-- [ ] [REVIEW] P1. Tests — (a) alerting-service persists the full payload; (b) deployment-api ingests and normalises it;
-      (c) `subject_repo` is the subject, not the emitter, for a known cross-repo CI regression; (d) concurrent writes no
-      longer drop rows; (e) retention/window returns the full requested range and signals capping explicitly; (f)
-      buckets resolve via `resolve_bucket_name()`; (g) a zombie-watchdog reap lands a durable row.
-      `bash scripts/quality-gates.sh` green in alerting-service, deployment-api, deployment-service.
+- [x] [REVIEW] P1. ✅ Tests — alerting-service@e7ecfcd + deployment-service@6848ceb (deployment-api untouched — already
+      fully covered). (b)-(f) already had strong pinning coverage from when each todo shipped
+      (`deployment-api/tests/unit/test_repo_ci_alerts.py` + `test_route_deployments_inventory.py`,
+      `deployment-service/tests/unit/test_vm_zombie_watchdog.py`'s `TestPersistZombieAlert`) — verified by direct grep
+      before writing anything, no duplicate tests added. Two REAL gaps found + closed: **(a)** zero coverage of the
+      delivery-record enrichment fields (`alert_class`/`severity`/`message`/`service`/`deployment_target`, shipped
+      alerting-service@d2f585c) — added pure-function tests for `_build_delivery_record`/
+      `_persisted_severity`/`_extract_deployment_target` + an end-to-end `route_event()` test proving the wiring, + 2
+      `AlertStore.record_fired` tests pinning the `alert_class` fallback (`event.code.value` else `event.rule_id`).
+      **(g)** `_persist_zombie_alert()` itself was tested in isolation but nothing proved `_reap_terminated_vms()`
+      actually CALLS it on a confirmed reap — added 4 tests (successful kill persists `alert_class="reap_terminated"`,
+      dry-run never kills/persists, a failed kill never persists, a keep-verdict VM is never reaped/persisted). Full
+      `quality-gates.sh` green in all 3 repos (alerting-service exit=0 191s, deployment-api untouched/ already-green,
+      deployment-service exit=0 215s — first run hit the 300s wall-clock budget under shared-host contention, re-ran
+      clean). (repo: alerting-service, deployment-service)
 - [ ] [REVIEW] P1. **Post-ingestion coverage re-measure** — re-run the audit's gap table against the live ledger and
       record before/after row counts and per-source coverage in the Progress Log. Success is MEASURED coverage, not
       "code shipped": a source counts as mirrored only when its rows are observably in the ledger.

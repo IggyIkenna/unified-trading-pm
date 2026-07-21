@@ -22,6 +22,8 @@ related:
     features_by_date_root_canonicalisation_2026_07_21.md,
     instrument_availability_hive_canonicalisation_2026_07_21.md,
     tradfi_canonical_path_migration_design_2026_07_19.md,
+    deribit_live_options_chain_path_noncanonical_2026_07_21.md,
+    uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
     ../../../codex/02-data/cross-asset-canonical-target-ssot.md,
     ../../../codex/02-data/canonical-cutover-register.md,
     ../../../codex/02-data/non-canonical-path-inventory.md,
@@ -107,25 +109,127 @@ papering over them.
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Enumerate which native-REST cefi venues emit `options_chain`/`futures_chain` and via which writer
+- [x] 1. [DATA] P1. Enumerate which native-REST cefi venues emit `options_chain`/`futures_chain` and via which writer
       (W1 `PartitionedTickWriter` vs W2 Tardis lane) — determine whether W1's cefi-chain path is reachable in prod and
-      size the live v5 cefi migration blast radius. Gate the rest of this doc's migration scope on the answer.
-- [ ] 2. [DATA] P1. Fix W1 `partitioned_writer.py:291-292` to derive `quote`/`margin` for **cefi** chains as well as
+      size the live v5 cefi migration blast radius. Gate the rest of this doc's migration scope on the answer. — **DONE
+      (investigation, 2026-07-21, no shipping required)**. Findings: (a) `BINANCE-DELIVERY`/`OKX-FUTURES` (the only cefi
+      venues whose `_VENUE_INSTRUMENT_TYPE` default to `futures_chain`) have NO standalone non-Tardis adapter — their
+      chain data flows exclusively via the Tardis lane (`tardis_options_adapter.py`, W2, already v6). (b) DERIBIT's LIVE
+      options-chain flows through a THIRD, standalone handler (`cli/handlers/deribit_options_chain_handler.py`,
+      registered live as CLI op `deribit-options-chain`) that bypasses BOTH W1 and W2 entirely and writes a completely
+      different, non-canonical (neither v5 nor v6) ad-hoc path shape — filed separately as
+      `deribit_live_options_chain_path_noncanonical_2026_07_21.md` (this is NOT the v5-vs-v6 axis this doc addresses; it
+      fails canonical STRUCTURE, not just the quote/margin tail). (c) **Conclusion: W1's cefi-chain path currently
+      reaches ZERO live cefi chain objects in prod** — no venue's real write traffic routes options_chain/futures_chain
+      through `PartitionedTickWriter`/`venue_fetch.py` today. The W1 fix (todos 2-3) is therefore pure defense-in-depth
+      against a FUTURE native-REST cefi chain venue, and **todos 6-7's v5→v6 data migration scope is ~0 objects for the
+      W1 path specifically** (any actual v5 cefi chain objects in GCS would come from a different source — not verified
+      in this session, see Progress Log).
+- [x] 2. [DATA] P1. Fix W1 `partitioned_writer.py:291-292` to derive `quote`/`margin` for **cefi** chains as well as
       tradfi (mirror the tradfi branch; use the cefi quote/margin derivation, not `_tradfi_chain_partition_dims`), so W1
-      emits the v6 tail. Keep combo EXCLUDED.
-- [ ] 3. [DATA] P1. Widen the write-time guard `_assert_canonical_tradfi_path` (`partitioned_writer.py:83`) to cefi (+
+      emits the v6 tail. Keep combo EXCLUDED. — **CODE DONE + TESTED, NOT YET SHIPPED** (see Progress Log — blocked on
+      two unrelated pre-existing/concurrent MTDS repo-wide QG failures, not a defect in this fix). Added
+      `_cefi_chain_partition_dims` (derives via the SAME `derive_settlement_dimensions` W2 already uses per-symbol) +
+      wired it into `write_chunk`'s branch alongside the tradfi one. **Also fixed a corollary bug found while
+      implementing this**: the writer-object CACHE key in `_get_writer` (and `close()`'s log-line unpacking) was a fixed
+      3-tuple that did NOT vary by quote/margin — meaning two cefi chains sharing one underlying but DIFFERENT
+      settlement (DERIBIT `BTC-PERPETUAL` inverse vs `BTC_USDC-PERPETUAL` linear) would have silently shared ONE cached
+      writer object post-fix (the second chain's rows misrouted into the first chain's GCS object) — widened the cache
+      key to the SAME 5-tuple `(itype, dt, underlying, quote, margin)` `_row_counts` already uses when chain dims are
+      populated. Proof: `tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py` (new, 6 tests, all passing) — see
+      `test_cefi_chain_same_underlying_different_margin_never_collides` for the anti-collision proof.
+- [x] 3. [DATA] P1. Widen the write-time guard `_assert_canonical_tradfi_path` (`partitioned_writer.py:83`) to cefi (+
       prediction chains) — rename/generalise it so a regressing cefi/prediction backfill fails LOUD via
-      `canonical_path_violations(..., require_pipeline_mode=True)` exactly as tradfi does.
-- [ ] 4. [REVIEW] P1. Confirm the shard-atom (manifest key) and `available_at` bookkeeping key on the SAME v6
+      `canonical_path_violations(..., require_pipeline_mode=True)` exactly as tradfi does. — **UAC portion SHIPPED:
+      `unified-api-contracts@9a92cf4f55a2753e3a4db045456f224e692867a5`** (added `_cefi_chain_tail_violations` STRUCTURAL
+      check to `canonical_path_violations` — without this, the widened MTDS-side guard call was a no-op for cefi, since
+      UAC previously had NO structural chain-tail enforcement for cefi, only for tradfi; updated the stale
+      `test_cefi_chain_ticks_parquet_is_never_flagged` test that had asserted a bare v5 cefi chain path was canonical —
+      split into a v6-passes + v5-now-flagged pair). **MTDS portion (the widened call site + rename to
+      `_assert_canonical_chain_path`) CODE DONE + TESTED, NOT YET SHIPPED** — same block as todo 2, see Progress Log.
+      Scoped to cefi's two real chain types ONLY (`options_chain`/`futures_chain`, not blanket `asset_group == "cefi"`)
+      — a blanket cefi guard would break ~10 EXISTING passing cefi single-instrument tests that intentionally exercise
+      non-canonical fallback id shapes (verified before scoping this way). Prediction chains NOT widened — no
+      concretely-defined "prediction chain" analog exists in this codebase (prediction's bundling is
+      `canonical_question_group`/event_contract, not the `options_chain`/`futures_chain` writer-key mechanism) and
+      guessing at scope risked tripping the `book_snapshot_5` symbol-less fan-in; left for a follow-up once a
+      prediction-chain shape is concretely defined.
+- [x] 4. [REVIEW] P1. Confirm the shard-atom (manifest key) and `available_at` bookkeeping key on the SAME v6
       `(underlying, quote, margin)` tuple in W1 as they already do in W2/UAC — no desync between object path and
-      manifest row.
+      manifest row. — **CONFIRMED + PROVEN** via `test_cefi_chain_shard_atom_matches_object_path` (new test): the
+      `underlying_counts` (`_row_counts`) 5-tuple atom and the writer-object cache key (post todo-2's corollary fix) are
+      now the IDENTICAL key, so they cannot desync by construction. **NOT independently re-verified**:
+      `_cluster_counts`/`_chain_available_at_max` (`_update_cluster_and_chain_counts`) — a SEPARATE bookkeeping
+      structure (ES-options-cluster-coverage + available_at envelope) — still keys on the 3-tuple
+      `(itype, dt, underlying)` WITHOUT quote/margin, so two cefi chains sharing an underlying but different margin
+      would still merge their cluster-counts/available_at into one bucket. This is lower-severity than the writer-object
+      collision (no data corruption, just a coarser coverage-check granularity) and was NOT fixed in this session (out
+      of this todo's literal scope — todo 4 names "shard-atom (manifest key)" + "available_at bookkeeping", which most
+      directly maps to `_row_counts`/`underlying_counts`, already fixed) — flagging as a residual, smaller finding for a
+      follow-up rather than expanding scope further.
 - [ ] 5. [DATA] P1. PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the
-      v6-first probe at `reader.py:402`), with the guard raising on a synthetic v5 path.
+      v6-first probe at `reader.py:402`), with the guard raising on a synthetic v5 path. — **NOT ATTEMPTED**: per the
+      task's explicit CAUTION, an active `canonical-migration-cefi-*` VM fleet is running a separate migration against
+      the SAME `market-data-tick-cefi-prd` bucket right now, and the code fix itself could not be shipped this session
+      (see Progress Log) — proving a real-day run against unshipped code would not be meaningful evidence. Unit-level
+      proof (mocked writer, no real GCS) is in `tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py`; the real-day
+      round-trip proof is deferred to Round 2 alongside shipping.
 - [ ] 6. [DATA] P1. Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5),
       recording any v5 collisions where two logical chains overwrote one object as unrecoverable rather than silently
-      merging.
+      merging. — **DEFERRED to Round 2** (out of scope for this session per task instructions; todo 1's finding that W1
+      reaches zero live objects means this migration's true source, if any v5 cefi chain objects exist at all in GCS, is
+      NOT the W1 path — needs its own enumeration before migrating).
 - [ ] 7. [DATA] P1. Re-sync the manifest / data-status render for the migrated cefi chain cells so all four canonical
-      surfaces agree post-migration.
+      surfaces agree post-migration. — **DEFERRED to Round 2** (depends on todo 6).
 - [ ] 8. [REVIEW] P1. On W1 ship, record the cefi chain-tail v6 cutover date in
       `codex/02-data/canonical-cutover-register.md` (repo@sha) and update the §7 summary cefi `chain tail` cell from
-      "v5/v6 dual hazard" to the ruled v6 (migration_pending → EXECUTED).
+      "v5/v6 dual hazard" to the ruled v6 (migration_pending → EXECUTED). — **DEFERRED**: gated on the MTDS-side W1 code
+      actually shipping (todos 2/3's MTDS portion), which did not happen this session.
+
+## Progress Log
+
+**2026-07-21 (this session)** — Executed todos 1-5 per an explicit sub-task scope (todos 6-8 out of scope, real-day
+proof deferred per an explicit CAUTION about an active cefi migration VM fleet). Findings + status:
+
+- Todo 1 answered: W1 reaches ZERO live cefi chain objects today (see todo 1 above). Filed
+  `deribit_live_options_chain_path_noncanonical_2026_07_21.md` for the DERIBIT live-handler non-canonical-path finding
+  this surfaced (a SEPARATE, more severe canonicalisation bug — not this doc's v5-vs-v6 axis).
+- Todos 2-4: code written in
+  `market-tick-data-service/market_tick_data_service/engine/orchestrator/ partitioned_writer.py`
+  (`_cefi_chain_partition_dims`, widened `_get_writer` cache key + guard call site, renamed
+  `_assert_canonical_tradfi_path` → `_assert_canonical_chain_path`) +
+  `unified-api-contracts/ unified_api_contracts/canonical/partition_paths.py` (`_cefi_chain_tail_violations`). New test
+  file `market-tick-data-service/tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py` (6 tests, all green) +
+  updates to 3 existing MTDS test files (`test_partitioned_writer_partition_validation.py` — fixed a fixture that used
+  an unresolvable settlement symbol, orthogonal to what that test actually checks;
+  `test_partitioned_writer_tradfi_filename_canonical.py` — updated the rename;
+  `tests/unit/test_pipeline_e2e_prediction_canonical.py` — NOT modified, see below) + 2 UAC test files
+  (`test_partition_path_is_canonical.py` — updated the stale v5-cefi-chain-is-canonical assertion).
+- **UAC SHIPPED**: `unified-api-contracts@9a92cf4f55a2753e3a4db045456f224e692867a5` (files:
+  `unified_api_contracts/canonical/partition_paths.py`, `tests/unit/test_partition_path_is_canonical.py`). UAC's own
+  full `quality-gates.sh` (`--no-fix`) passed green (sentinel `018c3ca6...`) before shipping.
+- **MTDS NOT SHIPPED — blocked by two pre-existing, independently-confirmed, unrelated conditions** (both verified via
+  `git status`/`git diff` to be outside this session's own diff, in files this session never touched):
+  1. `tests/unit/test_pipeline_e2e_prediction_canonical.py::test_rule11_per_ag_shard_counts_byte_unchanged` — a
+     pre-existing CEFI shard-count pin drift (measured 208, pinned 200) in a file ALREADY dirty from another concurrent
+     agent's own DEFI-count fix (their comment: "confirmed via `git stash` that HEAD itself — no local changes — already
+     fails this test, so the drift predates and is unrelated to that work" — the SAME class of issue, just a different
+     `_PER_AG_SHARD_COUNTS` key). This session temporarily patched this ONE line locally (200→208) ONLY to obtain an
+     honest full-repo `quality-gates.sh` green reading for verification purposes, then REVERTED it immediately after
+     (never staged, never included in any `--files` scope) — the file's dirty state is back to exactly what the other
+     agent left it in.
+  2. A NEW cross-repo ripple: a concurrent, unrelated UAC commit (landed mid-session) made
+     `unified_api_contracts.internal.reference.canonical_id_builder.build_instrument_id` raise loud on an embedded `:`
+     in `symbol` for non-sports/prediction asset groups. MTDS's editable UAC install means this took effect in MTDS's
+     test suite immediately, breaking 3 tests unrelated to this doc's scope. Filed
+     `uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`.
+  - Both conditions were re-verified as still present in MTDS's OWN clean-diff HEAD (`7335631d`, unchanged all session)
+    immediately before giving up on shipping — this is not a stale/one-off observation.
+  - **The verified-correct, fully-tested MTDS code diff is backed up** (in case of concurrent clobbering in this
+    heavily-shared checkout) at
+    `/tmp/claude-1000/-home-ubuntu-unified-trading-system-repos/5697ef0c-2b5a-43bf-8008-6202d06ded45/scratchpad/mtds_cefi_chain_v6_diff_backup.patch`
+    (diff of the 3 modified files) + `.../scratchpad/test_partitioned_writer_cefi_chain_tail_v6.py.backup` (the new test
+    file) — a scratchpad path, NOT durable; whoever picks this up next should apply the backup FIRST if the working tree
+    no longer shows these changes, then re-run `bash scripts/quality-gates.sh --no-fix` and
+    `bash scripts/quickmerge.sh "fix(cefi): derive+enforce v6 quote/margin chain-tail for cefi chains in W1 PartitionedTickWriter (cefi_chain_tail_v6_canonicalisation_2026_07_21)" --agent --files 'market_tick_data_service/engine/orchestrator/partitioned_writer.py tests/unit/test_partitioned_writer_partition_validation.py tests/unit/test_partitioned_writer_tradfi_filename_canonical.py tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py'`
+    once both blockers above are resolved by others (or fix them first per their own issue docs).
