@@ -102,9 +102,15 @@ principle, wrong in aggregation.
       ARN's trailing `instance/i-…` segment through the map before the by-name billing join; unmapped rows stay `None`.
       Unit tests added: `test_attach_costs_resolves_aws_arn_via_instance_census`,
       `test_attach_costs_unmapped_aws_row_stays_honest_none`. `bash scripts/quality-gates.sh` green.
-- [ ] [BACKEND] P1. **Partial-day basis flag** (decision 4). When `cost_actual_usd` falls back to the latest PARTIAL day
-      (no complete day exists — service.py:321-322), emit a `cost_basis: "partial" | "complete"` field alongside it (or
-      equivalent) so the frontend can style it — no text label, colour only. Field doc updated.
+- [x] ✅ [BACKEND] P1. **Partial-day basis flag** (decision 4). When `cost_actual_usd` falls back to the latest PARTIAL
+      day (no complete day exists — service.py:321-322), emit a `cost_basis: "partial" | "complete"` field alongside it
+      (or equivalent) so the frontend can style it — no text label, colour only. Field doc updated. —
+      deployment-api@0a14fd6: `ResourceDailyCost.cost_basis: Literal["partial", "complete"]` added in
+      `cost_observability/models.py`; `per_resource_daily()` sets it `"complete" if complete_days else "partial"`
+      (`service.py`); threaded through `_attach_costs` onto `DeploymentItem.cost_basis: str | None` (`None` = no billing
+      row yet, honest absence) in `deployments_inventory.py`. Existing `_attach_costs` unit tests updated for the new
+      required dataclass field + 2 new assertions on `per_resource_daily`'s `cost_basis` output (complete / partial
+      cases). `bash scripts/quality-gates.sh` green.
 - [ ] [UI] P1. `CostCell` colour treatment — when `cost_basis == "partial"`, render the actual-cost figure in a visually
       distinct colour from the normal complete-day colour (no added text/tooltip — colour is the only signal per
       operator decision). `pw:L2 ✓` + a cited regression spec covering both partial and complete states.
