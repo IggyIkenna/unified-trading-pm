@@ -55,9 +55,11 @@ source: operator dictation 2026-07-17 (interactive session — six deployment-ui
 > **🟡 TRACKER — DO NOT DISPATCH THIS FILE, EVER.** Operator 2026-07-17 — _"its going to be a tracker for now and we
 > will split them once we are done."_ This file exists to capture every workstream NOW so nothing is missed; it stays
 > `status: draft` (never ingested) and **must never flip `active` itself** — it exceeds the 10–20-todo AO cap by design.
-> When the operator finalises, SPLIT per the "Split map" section into per-WS AO plans (one plan = one agent), then this
-> tracker archives with pointers. Frontmatter carries AO fields (`assigned_vm: planning`) per operator instruction so
-> the split children inherit them.
+> When the operator finalises, SPLIT per the "Split map" section into per-WS AO plans (≤10–20 todos each; intra-plan
+> concurrency per `task_template.md` §4 — a plan's independent same-priority todos fan out across workers, so split for
+> the todo cap / partial-parallelism dep gates, NOT the superseded "one plan = one agent"), then this tracker archives
+> with pointers. Frontmatter carries AO fields (`assigned_vm: planning`) per operator instruction so the split children
+> inherit them.
 >
 > **PUSHED TO REMOTE (operator 2026-07-17)** so it's durable and visible to the team — still `draft`, still never
 > dispatched. The split into per-WS plans happens after the open decisions land and the scope is finalised.
@@ -448,8 +450,9 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
 | WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                          | 🟢 **Plan A ACTIVE 2026-07-21** — 2nd-wave dispatch; Plan B stays `draft` (gated on A)               |
 | WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend; git-health dropped) | done — write-path decided; kept `draft`, dispatch held                                               |
 
-Per task_template §4 — each child gets 10–20 todos, one plan = one agent, audits separable, draft-gated phases where a
-build depends on an audit/decision.
+Per task_template §4 — each child gets 10–20 todos, intra-plan concurrency (independent same-priority todos fan out
+across workers; use `sequential: true` / `depends_on`+`gate_on_depends` for real chains), audits separable, draft-gated
+phases where a build depends on an audit/decision.
 
 ## Pre-activation fix checklist (still-draft plans — apply BEFORE flipping each to `active`)
 
