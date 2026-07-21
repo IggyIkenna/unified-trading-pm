@@ -79,10 +79,16 @@ File as a P3 backlog item — neither is blocking, both are worth picking up opp
       explicit "not wired yet" note pointing at todo 3 below (INFRA, the remaining wiring for `DriftEvent`; the
       per-calculator HTTP route is a further follow-up beyond this card's scope). Unit spec:
       `tests/unit/components/SportsFeatureCoverageCard.test.tsx`.
-- [ ] [DOC] P3. Write a codex playbook under `codex/02-data/` documenting how to register a new sports feature
+- [x] ✅ [DOC] P3. Write a codex playbook under `codex/02-data/` documenting how to register a new sports feature
       calculator against the coverage-gating architecture (UAC `FEATURE_UPSTREAM_REQUIREMENTS` entry, `_gate_then_run`
       wiring in features-service, the deployment-api per-calc-meta entry each new calculator needs). (repo:
-      unified-trading-pm)
+      unified-trading-pm) — `codex/02-data/sports-feature-calculator-registration-playbook.md`. Covers the 2 real touch
+      points (UAC `FEATURE_UPSTREAM_REQUIREMENTS` entry; the `gate(...)` call in the features-service dispatcher wired
+      through `_gate_then_run`/`check_calculator_coverage`) + 1 conditional touch point (`DATA_TYPE_TO_REF_KEY` only for
+      a genuinely new upstream data_type), plus an explicit correction of the todo's own premise: deployment-api's
+      `FEATURES_SPORTS_PER_CALC_META` is auto-derived (a dict comprehension over `FEATURE_UPSTREAM_REQUIREMENTS`,
+      `sports_helpers.py`) — there is no manual per-calc-meta entry to add, and the playbook says so explicitly so
+      future authors don't duplicate work. Includes a worked example (`set_piece_calculator`).
 - [ ] [INFRA] P3. Wire the drift comparator's cron entrypoint + dashboard alert (the one remaining piece of the
       otherwise-shipped P8.B). (repo: deployment-api)
 
