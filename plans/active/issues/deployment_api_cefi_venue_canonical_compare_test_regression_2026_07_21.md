@@ -67,9 +67,21 @@ it isn't theirs, same class of interruption already logged in this session for t
 
 # Recommended decision
 
-- [ ] [SCRIPT] P3. Determine whether `OKX-FUTURES` legitimately belongs in the cefi canonical-venue set
+- [x] ✅ [SCRIPT] P3. Determine whether `OKX-FUTURES` legitimately belongs in the cefi canonical-venue set
       `enumerate_distinct_values` compares against (in which case fix the test's expectation) or whether the
       canonical-set derivation regressed for the venue axis specifically (in which case fix
       `deployment_api/routes/data_status/_distinct_values.py`) — trace back through `ea56fff`/`96499dd`/`0d2f6e6` to
       find which changed the comparison grain most recently, then correct whichever side is wrong. (repo:
-      deployment-api)
+      deployment-api) — deployment-api@fe8eaf1. **Verdict: the test was stale, not the code.** UAC's
+      `VENUES_BY_ASSET_GROUP["cefi"]` (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`)
+      already documents the root cause in-line: `OKX-FUTURES`/`OKX-SWAP` were added 2026-07-21 as real,
+      actively-captured cefi venues (119,706 + 423,313 captured manifest rows respectively) that had been wholly absent
+      from the list — that same comment explicitly names `_distinct_values.py::_canonical_set()` as the consumer that
+      was badging them a false-positive drift alarm before the fix. Confirmed via the sibling editable UAC import
+      (`.venv/bin/python -c "... VENUES_BY_ASSET_GROUP['cefi']"` → `OKX-FUTURES` is a member) that
+      `enumerate_distinct_values` now correctly reports `is_canonical=True` for `OKX-FUTURES` — no regression in
+      `_distinct_values.py`, `ea56fff`/`96499dd`/`0d2f6e6` are unrelated canonical-vs-grain fixes to a different code
+      path. Fixed `tests/unit/test_route_data_status_distinct_values.py::test_cefi_venue_axis_keeps_exact_compare`:
+      `OKX-FUTURES` now asserts `True` (matches the corrected canonical set) and a genuinely non-canonical value
+      (`OKX-MARGIN`, not registered under any name) replaces it as the exact-compare negative case so the test still
+      proves the comparison isn't loosened. All 12 tests in the file pass; `quality-gates.sh` green.
