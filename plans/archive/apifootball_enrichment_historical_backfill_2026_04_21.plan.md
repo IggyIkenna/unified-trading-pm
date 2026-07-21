@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: API-Football Enrichment Historical Backfill — FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS / INJURIES
+title:
+  API-Football Enrichment Historical Backfill — FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / PLAYER_STATS /
+  INJURIES
 summary:
 status: complete
 nature: record
@@ -17,12 +19,21 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: deployment
 epic: none
-completion_gates: {code: none, deployment: D3, business: B3}
+completion_gates: { code: none, deployment: D3, business: B3 }
 repo_gates:
-- {repo: deployment-service, deployment: D0}
+  - { repo: deployment-service, deployment: D0 }
 depends_on: []
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md` — successor:
+
+sports_p2_history_apifootball_2015_to_present_2026_06_27 (all 3 open items — monitor/rescan/audit the AF-enrichment
+chain, data-status coverage confirmation, per-entity spot-check — are absorbed by that plan's completed monitor+rescan+
+audit cycles, cross-confirmed by `plans/active/sports_data_sources_canonical_completion_2026_07_13.md` and
+`plans/active/data_completion_to_100_all_ag_2026_06_21.md`. The pre-2020-06-06 portion of this plan's original window is
+independently moot per `codex/02-data/sports-2020-06-data-floor.md`. NOTE: `locked_by: live-defi-rollout` was never
+cleared at archival — flagged for operator `[unlock-plan]` cleanup, tracked in the parent issue doc.)
 
 ## PLAN-SIZING (Phase 0 — 2026-04-21)
 

@@ -20,6 +20,15 @@ parent: master_to_live_defi_2026_05_23
 deadline: 2026-05-23
 ---
 
+## Deferred work — migrated to: `plans/epics/predictions_master.md` — successor: predictions_master (every open item —
+
+Polymarket/Kalshi/data-pipeline/cross-asset-features/LookaheadBiasError/cluster-validation/strategy+execution — is
+routed through that epic's "Workstream routing" table to its live children, e.g.
+`plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md`,
+`plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md`. Opinion Trade backtest + CME event-futures arb
+backtest were explicitly ruled OUT-of-scope 2026-05-08. NOTE: `locked_by: live-defi-rollout` was never cleared at
+archival — flagged for operator `[unlock-plan]` cleanup.)
+
 # Epic — Prediction Markets (May 23 2026)
 
 > **🔴 SUPERSEDED 2026-05-08** — folded into [`predictions_master_2026_05_07.md`](./predictions_master_2026_05_07.md) §

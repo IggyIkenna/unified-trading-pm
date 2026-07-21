@@ -6,7 +6,15 @@ status: drafted
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-ui, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-ui,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -17,6 +25,19 @@ locked_since: 2026-05-06
 parent_plan: writegate_honest_coverage_endtoend_2026_05_06.plan.md
 companion_handover: shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
 ---
+
+## Deferred work — migrated to: `plans/active/data_completion_prediction_2026_07_15.md`,
+
+`plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md` — successor:
+data_completion_prediction_2026_07_15, predictions_other_bucket_and_ui_drilldown_2026_06_20 (the instruments-service
+lifecycle + MTDS adapter + manifest-canonicalisation clusters route through `plans/epics/predictions_master.md`'s
+"Workstream routing" table to the first plan (the prediction slice split from M-1 2026-07-15); the deployment-api/
+deployment-ui panel cluster routes to the second plan, which still carries the live remainder (3 open items). The
+features/strategy reader-migration + lookahead + e2e-smoke cluster already shipped, archived complete at
+`plans/archive/2026_07/predictions_lookahead_and_reader_migration_2026_06_20.md`. Two Phase-5 integration-test items
+(cluster-validation + lifecycle-gating tests) are AMBIGUOUS — no direct evidence found either way, recommend an operator
+spot-check of the `market-tick-data-service` test suite rather than a blind close. NOTE: `locked_by: live-defi-rollout`
+was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
 
 # Predictions Canonical-Question-Group SSOT + Polymarket Migration + Lifecycle Timing — Plan
 
@@ -113,17 +134,33 @@ Per workspace CLAUDE.md (codified 2026-05-06):
 
 ### unified-api-contracts (UAC)
 
-| Surface                                                                                                         | New / changed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `unified_api_contracts/predictions/__init__.py` (new module)                                                    | Public facade: `CanonicalQuestionGroup`, `classify_market_to_canonical_group()`, `lifecycle_for_market()`, `expected_market_ids_for_canonical_group()`, `is_market_active_at()`.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `unified_api_contracts/canonical/domain/predictions/canonical_groups.py` (new)                                  | `CanonicalQuestionGroup` enum + `CANONICAL_GROUP_METADATA` registry (cadence, expected_active_count, resolution_basis).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `unified_api_contracts/canonical/domain/predictions/classifiers.py` (**ALREADY SHIPPED — wraps internal SSOT**) | Verified 2026-05-06: file exists, exported via `unified_api_contracts/predictions/__init__.py:37`. Per **Citadel Import Rules** facade pattern (CLAUDE.md "UAC Citadel Architecture"): the canonical-facade `classifiers.py` re-exports from internal SSOT `unified_api_contracts/internal/schemas/_prediction_market_taxonomy.py` (130-entry rule set, 78 tests, 13+ direct callers including `internal/schemas/contracts.py` 5 imports). NOT duplication — this IS the architecture. Plan work is bug-fix + canonical_question_group naming wired through the existing internal taxonomy, NOT creating new modules. | None`; word-boundary regex + token rules + classifier stability hash. |
-| `unified_api_contracts/canonical/domain/predictions/condition_id_overrides.py` (new)                            | `POLYMARKET_CONDITION_ID_TO_GROUP: dict[str, CanonicalQuestionGroup]` — hand-curated overrides for headline markets where automated classification is wrong; long tail uses classifier.                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `unified_api_contracts/canonical/domain/predictions/ticker_overrides.py` (new)                                  | `KALSHI_TICKER_TO_GROUP: dict[str, CanonicalQuestionGroup]` — same pattern.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `unified_api_contracts/canonical/domain/predictions/lifecycle.py` (new)                                         | `MarketLifecycle` dataclass: `market_id`, `canonical_group`, `market_created_at`, `resolution_time`, `settlement_time`, `current_status`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `unified_api_contracts/canonical/crosscutting/honest_coverage.py`                                               | `PREDICTION_GROUPS` registry populated (currently empty per writegate plan). Schema: `{canonical_group: {expected_market_ids_per_day_by_cadence: ...}}`.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `unified_api_contracts/canonical/crosscutting/availability_semantics.py`                                        | Add `("prediction", "prediction_canonical_question_group")` → `event_time` (per-row tick timestamp); add `("prediction", "MARKET_LIFECYCLE")` → `market_created_at` for the metadata table.                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `unified_api_contracts/canonical/crosscutting/source_priority.py`                                               | Add `("prediction", "prediction_canonical_question_group")` → `["polymarket_ws_live", "polymarket_rest_archive", "kalshi_ws_live", "kalshi_rest_archive"]`.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Surface | New / changed | |
+--------------------------------------------------------------------------------------------------------------- |
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+| --------------------------------------------------------------------- | |
+`unified_api_contracts/predictions/__init__.py` (new module) | Public facade: `CanonicalQuestionGroup`,
+`classify_market_to_canonical_group()`, `lifecycle_for_market()`, `expected_market_ids_for_canonical_group()`,
+`is_market_active_at()`. | | `unified_api_contracts/canonical/domain/predictions/canonical_groups.py` (new) |
+`CanonicalQuestionGroup` enum + `CANONICAL_GROUP_METADATA` registry (cadence, expected_active_count, resolution_basis).
+| | `unified_api_contracts/canonical/domain/predictions/classifiers.py` (**ALREADY SHIPPED — wraps internal SSOT**) |
+Verified 2026-05-06: file exists, exported via `unified_api_contracts/predictions/__init__.py:37`. Per **Citadel Import
+Rules** facade pattern (CLAUDE.md "UAC Citadel Architecture"): the canonical-facade `classifiers.py` re-exports from
+internal SSOT `unified_api_contracts/internal/schemas/_prediction_market_taxonomy.py` (130-entry rule set, 78 tests, 13+
+direct callers including `internal/schemas/contracts.py` 5 imports). NOT duplication — this IS the architecture. Plan
+work is bug-fix + canonical_question_group naming wired through the existing internal taxonomy, NOT creating new
+modules. |
+None`; word-boundary regex + token rules + classifier stability hash. | | `unified_api_contracts/canonical/domain/predictions/condition_id_overrides.py`(new)                            |`POLYMARKET_CONDITION_ID_TO_GROUP:
+dict[str,
+CanonicalQuestionGroup]`— hand-curated overrides for headline markets where automated classification is wrong; long tail uses classifier.                                                                                                                                                                                                                                                                                                                                                                                                                               | |`unified_api_contracts/canonical/domain/predictions/ticker_overrides.py`(new)                                  |`KALSHI_TICKER_TO_GROUP:
+dict[str,
+CanonicalQuestionGroup]`— same pattern.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | |`unified_api_contracts/canonical/domain/predictions/lifecycle.py`(new)                                         |`MarketLifecycle`dataclass:`market_id`, `canonical_group`, `market_created_at`, `resolution_time`, `settlement_time`, `current_status`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | | `unified_api_contracts/canonical/crosscutting/honest_coverage.py`                                              |`PREDICTION_GROUPS`registry populated (currently empty per writegate plan). Schema:`{canonical_group:
+{expected_market_ids_per_day_by_cadence:
+...}}`.                                                                                                                                                                                                                                                                                                                                                                                                                                                              | | `unified_api_contracts/canonical/crosscutting/availability_semantics.py`                                       | Add`("prediction",
+"prediction_canonical_question_group")`→`event_time`(per-row tick timestamp); add`("prediction",
+"MARKET_LIFECYCLE")`→`market_created_at`for the metadata table.                                                                                                                                                                                                                                                                                                                                                                                                                           | |`unified_api_contracts/canonical/crosscutting/source_priority.py`                                              | Add`("prediction",
+"prediction_canonical_question_group")`→`["polymarket_ws_live", "polymarket_rest_archive", "kalshi_ws_live",
+"kalshi_rest_archive"]`. |
 
 ### market-tick-data-service (MTDS)
 
@@ -137,11 +174,19 @@ Per workspace CLAUDE.md (codified 2026-05-06):
 
 ### features-\* + strategy-service
 
-| File                                                                                       | Concern                                                                                                                                                                                                                                    |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `features-cross-instrument-service` (likely owner of prediction features — verify Phase 0) | Reader paths currently key on `(venue, data_type=BTC                                                                                                                                                                                       | ETH | ...)`. Migrate to `(venue, data_type=prediction_canonical_question_group, canonical_question_group=BTC_UP_DOWN_HOURLY | ...)`. Per-market drill-down for features that operate at single-market level. |
-| `strategy-service` prediction archetypes                                                   | Archetype configs reference `data_type=BTC` etc. Migrate to canonical_group references.                                                                                                                                                    |
-| `LookaheadBiasError`                                                                       | Per-market lifecycle gating: feature at T can only consume ticks where `tick.market_id`'s `market_created_at <= T`. UTL `assert_lifecycle_respected(feature_t, market_lifecycle)` helper (extends existing `assert_available_at_present`). |
+| File | Concern | | ------------------------------------------------------------------------------------------ |
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+| ---                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------- |
+| ------------------------------------------------------------------------------                                          |                               | `features-cross-instrument-service`      |
+| (likely owner of prediction features — verify Phase 0)                                                                  | Reader paths currently key on |
+| `(venue, data_type=BTC                                                                                                  | ETH                           | ...)`.                                   |
+| Migrate to `(venue, data_type=prediction_canonical_question_group, canonical_question_group=BTC_UP_DOWN_HOURLY          | ...)`.                        |
+| Per-market drill-down for features that operate at single-market level.                                                 |                               | `strategy-service` prediction archetypes |
+| Archetype configs reference `data_type=BTC` etc. Migrate to canonical_group references.                                 |                               | `LookaheadBiasError`                     |
+| Per-market lifecycle gating: feature at T can only consume ticks where `tick.market_id`'s `market_created_at <= T`. UTL |
+| `assert_lifecycle_respected(feature_t, market_lifecycle)` helper (extends existing `assert_available_at_present`).      |
 
 ### deployment-api / deployment-ui
 
@@ -419,12 +464,19 @@ Sources verified during probe:
 
 **Polymarket — partial coverage with one zero-effort UAC fix**:
 
-| Plan field                 | Source field                                                                 | Status                          | Action                                                                                                              |
-| -------------------------- | ---------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `market_created_at`        | `PolymarketGammaMarket.createdAt` (raw JSON has it; Pydantic model drops it) | **CRITICAL ONE-LINE FIX**       | Add `created_at: str                                                                                                | None = Field(None, alias="createdAt")`to`PolymarketGammaMarket`(UAC`external/polymarket/schemas.py:289`) |
-| `resolution_time` (actual) | `PolymarketMarketResult.resolution_time` (separate REST endpoint)            | Available via second API call   | One-extra-call-per-resolved-market in instruments-service Phase 1B                                                  |
-| `resolution_time` (proxy)  | `PolymarketGammaMarket.end_date_iso`                                         | Available; scheduled-not-actual | Use as `lifecycle_confidence="low_scheduled_end_date"` for unresolved markets                                       |
-| `settlement_time`          | NO direct field                                                              | UNAVAILABLE                     | Always derive: `resolution_time + settlement_lag` (2h UMA undisputed; 48-72h disputed); confidence column mandatory |
+| Plan field | Source field | Status | Action | | -------------------------- |
+---------------------------------------------------------------------------- | ------------------------------- |
+------------------------------------------------------------------------------------------------------------------- |
+-------------------------------------------------------------------------------------------------------- | |
+`market_created_at` | `PolymarketGammaMarket.createdAt` (raw JSON has it; Pydantic model drops it) | **CRITICAL ONE-LINE
+FIX** | Add
+`created_at: str                                                                                                | None = Field(None, alias="createdAt")`to`PolymarketGammaMarket`(UAC`external/polymarket/schemas.py:289`)
+| | `resolution_time` (actual) | `PolymarketMarketResult.resolution_time` (separate REST endpoint) | Available via
+second API call | One-extra-call-per-resolved-market in instruments-service Phase 1B | | `resolution_time` (proxy) |
+`PolymarketGammaMarket.end_date_iso` | Available; scheduled-not-actual | Use as
+`lifecycle_confidence="low_scheduled_end_date"` for unresolved markets | | `settlement_time` | NO direct field |
+UNAVAILABLE | Always derive: `resolution_time + settlement_lag` (2h UMA undisputed; 48-72h disputed); confidence column
+mandatory |
 
 **Kalshi — full coverage**:
 
@@ -483,17 +535,30 @@ superseded entirely by canonical migration script.
 
 ### Plan amendments surfaced (post Phase 0)
 
-| #   | Amendment                                                                                                                                                                                                                                                          | Status                                                                                                                            | Owner                                        |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------- |
-| α   | Phase 1A scope reduction: existing classifier IS the SSOT — wrap + bug-fix + add stability hash, not greenfield build (~70% effort drop)                                                                                                                           | Surfaced — needs Ikenna sign-off on revised scope                                                                                 | Ikenna                                       |
-| β   | One-line UAC fix: `PolymarketGammaMarket.created_at: str                                                                                                                                                                                                           | None = Field(None, alias="createdAt")`+ same for`closedTime`. Unblocks `market_created_at`and event-level`resolution_time` proxy. | **Trivial — Claude can ship after sign-off** | Claude (with sign-off) |
-| γ   | Bug fix: add `"may"` to `_MONTHLY_TOKENS` in `_prediction_market_taxonomy.py` (currently missing from both 3-letter and full-name sets).                                                                                                                           | Trivial bug fix                                                                                                                   | Claude (with sign-off)                       |
-| δ   | 7 edge-case tests to add for the existing classifier (Airbnb / archBitcoin / solar / house-price / fed-ex / bnb-may-15 / fear-factor — see audit-3 §F3).                                                                                                           | Test coverage                                                                                                                     | Claude (with sign-off)                       |
-| ε   | Migration scope reduction: GCS hive partitions ALREADY include `market_category` / `underlying` / `market_type` / `resolution_period`. Migration is a single composition step (4-tuple → canonical_group name) + lifecycle metadata add, NOT a structural reshape. | Surfaced                                                                                                                          | Ikenna                                       |
-| ζ   | Open question: canonical-group naming convention (`BTC_UP_DOWN_HOURLY` vs `BTC_HOURLY` vs `CRYPTO_BTC_HOURLY`)?                                                                                                                                                    | Pending                                                                                                                           | Ikenna                                       |
-| η   | Open question: per-cadence `expected_market_ids_per_day` — hardcoded constants in registry, or dynamic from manifest row counts?                                                                                                                                   | Pending                                                                                                                           | Ikenna                                       |
-| θ   | Open question: election year suffix — explicit (`ELECTION_PRESIDENT_2028`) or floating (`ELECTION_PRESIDENT_NEXT`)?                                                                                                                                                | Pending                                                                                                                           | Ikenna                                       |
-| ι   | Open question: sports fixture canonical groups — align with writegate plan's `SPORTS_FIXTURE_CLUSTERS` registry, or separate?                                                                                                                                      | Pending — coordination point with writegate                                                                                       | Ikenna                                       |
+| # | Amendment | Status | Owner | | --- |
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+|
+---------------------------------------------------------------------------------------------------------------------------------
+
+| -------------------------------------------- | ---------------------- | | α | Phase 1A scope reduction: existing
+classifier IS the SSOT — wrap + bug-fix + add stability hash, not greenfield build (~70% effort drop) | Surfaced — needs
+Ikenna sign-off on revised scope | Ikenna | | β | One-line UAC fix:
+`PolymarketGammaMarket.created_at: str                                                                                                                                                                                                           | None = Field(None, alias="createdAt")`+
+same for`closedTime`. Unblocks `market_created_at`and event-level`resolution_time` proxy. | **Trivial — Claude can ship
+after sign-off** | Claude (with sign-off) | | γ | Bug fix: add `"may"` to `_MONTHLY_TOKENS` in
+`_prediction_market_taxonomy.py` (currently missing from both 3-letter and full-name sets). | Trivial bug fix | Claude
+(with sign-off) | | δ | 7 edge-case tests to add for the existing classifier (Airbnb / archBitcoin / solar / house-price
+/ fed-ex / bnb-may-15 / fear-factor — see audit-3 §F3). | Test coverage | Claude (with sign-off) | | ε | Migration scope
+reduction: GCS hive partitions ALREADY include `market_category` / `underlying` / `market_type` / `resolution_period`.
+Migration is a single composition step (4-tuple → canonical_group name) + lifecycle metadata add, NOT a structural
+reshape. | Surfaced | Ikenna | | ζ | Open question: canonical-group naming convention (`BTC_UP_DOWN_HOURLY` vs
+`BTC_HOURLY` vs `CRYPTO_BTC_HOURLY`)? | Pending | Ikenna | | η | Open question: per-cadence
+`expected_market_ids_per_day` — hardcoded constants in registry, or dynamic from manifest row counts? | Pending | Ikenna
+| | θ | Open question: election year suffix — explicit (`ELECTION_PRESIDENT_2028`) or floating
+(`ELECTION_PRESIDENT_NEXT`)? | Pending | Ikenna | | ι | Open question: sports fixture canonical groups — align with
+writegate plan's `SPORTS_FIXTURE_CLUSTERS` registry, or separate? | Pending — coordination point with writegate | Ikenna
+|
 
 ---
 
@@ -504,15 +569,15 @@ superseded entirely by canonical migration script.
       "BTC_UP_DOWN_DAILY" # ... (per Phase 0 taxonomy) OTHER = "OTHER"
 
       @dataclass(frozen=True)
-      class CanonicalGroupMetadata:
-          group: CanonicalQuestionGroup
-          cadence: Literal["hourly", "daily", "weekly", "monthly", "irregular", "single"]
-          expected_market_ids_per_day: int | Callable[[date], int]  # int for fixed cadence, callable for irregular
-          resolution_basis: Literal["price_threshold", "binary_outcome", "multi_outcome"]
-          settlement_lag: timedelta  # typical settlement_time − resolution_time
+              class CanonicalGroupMetadata:
+                  group: CanonicalQuestionGroup
+                  cadence: Literal["hourly", "daily", "weekly", "monthly", "irregular", "single"]
+                  expected_market_ids_per_day: int | Callable[[date], int]  # int for fixed cadence, callable for irregular
+                  resolution_basis: Literal["price_threshold", "binary_outcome", "multi_outcome"]
+                  settlement_lag: timedelta  # typical settlement_time − resolution_time
 
-      CANONICAL_GROUP_METADATA: dict[CanonicalQuestionGroup, CanonicalGroupMetadata] = {...}
-      ```
+              CANONICAL_GROUP_METADATA: dict[CanonicalQuestionGroup, CanonicalGroupMetadata] = {...}
+              ```
 
 - [x] [SCRIPT] P0. New module `unified_api_contracts/canonical/domain/predictions/classifiers.py`: -
       `classify_market_to_canonical_group(market_metadata: PolymarketMarketMetadata | KalshiMarketMetadata) -> CanonicalQuestionGroup | None`
@@ -527,14 +592,14 @@ superseded entirely by canonical migration script.
       datetime current_status: Literal["created", "active", "resolved", "settled"]
 
       def is_market_active_at(lifecycle: MarketLifecycle, ts: datetime) -> bool:
-          return lifecycle.market_created_at <= ts < lifecycle.settlement_time
+                  return lifecycle.market_created_at <= ts < lifecycle.settlement_time
 
-      def expected_market_ids_for_canonical_group(
-          group: CanonicalQuestionGroup, day: date, lifecycles: Iterable[MarketLifecycle]
-      ) -> set[str]:
-          # Returns market_ids whose [created, settled) window overlaps the day.
-          ...
-      ```
+              def expected_market_ids_for_canonical_group(
+                  group: CanonicalQuestionGroup, day: date, lifecycles: Iterable[MarketLifecycle]
+              ) -> set[str]:
+                  # Returns market_ids whose [created, settled) window overlaps the day.
+                  ...
+              ```
 
 - [x] [SCRIPT] P0. Populate `unified_api_contracts/canonical/crosscutting/honest_coverage.py` `PREDICTION_GROUPS`
       registry (was empty per writegate plan): - For each `CanonicalQuestionGroup`, derive the expected

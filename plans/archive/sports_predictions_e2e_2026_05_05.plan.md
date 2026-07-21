@@ -6,12 +6,20 @@ status: in_progress
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-05
-overview: 'Drive sports predictions running end-to-end on the live pipeline: feature-service-sports producing
+overview: "Drive sports predictions running end-to-end on the live pipeline: feature-service-sports producing
 
   honest non-NULL features → ML training (Model 2A walk-forward) → strategy-service paper trade
 
@@ -23,7 +31,7 @@ overview: 'Drive sports predictions running end-to-end on the live pipeline: fea
 
   activation and the features_sports_honest_coverage plan.
 
-  '
+  "
 type: mixed
 epic: sports-predictions-e2e
 priority: P0
@@ -31,18 +39,38 @@ owner: Iggy
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
 supersedes: [sports_e2e_validation_2026_03_27.plan.md]
-depends_on: [sports_roadmap_master_execution_2026_04_21.plan.md, utl_base_image_rebuild_and_workflow_unblock_2026_04_22.plan.md, features_sports_honest_coverage_2026_05_05.plan.md, sports_phantom_recon_and_failure_triage_2026_05_01.plan.md, sports_manifest_shard_migration_cleanup_2026_04_21.plan.md, canonical_team_mapping_propagation_2026_03_30.plan.md]
-completion_gates: {code: C5, deployment: D5, business: B5}
+depends_on:
+  [
+    sports_roadmap_master_execution_2026_04_21.plan.md,
+    utl_base_image_rebuild_and_workflow_unblock_2026_04_22.plan.md,
+    features_sports_honest_coverage_2026_05_05.plan.md,
+    sports_phantom_recon_and_failure_triage_2026_05_01.plan.md,
+    sports_manifest_shard_migration_cleanup_2026_04_21.plan.md,
+    canonical_team_mapping_propagation_2026_03_30.plan.md,
+  ]
+completion_gates: { code: C5, deployment: D5, business: B5 }
 repo_gates:
-- {repo: feature-service-sports, code: C0, deployment: D0, business: B0}
-- {repo: ml-training, code: C0, deployment: D0, business: B0}
-- {repo: strategy-service, code: C0, deployment: D0, business: B0}
-- {repo: execution-service, code: C0, deployment: D0, business: B0}
-- {repo: market-data-processing-service, code: C0, deployment: D0, business: B0}
-- {repo: market-tick-data-service, code: C0, deployment: D0, business: B0}
-- {repo: deployment-api, code: C0, deployment: D0, business: B0}
-- {repo: deployment-ui, code: C0, deployment: D0, business: B0}
+  - { repo: feature-service-sports, code: C0, deployment: D0, business: B0 }
+  - { repo: ml-training, code: C0, deployment: D0, business: B0 }
+  - { repo: strategy-service, code: C0, deployment: D0, business: B0 }
+  - { repo: execution-service, code: C0, deployment: D0, business: B0 }
+  - { repo: market-data-processing-service, code: C0, deployment: D0, business: B0 }
+  - { repo: market-tick-data-service, code: C0, deployment: D0, business: B0 }
+  - { repo: deployment-api, code: C0, deployment: D0, business: B0 }
+  - { repo: deployment-ui, code: C0, deployment: D0, business: B0 }
 ---
+
+## Deferred work — migrated to: `plans/active/sports_master_closeout_2026_07_21.md`,
+
+`plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md` — successor: sports_master_closeout_2026_07_21,
+predictions_ml_walk_forward_and_arb_2026_06_20 (Group D FSS/MDPS chain + Group E ML walk-forward are actively owned by
+these plans, per `predictions_ml_walk_forward_and_arb_2026_06_20.md`'s own provenance note extracting it from this
+plan's predictions half; `arb_calculator` already shipped `features-service@9347dbeb`. **GENUINELY ORPHANED** (Group
+F/H/I): `spread_calculator`, strategy-service/execution-service backtest+matching-engine passes, arb-decay-window
+analysis, paper-trade alpha gate, FSS/ML/strategy schema-parity test, UI prediction-display check, and the full
+MTDS/MDPS/FSS/strategy live-mode activation chain — bundled into
+`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`. NOTE:
+`locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
 
 # Sports Predictions End-to-End
 

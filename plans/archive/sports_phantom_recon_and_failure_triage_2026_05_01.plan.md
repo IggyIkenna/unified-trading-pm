@@ -15,11 +15,20 @@ priority: P1
 owner: Harsh
 type: data
 epic: data-pipeline-completion
-completion_gates: {business: B3}
+completion_gates: { business: B3 }
 repo_gates:
-- {repo: instruments-service, business: B3}
+  - { repo: instruments-service, business: B3 }
 depends_on: [instruments_and_market_tick_data_completion_2026_05_01.md]
 ---
+
+## Deferred work — migrated to: `plans/active/sports_data_sources_canonical_completion_2026_07_13.md`,
+
+`plans/active/issues/reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md` — successor:
+sports_data_sources_canonical_completion_2026_07_13, reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12
+(SFI_STANDINGS/open-meteo/api-football/understat coverage-window findings are closed or superseded by the 2020-06-06
+data floor; the schema-modal quick-fix already shipped in `deployment-api`; the phantom-reconciler CAS/lost-update race
+is the same bug class fixed at `unified-trading-library@75e59a89`, tracked resolved in the linked issue doc; the
+VM-wait/relaunch items are long superseded by multiple later sports closeout runs. No `locked_by` is set on this file.)
 
 > **2026-05-06 update — Phase 1 mechanism unblocked once UTL fix lands.** This plan's flip-to-`attempted_failed`
 > approach was previously broken because `check_shard_freshness` (UTL `manifest_writer.py`) ignored `capture_status` —
@@ -92,23 +101,23 @@ Dry-run is always safe (read-only).
       attempted_failed in the manifest). Detail by data_type:
 
       | data_type             | new phantoms | currently captured | phantom%   |
-      | --------------------- | -----------: | -----------------: | ---------: |
-      | INJURIES              |        9,872 |             10,559 |  **48.3%** |
-      | PLAYER_VALUES         |        3,814 |                979 |  **79.6%** |
-      | STANDINGS             |       13,022 |            183,709 |       6.6% |
-      | PLAYER_STATS          |        3,053 |             20,758 |      12.8% |
-      | FIXTURE_LINEUPS       |        2,842 |             30,997 |       8.4% |
-      | FIXTURE_STATS         |        2,629 |             36,685 |       6.7% |
-      | FIXTURE_EVENTS        |          555 |             35,045 |       1.6% |
-      | TEAMS                 |          383 |            103,138 |       0.4% |
-      | SFI_LEAGUES           |          207 |             13,006 |       1.6% |
-      | ODDS                  |          204 |             26,171 |       0.8% |
-      | PREDICTIONS           |          189 |             26,353 |       0.7% |
-      | (others)              |            0 |                  — |       0.0% |
+              | --------------------- | -----------: | -----------------: | ---------: |
+              | INJURIES              |        9,872 |             10,559 |  **48.3%** |
+              | PLAYER_VALUES         |        3,814 |                979 |  **79.6%** |
+              | STANDINGS             |       13,022 |            183,709 |       6.6% |
+              | PLAYER_STATS          |        3,053 |             20,758 |      12.8% |
+              | FIXTURE_LINEUPS       |        2,842 |             30,997 |       8.4% |
+              | FIXTURE_STATS         |        2,629 |             36,685 |       6.7% |
+              | FIXTURE_EVENTS        |          555 |             35,045 |       1.6% |
+              | TEAMS                 |          383 |            103,138 |       0.4% |
+              | SFI_LEAGUES           |          207 |             13,006 |       1.6% |
+              | ODDS                  |          204 |             26,171 |       0.8% |
+              | PREDICTIONS           |          189 |             26,353 |       0.7% |
+              | (others)              |            0 |                  — |       0.0% |
 
-      **Critical interpretation: 79.6% of `PLAYER_VALUES` and 48.3% of `INJURIES` "captured" rows are lying.** These
-      manifest entries claim parquet exists; recon's bulk GCS list says it doesn't. This is a much bigger problem than
-      the initial 9k flagged failures.
+              **Critical interpretation: 79.6% of `PLAYER_VALUES` and 48.3% of `INJURIES` "captured" rows are lying.** These
+              manifest entries claim parquet exists; recon's bulk GCS list says it doesn't. This is a much bigger problem than
+              the initial 9k flagged failures.
 
 - [x] [AGENT] P0. Per-source breakdown of ALL 6 sports sources (api-football / footystats / understat / transfermarkt /
       sfi / open-meteo) — see "Per-source findings" section below.

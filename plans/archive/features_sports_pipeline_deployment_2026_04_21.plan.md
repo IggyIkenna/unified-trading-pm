@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, market-tick-data-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -17,13 +25,25 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: deployment
 epic: none
-completion_gates: {code: none, deployment: D3, business: B3}
+completion_gates: { code: none, deployment: D3, business: B3 }
 repo_gates:
-- {repo: features-sports-service, deployment: D0}
-- {repo: deployment-service, deployment: D0}
+  - { repo: features-sports-service, deployment: D0 }
+  - { repo: deployment-service, deployment: D0 }
 depends_on: [features_sports_denormalisation_pipeline_2026_04_21]
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/features_sports_service_consolidation_deploy_2026_07_15.md`,
+
+`plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md` — successor:
+features_sports_service_consolidation_deploy_2026_07_15, sports_p2_features_history_to_ml_ready_2026_06_27 (the T-1h
+trigger-fire test and coverage audit are absorbed by the first plan's live-fire proof + service rename
+(`features-sports-service` → `features-service-sports-job`); the FIXTURE_FEATURES coverage audit is superseded by the
+second plan's full 2015→present backfill with real per-league coverage proofs. One residual item — a literal UI
+screenshot confirming the SPORTS drilldown completion % — has no plan naming it explicitly; low-value, left for
+`plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md`'s general sports-drilldown work to pick up
+incidentally. NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]`
+cleanup.)
 
 ## Context
 

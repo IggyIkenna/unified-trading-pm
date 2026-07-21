@@ -11,21 +11,38 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-05
-overview: Honest-coverage backfill for features-sports-service — distinguish NaN-expected (out-of-coverage) from genuinely-missing upstreams; phased per-source then cross-source then enriched
+overview:
+  Honest-coverage backfill for features-sports-service — distinguish NaN-expected (out-of-coverage) from
+  genuinely-missing upstreams; phased per-source then cross-source then enriched
 type: mixed
 epic: data-pipeline-completion
 owner: Iggy
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
-completion_gates: {code: C5, deployment: D2, business: B2}
+completion_gates: { code: C5, deployment: D2, business: B2 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: D0, business: B0}
-- {repo: features-sports-service, code: C0, deployment: D0, business: B0}
-- {repo: deployment-api, code: C0, deployment: D0, business: B0}
-- {repo: instruments-service, code: C0, deployment: D0, business: B0}
+  - { repo: unified-api-contracts, code: C0, deployment: D0, business: B0 }
+  - { repo: features-sports-service, code: C0, deployment: D0, business: B0 }
+  - { repo: deployment-api, code: C0, deployment: D0, business: B0 }
+  - { repo: instruments-service, code: C0, deployment: D0, business: B0 }
 depends_on: [instruments_and_market_tick_data_completion_2026_05_01]
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/sports_consolidated_closeout_2026_07_19.md`,
+
+`plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`,
+`plans/active/features_sports_service_consolidation_deploy_2026_07_15.md` — successor:
+sports_consolidated_closeout_2026_07_19, sports_halftime_odds_sfi_vs_inplay_2026_07_16,
+features_sports_service_consolidation_deploy_2026_07_15 (Phases 1-3 architecture + the odds_api venue→data_source
+migration + the feature_definitions.yaml reconciliation are all shipped, just never flipped — verified directly against
+`plans/epics/sports_master.md`'s commit trail; Phase 4-7 backfills are absorbed into the 2026-07-19 closeout's Track
+V/Track F; the halftime-detection follow-ups are superseded by a much deeper 2026-07-16 investigation of the same SFI
+data; the T-1h trigger test + UI/coverage-audit items are absorbed into the consolidation-deploy plan + the closeout's
+Track K. **GENUINELY ORPHANED**: the deployment-ui per-feature-group coverage tab (Phase 8.A) and the "how to register a
+new feature" codex playbook (Phase 8.C) — filed as
+`plans/active/issues/features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md`. NOTE:
+`locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
 
 # features-sports-service — honest-coverage backfill
 
@@ -586,10 +603,20 @@ BEFORE Phase 1 starts. That way the rest of the pipeline lights up with halftime
       `read_reference_entity` only probed singleton path `entity=progressive_stats/progressive_stats.parquet` while SFI
       is partitioned per-league `entity=progressive_stats/league={L}/progressive_stats.parquet`. 3. **VM #3**: added
       per-league fallback to `gcs_reader.read_reference_entity`. 2316 captured / 0 failed. Spot-check still showed 100%
-      `unavailable` — calculator probed
-      `shots*\_`(correct English) but SFI's actual        provider columns are`shoots\_\_`(double-o typo), AND`corners`/`shots*on_target`/`shots_off_target`are        0% populated everywhere. Counter-freeze AND condition could never fire.     4. **VM #4 + #5 (cancelled before launch)**: switched calculator to`shoots*\*`columns + ≥4-of-6 majority        threshold + longest-run picker. Local pre-flight on 4 sample dates: 75% detection. Cancelled to lower        MIN_DURATION 5 min → 4 min after diagnosing many "unavailable" fixtures had max-freeze-run = 3.5-5 min that        just barely missed the 5-min cutoff.     5. **VM #6**: ran with the 91%-pre-flight calculator but spot-check showed 100% unavailable. Root cause:        script built`target_fixtures`via`read_reference_entity("fixtures")` which returns api-football-keyed        fixtures (`af_fixture_id`→ renamed to`fixture_id`: int 1040628), while progressive_stats uses SFI's        content-hash `fixture_id`(16-char hex`6096d135bcc56107`). Two ID spaces with no direct bridge in the SFI        data, so `compute_sfi_progressive_batch`'s join-by-fixture-id silently failed for every fixture → all-NaN.     6. **VM #7 (final)**: switched to `read_reference_entity("progressive_stats")`
-      as the source-of-truth for which fixtures to compute on. Per-fixture join is now self-consistent (both sides use
-      SFI hex IDs). Final result: **2073 captured days + ~243 empty days (no SFI coverage) + 0 failed**.
+      `unavailable` — calculator probed `shots*\_`(correct English) but SFI's actual provider columns
+      are`shoots\_\_`(double-o typo), AND`corners`/`shots*on_target`/`shots_off_target`are 0% populated everywhere.
+      Counter-freeze AND condition could never fire. 4. **VM #4 + #5 (cancelled before launch)**: switched calculator
+      to`shoots*\*`columns + ≥4-of-6 majority threshold + longest-run picker. Local pre-flight on 4 sample dates: 75%
+      detection. Cancelled to lower MIN_DURATION 5 min → 4 min after diagnosing many "unavailable" fixtures had
+      max-freeze-run = 3.5-5 min that just barely missed the 5-min cutoff. 5. **VM #6**: ran with the 91%-pre-flight
+      calculator but spot-check showed 100% unavailable. Root cause: script
+      built`target_fixtures`via`read_reference_entity("fixtures")` which returns api-football-keyed fixtures
+      (`af_fixture_id`→ renamed to`fixture_id`: int 1040628), while progressive_stats uses SFI's content-hash
+      `fixture_id`(16-char hex`6096d135bcc56107`). Two ID spaces with no direct bridge in the SFI data, so
+      `compute_sfi_progressive_batch`'s join-by-fixture-id silently failed for every fixture → all-NaN. 6. **VM #7
+      (final)**: switched to `read_reference_entity("progressive_stats")` as the source-of-truth for which fixtures to
+      compute on. Per-fixture join is now self-consistent (both sides use SFI hex IDs). Final result: **2073 captured
+      days + ~243 empty days (no SFI coverage) + 0 failed**.
 - [x] [SCRIPT] P0.6.E. Spot-check 6 representative dates from VM #7's output (all bounds correct —
       `ht_start ∈ [38,     61]` min, `ht_duration ∈ [4, 19.5]` min, mean detected HT start ~49 min, mean duration ~7-8
       min):

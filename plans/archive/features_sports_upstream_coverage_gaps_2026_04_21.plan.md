@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: features-sports — close upstream-data coverage gaps (Transfermarkt 2020-26 backfill, SFI LEAGUES+PROGRESSIVE backfill, weather venue-id cross-ref)
+title:
+  features-sports — close upstream-data coverage gaps (Transfermarkt 2020-26 backfill, SFI LEAGUES+PROGRESSIVE backfill,
+  weather venue-id cross-ref)
 summary:
 status: complete
 nature: record
@@ -15,15 +17,23 @@ priority: P1
 owner: agent
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: deployment-service, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: features-sports-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: deployment-service, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: features-sports-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: [features_sports_denormalisation_pipeline_2026_04_21, features_sports_derived_data_crime_fixes_2026_04_21]
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` —
+
+successor: instruments_mtds_subset_consistency_remediation_2026_06_17 (both post-backfill verification items are
+subsumed by that plan's still-open Transfermarkt PLAYER_VALUES / SFI_PROGRESSIVE_STATS backfill-verification todo; the
+literal `SFI_LEAGUES` check is additionally moot — that data_type was retired 2026-04-24. The
+`[HUMAN] P0. Approve unlock` item is a stale leftover from an already-completed archival — no `locked_by` is set on this
+file.)
 
 ## Context
 
