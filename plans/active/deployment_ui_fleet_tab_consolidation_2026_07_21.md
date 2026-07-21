@@ -300,9 +300,18 @@ Key audit facts driving the merges:
       `deployment-api` was untouched throughout (every backend endpoint stayed intentionally out of scope per each
       todo's own text). Verified both repos' trees are clean and fast-forwarded to `origin/live-defi-rollout` before
       flipping this todo — nothing outstanding to ship.
-- [ ] [REVIEW] P2. Post-phase codex audit — document the consolidated contract (Deployments owns VM inventory + idle
+- [x] [REVIEW] P2. ✅ Post-phase codex audit — document the consolidated contract (Deployments owns VM inventory + idle
       spend + reap actions + history; Fleet = git-health-only; `/vm-deployments` retired) in
-      `codex/05-infrastructure/deployment-observability.md`.
+      `codex/05-infrastructure/deployment-observability.md`. — ✅ `unified-trading-pm@dd5068f4c`. Added a new "Fleet-tab
+      consolidation" section documenting: Deployments now owns idle-spend (rollup cards + verdict/ stopped-age + dry-run
+      reap/delete, ported verbatim from the removed `FleetOrphans.tsx`) + the folded `/vm-deployments` archive history;
+      Fleet is git-health-only (`FleetTab` renders exactly `FleetGitContent` + the new snapshot timestamp);
+      `/vm-deployments` is legacy-quarantined (NOT redirected — BLK-7cb5bbbc, stays live for the 4 venue-config panels,
+      later given its own canonical `/venue-config` route). **Also corrected** the now-stale "cockpit Fleet tab wires
+      it" claim in the pre-existing cross-cloud-reconciliation paragraph (the endpoint is unchanged, just no longer
+      UI-consumed after this plan). Added `FleetGit.tsx`/`Cockpit.tsx`/ `NavMenu.tsx`/`DeploymentDetail.tsx` to the
+      doc's `code_refs` and this plan to `related`. **Plan is now fully closed** — every todo (10 code todos + this
+      audit) done.
 
 ## Success criteria
 
