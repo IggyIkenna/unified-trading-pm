@@ -160,9 +160,23 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       speculative field nothing populates), left for whichever future ingestion todo adds it. 1 new `pw:L2` case in
       `tests/smoke/alerts-page.spec.ts` (click → `?logs=` set → empty-state placeholder replaced) — all 20 pre-existing
       assertions stay green (21/21 passed). `quality-gates.sh` green (sentinel 32a14ebb).
-- [ ] [UI] P2. **Layout / "proper view"** — restructure the two-card layout into a usable table-first view per the
+- [x] ✅ [UI] P2. **Layout / "proper view"** — restructure the two-card layout into a usable table-first view per the
       operator's "not proper right now" complaint; keep the streams summary but make the timeline the primary,
-      filterable/sortable surface. Preserve every `data-testid` the regression spec depends on.
+      filterable/sortable surface. Preserve every `data-testid` the regression spec depends on. —
+      deployment-ui@f47d0ac1. Filed BLK-de39d214 (todo was subjective operator language with no concrete spec) covering
+      two independent calls: (1) how to visually demote Streams vs Timeline, (2) whether the Timeline markup should
+      become a real `<table>`. Main answered: (1) Streams stays a visible compact single-line-per-stream summary strip
+      (dropped Card/CardHeader/CardContent chrome, `text-xs`, tighter padding — same DOM position above Timeline, zero
+      reorder) — option A of 3, chosen because C ("no change") ignores the operator's stated dissatisfaction and B
+      (collapsed `<details>`) violates "streams STAYS a summary" by hiding it. (2) Do NOT convert Timeline rows to a
+      `<table>` — "filterable/sortable" is behavior (state + handlers), not markup, and a flex-div→table rewrite is the
+      highest-risk change to the preserve-every-testid constraint for zero required benefit; added `role="table"`/
+      `role="row"` to the existing flex divs instead (semantic a11y, zero testid churn). A first attempt at the
+      `<table>` conversion was built, verified (21/21 pw:L2 green), then fully reverted per this answer before shipping
+      — the shipped commit only contains the Streams compaction + ARIA roles. New `pw:L2` case in
+      `tests/smoke/alerts-page.spec.ts` pins the visual-hierarchy contract main required (Streams summary label + DOM
+      order before Timeline; Timeline keeps its CardTitle; every pre-existing testid resolves) — all 21 pre-existing
+      assertions stay green (22/22 passed). `quality-gates.sh` green (sentinel fe767f19).
 - [ ] [REVIEW] P1. **Regression + new specs** — extend `tests/smoke/alerts-page.spec.ts` (or a sibling) to cover the new
       filter/sort/date-range/deep-link behaviour while keeping every existing assertion in that spec green. `pw:L2 ✓`
       with the spec cited. No tick without it.
