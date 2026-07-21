@@ -141,9 +141,25 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
       `StrategyCatalogueSurface.tsx`'s `AdminUniverseGrid`, `signal-history-table.tsx`, and
       `admin/strategy-universe/page.tsx` — currently render raw underscore identifiers. (repo:
       unified-trading-system-ui)
-- [ ] [CODE] P3. Wire `derivePersonaInstruments()` into `personaToAuthUser()` (make it async, populate a new
+- [x] [CODE] P3. ✅ Wire `derivePersonaInstruments()` into `personaToAuthUser()` (make it async, populate a new
       `AuthUser.instruments` field); remove the now-redundant `QUESTIONNAIRE_PRESEEDS` mock once wired. (repo:
-      unified-trading-system-ui)
+      unified-trading-system-ui) — `unified-trading-system-ui@7967177b`
+
+  `personaToAuthUser()` (`lib/auth/demo-provider.ts`) is now `async`, awaits `derivePersonaInstruments(persona)`, and
+  populates a new `AuthUser.instruments?: readonly string[]` field (`lib/auth/types.ts`) when non-empty. Both call sites
+  updated: `restore()` (constructor fire-and-forget `void this.restore()`, now itself `async`) and `login()` (already
+  `async`, trivial `await`).
+
+  **Verified the "now-redundant" claim before removing** the `QUESTIONNAIRE_PRESEEDS` block from `login()` — grepped
+  `tests/e2e/` + `tests/unit/` for `desmond-signals-in`/`desmond-dart-full`/`elysium-defi`/`elysium-defi-full` and for
+  `questionnaire-response-v1`: no test asserts the preseed is written on login for these personas; the
+  `questionnaire-response-v1` key IS exercised elsewhere (`demo-perp-funding-journey.spec.ts`,
+  `refactor-g1-10-questionnaire.spec.ts`) but through the REAL questionnaire-submission flow for unrelated personas
+  (`prospect-perp-funding`), not this login-time mock. Safe to remove.
+
+  Typecheck clean, full `npx vitest run` (whole repo): 3282/3284 passed (2 pre-existing skips, unrelated
+  `ECONNREFUSED`/socket-hangup noise from an unrelated integration test's external-service probe). Shipped +
+  quality-gates.sh green.
 
 ## Codex SSOTs
 
