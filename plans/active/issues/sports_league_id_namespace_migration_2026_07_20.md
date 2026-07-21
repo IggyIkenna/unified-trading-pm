@@ -592,3 +592,38 @@ Session-local map artifacts (to be committed with the executor to the mtds scrip
   YET BUILT; the dry-run cut deliberately stubs `--apply`. To be built as a focused effort + committed to the mtds
   scripts home, then run behind BOTH gates: dry-run success (met) AND all `features-sports-sports-*` VMs drained (they
   read the tick bucket). Delete authorised by the operator on those two conditions.
+
+## READY TO EXECUTE 2026-07-21 — verified executor committed; runs as a monitored migration job
+
+The executor is adversarially verified (Ultracode 6-agent workflow) and committed to the durable mtds scripts home:
+`market-tick-data-service@b2a49317` →
+`scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py` (+ `sportkey_canon_final.json`,
+`classification.json` beside it).
+
+**Verification (workflow `wf_1e73121f-e1c`):** 4 adversarial reviewers found 4 REAL defects, all fixed + re-proven: (A)
+a TOCTOU write race → fixed with a compare-and-swap loop (`if_generation_match`), so a concurrent writer's rows can
+never be clobbered with a false verify=PASS; (B) the no-clobber proof was skipped on the merge-into-existing path → now
+always computed + tracks the pre-existing target's rows; (C) `classification.json` had `PREMIER_LEAGUE→RUSSIA`
+(confirmed 12,847 objects are all EPL) → fixed at the root + an operator-override pin + an opt-in `--sample-check`; (D)
+~32% of the corpus was silently unexamined → now an explicit OUT-OF-SCOPE census. Full-corpus dry-run PASSED: 266,408
+objects / 34,228 units, 0 unknown raws; all validation PASS / 0 FAIL. Verdict: **GO** (VMs drained).
+
+**Run as a MONITORED migration job (NOT inline — it is ~139K raw-shape objects, multi-hour).** Sequence:
+
+1. `--apply-prod` (no `--confirm-prod-write`) once, WITHOUT `--index`, for the live out-of-scope census + VM-guard +
+   PLAN.
+2. `--apply-prod --confirm-prod-write --index scripts/.../raw_index.tsv` — copies+CAS-verifies the raw
+   `batch_odds_api/odds/trades` shape to canonical paths (`league_id=<CANON>/instrument_type=ODDS/data_type=TRADES/`).
+   COPY-ONLY: never deletes; refuses while any `features-sports-sports-*` VM is non-terminal.
+3. THEN the deferred shapes (127,488 objects — `odds_horizon_bucket` 109,312 · `batch_footystats` 16,970 · … — the "then
+   extend" passes) must be handled before any bucket-wide delete or "complete" claim.
+4. THEN the atomic manifest-swap (reuse `rebuild_sports_manifest.py::_clean_stale_league_entries`), THEN MDPS reprocess
+   of the processed surface, THEN the coverage-registry refresh.
+5. **ONLY THEN the SEPARATE, irreversible delete** of the old non-canonical objects (operator-authorised on dry-run
+   success — which is met — snapshot first; GCS soft-delete safety net). This step is deliberately NOT started at
+   extreme session depth; it warrants a fresh, monitored context + a final at-scale content re-verify.
+
+Caveats the operator must hold (from the workflow): the raw-content `data_type` casing is rewritten but path-casing on
+the deferred shapes is a later pass; the one earlier-incident PROD object at
+`2020-06-11/PINNACLE/.../LA_LIGA/ODDS/TRADES` is idempotent-safe (SKIP). NO-GO trigger: any `features-sports-sports-*`
+VM non-terminal, or a `--sample-check` mismatch.
