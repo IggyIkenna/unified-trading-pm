@@ -63,8 +63,12 @@ normally.
 
 ## Todos
 
-- [ ] [DOCS] P2. Fix `codex/02-data/sports-2020-06-data-floor.md` frontmatter — add the missing `referenced_by` key
-      (present-but-empty is enough to pass `scripts/docs/seed_frontmatter.py --apply`). (repo: unified-trading-pm)
+- [x] [DOCS] P2. ✅ Fix `codex/02-data/sports-2020-06-data-floor.md` frontmatter — add the missing `referenced_by` key
+      (present-but-empty is enough to pass `scripts/docs/seed_frontmatter.py --apply`) — unified-trading-pm@3122de370.
+      Ran the remedy tool as-instructed; it also seeded the elective `implementation_status` key.
+      `check_frontmatter_schema.py` now reports zero violations across all 1739 docs; full `quality-gates.sh` for this
+      repo now passes clean end-to-end (both todos in this issue doc closed — plan-discipline ratchet fix landed
+      @522dcdf92). (repo: unified-trading-pm)
 - [x] [DOCS] P2. ✅ Triage the 121 plan-discipline violations (42 `A-deferred-no-banner` + 79 `C-archive-no-successor`)
       against baseline 120 in `scripts/quality_gates/plan_discipline_baseline.yaml` — unified-trading-pm@522dcdf92. Real
       fix, not a blind re-baseline: enumerated all 121, classified each by whether an honest templated banner applies.
