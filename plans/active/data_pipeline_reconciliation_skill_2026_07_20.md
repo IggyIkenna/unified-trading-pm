@@ -377,12 +377,12 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       MTDS lending writers that broke into `attempted_failed`/zero-data on the reversed attempt; file the fix as its own
       plan (this plan does not own MTDS writer work). **The migration must not start until that plan is green** — this
       is the step whose omission caused the reversal.
-- [ ] 24. [DATA] P1. **D3 — fold before anything else.** Content-UNION the 32 legacy-only Raydium pools into the
+- [x] 24. ✅ [DATA] P1. **D3 — fold before anything else.** Content-UNION the 32 legacy-only Raydium pools into the
       canonical tree, and confirm the KAMINO/SOLEND `dex_pool_state` cells (canonical count **zero** — legacy is the
       only copy) are covered by the fold. Verify by count + content, not by path existence.
-- [ ] 25. [CODE] P1. **D3 — repoint execution-service, then re-verify.** Point `providers/solana_amm_depth_provider.py`
-      at the canonical `data_type=dex_pool_state` path and fix its broken call to
-      `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`. Resolve the open sub-question first
+- [x] 25. ✅ [CODE] P1. **D3 — repoint execution-service, then re-verify.** Point
+      `providers/solana_amm_depth_provider.py` at the canonical `data_type=dex_pool_state` path and fix its broken call
+      to `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`. Resolve the open sub-question first
       (the call sits outside the `try:` so the provider may be dead-on-arrival). **Delete comes after this, never
       before** — and the prod-bucket delete itself stays human-only.
 
@@ -612,3 +612,25 @@ human-only.**
 **Stage 1 in flight (`wf_ecb25452-3df`):** fold-script author (no run) · reader repoint (25) · F6 3-repo fix · Tier-2 VM
 registration (31) — each QG-green + quickmerge. **Stage 2 (orchestrator):** run the fold
 dry-run→verify→apply→manifest→verify twins. **Stage 3:** todo 32 (launcher+validator) after 31 lands.
+
+### 2026-07-21 (cont.) — FOLD APPLIED + verified; reader repointed
+
+- **24 ✅ DONE — the fold ran on real infra and is verified.** `market-tick-data-service@13b9dac5` shipped the corrected
+  fork `fold_legacy_solana_defi_to_consolidated_canonical_2026_07_21.py` (per-instrument fan-out via `write_defi_rows`,
+  the MTDS write-path SSOT → byte-identical to the live writer; UNION-idempotent via `blob_exists`; copy-not-move).
+  Dry-run → verified → applied 2026-07-21 (`GCP_PROJECT_ID` required in env). **648 legacy-only instruments written,
+  14,159 skipped.** Verified twins now exist where R5 said there were NONE: **KAMINO `solana_vault` 0→513 · SOLEND
+  `solana_lending` 0→59 · KAMINO `solana_lending` 0→44 · RAYDIUM `solana_amm_pool` 100→132** (the 32 legacy-only pools);
+  ORCA 14,094 + the 66 Raydium intersection correctly skipped. The dry-run counts matched R5 exactly (raydium 32 write /
+  66 skip). **The legacy `dex_pools/`+`lending_indices/` prefixes now have canonical twins for every cell → the delete
+  is SAFE, but stays HUMAN-ONLY per the ruling.**
+- **25 ✅ DONE — `execution-service@45628a37`.** Repointed `solana_amm_depth_provider.py` from the legacy `dex_pools/`
+  template to the canonical `dex_pool_state` path (via `build_defi_partition_path`), and fixed the `resolve_bucket_name`
+  call that raised `TypeError` (bad `kind`/`env`/`project_id` kwargs, outside the `try` → dead-on-arrival). The ship
+  agent caught a spec error: the writer emits `pipeline_mode=batch_onchain_subgraph` (not coarse `batch`), so the reader
+  derives the source-aware mode to match — a coarse prefix would have listed zero objects. New regression test added.
+- **Manifest:** the fold wrote OBJECTS (the source of truth); the availability manifest re-derives from GCS via the
+  standard consolidator. To reflect the 648 new twins as `captured`, the consolidator must run over `day=2026-04-14`
+  defi — a follow-up (the objects exist now; the depth-provider reads objects directly).
+- **In progress:** F6 3-repo enumerator fix (IS dead-WIP has C.1+C.3; UAC C.2 + commit pending — UAC tree just became
+  quiescent) · 31 (deployment-service landed `@bd7a7bd8`; UAC yaml `datapoint-validation` kind pending commit) · 32.
