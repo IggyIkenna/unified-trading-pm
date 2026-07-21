@@ -18,8 +18,13 @@ summary:
   full-history rollup lands. Recovery is NOT a per-fixture refetch - the api_football adapter already fetches in bulk
   per (league, season) with no date param, and _fetch_season_fixtures_with_raw keeps the raw response carrying
   league.round, so the whole 2019-2026 corpus is roughly 89 leagues x ~8 seasons = ~600-700 calls.
-status: open
+status: resolved
 resolved_by:
+  2026-07-21 — round + status_long writer defects confirmed fixed and live-verified (instruments-service@19ae5890,
+  @4ef4cfeb); the "2025-12 regression window" root-caused as a stale-catalogue measurement artifact, not a genuine
+  writer stop. Residual `is_promotion_relegation` gap is a separate, already-tracked item (Track F P2,
+  sports_consolidated_closeout_2026_07_19.md) — carried forward there, not reopened here. See the dated section at the
+  end of this doc.
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -58,7 +63,7 @@ drift_direction: advance-code
 parent_epic: infrastructure_master
 execution_scope: local-only
 depends_on: []
-last_updated: 2026-07-17
+last_updated: 2026-07-21
 locked_by:
 locked_since:
 ---
@@ -309,3 +314,114 @@ ENG_CHAMPIONSHIP=558≈552) — the capture was never missing fixtures, the roll
 - VERIFY pending: at T+10min sample a 2019/2020 `entity=fixtures/.../fixtures.parquet` → `round` populated.
 - AFTER completion: catalogue rollup `--since 2019-01-01`, verify `competition_phase` not ~100% UNKNOWN, then RESUME the
   4 enrichment entities (skip-existing).
+
+## ✅ ROOT-CAUSED + VERIFIED + RESOLVED (2026-07-21)
+
+**Dispatch context**: asked to root-cause "a 2025-12 regression that happened AGAIN after the writer fix," ship a fix if
+real, verify downstream distributions, and audit `status_long`. Findings below, each independently re-verified against
+live GCS on 2026-07-21 (fresh reads, not a re-quote of an earlier claim) — no code changes were needed because the real
+fixes were already shipped between this doc's last update (2026-07-17) and now, by the `ac#12`
+`sports_features_layer_findings_sweep_2026_07_18.md` investigation (§§ O, P, Q, R, T, W, Z — that doc is the deep trace;
+this section is the closure against THIS issue's specific claims).
+
+### 1. Root cause of the "2025-12 regression window" — it never regressed; a stale catalogue was misread
+
+The original evidence (3.2% = 545/17,064, populated ONLY 2025-12-01..30) was measured on `prod/catalog.parquet`, which
+`sports_features_layer_findings_sweep_2026_07_18.md` § R found was rolling up the **legacy `entity=fixtures`** corpus —
+frozen (no new writes) since **2026-05-23** — via a hardcoded `SPORTS_FIXTURE_ENTITY = "fixtures"` in
+`build_instrument_catalogue.py`, while the real writer had already moved to a split `entity=fixtures_schedule` /
+`entity=fixtures_outcomes` layout. Two independent, already-fixed bugs compounded to produce the illusion of a
+"regression that stopped after Dec 2025":
+
+1. **The 400-day rollup-window bug** (this doc's own "Related" section, fixed by instruments-service@4a795c24): the
+   17,064-row catalogue that seeded the original 3.2% figure only covered a ~13-month window to begin with.
+2. **The dead-entity catalogue** (§ R): within that window, the catalogue was reading a frozen legacy corpus that
+   happened to carry non-blank `round` for a Dec-2025 sub-slice (whatever the writer captured before later re-polls or
+   the entity split touched it) and blank everywhere else it had gone stale — an artifact of WHEN specific per-day
+   objects were last (re)written into the dead entity, not a writer behaviour change over calendar time.
+
+**There was never a capture blackout to explain.** `sports_features_layer_findings_sweep_2026_07_18.md` § O / § P-ERA
+measured `round` population on the LIVE `entity=fixtures_schedule` corpus across 8 sampled matchdays spanning 2019-05 →
+2026-03 and found **consistent 40-66% population throughout** (0% only pre-mid-2019, before api-football round data
+existed in the corpus at all) — i.e. no era-specific stop-and-resume pattern anywhere, including around December 2025.
+The "stopped after Dec 2025" read was a property of the CATALOGUE's staleness, not of capture.
+
+**No further code fix was required for this**: the catalogue was already repointed to the live entity
+(`SPORTS_FIXTURE_ENTITY` → `fixtures_schedule`, § R-FIXED) and a zero-API-cost sibling-derivation pass
+(`scripts/derive_sports_fixture_round_2026_07_18.py`, instruments-service@e63049e7) plus two scoped backfills (§ T/§ W,
+instruments-service@34ada099 + follow-up) closed the vast majority of the genuine historical gap. See that doc for the
+full quantitative trace; not reproduced here to avoid duplicating the SSOT.
+
+### 2. Live re-verification (2026-07-21, fresh GCS reads — not a re-quote)
+
+Direct read of
+`gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day=<D>/ pipeline_mode=batch_api_football/entity=fixtures_schedule/league=*/fixtures_schedule.parquet`
+for the exact "regression window" dates plus surrounding months (the check the original issue implied would show a
+blackout outside Dec 2025):
+
+| day        | rows | round populated | round_provenance          | status_long populated | status_long == "Unknown" |
+| ---------- | ---: | --------------- | ------------------------- | --------------------: | -----------------------: |
+| 2025-12-05 |   52 | 52 (100%)       | 45 derived, rest captured |             52 (100%) |                        0 |
+| 2025-12-15 |   13 | 13 (100%)       | 13 derived                |             13 (100%) |                        0 |
+| 2025-12-24 |    4 | 4 (100%)        | 4 derived                 |              4 (100%) |                        0 |
+| 2025-11-08 |  209 | 209 (100%)      | 191 derived               |            209 (100%) |                        0 |
+| 2026-01-10 |   95 | 95 (100%)       | 78 derived                |             95 (100%) |                        0 |
+| 2026-03-14 |  212 | 201 (94.8%)     | 103 derived               |            212 (100%) |                        0 |
+
+Sample values: `round` = "Regular Season - 16", "Final", "Group Stage - 1", "2nd Phase - 15", "Relegation Group - 23"
+(real, varied — including exactly the phase-carrying labels `classify_competition_phase` needs). `status_long` = "FT",
+"CANC", "PEN" (real match-status text, never the "Unknown" default). **No blackout on any sampled date, in or out of the
+original "regression window."** This directly confirms both writer fixes are live and correct today:
+
+- `round`: instruments-service@19ae5890 (`_round_from_af_response`, reads `af_response["league"]["round"]`).
+- `status_long` / `status_short`: instruments-service@4ef4cfeb (`_status_from_af_response`, reads
+  `af_response["fixture"]["status"]`) — **this is the P3 "audit the sibling `status_long` default" todo below, now
+  closed**: same bug class as `round` (a getattr on a field `CanonicalFixture` never carried), same fix shape (read from
+  the raw `af_response`), already shipped and verified live with 0% `"Unknown"` across every sampled date.
+
+### 3. Downstream distributions (task item 3) — `competition_phase` sane; `is_promotion_relegation` still flat (separate, already-tracked gap)
+
+Direct read of `derived_features` parquet content (features-sports-prd bucket) for post-floor sample days:
+
+| day        | rows sampled | `competition_phase` distribution           | `is_promotion_relegation` distribution |
+| ---------- | -----------: | ------------------------------------------ | -------------------------------------- |
+| 2024-04-06 |           69 | `{early: 18, mid/None: 16, late: 35}`      | `{0: 69}`                              |
+| 2025-11-08 |           74 | `{late: 18, None: 19, mid: 17, early: 20}` | `{0: 74}`                              |
+
+`competition_phase` shows a **real, varied spread** (early/mid/late, not monolithic UNKNOWN or a single fabricated
+value) — this is the intended signal working. Note there was a SEPARATE, much worse bug on this same field
+(`sports_features_layer_findings_sweep_2026_07_18.md` § Z-FIXED: the features exporter was silently writing FABRICATED
+`competition_phase='late'` / `games_remaining=0.0` corpus-wide via an unguarded NaN merge — fixed
+features-service@c6eb1f38, verified present in current HEAD). A residual **2,821 post-floor fabricated
+`derived_features` objects** from before that fix have not yet been purged (overwrite-only reruns don't touch no-output
+days) — tracked as its own P0 in `sports_derived_features_fabricated_corpus_scope_2026_07_20.md` /
+`sports_consolidated_closeout_2026_07_19.md` Track F, **not duplicated here**; my two sampled days did not land on the
+fabricated pattern (real spread, not all-`'late'`), but a full census was out of this task's scope.
+
+`is_promotion_relegation` is **still constant `0`/False on every row sampled** — but this is now a DIFFERENT defect than
+the one this issue originally reported. The original bug was "blank `round` → classifier falls through to False."
+`round` is no longer blank (verified above), yet `is_promotion_relegation` is still always False, because
+`features-service/features_service/sports/calculators/season_context.py` correctly PROPAGATES whatever
+`is_promotion_relegation` value it is given as input — but nothing upstream ever populates that input column with a real
+relegation-zone classification; `derived_features_helpers.py:816-817` just defaults the whole column to `False` when
+absent. This is a genuine gap matching the spirit of this issue's original concern (a confident-wrong `False` instead of
+an honest signal), but it is **already tracked** as Track F P2 in `sports_consolidated_closeout_2026_07_19.md` ("wire it
+from the standings relegation-zone classification — `_compute_league_batch` already computes it — or formally retire
+it + its `points_at_stake` multiplier"). Per the workspace findings-triage rule ("fits another plan → annotate it, don't
+fix — collision risk"), it is **cross-referenced here, not fixed in this session** — wiring in a real classifier is
+scoped feature work belonging to that track, not a regression of the round-capture writer this issue is about.
+
+### 4. Disposition
+
+- [x] Root-cause of the 2025-12 window — DONE (§ 1 above): stale-catalogue artifact, not a writer regression.
+- [x] Writer fix — already shipped, re-verified live (§ 2).
+- [x] `status_long` sibling audit (P3 todo) — DONE, same bug class, already fixed (instruments-service@4ef4cfeb),
+      verified 100% populated / 0% `"Unknown"` (§ 2).
+- [x] Downstream `competition_phase` / `is_promotion_relegation` verification — DONE (§ 3): `competition_phase` sane;
+      `is_promotion_relegation` still flat but reassigned to Track F P2 (separate root cause, separate owner).
+- [x] Backfill-to-2019 scope — MOOT: the 2020-06-06 data floor wipe (2026-07-21,
+      `codex/02-data/sports-2020-06-data-floor.md`) deleted everything before the floor; nothing before 2020-06-06
+      exists to backfill.
+- No code shipped this session — both real defects in this issue's scope (`round`, `status_long`) were already fixed and
+  are confirmed live; the only remaining downstream gap (`is_promotion_relegation`) belongs to a different,
+  already-owned track.

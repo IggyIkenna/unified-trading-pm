@@ -215,9 +215,15 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
   (Russia PL pattern) still open; fix cap + sweep/purge shards + re-run `ml_readiness` gate.
 - `sports_halftime_odds_sfi_vs_inplay` (ad#4) — `_apply_ht_odds_pit_gate` default-cutoff unreachable in prod (1 open P1;
   leaks already fixed).
-- `sports_fixture_round_not_captured_competition_phase_unknown` (ac#13) — writer fixed; open: root-cause the 2025-12
-  regression window + verify downstream `competition_phase`/`is_promotion_relegation` distributions + `status_long`
-  sibling audit; **rescope backfill start 2019-01-01→2020-06.**
+- `sports_fixture_round_not_captured_competition_phase_unknown` (ac#13) — **RESOLVED 2026-07-21.** The "2025-12
+  regression window" was a measurement artifact (stale/frozen legacy `entity=fixtures` catalogue + the 400d
+  rollup-window bug), NOT a genuine writer stop — raw `entity=fixtures_schedule` capture has never blacked out; live
+  re-verified 2026-07-21: `round` 94.8-100% populated and `status_long` 100% populated / 0% `"Unknown"` across
+  Dec-2025/Nov-2025/ Jan-2026/Mar-2026 samples. `status_long` sibling audit DONE (instruments-service@4ef4cfeb, already
+  shipped). Residual `is_promotion_relegation` still constant `False` — a DIFFERENT, deeper gap (no upstream
+  relegation-zone classifier wired into features-service `season_context`, not a round/capture defect) — carried under
+  Track F P2 in `sports_consolidated_closeout_2026_07_19.md`, not re-owned here. Backfill-to-2019 is MOOT — floored to
+  2020-06 (§3/§6). See issue doc for full evidence.
 - `sports_derived_features_per_league_layout_unread_by_ml_loader` (ac#10) — fixed; DOC P3 features-bucket path SSOT
   only.
 - ~~`features_service_red_tree_blocks_digest_pin_fix` (aa#11)~~ — **RESOLVED 2026-07-21, verified not a coverage bug.**
