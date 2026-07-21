@@ -142,7 +142,7 @@ never a fabricated green (the `_image_signal` principle).
      Phase 3b.
 2. **Deploy timeline** — Cloud Run revisions + App Runner/ECS operations: every deploy, its digest, when, by whom;
    change-type = new-code / **config-only** (same digest) / **rollback** (digest reverted) / **failed** (deploy broke
-   though the build was green). **Also answers "what was running on date X"** — revision N was live [t_N, t_{N+1}).
+   though the build was green). **Also answers "what was running on date X"** — revision N was live [t*N, t*{N+1}).
 3. **Pipeline** — both clouds, both lanes; status, trigger, SHA, branch, started, duration, produced artifact,
    structured failure. Row → detail drawer (step/phase timeline + failure message + log excerpt + cloud-console link).
 4. **Artifacts** — AR + ECR + tarball bucket: tags, digest, pushed, size, "running?" badge; surfaces the 1.5 TB sprawl
@@ -240,6 +240,19 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 5. Cloud-build-failure-watcher persists the failure reason only as free text in a Slack message and stamps
    `repo: unified-trading-pm` (its own repo), not the repo that failed.
 6. Tarball VM BoM never stamped (see Honest gaps) — the runtime-provenance gap.
+7. **AWS App Runner: both prod services PAUSED after a 13-failure deploy storm on 2026-05-22** (NEW, measured live
+   2026-07-21). `uts-deployment-api-prod` = 7 of 9 ops FAILED; `uts-alerting-service-prod` = 6 of 8 FAILED incl. a
+   failed `CREATE_SERVICE`. Both ended `PAUSE_SERVICE` at 14:38Z. The builds were green — the **deploys** broke, a class
+   the build feed can't see. Evidence: `aws apprunner list-operations`. (deployment-api-prod was already a known gap;
+   the second paused service + the true failure count are the new facts.)
+8. **AWS ECR estate is orphaned — 0 of 20 repos have a running task** (NEW, measured live 2026-07-21). 2 App-Runner
+   PAUSED, 3 ECS `uts-defi-prod` at `desired=0`, the other 15 have no AWS runtime; 4 repos are **empty** (0 images:
+   risk-and-exposure-service, unified-trading-system, position-balance-monitor-service, deployment-ui); **18 of 20 last
+   pushed 2026-06-27** — AWS image builds went quiet that day; only `market-tick-data-service` still pushes and it is
+   `latest`-only (no version tag → corroborates bug #1). ~393 images retained, nothing serves them. Evidence:
+   `aws ecr describe-images` + App Runner/ECS state.
+9. **~40% of Cloud Run deploys ship nothing** (config-only redeploys, same digest) — churn that reads as activity; cheap
+   to flag, noise unlabelled. Evidence: Cloud Run revision digests for `uts-shared-deployment-api` (192 revs).
 
 ## Todos
 
@@ -280,10 +293,26 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
   - Data source for build-time is confirmed available (image `createTime`, manifest `created_at`); a couple of GCP
     createTimes in the MOCK are deploy-derived only because gcloud auth expired mid-session — a non-issue for the real
     backend (it holds live creds).
-- [ ] [OPERATOR] P0. **Tab 2 — Deploy timeline** — not yet reviewed.
-- [ ] [OPERATOR] P0. **Tab 3 — Pipeline** — not yet reviewed.
-- [ ] [OPERATOR] P0. **Tab 4 — Artifacts** — not yet reviewed.
-- [ ] [OPERATOR] P0. **Tab 5 — Health** — not yet reviewed.
+- [ ] [OPERATOR] P0. **Tab 2 — Deploy timeline** — iterated (correctness + usefulness pass), awaiting operator review.
+      `ui@e01e5fc`. Was one-service (uts-shared-deployment-api) + 4 static AWS rows; now **estate-wide** across 5 real
+      sections: Cloud Run for that service (15 revs, each with a computed **held-for** interval so "what ran on date X"
+      is a lookup) + other Cloud Run services + **GCE VM launches (a launch IS the tarball-lane deploy)** + the real AWS
+      App Runner storm + ECS. New surfaces: **● live-now** badges, **human-vs-CI deployer** column (hand-deploys lit
+      red), **config-only / new-code / live-now / failed** filter chips, per-row **console↗ / VM↗** links, and
+      `resolve ↗` where a digest→SHA join exists but the value needs a fresh gcloud auth.
+- [ ] [OPERATOR] P0. **Tab 3 — Pipeline** — iterated, awaiting review. `ui@e01e5fc`. Added **All / Failed / Image /
+      Tarball / GCP / AWS** filter chips, surfaced the previously-dead `xlane` flag as a **⇄ both-lanes** badge (one
+      commit built as image AND tarball), and a **shipped ↗** through-line hint on successful image builds. Drawer (step
+      timeline + failure + log excerpt) unchanged.
+- [ ] [OPERATOR] P0. **Tab 4 — Artifacts** — iterated, awaiting review. `ui@e01e5fc`. Was 8 image rows for 2 repos; now
+      **one row per repo** showing the real sprawl (**ECR inventory probed live 2026-07-21**): 20 repos, image counts,
+      latest tags, last-push, **running? + state** (running / App-Runner-PAUSED / ECS-desired=0 / orphaned-GC / empty /
+      still-pushing), with **running / orphaned-GC / empty / cloud** filters. GCP AR kept as the 2026-07-17 sample + an
+      honest aggregate row (full AR walk needs gcloud auth).
+- [ ] [OPERATOR] P0. **Tab 5 — Health** — iterated, awaiting review. `ui@e01e5fc`. Folded in 3 new **measured**
+      deploy-lane findings (App Runner storm, orphaned ECR estate, ~40% config churn → 13 conditions), added severity
+      **tiles + filter**, an **Area** column, and a **"see in <tab> ↗"** cross-link from every condition to the view
+      that proves it. Note now states none of these fires an alert today.
 - [ ] [OPERATOR] P0. **Final sign-off on the whole mock** → unblocks Phases 1–6.
 
 ### Phase 1 — backend read + snapshot layer (deployment-api)
@@ -485,15 +514,16 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 
 ## Deferred work after 2026-07-21
 
-**Recommended NEXT: review Tab 2 (Deploy timeline) with the operator** — continue the per-tab gate; it is the only
-unblocked forward step. Everything below Tab-5 sign-off is deliberately not started.
+**Recommended NEXT: operator reviews the iterated Tabs 2–5 in the mock** (`ui@e01e5fc`) — all four had the correctness +
+usefulness pass applied this turn and now await scrutiny; that review is the only unblocked forward step. Everything
+below whole-mock sign-off is deliberately not started.
 
 | Item                                                    | State / why deferred                                                                                                                                     | Blocked on                            |
 | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
 | Tab 1 final sign-off                                    | **Operator-owned** — reviewed + iterated, awaiting the green tick                                                                                        | operator                              |
-| Tabs 2–5 mock review (Deploy/Pipeline/Artifacts/Health) | **Not done** — real work, next up, one tab at a time                                                                                                     | nobody — pick it up                   |
+| Tabs 2–5 mock review (Deploy/Pipeline/Artifacts/Health) | **Operator-owned** — iterated this turn (correctness + usefulness), awaiting operator scrutiny                                                           | operator                              |
 | Whole-mock final sign-off                               | **Operator-owned** — the gate that unblocks all implementation                                                                                           | tabs 1–5 signed off                   |
 | Phase 1–6 implementation (backend, page, absorb, codex) | **Cannot be done yet** — gated by the mock sign-off above                                                                                                | whole-mock sign-off                   |
 | (A) tarball commit stamp                                | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS, but part of Phase 3c; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file) | mock sign-off + Phase 3c start        |
 | Fill the mock's 2 `n/a — re-auth` build dates           | **Cannot be done yet** — needs a fresh GCP `gcloud auth login`                                                                                           | operator re-auth (optional, cosmetic) |
-| Issue doc: 6 pipeline bugs + bucket-resolution bypass   | **Not done** — Phase 5 todo; notify Ikenna (CI-area overlap)                                                                                             | nobody — but coordinate w/ Ikenna     |
+| Issue doc: 9 pipeline bugs + bucket-resolution bypass   | **Not done** — Phase 5 todo; now 9 (added AWS App Runner storm, orphaned ECR estate, config churn — all measured 2026-07-21); notify Ikenna (CI-area)    | nobody — but coordinate w/ Ikenna     |
