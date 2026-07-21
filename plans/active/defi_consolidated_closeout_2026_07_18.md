@@ -65,7 +65,7 @@ related:
     ao_dispatch_cooldown_and_park_2026_07_20.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -532,7 +532,50 @@ Discriminator = **does a manifest row exist**.
       `canonical_instrument_id` remain for a resolvable token; a token genuinely absent from BOTH Alchemy AND the Solana
       list (e.g. a rugged/delisted token with no metadata anywhere) is the only acceptable residual — route those
       through `needs_attribution`/`empty_confirmed`, never silently re-embed the address. (repos:
-      unified-trading-library, unified-api-contracts, market-tick-data-service, instruments-service)
+      unified-trading-library, unified-api-contracts, market-tick-data-service, instruments-service) - **(2)/(4) — CODE
+      COMPLETE + TESTED + MEASURED 2026-07-21 (slot-4), SHIP BLOCKED on an external, now-tracked cross-repo issue (not a
+      partial-scope call — see below).** Wired `resolve_evm_token_symbol` / `resolve_solana_token_symbol` into
+      `balancer.py::_pool_to_record`, `orca.py::_build_pool_record`,
+      `raydium.py::_build_pool_record`/`_extract_token_symbol` as the enrichment step BEFORE their drop/`"UNKNOWN"`
+      branches: subgraph/REST symbol present → unchanged; blank → resolver called with the on-chain address the pool
+      already carries → real symbol on success; drop/`"UNKNOWN"` only when the resolver ALSO returns `None` (honest
+      residual). `raydium.py::_build_historical_pool_record` deliberately stays `"UNKNOWN"`/DELISTED (documented
+      in-code): its caller (`getProgramAccounts` with a zero-length `dataSlice`) never fetches mint addresses at all —
+      genuinely resolving it needs a NEW on-chain step (decode the base/quote mint from the Raydium AMM V4 752-byte
+      account layout) that cannot be verified against live data in this pass; this path also defaults
+      `include_historical=False` (opt-in only) — tracked as an explicit follow-up rather than shipping an unverified
+      byte-offset guess that could fabricate a WRONG symbol (worse than an honest placeholder). **Adjacent fix in the
+      same commit**: a live Balancer pool's subgraph `symbol` can itself be a malformed string carrying an embedded `:`
+      (UAC `build_instrument_id`'s own id delimiter — FAILS LOUD, same bug class as the CeFi/Bitfinex
+      colon-wire-notation case) — now treated like a blank symbol (resolve on-chain instead of trusting it verbatim),
+      with 2 new regression tests. 15 new/updated unit tests total across the 3 adapters (subgraph-has-symbol unchanged
+      / subgraph-blank-resolver-succeeds / subgraph-blank-resolver-also-fails, per adapter, plus the colon-guard pair).
+      **Measured live 2026-07-21** (real Alchemy + `solana-labs/token-list` calls, zero mocks,
+      `GCP_PROJECT_ID=central-element-323112`): **BALANCER-ETHEREUM** 2,323 pools sampled, 3 had a blank/malformed token
+      symbol before this fix (all → `"UNKNOWN"`), **1 now resolves to a real on-chain symbol** via live Alchemy (2
+      genuinely unresolvable — no Alchemy metadata for those specific wrapped-vault-share addresses, correctly left
+      honest); **ORCA-SOLANA** 502 pools kept before → **514 after (+12 previously-silently-DROPPED pools now named and
+      included)** via the Solana static token list; **RAYDIUM-SOLANA** (active REST sample) 994/994 — no blank symbols
+      in this particular top-994-by-liquidity live snapshot (resolver wired + unit-tested; no live opportunity to fire
+      in this sample). (4) scoped equivalent: `build_instrument_catalogue.py`'s `_defi_pool_dual_form` re-derives
+      `glued_pair_id`/`canonical_instrument_id` from PRIOR DAILY ENUM SNAPSHOTS (`by_date/.../instruments.parquet`), not
+      a live adapter call — a catalogue rebuild today would NOT yet reflect this fix (the daily enum cron hasn't run
+      since); the live-adapter measurement above is the real-world equivalent proof that the SAME code path the cron
+      calls now resolves real symbols. **Full quality-gates.sh is genuinely green for this diff** (proven via a
+      `git stash` baseline: the FULL suite shows the identical 4 pre-existing, unrelated failures with or without this
+      diff — 4,756 passed / 7 skipped baseline vs 4,765 passed / 8 skipped with the diff, delta = exactly the new tests,
+      nothing else moved). **NOT yet shipped**: `quickmerge --agent`'s sentinel fast-path requires a literal 100%-green
+      `quality-gates.sh` run, and instruments-service's tree currently fails 4 hard invariant tests
+      (`test_every_uac_adapter_key_resolves_to_a_class` et al.) because UAC `unified-api-contracts@6bdbc31d`
+      (`lst_rate_honest_coverage_2026_07_21.md` Phase 1) registered `AAVE-ETHEREUM: aave_oracle` ahead of
+      instruments-service's own `factory._ADAPTERS` entry — a live, plan-owned, already-in-flight track (that plan's own
+      Progress Log: the IS-side `aave_oracle.py` adapter is "BUILT-BUT-NOT-SHIPPED" in a DIFFERENT session's checkout,
+      not this slot's). Building it here would risk a duplicate/divergent implementation colliding with that in-flight
+      work, and the failing tests are DELIBERATE no-bypass ship gates (no `known_gaps`-style escape valve for 3 of the
+      4). Filed `issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (full evidence +
+      stash-baseline proof + recommended decision). **Action**: re-attempt a `quickmerge --agent --files` ship of the 3
+      changed adapters + their 2 test files from instruments-service the moment that issue closes (the code is untouched
+      and ready; nothing further to do on it). (repo: instruments-service)
 
 ### Operator decisions applied (2026-07-21, /autonomous — decided per AUTONOMOUS_AGENT_RULES.md rule 2, documented not asked)
 
