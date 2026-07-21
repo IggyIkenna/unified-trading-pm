@@ -232,9 +232,26 @@ Key audit facts driving the merges:
       files/build). Playwright: `cockpit.spec.ts` full run, 39 passed, 0 failed. `pw:L2 ✓`. Lost the quickmerge sentinel
       race once to a concurrent unrelated `.pre-commit-config.yaml` commit — re-ran QG, retried, landed clean on the 2nd
       attempt.
-- [ ] [UI] P1. **Fleet = FleetGit only** — `FleetTab` renders only `FleetGitContent`; update the page title + the Fleet
-      nav description in `NavMenu.tsx` ("Census · orphans · git · infra" → "git health · dirty repos"). Verify FleetGit
-      renders standalone (reads only `/api/repo-ci/fleet-git-health`).
+- [x] [UI] P1. ✅ **Fleet = FleetGit only** — `FleetTab` renders only `FleetGitContent`; update the page title + the
+      Fleet nav description in `NavMenu.tsx` ("Census · orphans · git · infra" → "git health · dirty repos"). Verify
+      FleetGit renders standalone (reads only `/api/repo-ci/fleet-git-health`). — ✅ `deployment-ui@fce06fb` +
+      `@8c23e7b` (stale-comment follow-up). `FleetTab` now renders ONLY `<FleetGitContent />` (removed the
+      `FleetOrphansContent` embed — that capability was already MERGED into Deployments in earlier todos, not lost, so
+      Fleet dropping it is a pure de-dup); deleted the now-fully-orphaned `FleetOrphans.tsx` (confirmed zero other
+      importers — no standalone route referenced it). Updated `NavMenu.tsx`'s Fleet `desc` from
+      `"Census · orphans · git · infra"` to `"git health · dirty repos"` (confirmed no test asserted the old string
+      verbatim). Verified `FleetGitContent` is genuinely standalone by inspection — its only data import is
+      `getFleetGitHealth` from `api/client.ts` (`/api/repo-ci/fleet-git-health`), no dependency on
+      FleetInfra/FleetOrphans/VmDeployments. **Test coverage decision**: rather than just deleting the 2 Fleet-orphans
+      Playwright tests (which would silently drop real e2e coverage for a capability that still exists on Deployments),
+      retargeted them to `/deployments` using its `deployments-`-prefixed testids — the idle-spend rollup cards + bulk
+      dry-run/execute reap flow are both exercisable there with the EXISTING mock data (same `/api/fleet/orphans`
+      fixture, fetched independently by Deployments). The per-instance delete-dialog flow was NOT ported — it needs a
+      row in the main deployment-inventory mock with `reap_verdict` populated, which doesn't currently exist in
+      `mock-api.ts` (a pre-existing gap from whichever earlier todo shipped that Deployments feature, only unit-tested
+      via hand-built fixtures in `Deployments.test.tsx` — noted honestly in a spec comment, not silently dropped, out of
+      scope for this P1/1hr todo). Full `quality-gates.sh` green (typecheck/lint/orphan-audit/99 test files/build).
+      Playwright `cockpit.spec.ts`: 38 passed, 0 failed. `pw:L2 ✓`.
 - [ ] [UI] P1. **Show the snapshot timestamp per slot in FleetGit** — render the `reported_at` field (already on the
       wire type in `client.ts`; already stored server-side as `SlotRow.git_status_reported_at`) next to each slot in
       `FleetGit.tsx`, so the operator can see WHEN the status snapshot was taken, not just the derived `reporter_stale`
