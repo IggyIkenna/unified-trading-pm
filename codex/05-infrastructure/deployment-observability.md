@@ -21,6 +21,7 @@ related:
     codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
     codex/05-infrastructure/live-deployment-monitoring.md,
     plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
+    plans/active/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
   ]
 created: 2026-06-22
 authoritative_for:
@@ -50,8 +51,12 @@ code_refs:
     unified-trading-library/unified_trading_library/deployment_registry.py,
     unified-trading-library/unified_trading_library/lifecycle/daemon.py,
     deployment-ui/src/pages/Deployments.tsx,
+    deployment-ui/src/pages/DeploymentDetail.tsx,
+    deployment-ui/src/pages/FleetGit.tsx,
+    deployment-ui/src/pages/Cockpit.tsx,
     deployment-ui/src/components/RunLogPanel.tsx,
     deployment-ui/src/components/StreamingLogsPanel.tsx,
+    deployment-ui/src/components/NavMenu.tsx,
     deployment-ui/src/components/filters,
     deployment-ui/src/hooks/useColumnSort.ts,
     deployment-ui/src/lib/columnSort.ts,
@@ -120,6 +125,38 @@ Cloud Run jobs (kind icon, GCP/AWS cloud badge, status badge, exit_code with `13
 captured-progress), a per-umbrella summary header, and URL-param-backed cloud/status/asset_group filters
 (`useSearchParams` → deep-linkable). Drill-down `/deployments/:name` reuses `VmEventsTimeline` + `StreamingLogsPanel`
 (live log tail + event timeline) + the GCS `run.log` link. pw:L2-gated (`tests/smoke/deployments-page.spec.ts`).
+
+## Fleet-tab consolidation — Deployments owns inventory, Fleet is git-health-only (2026-07-21)
+
+Plan: `deployment_ui_fleet_tab_consolidation_2026_07_21.md`. Fleet (`/fleet`) used to stack FIVE sections built before
+Deployments existed as a dedicated tab; each capability now lives at its ONE real home instead of two divergent copies:
+
+- **Deployments (`/deployments`) additionally owns idle-disk-spend** (merged from the removed `FleetOrphans.tsx`, not
+  dropped): rollup cards (Stopped VMs / Reapable / Idle disk $/mo / Reclaimable $/mo, `deployments-idle-spend-cards`),
+  per-row reap-verdict + stopped-age (`OrphanVerdictCell`, reusing
+  `OrphanEntry.reap_verdict`/`stopped_age_hours`/`monthly_disk_usd` fields the backend joins into `DeploymentItem` for
+  STOPPED/SUSPENDED/TERMINATED rows only — a running row honestly reports all four as `None`), a dry-run-first bulk reap
+  (`POST /api/fleet/reap`) and per-instance delete (`DELETE /api/fleet/instances/{name}`), all ported verbatim (same
+  testids/labels, `deployments-` prefixed) rather than rebuilt. Also owns the **folded `/vm-deployments` archive
+  history** (`VmRunHistoryCard` on `DeploymentDetail.tsx` — Outcome/Duration/Rows Captured/Completed + archive log
+  links, scoped per target).
+- **Fleet (`/fleet`) is now git-health-only** — `FleetTab` renders exactly `FleetGitContent` (per-slot dirty-repo
+  state + a `reported_at` snapshot-freshness timestamp, relative age + absolute-time tooltip, next to the existing
+  `reporter_stale` badge). REMOVED (not merged — judged genuinely redundant): the VM-census embed, the cross-cloud
+  reconciliation cards (endpoint unchanged, see the correction note above), `FleetInfra.tsx` in full (orchestrator/
+  infra tiles — AO's own dashboard owns that surface), and the `FleetOrphans.tsx` embed (its capability moved to
+  Deployments per the bullet above, so the Fleet-side copy was deleted, not just hidden).
+- **`/vm-deployments` is RETIRED from the canonical nav but stays a LIVE route** (operator decision BLK-7cb5bbbc) —
+  quarantined into a `legacy: true` `NAV_GROUPS` entry (off the canonical dropdown/top-bar), NOT redirected, because its
+  non-compact render mode was the only reachable home for 4 venue-config panels
+  (`VenueCredentialsPanel`/`VenueDateRangePanel`/`VenueRelaunchEstimatePanel`/`VenueTardisWindowsPanel`) the
+  consolidation audit never accounted for. Those 4 panels were subsequently given their own canonical `/venue-config`
+  route, closing that gap properly rather than leaving them stranded behind the legacy quarantine.
+
+Anti-pattern this closes: a capability existing on TWO surfaces with divergent feature-completeness (Deployments could
+SEE idle spend but not ACT on it; Fleet could act but wasn't the inventory-of-record) — the fix is always
+MERGE-then-remove-the-duplicate, never a blind delete of the less-complete side without checking what it uniquely
+offered.
 
 ## Date-range filter, kind multi-select, always-on treatment (WS-2/WS-3, 2026-07-21)
 
@@ -379,11 +416,13 @@ a lock. Measured: cold ~10s (one-time) → warm <0.2s.
 allowlist — surfacing **UNKNOWN** (running but unregistered → classify-or-kill, its own alert class) and
 **EXPECTED-MISSING** (registered/active but not running) as distinct `classify_vm_target`-classified rows. Rows are
 capped at 200/cloud for a responsive payload while `unknown_count`/`expected_missing_count` carry the EXACT totals. AWS
-rides the same shape and degrades to empty without creds (never blocks GCP). The cockpit **Fleet tab** wires it
-(accounted / unknown / expected-missing cards). NOTE: a large `expected_missing` is dominated by un-reaped STALE active
-entries (registry-hygiene debt — the zombie-watchdog's reap job), a real signal the reconciliation surfaces. The
-reconciliation reads the full active registry (~2.4k entries) per call → ~13s cold; a stale-while-revalidate cache (the
-inventory pattern) is a tracked perf follow-up.
+rides the same shape and degrades to empty without creds (never blocks GCP). NOTE: a large `expected_missing` is
+dominated by un-reaped STALE active entries (registry-hygiene debt — the zombie-watchdog's reap job), a real signal the
+reconciliation surfaces. The reconciliation reads the full active registry (~2.4k entries) per call → ~13s cold; a
+stale-while-revalidate cache (the inventory pattern) is a tracked perf follow-up. **UI wiring REMOVED 2026-07-21**
+(Fleet-tab consolidation, below) — the cockpit Fleet tab no longer renders the accounted/unknown/expected-missing cards
+(judged redundant with Deployments' own per-row status); the endpoint itself is UNCHANGED and still callable, just no
+longer UI-consumed.
 
 **Monitoring-registration enforcement — declare-or-fail-QG (Phase 4):** every long-lived deployable service MUST
 self-register in `MONITORED_SERVICES` (`deployment_service/monitored_services.py`) — each entry carries its resolved

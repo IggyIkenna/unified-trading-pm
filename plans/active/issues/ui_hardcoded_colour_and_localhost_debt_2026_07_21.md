@@ -144,14 +144,27 @@ rather than a single CSS var.
       state on the fully-merged tree (both diffs are additive/composable — different files, no overlap) rather than
       guessing: combined colour count 501→465. `quality-gates.sh` green end-to-end (345s: typecheck/lint/286
       tests/build/DeFi- citation all passed), sentinel `2d7d8ca6`→`252ed295` after quickmerge.
-- [ ] [UI] P3. Batch 3 — trading/sports (10 files, 1–27 hits each):
+- [x] ✅ [UI] P3. Batch 3 — trading/sports (10 files, 1–27 hits each):
       `components/trading/sports/fixtures-detail-panel.tsx`, `components/trading/sports/arb-grid.tsx`,
       `components/trading/sports/shared.tsx`, `components/trading/sports/my-bets-tab.tsx`,
       `components/trading/sports/fixtures-match-card.tsx`, `components/trading/sports/arb-stream.tsx`,
       `components/trading/sports/arb-tab.tsx`, `components/trading/sports/fixtures-tab.tsx`,
       `components/trading/sports/bet-slip.tsx`, `components/widgets/sports/sports-widgets.md` (a markdown doc — check if
       the hex mentions are prose/examples, not code, before touching). `shared.tsx` likely defines a per-outcome colour
-      map shared by the other 9 — fix it first, other files may just import from it. (repo: unified-trading-system-ui)
+      map shared by the other 9 — fix it first, other files may just import from it. (repo: unified-trading-system-ui) —
+      `unified-trading-system-ui@e60cf555`. Fixed `shared.tsx` first (per this todo's own note), mapping every hardcoded
+      hex to this repo's existing design-system CSS vars after confirming exact-hex matches (`--status-live`,
+      `--color-pnl-positive/-negative`, `--color-primary`, `--color-chart-1/4`,
+      `--color-background/-card/-border/-muted-foreground`, `--color-surface-arb-card`); added a new
+      `--surface-loss-card` token (mirroring the existing `--surface-arb-card`) for the one colour with no design-system
+      counterpart. New `lib/sports-theme.ts` (mirrors `lib/chart-theme.ts`'s pattern) holds the genuinely categorical
+      league-badge + bookmaker-brand palettes, added to `CODEX_COLOUR_EXCLUDE_GLOBS`. The `.md` doc's hex mentions
+      confirmed prose (future-widgetization notes), left untouched per this todo's own instruction. Hit two
+      concurrent-peer merge conflicts shipping (Batch 2's colour cleanup + a colour/localhost triage pass landed
+      mid-ship) — reconciled both properly (combined `CODEX_COLOUR_EXCLUDE_GLOBS`, recomputed the TRUE combined baseline
+      via `--update-baseline` rather than guessing, colour 465→352). `quality-gates.sh` green end-to-end (286 tests,
+      build passed) + `pw:L2` ✓ (`tests/smoke/sports-tab-colour-migration.smoke.spec.ts`, new spec, passed after
+      installing this slot's missing Playwright browser binary).
 - [ ] [UI] P3. Batch 4 — trading (non-sports) + predictions (14 files, 1–21 hits each):
       `components/shared/status-badge.tsx`, `components/trading/strategy-audit-trail.tsx`,
       `components/trading/strategy-filter-bar.tsx`, `components/trading/alerts-feed.tsx`,

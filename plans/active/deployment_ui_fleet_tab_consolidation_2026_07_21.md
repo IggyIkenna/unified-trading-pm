@@ -252,21 +252,66 @@ Key audit facts driving the merges:
       via hand-built fixtures in `Deployments.test.tsx` — noted honestly in a spec comment, not silently dropped, out of
       scope for this P1/1hr todo). Full `quality-gates.sh` green (typecheck/lint/orphan-audit/99 test files/build).
       Playwright `cockpit.spec.ts`: 38 passed, 0 failed. `pw:L2 ✓`.
-- [ ] [UI] P1. **Show the snapshot timestamp per slot in FleetGit** — render the `reported_at` field (already on the
+- [x] [UI] P1. ✅ **Show the snapshot timestamp per slot in FleetGit** — render the `reported_at` field (already on the
       wire type in `client.ts`; already stored server-side as `SlotRow.git_status_reported_at`) next to each slot in
       `FleetGit.tsx`, so the operator can see WHEN the status snapshot was taken, not just the derived `reporter_stale`
       "reporter dead" boolean. Show both an absolute time and a relative age (e.g. "3m ago") so freshness reads at a
       glance and pairs with the existing stale badge. Pure UI — NO backend change (the timestamp already reaches the
-      frontend).
-- [ ] [REVIEW] P1. **Playwright specs** — new: Deployments idle-spend cards + reap-confirm/dry-run flow + folded
+      frontend). — ✅ `deployment-ui@509f3b9`. Added `fmtSnapshotAge`/`fmtSnapshotTime` helpers to `FleetGit.tsx` and
+      rendered `"snapshot ‹Nm/h/d ago›"` next to each slot's badges/ff-pull chip, with the absolute local time as a
+      hover tooltip (`title` attr) — pairs with the existing `reporter dead` badge without duplicating it. Pure UI, no
+      backend change (confirmed `reported_at` was already on the wire, just unrendered). Extended
+      `fleet-git-tab.spec.ts` with a new Playwright test asserting the snapshot text + tooltip render. Full
+      `quality-gates.sh` green (one unit-test failure on the first full-QG attempt, in an unrelated file
+      `ExecutionBacktests.test.tsx` — verified as a FLAKE, not caused by this change: the same file passed in isolation
+      on both this diff and pre-change HEAD, and the full suite re-run passed 100% clean on the second attempt).
+      Playwright `fleet-git-tab.spec.ts`: 4 passed, 0 failed. `pw:L2 ✓`.
+- [x] [REVIEW] P1. ✅ **Playwright specs** — new: Deployments idle-spend cards + reap-confirm/dry-run flow + folded
       history; Fleet shows ONLY git health + dirty repos + the per-slot snapshot timestamp; `/vm-deployments` redirects
       to `/deployments`. Keep existing Deployments + Fleet regression specs green. `pw:L2 ✓` + cited specs. No tick
-      without them.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across deployment-ui + deployment-api if
-      touched) + flip todos same turn (`docs(plans):`).
-- [ ] [REVIEW] P2. Post-phase codex audit — document the consolidated contract (Deployments owns VM inventory + idle
+      without them. — ✅ Audit complete, no new code shipped this todo (nothing outstanding to ship — see below). Per
+      capability: **Deployments idle-spend cards + reap-confirm/dry-run** — covered by `cockpit.spec.ts`'s "Cockpit —
+      Deployments orphan inventory + bulk reap" describe block (retargeted from Fleet to Deployments in this plan's
+      earlier todo). **Folded history** — covered by the pre-existing `vm_deployments_archive_history.spec.ts` (5 tests:
+      outcome badges, duration, rows-captured, log/serial links, empty state). **Fleet = git-only + snapshot timestamp**
+      — covered by `cockpit.spec.ts`'s "each tab switches" test + `fleet-git-tab.spec.ts` (4 tests incl. the new
+      snapshot-age assertion). **Note on the literal "`/vm-deployments` redirects to `/deployments`" wording**: this
+      line predates the operator's later BLK-7cb5bbbc decision (an earlier todo in this same plan) which ruled
+      `/vm-deployments` STAYS a live route (legacy-quarantined, not redirected) because its non-compact mode is the only
+      reachable home for 4 venue-config panels — that decision is what's actually implemented and tested
+      (`vm_deployments_archive_history.spec.ts`'s own describe-block comment cites BLK-7cb5bbbc explicitly), so no
+      redirect test was written since a redirect would contradict the ruling that superseded this line. **Found + fixed
+      a real pre-existing gap during this audit**: `nav-menu-dedup.spec.ts`'s "top bar carries the same N entries" test
+      still expected the OLD stale `vm-deployments` canonical-nav testid (a leftover from BLK-7cb5bbbc never being
+      reflected there — confirmed via live DOM inspection, not guessed) — while resolving this, a CONCURRENT slot's
+      commit (`deployment-ui@ddecdec`, "give the 4 venue-config panels a canonical `/venue-config` route") landed with
+      an equivalent-but-more-complete fix (also closing the venue-panels-orphaned-route issue doc filed earlier in this
+      plan) — deferred to theirs per the multi-agent-collision precedent (verified their version passes before
+      accepting, not blindly). Ran the CONSOLIDATED regression suite across every capability this plan touched
+      (`cockpit.spec.ts` + `fleet-git-tab.spec.ts` + `nav-menu-dedup.spec.ts` + `nav_and_header.spec.ts` +
+      `vm_deployments_archive_history.spec.ts` + `vm_deployments_reconcile.spec.ts` + `deployments-page.spec.ts` +
+      `venue_tardis_windows.spec.ts` + `routes.spec.ts`): **114 passed, 0 failed**. `pw:L2 ✓`.
+- [x] [INFRA] P1. ✅ Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across deployment-ui + deployment-api if
+      touched) + flip todos same turn (`docs(plans):`). — ✅ Already satisfied by construction: every todo in this plan
+      (from "Remove FleetInfra" through the Playwright-review audit) was individually shipped via `quickmerge.sh` and
+      its plan checkbox flipped in the SAME turn, per the commit-push-flip HARD RULE — not deferred to a single
+      end-of-plan mega-commit. Final shipped chain on `deployment-ui`: `84b6a17` → `e2cf84b` → `fce06fb` → `8c23e7b` →
+      `509f3b9` → `ddecdec` (the last one landed by a concurrent slot closing the venue-panels gap found during review).
+      `deployment-api` was untouched throughout (every backend endpoint stayed intentionally out of scope per each
+      todo's own text). Verified both repos' trees are clean and fast-forwarded to `origin/live-defi-rollout` before
+      flipping this todo — nothing outstanding to ship.
+- [x] [REVIEW] P2. ✅ Post-phase codex audit — document the consolidated contract (Deployments owns VM inventory + idle
       spend + reap actions + history; Fleet = git-health-only; `/vm-deployments` retired) in
-      `codex/05-infrastructure/deployment-observability.md`.
+      `codex/05-infrastructure/deployment-observability.md`. — ✅ `unified-trading-pm@dd5068f4c`. Added a new "Fleet-tab
+      consolidation" section documenting: Deployments now owns idle-spend (rollup cards + verdict/ stopped-age + dry-run
+      reap/delete, ported verbatim from the removed `FleetOrphans.tsx`) + the folded `/vm-deployments` archive history;
+      Fleet is git-health-only (`FleetTab` renders exactly `FleetGitContent` + the new snapshot timestamp);
+      `/vm-deployments` is legacy-quarantined (NOT redirected — BLK-7cb5bbbc, stays live for the 4 venue-config panels,
+      later given its own canonical `/venue-config` route). **Also corrected** the now-stale "cockpit Fleet tab wires
+      it" claim in the pre-existing cross-cloud-reconciliation paragraph (the endpoint is unchanged, just no longer
+      UI-consumed after this plan). Added `FleetGit.tsx`/`Cockpit.tsx`/ `NavMenu.tsx`/`DeploymentDetail.tsx` to the
+      doc's `code_refs` and this plan to `related`. **Plan is now fully closed** — every todo (10 code todos + this
+      audit) done.
 
 ## Success criteria
 
