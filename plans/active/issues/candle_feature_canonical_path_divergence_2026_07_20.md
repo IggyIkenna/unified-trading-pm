@@ -451,3 +451,60 @@ P7 AROUND the raw-tick fleet's completion, disjoint prefix but shared manifest-s
 drain / P7 apply are correctly BLOCKED-pending on this external fleet finishing, not something to force through now.**
 This is a "cannot be done yet" deferral (elapsed time / external event), not a gap — re-check fleet status before
 starting P6.
+
+### 2026-07-21 — ✅ P5 executor SHIPPED (`mdps@6ce1a25`) — the adversarial workflow caught a real critical bug before it ever touched prod
+
+`market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py` (951 lines) + a 23-test unit suite, cloning
+`migrate_tradfi_canonical_2026_07.py`'s proven safety structure (dry-run default, mapping-manifest + 0-orphan reconcile
+before any write, copy→verify→delete with the target==source no-delete guard, per-object try/except isolation, sharding)
+while deliberately NOT reusing its `data_type` transform (candles keep SOURCE `data_type` unchanged — see the LOCKED
+shape above). 8 disposition classes + the ORPHAN loud-failure bucket; genuine defects (empty-stem, TradFi leaf-id,
+split-brain dedup) repaired in the same pass per todos 2/3/9.
+
+**Built + reviewed via a workflow (build agent + 3 parallel adversarial lenses — data-loss safety, dedup/shape
+correctness, operational safety — + a conditional fix pass), and it earned its keep**: all 3 lenses INDEPENDENTLY
+converged on the same **CRITICAL** finding — `PipelineModeSiblingIndex`/`ProvisionalTargetIndex` (the split-brain dedup
+indices) were built PER-SHARD using the same `--shard-of`/`--shard-index` filter as the classify/apply pass, but
+`_stable_shard()` hashes each object's raw enumeration LINE TEXT, and a split-brain pair's two lines differ (one carries
+an extra `pipeline_mode=X/` segment) — so under the script's own documented `--shard-of N` prod usage, a split-brain
+pair lands in DIFFERENT shards with overwhelming probability. The sibling backfill would silently never fire, the
+pm-less twin would fall back to the blind `BATCH_DATABENTO` default, and BOTH objects would migrate to DISTINCT,
+one-mislabeled canonical paths — permanently duplicating the shard with corrupted provenance metadata, with the
+reconcile's 0-orphan check never catching it (both twins individually resolve to a valid disposition). This is exactly
+the class of silent-corruption-at-scale bug the adversarial-review step exists to catch before a real `--apply` run.
+
+**Fixed in the same pass**: `build_pipeline_mode_sibling_index()` / `build_target_index()` no longer accept shard
+parameters at all (the footgun removed at the signature level, not just one call site) — they always scan the full
+unsharded enumeration; only the classify/apply passes stay sharded. 4 new regression tests added, including one that
+hand-reconstructs the OLD buggy call pattern and asserts it DOES reproduce the bug (documents exactly what the fix
+prevents). I additionally fixed 2 issues surfaced but not auto-fixed (medium/low severity, so outside the workflow's
+auto-fix threshold): the crc32c verification was OPPORTUNISTIC (`if smeta.crc32c and dmeta.crc32c and ...`) rather than
+REQUIRED, so a missing crc32c on either side would silently downgrade to a weaker size-only match — tightened to require
+crc32c on both sides, never falling through to size-only; and a genuine `str | None` type-safety gap in the
+content-repair path (now explicitly narrowed, never assumed). basedpyright: 0 errors. QG: ALL PASSED.
+
+**Remaining findings NOT fixed (medium/low, tracked as follow-up, not blocking)**:
+
+- [ ] 11. [SCRIPT] P2. `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` has no branch for this script,
+      and copy-pasting the existing tradfi pattern (`python -m ${base}.migrate_tradfi_canonical_2026_07`) would break
+      (`ModuleNotFoundError`) since this script lives at `scripts/`, not inside the package — needs an explicit
+      `python scripts/migrate_candle_canonical_2026_07.py` invocation branch before P7 can launch VMs.
+- [ ] 12. [SCRIPT] P2. No PROGRESS.json-style resume checkpoint for `--apply` — a SPOT preemption forces a full 3-pass
+      restart (both indices + reconcile) before resuming; under frequent preemption a shard could make zero net forward
+      progress. Worth adding before a real fleet-wide P7 run (per the workspace's mandatory
+      preemption-recovery-from-measured-progress rule).
+- [ ] 13. [DATA] P3. `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT (not the actual
+      migration safety) can be inflated by cross-asset-group path coincidences — cosmetic, fix before trusting the
+      corpus-wide "quantify the split" number (todo 9) precisely.
+- [ ] 14. [DATA] P3. Non-colon CeFi "bare wire" leaf stems (e.g. on-chain `BTC-PERP`) route to QUARANTINE_CORRUPT rather
+      than attempting `_renormalize_wire_cefi` content-repair (which exists and could resolve them) — confirm this is an
+      intentional scope boundary (spec only names TradFi leaf-id repair) before the P0 census, since it affects the
+      QUARANTINE volume estimate.
+- [ ] 15. [DOC] P3. `unified-trading-library`'s `build_canonical_candle_path()` docstring example still shows the
+      SUPERSEDED "aggregated data_type" semantics (`data_type='deriv_ohlcv_15m'`) — not a functional bug (the function
+      is value-agnostic), but could mislead a future maintainer into "fixing" the correct SOURCE-keyed callers. Update
+      the docstring example to match the 2026-07-21 correction.
+
+**NEXT: P0 census** (Tier-2 spot VM, per the workspace's own census-and-compute-tiers rule — a full ~10-20M-object
+enumeration + classification run must happen on sanctioned infra, never in-session) — **blocked on the raw-tick fleet
+finishing** (checked above, 11/18 still running).
