@@ -40,6 +40,7 @@ supersedes:
 superseded_by:
 resolved_by:
 source: operator request 2026-07-21 — "Orphans not assessed for any AG — lets assess then"
+depends_on: []
 ---
 
 # Estate orphan assessment 2026-07-21 (partial)
