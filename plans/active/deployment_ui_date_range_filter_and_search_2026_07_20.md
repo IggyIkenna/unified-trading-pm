@@ -161,8 +161,12 @@ Full audit transcript available on request; the load-bearing facts:
       folded into the client-side `items.filter(...)` predicate alongside kind/launched_by — the inventory endpoint's
       own `service` query param stays unused by this control, deliberately client-side per the decision) | pw:L2 ✓ |
       regression: tests/smoke/deployments-page.spec.ts
-- [ ] [UI] P2. Target search box (WS-3) — free-text substring match on the Target column (`item.name`),
-      case-insensitive, URL-backed (`?q=`), debounced, clears with an ✕.
+- [x] ✅ [UI] P2. Target search box (WS-3) — free-text substring match on the Target column (`item.name`),
+      case-insensitive, URL-backed (`?q=`), debounced, clears with an ✕. — deployment-ui@0dd3438 (`TargetSearchBox` in
+      `Deployments.tsx`; local `searchInput` state drives the visible box AND the client-side filter instantly — cheap
+      in-memory array filter, no reason to lag the actual filtering; only the `?q=` URL write is debounced 300ms via the
+      house `useDebounce` hook, so typing doesn't spam browser history) | pw:L2 ✓ | regression:
+      tests/smoke/deployments-page.spec.ts
 - [ ] [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
       `StatusFilterChips` (`:924-961`), and the column-sort machinery (`SortKey` / `columnSortValue` / `compareByColumn`
       at `:256-320`, plus `onHeaderClick` at `:821` — note it lives in the table component, NOT co-located with the pure
