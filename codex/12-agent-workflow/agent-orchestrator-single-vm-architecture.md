@@ -52,13 +52,14 @@ authoritative_for:
   ]
 referenced_by: [cursor-configs/CLAUDE.md, cursor-configs/skills/check-agent-orchestrator/SKILL.md]
 owner:
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-21
 code_refs:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
     agent-orchestrator/server/dispatch.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/role_registry.py,
+    agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/plan_health.py,
     agent-orchestrator/server/tmux_pruner.py,
