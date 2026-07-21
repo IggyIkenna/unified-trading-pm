@@ -133,7 +133,11 @@ principle, wrong in aggregation.
       `test_attach_costs_resolves_aws_arn_via_instance_census`, and
       `test_attach_costs_unmapped_aws_row_stays_honest_none` from the earlier BACKEND/DATA todos. Full
       `bash scripts/quality-gates.sh` green (4804 passed, 16 skipped, coverage 80.06%).
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
+- [x] ✅ [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`). —
+      all six BACKEND/DATA/UI/REVIEW commits above were already pushed to `origin/live-defi-rollout` at task pickup
+      (deployment-api@de1f680, deployment-ui@6a32408) — verified via
+      `git rev-list --count HEAD ^origin/live-defi-rollout` == 0 in both repos, no local WIP to ship. This todo covers
+      the plan-flip confirmation itself.
 - [ ] [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions, active-days
       average, 24h basis, GCP-name/AWS-ARN join, `cost_basis` colour convention) in
       `codex/05-infrastructure/deployment-observability.md`.
@@ -172,6 +176,11 @@ principle, wrong in aggregation.
   - Confirms the exact symptom named in the todo: `avg == actual/7` and `projected == actual`. After the decision-1 fix
     (divide by `len(day_net)`), `avg_7d_usd` for both examples above should read equal to `actual_usd` (`4.43` and
     `5.76` respectively), not `0.63`/`0.82`.
+- **2026-07-21** — [INFRA] Ship-and-flip todo picked up (slot 2). All code for the BACKEND/DATA/UI/REVIEW todos was
+  already committed and pushed to `origin/live-defi-rollout` in both `deployment-api` (HEAD `de1f680`) and
+  `deployment-ui` (HEAD `6a32408`, since fast-forwarded to `e4f893e` by an unrelated sibling-plan push) — confirmed zero
+  unpushed commits in either repo before flipping this checkbox. Remaining open todo: the P2 post-phase codex audit of
+  `codex/05-infrastructure/deployment-observability.md`.
 
 ## Codex SSOTs
 
