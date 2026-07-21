@@ -252,12 +252,20 @@ Key audit facts driving the merges:
       via hand-built fixtures in `Deployments.test.tsx` — noted honestly in a spec comment, not silently dropped, out of
       scope for this P1/1hr todo). Full `quality-gates.sh` green (typecheck/lint/orphan-audit/99 test files/build).
       Playwright `cockpit.spec.ts`: 38 passed, 0 failed. `pw:L2 ✓`.
-- [ ] [UI] P1. **Show the snapshot timestamp per slot in FleetGit** — render the `reported_at` field (already on the
+- [x] [UI] P1. ✅ **Show the snapshot timestamp per slot in FleetGit** — render the `reported_at` field (already on the
       wire type in `client.ts`; already stored server-side as `SlotRow.git_status_reported_at`) next to each slot in
       `FleetGit.tsx`, so the operator can see WHEN the status snapshot was taken, not just the derived `reporter_stale`
       "reporter dead" boolean. Show both an absolute time and a relative age (e.g. "3m ago") so freshness reads at a
       glance and pairs with the existing stale badge. Pure UI — NO backend change (the timestamp already reaches the
-      frontend).
+      frontend). — ✅ `deployment-ui@509f3b9`. Added `fmtSnapshotAge`/`fmtSnapshotTime` helpers to `FleetGit.tsx` and
+      rendered `"snapshot ‹Nm/h/d ago›"` next to each slot's badges/ff-pull chip, with the absolute local time as a
+      hover tooltip (`title` attr) — pairs with the existing `reporter dead` badge without duplicating it. Pure UI, no
+      backend change (confirmed `reported_at` was already on the wire, just unrendered). Extended
+      `fleet-git-tab.spec.ts` with a new Playwright test asserting the snapshot text + tooltip render. Full
+      `quality-gates.sh` green (one unit-test failure on the first full-QG attempt, in an unrelated file
+      `ExecutionBacktests.test.tsx` — verified as a FLAKE, not caused by this change: the same file passed in isolation
+      on both this diff and pre-change HEAD, and the full suite re-run passed 100% clean on the second attempt).
+      Playwright `fleet-git-tab.spec.ts`: 4 passed, 0 failed. `pw:L2 ✓`.
 - [ ] [REVIEW] P1. **Playwright specs** — new: Deployments idle-spend cards + reap-confirm/dry-run flow + folded
       history; Fleet shows ONLY git health + dirty repos + the per-slot snapshot timestamp; `/vm-deployments` redirects
       to `/deployments`. Keep existing Deployments + Fleet regression specs green. `pw:L2 ✓` + cited specs. No tick
