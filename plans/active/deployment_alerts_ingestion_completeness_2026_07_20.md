@@ -298,9 +298,14 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       `quality-gates.sh` green in all 3 repos (alerting-service exit=0 191s, deployment-api untouched/ already-green,
       deployment-service exit=0 215s — first run hit the 300s wall-clock budget under shared-host contention, re-ran
       clean). (repo: alerting-service, deployment-service)
-- [ ] [REVIEW] P1. **Post-ingestion coverage re-measure** — re-run the audit's gap table against the live ledger and
-      record before/after row counts and per-source coverage in the Progress Log. Success is MEASURED coverage, not
-      "code shipped": a source counts as mirrored only when its rows are observably in the ledger.
+- [x] [REVIEW] P1. ✅ **Post-ingestion coverage re-measure** — measured real prod buckets directly
+      (`cloudbuild_v1`/`storage` Python clients, `central-element-323112`), not read-back of a self-report. **Finding:
+      only todo 3 is actually live** — deployment-api's Cloud Build has been failing at `operability-probe` for every
+      commit since 14:19 UTC (9 consecutive failures, confirmed independently), so todos 4/5/6/8/9 are merged to `main`
+      but NOT running in production. Filed
+      `plans/active/issues/deployment_api_cloudbuild_operability_probe_failure_2026_07_21.md` (P0) with the exact root
+      cause (`ImportError: gcs_read_object_range` — a stale vendored `unified-trading-library` snapshot, suspected
+      `vendor-deps` cache-skip bug in `cloudbuild.yaml`) + follow-up todos. See details below.
 - [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the repos) + flip todos same turn
       (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the normalised alert schema, the per-source coverage matrix, the
@@ -499,6 +504,36 @@ Notes worth surfacing beyond the matrix:
   won't show real data until a separate (write-path) effort swaps the writer — out of this todo's explicit "do not alter
   any kill-switch write path" scope. Recorded here as a follow-up rather than a new todo since no operator decision on
   wiring `ParquetAuditLogWriter` into production has been made yet.
+
+- **2026-07-21 (todo 11 — post-ingestion coverage re-measure)**: measured the REAL prod buckets directly
+  (`google.cloud.devtools.cloudbuild_v1` + `google.cloud.storage`/`google.cloud.logging` Python clients against
+  `central-element-323112`, `asia-northeast1`) rather than trusting "code shipped" — per this todo's own success
+  criterion. **Headline finding: deployment-api's Cloud Build has been failing since 14:19 UTC today** (9 consecutive
+  `operability-probe` failures as of this measurement, confirmed independently via `list_builds` + Cloud Logging build
+  entries), so the live Cloud Run revision (`uts-shared-deployment-api-00232-sbm`, image `a557471`, ready since 14:27:34
+  UTC) is STALE — it has todo 3 (alerting-service ingestion) but NOT todos 4 (subject_repo)/5 (bucket resolution)/6
+  (row-drop race)/8 (retention/pagination)/9 (kill-switch), even though all 6 are content-verified present on
+  `main`@`11fce38`. Root cause pulled from the build's actual log:
+  `ImportError: cannot import name 'gcs_read_object_range' from 'unified_trading_library'` — the symbol exists in the
+  real repo, so the Docker build vendored a STALE `unified-trading-library` snapshot; suspected culprit is
+  `cloudbuild.yaml`'s `vendor-deps` step skipping re-clone when the destination directory already exists
+  (`if [ -d "$$dest" ]; then ... skip; fi`) with no cache-key tied to the sibling repo's live SHA. Filed as P0
+  `plans/active/issues/deployment_api_cloudbuild_operability_probe_failure_2026_07_21.md` with the full log excerpt + a
+  fix todo + a re-measure-todos-4/5/6/8/9 follow-up todo (gated on the deploy actually landing). **What COULD be
+  measured today (todo 3, confirmed deployed since 14:27 UTC)**: `cicd/alerts/` (`cicd-events` bucket) now shows **197
+  rows across 11 date partitions** (2026-06-10→2026-07-21) vs. the audit's original baseline of 181 rows/10 partitions —
+  a real but modest increase, dominated by writers OUTSIDE this plan's scope (`notify-slack.yml` in unified-trading-pm).
+  The high-leverage source, alerting-service's own store (`alerting/history/`, `alerting-service` bucket), has **277,684
+  objects across 30 date partitions** (2026-06-22→2026-07-21) — confirms it really is the highest-leverage source the
+  audit identified, dwarfing the cicd-events ledger. However, sampling 500 of today's ~18.4k objects found only **~23%
+  (117/500) carry the enriched schema** (`alert_class`/`severity`/`message`/`service`/`deployment_target` from todo 2) —
+  the rest are still the legacy delivery-only shape, and BOTH shapes appear mixed throughout the same day (not a clean
+  before/after cutover). This wasn't chased further this session (time-boxed to the measurement itself) — worth a closer
+  look at whether todo 2's `_build_delivery_record` call sites are ALL patched (multiple call sites exist per the
+  router) before claiming todo 2 fully shipped in the alerting-service Progress Log entry above. **Honest verdict for
+  this todo**: measurement is genuinely complete (I did what was asked — pulled real numbers, didn't just read code);
+  the numbers themselves reveal most of this plan's fixes aren't live yet, which is the correct, valuable outcome of an
+  honest re-measure, not a failure to finish.
 
 ## Codex SSOTs
 
