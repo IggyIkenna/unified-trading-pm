@@ -3433,3 +3433,21 @@ need to reach `2026-05-10`, LINEUPS/PLAYER_STATS still need to reach present —
 worth running yet (would just re-confirm "still pending", as it has every prior cheap re-check). Not flipping the
 checkbox. `/skip-current-task` — resume once the fleet completes (all 4 shards self-delete `exit_code=0`) or a shard
 goes dead/stalled again (flat `PROGRESS.json` timestamp on a live re-check).
+
+### 2026-07-21T04:15Z — data_engineering slot-15 (Todo `-001` re-dispatched, ~7min after slot-13's check — cheap re-check, all 4 shards still healthy, decline)
+
+Dispatched onto `-001`. Fresh-pulled `unified-trading-pm`, clean tree, up to date with origin (slot-13's 04:08Z entry
+already on HEAD). Re-checked fleet liveness (`gcloud compute instances list --filter="name~af-backfill"` + per-VM
+`PROGRESS.json` via `gcloud storage cat`):
+
+- All 4 VMs still `RUNNING`: `af-backfill-20260719-180545` (LINEUPS), `-180620` (PLAYER_STATS),
+  `af-backfill-20260721-033537` (FIXTURE_EVENTS), `-033605` (FIXTURE_STATS).
+- `PROGRESS.json` monotonically advanced vs slot-13's 04:08Z readings (all timestamps fresh, within ~2 min of this
+  check): FIXTURE_EVENTS `2020-06-25→2020-06-27`, FIXTURE_STATS `2020-06-24→2020-06-27`, LINEUPS
+  `2024-06-08→2024-06-15`, PLAYER_STATS `2025-12-19→2025-12-23`.
+
+No stall, no new dead shard, no new information beyond confirming continued healthy advance — a genuine multi-day run
+exactly as framed. Gate (`expected_unattempted_pending_fetch == 0` across all AF enrichment data_types) remains far from
+met (FIXTURE_EVENTS/STATS still need to reach `2026-05-10`; LINEUPS/PLAYER_STATS still need to reach present). Not
+flipping the checkbox — a full gate-verification query this soon after slot-13's would just re-confirm "still pending".
+`/skip-current-task` — resume once the fleet completes or a shard goes dead/stalled on a future check.
