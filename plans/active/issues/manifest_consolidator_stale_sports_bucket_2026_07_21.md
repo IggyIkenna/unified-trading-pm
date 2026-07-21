@@ -120,12 +120,30 @@ consolidated blob catches up (staleness should trend back toward 0, not keep gro
 - [ ] [INFRA] P3. Consider whether this bucket/consolidator pairing needs its own staleness alert (the 120s threshold
       being breached for 1h10m+ straight during a live backfill went unnoticed until an unrelated task's logs surfaced
       it). (repo: deployment-service or wherever consolidator alerting lives)
-- [ ] [INFRA] P3. Audit every OTHER sports launcher reading `instruments-store-sports-prd-central-element-323112`
+- [x] [INFRA] P3. Audit every OTHER sports launcher reading `instruments-store-sports-prd-central-element-323112`
       (`launch-sports-full-sweep-vm.sh`, `launch-sports-entity-sweep-vm.sh`, `launch-sports-manifest-rescan-vm.sh`,
       `launch-transfermarkt-forward-poll.sh`, `launch-mtds-sports-odds-backfill-vm.sh`, etc.) for the same missing
       `MANIFEST_CONSOLIDATED_STALENESS_SEC` override applied to `launch-transfermarkt-backfill-vm.sh` above — any of
       them can hit the same `ManifestConsolidatorStaleError` given this bucket's now-routine 400-460s merge duration.
-      (repo: deployment-service)
+      (repo: deployment-service) — ✅ deployment-service@dc5a2a7
+
+  Audited every `deployment-service/scripts/vm/launch-*sports*.sh` launcher by `VM_SERVICE=` value: 14 launchers set
+  `VM_SERVICE=instruments_service` + `VM_ASSET_GROUP=SPORTS` (i.e. read/write the SAME `instruments-store-sports-prd-*`
+  bucket as the TM launcher) and none of them set `MANIFEST_CONSOLIDATED_STALENESS_SEC` — the identical gap. Bumped all
+  14 to `=1800` (matching the TM fix): `launch-api-football-backfill-vm.sh`, `launch-fill-missing-player-stats-vm.sh`,
+  `launch-fixtures-truthset-audit-vm.sh`, `launch-footystats-backfill-vm.sh`, `launch-footystats-forward-poll.sh`,
+  `launch-sfi-backfill-vm.sh`, `launch-sfi-forward-poll.sh`, `launch-sports-entity-sweep-vm.sh`,
+  `launch-sports-full-sweep-vm.sh`, `launch-sports-instruments-reference-vm.sh`, `launch-sports-is-gap-fill.sh`,
+  `launch-sports-manifest-rescan-vm.sh`, `launch-transfermarkt-forward-poll.sh`, `launch-understat-forward-poll.sh`.
+
+  **Deliberately excluded**: `launch-mtds-sports-odds-backfill-vm.sh` (`VM_SERVICE=market_tick_data_service`) and
+  `launch-mdps-sports-bucket-vm.sh` (`VM_SERVICE=market_data_processing_service`) — these read a DIFFERENT bucket
+  (`market-data-tick-sports-*`, its own separate `uts-prod-manifest-consolidator-market-data-sports` Cloud Run job), not
+  `instruments-store-sports-prd-*`. This todo's scope is the instruments bucket only; the market-data-sports
+  consolidator wasn't diagnosed as having the same merge-duration problem and shouldn't get the same override without
+  its own evidence. `launch-sports-scheduler-vm.sh` (`VM_SERVICE=deployment_service`) and
+  `launch-sports-v9-migration-vm.sh` (`VM_SERVICE=market_tick_data_service`) were similarly out of scope for the same
+  reason.
 
 ## Codex SSOTs
 
