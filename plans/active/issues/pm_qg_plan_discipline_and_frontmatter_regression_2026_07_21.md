@@ -176,18 +176,35 @@ normally.
       `check_plan_discipline.py`'s `_check_rule_c`: all 8 confirmed cleared, no other plans' counts moved. Reconciled
       `plan_discipline_baseline.yaml` against sibling batch-1's concurrent landing (82 after their fix) — combined
       re-baseline 82 → 74. (repo: unified-trading-pm)
-- [ ] [DOCS] P3. Remaining archived-plan debt, batch 5 — infra/orchestrator/deployment/codex/misc (16 plans, 4–139 open
-      items each): `ICLOUD_MIGRATION_CHECKLIST`, `quality_gate_hardening.plan`,
-      `deployment_service_build_infrastructure_repair_2026_04_22`, `phase3_service_hardening_integration`,
-      `orchestrator_consolidated_remaining_2026_06_25`,
-      `orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24`,
-      `sfi_chunk_parallel_backfill_2026_04_22`, `stub_completion_interfaces_and_infra`,
-      `_HANDOFF_expected_universe_enumerator_2026_05_07`, `WORKFLOW_RESIDUAL_ITEMS`, `codex_refactor_2026_05_08`,
-      `data_pipeline_completion_2026_04_18`, `work_split_2026_05_07`, `work_split_2026_05_08_harsh`,
-      `work_split_2026_05_08_ikenna`, `work_split_2026_05_07_harsh_5tab_layout` (the 4 `work_split_*` files read as
-      personal/ephemeral operator coordination trackers — worth checking with the operator whether they're safe to
-      declare abandoned rather than tracked as real open work). Same per-plan-judgment discipline as batch 1. (repo:
-      unified-trading-pm)
+- [x] ✅ [DOCS] P3. Remaining archived-plan debt, batch 5 — infra/orchestrator/deployment/codex/misc (16 plans, 4–139
+      open items each) — `unified-trading-pm@2fd0231ba`. Real per-plan judgment for all 16, no blind-close: **13 MOOT**
+      (`ICLOUD_MIGRATION_CHECKLIST` — superseded by live dependency-alignment enforcement;
+      `deployment_service_build_infrastructure_repair_2026_04_22` — each item's goal independently achieved via later
+      plans; `orchestrator_strict_vm_matching_and_plan_frontmatter_governance_2026_06_24` — open items live in a section
+      the plan's own banner already disowns as superseded; `_HANDOFF_expected_universe_enumerator_2026_05_07` —
+      deliverable shipped under an evolved name; `WORKFLOW_RESIDUAL_ITEMS` — every named repo renamed/merged/ retired
+      since 2026-03; `codex_refactor_2026_05_08` — frontmatter already declared shipped, D.4 cross-refs verified
+      resolved; all 4 `work_split_*` files — confirmed personal day-splitting coordination docs
+      (`type: coordination-doc`), every substantive item tracked+completed elsewhere). **3 with real named successors**:
+      `quality_gate_hardening.plan` → `cicd_mvp_ldr_to_main_pipeline_2026_06_30` (operator 2026-06-30 decision replaced
+      build-platform gating with `quality-gates-v2` required-check branch protection);
+      `sfi_chunk_parallel_backfill_2026_04_22` → `sports_pipeline_to_100pct_golden_window_first_2026_06_27` (the full
+      2015→present SFI backfill is explicitly tracked `⬜ not started` as "P2b" there);
+      `data_pipeline_completion_2026_04_18` → `data_completion_to_100_all_ag_2026_06_21` (documented `supersedes:`
+      chain, folded 2026-07-13 into per-AG children). **2 split-verdict**:
+      `orchestrator_consolidated_remaining_2026_06_25` (WS-D items moot — human-planning VM migration + 37GB-OOM fix
+      both shipped; WS-E items real but explicitly deferred-to-next-quarter by
+      `plans/epics/agent_operating_framework_master.md` itself); `stub_completion_interfaces_and_infra` +
+      `phase3_service_hardening_integration` (Tracks G/H moot — UPI/UMI fully eliminated; but BOTH plans independently
+      still reference the SAME genuinely orphaned code TODO, `risk-batch-compute-unimplemented` in
+      `strategy-service/strategy_service/risk/cli/handlers/compute_handler.py` — it bounced between these two archived
+      plans for 4+ months without ever landing on an active tracker). Filed ONE new issue doc for that shared orphan:
+      `issues/strategy_service_batch_risk_compute_unimplemented_2026_07_21.md` (P2, closes both plans' open item at
+      once). Also fixed a pre-existing frontmatter YAML bug in `phase3_service_hardening_integration` (an `overview:`
+      multi-line plain scalar with an embedded colon broke the parser — surfaced by the plan-hygiene pre-commit hook the
+      first time this file was touched; quoted as a block scalar). Re-ran `check_plan_discipline.py` before/after
+      (combined with concurrent batch-1/batch-4 fixes landing in parallel): violations dropped to 58, re-baselined via
+      `--baseline-write`. (repo: unified-trading-pm)
 - [x] [DOCS] P3. ✅ Precisely 3-way classified all 42 active-plan `A-deferred-no-banner` violations by re-scanning each
       plan's actual `_DEFERRED_RE` hit context (not just presence of the word) — unified-trading-pm@6538ead51. My FIRST
       pass (before landing) assumed most were the CLAUDE.md-sanctioned `DEFERRED-OPERATOR-DECISION` / `-CREDENTIALS` /
