@@ -266,10 +266,31 @@ Key audit facts driving the merges:
       `ExecutionBacktests.test.tsx` — verified as a FLAKE, not caused by this change: the same file passed in isolation
       on both this diff and pre-change HEAD, and the full suite re-run passed 100% clean on the second attempt).
       Playwright `fleet-git-tab.spec.ts`: 4 passed, 0 failed. `pw:L2 ✓`.
-- [ ] [REVIEW] P1. **Playwright specs** — new: Deployments idle-spend cards + reap-confirm/dry-run flow + folded
+- [x] [REVIEW] P1. ✅ **Playwright specs** — new: Deployments idle-spend cards + reap-confirm/dry-run flow + folded
       history; Fleet shows ONLY git health + dirty repos + the per-slot snapshot timestamp; `/vm-deployments` redirects
       to `/deployments`. Keep existing Deployments + Fleet regression specs green. `pw:L2 ✓` + cited specs. No tick
-      without them.
+      without them. — ✅ Audit complete, no new code shipped this todo (nothing outstanding to ship — see below). Per
+      capability: **Deployments idle-spend cards + reap-confirm/dry-run** — covered by `cockpit.spec.ts`'s "Cockpit —
+      Deployments orphan inventory + bulk reap" describe block (retargeted from Fleet to Deployments in this plan's
+      earlier todo). **Folded history** — covered by the pre-existing `vm_deployments_archive_history.spec.ts` (5 tests:
+      outcome badges, duration, rows-captured, log/serial links, empty state). **Fleet = git-only + snapshot timestamp**
+      — covered by `cockpit.spec.ts`'s "each tab switches" test + `fleet-git-tab.spec.ts` (4 tests incl. the new
+      snapshot-age assertion). **Note on the literal "`/vm-deployments` redirects to `/deployments`" wording**: this
+      line predates the operator's later BLK-7cb5bbbc decision (an earlier todo in this same plan) which ruled
+      `/vm-deployments` STAYS a live route (legacy-quarantined, not redirected) because its non-compact mode is the only
+      reachable home for 4 venue-config panels — that decision is what's actually implemented and tested
+      (`vm_deployments_archive_history.spec.ts`'s own describe-block comment cites BLK-7cb5bbbc explicitly), so no
+      redirect test was written since a redirect would contradict the ruling that superseded this line. **Found + fixed
+      a real pre-existing gap during this audit**: `nav-menu-dedup.spec.ts`'s "top bar carries the same N entries" test
+      still expected the OLD stale `vm-deployments` canonical-nav testid (a leftover from BLK-7cb5bbbc never being
+      reflected there — confirmed via live DOM inspection, not guessed) — while resolving this, a CONCURRENT slot's
+      commit (`deployment-ui@ddecdec`, "give the 4 venue-config panels a canonical `/venue-config` route") landed with
+      an equivalent-but-more-complete fix (also closing the venue-panels-orphaned-route issue doc filed earlier in this
+      plan) — deferred to theirs per the multi-agent-collision precedent (verified their version passes before
+      accepting, not blindly). Ran the CONSOLIDATED regression suite across every capability this plan touched
+      (`cockpit.spec.ts` + `fleet-git-tab.spec.ts` + `nav-menu-dedup.spec.ts` + `nav_and_header.spec.ts` +
+      `vm_deployments_archive_history.spec.ts` + `vm_deployments_reconcile.spec.ts` + `deployments-page.spec.ts` +
+      `venue_tardis_windows.spec.ts` + `routes.spec.ts`): **114 passed, 0 failed**. `pw:L2 ✓`.
 - [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across deployment-ui + deployment-api if
       touched) + flip todos same turn (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the consolidated contract (Deployments owns VM inventory + idle
