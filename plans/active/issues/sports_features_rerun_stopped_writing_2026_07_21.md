@@ -79,3 +79,34 @@ the **frontier log line is activity, not an artifact**. Counting the TARGET arti
   Python, not awk.
 
 Evidence: `scratchpad/df_listing.txt` (the census listing), `scratchpad/purge_census*.{py,sh}` (2026-07-21).
+
+## ROOT CAUSE (2026-07-21) — not a stalled VM; the features CANNOT be computed for 2018-2020
+
+Read the 2018 VM `run.log` directly. Every day fails to write for a real, measured reason — the re-run is honest, the
+INPUTS are absent:
+
+- `calculator_season_context` produces **18 all-NaN columns** (matchday, competition_phase, games_remaining, …). This is
+  the §Z fix WORKING — honest `None`, not fabricated `'late'`. But it means season-context is genuinely empty.
+- `calculator_league` (24 all-NaN: positions, points, strengths), `calculator_multisource_xg` (21 all-NaN),
+  `calculator_squad_value` (5-6 all-NaN), `calculator_halftime` (15 all-NaN) — the **upstream fixture data (results,
+  standings, xG, squad values) is MISSING for 2018**, so every derived feature is NaN.
+- `batch_feature_quality_gate`: "Feature output for 2018-01-0N has 83-84 all-NaN columns (recovery=skip)".
+- **`AvailableAtStampingError: available_at stamping (post_match) produced all-NaT result; every row's source timestamp is missing or unparseable. Stamping midnight UTC would mask this; raising instead.`**
+  — RAISES (Traceback), aborting the day's write. This is why most 2018 days never wrote and the fabricated pre-fix
+  object survived.
+
+**Reframing:** the fabricated `derived_features` for 2018-2020 were FAKE values hiding a genuine upstream-data absence.
+The remediation is NOT "relaunch the re-run" — a relaunch fails identically. It is a foundation-gate problem:
+
+1. **Establish whether the 2018-2020 upstream fixture data (results / standings / xG / event timestamps) SHOULD exist**
+   (i.e. api-football / footystats / understat coverage for those seasons) and, if so, backfill it FIRST. If it
+   genuinely does not exist, then 2018-2020 derived_features are **honest-absent** and the fabricated objects should be
+   DELETED (the purge becomes correct) — but only after that is confirmed per-league, not assumed.
+2. **Fix the write-abort behavior**: `AvailableAtStampingError` raising on all-NaT means a day with no parseable source
+   timestamp produces NO output at all (not even an honest-absence marker). Decide the honest contract —
+   skip-with-record vs raise — so the pipeline distinguishes "computed empty" from "crashed".
+3. Why did 2017 write in full while 2018-2020 did not? Almost certainly 2017 upstream coverage is more complete — verify
+   by checking upstream fixture-results availability per year.
+
+This is a **foundation-completion-gate** issue (derived_features depend on fixture results/standings/xG); it freezes the
+Track F purge AND the "ML-ready" claim for sports 2018-2020 until the upstream layer is confirmed/backfilled.
