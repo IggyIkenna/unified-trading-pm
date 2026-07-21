@@ -195,15 +195,63 @@ Key audit facts driving the merges:
       `DeploymentDetail`'s History card in the prior todo — this todo only concerned the standalone page's route/nav
       fate. Deferred: relocating the 4 venue panels to a permanent canonical home is real unplanned design work, filed
       as `plans/active/issues/vm_deployments_venue_panels_orphaned_route_2026_07_21.md` rather than decided here.
-- [ ] [UI] P1. **Remove FleetInfra** — delete the FleetInfra section from `FleetTab` and its imports; remove any nav/
+- [x] [UI] P1. ✅ **Remove FleetInfra** — delete the FleetInfra section from `FleetTab` and its imports; remove any nav/
       route pointing at it. Confirm nothing else depends on its endpoints (`/api/fleet/vm-census`,
-      `/api/fleet/infra-vm-health`) in the UI; leave the backend endpoints intact (out of scope).
-- [ ] [UI] P1. **Remove the VM-census embed + reconciliation cards** from `FleetTab` (in `Cockpit.tsx`) — after the
+      `/api/fleet/infra-vm-health`) in the UI; leave the backend endpoints intact (out of scope). — ✅
+      `deployment-ui@84b6a17`. Removed the `<FleetInfraContent />` section + its import from `Cockpit.tsx`; deleted
+      `FleetInfra.tsx` entirely (confirmed zero other importers). No dedicated nav/route pointed at it — only the
+      generic `/infra → /fleet` bookmark-compat redirect exists, which stays (its App.tsx comment updated for accuracy).
+      Confirmed nothing else in the UI calls `/api/fleet/vm-census` / `/api/fleet/infra-vm-health` — removed the
+      now-fully-dead `getVmCensus`/`getInfraVmHealth` client functions + their exclusive response types from `client.ts`
+      (kept `VmLifecycleClass`/`VmRunStatus`, which `OrphanEntry` still depends on) and their mock-api.ts
+      handlers/generators; backend endpoints untouched (out of scope, confirmed intact). Deleted 2 now-fully-obsolete
+      regression specs (`fleet-infra-vm-census.spec.ts`, `fleet-infra-tab.spec.ts` — both existed solely to guard
+      FleetInfra content) and fixed 2 partially-affected specs (`cockpit.spec.ts`'s Fleet-tab fold test now asserts
+      `cockpit-fleet-infra` has zero count instead of visible; `nav-menu-dedup.spec.ts`'s redirect-mount assertion
+      switched from the removed testid to the still-live `cockpit-fleet` wrapper). Full `quality-gates.sh` green
+      (typecheck/lint/orphan-audit/99 test files/build all passed). Playwright: ran both touched specs — 59 passed, 1
+      pre-existing unrelated failure (`nav-menu-dedup.spec.ts`'s "top bar carries 15 entries" test still expects
+      `cockpit-navlink-vm-deployments` visible in the canonical bar, a gap left by the earlier
+      `/vm-deployments`→Legacy-nav todo, BLK-7cb5bbbc — verified via `git stash` that it fails identically on pre-change
+      HEAD, not a regression from this change). `pw:L2 ✓` (my own 2 touched specs both green).
+- [x] [UI] P1. ✅ **Remove the VM-census embed + reconciliation cards** from `FleetTab` (in `Cockpit.tsx`) — after the
       merges above land. Optionally preserve the "expected-missing" (registered-but-not-running) count as a small
-      Deployments summary if cheap; otherwise drop.
-- [ ] [UI] P1. **Fleet = FleetGit only** — `FleetTab` renders only `FleetGitContent`; update the page title + the Fleet
-      nav description in `NavMenu.tsx` ("Census · orphans · git · infra" → "git health · dirty repos"). Verify FleetGit
-      renders standalone (reads only `/api/repo-ci/fleet-git-health`).
+      Deployments summary if cheap; otherwise drop. — ✅ `deployment-ui@e2cf84b`. Removed the reconciliation
+      `useEffect`/state/cards block + the `<VmDeploymentsContent compact />` census embed from `FleetTab`; `FleetTab`
+      now renders only the orphan idle-spend surface + `FleetGitContent` (git-only is the next todo). "Expected-missing"
+      preservation: dropped (not cheap) — no existing surface on Deployments carries this concept, and preserving it
+      would mean re-wiring the whole `/api/fleet/reconciliation` endpoint I'm removing UI support for, contradicting the
+      audit's own primary verdict that reconciliation is redundant. Cleaned up the now-fully-dead
+      `getFleetReconciliation`/`FleetReconciliationResponse`/`ReconciliationRow`/`CloudReconciliation` from
+      `api/health.ts` (confirmed zero other importers) + the mock-api.ts `/api/fleet/reconciliation` handler; removed
+      the now-unused `VmDeploymentsContent` import from `Cockpit.tsx` (the standalone `/vm-deployments` page itself is
+      untouched). Fixed 3 affected tests: `cockpit.spec.ts`'s "each tab switches" test (dropped the reconciliation-card
+      assertions, added a `cockpit-fleet-git` visibility check instead), deleted its now-fully-obsolete "Fleet tab
+      renders the real VM census" test, and `Cockpit.test.tsx`'s unit test (asserts `cockpit-fleet-git` present +
+      `cockpit-fleet-card-unknown` absent). Full `quality-gates.sh` green (typecheck/lint/orphan-audit/99 test
+      files/build). Playwright: `cockpit.spec.ts` full run, 39 passed, 0 failed. `pw:L2 ✓`. Lost the quickmerge sentinel
+      race once to a concurrent unrelated `.pre-commit-config.yaml` commit — re-ran QG, retried, landed clean on the 2nd
+      attempt.
+- [x] [UI] P1. ✅ **Fleet = FleetGit only** — `FleetTab` renders only `FleetGitContent`; update the page title + the
+      Fleet nav description in `NavMenu.tsx` ("Census · orphans · git · infra" → "git health · dirty repos"). Verify
+      FleetGit renders standalone (reads only `/api/repo-ci/fleet-git-health`). — ✅ `deployment-ui@fce06fb` +
+      `@8c23e7b` (stale-comment follow-up). `FleetTab` now renders ONLY `<FleetGitContent />` (removed the
+      `FleetOrphansContent` embed — that capability was already MERGED into Deployments in earlier todos, not lost, so
+      Fleet dropping it is a pure de-dup); deleted the now-fully-orphaned `FleetOrphans.tsx` (confirmed zero other
+      importers — no standalone route referenced it). Updated `NavMenu.tsx`'s Fleet `desc` from
+      `"Census · orphans · git · infra"` to `"git health · dirty repos"` (confirmed no test asserted the old string
+      verbatim). Verified `FleetGitContent` is genuinely standalone by inspection — its only data import is
+      `getFleetGitHealth` from `api/client.ts` (`/api/repo-ci/fleet-git-health`), no dependency on
+      FleetInfra/FleetOrphans/VmDeployments. **Test coverage decision**: rather than just deleting the 2 Fleet-orphans
+      Playwright tests (which would silently drop real e2e coverage for a capability that still exists on Deployments),
+      retargeted them to `/deployments` using its `deployments-`-prefixed testids — the idle-spend rollup cards + bulk
+      dry-run/execute reap flow are both exercisable there with the EXISTING mock data (same `/api/fleet/orphans`
+      fixture, fetched independently by Deployments). The per-instance delete-dialog flow was NOT ported — it needs a
+      row in the main deployment-inventory mock with `reap_verdict` populated, which doesn't currently exist in
+      `mock-api.ts` (a pre-existing gap from whichever earlier todo shipped that Deployments feature, only unit-tested
+      via hand-built fixtures in `Deployments.test.tsx` — noted honestly in a spec comment, not silently dropped, out of
+      scope for this P1/1hr todo). Full `quality-gates.sh` green (typecheck/lint/orphan-audit/99 test files/build).
+      Playwright `cockpit.spec.ts`: 38 passed, 0 failed. `pw:L2 ✓`.
 - [ ] [UI] P1. **Show the snapshot timestamp per slot in FleetGit** — render the `reported_at` field (already on the
       wire type in `client.ts`; already stored server-side as `SlotRow.git_status_reported_at`) next to each slot in
       `FleetGit.tsx`, so the operator can see WHEN the status snapshot was taken, not just the derived `reporter_stale`

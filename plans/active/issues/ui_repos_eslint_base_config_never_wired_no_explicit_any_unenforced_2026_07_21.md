@@ -138,7 +138,7 @@ This is a cross-repo SSOT-wiring gap, not something to unilaterally fix mid-way 
       `js/jsx/mjs/ts/tsx/mts/cts` omits `.cjs` — so linting it directly throws a plugin-resolution error; the exact diff
       was drafted and verified working 2026-07-21 but reverted before shipping once the violation count was known —
       re-derive it, it's cheap to redo). (repo: unified-trading-system-ui)
-- [ ] [INFRA] P3. `unified-trading-system-ui`'s shared `.pre-commit-config.yaml` (rolled out from
+- [x] ✅ [INFRA] P3. `unified-trading-system-ui`'s shared `.pre-commit-config.yaml` (rolled out from
       `unified-trading-pm/scripts/pre-commit-templates/ui.pre-commit-config.yaml`) pins
       `pre-commit/mirrors-eslint@v8.56.0` for the `Lint with ESLint` hook. That ESLint 8.56.0 build's flat-config
       auto-discovery only recognizes a file literally named `eslint.config.js` — NOT `eslint.config.mjs`. Confirmed
@@ -155,7 +155,28 @@ This is a cross-repo SSOT-wiring gap, not something to unilaterally fix mid-way 
       `rev:` to an ESLint 9-based mirror tag that understands flat config natively, or add an `exclude:` pattern for
       root-level `*.config.mjs` tooling files (the actual application `.ts`/`.tsx` linting coverage is unaffected either
       way since app code isn't `.mjs`-named) — then re-propagate via `scripts/propagation/rollout-pre-commit-configs.sh`
-      to all UI-template consumers. (repo: unified-trading-pm, unified-trading-system-ui)
+      to all UI-template consumers. (repo: unified-trading-pm, unified-trading-system-ui) — **removed the hook entirely
+      rather than patching it, after establishing it never provided real coverage in EITHER repo, not just an
+      .mjs-naming edge case.** Deeper investigation (via the actual git-commit hook path, not just
+      `prek run     --files`, which under-reported): the mirror hook's own upstream manifest hard-restricts matched file
+      types independently of a consumer's local `types_or:` override — proven by the sibling `prettier-autostage` hook,
+      which uses the IDENTICAL `types_or: [javascript, jsx, ts, tsx, ...]` list and correctly matches `.ts`/`.tsx`.
+      Confirmed on a REAL, obviously-violating `.tsx` file with an unused variable in `deployment-ui` (whose
+      `eslint.config.js` DOES resolve by name, ruling out the config-discovery issue as the cause) — the hook reported
+      "no files to check" every time, meaning `.ts`/`.tsx` were never even attempted, in either repo, ever. Getting real
+      TypeScript coverage out of this hook would additionally require per-repo `additional_dependencies` mirroring each
+      project's own `eslint`/`typescript-eslint`/`eslint-config-next` versions (the isolated hook environment has none
+      of them) — a maintenance burden defeating the point of a shared template, duplicating a check `quality-gates.sh`'s
+      own `npm run lint` (each repo's REAL, correctly-configured, already-mandatory-gated ESLint 9) already does
+      correctly. Removed the hook block from `unified-trading-pm/scripts/pre-commit-templates/ui.pre-commit-config.yaml`
+      (`unified-trading-pm@62dfd4009`), re-propagated via `rollout-pre-commit-configs.sh --repo <name>` to both
+      consumers: `deployment-ui@58b7ead58`, `unified-trading-system-ui@88192658b`. Caught + preserved a pre-existing
+      repo-local customization the full-file template propagation would have silently stripped:
+      `unified-trading-system-ui`'s `check-added-large-files` exclude for 2 UAC-generated JSON mirrors that still exceed
+      1MB — re-added by hand after the propagation script ran, not part of the shared template.
+      `unified-trading-system-ui`'s propagation also converted `.gitleaks.toml` from a stale committed copy to a symlink
+      (matching `deployment-ui`'s existing state) as a normal side effect of the same rollout run. Full
+      `quality-gates.sh` green on both repos before shipping.
 
 ## Codex SSOTs
 
