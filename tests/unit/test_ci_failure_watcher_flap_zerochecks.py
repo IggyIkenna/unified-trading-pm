@@ -451,6 +451,11 @@ class TestBuildAlertItemsFlapping:
         flap_items = [i for i in items if i["key"].startswith("ci-flap:")]
         assert "FLAPPING" in flap_items[0]["message"]
 
+    def test_flapping_item_carries_subject_repo(self) -> None:
+        items = MOD.build_alert_items([self._flapping_failing()], [], [], [], None)
+        flap_items = [i for i in items if i["key"].startswith("ci-flap:")]
+        assert flap_items[0]["repo"] == "mtds"
+
     def test_stable_failing_uses_ci_fail_key_not_flap(self) -> None:
         items = MOD.build_alert_items([self._stable_failing()], [], [], [], None)
         keys = [i["key"] for i in items]
@@ -517,4 +522,9 @@ class TestBuildAlertItemsZeroChecks:
         items = MOD.build_alert_items([], [], [self._stuck(zero_checks=True)])
         zc = [i for i in items if i["key"].startswith("zero-checks:")]
         assert "mtds" in zc[0]["key"]
+
+    def test_zero_checks_item_carries_subject_repo(self) -> None:
+        items = MOD.build_alert_items([], [], [self._stuck(zero_checks=True)])
+        zc = [i for i in items if i["key"].startswith("zero-checks:")]
+        assert zc[0]["repo"] == "mtds"
         assert "55" in zc[0]["key"]

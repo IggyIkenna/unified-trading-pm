@@ -117,6 +117,11 @@ jobs:
       cooldown_min: ${{ matrix.alert.cooldown_min }}
       workflow_name: ci-failure-watcher
       run_url: ${{ matrix.alert.url }}
+      # This fleet-wide watcher posts on OTHER repos' CI (`github.repository` is always
+      # unified-trading-pm, the emitter). `build_alert_items()` stamps the real subject repo onto
+      # each per-condition item (empty for fleet-wide conditions like billing-block/glue-starvation,
+      # which have no single subject repo).
+      subject_repo: ${{ matrix.alert.repo }}
     secrets:
       # Dedicated #ci-failures incoming webhook (falls back to general if unset).
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}

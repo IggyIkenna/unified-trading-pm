@@ -169,6 +169,9 @@ class TestBuildAlertItems:
         assert it["cooldown_min"] == MOD.RENAG_WORKFLOW_FAIL_MIN == 60
         assert it["severity"] == "CRITICAL"
         assert "<https://github.com/run/1|run>" in it["message"]
+        # This watcher itself always runs as unified-trading-pm — the item must carry the real
+        # subject repo explicitly so notify-slack.yml can stamp a distinct subject_repo.
+        assert it["repo"] == "mtds"
 
     def test_failing_item_renders_reason_when_enriched(self) -> None:
         f = self._fail()
@@ -183,6 +186,7 @@ class TestBuildAlertItems:
         assert items[0]["key"] == "stuck-pr:mtds:42"
         assert items[0]["cooldown_min"] == MOD.RENAG_STUCK_PR_MIN == 20
         assert "<https://github.com/pr/42|open PR>" in items[0]["message"]
+        assert items[0]["repo"] == "mtds"
 
     def test_billing_item_is_fleet_frozen_cooldown(self) -> None:
         billing = {"repo": "mtds", "workflow": "qg", "url": "https://github.com/run/9"}
@@ -190,6 +194,8 @@ class TestBuildAlertItems:
         assert items[0]["key"] == "ci-billing-block"
         assert items[0]["cooldown_min"] == MOD.RENAG_FLEET_FROZEN_MIN == 20
         assert "BILLING BLOCK" in items[0]["message"]
+        # Fleet-wide condition (blocks ALL repos) — no single subject repo.
+        assert items[0]["repo"] == ""
 
     def test_recovered_bookend_short_cooldown_distinct_key(self) -> None:
         rec = {"repo": "mtds", "branch": "main", "workflow": "qg", "url": "u"}
@@ -197,6 +203,7 @@ class TestBuildAlertItems:
         assert items[0]["key"] == "ci-recovered:mtds:main:qg"
         assert items[0]["cooldown_min"] == MOD.BOOKEND_COOLDOWN_MIN == 5
         assert items[0]["severity"] == "INFO"
+        assert items[0]["repo"] == "mtds"
 
     def test_resolved_bookend(self) -> None:
         res = {"repo": "mtds", "number": 7, "head": "live-defi-rollout", "base": "main", "merged": True, "url": "u"}
@@ -204,6 +211,7 @@ class TestBuildAlertItems:
         assert items[0]["key"] == "resolved-pr:mtds:7"
         assert items[0]["severity"] == "INFO"
         assert "merged" in items[0]["message"]
+        assert items[0]["repo"] == "mtds"
 
     def test_billing_sorts_first(self) -> None:
         billing = {"repo": "mtds", "workflow": "qg", "url": "u"}

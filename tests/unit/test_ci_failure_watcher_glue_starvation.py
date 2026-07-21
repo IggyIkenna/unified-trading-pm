@@ -192,6 +192,9 @@ class TestBuildAlertItemsGlue:
         assert "24h" in item["message"]
         assert "glue 0 online/0 idle" in item["message"]
         assert "systemctl restart" in item["message"]
+        # Fleet-wide condition (spans whatever repos dispatch to the shared pool) — no single
+        # subject repo.
+        assert item["repo"] == ""
 
     def test_single_pool_item_not_one_per_job(self) -> None:
         """Every starved job shares one root cause — per-job items would be pure noise."""

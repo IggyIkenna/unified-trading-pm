@@ -22,6 +22,17 @@ on:
         required: false
         type: string
         default: ""
+      subject_repo:
+        description: >-
+          The repo the alert is ABOUT (e.g. "execution-service"), as distinct from the calling/
+          emitting workflow's own repo. A central watcher (ci-status-update.yml, ci-health.yml)
+          reports on OTHER repos' CI, so its `github.repository` is always the watcher's own repo
+          (unified-trading-pm) — that alone can never answer "which repo is this alert about".
+          Leave blank for a self-reporting caller (its own repo IS the subject); the persist step
+          then falls back to the caller's own repo name.
+        required: false
+        type: string
+        default: ""
       run_url:
         description: URL to the GHA run (shown as context link)
         required: false
@@ -389,22 +400,30 @@ jobs:
           INPUT_RUN_URL: ${{ inputs.run_url }}
           INPUT_CONCLUSION: ${{ inputs.conclusion }}
           INPUT_DEDUP_KEY: ${{ inputs.dedup_key }}
+          INPUT_SUBJECT_REPO: ${{ inputs.subject_repo }}
         run: |
           set -euo pipefail
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           DATE_PARTITION=$(date -u +"%Y-%m-%d")
+          # `repo` stays the EMITTING/calling repo (unchanged meaning, back-compat for existing
+          # readers). `subject_repo` is the repo the alert is ABOUT — when a caller doesn't pass one
+          # (a self-reporting workflow, where its own repo already IS the subject) fall back to the
+          # caller's own repo so the field is never blank for the common case.
+          SUBJECT_REPO="${INPUT_SUBJECT_REPO:-${CALLER_REPO#*/}}"
           ALERT_JSON=$(jq -n -c \
             --arg event_type "slack_alert" \
             --arg timestamp "$TIMESTAMP" \
             --arg repo "${CALLER_REPO#*/}" \
+            --arg subject_repo "$SUBJECT_REPO" \
             --arg workflow_name "$INPUT_WORKFLOW_NAME" \
             --arg severity "$INPUT_SEVERITY" \
             --arg conclusion "$INPUT_CONCLUSION" \
             --arg run_url "$INPUT_RUN_URL" \
             --arg message "$INPUT_MESSAGE" \
             --arg dedup_key "${INPUT_DEDUP_KEY:-}" \
-            '{event_type:$event_type, timestamp:$timestamp, repo:$repo, workflow_name:$workflow_name,
-              severity:$severity, conclusion:$conclusion, run_url:$run_url, message:$message, dedup_key:$dedup_key}')
+            '{event_type:$event_type, timestamp:$timestamp, repo:$repo, subject_repo:$subject_repo,
+              workflow_name:$workflow_name, severity:$severity, conclusion:$conclusion, run_url:$run_url,
+              message:$message, dedup_key:$dedup_key}')
           # DEDUP MARKER first (root-cause fix 2026-07-17): the per-key object the dedup gate
           # reads. Atomic single-object overwrite — immune to the read-modify-write clobbering
           # that silently erased keys from the shared ledger and made every "dedup'd" alert

@@ -1107,22 +1107,28 @@ def build_alert_items(
 ) -> list[dict]:
     """Per-condition alert items for the carrier's matrix notify (Phase 5 re-nag).
 
-    Each item is ``{key, severity, cooldown_min, message, url}``: ``key`` is the stable
+    Each item is ``{key, severity, cooldown_min, message, url, repo}``: ``key`` is the stable
     ``dedup_key`` the carrier re-arms on, ``cooldown_min`` the severity-scaled re-nag cadence
-    (see the ``RENAG_*`` constants). Pure (no IO) → unit-testable. ``ci-failure-watcher.yml``
+    (see the ``RENAG_*`` constants). ``repo`` is the SUBJECT repo this condition is about — the
+    carrier forwards it to ``notify-slack.yml`` as ``subject_repo`` (this watcher itself always
+    runs as unified-trading-pm, the emitter, so the item must carry the real subject explicitly).
+    Fleet-wide conditions (billing-block, glue-starvation) have no single subject repo → ``""``.
+    Pure (no IO) → unit-testable. ``ci-failure-watcher.yml``
     fans each item to ``notify-slack.yml`` with its own ``dedup_key``+``cooldown_min``, so each
     open condition re-pages independently on its own MTTR clock and a recovered/resolved bookend
     fires once on a distinct short-cooldown key. SSOT: alert_quality_overhaul_2026_06_18 § Phase 5.
     """
     items: list[dict] = []
     if billing:
-        # Fleet frozen — ONE unmissable line, fast re-nag (it blocks everything).
+        # Fleet frozen — ONE unmissable line, fast re-nag (it blocks everything). Not a single-repo
+        # condition (billing blocks the whole fleet), so no subject repo.
         items.append(
             {
                 "key": "ci-billing-block",
                 "severity": "CRITICAL",
                 "cooldown_min": RENAG_FLEET_FROZEN_MIN,
                 "url": billing.get("url") or "",
+                "repo": "",
                 "message": (
                     ":rotating_light: *GitHub Actions BILLING BLOCK — all CI is FROZEN fleet-wide.* "
                     "Every job fails at 'Set up job' (spending limit / failed payment). "
@@ -1142,6 +1148,7 @@ def build_alert_items(
                     "severity": "WARNING",
                     "cooldown_min": RENAG_FLAPPING_MIN,
                     "url": t.get("url") or "",
+                    "repo": t["repo"],
                     "message": (
                         f":zap: *CI FLAPPING ({t.get('age_min', 0)}m)* — `{t['repo']}`@`{t['branch']}` "
                         f"{t['workflow']} oscillating fail↔success (≥{FLAP_TRANSITION_THRESHOLD} "
@@ -1168,6 +1175,7 @@ def build_alert_items(
                 "severity": "CRITICAL",
                 "cooldown_min": RENAG_WORKFLOW_FAIL_MIN,
                 "url": t.get("url") or "",
+                "repo": t["repo"],
                 "message": line,
             }
         )
@@ -1184,6 +1192,7 @@ def build_alert_items(
                     "severity": "CRITICAL",
                     "cooldown_min": RENAG_WORKFLOW_FAIL_MIN,
                     "url": s.get("url") or "",
+                    "repo": s["repo"],
                     "message": (
                         f":no_entry: *STAGING HEAD — ZERO CHECK RUNS ({s.get('age_min')}m)* — "
                         f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
@@ -1202,6 +1211,7 @@ def build_alert_items(
                     "severity": "CRITICAL",
                     "cooldown_min": RENAG_STUCK_PR_MIN,
                     "url": s.get("url") or "",
+                    "repo": s["repo"],
                     "message": (
                         f":hourglass_flowing_sand: *PROMOTION PR STUCK ({s.get('age_min')}m)* — "
                         f"`{s['repo']}` #{s['number']} {s.get('head')}→{s.get('base')} "
@@ -1216,6 +1226,7 @@ def build_alert_items(
                 "severity": "INFO",
                 "cooldown_min": BOOKEND_COOLDOWN_MIN,
                 "url": t.get("url") or "",
+                "repo": t["repo"],
                 "message": (
                     f":white_check_mark: *CI RECOVERED* — `{t['repo']}`@`{t['branch']}` "
                     f"{t['workflow']} <{t.get('url')}|run>"
@@ -1230,6 +1241,7 @@ def build_alert_items(
                 "severity": "INFO",
                 "cooldown_min": BOOKEND_COOLDOWN_MIN,
                 "url": r.get("url") or "",
+                "repo": r["repo"],
                 "message": (
                     f":ballot_box_with_check: *PROMOTION PR RESOLVED* — `{r['repo']}` #{r['number']} "
                     f"{r.get('head')}→{r.get('base')} {verb} <{r.get('url')}|PR>"
@@ -1243,6 +1255,7 @@ def build_alert_items(
                 "severity": "WARNING",
                 "cooldown_min": RENAG_STUCK_PR_MIN,
                 "url": "",
+                "repo": q["repo"],
                 "message": (
                     f":warning: *PROMOTION QUARANTINE stale ({q['age_min']}m)* — `{q['repo']}` "
                     f"has been quarantined since {q['since']} after {q['attempts']} consecutive "
@@ -1254,13 +1267,15 @@ def build_alert_items(
     if glue_starvation:
         # One line for the whole pool — every starved job shares one root cause, so per-job items
         # would be pure noise. CRITICAL + a 15-min re-nag: silent until GitHub kills the jobs at 24h,
-        # and by then the ci_status transitions are gone.
+        # and by then the ci_status transitions are gone. Fleet-wide (the queued jobs span whatever
+        # repos dispatch to the shared self-hosted pool), so no single subject repo.
         items.append(
             {
                 "key": "glue-runners-starved",
                 "severity": "CRITICAL",
                 "cooldown_min": RENAG_GLUE_STARVED_MIN,
                 "url": glue_starvation.get("url") or "",
+                "repo": "",
                 "message": (
                     f":rotating_light: *Self-hosted GLUE runners are NOT draining* — "
                     f"{glue_starvation.get('count')} job(s) queued in `{_PM_DISPATCH_REPO}`, oldest "
