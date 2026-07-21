@@ -87,6 +87,49 @@ capture_status deltas reconcile exactly: `captured −679,609` (675,994 massive 
   blank/`'ticks'` rows — a separate, heavier operation partly already covered by the in-flight catalogue rebuild + the
   expected-universe-v2 enumerator. Tracked as the follow-up todo below.
 
+## ✅ RESOLVED (c)/(d) — MOOTED, evidence-backed consumer trace (2026-07-21, operator-authorised close)
+
+**Verdict: the residual non-canonical manifest `instrument_id` is COSMETIC/UNUSED — no correctness-critical consumer
+keys off its VALUE. The (c)/(d) object-walk re-derivation + 2nd surgical drop is NOT worth the risk and is closed
+resolved-as-mooted.** A standalone index surgery here is exactly the risky op the SSOT warns against, and it buys
+nothing no consumer reads.
+
+### Consumer trace — who reads the manifest `instrument_id`, and whether its canonical form matters
+
+| Consumer                                                                     | Reads manifest `instrument_id`?                                                                                               | Does the canonical form of the id STRING matter? | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **deployment-api served honest-coverage** (`mtds_honest_coverage_for_venue`) | Yes, to form coverage cells                                                                                                   | **NO**                                           | Every tradfi per-instrument data_type is **SEEDED** (`expected_unattempted` materialised — measured live: ohlcv_1m=307,512, plus ohlcv_1s/15m/24h, tbbo, trades, mbp_10, corporate_action, earnings), so `_seeded_expected_unattempted_dts` routes them to `_mtds_seeded_4state_dt_entry` (`data_status/mtds.py:500-576`) where cells are built from the manifest's OWN rows — **both numerator and denominator** — so the ratio is internally consistent regardless of the id string. Never matched against an external canonical set. |
+| deployment-api Tier-3 `per_instrument_coverage` (`instrument_coverage.py`)   | Only for NON-seeded per-instrument dts                                                                                        | **NO (dead for tradfi)**                         | Inactive for tradfi because its per-instrument dts are seeded (above). Even if reached: blank ids hit the legacy→venue-level fallback (`:241-258`); populated ids are normalised (`_normalize_instrument_id_for_match` strips `@LIN`/`@INV` + whitespace) and matched against a **terse UAC MVP seed** — canonicalising to `VENUE:TYPE:ROOT-USD@LIN-…` would make matching WORSE, not better.                                                                                                                                           |
+| **deployment-api catalogue / identity render** (`catalogue_lifecycle.py`)    | **No** — reads `prod/catalog.parquet`                                                                                         | n/a                                              | "The catalogue is the ONLY identity-level source" (`catalogue_lifecycle.py:6`). The canonical-id RENDER comes from the CATALOGUE, not the manifest. Catalogue canonicalisation is separately tracked (Phase B).                                                                                                                                                                                                                                                                                                                         |
+| **instruments-service `measure_honest_coverage.py`** (offline audit)         | Yes, as a cross-bucket **dedup-key** component only                                                                           | **NO**                                           | `_SHARD_KEY_WITH_IID=[date,venue,instrument_id,data_type]` with a `(date,venue,data_type)` fallback; coverage % is from `capture_status` counts, not id values. Canonicalising the prd bucket alone would HURT cross-bucket dedup vs the legacy `market-data-tick-tradfi-{pid}` bucket, not help.                                                                                                                                                                                                                                       |
+| **MTDS `reader.py`** (runtime data read)                                     | Reads the manifest, but resolves by `(venue,data_type,instrument_type,date,capture_status=="captured")` (`reader.py:851-855`) | **NO**                                           | Does NOT filter the manifest by `instrument_id`. Data is read by GCS path (`underlying=`/`symbol`); per-contract identity lives in parquet CONTENT. `'ticks'` is just the derivative bundle filename stem (`underlying={U}/ticks.parquet`).                                                                                                                                                                                                                                                                                             |
+| runtime guards **ml / strategy / execution**                                 | Read FEATURES/STRATEGY manifests                                                                                              | **NO**                                           | `manifest_inference_guard`/`manifest_gap_handler` (features_bucket), `strategy manifest_allocation_guard` (features, keyed `asset_group×date`), `execution canonical_paths` (keyed `asset_group×date`) — none read the tradfi TICK manifest instrument_id.                                                                                                                                                                                                                                                                              |
+| CSV / drilldown DISPLAY (`_csv_export.py`, `_instruments.py`)                | Yes, renders it                                                                                                               | cosmetic only                                    | Renders the shard/file-stem id; canonical identity display is the catalogue's job.                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Operator-ruled corroboration**                                             | —                                                                                                                             | —                                                | The 2026-07-20 databento shard-atom ruling (`databento_future_option_blank_instrument_id_shard_atom_2026_07_19.md`) records a **repo-wide sweep that found NO honest-coverage / UI / gate code re-keying a tradfi chain atom on `instrument_id`** — the per-root blank-id atom keyed by `underlying` IS canonical.                                                                                                                                                                                                                      |
+
+### Live re-measurement (post-cleanup `_index`, 2026-07-21) — the defect is smaller than feared and self-converging
+
+Read of the live `market-data-tick-tradfi-prd` `_index/availability_index.parquet` (**4,519,965 rows; `schema_version`
+int64=9; source = databento 4,473,311 + yahoo 41,999 + barchart 4,655 → `batch_massive`=0**, i.e. exactly the
+post-(a)+(b) index):
+
+- **The feared "~9% `ticks`/blank derivative" defect does NOT exist.** Literal `'ticks'` = **983 rows (0.02%)**.
+  Derivative rows (850,240) = **52.2% legitimate blank chain-atoms** (keyed by `underlying`) + **42.6% canonical
+  `@LIN`/`@INV`** + ~44k real Databento terse root codes (`6E.FUT`, `6A.OPT`). Non-blank derivative ids are **89.1%
+  `@LIN`** (confirms the ~91% prior figure).
+- **The genuine blank-no-underlying set = 104,440, but 95,658 are `empty_confirmed`** (legitimate absence — no data, so
+  no id is expected) + 1,304 `attempted_failed`; **only 7,478 are `captured` (0.17%)** — and even those degrade
+  gracefully via the seeded/legacy fallback above.
+- **Self-converging:** the manifest `instrument_id` is DERIVED from the parquet-content id, the forward-writer already
+  emits `-USD@LIN` (Phase A DONE), so the manifest converges passively as the separately-tracked Phase-B tick-content
+  migration lands and the consolidator re-absorbs — **no standalone index surgery needed**. Attempting it now is
+  strictly worse: `instrument_id ∈ _OPTIONAL_DEDUP_COLS` (`manifest_consolidator.py:522`) means a re-derive lands
+  new-keyed rows ALONGSIDE the defective ones, requiring a rebuild PLUS a second paused-consolidator surgical drop — a
+  data-loss-grade operation for a column no consumer reads canonically.
+
+**Measurement script (read-only):** `scratchpad/measure_tradfi_manifest.py` (local copy of the `_index`; no writes to
+prod).
+
 ## Measured post-purge manifest baseline (live `_index/availability_index.parquet`, 2026-07-20)
 
 Total rows **5,209,585**:
@@ -157,13 +200,18 @@ the object-walk rebuild.
       first (caught 12,790 contaminated rows). Watched 2 clean no-op cycles post-resume; index 5,209,585→4,519,965,
       massive=0, schema_version int64. — `market-data-tick-tradfi` `_index` gen `1784578157569319`, 2026-07-20T20:09Z
       (slot-1).
-- [ ] [BACKEND] P1. (c)/(d) object-walk id re-derivation follow-up: `rebuild_tradfi_manifest.py` over post-migration
-      disk paths to land `-USD@LIN` for the residual ~35k `'ticks'`/blank derivative rows + reduce the ~82k
-      blank-no-underlying ids. **NOT a simple merge-flip**: `instrument_id` ∈ `_OPTIONAL_DEDUP_COLS`, so re-derived rows
-      carry a NEW dedup key and land ALONGSIDE the defective rows — the rebuild must be paired with a second surgical
-      drop of the superseded blank/`'ticks'` rows under a paused consolidator (same recipe as (a)/(b)). Largely mooted
-      by the in-flight catalogue rebuild + expected-universe-v2 enumerator; measure before doing. (repo:
-      market-tick-data-service)
+- [x] [BACKEND] P1. ✅ **RESOLVED-AS-MOOTED 2026-07-21** (operator-authorised close). (c)/(d) object-walk id
+      re-derivation is CLOSED without surgery — see the "✅ RESOLVED (c)/(d) — MOOTED" section above for the full
+      consumer trace + live re-measurement. Verdict: **no correctness-critical consumer keys off the manifest
+      `instrument_id` VALUE** (served coverage takes the seeded 4-state internally-consistent path; the identity render
+      reads the catalogue `prod/catalog.parquet`, not the manifest; MTDS `reader.py` resolves shards by
+      `(venue,data_type,instrument_type,date,captured)` not the id; ml/strategy/execution guards read features/strategy
+      manifests keyed `asset_group×date`). The feared "~9% `ticks`" defect does NOT exist (983 rows, 0.02%); the real
+      blank-no-underlying defect is only 7,478 `captured` rows (0.17%), and the manifest id self-converges (it is
+      DERIVED from the already-canonical `-USD@LIN` parquet content) as the separately-tracked Phase-B tick-content
+      migration lands. A standalone rebuild + 2nd surgical drop (id ∈ `_OPTIONAL_DEDUP_COLS`) is a data-loss-grade op
+      for a column no consumer reads canonically — not worth the risk. (repo: market-tick-data-service — NO code change
+      required)
 - [ ] [BACKEND] P1. Add a manifest-vs-disk consistency check so a `captured` row with no object on disk fails loudly
       (prevents the phantom-row class recurring — this exact class produced BOTH the 3,615 real phantoms AND the
       contaminated 16,389 list). (repo: market-tick-data-service)
