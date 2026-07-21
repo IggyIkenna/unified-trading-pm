@@ -1733,3 +1733,27 @@ fleet/logs directly).**
   forward-writes were genuinely canonical, but I conflated that with the HISTORICAL manifest/parquet-content id-form,
   which measured 30.8% (0% pre-2023). Lesson: "paths migrated" and "content migrated" are different surfaces — say which
   one, every time.
+
+---
+
+## 🔴 P0 finding — 2026-07-21T16:04Z: the 30.8% figure is NOT stable historical debt, it's an ACTIVE LIVE REGRESSION
+
+**Full writeup: `plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`.** Sequencing-altering —
+read before resuming Phase B/content-migration work.
+
+Measured directly against the live manifest today: the currently-running TradFi equity/ETF backfill fleet
+(`tradfi-bf-nasdaq-*`/`tradfi-bf-nyse-*`) writes a **canonical GCS filename** (`NASDAQ:EQUITY:AAPL-USD.parquet`,
+confirmed) but a **non-canonical manifest row** (`instrument_type=equity` lowercase, `instrument_id=AAPL` bare symbol)
+for the SAME capture. 352,423 canonical manifest rows exist, ALL frozen at `written_at=2026-07-18` (the one-time
+`migrate_tradfi_manifest_usd_lin_2026_07_18.py --in-place-cas` output) — nothing new has landed in canonical form since.
+Meanwhile 858,165 legacy rows exist, of which **856,872 were written TODAY** — i.e. the writer bug is actively producing
+~850K bad manifest rows/day while the backfill fleet runs, not sitting as a static historical backlog. **Any
+content-migration run before this writer is fixed gets immediately re-polluted by the next backfill cycle** — exactly
+what happened to the 2026-07-18 fix.
+
+Revised sequencing (supersedes the "run content-migration now" ordering below): **(1) fix the writer** (root cause — the
+manifest `record_captured` call site isn't using the same canonical id `tradfi_shared.py` already derives for the file
+path) **→ (2) THEN** the historical content-migration/cleanup pass (two-track design: manifest re-run + a new
+parquet-content read-modify-write pass) **→ (3)** re-measure canonical % only after both the writer fix AND fleet drain,
+not before. A background agent is locating the exact call site + shipping a scoped fix if safe; check its outcome before
+re-investigating.
