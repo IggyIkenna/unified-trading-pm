@@ -140,9 +140,15 @@ Full audit transcript available on request; the load-bearing facts:
       shipped these fields (deployment-api@ff5bb06) but the UI type never declared them; mock fixture
       `funding-ensemble-paper-week` (a single-timestamp CLOUD_RUN_JOB) marked `basis: "approx"`) | pw:L2 ✓ | regression:
       tests/smoke/deployments-approx-marker.spec.ts
-- [ ] [UI] P1. Always-on rows (CLOUD_RUN_SERVICE, any other no-interval kind) sort **last** in date-range-filtered
+- [x] ✅ [UI] P1. Always-on rows (CLOUD_RUN_SERVICE, any other no-interval kind) sort **last** in date-range-filtered
       results and stay visible regardless of range, with a distinct "always-on" visual treatment (decision 2) — visibly
-      different from the approx marker, since this means "not applicable," not "uncertain."
+      different from the approx marker, since this means "not applicable," not "uncertain." — deployment-ui@c7d0c04
+      (`ALWAYS_ON_KINDS` = the exact complement of the backend's `_SINGLE_TIMESTAMP_KINDS ∪ {VM}` in `_apply_date_range`
+      — services/functions/orphaned DISK/STATIC_IP; `defaultHierarchyCmp`/`compareByColumn` in `Deployments.tsx` now
+      take a `dateFiltered` flag and sort always-on kinds after every other row, overriding even an explicit column
+      sort, only while `?date_from=`/`?date_to=` is active; `LastRunCell` renders a cyan "always-on" badge (distinct
+      from the amber `basis === "approx"` tone) gated on the same flag) | pw:L2 ✓ | regression:
+      tests/smoke/deployments-always-on-marker.spec.ts
 - [ ] [UI] P1. Out-of-range "no data before `<date>`" banner (decision 5).
 - [ ] [UI] P2. Service dropdown filter (WS-3) — options from distinct `service` values in the loaded inventory,
       URL-backed (`?service=`), client-side.
