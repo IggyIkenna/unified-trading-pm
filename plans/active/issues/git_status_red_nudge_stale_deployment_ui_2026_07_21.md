@@ -9,7 +9,7 @@ summary:
   session). Directly verified twice ~90 min apart that `.tabs/4/deployment-ui` is genuinely clean (`git status` reports
   nothing to commit) and the named file does not exist anywhere in the worktree or its history. The server-side
   git-status watcher generating this nudge is reading stale/cached state that never got invalidated.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -25,7 +25,7 @@ execution_scope: orchestrator-agent
 estimate_class: infra
 drift_direction: advance-code
 source: "slot-4 heartbeat/boot responses, 2026-07-21"
-resolved_by:
+resolved_by: "agent-orchestrator@5e0f67d, 2026-07-21"
 locked_by:
 depends_on: []
 ---
@@ -71,5 +71,25 @@ one-shot re-verify against live `git status` before re-emitting the nudge) so a 
 Not fixed inline this session — the watcher's implementation is outside `.tabs/4` (orchestrator-server-side), out of
 scope for a data_engineering/cicd dispatch.
 
-- [ ] [INFRA] P3. Root-cause + fix the stale GIT STATUS RED nudge for slot 4 / deployment-ui (server-side git-status
-      watcher reading stale/cached state instead of live `git status`) — see evidence above.
+- [x] [INFRA] P3. ✅ Root-cause + fix the stale GIT STATUS RED nudge for slot 4 / deployment-ui (server-side git-status
+      watcher reading stale/cached state instead of live `git status`) — see evidence above. —
+      agent-orchestrator@5e0f67d
+
+## Root cause + fix (2026-07-21)
+
+`maybe_nudge_on_red_repos` (`server/worker_liveness/_git_alerts.py`) read `slot.git_status_json` — a snapshot POSTed
+every 5 min by `slot-git-status-report.sh` — and computed `dirty for Nm` as `now - dirty_oldest_mtime` from that cached
+snapshot, with **no check that the snapshot itself was still being refreshed**. If a slot's reporter cron dies (dead
+host / cron disabled / VM decommissioned), `git_status_json` freezes at its last-posted instant forever; every
+subsequent kicker tick still recomputes the age against the live `now`, so the counter climbs unbounded even after the
+real repo is clean — exactly the 11615m → 15050m growth observed for slot 4 / deployment-ui.
+
+Fix: before trusting the snapshot's embedded per-repo ages, check `slot.git_status_reported_at` freshness against
+`REPORTER_STALE_S` (15 min) — the same constant `maybe_alert_git_staleness` already uses to detect a silent reporter
+cron. If the snapshot itself is stale, skip the worker nudge rather than repeat an unconfirmable claim (the operator is
+already separately paged for the dead-reporter condition via the existing Slack staleness alert). Added two regression
+tests (`test_nudge_skipped_when_snapshot_itself_is_stale`, `test_nudge_still_fires_on_fresh_snapshot`) to
+`tests/test_git_staleness_alerting.py`. Full QG green (1539 passed).
+
+Scope note: `maybe_alert_git_staleness` (the Slack-paging path) already has its own reporter-silence handling and was
+not touched — only the worker-facing nudge (`maybe_nudge_on_red_repos`) had this gap.
