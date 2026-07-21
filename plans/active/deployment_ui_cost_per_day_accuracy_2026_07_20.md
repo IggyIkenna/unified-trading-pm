@@ -71,11 +71,14 @@ principle, wrong in aggregation.
       `projected == actual`, the reported symptom; `$4.4 / 7d $0.63 / 24h $4.4` was an illustrative example, not a
       specific named VM to search for). Capture that resource's `day_net` dict in the Progress Log as ground truth. No
       code change. — reproduced 2026-07-21, see Progress Log.
-- [ ] [BACKEND] P0. **Fix the 7-day-average divisor** (decision 1). In `per_resource_daily`
+- [x] ✅ [BACKEND] P0. **Fix the 7-day-average divisor** (decision 1). In `per_resource_daily`
       ([`service.py:319-327`](../../deployment-api/deployment_api/services/cost_observability/service.py)), divide by
       `len(day_net)` instead of the fixed window length. Sync field docs (`models.py:73-83`,
       [`deployments_inventory.py:425`](../../deployment-api/deployment_api/routes/deployments_inventory.py)). Empty case
-      → `None` (honest absence).
+      → `None` (honest absence). — deployment-api@b6bebdf: `avg_7d_usd=round(sum(daily) / len(daily), 2)`
+      (`daily = list(day_net.values())`, so `len(daily) == len(day_net)`); docs synced in `models.py` +
+      `deployments_inventory.py`; existing regression test `test_per_resource_daily_three_values` updated (was asserting
+      the buggy `/7` divisor, now asserts `/3` = days actually billed).
 - [ ] [BACKEND] P0. **Fix the 24h projection** (decision 2). Replace `max(daily)` (service.py:326) with: most recent
       COMPLETE billing day; fall back to partial-day normalisation (`day_cost / hours_billed × 24`) only when no
       complete day exists — where `hours_billed` = wall-clock hours elapsed since UTC midnight for that partial day
