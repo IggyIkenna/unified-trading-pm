@@ -123,8 +123,8 @@ autospawn machinery below governs.
   `[CODE]`/`[SCRIPT]` fall back to the plan's `assigned_role`. Charters live in `unified-trading-pm/agents/<role>.md`.
 - **Trigger**: a `queued`, prereq-met, role-matched task exists and AutoSpawn wakes a free slot for it.
 - **Lifecycle**: `/boot` → claim a task → work → `/done` (clean-tree + checkbox-flip gated) → **drains the next ready
-  task in the same session** (persistent; retires+reaps only when its work is done; idle→`--resume` when blocked — NOT
-  reaped per task, see § Worker-lifecycle Reap). A dead worker mid-task RESUMES (`--resume`) or requeues.
+  task in the same session** (persistent; when no task is ready it goes idle → the reclaimer retires it — NOT reaped per
+  task, see § Worker-lifecycle Reap). A dead worker mid-task RESUMES (`--resume`) or requeues.
 - **Identity**: the task carries `dispatched_to`, `done_sha`, `brief_hash`; the slot carries `current_task`.
 
 ### Class B — Standing & event-driven agents (NOT plan-driven)
@@ -192,10 +192,11 @@ dead worker's task or process stranded.
 - **Class-A backlog workers are PERSISTENT — NOT reaped on `/done`** (dispatch-context lifecycle, 2026-07-21). Reaping
   is a property of WHO fired the worker, **not** the role's static `lifecycle` field — roles are just boot prompts (the
   same prompt can back a plan worker or a scheduled one). A plan-backlog worker (no `one_shot`/`scheduled` `AgentRow`)
-  drains the next ready task in the **same live session** (case 1), **retires + reaps** only when its work is done (case
-  3), or goes **idle → reaped by the idle-reclaimer → `--resume`d (same-slot only)** when a prereq-blocked task clears
-  (case 2). Only Class-B event-spawned crafts (which carry a one_shot/scheduled `AgentRow`) reap on `/done` (case 4).
-  Full model (four cases, one-session-per-plan-context, same-slot-resume, the `≤1`-task resume-wait):
+  drains the next ready task in the **same live session**; when it has **no ready task** (backlog drained, or the only
+  remaining tasks are prereq-blocked) it goes **idle → the idle-reclaimer retires it** (~2 ticks), and a **fresh**
+  worker picks up later work (a cleared blocked task re-reads the plan — durable state lives in the plan/Progress Log,
+  so conversational context-resume is an explicit NON-GOAL). Only Class-B event-spawned crafts (which carry a
+  one_shot/scheduled `AgentRow`) reap on `/done`. Full model:
   [worker-liveness.md § "Dispatch-context-driven lifecycle"](../04-architecture/agent-orchestrator-worker-liveness.md) +
   [`ao_worker_lifecycle_dispatch_context`](../../plans/active/ao_worker_lifecycle_dispatch_context_2026_07_21.md). This
   corrects a live defect where four plan-worker roles declared `lifecycle: one_shot` were reaped per task via a

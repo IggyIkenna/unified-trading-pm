@@ -300,8 +300,8 @@ on `/done` it is archived, not reaped). Only `5907317` (the boot-gate `spawn_bas
 depends on it, so it was not subsumed.
 
 > **"One-off" here = an event-spawned CRAFT** (escalation/scheduled). A **plan-backlog worker is persistent** and DOES
-> go `idle` between prereq-blocked tasks — the idle-reclaimer reaping it is then correct (its context is preserved for
-> `--resume`). See the next section, § "Dispatch-context-driven lifecycle", for the full split.
+> go `idle` when it has no ready task — the idle-reclaimer reaping it is then correct (a fresh worker picks up later
+> work; durable state lives in the plan/Progress Log). See the next section, § "Dispatch-context-driven lifecycle".
 
 ---
 
@@ -318,10 +318,10 @@ A worker's role (`backend_engineer`, `cicd`, `data_engineering`, …) is **just 
 handed to a plan-backlog worker OR an event-spawned craft. So **the role's declared `lifecycle` field cannot decide
 whether to reap a worker on `/done`.** The authoritative signal is **who fired the worker**:
 
-| Dispatch context        | How it's fired                                                                                                                                                                                                                            | How the backend knows                                                                                                             | Lifecycle on `/done`                                                          |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **Plan-backlog worker** | AutoSpawn dispatches a `backlog.yaml` task to a free slot (drains the backlog by `(tier, priority, plan_order)`/affinity)                                                                                                                 | **No** `one_shot`/`scheduled` `AgentRow` — a SlotRow-only worker (verified: the `agents` table is empty for plan-task dispatches) | **persistent** — drain / retire-when-done / idle-then-`--resume`-when-blocked |
-| **Event-spawned craft** | An escalation wall (`escalate()` → QG→`cicd`, pipeline→`data_pipeline_failure`, conflict→`conflict_resolver`) or a scheduled tick registers a bound `AgentRow` with `lifecycle` `one_shot`/`scheduled` (`escalation.py` register pattern) | **Yes** — a live `one_shot`/`scheduled` `AgentRow` owns the session                                                               | **one-shot** — reap on `/done`; its whole life is that one job                |
+| Dispatch context        | How it's fired                                                                                                                                                                                                                            | How the backend knows                                                                                                             | Lifecycle on `/done`                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Plan-backlog worker** | AutoSpawn dispatches a `backlog.yaml` task to a free slot (drains the backlog by `(tier, priority, plan_order)`/affinity)                                                                                                                 | **No** `one_shot`/`scheduled` `AgentRow` — a SlotRow-only worker (verified: the `agents` table is empty for plan-task dispatches) | **persistent** — drains ready tasks in one session; when none is ready, goes idle → the reclaimer retires it |
+| **Event-spawned craft** | An escalation wall (`escalate()` → QG→`cicd`, pipeline→`data_pipeline_failure`, conflict→`conflict_resolver`) or a scheduled tick registers a bound `AgentRow` with `lifecycle` `one_shot`/`scheduled` (`escalation.py` register pattern) | **Yes** — a live `one_shot`/`scheduled` `AgentRow` owns the session                                                               | **one-shot** — reap on `/done`; its whole life is that one job                                               |
 
 ### The defect this corrects (2026-07-21, live)
 
@@ -337,56 +337,46 @@ event-spawned `AgentRow`) plus the plan-worker retire condition below. Robust ev
 is why role-field reclassification is **deliberately deferred** (roles are boot prompts; a later pass may align the
 fields, but reaping no longer depends on them).
 
-### The four lifecycle cases (plan-backlog worker, at `/done`)
+### The lifecycle (plan-backlog worker, at `/done`)
 
-The plan model (per `task_template.md` §4, harsh 2026-07-21): a plan's independent same-priority todos dispatch
-**concurrently to any free slot** (`regen` sets no affinity; `_task_is_routable_to` → any free slot); `sequential: true`
-serialises a whole plan; prereqs come only from `sequential`/`depends_on`+`gate_on_depends`, enforced by
-`dispatch.py::_prereqs_met`. Against that, a worker **persistently drains the backlog** (any routable task, across
-plans):
+The plan model (per `task_template.md` §4): a plan's independent same-priority todos dispatch **concurrently to any free
+slot** (`regen` sets no affinity; `_task_is_routable_to` → any free slot); `sequential: true` serialises a whole plan;
+prereqs come only from `sequential`/`depends_on`+`gate_on_depends`, enforced by `dispatch.py::_prereqs_met`. Against
+that, a worker **persistently drains the backlog** (any routable task):
 
-| #                             | Situation at `/done`                                                  | Action                                                                                                                                                                                                |
-| ----------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1 — next task ready**       | `pick_next_task` returns a task for this slot                         | Hand it over — **same live session drains it** (context stays live). No reap.                                                                                                                         |
-| **2 — blocked, work remains** | No ready task now, but non-terminal tasks remain (prereqs will clear) | Worker goes **idle** → the idle-reclaimer reaps its tmux session (correct). Preserve `claude_session_id`. When a blocked task of its plan-context clears, **`--resume`** it — see resume rules below. |
-| **3 — no work left**          | No ready task AND nothing pending this worker will get                | **Retire + reap now.** Do NOT idle-loop on a completed plan — "why keep the slot waiting on work that's already done?"                                                                                |
-| **4 — event-spawned craft**   | The session owns a `one_shot`/`scheduled` `AgentRow`                  | Reap on `/done`, always (the completion contract above).                                                                                                                                              |
+| #                           | Situation at `/done`                                                                                    | Action                                                                                                                                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **1 — next task ready**     | `pick_next_task` returns a task for this slot                                                           | Hand it over — the **same live session drains it**. No reap. This is the win over the old per-task reap: consecutive ready tasks (e.g. a `sequential` plan's chain, each ready as its predecessor `/done`s) run in ONE session.      |
+| **2 — no ready task**       | Nothing dispatchable to this slot now (backlog drained, OR the only remaining tasks are prereq-blocked) | Worker goes **idle** → the idle-reclaimer reaps its session (`~watchdog_idle_session_ticks` ticks, default 2×60s) → the slot retires. AutoSpawn respawns a **fresh** worker when a blocked task later clears (it re-reads the plan). |
+| **3 — event-spawned craft** | The session owns a `one_shot`/`scheduled` `AgentRow`                                                    | Reap on `/done`, always (the completion contract above).                                                                                                                                                                             |
 
-### One session per plan-context, preserved on switch; same-slot `--resume` only
+The reaper reaping an idle plan-worker (case 2) is what makes "retire when the work is done" true without a per-`/done`
+kill — a finished-plan worker simply stops getting tasks, goes idle, and is reaped ~2 min later; it never idle-loops
+forever (the finished-immortal bug), and it never churns per task (the reap-per-task defect).
 
-- **One session per plan-context.** When a worker's current plan blocks (case 2) and it picks up a **different** plan,
-  its current session is **reaped + preserved** (transcript on disk) and a **fresh** session starts for the new plan —
-  so each plan's context stays independently resumable. (Not one ever-growing session per worker.)
-- **The transcript is the resume substrate and is NEVER deleted by a reap.** Transcripts live at
-  `~/.claude-configs/orch-slot-N/projects/<enc-cwd>/<claude_session_id>.jsonl`; reaping kills the tmux session + orphan
-  PIDs only — verified: no code path deletes the config dir / `projects/` / `.jsonl`, and reaped sessions' transcripts
-  persist on disk. `--resume <claude_session_id>` reloads that transcript.
-- **Same-slot `--resume` only.** The transcript is bound to its slot's config dir AND its slot's worktree cwd
-  (`…--tabs-N`), so `--resume` is clean **only on the origin slot**. Cross-slot resume would need transcript relocation
-  - path rewrite (the transcript's absolute paths point at the origin `.tabs/N`) — **explicitly not done** (unsafe).
-- **Resume vs. another-slot decision (when a blocked task clears).** If the **origin slot will free soon — `≤ 1` task
-  remaining** (config knob; the per-task time-estimate is unreliable and NOT used) — **wait**, then `--resume` on the
-  origin slot. If the origin slot is busy-longer, dispatch the cleared task to **another free slot as a fresh spawn**
-  (no resume). Safe because a task routable to any slot is, by the intra-plan-concurrency rule, an **independent,
-  different-file** task that does not need the prior conversational context — only genuine dependency chains
-  (`sequential`/gated) need it, and those stay on one slot.
-- **New-plan slot preference.** When placing a NEW plan/task, prefer a free slot **not** holding a blocked-prereq resume
-  obligation; fall back to any free slot only if none are available (keeps resume-pending slots free to resume
-  promptly).
+### Conversational context-resume is an explicit NON-GOAL (operator ruling 2026-07-21)
 
-### Interaction with the C1 carve-out deletion — now correct, not a regression
+We deliberately do **not** carry a plan-worker's Claude conversation across an idle/retire boundary — no
+`--resume`-with-context, no session-per-plan binding, no `target_slot` pinning of a plan to a slot. **Durable state
+lives in the plan items + Progress Log** (the operator-facing SSOT a worker writes as it goes) and in the shipped
+commits; a fresh worker re-reads those and continues correctly. Conversational memory is a nice-to-have efficiency, not
+a correctness requirement — losing it re-reads a plan, it does not lose work. (The dead-worker `--resume` for a MID-task
+crash — `resume_lifecycle.py`, `ao_task_lifecycle` Phase B — is a different mechanism and stays.)
+
+### Interaction with the C1 carve-out deletion — still correct
 
 The finished-immortal contract deleted the idle-scanner carve-outs (`f641968`/`1e7fec0`, C1) on the premise that every
 idle-lingering session was a finished one-off to reap. Under this model a plan-backlog worker **legitimately goes idle**
-between blocked tasks (case 2) — and the idle-reclaimer reaping it is **exactly right**, because the context is
-preserved on disk and comes back via `--resume`. So: **crafts** stay `working` until `/done` (never idle → carve-out
-unneeded); **plan-backlog workers** may go idle → reaped → resumed. Both are handled without re-introducing a carve-out.
+when it has no ready task (case 2) — and the idle-reclaimer reaping it is **exactly right**: it frees the slot, and a
+fresh worker picks up later work. So: **crafts** stay `working` until `/done` (never idle → carve-out unneeded);
+**plan-backlog workers** may go idle → reaped → a fresh worker respawns on new work. No carve-out is re-introduced.
 
-### Deferred (revisit after this lands)
+### Deferred (revisit later, not required for correctness)
 
-Role-field reclassification (`backend_engineer`/`ui_developer`/`quant_dev`/`infra` `one_shot → persistent`;
-`data_engineering` scheduled-vs-persistent). Not required for correctness — reaping keys on dispatch context, not the
-field — so it's a later tidy-up, not part of this fix.
+- **Role-field reclassification** (`backend_engineer`/`ui_developer`/`quant_dev`/`infra` `one_shot → persistent`;
+  `data_engineering` scheduled-vs-persistent). Reaping keys on dispatch context, not the field, so this is cosmetic.
+- **Sequential-plan context-continuity** (pin a `sequential` plan to one slot for conversational continuity across a
+  cross-plan gate). A nice-to-have only — the durable state above already carries what matters. Explicitly out of scope.
 
 ---
 
