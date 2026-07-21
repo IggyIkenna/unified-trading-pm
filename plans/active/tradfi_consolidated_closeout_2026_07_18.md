@@ -1644,3 +1644,63 @@ window (~today-1yr for L1, ~today-1mo for L2/L3), reusing the existing OHLCV lau
 **SSOTs**: `market-tick-data-service/scripts/pipeline_e2e_check.py` (`_TRADFI_BILLING_GATED_DATA_TYPES`,
 `DATABENTO_SCHEMA_LEVEL` — the billing-guard oracle) + `codex/02-data/tradfi-databento-sourcing-ssot.md` "Schema
 allowlist" table.
+
+---
+
+## Progress Log — 2026-07-21 pre-compact checkpoint (autonomous session, tabs/1)
+
+**State machine for a compacted resume. Background task IDs are session-local (won't survive compaction — re-query
+fleet/logs directly).**
+
+### DONE this session (verified)
+
+- **MVP expanded +409** (`uac@afa2dd64`→`22e6a534`): VIX FUTURE, CBOE treasury INDEX (US3M/2Y/5Y/10Y/30Y), KRW FX,
+  crypto BTC/ETH/MBT/MET **futures-only** (operator "no cme option for btc and eth"; `option_underliers={ES}`).
+- **CME crypto write-guard fix** (`uac@22e6a534`): BTC/ETH/MBT/MET added to `is_recognized_tradfi_underlying` (identity
+  maps both registries + named-spread substring guard). Validated live: `underlying=BTC` writes canonical, futures-only.
+- **Launchers** (`deployment-service@552d9de` + `@55e13ac`): CBOE-indices treasuries launcher (Yahoo daily), CME crypto
+  FUT-only, NASDAQ `--only-group` flag. L1/L2/L3 nice-to-have documented (`@5bdf2a692`).
+- **Reconciliation** (`/data-pipeline-reconciliation tradfi`, report at
+  `plans/audit/results/data_pipeline_reconciliation_tradfi_2026_07_21.md`): **Massive FULLY purged** (0 objects/rows GCP
+  tick+IS+AWS+manifest); **my "~99.65% canonical" was OVERSTATED** — catalogue(99.84%)+paths+filenames+forward-writes
+  ARE canonical, but historical **manifest/parquet-content `instrument_id` form is only 30.8% canonical** (0% pre-2023)
+  — the content `--apply` migration hasn't covered the bulk.
+- **Storage purge (operator-authorized clean-out, in flight)**: `_migration_backup_2026_07_09` **35.91 GB DELETED**
+  (twin-verified: all 1636 backup days covered by live); `_quarantine` (7.18 GB) + `_needs_attribution` (4.01 GB)
+  deleting. AWS empty. Verify 0 + report ~47 GB reclaimed.
+
+### IN FLIGHT
+
+- **Backfill**: all MVP roots launched SPOT (equity NASDAQ g01-g05 + NYSE g01-g05 [ohlcv_1m+1s, 2023-26 XNAS/XNYS
+  floor]; CME ES[done]/GC/CL/SI/HG/NQ/BTC/ETH/NG/PA/PL/MBT/MET; CFE VIX[done]; FX KRW[done]; CBOE treasuries[Yahoo
+  daily]). Cap raised to 105. Fleet ~79 draining. 0 errors/quarantine (one transient treasury-VM `cboe-idx-2025` error
+  flagged — VM already gone, likely Yahoo hiccup; RELAUNCH if a treasury tenor ends missing). Watch: re-query
+  `gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING'`.
+
+### NEXT (sequenced — DO NOT reorder)
+
+1. **Backfill completes** (equity long-pole gates) → **DRAIN all VMs both clouds** → consolidate → **snapshot**
+   (content-migration is drain-gated HARD RULE + had a prior data-loss incident).
+2. **Content-migration** —
+   `market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py` (content-based,
+   sharded VM, dry-run default, `--apply` gated; needs a fresh single-walk enumeration `--enumeration`; per-object
+   copy→verify→delete + re-derive canonical id from parquet; 9-disposition 0-ORPHAN or ABORT). **Run dry-run FIRST**
+   (verify dispositions + 0 ORPHAN), then sharded `--apply` on VMs. Then `rebundle_tradfi_chains_2026_07.py --apply`
+   (112,839 per-contract `options_chain`). Then migrate the **107 `day=/venue=CME/ticks.parquet` MBO monoliths** (2.53
+   GB, ONLY-COPY — migrate-first, NEVER blind-delete). Diagnose WHY 30.8% before full apply. Operator APPROVED running
+   it.
+3. **Verify** id-form re-measured toward ~100%.
+4. **Catalogue MVP promote** (+409) — rebuild+promote served `catalog.parquet` (still old mvp=70,930); verify
+   data-status/deployment-api.
+5. **Apply doc fixes**: 35 verified contradictions (in scratch `docs_findings.json`) + reconciliation's 4 stale codex
+   docs (`non-canonical-path-inventory.md` row 10 / `reconciliation-finding-taxonomy.md` AE-4 /
+   `gcs-and-manifest-delete-safety-protocol.md` §3.3 / `tradfi-databento-sourcing-ssot.md` — all still say Massive purge
+   PENDING; it EXECUTED) + register patch (rows 10/11/22/24 count updates + new
+   `_migration_backup`/`_needs_attribution`/`_quarantine` now DELETED). Apply AFTER migration so "migration complete"
+   claims reflect the post-`--apply` reality (nuance: paths/catalogue canonical, id-form migrated).
+
+### Operator directives (durable intent)
+
+- Purge every Massive item (DONE — was already 0). Delete old/bad data, completely clean tradfi buckets IS+MTDS, hard
+  storage requirement (EXECUTING ~47 GB). Run content-migration NOW (approved; sequenced after drain). Both AWS tradfi
+  buckets empty. Data types: `ohlcv_1m`+`ohlcv_1s` (L0 free) accepted; order-book L1/L2 is documented nice-to-have.
