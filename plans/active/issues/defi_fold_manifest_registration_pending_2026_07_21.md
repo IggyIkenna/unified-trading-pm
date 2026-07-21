@@ -38,6 +38,7 @@ supersedes:
 superseded_by:
 resolved_by:
 source: found while executing the D3 fold + manifest step, 2026-07-21
+depends_on: []
 ---
 
 # DeFi fold (2026-07-21) — canonical objects written, manifest rows pending
