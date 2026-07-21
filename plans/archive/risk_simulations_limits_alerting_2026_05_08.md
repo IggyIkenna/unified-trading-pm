@@ -9,9 +9,23 @@ stage: [meta]
 repos: [alerting-service, execution-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md, plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md, plans/questions/client_reporting_pnl_attribution_2026_05_08.md, plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md, plans/questions/defi_readiness_catalogue_2026_05_08.md, plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/alerting_service_live_rules_2026_05_07.md,
+    plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md,
+    plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md,
+    plans/questions/client_reporting_pnl_attribution_2026_05_08.md,
+    plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md,
+    plans/questions/defi_readiness_catalogue_2026_05_08.md,
+    plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md,
+  ]
 created: 2026-05-08
-overview: Risk monitor vs risk simulations vs risk alerts vs pre-flight risk checks — wire-up across the system, dimensions (venue / account / strategy / client), per instrument-type + strategy-family / archetype, consequences of failure (block vs monitor vs test). Owner of the canonical circuit-breaker rule taxonomy + the mock-data-as-stress-test surface that downstream plans consume.
+overview:
+  Risk monitor vs risk simulations vs risk alerts vs pre-flight risk checks — wire-up across the system, dimensions
+  (venue / account / strategy / client), per instrument-type + strategy-family / archetype, consequences of failure
+  (block vs monitor vs test). Owner of the canonical circuit-breaker rule taxonomy + the mock-data-as-stress-test
+  surface that downstream plans consume.
 type: question
 plan_spawned: 2026-05-10
 operator: ikenna
@@ -20,6 +34,11 @@ locked_since: 2026-05-08
 spawned_plan: plans/active/risk_simulations_limits_alerting_2026_05_10.md
 related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/separation-of-concerns.md]
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 # Risk monitor + risk simulations + risk alerts + pre-flight risk checks — end-to-end wire-up question
 

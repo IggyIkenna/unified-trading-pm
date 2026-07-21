@@ -18,7 +18,7 @@ priority: P2
 last_updated: 2026-05-13
 deadline: 2026-05-20
 parent: expected_unattempted_propagation_chain_2026_05_12
-migrated_from: 'Discovered during slot 4 retired-data-type manifest cleanup (2026-05-13). Manifest rows
+migrated_from: "Discovered during slot 4 retired-data-type manifest cleanup (2026-05-13). Manifest rows
 
   successfully flipped to empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE; GCS parquets deleted.
 
@@ -26,7 +26,7 @@ migrated_from: 'Discovered during slot 4 retired-data-type manifest cleanup (202
 
   needed to prevent future code paths from re-creating the same legacy rows.
 
-  '
+  "
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 estimate_class: refactor
@@ -36,6 +36,11 @@ effective_concurrent_slots: 1
 model_tier: sonnet-doable
 thinking: medium
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 > **ARCHIVED 2026-05-18 (slot 10)** — 100% complete (12/12 checkboxes flipped). Preserved for archaeology. No deferred
 > work outstanding — the single "Deferred discovery" item (TRANSFERMARKT_VALUES alias) was migrated + SHIPPED 2026-05-15

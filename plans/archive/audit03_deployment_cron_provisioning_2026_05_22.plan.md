@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-service, e2e-testing, market-tick-data-service, strategy-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-service,
+    e2e-testing,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -21,6 +29,11 @@ last_updated: 2026-05-22
 source: audits/audit-files/audit_03_defi_archetypes_e2e.md (§2.10 CUT + §6.1 re-verification ledger)
 gate: Cloud Run Jobs (Phase 1) must exist before their schedulers (Phase 2) are applied
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 ## Deferred work — none (all items completed)
 

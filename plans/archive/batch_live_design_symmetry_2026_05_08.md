@@ -6,21 +6,69 @@ status: plan-spawned
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md, unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md, unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md, unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md, unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md, unified-trading-pm/plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md, unified-trading-pm/plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md]
+related:
+  [
+    unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md,
+    unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md,
+    unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md,
+    unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md,
+    unified-trading-pm/plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md,
+    unified-trading-pm/plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md,
+  ]
 created: 2026-05-08
-overview: Re-audit "batch = live, only fill source differs" SSOT — service code paths, UI surfaces, events, analytics, manifest schema, per-asset-group narratives, static enforcement. Gap-list vs the goal of total design-path symmetry, even at the cost of feeling like overkill.
+overview:
+  Re-audit "batch = live, only fill source differs" SSOT — service code paths, UI surfaces, events, analytics, manifest
+  schema, per-asset-group narratives, static enforcement. Gap-list vs the goal of total design-path symmetry, even at
+  the cost of feeling like overkill.
 type: question
 plan_spawned: 2026-05-10
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-spawned_plan: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md]
-related_codex: [unified-trading-pm/codex/04-architecture/batch-live-architecture.md, unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md, unified-trading-pm/codex/05-infrastructure/replay-subsystem.md, unified-trading-pm/codex/02-data/pipeline-mode-partition.md, unified-trading-pm/codex/04-architecture/execution-modes-and-chain-resolution.md, unified-trading-pm/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md, unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, unified-trading-pm/codex/04-architecture/research-service-and-dart-integration.md, unified-trading-pm/codex/04-architecture/manual-trade-booking.md, unified-trading-pm/codex/04-architecture/alerting-batch-live.md, unified-trading-pm/codex/04-architecture/instruments-live-architecture.md, unified-trading-pm/codex/04-architecture/instruments-preflight-chain.md, unified-trading-pm/codex/04-architecture/features-service-architecture.md,
-  unified-trading-pm/codex/04-architecture/live-strategy-config-hot-reload.md]
+spawned_plan:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    plans/active/writegate_honest_coverage_endtoend_2026_05_06.md,
+    plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md,
+  ]
+related_codex:
+  [
+    unified-trading-pm/codex/04-architecture/batch-live-architecture.md,
+    unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md,
+    unified-trading-pm/codex/05-infrastructure/replay-subsystem.md,
+    unified-trading-pm/codex/02-data/pipeline-mode-partition.md,
+    unified-trading-pm/codex/04-architecture/execution-modes-and-chain-resolution.md,
+    unified-trading-pm/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md,
+    unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    unified-trading-pm/codex/04-architecture/research-service-and-dart-integration.md,
+    unified-trading-pm/codex/04-architecture/manual-trade-booking.md,
+    unified-trading-pm/codex/04-architecture/alerting-batch-live.md,
+    unified-trading-pm/codex/04-architecture/instruments-live-architecture.md,
+    unified-trading-pm/codex/04-architecture/instruments-preflight-chain.md,
+    unified-trading-pm/codex/04-architecture/features-service-architecture.md,
+    unified-trading-pm/codex/04-architecture/live-strategy-config-hot-reload.md,
+  ]
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 # Batch = Live design symmetry — re-audit + gap list (overkill OK)
 
@@ -121,8 +169,8 @@ B4. `OperationalMode` (`PAPER` etc., UAC `unified_api_contracts/internal/modes.p
 
 B5. Strategy-lifecycle maturity (9 phases per `09-strategy/architecture-v2/strategy-lifecycle-maturity.md`): smoke /
 backtest*minimal / backtest_1yr / backtest_multi_year / paper_1d / paper_14d / paper_stable / live_early / live_stable /
-retired. How does this enum project onto `RuntimeMode`? E.g.
-`paper*\*`phases run with`RuntimeMode=LIVE`+`BatchExecutionMode=SIMULATED`? Codified anywhere?
+retired. How does this enum project onto `RuntimeMode`? E.g. `paper*\*`phases run
+with`RuntimeMode=LIVE`+`BatchExecutionMode=SIMULATED`? Codified anywhere?
 
 B6. Are there ANY other mode-shaped enums in the system that this audit might have missed? Search for
 `class.*Mode.*Enum` workspace-wide and enumerate. Surface any that look unloved or redundant.
@@ -707,7 +755,7 @@ The audit was run by three parallel sub-agents covering services / UI+events / c
 | F5         | No shared ModeContext provider                                         | Low                                                      |
 | G1         | `LIVE_` prefix in `VMEventType`                                        | Med (precedent)                                          |
 | G4         | Event archive path partitioning unclear                                | Low                                                      |
-| H1         | Mock-vs-real ↔ batch-vs-live conflation cases                         | Low                                                      |
+| H1         | Mock-vs-real ↔ batch-vs-live conflation cases                          | Low                                                      |
 | I1, I2, I5 | Per-asset-group narratives missing                                     | Med (cefi blocking)                                      |
 | J1         | Mode-axis composition SSOT missing                                     | High                                                     |
 | K1         | Replay subsystem implementation status                                 | High                                                     |

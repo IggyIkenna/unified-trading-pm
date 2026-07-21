@@ -19,8 +19,10 @@ priority: P2
 assigned_vm: planning
 resolved_by:
 locked_by:
-author: slot-3
 source: [deployment_ui_vm_log_viewer_2026_07_20.md]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # What I found
@@ -63,7 +65,22 @@ normally.
 
 - [ ] [DOCS] P2. Fix `codex/02-data/sports-2020-06-data-floor.md` frontmatter — add the missing `referenced_by` key
       (present-but-empty is enough to pass `scripts/docs/seed_frontmatter.py --apply`). (repo: unified-trading-pm)
-- [ ] [DOCS] P2. Triage the 121 plan-discipline violations (42 `A-deferred-no-banner` + 79 `C-archive-no-successor`)
-      against baseline 120 in `scripts/quality_gates/plan_discipline_baseline.yaml` — add banners/successor-refs for
-      genuine new offenders, or re-baseline with `--baseline-write` + an operator-approved note if this is accumulated
-      fleet-wide debt rather than one bad commit. (repo: unified-trading-pm)
+- [x] [DOCS] P2. ✅ Triage the 121 plan-discipline violations (42 `A-deferred-no-banner` + 79 `C-archive-no-successor`)
+      against baseline 120 in `scripts/quality_gates/plan_discipline_baseline.yaml` — unified-trading-pm@<pending-sha>.
+      Real fix, not a blind re-baseline: enumerated all 121, classified each by whether an honest templated banner
+      applies. 19/79 archived `C-archive-no-successor` plans had **zero open `- [ ]` items** (100%-closed) — applied the
+      established `## Deferred work — migrated to: **None** — successor: not applicable` banner (same template as
+      precedent commit `835ef6114`). This is the ONLY subset a scripted fix can honestly close — everything else needs
+      real per-plan judgment: 60/79 archived plans still have open items (1–139 each) and 42/42 active
+      `A-deferred-no-banner` plans have un-qualified DEFERRED mentions, both requiring a human/plan-owner call on the
+      actual successor, not a generic banner. Net: 121 → 102 violations, comfortably clears baseline 120 without gaming
+      it (an improvement, not just a ratchet raise) — re-baselined 120 → 102 via `--baseline-write` to codify. Remaining
+      102 (42 A + 60 C) is genuine accumulated fleet-wide plan-corpus debt, not attributable to one commit; tracked as a
+      fresh P3 follow-up todo below rather than force-fit into this P2 task's scope. (repo: unified-trading-pm)
+- [ ] [DOCS] P3. Remaining plan-discipline debt (baseline now 102, down from 120): 42 active plans with unqualified
+      `DEFERRED` mentions need per-plan judgment on whether to add inline `DEFERRED-<QUALIFIER>` annotations (see
+      precedent `f6df716e7`) or a real `## Deferred work — migrated to:` banner naming an actual successor; 60 archived
+      plans with 1–139 open `- [ ]` items each need a real successor plan identified (or a decision that the open items
+      are abandoned) before a `C-archive-no-successor` banner can be added honestly — do NOT blanket-apply the "no
+      successor needed" template to these, it would be false for plans with real open work. Split across multiple P3
+      tasks by plan-owner/asset_group if picked up; not a single sitting. (repo: unified-trading-pm)
