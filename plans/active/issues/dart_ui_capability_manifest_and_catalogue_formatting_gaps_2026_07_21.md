@@ -131,11 +131,37 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
       `test_archetype_capability_may_23_coverage.py` pass. `enumerate_envelope.py` simplification (issue-doc prose
       bullet, not a separate todo) deferred — its mocking logic is now dead code but simplifying it was not part of this
       checkbox's scope.
-- [ ] [BACKEND] P3. Build the `admin_assignment.py` (`AdminStrategyAssignment`) model + wire it as the real backing
-      store for `lib/entitlements/strategy-route.ts`'s resolvers (currently a UI-side approximation with no backend).
-      Build `AdminStrategyAssignmentTable.tsx` + `app/(ops)/admin/strategy-assignments/page.tsx`. Wire
-      `canEnterTerminal()` (currently dead code) into the actual terminal entry path. (repo: unified-api-contracts,
-      unified-trading-system-ui)
+- [x] [BACKEND] P3. Build the `admin_assignment.py` (`AdminStrategyAssignment`) model. (repo: unified-api-contracts) —
+      ✅ unified-api-contracts@08cc94fa: `AdminStrategyAssignment` (assignment_id/scope/scope_id/route/org_id/
+      config_version/notes/created_at/created_by, frozen Pydantic per `archetype_capability.py` conventions) +
+      `AdminStrategyAssignmentWriter.validate()` enforcing the archived-plan's `ORG_CONFLICT_ON_STRATEGY` exclusivity
+      rule (a `LOCKED` route on a `scope_id` excludes every other org on that `scope_id`); wired into both
+      `architecture_v2/__init__.py` and the canonical `internal/__init__.py` re-export surface; 7 new unit tests. Full
+      `quality-gates.sh` green. This checkbox originally bundled a UAC Python model with 3 UI/TypeScript deliverables
+      (Table, page, resolver wiring) under one `[BACKEND]`-tagged item + `assigned_role: backend_engineer` dispatch — a
+      craft-scope mismatch per `unified-trading-pm/agents/backend_engineer.md`'s `does_not: UI /     TypeScript work`,
+      and per `codex/06-coding-standards/ui-testing-layers.md` any UI tick needs a `pw:L2` regression spec a
+      backend_engineer worker isn't positioned to author. Split the remaining scope into the todo below (assigned_role:
+      ui_developer) rather than silently claiming it done.
+- [ ] [UI] P3. Wire `AdminStrategyAssignment` (unified-api-contracts@08cc94fa,
+      `internal.architecture_v2.     admin_assignment`) as the real backing store for
+      `lib/entitlements/strategy-route.ts`'s `resolveSlotAccess`/ `resolveArchetypeAccess` resolvers (currently pure
+      UI-side approximations — `AuthUser.assigned_strategies` already exists as a field but has no production data
+      source; see its doc comment + the parallel `AuthPersona.assigned_strategies` comment in
+      `lib/config/auth.ts:143-161`, both already pointing at this model). Established pattern for admin-mutable data in
+      this repo is **not** the static-manifest mirror used for `archetype_capability_manifest.json` — it's the live
+      `/api/v1/*` Next.js route + Firestore pattern used by `app/api/v1/users/route.ts` +
+      `lib/admin/server/users-list.ts` + `hooks/api/use-user-management.ts`. Scope: (1) a Firestore-backed
+      `app/api/v1/admin-strategy-assignments/route.ts` + `lib/admin/server/     strategy-assignments.ts` mirroring the
+      `AdminStrategyAssignment` shape, enforcing the same `ORG_CONFLICT_ON_STRATEGY` exclusivity rule on write; (2) a
+      `lib/admin/api/strategy-assignments.ts` client wrapper + `hooks/api/use-strategy-assignments.ts` query hook
+      (TanStack Query, per pattern B); (3) `AdminStrategyAssignmentTable.tsx` +
+      `app/(ops)/admin/strategy-assignments/page.tsx` (shadcn `Table` style, per `app/(ops)/admin/groups/page.tsx`); (4)
+      wire `assigned_strategies` population into `personaToAuthUser()` (`lib/auth/demo-provider.ts`) and
+      `lib/auth/firebase-provider.ts` from the new store instead of the persona stub; (5) wire `canEnterTerminal()`
+      (`lib/entitlements/strategy-route.ts`, currently dead code — never called) into the actual terminal order-entry
+      action-button gate. Needs a `pw:L2` regression spec per the UI testing-layer gate before ticking. (repo:
+      unified-trading-system-ui; assigned_role: ui_developer)
 - [ ] BLOCKED-SUPERSEDED [CODE] P3. ~~Execute the `AssetClass` → `AssetGroup` rename repo-wide~~ — SUPERSEDED
       2026-07-21: the real blast radius is 9+ repos (not 2), touches a persisted-schema-adjacent field, and risks
       conflating two distinct `AssetClass` enums (domain vs. `LedgerAssetClass`). See
