@@ -226,11 +226,11 @@ replaces `importlib.util.find_spec`. No bypass needed.
 
 **Audit:** dependency_governance.plan.md (2026-03-05)
 
-| Repo                                       | Issue                                                        | Resolution                                                                    |
-| ------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------- |
-| unified-trading-library                    | uv lock fails: `unified-cloud-services[aws]` not in registry | Dep references external package; add to workspace-constraints or use path dep |
-| features-cross-instrument-service          | uv lock fails: `unified-cloud-interface` path dep            | Run `uv lock` from workspace root with path deps installed                    |
-| system-integration-tests                   | `.venv` invalid (no Python executable)                       | Remove `.venv` and run `uv sync` from workspace                               |
+| Repo                                      | Issue                                                        | Resolution                                                                    |
+| ----------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| unified-trading-library                   | uv lock fails: `unified-cloud-services[aws]` not in registry | Dep references external package; add to workspace-constraints or use path dep |
+| features-cross-instrument-service         | uv lock fails: `unified-cloud-interface` path dep            | Run `uv lock` from workspace root with path deps installed                    |
+| system-integration-tests                  | `.venv` invalid (no Python executable)                       | Remove `.venv` and run `uv sync` from workspace                               |
 | 20 internal manifest↔pyproject mismatches | fix-internal-dependency-alignment.py needs tomli_w           | `uv pip install tomli-w` then run fix script                                  |
 
 **Rationale:** Path deps and workspace-local packages require workspace context for resolution. Documented for S4 audit
@@ -250,3 +250,51 @@ chains in workspace venv context — NOT architectural violations. No `reportAny
 suppressed.
 
 **Target:** Remove baseline when upstream type stubs are available.
+
+---
+
+## 3. `unified-trading-system-ui` — Codex-Violation Count-Baseline Ratchet (Audited Exception)
+
+**File:** `unified-trading-system-ui/codex_ui_violation_baseline.json`
+
+```json
+{ "console": 84, "colour": 1082, "localhost": 30 }
+```
+
+**Rule bypassed:** `base-ui.sh`'s `[3.5/6] UI CODEX CHECKS` block, which `rg`s the whole `app/`/`components/`/`lib/`
+tree for `console.*` calls, hardcoded hex/rgb colours, and hardcoded `http://localhost:PORT` URLs and normally fails the
+gate on ANY hit.
+
+**Why:** `ui_codex_gate_blind_to_app_router_layout_2026_07_21.md` todo 1 fixed a real App-Router blind spot in `[3.5/6]`
+(it wasn't scanning `app/` at all). Once fixed, the gate correctly started scanning the real tree — and found the actual
+violation surface was far larger than the original manual audit estimated (documented in
+`plans/active/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`): 84 `console.*`
+calls across 49 files, 1082 hardcoded-colour hits across 100 files, 30 hardcoded-localhost hits. Because `[3.5/6]` scans
+the whole tree (not diff-scoped), this made `quality-gates.sh` fail for EVERY future commit to this repo, regardless of
+what it touches, until the full backlog clears — a structural, repo-wide blocker, not a per-PR one. Hand-fixing 1082+30
+hits blind risked visual regressions across ~100 files with no Playwright coverage for most of them.
+
+**Decision (operator ruling via BLK-bafba232, consistent with prior rulings BLK-fb2af155/BLK-928e1824):** a
+**count-baseline ratchet**, not a literal `CODEX_*_EXCLUDE_GLOBS` path bypass and not a hard block. `base-ui.sh`
+compares each category's CURRENT count against `codex_ui_violation_baseline.json`: the gate fails only if a count
+EXCEEDS its baseline (a genuinely NEW violation was introduced); it warns (does not fail) if a count drops below
+baseline, prompting a `--update-baseline` re-ratchet down. This achieves the same practical goal as an interim bypass —
+other UI work can ship via the normal `quality-gates.sh` → `quickmerge --agent` pipeline while the backlog clears —
+without silently exempting any file from future scrutiny the way a glob exclusion would. `CODEX_COLOUR_EXCLUDE_GLOBS` /
+`CODEX_LOCALHOST_EXCLUDE_GLOBS` remain available separately for genuinely-not-real-violations (e.g. a generated-PDF HTML
+string builder, mock/fixture data files) once the triage pass (this issue doc's todo 3) identifies them — that triage
+should shrink the baseline, not raise it.
+
+**Proof the mechanism works in practice:** `unified-trading-system-ui@94c7b25b` (todo 1 of the same issue doc) shipped
+through this exact ratchet end-to-end — `quality-gates.sh` green, sentinel `460b1bbdb72ffb5cdce8b3f6d4fe82bce95ad0e1`,
+via the normal `quickmerge --agent` flow — proving the gate no longer blocks unrelated ships.
+
+**Paydown plan (tracked, not open-ended):**
+`plans/active/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md` todos 2 (~80
+`console.*` sweep) and 3 (colour/localhost triage + real-violation sweep) — each re-ratchets the baseline DOWN via
+`--update-baseline` as it lands, until it reaches 0 and this exception can be removed.
+
+**Audit trail:** Ratchet mechanism shipped `unified-trading-pm@1ef0fa0e6`; baseline file registered
+`unified-trading-system-ui@94c7b25b` (2026-07-21). This entry added 2026-07-21 (slot-9) documenting the interim-
+shippability decision per `unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`'s own
+"Recommended decision" § 3.

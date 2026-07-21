@@ -158,16 +158,44 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       before I could ship mine — discarded the redundant local diff, nothing left to ship on the PM side.
       `quality-gates.sh` green end-to-end (`✅ ALL UI QUALITY GATES PASSED`, sentinel
       `460b1bbdb72ffb5cdce8b3f6d4fe82bce95ad0e1` → shipped at `94c7b25b`).
-- [ ] [UI] P1. Sweep the remaining ~80 `console.*` calls across ~48 files (this session fixed the 4 `console.log` stubs
-      in trader-dashboard.tsx) — most are `console.error`/`console.warn` inside catch blocks; decide + wire a shared
-      structured-logging helper vs. silent removal per call site. (repo: unified-trading-system-ui)
+- [x] ✅ [UI] P1. Sweep the remaining ~80 `console.*` calls across ~48 files (this session fixed the 4 `console.log`
+      stubs in trader-dashboard.tsx) — most are `console.error`/`console.warn` inside catch blocks; decide + wire a
+      shared structured-logging helper vs. silent removal per call site. (repo: unified-trading-system-ui) —
+      `unified-trading-system-ui@fce0861a`. The prior session's claimed 4-fix in `trader-dashboard.tsx` was never
+      actually shipped (found still present on a fresh worktree) — folded into this sweep along with the rest. Created
+      `lib/logger.ts` (shared `console.*`-wrapping sink, the sanctioned `CODEX_CONSOLE_EXCLUDE_GLOBS` pattern already
+      documented in `base-ui.sh`, mirroring `deployment-ui`'s existing `lib/logger`/`ErrorBoundary` precedent) and
+      mechanically swept all 84 `console.*` calls across 49 files to `logger.*` (47 files via a reviewed script + 2
+      hand-fixed multi-line-import edge cases the script mishandled); `components/shared/error-boundary.tsx`'s
+      `componentDidCatch` console.error left as-is + excluded (same devtools-surfacing rationale as `deployment-ui`'s
+      `ErrorBoundary`); the 4 `trader-dashboard.tsx` placeholder `console.log` nav stubs replaced with `TODO` comments
+      (no behavior change, no real navigation wired yet). Verified: `tsc --noEmit` clean, `eslint .` 0 errors, console
+      category = 0 in the `codex_ui_violation_baseline.json` ratchet. Session also hit the repo-wide `[3.5/6]`
+      structural block (colour/localhost/chart-theme categories, unrelated to this todo) — filed repo-blockers
+      `RB-96829ed8`/`RB-de0da97d`, caught + corrected a stale-CI-run false-positive green (same class as `agt-2e83b7`'s
+      finding), then the operator-ruled baseline ratchet (`unified-trading-pm@1ef0fa0e6`, todo 4 below) unblocked
+      shipping; reconciled a same-file collision with slot-7's parallel `-001` any-type sweep landing first (`94c7b25b`
+      — both independently added `lib/chart-theme.ts`/`codex_ui_violation_baseline.json`) via an `ff-only` pull +
+      recomputed merged baseline (console 84→0, colour 1082→1076) rather than force-overwriting either side.
+      `quality-gates.sh` green end-to-end, sentinel `94c7b25b0f3eedbd8ff43f87d41bc62b3ec01d6b` → shipped at `fce0861a`.
 - [ ] [INFRA] P2. Triage the 1082 hardcoded-colour hits (100 files) and 30 hardcoded-localhost hits: identify legitimate
       `CODEX_COLOUR_EXCLUDE_GLOBS`/`CODEX_LOCALHOST_EXCLUDE_GLOBS` candidates (generated-PDF HTML, mock/fixture data
       files) to cut the real count, then fix or file the residual real-violation sweep as its own sized todo. (repo:
       unified-trading-system-ui, unified-trading-pm for the glob config)
-- [ ] [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
+- [x] ✅ [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
       `QUALITY_GATE_BYPASS_AUDIT.md`, citing this issue doc) vs. hard-block `quality-gates.sh` on this repo until the
-      above 3 todos land — operator/main decision, not unilateral. (repo: unified-trading-pm)
+      above 3 todos land — operator/main decision, not unilateral. (repo: unified-trading-pm) — Decision already made by
+      the operator via BLK-bafba232 (consistent with prior rulings BLK-fb2af155/BLK-928e1824): a **count-baseline
+      ratchet** (`codex_ui_violation_baseline.json`, shipped `unified-trading-pm@1ef0fa0e6` + registered
+      `unified-trading-system-ui@94c7b25b`) — neither a literal glob-exclude bypass nor a hard block; the gate fails
+      only on a NEW violation (count exceeding baseline), so unrelated UI work ships normally while the backlog clears.
+      This todo's job was documenting that already-made decision, which was missing: added
+      `unified-trading-pm@QUALITY_GATE_BYPASS_AUDIT.md` § 3, citing this issue doc + the proof it already works
+      (`94c7b25b` shipped clean through it). Attempted a fresh in-session `quality-gates.sh` re-verification but hit
+      severe host contention (load average 63+ from ~6 concurrent slots' Node/Python builds, confirmed via `ps`/`free` —
+      the same environmental-contention class this issue doc's own Playwright section already documents as non-code);
+      relying instead on code-level inspection of the ratchet logic (`base-ui.sh` lines ~376-404) plus todo 1's own
+      shipped, QG-green proof rather than re-running an already-proven mechanism under a degraded host.
 
 ## Codex SSOTs
 
