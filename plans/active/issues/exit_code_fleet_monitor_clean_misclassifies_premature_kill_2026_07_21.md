@@ -10,7 +10,7 @@ summary:
   any other premature-kill class with no clean exit) is therefore indistinguishable from a genuinely-finished run — no
   alert, no auto-relaunch, silent data-loss-in-progress. Confirmed via a real incident (af-backfill-20260719-180520/
   -180603, 2026-07-20T05:25Z).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -30,7 +30,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 estimate_class: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: deployment-service@2e22c54 (item 1), deployment-service@6671f02 (item 2)
 locked_by:
 depends_on: []
 ---
@@ -113,9 +113,19 @@ silent-CLEAN outcome even with the fix fully deployed.
       `test_classify_clean_still_requires_confirmed_exit0_not_just_climb`,
       `test_sweep_partial_unconfirmed_vm_relaunches_successfully_emits_warn_not_critical`,
       `test_sweep_partial_unconfirmed_vm_no_launcher_emits_critical_no_relaunch` — full `quality-gates.sh` green.
-- [ ] [INFRA] P3. **Harden `uts-preemption-signal.service`'s marker write for the fast-DELETE case** — confirm
+- [x] ✅ [INFRA] P3. **Harden `uts-preemption-signal.service`'s marker write for the fast-DELETE case** — confirm
       `--instance-termination-action=DELETE` SPOT VMs (used by `af-backfill-*` and others) reliably give the shutdown
       unit's `ExecStop` its full window before the instance is torn down; if GCE's DELETE path can race ahead of the
       unit's `TimeoutStopSec=25`, consider a secondary detection path (e.g. the `compute.instances.preempted` GCP
       audit-log event itself, which this investigation confirmed exists and is queryable independent of any VM-side
-      marker) as a fallback trigger for `is_vm_preempted()`-equivalent classification. (repo: deployment-service)
+      marker) as a fallback trigger for `is_vm_preempted()`-equivalent classification. (repo: deployment-service) —
+      deployment-service@6671f02. **Confirmed**: GCE's `DELETE` termination action does not shorten the guest's
+      preemption window vs `STOP` — both run the identical ACPI-soft-off guest shutdown sequence before the outcome
+      diverges (stop vs delete happens strictly AFTER the guest has already shut down), so `TimeoutStopSec=25` is not
+      structurally raced by the termination action itself; a GCP-audit-log-based secondary trigger is therefore not
+      needed to close a DELETE-specific race. The real residual risk was narrower: a single flaky `gcloud storage cp`
+      (transient DNS/5xx) silently dropping the marker with no retry inside the 25s budget. Hardened
+      `uts-preemption-signal.sh`: every metadata curl now carries `--max-time 2`, and the marker write retries once
+      (`timeout 7` per attempt) — worst case ~20s, still inside the 25s `TimeoutStopSec` budget. Also fixed the script's
+      success log to only fire on an actual successful write (previously logged "wrote PREEMPTED signal" unconditionally
+      even when the `gcloud storage cp` call failed and was swallowed by `|| true`).
