@@ -179,7 +179,57 @@ the oracle" — the oracle simply doesn't cover this namespace). **The durable f
 `processed_candles/` (and features) namespace** so the ratified candle shape (post A/B/C ruling) becomes
 machine-checkable and the skill can call the oracle instead of a bespoke rule.
 
-## ✅ OPERATOR RULING 2026-07-21 — OPTION A (declared template wins → migrate writers + data + manifest)
+## ⚠️→✅ CORRECTED RULING 2026-07-21 (evening) — the codex SSOT contradicted the original Option-A framing; operator RE-DECIDED with full info
+
+**Critical correction (workflow wq44d6bto, ground-truthed):** my original A/B/C framing treated the UTL registry
+template (`registry.py:28`, which carries `instrument_type=`) as the SSOT. But the AUTHORITATIVE codex layout
+`codex/02-data/per-asset-group-bucket-layouts.md:166` defines cefi/tradfi/defi candles as
+`processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/venue={v}/{id}.parquet` — **NO `instrument_type=`
+segment** (only PREDICTION shards by instrument_type). The current objects ALREADY match the codex. So the original
+"Option A = fulfill the declared template" was WRONG — adding `instrument_type=` CONTRADICTS the codex + is a NEW
+canonical definition, not a divergence fix. ALSO verified: the candle-path migration is a GENUINE GAP (NOT duplicative)
+— every running `canonical-migration-*` VM is `raw_tick_data/`-scoped (column patching), no plan/VM/todo migrates candle
+PATHS; and the aggregated key `deriv_ohlcv` appears NOWHERE in codex/plans.
+
+**Operator RE-DECISION 2026-07-21 (with the corrected info):**
+
+1. **`instrument_type=` → AMEND THE CODEX + ADD IT (full migration).** Deliberate new-canonical: candles get an
+   `instrument_type=` segment for cefi/tradfi/defi too (consistency with raw_tick + prediction, instrument_type
+   sharding). Requires amending `per-asset-group-bucket-layouts.md:166` FIRST, then the object migration.
+2. **`data_type` axis → KEEP SOURCE on the path, ALIGN THE MANIFEST to match (source).** The object path keeps the
+   SOURCE `data_type` (derivative_ticker/trades/dex_pool_swaps) — **NO data_type object rewrite** (drops the aggregated
+   `deriv_ohlcv` idea, which isn't a codex concept anyway). Instead the MANIFEST writer records the SOURCE key so
+   path==manifest (code-only). Existing aggregated manifest rows re-recorded as source during the migration's manifest
+   pass.
+
+**REVISED canonical candle shape (LOCKED):**
+`processed_candles/by_date/day={date}/pipeline_mode={pm}/timeframe={tf}/data_type={SOURCE}/instrument_type={it}/venue={v}/{canonical_id}.parquet`
+(the migration ADDS `instrument_type=` + normalises pipeline_mode/tf + fixes defects; it does NOT rewrite data_type.)
+
+**FOLD INTO the master consolidated plan** (`master_data_canonicalisation_migration_catalogue_2026_06_07.md`) as a new
+candle-path phase — NOT a parallel effort (per the check's recommendation). Coordinate with the running raw_tick cefi
+fleet: DISJOINT prefix (processed_candles/ vs raw_tick_data/) so no object collision, but manifest-shard contention +
+the pre-migration-drain rule mean the candle cutover is scheduled AROUND the raw-tick fleet's completion, not
+mid-flight.
+
+**The genuine DEFECTS are fixed under EITHER path** (empty stems, split-brain pipeline_mode-less dups, TradFi artifact
+ids, volatility bucket-root — P2 done). The UTL foundation built earlier (template + `build_canonical_candle_path` +
+`candle_read_prefixes`) is CORRECT for the revised shape (keeps instrument_type=, adds pipeline_mode=, data_type generic
+= source) — held uncommitted, lands atomically with the MDPS writer.
+
+**OPERATOR PRINCIPLE 2026-07-21 — coordinated all-surface upgrade + BACKWARD migration (no split canonicals):** the
+`instrument_type=`-add + `data_type` source-alignment must be upgraded across ALL canonical-definition surfaces TOGETHER
+in the coordinated landing — (1) **codex** (`per-asset-group-bucket-layouts.md:166` candle layout + any sibling candle
+SSOT + the UTL registry template), (2) **docs/plans** (this issue + fold into the master consolidated catalogue), (3)
+**manifest** (writer records SOURCE data_type going forward AND existing aggregated rows RE-RECORDED to source — a
+backward manifest migration, not just forward), (4) **code** (writer + all readers), (5) **data** (existing ~10-20M
+objects MIGRATED BACKWARD to add `instrument_type=`, not merely new objects born canonical). "Not just going forward,
+always migrated backwards": every surface is reconciled for the WHOLE historical corpus, so no split-canonical state
+lingers on old data, old manifest rows, or stale docs. This is the acceptance bar for closing the migration.
+
+---
+
+## (SUPERSEDED by the corrected ruling above) OPTION A first framing — kept for history
 
 The operator chose **A** and explicitly directed: **"migrate data gcs paths and manifest"** — i.e. do the full breaking
 migration, not just the writer. Scope now:
