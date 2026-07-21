@@ -110,12 +110,14 @@ scope a design decision first, then a real parity test becomes possible against 
       consumers (features-service producer, ml-service loader, strategy-service v2 + legacy subscriber), and —
       critically — closes the ml-service loader's silent-agnostic gap with loud schema validation so a future naming
       mismatch fails LOUD instead of `None`/`KeyError`. Sequenced alongside (not after) the "wire sports end-to-end"
-      work per the operator's note. **Retired todo**: the original P3 "write the parity test" todo is removed from this
-      doc's dispatchable Todos (not just annotated) to stop the backlog dispatcher re-queuing a duplicate that is
-      currently unactionable — it is fully superseded by
-      `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`'s own todo 7 (same deliverable), which is
-      correctly gated behind that plan's naming-decision + migration todos instead of floating as an open-ended item
-      here.
+      work per the operator's note.
+- [x] [SCRIPT] P3. Once a canonical naming is chosen, write the actual FSS-output ↔ ml-service-input ↔
+      strategy-service-input parity test this backlog item originally asked for, against the NOW-REAL contract. (repo:
+      features-service, ml-service, strategy-service) — ✅ retired/superseded, not literally written yet: this exact
+      deliverable now lives as todo 7 in `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`,
+      correctly gated behind that plan's naming-decision + 3-repo migration todos (it cannot be written until those land
+      — there is still no real contract to test parity against). Flipping this duplicate closed instead of leaving it
+      open prevents the backlog dispatcher from re-queuing a currently-unactionable duplicate of the same work here.
 
 ## Codex SSOTs
 
