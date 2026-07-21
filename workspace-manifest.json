@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 4,
         "warn_file_count": 16,
-        "coverage_pct": 82.66
+        "qg_red_reason": null,
+        "coverage_pct": 82.68
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "large_file_count": 2,
         "warn_file_count": 11,
         "qg_red_reason": null,
-        "coverage_pct": null,
-        "large_file_count": 2
+        "coverage_pct": 73.23
       }
     },
     "execution-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "qg_red_reason": "pytest",
+        "large_file_count": 7,
         "warn_file_count": 9,
-        "coverage_pct": 90.71,
-        "large_file_count": 7
+        "qg_red_reason": "pytest",
+        "coverage_pct": 90.81
       }
     },
     "market-data-processing-service": {
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 3,
         "warn_file_count": 8,
-        "coverage_pct": null
+        "qg_red_reason": null,
+        "coverage_pct": 88.47
       }
     },
     "market-tick-data-service": {
@@ -1011,10 +1011,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 3,
-        "coverage_pct": null,
-        "warn_file_count": 9
+        "warn_file_count": 9,
+        "qg_red_reason": null,
+        "coverage_pct": 85.45
       }
     },
     "system-integration-tests": {
@@ -1264,9 +1264,9 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "qg_red_reason": "ruff",
-        "warn_file_count": 21,
         "large_file_count": 6,
+        "warn_file_count": 21,
+        "qg_red_reason": null,
         "coverage_pct": 88.45
       }
     },
@@ -1417,10 +1417,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 74.41,
-        "qg_red_reason": null,
+        "large_file_count": 14,
         "warn_file_count": 6,
-        "large_file_count": 14
+        "qg_red_reason": null,
+        "coverage_pct": 74.45
       },
       "breaking_scan_dir": "none"
     },
