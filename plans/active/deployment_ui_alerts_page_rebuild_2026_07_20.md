@@ -110,10 +110,17 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       streams card). New spec `tests/smoke/alerts-page.spec.ts` § "timeline entries show the full date... and the
       workflow name" pins both on the newest-first `entry-0` row; every pre-existing assertion in that spec stays green
       (9/9 pass). `quality-gates.sh` green.
-- [ ] [UI] P1. **Sortable columns** — make the timeline table columns sortable (timestamp, severity, source, subject)
+- [x] ✅ [UI] P1. **Sortable columns** — make the timeline table columns sortable (timestamp, severity, source, subject)
       using the shared `useColumnSort` hook + `compareByColumn`, supplying an alert-specific sort-key union and
       `columnSortValue`. Default order stays newest-first / worst-first (regression spec); user sort overrides it.
-      URL-backed sort key + direction.
+      URL-backed sort key + direction. — `deployment-ui@c631ef5`: `useColumnSort` gained an optional `initial` param
+      (backward-compatible — `Deployments.tsx`'s existing no-arg call unaffected) so `Alerts.tsx` can seed the hook from
+      `?sort_key=&sort_dir=` on mount; `alertColumnSortValue` maps `timestamp`/`severity` (rank)/`source`
+      (`kindLabel`)/`subject` (`repo`) to a comparable value, ties broken by the existing newest-first default via
+      `compareByColumn`'s tie-break contract. A header click cycles asc → desc → back to default (clears both URL
+      params). New `pw:L2` spec pins the click-to-cycle behaviour + URL persistence; every existing
+      `alerts-page.spec.ts` assertion and `deployments-page.spec.ts` (shared-hook regression check) stay green.
+      `quality-gates.sh` green.
 - [ ] [UI] P1. **Filter bar** — source/plane, severity, subject-repo, service filters using the extracted `FilterSelect`
       (multi-select where it helps), URL-backed. Options derived from the loaded normalised alert set.
 - [ ] [UI] P1. **Date-range picker** — URL-backed `?alert_from=&alert_to=`, wired to the ledger's widened retention
