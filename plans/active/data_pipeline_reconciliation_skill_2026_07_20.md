@@ -515,8 +515,8 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       one walk. Codex SSOT § 3.
 - [x] 30. ✅ [SCRIPT] P1. **Wire § 3g + § 7 compute tiers into the skill** (id/schema legs; Tier-1 ≤500-sample smoke;
       Tier-2 read from the `datapoint-validation` results index). Depends on 28.
-- [ ] 31. [INFRA] P1. **Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind BEFORE any launch**
-      (real `VmPrefixSpec` EPHEMERAL_BATCH entries in `vm_prefix_registry.py`, the `datapoint-validation`
+- [x] 31. ✅ [INFRA] P1. **Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind BEFORE any
+      launch** (real `VmPrefixSpec` EPHEMERAL_BATCH entries in `vm_prefix_registry.py`, the `datapoint-validation`
       `resolve_bucket_name` kind in `configs/cloud-providers.yaml`; ship via quickmerge). Unregistered = invisible.
 - [ ] 32. [SCRIPT] P1. **Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py`** — modeled on
       `launch-manifest-recon-all-vm.sh`; SPOT + PROGRESS.json resume; reuses `validate_dataframe` +
@@ -634,3 +634,23 @@ dry-run→verify→apply→manifest→verify twins. **Stage 3:** todo 32 (launch
   defi — a follow-up (the objects exist now; the depth-provider reads objects directly).
 - **In progress:** F6 3-repo enumerator fix (IS dead-WIP has C.1+C.3; UAC C.2 + commit pending — UAC tree just became
   quiescent) · 31 (deployment-service landed `@bd7a7bd8`; UAC yaml `datapoint-validation` kind pending commit) · 32.
+
+### 2026-07-21 (cont.) — F6 enumerator fix shipped; 31 done; 32 in flight
+
+- **F6 enumerator vocab — SHIPPED (3-repo atom complete).** `unified-api-contracts@5d83b729` (C.2 — the defi capability
+  declaration accepts `solana_amm_pool`/`solana_vault`) + `instruments-service@c781eb0b` (C.1 —
+  raydium/orca→SOLANA_AMM_POOL, kamino→SOLANA_VAULT in all 3 adapters; C.3 — `_ADDRESS_KEYED_ITYPES` gains the solana
+  types; regression test; defi expected-universe golden regenerated). Direction A (expected matches the writer) per the
+  SSOT. **The folded `solana_amm_pool` twins now reconcile against the expected universe** — F6's coverage-denominator
+  inflation is fixed. **Side-benefit caught in flight:** the defi golden was already fleet-RED on clean HEAD
+  (pre-existing cross-repo drift from the committed `5d83b729`/`d4d85854` that shipped without regenerating the IS
+  golden — the known `instruments_service_qg_red_golden_drift` hazard); this commit's regen cleared it. Verified: only
+  defi.json changed (the 4 cosmetic non-defi golden reformats were reverted); IS QG green (4729 passed).
+- **31 ✅ DONE** — `deployment-service@bd7a7bd8` (VmPrefixSpec `datapoint-validation-{ag}-` + registry) +
+  `unified-api-contracts@5d83b729` (the `datapoint-validation` results-bucket kind in cloud-providers.yaml, all 3
+  mirrors) → `resolve_bucket_name(cloud="gcp", kind="datapoint-validation")` resolves.
+- **32 in flight** — a background agent is authoring `launch-datapoint-validation-vm.sh` +
+  `validate_datapoint_schema_id.py` in deployment-service (SPOT, single-walk, results manifest via UTL ManifestWriter).
+- **Manifest re-derive (follow-up):** the fold wrote 648 canonical OBJECTS; the availability manifest re-derives from
+  GCS via the standard consolidator — it must run over `day=2026-04-14` defi to mark the twins `captured`. The
+  depth-provider (25) reads objects directly, so this does not block execution; it is a coverage-surface refresh.
