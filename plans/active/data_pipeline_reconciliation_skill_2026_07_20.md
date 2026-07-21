@@ -654,3 +654,16 @@ dry-run→verify→apply→manifest→verify twins. **Stage 3:** todo 32 (launch
 - **Manifest re-derive (follow-up):** the fold wrote 648 canonical OBJECTS; the availability manifest re-derives from
   GCS via the standard consolidator — it must run over `day=2026-04-14` defi to mark the twins `captured`. The
   depth-provider (25) reads objects directly, so this does not block execution; it is a coverage-surface refresh.
+
+### 2026-07-21 (cont.) — manifest registration: mechanism found, filed as bounded follow-up
+
+Attempted the manifest-registration step of the fold. **Finding:** the consolidator merges `record_captured` per-VM
+shards — it does NOT re-derive rows from raw GCS objects (the fold script's docstring was wrong). Authored + dry-ran a
+`--register-manifest` pass (DefiManifestRecorder, **714 rows** verified: 648 new twins + 66 idempotent RAYDIUM refresh,
+ORCA skipped). The **apply hung/exited without flushing** a `_index/per_vm/` shard in a plain-script context (the
+`ManifestWriter(batch_size=1)` recorder is coupled to the live handler's async flush discipline). **No partial manifest
+write occurred** (per_vm still holds only `_legacy_seed.parquet`). Reverted the broken register-mode from the fold
+script (the shipped object-fold is clean) and filed the exact recipe + finding as a bounded P1 follow-up →
+`plans/active/issues/defi_fold_manifest_registration_pending_2026_07_21.md`. **The DATA migration + delete-safety are
+COMPLETE**; the manifest rows are a coverage-surface refresh (the depth-provider reads objects directly, so nothing is
+blocked). This is the one operator-ask sub-part that met a genuine technical obstacle, tracked with a precise recipe.
