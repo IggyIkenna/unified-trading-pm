@@ -43,6 +43,12 @@ _SUCCESSOR_RE = re.compile(
 _ARCHIVE_OK_TOKENS_RE = re.compile(r"\bpost.cutover\b|\bout of scope\b|\bDEFERRED\b", re.IGNORECASE)
 _ACTIVE_FNAME_RE = re.compile(r"^[a-z0-9_]+(_\d{4}_\d{2}_\d{2})?\.md$")
 _ISSUE_FNAME_RE = re.compile(r"^[a-z0-9_]+_\d{4}_\d{2}_\d{2}\.md$")
+# Directory-structure files that are NOT plans and must not be filename-checked as one. INDEX.md is
+# the canonical "# Active Plans Index" (referenced by that name across the corpus, so it cannot be
+# renamed to satisfy the plan-slug pattern); README.md is a directory readme. Before this exclusion
+# INDEX.md was a permanent B-active-filename false-positive that sat in the baseline and consumed a
+# ratchet slot for no reason (2026-07-21).
+_NON_PLAN_STRUCTURE_FILES = frozenset({"INDEX.md", "README.md"})
 
 
 @dataclass(frozen=True)
@@ -78,6 +84,8 @@ def _check_rule_b(active_dir: Path, issues_dir: Path) -> list[DisciplineViolatio
     """Filename convention check."""
     out: list[DisciplineViolation] = []
     for p in active_dir.glob("*.md"):
+        if p.name in _NON_PLAN_STRUCTURE_FILES:
+            continue  # index/readme structure files are not plans
         if not _ACTIVE_FNAME_RE.match(p.name):
             out.append(
                 DisciplineViolation(
