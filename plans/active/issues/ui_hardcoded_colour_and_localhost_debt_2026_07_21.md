@@ -72,7 +72,7 @@ rather than a single CSS var.
 
 ## Todos
 
-- [ ] [UI] P2. Batch 1 — chart/research components (16 files, 3–19 hits each):
+- [x] [UI] P2. Batch 1 — chart/research components (16 files, 3–19 hits each):
       `components/research/equity-chart-with-layers.tsx`, `components/research/signal-overlay-chart.tsx`,
       `components/research/execution/execution-detail-view.tsx`, `components/research/execution/status-helpers.tsx`,
       `components/research/overlaid-equity-curves.tsx`, `components/research/profit-structure-chart.tsx`,
@@ -82,7 +82,34 @@ rather than a single CSS var.
       `components/reports/portfolio-analytics.tsx`, `components/risk/correlation-heatmap.tsx`,
       `components/events/economic-heatmap.tsx`, `components/events/economic-grid.tsx`. Most are recharts-based — check
       whether `lib/chart-theme.ts`'s `CHART_COLORS`/`TOOLTIP_STYLE`/`GRID_STYLE`/`AXIS_STYLE` already cover the literal
-      in question before inventing a new CSS var. (repo: unified-trading-system-ui)
+      in question before inventing a new CSS var. (repo: unified-trading-system-ui) — ✅
+      `unified-trading-system-ui@2e829de0`. All 16 files migrated to `lib/chart-theme.ts` tokens
+      (`CHART_COLORS`/`GRID_STYLE`/`AXIS_STYLE`/`TOOLTIP_STYLE`) and the pre-existing `--color-pnl-positive`/
+      `--color-pnl-negative`/`--color-risk-*` semantic CSS vars; `color-mix(in srgb, var(--x) N%, transparent)` for
+      alpha-blended literals; Tailwind arbitrary-value + colour-utility split (`shadow-[...] shadow-emerald-500/25`) for
+      2 Tailwind-only hits. Repo-measured hardcoded-colour count 1082→947 (real ~135-hit reduction);
+      `codex_ui_violation_baseline.json` ratcheted `colour: 1082→947`. Full `quality-gates.sh` green (469s, sentinel
+      `fce0861a`→`2e829de0` after quickmerge; typecheck/lint/286 unit tests/build/DeFi-citation all passed).
+      **Correction during the batch**: `components/trading/candlestick-chart.tsx` and
+      `components/paper-trading/coin-price-chart.tsx` use `lightweight-charts` (canvas-rendered, not recharts) — an
+      initial sub-agent pass tested raw `ctx.fillStyle = 'var(--x)'` via canvas API directly, found it doesn't resolve
+      (falls back to black), and concluded these 2 files couldn't be tokenized, leaving them on literals. A second pass
+      found via reading the library source (`ColorParser`/`getRgbStringViaBrowser` in
+      `lightweight-charts.development.mjs`) that the library's own series-config options (`upColor`, `wickUpColor`,
+      etc.) resolve `var(--x)` through a hidden-DOM `getComputedStyle` lookup — a different code path than raw canvas
+      calls. Verified this empirically before trusting it: built a live headless-Chromium + `@playwright/test` render
+      passing `upColor: 'var(--test-color)'` to an actual `CandlestickSeries`, then read back real canvas pixel data via
+      `getImageData` — confirmed the exact expected RGB rendered. Both files were then migrated to direct
+      `var(--color-pnl-positive)`/`var(--color-pnl-negative)` string literals in their series-config options (confirmed
+      correct); test artifacts deleted after verification. **Merge conflict during ship**: another slot concurrently
+      landed a console.\* cleanup touching both `codex_ui_violation_baseline.json` and
+      `components/trading/vol-surface-chart.tsx` (import line). Resolved by keeping the fuller import
+      (`CHART_COLORS, GRID_STYLE, AXIS_STYLE, TOOLTIP_STYLE`) and by re-measuring (not guessing) the baseline file's
+      true combined state directly via `rg` on the merged tree (`console: 5, colour: 947, localhost: 30`) rather than
+      picking either side's stale claimed numbers. **Playwright**: attempted `research-real-data.smoke.spec.ts` as a
+      pre-existing sanity-check spec; it failed (`net::ERR_CONNECTION_RESET`-class timeouts) under severe host
+      contention (load 31-35 on 8 cores) — same environment blocker confirmed in the prior any-type-sweep task, not a
+      regression from this change. No fabricated `pw:L2 ✓`.
 - [ ] [UI] P2. Batch 2 — widgets/\_primitives + widgets/\* (11 files, 1–8 hits each):
       `components/widgets/_primitives/metric-gauge.tsx`, `components/widgets/_primitives/flow-chart.tsx`,
       `components/widgets/_primitives/categorical-matrix.tsx`, `components/widgets/_primitives/depth-area-chart.tsx`,
