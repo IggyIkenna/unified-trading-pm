@@ -195,9 +195,25 @@ Key audit facts driving the merges:
       `DeploymentDetail`'s History card in the prior todo — this todo only concerned the standalone page's route/nav
       fate. Deferred: relocating the 4 venue panels to a permanent canonical home is real unplanned design work, filed
       as `plans/active/issues/vm_deployments_venue_panels_orphaned_route_2026_07_21.md` rather than decided here.
-- [ ] [UI] P1. **Remove FleetInfra** — delete the FleetInfra section from `FleetTab` and its imports; remove any nav/
+- [x] [UI] P1. ✅ **Remove FleetInfra** — delete the FleetInfra section from `FleetTab` and its imports; remove any nav/
       route pointing at it. Confirm nothing else depends on its endpoints (`/api/fleet/vm-census`,
-      `/api/fleet/infra-vm-health`) in the UI; leave the backend endpoints intact (out of scope).
+      `/api/fleet/infra-vm-health`) in the UI; leave the backend endpoints intact (out of scope). — ✅
+      `deployment-ui@84b6a17`. Removed the `<FleetInfraContent />` section + its import from `Cockpit.tsx`; deleted
+      `FleetInfra.tsx` entirely (confirmed zero other importers). No dedicated nav/route pointed at it — only the
+      generic `/infra → /fleet` bookmark-compat redirect exists, which stays (its App.tsx comment updated for accuracy).
+      Confirmed nothing else in the UI calls `/api/fleet/vm-census` / `/api/fleet/infra-vm-health` — removed the
+      now-fully-dead `getVmCensus`/`getInfraVmHealth` client functions + their exclusive response types from `client.ts`
+      (kept `VmLifecycleClass`/`VmRunStatus`, which `OrphanEntry` still depends on) and their mock-api.ts
+      handlers/generators; backend endpoints untouched (out of scope, confirmed intact). Deleted 2 now-fully-obsolete
+      regression specs (`fleet-infra-vm-census.spec.ts`, `fleet-infra-tab.spec.ts` — both existed solely to guard
+      FleetInfra content) and fixed 2 partially-affected specs (`cockpit.spec.ts`'s Fleet-tab fold test now asserts
+      `cockpit-fleet-infra` has zero count instead of visible; `nav-menu-dedup.spec.ts`'s redirect-mount assertion
+      switched from the removed testid to the still-live `cockpit-fleet` wrapper). Full `quality-gates.sh` green
+      (typecheck/lint/orphan-audit/99 test files/build all passed). Playwright: ran both touched specs — 59 passed, 1
+      pre-existing unrelated failure (`nav-menu-dedup.spec.ts`'s "top bar carries 15 entries" test still expects
+      `cockpit-navlink-vm-deployments` visible in the canonical bar, a gap left by the earlier
+      `/vm-deployments`→Legacy-nav todo, BLK-7cb5bbbc — verified via `git stash` that it fails identically on pre-change
+      HEAD, not a regression from this change). `pw:L2 ✓` (my own 2 touched specs both green).
 - [ ] [UI] P1. **Remove the VM-census embed + reconciliation cards** from `FleetTab` (in `Cockpit.tsx`) — after the
       merges above land. Optionally preserve the "expected-missing" (registered-but-not-running) count as a small
       Deployments summary if cheap; otherwise drop.
