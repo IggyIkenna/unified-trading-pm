@@ -1082,3 +1082,11 @@ for every agent on this plan:
   so that sibling plan's claim is correct as written and needs no correction.) The strategy-service LOGIC FREEZE itself
   was separately lifted 2026-07-12 (see `epics/strategy_master.md` banner, findings 286/292) — unrelated timing
   coincidence, noted for completeness.
+
+## Deferred work — migrated to:
+
+**Not yet identified** — "Client-lite wizard mode (use case 4)" (`[DEFERRED] P3`, Phase 5) is explicitly deferred
+pending "a named successor plan once internal wizard is hardened" and is already tracked verbatim in this doc's own "##
+Out of scope / named successors" section ("Client-facing lite wizard + alpha-curtailment tiers (use case 4) — successor
+plan"). Grepped `plans/active/` and `plans/epics/` for "client-lite wizard" with no hit — no successor plan exists yet.
+This plan remains the owner of record until one is authored and named.

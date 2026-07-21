@@ -178,10 +178,43 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       — both independently added `lib/chart-theme.ts`/`codex_ui_violation_baseline.json`) via an `ff-only` pull +
       recomputed merged baseline (console 84→0, colour 1082→1076) rather than force-overwriting either side.
       `quality-gates.sh` green end-to-end, sentinel `94c7b25b0f3eedbd8ff43f87d41bc62b3ec01d6b` → shipped at `fce0861a`.
-- [ ] [INFRA] P2. Triage the 1082 hardcoded-colour hits (100 files) and 30 hardcoded-localhost hits: identify legitimate
-      `CODEX_COLOUR_EXCLUDE_GLOBS`/`CODEX_LOCALHOST_EXCLUDE_GLOBS` candidates (generated-PDF HTML, mock/fixture data
-      files) to cut the real count, then fix or file the residual real-violation sweep as its own sized todo. (repo:
-      unified-trading-system-ui, unified-trading-pm for the glob config)
+- [x] ✅ [INFRA] P2. Triage the 1082 hardcoded-colour hits (100 files) and 30 hardcoded-localhost hits: identify
+      legitimate `CODEX_COLOUR_EXCLUDE_GLOBS`/`CODEX_LOCALHOST_EXCLUDE_GLOBS` candidates (generated-PDF HTML,
+      mock/fixture data files) to cut the real count, then fix or file the residual real-violation sweep as its own
+      sized todo. (repo: unified-trading-system-ui, unified-trading-pm for the glob config) —
+      `unified-trading-system-ui@2bb398c1c`. Re-measured fresh (947/30, down from the doc's original 1082/30 measured
+      pre-session — other work already shrank the colour count). Two legitimate colour categories confirmed by reading
+      file content, not guessed: (a) 15 files / ~132 hits — server-generated email HTML bodies + one downloadable-PDF
+      HTML builder (`signup-pdf.ts`), inline `<style>` for an external renderer, not React theming; (b) 4 files / ~314
+      hits — mock/fixture DATA files where `color` is a business-data field on a category object
+      (`lib/mocks/fixtures/strategy-instances.ts` alone is 294, confirmed AUTO-GENERATED from the UAC Python SSOT per
+      its own file header — hand-editing hex there gets silently overwritten on regen). All 30 localhost hits also
+      confirmed legitimate: Firebase Auth emulator port, documented `NEXT_PUBLIC_*_URL` env-var fallback defaults
+      (already following the rule's own recommended pattern), JSON registry/config-schema default values, one
+      doc-comment example string (not executable). Added both exclude-glob arrays to
+      `unified-trading-system-ui/scripts/quality-gates.sh` (the sanctioned per-repo customization point — same file
+      already carries `CODEX_CONSOLE_EXCLUDE_GLOBS`), ratcheted `codex_ui_violation_baseline.json` down via
+      `--update-baseline`: colour 947→501, localhost 30→0, console 5→0 (already-clean, unrelated bonus ratchet).
+      Residual real-violation sweep filed as its own todo below (not fixed here — 501 hits across ~65 files with no
+      Playwright coverage for most of them is not a same-session, same-todo fix).
+
+- [ ] [UI] P2. Sweep the residual 501 real hardcoded-colour hits across ~65 component/page files (post-triage — excludes
+      the two legitimate categories from todo 3 above) to CSS vars / Tailwind classes / `chart-theme.ts` tokens. Get the
+      current file-by-file breakdown fresh via
+      `rg '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgb\(|rgba\(' app components lib --glob "!**/*.test.*" --glob     "!**/chart-theme.*" --glob "!**/globals.css" --glob "!**/*.css" -c`
+      (plus the `CODEX_COLOUR_EXCLUDE_GLOBS` entries in `scripts/quality-gates.sh` to exclude the already-triaged
+      legitimate files) — the top offenders as of 2026-07-21 are `lib/taxonomy.ts` (60), `app/(public)/_home-client.tsx`
+      (32), `components/trading/sports/*.tsx` (several files, 9-27 each), `lib/reference-data.ts` (19),
+      `components/shared/status-badge.tsx` (21). Three files (`lib/design-tokens.ts`, `lib/taxonomy.ts`,
+      `lib/reference-data.ts`) are ambiguous — they look like they MAY be legitimate single-source token-definition
+      files (same role as the already-excluded `chart-theme.ts`), but that's a judgment call this todo should make
+      explicitly (verify no other file re-hardcodes the SAME hex values instead of importing from these) rather than
+      blindly including or excluding them. No blind mechanical find/replace — per-file, use this repo's actual
+      `--color-*` CSS vars from `app/globals.css` or Tailwind classes; **no change ships without pw:L2** per
+      `codex/06-coding-standards/ui-testing-layers.md` (visual/theming changes are exactly the class of change that rule
+      exists for). Split across multiple sub-tasks if dispatched (e.g. by directory: `components/trading/sports/*`,
+      `components/marketing/*`, `components/widgets/*`, remainder) rather than one giant todo. (repo:
+      unified-trading-system-ui)
 - [x] ✅ [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
       `QUALITY_GATE_BYPASS_AUDIT.md`, citing this issue doc) vs. hard-block `quality-gates.sh` on this repo until the
       above 3 todos land — operator/main decision, not unilateral. (repo: unified-trading-pm) — Decision already made by

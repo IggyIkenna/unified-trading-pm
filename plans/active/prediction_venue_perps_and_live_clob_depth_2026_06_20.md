@@ -1119,13 +1119,13 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row).
 
         (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
-                            `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
-                            Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
-                            extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
-                            REAL paired samples (no false pairs — operator). Repos:
-                            unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
-                            enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
-                            (residual after parser UAC@3effe2fc).
+                                        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
+                                        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
+                                        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
+                                        REAL paired samples (no false pairs — operator). Repos:
+                                        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
+                                        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
+                                        (residual after parser UAC@3effe2fc).
 
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 
@@ -2344,3 +2344,11 @@ entry above do NOT hold — annotated in a banner near the top of this doc; full
   - real endpoint research + demo dry-run + prod cutover, gated on Kalshi member-rollout access) is tracked in
     `plans/active/prediction_capture_incident_remediation_2026_07_06.md` Workstream B — coordinate there before
     re-touching `cefi/kalshi_perp.py` / `cefi/polymarket_perp.py` to avoid duplicate work.
+
+## Deferred work — migrated to:
+
+See inline `DEFERRED-CROSS-DEP` annotation within this plan (the "batch book_snapshot_5 row-proof" todo) for the
+specific successor/blocker: it needs an instruments-service re-enumeration of a recent past date carrying
+`clob_token_ids`, then a re-run of the book backfill for that date (repo: instruments-service + deployment-service).
+Live book_snapshot_5 capture is already code-complete and live-proven; this is a batch-only row-proof residual, not a
+sports/prediction-track blocker.

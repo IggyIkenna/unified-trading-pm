@@ -719,10 +719,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       −861 legitimate spelling-dedup).
 
       **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
-                  finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-                  `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
-                  UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
-                  (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+                      finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+                      `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
+                      UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
+                      (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
@@ -1213,13 +1213,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-                  chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-                  even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-                  UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-                  column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-                  migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-                  canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-                  AG. — market-tick-data-service
+                      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                      AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
@@ -2150,3 +2150,19 @@ findings-triage — not fixed this session):
       logged (out of scope): `_normalize_venue()` docstring/code mismatch in `canonical_write.py`; 1,139 pre-existing
       `attempted_failed` manifest rows with old label-pairing. — unified-trading-pm (docs-only; no code change needed,
       data-only op)
+
+## Deferred work — migrated to:
+
+Two genuine hits in this plan:
+
+1. (line ~293) "SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES cov 0.000 (all attempted_failed — credentialed/blocked
+   scraper sources, tracked in sports_master DEFERRED-INDEFINITELY scraper set)." **`plans/epics/sports_master.md`** §
+   "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator" — this is the real, already-documented named successor: a
+   formal 2026-05-12 operator ruling that these credentialed/blocked scraper sources are out of scope for the active
+   sports universe indefinitely (see also `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` for the same
+   ruling applied to DRAFTKINGS/FANDUEL). Not a B0 gap for this plan.
+2. (line ~1724) "**DEFERRED** — the silent-worker watchdog (already a pending residual) is the systemic fix for the
+   gas/sfi 'VM RUNNING but work-process silent' class." **Not yet identified** — no separate successor plan exists; this
+   is tracked as this same plan's own open `- [ ]` [SCRIPT] P2 todo (line ~1724), Target repo: deployment-service. It
+   remains this plan's responsibility until shipped; grepping `plans/active/` and `plans/epics/` found no other plan
+   that has picked up the "silent-worker watchdog" item.

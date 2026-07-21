@@ -394,3 +394,22 @@ per MTDS consolidation ruling.)**
       `rollout-workflow-templates`/the QG-base propagation. Provenance: UAC quickmerge 2026-06-09 STAGE 3 block. Target
       repo: `unified-trading-pm` (`scripts/quality-gates-base/base-library.sh`). **(MIGRATED FROM:
       `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+## Deferred work — migrated to:
+
+This plan carries 5 bare `DEFERRED` mentions, all in the `macro_econ_adapter_scaffolds_2026_06_09.md` migrated-in block.
+Re-audited 2026-07-21:
+
+- **4 items** (`altdata` asset_group home decision; honest-coverage-gate registration; MTDS handler/CLI wiring; codex
+  doc update) form one dependency chain, all explicitly gated on the `[OPERATOR-DECISION] P1` item directly above them
+  ("`altdata` home — revive `altdata` as a real `asset_group` vs model macro as a SHARED cross-asset axis"). Searched
+  `plans/active/` + `plans/epics/` for any plan that has since picked up the `altdata` asset_group decision or the macro
+  adapter GCS-write wiring — none found. **Not yet identified** — these remain blocked on the operator ruling cited
+  inline; this plan (post-migration from the archived `macro_econ_adapter_scaffolds_2026_06_09.md`) is the current owner
+  until that ruling lands.
+- **1 item** ("PM-template gap: `base-library.sh` QG writes `.qg_content_sentinel` but `quickmerge.sh --agent` verifies
+  `.qg_last_passed_sha`") — investigated the live file: `scripts/quality-gates-base/base-library.sh` (this repo)
+  **already writes `.qg_last_passed_sha` on a full green run** (see the "SENTINEL CONTRACT (parity with base-service.sh,
+  WS-L #1014)" block, ~line 1467-1484) — the exact fix this item describes has landed separately. **Already resolved** —
+  the checklist item text is stale (left un-flipped by whoever shipped the sentinel-parity fix); no successor plan
+  needed, no further code action required.

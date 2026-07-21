@@ -467,10 +467,11 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
       **Confirmed by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
 - [x] ✅ [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the
       get*input_bucket bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead
-      of `-test`. mtf's writer path doesn't honor
-      `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way     delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED**     features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per     asset_group via`get_data_sink(bucket=...,
-      routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest
-      share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
+      of `-test`. mtf's writer path doesn't honor `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way
+      delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED**
+      features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per
+      asset_group via`get_data_sink(bucket=...,     routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket`
+      uses the same resolver so parquet + manifest share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
 - [x] ✅ [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`,
       `tf_rr_*`) + `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no
       source). Diagnose whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance:
@@ -694,3 +695,18 @@ zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_R
 - Composes with HARD RULE _Data Pipeline Correctness Is The Heartbeat_ (the WRITE half is the other half of honest
   coverage; an un-emitted manifest row on a real feature write is the same class of divergence as a phantom `captured`).
 - `onchain`/`sports` reads are the reference manifest-driven model; do not regress them when adding the shared harness.
+
+## Deferred work — migrated to:
+
+Two bare `DEFERRED` mentions, re-audited 2026-07-21:
+
+- **`[FINDING-C]` `_emit_group_policies` ordering bug** ("**DEFERRED** — add to `[FINDING-B]` fix scope when group-level
+  isolation is implemented") — cross-checked against the rest of this same doc: the identical root cause
+  (`svc.shutdown()` tearing down event logging before `_emit_group_policies`/completion events) was fixed later in this
+  same plan, **features-service@a70e89fb** ("shutdown → outer finally", confirmed by re-run reaching clean shutdown for
+  all 38 instruments). **Already resolved in-place** — the `[FINDING-C]` entry itself was left un-updated when the fix
+  landed; no external successor is needed.
+- **BITGET-SPOT silent-skip honest-absence gap** ("Tracked as **DEFERRED** below in Temporary states") — has an explicit
+  named successor in this doc's own "Temporary states + their canonical follow-up plans" table:
+  **`features_and_ml_master`** Phase 3 (honest-absence recording for mtf) owns emitting
+  `empty_confirmed(NO_INPUT_AVAILABLE)` when `_load_and_join` returns `None`.

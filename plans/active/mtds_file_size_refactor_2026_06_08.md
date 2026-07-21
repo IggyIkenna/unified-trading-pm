@@ -186,3 +186,12 @@ byte-identical output before/after).
   (all above the audited 3×/5×/7.8× targets). Shas: market-data-processing-service@c7e0437/85060ff/eee8433/2dd13db,
   unified-trading-pm@68bf2c85c/be1f7633c. The remaining M-2 scope (file-size splits, adapter-protocol pandas→polars,
   coverage/QG residuals) stays parked/⏸️ DEFERRED — unaffected by this fold.
+
+## Deferred work — migrated to:
+
+**Not yet identified** — this whole plan (`status: paused`, tagged `deferred`) IS the designated survivor/receptacle for
+the parked MTDS/MDPS file-size-splits + pandas→polars adapter-seam + coverage/QG-residual scope (per the top-of-doc "⏸️
+DEFERRED 2026-06-26 (operator) — non-essential, parked" banner). There is no external successor to point to because the
+work was never migrated elsewhere — it stays captured here so nothing is lost, and resumes in-place (this same plan)
+once the MTDS commit-quality-boundary needs restoring or the operator reprioritises it. This plan itself remains the
+owner.

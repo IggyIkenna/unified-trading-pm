@@ -290,7 +290,7 @@ normally.
       defect, no work lost). Shipped via PR #1301 (live-defi-rollout→main, auto-merge). The remaining 19 genuinely
       bare/mixed plans are the corrected, precise list for the next todo below (its original 30-item list is now stale
       by 11 entries). (repo: unified-trading-pm)
-- [ ] [DOCS] P3. The remaining 19 active plans (re-classified — see the checker-fix todo above, which corrected the
+- [x] [DOCS] P3. ✅ The remaining 19 active plans (re-classified — see the checker-fix todo above, which corrected the
       original 30-item list down to these 19 confirmed-genuine hits; the other 11 were incidental compound-word/
       filename false positives, now cleared) have a genuine bare/unqualified `DEFERRED` mention needing real per-plan
       judgment (add a `DEFERRED-<QUALIFIER>` tag if a `f6df716e7`-style qualifier honestly applies, or a
@@ -307,4 +307,19 @@ normally.
       `migration_verification_orphan_safety_2026_06_10`, `mtds_file_size_refactor_2026_06_08`,
       `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`,
       `prediction_venue_perps_and_live_clob_depth_2026_06_20`, `sports_manifest_canonicalisation_2026_06_01`. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — `unified-trading-pm@0c51e381a` + `@885a1410b` + `@b3c486381` + `@5225b4a08` (4 parallel
+      sub-agent batches of 5/5/5/4 plans, no file overlap). Real per-plan judgment throughout, no blanket-closing —
+      banner types used per plan: **named-successor** (a real active plan/epic identified, e.g.
+      `sports_manifest_canonicalisation_2026_06_01` → `data_completion_to_100_all_ag_2026_06_21` after tracing through
+      an archived intermediate; `data_feed_sla_registry_and_active_self_healing_2026_06_19` →
+      `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03`), **resolved-in-place** (the DEFERRED text described a finding
+      whose fix had already shipped later in the SAME doc — several hits in `data_completion_to_100_all_ag_2026_06_21`
+      and `features_service_e2e_pipeline_test_2026_05_26`), **qualifier-tag-pointer** (the established `f6df716e7`
+      precedent banner, for plans genuinely dominated by formal `DEFERRED-<QUALIFIER>` tags, e.g.
+      `master_to_live_defi_2026_05_23`'s ~100+ tagged hits; `prediction_venue_perps_and_live_clob_depth_2026_06_20`'s
+      `DEFERRED-CROSS-DEP`), and **not-yet-identified** (honest "no successor exists yet, this plan remains the owner"
+      for genuinely unowned items, e.g. `mtds_file_size_refactor_2026_06_08`,
+      `migration_verification_orphan_safety_2026_06_10`) — never fabricated a successor that doesn't exist. Verified via
+      `.venv/bin/python scripts/quality_gates/check_plan_discipline.py --strict`: **0 violations** (down from the
+      19-plan baseline; re-baselined 19 → 0 via `--baseline-write`, closing this entire issue doc — both original todos
+      plus every P3 follow-up are now done). (repo: unified-trading-pm)

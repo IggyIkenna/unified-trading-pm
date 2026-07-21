@@ -1366,3 +1366,14 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
         the live consolidator (`*/1` re-derives the consolidated index) or live writers → also needs the quiet window.
         Run order when resumed: drain → consolidate+snapshot → mtds `--apply` (captured cells) + manifest-only re-stamp
         (empty cells) → re-consolidate → re-verify the distribution is uniform v9.
+
+## Deferred work — migrated to:
+
+**Not yet identified** — the sole hit (line ~1352, "**Re-stamp the legacy schema_version tails**... DEFERRED — operator
+2026-06-22: wait for the active backfill fleet to finish, then run in a quiet window") is a real, operator-acked
+deferral (operator explicitly said wait for the active backfill fleet to drain before running), but no separate
+successor plan exists or is needed — it remains this plan's own open `- [ ]` [DATA] P3 todo. The named "Trigger to
+resume" condition (the `cefi-hyperliquid-2023..2026`, `mdps-backfill-tradfi`, `mdps-sports`, and `mtds-dex-pools-*`
+backfill VMs reaching STOPPED) was already observed true as of the 2026-06-22 characterisation, but the actual `--apply`
+run (gated on a pre-migration drain + operator sign-off, since it is irreversible) has not yet been executed. This plan
+remains the owner until that run ships.
