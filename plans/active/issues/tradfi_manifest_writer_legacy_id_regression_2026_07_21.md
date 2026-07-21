@@ -94,7 +94,12 @@ active CME backfill is writing into. So the CME futures/options backfill fleet w
 **Deliberately left unscoped by the fix** (flagged by the fixing agent, not guessed): FX `spot_pair` and other tradfi
 cash types (`currency`/`bond`/`commodity`/`cds`) share the identical mechanism but route through a different UAC builder
 branch (`_build_tradfi_cash` vs `_build_cefi_simple`) that wasn't verified — left untouched rather than risk a wrong
-mapping on a live writer. Population size TBD — check before considering this closed.
+mapping on a live writer. **Checked live (2026-07-21T17:05Z): small, low-priority, DIFFERENT bug.** Only 3,126 total
+rows (3,115 UPPERCASE `SPOT_PAIR` from the 2026-07-18 fix + 11 lowercase written today — negligible ongoing volume, not
+a live-regression driver like equity/etf). But the "canonical" 3,115 rows are themselves broken a different way:
+`instrument_id` is either the literal string `"ticks"` or blank, not a real derived id (`FX:SPOT_PAIR:KRW-USD`-shape) —
+looks like a bundle-style `ticks.parquet` filename leaking into the id field rather than a per-pair id ever being
+derived. Low priority given the tiny volume; needs its own small fix when convenient, not urgent.
 
 **⚠️ Fix propagation gap (found post-ship, 2026-07-21T16:40Z)**: shipping the code fix does NOT retroactively patch
 already-running VM processes (tarball-deployment model — a VM fetches its code tarball once at boot, never re-fetches).
