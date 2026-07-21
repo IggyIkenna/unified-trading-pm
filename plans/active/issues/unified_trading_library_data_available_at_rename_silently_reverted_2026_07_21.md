@@ -98,10 +98,24 @@ that would break if it's removed (grep first), and add a regression test asserti
 
 ## Todos
 
-- [ ] [CODE] P1. Re-fix `unified_trading_library/instruments_write_gate.py::DEFAULT_AS_OF_COLUMNS` — `data_available_at`
-      → `available_at` (re-apply the `94e43e8c` change reverted by `988ab287`). (repo: unified-trading-library)
-- [ ] [CODE] P1. Re-fix `unified_trading_library/point_in_time.py` — default `timestamp_col` + docstrings, same rename.
-      (repo: unified-trading-library)
+- [x] ✅ [CODE] P1. Re-fix `unified_trading_library/instruments_write_gate.py::DEFAULT_AS_OF_COLUMNS` —
+      `data_available_at` → `available_at` (re-apply the `94e43e8c` change reverted by `988ab287`). (repo:
+      unified-trading-library) — `unified-trading-library@9064dd2a`: `DEFAULT_AS_OF_COLUMNS` renamed back to
+      `available_at`; existing tests updated (`test_instruments_write_gate.py`).
+- [x] ✅ [CODE] P1. Re-fix `unified_trading_library/point_in_time.py` — default `timestamp_col` + docstrings, same
+      rename. (repo: unified-trading-library) — shipped in the SAME commit `unified-trading-library@9064dd2a` (bundled
+      with todo 1 above): `validate_pit_safety`'s default `timestamp_col` + both docstring references renamed to
+      `available_at`; existing `TestValidatePitSafety` tests updated to construct DataFrames with the new default column
+      name. That commit also fixed the QG red this rename surfaces on any commit to this repo (verified pre-existing,
+      unrelated to the rename): registered `cicd-events` in `_KNOWN_YAML_ASYMMETRIES`
+      (`tests/cloud_interface/unit/test_bucket_naming.py`) for the intentional GCP-only asymmetry from
+      `deployment_alerts_ingestion_completeness_2026_07_20.md` todo 5. **Follow-up gap found + closed**: that fix didn't
+      cover the THIRD `cloud-providers.yaml` mirror — `unified-trading-pm@a97a2728e`'s sibling,
+      `unified-trading-pm/configs/cloud-providers.yaml`, was still missing the `cicd-events` entry, which
+      `unified-trading-library`'s `test_sibling_copy_matches_packaged_uac_copy[unified-trading-pm]` regression pin
+      catches (reads the PM sibling copy live off disk, not a committed snapshot) — added it here,
+      `unified-trading-pm@b3ab78b00` (same entry + comment as the other two copies). `quality-gates.sh` green in
+      unified-trading-library (6638 tests) with this PM-repo fix present.
 - [ ] [CODE] P2. Add a regression test asserting `DEFAULT_AS_OF_COLUMNS` / the default `timestamp_col` use the canonical
       `available_at` name, not the legacy `data_available_at`, so a future stale-merge/rebase can't silently reintroduce
       this class of bug. (repo: unified-trading-library)
