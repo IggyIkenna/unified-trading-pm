@@ -112,12 +112,40 @@ Two independent fixes, either sufficient to close the immediate ship-blocking bu
       `prettier --write     --ignore-unknown` to `npx -y prettier@3.9.5 --write --ignore-unknown` (pinned, matching
       quickmerge.sh's own pin), avoiding the 97-file repo-wide reformat blast radius of bumping the `prettier`
       devDependency itself. QG green, shipped via quickmerge --agent.
-- [ ] [INFRA] P2. Investigate why `core.hooksPath=.husky/_` routes around the prek-installed `.git/hooks/pre-commit`
-      (which carries the correct `prettier-autostage` 3.9.5-floor guard) on this clone (repo: deployment-ui) — either
-      make husky's hook delegate to `prek`/`pre-commit run` instead of calling `lint-staged` directly, or confirm this
-      dual-hook-manager split is intentional and document why lint-staged (not prettier-autostage) is meant to be
-      authoritative for UI repos in `codex/06-coding-standards/quality-gates-ui-template.sh`'s SSOT doc.
+- [x] ✅ [INFRA] P2. Investigate why `core.hooksPath=.husky/_` routes around the prek-installed `.git/hooks/pre-commit`
+      (which carries the correct `prettier-autostage` 3.9.5-floor guard) on this clone (repo: deployment-ui) —
+      deployment-ui@3a71ffe. **Real root cause differs from the original framing above**: `.git/hooks/pre-commit` isn't
+      what's dead — both husky (via its npm `prepare` lifecycle script) AND prek/pre-commit-framework write to the SAME
+      file, `.husky/_/pre-commit`, once `core.hooksPath=.husky/_` is set. Whichever tool's install step runs LAST for a
+      given clone overwrites the other's file there — a genuine, non-deterministic race, not an intentional split.
+      Confirmed via a research pass across `unified-trading-pm/scripts/`: `setup-tab-worktrees.sh`'s
+      `install_prek_precommit_hook` (clone-time), `check-precommit-versions.py`'s `run_precommit_install --apply`, and
+      any ad-hoc `prek install`/`pre-commit install` all write into whatever `core.hooksPath` currently resolves to with
+      **no husky-awareness guard** — only `slot-cron-ff-pull.sh`'s periodic self-heal (2026-07-08 fix) skips
+      `*/.husky/*` hooksPath dirs; the other three install paths do not. The canonical UI pre-commit template itself
+      (`scripts/pre-commit-templates/ui.pre-commit-config.yaml:4`, "Setup: `pre-commit install --install-hooks`") still
+      tells operators to run the very install that clobbers husky, contradicting the cron-heal's husky-deference. **This
+      is worse than the prettier-only framing**: when husky's shim wins the race, git skips not just the
+      prettier-version floor but EVERY fleet canonical check — branch-drift, commit-identity, gitleaks secret-scanning,
+      conventional-commit validation — running only `lint-staged` instead. Fix: rewrote the tracked `.husky/pre-commit`
+      (the file husky's dispatcher actually execs when it wins) to delegate to `prek run --hook-stage pre-commit`
+      (falling back to `pre-commit run`, then `lint-staged` only if neither binary is on PATH) — so whichever install
+      won the race, the actual checks that fire are always the fleet's canonical set. Verified locally: staged a file,
+      ran `.husky/pre-commit` directly — it invoked prek's `check-branch-drift` hook (correctly failed on real drift),
+      proving delegation works instead of silently running lint-staged. QG green, shipped via quickmerge --agent. Did
+      not touch the `codex/06-coding-standards/` SSOT doc naming lint-staged as authoritative — this plan's
+      `drift_direction:     advance-code` scopes this todo to code, not codex; the fleet-wide setup-script race (this
+      finding's actual root cause) is out of scope for a per-repo fix and is exactly what todo 3 below should cover.
 - [ ] [INFRA] P3. Audit other UI repos (`unified-trading-system-ui`, `agent-orchestrator`'s dashboard package, any other
       repo with a `package.json` + husky) for the same `core.hooksPath` vs prek dead-hook split (repo:
-      unified-trading-pm, cross-repo scan) — if it's fleet-wide, fix it once in the shared setup script rather than
-      per-repo.
+      unified-trading-pm, cross-repo scan) — if the per-repo `.husky/pre-commit` there still calls bare
+      `npx lint-staged` (not yet delegating to prek per todo 2's fix), apply the same delegation fix. **Also fix the
+      fleet-wide install-order race at its 3 real sources** (found investigating todo 2, repo: unified-trading-pm): (1)
+      `scripts/dev/setup-tab-worktrees.sh`'s `install_prek_precommit_hook` (~line 395-400) and (2)
+      `scripts/manifest/check-precommit-versions.py`'s `run_precommit_install`/`--apply` path (~line 225-347) both write
+      to whatever `core.hooksPath` resolves to with zero husky-awareness — port `slot-cron-ff-pull.sh`'s existing
+      2026-07-08 guard (`case "${_hooks_dir}" in */.husky/*) continue;; esac`, ~line 700) into both so they skip
+      husky-managed repos instead of clobbering `.husky/_/pre-commit`; (3)
+      `scripts/pre-commit-templates/ui.pre-commit-config.yaml:4`'s `# Setup: pre-commit install --install-hooks` comment
+      contradicts that guard (it tells operators to run the very install that clobbers husky) — update it to note the
+      husky delegation pattern instead for UI repos.
