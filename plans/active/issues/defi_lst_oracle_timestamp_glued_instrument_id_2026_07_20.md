@@ -112,3 +112,50 @@ grain differs (some write one file per protocol-chain, some per-instrument), so 
 a shared helper, then one migration pass — a focused project, not a marathon-tail edit. The minimal-safe first step
 (drop `ts_label` → stable `{protocol}_{chain}` per date, idempotent overwrite) removes the glued timestamp everywhere
 but keeps the current (coarse) grain; the per-instrument sharding is the finer follow-up.
+
+## MIGRATION IN FLIGHT (2026-07-21) — re-shard DONE-logic PROVEN + running; RESUME = rebuild manifest + verify
+
+**Operator ruling 2026-07-21: fix write path + re-migrate. Operator also asked whether the pool id is canonical.**
+ANSWER (verified against the builder + live data): the canonical symbolic pool id IS the human
+`venue:instrument_type:base-quote-fee` — e.g. `UNISWAP_V3-ETHEREUM:POOL:COMP-WETH-100` (filename
+`COMP-WETH-100.parquet`, `token_a=COMP token_b=WETH fee_rate_bps=10000`), produced by
+`unified_api_contracts/canonical/crosscutting/defi.py::_symbolic pool id`. `…:POOL:0x<addr>` (Balancer) and
+`…:LENDING:<uuid>` (Kamino) are the builder's INTENDED FALLBACK ("the symbol IS the pool address — no pair/fee encoded —
+always non-empty + reversible") for pools/markets whose tokens can't resolve to a clean symbol. So the DATA's per-row
+`instrument_id` column is ALREADY canonical (human where resolvable, address/UUID fallback otherwise). The DEFECT is
+only the coarse glued FILENAME (`{protocol}_{chain}_{capture_ts}`).
+
+**Measured true scale (from the live `_index`):** 1,755 captured glued coarse files → **406,724 per-instrument groups**,
+BUT R3 already created MOST of the per-instrument twins from other coarse files for the same (venue,chain,date) — so the
+migration is **mostly idempotent renames + ~a few thousand genuinely-new twins** (the Solana lending/lst R3's matcher
+missed: `kamino_lending_SOLANA_`, `lst_rates_marinade_` — the extra `_lending_`/`_rates_` segment breaks the
+`{venue}_{chain}_` prefix). Measured mid-run: present≈201k, new twins≈6.5k, retired≈473.
+
+**The re-shard (PROVEN end-to-end via an oracle_prices canary):** for each glued coarse file → group by the
+already-canonical `instrument_id` column → write one `{sanitize_defi_symbol(SYMBOL)}.parquet` per instrument (reusing
+`migrate_defi_batch_to_per_instrument.leaf_for_instrument_id`) → retire the coarse original to
+`_migrated_{orig}.parquet` (proof-gated: only after every attributable group has a twin). Idempotent (exists()-gated).
+Canary VERIFIED: `oracle_prices_1782388800` → 7 twins `BTC_USD.parquet`/`ETH_USD.parquet`/…
+
+- original retired. Harness: `market-tick-data-service/scripts/one_offs/reshard_glued_defi_ids_2026_07_21.py` (local,
+  index-driven, decoupled 16-reader/64-writer pool; NOT the R3 tool because R3's matcher misses the Solana naming — this
+  is index+column-driven so it handles all 1,755).
+
+**RESUME (fresh session):**
+
+1. Confirm the apply finished (log `reshard_apply2.log` SUMMARY, or re-run the harness `--apply` — idempotent, skips
+   present + already-`_migrated_`).
+2. **Rebuild the manifest** for the affected data_types so the glued ids leave the index and the twins enter:
+   `rebuild_defi_manifest --bucket market-data-tick-defi-prd-central-element-323112 --start-date 2020-01-01 --end-date 2026-12-31`
+   (default `--reemit-absence` OFF, mtds@05ad49f7). The `_migrated_` originals are skipped by the Defect-A `_`-prefix
+   guard.
+3. **VERIFY 0 glued ids**: re-scan the fresh `_index` for `instrument_id` matching `(_\d{8}_\d{6}|_\d{10})$` with
+   capture_status=captured → must be 0.
+4. **Delete the `_migrated_` markers** (operator-authorized deletes; proof-gated: only where the per-instrument twins
+   exist) — cleanup.
+
+**FORWARD write-path fix (still open):** the ~6 handlers (lending_indices/lst_rates/oracle_prices/liquidations/
+dex_swaps/dex_pool_state Solana paths) still have a residual coarse `file_name=f"{...}_{ts_label}"` write alongside
+their `write_defi_rows` per-instrument path (the compound_v3 file dated 2026-07-20 proves it). Route those residual
+paths through `write_defi_rows` (or drop the `_{ts}`) so no new glued files appear when capture resumes. DeFi capture is
+currently STOPPED, so no new ones are being written now.
