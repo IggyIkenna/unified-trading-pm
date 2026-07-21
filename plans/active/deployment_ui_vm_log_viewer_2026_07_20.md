@@ -88,15 +88,19 @@ source:
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Writer-side final snapshot** (decision 1) — on VM completion write one durable copy of `run.log`
-      to a fixed, deterministic path. **Locations (verified — note the completion hook lives in UTL, not
-      deployment-service):** add a new path helper `vm_run_log_final_uri(vm_name, project_id)` →
-      `gs://deployment-scripts-{project}/log-archive/final/{vm}/run.log` (no date in the path — that is the whole point;
-      no TTL, plain replace) alongside `vm_log_stream_uri`/`vm_log_archive_uri`/`vm_run_log_rolling_uri` in
-      **`unified-trading-library/unified_trading_library/deployment_registry.py`**. Invoke the write from the completion
-      path: `HeartbeatDaemon` in `unified-trading-library/.../lifecycle/daemon.py` (terminal-event emission ~L344),
-      driven by `deployment-service/deployment_service/vm/heartbeat_cli.py:389-406`; also cover the SIGKILL fallback in
-      `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh:313-339` so a hard-killed daemon still leaves a final copy.
+- [x] ✅ [BACKEND] P0. **Writer-side final snapshot** (decision 1) — on VM completion write one durable copy of
+      `run.log` to a fixed, deterministic path — `unified-trading-library@af1299d5` + `deployment-service@815e8f3`.
+      Added `vm_run_log_final_uri(vm_name, project_id)` →
+      `gs://deployment-scripts-{project}/log-archive/final/{vm}/run.log` (no date, no TTL, plain replace) in
+      `unified_trading_library/deployment_registry.py`. `HeartbeatDaemon` gained a `final_log_uri` param +
+      `_write_final_log_snapshot()`, called from `_archive_terminal_state()` (terminal-event emission) alongside the
+      existing interval-uploader final flush — best-effort, shard-level-isolated. Wired in
+      `deployment-service/deployment_service/vm/heartbeat_cli.py` via
+      `final_log_uri=vm_run_log_final_uri(vm_name, project_id=config.gcp_project_id or None)`. SIGKILL fallback in
+      `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh` now also writes the final snapshot inline (bucket derived
+      from `GCS_LOG_URI`, matching the Python helper's shape) so a hard-killed daemon still leaves a final copy. Unit
+      tests added in both repos (`test_deployment_registry.py`, `test_daemon.py`, `test_vm_event_emission.py`); both
+      repos' `quality-gates.sh` green.
 - [ ] [BACKEND] P0. **Read-path resolution** (decision 2) — deployment-api tries `vm-logs/{vm}/run.log` first for any VM
       (regardless of `completed_at`); on miss, falls back to the final-snapshot path (`vm_run_log_final_uri`, from the
       writer todo above — `sequential: true` guarantees it lands first). Removes the broken `completed_at[:10]`-keyed
@@ -149,6 +153,10 @@ source:
   the writer (durable single final snapshot on completion, no more date-guessing), read `vm-logs/` first regardless of
   completion status (14-day TTL from last write, not from start), keep the events panel but rename it honestly, add a
   genuinely new run.log panel, and use a signed URL for download.
+- **2026-07-21** (slot 3) — Shipped the writer-side final snapshot (todo 1): `vm_run_log_final_uri()` helper +
+  `HeartbeatDaemon._write_final_log_snapshot()` in `unified-trading-library@af1299d5`, wired into `heartbeat_cli.py` +
+  the `vm-exec-with-gcs-tee.sh` SIGKILL fallback in `deployment-service@815e8f3`. Read-path resolution (todo 2) can now
+  consume this fixed path instead of the broken date-guessing rolling lookup.
 
 ## Codex SSOTs
 
