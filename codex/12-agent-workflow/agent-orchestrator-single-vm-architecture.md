@@ -130,16 +130,19 @@ autospawn machinery below governs.
 These never come from `backlog.yaml`. They are triggered by the keeper, by external events (GHA webhooks), or by timers,
 and most are one-shot or scheduled.
 
-> **⚠️ Completion-contract change in flight (2026-07-21 operator decision →
+> **✅ Completion-contract LANDED 2026-07-21 (`agent-orchestrator@0d510e9`; operator decision →
 > [`ao_uniform_agent_liveness_contract`](../../plans/active/ao_uniform_agent_liveness_contract_2026_07_20.md)).** The
 > prior model — _one-offs never `/done`; cleanup is the pruner/reaper's job on session death_ — was proven broken
 > 2026-07-21: **a finished one-off does not die.** Saying "EXIT" in a role doc only ends the Claude _turn_; the tmux
 > session lingers at an idle `❯` prompt, `WorkerLivenessKicker` re-nudges it, `has_session()` stays True, and every
 > session-death-gated reaper is blind → the AgentRow stays `active` forever and pins its slot (15 such zombies pinned
-> 15/16 slots → the reconciler `503 no free slot`). **Target contract:** a `one_shot`/`scheduled` agent, on completing,
-> POSTs an explicit **role-aware `/done`** (task-less for a task-less one-off) → the backend archives it
-> `lifecycle-complete`, frees the slot, and flags it so the Kicker stops nudging → the agent then stops → the next reap
-> cleans the session. The rows + § Worker-lifecycle Reap below still describe the CURRENT pre-fix code.
+> 15/16 slots → the reconciler `503 no free slot`). **The contract (NOW LIVE):** a `one_shot`/`scheduled` agent, on
+> completing, POSTs an explicit **role-aware `/done`** (task-less for a task-less one-off, `one_shot_complete=true`) →
+> the backend archives it `lifecycle-complete`, frees the slot → the agent then stops → the reap cleans the session.
+> **Landed `agent-orchestrator@0d510e9`:** A1 (`/done` task-less path) + A2 (5 role docs) + A3 (boot-prompt STEP 3) + B1
+> (`/boot` holds a one-off `working`) + C1 (the `f641968`/`1e7fec0` idle-scanner carve-outs deleted). The cicd/
+> plan_health rows above still name the historical "EXITS without /done" for context; the § Worker-lifecycle Reap below
+> is updated to the live behavior.
 
 | Agent                     | Kind / lifecycle                    | Trigger                                             | Notes                                                                                                                                                                                           |
 | ------------------------- | ----------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -175,13 +178,16 @@ dead worker's task or process stranded.
 - **Death**: a dead worker with in-flight dirty WIP RESUMES (`--resume`, bounded by `ORCHESTRATOR_RESUME_MAX_ATTEMPTS`);
   dead + clean requeues. A `paused` slot's task is NEVER released (operator intent). Governed by
   `server/resume_lifecycle.py` + `server/tmux_pruner.py`.
-- **Reap**: _Current code:_ Class-B one-shot/scheduled agents never `/done`; the TmuxPruner (on session death) and the
-  reaper (`reap_orphan_agents`) archive them `lifecycle-complete`; sessionless terminal-lifecycle agents reap on a short
-  grace (`one_shot_stale_grace_minutes`, default 15), not the 6h persistent grace. **⚠️ This model is being replaced
-  (2026-07-21) — it assumes the agent becomes _sessionless_ on completion, which it does not** (see the Class-B contract
-  banner above): a finished one-off lingers session-alive, so the session-death-gated pruner/reaper never fire and it is
-  never reaped. Target: an explicit role-aware `/done` archives + frees + stops-the-nudge, then the agent stops and the
-  next reap cleans the now-dead session.
+- **Reap**: **Live behavior (as of `agent-orchestrator@0d510e9`, 2026-07-21):** a Class-B one-shot/scheduled agent POSTs
+  a task-less role-aware `/done` (`one_shot_complete=true`) on completion → the backend archives it
+  `lifecycle-complete` + frees the slot; the reaper then cleans the now-idle slot's lingering session. It is `working`
+  throughout its run (claim sets it; B1 stops `/boot` resetting it), so the idle-scanning reapers skip it by
+  construction (the `f641968`/`1e7fec0` carve-outs are DELETED — C1). The TmuxPruner (on session death) and
+  `reap_orphan_agents` still archive `lifecycle-complete` as a backstop; sessionless terminal-lifecycle agents reap on a
+  short grace (`one_shot_stale_grace_minutes`, default 15), not the 6h persistent grace. **The prior model** — never
+  `/done`, cleanup relies on session death — assumed the agent becomes _sessionless_ on completion, which it does not: a
+  finished one-off lingers session-alive, so the session-death-gated pruner/reaper never fire and it was never reaped —
+  the exact leak (15 zombies pinned 15/16 slots) the live contract above fixes.
 - **Account failover**: usage-cap / auth-failure evicts a slot off a dead/exhausted account onto a headroom account
   (resume-preserving where a `claude_session_id` exists). Health is a poller verdict, never a heartbeat inference. Full
   contract:
