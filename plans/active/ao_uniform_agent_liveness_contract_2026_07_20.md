@@ -167,6 +167,17 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
 - [ ] [DOC] P2. **Record the contract in codex and point the role docs at it.** This is a durable architectural rule, so
       its SSOT is a codex doc, not this plan. **Gate**: a codex doc describes the contract; every role doc references it
       rather than restating it; `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` links to it.
+- [ ] [BACKEND] P1. **Define the terminal transition for a task-less one-off — "finished ⇒ the process EXITS."**
+      (Discovered 2026-07-21 from the 15-agent JSONL post-mortem — see Progress Log 2026-07-21.) The contract as drafted
+      has NO trigger that stops a one-off: §2 says Class B "never `/done`" and heartbeats ≤10 min, and §6 assumes its
+      finish is "a real session death" — but nothing bridges the two, so a one-off that finishes its work keeps
+      idle-polling forever. Measured live: `cicd`/`plan_health` agents ran 5 min–**19 h** AFTER completing, never
+      reaped, each pinning a slot (the direct cause of the 07-21 reconciler `503 no free slot`). The live idle session
+      keeps `has_session()==True` and the heartbeat keeps `SlotRow.last_ping` fresh, so all six paths in §0 are defeated
+      at once. The role doc / `/boot` response for Class-B one-offs must make the agent EXIT the process after posting
+      its result (not loop-poll), so `has_session()` goes False and the existing pruner/reclaim archive it cleanly.
+      **Gate**: a finished one-off's `orch-slot-N` session dies on its own within one heartbeat interval of completion,
+      the AgentRow archives `lifecycle-complete`, and the slot returns session-less — observed live, no manual kill.
 
 ## Design note (todo 1) — the uniform agent-liveness contract
 
@@ -292,3 +303,44 @@ live fleet worker on both.
   verification of `f641968` (not new code) — if it confirms, this plan is a lower-priority de-dup refactor (as the plan
   itself anticipated). Left `status: draft`; the flip-to-active gate is now that one live observation, per the ✅ UPDATE
   section above. See `ao_scheduled_agent_hygiene_2026_07_20.md` P0 for the full evidence trail.
+- **2026-07-21 — LIVE FLEET CLEAR + 15-agent JSONL post-mortem (slot-16 interactive).** The fleet had saturated: 15 of
+  16 slots pinned by zombie typed-agent records (9 `cicd` one_shot + 6 `plan_health` scheduled), all `status=active`,
+  which produced the reconciler's 07-21 `503 no free slot`. Cleared them live by killing the 15 lingering `orch-slot-N`
+  sessions; the backend's own `tmux_pruner` archived all 15 `lifecycle-complete` within 45 s and recycled the slots
+  (registry 16 → 3 non-archived: main + review [auto-relaunched] + one fresh cicd escalation; `/health` 200). All 15
+  JSONLs preserved to scratchpad before the kill.
+  - **The post-mortem overturns the "one-off gets killed" framing for THIS class — the opposite happened.** Reading all
+    15 transcripts: **not one agent errored or crashed. Every one COMPLETED its task and then fell into an infinite
+    idle-poll loop instead of exiting.** cicd agents resolved their escalation (mostly "stale — CI already green, no fix
+    required") then polled `idle / new_task: null`; plan_health finished their sweep and did the same. Representative
+    endings — agt-412d4a: "Idle, no new task (**179th poll**), unchanged"; agt-896605: "I'm not going to keep
+    re-querying the same idle state — I've confirmed three times there's nothing dispatched"; agt-3526a5: "armed a
+    15-minute check-in rather than busy-polling." Runtimes AFTER completion: cicd 5 min–18.5 h, plan_health **16–19 h**
+    (agt-fac158 07-20 09:13 → 07-21 04:30, 499 assistant turns). These agents were **never reaped — they survived,
+    heartbeating, for up to 19 h.**
+  - **Why they were immortal — the empirical correction to §6.** §6 asserts a one-off's "finish is a real session death
+    that the pruner archives cleanly." **That assumption is FALSE for this class.** The one-off finishes its work but
+    the claude PROCESS never exits — it sits at an idle `❯` prompt and keeps posting `/progress`. Consequences, all
+    measured live: (a) the heartbeat advances `SlotRow.last_ping` (§4) but NOT `AgentRow.last_ping` — verified: slot-2
+    `last_ping=07-21 04:30` (fresh) while its bound `agt-59e680.last_ping=07-20 09:58` (frozen at claim) — so the two
+    **silence** reapers (heartbeat-silent 15 min, working-stale 25 min) never fire, the slot looks alive; (b) the two
+    **idle-scanning** reapers are carve-out-exempted (`f641968`/`1e7fec0`) while the AgentRow is non-archived; (c)
+    `tmux_pruner` + `reap_orphan_agents` are `has_session==False`-gated → the live idle session means they never fire;
+    (d) `_reclaim_idle_lingering_sessions` — the ONE reaper built to kill lingering-finished sessions — is the same
+    reaper `f641968` disabled for typed agents, and because a one-off never `/done`s the carve-out cannot distinguish
+    finished from working, so it protects finished ones forever. **Net: a FINISHED one-off is immortal under the current
+    contract.** Proven the instant I killed each session — the pruner archived it in < 45 s (the cleanup path is
+    correct; it simply never receives the session-death signal).
+  - **The gap in the design (captured as the new P1 todo above).** The contract has no "**one-off is DONE → exit now**"
+    trigger: §2 says Class B "never `/done`" and heartbeats ≤10 min; §6 assumes the finish is a real session death;
+    nothing bridges them. The one-off heartbeats forever because nothing tells it to stop. Fix: the terminal transition
+    for a task-less one-off must be a real **process exit** after it posts its result.
+  - **Causal link — the reconciler 503 IS this bug's downstream (mode #1 ↔ mode #2).** The "survive-forever" mode
+    directly caused the dispatch starvation: accumulated zombies pinned 15/16 slots → `_pick_free_slot` (session-based)
+    found no session-less slot → `503 no free slot`. The plan's §0 "reconciler dies too early" and this "one-off
+    survives forever" are two symptoms of the same missing contract, and they feed each other — finished one-offs that
+    never exit starve the next one-off of a slot.
+  - **Benign latent state noted (not actioned):** the killed-slot orphan-reclaim (`worker_liveness_watchdog.py:636-655`)
+    only acts on `killed` slots whose session is still ALIVE; a `killed` slot whose session is GONE is left `killed`
+    until AutoSpawn reuses it (`autospawn.py:678/739` treat `killed`/`stale` as spawnable). Cosmetic on the dashboard,
+    not a dispatch blocker.

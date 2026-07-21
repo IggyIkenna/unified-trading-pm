@@ -1598,3 +1598,26 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   TRY_CAST only — it does NOT touch manifest data, the tick bucket, or the migrate/rebundle/recover scripts, so it
   composes cleanly with any concurrent manifest id-canonicalization that runs THROUGH this consolidator (the id work
   changes VALUES; this pins TYPES).
+
+---
+
+## Backfill drive — Progress Log (2026-07-21, autonomous session)
+
+Live MVP OHLCV backfill fills the migrated canonical structure (the Phase D data prerequisite). Fleet driven at cap 60,
+SPOT, per-VM shards.
+
+- **Shipped**: MVP def expanded (`uac@afa2dd46`→`afa2dd64`: +409 = VIX FUTURE / treasury INDEX / KRW / crypto
+  BTC-ETH-MBT-MET futures). CME crypto recognized-root fix (`uac@22e6a534`) — write-guard was quarantining
+  `underlying=BTC/ETH` (in MVP scope but not `is_recognized_tradfi_underlying`); VALIDATED on real infra (BTC writes
+  canonical `underlying=BTC`, futures-only). Launchers (`deployment-service@552d9de`): new CBOE-indices treasuries
+  launcher (Yahoo daily, 5 tenors, registered `tradfi-bf-` prefix) + CME crypto set futures-only (operator "no cme
+  option for btc and eth").
+- **Launched + healthy** (449M+ records, 0 real errors, 0 quarantine): NYSE g01-g05 (20) + NASDAQ g01-g02 (7) equities;
+  CME ES (SP500 fut+opt, canonical `underlying=SP500 options_chain`, the 69,822-option bulk) + GC + BTC + ETH; CFE VIX
+  (canonical, completing fast); FX KRW (already-captured, skip-if-fresh).
+- **Remaining (gated on slots at cap 60)**: CME MBT/MET + NQ/CL/SI/HG/NG/PA/PL; treasuries (8 VMs); NASDAQ g03-g05.
+- **FINAL STEP (gated on backfill completion)**: rebuild+promote served catalogue so `mvp=True` reflects +409 (currently
+  still old 70,930 set; new groups not yet flagged). Then Phase D gate: `/data-pipeline-check-mtds` + `-is` scoped
+  tradfi, all shards.
+- **Cleanup note**: CME launcher SSOT header cites archived `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` +
+  non-existent `tradfi_mvp_set_expansion_2026_07_21.md` — minor ref fix pending.

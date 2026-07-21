@@ -329,20 +329,11 @@ NOT AO and are deliberately out of scope here.
       (own-config vs ambient passthrough, documented in `config.py`). **Gate**: `OPERATOR` no longer written by
       bootstrap + a host with only `VM_ID` set resolves the same operator; keep-decisions recorded in ENV_VARS.md. **➡️
       MOVED 2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.**
-- [ ] [INFRA] P2. **Per-repo freeze-streak alert in `slot-cron-ff-pull.sh`.** Verified still absent: the dirty-streak
-      WARN fires only when EVERY repo in a sweep skips — a single frozen clone (the exact 2-day outage mode) stays
-      silent. Make the streak per-repo (repo X `[skip:dirty]`/`[skip:ff-failed]` N consecutive ticks → WARN naming the
-      repo). NOTE (operator 2026-07-18): the "UI surface" agent doc #7 mentioned is a DIFFERENT scope — the backlog
-      details pop-up (what tasks exist, their prerequisites, how tasks/plans connect) — and has not started (UI design
-      not final). It does NOT cover this, so this is a standalone task with no cross-agent dependency. **SURFACE
-      (operator 2026-07-18): NOT a Slack alert — feed the per-repo/per-slot freeze signal into the `deployment-ui` FLEET
-      TAB (where clone/slot status is already shown) so a SINGLE stuck repo on a SINGLE slot is obvious at a glance, and
-      improve that page to make the state easy to check on demand.** So the work spans two repos: (1)
-      `agent-orchestrator` `slot-cron-ff-pull.sh` emits a per-repo/per-slot freeze-streak signal (behind-origin N
-      consecutive ticks); (2) `deployment-ui` fleet tab renders it (per repo × slot, not one global flag). Source: doc
-      #7 todo 3 + operator 2026-07-18. **Gate**: a deliberately-frozen single clone shows as stuck in the deployment-ui
-      fleet tab within N ticks (naming the repo + slot). **➡️ MOVED 2026-07-20 to
-      `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.**
+- 🚫 **Per-repo freeze-streak alert (`slot-cron-ff-pull.sh` signal) + deployment-ui fleet-tab surface — DESCOPED
+  2026-07-21 (operator).** Handed to the agent already working on the deployment-ui fleet tab; owned there, no longer
+  our work. Was doc #7 todo 3 + operator 2026-07-18 (moved 2026-07-20 to `ao_fleet_infra_hardening` → then
+  `monitoring_control_plane_master`, both now cleared). Removed as a `- [ ]` todo so it no longer reads as open work
+  here; this line is the audit breadcrumb.
 - [ ] [INFRA] P2. **Fleet-wide frozen-clone sweep.** hk-host root repos measured behind=0 today, but the VM's SLOT
       clones + any other hosts were not swept. One pass: every host's root + slot clones, `HEAD..origin/LDR > 0` with
       untracked-only dirt → unfreeze (plain FF, per the doc's recipe). Source: doc #7 todo 4. **Gate**: sweep output

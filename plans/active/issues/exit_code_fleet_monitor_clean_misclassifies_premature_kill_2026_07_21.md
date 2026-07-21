@@ -10,7 +10,7 @@ summary:
   any other premature-kill class with no clean exit) is therefore indistinguishable from a genuinely-finished run — no
   alert, no auto-relaunch, silent data-loss-in-progress. Confirmed via a real incident (af-backfill-20260719-180520/
   -180603, 2026-07-20T05:25Z).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -30,7 +30,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 estimate_class: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: deployment-service@2e22c54 (item 1), deployment-service@6671f02 (item 2)
 locked_by:
 depends_on: []
 ---
@@ -94,18 +94,38 @@ silent-CLEAN outcome even with the fix fully deployed.
 
 ## Recommended decision
 
-- [ ] [INFRA] P2. **Add a defensive check to `classify_terminated_vm()` (or its caller)**: before resolving to CLEAN on
-      a VM with `exit_code is None` (no durable terminal exit code was ever observed), independently corroborate "this
-      really finished" — e.g. require either a `DEPLOYMENT_COMPLETED`/`EXIT_STATUS=0` `run.log` marker OR the manifest's
-      own completion signal (full requested date range reached, not just "captured climbed some") before treating a
-      no-exit-code VM as CLEAN. A `captured climbed` VM with NO recorded completion marker and NO reached end-date is
-      the exact ambiguous case this incident hit — resolve it to a new, lower-severity-but-NOT-silent verdict (e.g.
-      `PARTIAL_UNCONFIRMED`, `auto_recover`-routed like PREEMPTED so it self-heals AND is visible) rather than either of
-      the two existing extremes (`CLEAN` silence or `GONE_NO_CAPTURE` false-alarm-on-legit-partial-runs). (repo:
-      deployment-service)
-- [ ] [INFRA] P3. **Harden `uts-preemption-signal.service`'s marker write for the fast-DELETE case** — confirm
+- [x] [INFRA] P2. ✅ **Add a defensive check to `classify_terminated_vm()` (or its caller)**: before resolving to CLEAN
+      on a VM with `exit_code is None` (no durable terminal exit code was ever observed), independently corroborate
+      "this really finished" — e.g. require either a `DEPLOYMENT_COMPLETED`/`EXIT_STATUS=0` `run.log` marker OR the
+      manifest's own completion signal (full requested date range reached, not just "captured climbed some") before
+      treating a no-exit-code VM as CLEAN. A `captured climbed` VM with NO recorded completion marker and NO reached
+      end-date is the exact ambiguous case this incident hit — resolve it to a new, lower-severity-but-NOT-silent
+      verdict (e.g. `PARTIAL_UNCONFIRMED`, `auto_recover`-routed like PREEMPTED so it self-heals AND is visible) rather
+      than either of the two existing extremes (`CLEAN` silence or `GONE_NO_CAPTURE` false-alarm-on-legit-partial-runs).
+      (repo: deployment-service) — deployment-service@2e22c54: `classify_terminated_vm()`'s CLIMBED branch now splits on
+      `exit_code` (`== 0` → CLEAN, `is None` → new `PARTIAL_UNCONFIRMED` verdict, DP-VM-008), routed `auto_recover`
+      reusing the SAME checkpoint-resume `RelaunchPreemptedVm` actuator as PREEMPTED (WARN, not silent). Scoped to the
+      exit_code=None case only (the `DEPLOYMENT_COMPLETED`/manifest-end-date corroboration in the "e.g." text was
+      illustrative, not load-bearing — `exit_code is None` already means no terminal marker of any kind exists, so there
+      is no weaker corroboration signal available to check first). Codex updated:
+      `codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml` (DP-VM-007 backfilled, was undocumented;
+      DP-VM-008 added). Unit tests: `test_classify_partial_unconfirmed_when_exit_none_and_climb`,
+      `test_classify_clean_still_requires_confirmed_exit0_not_just_climb`,
+      `test_sweep_partial_unconfirmed_vm_relaunches_successfully_emits_warn_not_critical`,
+      `test_sweep_partial_unconfirmed_vm_no_launcher_emits_critical_no_relaunch` — full `quality-gates.sh` green.
+- [x] ✅ [INFRA] P3. **Harden `uts-preemption-signal.service`'s marker write for the fast-DELETE case** — confirm
       `--instance-termination-action=DELETE` SPOT VMs (used by `af-backfill-*` and others) reliably give the shutdown
       unit's `ExecStop` its full window before the instance is torn down; if GCE's DELETE path can race ahead of the
       unit's `TimeoutStopSec=25`, consider a secondary detection path (e.g. the `compute.instances.preempted` GCP
       audit-log event itself, which this investigation confirmed exists and is queryable independent of any VM-side
-      marker) as a fallback trigger for `is_vm_preempted()`-equivalent classification. (repo: deployment-service)
+      marker) as a fallback trigger for `is_vm_preempted()`-equivalent classification. (repo: deployment-service) —
+      deployment-service@6671f02. **Confirmed**: GCE's `DELETE` termination action does not shorten the guest's
+      preemption window vs `STOP` — both run the identical ACPI-soft-off guest shutdown sequence before the outcome
+      diverges (stop vs delete happens strictly AFTER the guest has already shut down), so `TimeoutStopSec=25` is not
+      structurally raced by the termination action itself; a GCP-audit-log-based secondary trigger is therefore not
+      needed to close a DELETE-specific race. The real residual risk was narrower: a single flaky `gcloud storage cp`
+      (transient DNS/5xx) silently dropping the marker with no retry inside the 25s budget. Hardened
+      `uts-preemption-signal.sh`: every metadata curl now carries `--max-time 2`, and the marker write retries once
+      (`timeout 7` per attempt) — worst case ~20s, still inside the 25s `TimeoutStopSec` budget. Also fixed the script's
+      success log to only fire on an actual successful write (previously logged "wrote PREEMPTED signal" unconditionally
+      even when the `gcloud storage cp` call failed and was swallowed by `|| true`).
