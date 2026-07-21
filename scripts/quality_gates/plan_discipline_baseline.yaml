@@ -1,84 +1,42 @@
-violation_count: 40
+violation_count: 19
 rule: plan-discipline
 source: "governance_qg_automation_gaps_post_cutover_2026_05_12.md \xA7 Group A"
 baseline_files:
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/cefi_ml_directional_continuous_live_2026_06_20.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/cefi_ml_directional_continuous_live_2026_06_20.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/qg_host_adaptive_resource_governor_2026_07_14.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/capability_wizard_and_manifest_2026_06_11.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/capability_wizard_and_manifest_2026_06_11.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/migration_verification_orphan_safety_2026_06_10.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/data_completion_to_100_all_ag_2026_06_21.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/migration_verification_orphan_safety_2026_06_10.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/sports_manifest_canonicalisation_2026_06_01.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/features_sports_service_consolidation_deploy_2026_07_15.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/data_completion_to_100_all_ag_2026_06_21.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/sports_manifest_canonicalisation_2026_06_01.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/features_sports_service_consolidation_deploy_2026_07_15.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/data_completion_defi_2026_07_15.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/ao_worker_lifecycle_dispatch_context_2026_07_21.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/ao_fleet_observability_kpis_2026_07_20.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/data_completion_tradfi_2026_07_15.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/mtds_file_size_refactor_2026_06_08.md
   - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/tradfi_consolidated_closeout_2026_07_18.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/infra_capture_and_devops_leftovers_2026_07_06.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/l2_book_microstructure_capture_2026_07_13.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/github_actions_cost_reduction_options_analysis_2026_07_15.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/distinct_values_noncanonical_audit_2026_07_20.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/prediction_canonical_identity_migration_2026_07_08.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/defi_consolidated_closeout_2026_07_18.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/ao_worker_lifecycle_dispatch_context_2026_07_21.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/ao_fleet_observability_kpis_2026_07_20.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/github_actions_ci_cost_reduction_2026_07_15.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/data_completion_tradfi_2026_07_15.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/sports_data_sources_canonical_completion_2026_07_13.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/mtds_file_size_refactor_2026_06_08.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/pipeline_mode_partition_migration_2026_06_01.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/artifact_pipeline_observability_2026_07_17.md
-  - rule: A-deferred-no-banner
-    path: /home/ubuntu/unified-trading-system-repos/.tabs/8/unified-trading-pm/plans/active/features_service_e2e_pipeline_test_2026_05_26.md
+    path: /home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/active/features_service_e2e_pipeline_test_2026_05_26.md
