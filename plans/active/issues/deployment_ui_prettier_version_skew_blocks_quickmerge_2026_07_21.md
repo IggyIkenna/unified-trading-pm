@@ -107,12 +107,11 @@ locked_by:
 
 Two independent fixes, either sufficient to close the immediate ship-blocking bug (do both for defense in depth):
 
-- [ ] [INFRA] P2. Pin `.husky/pre-commit`'s lint-staged prettier invocation to the same floor quickmerge.sh enforces —
-      either bump deployment-ui's `prettier` devDependency to `^3.9.5` (repo: deployment-ui) AND, in a SEPARATE
-      dedicated commit (never bundled with a feature diff), run `npx prettier@3.9.5 --write` across the whole `src/`
-      tree once to absorb the 97-file reformat cleanly, or change the `lint-staged` config's prettier invocation to
-      `npx -y prettier@3.9.5 --write --ignore-unknown` (pinned, matching quickmerge.sh's own pin) so lint-staged and
-      quickmerge always agree regardless of what's in `node_modules`.
+- [x] ✅ [INFRA] P2. Pin `.husky/pre-commit`'s lint-staged prettier invocation to the same floor quickmerge.sh enforces
+      — deployment-ui@3584da7. Changed `lint-staged`'s prettier target in `package.json` from unpinned
+      `prettier --write     --ignore-unknown` to `npx -y prettier@3.9.5 --write --ignore-unknown` (pinned, matching
+      quickmerge.sh's own pin), avoiding the 97-file repo-wide reformat blast radius of bumping the `prettier`
+      devDependency itself. QG green, shipped via quickmerge --agent.
 - [ ] [INFRA] P2. Investigate why `core.hooksPath=.husky/_` routes around the prek-installed `.git/hooks/pre-commit`
       (which carries the correct `prettier-autostage` 3.9.5-floor guard) on this clone (repo: deployment-ui) — either
       make husky's hook delegate to `prek`/`pre-commit run` instead of calling `lint-staged` directly, or confirm this
