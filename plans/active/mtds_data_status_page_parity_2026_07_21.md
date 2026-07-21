@@ -236,8 +236,15 @@ the same fixes.
       `mtds_honest_coverage_for_venue` → `venue_resolution.py`'s call site (all backward-compatible via a
       `None`-default, zero behavior change for any caller that doesn't pass it). New `_clip_dates_to_window` helper + 8
       new unit tests (existence-window clipping, fail-open on missing catalogue data, exact pre-fix-behavior parity when
-      `instrument_windows=None`) — 17/17 passing in the target test file. Full repo `quality-gates.sh` in progress; not
-      yet shipped via quickmerge.
+      `instrument_windows=None`) — 17/17 passing in the target test file. **SHIPPED — `deployment-api@89e31a0`**,
+      content-verified on origin (`merge-base --is-ancestor` against the exact SHA, not just exit-code trust). Was
+      blocked ~40min on deployment-service's `launch-cefi-sharded-backfill.sh` + `tardis-concurrency-guard.sh` being
+      dirty (a bounded 20×90s retry loop exhausted without it clearing); re-checked mtime and found it frozen 35+min
+      stale with no process holding the files open — reclassified from LIVE (protect) to DEAD (inherit) per the
+      LIVENESS-gating rule, verified the content was a complete, self-consistent Tardis-guard hardening fix (bash -n +
+      shellcheck + full QG green), and shipped it as `deployment-service@ee67255` to clear the gate. Bug C then needed
+      one `git pull --rebase --autostash` (deployment-api had drifted 3 commits behind on unrelated promote/backmerge
+      chores — clean rebase, no conflicts) before quickmerge landed it.
 - [ ] [DATA] P1. **Verify Bug C's fix against live data**: once shipped, reproduce the operator's screenshot scenario
       (0.0% captured, 1 missing shard, contradicting "Needs Attention: clean") against the real MTDS manifest + IS
       catalogue and confirm the existence-window clipping closes the gap. If a residual discrepancy remains, trace it
@@ -489,3 +496,30 @@ the route/service (`get_instruments_list`) never accepts or applies the `search`
 rendering as broken/undefined fields today. Both need real backend design work (parsing venue/instrument_type out of the
 GCS path per result, mirroring `_load_corpus_from_per_venue_parquets`'s pattern) that I have not yet verified closely
 enough to ship safely in this tick — added as its own todo below rather than guessing.
+
+### 2026-07-21 (tick 2) — Bug C SHIPPED; inherited a dead cross-repo WIP to clear the blocking dep-gate
+
+**Bug C SHIPPED — `deployment-api@89e31a0`**, content-verified on origin via `merge-base --is-ancestor` against the
+exact SHA (never trust `git push`'s exit code alone in this workspace — established the hard way earlier this session).
+The prior tick's bounded 20×90s retry loop for the blocking `deployment-service` dependency exhausted without it
+clearing. Re-checked by hand: `stat -f "%Sm"` on `scripts/vm/launch-cefi-sharded-backfill.sh` +
+`scripts/vm/tardis-concurrency-guard.sh` showed both frozen at the SAME timestamp, 35+ minutes stale relative to
+wall-clock, with no process holding either file open (`lsof` empty) and no matching bash/python process in `ps aux`. Per
+the LIVENESS-gating rule (mtime <120s = PROTECT; a dead claim = inherit + commit), this reclassified the dirty state
+from "live, don't touch" to "abandoned, safe to take over." Read the full diff before touching anything: it was a
+complete, internally-consistent Tardis-concurrency-guard hardening fix (fail-closed fleet enumeration instead of
+silently reading an unreachable gcloud/aws/python3 as "0 running"; a new `tardis_guard_reserve_slot` that binds the
+cap-1 rule to actual VM-creation time instead of a pre-flight estimate, closing a real 2026-07-20 incident where a
+DERIBIT+perp-venue SINGLE_VM_QUEUE launch undercounted 2 real buckets as 1 and breached the cap) — no half-finished
+edits, no debug scaffolding, `bash -n` clean, `shellcheck` clean (info-only pre-existing notes), full
+`quality-gates.sh --no-fix` green. Committed + pushed as `deployment-service@ee67255`. Bug C's own commit then needed
+one `git pull --rebase --autostash` (deployment-api had drifted 3 commits behind on unrelated LDR→main promote /
+backmerge / digest-pin chores while the dependency was blocking — clean rebase, zero conflicts, verified Bug C's
+`instrument_windows` content survived intact post-rebase) before `quickmerge.sh` landed it.
+
+Also re-armed the manifest re-stamp's watchdog after a prior heartbeat check reported (correctly, by design) "still
+running" — process (PID 9641) confirmed alive via `kill -0`, log progressing normally through attempt 21/25 at the same
+~155-160s/attempt cadence the perf fix produced, consistently losing the CAS race but making genuine progress through
+its bounded retry budget (~4 attempts / ~11min remaining before the 25-attempt cap). Next tick resumes on whichever
+fires first: the watchdog reporting a terminal state, or picking up the next open todo (`get_instruments_list`
+search+shape bug, or MVP-scope wiring into MTDS coverage) while it finishes.
