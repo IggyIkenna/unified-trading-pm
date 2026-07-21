@@ -107,9 +107,13 @@ Full audit transcript available on request; the load-bearing facts:
       response. — deployment-api@42191d9 (`_load_registry_entries_for_date_range`/`_archive_floor_date`; route merges
       the extra range-scoped VM rows, deduped against the cached 7-day census; response carries `archive_floor` +
       `date_range_out_of_range` for the UI banner; 8 new unit tests; `quality-gates.sh` green)
-- [ ] [BACKEND] P1. Unmanaged VMs + Cloud Run Job/AWS Batch/Scheduler — match via their single available timestamp
+- [x] ✅ [BACKEND] P1. Unmanaged VMs + Cloud Run Job/AWS Batch/Scheduler — match via their single available timestamp
       (`last_run_at`/`last_attempt_at`) where no true interval exists, marked `basis: "approx"`. Document the per-kind
-      support matrix (interval / single-timestamp / none) on the field.
+      support matrix (interval / single-timestamp / none) on the field. — deployment-api@fbb5ac9
+      (`_single_timestamp_overlaps`/`_SINGLE_TIMESTAMP_KINDS` in `deployments_inventory.py`; covers unmanaged/AWS-EC2
+      VMs + CLOUD_RUN_JOB (GCP + AWS Batch share the wire kind) + SCHEDULER; support matrix documented on
+      `DeploymentItem.last_run_at`; kinds with no timestamp signal at all pass through unfiltered; 10 new unit tests;
+      `quality-gates.sh` green)
 - [ ] [BACKEND] P1. Add a `last_deployed_at` field to the `CLOUD_RUN_SERVICE` list item (revision create_time) — closes
       the asymmetry vs `ECS_SERVICE` found in the audit; needed so always-on services can be sorted/labelled per
       decision 2.
