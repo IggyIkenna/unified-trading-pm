@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -16,12 +24,27 @@ owner: harsh
 completed: 2026-05-05
 type: deployment
 epic: data-pipeline-completion
-completion_gates: {code: none, deployment: D2, business: none}
+completion_gates: { code: none, deployment: D2, business: none }
 repo_gates:
-- {repo: instruments-service, deployment: D2}
+  - { repo: instruments-service, deployment: D2 }
 depends_on: [instruments_and_market_tick_data_completion_2026_05_01]
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`,
+
+`plans/active/data_completion_cefi_2026_07_15.md`,
+`plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md`,
+`plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md`,
+`plans/active/prediction_consolidated_closeout_2026_07_18.md`, `plans/active/defi_consolidated_closeout_2026_07_18.md` —
+successor: (see list above) (all 32 open items resolve to HAS_SUCCESSOR or STALE_OBSOLETE across this successor family —
+scope-definition/Phase-0-diagnose/phantom-flips/per-AG backfills all continue in the current data-completion-to-100%
+plan chain; POLYGON adapter items are moot (Polygon.io/"Massive" removed as a tradfi source 2026-07-19); FRED adapter
+gap is tracked live in `macro_micro_econ_data_capture_audit_2026_06_05.md`. Two items (sports IAM-grant blocker, DEFI
+EIGENLAYER-rewards phantom count) are AMBIGUOUS — no exact-match successor confirmed, but strong circumstantial evidence
+both were resolved out-of-band (later sports VM launches succeed;
+`data_completion_defi_2026_07_15.md`/`defi_consolidated_closeout_2026_07_18.md` likely absorbed the DEFI item) —
+recommend an operator spot-check rather than a blind close. No genuinely orphaned items requiring a fresh issue doc.)
 
 ## Closeout 2026-05-05 (post-EOD ship record)
 
@@ -1573,17 +1596,17 @@ scripts default is `false`). With `force=true`, the orchestrator re-fetches ever
       running — skip `launch-sfi-backfill-vm.sh` and `launch-sfi-forward-poll.sh`. ```bash # api-football (LEAGUES,
       TEAMS, FIXTURES, FIXTURE_EVENTS, STANDINGS, INJURIES, …) bash
       ~/unified-trading-system-repos/deployment-service/scripts/vm/launch-api-football-backfill-vm.sh \
-       --data-type <X> --start-date 2020-06-01
+      --data-type <X> --start-date 2020-06-01
 
       # transfermarkt (PLAYER_VALUES, TRANSFERMARKT_LEAGUES)
-      bash .../launch-transfermarkt-backfill-vm.sh --data-type <X> --start-date 2020-06-01
+                      bash .../launch-transfermarkt-backfill-vm.sh --data-type <X> --start-date 2020-06-01
 
-      # footystats / understat / openmeteo — same pattern
-      ```
-      For non-prediction reference leagues, scope to FIXTURES + FIXTURE_EVENTS + STANDINGS
-      only — per parent-epic prediction-vs-reference cutoff rule. The orchestrator's
-      `_should_skip_shard` + `_should_skip_reference_league` guards handle this; pass
-      `--leagues prediction|reference|all` if the launcher accepts it.
+                      # footystats / understat / openmeteo — same pattern
+                      ```
+                      For non-prediction reference leagues, scope to FIXTURES + FIXTURE_EVENTS + STANDINGS
+                      only — per parent-epic prediction-vs-reference cutoff rule. The orchestrator's
+                      `_should_skip_shard` + `_should_skip_reference_league` guards handle this; pass
+                      `--leagues prediction|reference|all` if the launcher accepts it.
 
 - [ ] [SCRIPT] P0. After each non-SFI launcher batch completes, re-run sports phantom recon (no `--dry-run`) **with the
       same `--data-types` scope as Phase 0.5** (i.e. excluding SFI_LEAGUES / SFI_PROGRESSIVE_STATS until the SFI VM is

@@ -15,6 +15,16 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-23
 ---
 
+## Deferred work — migrated to: `plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`,
+
+`plans/active/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` — successor:
+cefi_chain_tail_v6_canonicalisation_2026_07_21, manifest_v6_batch3_residual_orphaned_work_2026_07_21 (most items shipped
+2026-04/05, superseded by the manifest's move to v9; the DERIBIT v6-smoke + legacy-migration items are live, unresolved
+continuations of the same v5-cefi-chain-tail defect, now owned by `cefi_chain_tail_v6_canonicalisation_2026_07_21.md`.
+**GENUINELY ORPHANED**: deployment-api data-status API + deployment-ui heatmap were never made filterable by
+`quote_asset`/`margin_type` — zero hits in either repo, no active plan claims it — filed in the issue doc above. NOTE:
+`locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
+
 # Manifest schema v6 — quote / margin / combo dimensions
 
 ## Context

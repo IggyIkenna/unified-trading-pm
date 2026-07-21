@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    alerting-service,
+    deployment-api,
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: [availability_manifest_v4_and_data_status_2026_04_13.md, manifest_schema_v6_quote_margin_combo_2026_04_23.md]
-created: '2026-04-25'
+created: "2026-04-25"
 slug: manifest_429_per_vm_sharding_2026_04_25
 date: 2026-04-25
 owner: claude-code
@@ -20,6 +28,19 @@ priority: P0
 phase: in_progress
 domain: infrastructure
 ---
+
+## Deferred work — migrated to: `plans/active/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md`,
+
+`plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md` — successor:
+manifest_v6_batch3_residual_orphaned_work_2026_07_21, consolidator_throughput_backlog_monitor_2026_07_09 (the
+7-day-observation item is STALE_OBSOLETE — 3 months of continuous production operation supersede a one-time window; the
+"Cloud Monitoring panel" item is AMBIGUOUS — no literal generation-conflict panel exists, but
+`consolidator_throughput_backlog_monitor_2026_07_09` shipped adjacent observability that may already satisfy intent.
+**GENUINELY ORPHANED**: deleting `_write_with_generation_match` + its feature flag — still live in
+`unified-trading-library`, but current architecture now also deliberately reuses this CAS path for canonical-index
+force-rewrites, so the original "clean deletion" premise needs re-scoping, not blind re-execution — filed in the issue
+doc above. NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]`
+cleanup.)
 
 # Manifest-429 Per-VM Sharding Architecture
 

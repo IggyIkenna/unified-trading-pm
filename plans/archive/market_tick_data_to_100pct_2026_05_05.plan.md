@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -15,12 +23,22 @@ priority: P0
 owner: harsh
 type: deployment
 epic: data-pipeline-completion
-completion_gates: {code: none, deployment: D2, business: none}
+completion_gates: { code: none, deployment: D2, business: none }
 repo_gates:
-- {repo: market-tick-data-service, deployment: D2}
+  - { repo: market-tick-data-service, deployment: D2 }
 depends_on: [instruments_to_100pct_eod_2026_05_04, instruments_and_market_tick_data_completion_2026_05_01]
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/data_completion_to_100_all_ag_2026_06_21.md`,
+
+`plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md`,
+`plans/active/sports_master_closeout_2026_07_21.md` — successor: data_completion_to_100_all_ag_2026_06_21,
+instruments_mtds_subset_consistency_remediation_2026_06_17, sports_master_closeout_2026_07_21 (all 90 open items — the
+largest plan in this batch — resolve to HAS_SUCCESSOR, predominantly the umbrella
+`data_completion_to_100_all_ag_2026_06_21.md`, or STALE_OBSOLETE (dead superseded-in-text UTL work, self-referential
+tracking checklists, one-time diagnostic gates from 2026-05). The SPORTS per-AG launch cluster is additionally moot on
+substance — it predates the operator-ruled 2020-06-06 sports data floor. No genuinely orphaned items found.)
 
 ## Final session summary (2026-05-05 — comprehensive audit complete)
 
@@ -1572,17 +1590,17 @@ need a GCE VM** at this scale — laptop-side is fine.
 
 ### Findings table (per drift axis — fill in as audit completes)
 
-| Axis | Description                                        | Known/New | AGs affected | Rows affected (est.) | Severity | Root-cause repo | Fix dependency | Status |
-| ---- | -------------------------------------------------- | --------- | ------------ | -------------------- | -------- | --------------- | -------------- | ------ |
+| Axis | Description                                       | Known/New | AGs affected | Rows affected (est.) | Severity | Root-cause repo | Fix dependency | Status |
+| ---- | ------------------------------------------------- | --------- | ------------ | -------------------- | -------- | --------------- | -------------- | ------ |
 | 1    | Hive vocab `category=` ↔ `asset_group=`           | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
-| 2    | Path prefix top-level vs `raw_tick_data/by_date/`  | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
-| 3    | `instrument_type` casing                           | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
-| 4    | Empty `instrument_type` (schema-v4 vestige)        | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
+| 2    | Path prefix top-level vs `raw_tick_data/by_date/` | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
+| 3    | `instrument_type` casing                          | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
+| 4    | Empty `instrument_type` (schema-v4 vestige)       | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
 | 5    | Chain-bundle equivalence (option ↔ options_chain) | known     | TBD          | TBD                  | TBD      | TBD             | —              | TBD    |
-| 6    | DeFi venue overload `PROTOCOL-CHAIN/` vs split     | known     | DEFI         | TBD                  | TBD      | TBD             | —              | TBD    |
-| 7    | DeFi no-asset-group hive segment                   | known     | DEFI         | TBD                  | TBD      | TBD             | —              | TBD    |
-| 8    | Polymarket 9-segment layout vs flat                | known     | PREDICTION   | TBD                  | TBD      | TBD             | —              | TBD    |
-| 9+   | NEW — discovered during this audit                 | new       | TBD          | TBD                  | TBD      | TBD             | TBD            | TBD    |
+| 6    | DeFi venue overload `PROTOCOL-CHAIN/` vs split    | known     | DEFI         | TBD                  | TBD      | TBD             | —              | TBD    |
+| 7    | DeFi no-asset-group hive segment                  | known     | DEFI         | TBD                  | TBD      | TBD             | —              | TBD    |
+| 8    | Polymarket 9-segment layout vs flat               | known     | PREDICTION   | TBD                  | TBD      | TBD             | —              | TBD    |
+| 9+   | NEW — discovered during this audit                | new       | TBD          | TBD                  | TBD      | TBD             | TBD            | TBD    |
 
 ### Fix manifest (one row per fix that needs to land — fill in as findings drive it)
 

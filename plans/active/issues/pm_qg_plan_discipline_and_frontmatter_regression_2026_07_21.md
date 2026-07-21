@@ -146,12 +146,33 @@ normally.
       `dex_historical_replay_lighter_extended_pacifica_2026_05_07`, `cefi_phase2_gap_audit_2026_05_01`,
       `defi_recursive_borrow_archetypes_2026_05_08`. Same per-plan-judgment discipline as batch 1. (repo:
       unified-trading-pm)
-- [ ] [DOCS] P3. Remaining archived-plan debt, batch 3 — instruments/market-data/manifest (9 plans, 3–90 open items
-      each): `manifest_429_per_vm_sharding_2026_04_25`, `instruments_service_orchestrator_reliability_fixes_2026_04_21`,
-      `shard_granularity_ssot_propagation_2026_05_06` (+ its `.HANDOVER.md` twin),
-      `manifest_schema_v6_quote_margin_combo_2026_04_23`, `run_lifecycle_events_ssot_2026_05_05`,
-      `instruments_and_market_tick_data_completion_2026_05_01`, `instruments_to_100pct_eod_2026_05_04`,
-      `market_tick_data_to_100pct_2026_05_05`. Same per-plan-judgment discipline as batch 1. (repo: unified-trading-pm)
+- [x] ✅ [DOCS] P3. Remaining archived-plan debt, batch 3 — instruments/market-data/manifest (9 plans, 3–90 open items
+      each) — unified-trading-pm@\<pending\>. Fanned out 9 parallel read-only research agents (~222 open items total),
+      made closure judgments myself. All 9 files got a real `## Deferred work — migrated to:` banner:
+      `manifest_429_per_vm_sharding_2026_04_25` → `manifest_v6_batch3_residual_orphaned_work_2026_07_21` +
+      `consolidator_throughput_backlog_monitor_2026_07_09`;
+      `instruments_service_orchestrator_reliability_fixes_2026_04_21` →
+      `sports_data_sources_canonical_completion_2026_07_13` + `sports_consolidated_audit_2026_07_19`;
+      `shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md` → `master_to_live_defi_2026_05_23` +
+      `data_status_page_ux_and_canonicalisation_2026_07_16`; `shard_granularity_ssot_propagation_2026_05_06.plan.md` →
+      `writegate_honest_coverage_endtoend_2026_05_06` + `sports_p2_features_history_to_ml_ready_2026_06_27` +
+      `manifest_writer_record_captured_available_at_never_persisted_2026_07_13` +
+      `mtds_available_at_cross_asset_backfill_2026_07_13`; `manifest_schema_v6_quote_margin_combo_2026_04_23` →
+      `cefi_chain_tail_v6_canonicalisation_2026_07_21` + `manifest_v6_batch3_residual_orphaned_work_2026_07_21`;
+      `run_lifecycle_events_ssot_2026_05_05` → `codex_violations_ratchet_to_five_2026_06_10`;
+      `instruments_and_market_tick_data_completion_2026_05_01` → the per-AG consolidated-closeout family +
+      `data_completion_to_100_all_ag_2026_06_21`; `instruments_to_100pct_eod_2026_05_04` → same family +
+      `macro_micro_econ_data_capture_audit_2026_06_05`; `market_tick_data_to_100pct_2026_05_05` (largest, 90 items) →
+      `data_completion_to_100_all_ag_2026_06_21` + `instruments_mtds_subset_consistency_remediation_2026_06_17` +
+      `sports_master_closeout_2026_07_21`. **2 genuinely-orphaned findings bundled into 1 fresh issue doc** (not
+      blanket-closed): `plans/active/issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` (P3) — (1) the
+      legacy `_write_with_generation_match` CAS-path deletion needs re-scoping (current architecture now also reuses it
+      for canonical-index force-rewrites, so a blind delete would be wrong), (2) deployment-api/deployment-ui never
+      surfaced `quote_asset`/`margin_type` filtering. Also surfaced (not separately filed): all 7 of 9 files still carry
+      `locked_by: live-defi-rollout` never cleared at archival — noted in each banner, a recurring
+      archival-ritual-step-5 gap for the operator. Re-ran `check_plan_discipline.py` before/after: 58 → 49 violations
+      (exactly the 9 `C-archive-no-successor` fixes; baseline had moved 82→58 from concurrent batch-2 work by another
+      slot), re-baselined 58 → 49 via `--baseline-write`. (repo: unified-trading-pm)
 - [x] [DOCS] P3. ✅ Remaining archived-plan debt, batch 4 — strategy/UI + the 2 held-back small plans (8 plans found,
       2–67 open items each) — unified-trading-pm@16aa0e958. Per-plan judgment, not blanket-close: 3 got a **direct
       successor banner** naming a verified real active epic — `dart_ux_cockpit_refactor_2026_04_29` +
