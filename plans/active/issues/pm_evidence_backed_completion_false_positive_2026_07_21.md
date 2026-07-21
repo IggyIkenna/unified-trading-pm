@@ -7,7 +7,7 @@ summary: >-
   workflow FILENAME (`cloud-build-router.yml`) and an unrelated `quality-gates.sh` "green" claim, not an actual
   Cloud-Build-success claim, but the checker's loose regex (any `cloud[- ]build` substring + any `green`/`SUCCESS` token
   anywhere in the block) flags it anyway. Blocks the green-tree ship gate for any non-`docs(plans):` PM commit.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -19,7 +19,7 @@ created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-4
 locked_by:
 source: [pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md]
 execution_scope: orchestrator-agent
@@ -82,10 +82,24 @@ nothing to do with the offending todo.
 
 ## Todos
 
-- [ ] [DOCS] P2. Get operator sign-off on `--baseline-write` (30 -> 31) for
-      `scripts/quality_gates/evidence_backed_completion_baseline.yaml`, citing this issue doc as the false-positive
-      proof, then run it. Unblocks the repo-wide QG red for any concurrent PM ship. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. Tighten `_RUNTIME_VERB_RE` + `_GREEN_TOKEN_RE` co-occurrence in
-      `scripts/quality_gates/check_evidence_backed_completion.py` sub-rule B to require same-clause proximity instead of
-      whole-block presence, then re-scan the full plan corpus and re-baseline in whichever direction the count moves.
-      (repo: unified-trading-pm)
+- [x] [DOCS] P2. ✅ Get operator sign-off on `--baseline-write` — HOLD received (BLK-9c18d1a3): operator/main declined
+      the baseline-up path ("baselines only go DOWN" + moving a shared repo-wide integrity gate up to absorb a false
+      positive is fleet-impacting) and directed the P3 root-cause fix below instead, with the guardrail that the
+      tightened regex must not introduce new false negatives. No `--baseline-write` up was run. (repo:
+      unified-trading-pm)
+- [x] [SCRIPT] P3. ✅ Tightened `_RUNTIME_VERB_RE` + `_GREEN_TOKEN_RE` co-occurrence in
+      `scripts/quality_gates/check_evidence_backed_completion.py` sub-rule B to require SAME-CLAUSE proximity (new
+      `_CLAUSE_BOUNDARY_RE` splits on `.`/`!`/`?` + whitespace + capital/backtick, collapsing line-wraps first) instead
+      of whole-block presence — unified-trading-pm@8c7613218. Re-scanned the full plan corpus (no `--include-issues`,
+      matching the exact QG invocation): 31 → 21 violations (baseline 30). Verified all 10 items that dropped out (the
+      target false positive + 9 more of the same shape) are genuine false positives, not new false negatives — for each,
+      traced the exact verb/green match pair and confirmed it was either an exempted code-ship `QG-green` mention, a
+      hypothetical/counterfactual clause ("a silent-success path **would have**..."), a future-tense TODO, or a
+      filename/job-name token (`cloud-build-router.yml`, `dispatch-cloud-build`) paired with an unrelated green mention
+      elsewhere in the block — none were an actual runtime-green claim losing its flag. Confirmed genuine same-clause
+      claims (real over-claims) still get flagged via `tests/unit/test_check_evidence_backed_completion.py` (8 new
+      tests: 4 false-positive-shape fixtures now clean, 4 genuine-claim fixtures still flagged, incl. one that spans a
+      line-wrap but not a real sentence boundary, and one Evidence-ref-suppression sanity check). Re-baselined 30 → 21
+      via `--baseline-write` to codify the improvement (a real fix-driven count drop, not a ratchet-up — needs no
+      operator sign-off per the HOLD guidance). Full `quality-gates.sh` green (sentinel = HEAD). (repo:
+      unified-trading-pm)
