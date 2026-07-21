@@ -189,7 +189,11 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       change) and its `done_definition: "Checkbox flipped in plan + code shipped"`; treated the `[REVIEW]` prefix as the
       per-task tag convention (routes-the-todo, not "become the daemon") and shipped it as a normal worker task. Full
       spec now 23/23 green. `quality-gates.sh` green (sentinel f47d0ac1).
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
+- [x] ✅ [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`). —
+      already cumulatively satisfied: every one of the 7 preceding todos was shipped via `quality-gates.sh` →
+      `quickmerge.sh --agent --files '<paths>'` → same-turn `docs(plans):` checkbox flip + push, individually
+      (deployment-ui@17fbb72/c631ef5/e6234d16/89cf1f87/fe767f19/f47d0ac1/4aa865c4). No new commit — nothing outstanding
+      to ship at this checkpoint.
 - [ ] [REVIEW] P2. Post-phase codex audit — document the rebuilt alerts-page contract (diagnostic surface, the
       filter/sort/date-range dimensions, the shared-primitive reuse, the drill-down link map) in
       `codex/06-coding-standards/ui-testing-layers.md` cross-ref + `codex/04-architecture/ci-alerting.md`.
