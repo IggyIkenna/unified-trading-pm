@@ -17,7 +17,7 @@ summary: >-
   "slack_alert"` row shape deployment-api's reader already parses — no reader compatibility question, unlike the
   original issue's "who reads this" open question. The fix is the SAME pattern already applied twice (one object per
   write instead of a shared per-day filename), just not yet applied to these two remaining writers.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -43,6 +43,8 @@ drift_direction: advance-code
 last_updated: 2026-07-21
 locked_by:
 resolved_by:
+  slot-9 (2026-07-21), both todos shipped — unified-trading-pm@963daa611 (semver-agent.yml.tmpl + fleet rollout) and
+  unified-trading-pm@363e8a7cc (notify-slack.yml)
 depends_on: []
 ---
 
@@ -88,11 +90,14 @@ write, and `deployment-api::_persist_alert()`'s alerts-ledger write): write each
 never-overwritten object (e.g. `cicd/alerts/{date}/{unique-id}.jsonl`) instead of the shared `alerts.jsonl` filename. No
 reader change needed — `_read_ledgers_sync()` already globs the whole `cicd/alerts/{date}/` prefix.
 
-- [ ] [DEVOPS] P2. Fix `notify-slack.yml`'s "Persist alert to ledger" step to write to a unique object per call (e.g.
+- [x] ✅ [DEVOPS] P2. Fix `notify-slack.yml`'s "Persist alert to ledger" step to write to a unique object per call (e.g.
       `cicd/alerts/{date}/{dedup_key-or-random}-{run_id}.jsonl`) instead of the shared `alerts.jsonl`, matching the
       pattern in `persist-event/action.yml`'s GCS/S3 write steps. Do NOT touch the dedup-marker write
       (`cicd/alerts/dedup/<key>.json`) — that one is already a single-object-per-key atomic overwrite and is not part of
-      this race. (repo: unified-trading-pm)
+      this race. (repo: unified-trading-pm) — unified-trading-pm@363e8a7cc (each alert now writes to its own
+      `cicd/alerts/{date}/{dedup_key-or-random}-{run_id}-{ns}.jsonl` object; dedup-marker write untouched). QG-verified
+      green across 40+ full quality-gates.sh runs (this exact byte-identical diff was part of the passing tree every
+      time — see slot-9 shipping notes below for the sentinel-race context).
 - [x] ✅ [DEVOPS] P2. Fix `semver-agent.yml.tmpl`'s "Persist CRITICAL pages to alert ledger" step the same way, then
       re-run `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` to propagate the fix fleet-wide to every
       service repo's rendered `semver-agent.yml`. (repo: unified-trading-pm) — unified-trading-pm@963daa611 (template
