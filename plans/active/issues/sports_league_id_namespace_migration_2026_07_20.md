@@ -440,3 +440,43 @@ review before any re-run.
 - **Folding the `features-sports` (30 obj) / `instruments-store` (9,733 obj) contamination into this move** — different
   vocabulary, likely different/untraced writer, unverified root cause; track as separate findings with the corrected
   counts, don't smuggle them in.
+
+## ⚠️ CRITICAL CORRECTION 2026-07-21 — objects are ROW-MIXED; migration is a per-row SPLIT, not a relocation
+
+Direct measurement (stratified sampling, 150 objects/league) found that the verified 9-step plan's premise — "classify
+each shard to ONE canonical target, then relocate the object" — is **WRONG for the 4 real-collision leagues**. A large
+fraction of their objects contain rows for BOTH sides of the collision in a single file, because the OLD capture adapter
+wrote all odds for a colliding raw name into one object per `(day, venue, raw_league_id)`:
+
+| collision league | single-league objects | **ROW-MIXED objects (both leagues in one file)** |
+| ---------------- | --------------------: | -----------------------------------------------: |
+| BUNDESLIGA       |              94 (63%) |                                     **56 (37%)** |
+| SERIE_A          |             118 (79%) |                                     **32 (21%)** |
+| PRIMERA_DIVISION |             109 (73%) |                                     **41 (27%)** |
+| SUPER_LEAGUE     |             107 (71%) |                                     **43 (29%)** |
+
+Example: `day=2023-02-12/…/venue=VIRGINBET/league_id=BUNDESLIGA/…/ticks.parquet` contains BOTH `Bundesliga - Germany`
+AND `Austrian Football Bundesliga` rows. Relocating that object wholesale to either target mis-attributes half its rows.
+
+**Consequence for the executor:** `sport_key` is a **per-ROW** oracle, not a per-object one. The correct operation for
+EVERY object is: read it → compute each row's canonical `league_id` from its `sport_key` → GROUP rows by canonical
+`league_id` → write each group to its canonical path (splitting a mixed object into 2 target objects). This uniformly
+handles single-league, mixed, and unambiguous objects; the content-column rewrite is inherently per-row.
+`gcs_copy_object` (object rename) is INSUFFICIENT for the mixed objects — they require read-partition-write.
+
+**Measured sport_key → canonical for the 4 real collisions (both sides confirmed present):**
+
+| sport_key                      | canonical slug        |
+| ------------------------------ | --------------------- |
+| `Bundesliga - Germany`         | `BUNDESLIGA`          |
+| `Austrian Football Bundesliga` | `AUSTRIAN_BUNDESLIGA` |
+| `Serie A - Italy`              | `SERIE_A`             |
+| `Brazil Série A`               | `BRASILEIRAO`         |
+| `Primera División - Argentina` | `ARGENTINA_PRIMERA`   |
+| `Primera División - Chile`     | `CHILE_PRIMERA`       |
+| `Swiss Superleague`            | `SWISS_SUPER_LEAGUE`  |
+| `Super League - Greece`        | `GREEK_SUPER_LEAGUE`  |
+
+Independently reconfirmed the two NON-collisions: `SERIE_B` = only `Serie B - Italy` (120/120), `CHAMPIONSHIP` = only
+`Championship` (120/120) — single-league in the data, as the workflow found. Evidence: `scratchpad/sportkey_probe.py`,
+`scratchpad/mixed_probe.py` (2026-07-21).
