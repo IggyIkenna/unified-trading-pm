@@ -165,14 +165,45 @@ rather than a single CSS var.
       via `--update-baseline` rather than guessing, colour 465→352). `quality-gates.sh` green end-to-end (286 tests,
       build passed) + `pw:L2` ✓ (`tests/smoke/sports-tab-colour-migration.smoke.spec.ts`, new spec, passed after
       installing this slot's missing Playwright browser binary).
-- [ ] [UI] P3. Batch 4 — trading (non-sports) + predictions (14 files, 1–21 hits each):
+- [x] [UI] P3. Batch 4 — trading (non-sports) + predictions (14 files, 1–21 hits each):
       `components/shared/status-badge.tsx`, `components/trading/strategy-audit-trail.tsx`,
       `components/trading/strategy-filter-bar.tsx`, `components/trading/alerts-feed.tsx`,
       `components/trading/limit-bar.tsx`, `components/trading/dimensional-grid.tsx`, `components/trading/kpi-card.tsx`,
       `components/trading/context-bar/trading-context-bar.tsx`,
       `components/trading/options-futures/vol-greeks-panels.tsx`, `components/trading/predictions/arb-stream-tab.tsx`,
       `components/trading/predictions/odum-focus-tab.tsx`, `components/trading/predictions/markets-tab.tsx`,
-      `components/shell/asset-group-pill.tsx`, `components/shell/lifecycle-nav.tsx`. (repo: unified-trading-system-ui)
+      `components/shell/asset-group-pill.tsx`, `components/shell/lifecycle-nav.tsx`. (repo: unified-trading-system-ui) —
+      ✅ `unified-trading-system-ui@7403a8b8`. All 14 files migrated to CSS-var tokens: most were exact byte-identical
+      hex matches to existing `var(--status-*)`/`var(--pnl-*)`/`var(--risk-*)`/`var(--color-chart-N)` tokens (e.g.
+      `strategy-filter-bar.tsx`'s 5 asset-class hexes = `--color-chart-2..6` dark-mode values exactly;
+      `--status-idle`/`--status-running`/`--muted-foreground` similarly exact). One new token added (`--status-info`,
+      light+dark+`@theme` mapping) for `status-badge.tsx`'s previously-untokenized "info" status.
+      `alerts-feed.tsx`/`limit-bar.tsx`/`status-badge.tsx` rgba-alpha literals →
+      `color-mix(in srgb, var(--x) N%,     transparent)`, matching the file's own pre-existing `color-mix` convention;
+      `dimensional-grid.tsx`'s dynamic-alpha PNL heatmap → `color-mix` with a computed percentage.
+      `kpi-card.tsx`/`asset-group-pill.tsx`/ `lifecycle-nav.tsx` Tailwind arbitrary-shadow hexes → Tailwind
+      arbitrary-shape + colour-utility split (`shadow-[0_0_10px] shadow-blue-500/15`), same pattern Batch 1/2
+      established. `trading-context-bar.tsx`'s `bg-[#111113]` → `bg-card` (exact match to `--card` dark value).
+      `predictions/arb-stream-tab.tsx` mirrors the ALREADY-tokenized twin component
+      `components/widgets/predictions/pred-arb-ui.tsx` exactly (confirmed the Tailwind v4 `var(--x)/NN` opacity-modifier
+      syntax works via that existing precedent). `odum-focus-tab.tsx`/ `markets-tab.tsx` (both recharts) route their
+      `Tooltip` `contentStyle` through `chart-theme.ts`'s `TOOLTIP_STYLE` per Batch 1's established convention.
+      `vol-greeks-panels.tsx`'s two static contrast-text hexes (`#fff`/`#1a1a2e`) moved to Tailwind
+      `text-white`/`text-slate-900` classes (no longer regex-flagged); its 3-branch `greekColor()` computed-RGB gradient
+      function reimplemented as `color-mix()` interpolation between existing
+      `--risk-healthy`/`--risk-critical`/`--risk-warning`/`--color-chart-1` tokens, preserving the same
+      low-to-high-intensity heatmap direction per greek (delta: red→green: gamma/vega: cyan→amber; theta: amber→red) — a
+      deliberate reimplementation, not a byte-exact preservation, since raw 3-channel RGB math can't be expressed as a
+      2-color CSS token blend. Repo-measured hardcoded-colour count 352→277 (75-hit reduction);
+      `codex_ui_violation_baseline.json` ratcheted `colour: 352→277`. Full `quality-gates.sh` green (367s:
+      typecheck/lint/286 unit tests/build/DeFi-citation all passed, sentinel `e60cf555`→`7403a8b8` after quickmerge).
+      **Playwright**: new regression spec `tests/smoke/trading-predictions-colour-migration.smoke.spec.ts` (pw:L2 ✓) —
+      visits the strategy-detail page (status-badge/kpi-card/strategy-audit-trail) and the DART terminal under both
+      Prediction scope (markets-tab/odum-focus-tab/asset-group-pill) and CeFi scope (lifecycle-nav/trading-context-bar),
+      asserting clean render with no error boundary/overlay. Initial run hit `page.goto` timeouts at the default 30s
+      under severe host contention (measured load 27.64/8 cores — same environment-blocker class Batch 1 hit, not a
+      regression); re-ran with `--timeout=120000 --workers=1` and all 3 passed (49.9s/18.5s/5.5s). No fabricated
+      `pw:L2 ✓`.
 - [ ] [UI] P3. Batch 5 — marketing + platform pages + misc (28 files, 1–32 hits each): `app/(public)/_home-client.tsx`,
       `components/marketing/market-galaxy.tsx`, `components/marketing/arbitrage-galaxy.tsx`,
       `components/marketing/galaxy-canvas.tsx`, `components/marketing/strategy-family-catalogue.tsx`,
