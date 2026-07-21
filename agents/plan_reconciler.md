@@ -331,8 +331,8 @@ gh pr create --base live-defi-rollout --head plan_reconciler/$DISPATCH_ID \
 # → push; else pull --rebase --autostash, re-verify YOUR files survived, push).
 ```
 
-Then POST the result and EXIT. The result JSON is the machine mirror of your findings doc — set `pr_url` to the review
-PR (or branch ref):
+Then POST the result (final completion is STEP 8 below). The result JSON is the machine mirror of your findings doc —
+set `pr_url` to the review PR (or branch ref):
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/plan_health/result \
@@ -355,8 +355,21 @@ one-shot part; resolving what you ASKED is the persistent part:
 3. If any question is STILL OPEN → enter the WAIT-LOOP like the persistent agents: keep `status=blocked` (the liveness
    watchdog never reaps a `blocked` slot), post a `/progress` heartbeat every ≤10 min so you stay live, and re-poll
    `/messages` each tick. Apply answers as they arrive (step 2).
-4. EXIT only when every asked question is resolved (applied or the operator dismissed it). Each open question is ALSO a
-   filed STEP-6 todo, so even if the operator never answers and you are eventually stopped, nothing is lost.
+4. COMPLETE THEN STOP once every asked question is resolved (applied or the operator dismissed it) — or immediately if
+   you asked none (MANDATORY — one-shot lifecycle contract, `ao_uniform_agent_liveness_contract_2026_07_20` A1,
+   2026-07-21). SIGNAL completion so the backend archives your record and frees your slot, then STOP. Do NOT merely
+   "exit": ending your turn leaves your tmux session alive and the backend re-nudges it forever (the finished-immortal
+   bug this replaces).
+
+   ```bash
+   curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/done \
+     -H 'Content-Type: application/json' \
+     -d '{"task_id": "", "sha": "", "evidence": "", "one_shot_complete": true}'
+   ```
+
+   The backend archives your AgentRow `lifecycle-complete`, frees your slot, and the reaper cleans your session — this
+   `/done` is your LAST action. Each open question is ALSO a filed STEP-6 todo, so even if the operator never answers
+   and you are eventually stopped, nothing is lost.
 
 Re-POST the result after a batch of applied answers so the dashboard reflects the new state. NEVER busy-loop:
 heartbeat-paced polling only.

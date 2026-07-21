@@ -159,4 +159,16 @@ curl -sS -X POST $SERVER_URL/api/slots/$AUTHORING_SLOT/message \
   -d '{"content": "conflict_resolver '"$ESCALATION_ID"' for '"$REPO"'#'"$PR_NUMBER"' ('"$WALL_TYPE"'): <one-line outcome — resolved+auto-merge-enabled, closed-superseded, or stopped: needs operator (asked via /blocked) because ...>"}'
 ```
 
-Then EXIT.
+COMPLETE THEN STOP (MANDATORY — one-shot lifecycle contract, `ao_uniform_agent_liveness_contract_2026_07_20` A1,
+2026-07-21): a one-shot agent must SIGNAL its completion, not merely stop producing output. POST `/done` with
+`one_shot_complete`, then STOP — do NOT keep polling. (Just "exiting" leaves your tmux session alive and the backend
+re-nudges it forever — the finished-immortal bug this replaces.)
+
+```bash
+curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/done \
+  -H 'Content-Type: application/json' \
+  -d '{"task_id": "", "sha": "", "evidence": "", "one_shot_complete": true}'
+```
+
+The backend archives your AgentRow `lifecycle-complete`, frees your slot, and the reaper cleans your session. This is
+your LAST action — do not loop, do not poll for more work.
