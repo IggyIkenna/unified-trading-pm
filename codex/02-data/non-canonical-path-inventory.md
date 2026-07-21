@@ -91,7 +91,17 @@ code_refs:
 > measures against is `cross-asset-canonical-target-ssot.md`; the machine oracle is UAC `canonical_path_violations()`.
 > This doc references both and duplicates neither.
 
-## 🔴 DO-NOT-DELETE — read before acting on any row
+## ✅ RESOLVED 2026-07-21 — `dex_pools/` + `lending_indices/` FOLDED + DELETED (rows 7/8 closed)
+
+> **The DO-NOT-DELETE below is HISTORY.** The safe fold→repoint→delete order was executed 2026-07-21: 648 legacy-only
+> Solana twins folded to canonical (`mtds@13b9dac5`) + verified (KAMINO-vault 0→513 · SOLEND 0→59 · KAMINO-lending 0→44
+> · RAYDIUM 100→132), the reader repointed (`execution-service@45628a37`) + F6 enumerator vocab (`uac@5d83b729` +
+> `is@c781eb0b`), then the **operator prod-deleted** `dex_pools/` + `lending_indices/` — re-probed: **0 objects**,
+> canonical twins intact. Rows 7/8 disposition is now **yes-twin-confirmed → DELETED**. Residual: the 648 twins'
+> manifest rows are unregistered (`defi_fold_manifest_registration_pending_2026_07_21.md`). The original DO-NOT-DELETE
+> reasoning is preserved below for the record.
+
+## 🔴 DO-NOT-DELETE (SUPERSEDED 2026-07-21 — was correct until the fold+delete above)
 
 **`dex_pools/` and `lending_indices/` in `market-data-tick-defi-prd-{pid}` MUST NOT be deleted.** Two live plan docs
 (`defi_consolidated_closeout_2026_07_18.md` Track 2 and `canonical_closeout_open_questions_2026_07_18.md` §A6) order a
