@@ -656,7 +656,7 @@
         "warn_file_count": 0,
         "large_file_count": 0
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
@@ -758,7 +758,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": "ruff",
         "coverage_pct": 90.71,
@@ -1391,7 +1391,7 @@
         "large_file_count": 34,
         "warn_file_count": 38
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "none"
     },
     "deployment-ui": {
