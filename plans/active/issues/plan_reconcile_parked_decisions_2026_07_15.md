@@ -184,6 +184,14 @@ The 3 that did **not** clear the bar (left active — this is exactly why verifi
 > (`execution-service@42956add`). Regardless of the archival ruling, that review either happened and is unrecorded, or
 > it never happened. Worth its own answer.
 
+> **🟢 §5 RULED 2026-07-21 (operator, via `/plan-reconcile`)**: the live-safety review of `execution-service@42956add`
+> DID happen, just wasn't documented at the time. `execution_fidelity_tiers_uac_governed_2026_06_28.md` is now archived
+> (`plans/archive/2026_07/`) with the confirmation cited inline. Note: a separate, INTERVENING audit
+> (`canonical_closeout_open_questions_2026_07_18.md` §C5) had already listed this plan as "archival-ready" without ever
+> surfacing this open question — a near-miss this table's own existence prevented from becoming a silent skip.
+> `data_pipeline_e2e_check_2026_07_10` — separately confirmed independently-verified/archived by this same
+> `/plan-reconcile` run (its residual threads live on their own issue docs, per WORKER REC option A above).
+
 ### §5b — 10 verified-done plans NOT archived: archival is blocked, not skipped
 
 All 10 are verified SAFE_TO_ARCHIVE. Archiving them is blocked on a **ref-graph coupling nobody had surfaced**: the
