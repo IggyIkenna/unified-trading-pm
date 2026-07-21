@@ -339,6 +339,13 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 
 ## 8. Path templates
 
+> **📐 HARD RULE (operator R2, 2026-07-21) — every data-at-rest tree uses the FULL canonical hive grammar** (the
+> canonical key set incl. `pipeline_mode=` and `asset_group=`, in the order below), never a reduced/flat subset.
+> `instrument_availability` / `market_lifecycle` / `futures_contracts` are the standing violations (`day=`/`venue=`
+> only) → RULED HIVE, `migration_pending`. Build the ordered keys via the sink PREFIX, not the partition dict (the sink
+> sorts dict keys alphabetically). See §11b R2 +
+> [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
+
 - **cefi/tradfi flat**:
   `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{src}/asset_group={ag}/venue={V}/instrument_type={it}/data_type={dt}/{instrument_id}.parquet`
 - **cefi bundle**:
@@ -433,6 +440,42 @@ path/column / UPPER in id"~~; see the §7 ruling banner]** · culled-venue purge
   - **Effect**: the two already-shipped uppercase migration scripts (`instruments-service@555ddf1c` + the tradfi Phase-B
     script) are RATIFIED and their DRAIN-GATED `--apply` freeze is **LIFTED**. The defi rows not yet folded UP are
     `migration_pending`, not a fresh non-canonical finding.
+
+### 11b. Operator decisions log — 2026-07-21
+
+Three rulings resolve contested-canonical axes. Each is a RULED **target** and is `migration_pending` until the named
+writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–§6c and the three issue docs.
+
+- **R1 — features data-at-rest root = `by_date/day=` (SSOT).** Every features tree MUST carry the `by_date/day=` level.
+  This RATIFIES the UTL paths registry, which already declares it (`registry.py:57` `delta_one/by_date/day=`, `:74`
+  `onchain/by_date/day=`, `:90` `volatility/by_date/day=`). The features-cefi `delta_one` writer emitting
+  `delta_one/day=` (no `by_date/` level, `feature_writer.py:132-136`) and the volatility writer's **bucket-root bypass**
+  (`get_data_sink` with no `prefix=`, `volatility/core/feature_writer.py:152-155`) are therefore **NON-CANONICAL**.
+  onchain/sports primary writers already carry `by_date/`. Fix + migration:
+  [`../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md).
+
+- **R2 — HARD RULE: every data-at-rest bucket uses the FULL canonical hive grammar.** Every data-at-rest tree MUST use
+  the full canonical key set **including `pipeline_mode=` and `asset_group=`, in the canonical ORDER** (§8) — never a
+  reduced/flat subset. `instrument_availability` is FLAT today (`day=`/`venue=` only) in BOTH the registry
+  (`registry.py:35`) and the live writer (`process_write.py:612` + `writers.py:201-208`); `market_lifecycle` and
+  `futures_contracts` share the same reduced-flat shape. This resolves the "instrument_availability FLAT vs hive"
+  contested axis → **RULED HIVE**. **Critical**: the UTL sink SORTS partition-dict keys ALPHABETICALLY
+  (`protocol_impls.py:26`, `for k, v in sorted(partition.items())`), so the keys CANNOT be added to the partition dict
+  (you would get `asset_group=/day=/pipeline_mode=/venue=` — wrong order, `day` not first). The fix MUST bake the
+  ordered canonical keys into the sink **PREFIX** (as the sports lane does), and the registry template is the SSOT and
+  must be updated too. Fix + migration:
+  [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
+
+- **R3 — cefi chain-tail v6 canonical everywhere; migrate ALL v5.** The v6 tail
+  `underlying={ROOT}/quote={Q}/margin={M}/ticks.parquet` is canonical everywhere; the v5 bare tail
+  `underlying={ROOT}/ticks.parquet` is **LOSSY** (same-underlying USD/USDT + linear/inverse chains collide/overwrite)
+  and must be migrated with none remaining. UAC (`partition_paths.py:252-253`), the reader (`reader.py:402-403`,
+  v6-first/v5-fallback) and the W2 Tardis lane (`tardis_shared.py:668-669`) already emit/probe v6; only W1
+  `PartitionedTickWriter` still emits bare v5 for cefi because it derives quote/margin ONLY under
+  `asset_group=="tradfi"` (`partitioned_writer.py:291-292`), and the write-guard `_assert_canonical_tradfi_path` (`:83`)
+  is tradfi-only. This resolves the "cefi chain-tail v5 vs v6 — two live-written shapes" contested axis → **RULED v6**.
+  Fix + migration:
+  [`../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
 
 ## 12. Where the work lives
 
