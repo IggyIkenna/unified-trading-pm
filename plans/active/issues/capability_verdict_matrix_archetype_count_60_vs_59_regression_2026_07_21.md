@@ -8,7 +8,7 @@ summary: >-
   `build_matrix()`'s archetype source (unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype) now
   yields 60 distinct archetypes. This reds unified-trading-pm's quality-gates.sh on live-defi-rollout for every worker
   trying to ship, independent of what they are shipping.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,6 +31,11 @@ source:
     changes of mine touching capability/archetype code,
   ]
 resolved_by:
+  unified-trading-pm@a85f00a93 (2026-07-21, a peer slot shipped the identical fix — 60th archetype is
+  ARBITRAGE_SPORTS_DUTCHING, a real strategy-service-registered engine per
+  sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md, added to _FIXTURE_ENGINE_BACKED, not a bare count
+  bump); slot-9 independently arrived at the equivalent fix (commit 191f0d409, superseded/discarded — nothing unique to
+  preserve) and confirmed quality-gates.sh green on the peer's shipped version (1318 passed, 0 failed)
 locked_by:
 locked_since:
 depends_on: []
@@ -91,10 +96,14 @@ needs its OWN capability-matrix classification decided (available/blocked/not_re
    `tests/unit/test_prospectus_generators.py` to match the corrected, deliberate classification.
 4. Re-run `bash scripts/quality-gates.sh` full to confirm green, then ship via `quickmerge --agent`.
 
-- [ ] [BACKEND] P1. Identify the 60th StrategyArchetype member and its correct capability-matrix verdict; update the 3
-      hardcoded archetype-count assertions in `tests/unit/test_capability_verdict_matrix.py` +
+- [x] ✅ [BACKEND] P1. Identify the 60th StrategyArchetype member and its correct capability-matrix verdict; update the
+      3 hardcoded archetype-count assertions in `tests/unit/test_capability_verdict_matrix.py` +
       `tests/unit/test_prospectus_generators.py` to match; confirm `quality-gates.sh` green; ship via quickmerge. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — unified-trading-pm@a85f00a93. The 60th archetype is `ARBITRAGE_SPORTS_DUTCHING`
+      (unified-api-contracts@cf28a962, `SportsArbDutchingEngine` given its own enum value instead of silently colliding
+      with `ARBITRAGE_PRICE_DISPERSION`) — real, engine-backed, added to `_FIXTURE_ENGINE_BACKED` (not a blanket block).
+      All 3 assertions bumped 59→60; both stale `*_57_*`-named test functions renamed to drop the magic number entirely.
+      `quality-gates.sh`: 1318 passed, 0 failed.
 
 ## Codex SSOTs
 
