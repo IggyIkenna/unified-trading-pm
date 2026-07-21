@@ -25,6 +25,9 @@ assigned_vm:
 locked_by:
 resolved_by:
 source: [/plan-reconcile audit, 2026-07-21]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # DeFi POOL cross-chain address collision — CURVE unaddressed, Balancer patch conflicts with Option-A ruling
