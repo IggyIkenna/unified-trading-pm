@@ -66,9 +66,9 @@ normally.
 - [ ] [DOCS] P2. Fix `codex/02-data/sports-2020-06-data-floor.md` frontmatter — add the missing `referenced_by` key
       (present-but-empty is enough to pass `scripts/docs/seed_frontmatter.py --apply`). (repo: unified-trading-pm)
 - [x] [DOCS] P2. ✅ Triage the 121 plan-discipline violations (42 `A-deferred-no-banner` + 79 `C-archive-no-successor`)
-      against baseline 120 in `scripts/quality_gates/plan_discipline_baseline.yaml` — unified-trading-pm@<pending-sha>.
-      Real fix, not a blind re-baseline: enumerated all 121, classified each by whether an honest templated banner
-      applies. 19/79 archived `C-archive-no-successor` plans had **zero open `- [ ]` items** (100%-closed) — applied the
+      against baseline 120 in `scripts/quality_gates/plan_discipline_baseline.yaml` — unified-trading-pm@522dcdf92. Real
+      fix, not a blind re-baseline: enumerated all 121, classified each by whether an honest templated banner applies.
+      19/79 archived `C-archive-no-successor` plans had **zero open `- [ ]` items** (100%-closed) — applied the
       established `## Deferred work — migrated to: **None** — successor: not applicable` banner (same template as
       precedent commit `835ef6114`). This is the ONLY subset a scripted fix can honestly close — everything else needs
       real per-plan judgment: 60/79 archived plans still have open items (1–139 each) and 42/42 active
