@@ -117,8 +117,16 @@ source:
       live-vs-archive EXISTENCE check belongs in the size/metadata endpoint (next todo), which resolves for one VM at
       request time, not for the whole fleet on every cache refresh. Unit test updated
       (`test_route_deployments_inventory.py`); `deployment-api` `quality-gates.sh` green (4790 passed).
-- [ ] [BACKEND] P0. Log metadata endpoint — size + last-modified via `gcs_describe_object` on whichever path resolved;
-      response marks which location was used (live vs archive) so the UI can label it.
+- [x] ✅ [BACKEND] P0. Log metadata endpoint — size + last-modified via `gcs_describe_object` on whichever path
+      resolved; response marks which location was used (live vs archive) so the UI can label it. —
+      `deployment-api@32aad22`. New `GET /api/deployments/{name}/run-log/metadata` in `deployments_inventory.py`
+      (`RunLogMetadataResponse`: `exists`/`location`/`uri`/`size_bytes`/`last_modified`). Real live-vs-archive
+      resolution now lives in the new `deployment_api/routes/_run_log_resolution.py` (`resolve_run_log_location`): tries
+      `vm_log_stream_uri` first via `gcs_describe_object`; on miss, describes `vm_run_log_final_uri` instead —
+      `metadata=None` when neither exists (honest "no log available", never a fabricated hit). This is the per-VM,
+      request-time GCS existence check the previous todo deliberately deferred out of the bulk census paths. Unit tests:
+      `tests/unit/test_run_log_resolution.py` (resolver, mocked `gcs_describe_object`) + 2 endpoint tests added to
+      `test_route_deployments_inventory.py`. `quality-gates.sh` green (4795 passed).
 - [ ] [BACKEND] P0. Bounded tail endpoint — byte-range read of only the last ~64–256KB, split to the last 200–500 lines
       (cap configurable). Never load the full object into API memory or the response.
 - [ ] [BACKEND] P1. Signed-URL download endpoint (decision 4) — short-lived signed URL for the resolved log object; no
