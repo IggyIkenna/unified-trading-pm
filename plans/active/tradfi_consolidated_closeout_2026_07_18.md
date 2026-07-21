@@ -1544,3 +1544,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     (`instrument_id` ∈ `_OPTIONAL_DEDUP_COLS` → new key, not a flip) → P1 follow-up.
   - **Ships (docs)**: `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL"; issue doc
     `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md` (a)+(b) → RESOLVED.
+
+- **2026-07-21 (sub-agent) — ✅ P2 defense-in-depth: VARCHAR-numeric-shard poisoning CLASS killed in the consolidator**
+  (`unified-trading-library@02fc4661`). Closes the P2 follow-up in
+  `tradfi_schema_version_string_regression_2026_07_20.md` (the source dispatch for this plan's nightly-T+1-down P0). The
+  consolidator merge (`_duckdb_merge_payload`) unions the canonical + per-VM shards via
+  `read_parquet(union_by_name=true)` + `UNION ALL`; a numeric column stored VARCHAR in ONE shard while BIGINT in the
+  canonical promoted the WHOLE merged column to VARCHAR — which bit `row_count` (2026-07-12) and `schema_version`
+  (2026-07-20), corrupting every row and later crashing `manifest_writer/_queries.py`. Fix generalises the point
+  `TRY_CAST(row_count AS BIGINT)` to the full declared-non-string column set via a new `_typed_col_projection` helper on
+  BOTH `shard_proj` + `canon_proj` (`schema_version`/`row_count`/`instrument_count` → BIGINT,
+  `expected_window_completeness_fraction` → DOUBLE, `expected`/`available` → BOOLEAN; mirrors
+  `manifest_writer/_writer_io.py`). A single mistyped shard can no longer poison the corpus and a poisoned column
+  auto-repairs next cycle; no-op for correctly-typed inputs. Anti-regression
+  `tests/unit/test_manifest_consolidator_numeric_varchar_hardening.py` (mixed-type merge, full-rebuild AND incremental —
+  fails on the pre-fix bare projection). Full `quality-gates.sh` green (119s). **Coordination note:** additive/defensive
+  TRY_CAST only — it does NOT touch manifest data, the tick bucket, or the migrate/rebundle/recover scripts, so it
+  composes cleanly with any concurrent manifest id-canonicalization that runs THROUGH this consolidator (the id work
+  changes VALUES; this pins TYPES).

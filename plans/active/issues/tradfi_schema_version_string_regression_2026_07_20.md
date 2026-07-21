@@ -124,9 +124,27 @@ other int-typed manifest column) to BIGINT at the `read_parquet` boundary via a 
 because the merge SQL is incident-scarred and high-risk to edit under time pressure; the writer fix + live re-stamp
 already restore and hold nightly collection.
 
+> **🟢 SHIPPED 2026-07-21 — `unified-trading-library@02fc4661`.** Exactly the recommended hardening, generalised to the
+> full declared-non-string column set. `_duckdb_merge_payload` now routes BOTH `shard_proj` and `canon_proj` through a
+> new `_typed_col_projection(union_cols, present_cols)` helper backed by a `_TYPED_MANIFEST_COLUMNS` map
+> (`schema_version`/`row_count`/`instrument_count` → `BIGINT`, `expected_window_completeness_fraction` → `DOUBLE`,
+> `expected`/`available` → `BOOLEAN`) — mirroring the writer's own coercion in `manifest_writer/_writer_io.py`. Each
+> present typed column becomes `TRY_CAST(col AS <type>) AS col`, each absent one `CAST(NULL AS <type>) AS col`, so both
+> `UNION ALL` branches carry the SAME explicit type and a lone VARCHAR shard can never promote the merged column
+> (auto-repairs a poisoned column on the next cycle). No-op for correctly-typed inputs. Anti-regression:
+> `tests/unit/test_manifest_consolidator_numeric_varchar_hardening.py` seeds a BIGINT canonical + a VARCHAR
+> `schema_version`+`row_count` shard through the REAL merge (full-rebuild AND incremental) and asserts integer output
+> dtype + correct values — this test fails on the pre-fix bare projection (verified: the old projection merges to
+> `VARCHAR`, the new one to `BIGINT`). Full `quality-gates.sh` green (119s).
+
 ## Todos
 
 - [x] [DATA] P0. Re-stamp live tradfi `_index` schema_version → int64 (CAS) — held across consolidator cycles.
 - [x] [SCRIPT] P0. Fix root writer restamp:427 → int + regression test — `market-tick-data-service@ac051bfe`.
 - [x] [VERIFY] P0. check_shard_freshness + un-forced `_apply_freshness_skip` complete without TypeError.
-- [ ] [SCRIPT] P2. Consolidator `TRY_CAST(schema_version AS BIGINT)` hardening (defense-in-depth; see recommendation).
+- [x] [SCRIPT] P2. Consolidator `TRY_CAST(schema_version AS BIGINT)` hardening (defense-in-depth; see recommendation).
+      **DONE 2026-07-21 — `unified-trading-library@02fc4661`.** Generalised to all declared-non-string columns via
+      `_typed_col_projection` (`schema_version`/`row_count`/`instrument_count` BIGINT,
+      `expected_window_completeness_fraction` DOUBLE, `expected`/`available` BOOLEAN) on both `shard_proj` +
+      `canon_proj`; anti-regression `tests/unit/test_manifest_consolidator_numeric_varchar_hardening.py` (fails pre-fix,
+      passes post-fix); full QG green.
