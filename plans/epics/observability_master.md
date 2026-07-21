@@ -39,14 +39,19 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/artifact_pipeline_observability_2026_07_17.md
   - ../active/consolidator_throughput_backlog_monitor_2026_07_09.md
   - ../active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md
   - ../active/data_pipeline_alerts_batch_remediation_2026_07_15.md
   - ../active/data_pipeline_hardening_self_monitoring_2026_06_22.md
+  - ../active/deployment_alerts_ingestion_completeness_2026_07_20.md
   - ../active/deployment_observability_expansion_2026_07_08.md
   - ../active/deployment_registry_firestore_migration_2026_07_14.md
   - ../active/deployment_registry_firestore_p0_unblock_2026_07_14.md
   - ../active/deployment_registry_firestore_p3_cutover_2026_07_14.md
+  - ../active/deployment_ui_alerts_page_rebuild_2026_07_20.md
+  - ../active/deployment_ui_fleet_tab_consolidation_2026_07_21.md
+  - ../active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md
   - ../active/monitoring_control_plane_master_2026_06_10.md
 last_updated: 2026-06-19
 locked_by: live-defi-rollout
@@ -88,7 +93,7 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_9 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
+_14 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -97,6 +102,11 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-pipeline alerts batch remediation —
 drive #data-pipeline-alerts to a clean/accurate state
+
+### [`deployment_alerts_ingestion_completeness_2026_07_20`](../active/deployment_alerts_ingestion_completeness_2026_07_20.md)
+
+**status**: active · **estimate**: 2.8 cal AI-days (class: infra) **title**: deployment alerts — ingestion completeness
+(WS-5 Plan A — mirror the Slack alert sources to the ledger)
 
 ### [`deployment_registry_firestore_migration_2026_07_14`](../active/deployment_registry_firestore_migration_2026_07_14.md)
 
@@ -125,12 +135,22 @@ kinds + rich per-target data + VM work-health
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Deployment registry Firestore migration —
 Phase 3 — cutover to Firestore-only + decommission the GCS registry
 
+### [`deployment_ui_alerts_page_rebuild_2026_07_20`](../active/deployment_ui_alerts_page_rebuild_2026_07_20.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: deployment-ui — Alerts page rebuild (WS-5
+Plan B — filters, sort, date-range, drill-down)
+
 ### [`monitoring_control_plane_master_2026_06_10`](../active/monitoring_control_plane_master_2026_06_10.md)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: design) **title**: Monitoring control-plane master — CI
 dashboard (deployment-ui) + fleet git-health (orchestrator)
 
 ## P2 — useful; opportunistic
+
+### [`artifact_pipeline_observability_2026_07_17`](../active/artifact_pipeline_observability_2026_07_17.md)
+
+**status**: active · **estimate**: 10 cal AI-days (class: infra) **title**: Artifact pipeline observability — build →
+artifact → deploy lineage across both clouds
 
 ### [`consolidator_throughput_backlog_monitor_2026_07_09`](../active/consolidator_throughput_backlog_monitor_2026_07_09.md)
 
@@ -141,6 +161,16 @@ consolidation throughput monitor
 
 **status**: active · **estimate**: 18 cal AI-days (class: infra) **title**: Data-Pipeline Hardening + Self-Monitoring
 (anti silent-misclassification)
+
+### [`deployment_ui_fleet_tab_consolidation_2026_07_21`](../active/deployment_ui_fleet_tab_consolidation_2026_07_21.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: refactor) **title**: deployment-ui — Fleet tab consolidation
+(strip to git-health, merge orphans + VM census into Deployments)
+
+### [`deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17`](../active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: deployment-ui — one URL scheme — plain
+routes, retire `?tab=`
 
 ## P3 — backlog; revisit quarterly
 

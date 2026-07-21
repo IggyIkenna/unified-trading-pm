@@ -39,6 +39,10 @@ codex_ssots:
   ]
 related_plans:
   - ../active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md
+  - ../active/ao_fleet_observability_kpis_2026_07_20.md
+  - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
+  - ../active/ao_scheduled_agent_hygiene_2026_07_20.md
+  - ../active/ao_worker_lifecycle_dispatch_context_2026_07_21.md
   - ../active/master_to_live_defi_2026_05_23.md
 last_updated: 2026-07-16
 locked_by: live-defi-rollout
@@ -306,10 +310,15 @@ the single audit trail.
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
+_6 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
+
+### [`ao_worker_lifecycle_dispatch_context_2026_07_21`](../active/ao_worker_lifecycle_dispatch_context_2026_07_21.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: Worker lifecycle by dispatch-context —
+persistent plan-backlog drain vs event-spawned one-shots
 
 ### [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md)
 
@@ -321,6 +330,20 @@ by 2026-05-23
 ### [`agent_orchestrator_alert_channel_cleanup_2026_07_13`](../active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra)
+
+### [`ao_fleet_observability_kpis_2026_07_20`](../active/ao_fleet_observability_kpis_2026_07_20.md)
+
+**status**: active · **estimate**: 2.8 cal AI-days (class: infra) **title**: AO fleet observability — make efficiency,
+escalator efficacy and account burn visible
+
+### [`ao_open_issues_consolidated_close_out_2026_07_17`](../active/ao_open_issues_consolidated_close_out_2026_07_17.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+
+### [`ao_scheduled_agent_hygiene_2026_07_20`](../active/ao_scheduled_agent_hygiene_2026_07_20.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: AO scheduled-agent hygiene — make the daily
+reconciler observably work
 
 ## P2 — useful; opportunistic
 

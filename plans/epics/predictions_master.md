@@ -33,6 +33,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/prediction_consolidated_closeout_2026_07_18.md
   - ../active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
   - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
@@ -897,7 +898,7 @@ features predict.
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
+_4 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -914,7 +915,9 @@ canonical-question-group bucket + deployment-ui 3-level drilldown
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority)_
+### [`prediction_consolidated_closeout_2026_07_18`](../active/prediction_consolidated_closeout_2026_07_18.md)
+
+**status**: active · **estimate**: 9.6 cal AI-days (class: infra)
 
 ## P2 — useful; opportunistic
 

@@ -41,6 +41,7 @@ related_plans:
   - ../active/canonical_id_builder_retrofit_checklist_2026_07_08.md
   - ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md
   - ../active/infra_capture_and_devops_leftovers_2026_07_06.md
+  - ../active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md
   - ../active/instruments_completion_tracker_2026_07_06.md
   - ../active/instruments_foundation_completeness_2026_06_24.md
   - ../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md
@@ -432,7 +433,7 @@ Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 
 ## Assigned active plans
 
-_10 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
+_11 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -488,7 +489,10 @@ remediation
 
 ## P3 — backlog; revisit quarterly
 
-_(no plans currently assigned at this priority)_
+### [`instrument_record_schema_completeness_extra_forbid_2026_07_18`](../active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md)
+
+**status**: active · **estimate**: 1.0 cal AI-days (class: refactor) **title**: InstrumentRecord schema-completeness +
+extra='forbid' — stop silently dropping adapter kwargs
 
 ## Archived plans
 
