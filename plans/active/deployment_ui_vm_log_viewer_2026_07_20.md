@@ -208,10 +208,24 @@ source:
       live/archive-fallback/no-log/download) + `StreamingLogsPanel.test.tsx`. Re-ran `quality-gates.sh` fresh (post
       fresh-pull) in all 5 touched repos — deployment-service, deployment-api, deployment-ui, unified-trading-library,
       unified-api-contracts — all green.
-- [ ] [REVIEW] P1. Verify against real VMs from this audit (`af-backfill-20260627-151733`,
+- [x] ✅ [REVIEW] P1. Verify against real VMs from this audit (`af-backfill-20260627-151733`,
       `footystats-fwd-20260620-150001`) — confirm the new path resolves correctly going forward; for VMs that completed
       BEFORE this ships (no final snapshot ever written for them), confirm the UI shows the honest "no log available"
-      state rather than a blank silent failure.
+      state rather than a blank silent failure. — verified 2026-07-21 (slot 3) against live GCS (project
+      `central-element-323112`), read-only, ADC creds. **Pre-writer VMs (honest-absence case)**: both
+      `af-backfill-20260627-151733` and `footystats-fwd-20260620-150001` completed before the final-snapshot writer
+      shipped (2026-07-21) and are well past the live path's 14-day TTL — confirmed via `gcs_describe_object` that
+      NEITHER `vm-logs/{vm}/run.log` NOR `log-archive/final/{vm}/run.log` exists for either VM, so
+      `resolve_run_log_location()` returns `metadata=None` and the metadata endpoint
+      (`deployments_inventory.py::get_run_log_metadata`) correctly returns `exists=False` — the UI's `run-log-empty`/"no
+      log available" state, not a blank panel. **Going-forward case (positive proof the writer is live in prod)**: found
+      20 real `log-archive/final/{vm}/run.log` objects written today by the shipped
+      `HeartbeatDaemon._write_final_log_snapshot()` (e.g. `canonical-migration-cefi-wp04s1-wpf07210859`, 42-53KB,
+      timestamped 2026-07-21T12:34-13:21Z — real completed VMs, not synthetic). Ran `resolve_run_log_location()` +
+      `read_run_log_tail()` end to end against two of them: both resolve via the live path (still within TTL) with real
+      log content read back via the bounded byte-range tail (e.g. 52790 bytes read, last line
+      `"2026-07-21 13:19:18,764 INFO Files discovered: 21684"`) — confirms the full read path works against real
+      production data, not just mocked tests.
 - [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the 4 repos — incl.
       `unified-trading-library` for the new path helper) + flip todos same turn (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the log-path resolution contract (live-first/archive-fallback,
@@ -296,6 +310,13 @@ source:
   `unified-api-contracts@21510159` that still expected deployment-api to import it by name (it actually imports
   `vm_run_log_final_uri` now). Re-ran `quality-gates.sh` fresh in all 5 touched repos (deployment-service,
   deployment-api, deployment-ui, unified-trading-library, unified-api-contracts) — all green.
+- **2026-07-21** (slot 3) — Verified todo 9 (real-VM verification) against live GCS, read-only. The two audit VMs
+  (`af-backfill-20260627-151733`, `footystats-fwd-20260620-150001`) completed before the final-snapshot writer shipped
+  and are past the live-path TTL — confirmed both GCS paths genuinely absent for both, so the metadata endpoint honestly
+  returns `exists=False` rather than a silent blank panel. Separately found 20 real `log-archive/final/` objects written
+  TODAY by the shipped writer for real completed VMs (`canonical-migration-cefi-*`) — positive proof the writer is live
+  in prod — and ran the full `resolve_run_log_location()` + `read_run_log_tail()` path against two of them, confirming
+  real log content reads back correctly through the bounded byte-range tail.
 
 ## Codex SSOTs
 
