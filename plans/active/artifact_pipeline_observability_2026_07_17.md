@@ -312,20 +312,31 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       is a lookup) + other Cloud Run services + **GCE VM launches (a launch IS the tarball-lane deploy)** + the real AWS
       App Runner storm + ECS. New surfaces: **● live-now** badges, **human-vs-CI deployer** column (hand-deploys lit
       red), **config-only / new-code / live-now / failed** filter chips, per-row **console↗ / VM↗** links, and
-      `resolve ↗` where a digest→SHA join exists but the value needs a fresh gcloud auth.
+      `resolve ↗` where a digest→SHA join exists but the value needs a fresh gcloud auth. **Real-page requirement (fold
+      into the build):** a **date cursor** so "what ran on date X" is an actual selection — the held-for intervals
+      already support the lookup; the real page's date-range picker provides the control.
 - [ ] [OPERATOR] P0. **Tab 3 — Pipeline** — iterated, awaiting review. `ui@e01e5fc`. Added **All / Failed / Image /
       Tarball / GCP / AWS** filter chips, surfaced the previously-dead `xlane` flag as a **⇄ both-lanes** badge (one
       commit built as image AND tarball), and a **shipped ↗** through-line hint on successful image builds. Drawer (step
-      timeline + failure + log excerpt) unchanged.
+      timeline + failure + log excerpt) unchanged. **Stale-fact fix `ui@57785a3`:** the note claiming the
+      failure-watcher "only posts free text to Slack / stamps `unified-trading-pm`" was corrected — that watcher was
+      **fixed 2026-07-20** (right repo + notify-slack dedup).
 - [ ] [OPERATOR] P0. **Tab 4 — Artifacts** — iterated, awaiting review. `ui@e01e5fc`. Was 8 image rows for 2 repos; now
       **one row per repo** showing the real sprawl (**ECR inventory probed live 2026-07-21**): 20 repos, image counts,
       latest tags, last-push, **running? + state** (running / App-Runner-PAUSED / ECS-desired=0 / orphaned-GC / empty /
       still-pushing), with **running / orphaned-GC / empty / cloud** filters. GCP AR kept as the 2026-07-17 sample + an
-      honest aggregate row (full AR walk needs gcloud auth).
+      honest aggregate row (full AR walk needs gcloud auth). **Real-page requirement (fold into the build):** a per-repo
+      **size** column + a **GC-candidate** flag (no matching build AND not running) so the 1.5 TB AR sprawl is
+      actionable at row level (ties to the cost page). GCP side needs live auth → real-page, not mock. (Overlaps the
+      Phase-6 P3 "orphaned-image GC candidates" stretch — promote into the v1 Artifacts columns.)
 - [ ] [OPERATOR] P0. **Tab 5 — Health** — iterated, awaiting review. `ui@e01e5fc`. Folded in 3 new **measured**
       deploy-lane findings (App Runner storm, orphaned ECR estate, ~40% config churn → 13 conditions), added severity
       **tiles + filter**, an **Area** column, and a **"see in <tab> ↗"** cross-link from every condition to the view
-      that proves it. Note now states none of these fires an alert today.
+      that proves it. Note now states none of these fires an alert today. **Stale-fact fix `ui@57785a3`:** corrected the
+      failure-watcher note (fixed 2026-07-20) and the AWS-tarball "`code/` has 0 objects" claim (now **populated**; real
+      defect = the launcher's 404 bucket). The AWS-lane **bugs** (tarball mismatch, freeze-replay) are kept as **real
+      defects tagged `AWS-deferred`**, distinct from the blue "parked · not a defect" tier (App Runner/ECR) — **operator
+      to confirm this framing.**
 - [ ] [OPERATOR] P0. **AWS-deferred reframe applied across the mock** (operator 2026-07-21) — the AWS state is
       **intentional parking (no credits)**, not breakage. Added a top **GCP-active / AWS-parked banner**; Deploy
       timeline tiles + section headers reframed to "intentionally parked · last active 2026-05-22"; Artifacts states
@@ -517,6 +528,18 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   active path): top banner, Deploy/Artifacts/Health states → parked/deferred, Health `deferred` tier. (3) `pm@6f52496a4`
   — filed `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md` after re-verifying every audit
   finding against current code (see the new lesson below). **Still mock-only; no page code started.**
+- **2026-07-21 (later) — build-kickoff prep + mock stale-fact corrections (`ui@57785a3`).** Operator signalled readiness
+  to build the image tab and to include the tarball SHA stamp **now** ("do it now" — Phase 3c Option A folds into the
+  first build). Before starting, re-read Tabs 2–5 against current verified facts and shipped `ui@57785a3` fixing 3 stale
+  spots: the Tab-3 + Tab-5 failure-watcher note (that watcher was **fixed 2026-07-20** — right repo + notify-slack
+  dedup) and the Tab-5 AWS-tarball "`code/` 0 objects" claim (now **populated**; real defect = the launcher's 404
+  bucket). Kept the AWS-lane bugs as real defects tagged `AWS-deferred`, distinct from the blue "parked · not a defect"
+  tier — flagged for operator confirmation. Mapped the full build blueprint from the two reference services
+  (`cost_observability` backend service + `CostObservability.tsx` page — providers/`_safe` isolation, snapshot worker,
+  DuckDB-over-parquet, `_resolve_range`, reqId ordering guard, mock-handler ordering, NAV_GROUPS/route seams). Captured
+  two real-page requirements as gate-item notes (Tab-4 per-repo size + GC-candidate flag; Tab-2 date cursor). Verified
+  in jsdom (all 5 tabs render, 0 errors); content-verified on origin (ahead=0). **Still mock-only; awaiting operator
+  sign-off on Tabs 2–5 before any page code.**
 
 ## Lessons this session (so they are not re-learned the hard way)
 
