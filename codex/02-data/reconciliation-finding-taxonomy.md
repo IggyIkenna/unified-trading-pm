@@ -481,21 +481,26 @@ Three standing qualifiers:
   finding.
 - **Stops being an exception when** — the operator reverses Option A and authorises a mass re-key.
 
-### AE-4 — `batch_massive` read-recognition, kept until the gated purge
+### AE-4 — `batch_massive` read-recognition — ✅ CLOSED 2026-07-20/21 (was: kept until the gated purge)
 
-- **What** — `batch_massive` remains a recognised `PipelineMode` and `possible_manifest` entry, and ~1.47M historical
-  objects live under `pipeline_mode=batch_massive/`, even though Massive (formerly Polygon.io) was REMOVED as a tradfi
+> **CLOSED 2026-07-20/21** — the gated GCS purge this exception was waiting on has EXECUTED (RUN_TS=20260720-193849,
+> 1,701,422 `batch_massive` objects → 0, 0 collateral; operator Option C, subscription terminated, accepted permanent
+> loss). Per the "Stops being an exception when" clause below, this AE is now CLOSED: a surviving `batch_massive` object
+> found on READ is a genuine finding, not an accepted exception. Retained below as a historical record.
+
+- **What** — `batch_massive` was a recognised `PipelineMode` and `possible_manifest` entry, and ~1.47M historical
+  objects lived under `pipeline_mode=batch_massive/`, even though Massive (formerly Polygon.io) was REMOVED as a tradfi
   SOURCE on 2026-07-19.
-- **Why accepted** — recognition is DELIBERATELY KEPT so historical data stays readable until the gated GCS purge
-  completes: `codex/02-data/tradfi-databento-sourcing-ssot.md:49-59` ("`batch_massive` `PipelineMode` +
-  `possible_manifest` recognition are DELIBERATELY KEPT until the ~1.47M historical … purge"; the same passage notes the
-  residual exposure is a re-consolidation/backfill that tries to RE-STAMP legacy rows).
-- **Ruled by / when** — operator ruling 2026-07-19 (source removal), with recognition explicitly narrowed, not revoked.
-- **Suppression rule** — `pipeline_mode=batch_massive` is NOT `non_canonical_path` and NOT delete-eligible on the
-  strength of source-removal alone. **Removal is a separate, human-only, operator-gated purge** — the reconciliation
-  never suggests it.
-- **Stops being an exception when** — the gated purge completes; recognition is then removed and any surviving
-  `batch_massive` object becomes a genuine finding.
+- **Why accepted (historical)** — recognition was DELIBERATELY KEPT so historical data stayed readable until the gated
+  GCS purge completed: `codex/02-data/tradfi-databento-sourcing-ssot.md:49-59` (post-purge, updated in the same pass);
+  the residual exposure was a re-consolidation/backfill that tried to RE-STAMP legacy rows.
+- **Ruled by / when** — operator ruling 2026-07-19 (source removal, recognition narrowed not revoked); purge executed
+  2026-07-20 (RUN_TS=20260720-193849).
+- **Suppression rule (historical)** — `pipeline_mode=batch_massive` was NOT `non_canonical_path` and NOT delete-eligible
+  on the strength of source-removal alone while objects remained; removal was a separate, human-only, operator-gated
+  purge, now executed.
+- **Stopped being an exception when** — the gated purge completed 2026-07-20; recognition remains in code (tracked for
+  removal separately) but any surviving `batch_massive` object found on READ is now a genuine finding.
 
 ### AE-5 — defi interim flat `LENDING` for market/event data_types
 

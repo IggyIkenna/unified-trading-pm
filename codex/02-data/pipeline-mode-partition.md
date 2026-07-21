@@ -1,17 +1,24 @@
 ---
 doc_type: codex-ssot
-title: '`pipeline_mode` Hive Partition'
+title: "`pipeline_mode` Hive Partition"
 summary: >-
-  pipeline_mode hive-partition SSOT — the outermost {mode}_{source}[_{transport}] path key (LEFT of
-  asset_group=) added to every parquet in the 2026-05-19 bundled GCS migration; the closed-set
-  PipelineMode StrEnum round-tripped with SOURCE_PRIORITY, the source-aware live/replay M1-M8 ratified
-  target design, the reader fallback chain, the GCS-delete-safety invariant (canonical-twin required),
-  and the phantom-audit --apply prefix_tpls hazard.
+  pipeline_mode hive-partition SSOT — the outermost {mode}_{source}[_{transport}] path key (LEFT of asset_group=) added
+  to every parquet in the 2026-05-19 bundled GCS migration; the closed-set PipelineMode StrEnum round-tripped with
+  SOURCE_PRIORITY, the source-aware live/replay M1-M8 ratified target design, the reader fallback chain, the
+  GCS-delete-safety invariant (canonical-twin required), and the phantom-audit --apply prefix_tpls hazard.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [batch-live-reconciliation-service, deployment-api, features-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    batch-live-reconciliation-service,
+    deployment-api,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [pipeline-mode, manifest, migration, single-walk, canonicalisation, batch-live]
 related:
@@ -23,7 +30,17 @@ related:
   ]
 created: 2026-05-08
 authoritative_for: [pipeline_mode hive-partition key, source-aware live/replay M1-M8 target design]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/data-status-drilldown-hierarchy.md, codex/02-data/data-status-drilldown.md, codex/02-data/defi-canonical-naming-ssot.md, codex/02-data/honest-coverage-model.md, codex/02-data/live-data-persistence-and-event-log.md, codex/02-data/manifest-migration-coordination.md, codex/02-data/pipeline-mode-and-batch-live-reconciliation.md]
+referenced_by:
+  [
+    codex/02-data/availability-manifest-and-data-status.md,
+    codex/02-data/data-status-drilldown-hierarchy.md,
+    codex/02-data/data-status-drilldown.md,
+    codex/02-data/defi-canonical-naming-ssot.md,
+    codex/02-data/honest-coverage-model.md,
+    codex/02-data/live-data-persistence-and-event-log.md,
+    codex/02-data/manifest-migration-coordination.md,
+    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+  ]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -67,12 +84,12 @@ code_refs:
 > `pipeline_mode={mode}_{source}/asset_group={ag}/…` paths (COPY not MOVE) → the legacy bare `asset_group=`/`category=`/
 > top-level `day=` shapes are DUPLICATES that still exist. The `_index` is CELL-KEYED (path-agnostic), so it does not by
 > itself tell you a cell's data is canonical. **NEVER delete a legacy object without `gcs_describe_object`-verifying a
-> twin already in CANONICAL format** (defi: + normalized venue/itype). A reconcile prefix-matches BOTH shapes, so it only
-> proves "some object exists" — a cell backed ONLY by a legacy copy passes reconcile yet would be ORPHANED by a blind
-> delete AND read MISSING under canonical-only data-status (deployment-api `DATA_STATUS_CANONICAL_PATHS_ONLY`). Two
-> buckets per legacy object: **SAFE-TO-DELETE** (canonical twin verified) vs **MIGRATE-FIRST** (no twin → COPY to
-> canonical first via `migrate_*_v9_canonical`, then delete-safe). Require **100% canonical-twin coverage per AG** before
-> executing that AG's delete-list; deletion is OPERATOR-GATED. SSOT:
+> twin already in CANONICAL format** (defi: + normalized venue/itype). A reconcile prefix-matches BOTH shapes, so it
+> only proves "some object exists" — a cell backed ONLY by a legacy copy passes reconcile yet would be ORPHANED by a
+> blind delete AND read MISSING under canonical-only data-status (deployment-api `DATA_STATUS_CANONICAL_PATHS_ONLY`).
+> Two buckets per legacy object: **SAFE-TO-DELETE** (canonical twin verified) vs **MIGRATE-FIRST** (no twin → COPY to
+> canonical first via `migrate_*_v9_canonical`, then delete-safe). Require **100% canonical-twin coverage per AG**
+> before executing that AG's delete-list; deletion is OPERATOR-GATED. SSOT:
 > `plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` § "GCS delete safety — path/schema
 > migration prerequisite map" + `plans/audit/results/gcs_delete_list_and_e2e_data_accounting_2026_06_18.md`.
 
@@ -99,8 +116,8 @@ Running `--apply` in that state **flips real `captured` rows → `attempted_fail
 honest-coverage accounting. Always verify `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` covers the new path shape with a
 `--dry-run` first; fix any missing `pipeline_mode=<mode>_*/` template variants; re-run `--dry-run` until the phantom
 count drops to zero; THEN run `--apply`. The Phase 6 "DO NOT run `--apply`" in the table above reflects this: those
-phantom counts were false positives from stale templates, and `--apply` there would have corrupted real `captured`
-cells for all five asset groups.
+phantom counts were false positives from stale templates, and `--apply` there would have corrupted real `captured` cells
+for all five asset groups.
 
 ## TL;DR
 
@@ -128,26 +145,26 @@ Three reasons:
 
 ## Closed-set values (UAC `PipelineMode` StrEnum)
 
-| Value                         | Source                                                                       |
-| ----------------------------- | ---------------------------------------------------------------------------- |
-| `batch_databento`             | Databento bulk + replay APIs (CME GLBX.MDP3 trades, OHLCV)                   |
-| `batch_tardis`                | Tardis CeFi historical ticks                                                 |
-| `batch_ccxt`                  | CCXT REST batch (per-instrument T+1 reconcile)                               |
-| `batch_barchart`              | VIX 15m historical preload (2020-01-02 → 2025-11-12)                         |
-| `batch_yahoo`                 | VIX 15m rolling window (last 60d) + tradfi ETFs                              |
-| `batch_api_football`          | api_football fixtures / events / lineups / stats                             |
-| `batch_footystats`            | footystats odds / xG                                                         |
-| `batch_understat`             | understat xG / shot maps                                                     |
-| `batch_transfermarkt`         | transfermarkt player values                                                  |
-| `batch_soccer_football_info`  | SFI progressive stats                                                        |
-| `batch_open_meteo`            | open-meteo weather (per fixture)                                             |
-| `batch_odds_api`              | odds_api closing-line + horizon snapshots                                    |
-| `batch_polymarket_historical` | Polymarket CLOB historical                                                   |
-| `batch_kalshi_historical`     | Kalshi historical                                                            |
-| `batch_lighter_candles`       | Lighter `/candles` historical (per dex_perp_onboarding 2026-05-07)           |
-| `batch_pacifica_kline`        | Pacifica `/kline` historical                                                 |
-| `batch_databento_replay`      | Databento used by the replay-cascade subsystem                               |
-| `live_websocket`              | Live websocket-streaming pipeline (MTDS / MDPS / features-service live mode) |
+| Value                         | Source                                                                                                                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `batch_databento`             | Databento bulk + replay APIs (CME GLBX.MDP3 trades, OHLCV)                                                                                                                                  |
+| `batch_tardis`                | Tardis CeFi historical ticks                                                                                                                                                                |
+| `batch_ccxt`                  | CCXT REST batch (per-instrument T+1 reconcile)                                                                                                                                              |
+| `batch_barchart`              | RETIRED 2026-06-24; Barchart removed as a source. VIX 15m now aggregates from VX futures via Databento (XCBF.PITCH → `batch_databento`) with `batch_yahoo` for the rolling window. No shim. |
+| `batch_yahoo`                 | VIX 15m rolling window (last 60d) + tradfi ETFs                                                                                                                                             |
+| `batch_api_football`          | api_football fixtures / events / lineups / stats                                                                                                                                            |
+| `batch_footystats`            | footystats odds / xG                                                                                                                                                                        |
+| `batch_understat`             | understat xG / shot maps                                                                                                                                                                    |
+| `batch_transfermarkt`         | transfermarkt player values                                                                                                                                                                 |
+| `batch_soccer_football_info`  | SFI progressive stats                                                                                                                                                                       |
+| `batch_open_meteo`            | open-meteo weather (per fixture)                                                                                                                                                            |
+| `batch_odds_api`              | odds_api closing-line + horizon snapshots                                                                                                                                                   |
+| `batch_polymarket_historical` | Polymarket CLOB historical                                                                                                                                                                  |
+| `batch_kalshi_historical`     | Kalshi historical                                                                                                                                                                           |
+| `batch_lighter_candles`       | Lighter `/candles` historical (per dex_perp_onboarding 2026-05-07)                                                                                                                          |
+| `batch_pacifica_kline`        | Pacifica `/kline` historical                                                                                                                                                                |
+| `batch_databento_replay`      | Databento used by the replay-cascade subsystem                                                                                                                                              |
+| `live_websocket`              | Live websocket-streaming pipeline (MTDS / MDPS / features-service live mode)                                                                                                                |
 
 **Source-of-truth rule**: every UAC `SOURCE_PRIORITY` entry MUST have a corresponding **batch** `PipelineMode` value,
 and vice versa. Unit test in `unified-api-contracts/tests/unit/test_pipeline_mode.py` enforces the round-trip. (The

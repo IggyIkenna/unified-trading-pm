@@ -203,15 +203,15 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
    confidence level at which an agent deletes from prod.
 2. **Any legacy-object delete after copy.** The entire v9-migration legacy estate is gated by Part 5 above; the copy
    made the legacy object look redundant without proving it is.
-3. **The tradfi `batch_massive` purge.** All objects under
-   `gs://market-data-tick-tradfi-prd-{pid}/…/pipeline_mode=batch_massive`. Massive (formerly Polygon.io) was removed as
-   a tradfi source 2026-07-19, but `batch_massive` **read-recognition** (`PipelineMode` + `possible_manifest`) is
-   deliberately KEPT until the purge completes — removing recognition before the purge makes the phantom audit flag the
-   entire corpus as unreachable. Design doc: `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`;
-   vendor removal: `codex/02-data/tradfi-databento-sourcing-ssot.md`. **UNVERIFIED — object count**: the audit synthesis
-   states the scale in two mutually inconsistent forms (a "1.47M-object purge" and "1,696,166 objects"). Neither was
-   independently re-measured for this doc. Treat the scale as ~1.5M and re-measure before any purge; do not cite either
-   figure as settled.
+3. **The tradfi `batch_massive` purge — ✅ EXECUTED 2026-07-20/21 (operator, human-only).** All objects under
+   `gs://market-data-tick-tradfi-prd-{pid}/…/pipeline_mode=batch_massive` were purged: RUN_TS=20260720-193849,
+   **1,701,422 objects → 0, 0 collateral** (operator Option C, subscription terminated, accepted permanent loss).
+   Massive (formerly Polygon.io) was removed as a tradfi source 2026-07-19. `batch_massive` **read-recognition**
+   (`PipelineMode` + `possible_manifest`) is still present in code (kept only while objects existed, to avoid
+   phantom-orphan flags) and is now safe to remove — tracked separately, not yet done as of this doc's last edit. Design
+   doc: `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`; vendor removal:
+   `codex/02-data/tradfi-databento-sourcing-ssot.md`. This category is retained in the hard-stop list for any FUTURE
+   prod-scale purge of a similar shape — not because this specific purge is still pending (it is not).
 4. **Anything touching `instrument_type` casing — RULED UPPERCASE (TARGET, D1), `migration_pending` today; still a
    human-only hard stop for prod-scale rewrites.** ⛔ corrected 2026-07-20 (re-reconciled same day, acceptance review):
    this axis was previously "unruled / this doc does not pick a side"; the operator **ruled the TARGET is UPPERCASE for

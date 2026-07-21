@@ -358,11 +358,11 @@ tooling but was a no-op on real data. Reference: `plans/archive/sports_gcs_parti
 
 > **Temporary states + their canonical follow-up plans** (per CLAUDE.md HARD RULE — codex audit D-3 2026-05-12):
 >
-> | Temporary state                                                                                                                                                                        | Successor plan                                                                                                         | Successor phase                                                                           |
-> | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated) | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep              |
-> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 7 reader-fallback deletion (~2026-06-15)                                            |
-> | v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows)                                                                            | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/active/tradfi_massive_dual_source_2026_05_28.md) | Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7) |
+> | Temporary state                                                                                                                                                                                                                                                                                                                                                                                 | Successor plan                                                                                                                                    | Successor phase                                                                                                                  |
+> | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated)                                                                                                                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)                            | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep                                                     |
+> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                                                                                                                                                                                                                                   | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)                            | Phase 7 reader-fallback deletion (~2026-06-15)                                                                                   |
+> | ~~v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows)~~ **RESOLVED 2026-07-21** — TradFi source is write-stamped `databento`-only at capture via `ManifestWriter._stamp_producer_source` / `--source databento`; the Massive dual-source drain (BLK-b00254d7) is CLOSED — Massive removed as a source 2026-07-19 and purged 2026-07-21. | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/active/tradfi_massive_dual_source_2026_05_28.md) (now `status: superseded`) | ~~Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7)~~ MOOT — no Massive backfill pending |
 
 The schema has evolved through six published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8
@@ -446,7 +446,8 @@ cutoff.
 > `str = ""` at runtime (:400), not `str | None = None`.
 
 ```python
-MANIFEST_SCHEMA_VERSION = 9  # v9: source column added (tradfi_massive_dual_source_2026_05_28.md Phase 3, 2026-05-30)
+MANIFEST_SCHEMA_VERSION = 9  # v9: source column added (tradfi_massive_dual_source_2026_05_28.md Phase 3, 2026-05-30;
+                              # plan superseded 2026-07-21 — Massive removed as a tradfi source 2026-07-19)
 
 @dataclass
 class AvailabilityRecord:
@@ -549,7 +550,9 @@ class AvailabilityRecord:
     # cells auto-stamped; multi-source cells must be explicit).
     # Closed-set values mirror UAC SOURCE_PRIORITY source strings.
     # ─────────────────────────────────────────────────────────────────────
-    source: str = ""                  # "databento" | "massive" | "yahoo" | "barchart" | "tardis" | "" (pre-v9 legacy)
+    source: str = ""                  # current tradfi: "databento" | "yahoo" | "tardis"; "massive" (removed
+                                       # 2026-07-19) / "barchart" (retired 2026-06-24) appear ONLY on legacy rows;
+                                       # "" = pre-v9
 
     # ─────────────────────────────────────────────────────────────────────
     # v8 — emission tracking (manifest_schema_final_gate_2026_05_09)
@@ -630,10 +633,12 @@ class AvailabilityRecord:
   from (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
 - **`source` field (v9, universal).** Every external-vendor cell across all 5 asset groups now carries `source`. The
   column tags which upstream provider produced the manifest row, enabling `GROUP BY source` reconciliation for
-  multi-source cells (e.g. TradFi Databento + Massive) and registry-driven auto-stamp for single-source cells.
-  Closed-set values mirror UAC `SOURCE_PRIORITY` source strings (`"databento"`, `"massive"`, `"yahoo"`, `"barchart"`,
-  `"tardis"`, etc.). UTL raises `MissingSourceError` on single-source blank (`uac@aab101ad` / `utl@0f7198f2`
-  2026-05-30). Cross-reference: `contracts-scope-and-layout.md` § "Generalised beyond TradFi".
+  multi-source cells and registry-driven auto-stamp for single-source cells. **Current UAC `SOURCE_PRIORITY` source
+  strings = `"databento"`, `"yahoo"`, `"tardis"` (per asset group)** — `"massive"` (removed 2026-07-19) and `"barchart"`
+  (retired 2026-06-24) are historical values no longer written or routed; they can appear only on pre-removal rows and
+  `batch_massive/` GCS objects pending the gated purge. UTL raises `MissingSourceError` on single-source blank
+  (`uac@aab101ad` / `utl@0f7198f2` 2026-05-30). Cross-reference: `contracts-scope-and-layout.md` § "Generalised beyond
+  TradFi".
 - **`capture_status` is canonical** for shard state — closed 4-state set: `captured` (real data on disk),
   `empty_confirmed` (source returned 200 + zero rows OR known expected gap; counts in denominator only),
   `attempted_failed` (exception during fetch; classified via `error_reason`), `expected_unattempted` (downstream service
@@ -689,10 +694,17 @@ class AvailabilityRecord:
   so the (date, venue, instrument_type, data_type, underlying) primary key extends to (..., quote_asset, margin_type)
   without colliding inverse/linear bundles. Leave both empty for non-derivative or single-margin venues.
 
-### Per-source `capture_status` semantics (v9 TradFi dual-source)
+### Per-source `capture_status` semantics (v9 TradFi dual-source) — HISTORICAL
 
-When a TradFi `(asset_group, venue, day, data_type)` cell has multiple sources in `SOURCE_PRIORITY`, the manifest may
-have **one row per source** for the same cell key. The `capture_status` semantics are per-source:
+> **SUPERSEDED 2026-07-21** — Massive removed as a TradFi source (operator ruling 2026-07-19), `batch_massive` GCS
+> objects purged 2026-07-21. TradFi is single-source Databento (+ Yahoo daily for KRX/rolling-VIX). No dual-source
+> Databento+Massive cell exists; `MassiveTradfiRestConnector` is gone. SSOT:
+> `codex/02-data/tradfi-databento-sourcing-ssot.md`. The table below is retained as a historical record of the v9
+> dual-source design; it no longer describes live behavior.
+
+When a TradFi `(asset_group, venue, day, data_type)` cell had multiple sources in `SOURCE_PRIORITY` (Databento +
+Massive, pre-2026-07-19), the manifest could carry **one row per source** for the same cell key. The `capture_status`
+semantics were per-source:
 
 | Scenario                                     | `source=databento` row | `source=massive` row        | Downstream consumer policy                                                                                                   |
 | -------------------------------------------- | ---------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -702,15 +714,17 @@ have **one row per source** for the same cell key. The `capture_status` semantic
 | Both empty_confirmed                         | `empty_confirmed`      | `empty_confirmed`           | cell is **empty** for this (venue, day, data_type)                                                                           |
 | Databento attempted_failed, Massive captured | `attempted_failed`     | `captured`                  | cell is **available** via Massive; Databento failure is flagged in error_reason but doesn't block downstream                 |
 
-**Key rule**: a TradFi cell is considered `captured` if **at least one source** has `capture_status=captured`.
-Downstream consumers apply union semantics. `select_primary_available_source(asset_group, data_type, available_sources)`
-in UAC `canonical.crosscutting.source_priority` returns the priority-ordered primary for a given available set.
+**Current single-source model**: a TradFi cell is considered `captured` if the (sole) `source=databento` row has
+`capture_status=captured` (or `source=yahoo` for the daily-only cells).
+`select_primary_available_source(asset_group, data_type, available_sources)` in UAC
+`canonical.crosscutting.source_priority` still exists for the general multi-source case (used by other asset groups) but
+no longer resolves a databento-vs-massive choice for tradfi.
 
-Conflict detection: if the same `(venue, day, ticker, timestamp)` appears in both sources,
-`detect_dual_source_conflicts()` logs `DUAL_SOURCE_DUPLICATE` + writes `divergence_kind=DUAL_SOURCE_DUPLICATE` to the
-manifest. No silent drops.
+Conflict detection: `detect_dual_source_conflicts()` still exists in code for asset groups that ARE genuinely
+multi-source; it no longer fires for tradfi.
 
-SSOT: `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` § "Multi-source merge".
+SSOT: `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` § "Multi-source merge",
+`codex/02-data/tradfi-databento-sourcing-ssot.md`.
 
 ### Documented exception: permanently-untyped legacy rows (sports IS, pre-2026-07-08)
 
@@ -730,8 +744,9 @@ defect and should be investigated normally.
 with their defaults (`captured` for capture_status, `""` for legacy string columns, `None` for v8 emission columns). No
 migration needed for reads. Writes produce v9 entries that coexist with older entries until re-scanned by a
 `rebuild*_manifest.py` pass. The v7 → v8 reader-fallback chain is bounded — deletion target ~2026-06-15 (30-day grace
-window) per the final-gate plan's "no double SSOT" closure rule. The v9 `source` column backfill (TradFi rows) is
-pending operator drain per `tradfi_massive_dual_source_2026_05_28.md` Phase 5.
+window) per the final-gate plan's "no double SSOT" closure rule. TradFi rows are write-stamped `source='databento'` at
+capture time; no Massive backfill is pending (Massive removed as a tradfi source 2026-07-19, purged 2026-07-21;
+`tradfi_massive_dual_source_2026_05_28.md` is now `status: superseded`).
 
 ## Per-Service Shard Dimension Matrix
 
@@ -2029,8 +2044,9 @@ SSOT: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2 +
 
 ## Universal `source` column — v9 {#universal-source-column--v9}
 
-**Initial plan**: `tradfi_massive_dual_source_2026_05_28.md` Phase 3 (task -017). **Generalised**: `uac@aab101ad` /
-`utl@0f7198f2` (2026-05-30) — `source` now covers every external-vendor cell across all 5 asset groups.
+**Initial plan**: `tradfi_massive_dual_source_2026_05_28.md` Phase 3 (task -017; plan superseded 2026-07-21 — Massive
+removed as a tradfi source 2026-07-19). **Generalised**: `uac@aab101ad` / `utl@0f7198f2` (2026-05-30) — `source` now
+covers every external-vendor cell across all 5 asset groups.
 
 ### Manifest row `source` field
 
@@ -2038,13 +2054,13 @@ Every `AvailabilityRecord` now carries `source: str = ""`. For all asset groups 
 registry-driven, the field is auto-stamped or required non-empty (single-source cells auto-stamp; multi-source cells
 must be explicit); `MissingSourceError` on blank. Pre-v9 legacy rows default to `""`.
 
-| Value                    | Provider                      | When stamped                                                                                                |
-| ------------------------ | ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `"databento"`            | Databento                     | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward               |
-| `"massive"`              | Massive (formerly Polygon.io) | `MassiveTradfiRestConnector` writes (Phase 4)                                                               |
-| `"polymarket_clob"`      | Polymarket CLOB API           | Prediction MTDS writes (single-source; auto-stamped via `default_source`)                                   |
-| `"polymarket_gamma_api"` | Polymarket Gamma API          | Prediction MTDS writes (single-source; auto-stamped via `default_source`)                                   |
-| `""`                     | —                             | Pre-v9 legacy rows; cefi/defi/sports cells whose write-wiring is not yet complete (see RED-gap table below) |
+| Value                            | Provider                      | When stamped                                                                                                                                                                                                                 |
+| -------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"databento"`                    | Databento                     | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward                                                                                                                                |
+| `"massive"` (RETIRED 2026-07-19) | Massive (formerly Polygon.io) | Historical only — `MassiveTradfiRestConnector` writes (Phase 4). Massive removed as a tradfi source 2026-07-19 and the connector deleted (`mtds@362a487e`); `batch_massive` GCS estate purged 2026-07-21. No longer written. |
+| `"polymarket_clob"`              | Polymarket CLOB API           | Prediction MTDS writes (single-source; auto-stamped via `default_source`)                                                                                                                                                    |
+| `"polymarket_gamma_api"`         | Polymarket Gamma API          | Prediction MTDS writes (single-source; auto-stamped via `default_source`)                                                                                                                                                    |
+| `""`                             | —                             | Pre-v9 legacy rows; cefi/defi/sports cells whose write-wiring is not yet complete (see RED-gap table below)                                                                                                                  |
 
 ### Per-AG `source=` write-wiring status — wired vs RED gaps (operator-confirmed 2026-06-01)
 
@@ -2054,13 +2070,13 @@ source over time, so every captured cell (even single-source today, for swap-res
 
 Current write-wiring status per asset group (snapshot; update when an AG is wired):
 
-| Asset group    | Status     | Source values wired                       | Notes                                                                                                                                                                                                                                                                                                                                                                      |
-| -------------- | ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **tradfi**     | ✅ WIRED   | `databento`, `massive`                    | Multi-source; `SOURCE_PRIORITY[("tradfi", data_type)] = ["databento", "massive"]`; `select_primary_available_source()` picks winner. Databento is primary (2026-06-24 coordinator decision).                                                                                                                                                                               |
-| **prediction** | ✅ WIRED   | `polymarket_clob`, `polymarket_gamma_api` | Single-source per writer; auto-stamped via `default_source` on `ManifestWriter`; UAC `SOURCE_PRIORITY` already carries the prediction pairs. `Prediction venue ≠ source`: Polymarket-vs-Kalshi dispersion is a feature-layer concern, NOT a source merge. Historical `_index` source-stamp rides the prediction canonicalisation walk; live/new writes auto-stamp already. |
-| **cefi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Tracked as a gap in `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`.                                                                                                                                                                                                          |
-| **defi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                         |
-| **sports**     | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                         |
+| Asset group    | Status     | Source values wired                       | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| -------------- | ---------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **tradfi**     | ✅ WIRED   | `databento`, `yahoo`                      | Databento (batch source-of-truth) + Yahoo (daily/rolling: `ohlcv_1m`/`15m`/`24h`, KRX Korean underliers + FX/treasury indices). Live `SOURCE_PRIORITY` per `_source_priority_data.py`: `("tradfi","ohlcv_1m")=["databento","yahoo"]`, `("tradfi","ohlcv_15m")=["databento","yahoo"]`, `("tradfi","ohlcv_24h")=["yahoo"]`, and `["databento"]` for trades/tbbo/ohlcv_1s/options_chain/futures_chain; Databento is primary. **Massive (formerly Polygon.io) REMOVED as a tradfi source 2026-07-19** (operator ruling; `uac@a2beed46` / `mtds@362a487e`) and GCS-purged 2026-07-21 — only `batch_massive/` PipelineMode recognition is retained historically. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`. |
+| **prediction** | ✅ WIRED   | `polymarket_clob`, `polymarket_gamma_api` | Single-source per writer; auto-stamped via `default_source` on `ManifestWriter`; UAC `SOURCE_PRIORITY` already carries the prediction pairs. `Prediction venue ≠ source`: Polymarket-vs-Kalshi dispersion is a feature-layer concern, NOT a source merge. Historical `_index` source-stamp rides the prediction canonicalisation walk; live/new writes auto-stamp already.                                                                                                                                                                                                                                                                                                                                          |
+| **cefi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Tracked as a gap in `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **defi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| **sports**     | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 **Downstream consumer policy for RED-gap AGs**: `select_primary_available_source()` gracefully handles empty `source`
 columns (returns the first available entry; does not raise). RED-gap cells still satisfy all other manifest integrity
@@ -2068,10 +2084,16 @@ rules (4-state taxonomy, cluster validation, `available_at`). The RED-gap label 
 correctness gap for current consumers — but it blocks multi-source disambiguation for those AGs if a second source is
 ever added. The SSOT tracking plan is `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`.
 
-### Per-source `capture_status` semantics in a dual-source cell
+### Per-source `capture_status` semantics in a dual-source cell — HISTORICAL
 
-When both Databento and Massive run for the same `(venue, data_type, day)`, the manifest contains **two separate rows**
-— one per `source`. Each row carries its own independent `capture_status`:
+> **SUPERSEDED 2026-07-21** — Massive removed as a TradFi source (operator ruling 2026-07-19), `batch_massive` GCS
+> objects purged 2026-07-21. TradFi is single-source Databento (+ Yahoo daily for KRX/rolling-VIX). No dual-source
+> Databento+Massive cell exists; `MassiveTradfiRestConnector` is gone. SSOT:
+> `codex/02-data/tradfi-databento-sourcing-ssot.md`. The examples below are retained as a historical record; they no
+> longer describe live behavior.
+
+When both Databento and Massive ran for the same `(venue, data_type, day)` (pre-2026-07-19), the manifest contained
+**two separate rows** — one per `source`. Each row carried its own independent `capture_status`:
 
 ```
 (venue=NYSE, data_type=ohlcv_1m, day=2026-05-30, source=databento) → capture_status=captured

@@ -378,8 +378,11 @@ path per AG.**
   `PROTOCOL-CHAIN` overload — which is precisely what oracle clause 7 catches, and only for defi. S2 carries BOTH
   `instrument_id` and `canonical_instrument_id`.
 - **tradfi — the only AG with write-time raising guards in the oracle** (clause 8), including the outright
-  `batch_massive` ban. `batch_massive` read-recognition is retained until the gated GCS purge, so a `batch_massive` path
-  found on READ is an accepted exception, not a fresh finding — see the taxonomy's exception list.
+  `batch_massive` ban. **The gated GCS purge of all ~1.7M historical `batch_massive` objects COMPLETED 2026-07-20**
+  (RUN_TS=20260720-193849, 1,701,422 objects removed, 0 collateral — see resolved issue
+  `massive_purge_blocked_databento_l1_entitlement_2026_07_20.md`), so `batch_massive` is no longer expected on disk. Per
+  taxonomy AE-4's transition rule, the read-recognition exception has **closed**: a surviving `batch_massive` path found
+  on READ is now a genuine finding, not an accepted exception — see the taxonomy's exception list.
 - **cefi — venue names legitimately contain hyphens** (`BINANCE-FUTURES`, `OKX-FUTURES`). Flagging every hyphen as
   `VENUE-CHAIN` glue _"crashed the cefi LIVE producers at the writer boundary … silently freezing the
   deribit/hyperliquid/binance live VMs for hours (2026-06-23)"_ (`partition_paths.py:742-749`). This is why clause 7 is
