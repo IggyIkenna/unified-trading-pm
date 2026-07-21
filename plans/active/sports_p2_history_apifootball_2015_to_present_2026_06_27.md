@@ -3206,3 +3206,37 @@ future dispatch notices these 2 VM slots (FIXTURE_EVENTS/FIXTURE_STATS coverage 
 not-relaunched after a reasonable window, that's worth a `/blocked` to the operator/main agent (self-heal watchdog
 possibly not covering this VM class) rather than a unilateral relaunch — per the same guardrail, confirming genuine
 staleness (not a sibling's in-flight work) is required before any VM-lifecycle action.
+
+### 2026-07-21T03:11Z — data_engineering slot-4 (Todo `-001`, resumed after an unrelated cicd escalation on this slot — confirms the 2 dead VMs remain un-relaunched ~22h later, crossing the prior entry's own escalation bar)
+
+Dispatched (resumed) onto `-001`. Fresh-pulled slot repos clean, no dirty state inherited.
+
+**Fleet-liveness + checkpoint check** (non-snap SDK `/home/ubuntu/google-cloud-sdk/bin/gcloud`; `gcloud storage cat` for
+`PROGRESS.json` — plain `gsutil` reports invalid creds in this environment, `gcloud storage` works fine on the same
+ADC):
+
+- `gcloud compute instances list --filter="name~af-backfill"` → only 2 VMs resolve: `af-backfill-20260719-180545`
+  (FIXTURE_LINEUPS) and `af-backfill-20260719-180620` (PLAYER_STATS), both `RUNNING`.
+- `af-backfill-20260719-180520` (FIXTURE_EVENTS) and `af-backfill-20260719-180603` (FIXTURE_STATS) — confirmed GONE
+  (absent from the instance list), consistent with the prior entry's finding.
+- `PROGRESS.json` checkpoints (current UTC 03:11:19Z):
+  - `-180545` LINEUPS: `last_completed_date=2024-04-25`, `updated=2026-07-21T03:10:31Z` — ~1 min old, actively
+    advancing.
+  - `-180620` PLAYER_STATS: `last_completed_date=2025-08-31`, `updated=2026-07-21T02:21:53Z` — ~49 min old, actively
+    advancing, now within ~8 months of the window end (`2026-05-10`).
+  - `-180520` FIXTURE_EVENTS: `last_completed_date=2021-05-01`, `updated=2026-07-20T05:25:00Z` — frozen, ~22h stale.
+    Dead.
+  - `-180603` FIXTURE_STATS: `last_completed_date=2021-03-20`, `updated=2026-07-20T05:25:21Z` — frozen, ~22h stale.
+    Dead.
+
+**This crosses the prior entry's own escalation bar** ("if a future dispatch notices these 2 VM slots still show as
+not-relaunched after a reasonable window, that's worth a `/blocked` ... rather than a unilateral relaunch"): ~22h with
+zero self-heal, no `PREEMPTED` marker on either (consistent with an abrupt kill, inconclusive on cause). VM relaunch is
+out of `data_engineering` craft scope (`data_engineering.md` `does_not`: "infra/VM launches (→ infra)"), and STEP 0.55's
+guardrail counsels `/blocked` over unilateral action when uncertain. Filed `/blocked` (see slot-4 dashboard)
+recommending an `infra`-craft relaunch of the 2 dead entity shards resuming from their durable checkpoints
+(`FIXTURE_EVENTS` from `2021-05-01`, `FIXTURE_STATS` from `2021-03-20`) per the shipped PROGRESS-checkpoint auto-resume
+contract — explicitly NOT a `--force`/`redo_all` restart, which would replay from `START_DATE` and lose the durable
+progress. Not flipping the checkbox — gate still far from green (2/4 shards stalled, the other 2 mid-window).
+`/skip-current-task` after filing — resume once either (a) the 2 dead shards are relaunched (infra) and reach parity
+with the other 2, or (b) a fresh full-history gate read is independently due.
