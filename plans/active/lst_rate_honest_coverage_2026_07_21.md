@@ -94,24 +94,25 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `venue_adapter_keys.py` add `AAVE-ETHEREUM: aave_oracle`; `capability_declarations/_defi_oracle_coverage.py`
       coverage-start. Add `aave` to UAC `pipeline_mode_for_source` if absent. — `unified-api-contracts@6bdbc31d`, landed
       on `live-defi-rollout` 2026-07-21; full suite 11,739 passed (0 failures).
-- [x] [IS] P1. **AaveOracle reference-data adapter** — `adapters/defi/aave_oracle.py` (clone `chainlink.py`; venue
+- [x] ✅ [IS] P1. **AaveOracle reference-data adapter** — `adapters/defi/aave_oracle.py` (clone `chainlink.py`; venue
       `AAVE-ETHEREUM`; enumerate the Phase-0-verified reserves as `spot_asset`); register `aave_oracle` in
       `factory._ADAPTERS` + add `AAVE-ETHEREUM` to `orchestrator/defi.py`. Keep IS phase in lockstep with UAC. —
-      `instruments-service@d13fb68d`+`@02e5215b` (2 commits, local, `quality-gates.sh` fully green, sentinel matches
-      HEAD) — **quickmerge BLOCKED**, not by anything IS-side: the dirty-deps pre-flight guard refuses because IS's
-      path-dependency `unified-trading-library` currently has genuinely LIVE uncommitted WIP (8 files, identical mtime
-      ~27s old at check time — well inside the 120s liveness threshold, correctly PROTECTED, not isolated). That same
-      WIP also blocks shipping this plan's own already-tested `unified-trading-library` fix (the
-      `_VENUE_OVERRIDES["AAVE"]` provenance bug from the Phase-2 entry above) — ship both together the next time UTL's
-      working tree is genuinely clear, then retry `instruments-service`'s quickmerge. See "the DEFI dedup count 98→99 is
-      UAC-registry-driven, not IS-adapter-driven" note below for why this ship, while blocked, is not itself the long
-      pole — Phase 4's daily-download gate is the actual next dependency.
-- [x] [IS] P1. **Regenerate catalogue + expected universe** — `build_instrument_catalogue.py` +
+      **SHIPPED** `instruments-service@fd0d12a9` (2026-07-21, slot-9), live on `live-defi-rollout`. The earlier
+      `d13fb68d`+`@02e5215b` local-only commits referenced above never reached origin (a different slot/session's
+      working tree, lost to the dirty-deps UTL block) — this is a fresh, independent build+ship, not a duplicate of
+      unreachable local state. `quality-gates.sh` fully green (4760 passed, 0 failed, all 4 previously-red invariant
+      tests now pass); full evidence in
+      `plans/active/issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (resolved).
+- [x] ✅ [IS] P1. **Regenerate catalogue + expected universe** — `build_instrument_catalogue.py` +
       `enumerate_expected_universe.py` (v2); confirm the new `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` +
       `(AAVE, spot_asset, oracle_prices)` cells appear as `expected_unattempted` (honest RED). Verify #1 (CEX) needs no
-      edit (no-op). — covered by the adapter registration above
-      (`instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md`'s own invariant tests confirm the
-      enumeration); same quickmerge-blocked state.
+      edit (no-op). — covered by the adapter registration above (shipped `instruments-service@fd0d12a9`); the AAVE
+      SPOT_ASSET enumeration is confirmed live via the now-green
+      `test_every_uac_adapter_key_resolves_to_a_class`/`test_adapter_data_sources_covers_all_adapters`/
+      `test_defi_set_equals_uac_denominator_drift_guard` invariants. A separate catalogue/expected-universe REGEN RUN
+      (the actual `build_instrument_catalogue.py`/`enumerate_expected_universe.py` script execution against real infra)
+      is still open if this plan intends a literal regen pass beyond the invariant-test confirmation — check before
+      archiving this todo further.
 
 ## Phase 2 — Collectors ready to fetch
 
@@ -182,6 +183,13 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Progress Log
 
+- **2026-07-21 (Phase 1, IS leg shipped)** — `instruments-service@fd0d12a9` (slot-9): built + shipped `aave_oracle.py`
+  fresh (the earlier `d13fb68d`/`@02e5215b` local-only commits from a different slot's session never reached origin —
+  dirty-deps UTL block lost that working tree; not recovered, not duplicated, independently rebuilt). `quality-gates.sh`
+  fully green (4760 passed, 0 failed) — fixed all 4 invariant-test failures the UAC registration (`6bdbc31d`) had
+  caused, including bumping the frozen DEFI dedup-target count 98→99 (confirmed exactly +1 for the one new static venue,
+  not further drift). Issue doc `instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md`
+  resolved.
 - **2026-07-21** — Plan authored from the pipeline-add understand sweep. Codex SSOT `lst-exchange-rate-surfaces.md`
   authored alongside. Key reframes captured: #1 CEX = backfill-not-build (catalogue already complete; list edits are
   phantom-minting); #3 Aave oracle = plumbing (dormant RPC, not missing); #2 DEX = collector/endpoint problem;

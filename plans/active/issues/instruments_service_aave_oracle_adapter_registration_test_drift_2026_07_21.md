@@ -11,7 +11,7 @@ summary: >-
   POOL-adapter change (`defi_consolidated_closeout_2026_07_18.md` Track 1, "eliminate the address/UUID fallback"
   sub-items 2+4) — confirmed via a `git stash` baseline (byte-identical 4 failures with the unrelated diff fully
   removed) that this is 100% pre-existing and unrelated to that change.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -29,7 +29,7 @@ depends_on: []
 locked_by:
 locked_since:
 parent_epic: defi_master
-resolved_by:
+resolved_by: slot-9 (2026-07-21) — instruments-service@fd0d12a9, both todos shipped, 4760 passed / 0 failed
 ---
 
 ## What I found
@@ -104,16 +104,20 @@ class + data source).
 
 ## Todos
 
-- [ ] [BACKEND] P1. Build/finish + ship `instruments_service/reference_data/adapters/defi/aave_oracle.py` (clone
+- [x] ✅ [BACKEND] P1. Build/finish + ship `instruments_service/reference_data/adapters/defi/aave_oracle.py` (clone
       `chainlink.py`'s shape per the plan's own guidance; venue `AAVE-ETHEREUM`; enumerate the Phase-0-verified 6
       reserves as `spot_asset`), register `"aave_oracle"` in `factory._ADAPTERS` + `ADAPTER_DATA_SOURCES`, and add
       `AAVE-ETHEREUM` to `orchestrator/defi.py`'s `_STATIC_DEFI_VENUES`. (repo: instruments-service — this is
       `lst_rate_honest_coverage_2026_07_21.md`'s own Phase-1 IS todo; do not duplicate that plan's todo list, just close
-      both from the one ship.)
-- [ ] [BACKEND] P2. Once shipped, confirm `test_pipeline_e2e_prediction.py`'s DEFI dedup target count (currently
+      both from the one ship.) — instruments-service@fd0d12a9. All 6 Phase-0-verified reserves
+      (wstETH/weETH/rETH/cbETH/rsETH/ezETH) enumerated as SPOT_ASSET under AAVE-ETHEREUM, symbol lower-cased per spec,
+      conservative available_from floor (max of AAVE V3 launch + each reserve's own protocol launch).
+- [x] ✅ [BACKEND] P2. Once shipped, confirm `test_pipeline_e2e_prediction.py`'s DEFI dedup target count (currently
       hard-coded `98`, observed `99` post-registration) reflects the new, correct steady-state venue count — update the
       magic number only after confirming it's the intended count, not a further symptom of drift (same caution as the
-      sibling DERIBIT-COMBO issue's todo 3). (repo: instruments-service)
+      sibling DERIBIT-COMBO issue's todo 3). (repo: instruments-service) — instruments-service@fd0d12a9. Confirmed 99 is
+      exactly +1 (one new static venue registered, dedup is per (asset_group, venue)) — not further drift. QG-verified:
+      4760 passed, 0 failed (all 4 originally-red invariant tests now green).
 
 ## Codex SSOTs
 
