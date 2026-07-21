@@ -909,3 +909,15 @@ repo. This plan tracks that work.
   features-sports hit) filed at
   [`plans/active/issues/utl_uac_skew_fleet_audit_2026_07_15.md`](issues/utl_uac_skew_fleet_audit_2026_07_15.md).
   READ-ONLY throughout — no service/job/image/scheduler modified.
+
+## Deferred work — migrated to:
+
+**This plan itself (self-resolved, same plan)** — the sole hit (line ~713, "Todo 7 (retire legacy job): DEFERRED — a
+real new dependency was discovered") described a temporary blocker on retiring `features-sports-service-job`: the
+`configs/sports-trigger-tiers.yaml` Tier-3/4 per-fixture triggers still dispatched to the legacy job, and
+`deployment_service/sports_trigger_scheduler.py::_build_cli_cmd` did not yet emit the required `--feature-family sports`
+prefix. A new P1 prerequisite todo was filed inline (same plan) to fix the dispatch code first. That prerequisite was
+subsequently cleared and proven in the RepointDispatch phase (progress-log entries ~line 767-799): `_build_cli_cmd` now
+injects `--feature-family sports`, both `sports-trigger-tiers.yaml` per-fixture entries were repointed and verified
+SUCCEEDED against the new job, and Todo 7 (retire the legacy job) is now `[x]` DONE. No external successor plan was
+needed — the deferral was fully closed within this same plan.

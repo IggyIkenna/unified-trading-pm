@@ -2254,3 +2254,22 @@ Items that cannot auto-close — require operator review + explicit `[ack]` befo
 | Item                                        | Plan                                                                | Gate                                   | What operator must do                                                                                                                                                                                                                                                                                         | Added             |
 | ------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 | deployment-ui G.3 — B6 operator UX sign-off | `plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md` Phase G.3 | B6 (business gate — final before prod) | Review 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction + env-tier hosting on staging (`staging.odum-research.com`); run G.2 staging deploy runbook first (`deployment-service/runbooks/deployment-ui-staging-deploy.md`); then comment `[ack] G.3 approved` in this plan to unblock prod deploy | 2026-05-19 slot-6 |
+
+## Deferred work — migrated to:
+
+See inline `DEFERRED-<QUALIFIER>` annotations within this plan for the specific successor/blocker.
+
+This plan carries dozens of genuine deferral hits, almost all under formal qualifier tags: `DEFERRED-FUTURE-WORK` (the
+large Group F/G residual-tracking block), `DEFERRED-BLOCKED` (the `ups-p8-e2e-*` cluster E2E todos),
+`DEFERRED-OPERATOR-DECISION` (Phase 1A.3 sports vocabulary), `DEFERRED-NEEDS-DEDICATED-SESSION` (paper-mode evidence
+run), `DEFERRED-POST-CUTOVER`/`DEFERRED-AFTER-CUTOVER` (the cbETH/Kraken adapter table above; the CEFFU
+`custody-providers.md` coverage note), and `DEFERRED-INDEFINITELY` (sports scraper set). The plan already maintains a
+dedicated "Successor plans for partial implementations" section (~line 1892 onward) naming the concrete owner for most
+of these — e.g. `plans/epics/sports_master.md` § "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator" for the
+sports-scraper deferral, and `sports_scrapers_post_cutover_2026_06_01.md` as the credentialed-scraper successor. The two
+bare `**DEFERRED**` mentions at ~line 1182/1189 (auto-registration + `LifecycleEventType` enum membership) named their
+own successor inline — `promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` Phase 9 / Phase 3 — which has since
+been folded/archived to `plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md` (its content was
+completed or subsumed per that plan's own archival banner). The ~line 1736 bare `**DEFERRED**` (2-yr grid run) is
+self-resolved: `RESOLVED-PENDING-OPERATOR-RUN`, the runner shipped and only the operator-scheduled execution remains,
+with the launch command already in the script's own docstring — no separate plan needed.
