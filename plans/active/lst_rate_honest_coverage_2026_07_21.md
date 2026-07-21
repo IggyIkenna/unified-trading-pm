@@ -119,19 +119,24 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `_collect_aave_rows`/`_emit_aave_manifest` in `OraclePricesHandler` (lifts `AavePositionsMixin._ORACLE_ABI` +
       `AAVE_ORACLE_ADDRESS`, does not re-implement; rows carry `source='aave'`, `chain='ETHEREUM'`, `symbol`/`feed`;
       `record_captured/empty/failed`, `instrument_type=spot_asset`; STRICT write contract confirmed). BUILT + 15 new
-      unit tests green + adversarially reviewed 2026-07-21 — **held staged, not shipped** (MTDS quality-gates.sh is
-      still blocked on the peer-owned `mtds_rule11_shard_count_stale_baseline_2026_07_21.md`, unrelated to this work).
-      Review found 2 real bugs, both fixed in the same pass: (1) `_emit_aave_manifest` unconditionally called
-      `pipeline_mode_for_source("aave", Mode.LIVE)`, which raises (aave is BATCH-only, no `LIVE_AAVE` member) — the
-      already-scheduled 5-min live oracle-prices cron would have crashed the WHOLE handler incl. Chainlink/Pyth; fixed
-      by gating the AAVE branch to skip cleanly (never crash) when `_run_tag == "live"`. (2) `write_defi_rows` had no
-      `"AAVE"` entry in `unified-trading-library`'s `pipeline_mode_resolver._VENUE_OVERRIDES`, so the actual parquet
-      write path mislabeled every AAVE row as `pipeline_mode=batch_pyth_hermes` (SOURCE_PRIORITY's top pick) while the
-      manifest correctly said `batch_aave` — fixed by adding the override (mirrors CHAINLINK/PYTH); **this UTL fix is
-      itself correct + tested (2 new tests, full 55-test suite green) but ALSO held unshipped** — UTL's working tree has
-      heavy unrelated foreign WIP right now and this fix has zero current blast radius (the AAVE collector it protects
-      hasn't shipped anywhere yet), so it wasn't worth a risky whole-tree gate for a non-urgent fix; ship alongside the
-      MTDS piece once MTDS unblocks. **Deliberate simplification vs the original todo**: no IS-first filter
+      unit tests green + adversarially reviewed 2026-07-21 — **held staged, not shipped**. The original blocker
+      (`mtds_rule11_shard_count_stale_baseline_2026_07_21.md`) was resolved upstream (`mtds@327eef73`+`@56d39325`,
+      pulled cleanly, my files unaffected) but a DIFFERENT, unrelated pre-existing regression immediately took its
+      place: `test_slash_id_never_forges_a_path_segment` (canonical-stem/leaf-byte-match, already tracked + corroborated
+      in `plans/active/issues/mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md`, explicitly
+      another agent's active, briefed-off-limits track — not mine to fix or duplicate). Verified via isolation this
+      reproduces byte-identically with none of this plan's files present. Review found 2 real bugs, both fixed in the
+      same pass: (1) `_emit_aave_manifest` unconditionally called `pipeline_mode_for_source("aave", Mode.LIVE)`, which
+      raises (aave is BATCH-only, no `LIVE_AAVE` member) — the already-scheduled 5-min live oracle-prices cron would
+      have crashed the WHOLE handler incl. Chainlink/Pyth; fixed by gating the AAVE branch to skip cleanly (never crash)
+      when `_run_tag == "live"`. (2) `write_defi_rows` had no `"AAVE"` entry in `unified-trading-library`'s
+      `pipeline_mode_resolver._VENUE_OVERRIDES`, so the actual parquet write path mislabeled every AAVE row as
+      `pipeline_mode=batch_pyth_hermes` (SOURCE_PRIORITY's top pick) while the manifest correctly said `batch_aave` —
+      fixed by adding the override (mirrors CHAINLINK/PYTH); **this UTL fix is itself correct + tested (2 new tests,
+      full 55-test suite green) but ALSO held unshipped** — UTL's working tree has heavy unrelated foreign WIP right now
+      and this fix has zero current blast radius (the AAVE collector it protects hasn't shipped anywhere yet), so it
+      wasn't worth a risky whole-tree gate for a non-urgent fix; ship alongside the MTDS piece once MTDS unblocks.
+      **Deliberate simplification vs the original todo**: no IS-first filter
       (`load_oracle_feeds_for_date('AAVE','ETHEREUM',…)`) — `_AAVE_ORACLE_ASSETS` is a static 6-entry dict, verified
       byte-identical to IS's `aave_oracle.py` `_AAVE_ORACLE_RESERVES["ETHEREUM"]` today but with nothing enforcing that
       going forward; add the IS-first filter (mirroring `_resolve_chainlink_feeds`) if/when the two registries need to

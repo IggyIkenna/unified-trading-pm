@@ -83,6 +83,19 @@ retrying quickmerge without a code fix will not help. Confirmed concretely: a on
 any of the 3 failing modules) could not be shipped via quickmerge because of this — see
 `defi_fold_manifest_registration_pending_2026_07_21.md` todo 3's Progress Log.
 
+## Corroborating evidence (2026-07-21, independent repro)
+
+Hit the same `test_slash_id_never_forges_a_path_segment` failure while trying to ship an unrelated
+`lst_rate_honest_coverage_2026_07_21.md` Phase 1+2 change (Chainlink weETH/ezETH feeds + a new AAVE oracle collection
+branch, both in `oracle_prices_handler.py`/`_oracle_prices_constants.py`). Confirmed via `git stash` isolation (my 3
+files fully removed) that the failure reproduces byte-identically on the clean-pulled tree at HEAD `d8efc6d6` — same
+error, same `defi/CHAINLINK/oracle_prices/eth/usd` id, same `eth_usd.parquet` message. This is further evidence the
+regression is genuinely diff-independent (a third unrelated change now corroborates it), not specific to any one agent's
+in-flight work — strengthens the "shared canonicalization helper" hypothesis over a one-off collision. Not fixed here
+for the same reason as above (another agent's active, briefed-off-limits track); this plan's own MTDS Phase 1+2 ship
+(`_oracle_prices_constants.py`/`oracle_prices_handler.py`/ `tests/unit/test_oracle_prices_handler.py`, otherwise fully
+green) is now ALSO blocked pending this fix — see `plans/active/lst_rate_honest_coverage_2026_07_21.md` Progress Log.
+
 ## Todos
 
 - [ ] 1. [DATA] P1. Root-cause which commit(s) regressed the 3 failing tests (bisect `781204d8` / `56d39325` / any
