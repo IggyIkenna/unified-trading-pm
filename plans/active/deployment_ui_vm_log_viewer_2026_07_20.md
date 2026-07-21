@@ -167,8 +167,21 @@ source:
       tests green, all 4 new + 3 related Playwright specs pass; `deployment-ui`'s `quality-gates.sh` green. (Found the
       pre-existing `daily_costs_and_vm_detail.spec.ts` failures — confirmed unrelated + already tracked in
       `plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`, not re-filed.)
-- [ ] [UI] P1. Rename the existing `StreamingLogsPanel`/events timeline (decision 3) — label + any misleading copy
-      updated to reflect it's lifecycle events, not log content. Functionality unchanged; update testids if renamed.
+- [x] ✅ [UI] P1. Rename the existing `StreamingLogsPanel`/events timeline (decision 3) — label + any misleading copy
+      updated to reflect it's lifecycle events, not log content. Functionality unchanged; update testids if renamed. —
+      `deployment-ui@9717344`. Confirmed BOTH consumers of the shared `StreamingLogsPanel` are events, not log content,
+      before renaming (the SSE `/api/logs/stream/{ref}` path used by the cockpit's `AlertsLogsTab` also converts
+      `VMLifecycleEvent` → its `VmLogLine` envelope via `_event_to_log_line`, deployment-api `vm_events.py:587` — same
+      mislabeling as the WS path). `DeploymentDetail.tsx`'s Card title renamed "Live log tail" → "Live event stream"
+      with a "lifecycle events, not run.log content (see Run log above)" subtitle; component doc comment updated.
+      `StreamingLogsPanel.tsx` internal copy fixed: placeholder "Search logs..." → "Search events...", "Connecting to
+      log stream…" → "Connecting to event stream…", "No matching logs found" → "No matching events found", CSV download
+      filename `logs-*` → `events-*`. No testids changed (none were keyed to the old copy). Left the cockpit's
+      `AlertsLogsTab.tsx` own headings ("Live logs" / "Stream logs") untouched — a different page this plan's audit
+      didn't scope, tracked as a candidate follow-up if the operator wants full consistency.
+      `StreamingLogsPanel.test.tsx` updated to match; tsc/ESLint clean, full vitest suite green (1026 passed),
+      `run-log-panel.spec.ts` + `deployments-page.spec.ts` Playwright specs pass (12/12); `deployment-ui`'s
+      `quality-gates.sh` green.
 - [ ] [REVIEW] P1. Tests — (a) writer-side final-snapshot written on completion; (b) API prefers `vm-logs/` within TTL,
       falls back correctly to the final snapshot; (c) metadata endpoint returns correct size/location; (d) tail endpoint
       never reads past the byte-range cap; (e) signed-URL download works end to end; (f) the old rolling-date-guess code
@@ -243,6 +256,15 @@ source:
   clean, 1026 vitest tests, new + related Playwright specs pass). While verifying the L2 gate, hit the pre-existing
   `daily_costs_and_vm_detail.spec.ts` failures (confirmed unrelated by re-running on a stashed clean tree) — already
   tracked in `plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`, not re-filed.
+- **2026-07-21** (slot 4) — Shipped the honest rename (todo 7, the second `[UI]` todo), `deployment-ui@9717344`:
+  verified BOTH `StreamingLogsPanel` consumers (the WS path here on `DeploymentDetail` and the cockpit's `AlertsLogsTab`
+  SSE path) are lifecycle events under the hood before renaming — deployment-api's `/api/logs/stream/{ref}` also
+  converts `VMLifecycleEvent` → `VmLogLine` (`vm_events.py::_event_to_log_line`), so the mislabeling was universal to
+  the component, not just the WS usage. Renamed the `DeploymentDetail.tsx` Card title "Live log tail" → "Live event
+  stream" (+ an honest subtitle pointing at the Run log panel above) and fixed `StreamingLogsPanel.tsx`'s internal copy
+  (search placeholder, connecting/empty messages, CSV download filename) to say "events" throughout. Deliberately left
+  `AlertsLogsTab.tsx`'s own headings untouched — outside this plan's audited scope. Full vitest suite + the
+  run-log-panel/deployments-page Playwright specs green; `deployment-ui`'s `quality-gates.sh` green.
 
 ## Codex SSOTs
 
