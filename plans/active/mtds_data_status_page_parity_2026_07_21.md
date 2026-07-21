@@ -162,13 +162,39 @@ the frontend type down to what `data_query_service.py` already returns. Fix A fi
 verification), then B (the real work) — do not ship A alone and call it done, the box will render but still return wrong
 results per the screenshot evidence until B lands.
 
-### Bug C — MTDS coverage/drilldown panel shows nothing / self-contradicts (operator screenshot, root cause NOT yet traced)
+### Bug C — MTDS coverage/drilldown panel shows nothing / self-contradicts
 
 Operator screenshot: the MTDS "Data Coverage" TURBO panel shows **0.0% captured / shards** and **"1 missing shards"**
 while the "Needs Attention" banner directly above it claims **"no failures, gaps, or stale captures in the current
 range"** — a direct contradiction, and the drilldown that should back this up renders empty where the equivalent
 instruments-service view shows real data. This is a SEPARATE bug from A/B (it's the coverage/drilldown data path, not
-the instrument-search path) and has **not yet been traced** — first todo below.
+the instrument-search path).
+
+**Partial root cause CONFIRMED (2026-07-21)** — matches the operator's own diagnosis exactly: MTDS's job should be "do
+we have market data shards for times we DO have instruments [per the IS catalogue]", i.e. IS answers "does this
+instrument exist for this expected day" and MTDS's denominator should only ask "did we capture it" over THAT gated set.
+`deployment-api/deployment_api/services/data_status/instrument_coverage.py::per_instrument_coverage`, lines 278-280:
+
+```python
+n_instruments = len(expected_instruments)
+n_dates = len(expected_dates)
+expected_count = n_instruments * n_dates
+```
+
+This is a flat CROSS-PRODUCT — every expected instrument × every expected date — with **no per-instrument
+existence-window clipping**. The function's own comment (lines 100-102, in `build_cefi_is_instruments_provider`) admits
+this: _"date-agnostic for now (IS catalog available_from/to lifecycle filtering is reserved for a future walk once the
+full universe stabilises)."_ So today the denominator counts `(instrument, day)` pairs that are structurally impossible
+(before listing / after delisting) as "missing shards" — inflating the false-missing count. Whether this fully explains
+the operator's exact screenshot numbers (0.0%, "1 missing") or is one of several contributing factors is NOT yet
+confirmed against live data — that verification is still open, but the mechanism itself is a confirmed, real bug
+matching the operator's stated model.
+
+**The fix requires**: `get_expected_instruments_for_venue` (or the catalogue read behind it) to expose each instrument's
+real existence window (`available_from`/`available_to`, or equivalent lifecycle columns already used elsewhere for the
+"could-exist" CF-14 denominator — reuse that concept, don't invent a second one), and `per_instrument_coverage` to
+intersect EACH instrument's own window with `expected_dates` when building the denominator set, instead of a blanket
+`n_instruments * n_dates` multiply.
 
 ## Desired UX (operator's explicit description, 2026-07-21)
 
@@ -196,11 +222,15 @@ the same fixes.
       `DataStatusTab.tsx:2495-2496` (and the same dead string at `:2471`, `ServiceDetails.tsx:226/238`,
       `CLIPreview.tsx:194`, `api/client.ts`'s turbo-mode lists) so the search box actually renders for MTDS. Cheap,
       scoped, near-zero risk — do this first so Bug B's fix is independently testable against a visible UI.
-- [ ] [BACKEND] P0. **Trace Bug C**: for a real MTDS venue/asset_group combination reproducing the operator's screenshot
-      (0.0% captured, 1 missing shard, contradicting "Needs Attention: clean"), find the root cause in
-      `deployment_api/services/data_status/mtds.py` / the TURBO coverage path — is the denominator wrong, is the
-      manifest read returning empty, is there a stale-cache issue, or is "Needs Attention" and "Data Coverage" reading
-      from two different (and inconsistent) sources. Write the finding as a Progress Log entry before fixing.
+- [ ] [BACKEND] P0. **Fix Bug C** — `per_instrument_coverage()`'s `expected_count = n_instruments * n_dates`
+      cross-product (root cause confirmed above, `instrument_coverage.py:278-280`) needs per-instrument existence-window
+      clipping: thread each instrument's real `available_from`/`available_to` (reuse the CF-14 could-exist lifecycle
+      concept, don't invent a second one) through `get_expected_instruments_for_venue`, and intersect per-instrument
+      with `expected_dates` when building the denominator, instead of the blanket multiply. Verify against a real MTDS
+      venue/asset_group reproducing the operator's screenshot (0.0% captured, 1 missing shard, contradicting "Needs
+      Attention: clean") that this closes the gap; if a residual discrepancy remains after the fix, trace that
+      separately (e.g. "Needs Attention" and "Data Coverage" reading from different/inconsistent sources) rather than
+      assuming this one fix explains 100% of the screenshot.
 - [ ] [BACKEND] P0. **Fix Bug B**: reconcile the instrument-search + per-instrument-availability contract between
       `DataStatusTab.tsx`/`api/client.ts` and `deployment-api`'s `/instruments`/`/instrument-availability` routes —
       either implement the `InstrumentAvailabilityResponse` shape (`availability_window`, `by_data_type` with per-day
@@ -281,3 +311,33 @@ untested) and surfacing a second, independent bug in the coverage/drilldown pane
   separate effort — added as its own todo rather than a new plan.
 - Reprioritized: Bugs A/B/C promoted to P0 (confirmed, operator-blocking) ahead of the MVP-wiring/precompute work, which
   remains real but is P1 (a gap, not a broken feature).
+
+### 2026-07-21 (later) — operator's precise coverage-model correction confirms Bug C's mechanism; `/autonomous` engaged
+
+Operator clarified the intended MTDS coverage model directly: IS answers "do we have instruments (catalogued) for an
+expected day"; MTDS should only ask "do we have market-data shards for the days we DO have instruments" — i.e. MTDS's
+denominator must be GATED by IS catalogue existence, never a raw instrument-count × date-count multiply. Traced this
+exactly to `instrument_coverage.py::per_instrument_coverage` lines 278-280 (`expected_count = n_instruments * n_dates`)
+— confirmed root cause, documented in the "Confirmed bugs" section above with the concrete fix shape (per-instrument
+existence-window intersection, reusing the CF-14 could-exist lifecycle concept). Not yet implemented or verified against
+live data.
+
+**`/autonomous` invoked** — operator: "execute plan mtds_data_status_page_parity_2026_07_21 in full, together with our
+other pending todos." Applying `cursor-configs/AUTONOMOUS_AGENT_RULES.md` + `SUB_AGENT_MANDATORY_RULES.md` from here:
+finish completely (no `BLOCKED-OPERATOR`/deferred leftovers for anything decidable with common sense + this plan's
+documented intent), decide-and-document instead of asking, drive on a self-paced loop, journal every tick to this
+Progress Log (this log IS the handoff document across context compression — no separate summary file).
+
+**Model-tier flag (rule 2, self-check)**: this is a long, cross-repo (deployment-api/deployment-ui/market-tick-data-
+service/market-data-processing-service/instruments-service/unified-api-contracts) autonomous dispatch — per
+`model-tier-selection.md` this class of work is usually `opus-required`. The main thread is running Sonnet 5 and cannot
+self-upgrade mid-session; flagging per rule 2 rather than silently proceeding as if it were the correct tier.
+Mitigation: delegate the highest-complexity architectural/design sub-steps to sub-agents with an explicit Opus model
+override where warranted, and keep this plan's Progress Log unusually explicit so a tier mismatch doesn't silently
+compound into a wrong decision going uncaught.
+
+**Execution order chosen** (documented per rule 2 — an "operator could decide, they're away" call): Bug A first (1-line,
+zero-design-risk, makes Bug B/UI work independently verifiable), then Bug C's fix (backend-only, no UI dep), then Bug B
+(deeper contract work), then the universal search UI (depends on B's fixed contract), then MVP wiring + MDPS parity,
+then the manifest re-stamp re-run (separate plan, picked up between MTDS ticks whenever its own background gates are the
+blocking step rather than my active attention).
