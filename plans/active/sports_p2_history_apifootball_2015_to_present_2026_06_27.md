@@ -3477,3 +3477,26 @@ own header comment (2026-04-19 SFI incident). Forcing past that lock now (`--for
 `api_football` rate budget across 6 concurrent VMs against a protection mechanism installed for exactly this reason —
 not attempted. `/skip-current-task` — resume once the fleet completes, a shard goes dead/stalled, or (separately)
 INJURIES/STANDINGS become launchable once the lock clears.
+
+### 2026-07-21T04:44Z — data_engineering slot-3 (Todo `-001` re-dispatched, ~22min after slot-10's check — cheap re-check, all 4 shards still healthy, decline)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean (no dirty state inherited — the boot-heartbeat's earlier
+`features-service AHEAD=1` warning had already self-resolved by the time this session read it, confirmed
+`ahead=0`/`origin==HEAD` before starting). Re-checked fleet liveness (non-snap
+`/home/ubuntu/google-cloud-sdk/bin/gcloud`, this slot's snap `gcloud` also hits the `cap_dac_override` failure every
+prior entry documents):
+
+- All 4 VMs still `RUNNING`: `af-backfill-20260719-180545` (LINEUPS), `-180620` (PLAYER_STATS),
+  `af-backfill-20260721-033537` (FIXTURE_EVENTS), `-033605` (FIXTURE_STATS).
+- `PROGRESS.json` monotonically advanced vs slot-10's 04:22Z readings (all timestamps fresh, within ~2 min of this check
+  at 04:44Z): LINEUPS `2024-06-20→2024-07-10`, PLAYER_STATS `2025-12-29→2026-01-13`, FIXTURE_EVENTS
+  `2020-06-30→2020-07-08`, FIXTURE_STATS `2020-06-30→2020-07-05`.
+
+No stall, no new dead shard — a genuine multi-day run continuing exactly as framed. Gate
+(`expected_unattempted_pending_fetch == 0` across all AF enrichment data_types within coverage) remains far from met —
+FIXTURE_EVENTS/STATS still need to reach `2026-05-10`; LINEUPS/PLAYER_STATS still need to reach present (`~2026-07-21`).
+Not re-running the full gate-verification query (would just re-confirm "still pending" at real compute cost, per
+established precedent across the last 5+ dispatches). Not flipping the checkbox. INJURIES/STANDINGS remain unlaunchable
+while the singleton lock holds against the running fleet (same as slot-10's finding, unchanged). `/skip-current-task` —
+resume once the fleet completes, a shard goes dead/stalled, or INJURIES/STANDINGS become launchable once the lock
+clears.
