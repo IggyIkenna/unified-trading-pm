@@ -132,8 +132,15 @@ Key audit facts driving the merges:
       `quality-gates.sh` clean (basedpyright error count unchanged vs pre-edit baseline — verified by diffing
       before/after). Next: the UI-facing todos below (rollup cards, verdict badges, reap/ delete actions) consume these
       new fields. (repo: deployment-api)
-- [ ] [UI] P1. **Idle-spend rollup cards on Deployments** — port the four FleetOrphans rollup cards (Stopped VMs ·
-      Reapable · Idle disk $/mo · Reclaimable $/mo) as a header/section on the Deployments tab.
+- [x] [UI] P1. ✅ **Idle-spend rollup cards on Deployments** — deployment-ui@d12843e. Ported the four FleetOrphans
+      rollup cards (Stopped VMs · Reapable · Idle disk $/mo · Reclaimable $/mo) verbatim (same markup/formatting) into
+      `Deployments.tsx`, right below `StrandedCostBadge` in the page header. Fetches `GET /api/fleet/orphans`
+      independently of the main inventory load (own `useVisibilityPausedInterval` cadence, same as the rest of the page)
+      — honest `"—"` placeholders on fetch failure, never stale/fabricated data. tsc/ESLint clean; 2 new Vitest tests
+      (cards render the rollup figures; cards degrade to `"—"` on fetch failure) + full existing suite green (1042
+      tests); full `quality-gates.sh` (base-ui.sh v2.0) green. Playwright verification is bundled into the plan's
+      consolidated `[REVIEW] P1. Playwright specs` todo below (covers this + the remaining UI todos together, per the
+      plan's own structure — not a separate spec per card). (repo: deployment-ui)
 - [ ] [UI] P1. **Reap-verdict + stopped-age on orphan rows** — surface the verdict badge (reapable / within-grace /
       retained / no-stop-time) and stopped-age on the relevant Deployments rows.
 - [ ] [UI] P1. **Reap/delete actions on Deployments** — port FleetOrphans' dry-run-first bulk reap (`reapOrphans` →
