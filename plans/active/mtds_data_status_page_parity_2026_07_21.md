@@ -336,11 +336,17 @@ the same fixes.
       time ANY league/day breakdown was expanded in mock mode (this is the ALREADY-EXISTING sports fixture drilldown,
       not new code — it had simply never been exercised live in mock mode before). All three fixed with realistic
       representative data so the click-through (and the pre-existing drilldown it composes) actually render in mock
-      mode.
-- [ ] [BACKEND] P1. Wire UAC `is_mvp` into `deployment_api/services/data_status/mtds.py` the same way
-      `_live_coverage.py` does for instruments-service-backed asset_groups — MTDS coverage responses gain the same
-      `scope=mvp|could_exist|all` param and the `VenueCoverageTable` pill toggle works when MTDS is the selected
-      service. Reuse `_coverage_scope.py`'s `filter_to_mvp`, do not fork a parallel implementation.
+      mode. **Follow-up fix (`deployment-ui@319a32e`, verified on origin, full QG green, tsc/eslint/pw:L2 all clean)**:
+      an independent adversarial-review pass on the shipped click-through found one real, plausible-but-unconfirmed edge
+      case — the `canonical_id` bare-symbol extraction silently produced an EMPTY string for any legacy,
+      not-yet-canonicalized (zero-colon) `instrument_key` still surviving in a venue's corpus (a shape UAC's own
+      `instrument_key.py` documents as still-live, pending removal), which would have sent an empty `instrument` param
+      to the availability endpoint and silently rendered a misleading "0 found / 0 missing" instead of a real check.
+      Fixed: guard `canonical_id.split(":").length < 3` and fall back to the raw `canonical_id` itself as the bare
+      symbol in that case.
+- [x] N. ✅ **DUPLICATE of the todo above — SHIPPED, see that entry** (`deployment-api@724910e`). Stale copy of the same
+      "wire UAC `is_mvp` into MTDS coverage" ask, left unchecked in an earlier plan revision; consolidating here rather
+      than leaving a done item showing as open next to its own completed twin.
 - [ ] [DATA] P2. **Precompute `mvp: bool` for sports/prediction — investigated, deliberately NOT implemented this tick,
       re-scoped from the original ask.** Traced `deployment-api/deployment_api/routes/data_status/_catalogue.py` in full
       before touching anything (grep-then-READ): the original framing ("mirror `_add_mvp_column`") is the WRONG fix and
