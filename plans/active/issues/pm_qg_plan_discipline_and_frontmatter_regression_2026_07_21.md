@@ -152,15 +152,30 @@ normally.
       `manifest_schema_v6_quote_margin_combo_2026_04_23`, `run_lifecycle_events_ssot_2026_05_05`,
       `instruments_and_market_tick_data_completion_2026_05_01`, `instruments_to_100pct_eod_2026_05_04`,
       `market_tick_data_to_100pct_2026_05_05`. Same per-plan-judgment discipline as batch 1. (repo: unified-trading-pm)
-- [ ] [DOCS] P3. Remaining archived-plan debt, batch 4 — strategy/UI + the 2 held-back small plans (9 plans, 2–67 open
-      items each): `leveraged_leg_controller_2026_05_01` (already investigated above — needs a real successor issue-doc
-      for the Phase A/B/C unit-tests gap + the Docker-image-rebuild gate, or operator confirmation both are abandoned),
-      `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22` (already investigated above — needs operator
-      confirmation the 2 `[HUMAN]` gates were satisfied out-of-band before checking them off),
-      `combo_bundle_aggregation_2026_04_30`, `strategy_architecture_v2_phase3_11_handoff_2026_04_17`,
-      `strategy_architecture_v2_finalization_2026_04_19`, `dart_ui_strategy_filtering_and_onboarding_2026_04_24`,
-      `dart_ux_cockpit_refactor_2026_04_29`, `ui_quality_gates_parity_2026_03_16`. Same per-plan-judgment discipline as
-      batch 1. (repo: unified-trading-pm)
+- [x] [DOCS] P3. ✅ Remaining archived-plan debt, batch 4 — strategy/UI + the 2 held-back small plans (8 plans found,
+      2–67 open items each) — unified-trading-pm@16aa0e958. Per-plan judgment, not blanket-close: 3 got a **direct
+      successor banner** naming a verified real active epic — `dart_ux_cockpit_refactor_2026_04_29` +
+      `strategy_architecture_v2_finalization_2026_04_19` both declared a `superseded_by:` pointing at
+      `strategy_and_dart_master_2026_05_07.md`, a file that no longer exists (it was itself superseded 2026-05-21 and
+      split into `strategy_master.md` + `dart_and_promote_master.md`) — retargeted at whichever half actually owns the
+      content (dart_ux → `dart_and_promote_master.md`; strategy_architecture_v2_finalization → `strategy_master.md`,
+      content-verified against its "Owns" section); `strategy_architecture_v2_phase3_11_handoff_2026_04_17` had no
+      declared successor at all but its residual items (allocator archetypes, action handlers, shadow mode, Unity/MEV
+      routing) are a direct content match for `strategy_master.md`'s "Owns" section. The other 5 have genuinely orphaned
+      or mixed-domain residuals with no honest single successor: filed
+      `plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md` naming each — 2 `[HUMAN]` gates
+      pending operator sign-off (`leveraged_leg_controller_2026_05_01`'s Docker rebuild,
+      `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`'s cache-speedup validation), 1 where the
+      writer-side code shipped but the migration/cleanup residual is unverified (`combo_bundle_aggregation_2026_04_30` —
+      confirmed bundling live in `market-tick-data-service/.../symbol_rules.py:256`), 1 where the plan's SSOT artifacts
+      shipped via other work but granular items need re-audit after 4 months of drift
+      (`ui_quality_gates_parity_2026_03_16`), and 1 genuinely mixed-domain plan needing an item-by-item split between
+      two different active plans (`dart_ui_strategy_filtering_and_onboarding_2026_04_24` —
+      `marketing_site_three_route_consolidation_2026_04_26` for the UI funnel vs
+      `capability_wizard_and_manifest_2026_06_11` for the archetype-capability tail). Verified via direct re-run of
+      `check_plan_discipline.py`'s `_check_rule_c`: all 8 confirmed cleared, no other plans' counts moved. Reconciled
+      `plan_discipline_baseline.yaml` against sibling batch-1's concurrent landing (82 after their fix) — combined
+      re-baseline 82 → 74. (repo: unified-trading-pm)
 - [ ] [DOCS] P3. Remaining archived-plan debt, batch 5 — infra/orchestrator/deployment/codex/misc (16 plans, 4–139 open
       items each): `ICLOUD_MIGRATION_CHECKLIST`, `quality_gate_hardening.plan`,
       `deployment_service_build_infrastructure_repair_2026_04_22`, `phase3_service_hardening_integration`,
