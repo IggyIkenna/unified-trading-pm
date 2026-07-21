@@ -127,8 +127,22 @@ source:
       request-time GCS existence check the previous todo deliberately deferred out of the bulk census paths. Unit tests:
       `tests/unit/test_run_log_resolution.py` (resolver, mocked `gcs_describe_object`) + 2 endpoint tests added to
       `test_route_deployments_inventory.py`. `quality-gates.sh` green (4795 passed).
-- [ ] [BACKEND] P0. Bounded tail endpoint — byte-range read of only the last ~64–256KB, split to the last 200–500 lines
-      (cap configurable). Never load the full object into API memory or the response.
+- [x] ✅ [BACKEND] P0. **Bounded tail endpoint** — byte-range read of only the last ~64–256KB, split to the last 200–500
+      lines (cap configurable). Never load the full object into API memory or the response. —
+      `unified-trading-library@e22e40f1` + `deployment-api@91fa66bd`. Added `gcs_read_object_range(uri, start, end)` to
+      UTL's `cloud_interface/gcs_blob_ops.py` (wraps the existing `StorageClient.download_bytes_range` across
+      gcp/aws/local, same URI-splitting convention as `gcs_describe_object`). New
+      `GET /api/deployments/{name}/run-log/tail` in `deployments_inventory.py`: resolves the object via
+      `resolve_run_log_location` (reused from the metadata endpoint, live-first/archive-fallback), then reads only the
+      last `DeploymentApiConfig.run_log_tail_max_bytes` (default 256KB) via `gcs_read_object_range`, split to the last
+      `run_log_tail_max_lines` (default 300, clampable per-request via a `lines=` query param). New
+      `deployment_api/routes/_run_log_tail.py` isolates the byte-range-read + line-split logic (drops the partial
+      leading-line fragment when the read doesn't start at byte 0) for credential-free unit testing. `exists=False`
+      honest-absence when neither live nor archive object exists (no GCS read attempted). Unit tests:
+      `tests/cloud_interface/unit/test_gcs_blob_ops.py` (UTL), `tests/unit/test_run_log_tail.py` +
+      `tests/unit/test_route_deployments_inventory.py` (deployment-api). Both repos' `quality-gates.sh` green.
+- [ ] [BACKEND] P1. Signed-URL download endpoint (decision 4) — short-lived signed URL for the resolved log object; no
+      server-side streaming of the object itself.
 - [ ] [BACKEND] P1. Signed-URL download endpoint (decision 4) — short-lived signed URL for the resolved log object; no
       server-side streaming of the object itself.
 - [ ] [UI] P0. New "Run log" panel on `DeploymentDetail` (decision 3) — separate component from the events panel; shows
@@ -183,6 +197,18 @@ source:
   Scoped as a pure URI-construction fix — no new GCS existence-check I/O added to these two 45s-SWR-cached bulk census
   endpoints; the real live-vs-archive resolution (an actual `gcs_describe_object` existence check) belongs in the next
   todo's per-VM size/metadata endpoint, not the fleet-wide background walk.
+- **2026-07-21** (slot 3) — Shipped the bounded tail endpoint (todo 4), `unified-trading-library@e22e40f1` +
+  `deployment-api@91fa66bd`: new `gcs_read_object_range()` UTL helper + `GET /run-log/tail` endpoint reusing
+  `resolve_run_log_location` from todo 3, capped at 256KB/300 lines by default (both configurable via
+  `DeploymentApiConfig`). While shipping, found + fixed a pre-existing, unrelated `cloud-providers.yaml` cross-copy
+  drift (UAC's packaged copy + this PM mirror were both missing the `alerting-service` kind that
+  `deployment-service@5f6d4e1` added to its authoring copy) that was failing `unified-trading-library`'s
+  `test_sibling_copy_matches_packaged_uac_copy` parity gate for every downstream consumer — synced via
+  `unified-api-contracts@83506de0` + this repo's `configs/cloud-providers.yaml`. Also found PM's own `quality-gates.sh`
+  red on 2 unrelated pre-existing issues (plan-discipline ratchet 121 > baseline 120; `sports-2020-06-data-floor.md`
+  missing `referenced_by` frontmatter key) — filed
+  `plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md` rather than absorb that unscoped
+  debt into this task.
 
 ## Codex SSOTs
 
