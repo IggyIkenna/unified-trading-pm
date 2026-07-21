@@ -40,6 +40,8 @@ code_refs:
   - .github/workflows/ci-status-update.yml
   - unified_api_contracts/canonical/crosscutting/alerting/ledger.py
   - deployment-api/deployment_api/routes/_repo_ci_alerts.py
+  - deployment-ui/src/pages/Alerts.tsx
+  - deployment-ui/tests/smoke/alerts-page.spec.ts
 ---
 
 # CI Alerting — the #ci-failures channel
@@ -194,9 +196,49 @@ window, so paginating within one window costs no extra reads. `health_overview`'
 `days=2` rather than inheriting the wider default, since its "recent" semantics predate the 30-day widening and would
 otherwise read near-permanently critical.
 
+### The `/alerts` page UI contract (deployment-ui, `pages/Alerts.tsx`)
+
+Plan B (`deployment_ui_alerts_page_rebuild_2026_07_20.md`, shipped 2026-07-21) built the diagnostic-surface UI on top of
+Plan A's normalised schema above. Every filter/sort/date-range param is **client-side and URL-backed** (deep-linkable,
+no new backend query surface beyond the existing `days`/`offset`/`limit` from the retention section) — the page fetches
+the full `days`-windowed response once, then narrows/reorders in-memory.
+
+- **Filter dimensions** — `kind` (source, e.g. `alert`→"CI", `vm_down`→"VM") and `severity` (the
+  `severity ?? conclusion ?? "info"` bucket) are multi-select (`?kind=a,b`, comma-joined, empty = no filter); `repo` and
+  `service` (`workflow_name`) are single-select dropdowns. Options are derived from the LOADED alert set, not a
+  hardcoded vocabulary — a kind/repo/service that never appears in the window never shows as a dead option.
+- **Sort** — 4 columns (timestamp / severity / source / subject), click-to-cycle asc → desc → default (newest-first),
+  URL-backed (`?sort_key=&sort_dir=`).
+- **Date-range** — `?alert_from=&alert_to=` filters the already-loaded window by `timestamp` date. The retention-floor
+  honesty banner ("No alerts before `<date>`") derives its boundary from the response's own `days` field
+  (`today − (days − 1)`), never a hardcoded frontend constant — if the backend's retention window changes, the banner
+  moves with it automatically.
+- **Drill-down link map** — `deployment_target` → internal `/deployments/:name` (React Router `Link`) AND the shared
+  `?logs=<target>` sub-param `AlertsLogsTab.tsx` already owns (swaps in `StreamingLogsPanel`, same target); `run_url` →
+  external GHA run (new tab). No row carries a `runbook` field in the schema today (checked `AlertEntryDict` +
+  `RepoCiAlertEntry` + the frontend mock) — that link is unimplemented until a future ingestion todo adds the field.
+- **Shared-primitive reuse** (`deployment_ui_date_range_filter_and_search_2026_07_20.md` owns the extraction) —
+  `FilterSelect`/`StatusFilterChips`+`chipTone`/`useColumnSort`/`compareByColumn` (`src/components/filters/`,
+  `src/hooks/useColumnSort.ts`, `src/lib/columnSort.ts`) are imported, not re-derived; `Deployments.tsx`'s own
+  `KindFilterChips` was generalized into a new shared `MultiChipFilter` (Set-backed multi-select chip row) reused by
+  both pages. The alert-specific sort-key union/`columnSortValue`, and the date-range picker (`AlertDateRangeFilter`),
+  stayed **local** to `Alerts.tsx` — the date-range widget wasn't extracted because the two pages' backends have
+  different contracts (Deployments queries an explicit server-side `date_from`/`date_to`; alerts only has the
+  `days`-back window above, filtered client-side), so sharing it would force a false abstraction over two different
+  backend shapes.
+- **Layout** — the Streams section (per repo/workflow current-vs-previous, worst-first) stays a visible, compact
+  single-line-per-stream **summary** above the Timeline, which is the primary/full-width filterable+sortable surface.
+  The Timeline rows deliberately stayed flex-divs, not a real `<table>` — "filterable/sortable" is behavior (state +
+  handlers), not markup, and a table conversion was rejected as the highest-risk change to the testid-stability contract
+  for no required benefit (operator/main ruling, BLK-de39d214, 2026-07-21).
+
 ## Cross-references
 
 - Pipeline mechanics + the workflow inventory: [ci-cd-flow.md](../08-workflows/ci-cd-flow.md) § "CI health monitor +
   branch-health" and § "Central CI watcher — auto-recover vs escalate, and the RESOLVED bookend".
 - The sibling AO channel contract (same page-on-transition philosophy, server-side transport):
   [agent-orchestrator-alerting.md](agent-orchestrator-alerting.md).
+- The `/alerts` page's `pw:L2` regression contract: `deployment-ui/tests/smoke/alerts-page.spec.ts` (23 cases as of
+  2026-07-21 — filter/sort/date-range/drill-down/layout, each individually plus one deliberately combined case). See
+  [ui-testing-layers.md](../06-coding-standards/ui-testing-layers.md) for how this fits deployment-ui's own testing
+  surface.
