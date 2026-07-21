@@ -151,6 +151,17 @@ overhead.
       them (previous todo). pw:L2 regression spec required. (repo: deployment-ui) — same `depends_on` gate as above
       (transitively blocked on the API todo, which is blocked on the v6 migration).
 
+  **Re-dispatched a THIRD time despite `gate_on_depends: true` (2026-07-21, slot 2)**: re-verified fresh —
+  `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` todos 5-8 are STILL open/unchecked, the block genuinely still
+  applies (same conclusion as the slot-7 re-check above). This is the SECOND observed instance of
+  `gate_on_depends: true` failing to prevent dispatch on this exact doc (slot-7 already fixed the frontmatter once for
+  this same symptom) — either the fix didn't take effect, the dispatcher reads a cached/stale backlog projection, or
+  there's a genuine bug in how `gate_on_depends` is enforced. This is an agent-orchestrator dispatch-logic question, out
+  of scope for a UI todo to diagnose or fix mid-course. No feature code implemented (correctly still blocked — the
+  data-pipeline-correctness heartbeat rule explicitly forbids surfacing pre-migration/inconsistent data). Escalating via
+  `/blocked` rather than fabricating progress; whoever owns agent-orchestrator's dispatch logic should check why
+  `gate_on_depends: true` isn't holding this doc's todos.
+
 ## Codex SSOTs
 
 `codex/02-data/shard-granularity-cefi.md`, `codex/02-data/availability-manifest-and-data-status.md`.
