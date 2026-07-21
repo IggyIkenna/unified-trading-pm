@@ -1,23 +1,25 @@
 ---
 doc_type: issue
 title:
-  "deployment-api CI is FAILING on live-defi-rollout — 8 tests hardcode onchain feature_family/AAVE-registry
-  expectations that UAC's WRITER-vocabulary reconciliation just changed"
+  "deployment-api CI was FAILING on live-defi-rollout — 8 tests hardcoded onchain feature_family/AAVE-registry
+  expectations that UAC's WRITER-vocabulary reconciliation had changed"
 summary: >-
   Found incidentally while verifying CI after shipping unrelated DeFi honest-coverage work this session.
-  deployment-api's `quality-gates-v2` on `live-defi-rollout` is currently FAILING (run 29793522960, headSha
+  deployment-api's `quality-gates-v2` on `live-defi-rollout` was FAILING (run 29793522960, headSha
   `ea56fff4d086c9bc5b18bfde6d37087947fa74a2`, `qg_red_reason=pytest`). 8 tests across
   `test_feature_group_breakdown_uac.py`, `test_data_status_hierarchical.py::TestFeatureFamilyAxis`, and
-  `test_shard_detail_service.py::TestResolveInstrumentTypeAuto` fail with mismatched dates/counts/booleans/strings (e.g.
-  `assert '2020-01-01' == '2022-03-16'`, `assert 87 == 86`, `assert '' == 'onchain'`). Root cause: UAC commit `e9faf32e`
-  ("fix(features): reconcile the onchain feature_group registry to the WRITER vocabulary", landed 2026-07-21 01:28:23
-  UTC — after this session's own UAC push `d4d85854` at 00:58:05 UTC, before deployment-api's CI dispatched at 01:35:17
-  UTC) changed the live onchain feature_group/AAVE registry values that these deployment-api tests hardcode as fixtures.
-  Not caused by this session's work — this session's only UAC touch was the unrelated
+  `test_shard_detail_service.py::TestResolveInstrumentTypeAuto` failed with mismatched dates/counts/booleans/strings
+  (e.g. `assert '2020-01-01' == '2022-03-16'`, `assert 87 == 86`, `assert '' == 'onchain'`). Root cause: UAC commit
+  `e9faf32e` ("fix(features): reconcile the onchain feature_group registry to the WRITER vocabulary", landed 2026-07-21
+  01:28:23 UTC — after this session's own UAC push `d4d85854` at 00:58:05 UTC, before deployment-api's CI dispatched at
+  01:35:17 UTC) renamed the onchain feature_group vocabulary that these deployment-api tests hardcoded as fixtures. Not
+  caused by this session's work — this session's only UAC touch was the unrelated
   `EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH` enum addition, and deployment-api's own commits this session
   (`8691f29`/`ea56fff`) are unrelated data-status/distinct-values changes that pass locally (`quality-gates.sh --no-fix`
-  green, 4755 passed/0 failed, confirmed 3x including once against this exact HEAD).
-status: open
+  green, 4755 passed/0 failed, confirmed 3x including once against this exact HEAD). **RESOLVED** by a different agent
+  (slot-4, `agt-896605`) at 2026-07-21 03:57:56 UTC, ~2.5h after this doc was filed and before anyone asked about it —
+  `deployment-api@c7eb95d` reconciled the 8 stale test fixtures to the new writer-vocabulary names.
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -37,7 +39,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by:
+resolved_by: "deployment-api@c7eb95d (slot-4·planning, agt-896605, 2026-07-21 03:57:56 UTC)"
 ---
 
 # deployment-api feature_family tests drifted from UAC onchain registry
@@ -91,12 +93,24 @@ UTC), so it picked up `e9faf32e`'s registry change. The 8 tests above hardcode s
   path, which had NOT yet picked up `e9faf32e` (a different agent's concurrent push) at test time. CI's fresh clone did
   pick it up, 7-16 minutes later.
 
+## Resolution (2026-07-21, slot-4)
+
+`deployment-api@c7eb95d` — `fix(tests): reconcile stale onchain feature_group vocabulary post-UAC rename` (task
+`agt-896605`). UAC's `e9faf32e` renamed the Aave-specific onchain feature_group names to protocol-agnostic writer names
+(`aave_lending_rates`→`lending_rates`, `lst_staking_yields`→`lst_yields`, plus `utilization`/`risk_params`/
+`rewards`/`rate_impact`) to match what features-service actually writes. deployment-api's production code already
+resolves `EXPECTED_FEATURE_GROUPS_BY_SERVICE`/`FEATURE_COVERAGE_START` dynamically from the UAC registry — only the 8
+test fixtures were hardcoded against the pre-rename names. The fix updated the fixtures/assertions to the current
+vocabulary, and repurposed the legacy name (`aave_lending_rates`) as the intentional "unexpected drift" example in
+`test_uac_breakdown_observed_but_unexpected_group_surfaces_as_drift` (the genuine post-rename drift case). Verified
+locally before shipping (`quality-gates.sh`: ALL QUALITY GATES PASSED, 97s); confirmed green on `live-defi-rollout` via
+`gh run list` (runs at 04:03, 06:52, 07:49 UTC on 2026-07-21, all `success`).
+
 ## Follow-on work (tracked)
 
-- [ ] [DECISION] P1. Whoever owns `unified-api-contracts@e9faf32e`'s "reconcile onchain feature_group registry to the
+- [x] [DECISION] P1. Whoever owns `unified-api-contracts@e9faf32e`'s "reconcile onchain feature_group registry to the
       WRITER vocabulary" intent should update the 8 deployment-api test fixtures above to match the new registry values
       (dates/counts/`feature_family` string), OR confirm the registry change itself needs a follow-up fix if the NEW
-      values are wrong. Needs the `e9faf32e` author's context on what the "WRITER vocabulary" reconciliation was
-      supposed to produce.
-- [ ] [BACKEND] P2. Re-run deployment-api's `quality-gates-v2` after the fixture update lands, to confirm CI goes green
-      again on `live-defi-rollout`.
+      values are wrong. — Done by slot-4, `deployment-api@c7eb95d`.
+- [x] [BACKEND] P2. Re-run deployment-api's `quality-gates-v2` after the fixture update lands, to confirm CI goes green
+      again on `live-defi-rollout`. — Confirmed green (see Resolution above).
