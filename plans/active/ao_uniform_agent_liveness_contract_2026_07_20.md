@@ -115,18 +115,22 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
 
 ### Workstream A — completion path (`/done` → archive → stop): the leak fix
 
-- [ ] [BACKEND] P1. **A1 — Extend `/done` to accept a task-less, role-aware completion.** Today `/done` hard-requires
-      `task_id` + a plan-flip (`server/routes/slots_worker.py:616-767` → 404/409 for a task-less one-off). Add a Class-B
-      completion path: no `task_id` / no plan-flip; it archives the AgentRow `lifecycle-complete`, frees the slot, and
-      flags it so `WorkerLivenessKicker` stops nudging. Backend still accepts an un-migrated one-off that never `/done`s
-      (existing pruner/reaper path unchanged). **Gate**: a task-less `/done` from a `plan_health`-shaped agent → 200,
-      AgentRow archived, slot session-less/idle, no re-nudge; a fleet-worker `/done` (task + plan-flip) byte-for-byte
-      unchanged (regression-tested); `quality-gates.sh` green.
-- [ ] [BACKEND] P1. **A2 — Rewrite the 5 role docs' non-functional "then EXIT" → "POST `/done` (completion) → stop."**
-      One role at a time, each verified live before the next: `cicd`, `conflict_resolver`, `data_pipeline_failure`,
-      `plan_health`, `plan_reconciler`. Their "EXIT" today only ends the Claude turn; replace with the real completion
-      call + stop. **Gate**: each role observed on completion → its `orch-slot-N` AgentRow archives
-      `lifecycle-complete`, slot frees, no re-nudge, no manual `kill-session`. Cite the agent_id.
+- [x] [BACKEND] P1. **A1 — Extend `/done` to accept a task-less, role-aware completion.** ✅ CODE-COMPLETE (local,
+      deploy-deferred) — `agent-orchestrator@31ef846` (unpushed); AO quality gate green (1543 passed) incl. 4 new
+      `test_done_one_off` cases + Class-A `/done` unchanged; live-verify pending the coordinated deploy. Today `/done`
+      hard-requires `task_id` + a plan-flip (`server/routes/slots_worker.py:616-767` → 404/409 for a task-less one-off).
+      Add a Class-B completion path: no `task_id` / no plan-flip; it archives the AgentRow `lifecycle-complete`, frees
+      the slot, and flags it so `WorkerLivenessKicker` stops nudging. Backend still accepts an un-migrated one-off that
+      never `/done`s (existing pruner/reaper path unchanged). **Gate**: a task-less `/done` from a `plan_health`-shaped
+      agent → 200, AgentRow archived, slot session-less/idle, no re-nudge; a fleet-worker `/done` (task + plan-flip)
+      byte-for-byte unchanged (regression-tested); `quality-gates.sh` green.
+- [x] [BACKEND] P1. **A2 — Rewrite the 5 role docs' non-functional "then EXIT" → "POST `/done` (completion) → stop."**
+      ✅ CODE-COMPLETE (local, deploy-deferred) — all 5 role docs (`cicd`, `conflict_resolver`, `data_pipeline_failure`,
+      `plan_health`, `plan_reconciler`) now POST `/done` with `one_shot_complete=true` then STOP; live-verify pending
+      deploy. One role at a time, each verified live before the next: `cicd`, `conflict_resolver`,
+      `data_pipeline_failure`, `plan_health`, `plan_reconciler`. Their "EXIT" today only ends the Claude turn; replace
+      with the real completion call + stop. **Gate**: each role observed on completion → its `orch-slot-N` AgentRow
+      archives `lifecycle-complete`, slot frees, no re-nudge, no manual `kill-session`. Cite the agent_id.
 - [ ] [BACKEND] P2. **A3 — Add the completion step to the boot prompt** so it is uniform and an agent can't "forget" it.
       **Gate**: a freshly-booted one-off's rendered prompt carries the `/done`+stop step; a live run confirms it fires.
 
