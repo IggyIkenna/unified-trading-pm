@@ -290,19 +290,22 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
 
 ## Todos
 
-- [ ] 1. [DATA] P1. **Operator ruling on A/B/C** for the candle object-path shape (`instrument_type=` presence + source
-      vs aggregated `data_type`). Blocks the full-history candle backfill — decide before ~386 serial-compute-days bake
-      in the current shape.
+- [x] 1. ✅ [DATA] P1. **Operator ruling on A/B/C** for the candle object-path shape — RULED 2026-07-21 (see "CORRECTED
+      RULING" above): ADD `instrument_type=` (amend codex + full migration) + KEEP SOURCE `data_type` on the path, align
+      the manifest to match. LOCKED shape documented; codex `per-asset-group-bucket-layouts.md:166` amended
+      (`mdps@752eaff`).
 - [ ] 2. [DATA] P1. Corpus-wide count of **zero-length-stem** candle objects (`…/venue=*/.parquet`); purge or repair.
-      These cannot be attributed to a shard.
+      These cannot be attributed to a shard. **Pending P5 executor (census phase).**
 - [ ] 3. [DATA] P1. Canonicalise **TradFi candle leaf ids** (`E1AF0_C3200_migrated_*` → `VENUE:TYPE:SYMBOL`) or rule the
-      migration naming acceptable.
-- [ ] 4. [SCRIPT] P1. **volatility writer**: pass the declared `prefix=` to `get_data_sink` so output lands under
-      `volatility/by_date/` per its own SSOT — or amend the SSOT. Currently writes to the bucket root.
-- [ ] 5. [SCRIPT] P2. Reconcile the **UTL paths-registry `delta_one` entry** with the real writer
-      (`feature_group_version=` present, no `by_date/`).
-- [ ] 6. [SCRIPT] P2. Once ruled: re-point `/data-pipeline-check-mdps` + `/data-pipeline-check-features` canonical legs
-      at the ratified template so a clean canonical sweep is achievable (today they correctly report the divergence).
+      migration naming acceptable. **Pending P5 executor (quarantine-if-unresolvable, per the LOCKED spec above).**
+- [x] 4. ✅ [SCRIPT] P1. **volatility writer**: pass the declared `prefix=` to `get_data_sink` so output lands under
+      `volatility/by_date/` per its own SSOT. Fixed + shipped `features-service@99d5554e`.
+- [x] 5. ✅ [SCRIPT] P2. Reconcile the **UTL paths-registry `delta_one` entry** with the real writer — readers now
+      dual-read via `candle_read_prefixes` (canonical + legacy, both pre/post-migration) rather than relying on a single
+      hand-rolled template. Shipped `unified-trading-library` (staging-first landing) + `features-service@99d5554e`.
+- [ ] 6. [SCRIPT] P2. Re-point `/data-pipeline-check-mdps` + `/data-pipeline-check-features` canonical legs at the
+      LOCKED template (was ratified 2026-07-21) so a clean canonical sweep is achievable post-migration. **Pending — do
+      after the P4 -test- verification confirms the writer emits the LOCKED shape.**
 
 ## How the new skills currently handle this (no silent acceptance)
 
@@ -332,16 +335,63 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       invocation (transient cache/download artifact); a clean re-run returns the full 10.36M (+~3,940 from the per-VM
       merge). The reader is NOT broken — do not chase a phantom reader bug; the real defect is candle-manifest
       under-population.
-- [ ] 8. [DATA] P1. **Fix the bundled-name rule**: decide the leaf by "is this write bundled by `underlying=`?" rather
-      than "is data_type in CEFI_CHAIN_INSTRUMENT_TYPES", so every `underlying=`-bundled write gets `ticks.parquet`
-      instead of an empty stem. Then repair/purge the existing empty-stem objects (measured 0.6-25% depending on day).
+- [x] 8. ✅ [DATA] P1. **Fix the bundled-name rule** (going-forward writer): `candle_leaf_filename` now decides the leaf
+      by "is this write bundled by `underlying=`?" (→ `ticks.parquet`) rather than the data_type-in-set check. Shipped
+      `mdps@752eaff`. **Repair/purge of EXISTING empty-stem objects is still pending P5/P7** (backward migration).
 - [ ] 9. [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
       `pipeline_mode=…/timeframe=…` and `pipeline_mode`-less `timeframe=…` candle objects. Quantify the corpus-wide
       split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
       `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
-      1), not an independent decision.
+      1), not an independent decision. **Pending P5 executor (dedup phase).**
 - [ ] 10. [SCRIPT] P1. **Extend the UAC canonical oracle to the `processed_candles/` (+ features) namespace** (addendum
       iii-b): `canonical_path_violations()` today only knows `raw_tick_data/by_date/` and flags every candle path as a
       structural violation, so it cannot govern candle shape. After the A/B/C ruling, teach the oracle the ratified
       candle template (incl. the `pipeline_mode=` insert decision) and re-point the skill canonical legs at it (todo 6)
       so candle canonicality becomes machine-checkable instead of bespoke.
+
+## Progress Log
+
+### 2026-07-21 — coordinated code foundation LANDED (P1 writer + P3 readers), QG-green all 4 repos
+
+The coordinated, held-uncommitted foundation described in the "OPERATOR PRINCIPLE" section above landed dep-ordered.
+Every repo was QG-green (fresh sentinel against current HEAD — this host has heavy concurrent agent QG activity, so the
+sentinel needed a re-run per repo each time HEAD advanced underneath it) before shipping.
+
+- **`unified-trading-library`** — `build_canonical_candle_path` / `candle_read_prefixes` + `pipeline_mode=` in the
+  `processed_candles` registry template. Landed via `quickmerge --agent` (staging-first routing for this repo).
+- **`market-data-processing-service@752eaff`** — writer single-derivation (`build_canonical_candle_object_path` /
+  `derive_candle_object_path`: adds `instrument_type=` + SOURCE `data_type` + `pipeline_mode=`); manifest records the
+  SOURCE key; empty-stem bundled-write fix (todo 8); codex `per-asset-group-bucket-layouts.md:166` amended to the LOCKED
+  shape. **Also closed the ONE gap the prior session flagged** (`build_continuous_engine.py`'s per-contract candle
+  reader): now dual-probes canonical (`pipeline_mode=batch_databento` default + `instrument_type=FUTURE`) + legacy
+  prefixes via `candle_read_prefixes`; the stitched continuous-future OUTPUT is now built through the same
+  single-derivation UTL seam (it was missing `pipeline_mode=` entirely). **Bonus find while in that file**:
+  `_resolve_tradfi_bucket()` called `resolve_bucket_name(kind="market-data-tick-tradfi")` — not a registered kind — so
+  `run_build_continuous` raised on every invocation; the continuous-futures pipeline had never successfully run. Fixed
+  to use the same `get_service_config().get_output_bucket_for_asset_group()` seam every other MDPS writer uses (also
+  makes it `-test-`-routable, matching the writer's existing test-isolation contract). Shipped via the closed dirty-deps
+  carve-out (UAC had live uncommitted venue-registry + quarantine WIP, mtime <120s, blocking quickmerge's pre-flight).
+- **`features-service@99d5554e`** — `delta_one` + `volatility` readers dual-read via `candle_read_prefixes` (todo 5);
+  `dependency_checker` drops `delimiter="/"` to walk the candle subtree; `continuous_future` slice confirmed intact. P2
+  volatility sink-prefix fix (todo 4) landed in the same commit. Shipped via the same dirty-deps carve-out
+  (`calendar_orchestrator.py`, a separate peer's live WIP in the same repo, was deliberately excluded from staging).
+- **`unified-trading-api@8377c98`** — `batch_candles` chart/UI reader dual-reads via the same `candle_read_prefixes`
+  SSOT. Shipped via the dirty-deps carve-out.
+- **`deployment-service`** — coverage probe confirmed transparent to the `instrument_type=` insert (no code change
+  needed, per the earlier scoping). While QG-ing this batch, found + attempted to fix an UNRELATED pre-existing parity
+  gap (`configs/cloud-providers.yaml` missing the `alerting-service` bucket kind UAC's packaged copy already had —
+  `test_sibling_copy_matches_packaged_uac_copy[deployment-service]` was failing on it) — a concurrent agent fixed the
+  identical gap upstream in the interim, so this repo needed no commit from this session (verified via a clean
+  `git diff HEAD` after reconciling the pull).
+
+**Verification note (this host):** `bash scripts/quality-gates.sh --no-fix`'s SHA sentinel is invalidated the moment
+`origin/live-defi-rollout` advances underneath it (the per-slot cron fast-forward-pulls every ~5 min, and this session
+observed multiple OTHER concurrent `quality-gates.sh` processes for other repos/slots on the same host) — every
+`quickmerge`/carve-out commit in this batch needed a **fresh** `quality-gates.sh --no-fix` run immediately before
+staging, not the run from a few minutes earlier. Budget for this when landing a multi-repo batch on a busy host.
+
+**NEXT (per the RESUME ORDER in `data_pipeline_check_mdps_features_2026_07_20.md`):** rebuild tarballs
+(`refresh_code_tarballs.sh`) → verify the canonical shape on `-test-` via `/data-pipeline-check-mdps` (force+skip+
+canonical, both axes) — THE GATE before any prod-data executor → then build the P5 migration+purge executor (todos 2/3/9
+— census, tradfi-id quarantine, split-brain dedup) → P0 census + P6 drain/snapshot + P7 per-AG SPOT backward apply + P8
+verify/reconcile.

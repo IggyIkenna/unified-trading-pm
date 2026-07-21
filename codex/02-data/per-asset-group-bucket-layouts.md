@@ -161,11 +161,24 @@ MDPS. Any future service reading the same path family MUST use the same pattern.
 
 ### MDPS processed candle writes
 
-| Asset-group          | Path pattern                                                                                           | Partition keys                                                                                                                                                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| CEFI / TRADFI / DEFI | `processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/venue={v}/{id}.parquet`            | standard                                                                                                                                                                                         |
-| PREDICTION           | `processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/instrument_type={it}/{id}.parquet` | no venue (POLYMARKET implicit); shards by instrument_type                                                                                                                                        |
-| **SPORTS**           | `processed/by_date/day={date}/data_type=odds_horizon_bucket/bucketed.parquet`                          | **completely different tree** — `processed/` not `processed_candles/`. Single file per date. Bookmaker-time bucketed odds feature artefacts. See `market-tick-data-service/docs/SPORTS_ODDS.md`. |
+| Asset-group          | Path pattern                                                                                                                                 | Partition keys                                                                                                                                                                                                                                                                                 |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CEFI / TRADFI / DEFI | `processed_candles/by_date/day={date}/pipeline_mode={mode}/timeframe={tf}/data_type={source_dt}/instrument_type={it}/venue={v}/{id}.parquet` | `date, pipeline_mode, timeframe, data_type (SOURCE type — `derivative_ticker`/`trades`/`book_snapshot_5`/`dex_pool_swaps`/`ohlcv_1m`, NOT the aggregated `deriv_ohlcv_*`), instrument_type, venue`. Bundled-by-underlying writes append `underlying={U}/` and use `ticks.parquet` as the leaf. |
+| PREDICTION           | `processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/instrument_type={it}/{id}.parquet`                                       | no venue (POLYMARKET implicit); shards by instrument_type                                                                                                                                                                                                                                      |
+| **SPORTS**           | `processed/by_date/day={date}/data_type=odds_horizon_bucket/bucketed.parquet`                                                                | **completely different tree** — `processed/` not `processed_candles/`. Single file per date. Bookmaker-time bucketed odds feature artefacts. See `market-tick-data-service/docs/SPORTS_ODDS.md`.                                                                                               |
+
+> **Single-derivation canonical landing (operator-ruled 2026-07-21).** The CEFI/TRADFI/DEFI object path is built ONCE,
+> inside `write_candle_parquet`, from the SAME post-derivation coordinates the manifest row uses (renormalized canonical
+> id, inferred `instrument_type`, normalised `tf` [24h→1d], SOURCE `data_type`, `pipeline_mode`) via the single builder
+> `unified_trading_library.build_canonical_candle_path(...)` (MDPS wrapper
+> `output_path_helpers.build_canonical_candle_object_path` / `canonical_writer_shaping.derive_candle_object_path`). The
+> path now carries `instrument_type=` (was absent) + `pipeline_mode=` and the **manifest `data_type` axis is the SOURCE
+> type** (was the aggregated `mdps_data_type_key`), so **path == manifest on `data_type` by construction** and matches
+> the freshness check (`check_shard_freshness` `expected_venues` = SOURCE data_types from `DATA_TYPES_BY_ASSET_GROUP`).
+> The `data_type=` kwarg passed to `record_captured` stays on the aggregated `mdps_data_type_key` — it drives the
+> schema-contract lookup + the `BUNDLED_DATA_TYPES` cluster gate only, not the stored axis. Existing pre-2026-07-21 rows
+> are re-keyed by the separate backward data/manifest migration. SSOT for the shape: `unified-trading-library`
+> `PATH_REGISTRY['processed_candles']`.
 
 **Consequence**: MDPS does not produce per-venue candles for SPORTS. Its `dependency_checker.py` `OUTPUT_BUCKETS` map
 covers SPORTS only so the dep-check can resolve; the actual processing is handled by the sports adapters

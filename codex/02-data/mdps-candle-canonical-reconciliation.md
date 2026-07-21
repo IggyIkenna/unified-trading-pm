@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: MDPS candle-layer canonical reconciliation (the four surfaces + shard atom for processed candles)
 summary: >-
   The candle-LAYER extension of the four-surface reconciliation. Defines the MDPS processed-candle shard atom (adds a
-  timeframe axis; data_type keyed on the AGGREGATED mdps_data_type_key; S3 rows filtered
+  timeframe axis; data_type is the SOURCE type on BOTH path and manifest per operator ruling 2026-07-21 — the aggregated
+  mdps_data_type_key survives only as the schema-contract lookup key; S3 rows filtered
   service_name=market-data-processing-service), the four surfaces for candles (S4 UNAVAILABLE by construction — there is
   no candle catalogue), and the fact that the UAC machine oracle does NOT cover the processed_candles/ namespace so
   candle canonicality is checked against the ratified Option-A registry template until the oracle is extended.
@@ -71,17 +72,22 @@ code_refs:
 
 ```
 service_name=market-data-processing-service · date · asset_group · [pipeline_mode({mode}_{source})]
-  · timeframe · data_type(mdps_data_type_key — AGGREGATED) · [instrument_type] · venue · (KEY) · source
+  · timeframe · data_type(SOURCE type — operator ruling 2026-07-21; aggregated mdps_data_type_key is contract-lookup only) · [instrument_type] · venue · (KEY) · source
 ```
 
 Deltas from the raw-tick atom ([`four-surface-reconciliation-procedure.md`](four-surface-reconciliation-procedure.md)
 §2):
 
 - **NEW `timeframe` axis** (`15s|1m|5m|15m|1h|4h|1d`; the manifest normalises `24h`→`1d`).
-- **`data_type` is the AGGREGATED `mdps_data_type_key(src, tf)`** (`trades+1m→ohlcv_1m`,
-  `book_snapshot_5+5m→ book5_ohlcv_5m`, `derivative_ticker+1h→deriv_ohlcv_1h`; already-`ohlcv_*` pass through), NOT the
-  source type. The Option-A target puts this SAME aggregated key on BOTH the manifest AND the path — that is what makes
-  `path==manifest` hold on the `data_type` axis, the exact invariant the migration restores.
+- **`data_type` is the SOURCE type** (operator ruling 2026-07-21 — SUPERSEDES the earlier Option-A "aggregated key on
+  both" model): `derivative_ticker`/`trades`/`book_snapshot_5`/`dex_pool_swaps`/`ohlcv_1m` (already-`ohlcv_*` pass
+  through). Going-forward MDPS writes put this SAME SOURCE value on BOTH the manifest `data_type` axis AND the object
+  path — that is what makes `path==manifest` hold on the `data_type` axis (and matches the `check_shard_freshness`
+  `expected_venues` = SOURCE `DATA_TYPES_BY_ASSET_GROUP`). The AGGREGATED `mdps_data_type_key(src, tf)`
+  (`trades+1m→ohlcv_1m`, `book_snapshot_5+5m→book5_ohlcv_5m`, `derivative_ticker+1h→deriv_ohlcv_1h`) survives ONLY as
+  the schema-contract lookup key + the `BUNDLED_DATA_TYPES` cluster gate (the `data_type=` kwarg to `record_captured`),
+  NOT as the stored manifest axis. Pre-2026-07-21 rows carry the aggregated key and are re-keyed by the backward
+  migration.
 - **S3 rows are filtered `service_name=="market-data-processing-service"`** — candle rows share ONE `_index` with
   raw-tick rows ([`chart-candle-delivery-flow.md`](chart-candle-delivery-flow.md) § "Read path"); the filter is
   load-bearing, or the two layers conflate.
@@ -96,14 +102,17 @@ Deltas from the raw-tick atom ([`four-surface-reconciliation-procedure.md`](four
 
 ## 2. The four surfaces (candles)
 
-- **S1 — GCS path** under `processed_candles/by_date/` (sports: `processed/`). TARGET grammar (Option A):
-  `…/pipeline_mode=…/timeframe=…/data_type={mdps_data_type_key}/instrument_type=…/venue=…/{canonical_id}.parquet`
-  (prediction drops `venue=`). Registry SSOT for the target shape:
-  `unified-trading-library/unified_trading_library/config_interface/paths/registry.py:28` (`processed_candles`
-  `path_template`). **Note the template is not yet the full target**: today it is
-  `processed_candles/by_date/day={date}/timeframe={timeframe}/data_type={data_type}/instrument_type={instrument_type}/venue={venue}/`
-  — it carries NO `pipeline_mode=` segment; Option-A decision 1 adds `pipeline_mode=` there so `build_path()` alone
-  yields the ratified shape.
+- **S1 — GCS path** under `processed_candles/by_date/` (sports: `processed/`). TARGET grammar (operator-ruled
+  2026-07-21): `…/pipeline_mode=…/timeframe=…/data_type={SOURCE_dt}/instrument_type=…/venue=…/{canonical_id}.parquet`
+  (prediction drops `venue=`; bundled-by-underlying writes append `underlying={U}/` and use `ticks.parquet` as the
+  leaf). **`data_type` is the SOURCE type**
+  (`derivative_ticker`/`trades`/`book_snapshot_5`/`dex_pool_swaps`/`ohlcv_1m`), NOT the aggregated `mdps_data_type_key`
+  — the manifest `data_type` axis now records the SAME SOURCE value, so **path == manifest** by construction. Registry
+  SSOT for the shape: `unified-trading-library/unified_trading_library/config_interface/paths/registry.py`
+  (`processed_candles` `path_template`, which now carries the `pipeline_mode=` segment); the single builder is
+  `unified_trading_library.build_canonical_candle_path(...)` (MDPS wrapper
+  `output_path_helpers.build_canonical_candle_object_path` / `canonical_writer_shaping.derive_candle_object_path`) — the
+  writer + the caller-side skip/prior-day-read + the manifest all funnel through it (path==path==manifest).
 - **S2 — parquet content** — the MDPS candle contract (`lookup_mdps_contract(mdps_data_type_key)`), never the raw-tick
   contract. OHLC nullability is PER-TYPE (deriv + empty-window rows legitimately nullable — resolved P0,
   [`mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
@@ -113,9 +122,9 @@ Deltas from the raw-tick atom ([`four-surface-reconciliation-procedure.md`](four
   [`bar-boundary-candle-edge-convention.md`](bar-boundary-candle-edge-convention.md) (RIGHT edge `t_close`, half-open
   window `[t_open, t_close)`); an S2 check must not assume left-edge stamping.
 - **S3 — manifest `_index`** — rows filtered `service_name=="market-data-processing-service"`; the atom carries
-  `timeframe` + the aggregated `data_type`. **Expect near-empty** — the candle write path is not calling
-  `record_captured` per shard (§4), so the reconciliation is GCS-object-DRIVEN, not manifest-driven, for the entire
-  candle layer.
+  `timeframe` + the SOURCE `data_type` (2026-07-21 ruling; going-forward writes). **Expect near-empty** — the candle
+  write path is not calling `record_captured` per shard (§4), so the reconciliation is GCS-object-DRIVEN, not
+  manifest-driven, for the entire candle layer.
 - **S4 — catalogue — NONE.** Candles are DERIVED; there is no instruments-store catalogue for them. The chart route's
   `BatchCandleReader` prunes off S3 directly ([`chart-candle-delivery-flow.md`](chart-candle-delivery-flow.md) § "Read
   path") — it is not an independent surface. **S4 is `UNAVAILABLE` for the ENTIRE candle layer BY CONSTRUCTION** —
@@ -192,8 +201,9 @@ The migration-window suppression is codified as **AE-6** in
 
 See [`reconciliation-census-and-compute-tiers.md`](reconciliation-census-and-compute-tiers.md). Candle deltas:
 
-- The in-session census axis set ADDS `timeframe`; `data_type` is badged against the AGGREGATED `mdps_data_type_key`
-  vocabulary, NOT the raw-tick `DATA_TYPES_BY_ASSET_GROUP`.
+- The in-session census axis set ADDS `timeframe`; going-forward (2026-07-21 ruling) `data_type` is badged against the
+  SOURCE `DATA_TYPES_BY_ASSET_GROUP` vocabulary (path==manifest); pre-migration rows still carry the AGGREGATED
+  `mdps_data_type_key` vocabulary until the backward migration re-keys them.
 - The manifest-side census must filter `service_name=="market-data-processing-service"` and add `timeframe` to
   `AXIS_CENSUS_COLUMNS` (`deployment-api/deployment_api/routes/data_status/_axis_census.py:86` — today
   `venue/chain/instrument_type/data_type/source/pipeline_mode`, no `timeframe`).
