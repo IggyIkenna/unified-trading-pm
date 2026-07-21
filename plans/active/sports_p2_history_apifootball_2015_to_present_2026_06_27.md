@@ -3451,3 +3451,29 @@ exactly as framed. Gate (`expected_unattempted_pending_fetch == 0` across all AF
 met (FIXTURE_EVENTS/STATS still need to reach `2026-05-10`; LINEUPS/PLAYER_STATS still need to reach present). Not
 flipping the checkbox — a full gate-verification query this soon after slot-13's would just re-confirm "still pending".
 `/skip-current-task` — resume once the fleet completes or a shard goes dead/stalled on a future check.
+
+### 2026-07-21T04:22Z — data_engineering slot-10 (Todo `-001` re-dispatched, ~7min after slot-15's check — cheap re-check, all 4 shards still healthy, decline)
+
+Dispatched onto `-001` immediately after closing out an unrelated `[INFRA]` P3 todo on this slot
+(`exit_code_fleet_monitor_clean_misclassifies_premature_kill_2026_07_21.md` item 2, deployment-service@6671f02).
+Re-checked fleet liveness (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud`, this slot's snap `gcloud` still hits the
+same `cap_dac_override` failure documented in every prior entry):
+
+- All 4 VMs still `RUNNING`: `af-backfill-20260719-180545` (LINEUPS), `-180620` (PLAYER_STATS),
+  `af-backfill-20260721-033537` (FIXTURE_EVENTS), `-033605` (FIXTURE_STATS).
+- `PROGRESS.json` monotonically advanced vs slot-15's 04:15Z readings (all timestamps fresh, within ~2 min of this check
+  at 04:22Z): FIXTURE_EVENTS `2020-06-27→2020-06-30`, FIXTURE_STATS `2020-06-27→2020-06-30`, LINEUPS
+  `2024-06-15→2024-06-20`, PLAYER_STATS `2025-12-23→2025-12-29`.
+
+No stall, no new dead shard — a genuine multi-day run continuing exactly as framed. Gate
+(`expected_unattempted_pending_fetch == 0` across all AF enrichment data_types within coverage) remains far from met
+(FIXTURE_EVENTS/STATS still need to reach `2026-05-10`; LINEUPS/PLAYER_STATS still need to reach present). Not running
+the full gate-verification query (would just re-confirm "still pending" at real compute cost, per established
+precedent). Not flipping the checkbox. Also confirmed the two entities still missing from this fleet entirely — INJURIES
+(needs `2021-01-01→`) and STANDINGS (needs `2018-01-01→`) — cannot be launched yet: the launcher
+(`launch-api-football-backfill-vm.sh`) enforces a singleton lock refusing any new `af-backfill-*`/`af-audit-*` launch
+while one is already running, specifically to prevent the shared-API-key thundering-herd failure mode documented in its
+own header comment (2026-04-19 SFI incident). Forcing past that lock now (`--force`) would split the shared
+`api_football` rate budget across 6 concurrent VMs against a protection mechanism installed for exactly this reason —
+not attempted. `/skip-current-task` — resume once the fleet completes, a shard goes dead/stalled, or (separately)
+INJURIES/STANDINGS become launchable once the lock clears.
