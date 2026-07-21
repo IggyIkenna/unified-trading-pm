@@ -299,6 +299,10 @@ C1, `agent-orchestrator@0d510e9`; a booted one-off is `working`, never `idle`, s
 on `/done` it is archived, not reaped). Only `5907317` (the boot-gate `spawn_base_role` recognition) is kept — B1
 depends on it, so it was not subsumed.
 
+> **"One-off" here = an event-spawned CRAFT** (escalation/scheduled). A **plan-backlog worker is persistent** and DOES
+> go `idle` between prereq-blocked tasks — the idle-reclaimer reaping it is then correct (its context is preserved for
+> `--resume`). See the next section, § "Dispatch-context-driven lifecycle", for the full split.
+
 ---
 
 ## Dispatch-context-driven lifecycle — persistent plan-backlog workers vs event-spawned one-shots (2026-07-21)
