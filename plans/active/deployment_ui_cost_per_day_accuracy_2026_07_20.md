@@ -138,9 +138,12 @@ principle, wrong in aggregation.
       (deployment-api@de1f680, deployment-ui@6a32408) — verified via
       `git rev-list --count HEAD ^origin/live-defi-rollout` == 0 in both repos, no local WIP to ship. This todo covers
       the plan-flip confirmation itself.
-- [ ] [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions, active-days
-      average, 24h basis, GCP-name/AWS-ARN join, `cost_basis` colour convention) in
-      `codex/05-infrastructure/deployment-observability.md`.
+- [x] ✅ [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions,
+      active-days average, 24h basis, GCP-name/AWS-ARN join, `cost_basis` colour convention) in
+      `codex/05-infrastructure/deployment-observability.md`. — unified-trading-pm: added "Cost/day attribution contract"
+      section (the three `ResourceDailyCost` definitions, the active-days-average fix, the GCP-name/AWS-ARN join via the
+      EC2 census, the best-effort-never-breaks-census enrichment, and the amber-only `cost_basis` colour convention);
+      frontmatter `code_refs`/`tags`/`related`/`last_reviewed` updated.
 
 ## Success criteria
 
@@ -181,6 +184,14 @@ principle, wrong in aggregation.
   `deployment-ui` (HEAD `6a32408`, since fast-forwarded to `e4f893e` by an unrelated sibling-plan push) — confirmed zero
   unpushed commits in either repo before flipping this checkbox. Remaining open todo: the P2 post-phase codex audit of
   `codex/05-infrastructure/deployment-observability.md`.
+- **2026-07-21** — [REVIEW] P2 post-phase codex audit picked up (slot 2). Added a "Cost/day attribution contract"
+  section to `codex/05-infrastructure/deployment-observability.md` documenting: the three `ResourceDailyCost`
+  definitions read off the live `service.py`/`models.py` docstrings; the active-days-average fix (`len(day_net)`, not
+  fixed window); the 24h basis (complete-day, partial-day-normalised fallback with `hours_billed` floored at 1h); the
+  GCP-name/AWS-ARN join (`_aws_instance_id_from_resource_id` + the EC2-census `instance_id_by_name` map threaded through
+  `_attach_costs`); the best-effort try/except so a billing-source outage never breaks the census; and the amber-only
+  `cost_basis` colour convention (shared with the page's other "approximate" figures, not cost-specific). Frontmatter
+  `code_refs`/`tags`/`related`/`last_reviewed` updated. All plan todos now complete — this plan is ready for archival.
 
 ## Codex SSOTs
 

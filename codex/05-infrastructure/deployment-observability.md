@@ -13,13 +13,14 @@ stage: [meta]
 repos:
   [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: [observability, monitoring, deployment, self-healing, ui]
+tags: [observability, monitoring, deployment, self-healing, ui, cost, billing]
 related:
   [
     codex/05-infrastructure/data-pipeline-alerts.md,
     codex/05-infrastructure/deployment-ui-architecture.md,
     codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
     codex/05-infrastructure/live-deployment-monitoring.md,
+    plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
   ]
 created: 2026-06-22
 authoritative_for:
@@ -38,8 +39,14 @@ referenced_by:
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
-last_reviewed: 2026-06-22
+last_reviewed: 2026-07-21
 code_refs:
+  [
+    deployment-api/deployment_api/services/cost_observability/service.py,
+    deployment-api/deployment_api/services/cost_observability/models.py,
+    deployment-api/deployment_api/routes/deployments_inventory.py,
+    deployment-ui/src/pages/Deployments.tsx,
+  ]
 ---
 
 # Deployment Observability — live/batch/paper × GCP/AWS at /repos grade (SSOT)
@@ -104,6 +111,51 @@ Cloud Run jobs (kind icon, GCP/AWS cloud badge, status badge, exit_code with `13
 captured-progress), a per-umbrella summary header, and URL-param-backed cloud/status/asset_group filters
 (`useSearchParams` → deep-linkable). Drill-down `/deployments/:name` reuses `VmEventsTimeline` + `StreamingLogsPanel`
 (live log tail + event timeline) + the GCS `run.log` link. pw:L2-gated (`tests/smoke/deployments-page.spec.ts`).
+
+## Cost/day attribution contract (per-target cost cell)
+
+The Deployments table's Cost/day column (`CostCell`, `deployment-ui/src/pages/Deployments.tsx`) reads real GCP BigQuery
+resource-level billing export + AWS Athena CUR data via `deployment-api`'s
+`CostObservabilityService.per_resource_daily()` (`deployment_api/services/cost_observability/service.py`) — **no rate
+card, no fabrication**. It attaches three USD figures per deployment target by joining on billing
+`resource_id == item.name`. Fixed 2026-07-21 (`plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md`) after
+all three figures were individually correct in source but wrong in aggregation.
+
+**The three definitions** (`ResourceDailyCost`, `cost_observability/models.py`) — net = cost + credit, USD (GCP already
+converted from GBP at query time):
+
+| Field               | Definition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `actual_usd`        | Net cost on the most recent **COMPLETE** billing day (a day strictly before UTC-today); falls back to the latest (still-accruing) day only if no complete day exists yet.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `avg_7d_usd`        | Total net over the trailing window ÷ **the count of days the resource actually has billing rows** (`len(day_net)`) — NOT the fixed window length. A 1-day-old resource averages over its 1 day, so it reads `$4.4 · 7d ~$4.4`, not `$4.4 · 7d $0.63` (the reported symptom — divided by the fixed `days=7` even when the resource only had 1 billing day).                                                                                                                                                                                                                                                         |
+| `projected_24h_usd` | The same most-recent COMPLETE day's net (so `actual_usd == projected_24h_usd` is expected + correct for any resource with a complete day); falls back to **partial-day normalisation** (`day_cost / hours_billed × 24`) only when no complete day exists — `hours_billed` = wall-clock hours elapsed since UTC midnight (floored at 1h to avoid a runaway multiplier in the first minutes of a new UTC day). Not a new hourly billing query — the billing snapshot stays daily-grained. Previously `max(daily)` (peak observed day), which silently overstated any resource whose peak day wasn't its most recent. |
+| `cost_basis`        | `"complete"` when a complete billing day exists (both figures above derive from it); `"partial"` when no complete day exists yet and both fall back to the latest, still-accruing day. Carried onto `DeploymentItem.cost_basis: str \| None` (`None` = no billing row yet, honest absence) — never fabricated.                                                                                                                                                                                                                                                                                                     |
+
+**Active-days average, not fixed-window** is the core fix: `per_resource_daily(days=N)` GROUP BYs `(resource_id, day)`
+over the window, then divides each resource's sum by however many distinct days THAT resource has rows for, not `N`. A
+resource billed on only 1 of the last 7 days no longer reads as if it cost 1/7th of what it actually cost.
+
+**GCP-name / AWS-ARN join** (`_attach_costs`, `deployment_api/routes/deployments_inventory.py`): a GCP VM's billing
+`resource.name` already equals its instance name (== `item.name`), so GCP rows join directly. AWS Athena CUR's
+`line_item_resource_id` is an ARN or bare instance-id (`arn:aws:ec2:<region>:<acct>:instance/i-...`), which won't match
+a friendly name — `_load_aws_items` builds `{instance_id: Name tag}` from the EC2 census
+(`deployment-service/backends/aws_census.py` `AwsInstanceCensus` / `list_ec2_census()`) and threads it into
+`_attach_costs` as `aws_instance_id_by_name`. `_aws_instance_id_from_resource_id` parses the trailing `instance/i-…`
+segment off the ARN (or accepts a bare `i-…`), resolves it through the map, and re-keys the cost record under the
+friendly name before the by-name join runs. No mapping found (unmapped instance, non-EC2 AWS resource) → the item's cost
+fields stay `None` — **never a fabricated `$0`**.
+
+**Cost enrichment is best-effort and never breaks the census**: `_attach_costs` wraps the `per_resource_daily()` call in
+a try/except — a billing-source failure (Athena/BigQuery down) logs a warning and leaves every item's cost fields
+`None`; the inventory itself still returns.
+
+**UI colour convention (no text label)**: `CostCell` renders `cost_actual_usd` in `text-amber-400` when
+`item.cost_basis === "partial"`, else the normal `text-[var(--color-text-primary)]` tone — colour is the ONLY signal
+distinguishing a still-accruing partial-day figure from a settled complete-day one (operator decision 2026-07-20;
+refines an earlier tooltip proposal). The same `text-amber-400` convention is reused elsewhere on the page for
+"estimated, not billing-derived" figures (e.g. the unmanaged-VM cost fallback) — one consistent amber = "approximate /
+provisional" signal across the table, not cost-specific. pw:L2 regression: `tests/smoke/deployments-cost-cell.spec.ts`
+(complete-day renders the normal tone; partial-day renders amber with no added text).
 
 ## Slack parity + alert enrichment
 
