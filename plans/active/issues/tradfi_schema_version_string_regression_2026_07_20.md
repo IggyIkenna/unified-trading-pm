@@ -45,6 +45,9 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 > **🟢 RESOLVED 2026-07-20 — nightly tradfi T+1 collection restored.** Live `_index` re-stamped to int64 (holds across
