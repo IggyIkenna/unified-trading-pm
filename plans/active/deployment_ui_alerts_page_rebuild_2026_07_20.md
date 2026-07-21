@@ -121,8 +121,16 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       params). New `pw:L2` spec pins the click-to-cycle behaviour + URL persistence; every existing
       `alerts-page.spec.ts` assertion and `deployments-page.spec.ts` (shared-hook regression check) stay green.
       `quality-gates.sh` green.
-- [ ] [UI] P1. **Filter bar** — source/plane, severity, subject-repo, service filters using the extracted `FilterSelect`
-      (multi-select where it helps), URL-backed. Options derived from the loaded normalised alert set.
+- [x] ✅ [UI] P1. **Filter bar** — source/plane, severity, subject-repo, service filters using the extracted
+      `FilterSelect`, URL-backed. Options derived from the loaded normalised alert set. — deployment-ui@e6234d16. New
+      `MultiChipFilter` (generic Set-backed multi-select chip row, generalizing Deployments.tsx's `KindFilterChips`) for
+      kind/severity (multi-select, comma-joined URL param); `FilterSelect` reused as-is for repo/service
+      (single-select). `?kind=&severity=&repo=&service=` all URL-backed via the existing `setParam` pattern; a
+      `filteredAlerts` memo ANDs all four dimensions before the existing sort; result-count + clear-filters affordances;
+      new `alerts-filter-empty` state distinguishes "0 alerts match filters" from "0 alerts in ledger". 7 new `pw:L2`
+      cases added to `tests/smoke/alerts-page.spec.ts` (chip toggle + URL persistence, multi-select additivity, dropdown
+      filtering, clear-filters, filtered-empty-vs-ledger-empty) — all 9 pre-existing assertions in that spec stay green
+      (16/16 passed). `quality-gates.sh` green (sentinel ddecdec).
 - [ ] [UI] P1. **Date-range picker** — URL-backed `?alert_from=&alert_to=`, wired to the ledger's widened retention
       window from Plan A. Explicit "no data before `<date>`" state when the range exceeds retention (same honesty
       pattern as the deployments date-range plan).
