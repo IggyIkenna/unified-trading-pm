@@ -7,7 +7,7 @@ summary: >-
   instead of a fixed window, redefine the 24h projection as the most-recent-complete-day (partial-day-normalised
   fallback) instead of the peak observed day, map AWS ARN/instance-id billing rows to friendly VM names via the AWS
   census, and colour-code (not text-label) the actual-cost figure when it falls back to a partial day.
-status: draft
+status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -38,9 +38,10 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-1, pe
 
 # deployment-ui — Cost/day column accuracy
 
-> **🟡 Kept `draft` deliberately (operator 2026-07-20)** — the operator is mid-change on AO right now; this plan is
-> written now (decisions are final) but not flipped `active`/dispatched until AO work settles. Flip `status: active`
-> when ready to dispatch — no further authoring needed at that point.
+> **🟢 ACTIVE (operator 2026-07-21)** — flipped `active` as one of the first two plans dispatched to AO to test its
+> reliability (the other is `deployment_ui_date_range_filter_and_search_2026_07_20.md`). Must-do review fixes applied
+> before activation (AWS-census wiring named, `hours_billed` defined, repro todo de-hypothesized). Remaining
+> observability plans stay `draft` until these two complete and AO looks stable.
 
 ## Context
 
@@ -65,9 +66,10 @@ principle, wrong in aggregation.
 
 ## Todos
 
-- [ ] [REVIEW] P0. Reproduce + record the defect on live data — query `per_resource_daily(days=7)` for the VM showing
-      `$4.4 / 7d $0.63 / 24h $4.4`; confirm it has exactly one billing day in the window; capture the `day_net` dict in
-      the Progress Log as ground truth. No code change.
+- [ ] [REVIEW] P0. Reproduce + record the defect on live data — run `per_resource_daily(days=7)` and find ANY resource
+      with billing rows for exactly ONE day in the window (it will exhibit `avg == actual/7` and `projected == actual`,
+      the reported symptom; `$4.4 / 7d $0.63 / 24h $4.4` was an illustrative example, not a specific named VM to search
+      for). Capture that resource's `day_net` dict in the Progress Log as ground truth. No code change.
 - [ ] [BACKEND] P0. **Fix the 7-day-average divisor** (decision 1). In `per_resource_daily`
       ([`service.py:319-327`](../../deployment-api/deployment_api/services/cost_observability/service.py)), divide by
       `len(day_net)` instead of the fixed window length. Sync field docs (`models.py:73-83`,
@@ -75,11 +77,17 @@ principle, wrong in aggregation.
       → `None` (honest absence).
 - [ ] [BACKEND] P0. **Fix the 24h projection** (decision 2). Replace `max(daily)` (service.py:326) with: most recent
       COMPLETE billing day; fall back to partial-day normalisation (`day_cost / hours_billed × 24`) only when no
-      complete day exists. Document the definition on the field. A legitimate `actual == projected` (a VM that ran
-      exactly one complete day) is correct and expected.
-- [ ] [DATA] P0. **Fix AWS attribution** (decision 3). Build the instance-id/ARN → friendly-name mapping from the AWS
-      census (instance-id ↔ Name tag) already loaded by the inventory; apply it in the billing join so AWS VMs get real
-      Cost/day. No mapping found → stay `None`, never fabricate `$0`.
+      complete day exists — where `hours_billed` = wall-clock hours elapsed since UTC midnight for that partial day
+      (`datetime.now(timezone.utc)`), NOT a new hourly billing query (the billing snapshot is daily-grained). Document
+      the definition on the field. A legitimate `actual == projected` (a VM that ran exactly one complete day) is
+      correct and expected.
+- [ ] [DATA] P0. **Fix AWS attribution** (decision 3). Concrete wiring: the census carrying both `instance_id` and
+      `name` (Name tag) is `deployment-service` `backends/aws_census.py` (`AwsInstanceCensus` via `list_ec2_census()`),
+      consumed in `deployment-api` `routes/_aws_deployments.py::_ec2_item` — but the item currently drops `instance_id`
+      before the billing join in `deployments_inventory.py:1678 _attach_costs` (which matches only on `item.name`).
+      Build `{inst.instance_id: inst.name}` from the census and thread it into `_attach_costs` (new optional param) so
+      an AWS CUR row's `line_item_resource_id` (ARN → parse trailing `instance/i-…`) resolves to the friendly name
+      before the join. No mapping found → stay `None`, never fabricate `$0`.
 - [ ] [BACKEND] P1. **Partial-day basis flag** (decision 4). When `cost_actual_usd` falls back to the latest PARTIAL day
       (no complete day exists — service.py:321-322), emit a `cost_basis: "partial" | "complete"` field alongside it (or
       equivalent) so the frontend can style it — no text label, colour only. Field doc updated.

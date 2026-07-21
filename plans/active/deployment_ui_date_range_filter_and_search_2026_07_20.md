@@ -8,11 +8,11 @@ summary: >-
   Run SERVICES carry no timestamp at all (an asymmetry vs their AWS ECS twin); several kinds (Job/Scheduler/Disk) have
   only a single timestamp or none. Also folds in the kind filter becoming multi-select, plus the previously-scoped
   service dropdown + target search box (WS-3) since they share the same filter bar.
-status: draft
+status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-ui]
+repos: [deployment-api, deployment-ui, unified-trading-library]
 scope: [engineer]
 tags: [deployment-ui, filters, search, date-range, observability]
 related:
@@ -41,8 +41,12 @@ source:
 
 # deployment-ui — date-range filter, kind multi-select, service filter, target search
 
-> **🟡 Kept `draft` deliberately (operator 2026-07-20)** — operator is mid-change on AO right now; this plan is written
-> now (audit done, decisions final) but not flipped `active` until AO settles.
+> **🟢 ACTIVE (operator 2026-07-21)** — flipped `active` as one of the first two plans dispatched to AO to test its
+> reliability (the other is `deployment_ui_cost_per_day_accuracy_2026_07_20.md`). Must-do review fixes applied before
+> activation (`unified-trading-library` added to `repos:` for the `deployment_registry.py` reference; `onHeaderClick`
+> line ref corrected to `:821`). **This plan owns the `Deployments.tsx` shared-primitive extraction** that WS-5B
+> consumes — so it is the correct one to run first. Remaining observability plans stay `draft` until these two complete
+> and AO looks stable.
 
 ## Context — live audit findings (2026-07-20, read-only, no writes)
 
@@ -120,13 +124,14 @@ Full audit transcript available on request; the load-bearing facts:
 - [ ] [UI] P2. Target search box (WS-3) — free-text substring match on the Target column (`item.name`),
       case-insensitive, URL-backed (`?q=`), debounced, clears with an ✕.
 - [ ] [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
-      `StatusFilterChips` (`:916-961`), and the column-sort machinery (`SortKey` / `columnSortValue` / `compareByColumn`
-      / `onHeaderClick`, `:256-320`) are currently LOCAL to `Deployments.tsx` and not exported. Lift them into shared
-      components (e.g. `src/components/filters/`) as part of this work, preserving behaviour, and re-consume them here.
-      **This plan owns the extraction** — the WS-5 alerts-page rebuild
-      (`deployment_ui_alerts_page_rebuild_2026_07_20.md`) declares `depends_on` this plan and consumes the extracted
-      primitives rather than duplicating or re-editing this file (operator decision 2026-07-20 — one agent owns
-      `Deployments.tsx`, no same-file collision, no divergent filter bars).
+      `StatusFilterChips` (`:924-961`), and the column-sort machinery (`SortKey` / `columnSortValue` / `compareByColumn`
+      at `:256-320`, plus `onHeaderClick` at `:821` — note it lives in the table component, NOT co-located with the pure
+      sort fns) are currently LOCAL to `Deployments.tsx` and not exported. Lift them into shared components (e.g.
+      `src/components/filters/`) as part of this work, preserving behaviour, and re-consume them here. **This plan owns
+      the extraction** — the WS-5 alerts-page rebuild (`deployment_ui_alerts_page_rebuild_2026_07_20.md`) declares
+      `depends_on` this plan and consumes the extracted primitives rather than duplicating or re-editing this file
+      (operator decision 2026-07-20 — one agent owns `Deployments.tsx`, no same-file collision, no divergent filter
+      bars).
 - [ ] [REVIEW] P1. Tests — overlap formula (fresh-running / heartbeat-stale / completed cases); archive bounded-read +
       30-day floor behaviour; out-of-range banner trigger; per-kind `basis` assignment; kind-multi-select +
       service/search URL param round-trip. `pw:L2 ✓` + cited regression spec for the UI pieces;
