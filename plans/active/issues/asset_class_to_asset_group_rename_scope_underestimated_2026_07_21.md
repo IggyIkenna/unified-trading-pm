@@ -91,10 +91,20 @@ Do NOT execute the rename under the original P3 todo. Instead:
 
 ## Todos
 
-- [ ] [PLANNING] P2. Author a dedicated `asset_class_to_asset_group_rename` plan (sequential, cross-repo,
+- [x] ✅ [PLANNING] P2. Author a dedicated `asset_class_to_asset_group_rename` plan (sequential, cross-repo,
       `assigned_vm: planning`) per the phased approach above; supersede todo C in
       `dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md` with a pointer to the new plan. (repo:
-      unified-trading-pm)
+      unified-trading-pm) — filed BLK-87fc93e4 first per the plan-destination HARD RULE (this todo's own text assumed
+      `assigned_vm: planning`, but that recommendation came from this issue doc itself, not the operator — main ruled B:
+      human plan, `assigned_vm: NA`, `execution_scope: local-only`, exactly because this is the risk class the
+      default-to-human bias protects). Authored `plans/active/asset_class_to_asset_group_rename_2026_07_21.md` (6 todos,
+      `sequential: true`, 8 repos) with a corrective finding vs. this doc's own risk read: re-traced
+      `LedgerRow.asset_class`'s actual import (`_ledger_row.py` imports `AssetClass` from the LOCAL `._enums` — the
+      ledger-scoped module re-exported publicly as `LedgerAssetClass` — not from `_instrument_enums`, the domain module
+      this rename targets), so the persisted field does NOT need a schema migration, provided the rename stays correctly
+      scoped to the domain enum only — encoded as the new plan's own Todo 1 (re-verify independently, don't inherit on
+      trust). Superseded todo C in `dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md` with a
+      `BLOCKED-SUPERSEDED` marker + pointer to both this doc and the new plan.
 
 ## Codex SSOTs
 

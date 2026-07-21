@@ -130,10 +130,13 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
       Build `AdminStrategyAssignmentTable.tsx` + `app/(ops)/admin/strategy-assignments/page.tsx`. Wire
       `canEnterTerminal()` (currently dead code) into the actual terminal entry path. (repo: unified-api-contracts,
       unified-trading-system-ui)
-- [ ] [CODE] P3. Execute the `AssetClass` → `AssetGroup` rename repo-wide (UAC: ~20 files; UI: ~19+15 files/identifiers)
-      — the direction is already set by newer code (`terminology.ts`, `envelope-loader.ts`), this is finishing the
-      sweep. Follow with the codex terminology grep+replace pass. (repo: unified-api-contracts,
-      unified-trading-system-ui)
+- [ ] BLOCKED-SUPERSEDED [CODE] P3. ~~Execute the `AssetClass` → `AssetGroup` rename repo-wide~~ — SUPERSEDED
+      2026-07-21: the real blast radius is 9+ repos (not 2), touches a persisted-schema-adjacent field, and risks
+      conflating two distinct `AssetClass` enums (domain vs. `LedgerAssetClass`). See
+      `plans/active/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md` (the investigation) and
+      `plans/active/asset_class_to_asset_group_rename_2026_07_21.md` (the dedicated 6-todo phased plan that owns this
+      work now — human plan, `assigned_vm: NA`, pending operator dispatch decision). Non-dispatchable — do not execute
+      this line as scoped. (repo: unified-api-contracts, unified-trading-system-ui)
 - [ ] [CODE] P3. Apply `lib/strategy-display.ts` formatters (`formatFamily`/`formatArchetype`/`formatSlotLabel`) in
       `StrategyCatalogueSurface.tsx`'s `AdminUniverseGrid`, `signal-history-table.tsx`, and
       `admin/strategy-universe/page.tsx` — currently render raw underscore identifiers. (repo:
