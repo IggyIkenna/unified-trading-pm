@@ -28,7 +28,7 @@ referenced_by:
     plans/epics/features_and_ml_master.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-21
 code_refs:
 ---
 
@@ -108,6 +108,28 @@ Bucket: same as MTDS — `market-data-tick-{category}-central-element-323112` un
 
 Path:
 `processed_candles/by_date/day=YYYY-MM-DD/timeframe=15s|1m|5m|15m|1h|4h|1d/data_type=trades|book_snapshot_5|.../venue={venue}/instrument_type={type}/.parquet`
+
+**Corrected against a real listing, 2026-07-21** (the line above pre-dates verification and doesn't match the actual
+on-disk shape): the real path is
+`processed_candles/by_date/day=YYYY-MM-DD/pipeline_mode={mode}/timeframe={tf}/data_type={dt}/venue={venue}/{instrument_id}.parquet`
+— it carries a `pipeline_mode=` segment the line above omits, there is no separate `instrument_type=` path segment (the
+instrument_id in the filename already encodes it, e.g. `DERIBIT:PERPETUAL:BTC-PERPETUAL.parquet`), and the daily
+timeframe label is **`24h`, not `1d`** (verified `timeframe=24h` present on disk; `1d` was not observed). Confirmed real
+example:
+`processed_candles/by_date/day=2019-03-30/pipeline_mode=batch_tardis/timeframe=15m/data_type=derivative_ticker/venue=DERIBIT/DERIBIT:PERPETUAL:BTC-PERPETUAL.parquet`.
+The candle schema (`market_data_processing_service/schemas/output_schemas.py`) carries both `volume` and `quote_volume`
+fields; a `timeframe=24h` candle's `quote_volume` is literally that instrument's daily USD volume.
+
+**CeFi on-chain-perp venue coverage gap (found 2026-07-21, still open)**: `processed_candles` currently has candles ONLY
+for tardis-sourced CeFi venues (Binance, Deribit, OKX, etc. — `pipeline_mode=batch_tardis`). The 4 on-chain-perp CeFi
+venues (ASTER, HYPERLIQUID, LIGHTER-ZKSYNC, EXTENDED-STARKNET) have **zero** processed_candles rows as of a 2026-05-01
+spot-check, even for HYPERLIQUID which has 2+ years of raw trade history — MDPS candle-building has never been pointed
+at their `pipeline_mode=batch_aster` / `batch_hyperliquid` / `batch_lighter_api` / `batch_extended` raw tick data.
+Extending MDPS's candle-building scope to these 4 venues is deliberately deferred (separate future work);
+`features-service/features_service/cross_instrument/app/calculators/adv.py` (rolling-ADV consumer, in progress
+2026-07-21 — see `plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md` for status) is written against this
+canonical path/schema regardless, so it starts working the moment this gap closes with no further wiring. Until then it
+correctly reports "insufficient history" for these 4 venues' instruments (missing files, not an error).
 
 SchemaContract key: `(category, instrument_type, source_data_type, ohlcv_{timeframe})` — see plan § 5b.1. TradFi
 `ohlcv_1m` is pass-through from Databento; higher timeframes aggregate from 1m. Every write adds a `timeframe` column +

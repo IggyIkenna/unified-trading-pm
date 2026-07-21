@@ -218,3 +218,44 @@ unaffected (verbatim passthrough unchanged).
 never has to recover information from the input string — it is NOT safe by inspection alone for a venue that
 suffix-guesses a quote asset. Any future venue added with similar quote-suffix inference needs the same
 catalogue-cross-reference treatment `_resolve_aster_native_symbols` provides.
+
+### CORRECTION 2026-07-21 — remediation scope was wrong; real ASTER backfill starts 2024-01-01, not 2025-05-25
+
+The remediation above only covered 2025-05-25→2026-07-20 because that range was copied verbatim from the parallel HL
+k-coin fix's scope, without checking it against ASTER's own actual backfilled window. Verified directly (operator
+question prompted the check): UAC's audited native (non-proxy) ASTER start is `2023-07-22`
+(`unified_api_contracts/registry/venue_launch_dates.py`); what's actually backfilled in GCS starts `2024-01-01`
+(confirmed nothing exists in GCS before that — 2021-09-01/2022-06-01/2023-07-22/2023-08-01 all 404, so the Astherus
+pre-rebrand proxy window was never backfilled and needs no purge). The still-open gap is
+`configs/expected_start_dates.yaml` (replicated per-repo) still declaring genesis `2021-08-30` — this is GAP-4,
+unchanged, still open.
+
+Checking 2024-01-01 directly (to answer "is this real ASTER data") surfaced that the SAME duplicate-instrument-id bug
+was still present, uncorrected, for the entire 2024-01-01→2025-05-24 window — **1,923 more duplicate pairs**. The code
+fix (mtds@a7f7769a) already covers this window (it's venue-general, not date-scoped) — only the corrective backfill +
+cleanup had the wrong scope.
+
+**Second remediation round — COMPLETE + VERIFIED:**
+
+1. Corrective re-backfill:
+   `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS="<the 10 coins>" YEARS="2024 2025" SHARD_DAYS=21 OVERRIDE_START_DATE=2024-01-01 OVERRIDE_END_DATE=2025-05-24`
+   (RUN_TS 20260721-091332, 25 VMs, ~18min to full self-shutdown). Post-run sweep: 0 bare-only pairs remained (clean on
+   first attempt, no retry needed this time).
+2. Deleted 1,923 wrong-form (bare) parquet files, each re-verified to have a non-empty `-USDT` replacement immediately
+   before deletion (0 skipped for safety). A full-range sweep across the ENTIRE 2024-01-01→2026-07-21 backfill window
+   (not just this round's window) confirms **zero** bare-form files remain anywhere.
+3. Manifest cleanup: paused the consolidator cron, CAS-removed 510 wrong-instrument-id rows for this window, then
+   immediately called `consolidate(bucket, force=True)` to stamp the marker correctly (applying the lesson from the
+   first round's gotcha) before resuming the cron. Durability-verified across multiple consolidator cycles.
+
+**Provenance re-confirmed while investigating**: `AsterBaseClient`'s REST base URLs (`fapi.asterdex.com` /
+`api.asterdex.com`) are hardcoded with no env override — every fetch in both remediation rounds hit the real exchange,
+not a Binance proxy.
+
+**Funding-rate spot-check (separate, related finding)**: sampling `derivative_ticker` across the 10 coins found real,
+moving funding rates for 8 of 10 (BTC/ETH/SOL controls: 113-146 distinct values over 183 observations; 1000PEPE: 31;
+1000BONK: 4). Two show near-zero variance — `1000SHIB` (flat `0.0001`, confirmed via a LIVE `fapi.asterdex.com` call to
+still be flat today, not a stale pipeline artifact) and `1000SATS` (flat, and live 24h quoteVolume is $6.04 on 1 trade —
+essentially a dead market). This is genuine ASTER exchange behavior for illiquid instruments, not a pipeline defect —
+tracked as a downstream feature-quality concern, not a data-correctness issue, in the new ADV-feature plan (see
+`plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md`).
