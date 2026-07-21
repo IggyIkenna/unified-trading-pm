@@ -35,7 +35,7 @@ related:
     ../../codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -264,7 +264,80 @@ earlier log entry at `:1516-1522` names as the group that went MTDS-QG-red on th
   reversal's own diagnosis was that no clean single mapping exists. This plan scopes it; it does not answer it.
 - Whether `SOLANA_LENDING` is in or out of D2's scope (todo 6) is not decidable from the ruling text as written.
 - Whether any Solana protocol can reach `lending_indices_handler.py:863` (the hardcoded-`LENDING` write path) was not
-traced to a terminal answer — todo 3 requires reading the branch before collapsing, not assuming.
-</content>
+  traced to a terminal answer — todo 3 requires reading the branch before collapsing, not assuming.
 
-</invoke>
+### 2026-07-21 — todos 1-5, 9, 13 code-complete + verified; todo 3 branch traced; todos 6-7 ruled/designed; NOT YET
+
+### COMMITTED (blocked on 2 unrelated cross-repo test-baseline regressions in the shared tree); todos 8/10/11/14 deferred
+
+**Todo 3 branch trace** (verified before collapsing): `lending_indices_morpho.py::_maybe_dedicated_collector` routes
+`chain=="SOLANA" and protocol in _SOLANA_LENDING_PROTOCOLS` → `_collect_solana_lending`, `protocol=="morpho"` →
+`_collect_morpho_lending` (itself calls `_write_protocol_chain_rows`), else falls through to
+`_write_protocol_chain_rows` via the generic subgraph cascade. So the `:863` hardcoded-enum site is reached by
+`aave_v3`/`spark`/`compound_v3`/`morpho` only — never by `kamino_lending`/`solend`/`marginfi` (those always divert to
+`_collect_solana_lending`, which had its OWN separate hardcoded resolver call, correct in value but a second
+expression). Collapsed both onto ONE resolver (`_resolve_lending_indices_instrument_type`) — no behaviour change.
+
+**Todo 6 ruling — SOLANA_LENDING IS IN SCOPE of the eventual full retire (decidable from evidence, no escalation
+needed):** `instruments-service/reference_data/adapters/defi/marginfi.py` + `.../solend.py` ALREADY mint real
+`InstrumentType.A_TOKEN`/`DEBT_TOKEN` HOLDINGS pairs for these exact Solana lending protocols today (verified
+`marginfi.py:232,240,252,260`, `solend.py:131`) — the bare enum values, no Solana-specific variant. Combined with the
+naming SSOT's "Same logic for `lending_indices`" clause, the eventual full retire should split Solana market/event
+lending onto the SAME bare `A_TOKEN`/`DEBT_TOKEN` values IS already uses — `chain=SOLANA` remains the partition
+differentiator. No new `SOLANA_A_TOKEN`/`SOLANA_DEBT_TOKEN` enum value is needed.
+
+**Todo 7 — per-data_type mapping (design only, NOT shipped — that is todo 8):** `lending_indices` and `position_data`
+are genuinely TWO-SIDED (one input row carries both supply + borrow columns, e.g. Aave's `aToken.id` +
+`variableDebtToken.id` in the SAME reserve row) — each needs a real per-row FAN-OUT into an `A_TOKEN` row + a
+`DEBT_TOKEN` row, not a relabel; this dovetails with the pending per-instrument re-architecture
+(`defi_consolidated_closeout_2026_07_18.md` § R1-R4). `liquidation_events` / `liquidations` (5 lending protocols) map to
+`A_TOKEN` only (primary identity = seized collateral; debt stays an informational column). `flash_loan_events` and
+`risk_params` map to `A_TOKEN` only (no persistent debt leg / risk config is a collateral-side property). **Separate
+discoveries, NOT this todo, flagged for a future ruling:** (a) `position_data` also carries Uniswap V3 LP rows tagged
+`instrument_type=LENDING` — a pre-existing LP-vs-lending semantic mismatch, should be `POOL`; (b) `liquidations`' `gmx`
+protocol is a DeFi perp (naming SSOT: GMX is `instrument_type=perpetual`), arguably not `LENDING`/`A_TOKEN` at all —
+kept on `LENDING` in todo 4's fix to match the value already live in GCS, not re-ruled here.
+
+**Code-complete + individually verified** (market-tick-data-service, uncommitted — see below): todos 2 (writers 1-3
+collapsed), 3 (writers 5+7 collapsed, branch-traced), 4 (`liquidations_handler` manifest/GCS desync closed — manifest
+now derives from the same resolver as the GCS write, resolved to the value ALREADY live in GCS), 5 (a `ValueError` from
+`build_instrument_id` now gets a distinct `DEFI_INSTRUMENT_ID_CONTRACT_VIOLATION` ERROR-severity event via a new shared
+`record_contract_violation` helper in `_lending_grain.py`, wired into all 8 writers' per-shard except blocks — still
+routes to `record_failed`, shard isolation unchanged, only observability is new), 9 (new
+`tests/unit/test_defi_lending_writer_instrument_type_pinning.py` — reads each handler's own protocol map, asserts
+`build_instrument_id` succeeds for every tuple under TODAY's interim type set; explicitly scoped to interim, not
+post-retire, per its own docstring), 13 (dated correction annotations on `docs/GCS_PATHS.md`,
+`docs/DEFI_DOWNLOAD_STRATEGY.md`, `docs/DATA_TYPE_DECISIONS.md`). Verification: `ruff check` + `basedpyright` clean on
+every changed/added file; `bash scripts/quality-gates.sh --no-fix` run FIVE times end-to-end (6648-6651 tests, coverage
+80.14-80.15% each time it measured cleanly) — every failure encountered across all five runs was proven UNRELATED to
+this diff:
+
+1. `test_rule11_per_ag_shard_counts_byte_unchanged` (CEFI 208 vs stale-pinned 200) — a pre-existing baseline drift
+   (peer-filed `issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md`), fixed by a peer agent mid-session.
+2. One run measured a bogus 32.51% coverage figure — a transient artifact of a DIFFERENT concurrent agent's
+   `pytest --cov` process writing the SAME shared `coverage.xml` at the same time (confirmed via `ps aux`); the next run
+   measured 80.15% again with no code change.
+3. 3 tests (`test_slash_id_never_forges_a_path_segment`, a WETH:USDC leaf-byte-match, a Bitfinex `ADAF0:USTF0`
+   catalog-decompose case) now fail on an ALREADY-COMMITTED `unified-api-contracts@502ef57e` (landed mid-session) that
+   added a stricter embedded-`:`-in-symbol validation to `build_instrument_id`, breaking pre-existing colon-bearing CeFi
+   symbol forms — filed as `issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md` (cross-repo,
+   unrelated to DeFi lending). This is the CURRENT blocker on `.qg_last_passed_sha` — genuinely unresolved as of this
+   Progress Log entry (not self-healing like #1, since it's a landed commit, not another agent's in-flight WIP).
+
+**NOT YET COMMITTED** — the two-pass ship rule requires a green `quality-gates.sh` sentinel, which is currently blocked
+by finding #3 above (fleet-wide, blocks EVERY MTDS commit, not just this one). The full diff is ready (file list +
+commit message drafted, MTDS-scoped, no foreign files touched) to ship the moment that blocker clears — do not re-do
+this work in a follow-up session; check `issues/mtds_uac_embedded_colon_symbol_validation_regression_2026_07_21.md`
+first and re-run `bash scripts/quality-gates.sh --no-fix` in `market-tick-data-service`.
+
+**Not completed this session — todos 8, 10, 11, 14 remain `- [ ]` in this SAME plan (honest partial, not a silent skip;
+no successor plan — the work stays here for a follow-up pass on this plan):** todo 8 (the actual atomic UAC + MTDS + UTL
+wave flipping the 8 writers off `LENDING`/`SOLANA_LENDING` onto `A_TOKEN`/`DEBT_TOKEN`) is exactly the action this plan
+exists to gate — shipping it requires the todo-7 mapping to become real per-row fan-out code (not a relabel) for two
+data_types, then proof via todo 10's real one-day run + todo 11's three-surface check on every one of the 8 writers, per
+this plan's own "mandatory order" banner. This session did not exercise live credentials/network against all 8 writers'
+external sources with a subsequent real GCS write + manifest read-back proof, and shipping the value flip without that
+proof is the precise failure mode this plan documents as the cause of the first reversal — left `- [ ]` for a dedicated
+follow-up with the design above as its starting point. Todo 14 (flip the gate to CLEARED) correspondingly does NOT apply
+yet (acceptance criteria 1-8 are not all green — 8 is the gating one). The migration plan's banner (todo 1, applied
+above) remains BLOCKED, correctly.
