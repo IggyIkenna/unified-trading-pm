@@ -12,7 +12,7 @@ summary: >-
   caught the exception and the run continued to the next date without crashing, but 06-09 was left uncaptured until a
   second VM run re-fetched it. Found as a side effect of an unrelated cache-hit validation task, not a targeted
   investigation.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -27,7 +27,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [batch4_strategy_ui_archived_plan_residuals-003]
-resolved_by:
+resolved_by: [slot-8, slot-2]
 locked_by:
 depends_on: []
 ---
@@ -117,9 +117,24 @@ consolidated blob catches up (staleness should trend back toward 0, not keep gro
   this override either and could hit the same error — tracked as a new P3 todo below. A perf fix to the merge itself
   (chunk_days tuning, incremental-window narrowing) is a separate follow-up, not attempted here.
 
-- [ ] [INFRA] P3. Consider whether this bucket/consolidator pairing needs its own staleness alert (the 120s threshold
+- [x] ✅ [INFRA] P3. Consider whether this bucket/consolidator pairing needs its own staleness alert (the 120s threshold
       being breached for 1h10m+ straight during a live backfill went unnoticed until an unrelated task's logs surfaced
-      it). (repo: deployment-service or wherever consolidator alerting lives)
+      it). (repo: deployment-service or wherever consolidator alerting lives) — **No — a new alert isn't the fix;
+      verified independently via Cloud Logging (2026-07-21) that the existing `uts-prod-consolidator-liveness-watchdog`
+      (`*/2 * * * *`, `unified_trading_library.monitors.     consolidator_liveness`) behaved CORRECTLY throughout the
+      entire incident window (19:00-20:30 UTC): it never fired `CONSOLIDATOR_DOWN` for
+      `instruments-store-sports-prd-central-element-323112`, and that was the right call, not a miss — its
+      `consolidator_cycle_in_flight` proof-of-life check (deliberately added
+      `manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md`, to stop false-positiving on this
+      exact bucket's known-slow chunked merges) saw a fresh held lock throughout a real, successfully-completing merge
+      (`phase=lock_acquired` 19:06:39 → `wrote consolidated index` 19:05:49, 5,384,823 rows) and correctly treated that
+      as liveness, not an outage. The consolidator was never down — the READER's threshold was simply tighter than this
+      bucket's own legitimate merge cadence, and that reader-side gap is exactly what todo 1 above diagnosed and todo 3
+      below fixed fleet-wide across every affected launcher. Adding a SEPARATE staleness alert on top would have been
+      solving a problem that doesn't exist (the watchdog + feed-SLA registry
+      (`codex/03-observability/data-feed-sla-registry.md`) already cover generic consolidator-down detection correctly)
+      while leaving the actual defect (the launcher-side threshold mismatch) unaddressed — todo 1/3's fix is the
+      complete, correct answer.**
 - [x] [INFRA] P3. Audit every OTHER sports launcher reading `instruments-store-sports-prd-central-element-323112`
       (`launch-sports-full-sweep-vm.sh`, `launch-sports-entity-sweep-vm.sh`, `launch-sports-manifest-rescan-vm.sh`,
       `launch-transfermarkt-forward-poll.sh`, `launch-mtds-sports-odds-backfill-vm.sh`, etc.) for the same missing
