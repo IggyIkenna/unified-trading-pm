@@ -402,3 +402,45 @@ count (only rendered for venues with <20 instruments) is NOT clipped to the per-
 from the unclipped `normalized_iid_counts`. The `min(..., 100.0)` clamp prevents a nonsensical >100% display, but this
 is a known, minor inconsistency in a secondary display block, not the primary headline metric the operator's screenshot
 was about. Flagged here for a future refinement pass rather than expanding this tick's scope further.
+
+### 2026-07-21 (tick 1, continued) — Bug C SHIPPED; two unrelated cross-repo bugs found+fixed while reconciling concurrent work
+
+**Bug C SHIPPED — `deployment-api@5bced2b`** (rebased SHA; original `885260a` before a peer-work reconciliation, see
+below). Full `quality-gates.sh` green, verified on origin (`ahead_by=0`).
+
+**Reconciliation (autonomous rule 4 — merge the best of both sides, never blind take-mine/take-theirs)**: while
+shipping, a concurrent slot-5 agent independently found + fixed the SAME stale `OKX-FUTURES` test assertion (this plan's
+earlier "unrelated stale test" fix) within ~1 hour of my own fix, in an unrelated commit (`fe8eaf1`). Their version is
+more thorough (asserts `OKX-FUTURES` canonical=True + adds a genuine `OKX-MARGIN` negative case, testing both directions
+of the exact-compare invariant) than mine (which only swapped the negative example). Resolved via `git rebase` +
+`--skip` on my now-redundant commit, keeping their better version + my genuine Bug C commit on top — verified both
+sides' content survived (grep-confirmed) before pushing, per the rule's explicit requirement.
+
+**Found + fixed, unrelated to this plan, discovered only because they blocked shipping**:
+
+1. **`unified-trading-library@517b276a`**: `gcs_copy_object` was defined and re-exported from
+   `cloud_interface/__init__.py` but accidentally omitted from the top-level `unified_trading_library/__init__.py`
+   re-export list, even though its siblings (`gcs_delete_object`/`gcs_describe_object`) were present — the exact
+   codex-sanctioned import surface. Discovered because it blocked the manifest re-stamp script (a completely separate
+   effort, see `distinct_values_noncanonical_audit_2026_07_20.md`) from even starting. 2-line fix (import + `__all__`).
+2. **`unified-trading-library@ec629a2e`**: found while re-running full QG for #1 — `defi/token_metadata_resolver.py` (a
+   brand-new, recently-landed feature, `b9534230`, not mine) had two deep-UAC-import lint violations with no noqa
+   opt-out, failing the shared codex-compliance gate for anyone touching this repo. Added the workspace's existing
+   sanctioned `# noqa: qg-deep-import` / `# noqa: imports-inside-functions, qg-deep-import` markers (verified this exact
+   convention already used identically elsewhere, e.g. `manifest_writer/_writer_ingest.py`) rather than restructuring
+   someone else's in-flight feature's import surface.
+3. **`unified-trading-pm@f542a76d7` + a same-session follow-up cleanup**: UTL's `test_cloud_providers_yaml_parity`
+   failed — the PM repo's `configs/cloud-providers.yaml` sibling mirror was missing a `kill-switch-audit-log` GCP
+   bucket-kind entry that UAC's packaged copy already had (per `deployment_alerts_ingestion_completeness_2026_07_20.md`
+   todo 9). Added the matching entry (metadata only — a bucket-name resolution template for the kill-switch audit-log
+   _reader_, not a kill-switch control action). **Caution logged**: right after this shipped cleanly (`ahead_by=0`
+   verified), a LOCAL, never-committed copy of this same file was found to contain literal git conflict-marker lines
+   (angle-bracket / equals-sign separator triples) — traced to a prek stash-pop artifact colliding with a concurrent
+   process's own edit to the same file. Verified origin was clean throughout (the markers never left my local working
+   tree); fixed via `git restore --staged --worktree` back to the clean committed HEAD. No data was ever at risk, but
+   this is worth remembering: **always re-read a just-pushed file's actual content once, don't trust a grep-count
+   alone**, when working in a repo this contended.
+
+All 4 fixes verified independently via full `quality-gates.sh` green + confirmed on origin before moving on. Relaunched
+the manifest re-stamp extended retry (`distinct_values_noncanonical_audit_2026_07_20.md`) now that its blocking
+dependency is fixed — see that plan for the outcome.
