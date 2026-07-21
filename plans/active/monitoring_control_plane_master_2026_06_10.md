@@ -41,6 +41,10 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-BY-HEADROOM` annotation next to its `- [ ]` item in body for the specific successor / blocker.
+
 # Monitoring control-plane master
 
 ## Problem

@@ -54,6 +54,11 @@ assigned_role: infra
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR-DECISION` annotation next to its `- [ ]` item in body for the specific successor /
+blocker.
+
 # CI/CD MVP — LDR→SIT→main
 
 > **THE pipeline, simplified to the MVP.** A commit is green locally (`quality-gates.sh`) and reaches

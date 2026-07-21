@@ -6,31 +6,43 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, strategy-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-service,
+    execution-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [incident_gateway_and_state_machine_2026_05_23.md, drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md]
-created: '2026-05-23'
+related:
+  [incident_gateway_and_state_machine_2026_05_23.md, drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md]
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 4.0
-estimate_calibration_note: 'Refactor class — `batch-live-reconciliation-service/` exists; this plan adds age fields, 12-dimension separation,
+estimate_calibration_note: "Refactor class — `batch-live-reconciliation-service/` exists; this plan adds age fields,
+  12-dimension separation,
 
   thresholds, immediate-overrides, and freeze-on-recon-risk. Baseline 10 days × 0.4 refactor = 4 cal-days. Existing
 
   recon logic stays; only the around-the-edges work changes.
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_since: 2026-05-23
 depends_on: [incident_gateway_and_state_machine_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F']
+gates: ["master_to_live_defi_2026_05_23:Group-F"]
 ---
 
-## Deferred work — none (all items completed)
+## Deferred work — migrated to: **observability_master epic P3** — successor: observability_master (all plan items
+
+completed; only operator-action items migrated)
 
 > Operator-action items (Phase 6 smoke + game-day) migrated to observability_master epic P3.
 
