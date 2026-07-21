@@ -1621,3 +1621,26 @@ SPOT, per-VM shards.
   tradfi, all shards.
 - **Cleanup note**: CME launcher SSOT header cites archived `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` +
   non-existent `tradfi_mvp_set_expansion_2026_07_21.md` — minor ref fix pending.
+
+---
+
+## Nice-to-have / deferred — Databento free L1/L2/L3 entitlement window (NOT MVP; operator 2026-07-21)
+
+MVP intraday capture is `ohlcv_1m` + `ohlcv_1s` (both Databento **L0 = free ~16-year full history**), plus Yahoo
+`ohlcv_24h` for the daily cells (Treasuries, KRW). Databento's tiered free-history entitlement additionally lets us
+capture limited trade/order-book microstructure for the MVP instrument universe **at no extra cost within the free
+window**:
+
+- **`trades` / `tbbo`** (L1) — free **~1-year** history → capture the last ~1 year.
+- **`mbp_10`** (L2) — free **~1-month** history → capture the last ~1 month.
+- **`mbo`** (L3, market-by-order) — same short (~1-month) free window as L2, if wanted.
+
+**This is a nice-to-have, NOT MVP** (operator 2026-07-21: "not even mvp, more a nice-have; no need to do it now, just
+document"). The Phase-D gate already classifies these `(venue, data_type)` cells EXEMPT (`billing_gated_by_design`) —
+leaving them un-captured is **not** a failure. To capture later: scope a separate short-window backfill over the MVP
+instrument universe with `OHLCV_DATA_TYPES=trades,tbbo,mbp_10` (and `mbo`) and a `--start-floor` set to the entitlement
+window (~today-1yr for L1, ~today-1mo for L2/L3), reusing the existing OHLCV launcher fleet.
+
+**SSOTs**: `market-tick-data-service/scripts/pipeline_e2e_check.py` (`_TRADFI_BILLING_GATED_DATA_TYPES`,
+`DATABENTO_SCHEMA_LEVEL` — the billing-guard oracle) + `codex/02-data/tradfi-databento-sourcing-ssot.md` "Schema
+allowlist" table.
