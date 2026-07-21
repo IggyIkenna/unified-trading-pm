@@ -294,10 +294,49 @@ the same fixes.
       Data Coverage" panel from the operator's 2nd screenshot) has no `scope` query param at all — add it, threading
       through the `_manifest_source` closure into `get_manifest_status(scope=...)` the same way `/manifest`'s route now
       does, so the MVP toggle works on both MTDS surfaces, not just the drilldown.
-- [ ] [UI] P1. **Build the universal MTDS search bar** per the "Desired UX" section above: one search box for
-      fixtures/leagues/instruments, type-aware click-through (sports → league → odds + day availability; instrument →
-      day availability drilldown), additive to (not replacing) the existing macro asset-group drilldown. Reuse Bug B's
-      fixed backend contract — do not design a third parallel data path.
+- [x] N. ✅ [UI] P1. **Build the universal MTDS search bar — SHIPPED** (`deployment-ui@afe3262`, verified on origin via
+      `merge-base --is-ancestor`, full `quality-gates.sh` green, live-verified via dev server + Playwright MCP before
+      writing the automated spec, new regression spec `tests/smoke/symbol_search_clickthrough.spec.ts` pw:L2 ✓). The
+      "Symbol search" box (`DataStatusTab.tsx`) already existed and already returned cross-category matches — the gap
+      was purely that clicking a result row did nothing; closed that with two new click-through branches, each its own
+      state (deliberately NOT the pre-existing `selectedInstrument`/`instrumentAvailability` pair, which is wiped by an
+      effect keyed on `[instrumentSearchMode, selectedCategories]` on any unrelated change, and whose render block is
+      additionally gated to `selectedCategories.length === 1` on MTDS/MDPS only — reusing it would make the panel
+      invisible on other service tabs or silently vanish out from under the operator): - **Non-SPORTS
+      (cefi/tradfi/defi/prediction)**: reuses `getInstrumentAvailability` exactly as Bug B fixed it — the only new logic
+      is parsing `InstrumentSearchMatch.canonical_id`. **Id-format landmine + how it was resolved**: `canonical_id` is a
+      single-colon `VENUE:TYPE:SYMBOL` composite (confirmed against deployment-api's `_read_venue_parquet_rows` producer
+      code + its own unit-test fixtures), a COMPLETELY different format from the `::`-delimited `instrument_key` the
+      separate manual "Instrument-Level Search" dropdown's Bug-B fix parses — naively reusing that `::`-split logic here
+      would have silently sent a malformed/overly-composite string to the availability endpoint. Fix: since the match
+      already carries `venue`/`instrument_type` as separate fields, strip that exact `venue:instrument_type:` prefix off
+      `canonical_id` to recover the bare symbol (falls back to positionally dropping the first two colon segments only
+      if the prefix doesn't match verbatim, defensive against format drift) — verified empirically against the real
+      backend's `instrument` param semantics (a plain string EQUALITY match against the manifest's `instrument_id`
+      column, not a colon-split), not assumed from the docstring. - **SPORTS**: fetches the clicked league's
+      found/missing dates via the already-built `GET /data-status/manifest?secondary_axis=league_id` contract (new,
+      independent state — NOT the page's global `turboData`/`manifestFilter`, so it can never replace or cancel the
+      macro drilldown below it, satisfying the "additive" requirement literally); picking a found day composes the
+      existing `<FixtureBreakdown day league_id       readOnly>` component unmodified. - **Second stale-closure gotcha
+      found + fixed while implementing** (beyond the one already flagged in research): the existing
+      `fetchInstrumentAvailability` `useCallback` is gated on `selectedInstrument` state — calling
+      `setSelectedInstrument` then that callback back-to-back in a click handler would silently no-op (stale closure,
+      state updates are async). Both new click handlers are plain (non-`useCallback`) functions that build the request
+      directly from the clicked match instead of depending on any state closure. - **Mock-mode gaps found + fixed while
+      verifying live (all in `src/lib/mock-api.ts`, required to actually see the feature render before writing the spec,
+      per the mandatory live-verify-before-spec rule)**: (1) no handler existed for `/data-status/instruments/search` at
+      all — it fell through to the generic `/data-status/instruments` prefix handler, which returns a completely
+      different shape (`{instruments: [...]}` vs the real `{matches: [...]}`), so `searchInstruments()` would have
+      handed back `matches: undefined` and the results `.map()` would have thrown; (2)
+      `/data-status/instrument-availability`'s mock body didn't match `RawInstrumentAvailabilityResponse` at all
+      (pre-existing, unrelated to this ship, but blocking — would have thrown on `raw.data_types` being undefined) —
+      reshaped to the real shape; (3) `/data-status/fixtures/breakdown` had NO mock handler either and fell through to a
+      different generic `/data-status/*` catch-all that returns the big turbo status object (no `fixtures` field) —
+      `FixtureBreakdown` then threw reading `data.fixtures.length`, crashing the whole tab's ErrorBoundary the first
+      time ANY league/day breakdown was expanded in mock mode (this is the ALREADY-EXISTING sports fixture drilldown,
+      not new code — it had simply never been exercised live in mock mode before). All three fixed with realistic
+      representative data so the click-through (and the pre-existing drilldown it composes) actually render in mock
+      mode.
 - [ ] [BACKEND] P1. Wire UAC `is_mvp` into `deployment_api/services/data_status/mtds.py` the same way
       `_live_coverage.py` does for instruments-service-backed asset_groups — MTDS coverage responses gain the same
       `scope=mvp|could_exist|all` param and the `VenueCoverageTable` pill toggle works when MTDS is the selected
