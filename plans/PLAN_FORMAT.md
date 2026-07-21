@@ -232,7 +232,8 @@ repo_gates:
     deployment: none
     business: none
 
-depends_on: [] # plan slugs this depends on — DOCUMENTS ordering + gates ARCHIVAL only. regen never reads it (BY DESIGN): every active plan matching assigned_vm is ingested. Inter-plan gating is enforced at DISPATCH via task-level prereqs (a task waits on its prereqs) — NOT this, and NOT draft (draft = WIP only). See "Citadel-Grade Planning Standards".
+depends_on: [] # plan slugs this depends on. ALONE it DOCUMENTS ordering + gates ARCHIVAL only and does NOT gate dispatch. WITH `gate_on_depends: true` (below), regen's `_wire_gate_on_depends_prereqs` reads it and makes every task of THIS plan wait on every task of the named upstream plan(s) — that is the author-facing inter-plan gate. NOT draft (draft = WIP only). See task_template.md §4 + "Citadel-Grade Planning Standards".
+gate_on_depends: false # optional — set `true` to turn `depends_on` into a real DISPATCH gate (regen wires task-level `prereqs.completed_tasks` to the upstream plans' tasks; `dispatch.py` holds this plan's tasks until they are all `done`). Default false = `depends_on` is documentation-only. This is the ONLY way to express a cross-plan gate from a plan file.
 
 todos:
   - id: task-id
@@ -356,15 +357,18 @@ Before writing any code, audit the blast radius:
 > **Two clean layers — never conflate them:**
 >
 > 1. **Ingest (regen):** every plan with a matching `assigned_vm` + `status: active` has its todos pulled into the
->    backlog. regen **does not read `depends_on`** (by design) — ingest is dumb and complete.
+>    backlog. Ingest is dumb and complete — it does NOT decide ordering or parallelism.
 > 2. **Dispatch (to a worker):** a queued task is held until its **task-level `prereqs`** are satisfied — a
 >    `prereqs.prerequisites` flag (flipped true when the upstream is done + review-confirmed) and/or the upstream's task
->    ids in `prereqs.completed_tasks`. **This is the ONLY inter-plan gate.** So a "gated" plan is `active` (ingested) but
->    its tasks carry `prereqs`; they sit in the backlog, undispatched, until the gate opens.
+>    ids in `prereqs.completed_tasks`. So a "gated" plan is `active` (ingested) but its tasks carry `prereqs`; they sit in
+>    the backlog, undispatched, until the gate opens.
 >
-> `depends_on` is for **documentation + archival** only (the depended-on plan can't archive first). (A dependency is NOT
-> a "blocked-question" and NOT the same as a `prereqs.prerequisites` flag — see work-philosophy + the AO blocked-questions
-> contract.)
+> **How an author creates those `prereqs`** (regen wires them — you never hand-edit `backlog.yaml`; there is NO per-todo
+> prereq syntax): `sequential: true` chains each task to its predecessor (intra-plan serial); `depends_on` +
+> `gate_on_depends: true` gates this whole plan on upstream plan(s) (cross-plan). `depends_on` **alone** (without
+> `gate_on_depends`) is **documentation + archival only** (the depended-on plan can't archive first) — it does NOT gate
+> dispatch. (A dependency is NOT a "blocked-question" and NOT the same as a `prereqs.prerequisites` flag — see
+> work-philosophy + the AO blocked-questions contract.)
 
 A **single small plan** still:
 
