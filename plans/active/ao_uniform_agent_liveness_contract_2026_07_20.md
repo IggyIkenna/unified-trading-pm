@@ -131,8 +131,12 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
       `data_pipeline_failure`, `plan_health`, `plan_reconciler`. Their "EXIT" today only ends the Claude turn; replace
       with the real completion call + stop. **Gate**: each role observed on completion → its `orch-slot-N` AgentRow
       archives `lifecycle-complete`, slot frees, no re-nudge, no manual `kill-session`. Cite the agent_id.
-- [ ] [BACKEND] P2. **A3 — Add the completion step to the boot prompt** so it is uniform and an agent can't "forget" it.
-      **Gate**: a freshly-booted one-off's rendered prompt carries the `/done`+stop step; a live run confirms it fires.
+- [x] [BACKEND] P2. **A3 — Add the completion step to the boot prompt** so it is uniform and an agent can't "forget" it.
+      ✅ **DONE `agent-orchestrator@da0f7df`** (deployed) — `_compose` (slot-worker branch) renders "STEP 3 — when your
+      work is DONE, SIGNAL COMPLETION then STOP" with the `{"one_shot_complete": true}` `/done` curl, before "Start now
+      with STEP 0" (`server/prompts.py:160-167`; asserted in `tests/test_prompts.py`). **Gate**: a freshly-booted
+      one-off's rendered prompt carries the `/done`+stop step (unit-verified); the live-fire confirmation is exactly
+      what the operator's upcoming reliability test exercises.
 
 ### Workstream B — boot → `working` (uniform liveness signal)
 
