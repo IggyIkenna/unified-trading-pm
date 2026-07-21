@@ -211,6 +211,14 @@ the plan Progress Log. **Todo 1 RULED → A.** Todos 2-10 fold into the migratio
 3. **Migration scope → FULL, ALL 4 AGs, ONE CAMPAIGN.** Writer+readers change for all AGs; DATA migration sequenced
    `defi → prediction → cefi → tradfi` (tradfi LAST — ~10^7, ~99% id-canonicalisation, quarantine unresolvable ids).
    Precise per-AG counts from a sanctioned Tier-2 spot-VM census before sizing the migration VMs.
+4. **PURGE the old/bad forms too (operator 2026-07-21 "full migration and purging of old bad data forms").** The
+   migration is copy→verify(crc32c)→**delete** — the delete IS the purge of the old-shape objects once the canonical
+   copy is proven. ALSO purge the genuinely-bad objects: (a) zero-length-stem `venue=*/.parquet` (unattributable —
+   delete/repair to `ticks.parquet`), (b) DEDUP the ~2x split-brain copies (same shard under `pipeline_mode=` AND naked
+   `timeframe=`) to the single canonical copy, (c) UNRESOLVABLE TradFi artifact ids (`E1AF0_*_migrated_*` that
+   `_renormalize_legacy_instrument_ids` cannot resolve) → QUARANTINE (never fake-canonicalise), operator-review before
+   any quarantine-delete. All prod deletes are gated: canonical copy crc32c-verified present FIRST, dry-run + reconcile
+   orphan gate + bucket snapshot BEFORE `--apply` (delete-safety + pre-migration-drain hard rules).
 
 ## Decision (ruled A — historical options kept for context) — which shape is canonical?
 
