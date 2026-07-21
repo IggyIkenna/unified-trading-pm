@@ -138,17 +138,42 @@ not a labelling choice.
 
 ## Follow-on work (tracked)
 
-- [ ] [DECISION] P1. **Operator/architecture call: (A) stop seeding reference-only holdings as expected, vs (B) a new
-      in-denominator terminal reason.** Blocks everything below. Must NOT be resolved by reusing
-      `EXPECTED_NOT_ENOUGH_TVL` (see THE TRAP).
+- [x] [DECISION] P1. **Operator/architecture call: (A) stop seeding reference-only holdings as expected, vs (B) a new
+      in-denominator terminal reason.** Must NOT be resolved by reusing `EXPECTED_NOT_ENOUGH_TVL` (see THE TRAP).
+      **Resolved: (B) — new in-denominator reason**, via `AskUserQuestion` (2026-07-20/21): "New in-denominator reason
+      (Option B)". Shipped: `unified-api-contracts@d4d85854`
+      (`EmptyConfirmedReason.     EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH`, NOT in `OUT_OF_COVERAGE_WINDOW_REASONS`),
+      `instruments-service@a516bd01` (prospective enumerator seeding, `_enumerate_v2_defi`),
+      `instruments-service@2967cf5f` (retroactive reconciliation script), `deployment-api@8691f29`/`@ea56fff` (dashboard
+      parity), `deployment-ui@183cfc3` (badge wiring).
 - [ ] [BACKEND] P1. **Generalise `catalogue_pool_ids_for_shard`** (`_catalogue_filter.py:77`) beyond
       `instrument_type=='pool'` — the prerequisite for ANY non-pool residual reconciliation.
 - [ ] [BACKEND] P1. **Add a per-instrument residual emitter** to the capturable non-POOL handlers
       (`lending_indices_handler`, `risk_params_handler`, `lst_rates_handler`, `evm_defi_collectors`) so their IS-seeded
       per-instrument EU cells can reconcile. `lst_rates_handler` additionally needs a per-instrument grain at all (it
       currently records `instrument_type='lst'` with no `instrument_id`).
-- [ ] [DATA] P2. **Measure the per-instrument_type split of the 215,864 re-seeded cells** in the live prod `_index` (the
-      instrument-level split 1,389/473/469 is verified from the catalogue; the CELL-level split is not).
+- [x] [DATA] P2. **Measure the per-instrument_type split of the 215,864 re-seeded cells** in the live prod `_index` (the
+      instrument-level split 1,389/473/469 is verified from the catalogue; the CELL-level split is not). **Measured
+      2026-07-21 (3 independent pyarrow queries against the live `_index/availability_index.parquet`, 52,290,207 total
+      rows): the CELL-level backlog is ZERO.** `expected_unattempted` = 11,631,011 rows, but NONE carry
+      `instrument_type` in `{spot_asset, a_token, debt_token}` (the observed EU instrument_types are exclusively
+      `pool`/`lending`/`LENDING`/`lst`/`perpetual`/`staking`/`yield_bearing`/`YIELD_BEARING`/`STAKING`/`SPOT_PAIR`).
+      Separately: 166,641 rows DO carry a reference-only `instrument_type` (`spot_asset`=136,806, `a_token`=29,835,
+      `debt_token`=0) — and **100% of them are `capture_status='captured'`**, zero `empty_confirmed`, zero
+      `attempted_failed`. Confirmed via `scripts/reclassify_defi_reference_only_eu_2026_07_21.py --dry-run`
+      (instruments-service): `TOTAL reclassified 0` across the full `_index` + all 3 `per_vm` shards — this is the
+      CORRECT, non-buggy result given the above, not a script defect. **Conclusion: the 215,864-cell estimate (an
+      instrument-level extrapolation) did not hold at cell grain by the time of this measurement — either the backlog
+      self-healed via real `oracle_prices_handler` (CHAINLINK/PYTH) captures landing for these instruments in the
+      interim, or the original estimate never matched actual per-cell manifest content. The retroactive script is
+      correctly a no-op today** (`--apply` not run — nothing to apply) **and stays in place as a self-cleaning safety
+      net should stale reference-only EU cells recur.** The prospective enumerator fix (`instruments-service@a516bd01`)
+      remains the durable guard against this class recurring going forward.
 - [ ] [DATA] P2. Check whether any affected `(venue, chain)` are in UAC `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` (→ correct
       terminal state is `EXPECTED_ACQUISITION_PENDING`, self-healing) or covered by `PROTOCOL_PAUSE_WINDOWS` (→
-      `EXPECTED_PROTOCOL_PAUSED`). Neither was verified in the read-only investigation.
+      `EXPECTED_PROTOCOL_PAUSED`). **Superseded by the enumerator's priority ordering**
+      (`instruments-service@a516bd01`): `_is_reference_only` is checked BEFORE `_acq_pending`, so a reference-only
+      instrument_type always routes to `EXPECTED_REFERENCE_ONLY_NO_CAPTURE_PATH` regardless of the venue's
+      acquisition-pipeline status — this was a deliberate design choice (the reference-only condition is permanent;
+      acquisition-pending is transient), so the venue/PROTOCOL_PAUSE_WINDOWS cross-check is no longer decision-relevant
+      for this class.

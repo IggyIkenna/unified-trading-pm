@@ -87,11 +87,15 @@ function-size debt.
 
 ## Follow-on work (tracked)
 
-- [ ] [BACKEND] P2. **Decompose the 3 regrown functions** back under the 200L/class-method gate, same staged-sibling-
+- [x] [BACKEND] P2. **Decompose the 3 regrown functions** back under the 200L/class-method gate, same staged-sibling-
       module pattern as the 2026-06-11 split (`_fetch_teams_and_standings` → helper extraction;
       `_write_per_fixture_entities` → helper extraction; `emit_empty_gaps_for_entity` → helper extraction). Then remove
       both files from `FUNCTION_SIZE_EXTRA_EXCLUDES` again (mirroring the 2026-06-11 precedent) and drop this row from
-      `QUALITY_GATE_BYPASS_AUDIT.md`.
+      `QUALITY_GATE_BYPASS_AUDIT.md`. — `instruments-service@ac22305c` (2026-07-21). Operator decision
+      (AskUserQuestion): "Dispatch it now" rather than defer. 9 new named helpers across both files; both files pass the
+      200L/50L gates directly again; `QUALITY_GATE_BYPASS_AUDIT.md` row dropped in the same close-out pass. Evidence:
+      `quality-gates.sh --no-fix` green (3 violations, back within tolerance — the other 2 pre-existing tolerated
+      violations below are untouched), sentinel==HEAD.
 - [ ] [DATA] P3. **Audit the other 2 tolerated violations** (`tests/unit/test_smoke_matrix.py` — empty dict/list
       fallback + hardcoded prod project ID) — determine if `"test-project"` (the check's own suggested literal) is a
       safe drop-in replacement without breaking the test's actual intent (verifying `resolve_test_bucket()`'s behavior
