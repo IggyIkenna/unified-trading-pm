@@ -635,3 +635,36 @@ completely unchanged** (verified: each failed attempt's CAS precondition failure
 dry-run, and failed apply attempt has been either read-only or safely aborted before any write. Continuing to profile +
 optimize the pipeline to shrink the window well below the manifest's write cadence, or considering an alternative
 strategy (e.g. a much smaller, targeted patch that avoids reprocessing the full 10.47M-row corpus).
+
+### 2026-07-21 — Root cause found: a classic pandas anti-pattern, fixed; extended retry running
+
+**Profiled precisely and found the real bottleneck**: NOT the duplicate-key rebuild (already removed, correctly, as
+mathematically redundant), NOT the required `sort_values` (only 14.8s). It was a per-row
+`.loc[scalar_idx, content_cols] = values` assignment inside the B1/B2 promotion loops — on this ~10.5M-row DataFrame,
+EACH such call costs ~1 SECOND regardless of how much data it touches (a pandas block-manager cost of repeated scalar
+`.loc` writes at this frame size). The B2 loop's 1,995 calls alone accounted for 1,948.7s of a 2,315.0s total run —
+everything else combined was under 6 minutes.
+
+**Fixed by batching**: collected every (surviving_index, source_index) pair from BOTH the B1-promote and B2-promote
+cases into two parallel lists, then issued ONE vectorized
+`final_df.loc[surv_indices, content_cols] = df.loc[ source_indices, content_cols].values` instead of looping.
+Semantically identical (verified: `surv_indices` cannot contain duplicates given the zero-pre-existing-duplicate-keys
+invariant already established; positional `.values` assignment preserves the same pairing as the original loop) — pure
+performance fix, no logic change. **Measured result: per-attempt time dropped from ~2,200-4,140s down to ~360-2,300s**
+(the growing variance across attempts is host-load/corpus-growth related, not the fix regressing).
+
+**Still lost every race across 5 attempts (~40 min total this round).** Critically, the classification result was
+BYTE-IDENTICAL across all 5 attempts (A=818634, B1=952, B2=1995, escalate=2701, every single time) despite the corpus
+visibly growing between reads — proving the concurrent writers are appending to OTHER, unrelated rows (different
+venues/dates), not touching the specific HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC historical rows this
+re-stamp targets. This is a pure timing race, not a moving-target correctness problem: the manifest's observed write
+cadence (~7-10 min between GCS object generations) is close enough to even the improved processing window that
+straightforward retries keep losing.
+
+**Extended retry running now**: 25 attempts, 3-hour wall-clock safety cap, same rigorous pre-write gate + CAS
+precondition + post-write verification on every attempt — unchanged safety guarantees, just more tries at a now-much-
+cheaper per-attempt cost. **No data has been mutated at any point across all attempts today** — every single one either
+passed its own invariant gate and then lost the CAS race cleanly (zero bytes written), or was aborted before reaching
+the write call. If this extended run also exhausts without success, the next escalation is likely: request a maintenance
+window / a brief pause in the specific writers touching this bucket, OR restructure as a narrower, row-scoped patch
+rather than a full-corpus read-transform-write cycle.

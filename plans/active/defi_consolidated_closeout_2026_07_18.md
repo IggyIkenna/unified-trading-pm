@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -770,6 +770,41 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-21 (slot-4, /pre-compact — durability checkpoint + finish-list state).**
+
+  **Shipped + flipped this session:** available_at 3-site clobber `mtds@f7af6ece`, re-emit opt-in `mtds@05ad49f7`,
+  earlier the full catalogue lockstep + CHAINLINK + evm pagination `mtds@6e2677b9` + migration/no-orphans verification.
+  2025d rebuild STOPPED (redundant re-emit ended). Checker report committed to `plans/audit/results/`.
+
+  ## Deferred work after 2026-07-21
+
+  | Item                                                                                    | Kind / why deferred                                                                                                                                                                          | Blocked-on / owner                                                                                                                                                        |
+  | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | **Glued-id fix + full re-migration** (Q4)                                               | Not done — root-caused (`ts_label = now()` in filename→id); TRUE scope is SYSTEMIC **~15 handlers**, not 3. Needs a shared stable-filename helper (per-handler grain) + a full re-migration. | Focused session. Fix-designed: `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`. **RECOMMENDED NEXT** (pure data-correctness, no fleet/infra risk).          |
+  | **Perf bundle + launcher preemption + 2-VM canary** (Q3)                                | Not done — fix-designed (T3 design + cefi preemption pattern). Core live-write-path rewrite; the ETA needs the live canary.                                                                  | Focused session + 2-VM canary. `defi_mvp_backfill_optimization_ready_2026_07_20.md`.                                                                                      |
+  | **Checker collect-\* route** (deliverable #3)                                           | Not done — precisely mapped (route the `mtds-backfill` DeFi branch → `collect-{evm,solana}-defi` in `setup-data-pipeline-vm.sh`).                                                            | Focused session — edits the FLEET-SHARED VM startup script (blast radius + GCS rollout + real-VM validation). `data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md`. |
+  | **available_at broader ~20 direct-`now()` handlers**                                    | Not done — the 3 on-chain clobbers are FIXED; ~20 others set `now()` with no on-chain stamp + gas Solana/Bitcoin use `stamp_explicit(now)`. Per-handler deterministic-source derivation.     | Focused follow-up. Flagged in `defi_available_at_clobbered_by_wallclock_2026_07_20.md`.                                                                                   |
+  | `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (`defi-pi-range` case) | Inherited/uncommitted WIP — NOT this session's work; a per-quarter migration fan-out addition. Survives compaction (dirty working-tree file).                                                | Owner / next-session assessment before committing (don't ship unfamiliar WIP).                                                                                            |
+
+  ## Lessons carried (would otherwise be re-learned)
+  - **`/data-pipeline-check-mtds` can't fetch DeFi** — its launcher runs `op=download`, which logs
+    `Skipping 98 DeFi venues (use collect-* handlers)`. DeFi needs `collect-evm-defi`/`collect-solana-defi`. The check
+    MECHANISM works; the fetch route is the gap.
+  - **The checker's `--venue` is the MANIFEST venue (`AAVE_V3`), NOT the UAC venue-chain (`AAVE_V3-ETHEREUM`)** — chain
+    is a separate manifest column. Passing the venue-chain form matched nothing.
+  - **`GCP_PROJECT_ID` + `MANIFEST_ALLOW_STALE_FALLBACK=true`** are needed to run the checker non-interactively during
+    an active rebuild (the default per-VM-shard fallback misses consolidated cells; the flagged recovery merge reads
+    consolidated+per-VM = complete).
+  - **The manifest consolidator for defi tick-data is NOT `uts-prod-manifest-consolidator-execution`** (that's the
+    execution-store). The defi `_index` refreshes ~every 30min and is <120s-fresh only briefly after each run.
+  - **QG whack-a-mole**: fixing a function-size violation by extracting a helper GREW the file past the 900-line cap
+    (the file was already near it after the `_rebuild_defi_n5` split). Trim in place OR check the file cap first.
+  - **The glued-id + available_at are the SAME wall-clock-in-identity bug class** — `now()` in the id (`ts_label`) and
+    `now()` in `available_at`. Both break re-fetchability/determinism.
+  - **Ship-race tax is real**: a full MTDS QG is ~10-15 min queued behind the 2-token governor; the quickmerge sentinel
+    invalidates on ANY peer commit in that window. The MTDS lockstep half took 6 attempts. Chain `pull→QG→quickmerge`
+    and expect retries on a busy repo.
 
 - **2026-07-21 (slot-4, /autonomous — operator ratified 4 rulings; executing the finish-list).** Operator answered the 4
   batched decisions (all as recommended): re-emit opt-in-default-off · available_at keep-on-chain-tick · perf-bundle

@@ -27,8 +27,13 @@ verifier:
   "python -m server.ci_status <repo> returns blocked=false for the walled repo after the fix (and the wall's escalation
   row closes with exit_reason=lifecycle-complete)"
 last_executed: 2026-07-02
-last_updated: 2026-07-02
-code_refs: [agent-orchestrator/server/ci_status.py, agent-orchestrator/server/escalation.py]
+last_updated: 2026-07-21
+code_refs:
+  [
+    agent-orchestrator/server/ci_status.py,
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/server/ci_reconcile.py,
+  ]
 execution:
   {
     owner: "the dispatched cicd one-shot worker (operator when the wall is escalated to main)",
@@ -57,6 +62,15 @@ python -m server.ci_status <repo> --branch main
 
 `blocked=true` covers BOTH a red v2 and a **never-reported** v2 (they need different recipes — below). This reuses the
 reconcile loop's own read path, so its verdict matches the dashboard by construction.
+
+> **The `CIReconcileLoop` only escalates a `failure` whose run tested the CURRENT branch HEAD (head-staleness gate,
+> `server/ci_reconcile.py` `failing_run_is_current`, 2026-07-21).** LDR never runs server QG on push — the
+> `quality-gates-v2` runs on `live-defi-rollout` are hourly `workflow_dispatch` runs — so a fix pushed to LDR leaves
+> HEAD green-but-untested until the next dispatch, and the latest _completed_ run is still the OLD failure. The loop
+> compares the failing run's `head_sha` to the current branch HEAD and **drops a stale/superseded failure** (logged, not
+> escalated); a genuine red is caught the moment a run against the live head confirms it. So a just-fixed repo not
+> escalating for a few minutes is EXPECTED, not a miss. (Prior false-red: the loop was head-blind and escalated
+> already-fixed repos, spawning cicd workers that resolved `qg_v2_green` — wasted credits.)
 
 > **This runbook cross-links, it does not duplicate.** The mechanics SSOT is
 > [`codex/08-workflows/ci-cd-flow.md`](../08-workflows/ci-cd-flow.md); each recipe cites its section. If a recipe here

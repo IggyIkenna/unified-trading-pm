@@ -198,6 +198,28 @@ migration, not just the writer. Scope now:
 Blast radius is being scoped by workflow BEFORE any code/data change (a missed reader = a silent corpus gap). Tracked in
 the plan Progress Log. **Todo 1 RULED → A.** Todos 2-10 fold into the migration phases below.
 
+### Phase-0 operator decisions RULED 2026-07-21 (workflow wvyttno6s scoped the migration as an 8-phase epic, ~10-20M objects)
+
+1. **`pipeline_mode=` placement → ADD TO THE REGISTRY TEMPLATE (single SSOT).** Add `pipeline_mode=` to
+   `unified-trading-library/…/config_interface/paths/registry.py:28` `processed_candles` `path_template` +
+   `partition_keys`, so `build_path()` alone yields the correct shape and readers routed through it cannot silently
+   drift. (Was: post-hoc string-insert in `config.py:144-145`.) Every reader + the oracle extension builds THIS shape.
+2. **continuous_future slice → IN SCOPE (treat as canonical, don't break it).** It already carries
+   `instrument_type=continuous_future` + aggregated `ohlcv_1m`; writer (`build_continuous_engine`) + reader
+   (`delta_one/engine/orchestrator.py:606-609`) move in lockstep with the rest; the migration executor verifies/no-ops
+   it (already canonical). Do NOT accidentally corrupt the CME roll path.
+3. **Migration scope → FULL, ALL 4 AGs, ONE CAMPAIGN.** Writer+readers change for all AGs; DATA migration sequenced
+   `defi → prediction → cefi → tradfi` (tradfi LAST — ~10^7, ~99% id-canonicalisation, quarantine unresolvable ids).
+   Precise per-AG counts from a sanctioned Tier-2 spot-VM census before sizing the migration VMs.
+4. **PURGE the old/bad forms too (operator 2026-07-21 "full migration and purging of old bad data forms").** The
+   migration is copy→verify(crc32c)→**delete** — the delete IS the purge of the old-shape objects once the canonical
+   copy is proven. ALSO purge the genuinely-bad objects: (a) zero-length-stem `venue=*/.parquet` (unattributable —
+   delete/repair to `ticks.parquet`), (b) DEDUP the ~2x split-brain copies (same shard under `pipeline_mode=` AND naked
+   `timeframe=`) to the single canonical copy, (c) UNRESOLVABLE TradFi artifact ids (`E1AF0_*_migrated_*` that
+   `_renormalize_legacy_instrument_ids` cannot resolve) → QUARANTINE (never fake-canonicalise), operator-review before
+   any quarantine-delete. All prod deletes are gated: canonical copy crc32c-verified present FIRST, dry-run + reconcile
+   orphan gate + bucket snapshot BEFORE `--apply` (delete-safety + pre-migration-drain hard rules).
+
 ## Decision (ruled A — historical options kept for context) — which shape is canonical?
 
 **(A) [RULED ✅] The declared template is canonical → migrate the writers.** Add `instrument_type=` to the candle object

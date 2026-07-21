@@ -11,7 +11,7 @@ summary:
   2026-07-20 confirms the legacy objects are still present, that two of the five legacy cells have NO canonical twin at
   all, and that `execution-service` still reads the legacy shape at runtime through an already-broken
   `resolve_bucket_name` call. Executing the standing order as written is an irreversible data-loss event.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -46,7 +46,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by:
+resolved_by: operator-executed prod delete 2026-07-21 (fold+repoint+delete complete; twins verified surviving)
 ---
 
 # DeFi legacy `dex_pools/` + `lending_indices/` — the standing DELETE order is STALE
@@ -211,3 +211,12 @@ Steps 1 and 2 are independent of each other and can proceed in parallel; step 3 
 4. Divergence RCA closed (`defi_consolidated_closeout_2026_07_18.md:270-272`) — is canon `dex_pool_state` trustworthy
    for other raydium/DEX days?
 5. Only then: legacy prefixes deleted (snapshot-first) or an explicit decision to retain them.
+
+## ✅ RESOLVED 2026-07-21 — safe order executed end-to-end
+
+The mandatory fold→repoint→delete order is complete: (1) 648 canonical twins folded + verified (`mtds@13b9dac5`); (2)
+execution-service reader repointed to `dex_pool_state` (`@45628a37`) + F6 enumerator vocab (`uac@5d83b729` +
+`is@c781eb0b`); (3) **operator executed the prod delete of `dex_pools/` + `lending_indices/` 2026-07-21.** Post-delete
+verification: legacy prefixes = 0 objects; canonical twins intact (KAMINO-vault 513 · SOLEND 59 · KAMINO-lending 44 ·
+RAYDIUM 132 · ORCA 14,094). No over-reach. Residual: manifest-row registration for the twins remains open →
+`defi_fold_manifest_registration_pending_2026_07_21.md`.
