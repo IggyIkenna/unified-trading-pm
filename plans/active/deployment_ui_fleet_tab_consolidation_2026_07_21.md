@@ -148,9 +148,15 @@ Key audit facts driving the merges:
       kind (the field is honestly absent, not hidden by a conditional guess). tsc/ESLint clean; 2 new tests (stopped
       orphan row shows the badge + age; running row shows neither) + full 1049-test suite green; full `quality-gates.sh`
       (base-ui.sh v2.0) green.
-- [ ] [UI] P1. **Reap/delete actions on Deployments** — port FleetOrphans' dry-run-first bulk reap (`reapOrphans` →
-      `/api/fleet/reap`) and per-instance delete-with-boot-disk (`DELETE /api/fleet/instances/{name}`), keeping the
-      confirm-dialog + dry-run-preview safety pattern. Destructive actions stay behind explicit confirm.
+- [x] [UI] P1. ✅ **Reap/delete actions on Deployments** — deployment-ui@eef5acf. Ported FleetOrphans' dry-run-first
+      bulk reap (`reapOrphans` → `/api/fleet/reap`) and per-instance delete-with-boot-disk
+      (`DELETE /api/fleet/instances/{name}`) verbatim, same two-dialog safety pattern (dry-run preview populates the
+      confirm dialog; destructive execute only fires on an explicit confirm click). Per-row delete button replaces
+      `VmControls`' inert "—" for a stopped/orphan row (a new `OrphanDeleteContext` threads the click handler to
+      `DeploymentRow`, mirroring the existing `DrillContext` pattern rather than prop-drilling through
+      `DeploymentMatrix`). Both actions refresh the main inventory + the idle-spend rollup together on success.
+      tsc/ESLint clean; 2 new tests (delete flow, bulk-reap flow) + full 1051-test suite green; full `quality-gates.sh`
+      (base-ui.sh v2.0) green.
 - [ ] [UI] P2. **Idle-spend discoverability** — since Deployments defaults `status=running`, add a quick entry point (an
       "idle spend" filter/chip or a rollup-card click that applies `status=stopped`/orphan filters) so idle resources
       aren't hidden.
