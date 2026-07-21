@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -839,6 +839,37 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-21 (deployment-service worker — checker collect-\* route SHIPPED, deliverable #3).**
+  `deployment-service@56a451f8669184351792079e8f37c0af048c5475`. Fixed the mapped gap in
+  `data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md`: `setup-data-pipeline-vm.sh`'s `mtds-backfill` branch
+  always built `--operation download`, which deliberately skips all 98 DeFi venues, so every DeFi force/skip-leg checker
+  cell failed `no_parquet` regardless of day/venue. Added a narrow conditional (VM_ASSET_GROUP=defi only) that routes
+  Solana-protocol venues to `collect-solana-defi` (`--solana-protocols`, lowercased, + `--solana-lending-backfill`) and
+  everything else to `collect-evm-defi` (`--venues`); every other asset_group (cefi/tradfi/sports/prediction) is
+  byte-identical to before. One doc-vs-code correction: the issue doc's prose said `--protocols`, the real flag is
+  `--solana-protocols` (grep-verified against `market_tick_data_service/cli/main.py` before shipping).
+  - **Verification (no full VM launch — see why below):** an isolated bash unit test asserting the exact `BASE_CLI`
+    string for every asset_group + every listed Solana venue + the no-venue default (all passed, incl. proving non-DeFi
+    paths are unchanged), PLUS a real (not mocked) `market_tick_data_service` `ServiceCLI` parser run confirming the
+    generated `collect-evm-defi`/`collect-solana-defi` argv strings (incl. `--force`/`--data-types`/
+    `--solana-lending-backfill`) parse cleanly on the current build. `deployment-service` `quality-gates.sh` green
+    (2797/2798; the one unrelated failure is pre-existing foreign WIP in `launch-canonical-migration-vm.sh`, untouched —
+    see the deferred-work table below).
+  - **Full real-VM-launch confirmation deferred**: `create-code-tarballs.sh` (which uploads the fixed script to the GCS
+    bucket VMs fetch at boot) refuses on a dirty tree, and `market-tick-data-service` currently has unrelated,
+    concurrent in-flight WIP from another agent (a token-metadata-resolver sub-project) — forcing
+    `--allow-dirty-tarball` would ship someone else's unfinished work fleet-wide, so this was deliberately not done.
+    Next step once that tree is clean: rebuild+upload tarballs, launch one `--test-run` DeFi shard (AAVE_V3
+    lending_indices), confirm `run.log` shows `op=collect-evm-defi` firing, then re-run
+    `/data-pipeline-check-mtds --asset-group DEFI --venue AAVE_V3` end-to-end.
+  - **Shipped as a direct push** (dirty-deps carve-out, not quickmerge): `unified-trading-library` had a live, unrelated
+    uncommitted change (`unified_trading_library/defi/`, another agent's concurrent WIP) blocking quickmerge's
+    cross-repo pre-flight audit. Also hit + safely recovered a stash-pop conflict on the SAME unrelated foreign file
+    this entry's deferred-work row already flags (`launch-canonical-migration-vm.sh`) — restored losslessly from the
+    autostash, left unstaged and untouched, matching this plan's own prior note not to ship unfamiliar WIP.
+  - Deferred-work table row below flipped to ✅ DONE; issue doc frontmatter flipped to `status: resolved` with the
+    caveat that full real-VM confirmation is the remaining step.
+
 - **2026-07-21 (slot-4, /pre-compact — glued-id re-migration IN FLIGHT; operator's canonical question answered).**
   Operator authorized the canonicalization migrations/deletes + the glued-id fix. Assessed + PROVEN + running:
   - **Canonical answer (operator asked):** the canonical pool id IS the human `venue:TYPE:base-quote-fee`
@@ -861,13 +892,13 @@ Discriminator = **does a manifest row exist**.
 
   ## Deferred work after 2026-07-21
 
-  | Item                                                                                    | Kind / why deferred                                                                                                                                                                          | Blocked-on / owner                                                                                                                                                        |
-  | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-  | **Glued-id fix + full re-migration** (Q4)                                               | Not done — root-caused (`ts_label = now()` in filename→id); TRUE scope is SYSTEMIC **~15 handlers**, not 3. Needs a shared stable-filename helper (per-handler grain) + a full re-migration. | Focused session. Fix-designed: `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`. **RECOMMENDED NEXT** (pure data-correctness, no fleet/infra risk).          |
-  | **Perf bundle + launcher preemption + 2-VM canary** (Q3)                                | Not done — fix-designed (T3 design + cefi preemption pattern). Core live-write-path rewrite; the ETA needs the live canary.                                                                  | Focused session + 2-VM canary. `defi_mvp_backfill_optimization_ready_2026_07_20.md`.                                                                                      |
-  | **Checker collect-\* route** (deliverable #3)                                           | Not done — precisely mapped (route the `mtds-backfill` DeFi branch → `collect-{evm,solana}-defi` in `setup-data-pipeline-vm.sh`).                                                            | Focused session — edits the FLEET-SHARED VM startup script (blast radius + GCS rollout + real-VM validation). `data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md`. |
-  | **available_at broader ~20 direct-`now()` handlers**                                    | Not done — the 3 on-chain clobbers are FIXED; ~20 others set `now()` with no on-chain stamp + gas Solana/Bitcoin use `stamp_explicit(now)`. Per-handler deterministic-source derivation.     | Focused follow-up. Flagged in `defi_available_at_clobbered_by_wallclock_2026_07_20.md`.                                                                                   |
-  | `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (`defi-pi-range` case) | Inherited/uncommitted WIP — NOT this session's work; a per-quarter migration fan-out addition. Survives compaction (dirty working-tree file).                                                | Owner / next-session assessment before committing (don't ship unfamiliar WIP).                                                                                            |
+  | Item                                                                                    | Kind / why deferred                                                                                                                                                                                                                                                                       | Blocked-on / owner                                                                                                                                               |
+  | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | **Glued-id fix + full re-migration** (Q4)                                               | Not done — root-caused (`ts_label = now()` in filename→id); TRUE scope is SYSTEMIC **~15 handlers**, not 3. Needs a shared stable-filename helper (per-handler grain) + a full re-migration.                                                                                              | Focused session. Fix-designed: `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`. **RECOMMENDED NEXT** (pure data-correctness, no fleet/infra risk). |
+  | **Perf bundle + launcher preemption + 2-VM canary** (Q3)                                | Not done — fix-designed (T3 design + cefi preemption pattern). Core live-write-path rewrite; the ETA needs the live canary.                                                                                                                                                               | Focused session + 2-VM canary. `defi_mvp_backfill_optimization_ready_2026_07_20.md`.                                                                             |
+  | **Checker collect-\* route** (deliverable #3)                                           | ✅ DONE 2026-07-21 — `deployment-service@56a451f8` routes `mtds-backfill` DeFi shards to `collect-evm-defi`/`collect-solana-defi`. Isolated unit test + real-CLI-parser proof done; full real-VM-launch confirmation still deferred (dirty MTDS tree from a concurrent, unrelated agent). | Remaining: real-VM `--test-run` confirmation once MTDS tree is clean. `data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md` (§ Fix applied).                |
+  | **available_at broader ~20 direct-`now()` handlers**                                    | Not done — the 3 on-chain clobbers are FIXED; ~20 others set `now()` with no on-chain stamp + gas Solana/Bitcoin use `stamp_explicit(now)`. Per-handler deterministic-source derivation.                                                                                                  | Focused follow-up. Flagged in `defi_available_at_clobbered_by_wallclock_2026_07_20.md`.                                                                          |
+  | `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (`defi-pi-range` case) | Inherited/uncommitted WIP — NOT this session's work; a per-quarter migration fan-out addition. Survives compaction (dirty working-tree file).                                                                                                                                             | Owner / next-session assessment before committing (don't ship unfamiliar WIP).                                                                                   |
 
   ## Lessons carried (would otherwise be re-learned)
   - **`/data-pipeline-check-mtds` can't fetch DeFi** — its launcher runs `op=download`, which logs
@@ -899,8 +930,9 @@ Discriminator = **does a manifest row exist**.
     test failures that the unconditional re-emit caused).
   - ✅ **stopped 2025d** — it was grinding ~40h of the now-ruled-off redundant re-emit; its 2025 captured rows are
     flushed + in the index; the consolidator finalizes a stable manifest now.
-  - **Remaining finish-list:** checker collect-* route (deliverable #3), glued-id fix + re-migrate, perf bundle +
-    launcher-preemption + 2-VM canary.
+  - **Remaining finish-list:** glued-id fix + re-migrate, perf bundle + launcher-preemption + 2-VM canary. (Checker
+    collect-\* route (deliverable #3) shipped 2026-07-21, `deployment-service@56a451f8` — code done, real-VM
+    confirmation still pending; see the Progress Log entry above.)
 
 - **2026-07-20 (slot-4, /autonomous — `/data-pipeline-check-mtds` ran e2e on DeFi → CHECKER GAP found).** The check
   MECHANISM is proven (VM launch → poll → report → write-prefix verify) but it **cannot FETCH DeFi**: its launcher runs

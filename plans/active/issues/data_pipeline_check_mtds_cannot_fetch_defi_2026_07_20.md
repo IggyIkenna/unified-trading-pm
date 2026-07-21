@@ -8,7 +8,7 @@ summary:
   skips all 98 DeFi venues ("use collect-* handlers"), so a DeFi force-leg fetches NOTHING and every DeFi cell fails
   no_parquet. The check mechanism (VM launch/poll/report, write-prefix verify) works; only the DeFi COLLECTION route is
   missing from the checker.
-status: open
+status: resolved # code fix shipped 2026-07-21, deployment-service@56a451f8 — full real-VM-launch confirmation deferred (see "Fix applied" section below)
 nature: issue
 asset_group: defi
 stage: [data]
@@ -26,7 +26,7 @@ drift_direction: stable
 depends_on: []
 source:
   ["filed 2026-07-20 during MTDS DeFi pipeline-check work; frontmatter completed 2026-07-21 to pass the schema gate"]
-resolved_by:
+resolved_by: deployment-service@56a451f8669184351792079e8f37c0af048c5475
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -116,3 +116,46 @@ VM_TASK=mtds-backfill + VM_ASSET_GROUP + venue
 breaks every launch, and validation requires a GCS rollout of the modified script + a real DeFi collect VM. That is a
 focused, validated-rollout task, not a tail-of-session change. The divergent scoping (EVM `--venues` vs Solana
 `--protocols`) + the missing evm-defi VM path are the two substantive pieces.
+
+## Fix applied (2026-07-21) — `deployment-service@56a451f8669184351792079e8f37c0af048c5475`
+
+Shipped exactly the mapped fix, with one naming correction: the real Solana-protocol CLI flag is `--solana-protocols`
+(this doc's prose said `--protocols`; `--solana-protocols` is what `market_tick_data_service/cli/main.py` actually
+registers and what the existing `VM_TASK=solana-defi-backfill` branch already uses — grep-verified before shipping).
+
+Inside the `mtds-backfill` branch of `setup-data-pipeline-vm.sh`, added a narrowly-scoped conditional: when
+`VM_ASSET_GROUP` is `defi` (case-insensitive), route Solana-protocol venues
+(`ORCA/RAYDIUM/KAMINO/PHOENIX/METEORA/LIFINITY/MARINADE/JITO/SOLEND/MARGINFI/SANCTUM/SOLBLAZE/ JITORESTAKING`) to
+`--operation collect-solana-defi --solana-protocols <lowercased venue> --solana-lending-backfill`; everything else (EVM
+DeFi) to `--operation collect-evm-defi --venues $VM_VENUE`. Every other asset_group (cefi/tradfi/sports/prediction)
+falls through to the untouched `else` branch — byte-identical `--operation download ...` to before.
+
+**Blast-radius verification (rule 11):**
+
+- Traced every caller of `launch-mtds-backfill-vm.sh` (VM_TASK=mtds-backfill): CEFI/TRADFI/SPORTS/ PREDICTION launches
+  never touch the new `if` branch (routing is gated strictly on `VM_ASSET_GROUP=defi`). The only production DeFi
+  launcher found (`launch-defi-backfill-vm.sh`) uses `VM_TASK=instruments-backfill`, not `mtds-backfill` — it is
+  untouched by this change. The one other caller passing `--asset-group defi` through `mtds-backfill` is
+  `phase11-backfill-coordinator.sh` (Lifecycle: oneoff, requires explicit `--apply` + two green-gates, not a standing
+  cron) — its DeFi leg was previously a guaranteed no-op (0 rows fetched); this fix makes it functionally correct, a
+  strict improvement, not a regression.
+- **Isolated unit test** (bash): extracted the exact operation-select block into a standalone harness and asserted the
+  resulting `BASE_CLI` string for CEFI/TRADFI/SPORTS/PREDICTION (byte- identical to pre-fix) + every listed Solana
+  venue + an EVM venue + the no-venue default + lower/ upper-case asset_group and venue inputs. All cases passed.
+- **Real-CLI-parser proof** (not a mock of the operation-select logic, the actual MTDS argparse build path —
+  `ServiceCLI` + the real `_add_service_args` registrar): parsed the exact generated
+  `collect-evm-defi`/`collect-solana-defi` argv strings (incl. `--force`, `--data-types`, `--solana-lending-backfill`)
+  and confirmed they are accepted CLI invocations on the current market-tick-data-service build (no `SystemExit`).
+- `deployment-service` `quality-gates.sh` green both before and after absorbing 74 upstream commits (2797/2798 tests;
+  the sole unrelated failure is pre-existing, uncommitted WIP in `launch-canonical-migration-vm.sh` by another agent —
+  untouched here, see the closeout plan's deferred-work table).
+
+**Deferred — full real-VM-launch confirmation:** `create-code-tarballs.sh` (which uploads the fixed script + code
+tarballs to the GCS bucket VMs actually fetch at boot) refuses on a dirty tree, and `market-tick-data-service` currently
+has unrelated, concurrent in-flight WIP from another agent (a token-metadata-resolver sub-project) — bundling that into
+a fleet-wide tarball would ship someone else's unfinished, unrelated work, so this was deliberately NOT forced with
+`--allow-dirty-tarball`. **Next step once that tree is clean:** rebuild + upload tarballs, launch one `--test-run` DeFi
+shard (e.g.
+`launch-mtds-backfill-vm.sh --asset-group DEFI --venues AAVE_V3 --data-types lending_indices --start 2025-03-12 --end 2025-03-12 --test-run`),
+and confirm `run.log` shows `op=collect-evm-defi` firing instead of the `Skipping 98 DeFi venues` line, then re-run
+`/data-pipeline-check-mtds --asset-group DEFI --venue AAVE_V3` end-to-end.
