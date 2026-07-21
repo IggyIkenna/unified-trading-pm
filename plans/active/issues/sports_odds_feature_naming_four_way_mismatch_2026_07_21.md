@@ -97,15 +97,25 @@ scope a design decision first, then a real parity test becomes possible against 
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Operator/architect decision: canonicalize sports odds-feature naming on UAC's `SportsFeatureVector`/
+- [x] [SCRIPT] P2. Operator/architect decision: canonicalize sports odds-feature naming on UAC's `SportsFeatureVector`/
       `OddsFeaturesMixin` (recommended, per the UAC-SSOT-types rule), OR pick one of the three existing conventions, OR
       rule that this is intentionally deferred (sports stays backtest-only, no live wiring imminent, so the mismatch is
       currently harmless and can wait). Whichever is chosen, name the concrete migration scope (which of the 3 real
       consumers need to change) as a follow-up todo/plan. (repo: unified-api-contracts, features-service, ml-service,
-      strategy-service)
+      strategy-service) — ✅ this commit. Operator ruled BLK-a1ce4719 (2026-07-21): Option A — UAC
+      (`SportsFeatureVector`/`OddsFeaturesMixin`) is canonical, executed as a scoped migration (not a blind rename this
+      session). Migration scope authored as `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`
+      (LOCAL/human track, `assigned_vm: NA`, per the operator's explicit instruction — mirrors how `BLK-b567ce7d` was
+      resolved): picks the final field names (todo 1, an `[OPERATOR]` call), migrates UAC's own schema + all 3 real
+      consumers (features-service producer, ml-service loader, strategy-service v2 + legacy subscriber), and —
+      critically — closes the ml-service loader's silent-agnostic gap with loud schema validation so a future naming
+      mismatch fails LOUD instead of `None`/`KeyError`. Sequenced alongside (not after) the "wire sports end-to-end"
+      work per the operator's note.
 - [ ] [SCRIPT] P3. Once a canonical naming is chosen, write the actual FSS-output ↔ ml-service-input ↔
       strategy-service-input parity test this backlog item originally asked for, against the NOW-REAL contract. (repo:
-      features-service, ml-service, strategy-service)
+      features-service, ml-service, strategy-service) — superseded by
+      `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`'s own todo 7 (same deliverable, now gated
+      on that plan's migration todos instead of open-ended).
 
 ## Codex SSOTs
 
