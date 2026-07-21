@@ -3547,3 +3547,28 @@ Not re-running the full gate-verification query (would just re-confirm "still pe
 established precedent across 6+ prior dispatches). Not flipping the checkbox. INJURIES/STANDINGS remain unlaunchable
 while the singleton lock holds against the running fleet. `/skip-current-task` — resume once the fleet completes, a
 shard goes dead/stalled, or INJURIES/STANDINGS become launchable once the lock clears.
+
+### 2026-07-21T06:46Z — data_engineering slot-5 (Todo `-001` re-dispatched, ~5min after slot-2's check — cheap re-check, all 4 shards still healthy, decline)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean (no dirty state, all fast-forwarded to
+`origin/live-defi-rollout`). Re-checked fleet liveness (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud`;
+`CLOUDSDK_AUTH_ACCESS_TOKEN` from `gcloud auth application-default print-access-token` in the same shell invocation as
+the `gcloud storage cat` call — same recipe as prior entries; bucket is `deployment-scripts-central-element-323112`, not
+the sports instruments-store bucket):
+
+- All 4 VMs still `RUNNING`: `af-backfill-20260719-180545` (LINEUPS), `-180620` (PLAYER_STATS),
+  `af-backfill-20260721-033537` (FIXTURE_EVENTS), `-033605` (FIXTURE_STATS).
+- `PROGRESS.json` vs slot-2's 06:41Z readings (this check at 06:45-06:46Z, ~5 min later): LINEUPS `2024-08-30`
+  (`updated=06:40:32Z`, same date as slot-2's reading — expected given the short ~5min gap between checks, and the
+  `updated` timestamp is fresh, not stale/frozen), PLAYER_STATS `2026-03-29→2026-04-04` (+6d, `updated=06:45:23Z`),
+  FIXTURE_EVENTS `2020-09-09→2020-09-11` (+2d, `updated=06:43:03Z`), FIXTURE_STATS `2020-09-09→2020-09-11` (+2d,
+  `updated=06:43:55Z`) — 3 of 4 shards advanced, LINEUPS unchanged only because the checkpoint interval was too short to
+  show fresh movement, not because it's stalled (timestamp itself is fresh).
+
+No stall, no new dead shard — fleet remains healthy exactly as every prior check found. Gate
+(`expected_unattempted_pending_fetch == 0` across all AF enrichment data_types within coverage) remains far from met —
+FIXTURE_EVENTS/STATS still need to reach `2026-05-10`; LINEUPS/PLAYER_STATS still need to reach present (`~2026-07-21`).
+Not re-running the full gate-verification query (would just re-confirm "still pending" at real compute cost, per
+established precedent across 7+ prior dispatches). Not flipping the checkbox. INJURIES/STANDINGS remain unlaunchable
+while the singleton lock holds against the running fleet. `/skip-current-task` — resume once the fleet completes, a
+shard goes dead/stalled, or INJURIES/STANDINGS become launchable once the lock clears.
