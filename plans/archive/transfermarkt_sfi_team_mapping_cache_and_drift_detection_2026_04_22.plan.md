@@ -1,6 +1,7 @@
 ---
 doc_type: plan
-title: Transfermarkt + SFI team-mapping cache + league/team drift detection (reduce API calls; catch silent partial writes)
+title:
+  Transfermarkt + SFI team-mapping cache + league/team drift detection (reduce API calls; catch silent partial writes)
 summary:
 status: complete
 nature: record
@@ -15,17 +16,28 @@ priority: P2
 owner: agent
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: features-sports-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
-depends_on: [features_sports_denormalisation_pipeline_2026_04_21, features_sports_derived_data_crime_fixes_2026_04_21, features_sports_upstream_coverage_gaps_2026_04_21]
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: features-sports-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
+depends_on:
+  [
+    features_sports_denormalisation_pipeline_2026_04_21,
+    features_sports_derived_data_crime_fixes_2026_04_21,
+    features_sports_upstream_coverage_gaps_2026_04_21,
+  ]
 isProject: false
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
 ---
+
+## Deferred work — migrated to: `plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md` — successor:
+
+batch4_strategy_ui_archived_plan_residuals (the 2 residual `[HUMAN]` gates — post-merge cache-speedup validation +
+plan-unlock approval — need an operator to actually run the comparison; no evidence found either happened, tracked as
+fresh todos there rather than fabricated).
 
 > **Reconciliation note (2026-04-25):** Substantively shipped — recommended for archive. 20/2 (91%) done.
 > instruments-service 9bf23d8 + UAC 36bed50 + UTL bf7ad8d1 + FSS 1bdf58d shipped 4 tracks across 4 repos. Ready for
@@ -105,13 +117,26 @@ Phase-0 findings already accumulated during the parent plans. Execution agent sh
 
 ## Pre-audit manifest
 
-| File / thing to find                                                                                             | Purpose                                                                                                                                                                          | Expected outcome                                                                                         |
-| ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `instruments-service/instruments_service/engine/orchestrator.py::_write_team_mapping`                            | Confirm the pattern (flat parquet, no partitioning, one write per orchestrator run).                                                                                             | Use same shape but partition TM output by `season=`.                                                     |
-| `instruments-service/instruments_service/reference_data/adapters/sports/adapters/transfermarkt.py::get_teams`    | Confirm the adapter signature + response shape (list of `TransfermarktTeamSquad` with nested `players`).                                                                         | Hash the team roster per league-season → cache short-circuit key.                                        |
-| `unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py::LeagueDefinition`           | Check what fields exist today on the dataclass.                                                                                                                                  | Add `expected_team_count_per_season: dict[int, int]                                                      | None = None` + migration note. |
-| Existing expected-instrument-count pattern (parent plan shipped 2026-04-21)                                      | `unified_api_contracts.get_expected_instruments_for_venue` + `is_per_instrument_shard_data_type` from MTDS Phase 8 (memory `project_sports_data_status_overhaul_2026_04_20.md`). | Mirror the API shape: `get_expected_team_count_for_league(league_id, season)` with `None` when unknown.  |
-| `features-sports-service/features_sports_service/data/gcs_reader.py::read_team_mapping` / `read_fixture_mapping` | Pattern to clone for TM + SFI mapping readers.                                                                                                                                   | Add `read_transfermarkt_team_mapping(season: int)` + `read_sfi_league_mapping()` — same signature shape. |
+| File / thing to find | Purpose | Expected outcome | |
+---------------------------------------------------------------------------------------------------------------- |
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| -------------------------------------------------------------------------------------------------------- |
+------------------------------ | | `instruments-service/instruments_service/engine/orchestrator.py::_write_team_mapping`
+| Confirm the pattern (flat parquet, no partitioning, one write per orchestrator run). | Use same shape but partition TM
+output by `season=`. | |
+`instruments-service/instruments_service/reference_data/adapters/sports/adapters/transfermarkt.py::get_teams` | Confirm
+the adapter signature + response shape (list of `TransfermarktTeamSquad` with nested `players`). | Hash the team roster
+per league-season → cache short-circuit key. | |
+`unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py::LeagueDefinition` | Check what
+fields exist today on the dataclass. | Add
+`expected_team_count_per_season: dict[int, int]                                                      | None = None` +
+migration note. | | Existing expected-instrument-count pattern (parent plan shipped 2026-04-21) |
+`unified_api_contracts.get_expected_instruments_for_venue` + `is_per_instrument_shard_data_type` from MTDS Phase 8
+(memory `project_sports_data_status_overhaul_2026_04_20.md`). | Mirror the API shape:
+`get_expected_team_count_for_league(league_id, season)` with `None` when unknown. | |
+`features-sports-service/features_sports_service/data/gcs_reader.py::read_team_mapping` / `read_fixture_mapping` |
+Pattern to clone for TM + SFI mapping readers. | Add `read_transfermarkt_team_mapping(season: int)` +
+`read_sfi_league_mapping()` — same signature shape. |
 
 ## Success criteria
 
