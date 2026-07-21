@@ -121,8 +121,12 @@ surface — Phase A1 (writer) → B (migrate `prod/catalog.parquet`) → C (widg
 
 - **S&P index futures** (ES) + **S&P index options**.
 - **Delta-one single-stock equities** (S&P/NASDAQ single names — already canonical on filenames; verify the id columns).
-- **CME BTC + ETH futures + options** (crypto index products on the TradFi venue).
+- **CME BTC/ETH/MBT/MET futures** — FUTURES ONLY, no crypto options (operator 2026-07-21 "no CME option for BTC and
+  ETH"; `option_underliers={ES}`).
 - **Daily Treasuries** (yields, `ohlcv_24h`) + **daily KRW** (FX daily).
+- **2026-07-21 +409 expansion** (`uac@afa2dd64`→`22e6a534`, Progress Log tick "MVP def expanded"): VIX FUTURE (CBOE),
+  CBOE treasury-yield INDEX (US3M/US2Y/US5Y/US10Y/US30Y), and FX KRW (`FX:SPOT_PAIR:KRW-USD`) added to the MVP universe
+  alongside the CME crypto futures above.
 
 Everything below is scoped so these cells are canonical, honestly-covered, and smoke-tested green before MVP backfill.
 
@@ -268,35 +272,29 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       is left to the owning workstreams; `fast-t1-recon` had been run once BEFORE that correction and incidentally came
       back exit 0 + 969,536 rows / 2,494 shards. (repos: market-tick-data-service, unified-api-contracts,
       deployment-service)
-- [ ] [INFRA] P1. **`yfinance` missing from the MTDS image — ICE/FX/KRX fail on EVERY tradfi run** ("No module named
-      'yfinance'", 3/7 venues, both trading-day executions 2026-07-20). Declared `pyproject.toml:60` but
-      `Dockerfile:152` installs `-e . --no-deps`, so MTDS's declared runtime deps are never installed — they are
-      inherited from the UTL base image, which lacks yfinance. Same "deps come from the frozen base image" family as the
-      P0 above. The import smoke does NOT catch it (yahoo_finance_adapter imports yfinance lazily inside a function).
-      Fix needs a considered `--no-deps` removal / explicit dep install + a check that no OTHER declared dep is likewise
-      absent — deliberately not ridden along on the P0 hotfix. (repos: market-tick-data-service)
-- [ ] [BACKEND] P0. **The ENTIRE tradfi availability index has `schema_version` typed as STRING — every un-forced MTDS
-      tradfi run dies with `TypeError: '<' not supported between instances of 'str' and 'int'`.** Measured 2026-07-20 on
-      `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`: **5,208,844/5,208,844
-      rows** carry `schema_version == "9"` (dtype `object`), so UTL `manifest_writer/_queries.py:165`
-      (`row.get("schema_version", 1) < MANIFEST_SCHEMA_VERSION`) raises out of `check_shard_freshness`
-      (`tick_data_handler.py:407` → `:178`). The UTL line is unchanged since 2026-06-24 ⇒ **data regression, not code**.
-      Bracketed by execution `…-g24t7` OK 12:44 → `…-xfrvc` crash 14:49, with
-      `canonical-migration-tradfi-catalogue-canon-20260720-132251` running in between. **The nightly T+1 cron passes no
-      `--force`, so it will fail every night until fixed.** Fix direction: find the writer that emits a string
-      `schema_version` and correct it, then re-type the index column; consider a UTL-side coercion so a string can never
-      hard-fail the freshness read. NOT touched here (this session was instructed not to touch the migration/rebundle/
-      recover scripts or catalogue tooling, and that VM is another workstream's in-flight run). (repos:
-      market-tick-data-service, unified-trading-library, instruments-service)
+- [x] ✅ [INFRA] P1. **`yfinance` missing from the MTDS image** — RESOLVED `mtds@d8dc04e1` (Dockerfile pinned
+      `yfinance==0.2.66` install after `-e . --no-deps` + image-import-smoke extended to `import yfinance`; Evidence:
+      `cloudbuild=ce814d53-1648-4cf4-b2dc-7ac6bffefecd` SUCCESS, in-image smoke printed `YFINANCE OK 0.2.66`; issue doc
+      status:resolved). (repos: market-tick-data-service)
+- [x] ✅ [BACKEND] P0. **tradfi availability index `schema_version` typed as STRING** — RESOLVED `mtds@ac051bfe`
+      (restamp writer now stamps int `MANIFEST_SCHEMA_VERSION` + regression test, QG-green) + live `_index` re-stamped
+      int64 (held across consolidator merge, `384f0345a`) + verified un-forced (`_apply_freshness_skip(_force=False)`
+      returns PARTIAL verdicts, not `TypeError`); P2 consolidator `TRY_CAST` hardening
+      `unified-trading-library@02fc4661`; issue doc status:resolved. (repos: market-tick-data-service,
+      unified-trading-library, instruments-service)
 - [ ] [INFRA] P1. **`tradfi-databento-t1-recon` SIGKILLs (signal 9) at 2cpu/8Gi on a real trading day, AFTER writing
       rows.** Both 2026-07-20 trading-day executions wrote parquet + manifest, then idled cpu≈0% / rss≈5,475 MiB for ~2
       min and were killed — data lands but the job self-reports FAILED every trading day. The prod Sunday run exited 0
       only because a non-trading day does no work, so this is currently masked. Diagnose the post-write hang (suspect
       the honest-absence re-emit / per-VM shard fallback after `consolidated blob age > 120s threshold`) and right-size
       the task. (repos: market-tick-data-service, deployment-service)
-- [ ] [BACKEND] P1. **Massive dual-source shape parity + consolidator dedup-key omits `source`**
-      (`tradfi_massive_dual_source_2026_05_28.md` Phase 4b — a silent last-write-wins loss risk the moment a cell goes
-      dual-source). (repos: unified-trading-library, market-tick-data-service)
+- ~~[BACKEND] P1. **Massive dual-source shape parity + consolidator dedup-key omits `source`**
+  (`tradfi_massive_dual_source_2026_05_28.md` Phase 4b — a silent last-write-wins loss risk the moment a cell goes
+  dual-source).~~ **MOOT 2026-07-21** — Massive was removed as a tradfi source 2026-07-19 (`--source` now
+  `choices=["databento"]`; a `source='massive'` write raises — L226-229) and fully PURGED at tick 26 (`batch_massive` →
+  0, 1,701,422 objects, 0 collateral — L1530-1536), under operator Option-C accepted-permanent- loss with the
+  subscription terminated. No tradfi cell can ever go Massive-dual-source, so shape-parity and the consolidator
+  dedup-key-omits-source loss risk are dead work. (repos: unified-trading-library, market-tick-data-service)
 
 #### A3.1 — Databento e2e throughput optimization (operator 2026-07-18: "optimize like cefi/tardis — large VM doing MORE not wasting; MEASURE the full e2e chain: download + processing + upload + disk-write")
 
@@ -514,8 +512,11 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       all-GREEN re-run; confirm live `_index.schema_version` is int64 not string `'9'`
       (`cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`); Layer-1 % recorded. **Legacy-twin bucket
       DELETEs = BLOCKED-OPERATOR-DECISION** (hard-stop).
-- [ ] [PM] P1. **Reconcile the stale fork** `data_completion_tradfi_2026_07_15.md` against `tradfi_v9_stage1_finish`
-      (flip done todos, re-scope open ones, delete its duplicate paragraph) so the backlog is honest.
+- [x] ✅ [PM] P1. **Reconcile the stale fork** `data_completion_tradfi_2026_07_15.md` against `tradfi_v9_stage1_finish`
+      (flip done todos, re-scope open ones, delete its duplicate paragraph) so the backlog is honest. DONE 2026-07-21
+      (docs-reconciliation pass, `tradfi_docs_reconciliation_findings_2026_07_21.md`): C0/C-source/C-pipeline_mode
+      RIDER/post-walk read/orphan-sweep/E4/E5/E7 flipped to `[x]` with evidence citing `tradfi_v9_stage1_finish`; the
+      Massive-dependent gate-b/coverage-gap/dual-source paragraphs re-scoped or marked obsolete.
 
 ## Phase C — data-status + honest-coverage (gated on Phase B)
 
@@ -974,12 +975,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **[A3 Databento executor] edits complete, ship pending QG-cap** — dedicated `_get_dbn_fetch_executor()` routes all
     databento_fetch + databento_batch_jobs fetch/decode off the default pool (DNS-starvation fix); waiting on a gate
     slot.
-  - **NEW FINDING (follow-up todo): Massive normalizers bypass the shared builder** —
+  - ~~**NEW FINDING (follow-up todo): Massive normalizers bypass the shared builder** —
     `unified-api-contracts/unified_api_contracts/external/massive/normalize.py`
     (`normalize_massive_equity`/`_futures`/…) build `instrument_key` via raw f-strings
     (`f"{venue}:{itype.value}:{ticker}"`), so Massive-sourced tradfi ids are bare (`NASDAQ:EQUITY:AAPL`, no `-USD`) and
     won't get the cash `-USD` or the FUTURE `-USD@LIN` shape. Route the Massive normalizers through
-    `build_instrument_id`. (repo: unified-api-contracts) — P1, matters for the Massive dual-source MVP cells.
+    `build_instrument_id`. (repo: unified-api-contracts) — P1, matters for the Massive dual-source MVP cells.~~ **MOOT
+    2026-07-21** — Massive removed as a tradfi source 2026-07-19 + fully purged (batch_massive → 0 objects); no cell can
+    go Massive-dual-source, so the Massive normalizer path is dead code, not a live follow-up.
   - **Remaining to the terminal gate:** per-day sweep (~68%) → combo re-stamp + cash-type migration (1 catalogue pass +
     1 manifest pause→CAS) → Barchart purge → Phase D (adapt data-pipeline-check-is/-mtds to tradfi-only all-shards, both
     green on `-test-`, then MVP backfills — the wall-clock-bound long pole).
@@ -1730,3 +1733,27 @@ fleet/logs directly).**
   forward-writes were genuinely canonical, but I conflated that with the HISTORICAL manifest/parquet-content id-form,
   which measured 30.8% (0% pre-2023). Lesson: "paths migrated" and "content migrated" are different surfaces — say which
   one, every time.
+
+---
+
+## 🔴 P0 finding — 2026-07-21T16:04Z: the 30.8% figure is NOT stable historical debt, it's an ACTIVE LIVE REGRESSION
+
+**Full writeup: `plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`.** Sequencing-altering —
+read before resuming Phase B/content-migration work.
+
+Measured directly against the live manifest today: the currently-running TradFi equity/ETF backfill fleet
+(`tradfi-bf-nasdaq-*`/`tradfi-bf-nyse-*`) writes a **canonical GCS filename** (`NASDAQ:EQUITY:AAPL-USD.parquet`,
+confirmed) but a **non-canonical manifest row** (`instrument_type=equity` lowercase, `instrument_id=AAPL` bare symbol)
+for the SAME capture. 352,423 canonical manifest rows exist, ALL frozen at `written_at=2026-07-18` (the one-time
+`migrate_tradfi_manifest_usd_lin_2026_07_18.py --in-place-cas` output) — nothing new has landed in canonical form since.
+Meanwhile 858,165 legacy rows exist, of which **856,872 were written TODAY** — i.e. the writer bug is actively producing
+~850K bad manifest rows/day while the backfill fleet runs, not sitting as a static historical backlog. **Any
+content-migration run before this writer is fixed gets immediately re-polluted by the next backfill cycle** — exactly
+what happened to the 2026-07-18 fix.
+
+Revised sequencing (supersedes the "run content-migration now" ordering below): **(1) fix the writer** (root cause — the
+manifest `record_captured` call site isn't using the same canonical id `tradfi_shared.py` already derives for the file
+path) **→ (2) THEN** the historical content-migration/cleanup pass (two-track design: manifest re-run + a new
+parquet-content read-modify-write pass) **→ (3)** re-measure canonical % only after both the writer fix AND fleet drain,
+not before. A background agent is locating the exact call site + shipping a scoped fix if safe; check its outcome before
+re-investigating.

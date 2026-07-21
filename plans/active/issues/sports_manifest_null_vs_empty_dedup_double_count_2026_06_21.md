@@ -4,7 +4,7 @@ title: Sports IS manifest double-count is caused by NULL-vs-empty-string in opti
 summary:
   While implementing the one-off `canonicalize_sports_legacy_pipeline_mode_2026_06_21.py` (re-stamp legacy
   `batch_instruments_service` sports rows → `batch_<source>` + fill blank `empty_confirmed` re...
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,12 +31,12 @@ source:
     instruments-service/scripts/canonicalize_sports_legacy_pipeline_mode_2026_06_21.py,
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: sports_master_closeout_2026_07_21 investigation (2026-07-21)
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-13
+last_updated: 2026-07-21
 ---
 
 ## What I found
@@ -148,6 +148,98 @@ bug in `market-tick-data-service`'s sports manifest rebuild script, run as part 
   exactly as before (a real, still-open, still-unexplained gap worth root-causing on its own merits, but the 2026-07-13
   "recurrence" is not fresh evidence for it). Correcting the record so a future reader doesn't over-weight this data
   point.
+
+## Update 2026-07-21 (sports_master_closeout investigation) — ROOT-CAUSED, FIXED, AND LIVE-VERIFIED CLOSED
+
+Dispatched to close the "Update 2026-07-08" item 2 / "Update 2026-07-13" gap ("Not root-caused further here … either a
+stale image … or the incremental anti-join is missing some contested-key cases the isolated SQL test doesn't
+reproduce"). Findings, in order:
+
+**1. Deployed Cloud Run image staleness check — NOT stale today (with evidence, not just ancestor-checking).**
+
+- The two sports consolidator jobs (`uts-prod-manifest-consolidator-instruments-sports`,
+  `uts-prod-manifest-consolidator-market-data-sports`,
+  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`) both run
+  `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/market-tick-data-service:latest`. The
+  live execution resolved that tag to digest `sha256:5ea4fc9c3d83588a1d6aa62619de9aad6b6ad6db5c921739ed0b532485aadbc5`,
+  pushed **2026-07-21T13:33:29Z (same day, ~2h before this check)** —
+  `gcloud artifacts docker images list … --include-tags`.
+- **Content-verified, not just date-inferred**: `docker pull`ed that exact digest and ran
+  `python -c "import unified_trading_library; ..."` inside it. The installed package (`unified-trading-library==0.55.0`,
+  editable at `.deps/unified-trading-library`, staged from LDR tip at build time per the 2026-07-20 DEP-SKEW-GUARD
+  structural fix in `market-tick-data-service/Dockerfile`) contains: the
+  `_DEDUP_NULL_SENTINEL = "__UTL_CONSOLIDATOR_NULL_4e8a2__"` coalesce fix (`f5ec2291f`, 2026-07-06) in
+  `manifest_consolidator.py`, the reader-side `_merge_shard_frames` optional-dim normalization (`d64563da`, 2026-07-08)
+  in `manifest_writer/_read_index.py`, AND a marker from a later 2026-07-19 fix
+  (`read_availability_index_column_selection_dependent_merge_2026_07_19`) — proving the image tracks near-current LDR
+  tip, not a stale pin.
+- **Every other GCP manifest-consolidator Cloud Run job shares the exact same image string**
+  (`gcloud run jobs describe … --format="value(spec.template.spec.template.spec.containers[0].image)"` on
+  `instruments-{cefi,defi,tradfi,prediction}`, `market-data-{cefi,defi,tradfi,prediction}`, `features-cefi`,
+  `execution`, `ml-training-artifacts`, `strategy`) — all `market-tick-data-service:latest`. One current image = all of
+  them current; there is no per-bucket staleness to find on GCP.
+- **AWS side** (Batch Fargate, ECR `market-tick-data-service:latest`): last pushed **2026-07-17T04:29:43Z** (4 days
+  behind GCP but still 9-11 days after both fix commits). Content-verified the same way (`docker pull` by digest +
+  grep): carries the `_DEDUP_NULL_SENTINEL` fix and the reader-side `_merge_shard_frames` function.
+  (`batch:Describe JobDefinitions` was access-denied from this session's role, so individual AWS job definitions weren't
+  enumerable, but per the manifest-consolidator SSOT every AWS consolidator job references this same ECR `:latest` tag,
+  so the ECR push check covers all of them by the same logic used for GCP.)
+
+**2. The deeper "incremental anti-join misses contested-key cases" bug — ALREADY independently root-caused + fixed
+2026-07-10, 2 days after this doc's own Update-2026-07-08 entry, but never cross-referenced here.**
+
+`plans/active/issues/defi_manifest_consolidator_duplicate_race_2026_07_10.md` (found during an unrelated DeFi backlog
+session) root-caused the EXACT mechanism this doc's item 2 speculated about: the incremental merge path
+(`_duckdb_merge_payload`) splits the canonical into `contested` rows (keys touched by the current cycle's incoming
+shards — correctly window-deduped) and `survivors` (all other rows — streamed through **completely unchanged, zero
+self-dedup**). Consequence: **any duplicate that ever lands in the canonical, by ANY mechanism — including a NULL/""
+twin created before the `f5ec2291f` SQL fix shipped — persists forever**, because incremental cycles only ever
+re-examine keys the _current_ cycle's shards touch, never re-verify the untouched 99%+ of the canonical against itself.
+This is precisely why the SQL fix tested correct in isolation (§ Update 2026-07-08: "fed it the exact duplicate pair
+directly … correctly picks 1 survivor") yet pre-existing duplicate twins already resident in the live canonical kept
+surviving cycle after cycle — they were never in anyone's `contested` set again.
+
+- **Fix**: `unified-trading-library@0de04b6e` (2026-07-10) — apply the same window-dedup already used for `contested`
+  rows to `survivors` too (later split into `survivors_clean`/`survivors_deduped` in `@800af156` the same day, for an
+  OOM regression at defi's 27M-row scale — irrelevant to sports' much smaller canonical). New regression test
+  `test_consolidate_incremental_self_dedups_untouched_canonical_duplicates`, verified fail-before/pass-after via a
+  stash-based check, not inline reasoning.
+- **That doc's own P2 todo (2026-07-10) already scanned all 5 asset groups** with the correct per-schema grain and found
+  **sports already clean (0 genuine duplicates)** post-fix, alongside cefi 0, defi 0, tradfi (346 rows/173 groups,
+  cleaned), prediction (6,284 rows/3,142 groups, cleaned). The fix + cleanup predates this doc's own "Update 2026-07-13"
+  entry by 3 days — this doc's remaining "not root-caused further" framing was simply not updated to reflect it.
+- This also explains the stale-image half of the 2026-07-08 finding: that same closure doc records the MTDS image
+  independently found stale on 2026-07-10 (pinned `BASE_IMAGE_DIGEST` predating the fix) and rebuilt/redeployed same
+  day, with the local `market-tick-data-service` Dockerfile git history confirming an **urgent** digest-pin bump
+  (`72fa3f42`, 2026-07-10T16:28 +01:00: _"Fleet-wide fan-out … to pick up unified-trading-library@0de04b6e (the
+  manifest-consolidator duplicate-row fix) — urgent, the consolidator running via this service's Cloud Run job needs
+  this deployed ASAP"_). So: **yes, the deployed image was genuinely stale in the narrow 2026-07-08 → 2026-07-10
+  window** — both halves of this doc's open hypothesis were partially right (a real stale-image gap AND a real deeper
+  bug), and both are now closed.
+
+**3. Live re-verification today (2026-07-21), against the CURRENT production canonical, using the exact production
+dedup-key SQL (`_BASE_DEDUP_COLS` + `_OPTIONAL_DEDUP_COLS` + `_dedup_key_sql` NULL/"" coalesce), not a narrow
+attempted_failed/XG_SHOTS angle:**
+
+| Bucket                         | Rows      | Duplicate dedup-key groups |
+| ------------------------------ | --------- | -------------------------- |
+| `instruments-store-sports-prd` | 5,384,397 | **0**                      |
+| `market-data-tick-sports-prd`  | 1,974,679 | **0**                      |
+| `instruments-store-cefi-prd`   | 84,266    | **0**                      |
+| `instruments-store-defi-prd`   | 118,809   | **0**                      |
+| `instruments-store-tradfi-prd` | 27,203    | **0**                      |
+| `instruments-store-pred-prd`   | 27,115    | **0**                      |
+
+(`market-data-tick-{cefi,defi,tradfi,pred}-prd` were not downloaded for a full duplicate scan — defi alone is 1.87 GB —
+but each shows a healthy `success:true` cycle in `_index/latest.json` within the last minute of this check, consistent
+with a live, functioning consolidator, and their consolidator jobs share the identical verified-current image.)
+
+**Conclusion — CLOSED.** Both halves of this doc's open question are answered: the deployed image WAS stale for a ~2-day
+window ending 2026-07-10, and there WAS a deeper incremental-merge bug (survivors never self-deduped) — both are now
+fixed, the fix is deployed and content-verified current on every consolidator bucket (same shared image), and the live
+production sports manifests show zero NULL-vs-empty-string (or any other) duplicate dedup-key groups today. No code
+change was needed from this session. `sports_master_closeout_2026_07_21.md` §2-C / §7 item 4 updated to reflect this is
+resolved, not a pending blocker for the post-floor recompute.
 
 ## Non-FIXTURES blank-reason residue (left untouched, by design)
 

@@ -6,7 +6,29 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [unified-api-contracts, unified-trading-library, unified-cloud-interface, instruments-service, market-tick-data-service, market-data-processing-service, features-delta-one-service, features-volatility-service, features-onchain-service, features-sports-service, features-calendar-service, features-multi-timeframe-service, features-cross-instrument-service, features-commodity-service, ml-training-service, ml-inference-service, deployment-service, deployment-api, deployment-ui, unified-trading-pm]
+repos:
+  [
+    unified-api-contracts,
+    unified-trading-library,
+    unified-cloud-interface,
+    instruments-service,
+    market-tick-data-service,
+    market-data-processing-service,
+    features-delta-one-service,
+    features-volatility-service,
+    features-onchain-service,
+    features-sports-service,
+    features-calendar-service,
+    features-multi-timeframe-service,
+    features-cross-instrument-service,
+    features-commodity-service,
+    ml-training-service,
+    ml-inference-service,
+    deployment-service,
+    deployment-api,
+    deployment-ui,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -17,8 +39,21 @@ priority: P0
 code_readiness: C1
 deployment_readiness: D0
 business_readiness: B0
-completion_gates: {code: C5, deployment: D3, business: B3}
+completion_gates: { code: C5, deployment: D3, business: B3 }
 ---
+
+## Deferred work — migrated to: `plans/active/data_completion_to_100_all_ag_2026_06_21.md` — successor:
+
+data_completion_to_100_all_ag_2026_06_21 (verified 2026-07-21, batch-5 archived-plan discipline triage). This plan's
+literal implementation is architecturally obsolete (targets manifest schema v4, now at v9; 8 separate
+`features-*-service` repos + split ml-training/ml-inference services, now consolidated into single
+`features-service`/`ml-service` repos; its bucket-retirement target no longer exists). But its actual GOAL — driving
+every asset group's manifest to honest 100% coverage across batch+live — is the direct ancestor of a documented
+succession chain: this plan → `path_to_100pct_backfill_mtds_is_2026_06_17` → `data_completion_to_100_all_ag_2026_06_21`
+(frontmatter `supersedes:` confirms) → folded 2026-07-13 into per-asset-group children
+(`data_completion_cefi/defi/tradfi/prediction_2026_07_15.md`), with observability/cost/event-integrity concerns carried
+by `data_pipeline_hardening_self_monitoring_2026_06_22.md` / `data_pipeline_e2e_check_2026_07_10.md` /
+`data_pipeline_alerts_batch_remediation_2026_07_15.md`.
 
 # Data Pipeline Completion — Instruments → MTDS → MDPS → Features
 
@@ -391,7 +426,15 @@ sports uses `processed/`). Current state is bad:
       `     _CANDLE_OHLCV_BASE = [_INSTRUMENT_ID, _VENUE, _CHAIN, _TS_EVENT,                           ColumnSpec("open", float64), ColumnSpec("high", float64),                           ColumnSpec("low", float64), ColumnSpec("close", float64),                           ColumnSpec("volume", float64, nullable=True),                           ColumnSpec("trade_count", int64, nullable=True),                           ColumnSpec("timeframe", string)]     _CANDLE_BOOK_5_EXT = [... + spread_bps_mean, depth_bid_mean, depth_ask_mean,                           imbalance_ratio_mean, bid_vol_0_mean, ask_vol_0_mean,                           tob_depth_ratio_mean, mid_price_mean]     _CANDLE_DERIV_EXT   = [... + funding_rate_mean, mark_price_mean, index_price_mean]     _CANDLE_LIQ_EXT     = [ColumnSpec("liquidation_count", int64), ColumnSpec("liquidation_notional_usd", float64)]     _CANDLE_DEX_EXT     = [... + swap_count, volume_quote_usd]     _CANDLE_ODDS_EXT    = [... + quote_count, source_count]     `
 - [ ] [AGENT] P0. Register MDPS contracts for every (category × instrument*type × source_data_type × timeframe): -
       **CeFi**: -
-      `cefi/perpetual/{trades,book_snapshot_5,derivative_ticker,liquidations}/ohlcv*{15s,1m,5m,15m,1h,4h,1d}`      -`cefi/spot*pair/{trades,book_snapshot_5}/ohlcv*{15s,1m,5m,15m,1h,4h,1d}`      -`cefi/options*chain/{trades}/ohlcv*{1m,15m,1h,1d}`(book not typically aggregated for options)       -`cefi/futures*chain/{trades}/ohlcv*{1m,15m,1h,1d}`    - **TradFi** (pass-through 1m + re-aggregated higher):       -`tradfi/future/{trades,ohlcv*1m}/ohlcv*{1m,5m,15m,1h,4h,1d}`(1m is pass-through from source ohlcv_1m)       -`tradfi/equity/{trades,ohlcv*1m}/ohlcv*{1m,5m,15m,1h,4h,1d}`      -`tradfi/options*chain/{trades}/ohlcv*{1m,15m,1h,1d}`      -`tradfi/index/{trades}/ohlcv*{1m,5m,15m,1h,1d}`    - **DeFi**:       -`defi/pool/{dex_pool_swaps,dex_pool_state}/ohlcv*{15s,1m,5m,15m,1h,1d}`(pool price/liquidity candles)       -`defi/a*token/{lending_indices,rate_indices,oracle_prices}/ohlcv*{1m,15m,1h,1d}`      -`defi/lst/{lst*rates,oracle_prices}/ohlcv*{1m,15m,1h,1d}`    - **Sports**:       -`sports/odds/{trades}/ohlcv*{1m,15m,1h}`(bookmaker odds time series per fixture)     - **Prediction**:       -`prediction/prediction_market/{trades}/ohlcv*{1m,15m,1h}`
+      `cefi/perpetual/{trades,book_snapshot_5,derivative_ticker,liquidations}/ohlcv*{15s,1m,5m,15m,1h,4h,1d}` -`cefi/spot*pair/{trades,book_snapshot_5}/ohlcv*{15s,1m,5m,15m,1h,4h,1d}` -`cefi/options*chain/{trades}/ohlcv*{1m,15m,1h,1d}`(book
+      not typically aggregated for options) -`cefi/futures*chain/{trades}/ohlcv*{1m,15m,1h,1d}` - **TradFi**
+      (pass-through 1m + re-aggregated higher): -`tradfi/future/{trades,ohlcv*1m}/ohlcv*{1m,5m,15m,1h,4h,1d}`(1m is
+      pass-through from source
+      ohlcv_1m) -`tradfi/equity/{trades,ohlcv*1m}/ohlcv*{1m,5m,15m,1h,4h,1d}` -`tradfi/options*chain/{trades}/ohlcv*{1m,15m,1h,1d}` -`tradfi/index/{trades}/ohlcv*{1m,5m,15m,1h,1d}` -
+      **DeFi**: -`defi/pool/{dex_pool_swaps,dex_pool_state}/ohlcv*{15s,1m,5m,15m,1h,1d}`(pool price/liquidity
+      candles) -`defi/a*token/{lending_indices,rate_indices,oracle_prices}/ohlcv*{1m,15m,1h,1d}` -`defi/lst/{lst*rates,oracle_prices}/ohlcv*{1m,15m,1h,1d}` -
+      **Sports**: -`sports/odds/{trades}/ohlcv*{1m,15m,1h}`(bookmaker odds time series per fixture) -
+      **Prediction**: -`prediction/prediction_market/{trades}/ohlcv*{1m,15m,1h}`
 - [ ] [AGENT] P0. Venue overrides where MDPS aggregates differ per venue (mirror Phase 3.3 DeFi pattern:
       `VENUE_CONTRACT_OVERRIDES[("cefi","BINANCE-FUTURES","perpetual","book_snapshot_5")]` etc only when columns truly
       diverge).

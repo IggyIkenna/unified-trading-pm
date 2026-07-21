@@ -46,19 +46,22 @@ code_refs:
 > ohlcv_1m, ohlcv_15m, options_chain, futures_chain) are now `["databento"]` / `["databento","yahoo"]` only, and the
 > runtime routing (`_umi_massive`, the two vendor adapters, `massive-futures-backfill`, `--source massive`) is DELETED
 > (`uac@a2beed46` + `mtds@362a487e`). **Everything below that says `["databento","massive"]` / "massive live-capable" /
-> "massive-first" is HISTORICAL** — read it for provenance, not current state. `batch_massive` `PipelineMode` +
-> `possible_manifest` recognition are DELIBERATELY KEPT until the ~1.47M historical `pipeline_mode=batch_massive/` GCS
-> objects are purged (gated). Full plan: `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`.
+> "massive-first" is HISTORICAL** — read it for provenance, not current state. **PURGE COMPLETED 2026-07-21**: 1,701,422
+> historical `pipeline_mode=batch_massive/` GCS objects → 0, accepted permanent loss (operator Option C, subscription
+> terminated). `batch_massive` `PipelineMode` + `possible_manifest` recognition are no longer guarding any on-disk
+> objects and can now be removed from code — tracked separately, not yet done as of this doc's last edit. Full plan:
+> `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`.
 >
 > **2026-07-20 operator ruling — WRITE-side hard-reject of `source='massive'` is ACCEPTED.** Because the UTL
 > manifest-writer source gate is registry-driven off UAC `SOURCE_PRIORITY`
 > (`unified-trading-library/unified_trading_library/manifest_writer/_schema.py` `MissingSourceError`), dropping
 > `massive` makes any manifest write carrying `source='massive'` raise. That is **intended**: no new Massive fetches
-> exist, so the only exposure is a re-consolidation / backfill that tries to re-stamp legacy `batch_massive` rows — such
-> a job MUST NOT re-write those rows before the gated GCS purge. **READ-side recognition is unaffected** — both
-> `batch_massive` `PipelineMode` and `possible_manifest` stay, per the paragraph above — so this ruling narrows only the
-> write path. Side effect of the same registry change: the 6 tradfi cells are now single-source, so `source_required()`
-> returns `False` for them and the writer auto-stamps the sole remaining source instead of leaving `source=""`.
+> exist, and the legacy `batch_massive` rows this ruling originally protected are now moot — the gated GCS purge
+> **COMPLETED 2026-07-21** (1,701,422 objects → 0), so there is nothing left to accidentally re-stamp. **READ-side
+> recognition** (`batch_massive` `PipelineMode` and `possible_manifest`) is technically still present in code but no
+> longer guards any real objects — safe to remove, per the paragraph above. So this ruling narrows only the write path.
+> Side effect of the same registry change: the 6 tradfi cells are now single-source, so `source_required()` returns
+> `False` for them and the writer auto-stamps the sole remaining source instead of leaving `source=""`.
 
 > **Status:** authoritative (operator decision 2026-06-18). **Code SSOT:**
 > `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py` (exported from

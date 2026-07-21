@@ -229,9 +229,10 @@ post-2026-07-19 tradfi chain object without the tail is a genuine regression and
 
 - **`combo`** keeps the bare `underlying=/ticks.parquet` fan-in and is deliberately outside the full-id filename guard —
   a documented carve-out (leg-id grammar unsettled), not drift.
-- **`batch_massive`** — Massive was removed as a tradfi source 2026-07-19, but `batch_massive` `PipelineMode` +
-  `possible_manifest` **read-recognition is KEPT until the gated GCS purge completes**. Suppressing this is not
-  optional: without it, the ~1.47M Massive objects read as orphans. See
+- **`batch_massive`** — HISTORICAL carve-out, no longer active. Massive was removed as a tradfi source 2026-07-19, and
+  the gated GCS purge **COMPLETED 2026-07-21** (1,701,422 objects → 0, accepted permanent loss, operator Option C). 0
+  Massive objects remain, so the orphan-suppression no longer guards anything; `batch_massive` `PipelineMode` +
+  `possible_manifest` read-recognition can now be removed from code. See
   [`tradfi-databento-sourcing-ssot.md`](tradfi-databento-sourcing-ssot.md).
 
 The tradfi corpus is canonical on **filenames only** — the manifest measured **0 canonical rows across all years**, and

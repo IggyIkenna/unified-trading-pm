@@ -121,13 +121,17 @@ The operator sequenced code+data changes AFTER the SSOT. These are ready; each n
 there in the CEFI CANONICAL SPEC section — contradicting the keep-non-MVP ruling + would delete real COIN-M data) →
 moved to KEPT.
 
-**C2 — OPERATOR RULINGS needed (5, parked)**:
+**C2 — OPERATOR RULINGS needed (4 still parked; C2a RULED 2026-07-20, D1)**:
 
-- **C2a [P2] `instrument_type` COLUMN case — UPPER vs lowercase (⚠ affects the SSOT I just shipped).** The cross-asset
-  SSOT §7 + the defi plan say the manifest `instrument_type` COLUMN is lowercase; but tradfi + cefi ALREADY SHIPPED
-  scripts that UPPERCASE the column (both citing "operator 2026-07-18"). The GCS path SEGMENT is definitely lowercase;
-  the id middle segment is UPPER; the COLUMN is the open question. **REC: confirm UPPERCASE column (it shipped) → then
-  correct SSOT §7 + the defi plan** (codex edit = operator-gated). A self-caught inconsistency in my SSOT.
+- **C2a [P2] `instrument_type` COLUMN case — ✅ RULED 2026-07-20 (operator ruling D1): UPPERCASE column, catalogue
+  wins.** ~~UPPER vs lowercase (⚠ affects the SSOT I just shipped). The cross-asset SSOT §7 + the defi plan say the
+  manifest `instrument_type` COLUMN is lowercase; but tradfi + cefi ALREADY SHIPPED scripts that UPPERCASE the column
+  (both citing "operator 2026-07-18"). REC: confirm UPPERCASE column (it shipped) → then correct SSOT §7 + the defi plan
+  (codex edit = operator-gated).~~ Recorded in
+  [`../data_pipeline_reconciliation_skill_2026_07_20.md`](../data_pipeline_reconciliation_skill_2026_07_20.md) §
+  "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20" (D1) and reflected by the tradfi plan's Phase-B "CASING FREEZE
+  LIFTED 2026-07-20, D1" banner. The GCS path SEGMENT stays lowercase; the id middle segment stays UPPER; the manifest
+  `instrument_type` COLUMN is now UPPERCASE. Codex §7/§11 correction already shipped (reconciliation-skill tick 20).
 - **C2b [P1] cefi Track-2 reopen-50.79%** — `cefi_consolidated_closeout:119` autonomously RE-OPENED the archived
   completion program + REVERSED the operator's 50.79% coverage acceptance. Human-only governance; do NOT resume the
   backfill until explicit confirm/deny.

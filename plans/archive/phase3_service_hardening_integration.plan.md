@@ -1,10 +1,9 @@
 ---
 name: phase3-service-hardening-integration
-overview:
+overview: >-
   Hardens all 19 T4 services, 3 T5 API services, and 11 T6 UIs in strict DAG order; closes with L2→L3a→L3b validation
-  sequence and healthy declaration. Requires Phase 1 and Phase 2 fully complete.
-  NOTE (2026-03-13 audit): T4 count corrected from 14 to 19 per WORKSPACE_MANIFEST_DAG.svg
-  (adds FCIS, FMTS, FSS, SVS, elysium-defi-system).
+  sequence and healthy declaration. Requires Phase 1 and Phase 2 fully complete. NOTE (2026-03-13 audit): T4 count
+  corrected from 14 to 19 per WORKSPACE_MANIFEST_DAG.svg (adds FCIS, FMTS, FSS, SVS, elysium-defi-system).
 type: code
 epic: epic-code-completion
 status: superseded
@@ -173,6 +172,19 @@ depends_on:
 
 isProject: true
 ---
+
+## Deferred work — migrated to: `plans/active/issues/strategy_service_batch_risk_compute_unimplemented_2026_07_21.md` — successor:
+
+strategy_service_batch_risk_compute_unimplemented_2026_07_21 (verified 2026-07-21, batch-5 archived-plan discipline
+triage). Of the 5 GH-BACKLOG items in the tail section: `risk-batch-compute-unimplemented` is the ONE genuinely
+still-open item (confirmed live in `strategy-service/strategy_service/risk/cli/handlers/compute_handler.py` —
+`_compute_batch_risk()` was never implemented, bounced between this plan and its own origin
+`stub_completion_interfaces_and_infra.plan.md` without ever landing on an active tracker) — migrated to the new issue
+doc above. The other 4 are MOOT: `gas-estimator-live-umi-feed` (module rewritten, `gas_estimator.py` no longer exists),
+`balancer-eth-venue-implementation` (implemented — `BALANCER-ETHEREUM` live in UAC venue registry),
+`futures-roll-adjuster-calendar` + `futures-basis-mark-price-features` (both closed by named archived successors
+`tradfi_futures_roll_adjuster_centralisation_2026_06_17` /
+`tradfi_canonical_futures_contract_hard_required_fields_2026_05_13`).
 
 ## DAG Pipeline Order
 

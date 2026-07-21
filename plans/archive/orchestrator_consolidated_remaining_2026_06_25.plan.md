@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Orchestrator / escalation / fleet-ops — consolidated REMAINING work (single SSOT; supersedes 7 prior orchestrator plans + 4 issue docs)
+title:
+  Orchestrator / escalation / fleet-ops — consolidated REMAINING work (single SSOT; supersedes 7 prior orchestrator
+  plans + 4 issue docs)
 summary:
 status: superseded
 nature: record
@@ -20,10 +22,41 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 14
 estimate_calibrated_ai_days: 11.2
-supersedes: [orchestrator_self_healing_hardening_2026_06_21 (1 open item migrated; done items + decision log preserved in source), orchestrator_agent_type_oversight_coverage_2026_06_17 (1 open item + 2 deferred migrated; done preserved), orchestrator_account_failover_resume_respawn_2026_06_17 (1 open NICE-TO-HAVE migrated; done preserved), 'orchestrator_human_central_vm_split_2026_06_12 (1 open [OPERATOR] + 1 open [INFRA] DEFERRED migrated; done preserved)', 'agent_orchestrator_dashboard_monitoring_2026_06_19 (5 open [OPERATOR]-gated items migrated; done preserved)', 'fleet_git_health_orchestrator_2026_06_10 (1 open [VERIFY] migrated; done preserved)', dispatch_strict_vm_matching_2026_06_24 (all open items migrated; done 0 — plan was all open), issues/agent_orchestrator_alerts_triage_2026_06_20 (1 open item migrated; done preserved; issue fully archived), issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22 (open items migrated as todos; issue archived), issues/orchestrator_spawn_failure_slack_alert_gap_2026_06_25
-    (all items DONE — pure archive), 'issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19 (all items DONE — pure archive; parent_epic infrastructure_master not orchestrator_master, but issue referenced orchestrator surface)']
-source: ['the 7 plans + 4 issues above (second-level consolidation; first-level 2026-06 fold collapsed many individual plans into themed ones, most now done)', parallel rationale-extraction sweep 2026-06-25 (slot-3·laptop) — open items + decision context harvested verbatim from each source]
+supersedes:
+  [
+    orchestrator_self_healing_hardening_2026_06_21 (1 open item migrated; done items + decision log preserved in source),
+    orchestrator_agent_type_oversight_coverage_2026_06_17 (1 open item + 2 deferred migrated; done preserved),
+    orchestrator_account_failover_resume_respawn_2026_06_17 (1 open NICE-TO-HAVE migrated; done preserved),
+    "orchestrator_human_central_vm_split_2026_06_12 (1 open [OPERATOR] + 1 open [INFRA] DEFERRED migrated; done
+    preserved)",
+    "agent_orchestrator_dashboard_monitoring_2026_06_19 (5 open [OPERATOR]-gated items migrated; done preserved)",
+    "fleet_git_health_orchestrator_2026_06_10 (1 open [VERIFY] migrated; done preserved)",
+    dispatch_strict_vm_matching_2026_06_24 (all open items migrated; done 0 — plan was all open),
+    issues/agent_orchestrator_alerts_triage_2026_06_20 (1 open item migrated; done preserved; issue fully archived),
+    issues/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22 (open items migrated as todos; issue archived),
+    issues/orchestrator_spawn_failure_slack_alert_gap_2026_06_25 (all items DONE — pure archive),
+    "issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19 (all items DONE — pure archive; parent_epic
+    infrastructure_master not orchestrator_master, but issue referenced orchestrator surface)",
+  ]
+source:
+  [
+    "the 7 plans + 4 issues above (second-level consolidation; first-level 2026-06 fold collapsed many individual plans
+    into themed ones, most now done)",
+    parallel rationale-extraction sweep 2026-06-25 (slot-3·laptop) — open items + decision context harvested verbatim
+    from each source,
+  ]
 ---
+
+## Deferred work — migrated to: `plans/epics/agent_operating_framework_master.md` — successor:
+
+agent_operating_framework_master (verified 2026-07-21, batch-5 archived-plan discipline triage). Of the 7 open items:
+the 2 WS-D items are MOOT — human-planning VM migration is now established architecture (see
+`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`), and the 37GB-OOM class was fixed via
+`earlyoom`/systemd `MemoryMax` (`codex/05-infrastructure/agent-orchestrator-api-host.md`) plus the exact per-slot-cgroup
+suggestion shipped in `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`. The 5 WS-E items (per-agent
+messaging foundation, fleet-vs-tab surface attribute, main-tab chats, fleet swarm list, retire the collapsed custom-role
+tab) are REAL and still unshipped (verified against current `agent-orchestrator` source) but were explicitly deferred to
+next quarter by the epic itself — revive from there, not a fresh doc.
 
 # Orchestrator / Escalation / Fleet-Ops — Consolidated Remaining Work
 

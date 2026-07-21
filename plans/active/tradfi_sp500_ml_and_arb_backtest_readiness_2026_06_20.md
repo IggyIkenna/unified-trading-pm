@@ -14,8 +14,8 @@ tags: [tradfi, sp500, ml, backtest, features, es, vix, arb]
 related:
   [
     ../epics/tradfi_master.md,
-    ./tradfi_manifest_canonicalisation_2026_06_01.md,
-    ./tradfi_massive_dual_source_2026_05_28.md,
+    ./data_completion_tradfi_2026_07_15.md,
+    ./tradfi_v9_stage1_finish_2026_07_06.md,
     ../active/master_to_live_defi_2026_05_23.md,
   ]
 created: "2026-06-12"
@@ -53,11 +53,14 @@ drift_direction: advance-code
 > - The **strategy catalogue completeness** (S&P + price-arb archetypes × venue combos) is a cross-cutting concern owned
 >   by master Group F's strategy-catalogue dependency, not here.
 > - **Instrument / MTDS / MDPS data-clean** for ES/MES/BTC futures + S&P spot + ETFs (the "End-state at May 23"
->   data-clean criteria) is owned by
->   [`tradfi_manifest_canonicalisation_2026_06_01`](./tradfi_manifest_canonicalisation_2026_06_01.md) (manifest v9 +
->   pipeline_mode + honest-absence) and
->   [`tradfi_massive_dual_source_2026_05_28`](./tradfi_massive_dual_source_2026_05_28.md) (Massive/Databento source
->   column). This plan READS clean data; it does not re-do the canonicalisation walk.
+>   data-clean criteria) — the v9 manifest canonicalisation + pipeline_mode + honest-absence work is **DONE** (executed
+>   in [`tradfi_v9_stage1_finish_2026_07_06`](./tradfi_v9_stage1_finish_2026_07_06.md); tracked/reconciled in
+>   [`data_completion_tradfi_2026_07_15`](./data_completion_tradfi_2026_07_15.md)). The former
+>   `tradfi_manifest_canonicalisation_2026_06_01` owner doc was ARCHIVED 2026-07-13 (folded into
+>   `data_completion_tradfi_2026_07_15`). The former `tradfi_massive_dual_source_2026_05_28` "Massive/Databento source
+>   column" premise is dead — Massive was removed as a tradfi source 2026-07-19 (operator: Databento = batch SoT, Yahoo
+>   = daily); that plan is now `status: superseded`. This plan READS clean canonical data; it does not re-do the
+>   canonicalisation walk.
 
 ## Context
 
@@ -112,12 +115,13 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       `futures_chain` + `options_chain` data_types from the MDPS processed-candle layer (data_loader.py:51–55). TRADFI
       MTDS bucket has only `ohlcv_1s`/`ohlcv_1m` — confirmed identical blocker as delta-one (slot-23, 2026-06-24). VM
       launch deferred until MDPS gap resolved. Issue:
-      `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`. **Additionally BLOCKED on VIX
-      data**: CBOE VIX cash index is NOT in TRADFI IS catalog (only CME venue exists). VIX features
-      (`compute_vix_features()`) require VIX OHLCV from Barchart/Yahoo; those are not in the IS-driven features pipeline
-      (CLAUDE.md: "VIX 15m: Barchart preload + Yahoo rolling 60d"). See gap todo below. **Additionally**:
-      `realized_vol` + `vix` calculators exist in features-service but are NOT wired into `FEATURE_GROUPS` or the CLI
-      dispatch — wiring gap todo below.
+      `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`. **VIX sourcing — see the
+      already-RESOLVED ruling below**: VIX cash index was DELETED 2026-06-23; VIX exposure = VX futures via XCBF.PITCH
+      (CFE), and VIX FUTURE is now an MVP instrument (`uac@22e6a534`, MVP +409 expansion). Route
+      `compute_vix_features()` off the existing VX futures OHLCV per the P2 items below. Barchart is a retired tradfi
+      source (`CLAUDE.md`: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). **Additionally**: `realized_vol` + `vix`
+      calculators exist in features-service but are NOT wired into `FEATURE_GROUPS` or the CLI dispatch — wiring gap
+      todo below.
 
 - [ ] [AGENT] P2. **DEFERRED: Wire `realized_vol` feature group into features-volatility CLI dispatch** —
       `compute_realized_vol_features()` in `calculators/realized_vol_calculator.py` exists but is NOT in

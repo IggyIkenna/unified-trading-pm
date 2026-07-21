@@ -6,34 +6,147 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [deployment-api, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-06'
-overview: Harden STEP 5.10/5.11 from soft-warn to hard-fail; audit all repos for cloud SDK violations; fix all Category A/B/C violations; wire gates into quickmerge CI.
+created: "2026-03-06"
+overview:
+  Harden STEP 5.10/5.11 from soft-warn to hard-fail; audit all repos for cloud SDK violations; fix all Category A/B/C
+  violations; wire gates into quickmerge CI.
 todos:
-- {id: p0-scan-category-a, content: Scan all repos for Category A violations (direct cloud SDK imports); produce CLOUD_SDK_VIOLATIONS.md., status: completed}
-- {id: p0-scan-category-b, content: Scan all repos for Category B violations (protocol-leaking symbols); document in CLOUD_SDK_VIOLATIONS.md., status: completed}
-- {id: p0-scan-category-c, content: Scan for direct redis imports outside UCI., status: completed}
-- {id: p0-scan-category-d, content: Re-run os.environ scan (baseline from phase0); confirm current state., status: completed}
-- {id: p1-fix-category-a, content: 'Remove/replace all direct cloud SDK imports — 14/14 fixed (deferred import helpers, TYPE_CHECKING guards, module __getattr__ lazy load). Confirmed 2026-03-05.', status: completed}
-- {id: p1-fix-category-b, content: 'Remove/replace all protocol-leaking symbols (CloudTarget, StandardizedDomainCloudService, gcs_bucket, bigquery_dataset) — 37/37 service source violations fixed. Confirmed 2026-03-06.', status: completed}
-- {id: p1-fix-category-c, content: Replace direct redis imports with UCI AsyncRedisProvider or RedisProvider. deployment-api/cache.py migrated. UCI is the only allowable file with direct redis import., status: completed}
-- {id: p1-baseline-approved, content: market-tick-data-service/inspect_gcs_data_schema.py is an ops root script excluded from SOURCE_DIR scan by quality gate pattern — no noqa comment needed; exclusion documented., status: completed}
-- {id: p2-verify-exit-codes, content: 'Verify all gate scripts exit code 1 when STEP 5.10/5.11 fail. STEP 5.10 at line 329, STEP 5.11 at line 478 of quality-gates.sh. Both use hard-fail exit 1 pattern. Confirmed 2026-03-05.', status: completed}
-- {id: p2-quickmerge-d3, content: Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (fail quickmerge at D3+ if cloud SDK imports detected)., status: completed}
-- {id: p2-per-repo-scripts, content: 'For repos without a per-repo scripts/quality-gate.sh, ensure it sources the template (or add them).', status: completed}
-- {id: p2-codex-readme, content: 'Update codex/06-coding-standards/README.md TL;DR to document STEP 5.10+5.11 as hard gates. Done: intent-level-api-pattern.md created; README.md updated (service_protocol_abstraction.md p5-codex-update, 2026-03-05).', status: completed}
-- {id: p3-bypass-audit-file, content: 'Create QUALITY_GATE_BYPASS_AUDIT.md in workspace root documenting approved exceptions with expiry dates and fix deadlines. Done: QUALITY_GATE_BYPASS_AUDIT.md exists at workspace root (confirmed session 4).', status: completed}
-- {id: p3-bypass-audit-update, content: 'After P1 fixes (completed), update audit file to reflect zero unapproved violations. Done: zero unapproved exceptions; market-tick-data-service/inspect_gcs_data_schema.py excluded by design.', status: completed}
-- {id: verify-cursor-language-server, content: 'In Cursor/VSCode: Cmd+Shift+P → ''Pylance: Restart Language Server''. Confirm import squiggles on unified_internal_contracts and sibling packages are gone across all repos after venvPath fix. (Migrated from pyrightconfig_venv_fix.md verify-cursor.)', status: completed}
-- {id: fix-cloudbuild-template-drift, content: 'WARN 3.14: 44 cloudbuild.yaml files with no enforced canonical template. Create unified-trading-pm/configs/cloudbuild-service-template.yaml as canonical structure. Add QG check to quality-gates.sh: verify cloudbuild.yaml has required steps (test-in-image, vulnerability-scan, push, deploy). Start with canary: 3 services (execution-service, instruments-service, alerting-service). Human review required for service-specific variations — do NOT auto-generate all 44. (Migrated from workspace_audit_remediation_2026_03_07.md fix-cloudbuild-template-drift.)', status: completed}
-- {id: p4-cloudbuild-gate, content: 'For repos with cloudbuild.yaml, add quality-gate step running STEP 5.10+5.11 that blocks the build.', status: pending}
-- {id: p4-buildspec-gate, content: 'For repos with buildspec.aws.yaml, add equivalent check in pre_build phase.', status: pending}
-- {id: p4-github-action, content: Ensure GitHub Action workflows that run tests also run the quality gate check., status: pending}
+  - {
+      id: p0-scan-category-a,
+      content: Scan all repos for Category A violations (direct cloud SDK imports); produce CLOUD_SDK_VIOLATIONS.md.,
+      status: completed,
+    }
+  - {
+      id: p0-scan-category-b,
+      content:
+        Scan all repos for Category B violations (protocol-leaking symbols); document in CLOUD_SDK_VIOLATIONS.md.,
+      status: completed,
+    }
+  - { id: p0-scan-category-c, content: Scan for direct redis imports outside UCI., status: completed }
+  - {
+      id: p0-scan-category-d,
+      content: Re-run os.environ scan (baseline from phase0); confirm current state.,
+      status: completed,
+    }
+  - {
+      id: p1-fix-category-a,
+      content:
+        "Remove/replace all direct cloud SDK imports — 14/14 fixed (deferred import helpers, TYPE_CHECKING guards,
+        module __getattr__ lazy load). Confirmed 2026-03-05.",
+      status: completed,
+    }
+  - {
+      id: p1-fix-category-b,
+      content:
+        "Remove/replace all protocol-leaking symbols (CloudTarget, StandardizedDomainCloudService, gcs_bucket,
+        bigquery_dataset) — 37/37 service source violations fixed. Confirmed 2026-03-06.",
+      status: completed,
+    }
+  - {
+      id: p1-fix-category-c,
+      content:
+        Replace direct redis imports with UCI AsyncRedisProvider or RedisProvider. deployment-api/cache.py migrated. UCI
+        is the only allowable file with direct redis import.,
+      status: completed,
+    }
+  - {
+      id: p1-baseline-approved,
+      content:
+        market-tick-data-service/inspect_gcs_data_schema.py is an ops root script excluded from SOURCE_DIR scan by
+        quality gate pattern — no noqa comment needed; exclusion documented.,
+      status: completed,
+    }
+  - {
+      id: p2-verify-exit-codes,
+      content:
+        "Verify all gate scripts exit code 1 when STEP 5.10/5.11 fail. STEP 5.10 at line 329, STEP 5.11 at line 478 of
+        quality-gates.sh. Both use hard-fail exit 1 pattern. Confirmed 2026-03-05.",
+      status: completed,
+    }
+  - {
+      id: p2-quickmerge-d3,
+      content:
+        Ensure STEP 5.10+5.11 are included in quickmerge.sh D3+ hardening (fail quickmerge at D3+ if cloud SDK imports
+        detected).,
+      status: completed,
+    }
+  - {
+      id: p2-per-repo-scripts,
+      content: "For repos without a per-repo scripts/quality-gate.sh, ensure it sources the template (or add them).",
+      status: completed,
+    }
+  - {
+      id: p2-codex-readme,
+      content:
+        "Update codex/06-coding-standards/README.md TL;DR to document STEP 5.10+5.11 as hard gates. Done:
+        intent-level-api-pattern.md created; README.md updated (service_protocol_abstraction.md p5-codex-update,
+        2026-03-05).",
+      status: completed,
+    }
+  - {
+      id: p3-bypass-audit-file,
+      content:
+        "Create QUALITY_GATE_BYPASS_AUDIT.md in workspace root documenting approved exceptions with expiry dates and fix
+        deadlines. Done: QUALITY_GATE_BYPASS_AUDIT.md exists at workspace root (confirmed session 4).",
+      status: completed,
+    }
+  - {
+      id: p3-bypass-audit-update,
+      content:
+        "After P1 fixes (completed), update audit file to reflect zero unapproved violations. Done: zero unapproved
+        exceptions; market-tick-data-service/inspect_gcs_data_schema.py excluded by design.",
+      status: completed,
+    }
+  - {
+      id: verify-cursor-language-server,
+      content:
+        "In Cursor/VSCode: Cmd+Shift+P → 'Pylance: Restart Language Server'. Confirm import squiggles on
+        unified_internal_contracts and sibling packages are gone across all repos after venvPath fix. (Migrated from
+        pyrightconfig_venv_fix.md verify-cursor.)",
+      status: completed,
+    }
+  - {
+      id: fix-cloudbuild-template-drift,
+      content:
+        "WARN 3.14: 44 cloudbuild.yaml files with no enforced canonical template. Create
+        unified-trading-pm/configs/cloudbuild-service-template.yaml as canonical structure. Add QG check to
+        quality-gates.sh: verify cloudbuild.yaml has required steps (test-in-image, vulnerability-scan, push, deploy).
+        Start with canary: 3 services (execution-service, instruments-service, alerting-service). Human review required
+        for service-specific variations — do NOT auto-generate all 44. (Migrated from
+        workspace_audit_remediation_2026_03_07.md fix-cloudbuild-template-drift.)",
+      status: completed,
+    }
+  - {
+      id: p4-cloudbuild-gate,
+      content: "For repos with cloudbuild.yaml, add quality-gate step running STEP 5.10+5.11 that blocks the build.",
+      status: pending,
+    }
+  - {
+      id: p4-buildspec-gate,
+      content: "For repos with buildspec.aws.yaml, add equivalent check in pre_build phase.",
+      status: pending,
+    }
+  - {
+      id: p4-github-action,
+      content: Ensure GitHub Action workflows that run tests also run the quality gate check.,
+      status: pending,
+    }
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` — successor:
+
+cicd_mvp_ldr_to_main_pipeline_2026_06_30 (verified 2026-07-21, batch-5 archived-plan discipline triage). The 3 open P4
+items assumed build-platform-triggered gating (Cloud Build / CodeBuild / GH Actions test workflows running the check
+directly). Operator decision 2026-06-30 replaced that whole approach: the current mechanism is local
+`quality-gates.sh`-green + `quickmerge` to LDR, then `quality-gates-v2` as a REQUIRED GitHub check on every promote PR
+via branch-protection rulesets (rolled fleet-wide, verified 2026-07-12) — the functional successor of these todos'
+intent, via required-checks rather than embedding the check inside build-platform steps.
 
 # Plan: Quality Gate Hardening — Cloud Agnostic + Protocol Enforcement
 

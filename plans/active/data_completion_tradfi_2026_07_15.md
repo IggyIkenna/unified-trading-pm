@@ -45,6 +45,12 @@ drift_direction: advance-code
 
 ### From `tradfi_manifest_canonicalisation_2026_06_01.md` (archived 2026-07-13 -- TradFi manifest + data canonicalisation (v9 + pipeline_mode partition single-walk, L3 owner for tradfi))
 
+> **🔴 Massive removed/purged 2026-07-19→21, Barchart retired 2026-06-24** — every `massive`/`barchart` reference below
+> (source lists, capture paths, `tradfi_massive_dual_source` cross-links) is STALE. Databento (batch SoT) + Yahoo
+> (daily) are the only live tradfi sources; `batch_massive`/`batch_barchart` PipelineMode recognition is kept read-only
+> for legacy GCS until the gated purge. Do not re-action any Massive/Barchart capture todo below without first
+> re-reading it against this banner.
+
 - [ ] [DATA] P1. Verify the corpus venue / data_type strings are underscore-canonical: data-state shows venues
       `BARCHART/CBOE/CME/FX/ICE/NASDAQ/NYSE/YAHOO_FINANCE` (canonical) BUT also `UNKNOWN` + blank `''` (drift to
       diagnose); data_types `ohlcv_15m/ohlcv_1m/ohlcv_24h/options_chain/tbbo/trades` + blank `''`. Relabel/diagnose the
@@ -83,34 +89,44 @@ drift_direction: advance-code
 > `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract". **(MIGRATED FROM:
 > `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. C0 ONE bundled walk on the tradfi `_index` + objects: (a) `pipeline_mode=` hive partition added to
+- [x] ✅ [DATA] P0. C0 ONE bundled walk on the tradfi `_index` + objects: (a) `pipeline_mode=` hive partition added to
       object paths (`pipeline_mode_partition_migration` RIDER — satisfied here, do NOT run separately); (b) re-version
       manifest rows to **v9** (data-state — assert the rewritten rows actually carry 9, not just the constant); (c)
       **`category=`→`asset_group=` across BOTH object PATHS and manifest `_index` ROWS** + env-split bucket for any
       legacy-form rows that remain (CODE side — writers emit `asset_group=` — already shipped via archived
       `venue_axis_asset_group_vocabulary_2026_04_25`; this is historical data+manifest only); (d) venue/data_type
-      canonical relabel for any drift found in P0; (e) `available_at` preserve-or-backfill (never migration-time). RUN
-      ON A VM via the canonical-migration launcher (gated on L0 tarball-prune fix) — small data scope (≈12,948 cells)
-      may run locally if P0 confirms. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
-      MTDS consolidation ruling.)**
-
-- [ ] [DATA] P0. C-source RIDER (absorbs `tradfi_massive` Task -031): re-consolidate the already-stamped parquet
-      `source` into the `_index` in THIS walk — every tradfi `_index` row carries `source`; multi-source cells (the 6
-      databento+massive/yahoo/barchart cells) emit two rows. Coordinate so `tradfi_massive`'s deferred re-consolidation
-      is NOT run as a separate walk. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
-      MTDS consolidation ruling.)**
-
-- [ ] [DATA] P0. C-pipeline_mode RIDER: confirm the `pipeline_mode=` partition for tradfi lands in THIS walk (satisfies
-      `pipeline_mode_partition_migration_2026_06_01.md` for tradfi). **(MIGRATED FROM:
+      canonical relabel for any drift found in P0; (e) `available_at` preserve-or-backfill (never migration-time).
+      **DONE — executed by `tradfi_v9_stage1_finish_2026_07_06.md`**: apply completed 2026-07-06 (2020-2026, all years,
+      exit_code=0, fatal=0); manifest is 100% `schema_version=9` corpus-wide, 0 blank `pipeline_mode`, 0 blank `source`
+      (verified 2026-07-16, `market-tick-data-service@38cf5dfa`+`@ba866544`, `total=5,553,198 rows`). NOTE: this is the
+      manifest schema-version/partition/relabel migration only — it does NOT by itself canonicalize the
+      raw-tick-parquet/manifest `instrument_id` COLUMN content (a separate, still-in-progress surface — see
+      `codex/02-data/canonical-cutover-register.md`). **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` for 100% of rows (data-state), `pipeline_mode=`
-      partition present + non-null, venue/data_type canonical only, `source` populated (multi-source = two rows),
-      `available_at` non-null. **0 legacy-only cells** (re-run the `(date,venue,data_type)` comparison). This is the
-      C-GREEN signal `bucket_name_ssot…` Phase 6/7 waits on for the legacy `market-data-tick-tradfi-…` decommission.
-      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [DATA] P0. C-source RIDER: re-consolidate the already-stamped parquet `source` into the `_index` — every tradfi
+      `_index` row carries `source` stamped from the live sources only (Databento = batch SoT; Yahoo = daily). DONE
+      alongside C0 (2026-07-16 verification, 0 blank `source` corpus-wide). Dropped the "absorbs `tradfi_massive` Task
+      -031" / "databento+massive/yahoo/barchart cells emit two rows" premise — Massive is removed + purged, Barchart is
+      retired, so there is no live dual-source cell to coordinate a re-consolidation walk for. Legacy
+      `batch_massive`/`batch_barchart` rows already on disk are read-only until the gated GCS purge; re-consolidation
+      must NOT re-stamp `source='massive'` (the UTL writer now hard-rejects it). **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. **Orphan sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).** Measured
+- [x] ✅ [DATA] P0. C-pipeline_mode RIDER: confirm the `pipeline_mode=` partition for tradfi lands in THIS walk
+      (satisfies `pipeline_mode_partition_migration_2026_06_01.md` for tradfi). DONE alongside C0 — see
+      `tradfi_v9_stage1_finish_2026_07_06.md`. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [x] ✅ [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` for 100% of rows (data-state), `pipeline_mode=`
+      partition present + non-null, venue/data_type canonical only, `source` populated, `available_at` non-null. **0
+      legacy-only cells.** DONE — `tradfi_v9_stage1_finish_2026_07_06.md` (2026-07-16):
+      `total=5,553,198 rows ·     schema_version=9=5,553,198 (100%) · blank pipeline_mode=0 · blank source=0`,
+      independently verified. This is the C-GREEN signal `bucket_name_ssot…` Phase 6/7 waits on for the legacy
+      `market-data-tick-tradfi-…` decommission. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
+      2026-07-13 per MTDS consolidation ruling.)**
+
+- [x] ✅ [DATA] P0. **Orphan sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).** Measured
       (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-tradfi-prd` 5,299,037 (~93% of legacy
       5,696,400), current to `day=2026-05-18` (= legacy). Sample `-prd` parquet
       `day=2026-05-18/asset_group=tradfi/venue=CME/instrument_type=combo/data_type=ohlcv_1m/underlying=SP500/ticks.parquet`
@@ -119,14 +135,20 @@ drift_direction: advance-code
       `pipeline_mode=` paths → the pre-existing legacy-FORM `-prd` objects become ORPHANS; E5/E7 MUST delete the
       legacy-FORM `-prd` objects too (not only the legacy SOURCE bucket). Legacy carries 3.52M noncurrent objects → E7's
       bulk-delete (incl. the 12 hyphen 0-row-placeholder prefixes) must also purge noncurrent versions; count
-      comparisons use Monitoring `type=live-object`. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
-      2026-07-13 per MTDS consolidation ruling.)**
+      comparisons use Monitoring `type=live-object`. **DONE — orphan_class_E=0, unknown_prefixes=0** corpus-wide,
+      confirmed 2026-07-10 17:17:22 UTC (`tradfi_v9_stage1_finish_2026_07_06.md`, fresh full corpus-wide re-sweep).
+      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. Notify `tradfi_massive_dual_source` to flip its Task -031 (manifest re-consolidation) — executed here
-      as the C-source rider; cross-link both ways. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
-      2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [DATA] P1. ~~Notify `tradfi_massive_dual_source` to flip its Task -031 (manifest re-consolidation) — executed
+      here as the C-source rider; cross-link both ways.~~ **DONE-MOOT 2026-07-21** — `tradfi_massive_dual_source`'s
+      dual-source premise is dead (Massive removed 2026-07-19, purged 2026-07-21; that plan is now
+      `status: superseded`). No separate re-consolidation walk exists to coordinate; the C-source rider above already
+      covers the live-source case. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
+      MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
+- [x] ✅ [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget). **DONE —
+      full-VM apply completed 2026-07-06** (`tradfi_v9_stage1_finish_2026_07_06.md`, 7 VMs, exit_code=0, fatal=0, all
+      years 2020-2026).
   - **DRY-RUN SCOPING DONE (slot-6 2026-06-03 — sharding/perf scoped, NO apply; full-VM run stays operator-gated):**
     - **Migrator** `migrate_tradfi_to_v9_canonical.py --dry-run` (real GCS `tradfi-prd`): **5,305,520 objects** planned,
       **moved=0 (dry)**, **100,698 L-hyphen placeholders correctly skipped** (0-row guard), **0 errors** → clean,
@@ -139,38 +161,44 @@ drift_direction: advance-code
       Migrator is `--apply`-gated + dry-by-default; E3 drain + snapshot still precede the real run. **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): NEW `rebuild_tradfi_manifest.py`.
+- [x] ✅ [DATA] P2. E5 build-spec reference (superseded by the DONE item above): NEW `rebuild_tradfi_manifest.py`.
       REFERENCE: cefi E5 DONE (mtds@2c3a479b) — copy its structure (optional `pipeline_mode=` regex segment, DAY-level
       list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via
       path-or-`derive_pipeline_mode_for_row(venue,"tradfi",dt)`). The post-migrator tradfi canonical form (the L-hive
       shape + inserted pipeline_mode) is
       `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/[underlying={U}/]{file}`
-      (chain bundles keep `underlying=`). Stamp `source` via `source_string_for(pipeline_mode)`
-      (databento/massive/yahoo/ barchart/eia — REQUIRED for tradfi v9 per `MissingSourceError`) + `available_at`
-      (parquet col else day-EOD-UTC). NO hyphen-tree rows (those are 0-row placeholders excluded by the migrator +
-      deleted at E7). Executes `tradfi_massive` Task -031 (source re-consolidation) — cross-link + flip there.
-      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      (chain bundles keep `underlying=`). Stamp `source` via `source_string_for(pipeline_mode)` — **live set only:
+      databento/yahoo (+ eia where in scope)**; `massive`/`barchart` are legacy-only (removed/retired) and MUST NOT be
+      stamped on new writes (`MissingSourceError` gate hard-rejects `source='massive'`). NO hyphen-tree rows (those are
+      0-row placeholders excluded by the migrator + deleted at E7). DONE — ran 2026-07-07
+      (`tradfi_v9_stage1_finish_2026_07_06.md`, `market-tick-data-service@4ccf52c6`). **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical (diagnose, don't bulk-rename).
       **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
+- [x] ✅ [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
       data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in
       `tradfi_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy
       `market-data-tick-tradfi` permanently** + **bulk-delete the 12 `day-*` hyphen 0-row-placeholder prefixes** in
       `tradfi-prd` (~110k objects — the issue-doc **Pattern-1 cleanup, now executed here**; pre-delete guard: re-assert
       0-row per object before deleting, abort the prefix on any non-empty object). This SUPERSEDES the
-      `gcs_hive_partition_malformed_paths_remediation` Pattern-1 todo. **(MIGRATED FROM:
+      `gcs_hive_partition_malformed_paths_remediation` Pattern-1 todo. **DONE — apply 2026-07-06 exit_code=0/fatal=0; E5
+      rebuild ran 2026-07-07; orphan_class_E=0 corpus-wide 2026-07-10; schema_version=9=100% (5,553,198 rows, 0 blank
+      pipeline_mode/source) confirmed 2026-07-16** (`tradfi_v9_stage1_finish_2026_07_06.md`). **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. **COVERAGE GAP (surfaced by the 0-row-placeholder finding, 2026-06-02)**: tradfi **equities/ETF
-      (NYSE/NASDAQ)** were NEVER genuinely ingested — only the 0-row Massive dry-run placeholders exist; the real `day=`
-      hive corpus is **CME databento only**. This is a real gap (Data-Pipeline-Correctness HARD RULE — every cell in
-      scope; data exists via databento/massive paid tiers). Backfill equities/ETF ohlcv/trades/tbbo via the
-      databento/massive ingest path (NOT a canonicalisation blocker — the migrator + E5 ship on the CME-real corpus;
-      track the equities/etf backfill as its own ingest item under `tradfi_massive_dual_source` / tradfi epic). Until
-      backfilled, the manifest must show these cells as MISSING/`attempted_unattempted`, never empty_confirmed (CF-11).
-      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [ ] [DATA] P1. **COVERAGE GAP → IN PROGRESS (was: surfaced by the 0-row-placeholder finding, 2026-06-02).** tradfi
+      **equities/ETF (NYSE/NASDAQ)** were originally never genuinely ingested — only the 0-row Massive dry-run
+      placeholders existed; the `day=` hive corpus was CME databento only. **UPDATE 2026-07-21**: the Databento
+      equity/ETF backfill is RUNNING (SPOT) — NASDAQ g01-g05 + NYSE g01-g05, `ohlcv_1m`+`ohlcv_1s`, window 2023-2026
+      (XNAS/XNYS Databento discovery floor 2023-04-15); launched-and-healthy tranche measured 449M+ records, 0 real
+      errors, 0 quarantine (`tradfi_consolidated_closeout_2026_07_18.md`). Equities/ETF are being ingested via Databento
+      — Massive is NOT the ingest path (removed/purged); drop the `tradfi_massive_dual_source` cross-link. Track
+      remaining coverage against this running backfill's completion + manifest verification, not as a never-ingested
+      gap. Until fully backfilled, the manifest must still show not-yet-covered cells as
+      MISSING/`attempted_unattempted`, never `empty_confirmed` (CF-11). **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [CODE] P1. ⑦ tradfi could-exist denominator seed — build the `--catalog-path` parquet from the tradfi IS catalog
       (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
@@ -228,8 +256,11 @@ drift_direction: advance-code
     2026-05-04, stopped after 2026-05-22** (freeze FINDING in
     `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`); the catalogue marks **651,661/684,372 (95%) delisted** →
     liveness PROVISIONAL. Seeding `expected_unattempted` against a frozen catalogue would write a WRONG could-exist
-    denominator. **Unblock = the Massive IS reference adapter (gate-b remediation, shipped this session — see below) →
-    re-feed `by_date/` → regenerate the catalogue → THEN seed.**
+    denominator. **Unblock (re-scoped 2026-07-21 — Massive removed/purged, its adapter is dead): re-feed `by_date/` via
+    the Databento IS reference-data adapter (`instruments_service/reference_data/router.py::_route_databento`,
+    `DatabentoReferenceDataAdapter`, `--source databento`) → regenerate the catalogue → THEN seed.** Not yet run under
+    this replacement path — do not assume gate-b is unblocked until a fresh liveness read confirms `by_date/` is
+    current.
   - **(c) accurate UAC + v9 indices: ⏳ TOOL-READY (UPDATED slot-6 2026-06-07 session-2) — the G1-V8 migrator is now
     BUILT (is@febb899e) + tradfi dry-run GREEN (20,388 `_index` rows → v9 100%, all CF stamps; see Step-1 UPDATE).** The
     `instruments-store-tradfi` `_index` is still v8 ON DISK (the dry-run only PROJECTS v9) AND the
@@ -240,8 +271,9 @@ drift_direction: advance-code
     rewritten by the walk) — so G1.run rides AFTER that v9 walk. It also hard-requires a VM
     (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`).
   - **Disposition**: dry-run PROVEN (Step 2); the irreversible seed waits on (b)+(c). NOT `DEFERRED` — gated with named
-    unblocks (Massive capture-restore + the v9 walks). parent_epic: mtds_mdps_master. **(MIGRATED FROM:
-    `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+    unblocks (Databento IS reference-capture restore + the v9 walks; Massive capture is dead — removed/purged
+    2026-07-19/21). parent_epic: mtds_mdps_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
+    2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [INFRA] P1. **Wire the tradfi `build_instrument_catalogue.py` daily rollup scheduler (GATED on gate-b capture
       restore).** FINDING (slot-6 2026-06-07): the G1 lifecycle producer `build_instrument_catalogue.py` has **NO
@@ -251,10 +283,10 @@ drift_direction: advance-code
       artefact (`generate_instrument_catalogue.py`, the availability-matrix), and their instruments-store `for_each`
       **OMITS tradfi** (only cefi/defi/sports/prediction) AND uses legacy no-env bucket names (`-central-element-…` not
       `-prd-`). So even the matrix regen never reads tradfi. **Gated** behind gate-b (a scheduler over a frozen
-      `by_date/` self-perpetuates a stale catalogue) — wire once Massive capture restores `by_date/`. Owner:
-      vm-cross-cutting (shared producer scheduler) + slot-6 (confirm tradfi inclusion). Repo: deployment-service
-      (terraform). parent_epic: mtds_mdps_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`,
-      2026-07-13 per MTDS consolidation ruling.)**
+      `by_date/` self-perpetuates a stale catalogue) — wire once IS reference-capture (Databento-based; the Massive
+      capture path is removed/purged) restores `by_date/`. Owner: vm-cross-cutting (shared producer scheduler) + slot-6
+      (confirm tradfi inclusion). Repo: deployment-service (terraform). parent_epic: mtds_mdps_master. **(MIGRATED FROM:
+      `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [SCRIPT] P2. **⑫ FOLLOW — re-run `reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run` AFTER the
       tradfi v9 object `--apply`** to confirm 0 false phantoms across all 5 source pipeline_modes
@@ -313,13 +345,19 @@ per MTDS consolidation ruling.)**
       schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
       **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. **NEXT — run Massive tradfi reference capture → regenerate catalogue → unblock gate-b (VM, requires
-      live `MASSIVE_API_KEY`).** With the adapter shipped (above), run IS instrument capture with `--source massive` to
-      refill `instrument_availability/by_date/` to today → regenerate the catalogue
-      (`build_instrument_catalogue --asset-group tradfi --apply`, monotonic guard accepts growth) → liveness no longer
-      marks ~651K instruments delisted → unblocks gate-b → then G1.run `--apply-write` (Step 3) becomes runnable.
-      VM-gated (live creds + per-VM shard isolation). Repo: instruments-service. parent_epic: mtds_mdps_master.
-      **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [ ] ❌ [DATA] P1. ~~NEXT — run Massive tradfi reference capture → regenerate catalogue → unblock gate-b (VM, requires
+      live `MASSIVE_API_KEY`). With the adapter shipped (above), run IS instrument capture with `--source massive` to
+      refill `instrument_availability/by_date/` to today.~~ **SUPERSEDED 2026-07-21** — Massive removed as a tradfi
+      source (operator ruling 2026-07-19, `uac@a2beed46`) and subscription terminated + data purged (operator Option C
+      2026-07-21). No `--source massive` capture; a `source='massive'` write now hard-rejects (`MissingSourceError`,
+      2026-07-20 ruling). **Replacement path**: run IS instrument capture with `--source     databento`
+      (`DatabentoReferenceDataAdapter`, `instruments_service/reference_data/router.py`) to refill
+      `instrument_availability/by_date/` → regenerate the catalogue
+      (`build_instrument_catalogue --asset-group tradfi --apply`) → THEN re-check whether liveness still marks ~651K
+      instruments delisted → unblocks gate-b → then G1.run `--apply-write` (Step 3) becomes runnable. Not yet run under
+      this replacement path (do not assume gate-b is unblocked). Repo: instruments-service. parent_epic:
+      mtds_mdps_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
 
 ### From `macro_econ_adapter_scaffolds_2026_06_09.md` (archived 2026-07-13 -- Macro/alt-data free adapter scaffolds (fear_greed / CFTC COT / Baker Hughes / EIA))
 

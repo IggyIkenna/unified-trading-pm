@@ -154,14 +154,16 @@ Read in full before touching any todo — this is the concrete acceptance spec, 
       green (exit 0), including the fix for a real pre-existing test-signature regression in
       `tests/unit/test_cefi_tradfi_comprehensive.py` (`_parse_cme_calendar_spread_legs` calls still passed a 2nd `venue`
       positional arg after the function's signature was narrowed to 1 arg as part of the venue-drop decision above).
-- [ ] [SCRIPT] P1 (NEW, filed 2026-07-09). **TradFi single-leg `@LIN`/`@INV`-`YYYYMMDD` extension — NOT implemented,
-      needs its own dedicated fix plan.** The parent issue doc's finding 1 was REVERSED 2026-07-09 (operator: "I'd
-      rather adjust tradfi... that's the whole point of cross-AG normalisation") — TradFi single-leg dated derivatives
-      (`FUTURE`/`OPTION`) are now in scope for the same margin-marker suffix already shipped for CeFi. This is out of
-      scope for THIS plan (multi-leg combos only) and is a comparably large migration on its own (every TradFi
-      `FUTURE`/`OPTION` `instrument_key` site in both Databento and IBKR adapters + its own historical catalog/by_date
-      migration) — recommend filing a dedicated plan under `instruments_master`, same pattern as this one, rather than
-      folding it into an unrelated fix.
+- [x] [SCRIPT] P1 (filed 2026-07-09, writer-side DONE 2026-07-18). **TradFi single-leg `@LIN`/`@INV`-`YYYYMMDD`
+      extension.** The parent issue doc's finding 1 was REVERSED 2026-07-09 (operator: "I'd rather adjust tradfi...
+      that's the whole point of cross-AG normalisation") — TradFi single-leg dated derivatives (`FUTURE`/`OPTION`) are
+      in scope for the same margin-marker suffix already shipped for CeFi. The CATALOGUE-surface writer is now
+      IMPLEMENTED: `instruments-service@287d1607` — the Databento catalogue adapter emits canonical
+      `PRODUCT_ROOT-USD@LIN` `instrument_key` for FUTURE/OPTION (was raw sanitized symbol), `canonical_instrument_id`
+      byte-equal, old colon/month additive builder deleted. **Scope note**: this is the catalogue-adapter writer path
+      only — it does not, by itself, rewrite the historical raw-tick-parquet/manifest `instrument_id` COLUMN content for
+      single-leg rows already on disk; that content-level migration is tracked separately under the TradFi
+      canonical-path migration effort (`plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`).
 - [ ] [SCRIPT] P2 (NEW, filed 2026-07-09). **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing
       combo builders** (`cefi/deribit_combo_adapter.py`, `cefi/tardis/combos.py`) — the operator spec (2026-07-09)
       explicitly made this cross-asset-group, not TradFi-only. Not attempted in this pass (untouched by this commit's
