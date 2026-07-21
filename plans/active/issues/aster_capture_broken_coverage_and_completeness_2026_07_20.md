@@ -137,19 +137,30 @@ REST API needs per-PROCESS request discipline; VM count is irrelevant when the b
   `CEFI_BASE_ASSET_UNIVERSE`; `is_in_mvp_capture_universe(ASTER, 1000PEPE)` verified True. Catalogue rebuild + backfill
   still pending (folds into STEP 3 of the HL k-coin plan — same UAC-deploy-gated blocker, see
   `hl_multiplier_kcoins_excluded_from_mvp_universe_2026_07_20.md`).
-- 🟡 **C. Run the ASTER trades backfill** — IN PROGRESS, part done:
-  - ✅ **1000-multiplier coins (the direct analog of the HL k-coin fix, fix B above): SHIPPED + VERIFIED.** Surgical run
+- ✅ **C. Run the ASTER trades backfill — COMPLETE + VERIFIED.**
+  - ✅ **1000-multiplier coins.** Surgical run
     `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS="1000PEPE;1000BONK;1000SHIB;1000FLOKI;1000LUNC;1000CHEEMS; 1000SATS;1000WOJAK;1000NEX;1000XEC" YEARS="2024 2025 2026" SHARD_DAYS=21`
     (RUN_TS 20260720-205932, 32 VMs, all self-shut-down clean, real rows confirmed for 1000PEPE/1000SHIB/1000FLOKI in
     spot-checks).
-  - 🟡 **Full 448-perp universe re-run: IN PROGRESS**, mtds@accd8aa4 (rate-limit bundle) then mtds@aa72787b (row_key
-    fix) via `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS=ALL YEARS="2024 2025 2026" SHARD_DAYS=21` (RUN_TS
-    20260720-203019, 46 VMs). Measured healthy (not stalled): ~9min/day, ~500-650k rows/day, throttle+backoff working
-    correctly on 429s (retries succeed or route to a real `attempted_failed`, no more storm). This is a genuinely
-    multi-hour operation (~3.15h/shard for a full 21-day window) — NOT yet complete as of this note.
+  - ✅ **Full 448-perp universe re-run — COMPLETE.** mtds@accd8aa4 (rate-limit bundle) + mtds@aa72787b (row_key fix) via
+    `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS=ALL YEARS="2024 2025 2026" SHARD_DAYS=21` (RUN_TS
+    20260720-203019, 46 VMs, all 46/46 self-shut-down over ~3.7h). VERIFIED: instrument-parquet counts across the full
+    range (2024-01-01 → 2026-07-20) grow from 60 → 453 tracking ASTER's real universe growth over time (sampled 12
+    dates); `capture_status` for 2026-07-01 ties out EXACTLY against GCS (441 `captured` manifest rows = 441 real
+    parquet files); **zero `attempted_failed` rows across the entire backfill** — the rate-limit fix worked well enough
+    that no persistent 429 exhaustion occurred at all (no failure-path exercise needed, so the row_key fix's correctness
+    here is unexercised-but-present, confirmed separately via the earlier 1000-coin run's 105 logged
+    429-retry-then-succeed sequences). Total canonical manifest rows grew 9,847,687 → 10,409,187 organically (matches
+    the ~561k new ASTER/trades rows written), confirming the earlier 429-incident CAS cleanup remained durable
+    throughout (no resurrected poisoned rows).
   - NOT yet done: genesis clip to the native 2023-07-22 (currently backfilling from ASTER's UAC start_date 2024-01-01,
     which already excludes the pre-launch Astherus-proxied window — GAP-4's specific clip to the databento-verified date
     is a separate, smaller, still-open item).
 - ✅ **D. Provenance hardening (host-guard half)** — SHIPPED mtds@accd8aa4. `_assert_aster_host()` guards all 3 ASTER
   live-WS connector construction sites (`aster_book_liq_ws.py`) against the latent Binance-host footgun; +3 regression
   tests (`test_aster_ws_connector.py::TestAsterHostGuard`). GAP-4 genesis clip to 2023-07-22 NOT yet done.
+
+## Status (2026-07-20/21): A, B, C, D(host-guard) all shipped + verified with real data. Remaining open: GAP-4 genesis
+
+clip (small, separate) and the "why did capture stop 2026-06-20" historical question (moot now — full backfill re-run
+supersedes it). Not yet `status: resolved` pending the GAP-4 clip.
