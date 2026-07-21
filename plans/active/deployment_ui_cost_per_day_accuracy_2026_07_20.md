@@ -121,10 +121,18 @@ principle, wrong in aggregation.
       `cost_basis: "complete"`, `cefi-live-trading-1` → `cost_basis: "partial"`. `pw:L2 ✓` | regression:
       `tests/smoke/deployments-cost-cell.spec.ts` (two new cases: complete-day renders the normal tone, not amber;
       partial-day renders `text-amber-400` and asserts no "partial" text is added to the visible figure).
-- [ ] [REVIEW] P1. Unit tests — (a) 1-day-in-window → avg == actual (regression for the reported symptom); (b) N active
-      days → avg == sum/N; (c) 24h basis is complete-day/normalised, not `max`; (d) AWS ARN→name mapping attributes a
-      known CUR row; (e) unmapped AWS row stays `None`; (f) `cost_basis` is `"partial"` iff no complete day exists.
-      `bash scripts/quality-gates.sh` green in deployment-api.
+- [x] ✅ [REVIEW] P1. Unit tests — (a) 1-day-in-window → avg == actual (regression for the reported symptom); (b) N
+      active days → avg == sum/N; (c) 24h basis is complete-day/normalised, not `max`; (d) AWS ARN→name mapping
+      attributes a known CUR row; (e) unmapped AWS row stays `None`; (f) `cost_basis` is `"partial"` iff no complete day
+      exists. `bash scripts/quality-gates.sh` green in deployment-api. — deployment-api@de1f680: added
+      `test_per_resource_daily_one_day_in_window_avg_equals_actual` (a, using the live-reproduced `$4.432787` figure),
+      `test_per_resource_daily_n_active_days_avg_equals_sum_over_n` (b),
+      `test_per_resource_daily_cost_basis_is_partial_iff_no_complete_day_exists` (f) in
+      `tests/unit/api/test_cost_per_resource.py`; (c)/(d)/(e) were already covered by
+      `test_per_resource_daily_three_values`, `test_per_resource_daily_24h_partial_day_normalized`,
+      `test_attach_costs_resolves_aws_arn_via_instance_census`, and
+      `test_attach_costs_unmapped_aws_row_stays_honest_none` from the earlier BACKEND/DATA todos. Full
+      `bash scripts/quality-gates.sh` green (4804 passed, 16 skipped, coverage 80.06%).
 - [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions, active-days
       average, 24h basis, GCP-name/AWS-ARN join, `cost_basis` colour convention) in
