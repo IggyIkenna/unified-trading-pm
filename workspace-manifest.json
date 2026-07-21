@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 73.23,
-        "qg_red_reason": null,
+        "large_file_count": 1,
+        "coverage_pct": null,
         "warn_file_count": 12,
-        "large_file_count": 1
+        "qg_red_reason": null
       }
     },
     "execution-service": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": 73.06,
         "warn_file_count": 0,
-        "large_file_count": 0
+        "qg_red_reason": null
       }
     },
     "unified-trading-api": {
@@ -1387,9 +1387,9 @@
       ],
       "codebase_health": {
         "coverage_pct": 50.95,
-        "qg_red_reason": null,
-        "warn_file_count": 37,
-        "large_file_count": 34
+        "large_file_count": 34,
+        "warn_file_count": 38,
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "none"
@@ -1417,10 +1417,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 74.35,
-        "qg_red_reason": null,
+        "coverage_pct": 74.28,
+        "large_file_count": 14,
         "warn_file_count": 6,
-        "large_file_count": 14
+        "qg_red_reason": null
       },
       "breaking_scan_dir": "none"
     },
