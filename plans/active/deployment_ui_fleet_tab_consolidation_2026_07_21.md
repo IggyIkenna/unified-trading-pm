@@ -157,9 +157,11 @@ Key audit facts driving the merges:
       `DeploymentMatrix`). Both actions refresh the main inventory + the idle-spend rollup together on success.
       tsc/ESLint clean; 2 new tests (delete flow, bulk-reap flow) + full 1051-test suite green; full `quality-gates.sh`
       (base-ui.sh v2.0) green.
-- [ ] [UI] P2. **Idle-spend discoverability** — since Deployments defaults `status=running`, add a quick entry point (an
-      "idle spend" filter/chip or a rollup-card click that applies `status=stopped`/orphan filters) so idle resources
-      aren't hidden.
+- [x] [UI] P2. ✅ **Idle-spend discoverability** — deployment-ui@596c13a. Each of the 4 idle-spend rollup cards now
+      applies `status=stopped` on click (cursor-pointer + hover affordance + `title="Show stopped VMs"`). Updated the
+      Vitest `Card` mock to spread all props through (it previously dropped `onClick`/`role`/etc., silently discarding
+      any click handler in tests) — matches the real `Card` component's forwarding contract. 1 new test + full existing
+      suite green (1052 tests); full `quality-gates.sh` (base-ui.sh v2.0) green.
 - [ ] [UI] P1. **Fold /vm-deployments history into Deployments** — bring the archive/history table (Outcome, Duration,
       Rows Captured, Completed) into the Deployments detail view / a history section. For the archive **log links**,
       link to WS-4's run.log viewer (`deployment_ui_vm_log_viewer_2026_07_20.md`) — do NOT build a second log renderer.
