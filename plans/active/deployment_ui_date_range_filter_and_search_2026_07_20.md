@@ -95,10 +95,12 @@ Full audit transcript available on request; the load-bearing facts:
 
 ## Todos
 
-- [ ] [BACKEND] P0. VM/registry overlap query — `date_from`/`date_to` params on the inventory endpoint; overlap =
+- [x] ✅ [BACKEND] P0. VM/registry overlap query — `date_from`/`date_to` params on the inventory endpoint; overlap =
       `started_at ≤ B AND (completed_at ≥ A OR effective_end ≥ A)` where `effective_end` = `completed_at` if set, else
       `last_heartbeat_at` when heartbeat-stale (>6h, matching the existing reap constant), else open-ended (truly live).
-      Heartbeat-derived rows get `basis: "approx"`.
+      Heartbeat-derived rows get `basis: "approx"`. — deployment-api@ff5bb06 (`_vm_overlap_basis`/`_apply_date_range` in
+      `deployments_inventory.py`; `DeploymentItem` gained `started_at`/`completed_at`/`last_heartbeat_at`/`basis`; 12
+      new unit tests incl. route-level date_from/date_to wiring; `quality-gates.sh` green)
 - [ ] [BACKEND] P0. Archive range-read — bypass the existing 7-day `_ARCHIVE_WINDOW_DAYS` cap for date-range queries
       specifically; read day-partitioned `deployments/archive/<day>/` prefixes directly for the requested range (bounded
       listing only, no whole-corpus walk) up to the real 30-day GCS floor. Beyond 30 days → structured out-of-range
