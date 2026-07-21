@@ -6,8 +6,11 @@
 
 Three sub-rules:
   - **(a) DEFERRED-without-migration-banner** (G-13): if plan body contains
-    `**DEFERRED**` or `[DEFERRED]` or `DEFERRED — ` annotations, the body MUST
-    contain a `## Deferred work — migrated to:` banner naming the successor plan.
+    `**DEFERRED**` or `[DEFERRED]` or `DEFERRED — ` annotations (case-sensitive —
+    uppercase only, so lowercase compound identifiers like `deferred-import` don't
+    false-positive), the body MUST contain a `## Deferred work — migrated to:`
+    banner OR the CLAUDE.md-mandated `## Deferred work after <date>` session-end
+    table naming the successor/disposition.
   - **(b) filename-convention** (G-5): `plans/active/*.md` filenames must match
     `<slug>.md` OR `<slug>_YYYY_MM_DD.md`; `plans/active/issues/*.md` must end
     in `_YYYY_MM_DD.md`.
@@ -34,13 +37,22 @@ import yaml
 
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_discipline_baseline.yaml"
 
-_DEFERRED_RE = re.compile(r"\*\*DEFERRED\*\*|\bDEFERRED\b\s*[—\-]|\[DEFERRED\]", re.IGNORECASE)
-_BANNER_RE = re.compile(r"##\s+Deferred work\s+—\s+migrated to", re.IGNORECASE)
+# Case-SENSITIVE by design (2026-07-21): every genuine deferral marker in this corpus is written
+# uppercase (`**DEFERRED**`, `[DEFERRED]`, `DEFERRED-BLOCKED`/`DEFERRED-FUTURE-WORK`/`DEFERRED-POST-CUTOVER`
+# tags). The prior case-insensitive version false-positived on lowercase compound code identifiers that
+# happen to contain the substring "deferred-" (`deferred-import`, `deferred-freshness`,
+# `freeze-deferred-build-replay` GHA workflow name, "**deferred** to construction time" in prose) — none of
+# those are backlog deferrals needing a banner. See pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md.
+_DEFERRED_RE = re.compile(r"\*\*DEFERRED\*\*|\bDEFERRED\b\s*[—\-]|\[DEFERRED\]")
+_BANNER_RE = re.compile(
+    r"##\s+Deferred work\s+—\s+migrated to|##\s+Deferred work after\s+\d{4}-\d{2}-\d{2}",
+    re.IGNORECASE,
+)
 _SUCCESSOR_RE = re.compile(
     r"MIGRATED TO:|successor:|→\s+plans/active/|See:\s+plans/active/|see\s+plans/active/",
     re.IGNORECASE,
 )
-_ARCHIVE_OK_TOKENS_RE = re.compile(r"\bpost.cutover\b|\bout of scope\b|\bDEFERRED\b", re.IGNORECASE)
+_ARCHIVE_OK_TOKENS_RE = re.compile(r"(?i:\bpost.cutover\b|\bout of scope\b)|\bDEFERRED\b")
 _ACTIVE_FNAME_RE = re.compile(r"^[a-z0-9_]+(_\d{4}_\d{2}_\d{2})?\.md$")
 _ISSUE_FNAME_RE = re.compile(r"^[a-z0-9_]+_\d{4}_\d{2}_\d{2}\.md$")
 # Directory-structure files that are NOT plans and must not be filename-checked as one. INDEX.md is

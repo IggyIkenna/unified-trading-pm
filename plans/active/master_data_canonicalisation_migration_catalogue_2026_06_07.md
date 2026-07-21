@@ -47,6 +47,13 @@ umbrella: true
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline annotations on each `DEFERRED` todo — every one names its own trigger/successor: the "deferred-with-reason"
+consumer cleanups (execution-service/deployment-api/MDPS, gated on per-AG applies), the massive-futures-404 gate,
+`predictions_master` Phase 3, and "named successor: THIS item" (self-tracked, gated on operator review) — none are
+orphaned deferrals.
+
 # MASTER COORDINATOR — Data-Layer Canonicalisation, Migration, Catalogue & Pipeline-Mode Cutover
 
 > **🟢 TradFi G4 `--apply` DONE 2020-2026 (7 VMs, exit_code=0 fatal=0, completed 2026-07-06; GCS re-verified

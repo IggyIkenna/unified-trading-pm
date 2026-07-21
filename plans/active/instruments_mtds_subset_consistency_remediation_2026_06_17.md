@@ -60,6 +60,12 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline annotations — the scraper-source gap is tracked in "sports_master `DEFERRED-INDEFINITELY` scraper set"
+(qualified tag) and the watchdog gap names its own systemic fix (the pending silent-worker-watchdog residual), not
+orphaned deferrals.
+
 # Instruments ↔ MTDS subset + consistency remediation
 
 > **ð´ PRE-`--apply` BLOCKER GATE (2026-06-17).** The dry-run projections that `--apply` will materialise STILL carry

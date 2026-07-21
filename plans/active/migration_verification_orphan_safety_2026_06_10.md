@@ -59,6 +59,11 @@ codex_ssots:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED` annotation on the "Re-stamp the legacy schema_version tails" todo — names both the operator
+decision (2026-06-22) and an explicit "Trigger to resume" condition, not an orphaned deferral.
+
 # Migration verification & orphan-safety — the "migrate once" harness
 
 > **🟢 V6 CLOSED (2026-07-06).** TradFi G4 `--apply` DONE for 2020-2025 + 2026 (7 VMs total, e2-standard-16 · SPOT ·

@@ -38,6 +38,12 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See the `[DEFERRED]` todo (drop the vcrpy `--ignore-vuln` pin) — names its own gate directly:
+`plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (aiohttp-3.14 unblock), not an orphaned
+deferral.
+
 # Data-feed SLA registry + active feed self-healing
 
 **Goal**: close the two gaps surfaced by the Blue Flame comparison while reusing — not duplicating — what already exists

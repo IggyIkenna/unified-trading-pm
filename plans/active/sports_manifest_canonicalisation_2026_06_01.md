@@ -49,6 +49,12 @@ orchestrates:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline annotations — one names an explicit successor (`defi_manifest_canonicalisation_2026_06_01.md` §
+C0/C-GREEN), one points at the plan's own "Deferred-work table" below, and one is tracked as item -009 in this same
+plan; none are orphaned deferrals.
+
 # Sports manifest + data canonicalisation — slot-4 MASTER orchestrator for the sports vertical
 
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by

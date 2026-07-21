@@ -37,6 +37,12 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `deferred` annotation ("Not re-run this dispatch") — the recorded reason is that VMs are still in-flight
+(a full hygiene/phantom pass would be premature and expensive against the stale consolidator), not an orphaned
+deferral.
+
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 >

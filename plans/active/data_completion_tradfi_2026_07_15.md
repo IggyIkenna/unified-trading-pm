@@ -33,6 +33,11 @@ source: [data_completion_to_100_all_ag_2026_06_21 (M-1) — split 2026-07-15, pl
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED` annotations — every one is gated on the named `OPERATOR-DECISION #1` (altdata asset-group home)
+or carries a `MIGRATED FROM: macro_econ_adapter_scaffolds_2026_06_09.md` provenance trail, not orphaned deferrals.
+
 # Data completion to 100% — TradFi
 
 > **Split from M-1 on 2026-07-15** (`data_completion_to_100_all_ag_2026_06_21.md`, plan-reconcile §8, operator ruling

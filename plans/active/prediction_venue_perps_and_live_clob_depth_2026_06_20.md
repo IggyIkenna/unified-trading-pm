@@ -36,6 +36,12 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-CROSS-DEP` annotation next to its `- [ ]` item in body for the specific successor/blocker; the
+plan's own progress log twice self-asserts "no DEFERRED-without-todo" — every other DEFERRED mention is a tracked
+checkbox, not an orphaned deferral.
+
 # Kalshi + Polymarket perps + live CLOB depth
 
 > **🟡 2026-07-14 OPERATOR RULING: Kalshi/Polymarket perps are NOT part of MVP.** "Nothing we can do — we can't get

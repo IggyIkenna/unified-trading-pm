@@ -40,6 +40,11 @@ source: operator decision 2026-07-15 (Path B chosen over patching the archived r
 Codex SSOTs: [codex/05-infrastructure/vm-launcher-runbook.md, codex/08-workflows/ci-cd-flow.md]
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED` annotation on "Todo 7 (retire legacy job)" — the discovered blocker (dispatch-code change
+needed first) is "Filed as a new P1 prerequisite todo above" in this same plan, not an orphaned deferral.
+
 # Finish features-sports-service → features-service consolidation (deploy side)
 
 ## What I found (2026-07-15, root-cause investigation)

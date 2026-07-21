@@ -41,6 +41,11 @@ source:
   [plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md, scripts/quality-gates-base/qg-host-governor.sh]
 ---
 
+## Deferred work — migrated to:
+
+See the `## Deferred / open decisions` section below — the plan already tracks the `cpu_weight` refinement mention
+there (the single inline reference points at that same section), not an orphaned deferral.
+
 # Host-adaptive RAM+CPU QG admission governor
 
 > **LOCAL / operator-driven plan** (`assigned_vm: NA`) — not AO-ingested. Operator decision 2026-07-14: human-driven,

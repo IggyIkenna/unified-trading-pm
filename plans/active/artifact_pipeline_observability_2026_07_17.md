@@ -52,6 +52,13 @@ assigned_role: infra
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See the "AWS is intentionally deferred — no AWS credits" note — the App Runner/ECS/ECR estate is deliberately stopped
+with an explicit resume trigger (credits return); the other in-body `deferred` mentions are a GHA workflow filename
+(`freeze-deferred-build-replay.yml`) and a string-prefix code reference (`deferred-aws-build-` vs `deferred-build-`),
+neither a backlog item — not orphaned deferrals.
+
 # Artifact pipeline observability — build → artifact → deploy lineage
 
 > **Human / local plan** (`assigned_vm: NA`, never AO-ingested). Operator-driven in an interactive session. This plan

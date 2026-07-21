@@ -31,6 +31,11 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED` annotation (Korea equities dispersion leg) — the recorded disposition is an operator
+credential/vendor decision, not an orphaned deferral.
+
 # Crypto-venue equity perps + tokenized stocks
 
 Operator 2026-06-20: crypto venues now list **single-stock perpetuals + tokenized stocks** — opportunity surface for

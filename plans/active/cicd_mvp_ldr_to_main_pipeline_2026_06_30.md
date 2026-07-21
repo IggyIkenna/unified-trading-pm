@@ -54,6 +54,11 @@ assigned_role: infra
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-OPERATOR-DECISION` annotation next to its `- [x]` item in body — AWS image builds disabled per
+operator (Harsh) 2026-07-03; the credential re-enable ask is filed separately.
+
 # CI/CD MVP — LDR→SIT→main
 
 > **THE pipeline, simplified to the MVP.** A commit is green locally (`quality-gates.sh`) and reaches

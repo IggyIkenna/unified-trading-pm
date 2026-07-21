@@ -37,6 +37,12 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED` annotation on the "Audit sub-bucket shards" todo — explicitly gated on the v9 migration landing
+first ("Do NOT address before the v9 migration lands — path shapes change"), a recorded trigger condition, not an
+orphaned deferral.
+
 # Data-status tab + instruments download remediation
 
 > Findings of record + every `file:line`:

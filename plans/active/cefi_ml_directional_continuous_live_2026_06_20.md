@@ -35,6 +35,11 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See the `## Model-improvement backlog (deferred — not blocking the live loop)` section below — both DEFERRED items
+there (volume feature, model-improvement-after-window-work) are named + operator-dated, not orphaned deferrals.
+
 > **Provenance**: extracted 2026-06-20 from the `cefi_master` epic body (formerly the folded
 > `cefi_ml_may_23_2026.epic`). This is the second live CeFi archetype — a continuous ML directional prediction signal
 > traded on real capital across OKX + Binance + Bybit. Distinct from the rules-based DeFi carry family. The design

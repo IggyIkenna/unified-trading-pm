@@ -52,6 +52,11 @@ assigned_role: infra
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `deferred` annotation on the `YAHOO_FINANCE` registry cleanup — the recorded reason is a real risk ("a
+naive fix would trip an undocumented fallback footgun"), not an orphaned deferral.
+
 # Data-pipeline alerts batch remediation — 2026-07-15
 
 ## Why this plan exists

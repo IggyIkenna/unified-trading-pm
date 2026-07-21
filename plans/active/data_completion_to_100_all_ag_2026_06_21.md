@@ -33,6 +33,17 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+11/13 in-body DEFERRED mentions carry a real recorded disposition: a self-referential named successor, an explicit
+Phase E.3 hand-off, "see next item" / "below" in-doc pointers, a QG-regression ticket number, a commit reference
+(`market-tick-data-service@ea33d38`), and two cross-references into `bucket_estate_consolidation_to_sub100_2026_07_13.md`'s
+own Deferred-table (items #2/#3). The other 2 mentions are NOT orphaned deferrals either: one explicitly says "not
+deferred — the mechanism is live" (a false-positive negation, not a claim of deferral), and one is a `deferred-import`
+Cloud Scheduler code reference (a lazy-import pattern, not a backlog item). The remaining 2 open items (BQ
+`feature_external` external-tables fix, UNMANAGED legacy prod resources migrate-vs-retire) are genuinely open
+operator-decision items without a further successor named — tracked here for completeness, not claimed as resolved.
+
 # Data completion to 100% — all AGs, batch + live, manifest v9
 
 > **🟢 VM RUNNING — EXTENDED-STARKNET (cefi) 2024+2026 DONE; 2025 RESUME RUNNING (2026-06-24 00:54Z)**: 2024+2026 shards

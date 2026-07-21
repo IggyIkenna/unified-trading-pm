@@ -50,6 +50,12 @@ drift_direction: advance-code
 ratified: 2026-06-05 (operator — all 6 decisions + refinements)
 ---
 
+## Deferred work — migrated to:
+
+See inline annotations — the Playwright-gate item names its provenance (C-TRANSPORT consumer sweep 2026-06-07) and
+owner (a UI-capable slot), and the emulator-independence item is tagged `DEFERRED-followup` (qualified), not orphaned
+deferrals.
+
 > **🟢 KEPT STANDALONE per operator ruling 2026-07-13 (MTDS/MDPS consolidation,
 > `mtds_consolidation_foldin_mapping_2026_07_12.md`).** This plan is a P0 prerequisite-gate/foundation plan (not a
 > backfill task) that GATES the per-AG canonicalisation walks — folding a gate INTO the plan(s) it gates would be an

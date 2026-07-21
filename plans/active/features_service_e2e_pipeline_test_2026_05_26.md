@@ -46,6 +46,12 @@ estimate_calibration_note: "brand-new (1.0×): a repeatable e2e harness driving 
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED` annotations — one names its own fix scope + trigger ("add to `[FINDING-B]` fix scope when
+group-level isolation is implemented") and the other points at the plan's own "Temporary states" section, not
+orphaned deferrals.
+
 > **Frontmatter correction (2026-07-12)**: `last_updated:` (was: 2026-05-25) — corrected to 2026-06-03, the date of the
 > most recent dated session heading in this doc's own body
 > (`## 2026-06-03 — Scope narrowed to 2 strategies + Track-2 fixes shipped`, line 577 pre-edit). The old value predated

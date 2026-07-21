@@ -33,6 +33,11 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+The plan's own progress log twice self-asserts "No DEFERRED-without-successor; no broken state" — every deferred item
+mentioned already has a successor/disposition recorded inline, not an orphaned deferral.
+
 # carry_staked_basis funding-carry scan — analysis harness + journal
 
 Exploratory analysis (operator-driven) of the CeFi funding leg of `carry_staked_basis`: scan ~30 perp coins across

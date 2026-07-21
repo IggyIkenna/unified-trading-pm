@@ -41,6 +41,11 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-BY-HEADROOM` annotation next to its `- [ ]` item in body — live-spawn verification deferred
+because all 3 accounts were at/over the AutoSpawn ceiling at test time, not a gap in the fix.
+
 # Monitoring control-plane master
 
 ## Problem

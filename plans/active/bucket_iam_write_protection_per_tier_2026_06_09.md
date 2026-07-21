@@ -40,6 +40,12 @@ Codex SSOTs:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `deferred` annotation on the per-domain×tier SA design decision — this is a resolved decision (chose
+option (a): one SA per tier) with explicit rationale (binding-count cost) and a named re-evaluation trigger ("before
+full tier isolation is in place"), not an orphaned deferral.
+
 # Bucket IAM write-protection — per-tier/per-domain SAs (§8 implementation)
 
 ## What I found

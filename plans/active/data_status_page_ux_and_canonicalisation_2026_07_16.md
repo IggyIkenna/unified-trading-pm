@@ -53,6 +53,12 @@ depends_on:
 source: operator request 2026-07-16 (data-status page review) + multi-agent audit workflow wf_872e8051-00a
 ---
 
+## Deferred work — migrated to:
+
+See inline `deferred` annotation (live Playwright MCP browser check) — the recorded reason is resource contention
+(browser held by another concurrent agent), mitigated by the committed + unit-verified mock-api handlers; not an
+orphaned deferral.
+
 # Data-status page — honest-coverage fix + UX & canonicalisation follow-ups
 
 > **Human/LOCAL plan** (`assigned_vm: NA`) — operator-driven, not AO-dispatched. Source: operator review of

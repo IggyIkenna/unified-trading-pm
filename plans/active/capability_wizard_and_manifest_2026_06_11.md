@@ -45,6 +45,12 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `[DEFERRED]`/`deferred` annotations — the scheduled-workflow item records its own current enforcement gate
+(fail-on-run) and the client-lite wizard mode names "successor plan once internal wizard is hardened" as its trigger,
+not orphaned deferrals.
+
 # Capability wizard + manifest
 
 ## Scope

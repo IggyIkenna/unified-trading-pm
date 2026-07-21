@@ -88,6 +88,11 @@ source:
   Authored + ground-truth-verified from a 6-agent audit (slot-4, 2026-07-18) with live GCS reads + operator rulings.
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED-bespoke` annotation next to its `- [ ]` item in body (names the specific deferred items: GMX
+POOL-vs-PERPETUAL shape, HYPERLIQUID-L1 gas, CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers — flagged, not MVP-blocking).
+
 # DeFi consolidated close-out — one pass to canonical, honestly-covered, forward-clean
 
 > **Purpose.** ONE place that aggregates every open defi + defi-touching IS/MTDS plan/issue into a single ordered pass.

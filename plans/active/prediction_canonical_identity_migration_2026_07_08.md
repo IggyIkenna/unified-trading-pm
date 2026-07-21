@@ -54,6 +54,11 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `deferred` annotation (Kalshi sports fixture key) — the recorded reason is that no team-name-to-canonical
+registry exists for Kalshi's city-level sports titles ("left undone rather than guessed"), not an orphaned deferral.
+
 > **Status: `active`** — picked up 2026-07-09. Todos 1, 3, 4, 5 implemented and verified against real prod GCS data (see
 > Progress Log); todo 6 VERIFIED SAFE / closed 2026-07-18 (no code change — raw prediction `instrument_id` embeds venue
 > by construction; all real consumers respect venue); todos 7 + 8 CLOSED 2026-07-19 (both were already resolved via the

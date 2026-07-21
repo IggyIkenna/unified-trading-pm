@@ -39,6 +39,12 @@ depends_on: [ao_dispatch_cooldown_and_park_2026_07_20.md]
 source:
 ---
 
+## Deferred work — migrated to:
+
+See inline `DEFERRED` annotation (dashboard REACT card) — the recorded blocker is environmental (no `node_modules`
+in this environment) plus the CLAUDE.md UI-testing rule requiring a cited Playwright regression spec, not an
+orphaned deferral.
+
 # AO fleet observability — KPIs, escalator efficacy, account burn
 
 > **Provenance**: Phase 7 (AF-1…AF-5) + the Phase-6 plan_health cadence item of

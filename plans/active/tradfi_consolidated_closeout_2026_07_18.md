@@ -86,6 +86,12 @@ source:
   (slot-3, 2026-07-18).
 ---
 
+## Deferred work — migrated to:
+
+See the `## Nice-to-have / deferred — Databento free L1/L2/L3 entitlement window` section below (explicit "NOT MVP",
+operator-dated 2026-07-21) — the only other in-body "deferred" mention is a data-set-diff term (98,006 deferred
+rows), not a backlog item; neither is an orphaned deferral.
+
 # TradFi consolidated close-out — one pass to MVP-backfill-ready
 
 > **Purpose.** ONE place that aggregates every open tradfi + tradfi-touching IS/MTDS plan/issue into a single ordered

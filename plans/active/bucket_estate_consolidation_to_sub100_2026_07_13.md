@@ -62,6 +62,12 @@ source:
   migrates') and chose HUMAN plan destination when asked per the plan-destination HARD RULE."
 ---
 
+## Deferred work — migrated to:
+
+See the `## Deferred work after 2026-07-13` table below (Item / Why deferred / Unblock condition per row) — every
+deferred item already has a per-row disposition; the single body mention ("Filed as Deferred-table item 13 below")
+points at that same table, not an orphaned deferral.
+
 # Bucket estate consolidation — 241 → <100
 
 > **🟡 OPERATOR RULINGS BAKED IN (2026-07-13, all decided)**: (1) env-split STANDS but merges into the Wave-3 folds —

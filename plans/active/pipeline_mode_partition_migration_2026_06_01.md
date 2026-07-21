@@ -28,6 +28,12 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` — the "deferred-partition note" it documents has
+an explicit resolution trigger (flip to "landed per-bucket" as each bucket's walk completes), not an orphaned
+deferral.
+
 **MIGRATED FROM:** `plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md` Phase 5 (on-disk partition —
 DEFERRED at column-level completion 2026-05-28; single-walk discipline forbids a standalone partition-key walk, so the
 work splits into this named successor that piggybacks on the next whole-corpus walk window per bucket).

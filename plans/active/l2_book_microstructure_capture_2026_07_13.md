@@ -33,6 +33,12 @@ source: [v2_engine_venue_buildout_2026_06_15.md follow-up, Phase E1 finding 2026
 sequential: true
 ---
 
+## Deferred work — migrated to:
+
+See inline `deferred-not-done` / `deferred-by-design` / `resolved-deferred-pending-an-external-event` annotations next
+to todos 5 and 7 in the progress log — both checkboxes are deliberately left unflipped pending a named external event,
+not orphaned deferrals.
+
 # Deeper-Than-L5 Order Book Capture
 
 > **Split out 2026-07-13** from [`v2_engine_venue_buildout_2026_06_15.md`](v2_engine_venue_buildout_2026_06_15.md)

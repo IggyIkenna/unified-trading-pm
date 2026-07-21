@@ -62,6 +62,16 @@ thinking_tier: max
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+All 111 `DEFERRED` mentions in this plan are already-closed (`- [x]`) checkbox items tagged
+`DEFERRED-FUTURE-WORK`/`DEFERRED-BLOCKED`/`DEFERRED-POST-CUTOVER`/`DEFERRED-NEEDS-DEDICATED-SESSION` — each carries its
+own inline disposition (a named blocking condition, a "folded from" cross-reference, or an explicit "post-cutover plan
+not yet created" note, e.g. the cbETH/Kraken credential-ask table above). As the top-level rollup for ~19 epics, this
+plan has no single successor — each DEFERRED item's successor is the specific work-stream/plan named on its own line
+(same pattern as the precedent banners on the smaller sub-plans this master orchestrates). Verified via a full grep of
+every match (not a skim) 2026-07-21.
+
 > **Frontmatter `last_updated` corrected 2026-07-12** (was: `2026-05-11` — findings id 215 + id 368, §A2 B-queue
 > ruling): the field was stale by ~2 months against the doc's own body (Group H "added 2026-05-20",
 > 2026-06-15/2026-07-04 dated targets, auto-inventory rows referencing plans created through 2026-07-08/09) and against

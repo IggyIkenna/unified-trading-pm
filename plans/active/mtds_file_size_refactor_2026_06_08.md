@@ -41,6 +41,13 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+This is itself a "Deferred MTDS/MDPS tech-debt plan" (per its own summary) — every DEFERRED mention in-body already
+names its disposition inline (operator-parked 2026-06-26, un-deferred-then-re-deferred Polars seam with "the named
+successor for the MTDS-QG P2 deferral" spelled out, remaining M-2 scope explicitly parked pending the fold), not an
+orphaned deferral.
+
 # MTDS file-size refactor — split the 15 pre-existing >900-line source files
 
 > **⏸️ DEFERRED 2026-06-26 (operator) — non-essential, parked.** This is pure tech-debt (file-size splits + the

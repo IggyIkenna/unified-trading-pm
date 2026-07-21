@@ -33,6 +33,11 @@ source: [data_completion_to_100_all_ag_2026_06_21 (M-1) — split 2026-07-15, pl
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+See inline `Deferred` annotation (`lending-indices` / `lending-indices-prd`) — names the live tracking artifact
+directly: `mvp_backfill_defi_onchain_v10_2026_06_27.md`, not an orphaned deferral.
+
 # Data completion to 100% — DeFi
 
 > **Split from M-1 on 2026-07-15** (`data_completion_to_100_all_ag_2026_06_21.md`, plan-reconcile §8, operator ruling

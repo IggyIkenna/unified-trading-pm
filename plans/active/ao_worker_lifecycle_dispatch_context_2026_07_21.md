@@ -42,6 +42,11 @@ depends_on:
 source:
 ---
 
+## Deferred work — migrated to:
+
+See the `### Deferred (tracked, not this plan's scope)` section below — the "Role lifecycle-field reclassification"
+item is already tracked there as an explicit out-of-scope `[DEFERRED]` todo, not an orphaned deferral.
+
 # Worker lifecycle by dispatch-context
 
 > **Operator design decisions (2026-07-21, slot-16).** Reaping is a property of **who fired the worker**, not the static

@@ -47,6 +47,12 @@ source:
   operator ask 2026-07-20 (data-status Distinct Values screenshot — "audit all these not just ones from screenshot")
 ---
 
+## Deferred work — migrated to:
+
+See the plan's own "deferred-work table" — all 4 in-body DEFERRED mentions point at (or update) that same table,
+which records the operator-call decision point (writer-pause window vs narrower row-scoped patch) and its 🔴-blocked
+status; not orphaned deferrals.
+
 # Distinct-Values non-canonical audit — all asset_groups × all axes
 
 > **Operator ask (2026-07-20):** the Distinct Values panel (data-status, IS view) badges far more values non-canonical
