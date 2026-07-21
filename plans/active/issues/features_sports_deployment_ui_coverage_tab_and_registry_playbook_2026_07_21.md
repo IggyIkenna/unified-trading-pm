@@ -89,8 +89,37 @@ File as a P3 backlog item — neither is blocking, both are worth picking up opp
       `FEATURES_SPORTS_PER_CALC_META` is auto-derived (a dict comprehension over `FEATURE_UPSTREAM_REQUIREMENTS`,
       `sports_helpers.py`) — there is no manual per-calc-meta entry to add, and the playbook says so explicitly so
       future authors don't duplicate work. Includes a worked example (`set_piece_calculator`).
-- [ ] [INFRA] P3. Wire the drift comparator's cron entrypoint + dashboard alert (the one remaining piece of the
-      otherwise-shipped P8.B). (repo: deployment-api)
+- [x] ✅ [INFRA] P3. Wire the drift comparator's cron entrypoint + dashboard alert (the one remaining piece of the
+      otherwise-shipped P8.B). (repo: deployment-api) — `deployment-api@47802dc5` + `unified-api-contracts@018c3ca6`.
+      Built a daily snapshot-write + comparator worker (`deployment_api/scripts/coverage_drift_worker.py`) mirroring the
+      two existing in-service Cloud-Scheduler-POST workers in this repo (`data_status_rollup_worker.py`/`_rollup.py`,
+      `cost_snapshot_worker.py`) rather than a standalone Cloud Run Job (this repo's native pandas compute crashes on
+      gen2 Jobs — R7 follow-up #4). **Snapshot**: reads a bounded 30-day trailing window of the features-sports-service
+      manifest via `read_manifest_index`'s predicate-pushdown `date_window` (no whole-corpus walk), filtered to
+      `known_calculators()`, writes a per-day parquet under `coverage-drift-snapshots/sports/{date}.parquet` in
+      deployment-api's existing state bucket (mirrors `cost_observability/snapshot.py` — no dedicated bucket for a
+      handful of small daily blobs). **Compare**: loads today's + 7-days-back snapshot (graceful `None` — not an error —
+      for the first week with no baseline), calls the already-shipped `detect_drift()`, and persists one alert per
+      `DriftEvent` via the existing `_persist_alert()` ledger (`deployments_inventory.py`) — the same ledger
+      `GET /api/alerts` already serves to deployment-ui's dashboard, so **zero reader-side changes** were needed for the
+      "dashboard alert" half. **Route**: `POST /api/data-status/sports/coverage-drift-run` (new
+      `_coverage_drift_run.py`, registered on the shared data-status router — inherits the router's existing
+      `verify_any_auth`), mirroring `_rollup.py`'s exact in-service-POST pattern. **Scheduler**: registered
+      `sports-coverage-drift` in UAC's `SCHEDULER_REGISTRY` (`0 2 * * *` daily, `target_kind=CLOUD_RUN`,
+      `target_ref=deployment-api`, `asset_group=sports`) — the SSOT this workspace's governance rule requires before any
+      real `gcloud scheduler jobs create`. Deliberately deviated from 2 details in the stale pre-implementation HANDOFF
+      doc, with reasoning: (1) cadence — HANDOFF/plan text said "hourly," but the shipped comparator + its own docstring
+      already commit to "daily vs N-days-back," which is also the only cadence a 30-day trailing-window percentage can
+      meaningfully move on — hourly would need a wholly different, much narrower windowing scheme; (2) repo — HANDOFF
+      said "Cloud Run Job in deployment-service," but this todo's own scope line names `deployment-api`, and the
+      comparator's actual compute (pure pandas over an already-bounded manifest slice) is cheap enough for the
+      in-service-route pattern, avoiding a new VM/Job entirely. Tests: `tests/unit/test_coverage_drift_worker.py` (17
+      new tests: snapshot projection/write/read round-trip + graceful-missing, drift-check alert-persist-on-threshold +
+      no-alert-on-missing-baseline, route dispatch) + `unified-api-contracts/tests/unit/test_scheduler_registry.py` (2
+      new assertions for the registry entry). Both repos' full `quality-gates.sh` green (a hardcoded-prod-GCP-project-ID
+      string I'd used in a test mock tripped this repo's codex-compliance ratchet at 6/5 on the first run — fixed to a
+      generic placeholder, re-verified back to 5/5 before shipping). Not done: the per-CALCULATOR (34-calculator)
+      HTTP-reachable breakdown referenced in todo 1's scope note is a distinct, larger follow-up beyond this todo.
 
 ## Codex SSOTs
 
