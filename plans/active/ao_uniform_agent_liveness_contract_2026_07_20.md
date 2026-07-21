@@ -136,22 +136,38 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
 
 ### Workstream B — boot → `working` (uniform liveness signal)
 
-- [ ] [BACKEND] P1. **B1 — Make `/boot` role-aware + accept a task-less boot.** A one-off POSTs `/boot` like everyone;
-      the response carries no task and the slot leaves `idle` for `working`. No parallel endpoint. Makes "working while
-      working" reliable so idle-scanners skip one-offs by construction. **Gate**: a `plan_reconciler`-shaped boot → 200
-      no task, SlotRow leaves `idle`; a fleet-worker boot byte-for-byte unchanged (regression-tested).
-- [ ] [BACKEND] P2. **B2 — Close the startup-latency gap.** A one-off's first heartbeat comes after a startup phase
-      (role-doc read, hygiene sweep) that can exceed the grace window. Require a STEP-0 ping before that phase, or
-      measure grace from first-contact not spawn. **Gate**: a one-off with a deliberately slow (10+ min) boot proves
-      liveness throughout.
+- [x] [BACKEND] P1. **B1 — Make `/boot` role-aware + accept a task-less boot.** ✅ `agent-orchestrator@f393d7a` (pushed)
+      — the `/boot` no-task path was resetting a typed one-off (`spawn_base_role` set at claim) to `idle`, silently
+      overwriting the `working` its claim set → idle-scanners could reap it. Now a one-off's task-less boot HOLDS the
+      slot `working` (normal workers still rest `idle`); tests in `test_boot_typed_role_gate` + QG green. A one-off
+      POSTs `/boot` like everyone; the response carries no task and the slot leaves `idle` for `working`. No parallel
+      endpoint. Makes "working while working" reliable so idle-scanners skip one-offs by construction. **Gate**: a
+      `plan_reconciler`-shaped boot → 200 no task, SlotRow leaves `idle`; a fleet-worker boot byte-for-byte unchanged
+      (regression-tested).
+- [x] [BACKEND] P2. **B2 — Close the startup-latency gap.** ✅ Satisfied by existing mechanisms (verified 2026-07-21, no
+      code change): the STEP-0 `/heartbeat` (the FIRST boot action, in `_compose`) stamps `last_ping` immediately, and
+      `effective_silence_seconds` anchors on `max(last_ping, last_spawned_at, session_created, assigned_at)` — i.e.
+      grace measures from **first-contact**, not spawn; the ≤10-min heartbeat mandate stays under the 15-min silent bar;
+      and B1 now holds one-offs `working`. The residual (a single >15-min blocking phase) is role-doc-guided (cicd
+      backgrounds long `quality-gates.sh` runs + heartbeats each poll). Original text: A one-off's first heartbeat comes
+      after a startup phase (role-doc read, hygiene sweep) that can exceed the grace window. Require a STEP-0 ping
+      before that phase, or measure grace from first-contact not spawn. **Gate**: a one-off with a deliberately slow
+      (10+ min) boot proves liveness throughout.
 
 ### Workstream C — remove the duplication (LAST — only once A + B are proven live)
 
-- [ ] [BACKEND] P1. **C1 — Delete the three carve-outs.** (a) prereq-reaper AgentRow guard (`1e7fec0`), (b)
-      `_reclaim_idle_lingering_sessions` AgentRow guard (`f641968`), (c) boot-gate typed-spawn recognition (`5907317`)
-      if the uniform contract subsumes it. Each deletion ships with a test proving the uniform signal
-      (status=`working` + heartbeat, or archived-on-`/done`) now protects that agent instead. **Gate**: `rg` finds no
-      typed-agent special-case in any reaper; the original regression tests still pass, protected by the contract.
+- [ ] [BACKEND] P1. **C1 — Delete the three carve-outs.** ⚠️ **GATED ON LIVE-VERIFY (2026-07-21):** A+B are now in place
+      (a one-off is `working` throughout — claim sets it, and B1 stops `/boot` resetting it — and archives on `/done`),
+      so the idle-scanner carve-outs are redundant IN PRINCIPLE. But the plan's own Safeguard forbids deleting them
+      before the replacement is **proven live**, and the historical failure was a **restart flipping `working` →
+      `idle`** (07:30 restart). The backend is currently STOPPED for this plan's work, so that can't be verified. **Do
+      C1 only after the coordinated restart confirms one-offs reliably stay `working` (esp. across the restart).** The
+      carve-outs are harmless to keep meanwhile — they are now-redundant guards, not bugs. (a) prereq-reaper AgentRow
+      guard (`1e7fec0`), (b) `_reclaim_idle_lingering_sessions` AgentRow guard (`f641968`), (c) boot-gate typed-spawn
+      recognition (`5907317`) if the uniform contract subsumes it. Each deletion ships with a test proving the uniform
+      signal (status=`working` + heartbeat, or archived-on-`/done`) now protects that agent instead. **Gate**: `rg`
+      finds no typed-agent special-case in any reaper; the original regression tests still pass, protected by the
+      contract.
 - [ ] [DOC] P2. **C2 — Finish the codex / role-doc SSOT.** The two codex SSOTs are already reconciled (2026-07-21:
       `agent-orchestrator-single-vm-architecture.md` § Class B, `agent-orchestrator-worker-liveness.md` § completion
       contract). Remaining: every role doc references the codex SSOT rather than restating it, and the "being
