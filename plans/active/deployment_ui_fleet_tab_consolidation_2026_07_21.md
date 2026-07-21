@@ -175,8 +175,10 @@ Key audit facts driving the merges:
       tsc/ESLint clean; full 1050-test suite green; full `quality-gates.sh` (base-ui.sh v2.0) green. `/vm-deployments`
       itself is untouched (still routed, still the `VmDeploymentsContent` the `/fleet` cockpit embeds) — retiring it is
       the separate todo below.
-- [ ] [UI] P1. **Cheap merged columns** — add `rows_error` (Errors) and throughput (`rows_in`/`events_emitted`) to
-      Deployments where useful; the data already exists on `DeploymentItem`, no backend work.
+- [x] [UI] P1. ✅ **Cheap merged columns** — deployment-ui@f838929. Added a compact `ErrorsThroughput` cell to the
+      Resources column (alongside cpu/mem/disk + `LeakedBadge`): "N err" in red when `rows_error > 0`, plus "N in"/"N
+      evt" when `rows_in`/`events_emitted` are present. Null-renders per field (no fabricated 0 for a row without the
+      signal). 2 new tests + full existing suite green (1054 tests); full `quality-gates.sh` (base-ui.sh v2.0) green.
 - [ ] [UI] P1. **Retire /vm-deployments** — remove the `/vm-deployments` route (`App.tsx`) + its nav entry
       (`NavMenu.tsx`) once its content is folded in; add a redirect `/vm-deployments → /deployments`.
 - [ ] [UI] P1. **Remove FleetInfra** — delete the FleetInfra section from `FleetTab` and its imports; remove any nav/
