@@ -111,9 +111,16 @@ principle, wrong in aggregation.
       row yet, honest absence) in `deployments_inventory.py`. Existing `_attach_costs` unit tests updated for the new
       required dataclass field + 2 new assertions on `per_resource_daily`'s `cost_basis` output (complete / partial
       cases). `bash scripts/quality-gates.sh` green.
-- [ ] [UI] P1. `CostCell` colour treatment — when `cost_basis == "partial"`, render the actual-cost figure in a visually
-      distinct colour from the normal complete-day colour (no added text/tooltip — colour is the only signal per
-      operator decision). `pw:L2 ✓` + a cited regression spec covering both partial and complete states.
+- [x] ✅ [UI] P1. `CostCell` colour treatment — when `cost_basis == "partial"`, render the actual-cost figure in a
+      visually distinct colour from the normal complete-day colour (no added text/tooltip — colour is the only signal
+      per operator decision). `pw:L2 ✓` + a cited regression spec covering both partial and complete states. —
+      deployment-ui@6a32408: added `cost_basis?: "complete" | "partial" | null` to the `DeploymentItem` TS type
+      (`src/api/deploymentApi.ts`); `CostCell` (`src/pages/Deployments.tsx`) renders the actual-cost figure in
+      `text-amber-400` when `item.cost_basis === "partial"`, else the normal `text-[var(--color-text-primary)]` tone —
+      colour only, no added text/tooltip line. Mock fixtures (`src/lib/mock-api.ts`) updated: `defi-live-capture-1` →
+      `cost_basis: "complete"`, `cefi-live-trading-1` → `cost_basis: "partial"`. `pw:L2 ✓` | regression:
+      `tests/smoke/deployments-cost-cell.spec.ts` (two new cases: complete-day renders the normal tone, not amber;
+      partial-day renders `text-amber-400` and asserts no "partial" text is added to the visible figure).
 - [ ] [REVIEW] P1. Unit tests — (a) 1-day-in-window → avg == actual (regression for the reported symptom); (b) N active
       days → avg == sum/N; (c) 24h basis is complete-day/normalised, not `max`; (d) AWS ARN→name mapping attributes a
       known CUR row; (e) unmapped AWS row stays `None`; (f) `cost_basis` is `"partial"` iff no complete day exists.
