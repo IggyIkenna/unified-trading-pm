@@ -92,19 +92,21 @@ subclassed Binance WS connector classes), but the HOST is correctly ASTER everyw
   `url=_ASTER_STREAM_URL/_ASTER_WS_URL`. A future ASTER connector subclassing a Binance connector and omitting the
   `url=` override would SILENTLY connect to `fstream.binance.com` and emit Binance data tagged `venue=ASTER`. Add a
   guard (assert host endswith asterdex.com in the ASTER connectors' `__init__`).
-- **GAP 4 (pre-launch proxied trades, PARTIALLY SHIPPED 2026-07-21 — MTDS still pending):**
-  `expected_start_dates.yaml:59,143,162` set ASTER trades genesis `2021-08-30` (annotated proxy/aggregated) vs UAC
-  native `2023-07-22`. `fapi.asterdex.com` serves deep pre-launch history that is Astherus-pre-rebrand data mirroring
-  Binance values. Any backfill of 2021-08-30→2023-07-22 ingests Binance-origin values tagged `venue=ASTER`. Clip trades
-  genesis to the native 2023-07-22 (+ recalculated derived +200d/+9d dates). **Shipped:** execution-service@e11e6a136
-  ("fix(config): clip ASTER trades genesis to native 2023-07-22 (GAP-4)") and unified-trading-pm@12b0d9db8
-  ("fix(config): clip ASTER trades genesis to native 2023-07-22 (GAP-4); flip ADV plan Phase-1 to shipped" — covers
-  deployment-service via symlink). **NOT shipped — market-tick-data-service**: that ship attempt reported
-  `Status: BLOCKED — could not ship` (unrelated dirty files already in the MTDS working tree —
-  `book_microstructure_handler.py`, `partitioned_writer.py`, `live/websocket_runner.py`, `market_interface/adapters/...`
-  — blocked scoping a clean single-file commit, per its own escalation guidance rather than a workaround). MTDS's own
-  copy of `expected_start_dates.yaml` still declares the stale `2021-08-30` genesis and needs a retry ship once that
-  tree is clean.
+- **GAP 4 (pre-launch proxied trades, SHIPPED 2026-07-21 — all 3 repos):** `expected_start_dates.yaml:59,143,162` set
+  ASTER trades genesis `2021-08-30` (annotated proxy/aggregated) vs UAC native `2023-07-22`. `fapi.asterdex.com` serves
+  deep pre-launch history that is Astherus-pre-rebrand data mirroring Binance values. Any backfill of
+  2021-08-30→2023-07-22 ingests Binance-origin values tagged `venue=ASTER`. Clip trades genesis to the native 2023-07-22
+  (+ recalculated derived +200d/+9d dates). **Shipped in all 3 repos:** execution-service@e11e6a136,
+  unified-trading-pm@12b0d9db8 (deployment-service via symlink), and market-tick-data-service@d8efc6d6. MTDS's ship was
+  delayed by two genuinely unrelated whole-program regressions discovered and fixed along the way (not the config change
+  itself): (1) `market-tick-data-service@08f15f26` — 2 stale regression-guard tests asserting the OLD,
+  now-operator-ruled-wrong `build_instrument_id` passthrough behavior for symbols carrying an embedded `:` (uac@502ef57e
+  made this fail loud; one of the exact test fixtures, Bitfinex Futures' real `ADAF0:USTF0` wire symbol, is cited by
+  name in the ruling as the bug's real-world case); (2) `market-tick-data-service@327eef73` — re-pinned the RULE-11 DEFI
+  shard-count regression guard 2646→2673 after verifying `uac@6bdbc31d` legitimately flipped the pre-existing
+  AAVE-ETHEREUM venue from `phase=pipeline` to `phase=live` (LST rate honest-coverage Phase 1), which this enumerator
+  counts as a newly-appearing venue (+27 shards, confirmed via direct measurement: 99 distinct DEFI venues,
+  AAVE-ETHEREUM contributing exactly 27).
 
 ## INCIDENT 2026-07-20 — the first fix attempt caused manifest corruption (resolved)
 
@@ -164,23 +166,22 @@ REST API needs per-PROCESS request discipline; VM count is irrelevant when the b
     throughout (no resurrected poisoned rows).
   - Genesis clip to the native 2023-07-22 (currently backfilling from ASTER's UAC start_date 2024-01-01, which already
     excludes the pre-launch Astherus-proxied window — GAP-4's specific clip to the databento-verified date was a
-    separate, smaller item): **shipped 2026-07-21** in execution-service@e11e6a136 and unified-trading-pm@12b0d9db8
-    (deployment-service via symlink); **still pending in market-tick-data-service** (ship attempt `BLOCKED` on an
-    unrelated dirty tree — see the GAP-4 bullet above).
+    separate, smaller item): **shipped 2026-07-21 in all 3 repos** — execution-service@e11e6a136,
+    unified-trading-pm@12b0d9db8 (deployment-service via symlink), market-tick-data-service@d8efc6d6.
 - ✅ **D. Provenance hardening (host-guard half)** — SHIPPED mtds@accd8aa4. `_assert_aster_host()` guards all 3 ASTER
   live-WS connector construction sites (`aster_book_liq_ws.py`) against the latent Binance-host footgun; +3 regression
-  tests (`test_aster_ws_connector.py::TestAsterHostGuard`). GAP-4 genesis clip to 2023-07-22 DONE in
-  execution-service@e11e6a136 and unified-trading-pm@12b0d9db8 (deployment-service via symlink) — still BLOCKED/pending
-  in market-tick-data-service (ship attempt hit an unrelated dirty working tree; needs a retry).
+  tests (`test_aster_ws_connector.py::TestAsterHostGuard`). GAP-4 genesis clip to 2023-07-22 DONE in all 3 repos —
+  execution-service@e11e6a136, unified-trading-pm@12b0d9db8 (deployment-service via symlink),
+  market-tick-data-service@d8efc6d6.
 
-## Status (2026-07-21): A, B, C, D(host-guard) all shipped + verified with real data. GAP-4 genesis clip shipped in
+## Status (2026-07-21): A, B, C, D(host-guard), and GAP-4 all shipped + verified with real data, in all 3 repos —
 
-2 of 3 repos — execution-service@e11e6a136, unified-trading-pm@12b0d9db8 (deployment-service via symlink) — but the
-market-tick-data-service ship attempt reported `BLOCKED` (unrelated dirty working-tree files prevented a clean scoped
-commit); MTDS's copy of `expected_start_dates.yaml` still carries the stale `2021-08-30` genesis. Remaining open: finish
-the GAP-4 clip in market-tick-data-service (retry once that tree is clean) and the "why did capture stop 2026-06-20"
-historical question (moot now — full backfill re-run supersedes it). Not yet `status: resolved` — pending the MTDS GAP-4
-ship.
+execution-service@e11e6a136, unified-trading-pm@12b0d9db8 (deployment-service via symlink),
+market-tick-data-service@d8efc6d6. The MTDS ship was delayed by two unrelated, genuinely-real whole-program test
+regressions (fixed along the way, not swept under the rug — see the GAP-4 bullet above for both). Remaining open: the
+"why did capture stop 2026-06-20" historical question (moot now — full backfill re-run supersedes it). All tracked fix
+items (A/B/C/D/GAP-4) are now shipped; ready for a final read-through before flipping frontmatter `status:` to
+`resolved`.
 
 ## INCIDENT 2026-07-21 — duplicate instrument_id from explicit-symbol surgical re-runs (found + fixed)
 
@@ -244,10 +245,11 @@ question prompted the check): UAC's audited native (non-proxy) ASTER start is `2
 (`unified_api_contracts/registry/venue_launch_dates.py`); what's actually backfilled in GCS starts `2024-01-01`
 (confirmed nothing exists in GCS before that — 2021-09-01/2022-06-01/2023-07-22/2023-08-01 all 404, so the Astherus
 pre-rebrand proxy window was never backfilled and needs no purge). The still-open gap is
-`configs/expected_start_dates.yaml` (replicated per-repo) still declaring genesis `2021-08-30` — this is GAP-4,
-unchanged, still open. (Update 2026-07-21, later same day: GAP-4 shipped in execution-service@e11e6a136 and
-unified-trading-pm@12b0d9db8 (deployment-service via symlink); market-tick-data-service ship `BLOCKED` — see the GAP-4
-bullet + Status section above for current state.)
+`configs/expected_start_dates.yaml` (replicated per-repo) still declaring genesis `2021-08-30` — this was GAP-4, now
+SHIPPED. (Update 2026-07-21, later same day: GAP-4 shipped in all 3 repos — execution-service@e11e6a136,
+unified-trading-pm@12b0d9db8 (deployment-service via symlink), market-tick-data-service@d8efc6d6 — see the GAP-4
+bullet + Status section above for the full history, including the 2 unrelated whole-program regressions found + fixed
+along the way to unblock MTDS's ship.)
 
 Checking 2024-01-01 directly (to answer "is this real ASTER data") surfaced that the SAME duplicate-instrument-id bug
 was still present, uncorrected, for the entire 2024-01-01→2025-05-24 window — **1,923 more duplicate pairs**. The code
