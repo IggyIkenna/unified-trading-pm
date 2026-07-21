@@ -3,7 +3,7 @@ doc_type: issue
 title:
   "UAC canonical_path_violations() was BLIND to the filename instrument-id stem — the machine oracle returned
   FALSE-CLEAN for ~811,200 wire-named CeFi objects"
-summary:
+summary: >-
   The workspace HARD RULE says canonical-vs-non-canonical is decided by the UAC `canonical_path_violations()` machine
   oracle. That oracle dropped the last path segment (`partition_segments = segments[:-1]`, "Last segment is the file
   name") before validating, and only `asset_group=tradfi` single-instrument shards ever carried a filename rule. So raw
@@ -11,11 +11,11 @@ summary:
   (`BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet`) returned 0 violations == CANONICAL at both `require_pipeline_mode`
   settings. Anyone following the rule to assess CeFi surface-A canonicality would report the corpus CLEAN while
   independent measurement put the CeFi filename surface at 20.82% canonical by id-form. SHIPPED 2026-07-20: violations
-  are now classified STRUCTURAL vs ID_FORM with BOTH reported by default (uac@d40c5d7d), and the caller-audit blocker was
-  fixed at root -- the two CeFi write-time guards now build filenames with sanitize_file_stem (preserves the id's literal
-  colon), so they emit canonical stems and the default all-class guard passes (mtds@953679de). No caller was softened.
-  Migration population measured 0; reader tolerates the legacy sanitized stem. The batch=live filename divergence this
-  exposed is tracked as its own finding.
+  are now classified STRUCTURAL vs ID_FORM with BOTH reported by default (uac@d40c5d7d), and the caller-audit blocker
+  was fixed at root -- the two CeFi write-time guards now build filenames with sanitize_file_stem (preserves the id's
+  literal colon), so they emit canonical stems and the default all-class guard passes (mtds@953679de). No caller was
+  softened. Migration population measured 0; reader tolerates the legacy sanitized stem. The batch=live filename
+  divergence this exposed is tracked as its own finding.
 status: open
 nature: issue
 asset_group: [cefi, tradfi, meta]
@@ -52,7 +52,9 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by: "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback); residual followups tracked in § 7 and the batch=live divergence issue"
+resolved_by:
+  "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback); residual
+  followups tracked in § 7 and the batch=live divergence issue"
 ---
 
 # The canonical-path machine oracle was blind to the filename stem

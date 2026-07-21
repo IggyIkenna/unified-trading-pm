@@ -3,15 +3,15 @@ doc_type: issue
 title:
   "Batch=live determinism: live/microstructure writers named objects with _sanitize_symbol (colons stripped) while batch
   wrote the id verbatim — one instrument, two object names; part of a verbatim-write / no-guard silent-tolerance family"
-summary:
-  The MTDS batch writer names per-instrument objects for the FULL canonical instrument_id VERBATIM (literal colons),
-  but the LIVE lane (live_tick_blob_path) and the microstructure handler named them via _sanitize_symbol, which rewrites
-  ':' to '_'. So the same instrument landed at TWO different GCS object names depending on the lane — a batch=live
+summary: >-
+  The MTDS batch writer names per-instrument objects for the FULL canonical instrument_id VERBATIM (literal colons), but
+  the LIVE lane (live_tick_blob_path) and the microstructure handler named them via _sanitize_symbol, which rewrites ':'
+  to '_'. So the same instrument landed at TWO different GCS object names depending on the lane — a batch=live
   determinism divergence and a canonicality defect (the sanitized name can never satisfy the id-form half of path
-  canonicality). FIXED forward 2026-07-20 (sanitize_file_stem preserves ':', still escapes '/'; mtds@953679de). This
-  doc records the fix AND the broader family the write-path audit surfaced: filename stems written verbatim with zero
-  form validation, no write-time path guard on the Tardis cefi lane, and validate=False on the cefi write sites. Those
-  are the mechanisms that let ~811,200 wire-named objects land, and they belong to the same fail-hard-in-writes gap.
+  canonicality). FIXED forward 2026-07-20 (sanitize_file_stem preserves ':', still escapes '/'; mtds@953679de). This doc
+  records the fix AND the broader family the write-path audit surfaced: filename stems written verbatim with zero form
+  validation, no write-time path guard on the Tardis cefi lane, and validate=False on the cefi write sites. Those are
+  the mechanisms that let ~811,200 wire-named objects land, and they belong to the same fail-hard-in-writes gap.
 status: open
 nature: issue
 asset_group: [cefi, defi, meta]
