@@ -56,6 +56,13 @@ source:
     gate for every agent",
   ]
 resolved_by:
+
+## RESOLVED (3 on-chain clobbers) 2026-07-21 — mtds@f7af6ece
+
+Operator ruled 'keep the on-chain tick'. Removed the `.assign(available_at=now())` clobber at the 3 sites where a deterministic on-chain stamp existed and was overwritten: `evm_defi_collectors._write_and_upload`, `solana_defi_handler._upload_parquet`, `gas_fee_handler` (Solana slot path). The on-chain tick now survives to the uploaded parquet (+regression test `TestUploadParquetPreservesAvailableAt`).
+
+**BROADER FOLLOW-UP (still open):** ~20 other DeFi handlers (governance/mev/dex_swaps/lst_rates/_dex_pools_subgraph/liquidations/risk_params/…) set `available_at=now()` DIRECTLY with NO on-chain stamp, and gas_fee's Solana/Bitcoin paths use `stamp_available_at_explicit(when=now())`. Those are the SAME determinism bug class but have no on-chain stamp to 'keep' — each needs a per-handler deterministic-timestamp derivation (from the block/snapshot/slot time in its data). That is a separate, careful per-handler pass, not covered by the ruled clobber fix.
+
 ---
 
 # `available_at` is clobbered with wall-clock `now()` after the on-chain stamp

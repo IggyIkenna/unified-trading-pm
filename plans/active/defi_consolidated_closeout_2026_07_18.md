@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -770,6 +770,20 @@ Discriminator = **does a manifest row exist**.
 `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ## Progress Log
+
+- **2026-07-21 (slot-4, /autonomous — operator ratified 4 rulings; executing the finish-list).** Operator answered the 4
+  batched decisions (all as recommended): re-emit opt-in-default-off · available_at keep-on-chain-tick · perf-bundle
+  ship-code-then-2VM-canary · glued-ids fix-write-path-and-re-migrate. **Shipped so far:**
+  - ✅ **available_at `mtds@f7af6ece`** — removed the wall-clock `now()` clobber at the 3 sites with an on-chain stamp
+    (evm_defi_collectors/solana_defi_handler/gas_fee_handler); on-chain tick now survives (+test). Broader ~20
+    direct-`now()` handlers flagged as a per-handler follow-up in the issue doc.
+  - ✅ **re-emit opt-in `mtds@05ad49f7`** — CF-11 re-emit is now `--reemit-absence`, default OFF for sharded rebuilds
+    (extracted `_reemit_absence_or_skip` to stay under the size cap; +2 tests; also fixed the 3 pre-existing dry-run
+    test failures that the unconditional re-emit caused).
+  - ✅ **stopped 2025d** — it was grinding ~40h of the now-ruled-off redundant re-emit; its 2025 captured rows are
+    flushed + in the index; the consolidator finalizes a stable manifest now.
+  - **Remaining finish-list:** checker collect-* route (deliverable #3), glued-id fix + re-migrate, perf bundle +
+    launcher-preemption + 2-VM canary.
 
 - **2026-07-20 (slot-4, /autonomous — `/data-pipeline-check-mtds` ran e2e on DeFi → CHECKER GAP found).** The check
   MECHANISM is proven (VM launch → poll → report → write-prefix verify) but it **cannot FETCH DeFi**: its launcher runs
