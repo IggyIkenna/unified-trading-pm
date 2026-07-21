@@ -584,3 +584,31 @@ their keep.
 
 **Loop terminated 2026-07-20** — success criteria met (skill built, validated, fit for the fleet; every finding tracked;
 the one blocker closed). The 4 deferred todos are execution/infra units, ready to execute.
+
+### 2026-07-21 — EXECUTING the defi fold + reader/writer + Tier-2 VM (operator-authorized, loop re-armed)
+
+Operator authorized (2026-07-21) the D3 execution + all 4 remaining todos. **Delete of legacy prefixes stays
+human-only.**
+
+**Understand phase (`wf_8ef4638a-04b`) — decisive findings:**
+
+- The legacy tree is **8 objects, ONE date (2026-04-14), 5 cells** (dex_pools/{orca,raydium,kamino} +
+  lending_indices/{kamino,solend}) — TINY, in-session, **no VM**. Each legacy file is multi-row (~98 pools/rows).
+- **No existing script folds correctly** — the primary `migrate_legacy_solana_defi_to_canonical.py` writes to a
+  now-**404 dead** dedicated bucket with the RETIRED `data_type=dex_pools` flat layout. Fold needs a small corrected
+  fork (4 changes: consolidated bucket via `resolve_bucket_name` · v9 path + `dex_pool_state` · per-instrument `groupby`
+  fan-out · `blob_exists`-skip UNION). Copy-not-move.
+- Canonical twins today: ORCA 14,094 · RAYDIUM 100 (missing 32) · **KAMINO-vault 0 · SOLEND 0 (legacy is the ONLY
+  copy)** — the fold COPIES those.
+- **Writer needs NO change** — the live MTDS writer already emits canonical (`solana_amm_pool`/`solana_vault`,
+  `dex_pool_state`).
+- **Reader (25):** execution-service `solana_amm_depth_provider.py` reads the legacy prefix + its `resolve_bucket_name`
+  call raises `TypeError` (bad `kind`/`env`/`project_id`, outside the `try`) → likely dead-on-arrival. Clean diff.
+- **F6 is a 3-REPO ATOM** (not just an adapter stamp): IS adapters (raydium/orca/kamino →
+  SOLANA_AMM_POOL/SOLANA_VAULT) + UAC `valid_data_types_for_venue_instrument_type` capability + IS enumerator
+  `_ADDRESS_KEYED_ITYPES`. Skipping any part swaps one desync for another. Direction A is SSOT-grounded. Included
+  because the fold's coverage won't reconcile without it ("migrate ... writers" covers the enumerator).
+
+**Stage 1 in flight (`wf_ecb25452-3df`):** fold-script author (no run) · reader repoint (25) · F6 3-repo fix · Tier-2 VM
+registration (31) — each QG-green + quickmerge. **Stage 2 (orchestrator):** run the fold
+dry-run→verify→apply→manifest→verify twins. **Stage 3:** todo 32 (launcher+validator) after 31 lands.
