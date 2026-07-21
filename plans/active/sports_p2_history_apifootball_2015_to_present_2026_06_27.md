@@ -245,6 +245,31 @@ drift_direction: advance-code
       daily quota (never exceed the shared per-key budget — registry `allocate_rate_budget("api_football", …)` is the
       SSOT math). **Gate** (the original todo-9 verify gate): full-history query → all AF enrichment data_types
       `expected_unattempted_pending_fetch == 0` within coverage windows, 0 blank-reason.
+- [ ] [INFRA] P0. **Relaunch the 2 dead af-backfill shards (FIXTURE_EVENTS, FIXTURE_STATS) from their durable checkpoint
+      — main-agent-ruled recovery for `BLK-32c04851` (2026-07-21).** `af-backfill-20260719-180520` (FIXTURE_EVENTS) and
+      `af-backfill-20260719-180603` (FIXTURE_STATS) went `GONE` ~2026-07-20T05:25Z (no `PREEMPTED` marker; abrupt kill,
+      cause inconclusive) and were never auto-relaunched — `PROGRESS.json` frozen at `last_completed_date=2021-05-01` /
+      `2021-03-20` respectively as of 2026-07-21T03:11Z (~22h stale), while the sibling shards LINEUPS (`-180545`) and
+      PLAYER_STATS (`-180620`) remained `RUNNING` and advancing throughout. Run (from `deployment-service/scripts/vm/`),
+      mirroring the original fleet launch exactly (same window, same `--fleet-vms` divisor so the rate-budget math stays
+      correct against the 2 already-running siblings) — **NO `--force`/`--redo_all`** (would replay from `START_DATE`
+      and discard the durable checkpoint per the PROGRESS-checkpoint contract; presence-skip resumes each shard from
+      where it stopped):
+      `     bash launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity FIXTURE_EVENTS 2020-06-06 2026-05-10     bash launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity FIXTURE_STATS  2020-06-06 2026-05-10     `
+      `af-backfill-*` is already a registered `VM_PREFIX_TO_BUCKET` prefix (`vm_zombie_watchdog.py`) — do not hand-roll
+      a new name. **No fire-and-forget**: verify `STARTED` within 60s, `run.log` shows live fetches within ~3 min, and
+      at T+10min confirm `PROGRESS.json` has advanced PAST the frozen checkpoint (count of TARGET fixtures written,
+      entity-scoped — not just VM-RUNNING activity). Evidence + full context: Progress Log entry
+      `2026-07-21T03:11Z — data_engineering slot-4` below.
+- [ ] [INFRA] P1. **Root-cause why the SPOT preemption/kill self-heal watchdog did not cover this kill class.** Two of
+      four `af-backfill-*` shards (`-180520` FIXTURE_EVENTS, `-180603` FIXTURE_STATS) died ~2026-07-20T05:25Z with no
+      `PREEMPTED` marker and sat dead ~22h with zero auto-relaunch, while
+      `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`'s fixes (all `[x]` complete) were assumed to cover
+      exactly this VM class. Determine: (a) did the watchdog daemon never see these 2 kills (heartbeat blob gap?), (b)
+      did it see them but decline to relaunch (threshold tuned for a different failure signature — e.g. requires a
+      `PREEMPTED` marker that an abrupt non-preemption kill never writes), or (c) is the daemon itself down/stale. This
+      is a real coverage gap, not a one-off — file findings as a todo update here or a fresh issue doc if the root cause
+      implicates infra beyond this one fleet.
 - [ ] [DATA] P2. **Features recompute for enriched dates** — after GW enrichment lands, re-run sports features with
       `--force`/`--no-skip-existing` for the enriched dates: `derived_features` + `fixture_features` ONLY
       (`odds_features` unaffected — odds inputs unchanged by enrichment). Mechanics + gates per
@@ -3240,3 +3265,11 @@ contract — explicitly NOT a `--force`/`redo_all` restart, which would replay f
 progress. Not flipping the checkbox — gate still far from green (2/4 shards stalled, the other 2 mid-window).
 `/skip-current-task` after filing — resume once either (a) the 2 dead shards are relaunched (infra) and reach parity
 with the other 2, or (b) a fresh full-history gate read is independently due.
+
+**`BLK-32c04851` answered by main (2026-07-21T03:14Z): Option A confirmed** — checkpoint-resume (no `--force`) is safe
+whether the kill was SPOT-preemption or a delete, since the monotonic-gated `PROGRESS.json` resumes exactly where each
+shard stopped either way; this clears the `data_engineering` STEP 0.55 accidental-delete concern (that guardrail is
+about `--force` replays / unilateral deletes, not checkpoint-gated resume). Per the ruling, did NOT relaunch ad-hoc as
+`data_engineering` — instead added two tracked `[INFRA]` todos above (P0 relaunch with the exact launcher invocation, P1
+self-heal-watchdog-coverage-gap root-cause) so the recovery dispatches through the correct craft. `/skip-current-task`
+on `-001` — resume once the new `[INFRA]` P0 todo is picked up and the 2 shards rejoin the fleet.
