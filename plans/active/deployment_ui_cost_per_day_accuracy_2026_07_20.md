@@ -79,12 +79,17 @@ principle, wrong in aggregation.
       (`daily = list(day_net.values())`, so `len(daily) == len(day_net)`); docs synced in `models.py` +
       `deployments_inventory.py`; existing regression test `test_per_resource_daily_three_values` updated (was asserting
       the buggy `/7` divisor, now asserts `/3` = days actually billed).
-- [ ] [BACKEND] P0. **Fix the 24h projection** (decision 2). Replace `max(daily)` (service.py:326) with: most recent
+- [x] ✅ [BACKEND] P0. **Fix the 24h projection** (decision 2). Replace `max(daily)` (service.py:326) with: most recent
       COMPLETE billing day; fall back to partial-day normalisation (`day_cost / hours_billed × 24`) only when no
       complete day exists — where `hours_billed` = wall-clock hours elapsed since UTC midnight for that partial day
       (`datetime.now(timezone.utc)`), NOT a new hourly billing query (the billing snapshot is daily-grained). Document
       the definition on the field. A legitimate `actual == projected` (a VM that ran exactly one complete day) is
-      correct and expected.
+      correct and expected. — deployment-api@3359d4b:
+      `projected_24h = day_net[max(complete_days)] if complete_days     else day_net[latest] / hours_billed * 24`;
+      `hours_billed` floored at 1h to avoid a runaway multiplier in the first minutes of a new UTC day. Regression tests
+      added: peak-vs-most-recent-complete-day distinction (`test_per_resource_daily_three_values`, now uses a
+      $30-peak/$20-recent dataset) + partial-day normalisation (`test_per_resource_daily_24h_partial_day_normalized`).
+      Docs synced in `models.py` + `deployments_inventory.py`.
 - [ ] [DATA] P0. **Fix AWS attribution** (decision 3). Concrete wiring: the census carrying both `instance_id` and
       `name` (Name tag) is `deployment-service` `backends/aws_census.py` (`AwsInstanceCensus` via `list_ec2_census()`),
       consumed in `deployment-api` `routes/_aws_deployments.py::_ec2_item` — but the item currently drops `instance_id`
