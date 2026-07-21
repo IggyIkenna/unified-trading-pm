@@ -59,6 +59,32 @@ locked_by:
 
 # Silent-wrong-answer audit — candidate findings
 
+## Operator responses (2026-07-21)
+
+- **DeFi ML does NOT train in prod (ruled).** The ml-service fix (`ml-service@93309c5`, raise on a DeFi total feature
+  miss) therefore stands as a latent correctness guard, not an urgent P1 — do not prioritise it as if a live model
+  depended on it.
+- **`compute_pnl` is the rates-PnL engine, NOT dead code — it is UNFINISHED WIRING (reclassifies the earlier
+  wire-or-delete note).** Verified 2026-07-21: `strategy_service/pnl/engine/orchestrator.py::compute_pnl` (and the
+  `compute_pnl_breakdown` it drives) is the ONLY code that assembles a full `PnLBreakdown` — hold-day lending/staking
+  **interest/rates PnL** via the liquidity index, plus `delta_pnl` / `basis_pnl` / `funding_rate_pnl` /
+  `interest_rate_pnl` and the rate-impact adjustment. The **live** `--operation compute` handler
+  (`_compute_attribution_for_date`) computes **only execution alpha** (fill price vs VWAP benchmark) and **skips hold
+  days** (`if total_qty == 0: continue`). So production PnL attribution today measures trade quality, not realized /
+  interest / funding / basis PnL. **Do not delete `compute_pnl`** — the follow-up is to WIRE it into the compute handler
+  (its own scoped plan), which is what makes DeFi lending/staking interest and the shipped rate-impact fix
+  (`strategy-service@928a41cf`) actually flow. One open caveat: confirm position/interest PnL is intended to live in
+  strategy-service here (vs another service) before wiring.
+- **`lending_rates` canonical form (clarified; shard-name still an operator ruling).** Rows are already canonical
+  per-**reserve** — `PROTOCOL-CHAIN:LENDING:ASSET` (e.g. `AAVE_V3-ARBITRUM:LENDING:WETH`) with per-reserve
+  `supply_apy`/`borrow_apy`. That per-asset shape is correct for the **pooled** protocols in the data (Aave V3 /
+  Compound V3 / Spark = 99.97% of rows), where each reserve has its own supply and borrow rate. A `(collateral, debt)`
+  paired canonical form applies only to **isolated-pair** protocols (Morpho Blue, Aave isolated markets, Compound v2),
+  which are not yet onboarded. So the row id-form is right; the remaining ruling is only the **shard/feature_group
+  name** (a protocol-agnostic `lending_rates` — recommended, since rows carry `protocol` — vs the registry's
+  Aave-specific `aave_lending_rates`, which would mislabel the Compound/Spark rows). Add a paired form when an
+  isolated-pair protocol is added.
+
 ## Evidence status — READ THIS FIRST
 
 The finder lenses were rigorous: each finding below was read in the enclosing function and up its caller chain, and
