@@ -1183,3 +1183,40 @@ in the MDPS pre-upload validator). **Measured:** trades write-rate ~16.9s/instru
 shard cells. **Ground-truthed (operator-gated resolution):** the existing-candle estate's canonical orphans (split-brain
 layout, no candle oracle, 6-row manifest vs 20k objects/day). Every finding is a tracked todo; the SPOT backfill fleet
 is ready pending the operator's canonical ruling + the candle-manifest-population root-cause.
+
+### 2026-07-21 — OPTION-A MIGRATION SCOPED (workflow wvyttno6s, 5 agents) — it is an 8-phase EPIC, not a cheap migration
+
+**Scale CORRECTION (material):** the original issue said "cefi 6 rows → cheap" — that was the MANIFEST count. The
+workflow's bounded sampling found the OBJECT corpus is **~10-20M candle objects** (order 10^7), tradfi-dominated: tradfi
+~10^7 (~99% carry `E1AF0_*_migrated_*` artifact leaf ids needing canonicalisation), cefi ~10^6, defi ~10^5-10^6,
+**prediction ~10^5 (an EXTRA in-scope AG)**; ~2x DUP-SHAPE inflation (same object under `pipeline_mode=` AND naked
+`timeframe=` on cefi/tradfi/pred → dedup required); empty-stem defect ~0.6-0.8%. Precise count needs the sanctioned
+**Tier-2 spot-VM single-walk** (in-session est. ±2-3x).
+
+**Blast radius (5+ repos, silent-miss is the hazard — empty frames, NO errors):** WILL-BREAK — features-service
+delta_one `data_loader.py:552-635` (hardcodes "dropped instrument_type 2026-04") + volatility
+`data_loader.py`/`io/loader.py`, unified-trading-api `batch_candles.py` (charts/UI go blind), UTL
+`domain_client/market_data.py:142-169` (legacy client), MDPS `build_continuous_engine.py:52` (continuous-future input).
+UNCERTAIN — deployment-api coverage scan. SAFE — ml/strategy/batch-recon (don't read candles by path). Two break-axes:
+(1) `instrument_type=` insert breaks EVERY flat reader; (2) source→aggregated data_type breaks derivative/trades/dex
+slices (tradfi base ohlcv passes through → axis-1 only → **false-pass risk if a reviewer tests only a tradfi-1m
+slice**).
+
+**Path transform (well-defined):** source→aggregated via `mdps_data_type_key`, tf-normalise (24h→1d), `instrument_type`
+via `_infer_instrument_type`, `pipeline_mode=` insert; defect folds — TradFi ids via
+`_renormalize_legacy_instrument_ids` (UNRESOLVABLE → QUARANTINE, never guessed), empty-stem → `ticks.parquet`.
+**Tooling: REUSE** `gcs_copy/delete/describe`, CLONE the proven executor
+`market-tick-data-service/scripts/migrate_tradfi_canonical_2026_07.py` (idempotent, sharded, enumeration-file-driven,
+--apply-gated), `record_captured` (path-independent) for manifest population, extend `launch-canonical-migration-vm.sh`.
+Upgrade verify SIZE→crc32c before any prod delete.
+
+**8 phases:** P0 (2 human-gated decisions + census) → P1 writer single-derivation fix (MDPS) → P2 volatility writer
+defect (features, independent — DOING NOW) → P3 reader lockstep (5+ repos) → P4 deployment-api coverage → P5 migration
+tooling (clone) → P6 drain+snapshot → P7 per-AG SPOT migration (defi→pred→cefi→tradfi, tradfi last) → P8
+verify/reconcile.
+
+**GATING (Phase 0, operator):** (a) `pipeline_mode=` placement — the registry template `registry.py:28` has
+`instrument_type=` but NO `pipeline_mode=` (injected post-hoc by `config.py:144-145`); add to the
+template+partition_keys OR keep the post-hoc insert. (b) continuous_future slice IN or OUT of scope (already carries
+`instrument_type=continuous_future`). Both gate the writer + all readers + the migration path-builder. Bringing these to
+the operator now; starting P2 (safe, independent) in parallel.
