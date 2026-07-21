@@ -131,9 +131,21 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       cases added to `tests/smoke/alerts-page.spec.ts` (chip toggle + URL persistence, multi-select additivity, dropdown
       filtering, clear-filters, filtered-empty-vs-ledger-empty) — all 9 pre-existing assertions in that spec stay green
       (16/16 passed). `quality-gates.sh` green (sentinel ddecdec).
-- [ ] [UI] P1. **Date-range picker** — URL-backed `?alert_from=&alert_to=`, wired to the ledger's widened retention
+- [x] ✅ [UI] P1. **Date-range picker** — URL-backed `?alert_from=&alert_to=`, wired to the ledger's widened retention
       window from Plan A. Explicit "no data before `<date>`" state when the range exceeds retention (same honesty
-      pattern as the deployments date-range plan).
+      pattern as the deployments date-range plan). — deployment-ui@89cf1f87. Local `AlertDateRangeFilter` (mirrors
+      Deployments.tsx's `DateRangeFilter` UX — atomic clear, no artificial `min`/`max` blocking a pick — but stayed
+      local rather than joining the shared `filters/` primitives, since the two pages' backends have different
+      contracts: deployments queries an explicit server-side `date_from`/`date_to`, alerts only has a `days`-back window
+      (`_DEFAULT_DAYS = _MAX_DAYS = 30`, deployment-api@cda7a89), so `[alert_from, alert_to]` filters client-side over
+      the already-loaded 30-day window instead). `RepoCiAlerts`/`UnifiedAlerts` client type gained the
+      `days`/`total_count`/`returned_count`/`offset`/`limit`/`capped` fields the backend has served since Plan A
+      (previously unread by the frontend) — `days` is the honesty source for the retention-floor banner
+      (`retentionFloorDate = today − (data.days − 1)`) rather than a hardcoded "30" that could drift from the backend's
+      own constant. 4 new `pw:L2` cases in `tests/smoke/alerts-page.spec.ts` (inclusive-bounds narrowing, banner fires
+      only when `alert_from` predates the floor, the widget's own atomic clear, page-level clear-filters also clears the
+      date range) — all 16 pre-existing assertions stay green (20/20 passed). `quality-gates.sh` green (sentinel
+      e6234d16).
 - [ ] [UI] P1. **Drill-down links** — per-row deep-links: `deployment_target` → `/deployments/:name` (preserve the
       pinned href shape), `run_url` → the external run, log stream → `?logs=<target>`, runbook link where the normalised
       row carries one. A row with an `alert_class`/source that has a detail view links to it.

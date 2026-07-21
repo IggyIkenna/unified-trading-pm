@@ -7,7 +7,7 @@ summary: >-
   1:1 active-plan owner. Two are HUMAN-gated confirmations pending operator sign-off; three have code that appears to
   have shipped since the plan was archived but the specific residual checkboxes were never verified/flipped or split
   across multiple current owners.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,6 +20,9 @@ parent_epic: agent_operating_framework_master
 priority: P3
 assigned_vm: planning
 resolved_by:
+  "slot-3, review, 2026-07-21 (item 2's [unlock-plan] on
+  transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md is a SEPARATE outstanding operator action,
+  not tracked as a checkbox here)"
 locked_by:
 source: [pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md]
 execution_scope: orchestrator-agent
@@ -127,13 +130,13 @@ issue doc can point to whichever plan actually ends up owning each thread.
       precision, L0/tbbo fallback).
 
       **Verification run**: `execution-service`'s full unit suite (`quality-gates.sh --test`) completed clean —
-                              7876 passed, 21 skipped, 1 xpassed, 0 failed (includes the Phase C tests above).
-                              `features-service`'s full suite (16k+ tests) could not be driven to a clean finish in-session — two attempts
-                              both died to shared-host resource contention (other slots' concurrent QG runs observed on the same host) at
-                              ~66-94% progress with **zero** `FAILED`/`F` markers in either partial run; both target test files were also
-                              confirmed importable and syntactically sound by direct read. Re-running `features-service` QG to full green is
-                              left as a lightweight follow-up for whoever next touches that repo — it is a verification-only gap (no code
-                              change pending), not a code gap.
+                                                      7876 passed, 21 skipped, 1 xpassed, 0 failed (includes the Phase C tests above).
+                                                      `features-service`'s full suite (16k+ tests) could not be driven to a clean finish in-session — two attempts
+                                                      both died to shared-host resource contention (other slots' concurrent QG runs observed on the same host) at
+                                                      ~66-94% progress with **zero** `FAILED`/`F` markers in either partial run; both target test files were also
+                                                      confirmed importable and syntactically sound by direct read. Re-running `features-service` QG to full green is
+                                                      left as a lightweight follow-up for whoever next touches that repo — it is a verification-only gap (no code
+                                                      change pending), not a code gap.
 
 - [x] ✅ [HUMAN] P3. **RESOLVED 2026-07-21 — premise moot, not a manual action.** `features-onchain-service` no longer
       exists as a standalone repo (`git subtree`-merged into `features-service` at `b0e63608` "feat(onchain): import
@@ -163,34 +166,34 @@ issue doc can point to whichever plan actually ends up owning each thread.
       baked into every tarball since; today's meaningful test is run-1-vs-run-2 on the SAME window).
 
       **Run 1** (`tm-backfill-20260721-195637`, cold except for 4 already-cached lead dates): task-start
-                  19:59:24Z → `Batch complete: 13 results collected` at 21:10:09.936Z = **4245.9s (1h10m46s)**. Of the 14 dates,
-                  7 were genuine "trigger days" needing real multi-league RapidAPI fetches (06-05 alone took ~16min/594 teams;
-                  06-07/10/11/12/13 each took several more minutes), 6 were non-trigger fast-skips, and **06-09 hit a real infra
-                  error** (`ManifestConsolidatorStaleError` — filed separately, see
-                  `manifest_consolidator_stale_sports_bucket_2026_07_21.md`) caught cleanly by shard-level failure isolation
-                  (run continued to 06-10 without crashing) but left 06-09 uncaptured.
+                                          19:59:24Z → `Batch complete: 13 results collected` at 21:10:09.936Z = **4245.9s (1h10m46s)**. Of the 14 dates,
+                                          7 were genuine "trigger days" needing real multi-league RapidAPI fetches (06-05 alone took ~16min/594 teams;
+                                          06-07/10/11/12/13 each took several more minutes), 6 were non-trigger fast-skips, and **06-09 hit a real infra
+                                          error** (`ManifestConsolidatorStaleError` — filed separately, see
+                                          `manifest_consolidator_stale_sports_bucket_2026_07_21.md`) caught cleanly by shard-level failure isolation
+                                          (run continued to 06-10 without crashing) but left 06-09 uncaptured.
 
-                  **Run 2** (`tm-backfill-20260721-211655`, launched immediately after run 1 finished): task-start
-                  21:19:36.647Z → `Batch complete: 14 results collected` at 21:33:47.626Z = **851.0s (14m11s)**. Decisive
-                  result: EVERY date that took real multi-minute API work in run 1 (05/06/07/10/11/12/13) fast-skipped in
-                  seconds in run 2 — the cache-hit fix correctly triggers off "has this actually been captured", not off the
-                  trigger-day schedule, so freshly-captured data short-circuits regardless of what day it is. The only real work
-                  in run 2 was re-fetching 06-09 (2m45s — legitimately necessary, since run 1 never actually captured it due to
-                  the infra error, not a caching failure).
+                                          **Run 2** (`tm-backfill-20260721-211655`, launched immediately after run 1 finished): task-start
+                                          21:19:36.647Z → `Batch complete: 14 results collected` at 21:33:47.626Z = **851.0s (14m11s)**. Decisive
+                                          result: EVERY date that took real multi-minute API work in run 1 (05/06/07/10/11/12/13) fast-skipped in
+                                          seconds in run 2 — the cache-hit fix correctly triggers off "has this actually been captured", not off the
+                                          trigger-day schedule, so freshly-captured data short-circuits regardless of what day it is. The only real work
+                                          in run 2 was re-fetching 06-09 (2m45s — legitimately necessary, since run 1 never actually captured it due to
+                                          the infra error, not a caching failure).
 
-                  **Speedup, reported both ways (honestly, not cherry-picked)**:
-                  - Raw run1-vs-run2 total: 1 − (851.0 / 4245.9) = **79.95% reduction — technically just under the archived
-                    plan's ≥80% bar** (by 0.05 percentage points).
-                  - Excluding the one legitimately-necessary 06-09 re-fetch (851.0 − 165.3 = 685.7s vs 4245.9s): **83.85%
-                    reduction — clearly exceeds ≥80%.**
+                                          **Speedup, reported both ways (honestly, not cherry-picked)**:
+                                          - Raw run1-vs-run2 total: 1 − (851.0 / 4245.9) = **79.95% reduction — technically just under the archived
+                                            plan's ≥80% bar** (by 0.05 percentage points).
+                                          - Excluding the one legitimately-necessary 06-09 re-fetch (851.0 − 165.3 = 685.7s vs 4245.9s): **83.85%
+                                            reduction — clearly exceeds ≥80%.**
 
-                  **My read, not a decision**: the raw number missing 80% by a hair is fully explained by one date's real,
-                  necessary catch-up work from an unrelated infra hiccup, not by the cache mechanism underperforming — every
-                  other previously-slow date sped up by >99%. But this is exactly the judgment call that belongs to a human,
-                  not an agent self-grading its own validation. **`[unlock-plan]` on
-                  `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md` is explicitly NOT granted here
-                  — operator approval needed as a separate, distinct action`, citing whichever of the two speedup
-                  numbers above you find dispositive.** (repo: instruments-service, deployment-service)
+                                          **My read, not a decision**: the raw number missing 80% by a hair is fully explained by one date's real,
+                                          necessary catch-up work from an unrelated infra hiccup, not by the cache mechanism underperforming — every
+                                          other previously-slow date sped up by >99%. But this is exactly the judgment call that belongs to a human,
+                                          not an agent self-grading its own validation. **`[unlock-plan]` on
+                                          `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md` is explicitly NOT granted here
+                                          — operator approval needed as a separate, distinct action`, citing whichever of the two speedup
+                                          numbers above you find dispositive.** (repo: instruments-service, deployment-service)
 
 - [x] ✅ [DOCS] P3. Re-audit `ui_quality_gates_parity_2026_03_16.plan.md`'s 25 residual items against the CURRENT state
       of `codex/06-coding-standards/ui-testing-layers.md` + the 11 consumer UI repos (any-type violations, console.log
@@ -200,34 +203,34 @@ issue doc can point to whichever plan actually ends up owning each thread.
       surfaced a real, live, workspace-wide gate bug, filed separately).**
 
       Of the "11 consumer UI repos" the plan targeted, only 2 (`deployment-ui`, `unified-trading-system-ui`) still
-                      exist as live surfaces — everything else (`unified-trading-ui-kit`, client-reporting-ui,
-                      execution-analytics-ui, live-health-monitor-ui, etc.) was archived/consolidated per
-                      `unified-trading-pm/workspace-manifest.json`, which is why 8 of the 25 items are MOOT (targeted a
-                      now-nonexistent repo/artifact: `p3-uikit-tests-deployment`, `p6-setup-sh-ui-kit-dist`,
-                      `p6-manifest-uikit-testing-level`, `p7-qg-uikit`, `p7-qg-consumer-parallel`, plus 3 more).
+                                              exist as live surfaces — everything else (`unified-trading-ui-kit`, client-reporting-ui,
+                                              execution-analytics-ui, live-health-monitor-ui, etc.) was archived/consolidated per
+                                              `unified-trading-pm/workspace-manifest.json`, which is why 8 of the 25 items are MOOT (targeted a
+                                              now-nonexistent repo/artifact: `p3-uikit-tests-deployment`, `p6-setup-sh-ui-kit-dist`,
+                                              `p6-manifest-uikit-testing-level`, `p7-qg-uikit`, `p7-qg-consumer-parallel`, plus 3 more).
 
-                      **DONE (12)**: `p1-typecheck-step-rename`/`p1-build-step-rename` (evolved into a different but equivalent 8-stage
-                      `[0/6]…[5/6]` numbering, `base-ui.sh` current), `p1-eslint-version-check` (`base-ui.sh:202-203` captures +
-                      prints `ESLINT_VER`), `p2-propagate-eslint` (both live repos carry `eslint.config.base.js`),
-                      `p4-fix-ts-ignore` (0 hits, both repos), `p4-page-test-depth` (far exceeded — 75 + 286 test files),
-                      `p5-coverage-audit`/`p5-coverage-exclusion-comment` (`deployment-ui`'s exclusions are reason-commented;
-                      `unified-trading-system-ui` has no exclusions to audit), `p6-rollout-eslint-in-unified` (mechanism shipped +
-                      ran), `p6-cursor-rule` (shipped under a different filename,
-                      `.cursor/rules/ui/ui-quality-gates-typescript.mdc` + 4 sibling rules), `p6-codex-doc` (absorbed into
-                      `codex/06-coding-standards/ui-testing-layers.md` rather than the originally-proposed filename), `p7-qg-pm`
-                      + `p7-rollout-first` + `p7-setup-all-ui` (artifacts they'd produce are present and working in both live repos).
+                                              **DONE (12)**: `p1-typecheck-step-rename`/`p1-build-step-rename` (evolved into a different but equivalent 8-stage
+                                              `[0/6]…[5/6]` numbering, `base-ui.sh` current), `p1-eslint-version-check` (`base-ui.sh:202-203` captures +
+                                              prints `ESLINT_VER`), `p2-propagate-eslint` (both live repos carry `eslint.config.base.js`),
+                                              `p4-fix-ts-ignore` (0 hits, both repos), `p4-page-test-depth` (far exceeded — 75 + 286 test files),
+                                              `p5-coverage-audit`/`p5-coverage-exclusion-comment` (`deployment-ui`'s exclusions are reason-commented;
+                                              `unified-trading-system-ui` has no exclusions to audit), `p6-rollout-eslint-in-unified` (mechanism shipped +
+                                              ran), `p6-cursor-rule` (shipped under a different filename,
+                                              `.cursor/rules/ui/ui-quality-gates-typescript.mdc` + 4 sibling rules), `p6-codex-doc` (absorbed into
+                                              `codex/06-coding-standards/ui-testing-layers.md` rather than the originally-proposed filename), `p7-qg-pm`
+                                              + `p7-rollout-first` + `p7-setup-all-ui` (artifacts they'd produce are present and working in both live repos).
 
-                      **STILL-OPEN (5, low-value except the flagged one)**: `p6-setup-sh-ui-vitest-check` (no `UI.5` step in
-                      `setup.sh`), `p6-rollout-vitest-template` (no propagation mechanism, but moot in practice — both live repos
-                      already have valid configs), `p6-run-all-setup-ui-flag` (`--ui-only` literal flag absent, but `--repos=` already
-                      achieves the same effect with only 2 UI repos left) — none of these three block anything today, not worth
-                      independent follow-up at P3. The remaining two (`p4-fix-any-types`, `p4-fix-console-log`) plus
-                      `p4-chart-theme-check` are DONE for `deployment-ui` but genuinely open for `unified-trading-system-ui` — **and
-                      the reason they're open is a real bug, not neglect**: `base-ui.sh:337` gates its whole codex-compliance block on
-                      `[ -d "src" ]`, and `unified-trading-system-ui` uses the Next.js `app/` router (no `src/` at all), so the gate
-                      has silently never run for that repo. Filed as its own issue doc (workspace-wide gate bug, not just a
-                      per-repo cleanup item):
-                      `plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md`. (repo: unified-trading-system-ui)
+                                              **STILL-OPEN (5, low-value except the flagged one)**: `p6-setup-sh-ui-vitest-check` (no `UI.5` step in
+                                              `setup.sh`), `p6-rollout-vitest-template` (no propagation mechanism, but moot in practice — both live repos
+                                              already have valid configs), `p6-run-all-setup-ui-flag` (`--ui-only` literal flag absent, but `--repos=` already
+                                              achieves the same effect with only 2 UI repos left) — none of these three block anything today, not worth
+                                              independent follow-up at P3. The remaining two (`p4-fix-any-types`, `p4-fix-console-log`) plus
+                                              `p4-chart-theme-check` are DONE for `deployment-ui` but genuinely open for `unified-trading-system-ui` — **and
+                                              the reason they're open is a real bug, not neglect**: `base-ui.sh:337` gates its whole codex-compliance block on
+                                              `[ -d "src" ]`, and `unified-trading-system-ui` uses the Next.js `app/` router (no `src/` at all), so the gate
+                                              has silently never run for that repo. Filed as its own issue doc (workspace-wide gate bug, not just a
+                                              per-repo cleanup item):
+                                              `plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md`. (repo: unified-trading-system-ui)
 
 - [x] ✅ [SCRIPT] P3. Verify whether the CME combo-parquet migration (`rebundle_combo_parquets.py` dry-run + production
       cutover + reader-compat-shim removal + manifest reconciler for stale per-combo rows) from
@@ -263,8 +266,25 @@ issue doc can point to whichever plan actually ends up owning each thread.
       different, already-tracked concern (the 1,154,976 tick-side `UD_*` manifest rows' catalogue/id-format/leg-weights
       metadata quality) — not this plan's physical file-bundling question, so there is nothing outstanding to fold in
       for THIS specific residual. (repo: market-tick-data-service)
-- [ ] [DOCS] P3. Split `dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`'s 67 residual items between
-      `marketing_site_three_route_consolidation_2026_04_26.plan.md` (onboarding/questionnaire/FOMO funnel, Phases 0-8)
-      and `capability_wizard_and_manifest_2026_06_11.md` (Phase 9 archetype-capability taxonomy) — name each item's real
-      owner (or a fresh issue doc for whatever lands in neither) instead of a single blanket successor. (repo:
+- [x] ✅ [DOCS] P3. Split via two parallel research agents (99 open items total across the archived plan's 12 phases —
+      67 was an undercount). **Correction to this todo's own premise**:
+      `capability_wizard_and_manifest_     2026_06_11.md` does NOT own Phase 9's archetype-capability-taxonomy work —
+      confirmed by grep, it claims ZERO of that scope (its overlap is extracting the EXISTING registry into the manifest
+      exporter, not adding new archetype cells). Real classification: - **~7 items HAS_SUCCESSOR** in
+      `marketing_site_three_route_consolidation_2026_04_26.plan.md` (Phase 3's post-questionnaire redirect + Phase 7's
+      briefing-page CTAs — the funnel was redesigned to route through `/briefings` → Strategy Review → Platform
+      Walkthrough instead of the originally-planned Explore-tab pre-filter; that plan's already-shipped Phase 0/1/4/5
+      todos are the actual successor). - **~35+ items DONE_BY_OSMOSIS** — shipped in code already (often under a
+      different filename/dir than originally spec'd — e.g. `codex/14-playbooks/` → `codex/14-customer-journeys/`,
+      `service-family-scope.md` → `commercial-service-families.md`), verified by direct file reads, not just grep-0. -
+      **4 items STALE_OBSOLETE** — Phase 4's demo-staging items (`docker-build.env.uat` moved off the demo auth provider
+      to real Firebase in 2026-04-25, making the described flow no longer applicable) + Phase 1's questionnaire-axis
+      tile-lock item (superseded by a documented SSOT decision: those axes are FOMO-pre-filter-only, never tile-lock,
+      per `codex/09-strategy/architecture-v2/       strategy-questionnaire-mapping.md`). - **21 items
+      GENUINELY_ORPHANED** — bundled into a new issue doc (not 67/99 separate ones):
+      `plans/active/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md` (P3). Headline
+      finding there: `archetype_capability_manifest.json` was never regenerated after Phase 9's 33-archetype enum
+      expansion (VOL/MM/PORTFOLIO) — still only 23 legacy archetypes have real capability cells. - **~7 items
+      AMBIGUOUS** — noted in the sub-agent reports (human-review gates, UAT-only checks, deployed-infra IAM
+      verification) that can't be resolved from static code reading; left as-is, not force-classified. (repo:
       unified-trading-pm)
