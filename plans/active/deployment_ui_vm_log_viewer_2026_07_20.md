@@ -101,11 +101,22 @@ source:
       from `GCS_LOG_URI`, matching the Python helper's shape) so a hard-killed daemon still leaves a final copy. Unit
       tests added in both repos (`test_deployment_registry.py`, `test_daemon.py`, `test_vm_event_emission.py`); both
       repos' `quality-gates.sh` green.
-- [ ] [BACKEND] P0. **Read-path resolution** (decision 2) — deployment-api tries `vm-logs/{vm}/run.log` first for any VM
-      (regardless of `completed_at`); on miss, falls back to the final-snapshot path (`vm_run_log_final_uri`, from the
-      writer todo above — `sequential: true` guarantees it lands first). Removes the broken `completed_at[:10]`-keyed
-      rolling-date guess (`deployments_inventory.py:675-680`, `vm_deployments.py:133-143`) — delete that dead logic,
-      don't leave it as an unused fallback.
+- [x] ✅ [BACKEND] P0. **Read-path resolution** (decision 2) — deployment-api tries `vm-logs/{vm}/run.log` first for any
+      VM (regardless of `completed_at`); on miss, falls back to the final-snapshot path (`vm_run_log_final_uri`, from
+      the writer todo above — `sequential: true` guarantees it lands first). Removes the broken
+      `completed_at[:10]`-keyed rolling-date guess (`deployments_inventory.py:675-680`, `vm_deployments.py:133-143`) —
+      delete that dead logic, don't leave it as an unused fallback. — `deployment-api@8ec29f0`. `_vm_item()`
+      (deployments_inventory.py) now always sets `run_log_uri = vm_log_stream_uri(entry.vm_name)` (the deterministic
+      live path, regardless of `completed_at` — previously only computed via the broken rolling-date guess and only when
+      completed). `_to_model()` (vm_deployments.py) keeps `log_uri` as the live path (already sourced from the registry
+      entry) and replaces the broken `vm_run_log_rolling_uri(vm_name, date_stamp)` call with the deterministic
+      `vm_run_log_final_uri(vm_name)` for `archive_run_log_uri` on completed entries — no date-guessing, no 404s from a
+      wrong cron-run-date guess. The serial-console rolling-archive logic (a separate, still-correct mechanism) is
+      untouched. Deliberately scoped to a pure deterministic-URI refactor with NO new GCS I/O in these two
+      background-cached bulk census paths (`_load_inventory`/`_load_vm_deployments`, both 45s SWR-cached) — the actual
+      live-vs-archive EXISTENCE check belongs in the size/metadata endpoint (next todo), which resolves for one VM at
+      request time, not for the whole fleet on every cache refresh. Unit test updated
+      (`test_route_deployments_inventory.py`); `deployment-api` `quality-gates.sh` green (4790 passed).
 - [ ] [BACKEND] P0. Log metadata endpoint — size + last-modified via `gcs_describe_object` on whichever path resolved;
       response marks which location was used (live vs archive) so the UI can label it.
 - [ ] [BACKEND] P0. Bounded tail endpoint — byte-range read of only the last ~64–256KB, split to the last 200–500 lines
@@ -157,6 +168,13 @@ source:
   `HeartbeatDaemon._write_final_log_snapshot()` in `unified-trading-library@af1299d5`, wired into `heartbeat_cli.py` +
   the `vm-exec-with-gcs-tee.sh` SIGKILL fallback in `deployment-service@815e8f3`. Read-path resolution (todo 2) can now
   consume this fixed path instead of the broken date-guessing rolling lookup.
+- **2026-07-21** (slot 5) — Shipped read-path resolution (todo 2), `deployment-api@8ec29f0`: deleted the broken
+  `completed_at[:10]`-keyed rolling-date guess in both `deployments_inventory.py::_vm_item` and
+  `vm_deployments.py::_to_model`; replaced with the deterministic live path (`vm_log_stream_uri`, always populated
+  regardless of `completed_at`) and the deterministic final-snapshot archive path (`vm_run_log_final_uri`, from todo 1).
+  Scoped as a pure URI-construction fix — no new GCS existence-check I/O added to these two 45s-SWR-cached bulk census
+  endpoints; the real live-vs-archive resolution (an actual `gcs_describe_object` existence check) belongs in the next
+  todo's per-VM size/metadata endpoint, not the fleet-wide background walk.
 
 ## Codex SSOTs
 
