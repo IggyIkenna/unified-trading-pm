@@ -201,7 +201,12 @@ Full audit transcript available on request; the load-bearing facts:
       union/revert/old-deeplink, service dropdown, target search debounce+deeplink; `deployments-approx-marker.spec.ts`;
       `deployments-always-on-marker.spec.ts`; `deployments-date-range-out-of-range.spec.ts`; `deployments-wsd.spec.ts`).
       No code changes required.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
+- [x] ✅ [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`). —
+      VERIFIED, no code changes required: every prior todo's cited SHA (deployment-api@ff5bb06, @42191d9, @fbb5ac9,
+      @1ff8699, @bb13425; deployment-ui@31d862c, @234130a, @e4f893e, @c7d0c04, @1880424, @79cf1dc, @0dd3438, @1cf191b,
+      @6101449) confirmed as an ancestor of `origin/live-defi-rollout` via `git merge-base     --is-ancestor` in both
+      repos — all already shipped by the workers who did the implementation. Both deployment-api and deployment-ui (+
+      unified-trading-library) worktrees are clean, `ahead=0`/`behind=0`. Nothing left to ship.
 - [ ] [REVIEW] P2. Post-phase codex audit — document the per-kind date-filter support matrix, the approx-colour
       convention reuse, the always-on-service treatment, and the 7-day-cap-bypass/30-day-floor behaviour in
       `codex/05-infrastructure/deployment-observability.md`.
