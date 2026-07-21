@@ -66,10 +66,11 @@ principle, wrong in aggregation.
 
 ## Todos
 
-- [ ] [REVIEW] P0. Reproduce + record the defect on live data — run `per_resource_daily(days=7)` and find ANY resource
-      with billing rows for exactly ONE day in the window (it will exhibit `avg == actual/7` and `projected == actual`,
-      the reported symptom; `$4.4 / 7d $0.63 / 24h $4.4` was an illustrative example, not a specific named VM to search
-      for). Capture that resource's `day_net` dict in the Progress Log as ground truth. No code change.
+- [x] ✅ [REVIEW] P0. Reproduce + record the defect on live data — run `per_resource_daily(days=7)` and find ANY
+      resource with billing rows for exactly ONE day in the window (it will exhibit `avg == actual/7` and
+      `projected == actual`, the reported symptom; `$4.4 / 7d $0.63 / 24h $4.4` was an illustrative example, not a
+      specific named VM to search for). Capture that resource's `day_net` dict in the Progress Log as ground truth. No
+      code change. — reproduced 2026-07-21, see Progress Log.
 - [ ] [BACKEND] P0. **Fix the 7-day-average divisor** (decision 1). In `per_resource_daily`
       ([`service.py:319-327`](../../deployment-api/deployment_api/services/cost_observability/service.py)), divide by
       `len(day_net)` instead of the fixed window length. Sync field docs (`models.py:73-83`,
@@ -121,6 +122,22 @@ principle, wrong in aggregation.
   distinguished by colour only, not a text label — this refines the tracker's original "tooltip" suggestion). Plan
   written now with decisions final but kept `status: draft` — operator is mid-change on AO and wants dispatch held until
   that settles.
+- **2026-07-21** — Reproduced the defect on LIVE billing data (GCP BigQuery + AWS Athena,
+  `GCP_PROJECT_ID=central-element-323112`, window 2026-07-15..2026-07-22 exclusive, `today=2026-07-21`) by calling
+  `CostObservabilityService().per_resource_daily(days=7)` (and its internal `_window`/`_window_table`/`_agg` to recover
+  the raw `day_net` per resource) from a standalone script — no code change. Of 1,676 resources with billing rows in the
+  window, **1,039 (62%) have exactly ONE billing day** — the bug is the common case, not an edge case. Ground truth
+  (near-exact match to the plan's illustrative `$4.4 / 7d $0.63 / 24h $4.4` figures):
+  - `resource_id: features-sports-sports-20260719-113257`
+  - `day_net: {"2026-07-19": 4.432787}`
+  - current (buggy) output: `actual_usd=4.43`, `avg_7d_usd=0.63` (= `4.43/7`, decision-1 bug — divides by fixed window
+    length 7 instead of `len(day_net)==1`), `projected_24h_usd=4.43` (= `max(daily)`, which happens to already equal
+    `actual` for a true 1-day resource — decision-2 doesn't change this case, only the multi-day/partial-day cases).
+  - Also captured for cross-check: `resource_id: cefi-queue-heavy-20260714-123340`,
+    `day_net: {"2026-07-15": 5.7624200000000005}` → `actual_usd=5.76`, `avg_7d_usd=0.82`, `projected_24h_usd=5.76`.
+  - Confirms the exact symptom named in the todo: `avg == actual/7` and `projected == actual`. After the decision-1 fix
+    (divide by `len(day_net)`), `avg_7d_usd` for both examples above should read equal to `actual_usd` (`4.43` and
+    `5.76` respectively), not `0.63`/`0.82`.
 
 ## Codex SSOTs
 
