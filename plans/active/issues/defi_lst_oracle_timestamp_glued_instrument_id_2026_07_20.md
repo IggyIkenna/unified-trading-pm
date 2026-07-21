@@ -173,10 +173,17 @@ currently STOPPED, so no new ones are being written now.
 
 **RESUME (precise):**
 
-1. **Diagnose the 28** — scoped run over the 77 `dex_pool_state` glued rows (filter first, it's slow full-scan): for
-   each LIVE file, list its `instrument_id`s, compute `leaf_for_instrument_id`, and print the leaf + the exact
-   exception. Likely a symbol → invalid-leaf case; fix the sanitiser (or route those 28 to `needs_attribution`), write
-   their twins, THEN the 22 retire on a re-run of the harness `--apply`.
+1. ✅ **DONE 2026-07-21 — the 28 diagnosed and fixed.** Root cause: all 28 are a single `WETH`-paired Uniswap V3 pool
+   (recurring across BASE/ARBITRUM/OPTIMISM, multiple days) whose counterparty is a spam/"zalgo" token — a symbol
+   stuffed with ~1000 Unicode combining marks. Confirmed via a parallelized, exception-logging diagnostic run (0 errors
+   on 14,914 real instrument checks) followed by an instrumented `--apply` run that captured the actual GCS exception:
+   `BadRequest: 400` because the sanitized leaf was **1,201 bytes**, over GCS's 1024-byte object-name cap. Fixed in
+   `_sanitize_defi_symbol` (`canonical_write.py`) — strips every Unicode combining-mark codepoint
+   (`unicodedata.category` in `Mn`/`Mc`/`Me`) then caps the result at 200 bytes; hardens both this migration AND the
+   live per-instrument writer against any future zalgo-stuffed on-chain token symbol. Pinning test added. Shipped
+   `market-tick-data-service@781204d8` (dirty-deps direct-push carve-out — unified-trading-library had unrelated
+   concurrent-agent WIP blocking quickmerge's pre-flight; not touched). Migration re-run in progress to finish retiring
+   the last 22 files.
 2. **Rebuild the manifest** (VM-scale, ~hrs — run on a `canonical-migration` VM, not in-session):
    `rebuild_defi_manifest --bucket market-data-tick-defi-prd-central-element-323112 --start-date 2020-01-01 --end-date 2026-12-31`
    (reemit OFF, the mtds@05ad49f7 default). `_migrated_` originals skipped by Defect-A.
