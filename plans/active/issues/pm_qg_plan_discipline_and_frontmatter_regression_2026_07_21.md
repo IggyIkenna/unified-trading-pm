@@ -82,9 +82,9 @@ normally.
       102 (42 A + 60 C) is genuine accumulated fleet-wide plan-corpus debt, not attributable to one commit; tracked as a
       fresh P3 follow-up todo below rather than force-fit into this P2 task's scope. (repo: unified-trading-pm)
 - [x] [DOCS] P3. ✅ Partial: real per-plan fixes for the 4 most tractable `C-archive-no-successor` cases (all
-      zero/near-zero open items) — unified-trading-pm@<PENDING_SHA_2>. `incident_gateway_and_state_machine_2026_05_23`
-      and `reconciliation_age_tracking_and_escalation_2026_05_23` already had honest "all items completed" banners but
-      in wording the regex didn't recognize (no literal `successor:`/`MIGRATED TO:` token) — reworded to the established
+      zero/near-zero open items) — unified-trading-pm@6538ead51. `incident_gateway_and_state_machine_2026_05_23` and
+      `reconciliation_age_tracking_and_escalation_2026_05_23` already had honest "all items completed" banners but in
+      wording the regex didn't recognize (no literal `successor:`/`MIGRATED TO:` token) — reworded to the established
       template, for the second one naming its REAL already-documented successor (`observability_master` epic P3) instead
       of a generic "not applicable". `instrument_universe_registry_consolidation_2026_06_29` had zero open items and its
       only "DEFERRED" hits were incidental prose ("verdict deferred to the investigation result", "no deferred `- [ ]`
@@ -145,23 +145,23 @@ normally.
       declare abandoned rather than tracked as real open work). Same per-plan-judgment discipline as batch 1. (repo:
       unified-trading-pm)
 - [x] [DOCS] P3. ✅ Precisely 3-way classified all 42 active-plan `A-deferred-no-banner` violations by re-scanning each
-      plan's actual `_DEFERRED_RE` hit context (not just presence of the word) — unified-trading-pm@<PENDING_SHA_2>. My
-      FIRST pass (before landing) assumed most were the CLAUDE.md-sanctioned `DEFERRED-OPERATOR-DECISION` /
-      `-CREDENTIALS` / `-UPSTREAM-OUTAGE` qualifier pattern — that assumption was WRONG on direct inspection. Real
-      breakdown: **(1) 2 plans** (`cicd_mvp_ldr_to_main_pipeline_2026_06_30`,
-      `monitoring_control_plane_master_2026_06_10`) had EVERY hit as a genuine all-caps `DEFERRED-<QUALIFIER>` tag
-      (`DEFERRED-OPERATOR-DECISION`, `DEFERRED-BY-HEADROOM`) — fixed mechanically with the exact `f6df716e7` precedent
-      banner ("See inline `DEFERRED-<QUALIFIER>` annotations... for the specific successor/blocker"). **(2) 10 plans**
-      had EVERY hit as an INCIDENTAL compound-word/filename false positive — `_DEFERRED_RE`'s `\bDEFERRED\b\s*[—\-]`
-      matches "deferred-" as a lowercase compound modifier with NO governance meaning at all (e.g.
-      `deferred-table item 13`, `deferred-import adapter pattern`, `deferred-build-replay` — a GHA workflow NAME), the
-      exact same loose-regex-matches-an-incidental-substring bug class fixed today in
-      `check_evidence_backed_completion.py` — these need a CHECKER fix (see the new todo below), not a plan edit. **(3)
-      30 plans** have at least one genuine BARE `**DEFERRED**`/`[DEFERRED]`/`DEFERRED — <description>` mention (a real
-      unqualified defer, not a false positive, not a formal qualifier tag either) — these need real per-plan judgment
-      same as the archived batches. Landed the 2 mechanical fixes; re-scanned full corpus (starting from 98, after the
-      archived-plan batch above): 98 → 96, re-baselined 98 → 96 via `--baseline-write`. Split the remaining 40 into the
-      2 todos below instead of guessing further. (repo: unified-trading-pm)
+      plan's actual `_DEFERRED_RE` hit context (not just presence of the word) — unified-trading-pm@6538ead51. My FIRST
+      pass (before landing) assumed most were the CLAUDE.md-sanctioned `DEFERRED-OPERATOR-DECISION` / `-CREDENTIALS` /
+      `-UPSTREAM-OUTAGE` qualifier pattern — that assumption was WRONG on direct inspection. Real breakdown: **(1) 2
+      plans** (`cicd_mvp_ldr_to_main_pipeline_2026_06_30`, `monitoring_control_plane_master_2026_06_10`) had EVERY hit
+      as a genuine all-caps `DEFERRED-<QUALIFIER>` tag (`DEFERRED-OPERATOR-DECISION`, `DEFERRED-BY-HEADROOM`) — fixed
+      mechanically with the exact `f6df716e7` precedent banner ("See inline `DEFERRED-<QUALIFIER>` annotations... for
+      the specific successor/blocker"). **(2) 10 plans** had EVERY hit as an INCIDENTAL compound-word/filename false
+      positive — `_DEFERRED_RE`'s `\bDEFERRED\b\s*[—\-]` matches "deferred-" as a lowercase compound modifier with NO
+      governance meaning at all (e.g. `deferred-table item 13`, `deferred-import adapter pattern`,
+      `deferred-build-replay` — a GHA workflow NAME), the exact same loose-regex-matches-an-incidental-substring bug
+      class fixed today in `check_evidence_backed_completion.py` — these need a CHECKER fix (see the new todo below),
+      not a plan edit. **(3) 30 plans** have at least one genuine BARE
+      `**DEFERRED**`/`[DEFERRED]`/`DEFERRED — <description>` mention (a real unqualified defer, not a false positive,
+      not a formal qualifier tag either) — these need real per-plan judgment same as the archived batches. Landed the 2
+      mechanical fixes; re-scanned full corpus (starting from 98, after the archived-plan batch above): 98 → 96,
+      re-baselined 98 → 96 via `--baseline-write`. Split the remaining 40 into the 2 todos below instead of guessing
+      further. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P3. Tighten `check_plan_discipline.py`'s `_DEFERRED_RE` (rule A) + `_ARCHIVE_OK_TOKENS_RE` (rule C) so
       lowercase `deferred-<word>` compound modifiers / filenames (not the all-caps `DEFERRED-<QUALIFIER>` governance
       convention, and not a real bare `DEFERRED —`/`**DEFERRED**` marker) stop false-positiving — same bug class as
