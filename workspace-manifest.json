@@ -1262,7 +1262,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 6,
         "warn_file_count": 21,
@@ -1391,7 +1391,7 @@
         "large_file_count": 33,
         "coverage_pct": 50.9
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "breaking_scan_dir": "none"
     },
     "deployment-ui": {
