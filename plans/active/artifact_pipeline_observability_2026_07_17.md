@@ -507,6 +507,16 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   build-datetime column (operator ask). Interactions and stat tiles verified against the data, not eyeballed. All tab-1
   review findings folded into the per-tab gate item above. **No page code started — still mock-only, per the working
   mode banner.**
+- **2026-07-21 — Tabs 2–5 correctness+usefulness pass, AWS-deferred reframe, issue doc filed (3 ships).** (1)
+  `ui@e01e5fc` — Deploy timeline made estate-wide (Cloud Run + GCE VM launches as tarball-lane deploys + real AWS
+  storm), live-now badges, held-for intervals, human-vs-CI deployer, filter chips, console links; Pipeline gained filter
+  chips + the ⇄-both-lanes xlane badge; Artifacts rebuilt to one-row-per-repo from a **live ECR inventory** (20 repos,
+  real counts); Health folded in deploy-lane findings + severity filter + cross-links. All verified in jsdom (0 script
+  errors). AWS data probed live 2026-07-21; GCP stayed the 2026-07-17 sample (auth still expired). (2) `ui@fa38eaa` +
+  `pm@f25f10911` — reframed AWS from red/defect to **intentionally parked** (operator: no AWS credits, GCP is sole
+  active path): top banner, Deploy/Artifacts/Health states → parked/deferred, Health `deferred` tier. (3) `pm@6f52496a4`
+  — filed `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md` after re-verifying every audit
+  finding against current code (see the new lesson below). **Still mock-only; no page code started.**
 
 ## Lessons this session (so they are not re-learned the hard way)
 
@@ -530,6 +540,23 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 - **The tarball-audit agent's completion record was lost across a compaction** — its findings had already been folded
   into the plan, but I re-verified every load-bearing Lane-B claim with a fresh live probe rather than trusting them.
   Treat any pre-compaction agent finding as unverified until re-probed.
+- **An audit finding decays — re-verify against CURRENT code before filing or acting, especially in a hot area
+  (2026-07-21).** The 2026-07-17 pipeline-bug list was ~4 days old and the CI area is the workspace's hottest (Ikenna
+  pushed to PM 9 min before I checked; `setup-data-pipeline-vm.sh` 7h, `freeze-deferred-build-replay.yml` 24h). On
+  re-check: **#5 was already FIXED 2026-07-20**, **#2 was not-a-bug** (never reproduced), **#6 had partially landed**
+  (SHA now measured at boot). Had I filed the list as-was, ~half would have been stale/duplicate. The discipline that
+  caught it: grep the 444 issue docs for existing coverage → **READ** the candidates (not grep-then-conclude) → verify
+  each bug against the live file + a live probe (the AWS bucket 404, the `deferred-aws-build-` vs `deferred-build-`
+  filter) → file only what survives, and record the "verified NOT open" set so nobody re-investigates.
+- **"Parked" ≠ "broken" — do not frame an intentional-off state as a defect (operator 2026-07-21).** I first rendered
+  the AWS App Runner PAUSED / ECR-idle states as high-severity red defects ("orphaned · GC"). They are **deliberate**:
+  AWS is deferred (no credits), GCP is the sole active production path. Fixing code is free; only creating/deploying AWS
+  images costs credits — so AWS-side code bugs are _deferred-with-AWS_, not urgent, and the parked estate is _kept_, not
+  a GC candidate. When a resource is off, establish WHY (intentional vs failure) before labelling it.
+- **Editing a teammate's actively-hot files is a collision risk, not just a cost question.** When the operator green-lit
+  fixing the bugs, the real blocker surfaced as collision (Ikenna is live in every file these bugs live in), not cost.
+  Surfaced it and parked the fixes in the issue doc with "loop Ikenna in first" rather than barging into fleet-critical
+  CI/boot files. Recurring: the multi-agent-safety "never edit recently-pushed files" rule is about blast radius.
 
 ## Deferred work after 2026-07-21
 
