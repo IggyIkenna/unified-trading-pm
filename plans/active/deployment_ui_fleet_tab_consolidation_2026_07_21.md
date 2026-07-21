@@ -179,8 +179,22 @@ Key audit facts driving the merges:
       Resources column (alongside cpu/mem/disk + `LeakedBadge`): "N err" in red when `rows_error > 0`, plus "N in"/"N
       evt" when `rows_in`/`events_emitted` are present. Null-renders per field (no fabricated 0 for a row without the
       signal). 2 new tests + full existing suite green (1054 tests); full `quality-gates.sh` (base-ui.sh v2.0) green.
-- [ ] [UI] P1. **Retire /vm-deployments** — remove the `/vm-deployments` route (`App.tsx`) + its nav entry
-      (`NavMenu.tsx`) once its content is folded in; add a redirect `/vm-deployments → /deployments`.
+- [x] [UI] P1. ✅ **DEVIATED from the literal ask (operator decision, BLK-7cb5bbbc)** — deployment-ui@92b5cd4. The audit
+      behind this todo never accounted for 4 venue-config panels (`VenueCredentialsPanel`/
+      `VenueDateRangePanel`/`VenueRelaunchEstimatePanel`/`VenueTardisWindowsPanel`) that ONLY render in
+      `VmDeploymentsContent`'s non-compact mode — the `/fleet` cockpit embed uses `compact=true` and explicitly skips
+      them (`{!compact && (<><VenueCredentialsPanel/>...`). A literal hard redirect + route deletion would have silently
+      orphaned this real, tested functionality (`tests/smoke/venue_tardis_windows.spec.ts`). Escalated via `/blocked`;
+      operator answered A — reuse the codebase's existing `legacy: true` `NAV_GROUPS` quarantine convention instead of
+      inventing a new mechanism: `/vm-deployments` STAYS a live route (bookmarks/deep-links survive, `orphan-audit.ts`
+      confirms zero new unreachable routes) but moved to a new "Legacy" nav group, off the canonical dropdown/bar
+      (`NAV_ITEMS_CANONICAL` 16→15). Updated 4 Vitest suites whose counts/testids hard-coded vm-deployments as canonical
+      (`NavMenu.test.tsx`, `TopNavBar.test.tsx`, `Header.test.tsx`) + rewrote
+      `tests/smoke/vm_deployments_archive_history.spec.ts`'s now-redirect-was-wrong assertion. Full 1052-test suite
+      green; full `quality-gates.sh` (base-ui.sh v2.0) green. The archive/history table itself was already folded into
+      `DeploymentDetail`'s History card in the prior todo — this todo only concerned the standalone page's route/nav
+      fate. Deferred: relocating the 4 venue panels to a permanent canonical home is real unplanned design work, filed
+      as `plans/active/issues/vm_deployments_venue_panels_orphaned_route_2026_07_21.md` rather than decided here.
 - [ ] [UI] P1. **Remove FleetInfra** — delete the FleetInfra section from `FleetTab` and its imports; remove any nav/
       route pointing at it. Confirm nothing else depends on its endpoints (`/api/fleet/vm-census`,
       `/api/fleet/infra-vm-health`) in the UI; leave the backend endpoints intact (out of scope).
