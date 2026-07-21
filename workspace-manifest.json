@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "ruff",
+        "qg_red_reason": null,
+        "large_file_count": 1,
         "coverage_pct": 81.47,
-        "warn_file_count": 0,
-        "large_file_count": 1
+        "warn_file_count": 0
       }
     },
     "batch-live-reconciliation-service": {
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": "ruff",
-        "coverage_pct": 74.68,
-        "warn_file_count": 4,
-        "large_file_count": 0
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "warn_file_count": 4
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": "ruff",
-        "coverage_pct": 82.63,
-        "warn_file_count": 16,
-        "large_file_count": 4
+        "qg_red_reason": null,
+        "coverage_pct": null,
+        "large_file_count": 4,
+        "warn_file_count": 16
       }
     },
     "deployment-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "qg_red_reason": "pytest",
-        "coverage_pct": 90.82,
-        "warn_file_count": 9,
-        "large_file_count": 7
+        "qg_red_reason": "ruff",
+        "coverage_pct": 90.71,
+        "large_file_count": 7,
+        "warn_file_count": 9
       }
     },
     "market-data-processing-service": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "pytest",
-        "coverage_pct": 73.06,
-        "warn_file_count": 0,
-        "large_file_count": 0
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": null,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
@@ -1366,7 +1366,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "FAILING",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1386,10 +1386,10 @@
         "standard"
       ],
       "codebase_health": {
-        "qg_red_reason": "qg",
+        "qg_red_reason": null,
         "coverage_pct": 50.9,
-        "warn_file_count": 38,
-        "large_file_count": 33
+        "large_file_count": 34,
+        "warn_file_count": 38
       },
       "ldr_ci_status": "RED",
       "breaking_scan_dir": "none"
@@ -1401,7 +1401,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
