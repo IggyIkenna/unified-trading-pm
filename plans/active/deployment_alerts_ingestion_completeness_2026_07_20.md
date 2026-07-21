@@ -115,12 +115,17 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Define the normalised alert schema** — the union shape every mirrored source writes to. Fields:
+- [x] ✅ [REVIEW] P0. **Define the normalised alert schema** — the union shape every mirrored source writes to. Fields:
       `timestamp`, `source_plane` (gha / deployment-api / alerting-service), `subject_repo` (the repo the alert is ABOUT
       — see the defect), `emitting_repo`, `severity`, `alert_class`, `message`, `service`, `deployment_target`,
       `run_url`/`link`, `dedup_key`, `resolved_state` (nullable). Document per-source which fields are populatable and
       which are structurally absent — this table is the contract Plan B builds its filters against, so it is the gating
-      deliverable.
+      deliverable. — `unified-api-contracts@9f51c058`: `NormalizedAlertRow` + `AlertSourcePlane` + `FIELD_COVERAGE` in
+      `unified_api_contracts/canonical/crosscutting/alerting/ledger.py`, exported from the
+      `unified_api_contracts.alerting` facade; closed-set tests in `tests/internal/unit/test_alert_ledger_schema.py`.
+      Human-readable coverage table below (§ "Normalised alert schema (contract)"). Widened `source_plane` to 5 values
+      (added `zombie_watchdog` + `kill_switch_audit`) so the P1/P2 ingestion todos below don't need a schema change
+      later.
 - [ ] [BACKEND] P0. **alerting-service — persist the full payload** (decision 2). Extend `persistence/storage_store.py`
       writes so `alerting/history/` carries severity, message body, target, and alert_class alongside the existing
       delivery-status fields, conforming to the normalised schema.
@@ -168,6 +173,52 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       "diagnostic surface / mirror-cheap-Slack-sources" principle, the persist-vs-page distinction, and the retention
       policy in `codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act.
 
+## Normalised alert schema (contract)
+
+Landed 2026-07-21 (todo 1). SSOT is code, not this table: `NormalizedAlertRow` / `AlertSourcePlane` / `FieldCoverage` /
+`FIELD_COVERAGE` in `unified-api-contracts` `unified_api_contracts/canonical/crosscutting/alerting/ledger.py`, imported
+via the `unified_api_contracts.alerting` facade (never the deep path). This table is a read-only projection of
+`FIELD_COVERAGE` for humans — if it ever disagrees with the code, the code wins; re-generate this table rather than
+hand-editing around a drift.
+
+Legend: **P** = populated today · **p** = populatable (value exists at the emit site, not wired yet — a sibling todo
+below fixes it) · **—** = structurally absent (the concept doesn't exist for that source; a permanent gap, not a bug).
+
+| field               | gha_ci_events | deployment_api | alerting_service | zombie_watchdog | kill_switch_audit |
+| ------------------- | :-----------: | :------------: | :--------------: | :-------------: | :---------------: |
+| `timestamp`         |       P       |       P        |        P         |        p        |         P         |
+| `subject_repo`      |       P       |       p        |        —         |        —        |         —         |
+| `emitting_repo`     |       —       |       P        |        p         |        p        |         p         |
+| `severity`          |       —       |       P        |        P         |        —        |         —         |
+| `alert_class`       |       —       |       P        |        p         |        p        |         p         |
+| `message`           |       —       |       P        |        p         |        p        |         p         |
+| `service`           |       —       |       —        |        p         |        —        |         p         |
+| `deployment_target` |       —       |       p        |        p         |        p        |         —         |
+| `run_url`           |       p       |       P        |        —         |        —        |         —         |
+| `dedup_key`         |       —       |       P        |        —         |        p        |         p         |
+| `resolved_state`    |       —       |       —        |        —         |        —        |         p         |
+
+Notes worth surfacing beyond the matrix:
+
+- **`gha_ci_events`** (`.github/actions/persist-event` → `cicd/events/{repo_name}/{date}/events.jsonl`): `subject_repo`
+  maps from `repo_name` and is correct as-is here — each repo's workflow reports on itself, so there is no separate
+  `emitting_repo` concept for this plane. The `repo`-vs-`repo_name` defect (todo 4) is specific to the OTHER ledger
+  (`deployment_api`), where the field is misnamed `repo` and holds the emitter.
+- **`deployment_api`**'s `_persist_alert()` currently takes `(alert_class, workflow_name, severity, message, dedup_key)`
+  — no `deployment_target` param exists yet even though `_repo_ci_alerts.py`'s reader already knows how to extract
+  `vm_name`/`deployment_id` from `details`. Both `subject_repo` (todo 4) and `deployment_target` need a writer-side
+  change, not just a reader-side one.
+- **`alerting_service`**'s delivery-record row (`channel, status, response_detail, event_name, timestamp`) is
+  detail-poorer than its decision record (`severity, message` already present); todo 2 unifies both onto this schema.
+  `service`/`deployment_target` are already computed in `notifiers/router.py` for the Slack payload — todo 2 is "persist
+  what's already computed," not new derivation logic.
+- **`zombie_watchdog`** has zero persistence today (todo 7 adds it); every field is either `p` (constructible from the
+  existing `WatchdogVerdict` dataclass: `vm_name`, `zone`, `age_minutes`, `verdict` reason string) or `—` (no
+  repo/severity concept — it's VM-scoped, not repo- or paging-tier-scoped).
+- **`kill_switch_audit`** (todo, P2) is a read-only projection of the UTL parquet audit log — `resolved_state` maps
+  naturally (null while armed, set from `recovery_mode` on disarm); `severity` has no native equivalent (armed/disarmed
+  isn't a paging-tier axis) so stays `—` rather than inventing a synthetic mapping.
+
 ## Explicitly deferred (not in this plan)
 
 - **All agent-orchestrator alerts** (decision 3) — including the 6 page-verdict notifiers the audit found that page
@@ -204,6 +255,18 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
   records the emitter not the subject (repo filtering currently wrong), a hardcoded-bucket QG violation, and that
   cost-anomaly alerts have no emitter at all. Decided: fix alerting-service at the emitter (persist full payload) rather
   than joining at read time.
+
+- **2026-07-21** — Todo 1 (normalised alert schema) shipped: `NormalizedAlertRow` / `AlertSourcePlane` /
+  `FIELD_COVERAGE` landed in `unified-api-contracts` (`canonical/crosscutting/alerting/ledger.py`, exported via the
+  `unified_api_contracts.alerting` facade) with closed-set tests. Widened `source_plane` from the 3 named in the todo
+  brief to 5 (added `zombie_watchdog`, `kill_switch_audit`) since todos 7 and the P2 kill-switch item both need to stamp
+  a source plane and re-touching the enum later would be a breaking change to an already-shipped contract. Per-source
+  coverage table added to this doc (§ "Normalised alert schema (contract)") as the human-readable read-only projection
+  of `FIELD_COVERAGE` — code is the SSOT, table is generated-by-hand today (no codegen yet; keep them in sync manually
+  until/unless that becomes a real drift risk). Key finding carried into the remaining todos:
+  `deployment_api._persist_alert()` needs a writer-side signature change for BOTH `subject_repo` (todo 4) and
+  `deployment_target` (not previously called out as needing a writer change) — the reader (`_repo_ci_alerts.py`) already
+  knows how to parse `deployment_target` from `details`, but nothing writes `details` today.
 
 ## Codex SSOTs
 
