@@ -77,6 +77,18 @@ code_refs:
 > there; compare here. **Do not restate the type names here**: a second enumeration is precisely how the two docs drift
 > (this paragraph previously carried three names — `orphan`, `masked-stale`, `drift-axis-false-positive` — that the
 > taxonomy does not use, one of which it had explicitly rejected).
+>
+> **This doc is the RAW-TICK layer. There is a candle-LAYER variant (added 2026-07-21).** The MDPS processed-candle
+> layer (`--layer candles`) reconciles the same four surfaces but with four deltas, so it has its own SSOT —
+> `codex/02-data/mdps-candle-canonical-reconciliation.md` — do NOT apply this doc's raw-tick rules to candles: (1) the
+> candle shard atom **adds a `timeframe` axis** and keys `data_type` on the AGGREGATED `mdps_data_type_key`, with S3
+> rows filtered `service_name == "market-data-processing-service"`; (2) the candle namespace (`processed_candles/`) is
+> **oracle-EXEMPT** — `canonical_path_violations()` hardcodes `raw_tick_data/by_date/` (`partition_paths.py:67`) and
+> false-flags every candle path, so candle canonicality is checked against the ratified Option-A registry template, not
+> the machine oracle; (3) **S4 is UNAVAILABLE for the whole candle layer by construction** (candles are derived — no
+> catalogue); (4) the candle reconciliation is **GCS-object-driven, not manifest-driven** (the candle manifest is
+> near-empty). The whole candle corpus is `migration_pending` behind the ruled Option-A migration (operator,
+> 2026-07-21). See the candle SSOT for the full grammar and per-AG deltas.
 
 ---
 
