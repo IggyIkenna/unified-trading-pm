@@ -302,10 +302,32 @@ the same fixes.
       `_live_coverage.py` does for instruments-service-backed asset_groups — MTDS coverage responses gain the same
       `scope=mvp|could_exist|all` param and the `VenueCoverageTable` pill toggle works when MTDS is the selected
       service. Reuse `_coverage_scope.py`'s `filter_to_mvp`, do not fork a parallel implementation.
-- [ ] [DATA] P1. Precompute `mvp: bool` for sports + prediction catalogues the same way `_add_mvp_column` already does
-      for cefi/defi/tradfi (`build_instrument_catalogue.py`), eliminating the live `df.apply(is_mvp_for_manifest_row)`
-      fallback path — this is the "performant way" half of ask (1), and closes the one precompute gap in the shipped MVP
-      feature.
+- [ ] [DATA] P2. **Precompute `mvp: bool` for sports/prediction — investigated, deliberately NOT implemented this tick,
+      re-scoped from the original ask.** Traced `deployment-api/deployment_api/routes/data_status/_catalogue.py` in full
+      before touching anything (grep-then-READ): the original framing ("mirror `_add_mvp_column`") is the WRONG fix and
+      has already been tried. `_add_mvp_column` already runs unconditionally for every asset_group in
+      `build_instrument_catalogue.py` including sports/prediction — `prod/catalog.parquet` DOES carry a precomputed
+      `mvp` column for sports/prediction rows too. The catalogue explorer's live `df.apply(is_mvp_for_manifest_row)`
+      path is NOT because that column is missing — it's because sports/prediction's _manifest_
+      (`_index/     availability_index.parquet`, read via `_read_availability_index`) is a DIFFERENT file from
+      `prod/catalog.parquet`, chosen deliberately because sports/prediction's manifest has genuine per-row
+      `instrument_id`/`league_id` granularity that cefi/defi/tradfi's VENUE-level manifest lacks. Redirecting
+      sports/prediction to `prod/catalog.parquet` instead (the naive "just precompute it" fix) has an explicit,
+      code-commented, regression-tested revert history (`_catalogue.py:75-87`,
+      `test_sports_not_in_identity_catalogue_asset_groups`): measured against the live sports `prod/catalog.parquet`
+      (27,250 rows, 2026-07-17), `venue` is 100% blank (silently breaks every venue filter), there's no `capture_status`
+      column (defaults to fabricating "captured" for 27k rows with zero capture evidence — an honest-absence violation),
+      and `instrument_type` is lowercase legacy vocabulary vs. this endpoint's uppercase canonical match. Also confirmed
+      the live-recompute cost is bounded (narrowed to the request's `venue`/ `instrument_type`/`data_type` mask BEFORE
+      `_is_mvp_series` runs, not a full-27k-row scan per request) and is explicitly commented as "the same cost those
+      asset groups already paid, so no regression" (`_catalogue.py:262-263`) — i.e. this is a pre-existing, accepted
+      characteristic, not a fresh bug introduced by this session's work. **Correct fix direction for whoever picks this
+      up**: precompute the `mvp` column onto `_index/availability_index.parquet` ITSELF at sports/prediction
+      manifest-WRITE time (not read time) — requires tracing which service/job actually writes that manifest (likely
+      market-tick-data-service's sports/prediction ingestion or a manifest-consolidator step, NOT yet traced) and
+      stamping `mvp` there, so `_row_is_mvp`/ `_is_mvp_series` can add an `"mvp" in df.columns` fast path for
+      manifest-backed rows too, mirroring the identity-catalogue branch exactly. Left at P2 (was P1) given the bounded,
+      non-regressed cost and the real risk of rushing a fix in a spot with documented prior near-misses.
 - [ ] [BACKEND] P1. **MDPS parity**: trace whether `market-data-processing-service`'s data-status view shares
       deployment-api service code with MTDS or has its own parallel path; apply every fix above (Bug A/B/C, MVP wiring,
       universal search) to MDPS's view too, so it shows the same shards/state as MTDS rather than drifting behind it.
