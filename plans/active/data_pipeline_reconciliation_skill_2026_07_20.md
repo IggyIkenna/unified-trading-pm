@@ -707,3 +707,11 @@ heartbeat watchdog) is the next operational step.
 
 **Loop terminated 2026-07-21** — all 4 todos done + verified; the one obstacle tracked with a precise recipe. Delete of
 the legacy prefixes remains the operator's to run.
+
+### 2026-07-21 — legacy prefixes DELETED (operator-executed) + verified
+
+The operator executed the prod delete of `dex_pools/` + `lending_indices/` (prod-bucket delete = human-only; I staged +
+verified, the operator ran it). Post-delete read-only verification: **legacy prefixes = 0 objects; all 5 canonical twin
+cells intact** (513/59/44/132/14,094) — the `rm -r` hit only the legacy prefixes, not `raw_tick_data/`. The
+fold→repoint→delete migration is COMPLETE end-to-end. `defi_dex_pools_delete_order_stale_2026_07_20` → RESOLVED. Only
+residual: the manifest-row registration follow-up.
