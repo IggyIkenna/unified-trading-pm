@@ -350,7 +350,7 @@ def build_matrix(engine_backed_archetypes: frozenset[str]) -> tuple[dict[str, ob
     matrix: dict[str, object] = {
         "matrix_version": MATRIX_VERSION,
         "axes": {
-            "archetype": "all 57 StrategyArchetype values",
+            "archetype": "all StrategyArchetype values",
             "venue": "per-archetype leg-eligible venues (ARCHETYPE_LEG_STRUCTURES)",
             "instrument_type": "per-leg ArchetypeInstrumentType",
             "instruction_action": "InstructionType induced by (venue_kind, instrument_type) — the selector axis",

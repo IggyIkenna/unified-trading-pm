@@ -213,8 +213,13 @@ def test_audit_output_deterministic() -> None:
         pytest.skip(f"UAC import unavailable: {e}")
 
 
-def test_audit_57_archetypes() -> None:
-    """Audit should report exactly 58 StrategyArchetype enum values."""
+def test_audit_archetype_count() -> None:
+    """Audit should report exactly 60 StrategyArchetype enum values.
+
+    This count has drifted repeatedly without the assertion updating in the same
+    commit (most recently 59 -> 60 with ARBITRAGE_SPORTS_DUTCHING, 2026-07-21) — see
+    plans/active/issues/capability_verdict_matrix_archetype_count_60_vs_59_regression_2026_07_21.md.
+    """
     uac_path = str(_UAC_ROOT)
     if uac_path not in sys.path:
         sys.path.insert(0, uac_path)
@@ -223,8 +228,8 @@ def test_audit_57_archetypes() -> None:
         from audit_prospectus_vs_codex import run_audit
 
         result = run_audit()
-        assert result["total_archetype_ids"] == 59, (
-            f"Expected 59 archetypes but got {result['total_archetype_ids']}. "
+        assert result["total_archetype_ids"] == 60, (
+            f"Expected 60 archetypes but got {result['total_archetype_ids']}. "
             "Update the plan if new archetypes were added (see F9 in findings tracker)."
         )
     except ImportError as e:
@@ -242,9 +247,7 @@ def test_audit_codex_docs_count() -> None:
 
         result = run_audit()
         # If codex docs change, update this test
-        assert result["total_codex_docs"] >= 57, (
-            f"Expected at least 57 codex docs but got {result['total_codex_docs']}"
-        )
+        assert result["total_codex_docs"] >= 57, f"Expected at least 57 codex docs but got {result['total_codex_docs']}"
     except ImportError as e:
         pytest.skip(f"UAC import unavailable: {e}")
 

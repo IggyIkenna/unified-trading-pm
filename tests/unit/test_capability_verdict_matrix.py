@@ -3,7 +3,9 @@
 Pins:
   - Every cell gets an explicit verdict (available | blocked | not_registered) —
     no absent cells; counts add up.
-  - All 58 archetypes appear as blocks.
+  - Every StrategyArchetype value appears as a block (count intentionally not pinned
+    in this docstring — it has drifted at least twice; the fixture-derived assertion
+    below is the SSOT, see test_all_archetypes_are_blocks).
   - not_registered archetypes (no leg structure) are explicit blocks.
   - Impossible algo combinations are BLOCKED (operator requirement).
   - Determinism: build_matrix(_FIXTURE_ENGINE_BACKED) is byte-stable across two runs.
@@ -72,16 +74,21 @@ _FIXTURE_ENGINE_BACKED: frozenset[str] = frozenset(
         "STAT_ARB_PAIRS_FIXED",
         "STAT_ARB_CROSS_SECTIONAL",
         "CARRY_FUNDING_DISPERSION",
+        # ARBITRAGE_SPORTS_DUTCHING: added 2026-07-21 alongside SportsArbDutchingEngine,
+        # confirmed registered in strategy-service's live ARCHETYPE_ENGINE_REGISTRY
+        # (strategy_service/engine/strategies/v2/factory.py:77) — see
+        # plans/active/issues/capability_verdict_matrix_archetype_count_60_vs_59_regression_2026_07_21.md.
+        "ARBITRAGE_SPORTS_DUTCHING",
     }
 )
 
 
-def test_all_57_archetypes_are_blocks() -> None:
+def test_all_archetypes_are_blocks() -> None:
     matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     blocks = matrix["archetypes"]
     assert isinstance(blocks, list)
     archetypes = {b["archetype"] for b in blocks}  # type: ignore[index]
-    assert len(archetypes) == 59
+    assert len(archetypes) == 60
 
 
 def test_counts_add_up_and_no_absent_cells() -> None:
