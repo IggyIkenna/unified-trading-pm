@@ -288,6 +288,30 @@ failure_modes:
       status: verbose,
       fires: "GCS 429 hot-object thrash",
     }
+  - {
+      id: DP-VM-007,
+      category: VM,
+      severity: INFO,
+      event: DP_VM_PREEMPTED,
+      detector: exit_code_fleet_monitor,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires: "durable PREEMPTED marker present (GCE SPOT reclaim) — benign, routine",
+    }
+  - {
+      id: DP-VM-008,
+      category: VM,
+      severity: WARN,
+      event: DP_VM_PARTIAL_UNCONFIRMED,
+      detector: exit_code_fleet_monitor,
+      kind: scriptable,
+      escalation: auto_recover,
+      status: verbose,
+      fires:
+        "terminated VM has no durable exit marker (exit_code is None) but captured climbed — ambiguous
+        CLEAN-vs-premature-kill",
+    }
 
   # --- DP-RATE (class C5) ---
   - {

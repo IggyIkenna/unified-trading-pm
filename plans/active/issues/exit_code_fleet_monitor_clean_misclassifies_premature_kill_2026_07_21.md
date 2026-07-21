@@ -94,15 +94,25 @@ silent-CLEAN outcome even with the fix fully deployed.
 
 ## Recommended decision
 
-- [ ] [INFRA] P2. **Add a defensive check to `classify_terminated_vm()` (or its caller)**: before resolving to CLEAN on
-      a VM with `exit_code is None` (no durable terminal exit code was ever observed), independently corroborate "this
-      really finished" — e.g. require either a `DEPLOYMENT_COMPLETED`/`EXIT_STATUS=0` `run.log` marker OR the manifest's
-      own completion signal (full requested date range reached, not just "captured climbed some") before treating a
-      no-exit-code VM as CLEAN. A `captured climbed` VM with NO recorded completion marker and NO reached end-date is
-      the exact ambiguous case this incident hit — resolve it to a new, lower-severity-but-NOT-silent verdict (e.g.
-      `PARTIAL_UNCONFIRMED`, `auto_recover`-routed like PREEMPTED so it self-heals AND is visible) rather than either of
-      the two existing extremes (`CLEAN` silence or `GONE_NO_CAPTURE` false-alarm-on-legit-partial-runs). (repo:
-      deployment-service)
+- [x] [INFRA] P2. ✅ **Add a defensive check to `classify_terminated_vm()` (or its caller)**: before resolving to CLEAN
+      on a VM with `exit_code is None` (no durable terminal exit code was ever observed), independently corroborate
+      "this really finished" — e.g. require either a `DEPLOYMENT_COMPLETED`/`EXIT_STATUS=0` `run.log` marker OR the
+      manifest's own completion signal (full requested date range reached, not just "captured climbed some") before
+      treating a no-exit-code VM as CLEAN. A `captured climbed` VM with NO recorded completion marker and NO reached
+      end-date is the exact ambiguous case this incident hit — resolve it to a new, lower-severity-but-NOT-silent
+      verdict (e.g. `PARTIAL_UNCONFIRMED`, `auto_recover`-routed like PREEMPTED so it self-heals AND is visible) rather
+      than either of the two existing extremes (`CLEAN` silence or `GONE_NO_CAPTURE` false-alarm-on-legit-partial-runs).
+      (repo: deployment-service) — deployment-service@2e22c54: `classify_terminated_vm()`'s CLIMBED branch now splits on
+      `exit_code` (`== 0` → CLEAN, `is None` → new `PARTIAL_UNCONFIRMED` verdict, DP-VM-008), routed `auto_recover`
+      reusing the SAME checkpoint-resume `RelaunchPreemptedVm` actuator as PREEMPTED (WARN, not silent). Scoped to the
+      exit_code=None case only (the `DEPLOYMENT_COMPLETED`/manifest-end-date corroboration in the "e.g." text was
+      illustrative, not load-bearing — `exit_code is None` already means no terminal marker of any kind exists, so there
+      is no weaker corroboration signal available to check first). Codex updated:
+      `codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml` (DP-VM-007 backfilled, was undocumented;
+      DP-VM-008 added). Unit tests: `test_classify_partial_unconfirmed_when_exit_none_and_climb`,
+      `test_classify_clean_still_requires_confirmed_exit0_not_just_climb`,
+      `test_sweep_partial_unconfirmed_vm_relaunches_successfully_emits_warn_not_critical`,
+      `test_sweep_partial_unconfirmed_vm_no_launcher_emits_critical_no_relaunch` — full `quality-gates.sh` green.
 - [ ] [INFRA] P3. **Harden `uts-preemption-signal.service`'s marker write for the fast-DELETE case** — confirm
       `--instance-termination-action=DELETE` SPOT VMs (used by `af-backfill-*` and others) reliably give the shutdown
       unit's `ExecStop` its full window before the instance is torn down; if GCE's DELETE path can race ahead of the
