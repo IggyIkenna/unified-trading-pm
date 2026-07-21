@@ -20,11 +20,11 @@ summary: >-
   the collision-avoidance briefing for that task). Because `quickmerge.sh`'s Pass-1 sentinel is written ONLY on a fully
   green `quality-gates.sh` run, this repo-wide regression blocks `quickmerge --agent` for ANY file in
   market-tick-data-service until fixed — not just the one this issue was found from.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
-repos: [market-tick-data-service]
+repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: [quality-gates, sentinel, quickmerge-blocked, canonical-stem, leaf-byte-match, regression, defi]
 related: [defi_fold_manifest_registration_pending_2026_07_21.md, defi_consolidated_closeout_2026_07_18.md]
@@ -36,6 +36,8 @@ execution_scope: local-only
 drift_direction: advance-code
 source: [found while shipping the defi_fold_manifest_registration_pending_2026_07_21 fold-script docstring fix]
 resolved_by:
+  "slot-4, 2026-07-21 — root-caused + fixed all 3 (2 converged with a concurrent agent's independent fix);
+  market-tick-data-service@7ce100f9"
 locked_by:
 depends_on: []
 ---
@@ -95,10 +97,54 @@ in-flight work — strengthens the "shared canonicalization helper" hypothesis o
 for the same reason as above (another agent's active, briefed-off-limits track); this plan's own MTDS Phase 1+2 ship
 (`_oracle_prices_constants.py`/`oracle_prices_handler.py`/ `tests/unit/test_oracle_prices_handler.py`, otherwise fully
 green) is now ALSO blocked pending this fix — see `plans/active/lst_rate_honest_coverage_2026_07_21.md` Progress Log.
+**UPDATE: fixed below (Resolution) — market-tick-data-service@7ce100f9 — this ship should now be unblocked; re-run
+`quality-gates.sh` on that tree and retry the quickmerge.**
+
+## Resolution (slot-4, 2026-07-21)
+
+Root-caused precisely (this issue's earlier "NOT confirmed root-caused here" is now closed) — all 3 were caused by
+**`unified-api-contracts@502ef57e`** ("widen ID-FORM oracle to defi + fail-loud on embedded ':' in
+build_instrument_id"), an inherited-dirty-WIP commit landed the same day, NOT by `781204d8`/`56d39325` (the two
+candidates this issue originally named — both cleared; unrelated theme overlap, not the actual cause).
+
+1. **`test_slash_id_never_forges_a_path_segment`** — `502ef57e` widened `_ID_FORM_CHECKED_ASSET_GROUPS` to include
+   `"defi"`, and that commit's OWN docstring explicitly says this is expected to flag today's DeFi corpus non-canonical
+   (bare-`symbol` leaves, not yet the wrapped `VENUE-CHAIN:TYPE:SYMBOL` id) — "the same honest-disclosure outcome the
+   CeFi widening produced… NOT a bug in this checker." `live_tick_blob_path`
+   (`market_tick_data_service/live/ websocket_runner.py`) was calling `canonical_path_violations()` with the DEFAULT
+   (both STRUCTURAL+ID_FORM) check, so it started hard-raising on every DeFi live write the moment defi's
+   known-non-canonical-today leaf shape got checked. **Fix**: restrict this ONE call site to
+   `violation_classes={STRUCTURAL}` for `asset_group="defi"` only — cefi keeps the full check (its own regression test,
+   `test_live_cefi_object_name_equals_canonical_id`, requires ID_FORM stay enforced there).
+   market-tick-data-service@7ce100f9.
+2. **`WETH:USDC` leaf-byte-match parametrize case** — `502ef57e` ALSO made `build_instrument_id` fail loud on any symbol
+   carrying an embedded `':'` for non-sports/prediction asset groups (a DELIBERATE operator ruling,
+   `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` §7 — stops silently minting a double-wrapped id).
+   `"WETH:USDC"` was never a valid canonical POOL symbol anyway (the ratified grammar glues legs with a HYPHEN,
+   `defi_consolidated_closeout_2026_07_18.md`) — this parametrize case was exercising exactly the malformed input the
+   ruling exists to reject. **Fix**: removed the case (kept `"st ETH/x"` covering the same space+slash sanitizer
+   characters). **Converged independently with a concurrent agent** (slot-3, `market-tick-data-service@08f15f26`, landed
+   first) — same root cause, same fix; no conflict, the landed version was kept as-is.
+3. **`ADAF0:USTF0` disabled-by-default byte-identical case** — same `build_instrument_id` ruling; `"ADAF0:USTF0"`
+   (Bitfinex's real colon-delimited funding-pair wire notation) is literally the motivating example `502ef57e`'s own
+   docstring cites for "silently polluted the CeFi corpus." The disabled-by-default (no catalogue resolver registered)
+   fallback used to legitimately produce the double-wrapped `"BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0"` string; the new
+   ruling correctly stops that. **Fix**: removed this ONE case from the byte-identical parametrize list, added a
+   dedicated `test_disabled_by_default_raises_on_embedded_colon_symbol` documenting the intentional behavior change (no
+   source-code change needed — `derive_row_instrument_id` never caught this ValueError, so it already propagated; only
+   the STALE test assertion needed updating). **Converged independently with the same concurrent agent** (slot-3,
+   `market-tick-data-service@08f15f26`, landed first) — kept as-is.
+
+Verified: full `quality-gates.sh` green on market-tick-data-service post-fix (6621 passed, 0 failed), sentinel
+`.qg_last_passed_sha` matched HEAD. No other quickmerge attempts found silently blocked by this window (todo 2 below
+folded into this resolution — the window was short, ~1-2 hours, same-day).
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Root-cause which commit(s) regressed the 3 failing tests (bisect `781204d8` / `56d39325` / any
-      commit since, or re-run each test against each commit's tree) and fix the underlying canonicalization bug.
-- [ ] 2. [REVIEW] P1. Once green, sweep for any other quickmerge attempts in this repo that were silently blocked by
-      this same regression window and ship them.
+- [x] 1. [DATA] P1. Root-cause which commit(s) regressed the 3 failing tests (bisect `781204d8` / `56d39325` / any
+      commit since, or re-run each test against each commit's tree) and fix the underlying canonicalization bug. — DONE,
+      see Resolution above. `unified-api-contracts@502ef57e` is the actual cause (not the 2 originally-named
+      candidates); market-tick-data-service@7ce100f9 (test #1, unique fix) + market-tick-data-service@08f15f26 (tests
+      #2/#3, concurrent-agent fix, converged independently).
+- [x] 2. [REVIEW] P1. Once green, sweep for any other quickmerge attempts in this repo that were silently blocked by
+      this same regression window and ship them. — Swept; window was short (same-day), no other blocked attempts found.
