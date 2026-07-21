@@ -553,3 +553,51 @@ production GCS manifest data (snapshot → dry-run → **collision pre-flight ha
 ≥2 consolidator cycles incl. one `--force`), and given the just-observed git-identity instability on this exact host,
 proceeding to a production-data mutation right now is deliberately deferred — flagged to the operator rather than run
 autonomously while this collision pattern is active. Sequence + gates restated above under "Ship gate", unchanged.
+
+### 2026-07-21 — MTDS paired manifest re-stamp: SNAPSHOT + dry-run analysis complete, application IN PROGRESS
+
+**Snapshot (safety gate 1):**
+`gs://market-data-tick-cefi-prd-central-element-323112/_index/backups/ availability_index.pre_venue_chain_restamp_20260721T003608Z.parquet`
+— verified byte-identical to the live index at snapshot time (178,205,094 bytes both sides).
+
+**Dry-run + collision pre-flight (safety gate 2):** 820,449–820,796 affected rows (venue ∈ {HYPERLIQUID, ASTER,
+EXTENDED-STARKNET, LIGHTER-ZKSYNC} AND chain==venue; count drifts slightly between reads as the corpus is live —
+expected). A blind bulk `chain=""` was **REJECTED** by the collision pre-flight: 5,612 rows would have collided with an
+already-existing row of the same post-blank identity, silently merging/destroying data. **This confirms the hard gate
+was necessary — do not skip it for any future re-stamp of this shape.**
+
+**Root cause of the collisions**: NOT a "before/after this session's fix" artifact. The `chain=""` counterpart of each
+collision was written independently by `instruments-service`'s `enumerate_expected_universe.py` seeder
+(`enumerator_run_id=enum-universe-cefi-20260719-013040`, 2026-07-19) — IS already resolves `chain=""` for these
+on-chain-perp cefi venues correctly (see RESULT 3's cross-service confirmation: the SAME bug class IS excised months ago
+via `_canonical_manifest_venue_chain`). So the collisions are MTDS's buggy pre-fix rows vs. IS's already-correct
+seed/capture rows for the identical logical shard — this is the manifest's own documented "`expected_unattempted`
+superseded by a real attempt" pattern, just blocked from firing automatically because the bug prevented the two rows
+from ever sharing a row_key.
+
+**Reconciliation logic (v1 dry-run, then refined to v2):**
+
+- **Phase A — safe bulk blank** (815,184 rows, zero collision): `chain -> ""` in place. No row_key change risk.
+- **Phase B2 — promote** (1,995 rows): pre-fix `empty_confirmed` (a real MTDS capture-attempt, e.g.
+  `error_reason=EXPECTED_PRE_SOURCE_COVERAGE_START`) collides with an IS `expected_unattempted` PLACEHOLDER seed. The
+  pre-fix row is STRICTLY more informative — its full content REPLACES the existing seed row's content (chain=""), and
+  the pre-fix row is dropped. This is the manifest's intended supersede behaviour, just unblocked.
+- **v1 also found 3,617 same-rank collisions** (mostly `captured`==`captured`) that my FIRST pass's strict
+  all-columns-must-match check correctly refused to auto-drop (avoiding a real hazard: 8 of the first 10 examples differ
+  ONLY in `written_at`/`attempted_at` — genuine re-captures of the identical shard at different times, not identical
+  duplicates — a naive "same status = safe to drop" rule would have been WRONG).
+- **v2 (running now)** excludes purely TEMPORAL/bookkeeping columns (`written_at`, `attempted_at`, `available_at`,
+  `last_emission_decision_at`, `enumerator_run_id`) from the duplicate-content check, keeping the row with the more
+  recent `written_at` when only timing differs, while STILL escalating (leaving untouched) any pair whose SUBSTANTIVE
+  content (`row_count`, `instrument_count`, `available`, `capture_status`, etc.) genuinely differs.
+
+**v1 measured invariants — all held (informational, since v1's own final assertion had a bug, not the data pipeline):**
+FINAL row count 10,413,279 → 10,411,284 (exactly -1,995, matching B2 drops); **zero duplicate row_keys in the final
+result**; **captured-row count UNCHANGED (3,358,529 → 3,358,529, zero loss)** — v1's B1 (drop) bucket was correctly
+computed as 0 (nothing was blindly dropped), so no real data was ever at risk in the v1 run; the crash was v1's own
+`assert remaining_bad == 0` incorrectly expecting the deliberately-untouched escalate set to also be empty.
+
+**Application NOT YET RUN.** v2 dry-run is executing (~70min runtime expected, per-row classification is the
+bottleneck). Once reviewed, APPLY proceeds as: CAS-write (generation-matched) the final in-memory dataframe back to the
+SAME index path, verify HOLDS across ≥2 consolidator cycles including one `--force`. Recovery point unchanged: the
+pre-restamp snapshot above.
