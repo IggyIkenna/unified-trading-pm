@@ -127,27 +127,77 @@ issue doc can point to whichever plan actually ends up owning each thread.
       precision, L0/tbbo fallback).
 
       **Verification run**: `execution-service`'s full unit suite (`quality-gates.sh --test`) completed clean —
-          7876 passed, 21 skipped, 1 xpassed, 0 failed (includes the Phase C tests above).
-          `features-service`'s full suite (16k+ tests) could not be driven to a clean finish in-session — two attempts
-          both died to shared-host resource contention (other slots' concurrent QG runs observed on the same host) at
-          ~66-94% progress with **zero** `FAILED`/`F` markers in either partial run; both target test files were also
-          confirmed importable and syntactically sound by direct read. Re-running `features-service` QG to full green is
-          left as a lightweight follow-up for whoever next touches that repo — it is a verification-only gap (no code
-          change pending), not a code gap.
+                  7876 passed, 21 skipped, 1 xpassed, 0 failed (includes the Phase C tests above).
+                  `features-service`'s full suite (16k+ tests) could not be driven to a clean finish in-session — two attempts
+                  both died to shared-host resource contention (other slots' concurrent QG runs observed on the same host) at
+                  ~66-94% progress with **zero** `FAILED`/`F` markers in either partial run; both target test files were also
+                  confirmed importable and syntactically sound by direct read. Re-running `features-service` QG to full green is
+                  left as a lightweight follow-up for whoever next touches that repo — it is a verification-only gap (no code
+                  change pending), not a code gap.
 
-- [ ] [HUMAN] P3. Rebuild + push the features-onchain-service Docker `:latest` image so the LST-seasonal-rewards Cloud
-      Run cron picks up the Phase B inner-instruction walker before the cron is (re-)enabled. (repo:
-      features-onchain-service)
+- [x] ✅ [HUMAN] P3. **RESOLVED 2026-07-21 — premise moot, not a manual action.** `features-onchain-service` no longer
+      exists as a standalone repo (`git subtree`-merged into `features-service` at `b0e63608` "feat(onchain): import
+      features-onchain-service into features-service via git subtree", 2026-05-08, imports rewritten
+      `features_onchain_service`→`features_service.onchain` at `b5c4b721`), and `features-service`'s own Cloud Build
+      trigger (`features-service-build`, `cloudbuild.yaml`) auto-rebuilds + pushes
+      `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/features-service:latest` on every
+      merge to `main` — there is no manual `:latest` push step to trigger. Verified the currently-live `:latest` image
+      already contains the Phase B inner-instruction walker: the last SUCCESSFUL Cloud Build
+      (`69789dfb-aacc-407a-85b4-1fc9ce330880`, finished 2026-07-21T16:10:28Z, pushed `:latest`) built commit `889ce87`
+      on `main`, and `git merge-base --is-ancestor b0e63608 889ce87` confirms the subtree-merge (carrying
+      `tests/onchain/unit/test_solana_inner_instruction_walk.py` +
+      `features_service/onchain/collectors/chain_event_scanners.py`) is an ancestor — the image the cron would pull
+      today already has this code, and has for the ~2.5 months since the merge (every successful build since included
+      it). (Not blocking this item, noted for transparency: the _next_ build after 69789dfb,
+      `a2c85a95-55ae-436f-92de-7793a736fc24` at 16:29:01Z, FAILED on an unrelated
+      `ImportError: cannot import name     'candle_read_prefixes' from 'unified_trading_library'` in
+      `tests/delta_one/unit/*` — confirmed transient cross-repo version-skew, not a real break: the symbol exists
+      correctly in UTL's current source (`unified_trading_library/config_interface/paths/registry.py:429`, landed
+      `af3dc71` at 16:23:16Z — published just ahead of that build's dependency pull); since Cloud Build only pushes
+      `:latest` after quality-gates passes, that failed build never overwrote the good image — `:latest` today is still
+      889ce87.) (repo: features-service)
 - [ ] [HUMAN] P3. Run the TM backfill VM post-merge validation (cold vs warm-cache wall-clock comparison,
       `launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-06-01 2025-06-14`) and confirm ≥80% speedup; only
       then approve the `[unlock-plan]` on
       `plans/archive/transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22.plan.md`. (repo:
       instruments-service)
-- [ ] [DOCS] P3. Re-audit `ui_quality_gates_parity_2026_03_16.plan.md`'s 25 residual items against the CURRENT state of
-      `codex/06-coding-standards/ui-testing-layers.md` + the 11 consumer UI repos (any-type violations, console.log
+- [x] ✅ [DOCS] P3. Re-audit `ui_quality_gates_parity_2026_03_16.plan.md`'s 25 residual items against the CURRENT state
+      of `codex/06-coding-standards/ui-testing-layers.md` + the 11 consumer UI repos (any-type violations, console.log
       usage, per-UI test-depth floors, coverage-exclusion comments, cursor rule, codex doc) — the SSOT artifacts
       (base-ui.sh, eslint.config.base.js) already shipped but the granular items were never verified. (repo:
-      unified-trading-system-ui)
+      unified-trading-system-ui) — **audited all 25 against current reality: 12 DONE, 8 MOOT, 5 STILL-OPEN (one of which
+      surfaced a real, live, workspace-wide gate bug, filed separately).**
+
+      Of the "11 consumer UI repos" the plan targeted, only 2 (`deployment-ui`, `unified-trading-system-ui`) still
+          exist as live surfaces — everything else (`unified-trading-ui-kit`, client-reporting-ui,
+          execution-analytics-ui, live-health-monitor-ui, etc.) was archived/consolidated per
+          `unified-trading-pm/workspace-manifest.json`, which is why 8 of the 25 items are MOOT (targeted a
+          now-nonexistent repo/artifact: `p3-uikit-tests-deployment`, `p6-setup-sh-ui-kit-dist`,
+          `p6-manifest-uikit-testing-level`, `p7-qg-uikit`, `p7-qg-consumer-parallel`, plus 3 more).
+
+          **DONE (12)**: `p1-typecheck-step-rename`/`p1-build-step-rename` (evolved into a different but equivalent 8-stage
+          `[0/6]…[5/6]` numbering, `base-ui.sh` current), `p1-eslint-version-check` (`base-ui.sh:202-203` captures +
+          prints `ESLINT_VER`), `p2-propagate-eslint` (both live repos carry `eslint.config.base.js`),
+          `p4-fix-ts-ignore` (0 hits, both repos), `p4-page-test-depth` (far exceeded — 75 + 286 test files),
+          `p5-coverage-audit`/`p5-coverage-exclusion-comment` (`deployment-ui`'s exclusions are reason-commented;
+          `unified-trading-system-ui` has no exclusions to audit), `p6-rollout-eslint-in-unified` (mechanism shipped +
+          ran), `p6-cursor-rule` (shipped under a different filename,
+          `.cursor/rules/ui/ui-quality-gates-typescript.mdc` + 4 sibling rules), `p6-codex-doc` (absorbed into
+          `codex/06-coding-standards/ui-testing-layers.md` rather than the originally-proposed filename), `p7-qg-pm`
+          + `p7-rollout-first` + `p7-setup-all-ui` (artifacts they'd produce are present and working in both live repos).
+
+          **STILL-OPEN (5, low-value except the flagged one)**: `p6-setup-sh-ui-vitest-check` (no `UI.5` step in
+          `setup.sh`), `p6-rollout-vitest-template` (no propagation mechanism, but moot in practice — both live repos
+          already have valid configs), `p6-run-all-setup-ui-flag` (`--ui-only` literal flag absent, but `--repos=` already
+          achieves the same effect with only 2 UI repos left) — none of these three block anything today, not worth
+          independent follow-up at P3. The remaining two (`p4-fix-any-types`, `p4-fix-console-log`) plus
+          `p4-chart-theme-check` are DONE for `deployment-ui` but genuinely open for `unified-trading-system-ui` — **and
+          the reason they're open is a real bug, not neglect**: `base-ui.sh:337` gates its whole codex-compliance block on
+          `[ -d "src" ]`, and `unified-trading-system-ui` uses the Next.js `app/` router (no `src/` at all), so the gate
+          has silently never run for that repo. Filed as its own issue doc (workspace-wide gate bug, not just a
+          per-repo cleanup item):
+          `plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md`. (repo: unified-trading-system-ui)
+
 - [ ] [SCRIPT] P3. Verify whether the CME combo-parquet migration (`rebundle_combo_parquets.py` dry-run + production
       cutover + reader-compat-shim removal + manifest reconciler for stale per-combo rows) from
       `combo_bundle_aggregation_2026_04_30.plan.md` actually ran — the writer-side bundling shipped

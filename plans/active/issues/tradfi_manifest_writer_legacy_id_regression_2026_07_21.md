@@ -72,14 +72,44 @@ it.
 This also means the tradfi id-form canonical percentage (measured 30.8% on 2026-07-21 morning) is **not stable** — it
 will continue to fall as the backfill fleet keeps running, not just stay flat pending cleanup.
 
-## Root cause (under investigation)
+## Root cause (CONFIRMED + fixed for equity/etf/index)
 
-A parallel investigation (this session) found:
-`market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py` around line 603 already derives the
-canonical id correctly (`derive_tradfi_row_instrument_id(...)`) for the **file-path/filename** write. The **manifest**
-`record_captured(...)` call site for the tradfi equity/ETF OHLCV backfill path is a _different_ piece of code that is
-NOT using that same derived value — exact file:line + fix TBD (dispatched to a background agent; check this doc's
-Progress Log / the plan's Progress Log for the outcome before re-investigating from scratch).
+`market_tick_data_service/engine/orchestrator/venue_fetch.py`'s `_canonicalize_manifest_instrument_id()` /
+`_record_venue_shard_counts()` fed the raw bare ticker + the DataFrame's lowercase HIVE PARTITION `instrument_type`
+token straight into the manifest `record_captured` call (`manifest_finalize.py:360-375`), instead of the SAME canonical
+value `tradfi_shared.py`'s file-path derivation already computes. Two independent divergences, same root cause (raw
+pre-derivation values reused instead of the canonical derived ones).
+
+**Fixed**: `mtds@56d39325` — new whitelist-gated resolver `_tradfi_manifest_canon.py::resolve_tradfi_manifest_shard()`,
+wired into both call sites. **Scoped to `equity`/`etf`/`index` only** (the 3 exhaustively-audited single-instrument hive
+tokens); everything else returns `None` (byte-identical prior behavior) — deliberately narrow, not a full tradfi-wide
+rewrite. 12 new regression tests. Full quality-gates green. Shipped via quickmerge.
+
+**Confirmed NOT affected** (verified live, 2026-07-21T16:2xZ): `futures_chain`/`options_chain` CME bundle rows —
+`instrument_id=null` is correct BY DESIGN for bundle grain (not a bug), and `underlying=SP500` (not raw `ES`) is already
+the correct product-root translation. The `future`/`FUTURE` lowercase/uppercase split visible in an axis census is a
+small (2,023-row), STATIC legacy population (all `written_at=2026-07-16`, nothing written since) — not something the
+active CME backfill is writing into. So the CME futures/options backfill fleet was never in scope for this bug.
+
+**Deliberately left unscoped by the fix** (flagged by the fixing agent, not guessed): FX `spot_pair` and other tradfi
+cash types (`currency`/`bond`/`commodity`/`cds`) share the identical mechanism but route through a different UAC builder
+branch (`_build_tradfi_cash` vs `_build_cefi_simple`) that wasn't verified — left untouched rather than risk a wrong
+mapping on a live writer. **Checked live (2026-07-21T17:05Z): small, low-priority, DIFFERENT bug.** Only 3,126 total
+rows (3,115 UPPERCASE `SPOT_PAIR` from the 2026-07-18 fix + 11 lowercase written today — negligible ongoing volume, not
+a live-regression driver like equity/etf). But the "canonical" 3,115 rows are themselves broken a different way:
+`instrument_id` is either the literal string `"ticks"` or blank, not a real derived id (`FX:SPOT_PAIR:KRW-USD`-shape) —
+looks like a bundle-style `ticks.parquet` filename leaking into the id field rather than a per-pair id ever being
+derived. Low priority given the tiny volume; needs its own small fix when convenient, not urgent.
+
+**⚠️ Fix propagation gap (found post-ship, 2026-07-21T16:40Z)**: shipping the code fix does NOT retroactively patch
+already-running VM processes (tarball-deployment model — a VM fetches its code tarball once at boot, never re-fetches).
+Confirmed live: NASDAQ equity rows written AFTER the fix landed (`written_at > 16:20Z`) were still bare-ticker legacy
+form. The published tarball (`gs://deployment-scripts-central-element-323112/code/mtds-code.tar.gz`) was also confirmed
+STALE (didn't contain the new module) as of the fix landing — refreshed via `create-code-tarballs.sh` (so any NEW VM
+launch from this point picks up the fix), but **every currently-running backfill VM will keep writing legacy-form rows
+for equity/etf/index until it finishes naturally** — they are not being killed/restarted for this (would lose in-flight
+capture progress). The historical content-migration pass therefore needs to cover everything written up through fleet
+drain, not just the pre-2026-07-21 backlog.
 
 ## Recommended sequencing (do not skip ahead)
 
@@ -106,3 +136,16 @@ carry this risk; the follow-up historical cleanup pass does.
   exact `record_captured` call site, diagnose the divergence, and ship a scoped fix if safe (agent authorized to ship
   directly if the fix is small/well-tested; told to stop and report a design instead if it's not confident). Also
   flagged to the operator in-chat per the workspace's big-finding rule.
+- **2026-07-21T16:33Z (sub-agent)** — root cause confirmed + fix shipped `mtds@56d39325` (equity/etf/index only; 12 new
+  tests; full quality-gates green). FX cash types + CME derivatives deliberately left unverified/out of scope.
+- **2026-07-21T16:40Z (main session)** — operator asked an unrelated sanity-check question ("only 12 tradfi shards
+  across instrument_type/data_type — sure?") which prompted a live axis census; that surfaced (a) the real captured
+  landscape is 34 `(instrument_type,data_type)` pairs / 51 with venue — "12" was an undercount from an unknown source —
+  and (b) confirmed CME `futures_chain`/`options_chain` are NOT affected by this bug (null id is by-design; underlying
+  already correctly translated) — the earlier worry that CME derivatives shared this bug is RESOLVED, false alarm. Also
+  found the fix hadn't reached the running fleet or the published tarball yet (tarball deploy model — VMs fetch code
+  once at boot); refreshed the tarball (`create-code-tarballs.sh`) so new VM launches pick it up, but currently-running
+  VMs will keep writing legacy-form equity/etf/index rows until they finish naturally (not killed — would lose in-flight
+  capture progress). Separately found the tradfi MVP rule's `data_types` is still `{ohlcv_1m}` only (never extended to
+  `ohlcv_1s` despite this session's backfill capturing both) — filed as a follow-up question for the operator, not yet
+  resolved.

@@ -222,6 +222,27 @@ def add_bump_library_hook(config_path: Path) -> None:
     config_path.write_text("".join(new_lines))
 
 
+def is_husky_managed(repo_path: Path) -> bool:
+    """True if the repo's active hooks dir resolves under .husky/ (core.hooksPath).
+
+    Husky-managed JS UI repos (deployment-ui, unified-trading-system-ui) route
+    `.git/hooks/pre-commit` around husky's `.husky/_/pre-commit` dispatcher. prek
+    does NOT refuse when core.hooksPath is set — it OVERWRITES husky's shim,
+    breaking husky/lint-staged — so callers must skip these repos entirely rather
+    than "fixing" a hooks-dir that was never meant to hold prek's files. Same
+    install-order race documented in slot-cron-ff-pull.sh and
+    deployment_ui_prettier_version_skew_blocks_quickmerge_2026_07_21.md.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(repo_path), "rev-parse", "--path-format=absolute", "--git-path", "hooks"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return False
+    return "/.husky/" in result.stdout
+
+
 def run_precommit_install(repo_path: Path) -> bool:
     """Install the git pre-commit hook in the repo. Returns True on success.
 
@@ -333,6 +354,11 @@ def main() -> int:
                 issues.append(msg)
 
         # --- Check .git/hooks/pre-commit exists ---
+        # Skip husky-managed repos: their active hook lives under .husky/_/, not
+        # .git/hooks/, so this check would always false-positive and `--apply`
+        # would clobber husky's dispatcher with prek's (see is_husky_managed).
+        if is_husky_managed(repo_path):
+            continue
         git_hook = repo_path / ".git" / "hooks" / "pre-commit"
         if not git_hook.exists():
             msg = f"HOOK_NOT_INSTALLED: {repo_name}  (.git/hooks/pre-commit missing)"

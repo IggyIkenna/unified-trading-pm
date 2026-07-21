@@ -136,16 +136,24 @@ Two independent fixes, either sufficient to close the immediate ship-blocking bu
       not touch the `codex/06-coding-standards/` SSOT doc naming lint-staged as authoritative — this plan's
       `drift_direction:     advance-code` scopes this todo to code, not codex; the fleet-wide setup-script race (this
       finding's actual root cause) is out of scope for a per-repo fix and is exactly what todo 3 below should cover.
-- [ ] [INFRA] P3. Audit other UI repos (`unified-trading-system-ui`, `agent-orchestrator`'s dashboard package, any other
-      repo with a `package.json` + husky) for the same `core.hooksPath` vs prek dead-hook split (repo:
-      unified-trading-pm, cross-repo scan) — if the per-repo `.husky/pre-commit` there still calls bare
-      `npx lint-staged` (not yet delegating to prek per todo 2's fix), apply the same delegation fix. **Also fix the
-      fleet-wide install-order race at its 3 real sources** (found investigating todo 2, repo: unified-trading-pm): (1)
-      `scripts/dev/setup-tab-worktrees.sh`'s `install_prek_precommit_hook` (~line 395-400) and (2)
-      `scripts/manifest/check-precommit-versions.py`'s `run_precommit_install`/`--apply` path (~line 225-347) both write
-      to whatever `core.hooksPath` resolves to with zero husky-awareness — port `slot-cron-ff-pull.sh`'s existing
-      2026-07-08 guard (`case "${_hooks_dir}" in */.husky/*) continue;; esac`, ~line 700) into both so they skip
-      husky-managed repos instead of clobbering `.husky/_/pre-commit`; (3)
-      `scripts/pre-commit-templates/ui.pre-commit-config.yaml:4`'s `# Setup: pre-commit install --install-hooks` comment
-      contradicts that guard (it tells operators to run the very install that clobbers husky) — update it to note the
-      husky delegation pattern instead for UI repos.
+- [x] ✅ [INFRA] P3. Audit other UI repos (`unified-trading-system-ui`, `agent-orchestrator`'s dashboard package, any
+      other repo with a `package.json` + husky) for the same `core.hooksPath` vs prek dead-hook split (repo:
+      unified-trading-pm, cross-repo scan) — unified-trading-pm@`<SHA>`. **Audit result**: only two repos in the fleet
+      have `.husky/` at all — `deployment-ui` (fixed by todo 2, `@3a71ffe`) and `unified-trading-system-ui`, which
+      already carried the identical delegation fix (`.husky/pre-commit` → `exec prek run --hook-stage pre-commit`,
+      falling back to `pre-commit run` then `lint-staged`; lint-staged's prettier target already pinned to
+      `npx -y prettier@3.9.5`) via a prior fleet-wide-audit pass already on `origin/live-defi-rollout`
+      (unified-trading-system-ui@f2bf4db6, @4bc18435, 2026-07-21T15:03Z) — nothing left to change there.
+      `agent-orchestrator/dashboard` has a `package.json` but no `.husky/` dir and no `core.hooksPath` override (its
+      `.git/hooks/pre-commit` is the live prek hook), so it was never affected. **Also fixed the fleet-wide
+      install-order race at its 3 real sources** (repo: unified-trading-pm): (1) `scripts/dev/setup-tab-worktrees.sh`'s
+      `install_prek_precommit_hook` now resolves the clone's active hooks dir via
+      `git rev-parse --path-format=absolute --git-path hooks` and returns early on a `*/.husky/*` match, mirroring
+      `slot-cron-ff-pull.sh`'s 2026-07-08 guard, so clone-time prek install no longer clobbers husky; (2)
+      `scripts/manifest/check-precommit-versions.py` gained an `is_husky_managed()` helper (same hooks-dir resolution)
+      and the `.git/hooks/pre-commit` existence check now skips husky-managed repos entirely (was a guaranteed false
+      positive there, since husky's hook never lives under `.git/hooks/`, and `--apply` would have called `prek install`
+      and clobbered `.husky/_/pre-commit`); (3) `scripts/pre-commit-templates/ui.pre-commit-config.yaml:4`'s
+      `# Setup: pre-commit install --install-hooks` comment replaced with guidance that husky-managed UI repos must NOT
+      run that install (it clobbers husky) and should instead point the tracked `.husky/pre-commit` at the
+      `prek run --hook-stage pre-commit` delegation pattern. QG green, shipped via quickmerge --agent.

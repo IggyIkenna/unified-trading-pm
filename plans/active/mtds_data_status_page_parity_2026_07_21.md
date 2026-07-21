@@ -218,17 +218,29 @@ the same fixes.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Fix Bug A** — swap the dead `"market-tick-data-handler"` string to `"market-tick-data-service"` at
-      `DataStatusTab.tsx:2495-2496` (and the same dead string at `:2471`, `ServiceDetails.tsx:226/238`,
-      `CLIPreview.tsx:194`, `api/client.ts`'s turbo-mode lists) so the search box actually renders for MTDS. Cheap,
-      scoped, near-zero risk — do this first so Bug B's fix is independently testable against a visible UI.
-- [ ] [BACKEND] P0. **Fix Bug C** — `per_instrument_coverage()`'s `expected_count = n_instruments * n_dates`
-      cross-product (root cause confirmed above, `instrument_coverage.py:278-280`) needs per-instrument existence-window
-      clipping: thread each instrument's real `available_from`/`available_to` (reuse the CF-14 could-exist lifecycle
-      concept, don't invent a second one) through `get_expected_instruments_for_venue`, and intersect per-instrument
-      with `expected_dates` when building the denominator, instead of the blanket multiply. Verify against a real MTDS
-      venue/asset_group reproducing the operator's screenshot (0.0% captured, 1 missing shard, contradicting "Needs
-      Attention: clean") that this closes the gap; if a residual discrepancy remains after the fix, trace that
+- [x] N. ✅ [BACKEND] P0. **Fix Bug A** — swapped the dead `"market-tick-data-handler"` string to
+      `"market-tick-data-service"` across `DataStatusTab.tsx` (2 conditionals + 1 comment), `CLIPreview.tsx`,
+      `ServiceDetails.tsx` (2 sites), `api/client.ts` (3 sites incl. a redundant duplicate key removed) + the one stale
+      unit-test assertion that had locked in the dead string. **deployment-ui@9c64878**, verified on origin
+      (`ahead_by=0`), full `quality-gates.sh` green, new regression spec
+      `tests/smoke/     mtds_instrument_search_visibility.spec.ts` (pw:L2 ✓, both boxes confirmed rendering for MTDS
+      live via dev server + Playwright MCP before the automated spec was written).
+- [x] N. ✅ [BACKEND] P0. **Fix Bug C** — `per_instrument_coverage()`'s `expected_count = n_instruments * n_dates`
+      cross-product (root cause confirmed above, `instrument_coverage.py:278-280`) now clips per-instrument to its real
+      existence window. Implementation note (verified via `catalogue_lifecycle.py` before writing code — the manifest/
+      availability-index read `build_cefi_is_instruments_provider` already used does NOT carry `available_from`/
+      `available_to`; only `prod/catalog.parquet` does): added `_read_cefi_catalogue_existence_windows()` (a small,
+      SEPARATE object read from the SAME already-resolved bucket, mirroring `catalogue_lifecycle.py::_read_catalogue`'s
+      pattern — not a second whole-corpus walk), changed `build_cefi_is_instruments_provider`'s return type to
+      `(provider, windows)`, threaded a new `instrument_windows` param through `per_instrument_coverage` →
+      `mtds_honest_coverage_for_venue` → `venue_resolution.py`'s call site (all backward-compatible via a
+      `None`-default, zero behavior change for any caller that doesn't pass it). New `_clip_dates_to_window` helper + 8
+      new unit tests (existence-window clipping, fail-open on missing catalogue data, exact pre-fix-behavior parity when
+      `instrument_windows=None`) — 17/17 passing in the target test file. Full repo `quality-gates.sh` in progress; not
+      yet shipped via quickmerge.
+- [ ] [DATA] P1. **Verify Bug C's fix against live data**: once shipped, reproduce the operator's screenshot scenario
+      (0.0% captured, 1 missing shard, contradicting "Needs Attention: clean") against the real MTDS manifest + IS
+      catalogue and confirm the existence-window clipping closes the gap. If a residual discrepancy remains, trace it
       separately (e.g. "Needs Attention" and "Data Coverage" reading from different/inconsistent sources) rather than
       assuming this one fix explains 100% of the screenshot.
 - [ ] [BACKEND] P0. **Fix Bug B**: reconcile the instrument-search + per-instrument-availability contract between
@@ -341,3 +353,52 @@ zero-design-risk, makes Bug B/UI work independently verifiable), then Bug C's fi
 (deeper contract work), then the universal search UI (depends on B's fixed contract), then MVP wiring + MDPS parity,
 then the manifest re-stamp re-run (separate plan, picked up between MTDS ticks whenever its own background gates are the
 blocking step rather than my active attention).
+
+### 2026-07-21 (tick 1) — Bug A SHIPPED, Bug C implemented (QG in progress)
+
+**Bug A — SHIPPED, verified on origin: `deployment-ui@9c64878`.** Fixed the dead `"market-tick-data-handler"` string at
+every site (`DataStatusTab.tsx` x2 conditionals + comment, `CLIPreview.tsx`, `ServiceDetails.tsx` x2, `api/client.ts` x3
+incl. one redundant duplicate dict key removed), plus the one stale unit test (`tests/unit/client.test.ts`) that had
+locked in the dead string as expected behaviour — this is exactly why the bug was never caught: the test asserted the
+BUG. Verified live before writing the automated spec: started the dev server (`VITE_MOCK_API=true`), used Playwright MCP
+to navigate to `/service/market-tick-data-service/data-status`, confirmed "First day of each month only" renders
+immediately and "Instrument-Level Search" renders once one asset-group category is selected (matches the
+`selectedCategories.length === 1` gate in the code). Wrote `tests/smoke/mtds_instrument_search_visibility.spec.ts` to
+lock this in — first attempt used manual `page.route()` mocking and failed (this repo's playwright webServer already
+runs with `VITE_MOCK_API=true`, so a hand-rolled empty-object route fallback shadowed the app's own richer mock layer);
+fixed by removing the manual routes and relying on the webServer's mock mode, matching what the manual MCP verification
+had already proven works. Full `tests/smoke/` run: 396 passed, 8 pre-existing failures confirmed unrelated (Daily Costs
+page / mobile nav / nav-menu-dedup — filed as
+`plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` rather than silently ignored,
+not fixed here to avoid scope creep). Full `quality-gates.sh` green both before AND after a sentinel-invalidating pull
+mid-ship (a peer landed `Deployments.tsx` changes between my QG run and the quickmerge attempt — re-ran the gate, got a
+fresh sentinel, shipped clean).
+
+**Bug C — implemented, not yet shipped.** Traced (before writing any code, per "grep-then-READ") whether the existing
+`build_cefi_is_instruments_provider`'s catalogue read already carried `available_from`/`available_to`: it does NOT —
+that function reads the MANIFEST/availability-index (`read_availability_index` → `read_manifest_index`), a per-shard
+schema; the existence-level `available_from`/`available_to` columns live ONLY in `prod/catalog.parquet`, confirmed via
+`catalogue_lifecycle.py`'s own docstring ("The catalogue is the ONLY identity-level source... the availability `_index`
+carries per-shard COUNTS"). This ruled out my first design (naively assume the existing read already had the columns)
+before it became a bug. Implemented as a SEPARATE small object read from the SAME already-resolved bucket (mirroring
+`catalogue_lifecycle.py::_read_catalogue`'s exact pattern, not imported cross-module since it's private there) —
+`_read_cefi_catalogue_existence_windows()`, fail-open (`{}` on any error). `build_cefi_is_instruments_provider` now
+returns `(provider, windows)`; `per_instrument_coverage` gained `instrument_windows` (default `None` — zero behavior
+change for every existing caller that doesn't pass it) and a new `_clip_dates_to_window` helper; the denominator
+(`expected_count`) and numerator (`found_count`) are now BOTH clipped per-instrument to `[available_from, available_to]`
+intersected with `expected_dates`, keyed by NORMALIZED instrument_id (reusing the existing bug #4 cross-service
+id-divergence pattern, since `instrument_windows` comes from the catalogue while `found_pairs` comes from the manifest).
+Threaded through `mtds_honest_coverage_for_venue` → `venue_resolution.py`'s call site. 8 new unit tests added to
+`tests/unit/test_per_instrument_cefi_is_provider.py` (clipping primitive in isolation, the operator's exact scenario — a
+late-listed instrument not counting its pre-listing days as missing, an already-delisted instrument contributing 0 —
+fail-open when an instrument is absent from the windows dict, and exact pre-fix-behavior parity when
+`instrument_windows=None` is not passed at all). 17/17 passing. Two lint issues found+fixed on the first QG pass (unused
+`n_dates` var, one line >120 chars) — re-verified ruff clean. Full repo `quality-gates.sh` running now; will ship via
+quickmerge once green.
+
+**Known residual scope, documented not silently dropped**: the secondary `per_instrument` breakdown block's `"found"`
+count (only rendered for venues with <20 instruments) is NOT clipped to the per-instrument window the way the headline
+`expected_shards`/`found_shards`/`completion_pct` now are — its `"expected"` field IS fixed, but `"found"` still comes
+from the unclipped `normalized_iid_counts`. The `min(..., 100.0)` clamp prevents a nonsensical >100% display, but this
+is a known, minor inconsistency in a secondary display block, not the primary headline metric the operator's screenshot
+was about. Flagged here for a future refinement pass rather than expanding this tick's scope further.

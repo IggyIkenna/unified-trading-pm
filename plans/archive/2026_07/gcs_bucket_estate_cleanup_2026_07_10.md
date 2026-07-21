@@ -14,7 +14,13 @@ stage: [data, meta]
 repos: [deployment-service, unified-trading-library, market-tick-data-service, strategy-service, ml-service]
 scope: [engineer, admin]
 tags: [gcs, buckets, cleanup, terraform, data-correctness, autonomous]
-related: []
+related:
+  [
+    plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
+    plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+  ]
 created: "2026-07-10"
 last_updated: "2026-07-14"
 parent_epic: infrastructure_master
@@ -832,6 +838,28 @@ callers have moved off") are now resolved. Full execution tracked in
   contradicting evidence found.
 - **Not this trio's scope, still open**: `lending-indices` + `lending-indices-prd` (§5i/§5j finding 78) remain undeleted
   — a separate, pre-existing residual item, unrelated to this trio.
+
+## 5l. Reconciliation with sibling plan before archival (plan-reconcile, 2026-07-21)
+
+The two items this plan's own text still called "genuinely open" (§5g, §5k) were resolved since — by
+`bucket_estate_consolidation_to_sub100_2026_07_13.md`, which explicitly lists this plan in its own `related:`
+frontmatter and states it "tracks/completes the in-flight deletions owned by other plans":
+
+- **§5k's "not this trio's scope, still open" `lending-indices`/`lending-indices-prd`** — CONFIRMED DELETED. Sibling
+  plan line ~541: purge-lifecycle armed 2026-07-14T14:00Z, drain completed, `gcloud storage buckets delete --quiet` on
+  both `lending-indices-central-element-323112` and `lending-indices-prd-central-element-323112` succeeded, both
+  confirmed 404 via `buckets describe`. "STATUS: COMPLETE 2026-07-15."
+- **§5g's football buckets (`football-backtest-results`, `football-mapped-consolidated`'s `odds/`+`parquet_backup/`,
+  `football-ml-models-and-predictions`)** — RULED + DONE. Sibling plan line ~199: "RULED + DONE 2026-07-14: migrated
+  count-verified into canonical homes (backtest-results/football 455 obj; ml-models-store-prd/legacy_football 119;
+  instruments-store-sports-prd/legacy_football/{mapped_consolidated 107, raw_all_sources 37}) and all 4 deleted."
+- **`ml-models-store` flat bucket migration (§5h/§5e)** — still genuinely open, but correctly owned by the sibling
+  plan's own unchecked todo ("ml legacy variants ... verify no new writes since, then delete"), gated on its W3 ml-fold.
+  Not a contradiction — consistent open item in both docs, no action needed here.
+
+No contradictory claims found between the two plans about current bucket state — this plan's text was simply stale (it
+hadn't been told its own flagged-open items got closed elsewhere). With this reconciliation, nothing remains open in
+this plan's own scope.
 
 ## 6. Model-tier note (repeating from frontmatter, since it matters for how much to trust this)
 

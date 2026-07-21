@@ -94,9 +94,52 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
       GENUINELY_ORPHANED verdict was wrong — it grepped only for a literal `spread_calculator` symbol and didn't find
       the equivalent functionality under its actual names. Writing a duplicate `spread_calculator.py` now would be
       redundant tech debt, not a real gap — no code shipped, none needed. (repo: features-service)
-- [ ] [SCRIPT] P3. Run a strategy-service backtest for sports/predictions archetypes through the shipped execution
-      matching-engine (L0 Sports TOB matcher), including an arb-decay-window analysis and a paper-trade alpha gate.
-      (repo: strategy-service)
+- [x] ✅ [SCRIPT] P3. ~~Run a strategy-service backtest for sports/predictions archetypes through the shipped execution
+      matching-engine (L0 Sports TOB matcher)~~ — **investigated: not runnable as scoped, premise mixes up two
+      deliberately-separate systems.** `codex/04-architecture/backtest-groups.md:27-28,117-120` is explicit: **Group B
+      (strategy-service) uses benchmark fills — "No matching-engine microstructure; zero execution alpha"**; the
+      matching engine (incl. `L0Matcher` — confirmed real,
+      `execution-service/execution_service/matching_engine/engine.py:290`, "L0_TOB Matcher for top-of-book-only
+      sources... Sports/prediction bets default to TOB") is Group C's (execution-service's) job, isolating execution
+      alpha on TOP of a Group B (or live) instruction stream — the two are architecturally never meant to fuse into one
+      "strategy-service backtest routed through the matching engine" run. Confirmed in code too:
+      `strategy_service/engine/backtest/benchmark_fills.py:9-10` — _"This lives in strategy-service (not
+      execution-service) because Group B replaces execution entirely; execution-service owns Group C."_ So the literal
+      ask is not a scoping gap, it's a category error inherited from the archived plans' original phrasing.
+
+      Also verified while investigating: the ONLY sports backtest CLI/fixtures that ever existed
+          (`scripts/run_sports_arb_backtest.py`, `tests/fixtures/sports_odds/`) were **deleted**
+          `strategy-service@fe2e0c7a` ("citadel-grade service remediation... deleted orphaned scripts, legacy dirs"), so
+          `docs/BACKTESTS.md`'s documented invocation is dead. `execution-service`'s Group-C CLI
+          (`execution_service/cli/backtest_domains.py`) has `run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`
+          but **no `run_sports_backtest`** — a genuine Group-C sports harness doesn't exist either. The
+          "arb-decay-window analysis" and "paper-trade alpha gate" have **zero code anywhere** in strategy-service,
+          execution-service, or the cited codex docs — grepped `decay_window`/`arb_decay`/`alpha_gate`/`paper_trade_alpha`,
+          the only hits are unchecked `- [ ]` todos in archived plans. These are net-new builds, not "run the shipped
+          thing" verification.
+
+          Sports/prediction archetypes DO exist and are exercised (proving the strategy engines themselves work):
+          `strategy_service/engine/strategies/v2/archetype_slots_sports.py:20-84` (`SPORTS_ARBITRAGE`,
+          `SPORTS_VALUE_BETTING`, `SPORTS_ML`, `SPORTS_HALFTIME_ML`, `SPORTS_MARKET_MAKING`), concrete engines
+          `SportsArbDutchingEngine` + `prediction_venue_dispersion.py`, unit-tested (synthetic in-memory data, not a
+          file-based dataset) in `tests/unit/engine/strategies/v2/test_sports_arb_dutching.py`.
+
+          Split into 3 correctly-scoped follow-ups below rather than re-filing the same impossible-as-worded ask a 4th
+          time. (repo: strategy-service, execution-service)
+
+- [ ] [DATA] P3. Restore or recreate a small committed sports/prediction odds fixture dataset (the deleted
+      `tests/fixtures/sports_odds/` was VCR-cassette-style local data, no live GCS needed) plus a caller script
+      analogous to the deleted `run_sports_arb_backtest.py` that builds `GroupBTickInput`s and calls
+      `GroupBRunner`/`strategy-service --operation group-b-backtest --mode batch --asset-group SPORTS` — this is the
+      prerequisite for ANY hermetic sports/prediction Group-B backtest run, in-session or otherwise. (repo:
+      strategy-service)
+- [ ] [DESIGN] P3. Decide whether sports/predictions actually needs a Group-C execution-alpha harness (a new
+      `run_sports_backtest` in `execution-service/execution_service/cli/backtest_domains.py`, exercising `L0Matcher`) —
+      if yes, scope it as its own plan; if the original "route through the matching engine" ask was just imprecise
+      phrasing for "prove the strategy backtest works," say so and retire the Group-C framing. (repo: execution-service)
+- [ ] [SCRIPT] P3. Build the arb-decay-window analysis + paper-trade alpha gate from scratch — zero code exists anywhere
+      today; this is brand-new feature work (see the `brand-new` 1.0x estimate multiplier), not a verification task.
+      Needs its own scoped plan once the Group-B fixture prerequisite above lands. (repo: strategy-service)
 - [ ] [SCRIPT] P3. Build an FSS output-schema ↔ ML-training-service input-schema ↔ strategy-service input-schema parity
       test for sports/predictions — no active plan currently owns this gate. (repo: features-service)
 - [ ] [VERIFY] P3. UI check that sports/predictions signals actually surface in the trading UI once produced (not just
