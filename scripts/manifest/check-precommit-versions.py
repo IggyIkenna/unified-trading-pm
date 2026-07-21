@@ -222,6 +222,28 @@ def add_bump_library_hook(config_path: Path) -> None:
     config_path.write_text("".join(new_lines))
 
 
+def is_husky_managed(repo_path: Path) -> bool:
+    """True if git's active hooks dir for this repo resolves under .husky/.
+
+    Husky-managed JS UI repos (deployment-ui, unified-trading-system-ui) point
+    core.hooksPath at .husky/_ once `npm`/`pnpm install` runs husky's `prepare`
+    script. prek does NOT refuse to install when core.hooksPath is set — it
+    OVERWRITES husky's .husky/_/pre-commit shim with its own, racing husky's
+    own install (same class of bug fixed in slot-cron-ff-pull.sh 2026-07-08).
+    These repos' `.husky/pre-commit` delegates to prek at RUN time instead, so
+    skip both the "hook missing" flag and the `prek install` fix for them. See
+    deployment_ui_prettier_version_skew_blocks_quickmerge_2026_07_21.md.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(repo_path), "rev-parse", "--path-format=absolute", "--git-path", "hooks"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return False
+    return ".husky" in result.stdout
+
+
 def run_precommit_install(repo_path: Path) -> bool:
     """Install the git pre-commit hook in the repo. Returns True on success.
 
@@ -332,9 +354,9 @@ def main() -> int:
             else:
                 issues.append(msg)
 
-        # --- Check .git/hooks/pre-commit exists ---
+        # --- Check .git/hooks/pre-commit exists (skip husky-managed repos — see is_husky_managed) ---
         git_hook = repo_path / ".git" / "hooks" / "pre-commit"
-        if not git_hook.exists():
+        if not git_hook.exists() and not is_husky_managed(repo_path):
             msg = f"HOOK_NOT_INSTALLED: {repo_name}  (.git/hooks/pre-commit missing)"
             if apply_fixes:
                 success = run_precommit_install(repo_path)

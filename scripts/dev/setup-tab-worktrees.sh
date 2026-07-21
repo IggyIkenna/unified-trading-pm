@@ -392,10 +392,18 @@ install_strict_quickmerge_hook() {
 # pre-commit + commit-msg; pre-push stays the strict-quickmerge guard above (prek must NEVER
 # manage pre-push). Refuses on a set core.hooksPath — clear stale ones (post-migration absolute
 # paths) rather than force.
+# Husky-managed repos (JS UI: deployment-ui, unified-trading-system-ui) resolve their hooks dir
+# UNDER .husky/ via core.hooksPath. prek does NOT refuse with hooksPath set — it OVERWRITES
+# husky's .husky/_/ shims with its own, racing husky's own `prepare` install (same class of bug
+# as slot-cron-ff-pull.sh's 2026-07-08 husky-deference fix). Skip prek install for these clones —
+# their `.husky/pre-commit` delegates to prek at RUN time instead (see
+# deployment_ui_prettier_version_skew_blocks_quickmerge_2026_07_21.md).
 install_prek_precommit_hook() {
-    local clone_dir="$1" prek_bin
+    local clone_dir="$1" prek_bin hooks_dir
     prek_bin="$(command -v prek || echo "${HOME}/.local/bin/prek")"
     [[ -x "${prek_bin}" && -f "${clone_dir}/.pre-commit-config.yaml" ]] || return 0
+    hooks_dir="$(git -C "${clone_dir}" rev-parse --path-format=absolute --git-path hooks 2>/dev/null)" || true
+    case "${hooks_dir}" in */.husky/*) return 0 ;; esac
     (cd "${clone_dir}" && "${prek_bin}" install >/dev/null 2>&1) || true
 }
 
