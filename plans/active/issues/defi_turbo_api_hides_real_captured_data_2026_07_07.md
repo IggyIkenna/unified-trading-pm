@@ -262,12 +262,17 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
 - [ ] [VERIFY] P3. Resolve which "Plasma" chain UAC's `FLUID-PLASMA`/`AAVE-PLASMA` placeholders are meant to refer to
       (the 2025 Tether-backed Plasma L1, or the unrelated pre-2020 Polygon Plasma bridge) before doing anything else
       with those two entries — UAC's own maintainers have this flagged unresolved.
-- [ ] [CODE] P1. **New 2026-07-10.** Decide + wire the CEFI/DEFI dual-counting axis for HYPERLIQUID/ASTER
-      (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`), then declare them in UAC
-      `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES` so their on-chain rows (3.77M / 1.07M real captured rows,
-      confirmed still 100% invisible to the DEFI turbo category as of 2026-07-10) stop being silently dropped by
-      `_filter_to_canonical_defi_venues`'s whitelist. This is the single highest-row-count gap left in this whole
-      investigation — bigger than every other finding in this doc combined.
+- [ ] [CODE] P1. **PARTIALLY FIXED 2026-07-21 (Track 6, `defi_consolidated_closeout_2026_07_18.md`) — user-facing
+      symptom resolved via a deployment-api-local stopgap, UAC declaration still open.** `deployment-api@427ede5` adds a
+      supplemental whitelist (`_CEFI_DEFI_HYBRID_VENUE_CHAIN_PAIRS` in `defi.py`) admitting the exact confirmed
+      `(HYPERLIQUID, HYPERLIQUID)`/`(ASTER, BSC)` pairs so their real captured rows stop being dropped by
+      `_filter_to_canonical_defi_venues` — NOT a double-counting risk (this whitelist only gates DEFI-category bucket
+      reads; CEFI's own coverage numbers come from a completely separate CEFI-category read), matching the
+      operator-confirmed hybrid architecture already on record (Update §3 below: CEFI holds instrument definitions, DEFI
+      holds chain-level settlement data — two distinct row sets). **Still open**: the durable fix — declaring
+      HYPERLIQUID/ASTER in UAC's own `ALL_DEFI_VENUES` + `DEFI_VENUE_DATA_TYPE_CAPABILITIES` — is out of scope for a
+      deployment-api/deployment-ui-only dispatch; this stopgap unblocks the dashboard today but the registry-level
+      declaration (and any UAC-side dual-counting axis decision it still needs) remains a real follow-up.
 - [ ] [OPS] P1. **New 2026-07-10.** Restart/fix the `uts-prod-data-status-rollup` Cloud Run Job — Cloud Scheduler has
       been firing into `UNAVAILABLE` (gRPC code 14) since at least 2026-07-05T15:53Z (confirmed still broken 2026-07-10,
       blob age ~4.8 days at check time). The 2026-07-08 staleness-gate fix (3847d6f) means `/turbo` now degrades to
