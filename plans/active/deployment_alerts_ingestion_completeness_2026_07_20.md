@@ -259,10 +259,30 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       never blocks the kill/reap it rides on. 4 new tests (`TestPersistZombieAlert`: correct row shape, two calls land
       at two distinct objects — no shared-filename race, bucket-resolution failure is best-effort, upload failure is
       best-effort). `quality-gates.sh` green (232 tests in this file, full suite green).
-- [ ] [BACKEND] P2. **Kill-switch events (cheap read-only projection).** Surface arm/disarm from the existing parquet
+- [x] ✅ [BACKEND] P2. **Kill-switch events (cheap read-only projection).** Surface arm/disarm from the existing parquet
       audit log (`gs://{pid}-kill-switch-audit-log/`, `UTL kill_switch/audit_log.py`) into the normalised feed — high
       diagnostic value, and cheap because it's a read-only projection of a store that already exists. Do not alter any
-      kill-switch write path.
+      kill-switch write path. — `deployment-api@105ffb3`: `_repo_ci_alerts.py` gained `_parse_kill_switch_audit_row()` +
+      `_read_kill_switch_audit_log_sync()` — bounded day-partitioned reads (`{date}/*.parquet`) against the
+      `kill-switch-audit-log` bucket, resolved via `resolve_bucket_name()` (never hardcoded), parsed via pyarrow
+      (already a resolved dependency), merged into `_read_ledgers_sync()`'s existing walk. `alert_class` =
+      `kill_switch_armed`/`kill_switch_disarmed`; `workflow_name` = `kill-switch-{switch_id}` so each switch groups into
+      its own lifecycle stream; `severity` intentionally left `None` (structurally ABSENT per the `KILL_SWITCH_AUDIT`
+      `FIELD_COVERAGE` — armed/disarmed is not a paging-tier axis, never fabricated). New bucket kind
+      `kill-switch-audit-log` (GCP-only, no AWS mirror — the canonical writer path never had one) added across all 3
+      `cloud-providers.yaml` copies this time (`deployment-service@f372f85`, `unified-api-contracts@d60112df`,
+      `unified-trading-pm@f542a76d7`) — learned from todo 8's gap where only 2 of 3 mirrors got updated — plus
+      registered in `unified-trading-library@978c3b35`'s `_KNOWN_YAML_ASYMMETRIES` so the GCP/AWS parity regression pin
+      doesn't flag it. 7 new tests in deployment-api (`TestParseKillSwitchAuditRow` ×3, `TestReadKillSwitchAuditLogSync`
+      ×4: parquet round-trip, non-parquet blobs skipped, bucket-resolution failure best-effort, malformed parquet
+      best-effort). `quality-gates.sh` green in all 4 touched repos. **Finding, not silently absorbed**: production
+      wires `InMemoryAuditLogWriter` into the bus (`deployment-api/routes/kill_switch_routes.py:86`), NOT
+      `ParquetAuditLogWriter` — the parquet store this todo reads from receives ZERO real writes today (in-process-only
+      audit log, lost on restart, no cross-process durability). This read path is correct + forward-compatible (it will
+      start surfacing real data the moment the writer is wired) and honestly returns empty rather than fabricating
+      anything, but "high diagnostic value" won't materialize until a separate effort swaps the writer — flagging so it
+      isn't mistaken for already-solved. Not fixed here: swapping the writer is a WRITE-path change, explicitly out of
+      this todo's scope ("Do not alter any kill-switch write path").
 - [ ] [REVIEW] P1. Tests — (a) alerting-service persists the full payload; (b) deployment-api ingests and normalises it;
       (c) `subject_repo` is the subject, not the emitter, for a known cross-repo CI regression; (d) concurrent writes no
       longer drop rows; (e) retention/window returns the full requested range and signals capping explicitly; (f)
@@ -457,6 +477,18 @@ Notes worth surfacing beyond the matrix:
   wired into both the RUNNING-VM zombie kill loop and the TERMINATED-VM reaper. `severity` intentionally omitted per the
   `ZOMBIE_WATCHDOG` `FIELD_COVERAGE` contract (structurally absent — VM-scoped, not a paging-tier axis).
   `quality-gates.sh` green (232 tests in the touched file).
+
+- **2026-07-21** — Todo 9 (kill-switch events, read-only projection) shipped, `deployment-api@105ffb3` +
+  `deployment-service@f372f85` + `unified-api-contracts@d60112df` + `unified-trading-pm@f542a76d7` +
+  `unified-trading-library@978c3b35`. Reads `KillSwitchBus` arm/disarm parquet audit rows via a new
+  `kill-switch-audit-log` bucket kind (GCP-only, registered across all 3 `cloud-providers.yaml` mirrors this time — todo
+  8 only updated 2 of 3, causing a QG red another slot + this session both had to clean up). **Key finding**:
+  production's kill-switch bus is wired to `InMemoryAuditLogWriter`, not `ParquetAuditLogWriter`
+  (`deployment-api/routes/kill_switch_routes.py:86`) — the parquet store this todo projects from is currently empty in
+  production (in-process-only writer, no cross-process durability). The read path is correct and forward-compatible, but
+  won't show real data until a separate (write-path) effort swaps the writer — out of this todo's explicit "do not alter
+  any kill-switch write path" scope. Recorded here as a follow-up rather than a new todo since no operator decision on
+  wiring `ParquetAuditLogWriter` into production has been made yet.
 
 ## Codex SSOTs
 
