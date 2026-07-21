@@ -9,11 +9,11 @@ summary:
   no_parquet. The check mechanism (VM launch/poll/report, write-prefix verify) works; only the DeFi COLLECTION route is
   missing from the checker.
 status: open
-nature: test-harness-gap
+nature: issue
 asset_group: defi
-stage: foundation
+stage: [data]
 repos: [market-tick-data-service, deployment-service]
-scope: /data-pipeline-check-mtds checker + launch-mtds-backfill-vm.sh
+scope: [engineer]
 tags: [defi, pipeline-e2e-check, checker, collect-handlers, download-op]
 related: [defi_consolidated_closeout_2026_07_18, defi_mvp_backfill_optimization_ready_2026_07_20]
 created: 2026-07-20
@@ -23,6 +23,11 @@ execution_scope: local-only
 priority: P1
 estimate_class: refactor
 drift_direction: stable
+depends_on: []
+source: ["filed 2026-07-20 during MTDS DeFi pipeline-check work; frontmatter completed 2026-07-21 to pass the schema gate"]
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # /data-pipeline-check-mtds cannot fetch DeFi — download op skips DeFi venues

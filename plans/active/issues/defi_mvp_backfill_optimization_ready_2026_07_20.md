@@ -7,11 +7,11 @@ summary:
   changes the live capture path and its validation needs a 2-VM TheGraph canary + a re-backfill — both blocked by the
   expired gcloud CLI auth. This doc is the dispatchable unit.
 status: open
-nature: optimization
+nature: issue
 asset_group: defi
-stage: foundation
+stage: [data]
 repos: [market-tick-data-service, deployment-service]
-scope: DeFi MVP backfill (collect handlers, canonical write path, VM launchers)
+scope: [engineer]
 tags: [defi, backfill, optimization, thegraph, pagination, spot, preemption, eta]
 related: [defi_consolidated_closeout_2026_07_18, defi_available_at_clobbered_by_wallclock_2026_07_20]
 created: 2026-07-20
@@ -23,6 +23,11 @@ estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
 drift_direction: stable
+depends_on: []
+source: ["filed 2026-07-20 during DeFi MVP backfill work; frontmatter completed 2026-07-21 to pass the schema gate"]
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # DeFi-MVP backfill optimization + correctness defects — READY

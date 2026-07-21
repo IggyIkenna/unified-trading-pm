@@ -7,11 +7,11 @@ summary:
   data_types. Small blast radius (78/51.9M rows) but an ACTIVE write-path pattern in the lst_rates + oracle_prices
   handlers.
 status: open
-nature: data-correctness
+nature: issue
 asset_group: defi
-stage: foundation
+stage: [data]
 repos: [market-tick-data-service]
-scope: lst_rates + oracle_prices canonical write path
+scope: [engineer]
 tags: [defi, instrument-id, per-instrument-model, lst, oracle, glued-key]
 related: [defi_consolidated_closeout_2026_07_18]
 created: 2026-07-20
@@ -21,6 +21,11 @@ execution_scope: local-only
 priority: P2
 estimate_class: refactor
 drift_direction: worsening-slowly
+depends_on: []
+source: ["filed 2026-07-20 during DeFi LST/oracle canonical-write work; frontmatter completed 2026-07-21 to pass the schema gate"]
+resolved_by:
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # lst_rates + oracle_prices write timestamp-glued instrument_ids
