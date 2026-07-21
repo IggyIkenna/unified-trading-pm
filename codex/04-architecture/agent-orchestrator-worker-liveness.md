@@ -255,6 +255,43 @@ Expected: kill event within 180s, fresh tmux session within 300s total.
 
 ---
 
+## One-off / scheduled completion contract — the finished-immortal failure mode (2026-07-21)
+
+The three wedge modes above (stuck / silent / context-full) are all a worker that is STILL SUPPOSED to be working. There
+is a **fourth** mode the watchdog was blind to: a `one_shot`/`scheduled` agent that has **finished** its work but never
+dies.
+
+**Symptom (measured 2026-07-21).** 15 finished typed agents (9 `cicd` one_shot + 6 `plan_health` scheduled) sat
+`status=active` for up to 19 h, pinning 15/16 slots → the daily reconciler got `503 no free slot`. Their JSONLs show
+none errored — each completed its task, then idle-polled forever. The role docs already say _"then EXIT, do NOT loop"_,
+but **"EXIT" only ends the Claude _turn_**; the tmux session lingers at an idle `❯` prompt, `WorkerLivenessKicker`
+re-nudges it, and it responds → idles → is nudged again (one agent logged its "179th poll").
+
+**Why every cleanup path is blind.** The finish is NOT a session death, so:
+
+- `has_session()==True` → `TmuxPruner` / `reap_orphan_agents` (session-death-gated) never fire;
+- the mandated `/progress` heartbeat keeps `SlotRow.last_ping` fresh → the heartbeat-silent + working-stale reapers
+  never fire (verified: a slot's `last_ping` stayed fresh while its bound AgentRow's froze at claim);
+- the two idle-scanning reapers (`_reclaim_idle_lingering_sessions`, `_release_prereq_blocked_slots`) are
+  carve-out-exempted for typed agents (`f641968` / `1e7fec0`, added 2026-07-20 to stop them reaping typed agents
+  MID-work) — and because a one-off never `/done`s, the carve-out cannot tell _finished_ from _working_, so it protects
+  finished ones forever.
+
+**A finished one-off is therefore immortal** — it is archived only by a manual `tmux kill-session` (which the backend
+then reaps `lifecycle-complete` in <45 s, proving the cleanup path is correct; it simply never receives the
+session-death signal).
+
+**The contract (being implemented →
+[`ao_uniform_agent_liveness_contract`](../../plans/active/ao_uniform_agent_liveness_contract_2026_07_20.md)).** A
+`one_shot`/`scheduled` agent, on completing, POSTs an explicit **role-aware `/done`** (task-less for a task-less one-off
+— today's `/done` is task + plan-flip gated and must be extended to accept a task-less completion). The backend then (a)
+archives the AgentRow `lifecycle-complete`, (b) frees the slot, (c) flags it so `WorkerLivenessKicker` stops nudging it.
+The agent then stops; the next reap cleans the now-dead session. This makes "finished" an **explicit signal** instead of
+an inference from a session death that never happens — and lets the `f641968`/`1e7fec0` carve-outs be deleted (a booted
+one-off is `working`, never `idle`, so idle-scanners skip it by construction; on `/done` it is archived, not reaped).
+
+---
+
 ## Self-healing hardening (2026-06-21 — `orchestrator_self_healing_hardening_2026_06_21`)
 
 Five robustness closures (all in `agent-orchestrator`, tested) for the operator's "always pick accounts with usage left,
