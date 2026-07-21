@@ -177,9 +177,18 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       `tests/smoke/alerts-page.spec.ts` pins the visual-hierarchy contract main required (Streams summary label + DOM
       order before Timeline; Timeline keeps its CardTitle; every pre-existing testid resolves) — all 21 pre-existing
       assertions stay green (22/22 passed). `quality-gates.sh` green (sentinel fe767f19).
-- [ ] [REVIEW] P1. **Regression + new specs** — extend `tests/smoke/alerts-page.spec.ts` (or a sibling) to cover the new
-      filter/sort/date-range/deep-link behaviour while keeping every existing assertion in that spec green. `pw:L2 ✓`
-      with the spec cited. No tick without it.
+- [x] ✅ [REVIEW] P1. **Regression + new specs** — extend `tests/smoke/alerts-page.spec.ts` (or a sibling) to cover the
+      new filter/sort/date-range/deep-link behaviour while keeping every existing assertion in that spec green.
+      `pw:L2     ✓` with the spec cited. No tick without it. — deployment-ui@4aa865c4. Each dimension already got
+      isolated coverage as its own todo shipped (filter bar +7 cases, date-range +4, drill-down +1, layout +1 — 13 cases
+      across 4 prior commits, all still green); this todo's own contribution is the one deliberately COMBINED case that
+      was genuinely missing — kind-filter + date-range + column-sort all active at once, proving the independent
+      `useMemo` layers (filter → sort) compose correctly instead of one clobbering another. Note on
+      `assigned_role:     review`: `agents/review.md` describes a persistent, non-committing UAT daemon
+      (`does_not: Edit / commit code`) — incompatible with this todo's own text (a concrete "extend the spec file"
+      change) and its `done_definition: "Checkbox flipped in plan + code shipped"`; treated the `[REVIEW]` prefix as the
+      per-task tag convention (routes-the-todo, not "become the daemon") and shipped it as a normal worker task. Full
+      spec now 23/23 green. `quality-gates.sh` green (sentinel f47d0ac1).
 - [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the rebuilt alerts-page contract (diagnostic surface, the
       filter/sort/date-range dimensions, the shared-primitive reuse, the drill-down link map) in
