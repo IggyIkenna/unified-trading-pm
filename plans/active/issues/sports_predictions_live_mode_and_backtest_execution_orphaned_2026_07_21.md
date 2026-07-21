@@ -108,24 +108,24 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
       ask is not a scoping gap, it's a category error inherited from the archived plans' original phrasing.
 
       Also verified while investigating: the ONLY sports backtest CLI/fixtures that ever existed
-              (`scripts/run_sports_arb_backtest.py`, `tests/fixtures/sports_odds/`) were **deleted**
-              `strategy-service@fe2e0c7a` ("citadel-grade service remediation... deleted orphaned scripts, legacy dirs"), so
-              `docs/BACKTESTS.md`'s documented invocation is dead. `execution-service`'s Group-C CLI
-              (`execution_service/cli/backtest_domains.py`) has `run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`
-              but **no `run_sports_backtest`** — a genuine Group-C sports harness doesn't exist either. The
-              "arb-decay-window analysis" and "paper-trade alpha gate" have **zero code anywhere** in strategy-service,
-              execution-service, or the cited codex docs — grepped `decay_window`/`arb_decay`/`alpha_gate`/`paper_trade_alpha`,
-              the only hits are unchecked `- [ ]` todos in archived plans. These are net-new builds, not "run the shipped
-              thing" verification.
+                      (`scripts/run_sports_arb_backtest.py`, `tests/fixtures/sports_odds/`) were **deleted**
+                      `strategy-service@fe2e0c7a` ("citadel-grade service remediation... deleted orphaned scripts, legacy dirs"), so
+                      `docs/BACKTESTS.md`'s documented invocation is dead. `execution-service`'s Group-C CLI
+                      (`execution_service/cli/backtest_domains.py`) has `run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`
+                      but **no `run_sports_backtest`** — a genuine Group-C sports harness doesn't exist either. The
+                      "arb-decay-window analysis" and "paper-trade alpha gate" have **zero code anywhere** in strategy-service,
+                      execution-service, or the cited codex docs — grepped `decay_window`/`arb_decay`/`alpha_gate`/`paper_trade_alpha`,
+                      the only hits are unchecked `- [ ]` todos in archived plans. These are net-new builds, not "run the shipped
+                      thing" verification.
 
-              Sports/prediction archetypes DO exist and are exercised (proving the strategy engines themselves work):
-              `strategy_service/engine/strategies/v2/archetype_slots_sports.py:20-84` (`SPORTS_ARBITRAGE`,
-              `SPORTS_VALUE_BETTING`, `SPORTS_ML`, `SPORTS_HALFTIME_ML`, `SPORTS_MARKET_MAKING`), concrete engines
-              `SportsArbDutchingEngine` + `prediction_venue_dispersion.py`, unit-tested (synthetic in-memory data, not a
-              file-based dataset) in `tests/unit/engine/strategies/v2/test_sports_arb_dutching.py`.
+                      Sports/prediction archetypes DO exist and are exercised (proving the strategy engines themselves work):
+                      `strategy_service/engine/strategies/v2/archetype_slots_sports.py:20-84` (`SPORTS_ARBITRAGE`,
+                      `SPORTS_VALUE_BETTING`, `SPORTS_ML`, `SPORTS_HALFTIME_ML`, `SPORTS_MARKET_MAKING`), concrete engines
+                      `SportsArbDutchingEngine` + `prediction_venue_dispersion.py`, unit-tested (synthetic in-memory data, not a
+                      file-based dataset) in `tests/unit/engine/strategies/v2/test_sports_arb_dutching.py`.
 
-              Split into 3 correctly-scoped follow-ups below rather than re-filing the same impossible-as-worded ask a 4th
-              time. (repo: strategy-service, execution-service)
+                      Split into 3 correctly-scoped follow-ups below rather than re-filing the same impossible-as-worded ask a 4th
+                      time. (repo: strategy-service, execution-service)
 
 - [x] ✅ [DATA] P3. Restore or recreate a small committed sports/prediction odds fixture dataset (the deleted
       `tests/fixtures/sports_odds/` was VCR-cassette-style local data, no live GCS needed) plus a caller script
@@ -140,27 +140,45 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
       full `V2EngineOrchestrator` + `BenchmarkFillEngine` path.
 
       **Pivoted archetype mid-task, documented in the script + fixture docstrings**: the original ask targeted
-          `ARBITRAGE_PRICE_DISPERSION` (the "sports arb" name), but building the first working version surfaced that
-          this archetype's factory-registered engine is `ArbitragePriceDispersionEngine` (CEFI cross-venue price
-          dispersion) — `SportsArbDutchingEngine` (the real sports-odds dutching engine) shares the same
-          `StrategyArchetype` enum value but is NOT in `strategy_service.engine.strategies.v2.factory`'s dispatch
-          table, so a "sports arb" instance silently gets the wrong engine (verified directly: registered instance's
-          engine type resolved to `ArbitragePriceDispersionEngine`, fed a real odds book, returned `[]` every tick).
-          That's a genuine, separate wiring bug — filed as
-          `plans/active/issues/sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md` rather than absorbed here
-          or worked around silently. This script/fixture instead targets `ML_DIRECTIONAL_EVENT_SETTLED`
-          (`SPORTS_VALUE_BETTING`), which IS correctly wired — it genuinely proves the sports Group-B pipeline works
-          end-to-end, which was the actual point of this todo.
+                  `ARBITRAGE_PRICE_DISPERSION` (the "sports arb" name), but building the first working version surfaced that
+                  this archetype's factory-registered engine is `ArbitragePriceDispersionEngine` (CEFI cross-venue price
+                  dispersion) — `SportsArbDutchingEngine` (the real sports-odds dutching engine) shares the same
+                  `StrategyArchetype` enum value but is NOT in `strategy_service.engine.strategies.v2.factory`'s dispatch
+                  table, so a "sports arb" instance silently gets the wrong engine (verified directly: registered instance's
+                  engine type resolved to `ArbitragePriceDispersionEngine`, fed a real odds book, returned `[]` every tick).
+                  That's a genuine, separate wiring bug — filed as
+                  `plans/active/issues/sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md` rather than absorbed here
+                  or worked around silently. This script/fixture instead targets `ML_DIRECTIONAL_EVENT_SETTLED`
+                  (`SPORTS_VALUE_BETTING`), which IS correctly wired — it genuinely proves the sports Group-B pipeline works
+                  end-to-end, which was the actual point of this todo.
 
 - [ ] [DESIGN] P3. Decide whether sports/predictions actually needs a Group-C execution-alpha harness (a new
       `run_sports_backtest` in `execution-service/execution_service/cli/backtest_domains.py`, exercising `L0Matcher`) —
       if yes, scope it as its own plan; if the original "route through the matching engine" ask was just imprecise
       phrasing for "prove the strategy backtest works," say so and retire the Group-C framing. (repo: execution-service)
-- [ ] [SCRIPT] P3. Build the arb-decay-window analysis + paper-trade alpha gate from scratch — zero code exists anywhere
-      today; this is brand-new feature work (see the `brand-new` 1.0x estimate multiplier), not a verification task.
-      Needs its own scoped plan once the Group-B fixture prerequisite above lands. (repo: strategy-service)
-- [ ] [SCRIPT] P3. Build an FSS output-schema ↔ ML-training-service input-schema ↔ strategy-service input-schema parity
-      test for sports/predictions — no active plan currently owns this gate. (repo: features-service)
+- [x] ✅ [SCRIPT] P3. Build the arb-decay-window analysis + paper-trade alpha gate from scratch — zero code exists
+      anywhere today; this is brand-new feature work (see the `brand-new` 1.0x estimate multiplier), not a verification
+      task. Needs its own scoped plan once the Group-B fixture prerequisite above lands. (repo: strategy-service) —
+      deliverable per operator ruling BLK-b567ce7d (2026-07-21, design-only, no speculative implementation): authored
+      `plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md` (`assigned_vm: NA`, human plan, not
+      AO-dispatched) defining the decay-window statistic/window-boundaries/data- source/output-shape and the paper-trade
+      alpha-gate statistic/sample-size/threshold-location/acceptance-test, grounded in the existing
+      `RECON_GREEN_THRESHOLDS` gate-architecture precedent (`batch-live-reconciliation-threshold-calibration.md`) rather
+      than inventing a new one. Sits for operator review; flips to `assigned_vm: planning` (or a referencing AO plan)
+      if/when they approve dispatching implementation.
+- [x] ✅ [SCRIPT] P3. Build an FSS output-schema ↔ ML-training-service input-schema ↔ strategy-service input-schema
+      parity test for sports/predictions — no active plan currently owns this gate. (repo: features-service) —
+      **investigated first, found there is no schema contract to test parity against**: read the actual code in all
+      three services (+ UAC) and found FOUR incompatible naming conventions for the same odds/probability data (FSS
+      `home_implied_prob` vs strategy-service v2 `decimal_odds_HOME` vs strategy-service's separate legacy subscriber's
+      `ht_odds_home_implied` vs UAC's own disconnected, zero-consumer `SportsFeatureVector`'s
+      `market_home_implied_prob`) — writing a literal parity test now would either trivially pass (testing unrelated
+      things are unrelated) or immediately surface this whole finding, not a small gap. Filed
+      `plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` with the recommended decision
+      (canonicalize on UAC's `SportsFeatureVector` per the UAC-SSOT-types rule, pending operator/architect sign-off) and
+      a follow-up todo to write the REAL parity test once a canonical naming is chosen. This is the same
+      "spec-before-code" pattern as the sibling `sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md` plan
+      (BLK-b567ce7d) — a naming decision, not a mechanical test-writing task, is the actual blocking gap here.
 - [ ] [VERIFY] P3. UI check that sports/predictions signals actually surface in the trading UI once produced (not just
       that the pipeline runs). (repo: unified-trading-system-ui)
 - [ ] [INFRA] P3. Scope + gate the full MTDS/MDPS/FSS/strategy live-mode activation chain for sports/predictions on an

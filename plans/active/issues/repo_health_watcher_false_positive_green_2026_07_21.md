@@ -50,8 +50,30 @@ document clearly that "green" is a weaker signal a waiter must still re-verify b
 
 ## Todos
 
-- [ ] [INFRA] P2. Audit `RepoHealthWatcher`'s green-detection source (agent-orchestrator repo) against what
-      `quality-gates.sh` actually checks; align or clearly document the gap. (repo: agent-orchestrator)
+- [x] [INFRA] P2. Audit `RepoHealthWatcher`'s green-detection source (agent-orchestrator repo) against what
+      `quality-gates.sh` actually checks; align or clearly document the gap. (repo: agent-orchestrator) — ✅
+      `agent-orchestrator@5bf0ccf`. **Root cause confirmed**: `RepoHealthWatcher.tick_once()` reads
+      `server.ci_status.ci_status()` → `ci_reconcile.repo_ldr_qg_conclusion()`, which is the latest _completed_
+      `quality-gates-v2` run's conclusion on `live-defi-rollout` — NOT a fresh re-run of `quality-gates.sh`. Confirmed
+      via the repo's own `.github/workflows/quality-gates-v2.yml` trigger surface (`push:[main]` + PRs to
+      `[main, staging]` + `workflow_dispatch` only — **no** `push:[live-defi-rollout]` trigger), matching
+      `ci_reconcile.py`'s own "Stale-failure gate" comment: "LDR never runs server QG on push... the runs on
+      live-defi-rollout are hourly workflow_dispatch runs." So the latest completed run can describe a commit HEAD has
+      since moved past, **in either direction**: `ci_reconcile.py` already shipped a fix for the false-RED direction
+      same-day (`failing_run_is_current()` requires the failing run's `head_sha` to equal current branch HEAD before
+      escalating) — but `RepoHealthWatcher`'s green path had no equivalent gate, so a hold-over SUCCESS from before a
+      since-landed regression would still read "green" and resolve blockers against a red-but-untested HEAD. This is
+      exactly the false-positive mechanism this issue reports. **Fix (not just documentation)**:
+      `RepoHealthWatcher.tick_once()` now reuses `ci_reconcile.failing_run_is_current()` (conclusion-agnostic despite
+      its name — it only checks `run.head_sha == branch HEAD`) to gate every green verdict the same way it already gates
+      red verdicts: an unverifiable or stale run leaves the blocker OPEN (fail-safe), mirroring the existing
+      conservative philosophy ("fail-open: blocker survives a poll error"). Updated the module docstring to correct the
+      prior overclaim ("this poll is the guarantee") — it's now accurate but still notes `quality-gates-v2` green (even
+      with a fresh head match) is a WEAKER guarantee than a waiter's own local `quality-gates.sh` run (different
+      runner/baseline state), so a waiter should still spot-check before shipping a red-adjacent change. Added
+      `test_watcher_stale_green_run_keeps_blocker_open` + patched the 2 existing green-path tests to inject the new
+      dependency. Full `quality-gates.sh` green (ruff lint/format clean, basedpyright 0 errors, 1575 tests passed —
+      `.venv` didn't exist yet in this worktree, built via `uv sync --extra dev` first).
 
 ## Codex SSOTs
 

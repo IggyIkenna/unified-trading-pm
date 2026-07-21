@@ -120,13 +120,10 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `_collect_aave_rows`/`_emit_aave_manifest` in `OraclePricesHandler` (lifts `AavePositionsMixin._ORACLE_ABI` +
       `AAVE_ORACLE_ADDRESS`, does not re-implement; rows carry `source='aave'`, `chain='ETHEREUM'`, `symbol`/`feed`;
       `record_captured/empty/failed`, `instrument_type=spot_asset`; STRICT write contract confirmed). BUILT + 15 new
-      unit tests green + adversarially reviewed 2026-07-21 — **held staged, not shipped**. The original blocker
-      (`mtds_rule11_shard_count_stale_baseline_2026_07_21.md`) was resolved upstream (`mtds@327eef73`+`@56d39325`,
-      pulled cleanly, my files unaffected) but a DIFFERENT, unrelated pre-existing regression immediately took its
-      place: `test_slash_id_never_forges_a_path_segment` (canonical-stem/leaf-byte-match, already tracked + corroborated
-      in `plans/active/issues/mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md`, explicitly
-      another agent's active, briefed-off-limits track — not mine to fix or duplicate). Verified via isolation this
-      reproduces byte-identically with none of this plan's files present. Review found 2 real bugs, both fixed in the
+      unit tests green + adversarially reviewed 2026-07-21 — **committed `market-tick-data-service@1ac3350c`,
+      `quality-gates.sh` green twice (sentinel matching HEAD), quickmerge BLOCKED by the shared UTL pyasn1-CVE
+      dirty-deps chain** (see the Progress Log's final 2026-07-21 entry for the full sequence — the rule11 blocker and a
+      later canonical-stem regression were both resolved upstream first). Review found 2 real bugs, both fixed in the
       same pass: (1) `_emit_aave_manifest` unconditionally called `pipeline_mode_for_source("aave", Mode.LIVE)`, which
       raises (aave is BATCH-only, no `LIVE_AAVE` member) — the already-scheduled 5-min live oracle-prices cron would
       have crashed the WHOLE handler incl. Chainlink/Pyth; fixed by gating the AAVE branch to skip cleanly (never crash)
@@ -251,6 +248,22 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   `instruments-service` and `unified-trading-library`'s Phase-1/2 pieces for this plan are now content-complete and
   gated green, waiting purely on that CVE issue's resolution** (not a dirty-deps/liveness question anymore — a real, if
   unrelated, security gate).
+- **2026-07-21 (MTDS Phase 1+2 shipped — all 3 repos now content-complete)** — `market-tick-data-service@1ac3350c`: the
+  pulled `mtds_rule11`/canonical-stem fixes let this land cleanly (44 tests green, `quality-gates.sh` green twice,
+  sentinel matching HEAD both times). Along the way, the AAVE Phase-2 additions pushed `oracle_prices_handler.py` over
+  its own 900-line file-size limit and two methods over the 50-line method limit — a real, self-inflicted gate failure
+  (not pre-existing) — fixed by extracting the whole AAVE collection/emission branch into a new
+  `_aave_oracle_collection.py` module (mirrors `_oracle_prices_constants.py`'s existing data-only split; this one
+  carries the logic), with the test file updated to patch/call the new module's free functions. Also hit a genuine,
+  new-code (not pre-existing) STEP 5.86 ratchet failure — `record_aave_empty`'s `SOURCE_RETURNED_ZERO` literal has no
+  per-reserve listing-date oracle to route through `record_zero_rows` yet (the same Phase-5 gap already documented in
+  that function's own docstring) — resolved via the ratchet's own sanctioned `# QG-allow:` escape hatch, not a
+  workaround. **Quickmerge itself is ALSO blocked** — MTDS depends on `unified-trading-library` too, so it hits the
+  exact same dirty-deps → pyasn1-CVE chain as `instruments-service`. **All three repos' Phase 1/2 work for this plan
+  (`unified-api-contracts` already shipped; `instruments-service@ae523a5e`; `market-tick-data-service@1ac3350c`;
+  `unified-trading-library`'s pending fix) are now fully built, tested, and gated green — the SOLE remaining blocker for
+  the last two is `utl_pyasn1_cve_pip_audit_blocks_quickmerge_2026_07_21.md`.** Nothing further to build until that
+  clears; the next session should check that issue's status first before resuming any Phase 3+ work.
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 

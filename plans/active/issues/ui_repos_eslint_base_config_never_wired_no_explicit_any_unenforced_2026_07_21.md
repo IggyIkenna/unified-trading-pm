@@ -100,12 +100,62 @@ This is a cross-repo SSOT-wiring gap, not something to unilaterally fix mid-way 
 
 ## Todos
 
-- [ ] [INFRA] P2. Determine why `eslint.config.base.js` isn't imported by either UI repo's live flat-config and either
-      fix `rollout-quality-gates-unified.py --ui-only` to wire it in correctly for ESLint 9 flat-config, or update the
-      base file itself to the flat-config format both repos actually use, then propagate. (repo: unified-trading-pm,
-      unified-trading-system-ui, deployment-ui)
-- [ ] [INFRA] P3. Once wired, reconcile `deployment-ui`'s inline `no-explicit-any: "warn"` (drifted below even the
-      pre-fix SSOT) and `no-unused-vars: "warn"` against the base file's `error` level. (repo: deployment-ui)
+- [x] ✅ [INFRA] P2. Determine why `eslint.config.base.js` isn't imported by either UI repo's live flat-config and
+      either fix `rollout-quality-gates-unified.py --ui-only` to wire it in correctly for ESLint 9 flat-config, or
+      update the base file itself to the flat-config format both repos actually use, then propagate. (repo:
+      unified-trading-pm, unified-trading-system-ui, deployment-ui) — **partially accomplished, 2 of 3 repos done,
+      unified-trading-system-ui deferred to todo 3 below (do not re-close this scope until that lands)**. Root cause was
+      the base file's format (legacy `.eslintrc` CommonJS `module.exports`), not the propagation script per se: replaced
+      with `eslint.config.base.cjs` (flat-config-compatible, unambiguously CommonJS regardless of a consumer's
+      `package.json` `"type"`) + fixed `rollout-quality-gates-unified.py`'s `propagate_eslint_config()` to
+      reference/copy it and clean up stale `.js` copies — `unified-trading-pm@a6128da10`.
+      `deployment-ui/eslint.config.js` now imports + spreads the base rules — `deployment-ui@01e455f` (confirmed
+      independently by slot-9 in todo 2 below). `unified-trading-system-ui`: only the dead `eslint.config.base.js` was
+      removed (`unified-trading-system-ui@7d6f3129d`); the base rules were **deliberately NOT wired** into its
+      `eslint.config.mjs` — see todo 3.
+- [x] ✅ [INFRA] P3. Once wired, reconcile `deployment-ui`'s inline `no-explicit-any: "warn"` (drifted below even the
+      pre-fix SSOT) and `no-unused-vars: "warn"` against the base file's `error` level. (repo: deployment-ui) —
+      **already accomplished** by the todo-1 wiring work itself: `deployment-ui@01e455f` ("wire deployment-ui
+      flat-config to the SSOT .cjs base rules") replaced the hardcoded local rules block with `...uiBaseRules.rules`
+      spread from `eslint.config.base.cjs` — there is no remaining local override to reconcile,
+      `no-explicit-any`/`no-unused-vars`/`no-console` are now literally the base file's `error` values, not a
+      separately-declared match. Verified 2026-07-21 (slot-9), independently: `npm run lint` (the real gate —
+      package.json scopes it to `eslint src`, not the whole repo) passes with ZERO output on the current tree;
+      deployment-ui genuinely has 0 real `any`-type usages today (confirmed by the original issue's own finding), so
+      this todo's deliverable is the rule now being correctly ACTIVE for the next violation, not a backlog of existing
+      ones to fix. Note: `unified-trading-system-ui`'s half of todo 1 (the wiring) is NOT yet done — that repo's
+      `eslint.config.mjs` still has zero reference to `eslint.config.base.js` as of this check; todo 1 stays open for
+      that repo.
+- [ ] [FRONTEND] P2. Wire `eslint.config.base.cjs`'s rules into `unified-trading-system-ui/eslint.config.mjs` (import +
+      spread `uiBaseRules.rules`, scoped to `files: ["**/*.ts", "**/*.tsx"]` — nextConfig's own `@typescript-eslint`
+      plugin registration is itself scoped that way, so an unscoped block errors on files where the plugin isn't
+      registered). Blocked on a real cleanup first: a live trial wiring (2026-07-21) surfaced **2610** `error`-level
+      `no-unused-vars`/`no-console` violations across the codebase — the prior any-type sweep
+      (`unified-trading-system-ui@94c7b25b`) only covered `no-explicit-any`, not these two rules. Needs its own sweep(s)
+      (likely split: one for `no-unused-vars`, one for `no-console`, given the volume) before the wiring can land
+      without redding `quality-gates.sh` for the whole repo. Also add `eslint.config.base.cjs` to the repo's `ignores`
+      list when re-adding the file (it isn't covered by `nextConfig`'s own file-pattern globs —
+      `js/jsx/mjs/ts/tsx/mts/cts` omits `.cjs` — so linting it directly throws a plugin-resolution error; the exact diff
+      was drafted and verified working 2026-07-21 but reverted before shipping once the violation count was known —
+      re-derive it, it's cheap to redo). (repo: unified-trading-system-ui)
+- [ ] [INFRA] P3. `unified-trading-system-ui`'s shared `.pre-commit-config.yaml` (rolled out from
+      `unified-trading-pm/scripts/pre-commit-templates/ui.pre-commit-config.yaml`) pins
+      `pre-commit/mirrors-eslint@v8.56.0` for the `Lint with ESLint` hook. That ESLint 8.56.0 build's flat-config
+      auto-discovery only recognizes a file literally named `eslint.config.js` — NOT `eslint.config.mjs`. Confirmed
+      2026-07-21 by reproducing on an untouched, unrelated `next.config.mjs` (not part of this issue's diff at all):
+      `prek run eslint --files next.config.mjs` fails with `ESLint couldn't find a configuration file`. This means **any
+      commit that stages a new/modified `.mjs`/`.js`/`.ts`/`.tsx`/`.jsx`/`.cjs` file in this repo hits a hard pre-commit
+      failure**, independent of that file's actual content — `deployment-ui` is unaffected only because its own
+      flat-config entrypoint happens to be named `eslint.config.js` (not `.mjs`), so this is
+      unified-trading-system-ui-specific today but is a template-level bug that would bite ANY future UI repo whose
+      package.json defaults to CommonJS (forcing an `.mjs`-named ESM config, same as this repo). This is a genuine
+      pre-existing latent bug, not caused by this issue's work — it was simply never triggered before because no prior
+      commit staged a matching file type through the `prek`/pre-commit path. Fix in the TEMPLATE
+      (`unified-trading-pm/scripts/pre-commit-templates/ui.pre-commit-config.yaml`), not the local copy — either bump
+      `rev:` to an ESLint 9-based mirror tag that understands flat config natively, or add an `exclude:` pattern for
+      root-level `*.config.mjs` tooling files (the actual application `.ts`/`.tsx` linting coverage is unaffected either
+      way since app code isn't `.mjs`-named) — then re-propagate via `scripts/propagation/rollout-pre-commit-configs.sh`
+      to all UI-template consumers. (repo: unified-trading-pm, unified-trading-system-ui)
 
 ## Codex SSOTs
 

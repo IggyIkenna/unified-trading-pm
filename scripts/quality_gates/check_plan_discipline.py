@@ -34,13 +34,26 @@ import yaml
 
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "plan_discipline_baseline.yaml"
 
-_DEFERRED_RE = re.compile(r"\*\*DEFERRED\*\*|\bDEFERRED\b\s*[—\-]|\[DEFERRED\]", re.IGNORECASE)
+# _DEFERRED_RE matches only precise DEFERRED-shaped tokens:
+#   - `**DEFERRED**` / `[DEFERRED]` — the formal bracket/bold markers
+#   - `DEFERRED-<QUALIFIER>` — the all-caps governance qualifier convention (e.g.
+#     DEFERRED-OPERATOR-DECISION, DEFERRED-BY-HEADROOM) — the char right after the
+#     hyphen must be uppercase, or it isn't the qualifier convention
+#   - `DEFERRED — ` / `DEFERRED - ` — the bare marker, which requires whitespace
+#     between the word and the dash (distinguishes it from the qualifier form,
+#     which has no space)
+# It deliberately does NOT match (case-sensitive `DEFERRED`, no bare `\bDEFERRED\b`
+# alone): lowercase `deferred-<word>` compound modifiers/filenames ("deferred-import",
+# "deferred-build-replay" — a GHA workflow name) and meta-referential negations like
+# "no DEFERRED-without-successor" (uppercase DEFERRED, but the word after the hyphen
+# is lowercase — not a real qualifier tag, just prose describing the absence of one).
+_DEFERRED_RE = re.compile(r"\*\*DEFERRED\*\*|\[DEFERRED\]|\bDEFERRED-[A-Z][A-Z0-9-]*\b|\bDEFERRED\b\s+[—-]")
 _BANNER_RE = re.compile(r"##\s+Deferred work\s+—\s+migrated to", re.IGNORECASE)
 _SUCCESSOR_RE = re.compile(
     r"MIGRATED TO:|successor:|→\s+plans/active/|See:\s+plans/active/|see\s+plans/active/",
     re.IGNORECASE,
 )
-_ARCHIVE_OK_TOKENS_RE = re.compile(r"\bpost.cutover\b|\bout of scope\b|\bDEFERRED\b", re.IGNORECASE)
+_ARCHIVE_OK_TOKENS_RE = re.compile(r"\bpost.cutover\b|\bout of scope\b", re.IGNORECASE)
 _ACTIVE_FNAME_RE = re.compile(r"^[a-z0-9_]+(_\d{4}_\d{2}_\d{2})?\.md$")
 _ISSUE_FNAME_RE = re.compile(r"^[a-z0-9_]+_\d{4}_\d{2}_\d{2}\.md$")
 # Directory-structure files that are NOT plans and must not be filename-checked as one. INDEX.md is
@@ -115,7 +128,7 @@ def _check_rule_c(archive_dir: Path) -> list[DisciplineViolation]:
             text = p.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        if _ARCHIVE_OK_TOKENS_RE.search(text) and not _SUCCESSOR_RE.search(text):
+        if (_ARCHIVE_OK_TOKENS_RE.search(text) or _DEFERRED_RE.search(text)) and not _SUCCESSOR_RE.search(text):
             out.append(
                 DisciplineViolation(
                     rule="C-archive-no-successor",
