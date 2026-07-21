@@ -544,3 +544,40 @@ These two leagues appear in the captured odds data but are not in the canonical 
 Either (a) they ARE intended to be in-universe → add canonical slugs to `LEAGUE_REGISTRY` and include them in the
 migration, or (b) they are out-of-universe → leave untouched now, and dispose of them under the delete-safety protocol
 separately. Default until decided: **left untouched** (never guess a canonical target for an unregistered league).
+
+## EXECUTOR SPEC + verified maps 2026-07-21 (operator-authorised: migrate+delete, gated on dry-run success + VM drain)
+
+Operator ruled China + Russia in-universe → added to the registry (`unified-api-contracts`: `league_data_other.py`
+CHINA_SUPER_LEAGUE af=169 / RUSSIA_PREMIER_LEAGUE af=235, + classification_data_b.py). Shipped-code write-path
+(id-based) verified unaffected: EPL(39)→EPL. **After this, 0 raw league_id values are UNRESOLVED.**
+
+**Classify by PER-ROW `sport_key`, never by raw name** — proven necessary: adding Russia's registry display name
+"Premier League" made a naive raw-name resolver map the bare corpus value `PREMIER_LEAGUE` to RUSSIA_PREMIER_LEAGUE, but
+in the corpus bare `PREMIER_LEAGUE` is ENGLISH (→EPL); Russia only ever appears as the machine key
+`soccer_russia_premier_league`. sport_key is unambiguous per row.
+
+**Verified `sport_key → canonical` map (55 entries; every target confirmed in LEAGUE_REGISTRY; all 51 corpus sport_keys
+covered):** collisions — `Bundesliga - Germany`→BUNDESLIGA · `Austrian Football Bundesliga`→AUSTRIAN_BUNDESLIGA ·
+`Serie A - Italy`→SERIE_A · `Brazil Série A`→BRASILEIRAO · `Serie B - Italy`→SERIE_B · `Championship`→ENG_CHAMPIONSHIP ·
+`Primera División - Argentina`→ARGENTINA_PRIMERA · `Primera División - Chile`→CHILE_PRIMERA ·
+`Swiss Superleague`→SWISS_SUPER_LEAGUE · `Super League - Greece`→GREEK_SUPER_LEAGUE. Both the display-label and
+`soccer_*` machine-slug forms map to the same canonical (e.g. `soccer_epl`/`EPL`→EPL,
+`soccer_china_superleague`→CHINA_SUPER_LEAGUE, `soccer_russia_premier_league`→RUSSIA_PREMIER_LEAGUE,
+`soccer_uefa_champs_league`→UCL).
+
+**Executor** (`market-tick-data-service` scripts home; per-row split):
+
+1. DRY-RUN (default, read-only): list every `league_id=` object, classify by path, emit a per-object decision manifest,
+   HARD-FAIL if any raw league_id is unmapped. Dispositions: RELOCATE(raw→canon) · PER-ROW-SPLIT(6 collisions) ·
+   already-canonical(skip) · UNRESOLVED-untouched(now 0).
+2. APPLY (refused while any `features-sports-sports-*` VM is RUNNING — they read the tick bucket): per object, read →
+   map EACH ROW's `sport_key` → canonical → GROUP by canonical → write each group to
+   `.../league_id={CANON}/instrument_type=ODDS/data_type=TRADES/ticks.parquet` (rewriting the `league_id` CONTENT column
+   - UPPER casing segments). Mixed objects SPLIT into 2. crc/row-verify each copy.
+3. Manifest atomic-swap (delete old raw-keyed rows + write canonical, reusing
+   `rebuild_sports_manifest.py::_clean_stale_league_entries`) then MDPS reprocess of the processed/ surface, then
+   coverage-registry refresh, then — gated on a clean dry-run + drain — the delete of the old objects (snapshot first;
+   GCS soft-delete safety net).
+
+Session-local map artifacts (to be committed with the executor to the mtds scripts home before apply):
+`scratchpad/sportkey_canon_final.json`, `scratchpad/classification.json`, `scratchpad/relocate_league_id.py`.
