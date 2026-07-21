@@ -157,3 +157,27 @@ conversational memory re-reads a plan, it does not lose work. (The dead-worker `
   (`test_snapshot_slot_carries_context_used_pct`), quickmerged `agent-orchestrator@c255895`; verified live — resume-pass
   errors → 0 and **slot 4's stuck dead-worker resume completed** (`resume_pending` cleared → `status=working`). **Plan
   complete.**
+
+## Lessons (2026-07-21)
+
+- **Lifecycle is a property of the DISPATCH, not the role.** Roles are boot prompts; the same prompt backs a plan worker
+  or a scheduled one, so the static `role.lifecycle` field cannot decide reaping. The authoritative signal is "who fired
+  it" — an event-spawned craft carries a `one_shot`/`scheduled` `AgentRow`; a plan-backlog worker has none. Keying
+  reaping on the field (`role_one_shot`) was the exact bug.
+- **Don't over-engineer context-preservation.** The design ballooned (session-per-plan, same-slot `--resume`,
+  sequential-slot-binding, `≤1`-wait) before the operator ruled it a **non-goal**: durable state lives in the plan
+  items + Progress Log, so a fresh worker on a cleared task loses nothing that matters. Built ~5 pieces, then reverted
+  to a 2-line fix. Lesson: name the end-game (correctness vs efficiency) before building the mechanism.
+- **A detached scalar snapshot must carry EVERY field its consumer READS, not just the obvious ones.** `snapshot_slot`
+  omitted `context_used_pct`; `_do_spawn` reads it only on the resume path (`… if resume_session_id else 0`), so the
+  crash was latent for weeks and fired only when a slot was `resume_pending`. When you add a `slot.<attr>` READ to
+  `_do_spawn`, add it to `snapshot_slot` in the same change (writes to a SimpleNamespace are harmless; reads of a
+  missing attr crash).
+- **`--reload` deploys cause TRANSIENT DB-contention bursts** (`database is locked` / brief `QueuePool` timeouts) while
+  the worker restarts — they self-recover; do NOT panic-restart into them (that overlaps two processes → the same lock).
+  But an **ONGOING** `QueuePool` exhaustion (seen here after another operator's 13:00 restart) needs a **clean
+  `systemctl restart`** to reset the pool — `--reload` alone won't. Distinguish transient (settles in <30s) from ongoing
+  (keeps firing) before acting.
+- **The backend can be restarted by someone else mid-session.** It was stopped for this work, yet a peer
+  `systemctl restart`'d it at 13:00 onto the pre-fix code — verify the live `ExecMainStartTimestamp` / running SHA
+  before assuming the state you left it in.
