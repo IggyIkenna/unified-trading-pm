@@ -159,6 +159,34 @@ the leg-mapping is confirmed, then wired.
   change. More correct-in-full, more work (new data source), larger NAV delta.
 - **Hold.** Keep only the prepared helper + tests; defer wiring until the leg semantics are ratified.
 
+## OPERATOR RULING 2026-07-21: A2 (LENDING + STAKING) + the real economic structure
+
+The operator corrected the model (which could not be safely inferred from code):
+
+- **`carry_staked_basis` does NOT borrow or lend on Aave.** It buys ETH/SOL → stakes → receives LST/LRT → shorts
+  (spot/perp) against the LST where the LST is accepted as collateral. Its interest is therefore the **LST/LRT
+  exchange-rate appreciation** (staking) minus the **short funding** — NOT an Aave `rate_spread`. The current spine's
+  `LENDING_INTEREST = rate_spread/365` for this strategy is a **mismodeling** to correct.
+- **`recursive_staking` is the borrow-to-stake strategy** — it stakes, uses the LST as collateral, borrows, and stakes
+  again (leverage loop). This is where the Aave **`borrow_index`** (cost of the borrowed leg) genuinely applies, against
+  the LST staking yield on the staked leg.
+
+**So A2 =** staking legs (both strategies) → LST/LRT **exchange-rate index** (Hard Rule #5); borrow leg
+(`recursive_staking` only) → `aave_borrow_index`; and correct the `carry_staked_basis` lending mismodeling.
+
+**Data confirmed (verified vs GCS):**
+
+- STAKING: `lst_yields` carries `exchange_rate` + `prev_rate` (LST redemption-rate index; e.g. 1.069→1.231) — the
+  sample-to-sample ratio `exchange_rate/prev_rate − 1` is pre-built. Keyed `token`/`protocol`/`asset`. **Coverage is
+  sparse — only 15 days** (a real gap: staking accrues zero on days with no `lst_yields` row → NAV under-report; file
+  the coverage extension).
+- BORROW: `aave_borrow_index` 100% populated in `lending_rates` (1.0→5.45).
+
+**Build scope (A2):** per-position resolution to (a) the staked LST's `lst_yields` row for the staking leg, (b) the Aave
+reserve's `aave_borrow_index` for `recursive_staking`'s borrow leg; replace the banned `/365` forms; honest-absence →
+zero + visible log (esp. for the sparse LST days); deterministic prev/now from the immutable partition; real
+paper-vs-batch passive-parity test; NO schema/keying/factor/sink change. Ship CODE to LDR on clean 3-lens review.
+
 ## The prod-NAV RECOMPUTE is a separate operator-gated step
 
 Landing option A on LDR changes the code; it does NOT retroactively recompute historical client-reports. Rerunning
