@@ -261,43 +261,50 @@ normally.
       mechanical fixes; re-scanned full corpus (starting from 98, after the archived-plan batch above): 98 → 96,
       re-baselined 98 → 96 via `--baseline-write`. Split the remaining 40 into the 2 todos below instead of guessing
       further. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. Tighten `check_plan_discipline.py`'s `_DEFERRED_RE` (rule A) + `_ARCHIVE_OK_TOKENS_RE` (rule C) so
+- [x] ✅ [SCRIPT] P3. Tighten `check_plan_discipline.py`'s `_DEFERRED_RE` (rule A) + `_ARCHIVE_OK_TOKENS_RE` (rule C) so
       lowercase `deferred-<word>` compound modifiers / filenames (not the all-caps `DEFERRED-<QUALIFIER>` governance
       convention, and not a real bare `DEFERRED —`/`**DEFERRED**` marker) stop false-positiving — same bug class as
       `check_evidence_backed_completion.py` fixed earlier this session (same-clause / precise-token-shape fix, not a
-      whole-block substring match). Verified false positives to use as fixtures:
-      `bucket_estate_consolidation_to_sub100_2026_07_13` (`Deferred-table`),
-      `carry_staked_basis_funding_scan_experiment_2026_06_16` (`DEFERRED-without-successor` ×2),
-      `data_pipeline_hardening_self_monitoring_2026_06_22` (`deferred-imported`),
-      `defi_consolidated_closeout_2026_07_18` (`DEFERRED-bespoke`, `deferred-work handoff`),
-      `github_actions_ci_cost_reduction_2026_07_15` + `github_actions_cost_reduction_options_analysis_2026_07_15`
-      (`deferred-build-replay` — a GHA workflow name), `infra_capture_and_devops_leftovers_2026_07_06`
-      (`deferred-import adapter pattern`), `l2_book_microstructure_capture_2026_07_13` (`deferred-not-done`,
-      `deferred-by-design`, `deferred-pending-an-external-event`), `pipeline_mode_partition_migration_2026_06_01`
-      (`deferred-partition note`), `sports_data_sources_canonical_completion_2026_07_13` (`deferred-freshness path`).
-      After the fix, re-scan the full corpus and re-baseline in whichever direction the count moves (could drop by up to
-      10 more A-violations if all 10 are confirmed clean). Also check whether ANY of the 30 "has-bare-or-mixed" plans
-      below turn out to be false positives once the regex is precise (re-classify before doing per-plan banner work on
-      them). (repo: unified-trading-pm)
-- [ ] [DOCS] P3. The remaining 30 active plans have a genuine bare/unqualified `DEFERRED` mention needing real per-plan
+      whole-block substring match) — unified-trading-pm@002f2cba8. New `_DEFERRED_RE` matches only: `**DEFERRED**` /
+      `[DEFERRED]`, `DEFERRED-[A-Z]...` (qualifier tag — char right after the hyphen must be uppercase), or
+      `DEFERRED\s+[—-]` (bare marker — requires whitespace between the word and the dash, distinguishing it from the
+      no-space qualifier form). Rule C's `_ARCHIVE_OK_TOKENS_RE` had its own bare `\bDEFERRED\b` (case-insensitive, no
+      dash requirement at all — an even looser instance of the same bug) removed; `_check_rule_c` now ORs against the
+      same tightened `_DEFERRED_RE` instead of duplicating the token shape. Verified all 10 named fixtures individually
+      cleared post-fix (`bucket_estate_consolidation_to_sub100_2026_07_13`,
+      `carry_staked_basis_funding_scan_experiment_2026_06_16`, `data_pipeline_hardening_self_monitoring_2026_06_22`,
+      `defi_consolidated_closeout_2026_07_18`, `github_actions_ci_cost_reduction_2026_07_15` +
+      `github_actions_cost_reduction_options_analysis_2026_07_15`, `infra_capture_and_devops_leftovers_2026_07_06`,
+      `l2_book_microstructure_capture_2026_07_13`, `pipeline_mode_partition_migration_2026_06_01`,
+      `sports_data_sources_canonical_completion_2026_07_13`), plus a standalone Python unit-test of the regex against
+      all 12 false-positive strings (should-NOT-match) and 7 real-marker strings (should-match, incl.
+      `DEFERRED-OPERATOR-DECISION`/`DEFERRED-BY-HEADROOM`/`DEFERRED-INDEFINITELY` qualifier tags) — all passed exactly
+      as intended. Also confirmed the 2 already-banner-fixed qualifier plans
+      (`cicd_mvp_ldr_to_main_pipeline_2026_06_30`, `monitoring_control_plane_master_2026_06_10`) stay clean (banner
+      already satisfies rule A). Re-scanned full corpus: 40 → 19 violations (11 MORE of the "30 has-bare-or-mixed" list
+      turned out to be false-positive-only once the regex is precise, beyond the 10 explicit fixtures) — re-baselined 40
+      → 19 via `--baseline-write` (real fix-driven improvement, no operator sign-off needed, same precedent as the P2/P3
+      batches above). Rule C (archive) stayed at 0 violations throughout, no regression. Lost the quickmerge sentinel
+      race twice to concurrent PM doc-pushes before landing on the 3rd attempt (known throughput issue, see
+      `plans/active/issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` — not a
+      defect, no work lost). Shipped via PR #1301 (live-defi-rollout→main, auto-merge). The remaining 19 genuinely
+      bare/mixed plans are the corrected, precise list for the next todo below (its original 30-item list is now stale
+      by 11 entries). (repo: unified-trading-pm)
+- [ ] [DOCS] P3. The remaining 19 active plans (re-classified — see the checker-fix todo above, which corrected the
+      original 30-item list down to these 19 confirmed-genuine hits; the other 11 were incidental compound-word/
+      filename false positives, now cleared) have a genuine bare/unqualified `DEFERRED` mention needing real per-plan
       judgment (add a `DEFERRED-<QUALIFIER>` tag if a `f6df716e7`-style qualifier honestly applies, or a
       `## Deferred work — migrated to:` banner naming an actual successor) — do NOT blanket-apply the generic "see
-      inline annotations" template to these, it would be false (they don't all carry qualifier tags). Re-run the
-      checker-fix todo above FIRST (some of these 30 may shrink once the regex is precise). List:
+      inline annotations" template to these, it would be false (they don't all carry qualifier tags). List:
       `ao_fleet_observability_kpis_2026_07_20`, `ao_worker_lifecycle_dispatch_context_2026_07_21`,
-      `artifact_pipeline_observability_2026_07_17`, `bucket_iam_write_protection_per_tier_2026_06_09`,
       `capability_wizard_and_manifest_2026_06_11`, `cefi_ml_directional_continuous_live_2026_06_20`,
-      `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20`, `data_completion_defi_2026_07_15`,
-      `data_completion_to_100_all_ag_2026_06_21`, `data_completion_tradfi_2026_07_15`,
-      `data_feed_sla_registry_and_active_self_healing_2026_06_19`, `data_pipeline_alerts_batch_remediation_2026_07_15`,
-      `data_status_page_ux_and_canonicalisation_2026_07_16`, `data_status_tab_and_downloads_remediation_2026_06_16`,
-      `distinct_values_noncanonical_audit_2026_07_20`, `features_service_e2e_pipeline_test_2026_05_26`,
+      `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20`, `data_completion_to_100_all_ag_2026_06_21`,
+      `data_completion_tradfi_2026_07_15`, `data_feed_sla_registry_and_active_self_healing_2026_06_19`,
+      `data_status_tab_and_downloads_remediation_2026_06_16`, `features_service_e2e_pipeline_test_2026_05_26`,
       `features_sports_service_consolidation_deploy_2026_07_15`,
       `instruments_mtds_subset_consistency_remediation_2026_06_17`,
       `master_data_canonicalisation_migration_catalogue_2026_06_07`, `master_to_live_defi_2026_05_23`,
       `migration_verification_orphan_safety_2026_06_10`, `mtds_file_size_refactor_2026_06_08`,
-      `mvp_backfill_defi_onchain_v10_2026_06_27`, `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`,
-      `prediction_canonical_identity_migration_2026_07_08`, `prediction_venue_perps_and_live_clob_depth_2026_06_20`,
-      `qg_host_adaptive_resource_governor_2026_07_14`, `sports_manifest_canonicalisation_2026_06_01`,
-      `tradfi_consolidated_closeout_2026_07_18`, `utl_uac_reuse_consolidation_remediation_2026_06_10`. (repo:
+      `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`,
+      `prediction_venue_perps_and_live_clob_depth_2026_06_20`, `sports_manifest_canonicalisation_2026_06_01`. (repo:
       unified-trading-pm)
