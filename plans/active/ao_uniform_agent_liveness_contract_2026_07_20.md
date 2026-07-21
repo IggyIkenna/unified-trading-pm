@@ -115,18 +115,22 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
 
 ### Workstream A — completion path (`/done` → archive → stop): the leak fix
 
-- [ ] [BACKEND] P1. **A1 — Extend `/done` to accept a task-less, role-aware completion.** Today `/done` hard-requires
-      `task_id` + a plan-flip (`server/routes/slots_worker.py:616-767` → 404/409 for a task-less one-off). Add a Class-B
-      completion path: no `task_id` / no plan-flip; it archives the AgentRow `lifecycle-complete`, frees the slot, and
-      flags it so `WorkerLivenessKicker` stops nudging. Backend still accepts an un-migrated one-off that never `/done`s
-      (existing pruner/reaper path unchanged). **Gate**: a task-less `/done` from a `plan_health`-shaped agent → 200,
-      AgentRow archived, slot session-less/idle, no re-nudge; a fleet-worker `/done` (task + plan-flip) byte-for-byte
-      unchanged (regression-tested); `quality-gates.sh` green.
-- [ ] [BACKEND] P1. **A2 — Rewrite the 5 role docs' non-functional "then EXIT" → "POST `/done` (completion) → stop."**
-      One role at a time, each verified live before the next: `cicd`, `conflict_resolver`, `data_pipeline_failure`,
-      `plan_health`, `plan_reconciler`. Their "EXIT" today only ends the Claude turn; replace with the real completion
-      call + stop. **Gate**: each role observed on completion → its `orch-slot-N` AgentRow archives
-      `lifecycle-complete`, slot frees, no re-nudge, no manual `kill-session`. Cite the agent_id.
+- [x] [BACKEND] P1. **A1 — Extend `/done` to accept a task-less, role-aware completion.** ✅ CODE-COMPLETE (local,
+      deploy-deferred) — `agent-orchestrator@31ef846` (unpushed); AO quality gate green (1543 passed) incl. 4 new
+      `test_done_one_off` cases + Class-A `/done` unchanged; live-verify pending the coordinated deploy. Today `/done`
+      hard-requires `task_id` + a plan-flip (`server/routes/slots_worker.py:616-767` → 404/409 for a task-less one-off).
+      Add a Class-B completion path: no `task_id` / no plan-flip; it archives the AgentRow `lifecycle-complete`, frees
+      the slot, and flags it so `WorkerLivenessKicker` stops nudging. Backend still accepts an un-migrated one-off that
+      never `/done`s (existing pruner/reaper path unchanged). **Gate**: a task-less `/done` from a `plan_health`-shaped
+      agent → 200, AgentRow archived, slot session-less/idle, no re-nudge; a fleet-worker `/done` (task + plan-flip)
+      byte-for-byte unchanged (regression-tested); `quality-gates.sh` green.
+- [x] [BACKEND] P1. **A2 — Rewrite the 5 role docs' non-functional "then EXIT" → "POST `/done` (completion) → stop."**
+      ✅ CODE-COMPLETE (local, deploy-deferred) — all 5 role docs (`cicd`, `conflict_resolver`, `data_pipeline_failure`,
+      `plan_health`, `plan_reconciler`) now POST `/done` with `one_shot_complete=true` then STOP; live-verify pending
+      deploy. One role at a time, each verified live before the next: `cicd`, `conflict_resolver`,
+      `data_pipeline_failure`, `plan_health`, `plan_reconciler`. Their "EXIT" today only ends the Claude turn; replace
+      with the real completion call + stop. **Gate**: each role observed on completion → its `orch-slot-N` AgentRow
+      archives `lifecycle-complete`, slot frees, no re-nudge, no manual `kill-session`. Cite the agent_id.
 - [ ] [BACKEND] P2. **A3 — Add the completion step to the boot prompt** so it is uniform and an agent can't "forget" it.
       **Gate**: a freshly-booted one-off's rendered prompt carries the `/done`+stop step; a live run confirms it fires.
 
@@ -153,6 +157,18 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
       contract). Remaining: every role doc references the codex SSOT rather than restating it, and the "being
       implemented / current pre-fix code" markers come out once the code lands. **Gate**: role docs point at codex; no
       in-flight markers remain; no plan↔codex drift.
+
+### Operational follow-ups (not workstream tasks)
+
+- [ ] [OPS] P1. **Re-activate the `CIReconcileLoop`** — paused 2026-07-21 to stop a false-red credit burn while this
+      plan is implemented. It was escalating three **GREEN** repos (`unified-trading-pm` / `unified-trading-library` /
+      `deployment-api`) as `ldr_qg_failure` on `live-defi-rollout`, spawning cicd agents that correctly resolved
+      `qg_v2_green` (pure wasted work + Claude credits — confirmed all three green via `gh`). Paused via
+      `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` (interval ≤ 0 → `start()` is a no-op; LoopSupervisor won't revive a
+      disabled loop) + a backend restart. **Re-enable = remove that env override (restore the default interval) +
+      restart the backend — but FIRST fix the false-red root cause** (why it reads green repos as red: likely a stale
+      `ci_reconcile_etag_cache.json` or a missing/`None` conclusion treated as failing), else it immediately re-storms.
+      The 72 cancelled escalations are backed up in the session scratchpad (`escalations_cancelled_backup.json`).
 
 ## Design note (todo 1) — the uniform agent-liveness contract
 

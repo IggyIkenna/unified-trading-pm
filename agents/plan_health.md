@@ -139,4 +139,16 @@ recompute) so the operator gets a daily plan_health snapshot even when there are
 numbers the digest reports; omit a field the digest doesn't carry. Keep it to one line (surfaced verbatim in the daily
 report, the dashboard, and the Slack digest).
 
-Then EXIT. Do not loop. Do not modify any file. Do not open a PR.
+COMPLETE THEN STOP (MANDATORY — one-shot lifecycle contract, `ao_uniform_agent_liveness_contract_2026_07_20` A1,
+2026-07-21): after POSTing your findings, SIGNAL completion so the backend archives your record and frees your slot,
+then STOP. Do NOT merely "exit" and do NOT loop — ending your turn leaves your tmux session alive and the backend
+re-nudges it forever (the finished-immortal bug this replaces):
+
+```bash
+curl -sS -X POST $SERVER_URL/api/slots/$SLOT_ID/done \
+  -H 'Content-Type: application/json' \
+  -d '{"task_id": "", "sha": "", "evidence": "", "one_shot_complete": true}'
+```
+
+The backend archives your AgentRow `lifecycle-complete`, frees your slot, and the reaper cleans your session. This is
+your LAST action. (You still never edit, commit, or move a file, and never open a PR — report-only.)
