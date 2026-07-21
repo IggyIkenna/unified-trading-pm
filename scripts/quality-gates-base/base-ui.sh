@@ -334,18 +334,35 @@ fi
 # rg-based pattern checks — equivalent of base-service.sh [5/6] codex compliance.
 # All checks are blocking. Add per-repo exclusions using the CODEX_*_EXCLUDE_GLOBS arrays
 # (set in quality-gates.sh before sourcing this script) and document in QUALITY_GATE_BYPASS_AUDIT.md.
-if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
+#
+# Source root resolution — src/-rooted repos search src/; Next.js App-Router repos
+# (app/ directory, no src/ at all) search app/ + components/ + lib/, whichever exist.
+# Without this, App-Router repos silently skipped this ENTIRE block forever (found
+# 2026-07-21: unified-trading-system-ui had run quality-gates.sh with `[3.5/6]`
+# never once firing, accumulating real console.log/any-type violations the whole
+# time — see ui_codex_gate_blind_to_app_router_layout_2026_07_21.md). All exclude
+# globs below use a leading `**/` so they match regardless of which root matched.
+_CODEX_ROOTS=()
+if [ -d "src" ]; then
+  _CODEX_ROOTS=("src")
+elif [ -d "app" ]; then
+  for _d in app components lib; do
+    [ -d "$_d" ] && _CODEX_ROOTS+=("$_d")
+  done
+fi
+
+if [ "$SKIP_CODEX" = false ] && [ "${#_CODEX_ROOTS[@]}" -gt 0 ]; then
   log_section "[3.5/6] UI CODEX CHECKS"
   _CODEX_V=0
 
   # ── console.* in production code ───────────────────────────────────────────
-  # Bypass: add entries to CODEX_CONSOLE_EXCLUDE_GLOBS before sourcing (e.g. "!src/lib/logger.ts")
+  # Bypass: add entries to CODEX_CONSOLE_EXCLUDE_GLOBS before sourcing (e.g. "!**/lib/logger.ts")
   _CONSOLE_EXTRA=()
   for g in "${CODEX_CONSOLE_EXCLUDE_GLOBS[@]+"${CODEX_CONSOLE_EXCLUDE_GLOBS[@]}"}"; do
     _CONSOLE_EXTRA+=(--glob "$g")
   done
-  _CONSOLE_HITS=$(rg "console\.(log|warn|error|debug|info)" src/ \
-    --glob "!src/**/*.test.*" --glob "!src/setupTests.*" \
+  _CONSOLE_HITS=$(rg "console\.(log|warn|error|debug|info)" "${_CODEX_ROOTS[@]}" \
+    --glob "!**/*.test.*" --glob "!**/setupTests.*" \
     "${_CONSOLE_EXTRA[@]+"${_CONSOLE_EXTRA[@]}"}" 2>/dev/null || true)
   if [ -n "$_CONSOLE_HITS" ]; then
     log_fail "console.* in production code — remove or replace with structured logging:"
@@ -356,14 +373,14 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
   fi
 
   # ── Hardcoded hex colours / rgb() ──────────────────────────────────────────
-  # Bypass: add entries to CODEX_COLOUR_EXCLUDE_GLOBS (e.g. "!src/lib/brand-colours.ts")
+  # Bypass: add entries to CODEX_COLOUR_EXCLUDE_GLOBS (e.g. "!**/lib/brand-colours.ts")
   _COLOUR_EXTRA=()
   for g in "${CODEX_COLOUR_EXCLUDE_GLOBS[@]+"${CODEX_COLOUR_EXCLUDE_GLOBS[@]}"}"; do
     _COLOUR_EXTRA+=(--glob "$g")
   done
-  _COLOUR_HITS=$(rg '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgb\(|rgba\(' src/ \
-    --glob "!src/**/*.test.*" --glob "!src/lib/chart-theme.*" \
-    --glob "!src/globals.css" --glob "!src/**/*.css" \
+  _COLOUR_HITS=$(rg '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgb\(|rgba\(' "${_CODEX_ROOTS[@]}" \
+    --glob "!**/*.test.*" --glob "!**/chart-theme.*" \
+    --glob "!**/globals.css" --glob "!**/*.css" \
     "${_COLOUR_EXTRA[@]+"${_COLOUR_EXTRA[@]}"}" 2>/dev/null || true)
   if [ -n "$_COLOUR_HITS" ]; then
     log_fail "Hardcoded colour values — use CSS vars (--color-*) or Tailwind classes:"
@@ -374,13 +391,13 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
   fi
 
   # ── Hardcoded localhost URLs ────────────────────────────────────────────────
-  # Bypass: add entries to CODEX_LOCALHOST_EXCLUDE_GLOBS (e.g. "!src/lib/dev-utils.ts")
+  # Bypass: add entries to CODEX_LOCALHOST_EXCLUDE_GLOBS (e.g. "!**/lib/dev-utils.ts")
   _LOCALHOST_EXTRA=()
   for g in "${CODEX_LOCALHOST_EXCLUDE_GLOBS[@]+"${CODEX_LOCALHOST_EXCLUDE_GLOBS[@]}"}"; do
     _LOCALHOST_EXTRA+=(--glob "$g")
   done
-  _LOCALHOST_HITS=$(rg 'http://localhost:[0-9]+' src/ \
-    --glob "!src/**/*.test.*" --glob "!src/lib/mock-api.*" --glob "!src/mock/**" \
+  _LOCALHOST_HITS=$(rg 'http://localhost:[0-9]+' "${_CODEX_ROOTS[@]}" \
+    --glob "!**/*.test.*" --glob "!**/mock-api.*" --glob "!**/mock/**" \
     "${_LOCALHOST_EXTRA[@]+"${_LOCALHOST_EXTRA[@]}"}" 2>/dev/null || true)
   if [ -n "$_LOCALHOST_HITS" ]; then
     log_fail "Hardcoded localhost URL — use import.meta.env.VITE_* instead:"
@@ -390,9 +407,9 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
     log_success "No hardcoded localhost URLs"
   fi
 
-  # ── @ts-ignore / @ts-expect-error in src/ ──────────────────────────────────
-  _TS_IGNORE_HITS=$(rg '@ts-ignore|@ts-expect-error' src/ \
-    --glob "!src/**/*.test.*" 2>/dev/null || true)
+  # ── @ts-ignore / @ts-expect-error ──────────────────────────────────────────
+  _TS_IGNORE_HITS=$(rg '@ts-ignore|@ts-expect-error' "${_CODEX_ROOTS[@]}" \
+    --glob "!**/*.test.*" 2>/dev/null || true)
   if [ -n "$_TS_IGNORE_HITS" ]; then
     log_fail "@ts-ignore in production code — fix the type error instead of suppressing it:"
     echo "$_TS_IGNORE_HITS" | head -5
@@ -402,10 +419,11 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
   fi
 
   # ── chart-theme.ts required when recharts is a dependency ──────────────────
+  _CHART_THEME_PATH="${_CODEX_ROOTS[0]}/lib/chart-theme.ts"
   if node -e "const p=require('./package.json'); process.exit(p.dependencies?.recharts ? 0 : 1)" 2>/dev/null; then
-    if [ ! -f "src/lib/chart-theme.ts" ]; then
-      log_fail "recharts in dependencies but src/lib/chart-theme.ts missing"
-      log_fail "Create src/lib/chart-theme.ts with CHART_COLORS, TOOLTIP_STYLE, GRID_STYLE, AXIS_STYLE using CSS vars"
+    if [ ! -f "$_CHART_THEME_PATH" ]; then
+      log_fail "recharts in dependencies but $_CHART_THEME_PATH missing"
+      log_fail "Create $_CHART_THEME_PATH with CHART_COLORS, TOOLTIP_STYLE, GRID_STYLE, AXIS_STYLE using CSS vars"
       _CODEX_V=$((_CODEX_V + 1))
     else
       log_success "chart-theme.ts present (recharts dependency)"
@@ -413,7 +431,7 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
   fi
 
   # ── No duplicate test files ─────────────────────────────────────────────────
-  _DUP=$(find src/ tests/ -name "*_extended.test.*" -o -name "*_additional.test.*" 2>/dev/null || true)
+  _DUP=$(find "${_CODEX_ROOTS[@]}" tests/ -name "*_extended.test.*" -o -name "*_additional.test.*" 2>/dev/null || true)
   if [ -n "$_DUP" ]; then
     log_fail "Duplicate test files found — expand existing test files instead:"
     echo "$_DUP"
@@ -425,7 +443,7 @@ if [ "$SKIP_CODEX" = false ] && [ -d "src" ]; then
   [ "$_CODEX_V" -gt 0 ] && { log_fail "UI codex checks FAILED ($_CODEX_V violation(s))"; exit 1; }
   log_success "UI codex checks passed"
 else
-  log_section "[3.5/6] UI CODEX CHECKS — skipped (--test / --lint / --quick or no src/)"
+  log_section "[3.5/6] UI CODEX CHECKS — skipped (--test / --lint / --quick or no src/ or app/)"
 fi
 
 # ── [4/6] BUILD ──────────────────────────────────────────────────────────────

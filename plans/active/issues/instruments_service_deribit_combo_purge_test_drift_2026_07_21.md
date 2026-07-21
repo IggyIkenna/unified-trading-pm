@@ -16,10 +16,10 @@ scope: [engineer]
 tags: [cefi, deribit-combo, test-drift, cross-repo]
 related: []
 created: 2026-07-21
-assigned_vm: NA
+assigned_vm: planning
 source: [cicd-escalation-agt-9df557]
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -99,6 +99,17 @@ Whoever owns the CEFI canonicalization migration (check `cefi_consolidated_close
 
 ## Todos
 
+- [ ] [BACKEND] P1. SHIP the orphaned instruments-service#886 `available_at` fix (the core reason this issue exists — it
+      was left UNSHIPPED). Worker agt-9df557 completed the fix (excluded `available_at` from the InstrumentsWriteGate
+      alignment scan, in `instruments_service/engine/orchestrator/__init__.py`) but exited via `slot_done_one_off`
+      (2026-07-21 16:55) on a blocked question BEFORE main's answer landed (16:59), leaving the diff UNCOMMITTED in
+      slot-10's instruments-service worktree. INHERIT that orphaned diff (do NOT re-derive it — dead claim,
+      LIVENESS-gated safe per inherited-dirty-WIP rule), then bundle it with the 3 DERIBIT-COMBO test/golden fixes below
+      and quickmerge all together (main's blocked-answer C for BLK-61faee02). GUARD: before touching the DERIBIT-COMBO
+      test/golden files, verify the owning CEFI-migration agent is not concurrently editing them (same-file collision
+      safety); if the orphaned diff is gone (a later slot-10 dispatch already committed/discarded it), re-derive the
+      one-line scan exclusion. This is an LDR-QG-failure fix — it will NOT self-heal until shipped (repo:
+      instruments-service).
 - [ ] [BACKEND] P1. Update instruments-service's DERIBIT-COMBO-specific factory/routing tests
       (`tests/unit/test_factory_comprehensive.py::TestFactoryTardisRouting`,
       `tests/unit/test_cefi_tradfi_comprehensive.py::TestDeribitComboAdapter`) to match UAC `11adf279`'s deregistration

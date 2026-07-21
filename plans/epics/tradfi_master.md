@@ -35,6 +35,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/tradfi_consolidated_closeout_2026_07_18.md
   - ../active/tradfi_multisource_backfill_2026_06_22.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 last_updated: 2026-06-20
@@ -794,11 +795,8 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: tradfi_master` in their frontmatter (was 3 —
-`tradfi_massive_dual_source_2026_05_28` removed 2026-07-21, now `status: superseded`: Massive removed as a tradfi source
-2026-07-19 + purged 2026-07-21; SSOT `codex/02-data/tradfi-databento-sourcing-ssot.md`). Workers pick up in priority
-order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py` — re-run to refresh this section
-mechanically._
+_3 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -808,6 +806,11 @@ mechanically._
 readiness (ES feature runs + data-clean slice)
 
 ## P1 — important; post-current-gate
+
+### [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)
+
+**status**: active · **estimate**: 11.2 cal AI-days (class: infra) **title**: TradFi consolidated close-out — one-pass
+code→migrations→coverage→smoke-test to MVP-backfill-ready
 
 ### [`tradfi_multisource_backfill_2026_06_22`](../active/tradfi_multisource_backfill_2026_06_22.md)
 

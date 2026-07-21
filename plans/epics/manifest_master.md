@@ -38,6 +38,8 @@ related_plans:
   - ../active/data_completion_defi_2026_07_15.md
   - ../active/data_completion_prediction_2026_07_15.md
   - ../active/data_completion_tradfi_2026_07_15.md
+  - ../active/data_pipeline_reconciliation_skill_2026_07_20.md
+  - ../active/distinct_values_noncanonical_audit_2026_07_20.md
   - ../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
   - ../active/migration_verification_orphan_safety_2026_06_10.md
   - ../active/mtds_available_at_cross_asset_backfill_2026_07_13.md
@@ -115,7 +117,7 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_7 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
+_9 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -140,6 +142,11 @@ canonicalisation + backfill (split from M-1)
 **status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — TradFi manifest
 canonicalisation + backfill (split from M-1)
 
+### [`data_pipeline_reconciliation_skill_2026_07_20`](../active/data_pipeline_reconciliation_skill_2026_07_20.md)
+
+**status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: /data-pipeline-reconciliation —
+per-asset-group four-surface canonicalisation reconciliation skill
+
 ### [`master_data_canonicalisation_migration_catalogue_2026_06_07`](../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md)
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: design)
@@ -149,6 +156,11 @@ canonicalisation + backfill (split from M-1)
 **status**: active · **estimate**: 6.6 cal AI-days (class: design)
 
 ## P1 — important; post-current-gate
+
+### [`distinct_values_noncanonical_audit_2026_07_20`](../active/distinct_values_noncanonical_audit_2026_07_20.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Distinct-Values non-canonical audit — all
+asset_groups × all axes
 
 ### [`mtds_available_at_cross_asset_backfill_2026_07_13`](../active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
 

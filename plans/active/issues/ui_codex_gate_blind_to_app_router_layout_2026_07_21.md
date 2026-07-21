@@ -82,14 +82,31 @@ at whichever root is actually present, then clean up the violations the gate wou
 
 ## Todos
 
-- [ ] [BACKEND] P2. Fix `base-ui.sh:337`'s `[ -d "src" ]` gate (and the `[3.5/6] ... skipped` message at line 428) to
+- [x] ✅ [BACKEND] P2. Fix `base-ui.sh:337`'s `[ -d "src" ]` gate (and the `[3.5/6] ... skipped` message at line 428) to
       also detect a Next.js App-Router layout (`[ -d "app" ]` or similar) and target the rg checks at that root instead
       of hardcoding `src/`. Verify against both `deployment-ui` (src/ layout, must stay green) and
-      `unified-trading-system-ui` (app/ layout, must now actually run). (repo: unified-trading-pm)
-- [ ] [UI] P2. Once the gate fires for `unified-trading-system-ui`, fix the violations it surfaces: ~13 `: any` type
-      annotations and 4 `console.log(...)` calls in `app/`/`components/`/`lib/` (excluding tests), plus add
-      `lib/chart-theme.ts` for its `recharts` usage (`package.json:117`) matching
-      `deployment-ui/src/lib/chart-theme.ts`'s pattern. (repo: unified-trading-system-ui)
+      `unified-trading-system-ui` (app/ layout, must now actually run). (repo: unified-trading-pm) —
+      `unified-trading-pm@dd23d1d20`. Introduced `_CODEX_ROOTS` array resolution (`src/` if present, else `app/` +
+      whichever of `components/`/`lib/` exist) and switched every exclude glob from `!src/**/...` to root-agnostic
+      `!**/...` so they match regardless of which root fired. `deployment-ui` (`src/` layout) verified byte-identical
+      green on a full `quality-gates.sh` run (66s, all 6 `[3.5/6]` checks pass as before — zero regression).
+      `unified-trading-system-ui` (`app/` layout, no `src/` at all) verified the gate now actually resolves
+      `_CODEX_ROOTS=(app components lib)` and finds real violations (84 `console.*` calls, 55 any-types, missing
+      `lib/chart-theme.ts`) instead of silently skipping — direct-tested the resolved rg logic since the repo's
+      pre-existing, unrelated `.next/` stale-cache typecheck failure blocks a full sequential `quality-gates.sh` run
+      from reaching `[3.5/6]` (not something this task should also fix). **Consequence, called out explicitly**:
+      `unified-trading-system-ui`'s full `quality-gates.sh` run will now correctly FAIL at `[3.5/6]` until the cleanup
+      todo below lands — this is the fix working as intended (a real, previously-invisible gap now visible), not a
+      regression. `--test`/`--lint`/`--quick` modes are unaffected. Corrected the sibling cleanup todo's violation-count
+      estimate with the numbers measured while verifying this fix.
+- [ ] [UI] P2. Once the gate fires for `unified-trading-system-ui`, fix the violations it surfaces. **Corrected count
+      (superseding the estimate above, measured with the actual fixed gate)**: 84 `console.*` calls across 49 files and
+      55 `: any`/`<any>`/`as any` occurrences in `app/`/`components/`/`lib/` (excluding tests) — materially larger than
+      first estimated, genuinely a multi-session cleanup, not a quick pass. Plus add `lib/chart-theme.ts` for its
+      `recharts` usage (`package.json:117`) matching `deployment-ui/src/lib/chart-theme.ts`'s pattern. **Note**: the
+      gate fix (todo above) ships ahead of this cleanup — `unified-trading-system-ui`'s `quality-gates.sh` will show
+      `[3.5/6] UI CODEX CHECKS FAILED` on any full run until this lands; `--test`/`--lint`/`--quick` modes are
+      unaffected (they already skip `[3.5/6]` for every repo). (repo: unified-trading-system-ui)
 
 ## Codex SSOTs
 

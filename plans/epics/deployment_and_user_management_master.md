@@ -22,9 +22,14 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/data_status_cell_grid_rearchitecture_2026_07_18.md
   - ../active/data_status_page_ux_and_canonicalisation_2026_07_16.md
   - ../active/data_status_tab_and_downloads_remediation_2026_06_16.md
   - ../active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md
+  - ../active/deployment_redesign_cherrypicks_2026_07_20.md
+  - ../active/github_actions_ci_cost_reduction_2026_07_15.md
+  - ../active/github_actions_cost_reduction_options_analysis_2026_07_15.md
+  - ../active/mtds_data_status_page_parity_2026_07_21.md
   - ../active/test_fleet_image_builds_from_current_code_2026_06_17.md
 last_updated: 2026-07-14
 locked_by: live-defi-rollout
@@ -83,7 +88,7 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Assigned active plans
 
-_4 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+_9 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -105,7 +110,32 @@ remediation — bounded caching architecture that fits 4GB
 **status**: active · **estimate**: 5.4 cal AI-days (class: design) **title**: Data-status page — honest-coverage fix
 (shipped) + UX & canonicalisation follow-ups (P1–P8)
 
+### [`mtds_data_status_page_parity_2026_07_21`](../active/mtds_data_status_page_parity_2026_07_21.md)
+
+**status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: MTDS data-status page parity — catalogue
+explorer, MVP coverage split, per-instrument download-day granularity
+
 ## P2 — useful; opportunistic
+
+### [`data_status_cell_grid_rearchitecture_2026_07_18`](../active/data_status_cell_grid_rearchitecture_2026_07_18.md)
+
+**status**: active · **estimate**: 3 cal AI-days (class: design) **title**: Data-status manifest cell-grid
+re-architecture — bound / stream / precompute the full-history view
+
+### [`deployment_redesign_cherrypicks_2026_07_20`](../active/deployment_redesign_cherrypicks_2026_07_20.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: Deployment data-status redesign
+cherry-picks (A–E) from Harsh's superseded branch
+
+### [`github_actions_ci_cost_reduction_2026_07_15`](../active/github_actions_ci_cost_reduction_2026_07_15.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: GitHub Actions CI/CD cost reduction —
+self-host the glue, kill the minute-minimum tax, fix cron cadence
+
+### [`github_actions_cost_reduction_options_analysis_2026_07_15`](../active/github_actions_cost_reduction_options_analysis_2026_07_15.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: design) **title**: GitHub Actions cost reduction — full options
+analysis & decision record
 
 ### [`test_fleet_image_builds_from_current_code_2026_06_17`](../active/test_fleet_image_builds_from_current_code_2026_06_17.md)
 

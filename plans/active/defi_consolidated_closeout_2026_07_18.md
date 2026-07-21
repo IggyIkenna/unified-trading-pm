@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -457,10 +457,34 @@ Discriminator = **does a manifest row exist**.
       Drift-only 24h/7d/30d window aggregates). Ratify enum-member DeFi grains (`lst`/`staking`/`yield_bearing`) as
       canonical (case-fold only, already `InstrumentType` members). (repos: market-tick-data-service,
       unified-api-contracts)
-- [ ] [DECISION] P2. **BLOCKED-OPERATOR-DECISION — bare `SUSHISWAP`/`UNISWAP` version (199,397 rows).** The data doesn't
-      record the version; derive it per-pool from the factory/router contract address (audit) before choosing a
-      canonical `_V{N}` — surface if underivable. `KALSHI_PERP`/`POLYMARKET_PERP`/`HYPERLIQUID` appearing in the defi
-      `chain` axis (2,936 rows) = cefi leakage → clean out of the defi manifest (they stay cefi).
+- [x] ✅ [DECISION] P2. **Bare `SUSHISWAP`/`UNISWAP` version (199,397→206,107 rows, measured 2026-07-21) — decided +
+      infra shipped `instruments-service@<SHA>`.** Operator ruling applied (see § "Operator decisions applied
+      (2026-07-21..." above): derive per-pool from the deploying factory contract address, not "undecidable." Shipped: a
+      static, cited factory-address→version map (Uniswap V2/V3/V4, SushiSwap V2/V3;
+      `instruments_service/reference_data/adapters/defi/_dex_factory_registry.py`) wired into
+      `scripts/canonicalize_defi_manifest_venue_2026_06_14.py` (fires only when a row carries a `factory_address`
+      column; never mints an unregistered `ALL_DEFI_VENUES` string). **Measured resolved=0 / residual=206,107 (100%) —
+      no row captured today carries a factory address anywhere in the schema (verified: `InstrumentRecord`, the v9
+      manifest schema, and all 4 subgraph query cascades in `uniswap_v3.py` were checked; none carries or requests
+      one)** — this is the genuine surface-don't-guess residual the ruling anticipated, not a code defect. A SECOND
+      blocker for the SUSHISWAP-ARBITRUM cohort (192,560 of the 206,107): UAC `ALL_DEFI_VENUES` has no registered
+      versioned venue for Sushi-on-Arbitrum at all (cross-repo prerequisite). Full writeup + the two follow-up capture
+      options: `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`. Follow-up capture work tracked as
+      the new todo below (non-trivial residual, not silently dropped).
+- [ ] [DATA] P2. **NEW 2026-07-21 — actually start capturing factory addresses so the shipped resolver above has
+      something to resolve** (today it resolves 0 of 206,107 bare SUSHISWAP/UNISWAP rows — see
+      `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`). Two options, not yet decided between: (a)
+      augment the 4 subgraph query cascades in `instruments-service`'s `uniswap_v3.py` to request a `factory` field —
+      needs a live-schema probe per fork (native/Algebra/SushiSwap-pairs/Messari) before landing, a wrong field name
+      hard-errors the query; (b) on-chain RPC `factory()` lookup keyed off the already-captured `pool_address` (needs an
+      RPC provider + enumerating the unique pool_address set from the raw MTDS parquet, not the manifest). Also register
+      the missing `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` (or whichever the capture work resolves to) canonical
+      venues in UAC `ALL_DEFI_VENUES` — currently only the bare `SUSHISWAP-ARBITRUM` is registered, so even a
+      correctly-resolved factory address cannot be written back without this. (repos: instruments-service,
+      unified-api-contracts, market-tick-data-service)
+- [ ] [DATA] P2. **`KALSHI_PERP`/`POLYMARKET_PERP`/`HYPERLIQUID` appearing in the defi `chain` axis (2,936 rows) = cefi
+      leakage** → clean out of the defi manifest (they stay cefi). Split out of the bare-version item above — NOT
+      addressed by the 2026-07-21 factory-resolver work (different defect, same original bullet).
 - [ ] [BACKEND] P2. **Combo cross-AG hand-off (leg-aware signed-weight spec).** Extend the 1–4-leg cap + shared
       `build_leg()` path to the DERIBIT-COMBO builders (`cefi/deribit_combo_adapter.py`, `tardis/combos.py`) —
       `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` open P2. DeFi has no combos; this rides here
@@ -524,7 +548,14 @@ Discriminator = **does a manifest row exist**.
 - **Bare SUSHISWAP/UNISWAP version (199,397 rows) → derive from the deploying factory contract address**, not
   "undecidable." Uniswap V2/V3/V4 and SushiSwap V2/V3 factory addresses are permanent, public constants — a static
   factory-address→version map resolves the overwhelming majority; a pool whose factory matches none of the known
-  contracts is the genuine residual (surface it, don't guess).
+  contracts is the genuine residual (surface it, don't guess). **✅ DONE (infra) `instruments-service@<SHA>`**: static
+  cited map + resolver built + wired into `canonicalize_defi_manifest_venue_2026_06_14.py`, gated so it never mints an
+  unregistered venue. **Measured 2026-07-21: resolved=0 / residual=206,107 (100%)** — no captured row anywhere carries a
+  factory address today (verified across `InstrumentRecord`, the v9 manifest schema, and all 4 subgraph query cascades),
+  so the "overwhelming majority" premise doesn't hold YET — the map is correct and ready, there is simply no factory
+  data in the corpus for it to resolve against. Full detail + the 2 follow-up capture options + the SushiSwap-Arbitrum
+  UAC registry gap: `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`; tracked as a new Track 1
+  `[DATA]` todo (not silently dropped).
 - **`_ID_FORM_CHECKED_ASSET_GROUPS` widening for `defi` → use the grammar already ratified in this plan** ("Instrument-
   uid grammar per DeFi type" above) — not a new decision, just wiring it into
   `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`'s checker. `prediction`'s id-form stays out of scope here
@@ -564,9 +595,21 @@ Discriminator = **does a manifest row exist**.
       the dead top-level Solana `dex_pools/`+`lending_indices/` prefixes (frozen 2026-04-14, "Shape-B")~~ **← DELETE
       CLAUSE SUPERSEDED — see the ⛔ correction banner directly above** and kill the second dexpool writer path.
       **Snapshot-before-delete** (pre-migration drain per the VM runbook). (repos: market-tick-data-service)
-- [ ] [INFRA] P1. **Correct the STALE codex path docs** — `codex/02-data/per-asset-group-bucket-layouts.md` (documents
-      chain-before-venue + omits pipeline_mode) and `market-tick-data-service/docs/GCS_PATHS.md` (shows dead Shape-B) →
-      match the operator-locked SSOT + live writer. (repos: unified-trading-pm, market-tick-data-service)
+- [x] ✅ [INFRA] P1. **Correct the STALE codex path docs — checklist item was itself stale; both docs were ALREADY fixed
+      (verified 2026-07-21).** Re-read both target docs in full + re-derived from this plan's own "Path template
+      (operator-locked...)" section + a fresh live GCS listing
+      (`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-04-14/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=AAVE_V3/chain=ARBITRUM/`
+      — venue segment confirmed BEFORE chain). **Finding: both docs already state venue-before-chain + carry
+      `pipeline_mode=` left of `asset_group=`, and neither contains any "Shape-B" text** — grepped
+      `market-tick-data-service/docs/` for `Shape-B` (0 hits). The underlying fix landed same-day this bullet was
+      authored (`58a6a54edb` @ 2026-07-18 14:14), just ~2.5h before the checklist text could reflect it:
+      **`unified-trading-pm@709274a5c`** (2026-07-18 16:50, "…venue-before-chain…", corrected the DEFI row in
+      `per-asset-group-bucket-layouts.md` to `venue={v}/chain={chain}` + added `pipeline_mode={mode}_{source}` left of
+      `asset_group=`) and **`market-tick-data-service@5f498858`+`@e9764b38`** (2026-07-18 16:46 / 2026-07-19 05:02, same
+      "venue-before-chain path" DEFI-align pass to `docs/GCS_PATHS.md`, which already showed
+      `venue={PROTOCOL}/chain={CHAIN}` with an explicit "(venue BEFORE chain)" comment and never referenced Shape-B).
+      **No further doc edit required** — this bullet was simply never flipped after the fix shipped; flipping it now
+      closes the gap. (repos: unified-trading-pm, market-tick-data-service)
 - [ ] [INFRA] P1. **Delete the lending-indices legacy bucket (C0f)** + resolve TF estate drift
       (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket. All
       GCS/bucket DELETEs are snapshot-first. (repos: deployment-service, market-tick-data-service)
@@ -737,11 +780,63 @@ Discriminator = **does a manifest row exist**.
 - **Close-out criterion**: zero references to culled venues in UAC / manifest / GCS / catalogue / docs; a snapshot
   exists before any delete.
 
-- [ ] [DATA] P1. **Purge the culled Solana-perp venues' DeFi-side residue**
-      (DRIFT/PACIFICA/MANGO/ZETA/FLASH/SOLAYER/PICASSO/CAMBRIAN) from manifest + GCS data + catalogue, snapshot-first;
-      drop the ~20 `architecture_v2` DRIFT leg-spec files + the `launcher_registry` self-heal handoff. Clean the STALE
-      `mvp-scope-canonical.md` PACIFICA-as-MVP bolding + any docs naming culled venues. (repos:
-      market-tick-data-service, instruments-service, deployment-service, unified-trading-pm)
+- [x] ✅ [DATA] P1. **Purge the culled Solana-perp venues' DeFi-side residue — checklist item was itself stale; nearly
+      all of it was ALREADY DONE (verified 2026-07-21).** Fresh live case-insensitive grep of unified-api-contracts +
+      market-tick-data-service for DRIFT/PACIFICA/MANGO/ZETA/FLASH/SOLAYER/PICASSO/CAMBRIAN, with every hit read in
+      context (not grep-and-conclude): - **architecture_v2 leg specs — already dropped, NOT ~20 files still pending.**
+      The `d996e4fe` UAC commit (2026-07-16, cited in
+      `issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`'s own "UPDATE" section) already
+      removed every live DRIFT reference from `archetype_capability_manifest.json`, `archetype_leg_spec.py`,
+      `archetype_leg_spec_seeds.py`, `collateral_registry.py`, `jurisdiction_overlay.py`, `order_semantics.py`,
+      `simulation_assumptions.py`, `venue_tokens.py` (+5 test files) — re-verified live: the ONLY residual "Drift"
+      mention in `architecture_v2/` is one properly-formatted historical note in `archetype_capability_manifest.json`
+      line 692 ("...CeFi-perp hedge leg (Drift) removed 2026-07-16, operator ruling..."), matching this cull's own
+      comment-marker convention. Zero MANGO/ZETA/PACIFICA hits in `architecture_v2/` at all. **Nothing left to drop.** -
+      **`mvp-scope-canonical.md` — already fixed**, `unified-trading-pm@709274a5c` (2026-07-18): grepped the live file,
+      zero PACIFICA/DRIFT hits remain; DeFi section now reads "MVP-tag-all today" with no per-venue bolding. **No doc
+      edit needed.** - **SOLAYER/PICASSO/CAMBRIAN — record-correction, not part of this ruling.** These were removed
+      **2026-06-02** (a DIFFERENT, EARLIER, unrelated operator decision — "no usable/decodable data source" per
+      `issues/issue_docs_remediation_sweep_2026_06_02.md`), NOT the 2026-07-16 Solana-perp-DEX-onto-Jupiter ruling this
+      todo's own wording implied. Confirmed live: only historical comment markers remain in
+      `unified_api_contracts/{testing/vcr_endpoints.py, registry/venue_adapter_keys.py,       registry/capability_declarations/{_defi.py,_defi_chain_data.py}}`
+      — no live registry entries, nothing to purge, already at the correct end-state. - **market-tick-data-service — one
+      genuine residue item found + removed**:
+      `market_tick_data_service/scripts/purge_drift_pacifica_solana_perp_2026_07_16.py`, the (already-executed)
+      DATA/STATE purge script itself, which carried its own lifecycle marker ("DELETE this file once the kill is
+      verified + journaled"). The kill IS fully verified + journaled
+      (`issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md` COMPLETION RECORD: 0 residual across
+      manifest/catalogue/GCS/per-VM-shards, both asset groups, 3+ post-resume consolidator cycles watched clean). No
+      other lingering MTDS handler branches found (`drift_v2_historical_handler.py` / `drift_v2_onchain_decoder.py` /
+      any pacifica-named handler were already deleted in `market-tick-data-service@2e674d1f`, "55 files, -11,178
+      lines"). Deleted: **`market-tick-data-service@f6176e8b`** (dirty-deps carve-out direct push — quickmerge's
+      pre-flight blocked on foreign concurrent WIP in unified-trading-library + unified-api-contracts, confirmed
+      unrelated canonical-id/fail-hard-enforcement work, neither touched; `quality-gates.sh --no-fix` green,
+      `.qg_last_passed_sha` sentinel matched HEAD before the commit). **unified-api-contracts required NO commit**
+      (nothing dead left to remove — see below). - **Confirmed LOAD-BEARING, deliberately left alone (not residue)**:
+      (a) `unified_api_contracts/registry/venue_adapter_keys.py::DECOMMISSIONED_VENUE_BASES` — an ACTIVE frozenset
+      (`{"DRIFT","PACIFICA","MANGO","ZETA","FLASH"}`) that deployment-api's data-status drilldown reads to
+      base-prefix-exclude legacy manifest rows; removing it would REGRESS that filter. (b)
+      `unified_api_contracts/canonical/quarantine.py::QUARANTINE_REGISTRY` — a NEW (2026-07-20/21,
+      `fail_hard_canonical_enforcement_design_2026_07_20.md`) fail-hard-enforcement mechanism whose ONE seed member is
+      `PACIFICA-SOLANA` (265 permanently-honest-raw objects, evidenced, expires 2027-07-21) — deliberately references
+      the culled venue so these legacy rows verdict `quarantined` (PASS) instead of `non_canonical` (FAIL) once Stage-3
+      read-enforcement wires in; NOT dead code. (c) `DRIFT` as a TOKEN TICKER (not venue) in
+      `unified_api_contracts/registry/{defi_major_assets.py,cefi_instrument_universe.py}` — the Drift-protocol
+      governance token trades live on non-culled venues (Binance/Bybit/etc, ~40,693 manifest rows per the original
+      cull's own scope-guard); this is a different entity from the culled DEX venue and must stay. (d) a
+      `_PERP_DEFAULT_CHAIN` DRIFT/PACIFICA chain-default mapping in MTDS's `scripts/migrate_defi_full_v9_canonical.py`
+      and a `_RENAMED_VENUES = {"PACIFICA": "PACIFICA-SOLANA"}` mapping in
+      `scripts/migrate_lst_perp_shared_bucket_gap_2026_07_13.py` — both are historical-data migration utilities (the
+      latter has its own `Delete-when:` gated on a DIFFERENT plan's Todo 9, unrelated to this cull) whose correctness
+      for any future re-run of already-written legacy rows depends on these mappings; left untouched as
+      out-of-scope-for-this-cull rather than risk miscategorising historical data. - **instruments-service +
+      deployment-service** were explicitly OUT of this dispatch's repo scope (narrowed to avoid a live file-collision
+      with two other concurrently-running agents in those exact repos) — per
+      `issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`'s own COMPLETION RECORD these already shipped
+      (`instruments-service@4d65d468`+`b37e9d82`+`ee19f6f3`, `deployment-service@9b13679`+`194deeb`, all confirmed on
+      `origin` as of the 2026-07-18 closing pass) — not re-verified this session, cited as already-closed evidence
+      rather than re-audited. (repos: market-tick-data-service, unified-api-contracts, unified-trading-pm —
+      instruments-service/deployment-service closed by a prior session, cited above)
 
 ## Track 8 — INFRA / forward-data: resume steady-state (⛔ for forward honesty) · P1
 

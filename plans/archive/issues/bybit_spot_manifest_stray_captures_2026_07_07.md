@@ -355,10 +355,15 @@ rows land with correct `instrument_type=spot_pair`.
   suspicious since the 53k are spread over 40k trades + 40k book_5 shards over ~4y) OR if the target
   `venue=BYBIT-SPOT/instrument_type=spot_pair/` path already exists (indicating pre-existing state we'd overwrite), STOP
   and post a BLK — do NOT push through; (v) 2c-reclassify LESSON: `reclassify_cefi_manifest_mvp_universe_2026_06_23.py`
-  was pulled last cycle due to `_derive_base` mis-parsing Bitfinex `ADAF0:USTF0` + Kraken
-  `PF*/PI\_`wire-forms leading to ~380k row DELETE — the same risk applies here; the BYBIT-SPOT USDT symbols like BTCUSDT/ACHUSDT/APEUSDT look straightforward but SPOT-instrument symbols can carry venue-native suffixes (USDC / USDT / USD / _PERP / _2X, etc.) — VERIFY the identity-match filter on manifest key`(date,
-  venue, instrument_id,
-  data_type)`catches EVERY row before mutation; (vi) DO NOT relabel the 82k EMPTY-instrument_type rows in this task — those are honest-absence rows tracked separately (their fix is (a1) forward-path writer fix + potentially the same (b1) delete pass); scope of -003 is ONLY the 53,785 PERPETUAL subset; (vii) reference materials: my Diagnosis (a) + (b) sections above have the exact`capture_status`×`data_type`×`instrument_type`breakdowns; -006's shipped code at`market-tick-data-service@c4df8ae0`(files:`symbol_rules.py`, `tardis_adapter.py`, `test_tardis_canonical_output.py`)
+  was pulled last cycle due to `_derive_base` mis-parsing Bitfinex `ADAF0:USTF0` + Kraken `PF*/PI\_`wire-forms leading
+  to ~380k row DELETE — the same risk applies here; the BYBIT-SPOT USDT symbols like BTCUSDT/ACHUSDT/APEUSDT look
+  straightforward but SPOT-instrument symbols can carry venue-native suffixes (USDC / USDT / USD / _PERP / _2X, etc.) —
+  VERIFY the identity-match filter on manifest key`(date, venue, instrument_id, data_type)`catches EVERY row before
+  mutation; (vi) DO NOT relabel the 82k EMPTY-instrument_type rows in this task — those are honest-absence rows tracked
+  separately (their fix is (a1) forward-path writer fix + potentially the same (b1) delete pass); scope of -003 is ONLY
+  the 53,785 PERPETUAL subset; (vii) reference materials: my Diagnosis (a) + (b) sections above have the
+  exact`capture_status`×`data_type`×`instrument_type`breakdowns; -006's shipped code
+  at`market-tick-data-service@c4df8ae0`(files:`symbol_rules.py`, `tardis_adapter.py`, `test_tardis_canonical_output.py`)
   shows the correct forward-path stamping to mirror in the relabel logic. Slot-8 next action: /skip-current-task.
 - **2026-07-07** — **Task -003 DONE** (slot-2). Corrective-relabel script shipped at `market-tick-data-service@5611d9a7`
   (`scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py`). Script provides dry-run (default) / --smoke (one shard,

@@ -50,6 +50,8 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/defi_consolidated_closeout_2026_07_18.md
+  - ../active/defi_lending_writer_retire_prerequisite_2026_07_20.md
   - ../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md
   - ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md
   - ../active/mtds_defi_dex_zero_capture_protocols_2026_07_14.md
@@ -607,10 +609,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                  gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                  ```
+                          gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                          ```
 
-                  [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                          [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -1154,16 +1156,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                  `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                  (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                  VM ran current code without a refresh.
+                          `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                          (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                          VM ran current code without a refresh.
 
-                  Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                  (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                  `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                          Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                          (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                          `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                  Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                  (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                          Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                          (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1685,10 +1687,15 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 
 ## Assigned active plans
 
-_4 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+_6 active plans declare `parent_epic: defi_master` in their frontmatter. Workers pick up in priority order (P0 first).
 Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
+
+### [`defi_lending_writer_retire_prerequisite_2026_07_20`](../active/defi_lending_writer_retire_prerequisite_2026_07_20.md)
+
+**status**: active · **estimate**: 2.0 cal AI-days (class: refactor) **title**: DeFi lending writer fix — HARD
+PREREQUISITE for the D2 flat-LENDING retire
 
 ### [`defi_onchain_derivable_values_and_date_drift_2026_06_20`](../active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
 
@@ -1706,7 +1713,9 @@ UAC date-drift elimination (derive-SSOT + CI citation gate)
 
 ## P1 — important; post-current-gate
 
-_(no plans currently assigned at this priority)_
+### [`defi_consolidated_closeout_2026_07_18`](../active/defi_consolidated_closeout_2026_07_18.md)
+
+**status**: active · **estimate**: 9.6 cal AI-days (class: infra)
 
 ## P2 — useful; opportunistic
 

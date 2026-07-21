@@ -30,13 +30,19 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/aster_and_cefi_rolling_adv_feature_2026_07_21.md
   - ../active/bucket_estate_consolidation_to_sub100_2026_07_13.md
+  - ../active/bucket_fold_closeout_2026_07_17.md
+  - ../active/bucket_fold_execution_strategy_2026_07_17.md
+  - ../active/bucket_fold_features_2026_07_17.md
+  - ../active/bucket_fold_ml_2026_07_17.md
+  - ../active/bucket_fold_portfolio_state_2026_07_17.md
   - ../active/bucket_iam_write_protection_per_tier_2026_06_09.md
   - ../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - ../active/codex_violations_ratchet_to_five_2026_06_10.md
-  - ../active/data_pipeline_e2e_check_2026_07_10.md
+  - ../active/data_pipeline_check_mdps_features_2026_07_20.md
   - ../active/defi_dedicated_bucket_shared_migration_2026_07_13.md
-  - ../active/gcs_bucket_estate_cleanup_2026_07_10.md
+  - ../active/lst_rate_honest_coverage_2026_07_21.md
   - ../active/mtds_retry_safe_default_audit_2026_07_14.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
   - ../active/repo_scripts_governance_audit_2026_06_18.md
@@ -490,7 +496,7 @@ sub-plan; this section is a pointer.
 
 ## Assigned active plans
 
-_14 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
+_20 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
 (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -500,7 +506,22 @@ _14 active plans declare `parent_epic: infrastructure_master` in their frontmatt
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: Bucket estate consolidation — 241 → <100
 (waves 0-3, single-migration env-split fold)
 
+### [`bucket_fold_ml_2026_07_17`](../active/bucket_fold_ml_2026_07_17.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Bucket fold — ml 5 kind-buckets → 1
+(ml-store-{env}-{pid})
+
 ## P1 — important; post-current-gate
+
+### [`bucket_fold_execution_strategy_2026_07_17`](../active/bucket_fold_execution_strategy_2026_07_17.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket fold — execution-store 4+pred → 1 &
+strategy-store flat → tiered
+
+### [`bucket_fold_features_2026_07_17`](../active/bucket_fold_features_2026_07_17.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Bucket fold — features 25 per-AG/kind → 5
+per-AG (features-{ag}-{env}-{pid})
 
 ### [`bucket_iam_write_protection_per_tier_2026_06_09`](../active/bucket_iam_write_protection_per_tier_2026_06_09.md)
 
@@ -512,19 +533,18 @@ per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: CI/CD MVP — LDR→SIT→main, simplified
 single-path pipeline (supersedes the WS-L complex pipeline)
 
-### [`data_pipeline_e2e_check_2026_07_10`](../active/data_pipeline_e2e_check_2026_07_10.md)
+### [`data_pipeline_check_mdps_features_2026_07_20`](../active/data_pipeline_check_mdps_features_2026_07_20.md)
 
-**status**: active · **estimate**: 4.0 cal AI-days (class: infra)
+**status**: active · **estimate**: 6.4 cal AI-days (class: infra)
 
 ### [`defi_dedicated_bucket_shared_migration_2026_07_13`](../active/defi_dedicated_bucket_shared_migration_2026_07_13.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Migrate dex-pools/lst-rates/perp-funding
 off dedicated buckets onto the shared DeFi tick bucket
 
-### [`gcs_bucket_estate_cleanup_2026_07_10`](../active/gcs_bucket_estate_cleanup_2026_07_10.md)
+### [`lst_rate_honest_coverage_2026_07_21`](../active/lst_rate_honest_coverage_2026_07_21.md)
 
-**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: GCS bucket estate cleanup —
-central-element-323112 (332 buckets)
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
 ### [`qg_host_adaptive_resource_governor_2026_07_14`](../active/qg_host_adaptive_resource_governor_2026_07_14.md)
 
@@ -541,14 +561,17 @@ data source to canonical 100%
 **status**: active · **estimate**: 7.2 cal AI-days (class: refactor) **title**: UTL/UAC reuse consolidation — kill local
 reimplementations, strongest-combination merge
 
-### [`ao_host_disk_pressure_2026_07_16`](../archive/2026_07/ao_host_disk_pressure_2026_07_16.md)
-
-**status**: complete (archived 2026-07-17) · **estimate**: 1.6 cal AI-days (class: infra) **title**: AO
-central-orchestrator host root-disk pressure (65→95% cycle) killing worker pytest/QG mid-task — all levers shipped +
-measured (prune cron `pm@88310f87a`, guard 2h cadence proven on a live 83%→51% excursion, AutoSpawn disk backstop
-`ao@e7f70c8`, cross-host uv-cache env `pm@86dea79d5`)
-
 ## P2 — useful; opportunistic
+
+### [`aster_and_cefi_rolling_adv_feature_2026_07_21`](../active/aster_and_cefi_rolling_adv_feature_2026_07_21.md)
+
+**status**: active · **estimate**: 1.5 cal AI-days (class: brand-new) **title**: Rolling ADV (average daily volume)
+feature for CeFi instruments — strategy-side volume caps
+
+### [`bucket_fold_portfolio_state_2026_07_17`](../active/bucket_fold_portfolio_state_2026_07_17.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket fold — portfolio-state 6 stores → 1
+(portfolio-state-{env}-{pid}) — LAST
 
 ### [`codex_violations_ratchet_to_five_2026_06_10`](../active/codex_violations_ratchet_to_five_2026_06_10.md)
 
@@ -565,6 +588,11 @@ deprecate/delete audit + strict-quickmerge carve scope (D16)
 cache warm so only changed code rebuilds
 
 ## P3 — backlog; revisit quarterly
+
+### [`bucket_fold_closeout_2026_07_17`](../active/bucket_fold_closeout_2026_07_17.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Bucket fold — Wave-3 cross-cutting closeout
+(codex audit, estate recount, alias sunset)
 
 ### [`mtds_retry_safe_default_audit_2026_07_14`](../active/mtds_retry_safe_default_audit_2026_07_14.md)
 
