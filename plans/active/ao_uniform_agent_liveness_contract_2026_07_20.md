@@ -187,17 +187,26 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
 
 ### Operational follow-ups (not workstream tasks)
 
-- [ ] [OPS] P1. **Re-activate the `CIReconcileLoop`** — paused 2026-07-21 to stop a false-red credit burn while this
-      plan is implemented. It was escalating three **GREEN** repos (`unified-trading-pm` / `unified-trading-library` /
-      `deployment-api`) as `ldr_qg_failure` on `live-defi-rollout`, spawning cicd agents that correctly resolved
-      `qg_v2_green` (pure wasted work + Claude credits — confirmed all three green via `gh`). Paused via
-      `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` (interval ≤ 0 → `start()` is a no-op; LoopSupervisor won't revive a
-      disabled loop) + a backend restart. **Re-enable = remove that env override (restore the default interval) +
-      restart the backend — but FIRST fix the false-red root cause** (why it reads green repos as red: likely a stale
-      `ci_reconcile_etag_cache.json` or a missing/`None` conclusion treated as failing), else it immediately re-storms.
-      The 72 cancelled escalations are recoverable from the live `escalation_queue` table
-      (`status='resolved', resolution='operator-cancelled-2026-07-21'`) — no re-instatement is expected (they were
-      false-red on GREEN repos; a genuinely-red repo re-escalates once CIReconcile is fixed + re-enabled).
+- [x] [OPS] P1. **Re-activate the `CIReconcileLoop`** — ✅ root-cause fixed + re-enabled 2026-07-21
+      (`agent-orchestrator@1837599`). **Root cause was NOT a stale ETag cache / `None` conclusion (that earlier
+      hypothesis was wrong) — the loop was HEAD-BLIND.** It decided a repo was failing from the latest _completed_
+      `quality-gates-v2` **conclusion** on `live-defi-rollout`, but **LDR never runs server QG on push** (the runs on
+      that branch are hourly `workflow_dispatch` runs), so when a broken commit `X` is fixed by a new commit `Y` pushed
+      to LDR **no run fires for `Y`**: HEAD is green-but-untested while the latest completed run is still `X`'s
+      `failure`. For up to ~1h (until the next dispatch re-tests HEAD) the loop read that stale failure and escalated a
+      repo whose current head was already fixed → the spawned cicd worker cloned the green head and resolved
+      `qg_v2_green` (wasted credits). Evidenced by `gh`: `deployment-api` `ea56ff`(fail)→`c7eb95`(pass);
+      `unified-trading-library` `69ff7f`(fail)→`9081e5`(pass) — both fixed by a NEW commit, with a window before the
+      next dispatch re-tested. **Fix**: a head-staleness gate (`failing_run_is_current` in `server/ci_reconcile.py`) — a
+      `failure` only escalates when the failing run's `head_sha` equals the current branch HEAD; a stale/superseded
+      failure is dropped (logged), and a genuine red is still caught the moment a run against the live head confirms it.
+      Applied to BOTH the LDR and `main` scans. **Re-enable done**: removed
+      `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` from the deployed `agent-orchestrator/.env.local` +
+      `sudo systemctl restart orchestrator`; verified the loop started (`interval=900s`) and its first sweep read
+      `no failing repos on live-defi-rollout or main (25 scanned)` with **zero** new `escalation_queue` rows. The 72
+      cancelled escalations stayed `resolved` (`resolution='operator-cancelled-2026-07-21'` / earlier `qg_v2_green`);
+      none re-instated. Evidence: AO gate green (1555 py + 113 vitest); `server/ci_reconcile.py` unit tests
+      `test_failing_run_is_current_*` + `test_tick_drops_stale_failure_keeps_live_failure`.
 
 ## Design note (todo 1) — the uniform agent-liveness contract
 
@@ -408,22 +417,21 @@ one-off looks identical to a live fleet worker on both.
   - **Deploy + live-verify:** `ao-self-pull` FF'd the deployed checkout to `0d510e9`, `--reload` applied it; backend
     `/health` 200, `mode=live`, CIReconcile disabled, fleet healthy carve-out-less. AO quality gate green throughout
     (1546 py + 113 vitest).
-  - **Still open (the OPS todo above):** re-enabling `CIReconcileLoop` needs its false-red root cause fixed first (it
-    was escalating 3 GREEN repos → wasted cicd credits; paused via env `interval=0`).
+  - **CIReconcile false-red — root-caused + fixed + re-enabled** `agent-orchestrator@1837599` (OPS todo above). The loop
+    was HEAD-BLIND (escalated a repo from a `failure` conclusion for a since-superseded commit, because LDR runs QG only
+    via `workflow_dispatch`, never on push). Head-staleness gate (`failing_run_is_current`) now escalates only when the
+    failing run's `head_sha` == the current branch HEAD. Re-enabled (env override removed + restart); first live sweep
+    clean (`25 scanned`, 0 escalations). **Nothing in this plan is now outstanding.**
 
 ## Deferred work after 2026-07-21
 
-The A→C contract is **fully landed, deployed, and verified** — nothing in workstreams A/B/C is outstanding. One
-operational follow-up remains (tracked as the `[OPS]` todo above):
+The A→C contract is **fully landed, deployed, and verified**, and the one operational follow-up (the `CIReconcileLoop`
+false-red) is **root-caused, fixed, and re-enabled** (`agent-orchestrator@1837599`; OPS todo above). **Nothing in this
+plan is outstanding** — it is ready to archive once the operator confirms.
 
-| Item                                                   | State / why deferred                                                                                                                                                                                                                                                      | Blocked on                                                                                                                                                               |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Fix `CIReconcileLoop` false-red, then re-enable it** | **Not done** — real work. It escalated 3 GREEN repos (`unified-trading-pm`/`unified-trading-library`/`deployment-api`) as `ldr_qg_failure`; cicd agents resolved `qg_v2_green` (wasted credits). Paused via env `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` + restart. | Nobody — pick it up. Likely a stale `ci_reconcile_etag_cache.json` or a `None`/missing-run conclusion treated as failing (see `server/ci_reconcile.py`, `ConclusionFn`). |
-
-**Recommended NEXT:** the CIReconcile false-red fix — it is the only open item, it is currently _masked_ (the loop is
-off, so nothing is broken right now), and re-enabling without the fix immediately re-storms the credit burn. To
-re-enable after fixing: remove the `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` line from the deployed
-`agent-orchestrator/.env.local` + `sudo systemctl restart orchestrator`.
+_(Historical, for the record: the loop was paused 2026-07-21 via env `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` +
+restart while the head-staleness gate was built; it is now back on the default 900s interval with that env override
+removed.)_
 
 ## Lessons (2026-07-21)
 
@@ -442,4 +450,21 @@ re-enable after fixing: remove the `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0
   tree) then `quickmerge --agent --files '<paths>'`. A raw `git push` of code is blocked by the strict-quickmerge
   pre-push hook (needs the `Quickmerge:` trailer). PM docs push directly.
 - **CIReconcile has no runtime toggle** — its interval is read at `__init__`. Disabling needs the env var +
-  `systemctl restart` (a uvicorn `--reload` will NOT re-read the systemd `EnvironmentFile`).
+  `systemctl restart` (a uvicorn `--reload` will NOT re-read the systemd `EnvironmentFile`). Corollary observed on
+  re-enable: after `git pull` of the deployed checkout, `--reload` respawns a worker that INHERITS the reloader parent's
+  stale environment (still `interval=0`) — only a full `systemctl restart` brings up a fresh tree that reads the edited
+  `.env.local`. So the boot log briefly shows `CIReconcileLoop disabled (interval=0s)` (the reload worker) then
+  `CIReconcileLoop started (interval=900s)` (the restart) — the restart's process is the live one.
+- **The CIReconcile "false-red" was HEAD-BLINDNESS, not a stale ETag cache.** The original OPS-todo hypothesis (stale
+  `ci_reconcile_etag_cache.json` / a `None` conclusion treated as failing) was WRONG — verified against `gh`: the runs
+  the loop read were _genuinely_ `failure`, for a commit HEAD had already advanced past. Because **LDR never runs server
+  QG on push** (the runs on `live-defi-rollout` are hourly `workflow_dispatch` runs), a fix pushed to LDR leaves HEAD
+  green-but-untested until the next dispatch — and the loop escalated that stale failure. The fix
+  (`failing_run_is_current`) requires the failing run's `head_sha` == the current branch HEAD before escalating.
+  **Lesson for diagnosis: a "false red" is not automatically a polling bug — confirm whether the CI signal was genuinely
+  red for a commit the branch has since moved past (run `head_sha` vs current branch HEAD) before assuming the reader
+  misread green.**
+- **The escalation queue was clean at re-enable (0 open rows)** — the loop head-blindness was the GENERATOR of the
+  storm; the queue-drain was the amplifier. Fixing the generator + the pre-cleared queue (72 `resolved`) means re-enable
+  did not re-storm. A residual, much narrower window remains (a genuine current-head red escalation that resolves while
+  queued) — bounded by the watchdog's 90-min deadline + the TTL re-probe, so not fixed here.
