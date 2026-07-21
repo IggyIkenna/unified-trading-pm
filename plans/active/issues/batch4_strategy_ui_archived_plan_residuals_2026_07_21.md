@@ -100,10 +100,41 @@ issue doc can point to whichever plan actually ends up owning each thread.
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Write Phase A/B/C formal unit tests for `LeveragedLegController`'s holding_wallet override
+- [x] ✅ [SCRIPT] P3. Write Phase A/B/C formal unit tests for `LeveragedLegController`'s holding_wallet override
       precedence, Solana inner-instruction walk, and L2 book shape projection (currently only smoke-tested via the
       surrounding chain) — see `plans/archive/leveraged_leg_controller_2026_05_01.plan.md` § "Outstanding". (repo:
-      features-onchain-service)
+      features-onchain-service) — **done-by-osmosis, verified, no new code needed.** `features-onchain-service` no
+      longer exists as a repo (consolidated into `features-service`, confirmed via
+      `unified-trading-pm/workspace-manifest.json`'s `removedEntries.features-onchain-service`
+      `archived_into: features-service`); the actual code lives at
+      `features-service/features_service/onchain/collectors/{parquet_dust_loader,chain_event_scanners}.py` and
+      `execution-service/execution_service/algo_library/mtds_book_provider.py` (Phase C, per the archived plan's own
+      text — it was never in features-onchain-service to begin with). All three phases already have comprehensive,
+      formal, pinned unit tests, added by later general coverage-raising waves that never got linked back to this
+      residual item: - **Phase A** (holding_wallet precedence):
+      `features-service/tests/onchain/unit/test_parquet_dust_loader.py` `TestLstHoldingWalletFromParams` (6 tests:
+      identity-wins, params-fallback-when-identity-missing, params-fallback-when-identity-empty, no-wallet-anywhere,
+      empty-params-dict, params-not-a-dict) — pins the exact 3-level precedence documented in
+      `lst_holding_wallet_from_params`'s docstring. - **Phase B** (Solana inner-instruction walk):
+      `features-service/tests/onchain/unit/test_chain_event_scanners.py` `TestSolanaChainEventScanner` +
+      `TestSplTransferGate` (89 `def test_` total in the file) — covers `transferChecked` + legacy `transfer` types, the
+      inner-instructions pass, the post-balance-diff fallback pass, malformed/non-dict/non-list skip branches,
+      mint/decimals extraction, amount parsing, and the distributor-address gate. Last touched
+      `features-service@1a249e23` (2026-06-10, "raise unit coverage 81.3->86.2%, +955 tests"). - **Phase C** (L2 book
+      shape): `execution-service/tests/unit/algorithms/test_mtds_book_provider.py`, section explicitly labelled
+      `# L2 (mbp_10) book shape — Phase C` (8 tests: schema detection via `bid_px_00`/`ask_px_00`, default `l2_levels=5`
+      walk, the `l2_levels` knob, schema-smaller-than-knob capping, null-price skip, top-level-null → None, decimal
+      precision, L0/tbbo fallback).
+
+      **Verification run**: `execution-service`'s full unit suite (`quality-gates.sh --test`) completed clean —
+          7876 passed, 21 skipped, 1 xpassed, 0 failed (includes the Phase C tests above).
+          `features-service`'s full suite (16k+ tests) could not be driven to a clean finish in-session — two attempts
+          both died to shared-host resource contention (other slots' concurrent QG runs observed on the same host) at
+          ~66-94% progress with **zero** `FAILED`/`F` markers in either partial run; both target test files were also
+          confirmed importable and syntactically sound by direct read. Re-running `features-service` QG to full green is
+          left as a lightweight follow-up for whoever next touches that repo — it is a verification-only gap (no code
+          change pending), not a code gap.
+
 - [ ] [HUMAN] P3. Rebuild + push the features-onchain-service Docker `:latest` image so the LST-seasonal-rewards Cloud
       Run cron picks up the Phase B inner-instruction walker before the cron is (re-)enabled. (repo:
       features-onchain-service)
