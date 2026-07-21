@@ -178,8 +178,22 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       green in both repos (a pre-existing, unrelated repo-wide QG red — `plan-discipline` regression + a missing
       `referenced_by` frontmatter key on `codex/02-data/sports-2020-06-data-floor.md` — was fixed by another agent / a
       small triage fix before this shipped; see Progress Log).
-- [ ] [BACKEND] P1. **Fix the hardcoded bucket** (QG 5.69) — `_repo_ci_alerts.py:27` and `deployments_inventory.py:342`
-      → `resolve_bucket_name()`. Update `tests/unit/test_route_deployments_inventory.py:854` which asserts the literal.
+- [x] ✅ [BACKEND] P1. **Fix the hardcoded bucket** (QG 5.69) — `_repo_ci_alerts.py:27` and
+      `deployments_inventory.py:342` → `resolve_bucket_name()`. Update
+      `tests/unit/test_route_deployments_inventory.py:854` which asserts the literal. — `deployment-service@9343a2f`:
+      added a `cicd-events` GCP storage kind (bare literal `"unified-trading-cicd-events"` — no project-id/env
+      substitution, since the bucket is a GitHub Actions `vars.CICD_EVENTS_BUCKET` repo variable default, not
+      per-project-provisioned; GCP-only, no AWS mirror needed). `deployment-api@7e7fa5a`: `_repo_ci_alerts.py`'s
+      `_read_ledgers_sync()` and `deployments_inventory.py`'s `_persist_alert()` both now resolve the bucket lazily
+      (inside the function, wrapped in `try/except BucketNamingError`) rather than as a module-level constant — matches
+      the established convention in this same codebase (module-level `resolve_bucket_name()` calls exist ONLY in
+      disposable one-shot backfill scripts, never in long-lived service code; confirmed via a workspace-wide grep before
+      implementing) and mirrors the sibling `alerting-service` bucket resolution already in
+      `_read_alerting_service_sync()`. A resolution failure degrades gracefully (skips the affected read/write, logs a
+      warning) rather than crashing the module at import time or breaking the inventory computation `_persist_alert`
+      rides on. Updated `test_route_deployments_inventory.py:854`'s literal-bucket assertion + added
+      `TestReadLedgersSync` (2 new tests: resolves + reads correctly; a resolution failure degrades to the
+      alerting-service-only merge, never blanking the ledger). `quality-gates.sh` green in both repos.
 - [ ] [BACKEND] P1. **Fix the read-modify-write row-drop race — BOTH instances.** (a) The one in
       `issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` (the GHA composite action
       `.github/actions/persist-event` writing `cicd/events/…` — a bash fix via the template +
@@ -342,6 +356,19 @@ Notes worth surfacing beyond the matrix:
   PERSIST step (writes `repo:"__REPO_NAME__"` — always self, no defect) and any caller whose alert has no single
   attributable subject repo (`ldr-ci-monitor.yml`'s fleet-wide digest, `build-smoke-all-repos.yml`'s aggregate "one or
   more repos failed" — both structurally have no one subject_repo to name).
+
+- **2026-07-21** — Todo 5 (hardcoded bucket, QG 5.69) shipped, `deployment-service@9343a2f` + `deployment-api@7e7fa5a`.
+  Confirmed via a workspace-wide grep that module-level (import-time) `resolve_bucket_name()` calls exist ONLY in
+  disposable dated backfill/migration scripts, never in real service package code — every real service call site is lazy
+  (inside a function, typically wrapped in `try/except` with a fallback), so both fixes follow that convention rather
+  than a bare module constant. Debugging note for future todos touching this bucket: a test that calls
+  `_persist_alert()` (or anything hitting the real `resolve_bucket_name()`) WITHOUT mocking it can intermittently fail
+  under the full `quality-gates.sh` run even though the exact same pytest invocation passes when run manually outside
+  the wrapper — root cause not fully isolated (not reproducible via direct
+  `pytest tests/unit/ --allow-hosts=... --cov=... -n 1` with matching flags across 3 attempts), but mocking
+  `resolve_bucket_name` at the test level (the pattern the existing `alerting-service` tests already use) makes the test
+  both correct (it isn't asserting on live filesystem state from a sibling repo) and immune to whatever the
+  environmental difference is. Flagging in case this resurfaces for a future bucket-resolution test in this file.
 
 ## Codex SSOTs
 
