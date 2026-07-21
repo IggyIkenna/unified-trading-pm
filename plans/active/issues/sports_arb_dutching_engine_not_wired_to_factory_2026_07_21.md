@@ -107,9 +107,19 @@ Needs an architecture decision, not a mechanical fix — filing the facts + opti
 
 ## Todos
 
-- [ ] [BACKEND] P2. Pick an option above (needs an architecture/product decision — `/blocked` or operator input) and
-      wire `SportsArbDutchingEngine` into the live dispatch path, or delete it if genuinely superseded. (repo:
-      strategy-service, unified-api-contracts if Option A)
+- [x] ✅ [BACKEND] P2. Operator picked Option A (dedicated archetype, unified-api-contracts@cf28a962 +
+      strategy-service@545a527b). Added `StrategyArchetype.ARBITRAGE_SPORTS_DUTCHING` to UAC (`ARCHETYPE_TO_FAMILY` + a
+      real 2-leg `archetype_leg_spec_seeds.py` structure citing the engine); `SportsArbDutchingEngine.ARCHETYPE`
+      repointed from `ARBITRAGE_PRICE_DISPERSION` to the new value; `factory.py`'s `ARCHETYPE_ENGINE_REGISTRY` now maps
+      it to `SportsArbDutchingEngine`; `archetype_slots_sports.py`'s `SPORTS_ARBITRAGE` slot re-pointed with
+      `initial_config` keys matching the engine's real params (`outcome_set`/`candidate_venues`/
+      `min_overround_savings_pct`, not the old `ArbitragePriceDispersionEngine` shape); `archetype_defaults.py` got a
+      Kelly tier (`_TIER_STABLE_STRUCTURAL`, matching `ARBITRAGE_PRICE_DISPERSION`) + a `GREENFIELD_ARCHETYPES` entry
+      (no legacy v0/v1 strategy to migrate); `target_universe/catalog_trading.py` got a new
+      `build_arbitrage_sports_dutching()` builder (4 seed rows: epl/laliga/seriea 3-way + nba 2-way) wired into
+      `catalog.py`'s `_BUILDERS_BY_ARCHETYPE`. Updated `test_sports_arb_dutching.py`'s identity fixture +
+      `test_ml_directional_continuous.py`'s `family_map`/`_archetype_min_params` + `test_archetype_leg_spec.py`'s
+      hardcoded real/not_registered counts (53→54) to match. (repo: strategy-service, unified-api-contracts)
 - [ ] [SCRIPT] P3. Once wired, extend or replace `strategy-service/scripts/run_sports_arb_backtest.py` (currently
       targets `SPORTS_VALUE_BETTING` / `ML_DIRECTIONAL_EVENT_SETTLED` as a workaround for this gap) to also exercise the
       real `SportsArbDutchingEngine` path with the multi-venue odds-book fixture shape already proven in
