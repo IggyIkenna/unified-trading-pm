@@ -222,11 +222,11 @@ register ──/boot──▶ working ──/progress (heartbeat, load-bearing)�
 
 ### §2. Which call each agent class makes (verified)
 
-| Class                                                                                                    | `/boot`                                                                                                          | periodic `/progress`            | `/done`                                                                                      | Reaped by                              |
-| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------- |
-| **A — backlog worker**                                                                                   | yes (returns a task)                                                                                             | yes                             | yes (clean-tree+flip gated)                                                                  | normal lifecycle → idle → next         |
-| **B — one-off** (`plan_reconciler`, `plan_health`, `cicd`, `conflict_resolver`, `data_pipeline_failure`) | **yes** (reconciler DOES `/boot` — `slot_boot` 07:27:03; the plan's original "never /boot" premise is retracted) | yes (role-doc mandated ≤10 min) | **no** (Class B never `/done`; TmuxPruner/`reap_orphan_agents` archive `lifecycle-complete`) | today: the 4 paths in §0               |
-| **persistent** (`main`, review)                                                                          | yes                                                                                                              | yes                             | no                                                                                           | keeper respawns; review-slot exemption |
+| Class                                                                                                    | `/boot`                                                                                                          | periodic `/progress`            | `/done`                                                                                                                                                                                                                                                                  | Reaped by                              |
+| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| **A — backlog worker**                                                                                   | yes (returns a task)                                                                                             | yes                             | yes (clean-tree+flip gated)                                                                                                                                                                                                                                              | normal lifecycle → idle → next         |
+| **B — one-off** (`plan_reconciler`, `plan_health`, `cicd`, `conflict_resolver`, `data_pipeline_failure`) | **yes** (reconciler DOES `/boot` — `slot_boot` 07:27:03; the plan's original "never /boot" premise is retracted) | yes (role-doc mandated ≤10 min) | **yes** (2026-07-21 operator decision — role-aware task-less `/done` on completion → archive + free slot + stop-nudge, then stop; the next reap cleans the session. Supersedes the retracted "never `/done`, rely on session death" premise, measured broken 2026-07-21) | today: the 4 paths in §0               |
+| **persistent** (`main`, review)                                                                          | yes                                                                                                              | yes                             | no                                                                                                                                                                                                                                                                       | keeper respawns; review-slot exemption |
 
 ### §3. What `/boot` returns per role (todo 2)
 
@@ -268,11 +268,20 @@ knowledge lives in ONE place (the `/boot` response), not scattered across reaper
 ### §6. Why a one-off will NOT be reaped (the Gate answer, no reaper source required)
 
 A one-off boots like everyone else (→ `working`, so the two idle-scanning reapers can't see it), heartbeats ≤ timeout/2
-like everyone else (so the two silence reapers never compute it as silent), and its finish is a real session death that
-the pruner archives cleanly. The backend encodes "this is a task-less one-off" ONCE — in the `/boot` response that moves
-it to `working` — instead of teaching each reaper to recognize its kind. A fourth reaper added tomorrow inherits the
-protection for free, because it reads `status` + `last_ping` like the others, and a live one-off looks identical to a
-live fleet worker on both.
+like everyone else (so the two silence reapers never compute it as silent), and on finishing it POSTs an explicit
+**role-aware `/done`** that archives it + frees the slot + flags it so `WorkerLivenessKicker` stops nudging it, then it
+stops (the next reap cleans the now-dead session). The backend encodes "this is a task-less one-off" ONCE — in the
+`/boot` response that moves it to `working` — instead of teaching each reaper to recognize its kind. A fourth reaper
+added tomorrow inherits the protection for free, because it reads `status` + `last_ping` like the others, and a live
+one-off looks identical to a live fleet worker on both.
+
+> **⚠️ 2026-07-21 correction (operator decision).** This §6 originally read "its finish is a real session death that the
+> pruner archives cleanly." **Measured false** on 2026-07-21: a finished one-off does NOT die — "EXIT" only ends the
+> Claude turn, the session lingers at an idle `❯` prompt, the Kicker re-nudges it, and every session-death-gated reaper
+> is blind → immortal (15 zombies pinned 15/16 slots → reconciler `503`). The terminal transition is therefore an
+> **explicit role-aware `/done`**, not an inferred session death. See Progress Log 2026-07-21 and the codex updates
+> (`agent-orchestrator-single-vm-architecture.md` § Class B, `agent-orchestrator-worker-liveness.md` § completion
+> contract).
 
 ## Safeguards
 
@@ -344,3 +353,18 @@ live fleet worker on both.
     only acts on `killed` slots whose session is still ALIVE; a `killed` slot whose session is GONE is left `killed`
     until AutoSpawn reuses it (`autospawn.py:678/739` treat `killed`/`stale` as spawnable). Cosmetic on the dashboard,
     not a dispatch blocker.
+- **2026-07-21 (later) — operator decided the terminal-transition mechanism + docs-first reconciliation.** After the
+  clear, a fresh escalation-drain wave produced 13 more finished `cicd` zombies (the same leak, refilling from a 32-deep
+  `ldr_qg_failure` backlog, mostly resolving `qg_v2_green` = stale). The operator ruled: **do not keep clearing — fix
+  the root cause.** Terminal transition for EVERY `one_shot` + `scheduled` agent = complete work → POST an explicit
+  **role-aware `/done`** (backend archives `lifecycle-complete` + frees the slot + flags it so `WorkerLivenessKicker`
+  stops nudging) → stop; the next reap cleans the session. This REVERSES the plan's original §2/§6 "Class B never
+  `/done`" premise and the SAME premise in two codex docs. Per operator ordering (**docs before code**), reconciled now:
+  (a) `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — Class-B banner + §Reap correction; (b)
+  `codex/04-architecture/agent-orchestrator-worker-liveness.md` — new "one-off/scheduled completion contract" section
+  (the 4th, finished-immortal failure mode); (c) this plan §2 row + §6 (above). **Code phase — NOT started, awaiting the
+  operator's next audit:** extend `/done` to accept a task-less role-aware completion (today it hard-requires
+  `task_id` + a plan-flip → 404/409 for a task-less one-off, verified in `server/routes/slots_worker.py:616-767`);
+  archive + free + stop-nudge on it; rewrite all 5 role docs' non-functional "then EXIT" to the real `/done`+stop call
+  (`cicd`, `conflict_resolver`, `data_pipeline_failure`, `plan_health`, `plan_reconciler`); add the completion step to
+  the boot prompt; then delete the `f641968`/`1e7fec0` carve-outs.
