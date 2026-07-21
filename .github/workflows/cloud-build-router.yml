@@ -943,6 +943,9 @@ jobs:
         "Tier-Ordered Deploy Warning | Repo: ${{ needs.route-build.outputs.repo }} v${{
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | Blocking: ${{
         needs.route-build.outputs.blocking_repos }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -959,6 +962,9 @@ jobs:
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | URL: ${{
         needs.route-build.outputs.health_check_service_url }} | Health check timed out after 5 min. deployed_versions
         NOT updated."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -975,6 +981,9 @@ jobs:
         "Post-Deploy Smoke Test FAILED | Repo: ${{ needs.route-build.outputs.repo }} v${{
         needs.route-build.outputs.version }} | Env: ${{ needs.route-build.outputs.env }} | /health passed but /readiness
         or response shape failed. deployed_versions NOT updated."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -994,6 +1003,9 @@ jobs:
         "EMERGENCY: Order flow resumed after failed deploy | Repo: ${{ needs.route-build.outputs.repo }} | Build failed
         but order flow was halted pre-deploy. Order flow has been automatically resumed. Investigate build failure
         immediately."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -1013,6 +1025,9 @@ jobs:
         "Cloud Build Regional Fallback | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
         needs.route-build.outputs.env }} | Primary region asia-northeast1 failed. Build ran in fallback region: ${{
         needs.route-build.outputs.build_region }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -1031,6 +1046,9 @@ jobs:
         "Cloud Build ${{ needs.route-build.outputs.build_failure_reason }} | Repo: ${{ needs.route-build.outputs.repo }}
         | Env: ${{ needs.route-build.outputs.env }} | Branch: ${{ needs.route-build.outputs.branch }} | Region: ${{
         needs.route-build.outputs.build_region }} | Log: ${{ needs.route-build.outputs.build_log_url }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -1049,6 +1067,9 @@ jobs:
       message:
         "Cloud Build poll exhausted after 60 attempts | Repo: ${{ needs.route-build.outputs.repo }} | Build still
         running or unresponsive. Log: ${{ needs.route-build.outputs.build_log_url }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -1095,6 +1116,9 @@ jobs:
         `${{ needs.route-build.outputs.repo }}-prod` Cloud Build trigger (the router runs `<repo>-<env>`). NOTE:
         `create-cloud-build-feature-triggers.sh` only creates `<repo>-feature-build` triggers for `feat/*`, NOT the
         prod-deploy trigger — provision that separately at cutover."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -1127,6 +1151,9 @@ jobs:
         --member=serviceAccount:github-actions-deploy@central-element-323112.iam.gserviceaccount.com
         --role=roles/cloudbuild.builds.editor`. The image build may have fired via a direct push:main trigger if one is
         configured — but this IAM gap must be closed to make the CI router path reliable."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}

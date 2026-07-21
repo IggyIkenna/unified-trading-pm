@@ -383,6 +383,9 @@ jobs:
         "AWS CodeBuild Not Configured | Repo: ${{ needs.route-build.outputs.repo }} | Env: ${{
         needs.route-build.outputs.env }} | Setup: provision CodeBuild project `${{ needs.route-build.outputs.repo }}-${{
         needs.route-build.outputs.env }}` in ap-northeast-1 with buildspec.aws.yaml."
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -401,6 +404,9 @@ jobs:
         "AWS CodeBuild ${{ needs.route-build.outputs.build_failure_reason }} | Repo: ${{ needs.route-build.outputs.repo
         }} | Env: ${{ needs.route-build.outputs.env }} | Branch: ${{ needs.route-build.outputs.branch }} | Log: ${{
         needs.route-build.outputs.build_log_url }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -419,6 +425,9 @@ jobs:
       message:
         "AWS CodeBuild poll exhausted after 60 attempts | Repo: ${{ needs.route-build.outputs.repo }} | Build still
         running or unresponsive. Log: ${{ needs.route-build.outputs.build_log_url }}"
+      # subject_repo: this job runs IN unified-trading-pm; the alert is ABOUT the routed repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.route-build.outputs.repo }}
       severity: "WARNING"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}

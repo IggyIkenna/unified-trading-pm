@@ -189,6 +189,9 @@ jobs:
       message:
         "Package publish | ${{ github.event.client_payload.repo }} v${{ github.event.client_payload.version }} |
         Registry: asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries"
+      # This job runs IN unified-trading-pm; the alert is ABOUT the published repo
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ github.event.client_payload.repo }}
       severity: "INFO"
       conclusion: ${{ needs.publish.result }}
       workflow_name: ${{ github.workflow }}
