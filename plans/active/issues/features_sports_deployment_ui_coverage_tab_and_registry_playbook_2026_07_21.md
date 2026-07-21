@@ -64,9 +64,21 @@ File as a P3 backlog item — neither is blocking, both are worth picking up opp
 
 ## Todos
 
-- [ ] [UI] P3. Build a deployment-ui panel/tab surfacing per-feature-group honest coverage for sports (reading the
+- [x] ✅ [UI] P3. Build a deployment-ui panel/tab surfacing per-feature-group honest coverage for sports (reading the
       Phase-3 `_sports_honest_coverage` axis + the drift comparator's `DriftEvent` output). pw:L2 regression spec
-      required per the UI testing-layers codex. (repo: deployment-ui)
+      required per the UI testing-layers codex. (repo: deployment-ui) — deployment-ui@d8def9c | pw:L2 ✓ | regression:
+      tests/smoke/sports_feature_coverage_card.spec.ts. Shipped `SportsFeatureCoverageCard` on the
+      features-sports-service Data Status tab, reading the 3 feature-rollup data_types
+      (FIXTURE_FEATURES/ODDS_FEATURES/DERIVED_FEATURES) that `sports_honest_coverage()` already serves over HTTP via
+      `GET /api/data-status/turbo` — verified live (found/expected shards + per-league `missing_dates`), previously only
+      reachable 5 levels deep in the generic drilldown. **Scope note**: the per-CALCULATOR (34-calculator,
+      `FEATURES_SPORTS_PER_CALC_META`) breakdown and the `DriftEvent` comparator output are NOT reachable over HTTP yet
+      — verified no route/cron wraps either (`coverage_drift.py` has zero caller in `deployment_api/routes/`/`main.py`).
+      Rendering those would mean inventing a shape the backend doesn't return (forbidden by the UI-testing-layers
+      "render exactly what the API returns" rule), so the card shows the 3 rollups it CAN honestly render plus an
+      explicit "not wired yet" note pointing at todo 3 below (INFRA, the remaining wiring for `DriftEvent`; the
+      per-calculator HTTP route is a further follow-up beyond this card's scope). Unit spec:
+      `tests/unit/components/SportsFeatureCoverageCard.test.tsx`.
 - [ ] [DOC] P3. Write a codex playbook under `codex/02-data/` documenting how to register a new sports feature
       calculator against the coverage-gating architecture (UAC `FEATURE_UPSTREAM_REQUIREMENTS` entry, `_gate_then_run`
       wiring in features-service, the deployment-api per-calc-meta entry each new calculator needs). (repo:
