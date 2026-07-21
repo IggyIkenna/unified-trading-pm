@@ -345,7 +345,14 @@ reconciling + signing off, not redoing.)_
       `mvp_backfill_cefi_tick_v10_2026_06_27.md` waves, not fully closed here). Flipped with this caveat rather than a
       bare check. Corrected 2026-07-12 — doc-reconciliation autofix findings 358-360,
       `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling. (was: `- [ ]`
-      unchecked.)
+      unchecked.) > **[⚠️ CORRECTION 2026-07-21, plan-reconcile]**: the "G4 ... fully SIGNED OFF" claim above is
+      STALE. > `instruments_foundation_completeness_2026_06_24.md:520-527` ran a later verify-rerun (2026-07-13/14,
+      finding > 105) and reversed it: gate G4 enforces Layer-1 AND Layer-2 per operator ruling C4(a) and CANNOT close
+      until D2 > (`cefi_layer1_denominator_gaps`) lands — cefi Layer-1 was measured INCOMPLETE (72.60-73.61%) at that
+      time. > `instruments_foundation_completeness` is the actual gate-owning plan; treat **G4 as OPEN pending D2**
+      unless the > operator has re-ruled since. This tracker's own Stage 2b ("cefi gate-authority fix" / D2 item) is
+      still `[ ]` > unchecked, which is internally consistent with G4 still being open — the stale claim was this one
+      bullet.
 - [ ] [DATA] P1. tradfi **§8 retirement purge** (4-leg GCS delete — ICE / CBOE-OPRA / VX-spread / VIX-cash) —
       **OPERATOR-CONFIRM**
 - [ ] [DESIGN] P1. defi completeness **oracle** design

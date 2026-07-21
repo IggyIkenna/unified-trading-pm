@@ -17,7 +17,7 @@ created: 2026-05-21
 name: trading_agent_master
 tier: L2
 priority: P0
-assigned_vm: vm-trading-core
+assigned_vm: planning # corrected 2026-07-21 (plan-reconcile) — legacy multi-VM host id, deprecated 2026-06-27
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:

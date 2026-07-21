@@ -86,8 +86,10 @@ heartbeat
 - **Decouple existence from enrichment** — census renders rows from the fast GCE list; registry metadata is best-effort
   per row (slow/absent registry → "—" columns, never a missing row). → solves #3 partial-render.
 - **AWS-ready** — a **DynamoDB** backend behind the same interface, cloud-selected (GCP → Firestore, AWS → DynamoDB)
-  like `resolve_bucket_name` selects GCS vs S3. Both are ~free at 10–100 VMs; at 5,000 VMs Firestore ≈ $13/day, DynamoDB
-  ≈ $4.5/day, both cheaper than the current GCS overwrite (~$36/day). No cross-cloud Firestore-from-AWS.
+  like `resolve_bucket_name` selects GCS vs S3. Both are ~~free at 10–100 VMs; at 5,000 VMs Firestore ≈
+  $13/day, DynamoDB
+  ≈ $4.5/day, both cheaper than the current GCS overwrite (~~$36/day). No cross-cloud
+  Firestore-from-AWS.
 - **Heartbeat cadence is the cost lever** — cost scales linearly with write frequency; dial to 2–5 min at high scale
   (resource-sample forensics ride the run.log per `utl@600fe4f4`, so a slower registry write loses no resource history).
 - **Safe migration, never a flag-day** — dual-write → migrate every reader (dual-write outlives the last reader) →
@@ -95,16 +97,20 @@ heartbeat
 - **History in docs, not data** — after decommission the GCS blobs are deleted; a codex note records the GCS→Firestore
   lineage.
 
-## Phase index (the dispatched work — draft-gated chain: only P0 `active`, P1–P5 `draft`)
+## Phase index (the dispatched work)
 
-| Phase  | Plan                                                                                                | Role             | Model / effort     | Status     | Gate                                        |
-| ------ | --------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | ---------- | ------------------------------------------- |
-| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md) | infra            | Sonnet / high      | **active** | none — dispatches immediately               |
-| **P1** | [p1 — Firestore writer + dual-write](deployment_registry_firestore_p1_dualwrite_2026_07_14.md)      | infra            | **Opus** / high    | **draft**  | activated by P0's last todo · `sequential`  |
-| **P2** | [p2 — reader migration + decouple](deployment_registry_firestore_p2_readers_2026_07_14.md)          | backend-engineer | **Opus** / **max** | **draft**  | activated by P1 (∥ P4) · `sequential`       |
-| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)           | backend-engineer | **Opus** / high    | **draft**  | activated by P2 · `sequential` (autonomous) |
-| **P4** | [p4 — DynamoDB (AWS-ready)](deployment_registry_firestore_p4_dynamodb_2026_07_14.md)                | infra            | Sonnet / high      | **draft**  | activated by P1 (∥ P2/P3)                   |
-| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)               | review           | Sonnet / high      | **draft**  | activated by P3 or P4 (last to finish)      |
+> **[⚠️ REFRESHED 2026-07-21, plan-reconcile]** — this table + the `related:` links above were stuck at the 2026-07-14
+> initial-draft snapshot; the chain has actually progressed to P3. Corrected below (was: P1/P2/P4 all shown `draft`,
+> `related:` links pointing at `plans/active/...` with no `../archive/` prefix).
+
+| Phase  | Plan                                                                                                              | Role             | Model / effort     | Status                                                                                                                                                                | Gate                                        |
+| ------ | ----------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **P0** | [p0 — unblock (reaper + graceful complete)](deployment_registry_firestore_p0_unblock_2026_07_14.md)               | infra            | Sonnet / high      | **complete**                                                                                                                                                          | none — dispatched immediately               |
+| **P1** | [p1 — Firestore writer + dual-write](../archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md) | infra            | **Opus** / high    | **complete (archived)**                                                                                                                                               | activated by P0's last todo · `sequential`  |
+| **P2** | [p2 — reader migration + decouple](../archive/2026_07/deployment_registry_firestore_p2_readers_2026_07_14.md)     | backend-engineer | **Opus** / **max** | **complete (archived)**                                                                                                                                               | activated by P1 (∥ P4) · `sequential`       |
+| **P3** | [p3 — cutover + GCS decommission](deployment_registry_firestore_p3_cutover_2026_07_14.md)                         | backend-engineer | **Opus** / high    | **active** — self-halted on a real data-loss guard (prod Firestore `deployments` measured EMPTY 2026-07-17; GCS delete blocked pending an operator GO/NO-GO)          | activated by P2 · `sequential` (autonomous) |
+| **P4** | [p4 — DynamoDB (AWS-ready)](../archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md)           | infra            | Sonnet / high      | **complete (archived)**                                                                                                                                               | activated by P1 (∥ P2/P3)                   |
+| **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)                             | review           | Sonnet / high      | **draft** — blocked on P3; scope now narrower than originally written (P4's DynamoDB half of the codex-sync mandate is already done via P4's own archival codex-sync) | activated by P3 or P4 (last to finish)      |
 
 ## Migration invariants (hold across every phase)
 

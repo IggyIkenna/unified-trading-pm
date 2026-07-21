@@ -42,11 +42,12 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 3)
 # Phase 3 — Cutover to Firestore-only + decommission the GCS registry
 
 > **Dispatch:** `assigned_role: backend-engineer` · **model: Opus** (`opus-required`) · **effort: high**.
-> `status: draft` — activated by Phase 2's last todo; `sequential: true` orders its todos. (Phase 4 runs in parallel off
-> Phase 1.) **Fully autonomous — NO operator gates.** **Pulled to LOCAL execution 2026-07-14** (`assigned_vm: NA` /
-> `execution_scope: local-only`, same as the rest of this phase chain) — see Phase 0's Dispatch note for why. The
-> irreversible GCS deletion is made safe by the snapshot-before-delete (recoverable), not a human sign-off; the "all
-> readers migrated" check is an agent verification.
+> `status: active` (activated by Phase 2's last todo, per frontmatter — this line corrected 2026-07-21, plan-reconcile:
+> was stale `draft` boilerplate copied from the phase-chain template and never updated on activation);
+> `sequential: true` orders its todos. (Phase 4 runs in parallel off Phase 1.) **Fully autonomous — NO operator gates.**
+> **Pulled to LOCAL execution 2026-07-14** (`assigned_vm: NA` / `execution_scope: local-only`, same as the rest of this
+> phase chain) — see Phase 0's Dispatch note for why. The irreversible GCS deletion is made safe by the
+> snapshot-before-delete (recoverable), not a human sign-off; the "all readers migrated" check is an agent verification.
 
 > **🔴 BLOCKED (2026-07-14) — GCS DELETE HELD UNTIL OPERATOR CONFIRMS THE FLEET IS ON FIRESTORE (operator decision
 > 2026-07-14).** The verify gate (todo 1) ran and HALTED: the prod `deployments` Firestore collection is EMPTY —
