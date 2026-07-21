@@ -16,7 +16,7 @@ created: 2026-06-25
 name: escalation_and_disaster_recovery_master
 tier: L4
 priority: P1
-assigned_vm: vm-cross-cutting
+assigned_vm: planning # corrected 2026-07-21 (plan-reconcile) — legacy multi-VM host id, deprecated 2026-06-27
 parent: master_to_live_defi_2026_05_23
 co_operators: [ikenna, harsh]
 codex_ssots: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/agent-orchestrator-overview.md]

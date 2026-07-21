@@ -58,7 +58,9 @@ estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
 locked_by:
 locked_since:
-supersedes: sports_consolidated_closeout_2026_07_19.md
+supersedes: # corrected 2026-07-21 (plan-reconcile) — sports_consolidated_closeout_2026_07_19.md still has 51 open/11
+  # done todos (real, unexecuted work); this doc is an entry-point redirect only, not a replacement — already
+  # correctly listed in related: above. supersedes:/superseded_by: would wrongly read as "safe to archive/deprioritize".
 superseded_by:
 depends_on:
 source: operator ruling 2026-07-21 (2020-06 sports floor + consolidation request)

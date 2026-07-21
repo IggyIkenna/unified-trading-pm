@@ -1,7 +1,11 @@
 ---
 doc_type: plan
-title: pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus walk
-summary: Promote pipeline_mode from a column to an on-disk hive partition key in GCS paths by bundling the change as a rider into each asset group's next scheduled whole-corpus manifest canonicalisation walk.
+title:
+  pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus
+  walk
+summary:
+  Promote pipeline_mode from a column to an on-disk hive partition key in GCS paths by bundling the change as a rider
+  into each asset group's next scheduled whole-corpus manifest canonicalisation walk.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -54,6 +58,17 @@ forbidden. Reads filter by column-scan (low cardinality, ~10 enum values) until 
 performance per the parent plan's "Out of scope" note.
 
 ## Coverage status
+
+> **[⚠️ NEEDS VERIFICATION 2026-07-21, plan-reconcile]**: the cefi/tradfi/prediction rows below name L3 owner plans that
+> are now `plans/archive/2026_07/` (archived+superseded by their asset-group `*_consolidated_closeout_2026_07_18`
+> plans), and the successor umbrella `data_completion_to_100_all_ag_2026_06_21.md` never mentions "hive partition" and
+> has no tracked C-pipeline_mode-RIDER todo of its own — so this table's coordination mechanism (rider bundled into a
+> named walk) looks orphaned. **However**, a live-code spot-check found `pipeline_mode=` already present as a path
+> segment in current production writes across cefi/defi (e.g. `.../day=<date>/pipeline_mode=live_hyperliquid/...`,
+> `.../pipeline_mode=live_onchain_subgraph/...` — 80+ occurrences in `data_completion_to_100_all_ag_2026_06_21.md`
+> alone), meaning the on-disk partition may already be live as a side effect of other writer work, not silently dropped.
+> This plan's own checklist below was never verified against real GCS state either way — recommend an actual
+> `gcloud storage ls`/manifest check per asset_group before treating this as done OR as a gap.
 
 Each asset_group's `pipeline_mode=` partition is a RIDER bundled into **that AG's L3 manifest-canonicalisation walk**
 (its named C-pipeline_mode rider todo). Completing the walk closes this plan's row for that AG — there is no separate

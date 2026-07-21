@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -559,7 +559,18 @@ Discriminator = **does a manifest row exist**.
 - **`_ID_FORM_CHECKED_ASSET_GROUPS` widening for `defi` → use the grammar already ratified in this plan** ("Instrument-
   uid grammar per DeFi type" above) — not a new decision, just wiring it into
   `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`'s checker. `prediction`'s id-form stays out of scope here
-  — it's already flagged cross-AG as its own future closeout.
+  — it's already flagged cross-AG as its own future closeout. **✅ DONE `unified-api-contracts@502ef57e`**: a new
+  `_DEFI_INSTRUMENT_ID_RE` (`VENUE-CHAIN:TYPE:SYMBOL`, covering every ratified per-type variant — SPOT_ASSET/POOL
+  fee-in-symbol/A_TOKEN+DEBT_TOKEN market-id-suffix/LST+YIELD_BEARING+STAKING+RESTAKING bare/SOLANA_AMM_POOL+
+  SOLANA_LENDING) is wired into `is_canonical_instrument_id()`, and `_ID_FORM_CHECKED_ASSET_GROUPS` is now
+  `{"cefi", "defi"}`. Same session also closed the sibling residual item — `build_instrument_id` fails loud
+  (`ValueError`) on a `symbol` carrying an embedded `:` for every non-sports/prediction asset group, removing the
+  double-wrapped-catalogue-miss-id mechanism at the shared root (see
+  `issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` § 7). **Measured consequence**: today's DeFi
+  single-instrument filenames are still the bare `symbol` column (MTDS `_resolve_file_symbol`'s own docstring —
+  "defi/sports are untouched"), so this widening is expected to report most of the current DeFi corpus `NON_CANONICAL`
+  by id-form until the writer emits the wrapped filename (separate, service-side, not done here) — the same
+  honest-disclosure outcome the original CeFi widening produced.
 - **UTL `_derive_instrument_id.py` dispatch key `('defi','lending')`** — once the EVM retire lands, `lending` stops
   being produced for EVM; retarget/split the dispatch so Solana's `SOLANA_LENDING` grain (untouched by the retire, per
   above) keeps a live dispatch entry. Concrete implementation task, not a standing fork — resolves

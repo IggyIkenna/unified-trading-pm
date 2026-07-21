@@ -609,10 +609,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                          gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                          ```
+                              gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                              ```
 
-                          [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                              [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -1156,16 +1156,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                          `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                          (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                          VM ran current code without a refresh.
+                              `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                              (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                              VM ran current code without a refresh.
 
-                          Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                          (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                          `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                              Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                              (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                              `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                          Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                          (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                              Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                              (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1556,8 +1556,11 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
 
 ### Cross-epic handshakes
 
-- **Depends on:** `cross_cutting_may_23_SUPERSEDED_2026_05_21` for strategy catalogue, strategy IDs, client wiring, UI
-  replication of manual-trade DART, infrastructure baseline.
+- **Depends on:** `client_isolation_and_governance_master` (strategy catalogue, strategy IDs, client wiring) +
+  `infrastructure_master` (infrastructure baseline) + `observability_master` (UI replication of manual-trade DART) —
+  repointed 2026-07-21 (plan-reconcile) from `cross_cutting_may_23_SUPERSEDED_2026_05_21`, which carries a clean
+  SUPERSEDED banner naming exactly these 3 successors; the deliverables it named were resolved via its own "Open
+  questions" section before it was superseded, so this was a dangling reference, not a live blocker.
 - **Provides to:** `cefi_master` cefi_ml deliverable (CeFi venue connectivity overlap on Bybit / Binance / OKX — same
   execution-service adapters, same alerting rules, same kill-switch wiring; only strategy-decision layer differs between
   rules-based carry and ML signal).

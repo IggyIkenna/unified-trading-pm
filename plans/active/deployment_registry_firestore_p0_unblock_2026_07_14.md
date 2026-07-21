@@ -103,11 +103,14 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       in `test_daemon.py`: SIGTERM archives status=failed, run()'s post-loop `complete()` is idempotent after a signal,
       a raising `store.complete` inside the handler doesn't propagate). Both repos' `quality-gates.sh --no-fix` run
       fresh (sentinel cleared first, not a cache hit) green: deployment-api 128s, unified-trading-library 151s.
-- [ ] [INFRA] P0. Ship: commit + push deployment-api and UTL changes (cite `<repo>@<sha>` each) and flip this plan's
+- [x] [INFRA] P0. Ship: commit + push deployment-api and UTL changes (cite `<repo>@<sha>` each) and flip this plan's
       items (`docs(plans):`). THEN hand off (draft-gated chain): edit
       `deployment_registry_firestore_p1_dualwrite_2026_07_14.md` frontmatter `status: draft`→`active` and commit
       (`docs(plans):`), so the fleet ingests Phase 1. Activate ONLY the immediate next phase, nothing further
-      downstream.
+      downstream. — [flipped 2026-07-21, plan-reconcile, false-unchecked]: the handoff plainly happened —
+      `plans/archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md` is `status: complete`, fully
+      shipped and archived 2026-07-15, and its own Progress Log says "Handoff: P2 + P4 both flipped `status: active`" —
+      confirming P1→P2→P3→P4 all progressed. This checklist item's checkbox just never caught up.
 
 ## Folded-in scope 2026-07-17 (registry-fork discovery — the REAL dual-write blocker)
 

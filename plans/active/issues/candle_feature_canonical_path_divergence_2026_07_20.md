@@ -395,3 +395,59 @@ staging, not the run from a few minutes earlier. Budget for this when landing a 
 canonical, both axes) — THE GATE before any prod-data executor → then build the P5 migration+purge executor (todos 2/3/9
 — census, tradfi-id quarantine, split-brain dedup) → P0 census + P6 drain/snapshot + P7 per-AG SPOT backward apply + P8
 verify/reconcile.
+
+### 2026-07-21 — ✅ THE GATE PASSED: writer proven emitting the LOCKED canonical shape on a real -test- VM (2 real bugs found + fixed along the way)
+
+Ran `/data-pipeline-check-mdps` (force+skip+canonical) against CEFI:DERIBIT:trades on the rebuilt tarball
+(`mdps@752eaff`). **First attempt failed with a real regression** (not the expected canonical-leg staleness): every
+force-leg write errored `Multi-source manifest write missing required source= kwarg` (VM exit 1, 0 objects). Root cause
+— `_resolve_candle_source_from_pipeline_mode`'s `has_source_priority`/`get_source_priority` lookup was keyed on the
+AGGREGATED `mdps_data_type_key` (a computed key almost never registered in `SOURCE_PRIORITY`), but `record_captured`'s
+own multi-source guard now evaluates `row_key["data_type"]` — the SOURCE type — since the coordinated manifest change.
+cefi/trades has 6 registered `SOURCE_PRIORITY` sources (tardis first), so the writer's own guard rejected the write its
+own source-resolver had just silently returned `None` for. **Fixed + shipped `mdps@2d720b4`** (dirty-deps carve-out):
+re-keyed the lookup on `source_data_type`; moved the resolver to the shared `canonical_writer_shaping.py` and wired the
+SAME fix into the streaming write path, which had NEVER passed `source=` at all (a pre-existing, independent gap the
+SOURCE-key change made much more likely to bite). Verified directly:
+`resolve_candle_source_from_pipeline_mode(CEFI, "trades", BATCH_TARDIS)` now returns `"tardis"` (was `None`).
+
+**Re-ran on the re-rebuilt tarball — THE GATE PASSED.** 29/60 instrument×timeframe cells succeeded (217,679 candles
+written); ground-truthed an actual object directly on GCS:
+
+```
+gs://market-data-tick-cefi-test-central-element-323112/processed_candles/by_date/day=2026-06-27/
+  pipeline_mode=batch_tardis/timeframe=15m/data_type=trades/instrument_type=PERPETUAL/venue=DERIBIT/
+  DERIBIT:PERPETUAL:BTC-USD@INV.parquet
+```
+
+— exactly the LOCKED shape (`instrument_type=` present, SOURCE `data_type=trades`, `pipeline_mode=` present). Read the
+per-VM manifest shard directly via pyarrow for the same shard:
+`data_type=trades, instrument_type=PERPETUAL, pipeline_mode=batch_tardis, capture_status=captured, row_count=96, source=tardis`
+— **path==manifest holds exactly**, and `source=` resolved correctly (proves the fix). The remaining 31/60 failures are
+a SEPARATE, PRE-EXISTING gap (`cefi/trades/FUTURE: ALL FAILED (31/31)` — CEFI has no registered candle SchemaContract
+for standalone `instrument_type =future`, unrelated to path/manifest shape) — filed
+`issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`, not blocking this gate. The `canonical`
+leg still correctly reports `content_check=non_canonical` (todo 6, re-point the skill's declared-template comparator,
+still pending — expected, not a failure of the writer).
+
+**Gate verdict: the writer + manifest are proven correct on real infra. Proceeding to the P5 executor.**
+
+### 2026-07-21 — P5 executor build dispatched (workflow); raw-tick fleet CHECKED — P6/P7 must wait for it
+
+Dispatched a workflow (build agent + 3 parallel adversarial-review lenses — data-loss safety, dedup/shape correctness,
+operational safety — + a conditional fix pass) to write
+`market-data-processing-service/scripts/ migrate_candle_canonical_2026_07.py`, cloning
+`market-tick-data-service/.../migrate_tradfi_canonical_2026_07.py`'s proven safety structure (dry-run default,
+mapping-manifest + 0-orphan reconcile before any write, copy→verify→delete with the target==source no-delete guard,
+per-object try/except isolation, sharding) while explicitly NOT cloning its `source→aggregated data_type` transform —
+the candle migration's `data_type` axis is UNCHANGED (already SOURCE on existing objects, per the -test- gate proof
+above); only `instrument_type=`/`pipeline_mode=` are added + the 3 genuine defects (empty-stem, TradFi leaf-id,
+split-brain) repaired. Not yet reviewed/shipped — awaiting the workflow.
+
+**Checked the running raw-tick fleet before considering P6/P7 timing**:
+`gcloud compute instances list --filter="name~'canonical-migration-cefi'"` → **11 RUNNING / 7 TERMINATED (18 total)**,
+so the fleet is well underway but NOT complete. Per the coordination note already in the master catalogue row (sequence
+P7 AROUND the raw-tick fleet's completion, disjoint prefix but shared manifest-shard write contention): **P0 census / P6
+drain / P7 apply are correctly BLOCKED-pending on this external fleet finishing, not something to force through now.**
+This is a "cannot be done yet" deferral (elapsed time / external event), not a gap — re-check fleet status before
+starting P6.

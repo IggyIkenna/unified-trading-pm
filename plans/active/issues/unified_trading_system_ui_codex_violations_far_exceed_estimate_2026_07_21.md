@@ -1,0 +1,142 @@
+---
+doc_type: issue
+title: >-
+  unified-trading-system-ui's real [3.5/6] UI CODEX + no-explicit-any violation count is 10-80x the
+  ui_codex_gate_blind_to_app_router_layout_2026_07_21.md estimate — repo's quality-gates.sh cannot go fully green
+  without a dedicated multi-pass remediation effort
+summary: >-
+  Discovered while working ui_codex_gate_blind_to_app_router_layout_2026_07_21.md todo 2 ("fix ~13 any-types and 4
+  console.log calls, plus add lib/chart-theme.ts"). Todo 1's gate fix (already shipped, unified-trading-pm@dd23d1d20) is
+  correct and working — but re-measuring against the now-firing [3.5/6] block plus a full ESLint no-explicit-any pass
+  shows the real violation surface is far larger than the original manual audit found: 84 console.* calls (not 4 — the
+  manual audit only grepped `console.log` specifically, missing `console.error/warn/debug/info`, which the gate's actual
+  rg pattern also blocks) across 49 files, ~60 real `any`-type usages (not ~13 — the manual audit's `: any` grep missed
+  `as any` casts, generic `<any>`, `any[]`, etc.) across ~30 files, 1082 hardcoded-colour hits across 100 files (a
+  category the original issue doc's finding never mentioned as a violation at all), and 30 hardcoded
+  `http://localhost:PORT` URLs (also never mentioned). Because `[3.5/6]` scans the WHOLE `app/`/`components/`/`lib/`
+  tree (not a diff-scoped check), `bash scripts/quality-gates.sh` on this repo will fail for EVERY future commit,
+  regardless of what that commit touches, until this backlog clears — this is a structural, repo-wide blocker, not a
+  per-PR one.
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-system-ui]
+scope: [engineer]
+tags: [quality-gates, ui, codex-compliance, scope-estimate-miss, any-type, console-log, hardcoded-colours, blocking]
+related:
+  [
+    plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md,
+    codex/06-coding-standards/ui-testing-layers.md,
+  ]
+created: "2026-07-21"
+parent_epic: agent_operating_framework_master
+priority: P1
+assigned_vm: planning
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+source: [ui_codex_gate_blind_to_app_router_layout-002]
+resolved_by:
+locked_by:
+depends_on: []
+---
+
+# unified-trading-system-ui codex-compliance backlog is far bigger than scoped
+
+## What I found
+
+Measured (not estimated) counts on `live-defi-rollout` HEAD, after fast-forwarding to `unified-trading-pm@dd23d1d20`
+(todo 1's App-Router gate fix, already shipped and correct):
+
+| Category                                | Original estimate   | Measured                  |
+| --------------------------------------- | ------------------- | ------------------------- |
+| `console.log(...)` specifically         | 4                   | 4 (confirmed exact match) |
+| `console.*` (log/warn/error/debug/info) | not scoped          | 84 across 49 files        |
+| `: any` (narrow grep)                   | ~13                 | 19 across 11 files        |
+| `any` (broad — incl. `as any`, `<any>`) | not scoped          | ~60 across ~30 files      |
+| Hardcoded hex/rgb colours               | not scoped at all   | 1082 across 100 files     |
+| Hardcoded `http://localhost:PORT`       | not scoped at all   | 30                        |
+| `lib/chart-theme.ts`                    | missing (confirmed) | now added (this session)  |
+
+The `console.log`-specific and `: any`-narrow numbers line up with the original manual audit almost exactly — the
+original audit was accurate for the LITERAL patterns it checked, but the actual gate (`[3.5/6]`'s rg pattern) and the
+repo's own ESLint `@typescript-eslint/no-explicit-any: "error"` rule both check BROADER patterns
+(`console\.(log|warn|error|debug|info)`, any `any` usage not just `: any`) that the manual audit didn't probe. The
+colour (1082) and localhost (30) categories were never checked by the original audit at all — todo 2's brief only named
+any-types/console.log/chart-theme, not these.
+
+**Structural consequence**: `base-ui.sh`'s `[3.5/6]` block `rg`s the WHOLE `${_CODEX_ROOTS[@]}` tree (`app/`,
+`components/`, `lib/`), not a diff-scoped set of changed files. So `bash scripts/quality-gates.sh` on this repo will
+exit 1 at `[3.5/6]` for ANY future commit — including ones that touch none of these files — until the full backlog
+clears. This is not a "my PR is red" situation; it's "the repo's full-QG entrypoint is now structurally red for
+everyone" as a direct (correct, intended) consequence of fixing the App-Router blind spot in todo 1.
+
+## Why it matters
+
+- No one can get a clean `.qg_last_passed_sha` sentinel for `unified-trading-system-ui` via the normal
+  `quality-gates.sh` → `quickmerge --agent` flow right now, which blocks ALL future ships to this repo through the
+  standard pipeline (not just UI-codex-related ones).
+- The colour/localhost categories (1112 combined hits) are large enough that blind mechanical fixing risks visual
+  regressions across ~100 files with no Playwright coverage for most of them — exactly what the `ui_developer` craft's
+  "no change ships without a regression spec" rule exists to prevent. This is not a same-session, same-task fix.
+- Some of the 1082 colour hits are likely legitimate exclusions rather than real violations (e.g.
+  `app/(public)/signup/components/signup/signup-pdf.ts` is a generated-HTML-string builder for a downloadable PDF
+  document, not app theming — analogous to the already-excluded `globals.css`/`*.css`/`chart-theme.*` globs) and
+  `lib/mocks/fixtures/*.ts` (e.g. `strategy-instances.ts` alone contributes 294 hits) are fixture/mock DATA files
+  carrying per-category display-colour fields, not component code — these may warrant a `CODEX_COLOUR_EXCLUDE_GLOBS`
+  entry rather than a hand-edit, but that's a judgment call, not something to unilaterally decide mid-task.
+
+## What I actually shipped this session (bounded, verified)
+
+- Added `lib/chart-theme.ts` (CHART_COLORS/TOOLTIP_STYLE/GRID_STYLE/AXIS_STYLE/LEGEND_STYLE, using this repo's actual
+  `--color-chart-1..6`/`--color-popover`/`--color-border`/`--color-muted-foreground` tokens from `app/globals.css` —
+  deployment-ui's token names don't exist here, so I did not copy its file verbatim).
+- Migrated `components/trading/vol-surface-chart.tsx`'s hardcoded `LINE_COLORS` hex array to `CHART_COLORS` (one real
+  consumer, proving the theme file is wired, not a dead stub). Left that file's `CartesianGrid`/`XAxis` rgba() values
+  untouched — deferred to the colour-remediation pass below, out of scope for one file's spot-fix.
+- Removed the exact 4 `console.log(...)` stub calls in `components/dashboards/trader-dashboard.tsx` (placeholder nav
+  handlers with no real navigation wired yet — replaced with `TODO` comments, no behavior change).
+- Fixed the 1 real `any`-usage in `app/(platform)/services/trading/strategies/[id]/strategy-detail-page-client.tsx`'s
+  `perfRaw` (was `any[]` via two `as any` casts on an already-typed `GatewayApiResponse` object; now
+  `Record<string, unknown>[]`, with the intentional Strategy-shape trust boundary made explicit via
+  `as unknown as Strategy[]` instead of hiding it behind `any`).
+- Verified: `tsc --noEmit` clean, `eslint` clean on all 4 touched files, `npm run build` succeeds (all routes compile).
+
+## Recommended decision
+
+This needs an operator/main call on sequencing + approach, not a unilateral pick:
+
+1. **Sequencing**: dispatch the remaining ~59 any-type sites, ~80 console.* sites, and the colour/localhost sweep as
+   SEPARATE, appropriately-sized todos/tasks (not one blob) — each requires per-call-site domain knowledge (e.g. real
+   API response shapes for the any-type fixes; whether a console.error belongs in a shared logger call for the console.*
+   sweep) that's better split across focused passes than absorbed into this one todo.
+2. **Colour/localhost triage-first**: before hand-fixing 1082+30 hits, run a targeted investigation pass to separate
+   real violations from legitimate exclusion candidates (generated-PDF HTML, mock/fixture data files) via
+   `CODEX_COLOUR_EXCLUDE_GLOBS`/`CODEX_LOCALHOST_EXCLUDE_GLOBS` (the sanctioned per-repo bypass mechanism `base-ui.sh`
+   already provides, documented in `QUALITY_GATE_BYPASS_AUDIT.md`) — this could cut the real remediation count
+   substantially before any manual fixing starts.
+3. **Interim shippability**: while the backlog clears, is a temporary, AUDITED `CODEX_*_EXCLUDE_GLOBS` bypass (with a
+   `QUALITY_GATE_BYPASS_AUDIT.md` entry citing this issue doc + a tracked paydown plan) acceptable so other UI work can
+   still ship via the normal pipeline, or should the repo stay hard-blocked on `quality-gates.sh` until full remediation
+   lands? This is the crux judgment call — raised via `/blocked` alongside this issue doc.
+
+## Todos
+
+- [ ] [UI] P1. Sweep the remaining ~59 real `any`-type usages across ~30 files (this session fixed 1 of ~60; see
+      measured list via `rg '\bany\b' app components lib --glob "!**/*.test.*" -t ts` filtered to type-usage lines) —
+      per-file, verify the real API/data shape before typing (no blind `Record<string, unknown>` casts). (repo:
+      unified-trading-system-ui)
+- [ ] [UI] P1. Sweep the remaining ~80 `console.*` calls across ~48 files (this session fixed the 4 `console.log` stubs
+      in trader-dashboard.tsx) — most are `console.error`/`console.warn` inside catch blocks; decide + wire a shared
+      structured-logging helper vs. silent removal per call site. (repo: unified-trading-system-ui)
+- [ ] [INFRA] P2. Triage the 1082 hardcoded-colour hits (100 files) and 30 hardcoded-localhost hits: identify legitimate
+      `CODEX_COLOUR_EXCLUDE_GLOBS`/`CODEX_LOCALHOST_EXCLUDE_GLOBS` candidates (generated-PDF HTML, mock/fixture data
+      files) to cut the real count, then fix or file the residual real-violation sweep as its own sized todo. (repo:
+      unified-trading-system-ui, unified-trading-pm for the glob config)
+- [ ] [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
+      `QUALITY_GATE_BYPASS_AUDIT.md`, citing this issue doc) vs. hard-block `quality-gates.sh` on this repo until the
+      above 3 todos land — operator/main decision, not unilateral. (repo: unified-trading-pm)
+
+## Codex SSOTs
+
+`codex/06-coding-standards/ui-testing-layers.md`, `codex/06-coding-standards/quality-gates.md`.
