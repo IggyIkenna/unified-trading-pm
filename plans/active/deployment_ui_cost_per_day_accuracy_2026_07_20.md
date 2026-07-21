@@ -90,13 +90,18 @@ principle, wrong in aggregation.
       added: peak-vs-most-recent-complete-day distinction (`test_per_resource_daily_three_values`, now uses a
       $30-peak/$20-recent dataset) + partial-day normalisation (`test_per_resource_daily_24h_partial_day_normalized`).
       Docs synced in `models.py` + `deployments_inventory.py`.
-- [ ] [DATA] P0. **Fix AWS attribution** (decision 3). Concrete wiring: the census carrying both `instance_id` and
+- [x] ✅ [DATA] P0. **Fix AWS attribution** (decision 3). Concrete wiring: the census carrying both `instance_id` and
       `name` (Name tag) is `deployment-service` `backends/aws_census.py` (`AwsInstanceCensus` via `list_ec2_census()`),
       consumed in `deployment-api` `routes/_aws_deployments.py::_ec2_item` — but the item currently drops `instance_id`
       before the billing join in `deployments_inventory.py:1678 _attach_costs` (which matches only on `item.name`).
       Build `{inst.instance_id: inst.name}` from the census and thread it into `_attach_costs` (new optional param) so
       an AWS CUR row's `line_item_resource_id` (ARN → parse trailing `instance/i-…`) resolves to the friendly name
-      before the join. No mapping found → stay `None`, never fabricate `$0`.
+      before the join. No mapping found → stay `None`, never fabricate `$0`. — deployment-api@e73bb31:
+      `load_aws_inventory` grew an optional `instance_id_by_name` out-param (additive, backward-compatible) that
+      `_load_aws_items` populates per-region from the EC2 census and threads into `_attach_costs`, which resolves an
+      ARN's trailing `instance/i-…` segment through the map before the by-name billing join; unmapped rows stay `None`.
+      Unit tests added: `test_attach_costs_resolves_aws_arn_via_instance_census`,
+      `test_attach_costs_unmapped_aws_row_stays_honest_none`. `bash scripts/quality-gates.sh` green.
 - [ ] [BACKEND] P1. **Partial-day basis flag** (decision 4). When `cost_actual_usd` falls back to the latest PARTIAL day
       (no complete day exists — service.py:321-322), emit a `cost_basis: "partial" | "complete"` field alongside it (or
       equivalent) so the frontend can style it — no text label, colour only. Field doc updated.
