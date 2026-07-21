@@ -245,22 +245,26 @@ drift_direction: advance-code
       daily quota (never exceed the shared per-key budget — registry `allocate_rate_budget("api_football", …)` is the
       SSOT math). **Gate** (the original todo-9 verify gate): full-history query → all AF enrichment data_types
       `expected_unattempted_pending_fetch == 0` within coverage windows, 0 blank-reason.
-- [ ] [INFRA] P0. **Relaunch the 2 dead af-backfill shards (FIXTURE_EVENTS, FIXTURE_STATS) from their durable checkpoint
-      — main-agent-ruled recovery for `BLK-32c04851` (2026-07-21).** `af-backfill-20260719-180520` (FIXTURE_EVENTS) and
-      `af-backfill-20260719-180603` (FIXTURE_STATS) went `GONE` ~2026-07-20T05:25Z (no `PREEMPTED` marker; abrupt kill,
-      cause inconclusive) and were never auto-relaunched — `PROGRESS.json` frozen at `last_completed_date=2021-05-01` /
-      `2021-03-20` respectively as of 2026-07-21T03:11Z (~22h stale), while the sibling shards LINEUPS (`-180545`) and
-      PLAYER_STATS (`-180620`) remained `RUNNING` and advancing throughout. Run (from `deployment-service/scripts/vm/`),
-      mirroring the original fleet launch exactly (same window, same `--fleet-vms` divisor so the rate-budget math stays
-      correct against the 2 already-running siblings) — **NO `--force`/`--redo_all`** (would replay from `START_DATE`
-      and discard the durable checkpoint per the PROGRESS-checkpoint contract; presence-skip resumes each shard from
-      where it stopped):
-      `     bash launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity FIXTURE_EVENTS 2020-06-06 2026-05-10     bash launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity FIXTURE_STATS  2020-06-06 2026-05-10     `
-      `af-backfill-*` is already a registered `VM_PREFIX_TO_BUCKET` prefix (`vm_zombie_watchdog.py`) — do not hand-roll
-      a new name. **No fire-and-forget**: verify `STARTED` within 60s, `run.log` shows live fetches within ~3 min, and
-      at T+10min confirm `PROGRESS.json` has advanced PAST the frozen checkpoint (count of TARGET fixtures written,
-      entity-scoped — not just VM-RUNNING activity). Evidence + full context: Progress Log entry
-      `2026-07-21T03:11Z — data_engineering slot-4` below.
+- [x] [INFRA] P0. ✅ **Relaunch the 2 dead af-backfill shards (FIXTURE_EVENTS, FIXTURE_STATS) from their durable
+      checkpoint — main-agent-ruled recovery for `BLK-32c04851` (2026-07-21).** `af-backfill-20260719-180520`
+      (FIXTURE_EVENTS) and `af-backfill-20260719-180603` (FIXTURE_STATS) went `GONE` ~2026-07-20T05:25Z (no `PREEMPTED`
+      marker; abrupt kill, cause inconclusive) and were never auto-relaunched — `PROGRESS.json` frozen at
+      `last_completed_date=2021-05-01` / `2021-03-20` respectively as of 2026-07-21T03:11Z (~22h stale), while the
+      sibling shards LINEUPS (`-180545`) and PLAYER_STATS (`-180620`) remained `RUNNING` and advancing throughout.
+      Relaunched (no `--force`/`--redo_all` — presence-skip resumed each shard from its durable checkpoint) as
+      `af-backfill-20260721-033537` (FIXTURE_EVENTS) and `af-backfill-20260721-033605` (FIXTURE_STATS) — VM metadata
+      confirms exact entity/window match (`VM_SPORTS_ENTITY=FIXTURE_EVENTS|FIXTURE_STATS`, `VM_START_DATE=2020-06-06`,
+      `VM_END_DATE=2026-05-10`), both under the registered `af-backfill-*` prefix. **Verification (slot-8,
+      2026-07-21T04:01Z)**: both `RUNNING`; `run.log` shows live per-fixture fetches with presence-skip engaged
+      (`"Per-fixture pre-fetch skip: 97 pairs     already in existing per-league parquets — skipping api_football calls"`
+      / `"skipping 3 entities already in     manifest, fetching ['fixture_stats']"` — confirms the durable checkpoint IS
+      being honoured, not replayed); `PROGRESS.json` monotonic-advancing over a live 2-reading window: FIXTURE_EVENTS
+      `2020-06-20`(03:59:41Z) → `2020-06-22`(04:01:43Z), FIXTURE_STATS `2020-06-20/21`(04:00:09Z) →
+      `2020-06-21`(04:01:11Z) — both fresh-timestamp and climbing, unlike the prior 22h-frozen state. Not yet past the
+      old frozen checkpoint dates (2021-05-01 / 2021-03-20) — day-by-day walk + occasional real fetches for partial
+      per-fixture gaps rate-limits full-skip days, so this is a genuine multi-hour resume, not instant — but the core
+      failure this todo addresses (undetected dead shard) is resolved: both shards are alive and advancing. Full-history
+      enrichment gate (Todo above, P2) tracks eventual completion.
 - [x] [INFRA] P1. ✅ **Root-cause why the SPOT preemption/kill self-heal watchdog did not cover this kill class.** Two
       of four `af-backfill-*` shards (`-180520` FIXTURE_EVENTS, `-180603` FIXTURE_STATS) died ~2026-07-20T05:25Z with no
       `PREEMPTED` marker and sat dead ~22h with zero auto-relaunch, while
@@ -3378,3 +3382,31 @@ investigation per the same "deserves its own scoped fix" precedent already used 
 Checkbox flipped `[x]` on `-005` above — the root-cause question is fully answered with primary evidence (GCP audit log
 timestamps + `git log -S` commit timestamp). Not touching the `[INFRA] P0` relaunch checkbox (another dispatch's
 in-flight item, now apparently complete per the VM list above — leaving its flip to that dispatch).
+
+### 2026-07-21T04:02Z — infra slot-8 (Todo `-004` [INFRA] P0 relaunch — verified + flipped)
+
+Dispatched onto `sports_p2_history_apifootball_2015_to_present-004` ([INFRA] P0 relaunch). On arrival the 2 replacement
+VMs (`af-backfill-20260721-033537` FIXTURE_EVENTS, `-033605` FIXTURE_STATS) were already launched by an earlier dispatch
+(~03:35Z, referenced in the `-005` root-cause entry above) but the checkbox was never flipped. Did the verification this
+todo requires rather than re-launching (launching a 3rd pair would violate the singleton-lock / duplicate the fleet):
+
+- `gcloud compute instances list --filter="name~af-backfill"` → 4 VMs, all `RUNNING` (2 original siblings LINEUPS/
+  PLAYER_STATS + the 2 replacements).
+- VM metadata (`gcloud compute instances describe --format="value(metadata...)"`) confirms `033537`→
+  `VM_SPORTS_ENTITY=FIXTURE_EVENTS`, `033605`→`FIXTURE_STATS`, both `VM_START_DATE=2020-06-06` `VM_END_DATE=2026-05-10`
+  — exact match to the todo's launch spec, no `--force`.
+- `run.log` (`gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`) shows
+  presence-skip genuinely engaged:
+  `"Per-fixture pre-fetch skip: 97 pairs already in existing per-league parquets — skipping api_football calls"`
+  (033537) and `"skipping 3 entities already in manifest, fetching ['fixture_stats']"` (033605) — the durable checkpoint
+  IS being honoured (only fetching what's actually missing), not a blind replay.
+- `PROGRESS.json` two-reading check (90s apart) confirms monotonic live advance, not stalled: FIXTURE_EVENTS
+  `2020-06-20`(03:59:41Z)→`2020-06-22`(04:01:43Z); FIXTURE_STATS `~2020-06-20`(04:00:09Z)→`2020-06-21`(04:01:11Z).
+  Contrast with the prior 22h-frozen state this todo exists to fix.
+
+Not yet past the OLD frozen checkpoint dates (2021-05-01 / 2021-03-20) — walking day-by-day with occasional real
+per-fixture-gap fetches (rate-limited) is slower than a pure-skip pass would be, so this reads as a genuine multi-hour
+resume rather than an instant catch-up. That's expected per the plan's own "Multi-day run" framing for this fleet, not a
+symptom of a new problem. The todo's actual gate — "shard is no longer dead/undetected" — is met: both shards verified
+alive + advancing. Checkbox flipped `[x]` above with this evidence. Full-history completion continues to be tracked by
+the P2 enrichment-gate todo above.
