@@ -149,7 +149,12 @@ Full audit transcript available on request; the load-bearing facts:
       sort, only while `?date_from=`/`?date_to=` is active; `LastRunCell` renders a cyan "always-on" badge (distinct
       from the amber `basis === "approx"` tone) gated on the same flag) | pw:L2 ✓ | regression:
       tests/smoke/deployments-always-on-marker.spec.ts
-- [ ] [UI] P1. Out-of-range "no data before `<date>`" banner (decision 5).
+- [x] ✅ [UI] P1. Out-of-range "no data before `<date>`" banner (decision 5). — deployment-ui@1880424
+      (`archive_floor`/`date_range_out_of_range` added to `DeploymentInventoryResponse` in `deploymentApi.ts`, mirroring
+      the backend fields deployment-api@42191d9 already ships; `DeploymentsContent` in `Deployments.tsx` captures them
+      from the inventory response and renders an explicit amber banner — distinct from the red fetch-error banner —
+      instead of a silent clipped/partial result; mock API mirrors the same 30-day `_archive_floor_date` computation for
+      pw:L2 coverage) | pw:L2 ✓ | regression: tests/smoke/deployments-date-range-out-of-range.spec.ts
 - [ ] [UI] P2. Service dropdown filter (WS-3) — options from distinct `service` values in the loaded inventory,
       URL-backed (`?service=`), client-side.
 - [ ] [UI] P2. Target search box (WS-3) — free-text substring match on the Target column (`item.name`),
