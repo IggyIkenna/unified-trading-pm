@@ -164,3 +164,57 @@ REST API needs per-PROCESS request discipline; VM count is irrelevant when the b
 
 clip (small, separate) and the "why did capture stop 2026-06-20" historical question (moot now — full backfill re-run
 supersedes it). Not yet `status: resolved` pending the GAP-4 clip.
+
+## INCIDENT 2026-07-21 — duplicate instrument_id from explicit-symbol surgical re-runs (found + fixed)
+
+Surfaced while verifying, for the operator, that MTDS writes exactly one parquet per instrument for the 10
+1000-multiplier coins. It doesn't — 8-10 of the 10 coins had trade data written under **two different canonical
+instrument_ids** for the SAME real trades: `ASTER:PERPETUAL:1000BONK-USDT@LIN` (correct) and
+`ASTER:PERPETUAL:1000BONK@LIN` (wrong, quote-less). Spot-checked pairs were byte-identical (same row counts, timestamp
+ranges, price sums) — a genuine mechanical duplicate, not two real markets.
+
+**Root cause:** `resolve_venue_symbols()` (`_onchain_perp_batch_symbols.py`) passes an explicit `--onchain-perp-symbols`
+list through **verbatim** ("surgical re-run path") — correct for HYPERLIQUID/LIGHTER/EXTENDED, whose
+`native_symbol_to_instrument_id` branches never need to recover a quote asset from the input string. ASTER's branch
+does: it suffix-matches the input against `_ASTER_QUOTE_SUFFIXES` to split `base` from `quote`. The catalogue-driven
+`ALL` path always passes the real wire symbol (`1000BONKUSDT`), so suffix-matching works. My earlier surgical 1000-coin
+backfill this session passed **bare base-asset names** (`1000BONK`, matching the UAC universe naming convention used
+everywhere else) — no suffix matches, so the function silently fell through to a quote-less id. Two different valid ways
+of naming the same instrument → two different canonical ids → duplicate writes. Measured scope: **2,390 (day, coin)
+pairs** with wrong-form data across the full 2025-05-25→2026-07-20 range (2,373 true duplicates + 17
+initially-bare-only, see remediation below); **4,715 manifest rows** under the 10 wrong bare-form instrument_ids (all
+`data_type=trades` — `derivative_ticker` was never affected).
+
+**Fix — SHIPPED mtds@a7f7769a.** `native_symbol_to_instrument_id`'s quote-split logic extracted into
+`_aster_native_quote_split()`; new `_resolve_aster_native_symbols()` cross-references the day's catalogue-native symbols
+(already real wire form) by base-asset so an explicit ASTER symbol resolves to the SAME id the `ALL` path would produce
+for the identical instrument. A symbol absent from that day's catalogue (not yet listed) passes through unchanged — no
+regression on the not-yet-listed case. +5 regression tests (`TestAsterExplicitSymbolQuoteResolution`). Other venues
+unaffected (verbatim passthrough unchanged).
+
+**Remediation — COMPLETE + VERIFIED:**
+
+1. Rebuilt + uploaded the UAC/UTL/MTDS/deployment-service code tarballs (VMs deploy from GCS tarballs, not a live git
+   pull — the fix needed a fresh tarball before any new backfill VM would pick it up).
+2. Corrective re-backfill:
+   `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS="<the 10 coins>" YEARS="2025 2026" SHARD_DAYS=21 OVERRIDE_START_DATE=2025-05-25`
+   (RUN_TS 20260721-025937, 21 VMs, ~18min to full self-shutdown — much faster than the ~3.7h general 46-VM run since
+   this is a narrow 10-symbol universe per VM). Post-run sweep found 2 of 422 days (2026-06-19/20) still bare-only — a
+   transient VM-startup hiccup, not a code defect (a narrow 3-day retry, RUN_TS 20260721-032600, resolved it cleanly on
+   the first attempt).
+3. Deleted all 2,390 wrong-form (bare, no `-USDT`) parquet files, each individually re-verified to have a non-empty
+   `-USDT` replacement immediately before deletion (0 skipped for safety). A final full-range sweep confirms **zero**
+   bare-form files remain anywhere.
+4. Manifest cleanup: paused `uts-prod-manifest-consolidator-market-data-cefi-cron`, removed the 4,715
+   wrong-instrument-id rows via generation-matched CAS. **Gotcha (documented for next time):** a raw CAS write that
+   doesn't carry the consolidator's `consolidator_content_write_at` blob-metadata marker forward gets treated by the
+   next consolidator cycle as an unprovable-cutoff out-of-band rewrite — it fails closed and re-merges every per-VM
+   shard, and (this session) the bad rows briefly resurrected from that path before self-clearing. Second pass: redid
+   the CAS removal, then immediately called `manifest_consolidator.consolidate(bucket, force=True)` directly (the
+   officially-supported write path) rather than waiting on the cron, so the marker is stamped correctly in the same
+   operation. Verified 0 bad rows immediately after, and via a follow-up multi-cycle check.
+
+**Lesson:** an explicit `--onchain-perp-symbols` surgical list is safe for venues whose `native_symbol_to_instrument_id`
+never has to recover information from the input string — it is NOT safe by inspection alone for a venue that
+suffix-guesses a quote asset. Any future venue added with similar quote-suffix inference needs the same
+catalogue-cross-reference treatment `_resolve_aster_native_symbols` provides.
