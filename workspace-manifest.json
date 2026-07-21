@@ -389,7 +389,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 1,
@@ -534,7 +534,7 @@
         "warn_file_count": 13,
         "large_file_count": 0
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -596,7 +596,7 @@
         "warn_file_count": 0,
         "large_file_count": 0
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -879,7 +879,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": "ruff",
         "coverage_pct": 83.19,
@@ -1163,7 +1163,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": "ruff",
         "coverage_pct": 73.53,
