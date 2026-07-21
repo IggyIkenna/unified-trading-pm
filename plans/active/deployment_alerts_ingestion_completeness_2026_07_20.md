@@ -220,10 +220,27 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       "Persist CRITICAL pages" step — both still doing the unlocked read-modify-write. Fixing only (b) makes
       deployment-api's own contribution race-free but does NOT fully close the alerts-ledger race until those two are
       fixed the same way; flagged as a follow-up, not silently absorbed into this todo's scope.
-- [ ] [BACKEND] P1. **Retention + window** — `_DEFAULT_DAYS = 2` / `_MAX_ITEMS = 400` cannot support the date-range
+- [x] ✅ [BACKEND] P1. **Retention + window** — `_DEFAULT_DAYS = 2` / `_MAX_ITEMS = 400` cannot support the date-range
       filter Plan B needs. Implement a retention/window policy (proposed default: 30 days queryable via bounded
       day-partitioned reads, response paginated rather than truncated at a silent cap). A silent 400-item truncation
-      must become an explicit "results capped" signal — never a silently short list.
+      must become an explicit "results capped" signal — never a silently short list. — `deployment-api@cda7a89`:
+      `_repo_ci_alerts.py`'s `_DEFAULT_DAYS`/`_MAX_ITEMS` (2 / 400) widened to `_DEFAULT_DAYS = _MAX_DAYS = 30` +
+      `_DEFAULT_PAGE_SIZE = 400` / `_MAX_PAGE_SIZE = 2000`; the day-partitioned reads stay bounded (single-walk
+      discipline unchanged) but the cache is now keyed per `days` window
+      (`_entries_cache: dict[int, tuple[float, list[AlertEntryDict]]]`) so re-paginating the SAME window never
+      re-triggers a GCS read. `load_alerts_payload()` gained `offset`/`limit` params and the response gained
+      `days`/`total_count`/`returned_count`/`offset`/`limit`/`capped` — `capped=True` whenever more rows exist past the
+      current page, replacing the old silent `[:_MAX_ITEMS]` truncation. Streams derive from the FULL window (not just
+      the page) since the (repo, workflow) roll-up is cardinality-bounded, not row-count-bounded — slicing it by page
+      would have silently dropped streams whose entries all fall outside the current page. Both routes
+      (`unified_alerts.py` `GET /api/alerts`, `repo_ci.py` `GET /api/repo-ci/alerts`) now accept `days`/`offset`/`limit`
+      query params (FastAPI `Query`, clamped server-side) so Plan B's date-range filter has something to call.
+      `health_overview.py`'s `_alerts_tile()` pins an explicit `days=2` rather than silently inheriting the new wider
+      default — its "open alerts right now" health signal predates this todo and would otherwise degrade to "critical"
+      almost permanently once any CRITICAL alert exists anywhere in a 30-day window. `_mock_alerts()` updated to
+      populate the new required fields (static fixture, always `capped=False`). New tests
+      (`TestLoadAlertsPayloadPagination`, 5 cases: capped true/false, offset paging, days-clamped-to-max, streams derive
+      from the full window not just the page). `quality-gates.sh` green (4841 tests incl. the 5 new, 80.27% coverage).
 - [ ] [BACKEND] P1. **zombie-watchdog reaps — add persistence.**
       `deployment-service/scripts/vm/vm_zombie_watchdog.py:247` fires a raw Slack webhook with no durable record; route
       it through the normalised persist path so the reap history survives on the page.
@@ -410,6 +427,15 @@ Notes worth surfacing beyond the matrix:
     anywhere). Filed as `issues/alerts_ledger_race_two_remaining_writers_2026_07_21.md` with 2 concrete P2 todos (same
     one-object-per-write fix, one per writer) — closing the alerts-ledger race fully requires those too, but they were
     outside todo 6's explicit scope (which named only deployment-api's writer).
+
+- **2026-07-21** — Todo 8 (retention + window) shipped, `deployment-api@cda7a89`. `_DEFAULT_DAYS`/`_MAX_ITEMS` (2 / 400)
+  widened to `_DEFAULT_DAYS = _MAX_DAYS = 30` / `_DEFAULT_PAGE_SIZE = 400` / `_MAX_PAGE_SIZE = 2000`, with real
+  `offset`/`limit` pagination + an explicit `capped` signal replacing the old silent `[:_MAX_ITEMS]` slice. The
+  per-request entries cache is now keyed by the `days` window so paginating within a window costs zero extra GCS reads.
+  Both `/api/alerts` and `/api/repo-ci/alerts` accept `days`/`offset`/`limit` query params now — Plan B's date-range
+  filter has a real API to call. `health_overview`'s alerts health tile was pinned to an explicit `days=2` so its
+  pre-existing "recent" semantics didn't silently widen to 30 days (which would have made it read near-permanently
+  critical). `quality-gates.sh` green.
 
 ## Codex SSOTs
 
