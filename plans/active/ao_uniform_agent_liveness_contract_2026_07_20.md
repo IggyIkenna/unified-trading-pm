@@ -6,7 +6,7 @@ summary:
   whole run and every liveness subsystem must be independently taught not to kill them. Three carve-outs exist and a
   fourth reaper would need a fifth. Replace them with one protocol every agent follows, where the backend answers
   role-appropriately instead of each reaper special-casing kinds.
-status: draft # NOT ingested — operator review pending (2026-07-20). Flip to `active` to start.
+status: active # operator activated 2026-07-21 (slot-16). LOCAL execution (assigned_vm: NA) — this session works it, NOT AO-dispatched.
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,7 +20,7 @@ related:
     ao_worker_lifecycle_reap_2026_07_20.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 parent_epic: orchestrator_master
 assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)
 execution_scope: local-only
@@ -46,61 +46,29 @@ source:
 > agent follow the same register/boot/heartbeat protocol with role-appropriate backend responses — **path 2 is chosen**.
 > This plan implements it.
 
-## ✅ UPDATE 2026-07-20 (slot-16 interactive) — the root cause IS now diagnosed; re-scope this plan accordingly
+## Status & history (activated 2026-07-21)
 
-The root-cause investigation this plan was waiting on has landed (`ao_scheduled_agent_hygiene_2026_07_20.md`, the P0
-todo — full evidence there). **Cause (airtight on the defect, ~90% on the fatal blow):** an UNGUARDED
-`WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` reaped `agt-751738` at 07:32:30 (`kill_session`,
-worker_liveness_watchdog.py:1212), because (A) its slot read `status=idle` while claude was demonstrably alive and
-working (tick-1 ~07:31:25, a full minute before the transcript's last write) and (B) at that moment the idle-reclaimer
-had **no typed-agent exemption** — the `f641968` guard was committed 1h38m LATER (09:10 UTC vs the 07:32:30 kill). A
-reaper ticking down to kill a live typed agent is the confirmed bug; whether the 07:32:30 `kill_session` was the fatal
-blow vs. reaped a ~1s-old corpse is ~90% (`remain-on-exit on` defeats the `has_session` proof, but the self-exit
-alternative has no surviving cause — usage was 5h=5% 80s prior, no rate-limit/OOM/error). Either way this is a
-**liveness-signalling** cause — squarely in this plan's domain, NOT an unrelated API/usage cutoff.
+**ACTIVE as of 2026-07-21** — operator decided to start (slot-16 interactive). **LOCAL execution:** this session
+implements it directly, NOT AO-dispatched (`assigned_vm: NA`, `execution_scope: local-only`) — a change to the AO's own
+liveness code, on the live fleet it runs, is safer operator-supervised than auto-dispatched into a worker.
 
-**Consequences for this plan:**
+**How the scope settled** (the earlier "do-not-start" banners, now historical, condensed):
 
-- The line below "the motivating bug is NOT diagnosed, so this plan must not be started" — the **first clause is now
-  false**. The bug is diagnosed. But **do not big-bang-start this plan either**: the cheapest correct next move is to
-  verify `f641968` (already deployed) actually fixes it on todo 4's next reconcile run. The claim (in this plan and the
-  hygiene plan) that "`f641968` did NOT fix this" is **unsound** — it was inferred from a death that predates `f641968`
-  by 1h38m. `f641968`'s AgentRow-keyed guard plausibly works; it is simply UNTESTED. **If that one live run confirms the
-  guard exempts the reconciler, this plan reverts to exactly the "pure de-duplication refactor at much lower priority"
-  case it already anticipated below** — the three carve-outs are real duplication worth removing, but the urgency is
-  gone. If the guard is somehow defeated (e.g. restart clears the AgentRow), that failure mode feeds directly into this
-  plan's uniform-contract design. Either way: **gate flipping this to `active` on that single live observation, not on
-  new code.**
-- **What is still true:** "typed agents get `status='working'` on claim" (plan_health.py:283) IS the code path — but the
-  reconciler was nonetheless reaped as `idle`, which means the `working` status did NOT survive to kill time
-  (empirically flipped to `idle` around the 07:30 restart; the exact line is unpinned — residual R1 in the hygiene
-  plan). So the "their slot reads idle" framing this plan warns against is **not simply false** after all: for a typed
-  one-off it can become true in flight. That nuance belongs in the contract design (todo 1).
-
-## ⚠️ READ FIRST — the evidence this plan was built on has been RETRACTED (2026-07-20)
-
-This plan originally opened with a confident mechanism: that one-off agents never call `/boot`, so their slot stays
-`idle` and `_reclaim_idle_lingering_sessions` reaps them mid-work. **That was wrong and is withdrawn.** The
-plan_reconciler demonstrably DOES call `/boot` (`slot_boot` 07:27:03) and DOES heartbeat (`slot_progress` 07:28:18); no
-reclaim event ever fired; and `tmux_session_lost` is the TmuxPruner OBSERVING an already-dead session, not killing one.
-Full disproven list + the live handoff: `ao_scheduled_agent_hygiene_2026_07_20.md`, the P0 root-cause todo.
-
-**Consequence: the motivating bug is NOT diagnosed, so this plan must not be started as an implementation.** Its
-destination may well still be right — three separate per-subsystem carve-outs for "typed agents are special" do exist
-(`1e7fec0`, `f641968`, `5907317`), and that duplication is real and independently worth removing. But the _route_ and
-the _urgency_ both depend on a root cause nobody has established yet.
-
-**What is still independently true** (verified, not inferred):
-
-- Typed agents already get `status="working"` on claim (`plan_health.py:283`, `escalation.py:476`) — so any future
-  argument based on "their slot reads idle" is false and must not be reintroduced.
-- Three carve-outs teach three different subsystems the same fact; a fourth reaper would need a fourth.
-- `agent-orchestrator@f641968` was shipped on the retracted premise. It is defensively harmless and its regression test
-  is real, but it did not fix the reconciler.
-
-**Do not flip this to `active` until the root-cause investigation lands.** If the cause turns out to be unrelated to
-liveness signalling (an API/usage cutoff, a crash), this plan becomes a pure de-duplication refactor at much lower
-priority — and should be re-scoped accordingly rather than executed as written.
+- **Original premise — RETRACTED (2026-07-20).** The plan first claimed one-offs never `/boot`, so their slot stays
+  `idle` and `_reclaim_idle_lingering_sessions` reaps them mid-work. Wrong: the plan_reconciler DOES `/boot`
+  (`slot_boot` 07:27:03) and DOES heartbeat. Typed agents already get `status="working"` on claim (`plan_health.py:283`,
+  `escalation.py:476`) — so "their slot reads idle" must not be reintroduced as an argument.
+- **Root cause — LANDED (2026-07-21).** Two failure modes, one missing contract. (1) **Reaped mid-work:** an unguarded
+  `_reclaim_idle_lingering_sessions` could kill a live typed agent before the `f641968` guard existed (the 07-20
+  diagnosis — `ao_scheduled_agent_hygiene_2026_07_20.md` P0). (2) **Finished-but-immortal — the dominant mode, measured
+  07-21:** a one-off completes, "EXIT"s (ends its Claude _turn_ only), the session lingers at an idle prompt,
+  `WorkerLivenessKicker` re-nudges it, and `has_session()==True` + a fresh heartbeat blind every reaper → the AgentRow
+  stays `active` forever and pins its slot (15 zombies pinned 15/16 slots → reconciler `503 no free slot`). Full
+  evidence: Progress Log 2026-07-21.
+- **Design DECIDED (2026-07-21 operator).** Terminal transition for every `one_shot`/`scheduled` agent = complete → POST
+  an explicit **role-aware `/done`** (archive `lifecycle-complete` + free slot + stop-nudge) → stop. That closes mode
+  (2); the boot→`working` protocol (path 2) closes mode (1) and lets the carve-outs be deleted. Docs were reconciled to
+  this contract BEFORE code (§2/§6 + the two codex SSOTs, `unified-trading-pm@468a7e67b`).
 
 ## What "uniform" means here — and what it does not
 
@@ -136,56 +104,64 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
       against live `agent-orchestrator@HEAD` (Explore map + direct reads). **Surfaced a plan-reframing finding (§0): the
       reconciler is exposed to ≥4 reaper paths, only 2 carry a carve-out — the 15-min heartbeat-silent trigger and
       25-min HealthMonitor working-stale flip are UNGUARDED — so `f641968` alone does NOT protect a run that goes >15
-      min between heartbeats.** **⚠️ PENDING OPERATOR DESIGN REVIEW before todos 2-7 (code) start** — this todo is
-      "write the contract first" precisely so the design is validated before implementation.
-- [ ] [BACKEND] P1. **Make `/boot` role-aware and accept a task-less boot.** A one-off POSTs `/boot` like anyone else;
-      the response carries no task and the slot transitions out of `idle` into a state that means "occupied and
-      working". Do NOT invent a parallel endpoint — that is path 1 wearing a different hat. **Gate**: a
-      plan_reconciler-shaped boot returns 200 with no task, the SlotRow leaves `idle`, and an existing fleet-worker boot
-      is byte-for-byte unchanged in behaviour (regression-tested).
-- [ ] [BACKEND] P1. **Backend accepts BOTH contracts during migration.** Old-style one-offs (no `/boot`) must keep
-      working exactly as today — including the three carve-outs, still in place — while the new path is proven.
-      **Gate**: a test matrix covering {old, new} × {fleet worker, one-off} all behaving correctly; nothing regresses
-      for an agent that has not migrated.
-- [ ] [BACKEND] P2. **Migrate the role docs one at a time, starting with `plan_reconciler`.** Add the STEP-0 liveness
-      ping + `/boot` to its boot procedure, keeping its existing `/progress` heartbeat guidance. `plan_reconciler` first
-      because it is the one measurably being killed and the easiest to observe. **Gate**: one full reconcile run
-      observed booting, heartbeating, and surviving past the 420s window that used to kill it — cite the dispatch_id.
-- [ ] [BACKEND] P2. **Migrate the remaining one-off roles** (`plan_health`, and the escalation crafts — `cicd`,
-      `conflict_resolver`, `data_pipeline_failure`). One at a time, each verified live before the next. **Gate**: each
-      role has a run observed on the new contract; none regressed.
-- [ ] [BACKEND] P2. **Close the startup-latency gap that made this bite.** The reconciler's first heartbeat comes after
-      a startup phase (reading role docs, running the hygiene sweep) that can exceed the grace window. Either require a
-      STEP-0 ping before that phase, or make the grace window measure from first-contact rather than spawn. **Gate**: a
-      one-off whose startup takes 10+ minutes still proves liveness throughout — test with a deliberately slow boot.
-- [ ] [BACKEND] P1. **Delete all three carve-outs — the plan is not done until they are gone.** (a) the AgentRow guard
-      in the prereq reaper (`1e7fec0`), (b) the AgentRow guard in `_reclaim_idle_lingering_sessions` (`f641968`), and
-      (c) the typed-spawn recognition in the boot gate (`5907317`) if the uniform contract subsumes it. Each deletion
-      must be accompanied by a test proving the uniform signal now protects that agent instead. **Gate**: `rg` finds no
-      typed-agent special-case left in any reaper; the regression tests from those commits still pass, now protected by
-      the contract rather than the carve-out.
-- [ ] [DOC] P2. **Record the contract in codex and point the role docs at it.** This is a durable architectural rule, so
-      its SSOT is a codex doc, not this plan. **Gate**: a codex doc describes the contract; every role doc references it
-      rather than restating it; `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` links to it.
-- [ ] [BACKEND] P1. **Define the terminal transition for a task-less one-off — "finished ⇒ the process EXITS."**
-      (Discovered 2026-07-21 from the 15-agent JSONL post-mortem — see Progress Log 2026-07-21.) The contract as drafted
-      has NO trigger that stops a one-off: §2 says Class B "never `/done`" and heartbeats ≤10 min, and §6 assumes its
-      finish is "a real session death" — but nothing bridges the two, so a one-off that finishes its work keeps
-      idle-polling forever. Measured live: `cicd`/`plan_health` agents ran 5 min–**19 h** AFTER completing, never
-      reaped, each pinning a slot (the direct cause of the 07-21 reconciler `503 no free slot`). The live idle session
-      keeps `has_session()==True` and the heartbeat keeps `SlotRow.last_ping` fresh, so all six paths in §0 are defeated
-      at once. The role doc / `/boot` response for Class-B one-offs must make the agent EXIT the process after posting
-      its result (not loop-poll), so `has_session()` goes False and the existing pruner/reclaim archive it cleanly.
-      **Gate**: a finished one-off's `orch-slot-N` session dies on its own within one heartbeat interval of completion,
-      the AgentRow archives `lifecycle-complete`, and the slot returns session-less — observed live, no manual kill.
+      min between heartbeats.** Operator design review: **DONE (2026-07-21)** — reconciled to the `/done`-then-stop
+      decision; implementation restructured into the three workstreams below.
+
+> **Restructured 2026-07-21 around the decided contract. Order = A → B → C.** **Workstream A (`/done` → archive → stop)
+> is the leak fix and comes FIRST** — lowest risk, because it archives a FINISHED one-off without touching any carve-out
+> (the carve-outs only protect MID-work agents, which A leaves untouched). B (boot→`working`) makes "working while
+> working" a reliable signal; C deletes the now-redundant carve-outs LAST. Throughout: the backend accepts BOTH the old
+> (never-`/done`) and new contracts, roles migrate one at a time, each verified live before the next.
+
+### Workstream A — completion path (`/done` → archive → stop): the leak fix
+
+- [ ] [BACKEND] P1. **A1 — Extend `/done` to accept a task-less, role-aware completion.** Today `/done` hard-requires
+      `task_id` + a plan-flip (`server/routes/slots_worker.py:616-767` → 404/409 for a task-less one-off). Add a Class-B
+      completion path: no `task_id` / no plan-flip; it archives the AgentRow `lifecycle-complete`, frees the slot, and
+      flags it so `WorkerLivenessKicker` stops nudging. Backend still accepts an un-migrated one-off that never `/done`s
+      (existing pruner/reaper path unchanged). **Gate**: a task-less `/done` from a `plan_health`-shaped agent → 200,
+      AgentRow archived, slot session-less/idle, no re-nudge; a fleet-worker `/done` (task + plan-flip) byte-for-byte
+      unchanged (regression-tested); `quality-gates.sh` green.
+- [ ] [BACKEND] P1. **A2 — Rewrite the 5 role docs' non-functional "then EXIT" → "POST `/done` (completion) → stop."**
+      One role at a time, each verified live before the next: `cicd`, `conflict_resolver`, `data_pipeline_failure`,
+      `plan_health`, `plan_reconciler`. Their "EXIT" today only ends the Claude turn; replace with the real completion
+      call + stop. **Gate**: each role observed on completion → its `orch-slot-N` AgentRow archives
+      `lifecycle-complete`, slot frees, no re-nudge, no manual `kill-session`. Cite the agent_id.
+- [ ] [BACKEND] P2. **A3 — Add the completion step to the boot prompt** so it is uniform and an agent can't "forget" it.
+      **Gate**: a freshly-booted one-off's rendered prompt carries the `/done`+stop step; a live run confirms it fires.
+
+### Workstream B — boot → `working` (uniform liveness signal)
+
+- [ ] [BACKEND] P1. **B1 — Make `/boot` role-aware + accept a task-less boot.** A one-off POSTs `/boot` like everyone;
+      the response carries no task and the slot leaves `idle` for `working`. No parallel endpoint. Makes "working while
+      working" reliable so idle-scanners skip one-offs by construction. **Gate**: a `plan_reconciler`-shaped boot → 200
+      no task, SlotRow leaves `idle`; a fleet-worker boot byte-for-byte unchanged (regression-tested).
+- [ ] [BACKEND] P2. **B2 — Close the startup-latency gap.** A one-off's first heartbeat comes after a startup phase
+      (role-doc read, hygiene sweep) that can exceed the grace window. Require a STEP-0 ping before that phase, or
+      measure grace from first-contact not spawn. **Gate**: a one-off with a deliberately slow (10+ min) boot proves
+      liveness throughout.
+
+### Workstream C — remove the duplication (LAST — only once A + B are proven live)
+
+- [ ] [BACKEND] P1. **C1 — Delete the three carve-outs.** (a) prereq-reaper AgentRow guard (`1e7fec0`), (b)
+      `_reclaim_idle_lingering_sessions` AgentRow guard (`f641968`), (c) boot-gate typed-spawn recognition (`5907317`)
+      if the uniform contract subsumes it. Each deletion ships with a test proving the uniform signal
+      (status=`working` + heartbeat, or archived-on-`/done`) now protects that agent instead. **Gate**: `rg` finds no
+      typed-agent special-case in any reaper; the original regression tests still pass, protected by the contract.
+- [ ] [DOC] P2. **C2 — Finish the codex / role-doc SSOT.** The two codex SSOTs are already reconciled (2026-07-21:
+      `agent-orchestrator-single-vm-architecture.md` § Class B, `agent-orchestrator-worker-liveness.md` § completion
+      contract). Remaining: every role doc references the codex SSOT rather than restating it, and the "being
+      implemented / current pre-fix code" markers come out once the code lands. **Gate**: role docs point at codex; no
+      in-flight markers remain; no plan↔codex drift.
 
 ## Design note (todo 1) — the uniform agent-liveness contract
 
-> **Status: DRAFT for operator review (slot-16 interactive, 2026-07-20).** Written before any code, per the plan's
-> "write down the contract first" rule. Subsystem inputs verified against live code (`agent-orchestrator@HEAD`); this is
-> the design todos 2-7 implement and todo 8 promotes to `codex/04-architecture/agent-orchestrator-worker-liveness.md`.
-> The Gate for this todo — "a reader can answer 'why won't a one-off be reaped?' without reading any reaper's source" —
-> is met by §5 + §6 below.
+> **Status: APPROVED (operator, 2026-07-21); reconciled to the `/done`-then-stop decision.** Written before any code,
+> per the plan's "write down the contract first" rule. Subsystem inputs verified against live code
+> (`agent-orchestrator@HEAD`); this is the design Workstreams A-C implement, and its codex SSOT
+> (`codex/04-architecture/agent-orchestrator-worker-liveness.md`) is already reconciled (todo C2). The Gate for this
+> todo — "a reader can answer 'why won't a one-off be reaped?' without reading any reaper's source" — is met by §5 + §6
+> below.
 
 ### §0. The finding that reframes the whole plan — carve-outs are whack-a-mole (≥4 reaper paths, 2 guarded)
 
