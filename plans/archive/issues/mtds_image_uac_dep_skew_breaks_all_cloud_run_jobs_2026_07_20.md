@@ -31,8 +31,9 @@ drift_direction: advance-code
 depends_on:
 locked_by:
 locked_since:
-resolved_by: market-tick-data-service@21733255 (cloudbuild=316b0733-42e8-4b8e-82ab-4ad8f1695a84 SUCCESS)
-  market-tick-data-service (cloudbuild.yaml stage-workspace-deps + image-import-smoke, Dockerfile workspace-dep refresh)
+resolved_by:
+  market-tick-data-service@21733255 (cloudbuild=316b0733-42e8-4b8e-82ab-4ad8f1695a84 SUCCESS) market-tick-data-service
+  (cloudbuild.yaml stage-workspace-deps + image-import-smoke, Dockerfile workspace-dep refresh)
 source: A3-3 tradfi T+1 job verification (slot-1)
 ---
 
