@@ -82,12 +82,23 @@ it's a real functional gap in an operator-facing tool.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Implement `_compute_batch_risk()` in
-      `strategy-service/strategy_service/risk/cli/handlers/compute_handler.py` — compute real historical portfolio risk
-      metrics over the `--start-date`/`--end-date` window (reuse whatever the live-mode path already computes
-      per-snapshot; iterate over the window's snapshots/trades). If a full batch implementation is out of scope for one
-      task, at minimum make the CLI fail loudly (raise / non-zero exit) instead of silently returning a placeholder —
-      honest-absence over silent no-op. (repo: strategy-service)
+- [x] ✅ [BACKEND] P2. **RESOLVED 2026-07-21 — not by implementing, by deleting: the stub was dead, unreachable code;
+      real batch risk computation already ships elsewhere.** Before implementing, verified how `ComputeHandler` is
+      actually invoked and found it isn't — a workspace-wide grep for `risk.cli.handlers`/`risk.cli.parser` outside the
+      cluster itself returns nothing, and `strategy_service/risk/cli/__init__.py` (the real package entry point) only
+      imports `main` from `risk/cli/main.py`, never anything from `risk/cli/handlers/` or `risk/cli/parser.py`.
+      `risk/cli/main.py`'s `RiskBatchHandler` (`--operation risk-monitor --mode batch`, wired live via
+      `strategy_service/cli/service_entry.py`) **already does real batch risk computation** for every configured client
+      — `risk_monitor.monitor_client_risk(client_id)` (computes risk metrics + alerts) +
+      `aggregator.calculate_exposures(client_id)` (computes + persists exposure via `RiskSnapshotSink`), for every
+      `client_id` from `get_monitored_client_ids()`. So the functionality this TODO asked for was never missing — it was
+      implemented under a different, live CLI operation name, and the `compute_handler.py` stub was an abandoned
+      parallel design nothing ever called (zero test coverage, zero runtime callers, only a self-referencing internal
+      import). Writing new logic inside that dead file would have been false progress — code that runs, in a module
+      nothing invokes. Deleted the whole unreachable cluster instead (`risk/cli/handlers/` + `risk/cli/parser.py`, 3
+      files) + the now-stale `pyproject.toml` per-file-ignore for it — matches this workspace's "delete deprecated code,
+      no shims" rule. `strategy-service@53839a6a`. `quality-gates.sh` green (content-sentinel confirmed the full suite
+      ran clean at commit time, no test referenced the deleted files). (repo: strategy-service)
 - [ ] [BACKEND] P3. Verify `balancer-eth-venue-implementation`'s current status — is `unified-market-interface` (or
       whatever superseded it) still missing a BALANCER-ETH venue adapter, or was this closed elsewhere and the
       GH-BACKLOG item just never got checked off? Close this item honestly either way. (repo: unified-market-interface
