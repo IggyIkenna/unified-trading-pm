@@ -272,8 +272,11 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   RULED (D1/D2 2026-07-20) but `migration_pending`** — compare case-insensitively, do NOT flag, do NOT refuse. **An
   absence result is evidence ONLY once you confirm you probed the vocabulary the WRITER emits** (Solana AMM writes
   `instrument_type=solana_amm_pool`, not `pool` — this exact slip produced a false "twin absent" verdict 2026-07-20).
-  **`dex_pools/` + `lending_indices/` are DO-NOT-DELETE** (stale delete order; no twin for KAMINO/SOLEND) →
-  `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`. SSOTs:
+  **`dex_pools/` + `lending_indices/` — FOLDED + DELETED 2026-07-21** (648 legacy-only Solana twins folded to
+  canonical + verified, reader repointed, operator prod-deleted; legacy prefixes now 0 objects — the earlier
+  DO-NOT-DELETE is RESOLVED; residual = the twins' manifest rows are unregistered) →
+  `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md` (RESOLVED),
+  `…/defi_fold_manifest_registration_pending_2026_07_21.md`. SSOTs:
   `codex/02-data/four-surface-reconciliation-procedure.md`, `…/reconciliation-finding-taxonomy.md`,
   `…/gcs-and-manifest-delete-safety-protocol.md`, `…/non-canonical-path-inventory.md`,
   `…/canonical-cutover-register.md`, `…/orphan-object-detection.md`, `…/reconciliation-census-and-compute-tiers.md`.

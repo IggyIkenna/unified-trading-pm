@@ -524,6 +524,68 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 - [x] 33. ✅ [DATA] P2. **Per-AG reference-sheet census nuance line** (defi chain axis + case-insensitive; cefi EXACT +
       dual chain-tail; tradfi batch_massive suppress; prediction conditionId; sports entity-keyed).
 
+### Phase F — MDPS candle layer (`--layer candles`) — operator ruled Option A 2026-07-21
+
+> **Provenance**: operator RULED **Option A** 2026-07-21 ("migrate data gcs paths and manifest") — the declared registry
+> template wins → an 8-phase migration, ~10–20M objects, sequenced **defi → prediction → cefi → tradfi**. NOTHING is
+> migrated on disk yet, so the WHOLE candle corpus is `migration_pending` and the candle audit reconciles against the
+> Option-A TARGET, never the current disk shape. Candles are co-located in the SAME `market-data-tick-{ag}` buckets
+> under `processed_candles/` (sports: `processed/`); Phase-0 bucket resolution is unchanged. **Codex SSOT for this
+> phase**: `codex/02-data/mdps-candle-canonical-reconciliation.md`. Migration source-of-truth issue:
+> `plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`.
+
+- [x] 34. ✅ [DATA] P1. **NEW codex SSOT** `codex/02-data/mdps-candle-canonical-reconciliation.md` — the candle-LAYER
+      extension of the four-surface procedure: the candle shard atom (adds `timeframe`; `data_type` keyed on the
+      AGGREGATED `mdps_data_type_key`; S3 rows filtered `service_name=="market-data-processing-service"`), the four
+      surfaces for candles (S4 UNAVAILABLE by construction — no candle catalogue), and the candle canonical authority
+      (Option-A registry template, oracle-EXEMPT namespace). — `unified-trading-pm` (sibling agent landed it this
+      batch).
+- [x] 35. ✅ [SCRIPT] P1. **NEW reference sheet** `cursor-configs/skills/data-pipeline-reconciliation/reference-mdps.md`
+      — layer-expansion pointers + candle hazards (H1 sports `processed/` tree · H2 oracle-exempt · H3 object↔manifest
+      disconnect · H4 split-brain `pipeline_mode` · H5 genuine defects). — `unified-trading-pm` (sibling agent landed it
+      this batch).
+- [x] 36. ✅ [SCRIPT] P1. **Wire the `--layer {raw-tick,candles}` flag + §3h into `SKILL.md`** (default `raw-tick`,
+      orthogonal to `--asset-group`): add the `## Layers` note + the §0 flag line, the
+      `### 3h. MDPS candle-layer     reconciliation` subsection (candle shard atom, GCS-object-driven inversion,
+      oracle-exempt Option-A template, S4-UNAVAILABLE, migration_pending suppression, genuine defects), the SSOT-table
+      row, the `(asset_group × layer)` §6 loop, and the "Extending to a new LAYER" note. — `unified-trading-pm` (this
+      batch).
+- [x] 37. ✅ [DATA] P1. **Add the candle-layer variant note to
+      `codex/02-data/four-surface-reconciliation-procedure.md`** (dated 2026-07-21, pointer + 4 key deltas: `timeframe`
+      atom, oracle-exempt, S4-unavailable, object-driven; migration_pending). Pointer only — no duplication. —
+      `unified-trading-pm` (this batch).
+- [ ] 38. [DATA] P0. **Add taxonomy AE-6 + candle rows to the cutover register** — add the
+      `AE-6 — MDPS candle-layer     Option-A migration window` exception to
+      `codex/02-data/reconciliation-finding-taxonomy.md` §4 (suppress missing-`instrument_type=` / source-not-aggregated
+      `data_type` / split-brain `pipeline_mode` as `migration_pending` during the per-AG window), and add per-AG
+      `processed_candles/` effective-from candle rows (all PENDING, sequenced defi → prediction → cefi → tradfi) to
+      `codex/02-data/canonical-cutover-register.md`. **Concurrency note:** the cutover register is owned by another
+      agent right now — coordinate / hand this row-add to that owner rather than editing it in parallel.
+- [ ] 39. [CODE] P1. **Extend the UAC machine oracle to `processed_candles/`** — `canonical_path_violations()` hardcodes
+      `RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` (`unified-api-contracts/.../canonical/partition_paths.py:67`)
+      and false-flags every candle path `structural`. Add the candle namespace + template so the oracle validates
+      `processed_candles/` against the Option-A grammar; then re-point the skill's candle leg (§3h) from the bespoke
+      template check at the oracle and lift the oracle-exemption. This is candle_feature issue todo 10 —
+      `plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`.
+- [ ] 40. [DATA] P0. **Fix the candle object↔manifest disconnect (candle-manifest population)** — the candle write path
+      is not calling `record_captured` per shard, so S3 holds ~6 degenerate candle rows corpus-wide vs 20,734 objects on
+      one measured day. Until this is fixed the candle audit is necessarily GCS-object-driven and the disconnect is its
+      headline `missing_row` finding; prod skip-if-fresh re-derives everything and honest coverage reports candles
+      absent. This is candle_feature issue todo 7 — scope the writer fix as its own MDPS-owned plan (this plan does not
+      own MDPS writer work).
+- [ ] 41. [DATA] P1. **Run the MDPS candle audit per-AG against the Option-A target** —
+      `/data-pipeline-reconciliation     --asset-group <ag> --layer candles`, sequenced defi → prediction → cefi →
+      tradfi (the migration order). Confirm it (a) drives off GCS objects not the empty manifest, (b) suppresses the
+      ruled migration deltas as `migration_pending` (does NOT flag migration-incomplete as a defect), (c) reports
+      S4-UNAVAILABLE once as a coverage gap, and (d) surfaces only the genuine defects (empty stems, TradFi
+      migration-artifact leaf ids, the object↔manifest disconnect). Read-only; prod deletes stay human-only. Depends
+      on 38.
+- [ ] 42. [DATA] P2. **Add `timeframe` to the manifest-side census + `service_name` filter for candles** — the manifest
+      census `AXIS_CENSUS_COLUMNS` (`deployment-api/.../routes/data_status/_axis_census.py`) has no `timeframe` and does
+      not filter `service_name=="market-data-processing-service"`; the candle census badges `data_type` against the
+      AGGREGATED `mdps_data_type_key` vocabulary, not the raw-tick `DATA_TYPES_BY_ASSET_GROUP`. Extend it so the
+      distinct-value census (§3f) works on the candle layer. Depends on 39.
+
 ---
 
 ## Deferred work after 2026-07-20

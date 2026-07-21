@@ -627,3 +627,16 @@ Caveats the operator must hold (from the workflow): the raw-content `data_type` 
 the deferred shapes is a later pass; the one earlier-incident PROD object at
 `2020-06-11/PINNACLE/.../LA_LIGA/ODDS/TRADES` is idempotent-safe (SKIP). NO-GO trigger: any `features-sports-sports-*`
 VM non-terminal, or a `--sample-check` mismatch.
+
+## DURABLE ARTIFACT LOCATIONS (2026-07-21 — corrects the scratchpad references above)
+
+The executor + its classification maps are COMMITTED (they are NOT session-local — earlier `scratchpad/…` references
+above are superseded by this):
+
+- **`market-tick-data-service@b2a49317`** →
+  `scripts/sports/league_id_relocation/migrate_sports_league_id_casing_2026_07_21.py` (+ `sportkey_canon_final.json` =
+  the verified 55-entry sport_key→canonical map, + `classification.json` = raw→canonical), all beside the script. Run it
+  from there (`--apply-prod --confirm-prod-write`), not from any scratchpad copy. The `scratchpad/*.py|*.sh` names in
+  the "Evidence:" lines above were session-local one-off probes (corpus walks, sport_key enumeration, sizing). They are
+  NOT committed and will vanish at session end — their MEASURED RESULTS are stated inline in this doc and are what
+  matters; re-derive with a fresh probe if a number needs refreshing (each carries a 2026-07 date).

@@ -159,8 +159,124 @@ the leg-mapping is confirmed, then wired.
   change. More correct-in-full, more work (new data source), larger NAV delta.
 - **Hold.** Keep only the prepared helper + tests; defer wiring until the leg semantics are ratified.
 
+## OPERATOR RULING 2026-07-21: A2 (LENDING + STAKING) + the real economic structure
+
+The operator corrected the model (which could not be safely inferred from code):
+
+- **`carry_staked_basis` does NOT borrow or lend on Aave.** It buys ETH/SOL → stakes → receives LST/LRT → shorts
+  (spot/perp) against the LST where the LST is accepted as collateral. Its interest is therefore the **LST/LRT
+  exchange-rate appreciation** (staking) minus the **short funding** — NOT an Aave `rate_spread`. The current spine's
+  `LENDING_INTEREST = rate_spread/365` for this strategy is a **mismodeling** to correct.
+- **`recursive_staking` is the borrow-to-stake strategy** — it stakes, uses the LST as collateral, borrows, and stakes
+  again (leverage loop). This is where the Aave **`borrow_index`** (cost of the borrowed leg) genuinely applies, against
+  the LST staking yield on the staked leg.
+
+**So A2 =** staking legs (both strategies) → LST/LRT **exchange-rate index** (Hard Rule #5); borrow leg
+(`recursive_staking` only) → `aave_borrow_index`; and correct the `carry_staked_basis` lending mismodeling.
+
+**Data confirmed (verified vs GCS):**
+
+- STAKING: `lst_yields` carries `exchange_rate` + `prev_rate` (LST redemption-rate index; e.g. 1.069→1.231) — the
+  sample-to-sample ratio `exchange_rate/prev_rate − 1` is pre-built. Keyed `token`/`protocol`/`asset`. **Coverage is
+  sparse — only 15 days** (a real gap: staking accrues zero on days with no `lst_yields` row → NAV under-report; file
+  the coverage extension).
+- BORROW: `aave_borrow_index` 100% populated in `lending_rates` (1.0→5.45).
+
+**Build scope (A2):** per-position resolution to (a) the staked LST's `lst_yields` row for the staking leg, (b) the Aave
+reserve's `aave_borrow_index` for `recursive_staking`'s borrow leg; replace the banned `/365` forms; honest-absence →
+zero + visible log (esp. for the sparse LST days); deterministic prev/now from the immutable partition; real
+paper-vs-batch passive-parity test; NO schema/keying/factor/sink change. Ship CODE to LDR on clean 3-lens review.
+
 ## The prod-NAV RECOMPUTE is a separate operator-gated step
 
 Landing option A on LDR changes the code; it does NOT retroactively recompute historical client-reports. Rerunning
 history with the corrected formula (which restates every client's past interest PnL/NAV) is a deliberate,
-separately-gated backfill — human-gated, not part of the code ship. </content>
+separately-gated backfill — human-gated, not part of the code ship.
+
+## LST exchange-rate is FOUR different numbers (operator, 2026-07-21) — audit in flight
+
+The operator flagged that "the LST exchange rate" is not one thing. For a staking token (stETH, and same shape for
+wstETH/rETH/cbETH/rsETH/weETH/ezETH/jitoSOL/mSOL/…) there are FOUR distinct rates, each for a different PnL use:
+
+| #   | rate                                            | source                                          | which leg it serves                            |
+| --- | ----------------------------------------------- | ----------------------------------------------- | ---------------------------------------------- |
+| 1   | CEX spot (e.g. stETH/USDT on Binance)           | market-data-tick-cefi (if we capture LST pairs) | mark-to-market of the LST position (basis)     |
+| 2   | DEX pool (e.g. stETH/ETH on Uniswap v3 / Curve) | market-data-tick-defi DEX (canonical path)      | secondary-market peg vs underlying (basis)     |
+| 3   | Aave oracle rate                                | on-chain oracle Aave uses for LST collateral    | collateral value → LTV/liquidation (recursive) |
+| 4   | Protocol redemption (Lido getPooledEthByShares) | the staking protocol contract (fair value)      | the TRUE staking-yield accrual                 |
+
+Correct A2 needs: **#4** for the staking accrual, **#1/#2** for the mark-to-market of the LST vs the short, **#3** for
+recursive-staking collateral/borrow. `lst_yields.exchange_rate` is exactly ONE of these (likely #4, unconfirmed) — do
+NOT wire staking PnL to it until the audit confirms which, and that we have the right rate for each leg. **Audit
+running:** workflow `wf_268532e0-323` builds the availability matrix (token × 4 sources × coverage + source-of-truth);
+its result is NOT yet on disk — process it when it lands.
+
+## Progress / in-flight (fresh-session resume point)
+
+- **RULED:** engine = spine (option A), scope = A2 (LENDING + STAKING). Economics per operator recorded above.
+- **PREPARED (untracked, held in strategy-service working tree, NOT shipped):**
+  `strategy_service/engine/backtest/index_ratio_accrual.py` + `tests/unit/engine/backtest/test_index_ratio_accrual.py` —
+  the correct pure `index_ratio_accrual(notional, prev, now) = notional*(now/prev−1)` helper (honest-absence→0) with 10
+  golden tests passing. It will be shipped WITH the wiring, not orphaned.
+- **IN-FLIGHT workflows (will notify a fresh session, results not yet durable):** `wf_fede40e7-098` (A2 position-
+  structure understand sweep) and `wf_268532e0-323` (the 4-rate data audit above). Process both, then build A2.
+
+## Deferred work after 2026-07-21
+
+| item                                                                   | state          | blocked-on                                                                                                      |
+| ---------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
+| A2 build (staking via #4 + borrow via aave_borrow_index)               | Not done       | the 2 in-flight sweeps landing + the 4-rate audit confirming which rate = #4                                    |
+| LST rate coverage (which of #1–#4 we actually have)                    | Cannot yet     | audit `wf_268532e0-323` result                                                                                  |
+| `lst_yields` sparse coverage (only 15 days)                            | Not done       | features/MTDS — file the coverage extension once the audit confirms the source                                  |
+| STAKING-leg data if #4 not fully captured                              | Cannot yet     | audit result — may need a new collector (Lido redemption)                                                       |
+| Onchain consolidator frozen (mark→recompute blocker)                   | Not done       | see [[onchain_manifest_dishonest_and_recompute_blocked_2026_07_21]]                                             |
+| MTDS chain-field collectors (ltv/liq_threshold/…)                      | Not done       | new upstream scope (same doc)                                                                                   |
+| 2 adjacent onchain vocabularies (required_inputs, \_feature_contracts) | Not done       | a dedicated UAC reconciliation pass                                                                             |
+| prod-NAV historical recompute                                          | Operator-owned | human-gated; only after the A2 code is reviewed + landed                                                        |
+| 2 features-service safe-survivor fixes                                 | Not done       | stashed `features-safe-survivor-fixes-2026-07-20-DEFERRED…`; reconcile against peer `features-service@9ce1f4ab` |
+
+**Recommended next item:** process the two in-flight sweeps (`wf_268532e0-323` first — it gates WHICH rate to use), then
+build A2 only for the legs whose data the audit confirms; surface any missing rate (esp. #4 protocol redemption or #3
+Aave oracle) as a data gap rather than wiring on a proxy.
+
+## Lessons (so they are not re-learned)
+
+- **The operator's named target was dead code.** `compute_pnl` reads nothing to prod; the consumed engine is the
+  determinism spine. Always confirm the CONSUMED sink before "finishing" a named function.
+- **"The LST exchange rate" is four numbers** (CEX / DEX / Aave-oracle / protocol-redemption) — never wire staking PnL
+  to whichever column happens to be named `exchange_rate` without confirming which of the four it is.
+- **Green determinism tests do NOT prove interest correctness** — the ε=0 fill proof EXCLUDES passive/interest rows, so
+  a passive-row parity test is a separate, required guard.
+- **Two careful build agents refused to wire the money-path on a wrong model and escalated** — that was correct; a
+  plausible NAV edit on a wrong leg-mapping is worse than a gated pause.
+- **`lst_yields` is only 15 days** — a full-history staking recompute would silently book zero on missing days; make it
+  a visible flag.
+
+## A2 build is BLOCKED on 4 escalations (understand sweep `wf_fede40e7-098`, 2026-07-21)
+
+The A2 position-structure sweep returned `buildable_now: false`. Resume-critical findings (full spec in that run's
+journal; resumable via `resumeFromRunId: wf_fede40e7-098`):
+
+- **E1 [BLOCKER — money-path]** csb SHORT-FUNDING source. The operator's "LST appreciation MINUS short funding" — but
+  today `FUNDING_ACCRUAL = -basis_amount` where basis IS the Aave rate_spread; once the LENDING mismodel is zeroed, the
+  funding leg collapses to 0. The "minus short funding" half has **no confirmed data source** (need real perp funding
+  for the short). Must resolve before csb interest is correct.
+- **E2 [confirm — sets the number]** staking BASE units. Hard Rule #5's `holding` is the LST balance in NATIVE units;
+  the spine passes `staked_notional` in QUOTE units. Rec: multiply the ratio by the quote `staked_notional` (CARRY
+  factor isolates staking yield in quote) — confirm.
+- **E3 [scope]** RECURSIVE staking is NOT drivable in the spine today (not in `_ENGINE_DRIVABLE_ARCHETYPES`, missing
+  perp/spot config keys → emits ZERO passive rows). Adding the `aave_borrow_index` borrow leg is **net-new archetype
+  wiring**, not a formula swap — a tracked FOLLOW-ON, bigger than csb.
+- **E4 [confirm]** A2 necessarily DROPS the csb LENDING/BASIS rows (csb does not lend) — contradicts "no schema change".
+  Confirm intended csb row-set = {STAKING via LST index, FUNDING via real perp}, LENDING/BASIS explicit-zeroed.
+
+**Smallest correct increment (when unblocked):** csb STAKING leg only — swap `STAKING_REWARD`/`CARRY` to the
+`lst_yields` index ratio keyed off `cfg['lst_asset']` (threaded into the loader — TODAY both call sites pass
+`lst_asset=native_asset='ETH'` for delta-netting, so the LST token is in config but NOT in the loader), explicit-zero
+the LENDING mismodel, resolve FUNDING per E1. Position resolution is derivable (`cfg['lst_asset']` → UAC
+`protocol_asset_for_token`); feed must widen from a `(day,bps,bps)` tuple to a typed record carrying index PAIRS
+(cross-archetype change); `lst_yields` has NO dup rows (prebuilt prev/now), `lending_rates` has ~3× dup (sort+dedup+
+min/max, never iloc). Recursive + compound/kamino dispatch = follow-on.
+
+**So the A2 build is gated on: E1 (funding source) + E2/E4 (confirms) + the 4-rate audit `wf_268532e0-323` (which rate
+is #4). Do NOT wire until these resolve.** </content>

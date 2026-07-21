@@ -299,15 +299,74 @@ Two further sports facts a reconciliation pass needs, both from the Phase-0 audi
 
 ---
 
+## §6a — Axis: features data-at-rest `by_date/day=` root (R1, 2026-07-21)
+
+**Target ruled: 2026-07-21** (operator R1) — every features data-at-rest tree MUST carry the `by_date/day=` level. This
+RATIFIES the UTL paths registry, which already declares it. **In force at the writer: NOT YET → effective-from for
+classification is UNKNOWN.**
+
+| Kind             | Registry SSOT (already canonical)                                 | Live writer today                                                                                         | State               |
+| ---------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------- |
+| delta_one (cefi) | `registry.py:57` `delta_one/by_date/day=…`                        | ❌ `delta_one/day=…` — NO `by_date/` (`feature_writer.py:132-136` prefix `"delta_one"`; probe `:793-796`) | `migration_pending` |
+| volatility       | `registry.py:90` `volatility/by_date/day=…`                       | ❌ **bucket root** — `get_data_sink` with NO `prefix=` (`volatility/core/feature_writer.py:152-155`)      | `migration_pending` |
+| onchain (defi)   | `registry.py:74` `onchain/by_date/day=…`                          | ✅ `onchain/adapters/onchain_writer.py:62` already `by_date/day=` (verify-only)                           | canonical (verify)  |
+| sports           | writer `sports/data/writer.py:26` `sports_features/by_date/day=…` | ✅ already `by_date/day=` (verify `feature_versioning.py:57` prefix `"by_date"`)                          | canonical (verify)  |
+
+Until the delta_one + volatility writers ship the `by_date/` prefix, their existing objects are `migration_pending`
+(written before the ruling), NOT a regression. Fix + migration:
+[`../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md).
+
+---
+
+## §6b — Axis: `instrument_availability` full canonical hive grammar (R2, 2026-07-21)
+
+**Target ruled: 2026-07-21** (operator R2, HARD RULE) — every data-at-rest bucket MUST use the FULL canonical hive
+grammar (canonical key set incl. `pipeline_mode=`/`asset_group=`, in canonical order), not a reduced/flat subset. This
+resolves the "`instrument_availability` FLAT vs hive" contested axis → **RULED HIVE**. **In force at the writer: NOT YET
+→ effective-from UNKNOWN.**
+
+| Surface       | State today                                                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| registry SSOT | ❌ FLAT — `registry.py:35` `instrument_availability/by_date/day={date}/venue={venue}/` (2 keys)                             |
+| live writer   | ❌ FLAT — `process_write.py:612` prefix `"instrument_availability/by_date"` + `writers.py:201-208` partition `{day, venue}` |
+| siblings      | ❌ same reduced-flat shape: `market_lifecycle` (`process_write.py:614`), `futures_contracts` (`writers.py:359,382`)         |
+
+**Trap (do not repeat):** the UTL sink sorts partition-dict keys ALPHABETICALLY (`protocol_impls.py:26`), so
+`pipeline_mode=`/`asset_group=` cannot be added to the partition dict — the fix bakes ordered keys into the sink PREFIX,
+and updates the registry template (SSOT). Flat objects are `migration_pending`, not a fresh finding. Fix + migration:
+[`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
+
+---
+
+## §6c — Axis: cefi chain-tail v6 (R3, 2026-07-21)
+
+**Target ruled: 2026-07-21** (operator R3) — the v6 tail `underlying={ROOT}/quote={Q}/margin={M}/ticks.parquet` is
+canonical everywhere; the v5 bare tail `underlying={ROOT}/ticks.parquet` is LOSSY (same-underlying USD/USDT +
+linear/inverse chains collide) and ALL v5 must migrate. This resolves the "cefi chain-tail v5 vs v6 — two live-written
+shapes" contested axis → **RULED v6**. **In force at W1: NOT YET → cefi effective-from UNKNOWN.**
+
+| Surface                    | v6 state                                                                                                                                                                      |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UAC builder                | ✅ v6 — `partition_paths.py:252-253` (`build_cefi_partition_path`)                                                                                                            |
+| reader                     | ✅ v6-first, v5-fallback — `reader.py:402-403`                                                                                                                                |
+| W2 (Tardis lane)           | ✅ v6 — `tardis_shared.py:668-669`                                                                                                                                            |
+| W1 (PartitionedTickWriter) | ❌ bare v5 for cefi — quote/margin derived ONLY under `asset_group=="tradfi"` (`partitioned_writer.py:291-292`); guard `_assert_canonical_tradfi_path` (`:83`) is tradfi-only |
+
+**Open first:** whether any native-REST cefi venue routes `options_chain`/`futures_chain` through W1 (vs the W2 Tardis
+lane) — this sizes the live v5 cefi migration blast radius. Fix + migration:
+[`../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
+
+---
+
 ## §7 — Summary table
 
-| asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN                        | chain tail        | defi leaf                    | sports data_type case  |
-| ----------- | ------------------------------------- | -------------------- | --------------------------------------------- | ----------------- | ---------------------------- | ---------------------- |
-| cefi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | v5/v6 dual hazard | n/a                          | n/a                    |
-| tradfi      | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | **2026-07-19**    | n/a                          | n/a                    |
-| defi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | n/a               | UNKNOWN (writer not resumed) | n/a                    |
-| prediction  | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | n/a               | n/a                          | n/a                    |
-| sports      | 2026-05-19 (+ BLK-d48acae4 exception) | n/a                  | ✅ UPPER target · migration_pending (D1, §3c) | n/a               | n/a                          | UNKNOWN (K1 unshipped) |
+| asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN                        | chain tail                                 | defi leaf                    | sports data_type case  |
+| ----------- | ------------------------------------- | -------------------- | --------------------------------------------- | ------------------------------------------ | ---------------------------- | ---------------------- |
+| cefi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | ✅ v6 target · migration_pending (R3, §6c) | n/a                          | n/a                    |
+| tradfi      | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | **2026-07-19**                             | n/a                          | n/a                    |
+| defi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | n/a                                        | UNKNOWN (writer not resumed) | n/a                    |
+| prediction  | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | n/a                                        | n/a                          | n/a                    |
+| sports      | 2026-05-19 (+ BLK-d48acae4 exception) | n/a                  | ✅ UPPER target · migration_pending (D1, §3c) | n/a                                        | n/a                          | UNKNOWN (K1 unshipped) |
 
 > **⛔ corrected 2026-07-20, operator ruling D1 — RE-RECONCILED 2026-07-20 (acceptance review).** The
 > `instrument_type COLUMN` cells above read "🔴 UNRULED (§3c)" until the 2026-07-20 ruling, then briefly "RULED
@@ -315,13 +374,17 @@ Two further sports facts a reconciliation pass needs, both from the Phase-0 audi
 > (mixed on disk today) — the reconciliation skill compares it **case-INSENSITIVELY** and emits **NO** casing finding
 > until the migration completes; UPPERCASE is enforced POST-migration. See §3c.
 
-**cefi chain-tail hazard (not a date, a fork).** cefi has **two live write lanes emitting two different tails for the
-same shard**: MTDS W1 `PartitionedTickWriter` emits the bare v5 tail `underlying={U}/ticks.parquet` because
-`write_chunk` gates quote/margin derivation on `asset_group == "tradfi"` only, while the W2 Tardis lane emits the v6
-tail. There is no cefi cutover date to record because cefi never cut over — both shapes are being written **now**. A
-reconciliation pass must accept both cefi tails and report the fork itself as one finding, not per-shard. _(**UNVERIFIED
-by this agent**: the `partitioned_writer.py:290-293` and `tardis_shared.py:667-671` line references come from the
-Phase-0 audit synthesis; this agent did not open the MTDS writer files.)_
+**cefi chain-tail hazard (not a date, a fork).** _(**⛔ RULED 2026-07-21, operator R3 — see §6c.** The fork is resolved:
+**v6 is canonical**, v5 is LOSSY and ALL v5 migrates. The W1 cefi-emits-v5 divergence is now a WRITER DEFECT to fix
+(`partitioned_writer.py:291-292` derives quote/margin only under `asset_group=="tradfi"`), not a permanent two-shape
+fork; it is `migration_pending` until W1 ships. Until then a reconciliation pass still accepts both cefi tails and does
+NOT flag v5 as a fresh finding.)_ cefi has **two live write lanes emitting two different tails for the same shard**:
+MTDS W1 `PartitionedTickWriter` emits the bare v5 tail `underlying={U}/ticks.parquet` because `write_chunk` gates
+quote/margin derivation on `asset_group == "tradfi"` only, while the W2 Tardis lane emits the v6 tail. There is no cefi
+cutover date to record because cefi never cut over — both shapes are being written **now**. A reconciliation pass must
+accept both cefi tails and report the fork itself as one finding, not per-shard. _(**UNVERIFIED by this agent**: the
+`partitioned_writer.py:290-293` and `tardis_shared.py:667-671` line references come from the Phase-0 audit synthesis;
+this agent did not open the MTDS writer files.)_
 
 ---
 

@@ -8,11 +8,11 @@ summary: >-
   Run SERVICES carry no timestamp at all (an asymmetry vs their AWS ECS twin); several kinds (Job/Scheduler/Disk) have
   only a single timestamp or none. Also folds in the kind filter becoming multi-select, plus the previously-scoped
   service dropdown + target search box (WS-3) since they share the same filter bar.
-status: draft
+status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-ui]
+repos: [deployment-api, deployment-ui, unified-trading-library]
 scope: [engineer]
 tags: [deployment-ui, filters, search, date-range, observability]
 related:
@@ -41,8 +41,12 @@ source:
 
 # deployment-ui — date-range filter, kind multi-select, service filter, target search
 
-> **🟡 Kept `draft` deliberately (operator 2026-07-20)** — operator is mid-change on AO right now; this plan is written
-> now (audit done, decisions final) but not flipped `active` until AO settles.
+> **🟢 ACTIVE (operator 2026-07-21)** — flipped `active` as one of the first two plans dispatched to AO to test its
+> reliability (the other is `deployment_ui_cost_per_day_accuracy_2026_07_20.md`). Must-do review fixes applied before
+> activation (`unified-trading-library` added to `repos:` for the `deployment_registry.py` reference; `onHeaderClick`
+> line ref corrected to `:821`). **This plan owns the `Deployments.tsx` shared-primitive extraction** that WS-5B
+> consumes — so it is the correct one to run first. Remaining observability plans stay `draft` until these two complete
+> and AO looks stable.
 
 ## Context — live audit findings (2026-07-20, read-only, no writes)
 
@@ -91,17 +95,25 @@ Full audit transcript available on request; the load-bearing facts:
 
 ## Todos
 
-- [ ] [BACKEND] P0. VM/registry overlap query — `date_from`/`date_to` params on the inventory endpoint; overlap =
+- [x] ✅ [BACKEND] P0. VM/registry overlap query — `date_from`/`date_to` params on the inventory endpoint; overlap =
       `started_at ≤ B AND (completed_at ≥ A OR effective_end ≥ A)` where `effective_end` = `completed_at` if set, else
       `last_heartbeat_at` when heartbeat-stale (>6h, matching the existing reap constant), else open-ended (truly live).
-      Heartbeat-derived rows get `basis: "approx"`.
-- [ ] [BACKEND] P0. Archive range-read — bypass the existing 7-day `_ARCHIVE_WINDOW_DAYS` cap for date-range queries
+      Heartbeat-derived rows get `basis: "approx"`. — deployment-api@ff5bb06 (`_vm_overlap_basis`/`_apply_date_range` in
+      `deployments_inventory.py`; `DeploymentItem` gained `started_at`/`completed_at`/`last_heartbeat_at`/`basis`; 12
+      new unit tests incl. route-level date_from/date_to wiring; `quality-gates.sh` green)
+- [x] ✅ [BACKEND] P0. Archive range-read — bypass the existing 7-day `_ARCHIVE_WINDOW_DAYS` cap for date-range queries
       specifically; read day-partitioned `deployments/archive/<day>/` prefixes directly for the requested range (bounded
       listing only, no whole-corpus walk) up to the real 30-day GCS floor. Beyond 30 days → structured out-of-range
-      response.
-- [ ] [BACKEND] P1. Unmanaged VMs + Cloud Run Job/AWS Batch/Scheduler — match via their single available timestamp
+      response. — deployment-api@42191d9 (`_load_registry_entries_for_date_range`/`_archive_floor_date`; route merges
+      the extra range-scoped VM rows, deduped against the cached 7-day census; response carries `archive_floor` +
+      `date_range_out_of_range` for the UI banner; 8 new unit tests; `quality-gates.sh` green)
+- [x] ✅ [BACKEND] P1. Unmanaged VMs + Cloud Run Job/AWS Batch/Scheduler — match via their single available timestamp
       (`last_run_at`/`last_attempt_at`) where no true interval exists, marked `basis: "approx"`. Document the per-kind
-      support matrix (interval / single-timestamp / none) on the field.
+      support matrix (interval / single-timestamp / none) on the field. — deployment-api@fbb5ac9
+      (`_single_timestamp_overlaps`/`_SINGLE_TIMESTAMP_KINDS` in `deployments_inventory.py`; covers unmanaged/AWS-EC2
+      VMs + CLOUD_RUN_JOB (GCP + AWS Batch share the wire kind) + SCHEDULER; support matrix documented on
+      `DeploymentItem.last_run_at`; kinds with no timestamp signal at all pass through unfiltered; 10 new unit tests;
+      `quality-gates.sh` green)
 - [ ] [BACKEND] P1. Add a `last_deployed_at` field to the `CLOUD_RUN_SERVICE` list item (revision create_time) — closes
       the asymmetry vs `ECS_SERVICE` found in the audit; needed so always-on services can be sorted/labelled per
       decision 2.
@@ -120,13 +132,14 @@ Full audit transcript available on request; the load-bearing facts:
 - [ ] [UI] P2. Target search box (WS-3) — free-text substring match on the Target column (`item.name`),
       case-insensitive, URL-backed (`?q=`), debounced, clears with an ✕.
 - [ ] [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
-      `StatusFilterChips` (`:916-961`), and the column-sort machinery (`SortKey` / `columnSortValue` / `compareByColumn`
-      / `onHeaderClick`, `:256-320`) are currently LOCAL to `Deployments.tsx` and not exported. Lift them into shared
-      components (e.g. `src/components/filters/`) as part of this work, preserving behaviour, and re-consume them here.
-      **This plan owns the extraction** — the WS-5 alerts-page rebuild
-      (`deployment_ui_alerts_page_rebuild_2026_07_20.md`) declares `depends_on` this plan and consumes the extracted
-      primitives rather than duplicating or re-editing this file (operator decision 2026-07-20 — one agent owns
-      `Deployments.tsx`, no same-file collision, no divergent filter bars).
+      `StatusFilterChips` (`:924-961`), and the column-sort machinery (`SortKey` / `columnSortValue` / `compareByColumn`
+      at `:256-320`, plus `onHeaderClick` at `:821` — note it lives in the table component, NOT co-located with the pure
+      sort fns) are currently LOCAL to `Deployments.tsx` and not exported. Lift them into shared components (e.g.
+      `src/components/filters/`) as part of this work, preserving behaviour, and re-consume them here. **This plan owns
+      the extraction** — the WS-5 alerts-page rebuild (`deployment_ui_alerts_page_rebuild_2026_07_20.md`) declares
+      `depends_on` this plan and consumes the extracted primitives rather than duplicating or re-editing this file
+      (operator decision 2026-07-20 — one agent owns `Deployments.tsx`, no same-file collision, no divergent filter
+      bars).
 - [ ] [REVIEW] P1. Tests — overlap formula (fresh-running / heartbeat-stale / completed cases); archive bounded-read +
       30-day floor behaviour; out-of-range banner trigger; per-kind `basis` assignment; kind-multi-select +
       service/search URL param round-trip. `pw:L2 ✓` + cited regression spec for the UI pieces;

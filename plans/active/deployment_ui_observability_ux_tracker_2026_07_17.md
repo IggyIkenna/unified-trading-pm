@@ -361,6 +361,14 @@ thorough alert coverage** — do that audit first, then write the plan.
 
 ## WS-6 — Durable resource-metrics timeline (design first — decision deferred by operator)
 
+> **✅ RESOLVED + SPLIT 2026-07-21** — write-path decided: **event-spine → BigQuery** (operator chose it over
+> GCS-batched / Ops-Agent; the VM just publishes an event, cost ~$0). Expanded beyond resource stats to THREE durable
+> signals — VM resource stats + a run-ledger (fixes the live-confirmed 30-day archive TTL) + idle/orphan-spend trend —
+> all in one BigQuery dataset. **No live interactive timeline chart** (operator: nice-to-have, dropped); analysis =
+> download + local DuckDB. **Git-health snapshot history DROPPED** (not necessary). Executable plan:
+> [`deployment_durable_operational_data_bigquery_2026_07_21.md`](deployment_durable_operational_data_bigquery_2026_07_21.md)
+> (kept `draft`). Section below stays as the pre-decision record + the three write-path options considered.
+
 ### Operator ask (2026-07-17, near-verbatim)
 
 Resources today are a current snapshot — good for now. In future we want a **durable** record of the ~30-second resource
@@ -432,13 +440,13 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
 
 ## Split map (when the operator finalises — before ANY dispatch)
 
-| Child plan                   | Contents                                                                          | Readiness                                                                             |
-| ---------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                    | done — kept `draft`, dispatch held pending AO changes settling                        |
-| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`             | done — audit run live inline; kept `draft`, dispatch held pending AO changes settling |
-| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                            | done — repro audit reframed scope (no viewer existed); kept `draft`, dispatch held    |
-| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred   | done — both audits run live; reframed to ingestion-first; kept `draft`, dispatch held |
-| WS-6 resource timeline       | (c)-audit + decision doc now; build todos stay `draft` until the operator decides | capture-only — operator explicitly deferred                                           |
+| Child plan                   | Contents                                                                                                                                 | Readiness                                                                                            |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                                                                           | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test, must-do fixes applied)                |
+| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`                                                                    | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test; owns the Deployments.tsx extraction)  |
+| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                                                                                   | 🟢 **ACTIVE 2026-07-21** — 2nd-wave dispatch (must-do fixes applied; do NOT co-run with WS-6/daemon) |
+| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                          | 🟢 **Plan A ACTIVE 2026-07-21** — 2nd-wave dispatch; Plan B stays `draft` (gated on A)               |
+| WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend; git-health dropped) | done — write-path decided; kept `draft`, dispatch held                                               |
 
 Per task_template §4 — each child gets 10–20 todos, one plan = one agent, audits separable, draft-gated phases where a
 build depends on an audit/decision.
@@ -506,6 +514,28 @@ build depends on an audit/decision.
   `deployment_alerts_ingestion_completeness_2026_07_20.md` (Plan A, P0) and
   `deployment_ui_alerts_page_rebuild_2026_07_20.md` (Plan B, `depends_on` A + the date-range plan, which owns the shared
   filter/sort-primitive extraction from `Deployments.tsx`). Both kept `draft`.
+
+- **2026-07-21 (interactive session)** — WS-6 resolved. Design discussion compared three write paths; operator chose
+  **event-spine → BigQuery** (simpler write path — the VM just publishes an event, no GCS flush/layout/compaction/
+  object-count machinery — and cost ~$0 at fleet scale, verified: ~4 GB / 6 months for 100 VMs at 1/min, queries within
+  the 1 TB/mo free tier). Scope expanded to THREE durable signals (resource stats + run-ledger + idle-spend), all in one
+  BQ dataset; **no live timeline chart** (dropped as nice-to-have — analysis via download + local DuckDB); **git-health
+  snapshot history dropped**. Live-confirmed the `deployments/archive/` 30-day TTL (the run-ledger fixes it). Split to
+  `deployment_durable_operational_data_bigquery_2026_07_21.md` (kept `draft`). NB: also authored the Fleet-tab
+  consolidation plan (`deployment_ui_fleet_tab_consolidation_2026_07_21.md`) this session — not a tracker WS, but
+  related deployment-ui cleanup.
+- **2026-07-21 (AO reliability test)** — Operator activated the FIRST TWO plans (`WS-1` cost accuracy + `WS-2/3`
+  filters+search) — flipped `status: active`, must-do review fixes applied, pushed. These are independent, no cross-plan
+  gating, and WS-2/3 is the upstream owner of the `Deployments.tsx` shared-primitive extraction — a good first pair. All
+  remaining plans (WS-4, WS-5A, WS-5B, Fleet consolidation, durable-operational-data) STAY `draft` until these two
+  complete and AO looks stable. Fleet + durable-operational-data pushed to remote as durable drafts.
+
+- **2026-07-21 (2nd-wave dispatch)** — WS-1/WS-2-3 progressed cleanly, so activated the next collision-safe pair for
+  throughput: **WS-4** (VM log viewer) + **WS-5A** (alerts ingestion). Must-do review fixes applied to both before
+  activation. Now 4 concurrent serial workers. Still `draft`: WS-5B (gated on WS-5A + WS-2/3), Fleet consolidation
+  (gated on WS-2/3 `Deployments.tsx` merge), WS-6 durable-operational-data (safe alone but **collides with WS-4 on the
+  UTL heartbeat daemon** — do NOT co-run). Next eligible when a slot frees: WS-6 (only once WS-4's daemon work is done),
+  then WS-5B / Fleet once their gates clear.
 
 ## Codex SSOTs
 

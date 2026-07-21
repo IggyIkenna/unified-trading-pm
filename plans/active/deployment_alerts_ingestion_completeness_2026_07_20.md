@@ -12,7 +12,7 @@ summary: >-
   read-modify-write row-drop race, retention wide enough for a real date range, and persistence for the zombie-watchdog
   webhook that currently records nothing. Agent-orchestrator alerts are explicitly DEFERRED (AO has its own alert
   machinery + UI). The page rebuild is Plan B, gated on this.
-status: draft
+status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -46,11 +46,14 @@ source:
 
 # deployment alerts — ingestion completeness (Plan A)
 
-> **🟡 Kept `draft` deliberately (operator 2026-07-20)** — operator is mid-change on AO; this plan is written now (audit
-> done, decisions final) but not flipped `active` until AO settles.
+> **🟢 ACTIVE (operator 2026-07-21)** — second-wave dispatch to AO (throughput ramp). Must-do review fixes applied
+> before activation: the ingest todo now handles the `resolve_bucket_name()` gap (no registry entry for the
+> alerting-service bucket → add one first); the race-fix todo now covers BOTH the `cicd/events/` race (issue doc) AND
+> the unaddressed `cicd/alerts/` `_persist_alert` race.
 >
 > **Plan A of two.** Plan B (`deployment_ui_alerts_page_rebuild_2026_07_20.md`) rebuilds the page UI and is draft-gated
-> on this plan — what the page can filter and sort on is determined by what actually arrives here.
+> on this plan — Plan B stays `draft` until this completes (its filter dimensions depend on the normalised schema
+> landing here).
 
 ## The framing (operator, 2026-07-20)
 
@@ -123,15 +126,23 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       delivery-status fields, conforming to the normalised schema.
 - [ ] [BACKEND] P0. **deployment-api — ingest the alerting-service store.** Read `alerting/history/date=…/*.jsonl` into
       the unified alerts response. **This single item mirrors ~12 alert classes at once** — the highest-leverage change
-      in the workstream, and the cheapest (an existing durable store, just read it). Bucket via `resolve_bucket_name()`,
-      bounded day-partitioned reads only (no whole-corpus walk).
+      in the workstream, and the cheapest (an existing durable store, just read it). **Bucket-resolution caveat
+      (verified):** the alerting-service bucket (`alerting-service-{project}`, derived by alerting-service's own private
+      `_bucket_name()`) has **no kind entry** in `deployment-service/configs/cloud-providers.yaml` today, so
+      `resolve_bucket_name()` cannot resolve it as-is — FIRST add a `gcp.storage` kind entry for it to that config, THEN
+      resolve via `resolve_bucket_name()`. Do NOT hardcode the literal (that recreates the QG 5.69 violation a sibling
+      todo fixes). Bounded day-partitioned reads only (no whole-corpus walk).
 - [ ] [BACKEND] P0. **Fix the emitting-vs-subject repo defect** — populate `subject_repo` distinctly from the emitting
       repo on the GHA/ci-failures path, so repo filtering returns correct results.
 - [ ] [BACKEND] P1. **Fix the hardcoded bucket** (QG 5.69) — `_repo_ci_alerts.py:27` and `deployments_inventory.py:342`
       → `resolve_bucket_name()`. Update `tests/unit/test_route_deployments_inventory.py:854` which asserts the literal.
-- [ ] [BACKEND] P1. **Fix the read-modify-write row-drop race** per
-      `issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` — concurrent writers currently drop rows
-      silently. Close that issue doc when done.
+- [ ] [BACKEND] P1. **Fix the read-modify-write row-drop race — BOTH instances.** (a) The one in
+      `issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` (the GHA composite action
+      `.github/actions/persist-event` writing `cicd/events/…` — a bash fix via the template +
+      `rollout-workflow-templates.sh`, not a same-repo Python patch); AND (b) a structurally-identical,
+      currently-UNADDRESSED race in `deployment_api/routes/deployments_inventory.py::_persist_alert` (~L604-609) writing
+      `cicd/alerts/…` — right next to the hardcoded-bucket fix. Fix both. Close the issue doc when (a) is done; note (b)
+      in the Progress Log.
 - [ ] [BACKEND] P1. **Retention + window** — `_DEFAULT_DAYS = 2` / `_MAX_ITEMS = 400` cannot support the date-range
       filter Plan B needs. Implement a retention/window policy (proposed default: 30 days queryable via bounded
       day-partitioned reads, response paginated rather than truncated at a silent cap). A silent 400-item truncation

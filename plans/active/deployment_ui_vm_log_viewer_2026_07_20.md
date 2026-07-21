@@ -9,11 +9,11 @@ summary: >-
   copies keyed by cron-run date — confirmed 404ing live for real VMs. This plan adds a writer-side durable final-
   snapshot on VM completion (removing date-guessing), a live-first/archive-fallback read path, size+capped-tail+
   signed-URL-download endpoints, a genuinely new log-viewer panel, and an honest rename of the existing events panel.
-status: draft
+status: active
 nature: process
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, deployment-api, deployment-ui]
+repos: [unified-trading-library, deployment-service, deployment-api, deployment-ui]
 scope: [engineer]
 tags: [deployment-ui, logs, gcs, observability]
 related:
@@ -43,8 +43,12 @@ source:
 
 # deployment-ui — VM run.log viewer
 
-> **🟡 Kept `draft` deliberately (operator 2026-07-20)** — operator is mid-change on AO right now; this plan is written
-> now (audit done, decisions final) but not flipped `active` until AO settles.
+> **🟢 ACTIVE (operator 2026-07-21)** — second-wave dispatch to AO (throughput ramp, after WS-1/WS-2-3 progressed
+> cleanly). Must-do review fixes applied before activation (`unified-trading-library` added to `repos:`; the writer todo
+> now names the real completion hook — `HeartbeatDaemon` in UTL `lifecycle/daemon.py`, driven by `heartbeat_cli.py`, +
+> the shell SIGKILL fallback — and specifies the `vm_run_log_final_uri` path). **Do NOT run concurrently with
+> `deployment_durable_operational_data_bigquery_2026_07_21.md`** — both edit the UTL heartbeat daemon (same-file
+> collision).
 
 ## Context — live repro audit findings (2026-07-20, read-only, no writes)
 
@@ -84,14 +88,20 @@ source:
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Writer-side final snapshot** (decision 1) — on VM completion, the archiver/heartbeat-daemon path
-      in deployment-service writes one durable copy of `run.log` to a fixed, deterministic path (new UTL path constant
-      alongside the existing `vm_log_stream_uri`/`vm_log_archive_uri`/`vm_run_log_rolling_uri` helpers in
-      `deployment_registry.py`) — no TTL, plain replace on re-run.
+- [ ] [BACKEND] P0. **Writer-side final snapshot** (decision 1) — on VM completion write one durable copy of `run.log`
+      to a fixed, deterministic path. **Locations (verified — note the completion hook lives in UTL, not
+      deployment-service):** add a new path helper `vm_run_log_final_uri(vm_name, project_id)` →
+      `gs://deployment-scripts-{project}/log-archive/final/{vm}/run.log` (no date in the path — that is the whole point;
+      no TTL, plain replace) alongside `vm_log_stream_uri`/`vm_log_archive_uri`/`vm_run_log_rolling_uri` in
+      **`unified-trading-library/unified_trading_library/deployment_registry.py`**. Invoke the write from the completion
+      path: `HeartbeatDaemon` in `unified-trading-library/.../lifecycle/daemon.py` (terminal-event emission ~L344),
+      driven by `deployment-service/deployment_service/vm/heartbeat_cli.py:389-406`; also cover the SIGKILL fallback in
+      `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh:313-339` so a hard-killed daemon still leaves a final copy.
 - [ ] [BACKEND] P0. **Read-path resolution** (decision 2) — deployment-api tries `vm-logs/{vm}/run.log` first for any VM
-      (regardless of `completed_at`); on miss, falls back to the new final-snapshot path. Removes the broken
-      `completed_at[:10]`-keyed rolling-date guess (`deployments_inventory.py:675-680`, `vm_deployments.py:133-143`) —
-      delete that dead logic, don't leave it as an unused fallback.
+      (regardless of `completed_at`); on miss, falls back to the final-snapshot path (`vm_run_log_final_uri`, from the
+      writer todo above — `sequential: true` guarantees it lands first). Removes the broken `completed_at[:10]`-keyed
+      rolling-date guess (`deployments_inventory.py:675-680`, `vm_deployments.py:133-143`) — delete that dead logic,
+      don't leave it as an unused fallback.
 - [ ] [BACKEND] P0. Log metadata endpoint — size + last-modified via `gcs_describe_object` on whichever path resolved;
       response marks which location was used (live vs archive) so the UI can label it.
 - [ ] [BACKEND] P0. Bounded tail endpoint — byte-range read of only the last ~64–256KB, split to the last 200–500 lines
@@ -113,8 +123,8 @@ source:
       `footystats-fwd-20260620-150001`) — confirm the new path resolves correctly going forward; for VMs that completed
       BEFORE this ships (no final snapshot ever written for them), confirm the UI shows the honest "no log available"
       state rather than a blank silent failure.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the 3 repos) + flip todos same turn
-      (`docs(plans):`).
+- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the 4 repos — incl.
+      `unified-trading-library` for the new path helper) + flip todos same turn (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the log-path resolution contract (live-first/archive-fallback,
       final-snapshot writer contract, no date-guessing), the size/tail/download endpoints, and the events-vs-logs panel
       distinction in `codex/05-infrastructure/deployment-observability.md` +
