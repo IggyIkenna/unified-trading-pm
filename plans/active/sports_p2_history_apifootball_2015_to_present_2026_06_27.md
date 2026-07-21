@@ -3273,3 +3273,28 @@ about `--force` replays / unilateral deletes, not checkpoint-gated resume). Per 
 `data_engineering` — instead added two tracked `[INFRA]` todos above (P0 relaunch with the exact launcher invocation, P1
 self-heal-watchdog-coverage-gap root-cause) so the recovery dispatches through the correct craft. `/skip-current-task`
 on `-001` — resume once the new `[INFRA]` P0 todo is picked up and the 2 shards rejoin the fleet.
+
+### 2026-07-21T03:32Z — data_engineering slot-8 (Todo `-001` re-dispatched, ~18min after the `[INFRA]` todos landed — cheap re-check, still gated, decline)
+
+Dispatched (again) onto `-001`. Fresh-pulled `unified-trading-pm` (was behind by 3 commits — `b9fcfec68`/`d360a854d`/
+`d54b4f62f`, the `BLK-32c04851` resolution + `[INFRA]` P0/P1 todo additions).
+
+**Fleet re-check** (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud`, `CLOUDSDK_AUTH_ACCESS_TOKEN` from
+`gcloud auth application-default print-access-token` — the default gcloud user/SA credential both fail to refresh
+non-interactively in this slot, ADC works fine):
+
+- `gcloud compute instances list --filter="name~af-backfill"` → still only 2 VMs resolve: `af-backfill-20260719-180545`
+  (LINEUPS) and `af-backfill-20260719-180620` (PLAYER_STATS), both `RUNNING`. `af-backfill-20260719-180520`
+  (FIXTURE_EVENTS) / `-180603` (FIXTURE_STATS) still absent — **not yet relaunched**.
+- `PROGRESS.json` (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/PROGRESS.json`): LINEUPS
+  `last_completed_date=2024-05-11` (updated `2026-07-21T03:31:55Z`, live) · PLAYER_STATS `2025-12-01` (updated
+  `03:31:56Z`, live) · FIXTURE_EVENTS still frozen `2021-05-01` (`updated=2026-07-20T05:25:00Z`, unchanged) ·
+  FIXTURE_STATS still frozen `2021-03-20` (`updated=2026-07-20T05:25:21Z`, unchanged).
+
+No material change since the 03:11Z entry — same 2 dead / 2 alive split, same frozen checkpoints. The `[INFRA] P0`
+relaunch todo (line 248 above) is the correctly-scoped fix and hasn't been picked up yet (only ~18 min old). Per the
+just-landed ruling, relaunching the 2 dead shards is explicitly out of `data_engineering` craft scope now that a
+dedicated `[INFRA]` todo exists for it — doing it here would duplicate/race that todo's own dispatch. Not flipping the
+checkbox (gate still 2/4 shards stalled). `/skip-current-task` — resume once the `[INFRA] P0` todo lands (both dead
+shards relaunched + confirmed advancing past their frozen checkpoints) or a fresh full-history gate read is
+independently due.
