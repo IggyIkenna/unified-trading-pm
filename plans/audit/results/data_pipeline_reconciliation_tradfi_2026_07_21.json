@@ -1,0 +1,272 @@
+{
+  "asset_group": "tradfi",
+  "run_date_utc": "2026-07-21",
+  "mode": "read-only",
+  "phases": "0-2",
+  "compute_tier": "tier-1 (in-session; census + per-shard oracle + sampled <=500 id/schema smoke)",
+  "clouds": ["gcp:central-element-323112", "aws:427895769566"],
+  "buckets": {
+    "gcp_tick": { "name": "market-data-tick-tradfi-prd-central-element-323112", "reachable": true, "test_tier": false },
+    "gcp_is": { "name": "instruments-store-tradfi-prd-central-element-323112", "reachable": true, "test_tier": false },
+    "aws_tick": { "name": "market-data-tick-tradfi-prd-427895769566", "reachable": true, "objects": 0, "empty": true },
+    "aws_is": { "name": "instruments-store-tradfi-prd-427895769566", "reachable": true, "objects": 0, "empty": true }
+  },
+  "index_state": {
+    "consolidated_index_rows": 5846844,
+    "consolidated_index_updated_utc": "2026-07-21T08:45:03Z",
+    "consolidator_lock_held": true,
+    "consolidator_instance": "1-9bd305ec",
+    "last_run": { "no_op": true, "error_reason": "locked", "shards_scanned": 0 },
+    "outstanding_per_vm_shards": 58,
+    "phantom_audit": { "count": 1635, "generated_utc": "2026-07-14T07:41:33Z", "stale": true },
+    "is_index_rows": 27200,
+    "is_index_locked": false,
+    "counts_are_lower_bound": true
+  },
+  "verdict": "BIFURCATED — forward writes + S4 catalogue canonical; historical resting estate NOT canonical on id-form (migration state).",
+  "big_findings": [
+    {
+      "id": "BF1",
+      "type": "ssot_vs_reality_contradiction",
+      "severity": "HIGH",
+      "statement": "batch_massive PURGED (0 objects across 2039 GCS days, 0 tick-manifest rows, 0 IS rows, AWS empty) but codex AE-4 / non-canonical-path-inventory row10 / delete-safety-protocol §3.3 / tradfi-databento-sourcing-ssot all describe it as a PENDING human-only hard stop. Codex STALE."
+    },
+    {
+      "id": "BF2",
+      "type": "claim_overstated",
+      "severity": "HIGH",
+      "statement": "Session claim '~99.65-99.84% canonical derivatives' not supported on manifest id-form: captured-single canonical-id fraction = 30.8% (lower bound). May hold for forward-only or path-structure-only."
+    },
+    {
+      "id": "BF3",
+      "type": "index_locked",
+      "severity": "MEDIUM",
+      "statement": "Consolidated _index LOCKED mid-consolidation + 58 outstanding per-VM shards; all S3 counts lower bounds."
+    }
+  ],
+  "census_s3": {
+    "total_rows": 5846844,
+    "pipeline_mode": { "batch_databento": 5799782, "batch_yahoo": 42383, "batch_barchart": 4655, "live_databento": 24 },
+    "venue": {
+      "NYSE": 2046610,
+      "CME": 2007434,
+      "NASDAQ": 1303873,
+      "ICE": 407467,
+      "KRX": 35146,
+      "CBOE": 21995,
+      "FX": 15200,
+      "BARCHART": 9119
+    },
+    "instrument_type_case_folded_noncanonical": { "futures": 16, "spot": 2 },
+    "data_type_noncanonical": { "options_chain": 112839, "futures_chain": 8 },
+    "source_noncanonical": { "barchart": 4655 },
+    "capture_status": {
+      "empty_confirmed": 3500799,
+      "captured": 1653247,
+      "expected_unattempted": 385985,
+      "attempted_failed": 306813
+    },
+    "reachable_coverage_pct_lower_bound": 70.5,
+    "reachable_coverage_formula": "captured / (captured + attempted_failed + expected_unattempted); empty_confirmed EXCLUDED"
+  },
+  "census_s1_gcs": {
+    "day_eq_prefixes": 2039,
+    "day_range": "2020-01-01..2026-07-20",
+    "pipeline_mode_union_all_days": ["batch_databento", "batch_yahoo", "live_databento"],
+    "batch_massive_objects_all_days": 0,
+    "live_day_axis_vocab_canonical": true,
+    "legacy_hyphen_dirs": 1,
+    "legacy_hyphen_objects": 2,
+    "bare_pockets_count": 125,
+    "bare_pocket_objects": 1007,
+    "bare_pocket_bytes": 2546269986,
+    "bare_pocket_shapes": {
+      "day/venue_monolith": { "objects": 107, "bytes_gb": 2.534 },
+      "day/data_type_pocket": { "objects": 900, "bytes_gb": 0.012 }
+    }
+  },
+  "id_form_split_s3": {
+    "captured_single_total": 1129056,
+    "captured_single_canonical": 347811,
+    "captured_single_noncanonical": 775732,
+    "captured_single_canonical_pct": 30.8,
+    "by_year_canonical_pct": {
+      "2020": 0.0,
+      "2021": 0.0,
+      "2022": 0.0,
+      "2023": 27.3,
+      "2024": 31.8,
+      "2025": 34.3,
+      "2026": 28.7
+    }
+  },
+  "s2_sample_smoke": {
+    "label": "validated on a SAMPLE of <=500, NOT the full corpus",
+    "schema_g3_validator": "UAC validate_dataframe(lookup_contract(...))",
+    "schema_result": "PASS where contract exists (future/ohlcv_1m, futures_chain/ohlcv_1m); NO contract for spot_pair/ohlcv_24h & equity/ohlcv_24h -> not-assessable",
+    "id_g2_cohorts": {
+      "legacy_2020": "ts_event tz-aware UTC + numeric uint32 id (non_canonical_id)",
+      "chain_2026": "timestamp int64 + canonical id (PASS)",
+      "single_2026": "timestamp string + canonical id (PASS)"
+    }
+  },
+  "s4_catalogue": {
+    "catalog_rows": 836961,
+    "canonical_ids": true,
+    "instrument_type_uppercase": true,
+    "mvp_true": 70930,
+    "mvp_false": 766031,
+    "fresh": true,
+    "clean": true
+  },
+  "findings": [
+    {
+      "type": "non_canonical_id",
+      "severity": "MEDIUM",
+      "surfaces": ["S2", "S3"],
+      "scope": "captured singles",
+      "count": 775732,
+      "pct": 68.7,
+      "delete_eligible": false,
+      "note": "migration state, operator-gated"
+    },
+    {
+      "type": "non_canonical_axis_value",
+      "severity": "MEDIUM",
+      "surfaces": ["S1", "S3"],
+      "axis": "data_type",
+      "value": "options_chain",
+      "count": 112839,
+      "delete_eligible": false,
+      "note": "per-contract chain pending rebundle"
+    },
+    {
+      "type": "non_canonical_path",
+      "severity": "MEDIUM",
+      "surfaces": ["S1"],
+      "scope": "day=/venue=CME/ticks.parquet monoliths",
+      "objects": 107,
+      "bytes": 2534000000,
+      "delete_eligible": false,
+      "note": "only-copy MBO/depth, migrate-first"
+    },
+    {
+      "type": "non_canonical_path",
+      "severity": "LOW",
+      "surfaces": ["S1"],
+      "scope": "day=/data_type=/ pockets + day-2026-01-01",
+      "objects": 902,
+      "bytes": 12600000,
+      "delete_eligible": "via legacy_duplicate",
+      "note": "canonical filenames, twins confirmed present"
+    },
+    {
+      "type": "non_canonical_axis_value",
+      "severity": "LOW",
+      "surfaces": ["S3"],
+      "axis": "venue/pipeline_mode/source",
+      "value": "barchart",
+      "counts": { "venue_BARCHART": 9119, "pipeline_mode_batch_barchart": 4655, "source_barchart": 4655 },
+      "delete_eligible": false,
+      "note": "retired venue, all empty_confirmed"
+    },
+    {
+      "type": "non_canonical_axis_value",
+      "severity": "LOW",
+      "surfaces": ["S3"],
+      "axis": "instrument_type",
+      "values": { "futures": 16, "spot": 2 },
+      "delete_eligible": false
+    },
+    {
+      "type": "contract_coverage_gap",
+      "severity": "INFO",
+      "surfaces": ["S2"],
+      "scope": "spot_pair/ohlcv_24h, equity/ohlcv_24h",
+      "note": "no UAC SchemaContract -> G3 not-assessable"
+    }
+  ],
+  "suppressed_accepted_exceptions": {
+    "C2a_instrument_type_casing": {
+      "rows_compared_case_insensitive": "~6.3M (equity/etf/future/combo/index/spot_pair)",
+      "casing_findings_emitted": 0,
+      "pointer": "reconciliation-finding-taxonomy.md#5.1"
+    },
+    "AE2_combo_bare_underlying": { "rows_suppressed": 1325979, "pointer": "reconciliation-finding-taxonomy.md#AE-2" },
+    "AE4_batch_massive": { "rows_to_suppress": 0, "note": "already purged" }
+  },
+  "purge_plan": {
+    "massive": {
+      "gcp_tick_objects": 0,
+      "gcp_tick_bytes": 0,
+      "gcp_is_objects": 0,
+      "aws_objects": 0,
+      "manifest_rows": 0,
+      "action": "NONE — already executed",
+      "residual": "codex stale-doc correction"
+    },
+    "legacy_dispositions": [
+      {
+        "id": "A",
+        "target": "day=/data_type=/ etf/equity pockets",
+        "objects": 900,
+        "bytes": 12000000,
+        "disposition": "yes-after-verify",
+        "twin_resolves": true,
+        "twin_fresher": true
+      },
+      {
+        "id": "B",
+        "target": "day-2026-01-01 hyphen",
+        "objects": 2,
+        "bytes": 4600,
+        "disposition": "unknown->migrate-first"
+      },
+      {
+        "id": "C",
+        "target": "day=/venue=CME/ticks.parquet monoliths",
+        "objects": 107,
+        "bytes": 2534000000,
+        "disposition": "no-migrate-first",
+        "only_copy": true,
+        "content": "MBO/depth, 604 numeric ids/file"
+      },
+      {
+        "id": "D",
+        "target": "on-canonical-path legacy id-form bulk (2020-2022 + 68.7% captured singles)",
+        "objects": "not enumerable in-session (Tier-2)",
+        "disposition": "no-migrate-first"
+      },
+      {
+        "id": "E",
+        "target": "per-contract data_type=options_chain",
+        "rows": 112839,
+        "disposition": "no-migrate-first (rebundle first)"
+      }
+    ],
+    "operational_dirs_gb": {
+      "_migration_backup_2026_07_09": { "objects": 158808, "gb": 35.91, "reclaimable": "after migration verified" },
+      "_quarantine": { "objects": 146288, "gb": 7.18, "reclaimable": "operator-decision (garbage/corrupt)" },
+      "_needs_attribution": { "objects": 71830, "gb": 4.01, "reclaimable": "operator-decision" },
+      "_migration_backup": { "objects": 1, "gb": 0.12 },
+      "_vm_staging": { "objects": 13, "gb": 0.04 },
+      "backfill-logs": { "objects": 21, "gb": 0.06 },
+      "databento-batch-registry": { "objects": 7146, "gb": 0.01 },
+      "processed_candles": "NOT SIZED (out of raw-tick scope)"
+    },
+    "storage_estimate": {
+      "a_massive_reclaimable_gb": 0.0,
+      "b_twin_confirmed_reclaimable_gb": 0.012,
+      "c_held_for_migrate_first_gb": 2.534,
+      "operational_cleanup_gb": 47.33,
+      "largest_safe_win": "_migration_backup_2026_07_09 = 35.91 GB"
+    }
+  },
+  "coverage_gaps": [
+    "orphans NOT ASSESSED (no whole-corpus walk)",
+    "id-form/schema at 100% NOT ASSESSED (Tier-1 sample <=500 only; Tier-2 VM not dispatched)",
+    "S3 counts are LOWER BOUNDS (index locked + 58 outstanding shards)",
+    "processed_candles not sized; AWS empty",
+    "G3 not-assessable for spot_pair/ohlcv_24h & equity/ohlcv_24h (no contract)"
+  ]
+}

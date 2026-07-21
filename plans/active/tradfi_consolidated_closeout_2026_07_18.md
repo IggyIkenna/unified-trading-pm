@@ -1692,7 +1692,8 @@ fleet/logs directly).**
 3. **Verify** id-form re-measured toward ~100%.
 4. **Catalogue MVP promote** (+409) — rebuild+promote served `catalog.parquet` (still old mvp=70,930); verify
    data-status/deployment-api.
-5. **Apply doc fixes**: 35 verified contradictions (in scratch `docs_findings.json`) + reconciliation's 4 stale codex
+5. **Apply doc fixes**: 35 verified contradictions (tracked in
+   `plans/active/issues/tradfi_docs_reconciliation_findings_2026_07_21.md` + `.json`) + reconciliation's 4 stale codex
    docs (`non-canonical-path-inventory.md` row 10 / `reconciliation-finding-taxonomy.md` AE-4 /
    `gcs-and-manifest-delete-safety-protocol.md` §3.3 / `tradfi-databento-sourcing-ssot.md` — all still say Massive purge
    PENDING; it EXECUTED) + register patch (rows 10/11/22/24 count updates + new
