@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -458,7 +458,7 @@ Discriminator = **does a manifest row exist**.
       canonical (case-fold only, already `InstrumentType` members). (repos: market-tick-data-service,
       unified-api-contracts)
 - [x] ✅ [DECISION] P2. **Bare `SUSHISWAP`/`UNISWAP` version (199,397→206,107 rows, measured 2026-07-21) — decided +
-      infra shipped `instruments-service@<SHA>`.** Operator ruling applied (see § "Operator decisions applied
+      infra shipped `instruments-service@3ffd1adf`.** Operator ruling applied (see § "Operator decisions applied
       (2026-07-21..." above): derive per-pool from the deploying factory contract address, not "undecidable." Shipped: a
       static, cited factory-address→version map (Uniswap V2/V3/V4, SushiSwap V2/V3;
       `instruments_service/reference_data/adapters/defi/_dex_factory_registry.py`) wired into
@@ -548,14 +548,14 @@ Discriminator = **does a manifest row exist**.
 - **Bare SUSHISWAP/UNISWAP version (199,397 rows) → derive from the deploying factory contract address**, not
   "undecidable." Uniswap V2/V3/V4 and SushiSwap V2/V3 factory addresses are permanent, public constants — a static
   factory-address→version map resolves the overwhelming majority; a pool whose factory matches none of the known
-  contracts is the genuine residual (surface it, don't guess). **✅ DONE (infra) `instruments-service@<SHA>`**: static
-  cited map + resolver built + wired into `canonicalize_defi_manifest_venue_2026_06_14.py`, gated so it never mints an
-  unregistered venue. **Measured 2026-07-21: resolved=0 / residual=206,107 (100%)** — no captured row anywhere carries a
-  factory address today (verified across `InstrumentRecord`, the v9 manifest schema, and all 4 subgraph query cascades),
-  so the "overwhelming majority" premise doesn't hold YET — the map is correct and ready, there is simply no factory
-  data in the corpus for it to resolve against. Full detail + the 2 follow-up capture options + the SushiSwap-Arbitrum
-  UAC registry gap: `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`; tracked as a new Track 1
-  `[DATA]` todo (not silently dropped).
+  contracts is the genuine residual (surface it, don't guess). **✅ DONE (infra) `instruments-service@3ffd1adf`**:
+  static cited map + resolver built + wired into `canonicalize_defi_manifest_venue_2026_06_14.py`, gated so it never
+  mints an unregistered venue. **Measured 2026-07-21: resolved=0 / residual=206,107 (100%)** — no captured row anywhere
+  carries a factory address today (verified across `InstrumentRecord`, the v9 manifest schema, and all 4 subgraph query
+  cascades), so the "overwhelming majority" premise doesn't hold YET — the map is correct and ready, there is simply no
+  factory data in the corpus for it to resolve against. Full detail + the 2 follow-up capture options + the
+  SushiSwap-Arbitrum UAC registry gap: `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`; tracked
+  as a new Track 1 `[DATA]` todo (not silently dropped).
 - **`_ID_FORM_CHECKED_ASSET_GROUPS` widening for `defi` → use the grammar already ratified in this plan** ("Instrument-
   uid grammar per DeFi type" above) — not a new decision, just wiring it into
   `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`'s checker. `prediction`'s id-form stays out of scope here
