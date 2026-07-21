@@ -19,6 +19,16 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Verified 2026-07-21 (batch-5 archived-plan discipline triage): mirror of the
+companion Harsh 05-08 tracker, same disposable daily-snapshot pattern. This file additionally already contains its own
+"## Deferred work after 2026-05-10 audit session" reconciliation table naming successors/blockers per residual item
+(cefi_master, predictions_master, launcher_scripts_consolidation, alerting Phase 4-9, etc.) — that section IS the
+deferred-work-to-successor mapping this banner requires, just under a heading the checker's regex doesn't match exactly.
+All items in it are since resolved (in-flight items were carried by a same-cycle tab; operator-needs-decision items were
+resolved via `operator_decisions_2026_05_08.md`).
+
 # Ikenna's daily work-split — 2026-05-08
 
 > **Companion**: [`work_split_2026_05_08_harsh.md`](work_split_2026_05_08_harsh.md). Cross-side handshakes appear in

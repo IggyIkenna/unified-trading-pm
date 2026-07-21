@@ -14,18 +14,46 @@ created: 2026-05-08
 plan_type: meta
 type: doc-only
 archived: 2026-05-08
-archived_reason: All 35 + 4 residual phases shipped; G.1 audit P0+P1 closed via Phase H; P2 nice-to-haves explicitly deferred per audit § 5.
+archived_reason:
+  All 35 + 4 residual phases shipped; G.1 audit P0+P1 closed via Phase H; P2 nice-to-haves explicitly deferred per audit
+  § 5.
 last_updated: 2026-05-08
 deadline: 2026-05-23
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 owner: ikenna
-overview: Comprehensive codex SSOT refactor consolidating findings from 7 directory audits (Wave 1 + Wave 2 cross-directory synthesis, 2026-05-08 session). The audits confirmed that ALL drift between codex docs and the active workspace plans resolves in favour of the plans (per CLAUDE.md "If this doc disagrees with active plans, the plans win" + "doc → plan → code"). This plan enumerates every codex file requiring changes, every cross-doc reference update needed when consolidations happen, and structures phases for parallel-agent execution. P0 phases are silent-correctness drift (must ship before May-23 cutover); P1 phases are consolidation that reduce drift surface; P2 phases are cosmetic / structural moves that can ship after cutover.
-depends_on: [writegate-honest-coverage-endtoend-2026-05-06, manifest-v7-schema-migration-design-2026-05-08, live-pipeline-mtds-mdps-features-2026-05-08, features-repo-consolidation-2026-05-08, alerting-service-live-rules-2026-05-07, master-to-live-defi-2026-05-23]
+overview:
+  Comprehensive codex SSOT refactor consolidating findings from 7 directory audits (Wave 1 + Wave 2 cross-directory
+  synthesis, 2026-05-08 session). The audits confirmed that ALL drift between codex docs and the active workspace plans
+  resolves in favour of the plans (per CLAUDE.md "If this doc disagrees with active plans, the plans win" + "doc → plan
+  → code"). This plan enumerates every codex file requiring changes, every cross-doc reference update needed when
+  consolidations happen, and structures phases for parallel-agent execution. P0 phases are silent-correctness drift
+  (must ship before May-23 cutover); P1 phases are consolidation that reduce drift surface; P2 phases are cosmetic /
+  structural moves that can ship after cutover.
+depends_on:
+  [
+    writegate-honest-coverage-endtoend-2026-05-06,
+    manifest-v7-schema-migration-design-2026-05-08,
+    live-pipeline-mtds-mdps-features-2026-05-08,
+    features-repo-consolidation-2026-05-08,
+    alerting-service-live-rules-2026-05-07,
+    master-to-live-defi-2026-05-23,
+  ]
 repo_gates:
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
-completion_gates: {code: C0, deployment: none, business: none}
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
+completion_gates: { code: C0, deployment: none, business: none }
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Frontmatter already declares (`archived_reason`): all 35 + 4 residual phases
+shipped, G.1 audit P0+P1 closed via Phase H, P2 nice-to-haves explicitly deferred per the audit's own § 5. Verified
+2026-07-21 (batch-5 archived-plan discipline triage): the D.4/D.6 codex cross-ref checklist items are either already
+resolved (confirmed the cited docs correctly cross-reference `custody-providers.md` / `venue-collateral-2026-05-07.md`)
+or a trivial 2-string stale-path fix (`codex/10-audit/_service-baseline-template.yaml` +
+`_checklist-template-enhanced.yaml` still cite the deleted `batch-live-symmetry.md` instead of
+`batch-live-architecture.md`) — too small to warrant a dedicated issue doc; left for opportunistic fix next time those
+templates are touched, or for the standing `codex_vs_repo_docs_ssot_audit_2026_06_01.md` sweep to pick up.
 
 # Codex SSOT Refactor — comprehensive worklist (2026-05-08)
 
@@ -631,21 +659,21 @@ drift.
       where the deepest partition is `league=BRASILEIRAO/`, with no `fixture=...` subdirectory anywhere.
 
       **No data migration needed.** Disk shape already matches banner. This phase
-      is a doc-only sweep removing stale body text in 02-data.
+                      is a doc-only sweep removing stale body text in 02-data.
 
-      **SHIPPED 2026-05-08** — body-text sweep landed (3 of 4 swept files; sports-scheduling-and-sharding.md was already
-      cleaned up at HEAD by parallel agent earlier in the session). My intended commit was absorbed by parallel agent's
-      commit `c2bc6cd5 docs(codex): Phase B.3 — workspace-wide stale repo/provider reference sweep` — same hunks,
-      different commit message (foot-gun #3 incident: parallel agent's prek/prettier hook ran during my commit cycle and
-      bundled my staged D.3 hunks into their B.3 commit). Verify via
-      `git show c2bc6cd5 -- codex/02-data/availability-manifest-and-data-status.md codex/02-data/per-category-bucket-layouts.md codex/02-data/prediction-schema-paths.md`.
-      Acceptance grep on the 4 swept files returns zero true-positive stale shard-axis claims (remaining hits are
-      corrective body text explicitly stating "row-level column INSIDE parquet, NOT a hive-partition shard axis").
-      CLAUDE.md "Per-asset-group shard-key matrix" remains workspace SSOT. Spillover stale claims in
-      `04-architecture/shard-level-failure-isolation.md` / `05-infrastructure/deployment-clusters-live-vs-batch.md` /
-      `02-data/shard-granularity-cefi.md` / `02-data/partitioning.md` / `POST_PLAN_REALITY_2026_05_06.md` are out of D.3
-      scope (those docs already carry the multi-axis-correction banner; cleanup deferred to adjacent codex_refactor
-      phases or follow-up).
+                      **SHIPPED 2026-05-08** — body-text sweep landed (3 of 4 swept files; sports-scheduling-and-sharding.md was already
+                      cleaned up at HEAD by parallel agent earlier in the session). My intended commit was absorbed by parallel agent's
+                      commit `c2bc6cd5 docs(codex): Phase B.3 — workspace-wide stale repo/provider reference sweep` — same hunks,
+                      different commit message (foot-gun #3 incident: parallel agent's prek/prettier hook ran during my commit cycle and
+                      bundled my staged D.3 hunks into their B.3 commit). Verify via
+                      `git show c2bc6cd5 -- codex/02-data/availability-manifest-and-data-status.md codex/02-data/per-category-bucket-layouts.md codex/02-data/prediction-schema-paths.md`.
+                      Acceptance grep on the 4 swept files returns zero true-positive stale shard-axis claims (remaining hits are
+                      corrective body text explicitly stating "row-level column INSIDE parquet, NOT a hive-partition shard axis").
+                      CLAUDE.md "Per-asset-group shard-key matrix" remains workspace SSOT. Spillover stale claims in
+                      `04-architecture/shard-level-failure-isolation.md` / `05-infrastructure/deployment-clusters-live-vs-batch.md` /
+                      `02-data/shard-granularity-cefi.md` / `02-data/partitioning.md` / `POST_PLAN_REALITY_2026_05_06.md` are out of D.3
+                      scope (those docs already carry the multi-axis-correction banner; cleanup deferred to adjacent codex_refactor
+                      phases or follow-up).
 
   **Files to sweep**:
   - [x] `02-data/sports-scheduling-and-sharding.md` § 1 — already cleaned up at HEAD before D.3 started (parallel agent

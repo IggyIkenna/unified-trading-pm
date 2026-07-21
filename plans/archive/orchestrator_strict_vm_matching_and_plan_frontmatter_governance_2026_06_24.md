@@ -1,7 +1,10 @@
 ---
 doc_type: plan
-title: Strict VM matching + frontmatter governance — DESIGN-CAPTURE APPENDIX (promoted to agent_operating_framework_master)
-summary: Design-capture appendix for strict VM matching and frontmatter governance — rationale, research, and A/B decisions promoted to the agent_operating_framework_master epic and split child plans.
+title:
+  Strict VM matching + frontmatter governance — DESIGN-CAPTURE APPENDIX (promoted to agent_operating_framework_master)
+summary:
+  Design-capture appendix for strict VM matching and frontmatter governance — rationale, research, and A/B decisions
+  promoted to the agent_operating_framework_master epic and split child plans.
 status: superseded
 nature: process
 asset_group: [cross-cutting]
@@ -29,15 +32,26 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Verified 2026-07-21 (batch-5 archived-plan discipline triage): all open items live
+entirely inside the "Phased execution DAG — ⚠️ SUPERSEDED (do not execute)" section, which this plan's own archival
+banner already disowns ("the unchecked Phased DAG below stays unflipped BY DESIGN... executed through the children,
+never from this doc"). Verified the real deliverables shipped: W1 (dispatch strict VM matching, later itself retired by
+the 2026-06-27 single-VM pivot), W2 (`plans/archive/2026_06/doc_frontmatter_schema_and_validator_2026_06_24.md`),
+`plans/PLAN_FORMAT.md`, `plans/active/task_template.md`, `scripts/docs/docspec.py` all confirmed present. Residual W3-W8
+scope is owned by `plans/epics/agent_operating_framework_master.md` (e.g. `l0_doc_index_generator_2026_06_24.md` tracks
+the L0-index generator separately, still active).
+
 # Strict per-plan VM matching + plan frontmatter completeness governance
 
 > **🗄️ ARCHIVED 2026-07-02 (operator-directed) — role fulfilled.** Verified at archival: the epic
 > [`../epics/agent_operating_framework_master.md`](../epics/agent_operating_framework_master.md) exists and owns the
 > W1–W10 workstream registry; W1 (`dispatch_strict_vm_matching_2026_06_24`) and W2
 > (`doc_frontmatter_schema_and_validator_2026_06_24`) both shipped and are archived in `plans/archive/2026_06/`. (W1's
-> strict-VM matching was itself later superseded by role-based dispatch — single-VM architecture 2026-06-27 — which
-> this appendix correctly predates as rationale-of-record.) The unchecked Phased DAG below stays unflipped BY DESIGN —
-> it was superseded by the epic's workstreams and executed through the children, never from this doc.
+> strict-VM matching was itself later superseded by role-based dispatch — single-VM architecture 2026-06-27 — which this
+> appendix correctly predates as rationale-of-record.) The unchecked Phased DAG below stays unflipped BY DESIGN — it was
+> superseded by the epic's workstreams and executed through the children, never from this doc.
 
 > **⚠️ PROMOTED — this is now the DESIGN-RATIONALE APPENDIX, not an execution plan (2026-06-24).** The decisions,
 > research, audits, and A/B analysis below were promoted into the epic

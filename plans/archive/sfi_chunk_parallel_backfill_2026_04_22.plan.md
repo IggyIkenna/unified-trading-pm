@@ -15,14 +15,24 @@ priority: P2
 owner: agent
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: deployment-service, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: deployment-service, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: [features_sports_upstream_coverage_gaps_2026_04_21]
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` — successor:
+
+sports_pipeline_to_100pct_golden_window_first_2026_06_27 (verified 2026-07-21, batch-5 archived-plan discipline triage).
+This plan's Phase 0 (fire experimental fetch) and Option-1/rate-limit-coordinator items are moot (Option 2 wall-clock
+proved sufficient, no merge coordinator needed). The real remaining work — the full historical 2015→present SFI backfill
+(this plan's Phase 4 `[HUMAN]` "fire 4-chunk real backfill") — is explicitly tracked, by name, as `⬜ not started` under
+"P2b reference+odds history 2015→present" in the successor plan; the golden window itself (P1b) is `✅ complete`. The
+`--chunks N` launcher (`launch-sfi-backfill-vm.sh`, `deployment-service@0d6e589`) remains the tool P2b will use when it
+starts.
 
 ## Context
 
@@ -130,8 +140,8 @@ ceiling.
       per 429 hit - total wall-clock per date Document the quota in this plan.
 
       *Deferred to operator fire*. Existing measurement from killed `sfi-backfill-20260421-231826`:
-      ~1.4 dates/hour single-VM → ~68 days for 2020-01-01..2026-04-21 range. Used as the
-      conservative baseline in the launcher help text + codex.
+                      ~1.4 dates/hour single-VM → ~68 days for 2020-01-01..2026-04-21 range. Used as the
+                      conservative baseline in the launcher help text + codex.
 
 - [x] [AGENT] P0. `launch-sports-manifest-rescan-vm.sh` 3-mode protocol: - **single-VM** (default): process full range
       on one VM, canonical writes direct. - **worker** (`--chunk-id X --run-id Y --date-start A --date-end B`): scan
@@ -142,9 +152,9 @@ ceiling.
       same run-id.
 
       SFI variant (shipped): Option 2 skips worker/coordinator modes because SFI writes land in
-      per-date canonical shards (not `_index/partial/`). Chunks are naturally disjoint on date key;
-      no merge required. Availability-index manifest rows may race at chunk edges — recommend
-      running `launch-sports-manifest-rescan-vm.sh` after all chunks complete.
+                      per-date canonical shards (not `_index/partial/`). Chunks are naturally disjoint on date key;
+                      no merge required. Availability-index manifest rows may race at chunk edges — recommend
+                      running `launch-sports-manifest-rescan-vm.sh` after all chunks complete.
 
 ### Phase 1: Chunk-safe CLI in instruments-service [DEFERRED — Option 2 skipped it]
 

@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -18,6 +26,15 @@ companion_to: plans/active/work_split_2026_05_08_ikenna.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Verified 2026-07-21 (batch-5 archived-plan discipline triage): a disposable
+single-day coordination snapshot (`type: coordination-doc`, `horizon: 1-day cycle`) whose own text says to archive it
+EOD and draft the next day's tracker — exactly what happened (a chain of dated successors through at least 2026-05-22,
+all similarly archived). Every named plan-of-record it points at (features-repo consolidation, mtds_databento streaming,
+hard_schema_enforcement, api_football flattening, cme_polymarket_arb, gcs_migration) is archived complete. Nothing here
+is untracked.
 
 # Harsh's daily work-split — 2026-05-08
 
@@ -563,9 +580,8 @@ sub-agents + master integration.
       axis to the per-instrument download API; needed for DeFi instrument download support. ~1 AI-day.
 - [ ] [SCRIPT] P0. **hard_schema_enforcement Phases 1-5 mechanical migration scripts per asset_group** — per
       [`hard_schema_enforcement_2026_05_08.md`](hard_schema_enforcement_2026_05_08.md). Each asset*group gets a one-time
-      migration script in instruments-service
-      `scripts/migrate*<asset_group>\_to_hard_schema.py`    (precedent:`migrate_local_sfi_to_canonical.py`). Per
-      CLAUDE.md "Manifest migration, NOT fallback". ~2.5 AI-days.
+      migration script in instruments-service `scripts/migrate*<asset_group>\_to_hard_schema.py`
+      (precedent:`migrate_local_sfi_to_canonical.py`). Per CLAUDE.md "Manifest migration, NOT fallback". ~2.5 AI-days.
 - [ ] [SCRIPT] P0. **api_football_minimal_flattening_removal all 16 todos** — UAC normalize.py:377-381 fix + re-fetch
       VM + manifest flip per
       [`api_football_minimal_flattening_removal_2026_05_07.md`](api_football_minimal_flattening_removal_2026_05_07.md).

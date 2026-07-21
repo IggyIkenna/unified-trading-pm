@@ -11,20 +11,34 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-04-22
-overview: Repair deployment-service Dockerfile + cloudbuild.yaml so Cloud Build ships a fresh deployment-dashboard image for the first time since 2026-02-20, unblocking Plan 3 (sports-scheduler cron) and Plan 6 (features-sports-service deployment).
+overview:
+  Repair deployment-service Dockerfile + cloudbuild.yaml so Cloud Build ships a fresh deployment-dashboard image for the
+  first time since 2026-02-20, unblocking Plan 3 (sports-scheduler cron) and Plan 6 (features-sports-service
+  deployment).
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-22
 type: infra
 epic: epic-deployment
-completion_gates: {code: C5, deployment: D2, business: none}
+completion_gates: { code: C5, deployment: D2, business: none }
 repo_gates:
-- {repo: deployment-service, code: C0, deployment: D0, business: none}
+  - { repo: deployment-service, code: C0, deployment: D0, business: none }
 depends_on: []
 todos: []
 isProject: false
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Verified 2026-07-21 (batch-5 archived-plan discipline triage): all 5 open items'
+underlying goals were independently achieved via later, more comprehensive work — P5 (sports-scheduler Cloud Run
+unblock) via `plans/active/issues/sports_trigger_scheduler_cloud_dispatch_broken_2026_07_08.md` (resolved, per-service
+Cloud Run Jobs); P4 (deployment-service Cloud Build health) via
+`plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` (active, GCP+AWS build parity established); P6
+(features-sports-service build-rot) superseded by
+`plans/active/features_sports_service_consolidation_deploy_2026_07_15.md`. P3/P7 are downstream gates of P4-P6, moot for
+the same reasons.
 
 ## Context
 
@@ -45,7 +59,7 @@ apply — the terraform `google_cloud_run_v2_job` references a `sports-scheduler
 | 3   | `COPY api/ backends/ deployment/` — these exist as `deployment_service/api/` etc., not at repo root | `Dockerfile:68-70`    | `ls deployment-service/` shows no top-level `api/`, `backends/`, `deployment/`. `deployment_service/{api,backends,deployment}` all present. |
 | 4   | `CMD gunicorn api.main:app -c /app/api/gunicorn.conf.py` — module path wrong + config file missing  | `Dockerfile:92`       | `deployment_service/api/main.py` exists; `api/` does not. `find . -name gunicorn*` finds only `.venv/` copies, no config file in source.    |
 | 5   | `$IMAGE` in heredoc unescaped + placeholder `UNKNOWN/UNKNOWN`                                       | `cloudbuild.yaml:225` | Cloud Build substitution engine expands `$IMAGE` at yaml-parse time, fails. Also UNKNOWN/UNKNOWN is an unfinished edit.                     |
-| 6   | Terraform drift: `terraform plan` = 56 adds + 78 changes outside Plan 3 scope                       | `terraform/gcp/`      | Two months of code ↔ live drift. **OUT OF SCOPE** for this plan — flagged for a separate drift-remediation plan if urgent.                 |
+| 6   | Terraform drift: `terraform plan` = 56 adds + 78 changes outside Plan 3 scope                       | `terraform/gcp/`      | Two months of code ↔ live drift. **OUT OF SCOPE** for this plan — flagged for a separate drift-remediation plan if urgent.                  |
 
 **Scope fence:** Plan 12 repairs the build pipeline. Plan 12 does NOT repair the ~134-resource terraform drift — that's
 a separate plan. Plan 12 does NOT repair consumer-repo Dockerfiles (features-sports-service et al.) unless Phase 6 finds

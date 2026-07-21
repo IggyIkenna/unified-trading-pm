@@ -10,12 +10,21 @@ repos: [alerting-service, deployment-api, deployment-service, e2e-testing, featu
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-07'
+created: "2026-05-07"
 type: coordination-doc
 companion_to: plans/active/work_split_2026_05_07.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Verified 2026-07-21 (batch-5 archived-plan discipline triage): the doc's own body
+declares it "NOT a fixed 5-tab layout" but a daily-evolving sub-agent orchestration ledger; its open checkboxes are
+template boilerplate quoted verbatim inside spawn-prompt code fences, not live tracked items — the real per-tab status
+lives in prose headers above each fence, and all tabs (3-14) are marked `✅ DONE 2026-05-08` with cited commit SHAs. The
+one item that read `🟢 IN FLIGHT` (cefi babysit) was absorbed into the cefi_master epic, itself long closed
+(`cefi_consolidated_closeout_2026_07_18.md`). Nothing here is untracked.
 
 # Harsh's main-agent orchestration ledger
 

@@ -10,8 +10,17 @@ repos: [alerting-service, client-reporting-api, deployment-api, deployment-servi
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-02'
+created: "2026-03-02"
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Verified 2026-07-21 (batch-5 archived-plan discipline triage): this is a
+2026-03-02 milestone tracker built around a "5 Workflow" framework superseded by the asset-group/epic plan structure
+used today. Every repo named in its open items (unscanned-repo scans, repo renames, the 8 separate `features-*-service`
+repos, the split `ml-training-service`/`ml-inference-service`) has since been renamed, merged into a consolidated repo,
+or retired outright — confirmed missing from the current workspace root. Closed project history with no actionable
+residue.
 
 # Workflow 1 Residual Items & Cross-Workflow Planning
 
