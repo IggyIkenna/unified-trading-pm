@@ -141,8 +141,13 @@ Key audit facts driving the merges:
       tests); full `quality-gates.sh` (base-ui.sh v2.0) green. Playwright verification is bundled into the plan's
       consolidated `[REVIEW] P1. Playwright specs` todo below (covers this + the remaining UI todos together, per the
       plan's own structure — not a separate spec per card). (repo: deployment-ui)
-- [ ] [UI] P1. **Reap-verdict + stopped-age on orphan rows** — surface the verdict badge (reapable / within-grace /
-      retained / no-stop-time) and stopped-age on the relevant Deployments rows.
+- [x] [UI] P1. ✅ **Reap-verdict + stopped-age on orphan rows** — deployment-ui@02b08c2. Added the 4 backend orphan-join
+      fields to the TS `DeploymentItem` interface + a new `OrphanVerdictCell` (same verdict label/variant mapping as
+      `FleetOrphans.tsx`'s `VerdictBadge`), rendered in `StatusCell` next to the status chip: verdict badge (reapable /
+      within-grace / retained / no-stop-time) + compact stopped-age ("2.1d"). Renders nothing for a running VM or non-VM
+      kind (the field is honestly absent, not hidden by a conditional guess). tsc/ESLint clean; 2 new tests (stopped
+      orphan row shows the badge + age; running row shows neither) + full 1049-test suite green; full `quality-gates.sh`
+      (base-ui.sh v2.0) green.
 - [ ] [UI] P1. **Reap/delete actions on Deployments** — port FleetOrphans' dry-run-first bulk reap (`reapOrphans` →
       `/api/fleet/reap`) and per-instance delete-with-boot-disk (`DELETE /api/fleet/instances/{name}`), keeping the
       confirm-dialog + dry-run-preview safety pattern. Destructive actions stay behind explicit confirm.
