@@ -777,3 +777,71 @@ verified, the operator ran it). Post-delete read-only verification: **legacy pre
 cells intact** (513/59/44/132/14,094) — the `rm -r` hit only the legacy prefixes, not `raw_tick_data/`. The
 fold→repoint→delete migration is COMPLETE end-to-end. `defi_dex_pools_delete_order_stale_2026_07_20` → RESOLVED. Only
 residual: the manifest-row registration follow-up.
+
+### 2026-07-21 — pre-compact checkpoint (defi migration + delete + rulings + MDPS + funding/staking + orphans)
+
+**Shipped + verified this session (all pushed, ahead=0):**
+
+- **defi dex_pools/lending_indices FOLD → REPOINT → DELETE — COMPLETE.** 648 legacy-only Solana twins folded
+  (`mtds@13b9dac5`) + verified (KAMINO-vault 0→513 · SOLEND 0→59 · KAMINO-lending 0→44 · RAYDIUM 100→132); reader
+  repointed (`execution-service@45628a37`); F6 enumerator vocab 3-repo (`uac@5d83b729` + `is@c781eb0b`); Tier-2 VM 31/32
+  (`ds@bd7a7bd8`, `ds@00a980e`, `is@ad05e34`); **operator prod-DELETED the legacy prefixes** — re-probed 0 objects,
+  twins intact. `defi_dex_pools_delete_order_stale` RESOLVED; codex DO-NOT-DELETE banners flipped (CLAUDE.md + inventory
+  rows 7/8). **Residual: the 648 twins' manifest rows are UNREGISTERED**
+  (`defi_fold_manifest_registration_pending_2026_07_21` — the standalone DefiManifestRecorder didn't flush; NO partial
+  write occurred; exact 714-row recipe filed).
+- **3 operator rulings recorded** (`uac@…` no — `unified-trading-pm@14f84cf0b`): (R1) features `by_date/day=` is SSOT;
+  (R2) HARD RULE every data-at-rest tree is full canonical HIVE, `instrument_availability` → hive (via sink PREFIX, not
+  the partition dict — it sorts keys alphabetically); (R3) cefi chain-tail **v6 everywhere, migrate all, no v5**. Each
+  in the tie-breaker SSOT §11b + cutover-register §6a/6b/6c + inventory rows #16/#17, with a migration issue doc each.
+- **MDPS candle layer added to the skill** (`9161c8d7b`): new codex SSOT `mdps-candle-canonical-reconciliation.md` +
+  `reference-mdps.md` + the `--layer {raw-tick,candles}` flag + Phase F todos 34-42. Audit target = the operator's
+  Option-A ruling (declared registry template wins; 8-phase migration, NOTHING migrated yet → whole candle corpus is
+  `migration_pending`).
+- **Funding + staking downstream readers = CANONICAL on the production path** (`a18f0163c` +
+  `downstream_funding_staking_canonical_reader_audit_2026_07_21`): every production funding
+  (perp_funding/derivative_ticker)
+  - staking (lst_rates) consumer reads canonical via `resolve_bucket_name`; the PATH_REGISTRY 404 defect is a LATENT
+    trap (UTL thin clients only, zero non-test callers). Exceptions = 4 non-runtime campaign scripts (worst = the
+    silent-empty `trace_carry_staked_basis.py`) + 1 CLI fallback — cleanup todos filed.
+- **Orphan assessment** (`estate_orphan_assessment_2026_07_21`): SPORTS measured — **214,319 ORPHAN_REAL** (real data,
+  no manifest row) + 34,385 legacy-dup, reports durable in `gs://…/_index/audit/orphan_sweep_sports.parquet`. defi/cefi/
+  tradfi FAILED in-session on the multi-GB manifest download (ChunkedEncodingError, defi index ~1.8GB); prediction hung
+  in the join phase — all four need the VM run (todo 3 of that issue).
+- **Rescued** (`5865f31ab`): the census-doc Tier-2-validator appendix was dropped from a retry re-stage — pre-compact
+  audit caught it uncommitted.
+
+## Deferred work after 2026-07-21
+
+| Item                                                                                 | State / why                                                                                                                                 | Blocked-on                                                            |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| defi 648-twin manifest registration (714 rows)                                       | **Not done** — DefiManifestRecorder standalone flush issue; recipe filed                                                                    | nobody — pick up `defi_fold_manifest_registration_pending_2026_07_21` |
+| Sports orphan back-fill (214,319 rows) + legacy-dup triage (34,385)                  | **Not done** — real data-correctness work; audit parquets are in GCS                                                                        | nobody — `estate_orphan_assessment_2026_07_21` todos 1-2              |
+| Orphan sweep for defi/cefi/tradfi/prediction                                         | **Not done** — in-session multi-GB manifest download breaks                                                                                 | **operator-owned** — I offered the SPOT VM launch; awaiting go-ahead  |
+| R1/R2/R3 writer migrations (features by_date, instrument_availability hive, cefi v6) | **Not done** — writer fixes filed as 3 issue docs 2026-07-21                                                                                | nobody — pick up the 3 issue docs                                     |
+| D2 defi LENDING full retire (~16.7M rows)                                            | **Not done** — gated                                                                                                                        | `defi_lending_writer_retire_prerequisite` must ship first             |
+| MDPS candle Option-A migration (~10-20M objects)                                     | **Cannot be done yet / operator-owned** — the 8-phase migration is scoped in `candle_feature_canonical_path_divergence` (running elsewhere) | that migration effort                                                 |
+| Tier-2 datapoint-validation VM — a real launch-run                                   | **Not done** — built (32), never launch-run                                                                                                 | operator/operational — an actual campaign                             |
+| Funding/staking latent-trap cleanup (4 scripts + UTL registry)                       | **Not done** — P2, latent (non-runtime)                                                                                                     | nobody — `downstream_funding_staking…` todos                          |
+
+**Recommended NEXT:** the sports 214K orphan back-fill (todo 1 of the orphan issue) — it is measured, the audit data is
+already in GCS, and it is a live honest-coverage hole; OR, if the operator OKs it, launch the orphan VM for the 4
+blocked AGs first so the whole-estate orphan picture is complete before back-filling.
+
+## Lessons (do not re-learn)
+
+- **In-session single-walk breaks at scale on the manifest DOWNLOAD, not the object walk** — a ~1.8GB
+  `availability_index.parquet` snaps a single HTTP read (`ChunkedEncodingError`). Run large-AG sweeps on a VM, or
+  stream/ resume the loader. `list_blobs` itself was fine (prediction swept 1.15M objects clean).
+- **`DefiManifestRecorder`/`ManifestWriter(batch_size=1)` does not flush cleanly from a plain script** (handler-runtime
+  coupled) — the manifest register hung without persisting; NO partial write. Use the handler path or fix the
+  standalone.
+- **Detached (`setsid`) background processes are unreliable here** — they die without flushing; use the harness
+  `run_in_background` (tracked, notifies) instead. Cost me 3 silent-exit debugging rounds.
+- **Adversarial verification paid off repeatedly** — caught the `pipeline_mode=batch` spec error (writer emits
+  `batch_onchain_subgraph`), the false `canonical_path_templates()`-doesn't-exist (it's at `possible_manifest.py:352`),
+  and the false "twin VERIFIED ABSENT" (probed `instrument_type=pool` not `solana_amm_pool`). Grep-then-READ, always.
+- **The dry-run gate is the safety rail for a prod write** — the fold dry-run showed exactly 648/14,159 (matching R5)
+  before any object was written. Never `--apply` a prod migration without inspecting the dry-run.
+- **The pre-commit hygiene gate caught 4 real defects** this session (unquoted `: ` in YAML summaries ×2,
+  `nature: refactor`, invalid audit-result `status`) — the commit-is-the-quality-boundary rule works.
