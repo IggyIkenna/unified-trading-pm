@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -14,6 +22,18 @@ created: 2026-04-24
 locked_by: live-defi-rollout
 locked_since: 2026-04-24
 ---
+
+## Deferred work — migrated to: `plans/active/data_completion_defi_2026_07_15.md` — successor:
+
+data_completion_defi_2026_07_15 (the 12 open items split into two clusters: (1) Phase 2.5 instruments-first refactor for
+4 pool-based MTDS handlers — `liquidation_events_handler.py`, `flash_loan_events_handler.py`,
+`token_transfers_handler.py`, `bridge_events_handler.py` — reading pool/contract addresses from the instruments manifest
+instead of hardcoded lists, plus the 8 handler unit-test files; and (2) Phase 5 deployment-api/deployment-ui DeFi
+`data_type` breakdown on the data-status tab. Both clusters are exactly the ongoing scope of the current DeFi
+data-completion umbrella (manifest canonicalisation, instruments-as-SSOT for pool/contract addresses, and the
+data-status coverage surface) — confirmed by direct read of that plan's Context section. This same 12-item set was ALSO
+folded verbatim into `defi_e2e_pipeline_2026_04_30` (see that plan's own now-added banner) as an intermediate hop;
+naming the current living plan directly here rather than the archived intermediate.
 
 # DeFi data type completeness — 10 missing types + pool policy + data status
 

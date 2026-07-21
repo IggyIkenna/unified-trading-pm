@@ -20,6 +20,16 @@ parent: master_to_live_defi_2026_05_23
 deadline: 2026-05-23
 ---
 
+## Deferred work — migrated to: `plans/active/defi_consolidated_closeout_2026_07_18.md` — successor:
+
+defi_consolidated_closeout_2026_07_18 (the 13 open success-criteria items — live carry-archetype trading, 6-venue perp
+universe live, cross-venue spot/perp/future legs, custody, live alerting, live observability, auto-recovery, kill
+switches, batch-vs-live reconciliation, AWS↔GCP parity — trace forward through the 2026-05-08 supersession into
+`defi_master_2026_05_07.md` (itself now archived, no longer on disk). That file's DeFi-live scope is now consolidated
+into this active plan, which explicitly self-describes as aggregating "every open defi + defi-touching IS/MTDS
+plan/issue into ONE ordered pass" — the direct-line living DeFi umbrella. Verified via grep — real successor, not a
+guess.
+
 # Epic — Live DeFi Rollout (May 23 2026)
 
 > **🔴 SUPERSEDED 2026-05-08** — folded into [`defi_master_2026_05_07.md`](../active/defi_master_2026_05_07.md) §
@@ -82,7 +92,7 @@ CeFi + DeFi spot/perp/future combos and the live infra is what actually unlocks 
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------ |
 | [`active/defi_master_2026_05_07`](../active/defi_master_2026_05_07.md)                                                                                                       | DeFi pipeline umbrella (folds defi_e2e + defi_pipeline_extension + leveraged_leg + carry_staked_basis archetype) | Active |
 | [`active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](../active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)                           | DeFi archetype canonicalisation + venue matrix                                                                   | Active |
-| [`active/aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)                                                                             | AWS↔GCP parity for DeFi-first migration (data + batch + live-trading layer)                                     | Active |
+| [`active/aws_migration_defi_first_2026_05_07`](../active/aws_migration_defi_first_2026_05_07.md)                                                                             | AWS↔GCP parity for DeFi-first migration (data + batch + live-trading layer)                                      | Active |
 | [`active/alerting_service_live_rules_2026_05_07`](../active/alerting_service_live_rules_2026_05_07.md)                                                                       | Live alerting rules (was the only Group F service with no plan pre-2026-05-06 audit)                             | Active |
 | [`active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20`](../active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md) | Fund admin + capital flow (treasury / subs+reds)                                                                 | Active |
 | [`cefi_master_2026_05_07`](./cefi_master_2026_05_07.md)                                                                                                                      | CeFi venues for hedge legs (Bybit / Deribit / Binance / OKX); shared with `cefi_ml` epic                         | Active |

@@ -140,11 +140,28 @@ normally.
       process-hygiene gap for the operator, not blocking. Re-ran `check_plan_discipline.py` before/after: 96 → 82
       violations (exactly the 14 `C-archive-no-successor` fixes, 0 side effects), re-baselined 96 → 82 via
       `--baseline-write`. (repo: unified-trading-pm)
-- [ ] [DOCS] P3. Remaining archived-plan debt, batch 2 — cefi/defi (9 plans, 9–35 open items each):
-      `price_arbitrage_may_23_2026`, `cefi_ml_may_23_2026`, `defi_data_types_completeness_2026_04_24`,
-      `live_defi_rollout_may_23_2026`, `defi_e2e_pipeline_2026_04_30`, `cefi_venue_universe_expansion_2026_05_01`,
-      `dex_historical_replay_lighter_extended_pacifica_2026_05_07`, `cefi_phase2_gap_audit_2026_05_01`,
-      `defi_recursive_borrow_archetypes_2026_05_08`. Same per-plan-judgment discipline as batch 1. (repo:
+- [x] ✅ [DOCS] P3. Remaining archived-plan debt, batch 2 — cefi/defi (9 plans, 9–35 open items each) —
+      unified-trading-pm@8cf0be7b2. Real per-plan judgment on all 9, verified via grep against the live active-plan
+      corpus (not guessed): **7/9 got a successor banner naming a real active plan** — `price_arbitrage_may_23_2026` →
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20` (traced through the archived `tradfi_master_2026_05_07`
+      intermediate); `cefi_ml_may_23_2026` → `cefi_ml_directional_continuous_live_2026_06_20`;
+      `defi_data_types_completeness_2026_04_24` → `data_completion_defi_2026_07_15`; `live_defi_rollout_may_23_2026` →
+      `defi_consolidated_closeout_2026_07_18`; `defi_e2e_pipeline_2026_04_30` → `defi_consolidated_closeout_2026_07_18`
+      (17/19 items — 2 strategy-engine items from a folded-in `leveraged_leg_controller_2026_05_01` sub-plan left
+      explicitly flagged as unresolved, deferring to batch 4's own investigation of that same source plan rather than
+      guessing); `cefi_venue_universe_expansion_2026_05_01` → `cefi_consolidated_closeout_2026_07_18` (all 6 venues —
+      BITFINEX/BITGET/KRAKEN/EXTENDED/PACIFICA/LIGHTER — confirmed shipped and under active canonical-id hardening
+      there); `dex_historical_replay_lighter_extended_pacifica_2026_05_07` → `cefi_consolidated_closeout_2026_07_18`.
+      **1/9** (`cefi_phase2_gap_audit_2026_05_01`, 615-line root-cause audit) got a domain-level successor citation
+      (`cefi_consolidated_closeout_2026_07_18` + `data_completion_cefi_2026_07_15`) without line-by-line item tracing —
+      noted explicitly as unverified-at-item-level. **1/9** (`defi_recursive_borrow_archetypes_2026_05_08`, a
+      question-doc) resolved to "None — not applicable": traced its full `spawned_plan` chain (`…_2026_05_10` →
+      `…_post_cutover_2026_06_01`, both archived with 0 open items, `status: complete`) confirming the work fully
+      shipped. Verified via direct re-run: `check_plan_discipline.py` 96 → 87 for this batch alone (later fell to 40 as
+      concurrent batches 1/3/4/5 also landed); re-baselined via `--baseline-write` at each step. Shipped after ~25 lost
+      sentinel-races under heavy fleet doc-push contention on this repo (see
+      `plans/active/issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` — a
+      pre-existing known throughput issue, not something introduced here; no work was lost, only wall-clock). (repo:
       unified-trading-pm)
 - [x] ✅ [DOCS] P3. Remaining archived-plan debt, batch 3 — instruments/market-data/manifest (9 plans, 3–90 open items
       each) — unified-trading-pm@\<pending\>. Fanned out 9 parallel read-only research agents (~222 open items total),

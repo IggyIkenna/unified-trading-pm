@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: defi
 stage: [meta]
-repos: [client-reporting-api, deployment-ui, execution-service, market-tick-data-service, strategy-service, unified-trading-pm]
+repos:
+  [
+    client-reporting-api,
+    deployment-ui,
+    execution-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -16,6 +24,20 @@ locked_since: 2026-04-30
 plan_type: e2e_validation
 owner: ikenna
 ---
+
+## Deferred work — migrated to: `plans/active/defi_consolidated_closeout_2026_07_18.md` — successor:
+
+defi_consolidated_closeout_2026_07_18 (17 of 19 open items — the Fork 1/Fork 2 code/test/coverage-gate checklists for
+all 8 DeFi archetypes, plus the folded-in `defi_full_coverage_expansion_2026_04_09` data-quality-verification +
+subgraph-schema-mismatch items for PancakeSwap/SushiSwap/Aerodrome/Camelot V3, plus the folded-in
+`defi_data_types_completeness_2026_04_24` end-to-end validation item — are all DeFi pipeline/data-correctness surface
+now owned by this active plan's "ONE ordered pass" scope). **2 items left ambiguous, NOT covered by the banner above**:
+the `leveraged_leg_controller_2026_05_01`-folded items (Phase A/B/C formal unit tests for `holding_wallet` override
+precedence + Solana inner-instruction handling; features-onchain-service Docker image rebuild to pick up the Phase-1
+LegController changes) are strategy-engine/deployment specific, not data-canonicalisation — no active plan visibly owns
+them, and the batch-4 todo in `pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md` already flags
+`leveraged_leg_controller_2026_05_01` itself as needing "a real successor issue-doc … or operator confirmation both are
+abandoned." Left for that batch-4 pass rather than guessed here.
 
 # DeFi e2e pipeline — both batch (GCS-mediated) and live (Pub/Sub-mediated) closure
 

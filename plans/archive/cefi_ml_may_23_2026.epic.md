@@ -20,6 +20,15 @@ parent: master_to_live_defi_2026_05_23
 deadline: 2026-05-23
 ---
 
+## Deferred work — migrated to: `plans/active/cefi_ml_directional_continuous_live_2026_06_20.md` — successor:
+
+cefi_ml_directional_continuous_live_2026_06_20 (the 10 open success-criteria items — continuous ML prediction live
+across OKX/Binance/Bybit, end-to-end live ML pipeline, backtest-fidelity proof, live model hot-reload/version
+traceability, live alerting, kill switches/circuit breakers, DART manual override — trace forward through the 2026-05-08
+supersession into `cefi_master_2026_05_07.md` (itself now archived) into this active plan, whose title and scope (CeFi
+ML directional signal, continuous, live) is a direct continuation of this epic's headline deliverable. Verified via grep
+— real living successor, not a guess.
+
 # Epic — CeFi ML (May 23 2026)
 
 > **🔴 SUPERSEDED 2026-05-08** — folded into [`cefi_master_2026_05_07.md`](./cefi_master_2026_05_07.md) § "May-23

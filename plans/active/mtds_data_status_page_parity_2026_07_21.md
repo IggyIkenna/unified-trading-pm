@@ -243,12 +243,20 @@ the same fixes.
       catalogue and confirm the existence-window clipping closes the gap. If a residual discrepancy remains, trace it
       separately (e.g. "Needs Attention" and "Data Coverage" reading from different/inconsistent sources) rather than
       assuming this one fix explains 100% of the screenshot.
-- [ ] [BACKEND] P0. **Fix Bug B**: reconcile the instrument-search + per-instrument-availability contract between
-      `DataStatusTab.tsx`/`api/client.ts` and `deployment-api`'s `/instruments`/`/instrument-availability` routes —
-      either implement the `InstrumentAvailabilityResponse` shape (`availability_window`, `by_data_type` with per-day
-      granularity) backend-side for MTDS, or correct the frontend type + request params to match what
-      `data_query_service.py` actually serves. `get_instruments_list` must return typed, category-correct results (fixes
-      the "BTC" → SPORTS/EPL screenshot bug).
+- [x] N. ✅ [BACKEND] P0. **Fix Bug B** — `deployment-ui@c11d370`, verified on origin, full QG green. Fixed the
+      `getInstrumentAvailability` request/response contract mismatch + added a monotonic-sequence stale-response guard
+      to both debounced search flows (`runSymbolSearch`, `fetchInstruments`). See the Progress Log entry above for the
+      full detail, including the correction that the operator's screenshot traces to a THIRD search flow
+      (`searchInstruments`/cross-category), not the originally-cited one.
+- [ ] [BACKEND] P1. **New — `GET /instruments` (`get_instruments_list`) is doubly broken**, found while fixing Bug B,
+      deliberately NOT fixed in the same tick (needs real design, not a quick patch): (a) the `search` query param the
+      frontend already sends is never read or applied by the route/service — the "Instrument-Level Search" box's text
+      input currently does nothing; (b) the service returns `instruments: list[str]` (bare filenames) while the
+      frontend's `InstrumentsListResponse.instruments` type expects `InstrumentSearchResult[]` objects
+      (`venue`/`instrument_type`/etc.) — every result the box shows today is likely rendering broken/undefined fields.
+      Fix: parse `venue`/`instrument_type` out of each GCS object path (mirror `_load_corpus_from_per_venue_parquets`'s
+      existing pattern in the same file) and apply substring+token-AND filtering matching `search_instruments`'s
+      convention, so both boxes share one filtering rule.
 - [ ] [UI] P1. **Build the universal MTDS search bar** per the "Desired UX" section above: one search box for
       fixtures/leagues/instruments, type-aware click-through (sports → league → odds + day availability; instrument →
       day availability drilldown), additive to (not replacing) the existing macro asset-group drilldown. Reuse Bug B's
@@ -444,3 +452,40 @@ sides' content survived (grep-confirmed) before pushing, per the rule's explicit
 All 4 fixes verified independently via full `quality-gates.sh` green + confirmed on origin before moving on. Relaunched
 the manifest re-stamp extended retry (`distinct_values_noncanonical_audit_2026_07_20.md`) now that its blocking
 dependency is fixed — see that plan for the outcome.
+
+### 2026-07-21 (tick 2) — Bug B SHIPPED; the operator's screenshot was a THIRD, different search flow than first assumed
+
+**Bug B SHIPPED — `deployment-ui@c11d370`**, verified on origin. Full `quality-gates.sh` green.
+
+**Correction to the original Bug B scoping**: while implementing, traced the operator's exact screenshot ("Symbol search
+— cross-category · canonical IDs") to a DIFFERENT code path than the "Instrument-Level Search" checkbox flow this plan
+originally cited — `runSymbolSearch` → `searchInstruments()` → `GET /data-status/instruments/search`, an institutional
+cross-asset-group search added in a separate, later feature (`bc4d05f8` was the OLDER flow; this is a third one). Two
+independent, real bugs found and fixed:
+
+1. **The originally-cited contract mismatch** (`getInstrumentAvailability`): confirmed via direct code reading — the
+   frontend sent `instrument_key`, the backend route requires `venue`/`instrument_type`/`instrument` as separate params
+   (would 422 on any real call); the frontend's `InstrumentAvailabilityResponse` type also didn't match the backend's
+   actual flat `{daily_availability, summary, ...}` shape. Fixed by sending the correct params (derived from
+   `selectedInstrument`, already carrying `venue`/`instrument_type`) and transforming the real backend response into the
+   existing UI type client-side — chose this over reshaping the backend since it's a smaller, already-tested surface and
+   the existing UI shape is the right one (day-level found/missing lists, matching "day availability").
+2. **A stale-response race in BOTH debounced search flows** (`runSymbolSearch` and `fetchInstruments`): the 250/300ms
+   debounce only cancels overlapping _timers_, never overlapping _in-flight fetches_ — if the user pauses twice in quick
+   succession, both requests fire, and whichever resolves LAST wins regardless of which query is more recent. This is
+   the most likely explanation for the screenshot itself (a "BTC" query displaying results — canonical_id=EPL across
+   every row — that only make sense for an earlier, different query): I could not reproduce it live (no real backend in
+   this dev session to drive the actual race), so this is the best-evidenced explanation from static analysis, not a
+   confirmed root cause with a live repro. Fixed with a monotonic per-flow sequence ref that discards any response whose
+   sequence number is stale by the time it resolves — the standard, always-correct fix for this bug class regardless of
+   whether it's the full explanation.
+
+**A third, real, but NOT YET FIXED bug found while investigating** — flagged rather than rushed: `GET /instruments`
+(backing `fetchInstruments`, the per-category "Instrument-Level Search" box) has TWO separate problems of its own: (a)
+the route/service (`get_instruments_list`) never accepts or applies the `search` query param the frontend already sends
+— typing in that box currently does nothing, the list is always unfiltered; (b) the service returns
+`instruments: list[str]` (bare filenames) while the frontend's `InstrumentsListResponse.instruments` type expects
+`InstrumentSearchResult[]` (objects with `venue`/`instrument_type`/etc.) — every result in that box is presumably
+rendering as broken/undefined fields today. Both need real backend design work (parsing venue/instrument_type out of the
+GCS path per result, mirroring `_load_corpus_from_per_venue_parquets`'s pattern) that I have not yet verified closely
+enough to ship safely in this tick — added as its own todo below rather than guessing.

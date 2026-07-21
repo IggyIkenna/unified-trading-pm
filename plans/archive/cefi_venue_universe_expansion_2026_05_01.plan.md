@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: CeFi venue universe expansion — Bitfinex/Bitget/Kraken (Tardis) + Extended/Pacifica/Lighter (DEX perp adapters) + Opinion.trade (prediction)
+title:
+  CeFi venue universe expansion — Bitfinex/Bitget/Kraken (Tardis) + Extended/Pacifica/Lighter (DEX perp adapters) +
+  Opinion.trade (prediction)
 summary:
 status: complete
 nature: record
@@ -17,14 +19,25 @@ type: feature
 epic: cefi-data-pipeline
 locked_by: live-defi-rollout
 locked_since: 2026-05-01
-completion_gates: {code: C2, deployment: D2, business: B2}
+completion_gates: { code: C2, deployment: D2, business: B2 }
 repo_gates:
-- {repo: unified-api-contracts, deployment: D0}
-- {repo: market-tick-data-service, deployment: D1}
-- {repo: deployment-service, deployment: D2}
+  - { repo: unified-api-contracts, deployment: D0 }
+  - { repo: market-tick-data-service, deployment: D1 }
+  - { repo: deployment-service, deployment: D2 }
 depends_on: []
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/cefi_consolidated_closeout_2026_07_18.md` — successor:
+
+cefi_consolidated_closeout_2026_07_18 (all 20 open items — Phase 1 UAC/MTDS/launcher wiring + backfill for
+BITFINEX/BITGET/KRAKEN, Phase 2 DEX-perp adapters for EXTENDED/PACIFICA/LIGHTER — are CONFIRMED SHIPPED per direct grep
+of the current CeFi umbrella plan, which discusses canonical-id coverage for all six venues at length (KRAKEN-FUTURES
+`FI_/FF_` reconstruct, BITFINEX-FUTURES canonicalisation, BITGET-FUTURES letter-month decode, EXTENDED-STARKNET
+marker-less ids, and a live backfill launch command naming `KRAKEN-FUTURES BITFINEX-FUTURES BITGET-FUTURES` explicitly).
+The venues exist and are actively being data-quality-hardened in this plan — this archived plan's remaining scope (Phase
+3 Opinion.trade was explicitly out-of-scope/deferred-to-a-separate-plan in the body already) is superseded by the
+ongoing canonicalisation work there. Verified via grep, not a guess.
 
 ## Context
 
