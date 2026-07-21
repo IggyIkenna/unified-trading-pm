@@ -3500,3 +3500,25 @@ established precedent across the last 5+ dispatches). Not flipping the checkbox.
 while the singleton lock holds against the running fleet (same as slot-10's finding, unchanged). `/skip-current-task` —
 resume once the fleet completes, a shard goes dead/stalled, or INJURIES/STANDINGS become launchable once the lock
 clears.
+
+### 2026-07-21T04:51Z — data_engineering slot-9 (Todo `-001` re-dispatched, ~7min after slot-3's check — cheap re-check, all 4 shards still healthy, decline)
+
+Dispatched onto `-001`. Fresh-pulled all 24 slot repos clean (no dirty state, all fast-forwarded to
+`origin/live-defi-rollout`). Re-checked fleet liveness (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud`,
+`CLOUDSDK_AUTH_ACCESS_TOKEN` from `gcloud auth application-default print-access-token` — same working recipe as prior
+entries; note the token export must happen in the SAME shell invocation as the `gcloud storage cat` call, or the snap
+`gcloud`'s `cap_dac_override` failure / ADC token loss recurs):
+
+- All 4 VMs still `RUNNING`: `af-backfill-20260719-180545` (LINEUPS), `-180620` (PLAYER_STATS),
+  `af-backfill-20260721-033537` (FIXTURE_EVENTS), `-033605` (FIXTURE_STATS).
+- `PROGRESS.json` monotonically advanced vs slot-3's 04:44Z readings (all timestamps fresh, ~04:50-04:51Z): LINEUPS
+  `2024-07-10→2024-07-13`, PLAYER_STATS `2026-01-13→2026-01-16`, FIXTURE_EVENTS `2020-07-08→2020-07-11`, FIXTURE_STATS
+  `2020-07-05→2020-07-10`.
+
+No stall, no new dead shard — fleet remains healthy exactly as every prior check found. Gate
+(`expected_unattempted_pending_fetch == 0` across all AF enrichment data_types within coverage) remains far from met —
+FIXTURE_EVENTS/STATS still need to reach `2026-05-10`; LINEUPS/PLAYER_STATS still need to reach present. Not re-running
+the full gate-verification query (would just re-confirm "still pending" at real compute cost, per established
+precedent). Not flipping the checkbox. INJURIES/STANDINGS remain unlaunchable while the singleton lock holds against the
+running fleet. `/skip-current-task` — resume once the fleet completes, a shard goes dead/stalled, or INJURIES/STANDINGS
+become launchable once the lock clears.
