@@ -127,7 +127,10 @@ Full audit transcript available on request; the load-bearing facts:
       with signal-less rows always passing through, honest-absence; both bounds independently clearable via one atomic
       `✕` — two sequential URL-param updates were found to race and clobber each other) | pw:L2 ✓ | regression:
       tests/smoke/deployments-page.spec.ts
-- [ ] [UI] P0. `kind` filter → multi-select (decision 3), URL-backed, same client-side filter model as today.
+- [x] ✅ [UI] P0. `kind` filter → multi-select (decision 3), URL-backed, same client-side filter model as today. —
+      deployment-ui@234130a (`KindFilterChips` toggle-chip group replaces the single `<select>`; comma-separated
+      `?kind=` URL, old single-value deep-link still works as a 1-element set; `cockpit.spec.ts`'s `.selectOption(...)`
+      updated to click the chip) | pw:L2 ✓ | regression: tests/smoke/deployments-page.spec.ts
 - [ ] [UI] P1. Approx-row colour marker (decision 4) — reuse the WS-1 partial-day colour convention for any
       `basis: "approx"` row (heartbeat-stale VMs, unmanaged fallback, single-timestamp kinds). One consistent visual
       language across the whole table.
