@@ -9,7 +9,14 @@ stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/defi_recursive_borrow_archetypes_2026_05_10.md, plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, plans/active/defi_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md]
+related:
+  [
+    plans/active/defi_recursive_borrow_archetypes_2026_05_10.md,
+    plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md,
+    plans/active/defi_master_2026_05_07.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/issues/defi_archetypes_doc_plan_drift_2026_05_07.md,
+  ]
 created: 2026-05-08
 type: question-doc
 closed: 2026-05-10
@@ -17,9 +24,26 @@ author: ikenna
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-related_codex: [codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md, codex/09-strategy/strategy-summary.md]
+related_codex:
+  [
+    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md,
+    codex/09-strategy/strategy-summary.md,
+  ]
 spawned_plan: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
 ---
+
+## Deferred work — migrated to: **None** — successor: not applicable. This is a question-doc (`status:
+
+closed-spawned-plan`) whose open items were a pre-implementation checklist, not standing work — the frontmatter's own `spawned_plan:
+plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`already names the real successor (the regex just didn't recognize the`spawned_plan:`key as a successor token). Traced the full chain: that spawned plan (now at`plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md`) itself has ZERO open items and its own `successor_plan:
+plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`(now at`plans/archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`) also has ZERO open items, `status:
+complete`. Both descendants confirm the recursive-borrow archetype work (Family 1 leveraged lending arb + Family 2
+long-funding-perp recursive-borrow) shipped in full — no live successor plan is needed for this question-doc's 35
+checklist items.
 
 # DeFi recursive-borrow archetypes — leveraged lending arb + long-funding-perp recursive-borrow flavor
 

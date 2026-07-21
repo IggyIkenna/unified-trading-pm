@@ -15,14 +15,26 @@ overview: Phase 2 (CeFi) gap audit + root-cause fix list before relaunching MTDS
 type: mixed
 epic: data-pipeline-completion
 owner: Harsh
-completion_gates: {code: C5, deployment: D2, business: B1}
+completion_gates: { code: C5, deployment: D2, business: B1 }
 repo_gates:
-- {repo: market-tick-data-service, code: C0, deployment: D0, business: B0}
-- {repo: unified-trading-library, code: C0, deployment: D0, business: B0}
-- {repo: deployment-service, code: C0, deployment: D0, business: B0}
+  - { repo: market-tick-data-service, code: C0, deployment: D0, business: B0 }
+  - { repo: unified-trading-library, code: C0, deployment: D0, business: B0 }
+  - { repo: deployment-service, code: C0, deployment: D0, business: B0 }
 depends_on: [instruments-and-market-tick-data-completion-2026-05-01]
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/cefi_consolidated_closeout_2026_07_18.md` — successor:
+
+cefi_consolidated_closeout_2026_07_18 (also `plans/active/data_completion_cefi_2026_07_15.md` for the pure
+backfill/manifest-completion slice). This is the 2026-05-01 root-cause gap audit for
+`instruments_and_market_tick_data_completion_2026_05_01` (itself long since archived) — the 29 open items are CeFi
+instruments-service reference-data + MTDS backfill root-cause fixes. Both named plans are the current living CeFi data
+umbrella: `cefi_consolidated_closeout_2026_07_18` explicitly aggregates every open CeFi/CeFi-adjacent IS/MTDS plan/issue
+into one ordered pass (mirroring the defi/tradfi siblings), and `data_completion_cefi_2026_07_15` is the CeFi
+backfill/canonicalisation slice split out of the M-1 data-completion program. Given the depth of this 615-line audit
+doc, individual item-level tracing back to specific current todos was NOT done — this is a domain-level successor
+citation, not a line-by-line reconciliation; flag for a future pass if item-level fidelity is needed.
 
 # CeFi Phase 2 — gap audit + root-cause fix list
 

@@ -20,6 +20,16 @@ parent: master_to_live_defi_2026_05_23
 deadline: 2026-05-23
 ---
 
+## Deferred work — migrated to: `plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` — successor:
+
+tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20 (the 9 open success-criteria/open-question items — CME
+same-day-expiry arb backtest, ETF↔future arb backtest, cross-venue ETF arb, backtest fidelity, TradFi data pipeline
+clean, 2-year config grid, cross-venue ETF universe pick, backtest window pick — trace forward through the 2026-05-08
+supersession into `tradfi_master_2026_05_07.md` (itself now archived) and land in this active plan, which explicitly
+carries forward "the two folded May-23 deliverables (S&P prediction 'deliverable A' + price-arbitrage 'deliverable B')"
+as its own scope: same-day-expiry arb, ETF↔future arb, cross-venue ETF arb, and the Group F backtest harness. Verified
+by direct grep — this is the real living successor, not a guess.
+
 # Epic — Price Arbitrage (CME futures + ETFs) (May 23 2026)
 
 > **🔴 SUPERSEDED 2026-05-08** — folded into [`tradfi_master_2026_05_07.md`](./tradfi_master_2026_05_07.md) § "May-23

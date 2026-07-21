@@ -15,6 +15,16 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
 
+## Deferred work — migrated to: `plans/active/cefi_consolidated_closeout_2026_07_18.md` — successor:
+
+cefi_consolidated_closeout_2026_07_18 (24 open items: Lighter shipped mid-plan via `/candles` REST — not the original
+subgraph-replay premise — per the in-body 2026-05-07 session log; Pacifica's `/kline` route was identified but "TODO
+(mirror P1)"; Extended was left "BLOCKED on research" with no public OHLCV endpoint found. All three venues —
+LIGHTER-ZKSYNC / PACIFICA-SOLANA / EXTENDED-STARKNET — are confirmed live in the current CeFi umbrella's canonical-id
+coverage work (grep hits for all three, incl. "EXTENDED-STARKNET marker-less ids" canonicalisation), so any remaining
+historical-replay completeness gap (Pacifica candles adapter, Extended's still-unresolved OHLCV source) is now that
+plan's data-completeness surface to carry forward. Verified via grep, not a guess.
+
 # DEX historical replay via on-chain event replay
 
 ## Problem
