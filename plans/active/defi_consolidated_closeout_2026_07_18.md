@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -2033,3 +2033,24 @@ Discriminator = **does a manifest row exist**.
   model), instrument_type + venue spelling carry heavy case/version drift (worklist in Track 1). cefi/tradfi findings +
   decisions passed to the two sibling plans per the operator's ownership split. No code/data changed yet — this plan
   holds the scope + target.
+
+- **2026-07-21 — data-loss risk found + repaired (deployment-service, `scripts/vm/launch-canonical-migration-vm.sh`).**
+  The checker collect-* route agent (Track work: fix `data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md`) hit a
+  dirty-deps quickmerge block, took the legitimate dirty-deps direct-push carve-out, and along the way stashed + popped
+  a pre-existing FOREIGN uncommitted WIP in this same file (an unfinished `defi-pi-range`/`defi-rebuild` per-quarter
+  migration-launcher feature — real, valuable, unrelated to its own task). The stash-pop reported "lossless" but
+  actually landed on a STALE base: the working tree ended up missing 5 already-committed fixes to this file
+  (`tradfi-catalogue-canon`, the gated massive-only purge, `VM_WORKSPACE`, disk-provisioning notes —
+  `a281ed5`/`bbdaf1a`/`dfd7608`/`2c00c74` and one more). Verified via `git log -S` + comparing the stash's recorded
+  parent commit (`699b4ab`, 5 commits behind HEAD) against the actual stash diff (only ~24 lines, none of which touch
+  the missing sections) — confirmed the removal was a stash-recovery artifact, not a deliberate edit. **Repaired**:
+  `git checkout HEAD -- <file>` to restore the full committed content, then hand-reapplied the stash's genuine
+  `defi-pi-range`/`defi-rebuild` addition on top of it (5 targeted edits: usage line, two new `_script_for()` case
+  blocks, the `_launch()` flag-mode + `_ag=DEFI` conditions, the final dispatch case) — verified `bash -n` clean and
+  `git diff` vs HEAD shows ONLY additions, zero HEAD content removed. Stash dropped (fully redundant: its
+  `setup-data-pipeline-vm.sh` half was already shipped in HEAD `56a451f`; its `launch-canonical-migration-vm.sh` half is
+  now correctly reapplied). File is intentionally left dirty/uncommitted — it's someone else's in-progress feature, not
+  mine to finish or ship; whoever owns `defi-pi-range`/`defi-rebuild` picks it up from here. **Lesson**: a stash-pop
+  that reports success can still silently regress unrelated already-shipped content when the stash's parent commit is
+  stale relative to HEAD — always diff the popped result against HEAD (not just check for pop errors) before trusting
+  "lossless."
