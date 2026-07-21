@@ -78,14 +78,54 @@ consolidated blob catches up (staleness should trend back toward 0, not keep gro
 
 ## Todos
 
-- [ ] [INFRA] P2. Check the manifest-consolidator Cloud Run Job + Scheduler status for
+- [x] [INFRA] P2. Check the manifest-consolidator Cloud Run Job + Scheduler status for
       `instruments-store-sports-prd-central-element-323112` — confirm whether it's genuinely down/erroring or just
       lagging under load, and get the consolidated blob's staleness trending back down. (repo: unified-trading-library
       or the consolidator's owning infra repo — grep `codex/05-infrastructure/manifest-consolidator-ssot.md` for the
-      exact deployment target)
+      exact deployment target) — ✅ deployment-service@5d6200e
+
+  **Diagnosis (2026-07-21, live investigation)**: the Cloud Run Job `uts-prod-manifest-consolidator-instruments-sports`
+  (arg `--bucket instruments-store-sports-prd-central-element-323112`) is **NOT down** —
+  `gcloud run jobs executions list` shows it firing every ~60s per its Scheduler cron with 0 failed executions over the
+  observed window, and `gcloud logging read` confirms real merges completing successfully (`success=True`, e.g.
+  `shards=3 rows_in=5452902 rows_out=5385281 dedup_dropped=67621 latency_ms=437239.8`). The root cause is **structural
+  under-provisioning of the staleness budget, not an outage**: a single incremental merge cycle on this bucket now
+  regularly takes **400-460s** (measured back-to-back: 437.2s, 456.5s), which is:
+  - **>3x** the reader's `MANIFEST_CONSOLIDATED_STALENESS_SEC` default (120s, used for sports per
+    `manifest-consolidator-ssot.md` §"Per-(kind, AG) cadence staleness budget"), so every real merge cycle guarantees a
+    multi-minute window where the reader legitimately sees the index as stale-past-threshold — this is exactly the
+    233.6s→360.4s growth pattern the original finding observed, reproduced live.
+  - **>4-7x** the Cloud Scheduler's `*/1` (60s) cadence, so most scheduled invocations arrive while the prior merge
+    still holds the lock and log `skipping cycle ... fresh lock present (sibling cron still running)` — a harmless no-op
+    (`error=locked`, `success=True`, `shards=0`), but it means the canonical only actually advances once every ~7-8
+    minutes, not every minute as the cron cadence implies.
+  - GCS object custom metadata on `_index/availability_index.parquet` confirms this: `consolidator_run_at` sat frozen
+    for 5+ minutes while a merge was in flight (`phase=lock_acquired` at 21:48:37Z, still running when re-checked at
+    21:54Z), i.e. staleness DOES trend back to 0 the moment each merge completes, then immediately starts climbing again
+    during the next multi-minute merge — a legitimate sawtooth, not a monotonic outage.
+
+  **Fix shipped**: same category as the OOM-avoidance staleness bump already applied to
+  `launch-cefi-sharded-backfill.sh` / `launch-mtds-backfill-vm.sh` (`MANIFEST_CONSOLIDATED_STALENESS_SEC=86400` there) —
+  a producer whose OWN merge cadence structurally exceeds the reader default needs a wider per-launcher budget, not a
+  global SLA change (the 120s default stays correct for readers who need fresher live-tick data). Bumped
+  `launch-transfermarkt-backfill-vm.sh` (the launcher that hit the original error) to
+  `MANIFEST_CONSOLIDATED_STALENESS_SEC=1800` (30 min — comfortable margin over the measured 400-460s merge, well short
+  of the 86400 "trust it blindly" tier since sports isn't OOM-bound the way cefi is).
+
+  **Not addressed (out of scope for this P2 check)**: the underlying merge-duration growth (5.4M+ rows, dedup_dropped
+  ~67k/cycle) will keep getting worse as the bucket grows, and other sports launchers reading this same bucket don't set
+  this override either and could hit the same error — tracked as a new P3 todo below. A perf fix to the merge itself
+  (chunk_days tuning, incremental-window narrowing) is a separate follow-up, not attempted here.
+
 - [ ] [INFRA] P3. Consider whether this bucket/consolidator pairing needs its own staleness alert (the 120s threshold
       being breached for 1h10m+ straight during a live backfill went unnoticed until an unrelated task's logs surfaced
       it). (repo: deployment-service or wherever consolidator alerting lives)
+- [ ] [INFRA] P3. Audit every OTHER sports launcher reading `instruments-store-sports-prd-central-element-323112`
+      (`launch-sports-full-sweep-vm.sh`, `launch-sports-entity-sweep-vm.sh`, `launch-sports-manifest-rescan-vm.sh`,
+      `launch-transfermarkt-forward-poll.sh`, `launch-mtds-sports-odds-backfill-vm.sh`, etc.) for the same missing
+      `MANIFEST_CONSOLIDATED_STALENESS_SEC` override applied to `launch-transfermarkt-backfill-vm.sh` above — any of
+      them can hit the same `ManifestConsolidatorStaleError` given this bucket's now-routine 400-460s merge duration.
+      (repo: deployment-service)
 
 ## Codex SSOTs
 
