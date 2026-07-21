@@ -165,9 +165,20 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       `CODEX_COLOUR_EXCLUDE_GLOBS`/`CODEX_LOCALHOST_EXCLUDE_GLOBS` candidates (generated-PDF HTML, mock/fixture data
       files) to cut the real count, then fix or file the residual real-violation sweep as its own sized todo. (repo:
       unified-trading-system-ui, unified-trading-pm for the glob config)
-- [ ] [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
+- [x] ✅ [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
       `QUALITY_GATE_BYPASS_AUDIT.md`, citing this issue doc) vs. hard-block `quality-gates.sh` on this repo until the
-      above 3 todos land — operator/main decision, not unilateral. (repo: unified-trading-pm)
+      above 3 todos land — operator/main decision, not unilateral. (repo: unified-trading-pm) — Decision already made by
+      the operator via BLK-bafba232 (consistent with prior rulings BLK-fb2af155/BLK-928e1824): a **count-baseline
+      ratchet** (`codex_ui_violation_baseline.json`, shipped `unified-trading-pm@1ef0fa0e6` + registered
+      `unified-trading-system-ui@94c7b25b`) — neither a literal glob-exclude bypass nor a hard block; the gate fails
+      only on a NEW violation (count exceeding baseline), so unrelated UI work ships normally while the backlog clears.
+      This todo's job was documenting that already-made decision, which was missing: added
+      `unified-trading-pm@QUALITY_GATE_BYPASS_AUDIT.md` § 3, citing this issue doc + the proof it already works
+      (`94c7b25b` shipped clean through it). Attempted a fresh in-session `quality-gates.sh` re-verification but hit
+      severe host contention (load average 63+ from ~6 concurrent slots' Node/Python builds, confirmed via `ps`/`free` —
+      the same environmental-contention class this issue doc's own Playwright section already documents as non-code);
+      relying instead on code-level inspection of the ratchet logic (`base-ui.sh` lines ~376-404) plus todo 1's own
+      shipped, QG-green proof rather than re-running an already-proven mechanism under a degraded host.
 
 ## Codex SSOTs
 
