@@ -3410,3 +3410,26 @@ resume rather than an instant catch-up. That's expected per the plan's own "Mult
 symptom of a new problem. The todo's actual gate — "shard is no longer dead/undetected" — is met: both shards verified
 alive + advancing. Checkbox flipped `[x]` above with this evidence. Full-history completion continues to be tracked by
 the P2 enrichment-gate todo above.
+
+### 2026-07-21T04:08Z — data_engineering slot-13 (Todo `-001` re-dispatched, ~6min after the `-004` relaunch verification — cheap re-check, all 4 shards now alive+advancing, decline)
+
+Dispatched onto `-001` (the full-history enrichment gate). Fresh state changed materially since the last `-001` check
+(03:32Z, 2/4 dead): the `-004` INFRA relaunch has since landed and been verified (entry directly above). Independently
+re-confirmed via `PROGRESS.json` (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud` + `CLOUDSDK_AUTH_ACCESS_TOKEN`
+from `gcloud auth application-default print-access-token` — the snap gcloud's `cap_dac_override` failure persists on
+this host, ADC via the standalone SDK works):
+
+- `gcloud compute instances list --filter="name~af-backfill"` → all 4 `RUNNING`: `af-backfill-20260719-180545`
+  (LINEUPS), `-180620` (PLAYER_STATS), `af-backfill-20260721-033537` (FIXTURE_EVENTS), `-033605` (FIXTURE_STATS).
+- `PROGRESS.json`, all 4 fresh (`updated` within the last ~5 min of 04:08Z) AND monotonically advanced vs the `-004`
+  entry's own readings ~6 min earlier: FIXTURE_EVENTS `2020-06-22→2020-06-25`, FIXTURE_STATS `2020-06-21→2020-06-24`,
+  LINEUPS `2024-05-11→2024-06-08` (03:31Z reading, ~28 days advanced in ~37 min), PLAYER_STATS `2025-12-01→2025-12-19`
+  (~18 days advanced in ~37 min).
+
+No stall, no new dead shard — a genuinely healthy multi-day run per the plan's own framing, matching every prior
+session's finding once the fleet is intact. The full-history gate itself (`expected_unattempted_pending_fetch == 0`
+across all AF enrichment data_types within their coverage windows) remains far from met — FIXTURE_EVENTS/STATS still
+need to reach `2026-05-10`, LINEUPS/PLAYER_STATS still need to reach present — so there is no gate-verification query
+worth running yet (would just re-confirm "still pending", as it has every prior cheap re-check). Not flipping the
+checkbox. `/skip-current-task` — resume once the fleet completes (all 4 shards self-delete `exit_code=0`) or a shard
+goes dead/stalled again (flat `PROGRESS.json` timestamp on a live re-check).
