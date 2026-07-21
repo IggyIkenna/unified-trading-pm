@@ -367,6 +367,13 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 
 ### Phase 3 — UI page (deployment-ui)
 
+> **🟢 VERTICAL SLICE 1 LANDED — `deployment-ui@47e6379` (2026-07-21).** The `/ops/artifacts` route + Fleet&Cost nav
+> entry + 5-tab shell are live, with the **Pipeline (builds) tab wired to real Cloud Build data**; the other four tabs
+> render an honest "backend in progress" placeholder. The Phase-3 todos below stay **open** because each is scoped to
+> the FULL 5-view page — what remains is the running / deploy / artifacts / health views + their `pw:L2` coverage +
+> `__mock` race hooks, each gated on its per-view backend. Default view is **Pipeline** (the only wired tab) until the
+> running backend lands — revisit the "default = What's running" shape then. See the Progress log.
+
 - [ ] [UI] P1. `/ops/artifacts` **top-level route + NAV_GROUPS entry** (shape locked by operator 2026-07-17: top-level,
       all 5 views in v1, default view = What's running); reuse the cost-page date-range picker, `Segmented`, `Card`,
       `Badge`, status pills, the `useRef` reqId ordering guard, and the visibility-paused refresh. Unknowns render
@@ -554,6 +561,25 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   tests). **Remaining backend:** 4 views (images / deploys / running-join+drift / health) + their providers (AR
   versions, Cloud Run revisions, ECR, App Runner/ECS, CodeBuild, tarball manifests) + the snapshot worker + the runtime
   digest→SHA join; then the UI page + Phase 3c tarball stamp.
+- **2026-07-21 (later still) — UI vertical slice 1 shipped: the `/ops/artifacts` page with a LIVE Pipeline tab
+  (`deployment-ui@47e6379`).** Operator asked for "at least one tab … in the actual UI". Ran the API (:8004, real GCP
+  data via ADC/`GCP_PROJECT_ID=central-element-323112`, `DISABLE_AUTH=true`) + the UI (:5183) locally for the operator
+  first — verified 400 live builds / 98.2% success / 7 failures / 26 wasted-dups flowing end-to-end. Then built
+  `src/pages/ArtifactPipeline.tsx` (self-contained, mirroring `CostObservability`: plain fetch + `useRef` reqId guard +
+  inline token-styled primitives): a 5-tab shell (running / deploy / **pipeline** / artifacts / health) where the
+  **Pipeline (builds) tab is wired live to `GET /api/artifacts/builds`** — data-derived stat band (total / success-rate
+  / failed / median / wasted-dup), client-side lane/cloud/status filters, and a per-build failure + step-timeline
+  drawer; the other four tabs render an honest "backend in progress" placeholder. Wired the route (`App.tsx`) + a
+  Fleet&Cost `NAV_GROUPS` entry (`NavMenu.tsx` — auto-lights `TopNavBar` + satisfies the orphan-audit),
+  `getArtifactBuilds`
+  - `BuildsResponse`/`BuildRow`/`BuildStep`/`BuildsStats` types on `deploymentApi.ts`, a `mockArtifactBuilds` handler on
+    `mock-api.ts`, **5 Vitest** unit tests + a **2-case `pw:L2`** smoke spec (`tests/smoke/artifact-pipeline.spec.ts`;
+    cites this plan). Bumped the two nav-count tests (15→16 canonical entries). Full deployment-ui gate green (tsc +
+    eslint
+  - orphan-audit + 1047 tests + build + codex checks incl. no-hardcoded-colours). Shipped through two peer-rebase
+    sentinel-stale cycles (busy branch) — pull-rebase kept the merged tree, content-verified ahead=0. **Remaining UI:**
+    the 4 placeholder tabs' real views + their `pw:L2` coverage + `__mock` race hooks, each gated on its per-view
+    backend (deploys next).
 
 ## Lessons this session (so they are not re-learned the hard way)
 
