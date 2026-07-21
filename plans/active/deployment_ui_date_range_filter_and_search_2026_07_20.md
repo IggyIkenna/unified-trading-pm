@@ -121,8 +121,12 @@ Full audit transcript available on request; the load-bearing facts:
       no extra RPC; mapped onto the EXISTING `DeploymentItem.last_modified_at` field in `_cloud_run_service_item` rather
       than a duplicate field, since it already carries "deploy time, distinct from last-invoke" for AWS Lambda; 6 new
       unit tests; `quality-gates.sh` green)
-- [ ] [UI] P0. Date-range picker on `/deployments`, URL-backed (`?date_from=&date_to=`), wired to the new backend
-      params.
+- [x] ✅ [UI] P0. Date-range picker on `/deployments`, URL-backed (`?date_from=&date_to=`), wired to the new backend
+      params. — deployment-ui@31d862c (`DateRangeFilter` in `Deployments.tsx`; `date_from`/`date_to` added to
+      `DeploymentInventoryFilters`/`getDeploymentInventory` in `deploymentApi.ts`; mock API filters on `last_run_at`
+      with signal-less rows always passing through, honest-absence; both bounds independently clearable via one atomic
+      `✕` — two sequential URL-param updates were found to race and clobber each other) | pw:L2 ✓ | regression:
+      tests/smoke/deployments-page.spec.ts
 - [ ] [UI] P0. `kind` filter → multi-select (decision 3), URL-backed, same client-side filter model as today.
 - [ ] [UI] P1. Approx-row colour marker (decision 4) — reuse the WS-1 partial-day colour convention for any
       `basis: "approx"` row (heartbeat-stale VMs, unmanaged fallback, single-timestamp kinds). One consistent visual
