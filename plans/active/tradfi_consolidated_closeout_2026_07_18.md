@@ -1518,11 +1518,11 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Deferred work after 2026-07-20 (tick 26)
 
-| Item                                                                               | Why deferred                                                                                                           | Tracked in                                                     |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| ✅ ~~Drop 686,005 stale `batch_massive` + phantom manifest rows~~ **DONE tick 27** | applied surgically (see tick 27)                                                                                       | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
-| Object-walk id re-derivation for (c) blank-id ↓ + (d) `-USD@LIN`                   | needs `rebuild_tradfi_manifest.py` + 2nd surgical drop (id ∈ dedup key); largely mooted by catalogue rebuild + enum-v2 | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
-| manifest-vs-disk consistency check (captured with no object = loud fail)           | P1 hardening, prevents phantom-row recurrence                                                                          | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| Item                                                                                  | Why deferred                                                                                                                                                                               | Tracked in                                                     |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| ✅ ~~Drop 686,005 stale `batch_massive` + phantom manifest rows~~ **DONE tick 27**    | applied surgically (see tick 27)                                                                                                                                                           | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| ✅ ~~Object-walk id re-derivation (c) blank-id + (d) `-USD@LIN`~~ **RESOLVED-MOOTED** | consumer-trace: no consumer keys off manifest `instrument_id` value (coverage seeds from own rows; render from catalogue); ids 89.1% `@LIN`, self-converging — no surgery (`PM@6bdbae4b6`) | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| manifest-vs-disk consistency check (captured with no object = loud fail)              | P1 hardening, prevents phantom-row recurrence                                                                                                                                              | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
 
 - **2026-07-20 (slot-1, tick 27) — ✅ Post-purge tradfi tick `_index` surgical cleanup (a)+(b) APPLIED +
   durability-proven; (c)/(d) scoped.**
