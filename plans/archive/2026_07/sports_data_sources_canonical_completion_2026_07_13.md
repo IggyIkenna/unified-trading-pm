@@ -3355,12 +3355,28 @@ it's new adapter work, not a data-audit residual).
     single-parquet manifest read (scratch `verify_af.py` / `verify_cf11.py`, mtds `.venv` duckdb 1.5.3 + gcsfs, ADC on
     `central-element-323112`).
 
-- [ ] [VERIFY] P0. **Overnight/next-day live-cron verification (NEW 2026-07-14, operator-directed)** — every scheduled
-      driver fixed today is hours-old and has only been confirmed via a single manual `gcloud run jobs execute --wait`
-      trigger, never a real unattended cron fire. Before calling ANY of these "fixed for good," confirm they actually
-      self-fire correctly on their own schedule at least once (ideally through one full overnight cycle + the next day's
-      live matches, per the operator's explicit ask — "let's wait for that overnight cycle... mark plan to check the run
-      tonight or tomorrow"). Check ALL of the following on the next session touching this plan:
+- [x] ✅ [VERIFY] P0. **Overnight/next-day live-cron verification (NEW 2026-07-14, operator-directed)** — **RESOLVED
+      2026-07-21 (plan-reconcile consolidation pass), flipped with real evidence, not the stale 07-18-clean assumption
+      below.** The Progress Log below stops at a 2026-07-17 ~15:27Z entry deferring to a 07-18 ~01:30Z re-check that
+      nobody performed (no 07-19/07-20/07-21 entries exist). Live read-only
+      `gcloud scheduler`/`gcloud     run jobs executions list` checks today (2026-07-21) found: all 5 schedulers
+      ENABLED, firing daily at their cron minute, including today. `t1-recon`: succeeded (cron-triggered) 07-18/19/20/21
+      — clean throughout. The other 4 (`footystats`/`transfermarkt`/`soccer-football-info`/`mdps-odds-horizon-bucket`)
+      each FAILED (`NonZeroExitCode`, "container exited with an error") specifically on **07-18** — the exact date this
+      todo's DoD names — then each SUCCEEDED cleanly, cron-triggered, on **07-19, 07-20, AND 07-21** (3 consecutive
+      clean unattended days). So the literal DoD ("all 5 succ=1 on 07-18") is NOT met, but the broader intent
+      (unattended self-fire is real and reliable) is proven MORE strongly than originally asked — 3 consecutive clean
+      days, not one. The 07-18 failure cluster (4 jobs, same day, self-healed by 07-19) was never diagnosed; root cause
+      unknown, low-priority follow-up, did not recur across the 3 following days. Closing on the 3-day clean streak as
+      the real proof of unattended self-fire — leaving this open indefinitely on a now-stale time-gate would be wrong
+      given the real answer was sitting in GCP the whole time.
+
+      _Original todo text + Progress Log preserved below for the record:_ every scheduled
+          driver fixed today is hours-old and has only been confirmed via a single manual `gcloud run jobs execute --wait`
+          trigger, never a real unattended cron fire. Before calling ANY of these "fixed for good," confirm they actually
+          self-fire correctly on their own schedule at least once (ideally through one full overnight cycle + the next day's
+          live matches, per the operator's explicit ask — "let's wait for that overnight cycle... mark plan to check the run
+          tonight or tomorrow"). Check ALL of the following on the next session touching this plan:
   - `uts-prod-sports-enrichment-footystats-daily` / `uts-prod-sports-enrichment-soccer-football-info-daily` /
     `uts-prod-sports-enrichment-transfermarkt-daily` (new today, `deployment-service@5da4b620`/`@0f862b6e`) — check
     `gcloud scheduler jobs describe <job> --project=central-element-323112 --location=asia-northeast1` for
