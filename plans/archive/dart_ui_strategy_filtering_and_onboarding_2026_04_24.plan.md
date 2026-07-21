@@ -10,7 +10,7 @@ repos: [deployment-service, instruments-service, unified-api-contracts, unified-
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-24'
+created: "2026-04-24"
 branch: live-defi-rollout
 repos_affected: [unified-trading-system-ui, unified-api-contracts, unified-trading-pm]
 superseded_by: marketing_site_three_route_consolidation_2026_04_26.md
@@ -18,6 +18,14 @@ superseded_on: 2026-04-26
 current_readiness: C2
 target_readiness: C5
 ---
+
+## Deferred work — migrated to: `plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md` — successor:
+
+batch4_strategy_ui_archived_plan_residuals (genuinely mixed domain — the frontmatter's
+`marketing_site_three_route_consolidation_2026_04_26.plan.md` is real and owns the onboarding/questionnaire/FOMO-funnel
+work streams (Phases 0-8), but this plan's Phase 9 (archetype-capability taxonomy: `bespoke_capable`, VOL/MARKET_MAKING
+splits, admin-assignment) is a different domain owned by `plans/active/capability_wizard_and_manifest_2026_06_11.md`; a
+single successor would misrepresent one half, so the split is tracked as a fresh audit todo there).
 
 # DART UI — Strategy Dimension Filtering, Permission Tiers, Client Onboarding & Codex Integration
 
@@ -449,9 +457,7 @@ const QUESTIONNAIRE_PRESEEDS: Record<string, QuestionnaireResponse> = {
     leverage_preference: "low",
     target_sharpe_min: null,
   },
-  "desmond-signals-in": {
-    /* same */
-  },
+  "desmond-signals-in": {/* same */},
 };
 
 const preseed = QUESTIONNAIRE_PRESEEDS[persona.id];
@@ -956,7 +962,7 @@ The DeFi/DeFi label has been fixed; cascade-to-4-levels in the catalogue surface
 | `lib/config/auth.ts` (the actual home of `AuthPersona`)                     | `assigned_strategies?: readonly string[]` field on the interface (L107) with jsdoc explaining catalogue slot label semantics + locked-visible fallback. (Plan said `lib/auth/personas.ts` — type lives in `auth.ts`; values seeded in `personas.ts`.)                               | ✅ DONE                                                                                                                    |
 | `lib/auth/personas.ts` Desmond + Patrick seeds                              | `desmond-dart-full` (L385) carries 11 slot labels (L409–421). `elysium-defi` (L250–265) carries 2; `elysium-defi-full` (L268–285) extends to 5 with CARRY_RECURSIVE_STAKED + YIELD_ROTATION_LENDING.                                                                                | ✅ DONE                                                                                                                    |
 | `lib/auth/demo-provider.ts` runtime hydration                               | `personaToAuthUser()` (L9–25) copies entitlements ONLY. **`assigned_strategies` is read by neither `personaToAuthUser` nor `login()`. `instrumentsForSlot()` is never called at login**. Plan-named "P10.6.4" is the architectural debt — not done.                                 | 🟥 PENDING (architectural debt — see "Universal hydration" rewrite below)                                                  |
-| `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md`    | New SSOT shipped describing the catalogue ↔ instruments-service join, GCS layout, refresh cadence.                                                                                                                                                                                 | ✅ DONE                                                                                                                    |
+| `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md`    | New SSOT shipped describing the catalogue ↔ instruments-service join, GCS layout, refresh cadence.                                                                                                                                                                                  | ✅ DONE                                                                                                                    |
 | `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`             | Updated for 4-level filter hierarchy.                                                                                                                                                                                                                                               | ✅ DONE                                                                                                                    |
 
 ### Architectural rewrite — Universal persona instrument hydration (replaces narrow P10.6.4)

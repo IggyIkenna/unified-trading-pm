@@ -241,9 +241,24 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       populate the new required fields (static fixture, always `capped=False`). New tests
       (`TestLoadAlertsPayloadPagination`, 5 cases: capped true/false, offset paging, days-clamped-to-max, streams derive
       from the full window not just the page). `quality-gates.sh` green (4841 tests incl. the 5 new, 80.27% coverage).
-- [ ] [BACKEND] P1. **zombie-watchdog reaps — add persistence.**
+- [x] ✅ [BACKEND] P1. **zombie-watchdog reaps — add persistence.**
       `deployment-service/scripts/vm/vm_zombie_watchdog.py:247` fires a raw Slack webhook with no durable record; route
-      it through the normalised persist path so the reap history survives on the page.
+      it through the normalised persist path so the reap history survives on the page. — `deployment-service@89b18e9`:
+      added `_persist_zombie_alert(vm_name, alert_class, message)`, mirroring `deployment-api`'s
+      `deployments_inventory.py::_persist_alert()` row shape exactly (same `cicd-events` bucket,
+      `event_type="slack_alert"`, one-object-per-alert convention at `cicd/alerts/{date}/{uuid4}.jsonl`) so
+      `_repo_ci_alerts.py`'s existing reader picks these up with ZERO reader-side changes. Wired into BOTH reap paths:
+      the RUNNING-VM zombie kill loop in `main()` (fires after a confirmed `_kill_vm()` success, `alert_class` = the
+      `WatchdogVerdict.verdict` reason string e.g. `zombie_stale_heartbeat`) and the TERMINATED-VM reaper in
+      `_reap_terminated_vms()` (fires after a confirmed reap, `alert_class="reap_terminated"`). `severity` is
+      intentionally omitted (`None`) — the normalised schema's `ZOMBIE_WATCHDOG` `FIELD_COVERAGE` in
+      `unified_api_contracts.alerting.ledger` marks `severity` structurally `ABSENT` for this plane (VM-scoped, not a
+      paging-tier axis), so this never fabricates one. `vm_name` is written at the TOP LEVEL of the row (not nested)
+      since `_parse_line()`'s `deployment_target` extraction reads `obj.get("vm_name")`/`obj.get("deployment_id")`
+      directly off the row. Best-effort — a `BucketNamingError`/`OSError`/`ValueError`/`RuntimeError` logs a warning and
+      never blocks the kill/reap it rides on. 4 new tests (`TestPersistZombieAlert`: correct row shape, two calls land
+      at two distinct objects — no shared-filename race, bucket-resolution failure is best-effort, upload failure is
+      best-effort). `quality-gates.sh` green (232 tests in this file, full suite green).
 - [ ] [BACKEND] P2. **Kill-switch events (cheap read-only projection).** Surface arm/disarm from the existing parquet
       audit log (`gs://{pid}-kill-switch-audit-log/`, `UTL kill_switch/audit_log.py`) into the normalised feed — high
       diagnostic value, and cheap because it's a read-only projection of a store that already exists. Do not alter any
@@ -436,6 +451,12 @@ Notes worth surfacing beyond the matrix:
   filter has a real API to call. `health_overview`'s alerts health tile was pinned to an explicit `days=2` so its
   pre-existing "recent" semantics didn't silently widen to 30 days (which would have made it read near-permanently
   critical). `quality-gates.sh` green.
+
+- **2026-07-21** — Todo 7 (zombie-watchdog reaps — add persistence) shipped, `deployment-service@89b18e9`. Added
+  `_persist_zombie_alert()` mirroring `deployment-api`'s `_persist_alert()` one-object-per-alert write shape exactly,
+  wired into both the RUNNING-VM zombie kill loop and the TERMINATED-VM reaper. `severity` intentionally omitted per the
+  `ZOMBIE_WATCHDOG` `FIELD_COVERAGE` contract (structurally absent — VM-scoped, not a paging-tier axis).
+  `quality-gates.sh` green (232 tests in the touched file).
 
 ## Codex SSOTs
 

@@ -93,6 +93,16 @@ reader change needed — `_read_ledgers_sync()` already globs the whole `cicd/al
       pattern in `persist-event/action.yml`'s GCS/S3 write steps. Do NOT touch the dedup-marker write
       (`cicd/alerts/dedup/<key>.json`) — that one is already a single-object-per-key atomic overwrite and is not part of
       this race. (repo: unified-trading-pm)
-- [ ] [DEVOPS] P2. Fix `semver-agent.yml.tmpl`'s "Persist CRITICAL pages to alert ledger" step the same way, then re-run
-      `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` to propagate the fix fleet-wide to every service
-      repo's rendered `semver-agent.yml`. (repo: unified-trading-pm)
+- [x] ✅ [DEVOPS] P2. Fix `semver-agent.yml.tmpl`'s "Persist CRITICAL pages to alert ledger" step the same way, then
+      re-run `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` to propagate the fix fleet-wide to every
+      service repo's rendered `semver-agent.yml`. (repo: unified-trading-pm) — unified-trading-pm@963daa611 (template
+      fix: writes each run's queued pages to a unique `cicd/alerts/{date}/{run_id}-{job_id}-{ts}-{rand}.jsonl` object
+      instead of the shared read-modify-write onto `alerts.jsonl`) + rollout-workflow-templates.sh re-run propagated the
+      rendered `.github/workflows/semver-agent.yml` to all 24 service repos, each committed + pushed to
+      `live-defi-rollout` individually: alerting-service@358aff4, batch-live-reconciliation-service@d03249d,
+      client-reporting-api@55b42a6, deployment-api@c4f4500, deployment-service@1369fea, execution-service@d584ab3,
+      features-service@e26db5f, fund-administration-service@c2b34d1, greeks-service@2b51324, ibkr-gateway-infra@2592941,
+      instruments-service@274e6d9, market-data-processing-service@bf2ea29, market-tick-data-service@c918381,
+      ml-service@29601a0, strategy-service@d206a2c, system-integration-tests@d91ce2a, trading-agent-service@9ccd80d,
+      unified-api-contracts@61b5b11, unified-trading-library@0d1bf0c4, unified-trading-api@067c271,
+      unified-trading-system-ui@d10b373, deployment-ui@51cbeda, e2e-testing@1d3a6ad, agent-orchestrator@162762e.

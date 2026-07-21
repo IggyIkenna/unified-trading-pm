@@ -20,6 +20,18 @@ parent: master_to_live_defi_2026_05_23
 deadline: 2026-05-23
 ---
 
+## Deferred work — migrated to: `plans/active/sports_consolidated_closeout_2026_07_19.md`,
+
+`plans/active/sports_master_closeout_2026_07_21.md`, `plans/active/sports_manifest_canonicalisation_2026_06_01.md` —
+successor: sports_consolidated_closeout_2026_07_19, sports_master_closeout_2026_07_21,
+sports_manifest_canonicalisation_2026_06_01 (data-pipeline-clean, honest-coverage-baseline, and phantom-recovery items
+are actively owned by these plans + several still-open issue docs; the matching-engine code for the sports L0 TOB
+matcher already shipped per `plans/active/master_to_live_defi_2026_05_23.md`; the open-questions cluster was resolved
+2026-05-08 per `plans/epics/sports_master.md`. **Two items are GENUINELY ORPHANED** — running a sports strategy backtest
+and an execution backtest through the shipped L0 TOB matcher — filed as
+`plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`. NOTE:
+`locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
+
 # Epic — Sports ML (May 23 2026)
 
 > **🔴 SUPERSEDED 2026-05-08** — folded into [`sports_master_2026_05_07.md`](./sports_master_2026_05_07.md) § "May-23

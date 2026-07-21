@@ -20,6 +20,14 @@ parent: master_to_live_defi_2026_05_23
 deadline: 2026-05-23
 ---
 
+## Deferred work — migrated to: `plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`,
+
+`plans/active/master_to_live_defi_2026_05_23.md` — successor: tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20,
+master_to_live_defi_2026_05_23 (per `plans/epics/tradfi_master.md`'s explicit routing: the S&P feature/ML/backtest chain
+is extracted to the first plan; strategy+execution progression is routed to the second plan's Group F. The 3
+open-questions items were resolved 2026-05-08 per `plans/epics/tradfi_master.md`. NOTE: `locked_by: live-defi-rollout`
+was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
+
 # Epic — S&P Prediction (CME) (May 23 2026)
 
 > **🔴 SUPERSEDED 2026-05-08** — folded into [`tradfi_master_2026_05_07.md`](./tradfi_master_2026_05_07.md) § "May-23

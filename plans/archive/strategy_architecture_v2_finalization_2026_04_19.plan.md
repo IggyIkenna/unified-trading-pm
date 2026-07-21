@@ -10,13 +10,22 @@ repos: [deployment-ui, e2e-testing, execution-service, features-service, strateg
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-19'
+created: "2026-04-19"
 owner: iggy
 started: 2026-04-19
 archived: 2026-05-07
-supersedes: plans/active/strategy_architecture_v2_2026_04_17.md (85/85 complete; this plan carries the open residuals forward)
+supersedes:
+  plans/active/strategy_architecture_v2_2026_04_17.md (85/85 complete; this plan carries the open residuals forward)
 superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md
 ---
+
+## Deferred work — migrated to: `plans/epics/strategy_master.md` — successor:
+
+strategy_master (the active L2 epic owning strategy-service post-consolidation). The frontmatter's original
+`superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md` is stale — that umbrella was itself superseded
+2026-05-21 and split into `strategy_master.md` (L2, strategy engine — the real owner of this plan's residual items)
+
+- `dart_and_promote_master.md` (L3, DART UX + promote workflow, unrelated to this plan's content).
 
 > **ARCHIVED 2026-05-07** — folded into
 > [`strategy_and_dart_master_2026_05_07.md`](../active/strategy_and_dart_master_2026_05_07.md). All open todos preserved
@@ -171,9 +180,12 @@ v2 engines in a feature-flagged path. ~790 LOC, 2-3 days of focused work.
       `BatchHandler._generate_signals_from_candles` router end-to-end with synthetic 5-day candle frames that carry both
       the legacy and v2 feature schemas so shadow mode can drive both sides. **Narrower than the plan's original ±2% /
       ±1% / exact-venue targets** — those require feeding identical features to both paths, which isn't achievable when
-      the legacy schema (e.g.
-      `aave_supply_apy*{TOKEN}`) and v2 schema (e.g. `apy*bps*<protocol>`)     diverge by design. The achievable-and-critical assertions this test DOES lock in: shadow plumbing runs both     sides cleanly, v2 harness accumulates emissions in `shadow_emitted_instructions`, position state survives     without Decimal corruption, legacy mode is unchanged by the Phase 1d refactor, and `\_extract_identity_for_write`    routes to the correct side per mode. Deeper parity is deferred to Phase 3 where`ShadowComparisonMetrics`
-      feed off production traffic. Evidence: strategy-service working tree, 20 tests pass. Full integration suite clean.
+      the legacy schema (e.g. `aave_supply_apy*{TOKEN}`) and v2 schema (e.g. `apy*bps*<protocol>`) diverge by design.
+      The achievable-and-critical assertions this test DOES lock in: shadow plumbing runs both sides cleanly, v2 harness
+      accumulates emissions in `shadow_emitted_instructions`, position state survives without Decimal corruption, legacy
+      mode is unchanged by the Phase 1d refactor, and `\_extract_identity_for_write` routes to the correct side per
+      mode. Deeper parity is deferred to Phase 3 where`ShadowComparisonMetrics` feed off production traffic. Evidence:
+      strategy-service working tree, 20 tests pass. Full integration suite clean.
 
 ### 1f — Extract sports_feature_subscriber helpers out of the archive
 

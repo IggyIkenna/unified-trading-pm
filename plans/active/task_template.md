@@ -107,6 +107,13 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   2026-07-21: `_parse_open_todos` captures only the first line matching `- [ ]`; wrapped/indented continuation lines are
   NOT parsed into the task brief the dispatcher sees)._ The `[TAG]`, `P<n>`, and the essential verb-phrase MUST be on
   line 1; treat continuation lines as human-only notes the worker's brief will not include.
+- **Reference SYMBOLS, never line numbers** _(operator rule 2026-07-21)_. A plan out-lives the code it points at — the
+  moment any agent edits a file, every `file.tsx:821` / `:256-320` shifts and now points at the WRONG code (exactly what
+  happened when one plan extracted shared primitives out of `Deployments.tsx` and every dependent plan's line refs went
+  stale). Cite the **function / class / component / type / testid / endpoint** an agent can `grep` for (e.g. "the
+  `useColumnSort` hook in `src/hooks/`", not "`Deployments.tsx:888`"); the agent locates the current position itself.
+  Same for **counts** ("all N tests") — pin the stable thing ("keep every existing assertion in `foo.spec.ts` green"),
+  not a number that a new test invalidates.
 - **`[TAG]` → craft role** (per-task, AO): `[INFRA]`→infra · `[DATA]`→data_engineering · `[BACKEND]`→backend_engineer ·
   `[UI]`→ui_developer · `[REVIEW]`→review. Generic `[CODE]` / `[SCRIPT]` → the plan's `assigned_role`.
 - **Priority** `P0`–`P3` (P0 = most urgent). Same-priority tasks run in plan-file order (§4).

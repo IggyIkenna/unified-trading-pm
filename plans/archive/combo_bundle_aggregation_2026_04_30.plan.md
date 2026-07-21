@@ -15,13 +15,21 @@ priority: P1
 owner: agent
 type: refactor
 epic: tradfi-data-pipeline
-completion_gates: {code: C2, deployment: D2, business: none}
+completion_gates: { code: C2, deployment: D2, business: none }
 repo_gates:
-- {repo: market-tick-data-service, deployment: D0}
-- {repo: deployment-service, deployment: D1}
+  - { repo: market-tick-data-service, deployment: D0 }
+  - { repo: deployment-service, deployment: D1 }
 depends_on: []
 isProject: false
 ---
+
+## Deferred work — migrated to: `plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md` — successor:
+
+batch4_strategy_ui_archived_plan_residuals (the writer-side bundling shipped —
+`market-tick-data-service/market_tick_data_service/engine/orchestrator/symbol_rules.py:256` confirms `"combo"` is now
+underlying-partitioned — but the historical re-bundle migration script, reader-compat-shim removal, and manifest
+reconciler have no found evidence of having run; tracked as a fresh verification todo there, folding into
+`tradfi_consolidated_closeout_2026_07_18.md` if still outstanding).
 
 ## Context
 

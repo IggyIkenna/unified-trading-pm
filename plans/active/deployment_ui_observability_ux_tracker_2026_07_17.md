@@ -442,13 +442,13 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
 
 ## Split map (when the operator finalises — before ANY dispatch)
 
-| Child plan                   | Contents                                                                                                                                 | Readiness                                                                                            |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                                                                           | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test, must-do fixes applied)                |
-| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`                                                                    | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test; owns the Deployments.tsx extraction)  |
-| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                                                                                   | 🟢 **ACTIVE 2026-07-21** — 2nd-wave dispatch (must-do fixes applied; do NOT co-run with WS-6/daemon) |
-| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                          | 🟢 **Plan A ACTIVE 2026-07-21** — 2nd-wave dispatch; Plan B stays `draft` (gated on A)               |
-| WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend; git-health dropped) | done — write-path decided; kept `draft`, dispatch held                                               |
+| Child plan                   | Contents                                                                                                                                 | Readiness                                                                                                               |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                                                                           | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test, must-do fixes applied)                                   |
+| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`                                                                    | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test; owns the Deployments.tsx extraction)                     |
+| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                                                                                   | 🟢 **ACTIVE 2026-07-21** — 2nd-wave dispatch (must-do fixes applied; do NOT co-run with WS-6/daemon)                    |
+| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                          | 🟢 **Plan A + Plan B both ACTIVE 2026-07-21** — Plan B `gate_on_depends: true` (machine-held until A + WS-2/3 done)     |
+| WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend; git-health dropped) | 🔴 **HELD `draft` 2026-07-21** — review found the write-path premise broken (PR-1); operator design decision 2026-07-22 |
 
 Per task_template §4 — each child gets 10–20 todos, intra-plan concurrency (independent same-priority todos fan out
 across workers; use `sequential: true` / `depends_on`+`gate_on_depends` for real chains), audits separable, draft-gated
@@ -460,17 +460,22 @@ phases where a build depends on an audit/decision.
 > immediately before flipping `status: active` (done for WS-1/WS-2-3/WS-4/WS-5A). The items below are the outstanding
 > pre-activation work for the plans still `draft`, captured here so a fresh session doesn't lose them.
 
-- [ ] [OPERATOR] P1. Before activating **WS-5B** (`deployment_ui_alerts_page_rebuild_2026_07_20.md`): fix the stale line
-      refs (`onHeaderClick` is `Deployments.tsx:821`, not `:256-320`; `StatusFilterChips` is `:924-961`); **correct the
-      "7 regression assertions" enumeration** — the review found it lists 7 but misses TWO actually-pinned tests
-      (`cockpit-tab-alerts`/`cockpit-tab-health` reachability, and the `stream-previous`/`stream-current` CRITICAL→INFO
-      pair) in `tests/smoke/alerts-page.spec.ts`; optionally name the shared-primitive import path. Also WS-5B is
-      draft-gated on WS-5A (schema) + WS-2/3 (Deployments.tsx extraction) — do not activate until both complete.
-- [ ] [OPERATOR] P1. Before activating **Fleet consolidation** (`deployment_ui_fleet_tab_consolidation_2026_07_21.md`)
-      and **WS-6 durable-operational-data** (`deployment_durable_operational_data_bigquery_2026_07_21.md`): run an
-      adversarial code-review first — both were authored AFTER the WS-1..WS-5B review batch and have NOT yet been
-      reviewed. Fleet is gated on WS-2/3's `Deployments.tsx` merge; WS-6 must NOT co-run with WS-4 (both edit the UTL
-      heartbeat daemon `lifecycle/daemon.py`).
+- [x] ✅ [OPERATOR] P1. **WS-5B activated gated 2026-07-21** (`deployment_ui_alerts_page_rebuild_2026_07_20.md`).
+      Rewrote EVERY locator from line numbers → grep-able symbols (operator rule: never bake line numbers into a plan —
+      they rot the moment another agent edits the file, which is exactly what WS-2/3's extraction did). Shared
+      primitives now point at their POST-extraction homes
+      (`useColumnSort`/`compareByColumn`/`FilterSelect`/`StatusFilterChips` under `src/hooks|lib|components/filters/`);
+      `onHeaderClick` is described as returned by `useColumnSort`; the regression dependency changed from a pinned count
+      to "keep every existing assertion in `alerts-page.spec.ts` green" (grep the file — no count to go stale). Flipped
+      `status: active` + `gate_on_depends: true` so AO machine-holds every task until BOTH WS-5A (schema) and WS-2/3
+      (extraction) complete.
+- [x] ✅ [OPERATOR] P1. **Fleet + WS-6 pre-activation review done 2026-07-21.** **Fleet** — reviewed, line numbers
+      stripped to symbol refs, activated `status: active` + `gate_on_depends: true` (machine-held until WS-2/3
+      completes; no `Deployments.tsx` collision). (An earlier "capability-loss" worry was a mis-read — the plan
+      correctly MERGES FleetOrphans' reap/cards into Deployments, it does not delete them.) **WS-6** — reviewed vs live
+      code; the write-path premise does NOT hold against the real wire format (one shared topic, no message attributes,
+      nested envelope ⇒ a native subscription can't yield typed tables) → **HELD `draft`, blocked on operator design
+      decision PR-1**, revisit 2026-07-22; full findings captured as PR-1..PR-7 todos in the WS-6 plan.
 
 ## Progress Log
 
@@ -565,17 +570,18 @@ phases where a build depends on an audit/decision.
 
   ### Deferred work after 2026-07-21
 
-  | Item                                                          | State / why deferred                                                          | Blocked-on                         |
-  | ------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------- |
-  | WS-1/WS-2-3/WS-4/WS-5A execution                              | **Cannot be done yet** — active in AO, workers running them serially          | AO workers (in flight)             |
-  | Activate next wave (WS-6, then WS-5B/Fleet)                   | **Not done** — pre-activation fixes + gates apply (see checklist above)       | operator go-ahead + gates clearing |
-  | WS-5B pre-activation fixes                                    | **Not done** — line-ref + regression-spec-enumeration fixes (checklist above) | before WS-5B flip                  |
-  | Fleet + WS-6 adversarial review                               | **Not done** — authored after the review batch, unreviewed                    | before their flip                  |
-  | WS-6 (idle-spend reap-event logging) hooks the reap endpoints | **Cannot be done yet** — relates to Fleet plan surfacing reap actions         | Fleet/WS-6 build                   |
+  | Item                     | State / why deferred                                                                                         | Blocked-on                |
+  | ------------------------ | ------------------------------------------------------------------------------------------------------------ | ------------------------- |
+  | WS-1 / WS-4 execution    | ✅ **DONE 2026-07-21** — both plans 100% flipped with per-todo merge shas                                    | —                         |
+  | WS-2-3 / WS-5A execution | **Cannot be done yet** — active in AO, workers running them                                                  | AO workers (in flight)    |
+  | WS-5B execution          | **Cannot be done yet** — activated + `gate_on_depends: true`; AO machine-holds until WS-5A + WS-2/3 complete | WS-5A + WS-2/3 completing |
+  | Fleet execution          | **Cannot be done yet** — activated + `gate_on_depends: true`; AO machine-holds until WS-2/3 completes        | WS-2/3 completing         |
+  | WS-6 activation          | **Operator-owned** — HELD `draft`; write-path premise broken (PR-1), needs an operator design decision       | operator, 2026-07-22      |
 
-  **Recommended NEXT when a slot frees:** activate **WS-6** (independent, high-value) _once WS-4's daemon work is
-  merged_ (they collide on `lifecycle/daemon.py`) — or WS-5B/Fleet once WS-2/3's `Deployments.tsx` extraction lands
-  (unblocks both). Do the pre-activation fix checklist first.
+  **Recommended NEXT:** nothing to activate by hand — WS-5B + Fleet are activated and machine-gated, so AO dispatches
+  them automatically as WS-2/3 (and, for WS-5B, WS-5A) finish. The one operator action outstanding is the **WS-6 PR-1
+  design decision** (2026-07-22): choose (A) dedicated topic per signal + flat schema, (B) message attributes +
+  subscription filters, or (C) raw-JSON column + query-time extraction. Until then WS-6 stays `draft`.
 
   ### Lessons (would be re-learned the hard way otherwise)
   - **AO backend is a mechanical translator, not a planner** — it can't decide parallel-vs-serial; the plan-writer

@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: ALL
 stage: [meta]
-repos: [deployment-service, execution-service, instruments-service, strategy-service, system-integration-tests, unified-trading-pm]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    instruments-service,
+    strategy-service,
+    system-integration-tests,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -16,6 +24,11 @@ locked_since: 2026-05-01
 plan_type: architecture
 owner: ikenna
 ---
+
+## Deferred work — migrated to: `plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md` — successor:
+
+batch4_strategy_ui_archived_plan_residuals (the 2 residual items — Phase A/B/C formal unit tests + the
+features-onchain-service Docker image rebuild — have no existing active-plan owner; tracked as fresh todos there).
 
 # LeveragedLegController — generic delta-targeted, leveraged, multi-leg portfolio primitive
 

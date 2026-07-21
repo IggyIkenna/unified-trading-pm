@@ -10,8 +10,15 @@ repos: [deployment-ui, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-16'
+created: "2026-03-16"
 ---
+
+## Deferred work — migrated to: `plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md` — successor:
+
+batch4_strategy_ui_archived_plan_residuals (this plan's core SSOT artifacts — `base-ui.sh`, `eslint.config.base.js` —
+already shipped in the repo, and `codex/06-coding-standards/ui-testing-layers.md` is now the living UI-testing SSOT, but
+the 25 granular residual items were never re-verified against the current UI repos after 4 months of drift; tracked as a
+fresh re-audit todo there).
 
 # AI-GENERATED — awaiting user review and promotion
 

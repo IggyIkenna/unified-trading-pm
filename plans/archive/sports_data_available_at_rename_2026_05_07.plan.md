@@ -9,8 +9,13 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [writegate_honest_coverage_endtoend_2026_05_06, master_to_live_defi_2026_05_23, sports_fixtures_legacy_schema_migration_2026_04_28]
-created: '2026-05-07'
+related:
+  [
+    writegate_honest_coverage_endtoend_2026_05_06,
+    master_to_live_defi_2026_05_23,
+    sports_fixtures_legacy_schema_migration_2026_04_28,
+  ]
+created: "2026-05-07"
 slug: sports_data_available_at_rename_2026_05_07
 date: 2026-05-07
 owner: claude-code
@@ -20,6 +25,16 @@ domain: data-pipeline
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
+
+## Deferred work — migrated to: `plans/epics/sports_master.md` — successor: sports_master (Phase 2 GCS migration +
+
+Phase 3 4-repo rename + Phase 4 writegate verify/unlock all shipped per that epic, incl. `instruments-service@fc7b306`,
+`features-service@9847b350`. **GENUINELY ORPHANED REGRESSION FOUND**: the UTL half of the Phase-3 rename
+(`instruments_write_gate.py::DEFAULT_AS_OF_COLUMNS`, `point_in_time.py` default `timestamp_col`) was silently reverted
+back to the legacy `data_available_at` name by an unrelated commit (`988ab287`, 2026-05-23) — the no-lookahead scan on
+sports data has been silently a no-op ever since. Filed as
+`plans/active/issues/unified_trading_library_data_available_at_rename_silently_reverted_2026_07_21.md` (P1). NOTE:
+`locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
 
 # Sports `data_available_at` → `available_at` rename + GCS column migration
 

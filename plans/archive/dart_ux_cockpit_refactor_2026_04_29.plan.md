@@ -14,9 +14,20 @@ created: 2026-04-29
 owner: ikenna
 archived: 2026-05-07
 codex_ref: codex/14-playbooks/dart/dart-terminal-vs-research.md
-supersedes: codex/14-playbooks/dart/dart-terminal-vs-research.md (tile-split mechanics — shipped commits a36a9889 → 0754cd3c). This plan addresses the structural reasons the navigation still feels like a headache instead of FOMO.
+supersedes:
+  codex/14-playbooks/dart/dart-terminal-vs-research.md (tile-split mechanics — shipped commits a36a9889 → 0754cd3c).
+  This plan addresses the structural reasons the navigation still feels like a headache instead of FOMO.
 superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md
 ---
+
+## Deferred work — migrated to: `plans/epics/dart_and_promote_master.md` — successor:
+
+dart_and_promote_master (the current active L3 epic owning DART operator UX). The frontmatter's original
+`superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md` is stale — that umbrella was itself superseded
+2026-05-21 and split into `strategy_master.md` (L2, strategy engine) + `dart_and_promote_master.md` (L3, DART UX +
+promote workflow); the 7 residual open items here (widget vocabulary SSOT, cross-cutting widget conventions, layer-2
+proof signals, v2 archetype-expansion roadmap, doc/IR/website copy alignment) are DART operator-UX concerns inherited by
+the latter.
 
 > **ARCHIVED 2026-05-07** — folded into
 > [`strategy_and_dart_master_2026_05_07.md`](../active/strategy_and_dart_master_2026_05_07.md). All open todos preserved
@@ -1360,7 +1371,7 @@ these up as `DartWidgetMeta` extensions so the cockpit feels like a serious trad
 | --- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | 1   | Information density vs. clarity (no decorative chrome)                            | Widget meta declares `defaultDensity: "high" \| "medium" \| "low"`; Replicate engagement defaults higher density than Monitor for the same widget.         | 5        |
 | 2   | Latency-of-glance (<1s for "what's my PnL right now?")                            | `freshnessSla: { decide: "1s", enter: "100ms", learn: "60s" }` per widget; cockpit header surfaces worst-of-row.                                           | 5        |
-| 3   | Spatial memory (persistent layouts, never auto-rearranging)                       | Layout positions saved per `(workspaceId, scope hash, engagement)`; toggling Monitor↔Replicate preserves positions per §4.1.                              | 6        |
+| 3   | Spatial memory (persistent layouts, never auto-rearranging)                       | Layout positions saved per `(workspaceId, scope hash, engagement)`; toggling Monitor↔Replicate preserves positions per §4.1.                               | 6        |
 | 4   | Phase-appropriate freshness (Decide=1s; Enter+Hold=sub-100ms; Learn=min)          | `freshnessSla` per phase (above); widgets with miss-SLA freshness render an amber freshness pill.                                                          | 5        |
 | 5   | One source of truth for state (positions on chart = blotter = risk)               | Mutation widgets emit `ScopeChangeEvent` + read-only views of mutating widgets share the same selector hook.                                               | 5        |
 | 6   | Hotkeys for action; mouse for analysis                                            | Cockpit declares `KeyboardContract` per preset; replicate engagement assigns defaults; conflicts surface in `/help/system-map`.                            | 6        |
@@ -1389,16 +1400,7 @@ type FreshnessSla = {
 };
 
 type WidgetNativeUnit =
-  | "DV01"
-  | "delta"
-  | "vega"
-  | "gamma"
-  | "fx_basket"
-  | "notional"
-  | "ltv"
-  | "pnl"
-  | "bps"
-  | "stake";
+  "DV01" | "delta" | "vega" | "gamma" | "fx_basket" | "notional" | "ltv" | "pnl" | "bps" | "stake";
 
 type DartWidgetMeta = {
   // Identity (§4.9)
@@ -1705,10 +1707,7 @@ machinery can reason about how "real" each preset feels for a given persona):
 
 ```ts
 type PresetStrategyBacking =
-  | "strategy-backed-strong"
-  | "strategy-backed-medium"
-  | "service-backed"
-  | "demo-only-until-subscribed";
+  "strategy-backed-strong" | "strategy-backed-medium" | "service-backed" | "demo-only-until-subscribed";
 
 interface WorkspacePreset {
   // ... existing fields ...

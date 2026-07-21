@@ -17,6 +17,16 @@ supersedes: [sports_batch_pipeline_end_to_end_2026_03_25.plan.md]
 reconciliation_supersedes_added: 2026-04-25
 ---
 
+## Deferred work — migrated to: `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`,
+
+`plans/archive/2026_07/sports_features_readiness_for_predictions_2026_06_20.md` — successor:
+sports_p2_features_history_to_ml_ready_2026_06_27 (Phase 2 MTDS/MDPS/FSS bucket-validation goal, now on the 8-bucket ML
+grid); the Phase-4 credit-cost/288M-row/BigQuery cluster was explicitly DROPPED per this plan's own archive banner and
+independently superseded (288M migration shipped 2026-05-23). **GENUINELY ORPHANED**: `spread_calculator` +
+strategy-service arb backtest + optimal-window analysis (Phase 3), and MTDS/MDPS/FSS/strategy live-mode wiring (Phase 5)
+— bundled into `plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`. No
+`locked_by` is set on this file.)
+
 > **ARCHIVED 2026-05-05.** Folded into
 > [`sports_predictions_e2e_2026_05_05`](../active/sports_predictions_e2e_2026_05_05.plan.md). Phases 2/3/5 (MTDS Tier 2
 > 1-week validation, arb backtest, live pipeline) are absorbed there. **Phase 4 (Tier 1 ML 126M + Tier 2 arb 103M = 207M

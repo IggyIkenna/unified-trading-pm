@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -14,8 +22,21 @@ created: 2026-05-05
 owner: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
-depends_on: [cefi_tradfi_tick_data_backfill_2026_04_10, cme_sp_ml_signal_preaudit_2026_04_20, data_pipeline_completion_2026_04_18]
+depends_on:
+  [cefi_tradfi_tick_data_backfill_2026_04_10, cme_sp_ml_signal_preaudit_2026_04_20, data_pipeline_completion_2026_04_18]
 ---
+
+## Deferred work — migrated to: `plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md` — successor:
+
+tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20 (the ES/VIX feature-calculator + ml-training-smoke + backtest
+items are extracted verbatim into that plan, currently BLOCKED-OPERATOR-DECISION per
+`plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`; the continuous-ES-stitcher and
+FUTURES_ROLL-event items are duplicate checkboxes of work already shipped later in this same file; MES-options and
+Yahoo-manifest-cleanup items are resolved-N/A / already-executed per operator ruling and a later cleanup. One item
+(individual S&P 500 constituent equities vs. the broader NASDAQ/NYSE backfill in
+`plans/active/tradfi_consolidated_closeout_2026_07_18.md`) is AMBIGUOUS on exact universe match — needs operator
+confirmation, not a new issue doc. NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for
+operator `[unlock-plan]` cleanup.)
 
 # S&P 500 Technical-Indicator ML Readiness — Master Plan
 
@@ -412,20 +433,20 @@ but parallel-able among themselves.
       → MDPS loads entire bundle into one Polars DataFrame → 32GB RAM (e2-standard-8) exhausted.
 
       **Live VMs at 07:42 UTC** (2021-2025) have done 12-22% each; likely heading for same OOM as they reach
-      options-heavy days (2024 ES_OPT chain especially).
+              options-heavy days (2024 ES_OPT chain especially).
 
-      **Remediation options** (next-session decision-gate, BEFORE Phase 2.3/3/4 work):
-      1. **Bigger VM**: e2-highmem-8 (64GB) or e2-standard-16 (64GB). Cheaper engineering, 2× cost, may still OOM
-         on the heaviest days. Edit `launch-mdps-sharded-backfill.sh` `MACHINE_TYPE`.
-      2. **MDPS streaming refactor**: split the legacy-bundle reader to process per-symbol, never holding the
-         whole bundle. Cleaner long-term, ~1-2 day engineering effort. SSOT: MDPS
-         `app/core/live_workers.py::_process_chain_timeframe_by_symbol` already iterates per-symbol — but the
-         upstream `_read_tick_data` loads the whole parquet first. Fix the read to lazy-stream via Polars
-         `scan_parquet`.
-      3. **Hybrid**: fix #2 for legacy bundles, ship now on e2-highmem-8 to unblock backfill in parallel.
+              **Remediation options** (next-session decision-gate, BEFORE Phase 2.3/3/4 work):
+              1. **Bigger VM**: e2-highmem-8 (64GB) or e2-standard-16 (64GB). Cheaper engineering, 2× cost, may still OOM
+                 on the heaviest days. Edit `launch-mdps-sharded-backfill.sh` `MACHINE_TYPE`.
+              2. **MDPS streaming refactor**: split the legacy-bundle reader to process per-symbol, never holding the
+                 whole bundle. Cleaner long-term, ~1-2 day engineering effort. SSOT: MDPS
+                 `app/core/live_workers.py::_process_chain_timeframe_by_symbol` already iterates per-symbol — but the
+                 upstream `_read_tick_data` loads the whole parquet first. Fix the read to lazy-stream via Polars
+                 `scan_parquet`.
+              3. **Hybrid**: fix #2 for legacy bundles, ship now on e2-highmem-8 to unblock backfill in parallel.
 
-      **Phase 1 success-gate is NOT met** until processed_candles populated for ≥95% of 2020-2026 trading days.
-      Phase 2.3 / Phase 3 / Phase 4 are HARD-BLOCKED until then.
+              **Phase 1 success-gate is NOT met** until processed_candles populated for ≥95% of 2020-2026 trading days.
+              Phase 2.3 / Phase 3 / Phase 4 are HARD-BLOCKED until then.
 
 - [x] [AGENT] **P1.5c Re-launch MDPS tradfi backfill with chain-bundle fix** — **DONE 2026-05-06**: 7 zombie
       `mdps-tradfi-{2020..2026}-20260505-203928` VMs killed (silently zombied 6+h after 2026-05-05 23:06 UTC last event

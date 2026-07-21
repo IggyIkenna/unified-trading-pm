@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-17'
+created: "2026-04-17"
 owner: iggy
 started: 2026-04-17
 depends_on: strategy_architecture_v2_2026_04_17.md
@@ -18,6 +26,12 @@ parent_docs: codex/09-strategy/architecture-v2/
 locked_by: live-defi-rollout
 locked_since: 2026-04-17
 ---
+
+## Deferred work — migrated to: `plans/epics/strategy_master.md` — successor:
+
+strategy_master (the active L2 epic owning strategy-service post-consolidation: engine + portfolio_allocator + risk +
+position + pnl + the archetype engines). Content match verified — the residual action-handler/allocator-archetype/
+Unity-adapter/MEV-router/shadow-mode items here are the exact domain strategy_master.md's "Owns" section declares.
 
 # Strategy Architecture v2 — Phases 3-11 Handoff Plan
 
@@ -245,9 +259,10 @@ Repos: `unified-trading-system-ui`, all 13 existing UIs.
 - [x] [CODE] P2. Execution policy viewer — `/services/research/strategy/execution-policies` lists 6 sample
       `(venue × action × condition)` rows with ALLOW / REJECT / RESIZE / DEFER decisions and policy version.
 - [x] [CODE] P2. Unity dashboard — `/services/research/strategy/unity` with the 10 child books, avg commission KPI, 3
-      sport chips, turnover-waiver progress bar against the $260k/month target, and deposit-refund progress bar against
-      the $5.3M lifetime target. Commercial parameters are asserted in `unity.test.ts` so they cannot be silently
-      drifted.
+      sport chips, turnover-waiver progress bar against the
+      $260k/month target, and deposit-refund progress bar against
+      the $5.3M lifetime target. Commercial parameters
+      are asserted in `unity.test.ts` so they cannot be silently drifted.
 - [x] [CODE] P2. Strategy registry is auto-generated from UAC — `lib/strategy-registry.ts` is now flagged `@deprecated`
       in its JSDoc with instructions to import from `@/lib/architecture-v2` for taxonomy and to swap to the gateway API
       once phase 11 migration lands. v2 taxonomy (8 families, 18 archetypes, 8 allocator archetypes, 5 venue categories,

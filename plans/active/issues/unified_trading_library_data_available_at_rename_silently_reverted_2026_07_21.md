@@ -1,0 +1,115 @@
+---
+doc_type: issue
+title:
+  UTL instruments_write_gate.py / point_in_time.py — data_available_at → available_at rename silently reverted,
+  no-lookahead scan on sports data is a no-op
+summary: >-
+  While triaging archived-plan debt for `sports_data_available_at_rename_2026_05_07.md`, found that the Phase-3 4-repo
+  atomic rename (`data_available_at` → `available_at`) shipped clean at `unified-trading-library@94e43e8c` (2026-05-22)
+  but was silently reverted the next day by `988ab287` ("fix(cloud-agnostic): add noqa gs-uri markers to URI composer
+  sites missing them", 2026-05-23) — an unrelated commit whose diff includes a 1-line accidental revert of
+  `instruments_write_gate.py`'s `DEFAULT_AS_OF_COLUMNS` tuple back to the legacy name (likely a bad rebase/merge
+  carrying stale local state). `unified-trading-library/unified_trading_library/instruments_write_gate.py:58` and
+  `point_in_time.py`'s default `timestamp_col` still read `data_available_at` today, live-verified via `git log -p` and
+  direct file read. Since sports adapters + every other service write the canonical `available_at` column (per
+  `plans/epics/sports_master.md` line 635, "HIGH-2 FULLY SHIPPED 2026-05-24"), the write-gate's default column-name scan
+  no longer matches any real column on sports rows — `InstrumentsWriteGate`'s lookahead-bias/timestamp-alignment check
+  silently stops firing on sports data, with no error raised anywhere (a column-name mismatch, not an exception).
+status: open
+nature: issue
+asset_group: [sports]
+stage: [data]
+repos: [unified-trading-library]
+scope: [engineer]
+tags:
+  [
+    lookahead-bias,
+    data-available-at,
+    available-at,
+    instruments-write-gate,
+    point-in-time,
+    silent-revert,
+    data-correctness,
+  ]
+related:
+  [
+    plans/archive/sports_data_available_at_rename_2026_05_07.plan.md,
+    plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md,
+  ]
+created: "2026-07-21"
+parent_epic: sports_master
+priority: P1
+assigned_vm: planning
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+source: [pm_qg_plan_discipline_and_frontmatter_regression-004]
+resolved_by:
+locked_by:
+depends_on: []
+---
+
+# What I found
+
+`unified-trading-library@94e43e8c` (2026-05-22, "refactor(sports): rename data_available_at → available_at in UTL (Phase
+3 atomic rename)") correctly renamed the column in `DEFAULT_AS_OF_COLUMNS` (`instruments_write_gate.py:58`) and
+`point_in_time.py`'s default `timestamp_col`, as part of the coordinated 4-repo rename tracked by
+`plans/archive/sports_data_available_at_rename_2026_05_07.plan.md` (all 4 phases shipped and archived complete).
+
+The very next day, `988ab287` (2026-05-23, "fix(cloud-agnostic): add noqa gs-uri markers to URI composer sites missing
+them" — a large, mostly-unrelated commit touching workflow files, docs, and ~15 other files) includes this hunk in its
+diff:
+
+```diff
+--- a/unified_trading_library/instruments_write_gate.py
++++ b/unified_trading_library/instruments_write_gate.py
+@@ -60,7 +60,7 @@ logger = logging.getLogger(__name__)
+ DEFAULT_AS_OF_COLUMNS: tuple[str, ...] = (
+     "as_of_date",
+     "valuation_date",
+-    "available_at",
++    "data_available_at",
+     "kickoff_utc",
+     "event_time",
+     "computed_at",
+```
+
+Nothing in that commit's message or the surrounding diff explains this revert — it reads like stale local state
+(possibly an un-rebased branch, or a conflict resolution that picked the wrong side) that happened to land in an
+otherwise-unrelated fix commit. Verified live on `unified-trading-library` HEAD today: `instruments_write_gate.py:58`
+and `point_in_time.py`'s default `timestamp_col` + docstring still read `data_available_at`.
+
+# Why it matters
+
+`InstrumentsWriteGate` / `validate_pit_safety` scan a configurable list of "as-of" columns to detect timestamp-alignment
+violations (batch-date vs row-timestamp mismatches — the lookahead-bias guard). Since sports rows are written with
+`available_at`, not `data_available_at`, the default scan silently finds nothing to check on that column for every
+sports write — no exception, no log warning, just a column that never matches. Any caller relying on the DEFAULT column
+list (not passing an explicit `check_columns=` override) gets a false sense of protection: the gate still runs and still
+"passes," but it is not actually inspecting the column that carries the real timestamp. This is exactly the kind of
+silent no-op CLAUDE.md's "honest absence vs fake results" principle warns against — a check that looks green but isn't
+checking the right thing.
+
+# Recommended decision
+
+Re-apply the `94e43e8c` rename to `instruments_write_gate.py` (`DEFAULT_AS_OF_COLUMNS`) and `point_in_time.py` (default
+`timestamp_col` + docstrings), verify no other UTL/consumer files reference the legacy `data_available_at` name in a way
+that would break if it's removed (grep first), and add a regression test asserting `DEFAULT_AS_OF_COLUMNS` contains
+`available_at`, not `data_available_at`, so a future stale-merge can't silently reintroduce this.
+
+## Todos
+
+- [ ] [CODE] P1. Re-fix `unified_trading_library/instruments_write_gate.py::DEFAULT_AS_OF_COLUMNS` — `data_available_at`
+      → `available_at` (re-apply the `94e43e8c` change reverted by `988ab287`). (repo: unified-trading-library)
+- [ ] [CODE] P1. Re-fix `unified_trading_library/point_in_time.py` — default `timestamp_col` + docstrings, same rename.
+      (repo: unified-trading-library)
+- [ ] [CODE] P2. Add a regression test asserting `DEFAULT_AS_OF_COLUMNS` / the default `timestamp_col` use the canonical
+      `available_at` name, not the legacy `data_available_at`, so a future stale-merge/rebase can't silently reintroduce
+      this class of bug. (repo: unified-trading-library)
+- [ ] [DIAG] P2. Grep every UTL consumer for an explicit `check_columns=`/`timestamp_col=` override naming
+      `data_available_at` — if any exist, they were written to compensate for this exact bug and should be reverted back
+      to relying on the (now-fixed) default once the rename lands. (repo: unified-trading-library)
+
+## Codex SSOTs
+
+`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`, `codex/02-data/pipeline-mode-partition.md` (for
+`available_at` semantics generally).

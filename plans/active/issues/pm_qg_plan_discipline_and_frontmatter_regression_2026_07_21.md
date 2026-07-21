@@ -101,16 +101,45 @@ normally.
       already-archived-complete plan — ambiguous whether they were satisfied out-of-band; no fabricated checkmarks) —
       both need real operator/plan-owner judgment, not a scripted close; left for the split-out todos below. (repo:
       unified-trading-pm)
-- [ ] [DOCS] P3. Remaining archived-plan debt, batch 1 — sports/predictions (14 plans, 3–49 open items each):
-      `apifootball_enrichment_historical_backfill_2026_04_21`, `features_sports_pipeline_deployment_2026_04_21`,
-      `features_sports_upstream_coverage_gaps_2026_04_21`, `sports_ml_may_23_2026`, `sp_prediction_may_23_2026`,
-      `sports_fixtures_truthset_recovery_2026_05_06`, `sports_phantom_recon_and_failure_triage_2026_05_01`,
-      `sports_data_available_at_rename_2026_05_07`, `sports_e2e_validation_2026_03_27`,
-      `sports_predictions_e2e_2026_05_05`, `sp500_ml_readiness_master_2026_05_05`, `prediction_markets_may_23_2026`,
-      `predictions_canonical_question_group_polymarket_migration_2026_05_06`,
-      `features_sports_honest_coverage_2026_05_05`. For each: read the open `- [ ]` items, determine whether an existing
-      active plan already owns that follow-up (name it as `successor:`) or file a fresh issue doc for genuinely orphaned
-      work — do NOT blanket-close. (repo: unified-trading-pm)
+- [x] [DOCS] P3. ✅ Remaining archived-plan debt, batch 1 — sports/predictions (14 plans, 3–49 open items each) —
+      unified-trading-pm@\<pending\>. Fanned out 14 parallel read-only research agents (one per plan) to extract every
+      open item's context and search `plans/active/` for an existing successor; made the closure call myself on each (no
+      blanket-close). Result: **all 14 plans got a real `## Deferred work — migrated to:` banner** naming their actual
+      successor(s) — `apifootball_enrichment_historical_backfill_2026_04_21` →
+      `sports_p2_history_apifootball_2015_to_present_2026_06_27`; `features_sports_pipeline_deployment_2026_04_21` →
+      `features_sports_service_consolidation_deploy_2026_07_15` + `sports_p2_features_history_to_ml_ready_2026_06_27`;
+      `features_sports_upstream_coverage_gaps_2026_04_21` →
+      `instruments_mtds_subset_consistency_remediation_2026_06_17`; `sports_ml_may_23_2026` →
+      `sports_consolidated_closeout_2026_07_19` + `sports_master_closeout_2026_07_21` +
+      `sports_manifest_canonicalisation_2026_06_01`; `sp_prediction_may_23_2026` →
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20` + `master_to_live_defi_2026_05_23`;
+      `sports_fixtures_truthset_recovery_2026_05_06` → `data_completion_to_100_all_ag_2026_06_21` +
+      `sports_pipeline_to_100pct_golden_window_first_2026_06_27`; `sports_phantom_recon_and_failure_triage_2026_05_01` →
+      `sports_data_sources_canonical_completion_2026_07_13` +
+      `reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12`; `sports_data_available_at_rename_2026_05_07` →
+      `sports_master` epic; `sports_e2e_validation_2026_03_27` → `sports_p2_features_history_to_ml_ready_2026_06_27`;
+      `sports_predictions_e2e_2026_05_05` → `sports_master_closeout_2026_07_21` +
+      `predictions_ml_walk_forward_and_arb_2026_06_20`; `sp500_ml_readiness_master_2026_05_05` →
+      `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`; `prediction_markets_may_23_2026` → `predictions_master`
+      epic; `predictions_canonical_question_group_polymarket_migration_2026_05_06` →
+      `data_completion_prediction_2026_07_15` + `predictions_other_bucket_and_ui_drilldown_2026_06_20`;
+      `features_sports_honest_coverage_2026_05_05` → `sports_consolidated_closeout_2026_07_19` +
+      `sports_halftime_odds_sfi_vs_inplay_2026_07_16` + `features_sports_service_consolidation_deploy_2026_07_15`. **3
+      genuinely-orphaned findings filed as fresh issue docs** (not blanket-closed): (1)
+      `plans/active/issues/unified_trading_library_data_available_at_rename_silently_reverted_2026_07_21.md` (P1) — a
+      **real live regression**: the UTL `data_available_at`→`available_at` rename shipped
+      `unified-trading-library@     94e43e8c` but was silently reverted the next day by an unrelated commit
+      (`988ab287`), so the no-lookahead scan on sports data has been a silent no-op since 2026-05-23; (2)
+      `plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` (P3) — bundles
+      the recurring `spread_calculator`/strategy+execution backtest/live-mode-activation gap found independently in 3 of
+      the 14 plans; (3)
+      `plans/active/issues/features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md` (P3) — the
+      deployment-ui honest-coverage tab + codex feature-registration playbook that Phase 8 of
+      `features_sports_honest_coverage` never shipped. Also surfaced (not separately filed, just noted in each banner):
+      10 of the 14 archived plans still carry `locked_by: live-defi-rollout` never cleared at archival — a
+      process-hygiene gap for the operator, not blocking. Re-ran `check_plan_discipline.py` before/after: 96 → 82
+      violations (exactly the 14 `C-archive-no-successor` fixes, 0 side effects), re-baselined 96 → 82 via
+      `--baseline-write`. (repo: unified-trading-pm)
 - [ ] [DOCS] P3. Remaining archived-plan debt, batch 2 — cefi/defi (9 plans, 9–35 open items each):
       `price_arbitrage_may_23_2026`, `cefi_ml_may_23_2026`, `defi_data_types_completeness_2026_04_24`,
       `live_defi_rollout_may_23_2026`, `defi_e2e_pipeline_2026_04_30`, `cefi_venue_universe_expansion_2026_05_01`,
@@ -123,15 +152,30 @@ normally.
       `manifest_schema_v6_quote_margin_combo_2026_04_23`, `run_lifecycle_events_ssot_2026_05_05`,
       `instruments_and_market_tick_data_completion_2026_05_01`, `instruments_to_100pct_eod_2026_05_04`,
       `market_tick_data_to_100pct_2026_05_05`. Same per-plan-judgment discipline as batch 1. (repo: unified-trading-pm)
-- [ ] [DOCS] P3. Remaining archived-plan debt, batch 4 — strategy/UI + the 2 held-back small plans (9 plans, 2–67 open
-      items each): `leveraged_leg_controller_2026_05_01` (already investigated above — needs a real successor issue-doc
-      for the Phase A/B/C unit-tests gap + the Docker-image-rebuild gate, or operator confirmation both are abandoned),
-      `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22` (already investigated above — needs operator
-      confirmation the 2 `[HUMAN]` gates were satisfied out-of-band before checking them off),
-      `combo_bundle_aggregation_2026_04_30`, `strategy_architecture_v2_phase3_11_handoff_2026_04_17`,
-      `strategy_architecture_v2_finalization_2026_04_19`, `dart_ui_strategy_filtering_and_onboarding_2026_04_24`,
-      `dart_ux_cockpit_refactor_2026_04_29`, `ui_quality_gates_parity_2026_03_16`. Same per-plan-judgment discipline as
-      batch 1. (repo: unified-trading-pm)
+- [x] [DOCS] P3. ✅ Remaining archived-plan debt, batch 4 — strategy/UI + the 2 held-back small plans (8 plans found,
+      2–67 open items each) — unified-trading-pm@16aa0e958. Per-plan judgment, not blanket-close: 3 got a **direct
+      successor banner** naming a verified real active epic — `dart_ux_cockpit_refactor_2026_04_29` +
+      `strategy_architecture_v2_finalization_2026_04_19` both declared a `superseded_by:` pointing at
+      `strategy_and_dart_master_2026_05_07.md`, a file that no longer exists (it was itself superseded 2026-05-21 and
+      split into `strategy_master.md` + `dart_and_promote_master.md`) — retargeted at whichever half actually owns the
+      content (dart_ux → `dart_and_promote_master.md`; strategy_architecture_v2_finalization → `strategy_master.md`,
+      content-verified against its "Owns" section); `strategy_architecture_v2_phase3_11_handoff_2026_04_17` had no
+      declared successor at all but its residual items (allocator archetypes, action handlers, shadow mode, Unity/MEV
+      routing) are a direct content match for `strategy_master.md`'s "Owns" section. The other 5 have genuinely orphaned
+      or mixed-domain residuals with no honest single successor: filed
+      `plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md` naming each — 2 `[HUMAN]` gates
+      pending operator sign-off (`leveraged_leg_controller_2026_05_01`'s Docker rebuild,
+      `transfermarkt_sfi_team_mapping_cache_and_drift_detection_2026_04_22`'s cache-speedup validation), 1 where the
+      writer-side code shipped but the migration/cleanup residual is unverified (`combo_bundle_aggregation_2026_04_30` —
+      confirmed bundling live in `market-tick-data-service/.../symbol_rules.py:256`), 1 where the plan's SSOT artifacts
+      shipped via other work but granular items need re-audit after 4 months of drift
+      (`ui_quality_gates_parity_2026_03_16`), and 1 genuinely mixed-domain plan needing an item-by-item split between
+      two different active plans (`dart_ui_strategy_filtering_and_onboarding_2026_04_24` —
+      `marketing_site_three_route_consolidation_2026_04_26` for the UI funnel vs
+      `capability_wizard_and_manifest_2026_06_11` for the archetype-capability tail). Verified via direct re-run of
+      `check_plan_discipline.py`'s `_check_rule_c`: all 8 confirmed cleared, no other plans' counts moved. Reconciled
+      `plan_discipline_baseline.yaml` against sibling batch-1's concurrent landing (82 after their fix) — combined
+      re-baseline 82 → 74. (repo: unified-trading-pm)
 - [ ] [DOCS] P3. Remaining archived-plan debt, batch 5 — infra/orchestrator/deployment/codex/misc (16 plans, 4–139 open
       items each): `ICLOUD_MIGRATION_CHECKLIST`, `quality_gate_hardening.plan`,
       `deployment_service_build_infrastructure_repair_2026_04_22`, `phase3_service_hardening_integration`,

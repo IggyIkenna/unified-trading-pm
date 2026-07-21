@@ -14,7 +14,7 @@ summary: >-
   yet UAC's own comments assert it does. Registering the 4 alone fixes NOTHING (tests 1+3 still fail on the absent
   chainlink key), so unblocking REQUIRES a chainlink decision. Owned by slot-4 (the feature author) — deliberately NOT
   fixed from slot-3 to avoid a cross-slot collision on their in-flight files.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -33,9 +33,23 @@ locked_by:
 locked_since:
 assigned_vm: NA
 resolved_by:
+  "unified-api-contracts@ae83689b (flip CHAINLINK-* back to phase=live + real adapter key) +
+  instruments-service@6506b505 (ChainlinkOracleReferenceDataAdapter + factory registration) +
+  instruments-service@9267e0ea (DERIVED citations on chainlink.py, CHAINLINK-* added to the IS venue set, goldens
+  regenerated) + instruments-service@793125ad (meteora/lifinity/phoenix/pyth wired into factory + goldens) — all four
+  verified present + reachable via `git log --oneline | grep <sha>` in their repos, commit messages match the claimed
+  content, dated 2026-07-20 on live-defi-rollout"
 ---
 
 # UAC/IS DeFi venue lockstep half-landed — instruments-service tree RED fleet-wide
+
+> **✅ RESOLVED 2026-07-21.** Adapter-first ordering (Option A from "Remediation options" below) completed same-day:
+> `is@6506b505` landed the real `ChainlinkOracleReferenceDataAdapter`, `is@9267e0ea` + `is@793125ad` wired all 5
+> outstanding venues into the IS factory/venue-set/goldens, and `uac@ae83689b` re-declared CHAINLINK-* `phase=live` with
+> real adapter keys. Cross-referenced evidence: `defi_consolidated_closeout_2026_07_18.md` Progress Log, the 2026-07-20
+> entry titled "✅✅ CHAINLINK FULLY FIXED end-to-end; the adapter-first bet paid off" — measured **IS 98 == UAC 98,
+> drift guard EQUAL=True, `UAC-only` empty**. All four cited commits independently confirmed real and reachable on
+> `live-defi-rollout` in both repos before this doc was flipped.
 
 ## Impact (why this is P0)
 

@@ -220,9 +220,14 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
   sibling audit; **rescope backfill start 2019-01-01→2020-06.**
 - `sports_derived_features_per_league_layout_unread_by_ml_loader` (ac#10) — fixed; DOC P3 features-bucket path SSOT
   only.
-- `features_service_red_tree_blocks_digest_pin_fix` (aa#11) — de-flake `test_squad_value_pre_launch_is_out_of_coverage`
-  (transfermarkt-fixture-dependent), then ship the paired digest-pin fix; blocks unrelated features-service promotions
-  (also the open item on plans#1).
+- ~~`features_service_red_tree_blocks_digest_pin_fix` (aa#11)~~ — **RESOLVED 2026-07-21, verified not a coverage bug.**
+  De-flaked already by `features-service@1d65390a` (2026-07-16, predates this plan) — the test derives its pre-launch
+  date from the LIVE UAC floor instead of a hardcoded one, so it's self-correcting across floor changes; CI has been
+  green 40+ consecutive runs since, including straight through today's 2020-06-06 floor revert. Root cause was a stale
+  test assertion, not a live coverage-classification bug. Full detail:
+  `issues/features_service_red_tree_blocks_digest_pin_fix_2026_07_15.md`. The **paired digest-pin fix** (cloudbuild.yaml
+  auto-repin + tfvars `:latest` flip) is still separately unshipped — its blocker is cleared, but shipping it is a
+  distinct P2 todo on `features_sports_service_consolidation_deploy_2026_07_15.md`, not part of this closeout.
 
 **E. Service / infra (dead-code, config, perf — date-independent)**
 

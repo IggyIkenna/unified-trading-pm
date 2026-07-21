@@ -42,11 +42,62 @@ source: operator design session 2026-07-21 (WS-6 resolved — event-spine→BigQ
 
 # durable operational data — BigQuery via the event spine
 
-> **🟡 Kept `draft` deliberately (operator 2026-07-21)** — dispatch held pending AO changes settling. Authored in the
-> tabs-3 worktree per operator instruction (new work off the root repo where other agents are active).
+> **🔴 HELD `draft` — BLOCKED on an operator design decision (2026-07-21).** A pre-activation review (verified against
+> live code) found the plan's central write-path premise does not hold against the real event wire format — see **##
+> Pre-activation review** below. Operator will revisit **2026-07-22**. Do NOT activate until finding **PR-1** is
+> resolved. Authored in the tabs-3 worktree (new work off the root repo where other agents are active).
 >
 > **This realizes the tracker's WS-6** ("durable resource-metrics timeline"), now decided and expanded to three signals.
 > Git-health snapshot history — a candidate raised in the same discussion — was **dropped** (operator: not necessary).
+
+## Pre-activation review (2026-07-21) — MUST resolve before activation
+
+A read-only pre-activation review (verified against live code) found the write-path premise partly wrong. The fixes
+below block dispatch; each references symbols, not line numbers (grep to locate).
+
+- [ ] [BACKEND] P0. **PR-1 (BLOCKING — operator design decision) — "native BQ subscription → typed tables, no
+      consolidator" is not achievable as written.** All deployment events publish to ONE shared topic
+      (`deployment-events`, configured in deployment-service's `deployment_config.py`; sink wired in
+      `heartbeat_cli.py`), and `PubSubEventSink.write_event` (in UTL `event_sink.py`) publishes with NO message
+      attributes — so a subscription filter cannot separate one signal from another; two native subscriptions on that
+      topic each receive EVERY event type. The body is also a doubly-nested envelope
+      (`{event, service, metadata:{…, details:{…real fields…}}}`) and no topic schema is registered, so a native
+      subscription can only land raw JSON in a single `data` column — it cannot populate the typed
+      `resource_samples`/`run_ledger` columns. The "no sink change + native subscription + typed tables" trio cannot all
+      hold. OPERATOR picks one: (A) dedicated topic per signal + registered flat topic schema; (B) add message
+      attributes (`event=<name>`) in `PubSubEventSink` + subscription filters (still needs a flat schema for typed
+      columns); or (C) accept a raw-JSON `data` column + query-time extraction (contradicts the typed-schema todos). The
+      `[DATA] P0` + `[INFRA] P0/P1` todos are mutually inconsistent until this is chosen.
+- [ ] [BACKEND] P0. **PR-2 (BLOCKING) — resource-sample event constant needs the FULL re-export chain.** The daemon
+      caller (`heartbeat_cli.py`) imports the DEPLOYMENT_* constants from the top-level `unified_trading_library`
+      package, not from `events_interface`. Adding the new constant only to `events_interface/schemas.py` will
+      `ImportError` at the caller. Add it to `events_interface/schemas.py` AND `events_interface/__init__.py` AND the
+      top-level `unified_trading_library/__init__.py` (both the import and `__all__`).
+- [ ] [BACKEND] P0. **PR-3 (BLOCKING) — publish via the generic-daemon contract, not a hardcoded name.**
+      `HeartbeatDaemon` is deliberately consumer-agnostic (takes event NAMES as constructor params; docstring: "callers
+      pick their own event names, no consumer-specific imports"). Hardcoding a resource-sample event name inside the
+      sampler violates that and fails review. Thread a new optional `resource_sample_event: str | None` (+ optional
+      payload builder) through the constructor like the existing event-name params, emit only when set, and have
+      `heartbeat_cli.py` pass the name.
+- [ ] [DATA] P1. **PR-4 — partition-expiration TTL + `require_partition_filter`.** The UTL `create_table` wrapper
+      exposes no partition-expiration parameter and sets `require_partition_filter=True`. Either extend the wrapper to
+      accept a default partition expiration, or set the TTL out-of-band (bq/terraform) and say so; and note every
+      verify/DuckDB example query MUST carry a `DATE(ts)` partition filter or it errors.
+- [ ] [BACKEND] P2. **PR-5 — simplify: the resource data is ALREADY on the topic.** The existing `DEPLOYMENT_PROGRESS`
+      event (emitted ~1/min) already carries every field listed for `resource_samples` (via the daemon's VM payload). A
+      filtered subscription on `DEPLOYMENT_PROGRESS` captures resource samples with NO new event schema or publish path
+      — which (with PR-1's decision) may collapse the two resource `[BACKEND] P0` todos. Operator weighs this vs a
+      dedicated event.
+- [ ] [BACKEND] P2. **PR-6 — run-ledger enrichment + idle-spend job home.** Run-ledger: the completion payload lacks
+      wall-clock `started_at`/`completed_at` and `peak_*` resources (only instantaneous-at-completion) — name these as
+      the fields to add. Idle-spend: pin the scheduled job INSIDE deployment-api (it calls `build_orphan_inventory` /
+      `/api/fleet/orphans`, whose rollup fields
+      `stopped_total`/`reapable_total`/`monthly_idle_usd`/`monthly_reapable_usd` are verified correct), insert via the
+      UTL BQ client, write one `reap_events` row per successfully-deleted VM inside the reap loop, and SKIP writes on
+      `dry_run`. Note `monthly_idle_usd` is a boot-disk-only estimate, not compute cost.
+- [ ] [DATA] P3. **PR-7 — strip line numbers → symbol refs throughout this plan** (same rule the operator applied to
+      WS-5B + Fleet on 2026-07-21): the Context/Todos below still cite `file:line`; replace each with a grep-able
+      symbol/function name.
 
 ## Decisions (operator, 2026-07-21)
 
