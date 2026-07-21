@@ -76,10 +76,13 @@ G2  Per-AG migration/manifest/schema scripts updated      ─┘     + 7+2-point
 G3  Manifest consolidation + deployment-API/UI UNION view + pipeline_mode drilldowns
 G3.5 Pre-apply verification harness (⑬–⑲): canonical possible-manifest registry · bidirectional orphan sweep (phantom==0 ∧ orphan-E==0) + bucket taxonomy + sizing · schema-attribute completeness · catalogue-seeded denominator · candle-edge · projected-manifest preview  ← HARD-BLOCKS G4; folded into re-runnable CF-15…CF-21  [migration_verification_orphan_safety_2026_06_10]
 G4  Per-AG --apply (manifest + data/schema migration)   ← GATED on G0,G1,G2,G3,G3.5 GREEN + pre-migration drain → then G4.5 verified-delete cleanup (CF-21)
-G5  Resume BACKFILLS → 100% honest coverage (UI drilldowns shrink to minor) + massive/polygon cost-swap vs databento
+G5  Resume BACKFILLS → 100% honest coverage (UI drilldowns shrink to minor)
                                                           ↓
                                   master_to_live_defi_2026_05_23.md  (live promotion — downstream)
 ```
+
+> **Massive purged/removed 2026-07-19→21 (operator Option C): Databento is the sole batch SoT; no cost-swap decision
+> remains — `batch_massive` is read-recognition-only until the gated GCS purge.**
 
 **Single hardest invariant (from the standardisation plan, restated as the master gate):** **NO `--apply`
 data/manifest/schema migration runs until G0 + G1 + G2 + G3 are GREEN.** The walk bakes in whatever model exists at
@@ -190,8 +193,8 @@ done
   legacy-twin deletes, RESUME runbook) is tracked separately in `tradfi_v9_stage1_finish_2026_07_06.md` +
   `instruments_completion_tracker_2026_07_06.md`, not gating this G4 cell). Rollback snapshots
   `pre_migration_2026_06_08.parquet` staged (retained; irreversible walk already executed for all 5 AGs).
-- **G5** 🔴 — backfills→100% + cost-swap (WAVE 5) start only after G4 `--apply`. (G4 is now green all 5 AGs per above —
-  G5 itself is unevidenced by this refresh and left unchanged.)
+- **G5** 🔴 — backfills→100% (WAVE 5) start only after G4 `--apply`. (G4 is now green all 5 AGs per above — G5 itself is
+  unevidenced by this refresh and left unchanged.)
 
 ## 🟢 Dispatch waves (live — who owns what NOW)
 
@@ -213,7 +216,7 @@ unblocked); per-AG `--apply-write` seed also gated on that AG's IS backfill comp
 parallel-safe.
 
 **WAVE 2 (after G0+G1 green)** — G2 per-AG dry-run + 7+2-point audit (one slot each) → **WAVE 3** G3 UNION UI (slot 7) →
-**WAVE 4** G4 per-AG `--apply` (gated G0∧G1∧G2∧G3 + drain) → **WAVE 5** G5 backfills→100% + cost-swap. Live-side
+**WAVE 4** G4 per-AG `--apply` (gated G0∧G1∧G2∧G3 + drain) → **WAVE 5** G5 backfills→100%; the live-side tranche
 (M3/M4/M6/M7 · `live_websocket`→`live_<source>` · M8 cadence) = tracked parallel track, after the batch migration.
 
 ### Dispatch checklist — TRACKED big-job on Ikenna's local slots (2–7), NOT VM auto-dispatch
@@ -298,8 +301,8 @@ parallel-safe.
       Phase-0 cross-source fixture/assertion in-flight — tracked in their plans.)
 - [ ] [CODE] P1. **slot 7 — post-apply consumer cleanups** (the deferred-with-reason items: execution-service defi
       loader, deployment-api FLAG-1/3/dedup, MDPS GAP-7) — after the per-AG applies.
-- [ ] [CODE] P2. **WAVE 5 / live-side (gated, after batch migration)** — G5 backfills→100% + massive/polygon cost-swap;
-      the live-side tranche (M3/M4/M6/M7 · `live_websocket`→`live_<source>` · M8 cadence). Assign to slots when reached.
+- [ ] [CODE] P2. **WAVE 5 / live-side (gated, after batch migration)** — G5 backfills→100%; the live-side tranche
+      (M3/M4/M6/M7 · `live_websocket`→`live_<source>` · M8 cadence). Assign to slots when reached.
 
 ### Coordinator progress — 2026-06-11 (autonomous finish-to-DONE run, slot-4)
 
@@ -568,7 +571,7 @@ regen) queue AFTER R1/R2 land. Playwright + chromium are installed on this host 
       no loss).
 
       Full narrative + verdicts in the G3.5 plan Progress Log. — instruments-service@f73abe4, uac@<tbbo>, reports
-                      `_index/audit/orphan_sweep_<ag>.parquet` + `orphan_backfill_<ag>.parquet`.
+                              `_index/audit/orphan_sweep_<ag>.parquet` + `orphan_backfill_<ag>.parquet`.
 
 - [x] ✅ [UAC] P0. **R2-schema — carry ALL dropped columns into v9** — **unified-api-contracts@715e2ed**: v9
       `SchemaSpec` registry extended so CF-18 is GREEN per AG — all 11 polymarket trades columns carried (amount, asset,
@@ -684,7 +687,8 @@ declares trades unsupported for CME — pre-flight drops it, not a failure); tra
 prediction `trades` × POLYMARKET on 2026-06-09 = **honest-empty** (clob fetch GREEN — 914 ticks returned — but lifecycle
 gating dropped all as post-settlement for that date's settled markets; fetchability proven); mtds massive market-tick
 path = **not wired** (`MassiveTradfiRestConnector` exists in mtds but has zero consumers — IS `--source massive` is the
-only live massive surface; tracked in remediation todos below).
+only live massive surface; tracked in remediation todos below) **(HISTORICAL — Massive removed as a source 2026-07-19;
+connector deleted)**.
 
 #### GREEN per AG (probe-grain counts)
 
@@ -760,10 +764,12 @@ current-code fetchability; the image-rebuild ride happens when the LDR→staging
       part of the post-apply restart sequencing — every IS CLI loud-fails on the stale index today
       (`MANIFEST_ALLOW_STALE_FALLBACK=true` is the interim recovery). Repo: deployment-service (Cloud Run Job +
       Scheduler).
-- [ ] [DATA] P2. **R5-fix-6 — wire or retire the mtds `MassiveTradfiRestConnector`**: the connector ships in mtds with
-      zero consumers (massive tick data unreachable from the CLI); either wire it into the tradfi dispatch behind the
-      source axis or delete it per delete-deprecated-code (IS keeps `--source massive` for definitions). Repo:
-      market-tick-data-service. **DEFERRED** until the massive futures endpoint 404 (R4 P1 todo) resolves.
+- [x] ✅ [DATA] P2. **R5-fix-6 — `MassiveTradfiRestConnector` RETIRED.** Massive removed as a tradfi source 2026-07-19
+      (operator: Databento=batch SoT, Yahoo=daily); the mtds connector + both vendor adapters + `--source massive`
+      runtime routing DELETED (`uac@a2beed46` + `mtds@362a487e`); subscription terminated + GCS estate purged 2026-07-21
+      (operator Option C). The "wire" option and the "DEFERRED until the massive futures endpoint 404 resolves" gate are
+      moot — the vendor is gone. `batch_massive` PipelineMode/possible_manifest recognition is deliberately kept only
+      until the gated legacy-GCS purge (per `tradfi-databento-sourcing-ssot.md`). Repo: market-tick-data-service.
 - [ ] [DATA] P2. **R5-fix-7 — re-probe defi `lst_rates` + `dex_pools` post-R4 catalog re-promote** (the probes hit the
       stale-catalog honest-absence gate even after R4's re-promote — verify the catalogue freshness contract the
       preflight reads, then 1-day dry-run both to GREEN). Repo: market-tick-data-service.
@@ -963,7 +969,7 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 | **G3**   | (data-status §B in each per-AG plan) + **M5** in the G0 plan                                                                                                                                                | deployment-api/UI = ONE UNION view across pipeline modes + 4-state + pipeline_mode/source drilldowns                                                                                                                                                                                                                                                                                                                                               | vm-cross-cutting + per-AG                                                                           | G0 (M5) + G2 readers union-aware                    |
 | **G3.5** | `migration_verification_orphan_safety_2026_06_10`                                                                                                                                                           | **pre-apply verification harness (⑬–⑲ + G4.5)** — canonical possible-manifest registry (CF-15) · catalogue-seeded denominator + CeFi/Pred enumerator stubs (CF-16) · bidirectional orphan sweep + bucket prefix taxonomy + sizing (CF-17) · schema-attribute completeness (CF-18) · candle edge-timestamp (CF-19) · projected-manifest preview (CF-20) · verified-delete (CF-21); audit `migration_orphan_safety_goalpost_verification_2026_06_10` | vm-cross-cutting (slot-3: V0 + scaffolds + cefi/pred) + vm-defi/tradfi/sports (slot-2: per-AG runs) | G3 ∧ V0 registry GREEN; **HARD-BLOCKS G4**          |
 | **G4**   | per-AG `*_manifest_canonicalisation` **`--apply`** items + `bucket_name_ssot` L6 delete                                                                                                                     | irreversible manifest + data/schema migration                                                                                                                                                                                                                                                                                                                                                                                                      | per-AG                                                                                              | **G0 ∧ G1 ∧ G2 ∧ G3 ∧ pre-migration drain**         |
-| **G5**   | `mtds_backfill_phase3` · `mdps_backfill_phase3` · `features_backfill_phase3` · `instruments_backfill_phase3` · `aws_cloud_toggle_and_backfill_parity_2026_05_22`                                            | resume backfills → 100% honest coverage; massive/polygon-vs-databento cost-swap                                                                                                                                                                                                                                                                                                                                                                    | per-AG                                                                                              | **G4 GREEN for that AG**                            |
+| **G5**   | `mtds_backfill_phase3` · `mdps_backfill_phase3` · `features_backfill_phase3` · `instruments_backfill_phase3` · `aws_cloud_toggle_and_backfill_parity_2026_05_22`                                            | resume backfills → 100% honest coverage                                                                                                                                                                                                                                                                                                                                                                                                            | per-AG                                                                                              | **G4 GREEN for that AG**                            |
 | ∥        | `ci_canonical_v2_migration_2026_05_29` · `mdps_pure_polars_migration_2026_05_28` · `global_ledger_pnl_attribution_migration_2026_06_01` · `planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05` | parallel infra/CI/ledger — tracked, NOT on the migration critical path                                                                                                                                                                                                                                                                                                                                                                             | various                                                                                             | parallel-safe                                       |
 
 ## G1 expanded — IS catalogue is the ROOT of all missing-data understanding (operator 2026-06-07)
@@ -2261,12 +2267,12 @@ speed-note (both deferred optimisations, non-blocking).
       `migrate_polymarket_canonical`/`migrate_sports_hive_key`); the **newer v9 scripts dropped it**.
 
       Confirmed MISSING in: `rebuild_defi_manifest.py`, `rebuild_cefi_manifest*`, `rebuild_tradfi_manifest*`,
-                      `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and
-                      IS `migrate_instruments_store_v9.py` (the ones that call `read_availability_index`). **Fix per AG-slot**: add
-                      `setup_events(service_name="...", mode="local", sink=None)` at the top of `main()` (mirror the sports fix;
-                      migrators that do pure object-path moves and never read the manifest — e.g. `migrate_sports_canonical_v9` — do
-                      NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
-                      instruments-service. `parent_epic`: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
+                              `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and
+                              IS `migrate_instruments_store_v9.py` (the ones that call `read_availability_index`). **Fix per AG-slot**: add
+                              `setup_events(service_name="...", mode="local", sink=None)` at the top of `main()` (mirror the sports fix;
+                              migrators that do pure object-path moves and never read the manifest — e.g. `migrate_sports_canonical_v9` — do
+                              NOT need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service +
+                              instruments-service. `parent_epic`: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
 
 - [x] ✅ [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
       `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
@@ -2278,36 +2284,36 @@ speed-note (both deferred optimisations, non-blocking).
       (`alchemy_*`/`extended_base`/`tardis_base`/`thegraph_base`).
 
       Each is commented "Coarse ingestion mode → canonical pipeline_mode= path segment (Live=Batch)". **TWO
-                      consequences**: (1) **batch≠live REGRESSION for DeFi** — DeFi live-written data lands at `pipeline_mode=batch/`
-                      (coarse) while migrated DeFi batch data lands at `pipeline_mode=batch_<source>/` (source-aware mtds@f80c50f1) →
-                      the migration CREATES a split the audit's ⑪ keystone forbids; (2) **STEP 5.85
-                      (`no-inline-pipeline-mode-string-literal`, added pm@28698c856 2026-05-28) hard-fails → mtds
-                      `quality-gates.sh` exits non-zero → NO `.qg_last_passed_sha` written → `quickmerge --agent` refuses → NO mtds
-                      code (any AG) can ship** (it currently blocks slot-4's verified sports `setup_events` fix). **FIX (slot-2 DeFi +
-                      cross-cutting)**: each handler/reader must pass the SOURCE-AWARE `PipelineMode.<BATCH_SOURCE>` (or
-                      `derive_pipeline_mode_for_row(venue, ag, data_type)`/`resolve_pipeline_mode()`), the SAME value the v9 migrator +
-                      the shared `engine/orchestrator.py` write path use, so DeFi live == DeFi migrated-batch. Per-handler source
-                      derivation is DeFi-domain (the handler knows its venue/source) — slot-4 did NOT edit (collision + correctness
-                      risk across 41 DeFi sites). Repo: market-tick-data-service. `parent_epic`: mtds_mdps_master. Provenance: slot-4
-                      sports pre-apply audit 2026-06-08 (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY
-                      verdict above, which covered migrator/rebuild but not the live handlers).
+                              consequences**: (1) **batch≠live REGRESSION for DeFi** — DeFi live-written data lands at `pipeline_mode=batch/`
+                              (coarse) while migrated DeFi batch data lands at `pipeline_mode=batch_<source>/` (source-aware mtds@f80c50f1) →
+                              the migration CREATES a split the audit's ⑪ keystone forbids; (2) **STEP 5.85
+                              (`no-inline-pipeline-mode-string-literal`, added pm@28698c856 2026-05-28) hard-fails → mtds
+                              `quality-gates.sh` exits non-zero → NO `.qg_last_passed_sha` written → `quickmerge --agent` refuses → NO mtds
+                              code (any AG) can ship** (it currently blocks slot-4's verified sports `setup_events` fix). **FIX (slot-2 DeFi +
+                              cross-cutting)**: each handler/reader must pass the SOURCE-AWARE `PipelineMode.<BATCH_SOURCE>` (or
+                              `derive_pipeline_mode_for_row(venue, ag, data_type)`/`resolve_pipeline_mode()`), the SAME value the v9 migrator +
+                              the shared `engine/orchestrator.py` write path use, so DeFi live == DeFi migrated-batch. Per-handler source
+                              derivation is DeFi-domain (the handler knows its venue/source) — slot-4 did NOT edit (collision + correctness
+                              risk across 41 DeFi sites). Repo: market-tick-data-service. `parent_epic`: mtds_mdps_master. Provenance: slot-4
+                              sports pre-apply audit 2026-06-08 (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY
+                              verdict above, which covered migrator/rebuild but not the live handlers).
 
-                      **✅ RESOLVED 2026-06-17 (mtds@c4c5f15) — verified, not the stale "already shipped" note (line 240, which over-claimed
-                                      the STEP-5.85 grep-clean surface).** The COARSE-literal consequence (#2, STEP 5.85) was already closed by the
-                                      sibling item @1727 (mtds@57242af5, 41 batch literals swept → `rg "pipeline_mode=\"live\"|\"batch\"" --type py` = 0 in
-                                      mtds non-test source). The REMAINING live-path batch≠live split (#1) was the runtime coarse `"live"` from each
-                                      handler's `_pipeline_mode_for(run_tag)` passing through to `write_defi_rows` — `canonical_write.py:138` only upgraded
-                                      `None`/`"batch"` → `batch_<source>`, so a live `dex_swaps`/`_dex_pools_subgraph` run landed at `pipeline_mode=live/`
-                                      (coarse) vs the migrated batch corpus's `batch_<source>/`. **FIX**: extended the `canonical_write` chokepoint to
-                                      upgrade coarse `"live"`/`"replay"` → source-aware `live_<source>`/`replay_<source>` via the SAME UAC source map
-                                      (`live_pipeline_mode_for_venue`) the batch branch derives from. Verified symmetric: `batch_onchain_subgraph` ↔
-                                      `live_onchain_subgraph`; +regression test `test_live_run_tag_stamps_source_aware_live_mode`. Coverage confirmed: the
-                                      DeFi DATA writers (`dex_swaps`, `_dex_pools_subgraph`) all route coarse values through `write_defi_rows` (chokepoint
-                                      catches them); `websocket_streaming_handler` already used `live_pipeline_mode_for_venue` (source-aware); the engine
-                                      `*_catalog_reader.py` carry NO coarse literal on HEAD. **Residual (P2, NON-blocking — not coarse, so out of this
-                                      item's scope)**: `dex_pools_handler.py` honest-absence `recorder.record_failed(...)` calls hardcode the SOURCE-AWARE
-                                      `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
-                                      the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
+                              **✅ RESOLVED 2026-06-17 (mtds@c4c5f15) — verified, not the stale "already shipped" note (line 240, which over-claimed
+                                              the STEP-5.85 grep-clean surface).** The COARSE-literal consequence (#2, STEP 5.85) was already closed by the
+                                              sibling item @1727 (mtds@57242af5, 41 batch literals swept → `rg "pipeline_mode=\"live\"|\"batch\"" --type py` = 0 in
+                                              mtds non-test source). The REMAINING live-path batch≠live split (#1) was the runtime coarse `"live"` from each
+                                              handler's `_pipeline_mode_for(run_tag)` passing through to `write_defi_rows` — `canonical_write.py:138` only upgraded
+                                              `None`/`"batch"` → `batch_<source>`, so a live `dex_swaps`/`_dex_pools_subgraph` run landed at `pipeline_mode=live/`
+                                              (coarse) vs the migrated batch corpus's `batch_<source>/`. **FIX**: extended the `canonical_write` chokepoint to
+                                              upgrade coarse `"live"`/`"replay"` → source-aware `live_<source>`/`replay_<source>` via the SAME UAC source map
+                                              (`live_pipeline_mode_for_venue`) the batch branch derives from. Verified symmetric: `batch_onchain_subgraph` ↔
+                                              `live_onchain_subgraph`; +regression test `test_live_run_tag_stamps_source_aware_live_mode`. Coverage confirmed: the
+                                              DeFi DATA writers (`dex_swaps`, `_dex_pools_subgraph`) all route coarse values through `write_defi_rows` (chokepoint
+                                              catches them); `websocket_streaming_handler` already used `live_pipeline_mode_for_venue` (source-aware); the engine
+                                              `*_catalog_reader.py` carry NO coarse literal on HEAD. **Residual (P2, NON-blocking — not coarse, so out of this
+                                              item's scope)**: `dex_pools_handler.py` honest-absence `recorder.record_failed(...)` calls hardcode the SOURCE-AWARE
+                                              `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (mode-fixed, not coarse) — on a live `dex_pools` run a FAILURE row would carry
+                                              the batch mode-label; the DATA shards are correct (the keystone the migration walks). Tracked below.
 
 - [x] ✅ [DEFI] P2. **`dex_pools_handler` honest-absence `record_failed`/`record_*` calls hardcode mode** — they passed
       `pipeline_mode=PipelineMode.BATCH_ONCHAIN_SUBGRAPH` (source-aware but mode-fixed) at

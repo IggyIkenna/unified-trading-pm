@@ -120,14 +120,14 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       EU→empty moves).
 
       APPLIED to live tradfi `_index` 2026-06-23 (fresh snapshot
-                          `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 =
-                          floor-clip 241,085 [trades 108,221 + tbbo 107,799 + `mbp_10` 25,065] + derived `ohlcv_15m` 140,530; VIX-index 0).
-                          **GATE proof: captured 733,338 → 733,338 (delta 0), `attempted_failed` 16,358 → 16,358 (delta 0), rows 6,668,467
-                          preserved.** Live re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,
-                          `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530, remaining EU = real fetchable target (`ohlcv_1m` 313,720 +
-                          `ohlcv_1s` 308,871 + in-window trades 219,144/tbbo 215,617/`mbp_10` 7,908 + `corporate_action`/earnings 9,641
-                          each), **135 VX `futures_chain` captured cells preserved untouched**. Honest coverage
-                          (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
+                                  `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 =
+                                  floor-clip 241,085 [trades 108,221 + tbbo 107,799 + `mbp_10` 25,065] + derived `ohlcv_15m` 140,530; VIX-index 0).
+                                  **GATE proof: captured 733,338 → 733,338 (delta 0), `attempted_failed` 16,358 → 16,358 (delta 0), rows 6,668,467
+                                  preserved.** Live re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,
+                                  `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530, remaining EU = real fetchable target (`ohlcv_1m` 313,720 +
+                                  `ohlcv_1s` 308,871 + in-window trades 219,144/tbbo 215,617/`mbp_10` 7,908 + `corporate_action`/earnings 9,641
+                                  each), **135 VX `futures_chain` captured cells preserved untouched**. Honest coverage
+                                  (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
 
 - [x] [SCRIPT] P0. **Delete Barchart/massive VIX-index GCS objects — APPLIED 2026-06-23** —
       `instruments-service/scripts/delete_vix_cash_index_gcs_objects_2026_06_23.py` deletes the VIX cash-index parquet
@@ -170,14 +170,14 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       all 3 `_iter_*` sites + 3 regression tests.
 
       tf: tradfi job 32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) + `timeout_seconds` 1800→3600 (slow
-                          13.5k-blob GCS read). — instruments-service@b84cc4f (`scripts/build_instrument_catalogue.py` +
-                          `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4 regression tests) +
-                          deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi Cloud Run job updated
-                          to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build `c0b6772a`) so `:latest`
-                          bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run
-                          `lifecycle-catalogue-regen-tradfi` on the fixed image and confirm it COMPLETES without OOM + writes a fresh
-                          `prod/catalog.parquet` mtime=today (evidence appended in the `data_pipeline_hardening` Progress Log). Other 4 AGs
-                          were already GREEN.
+                                  13.5k-blob GCS read). — instruments-service@b84cc4f (`scripts/build_instrument_catalogue.py` +
+                                  `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4 regression tests) +
+                                  deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi Cloud Run job updated
+                                  to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build `c0b6772a`) so `:latest`
+                                  bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run
+                                  `lifecycle-catalogue-regen-tradfi` on the fixed image and confirm it COMPLETES without OOM + writes a fresh
+                                  `prod/catalog.parquet` mtime=today (evidence appended in the `data_pipeline_hardening` Progress Log). Other 4 AGs
+                                  were already GREEN.
 
 ## Codex SSOT updates
 
@@ -254,7 +254,8 @@ re-list of the 13 date-prefixes returns 0 remaining objects; live re-read of the
 
 - The CBOE-reclass + wave-launcher map are landed; the FX backfill drain + ICE credential-ask are the open todos above.
 - VIX cash-index DELETE + Databento floor-clip landed 2026-06-23 (instruments-service@814b14a); GCS-object delete
-  `--apply` running. The enumerator change is live for future universe seeds — no follow-up needed.
+  `--apply` completed 2026-06-23 (1,621 objects deleted, exit 0); non-hive-shape stragglers verify-then-deleted
+  2026-07-13 (20 objects, 0 remaining). The enumerator change is live for future universe seeds — no follow-up needed.
 - VIX 15m bare-index stragglers (a different, non-hive path shape the 2026-06-23 sweep's glob missed)
   verify-then-deleted 2026-07-13 — see §VIX above. No further stragglers expected (live-verified 0 remaining objects at
   that shape).

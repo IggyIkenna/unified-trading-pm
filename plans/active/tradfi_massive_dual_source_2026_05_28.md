@@ -4,7 +4,7 @@ title: TradFi dual-source — Massive alongside Databento with co-mingled source
 summary:
   Add Massive (formerly Polygon.io) as a second TradFi OHLCV source alongside Databento, disambiguated via a source
   column.
-status: active
+status: superseded
 nature: process
 asset_group: [tradfi]
 stage: [meta]
@@ -24,7 +24,7 @@ last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
 supersedes:
-superseded_by:
+superseded_by: codex/02-data/tradfi-databento-sourcing-ssot.md
 depends_on:
 source:
 assigned_role: data_engineering
@@ -35,6 +35,15 @@ repo_gates:
   - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
   - { repo: unified-trading-library, code: C0, deployment: none, business: none }
 ---
+
+> **🔴 SUPERSEDED 2026-07-19/07-21 — Massive REMOVED as a TradFi source.** Operator 2026-07-19: Databento = batch SoT,
+> Yahoo = daily; Massive dropped from `SOURCE_PRIORITY`, runtime routing DELETED (`uac@a2beed46` / `mtds@362a487e`). The
+> ~1.47M `batch_massive` GCS corpus was PURGED to 0 with the subscription terminated (operator Option C 2026-07-21,
+> accepted permanent loss). **This dual-source plan is OBSOLETE — do not build.** SSOT:
+> `codex/02-data/tradfi-databento-sourcing-ssot.md`,
+> `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`. Remaining open Massive-build todos below
+> are retired WONTFIX in place (plan kept for audit-trail history, not archived — `locked_by: live-defi-rollout`
+> requires `[unlock-plan]` for archival).
 
 # TradFi dual-source — Massive alongside Databento
 
@@ -275,22 +284,28 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 > Databento on-disk shape. This defeats the operator's core requirement (consumers can't tell the source). **Must land
 > BEFORE the paid backfill.**
 
-> **Priority downgraded P0→P2 2026-07-12** (operator ruling, plan-reconciliation finding 305, §A2 of
+> **SUPERSEDED 2026-07-19/07-21** (supersedes the 2026-07-12 P0→P2 downgrade note below, retained for history):
+> ~~Priority downgraded P0→P2 2026-07-12 (operator ruling, plan-reconciliation finding 305, §A2 of
 > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`): Databento is PRIMARY
-> (codex/02-data/tradfi-databento-sourcing-ssot.md); Massive remains a documented fallback — no rebuild urgency. (was:
-> P0)
+> (codex/02-data/tradfi-databento-sourcing-ssot.md); Massive remains a documented fallback — no rebuild urgency.~~
+> Massive (formerly Polygon.io) was fully REMOVED as a tradfi source 2026-07-19 (operator ruling: Databento = batch SoT,
+> Yahoo = daily) — deleted from `SOURCE_PRIORITY` and all runtime routing (`uac@a2beed46` + `mtds@362a487e`), and the
+> ~1.47M-object corpus was purged 2026-07-21 (permanent loss accepted). **Massive is NOT a fallback.** SSOT:
+> `codex/02-data/tradfi-databento-sourcing-ssot.md` (2026-07-19 banner).
 
-- [ ] [MTDS] P2. Rebuild `MassiveTradfiRestConnector` to emit the SAME canonical columns/dtypes `tradfi_shared` writes
-      for Databento (per data_type), and route its output through `tradfi_shared.finalise_tradfi_rows_and_path` /
-      `write_tradfi_shard` — OR define a shared canonical `TRADFI_ROW_COLUMNS` contract in UAC/UTL and conform BOTH
-      adapters to it. Repo: market-tick-data-service (+ unified-api-contracts if a shared row schema).
-- [ ] [MTDS] P2. Wire `MassiveTradfiRestConnector` into the TradFi adapter orchestrator/factory so it is actually
-      reachable in the collect path (today it is dead code outside tests). Repo: market-tick-data-service.
-- [ ] [TEST] P2. Cross-source row-schema PARITY test: same instrument + window from databento vs massive → identical
-      column set + dtypes per data_type (trades/tbbo/ohlcv_1m/ohlcv_15m + Era-B options/futures chain). This is the
-      regression guard for "consumers don't care about source". Repo: market-tick-data-service.
-- [ ] [MTDS] P1. Add retry/backoff/rate-limit handling to `_get`/`_get_paginated` (429 is classified but never retried)
-      — a multi-million-row paid-tier backfill will fail-fast on throttle without it. Repo: market-tick-data-service.
+- [ ] ❌ [MTDS] P2. OBSOLETE/WONTFIX. ~~Rebuild `MassiveTradfiRestConnector` to emit the SAME canonical columns/dtypes
+      `tradfi_shared` writes for Databento (per data_type), and route its output through
+      `tradfi_shared.finalise_tradfi_rows_and_path` / `write_tradfi_shard`.~~ Massive removed as a tradfi source
+      2026-07-19 (Databento = batch SoT); runtime routing + connectors DELETED `mtds@362a487e`; subscription
+      terminated + data purged 2026-07-21 (operator Option C). No connector to rebuild.
+- [ ] ❌ [MTDS] P2. OBSOLETE/WONTFIX. ~~Wire `MassiveTradfiRestConnector` into the TradFi adapter orchestrator/factory
+      so it is actually reachable in the collect path.~~ Massive removed as a tradfi source 2026-07-19; connectors
+      DELETED `mtds@362a487e`. Nothing to wire.
+- [ ] ❌ [TEST] P2. OBSOLETE/WONTFIX. ~~Cross-source row-schema PARITY test: same instrument + window from databento vs
+      massive → identical column set + dtypes per data_type.~~ Massive removed + purged 2026-07-19/07-21; no second
+      source to compare against.
+- [ ] ❌ [MTDS] P1. OBSOLETE/WONTFIX. ~~Add retry/backoff/rate-limit handling to `_get`/`_get_paginated` for the Massive
+      paid-tier backfill.~~ Massive subscription terminated 2026-07-21; there is no paid-tier fetch path to protect.
 - [x] ✅ [MTDS] P0. **CME futures = S3 FLAT-FILES — DONE mtds@a311561 (gate UNLOCKED; operator correction 2026-06-17,
       supersedes the 2026-06-08 + 2026-06-16 REST framing).** The operator confirmed (with a sibling agent's proven 5y
       ES pull: 1,232 daily files) that **our Stocks-Starter REST tier is equities-only — CME futures are NOT served on
@@ -356,23 +371,22 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
   - `transactions`/`n` is NOT extra — it maps to the canonical `trade_count` (Databento has it). Keep the mapping. Owner
     of the call: Ikenna (canonical-schema authority). Until decided, the connector rebuild (Phase 4b #1) holds strict
     parity (option A) so it ships unblocked; widening to (B)/(C) is a follow-on once Ikenna picks.
-- [ ] [SCRIPT] P1. Build the **S3 flat-files bulk-backfill ingester** the plan prescribes
+- [ ] ❌ [SCRIPT] P1. OBSOLETE. ~~Build the **S3 flat-files bulk-backfill ingester** the plan prescribes
       (`s3://flatfiles/us_stocks_sip/`) as PRODUCTION code: `resolve_bucket_name` +
-      `record_captured(source="massive")` + `get_secret_client` (NOT boto3/os.environ/hardcoded `/tmp`/inline `s3://` —
-      the current `massive_flat_files_smoke.py` is a `/tmp` smoke test only). **Bar-edge: Massive `window_start` is the
-      LEFT/open edge (ns); convert to the canonical RIGHT-edge `t_close` INTERVAL-AWARELY** via UTL
-      `compute_bar_close_boundary(ts, timeframe)` / `BAR_TIMEFRAME_SECONDS[tf]` — do NOT copy the smoke script's
-      hardcoded `+ NS_PER_MINUTE` (`+60s`), which is correct only for 1m and silently misaligns 15m/hourly/daily by one
-      interval. (The MDPS write-gate `assert_bar_boundary_contract` is the cross-cutting backstop, but the ingester must
-      land it right.) Repo: market-tick-data-service.
-- [ ] [SCRIPT] P1. Fix `backfill_tradfi_source_column.py` walk prefix to include the `pipeline_mode=` segment (currently
-      `…/day={D}/asset_group=tradfi/` misses canonical Phase-3 paths → under-stamps legacy rows); switch
-      `google.cloud.storage` → UTL `gcs_*` ops. Repo: market-tick-data-service.
-- [ ] [UTL] P0. **Manifest consolidator dedup key omits `source`** (`manifest_consolidator.py:179-193`
+      `record_captured(source="massive")` + `get_secret_client`.~~ Massive was removed as a tradfi source (operator
+      2026-07-19) and purged (~1.7M objects → 0); the UTL manifest-writer `MissingSourceError` gate now HARD-REJECTS
+      `source='massive'` (2026-07-20 ruling, `unified-trading-library/.../manifest_writer/_schema.py`), so any such
+      ingester would RAISE. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` (lines 44-61).
+- [ ] ❌ [SCRIPT] P1. OBSOLETE (no-longer-massive-relevant). ~~Fix `backfill_tradfi_source_column.py` walk prefix to
+      include the `pipeline_mode=` segment.~~ This script only ever stamped legacy `databento` rows; per the 2026-07-20
+      ruling, any re-stamp of legacy `batch_massive` rows must not run — and `batch_massive` is now purged to 0 objects,
+      so the walk-prefix bug is moot for Massive. Re-scope to `databento`-only if the underlying prefix bug still
+      matters, otherwise close.
+- [ ] ❌ [UTL] P0. OBSOLETE. ~~Manifest consolidator dedup key omits `source`** (`manifest_consolidator.py:179-193`
       `_BASE_DEDUP_COLS` + `_OPTIONAL_DEDUP_COLS`) → two source rows for one cell collapse last-write-wins, silently
-      dropping the per-source manifest row the moment databento+massive co-mingle. Must land WITH the read-path resolver
-      (changes consolidation cardinality fleet-wide). Cross-ref `data_source_provenance_all_asset_groups_2026_06_01.md`
-      Phase 5 (same finding, open `- [ ]` P1). Repo: unified-trading-library.
+      dropping the per-source manifest row the moment databento+massive co-mingle.~~ No Massive fetches exist and the
+      `batch_massive` corpus was purged; databento+massive co-mingling can no longer happen. The 6 tradfi cells are now
+      single-source (`source_required()` returns False), so no per-source dedup is needed.
 - [ ] [MTDS] P2. Wire `MASSIVE_API_KEY` into `UnifiedCloudConfig`/`AliasChoices`/`ApiKeyReloader` (today direct SM-name
       fetch bypasses the typed-config + hot-reload contract, STEP 5.34). Fix stale connector docstrings
       (`tradfi_il_dual_source`/`"il"` source / nonexistent `PipelineMode.BATCH_MASSIVE` import). Repo:
