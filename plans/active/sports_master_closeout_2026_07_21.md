@@ -196,8 +196,13 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
 
 - `sports_index_recency_masked_captured_atoms` (ad#5) — later `empty_confirmed` recency-masks a present `captured` row;
   reader tie-break shipped, open: redeploy enumerator image fleet-wide + cross-AG sweep.
-- `sports_manifest_null_vs_empty_dedup_double_count` (ae#1) — consolidator dedups only on `""`, legacy rows use `NULL` →
-  twins never merge; open: root-cause the deployed-image-not-applying-fix gap + cross-bucket NULL/"" audit.
+- ~~`sports_manifest_null_vs_empty_dedup_double_count` (ae#1)~~ — **RESOLVED 2026-07-21.** Both the stale-image gap
+  (consolidator image WAS stale ~2026-07-08→07-10, fixed/redeployed) and the deeper root cause (incremental merge's
+  `survivors` never self-deduped pre-existing canonical duplicates — `unified-trading-library@0de04b6e`, 2026-07-10) are
+  fixed and live-verified: today's deployed image is current (content-verified, built same-day) on every GCP
+  consolidator bucket (they share one image) + AWS ECR; live re-scan of `instruments-store-sports-prd` (5.38M rows) and
+  `market-data-tick-sports-prd` (1.97M rows) found **0 duplicate dedup-key groups**. No longer a blocker. Full detail in
+  the issue doc's 2026-07-21 update.
 - `sports_cf8_available_at_backfill_regression` (ac#6) — `available_at` fill only ~40-50% on `captured` rows
   (service_name-scoped dedup); targeted re-emit BLOCKED pending per-service_name write-fix design (operator said STOP).
 - `sports_trades_venue_fetch_failed` (af#5) — restore true `attempted_at` on ~112K rows re-stamped to rebuild runtime
@@ -338,8 +343,9 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
    the casing relocation; do not fold it into items 2/3. It needs its own writer-trace/fix/migrate; confirmed live to
    2026-07-11.
 4. **Fix the recurring writer/process defects BEFORE the post-floor clean re-run**, or the re-run re-introduces
-   fabrication: Gap-2 `--force`-can't-heal-no-output-day (ac#9, PURGE-not-overwrite), NULL-vs-"" dedup-key instability
-   (ae#1), missing writer-side dedup/conformance gate (aa#6), `attempted_at` re-stamp on re-emit (af#5). The fabrication
+   fabrication: Gap-2 `--force`-can't-heal-no-output-day (ac#9, PURGE-not-overwrite), missing writer-side
+   dedup/conformance gate (aa#6), `attempted_at` re-stamp on re-emit (af#5). (NULL-vs-"" dedup-key instability, ae#1,
+   was carried here too but is **RESOLVED 2026-07-21** — see §2-C; no longer a pre-recompute blocker.) The fabrication
    ROOT cause (season_context `competition_phase` constant / `matchday` null; `round` never captured) is writer-fixed,
    but 2,821 post-floor fabricated objects survive unless purged.
 5. **SPOT-preemption-no-resume (ac#12/13, plans#7)** will silently restart the post-floor recompute at day-one or kill
@@ -415,8 +421,10 @@ DRIVE THESE TO DONE (order matters):
    notified 2026-07-21.)
 1. PRE-FLOOR WIPE. Measure the exact pre-2020-06 scope per sports bucket + manifest (snapshot the delete list first;
    GCS soft-delete). Delete pre-floor objects; prune the manifest of pre-floor rows. Re-verify by CENSUS: zero pre-floor
-   remains. BEFORE any post-floor clean re-run, fix the writer/process defects (Gap-2 force-can't-heal, NULL-vs-"" dedup
-   key, missing writer dedup gate, attempted_at re-stamp) or the re-run re-introduces fabrication.
+   remains. BEFORE any post-floor clean re-run, fix the writer/process defects (Gap-2 force-can't-heal, missing writer
+   dedup gate, attempted_at re-stamp) or the re-run re-introduces fabrication. (The NULL-vs-"" manifest dedup-key
+   instability that used to be in this list is RESOLVED 2026-07-21 — root-caused, fixed, and live-verified 0 duplicate
+   groups on both sports manifests; see the issue doc + §2-C. No action needed here.)
 2. ENFORCE THE FLOOR in code so nothing expects pre-floor data: honest-coverage denominators, fixture-expectation
    gates, MDPS/features start-date, manifest expected_unattempted, data-status UI. Promote the floor to a codex SSOT.
 3. league_id RELOCATION — COPY. Run the VERIFIED, adversarially-reviewed executor as a MONITORED migration job (it is
@@ -512,3 +520,18 @@ delete, coverage-registry refresh, and reconciliation that all sequence behind i
   document the exact launch sequence for a monitored run.
 - Environmental fix: gcloud user OAuth expired mid-session; restored the CLI by activating the ADC service account
   (`unified-trading-sa`, non-expiring) — this also un-blocks the relocation's gcloud-based VM guard.
+
+**2026-07-21 (separate dispatch — manifest-consolidator staleness investigation, closed):** Investigated the long-open
+`sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md` gap (§2-C ae#1). Findings: (1) the deployed GCP Cloud
+Run consolidator image (`market-tick-data-service:latest`, shared by every asset-group's consolidator job) is current —
+content-verified by pulling the exact running digest (built same-day) and confirming the NULL/"" dedup-key fix +
+reader-merge fix are present in the installed `unified-trading-library` package; AWS ECR image (4 days older)
+content-verified the same way. (2) The deeper "incremental anti-join misses contested-key cases" bug was already
+independently root-caused and fixed 2026-07-10
+(`plans/active/issues/defi_manifest_consolidator_duplicate_race_2026_07_10.md`, `unified-trading-library@0de04b6e` — the
+incremental merge's `survivors` set was never self-deduped, so pre-existing canonical duplicates persisted forever) —
+never cross-referenced from the sports doc. (3) Live re-scan of both sports canonical manifests today (5.38M + 1.97M
+rows) plus the small cefi/defi/tradfi/prediction instruments manifests found **0 duplicate dedup-key groups** everywhere
+checked. No code shipped (nothing left to fix); issue doc flipped to `status: resolved` with full evidence in its
+2026-07-21 update section; this plan's §2-C/§7/§autonomous-prompt references updated to stop treating it as a
+pre-recompute blocker.
