@@ -151,10 +151,22 @@ source:
       `download_url=""` when neither live nor archive object exists (no signed URL generated). Unit tests added to
       `tests/unit/test_route_deployments_inventory.py`. `quality-gates.sh` green. (Note: this todo was found duplicated
       in the plan file — deduped to one entry as part of this flip.)
-- [ ] [UI] P0. New "Run log" panel on `DeploymentDetail` (decision 3) — separate component from the events panel; shows
-      size (human units), the capped tail with a "last N lines of X MB" label, and a working Download button using the
-      signed URL. Honest states — "no log yet", "log expired (14-day TTL), showing archive copy", errors surfaced, never
-      swallowed.
+- [x] ✅ [UI] P0. New "Run log" panel on `DeploymentDetail` (decision 3) — separate component from the events panel;
+      shows size (human units), the capped tail with a "last N lines of X MB" label, and a working Download button using
+      the signed URL. Honest states — "no log yet", "log expired (14-day TTL), showing archive copy", errors surfaced,
+      never swallowed. — `deployment-ui@cbc7adb`. New `RunLogPanel.tsx` component (data-testid `run-log-panel`), wired
+      into `DeploymentDetail.tsx` as its own `Card`, separate from the existing "Live log tail" events panel. New
+      `getRunLogMetadata`/`getRunLogTail`/`getRunLogDownload` client functions in `deploymentApi.ts` against the
+      todo-3/4/5 endpoints. Honest states: `exists=false` → "no log available" message (`run-log-empty`, download
+      disabled); `location=archive` → amber "Log expired (14-day TTL) — showing archive copy" banner
+      (`run-log-archive-notice`); fetch errors surfaced via `role="alert"` (`run-log-error`/ `run-log-download-error`),
+      never swallowed. Download opens the signed URL directly in a new tab — no server-side streaming. Added matching
+      mock-api.ts handlers for `/run-log/{metadata,tail,download}` (keyed off `run_log_uri` presence in the inventory
+      fixture; `sports-backfill-20260621` simulates the archive-fallback case for a real regression target) +
+      `tests/smoke/run-log-panel.spec.ts` (live/archive/no-log/download states). `tsc`/ESLint clean, 1026 vitest unit
+      tests green, all 4 new + 3 related Playwright specs pass; `deployment-ui`'s `quality-gates.sh` green. (Found the
+      pre-existing `daily_costs_and_vm_detail.spec.ts` failures — confirmed unrelated + already tracked in
+      `plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`, not re-filed.)
 - [ ] [UI] P1. Rename the existing `StreamingLogsPanel`/events timeline (decision 3) — label + any misleading copy
       updated to reflect it's lifecycle events, not log content. Functionality unchanged; update testids if renamed.
 - [ ] [REVIEW] P1. Tests — (a) writer-side final-snapshot written on completion; (b) API prefers `vm-logs/` within TTL,
@@ -220,6 +232,17 @@ source:
   `generate_download_url()` — no new UTL code needed. Expiry via
   `DeploymentApiConfig.run_log_download_url_expiry_minutes` (default 15 min). Found this todo duplicated (two identical
   `- [ ]` entries) in the plan file, likely from a concurrent-slot merge artifact — deduped to one flipped entry.
+- **2026-07-21** (slot 4) — Shipped the new "Run log" panel (todo 6, the first `[UI]` todo), `deployment-ui@cbc7adb`:
+  new `RunLogPanel.tsx` component wired into `DeploymentDetail.tsx` as its own `Card`, separate from the existing events
+  panel below it. Client functions `getRunLogMetadata`/`getRunLogTail`/`getRunLogDownload` added to `deploymentApi.ts`
+  against the metadata/tail/download endpoints from todos 3-5. Honest states implemented: no-log (`exists=false`),
+  archive-fallback (`location=archive` → the 14-day-TTL banner), and surfaced fetch errors — never a silent blank panel.
+  Download opens the signed URL directly in a new tab, no server-side streaming. Added matching `mock-api.ts` handlers
+  (`sports-backfill-20260621` simulates the archive-fallback case for a real regression target) +
+  `tests/smoke/run-log-panel.spec.ts` covering all four states. `deployment-ui`'s `quality-gates.sh` green (tsc/ESLint
+  clean, 1026 vitest tests, new + related Playwright specs pass). While verifying the L2 gate, hit the pre-existing
+  `daily_costs_and_vm_detail.spec.ts` failures (confirmed unrelated by re-running on a stashed clean tree) — already
+  tracked in `plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`, not re-filed.
 
 ## Codex SSOTs
 
