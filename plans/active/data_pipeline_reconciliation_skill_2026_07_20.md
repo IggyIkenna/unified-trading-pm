@@ -518,8 +518,8 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 - [x] 31. ✅ [INFRA] P1. **Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind BEFORE any
       launch** (real `VmPrefixSpec` EPHEMERAL_BATCH entries in `vm_prefix_registry.py`, the `datapoint-validation`
       `resolve_bucket_name` kind in `configs/cloud-providers.yaml`; ship via quickmerge). Unregistered = invisible.
-- [ ] 32. [SCRIPT] P1. **Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py`** — modeled on
-      `launch-manifest-recon-all-vm.sh`; SPOT + PROGRESS.json resume; reuses `validate_dataframe` +
+- [x] 32. ✅ [SCRIPT] P1. **Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py`** — modeled
+      on `launch-manifest-recon-all-vm.sh`; SPOT + PROGRESS.json resume; reuses `validate_dataframe` +
       `build_canonical_instrument_id`; writes the results manifest. Depends on 31. Lifecycle marker required.
 - [x] 33. ✅ [DATA] P2. **Per-AG reference-sheet census nuance line** (defi chain axis + case-insensitive; cefi EXACT +
       dual chain-tail; tradfi batch_massive suppress; prediction conditionId; sports entity-keyed).
@@ -667,3 +667,43 @@ script (the shipped object-fold is clean) and filed the exact recipe + finding a
 `plans/active/issues/defi_fold_manifest_registration_pending_2026_07_21.md`. **The DATA migration + delete-safety are
 COMPLETE**; the manifest rows are a coverage-surface refresh (the depth-provider reads objects directly, so nothing is
 blocked). This is the one operator-ask sub-part that met a genuine technical obstacle, tracked with a precise recipe.
+
+### 2026-07-21 — FINAL REPORT: defi migration + Tier-2 VM complete (all 4 todos done)
+
+Operator-authorized defi legacy→canonical migration + the 4 remaining todos (24/25/31/32), executed on the `/autonomous`
+loop. **All four DONE.**
+
+**24 — Fold the data ✅** `market-tick-data-service@13b9dac5`. Dry-run-gated → applied on real infra → verified. **648
+legacy-only Solana instruments** copied to canonical twins where R5 found NONE: KAMINO `solana_vault` 0→513 · SOLEND
+`solana_lending` 0→59 · KAMINO `solana_lending` 0→44 · RAYDIUM `solana_amm_pool` 100→132 (the 32 legacy-only pools).
+ORCA 14,094 + the 66 Raydium intersection skipped (UNION-idempotent). Copy-not-move — **legacy delete is now SAFE but
+HUMAN-ONLY**. Reused `write_defi_rows` (the writer SSOT) so the folded objects are byte-identical to the live writer's.
+
+**25 — Repoint reader ✅** `execution-service@45628a37`. Legacy `dex_pools/` template → canonical `dex_pool_state` via
+`build_defi_partition_path`; fixed the `resolve_bucket_name` call that raised `TypeError` (dead-on-arrival). A
+spec-error catch: the writer emits `pipeline_mode=batch_onchain_subgraph`, not coarse `batch`.
+
+**Writers ✅** No change needed — the live MTDS writer already emits canonical.
+
+**F6 — Enumerator vocab ✅ (3-repo atom)** `uac@5d83b729` (capability) + `instruments-service@c781eb0b` (adapters +
+address-keying + golden). Solana venues now stamp `solana_amm_pool`/`solana_vault` (not `pool`), so the folded twins
+reconcile against the expected universe. Side-benefit: cleared a pre-existing fleet-RED defi golden (cross-repo drift).
+
+**31 — Tier-2 VM registration ✅** `deployment-service@bd7a7bd8` + `uac@5d83b729`.
+
+**32 — Tier-2 VM launcher + validator ✅** `deployment-service@00a980e` (`launch-datapoint-validation-vm.sh` + registry
+parity, SPOT, single-walk) + `instruments-service@ad05e34` (`validate_datapoint_schema_id.py` — the sanctioned single
+walk running G2 id-canonical + G3 schema per datapoint). The agent corrected 3 SSOT-prose inaccuracies against the code
+(per-VM shard path, `record_vm_progress` not exported, real violation codes) — see the census doc appendix.
+
+**ONE tracked follow-up (a genuine technical wall, not a descope):** manifest-row registration for the 648 folded
+objects — `defi_fold_manifest_registration_pending_2026_07_21.md`. The consolidator merges `record_captured` per-VM
+shards (not raw objects), and the standalone `DefiManifestRecorder` didn't flush in a plain-script context (no partial
+write). The exact 714-row recipe is filed. This is a coverage-surface refresh; the data + delete-safety are complete and
+the depth-provider reads objects directly.
+
+**Not runtime-verified:** the Tier-2 VM has not been launch-run (author+ship scope). A real campaign (+ the ≤30-min
+heartbeat watchdog) is the next operational step.
+
+**Loop terminated 2026-07-21** — all 4 todos done + verified; the one obstacle tracked with a precise recipe. Delete of
+the legacy prefixes remains the operator's to run.
