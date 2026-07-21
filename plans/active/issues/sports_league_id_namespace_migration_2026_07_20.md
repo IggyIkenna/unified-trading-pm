@@ -519,3 +519,28 @@ drain is hours away (watchdog `bu8zw4ei2` fires on completion). This is the corr
 → verify → swap → (drained + dry-run-proven) → delete.
 
 Evidence: `scratchpad/registry_map.py`, `scratchpad/sportkey_map.json`, `scratchpad/full_map.py` (2026-07-21).
+
+## Classification COMPLETE + registry-verified 2026-07-21 (executor input ready)
+
+Built the full `raw_league_id → canonical` map from the SSOT (each classification-registry entry's `odds_api_name`
+machine key + numeric-id resolution to the canonical slug) and verified every target exists in `LEAGUE_REGISTRY`. Result
+over all 76 distinct raw values:
+
+- **66 resolve deterministically to a canonical slug** — the `SOCCER_`/`soccer_` machine keys are country-qualified so
+  they carry no ambiguity (`SOCCER_GERMANY_BUNDESLIGA`→`BUNDESLIGA`, `SOCCER_AUSTRIA_BUNDESLIGA`→`AUSTRIAN_BUNDESLIGA`,
+  `soccer_epl`→`EPL`, …), and the bare display names map via the write-path resolver (`PREMIER_LEAGUE`→`EPL`,
+  `2._BUNDESLIGA`→`BUNDESLIGA_2`, `FIRST_DIVISION_A`→`JUPILER_PRO`, `PREMIERSHIP`→`SCOTTISH_PREMIERSHIP`,
+  `SUPERLIGA`→`DANISH_SUPERLIGA`).
+- **6 are the bare collisions** → per-row `sport_key` (map verified, both sides present).
+- **2 leagues genuinely UNRESOLVED** (4 raw values across two casings): **`SOCCER_CHINA_SUPERLEAGUE` /
+  `soccer_china_superleague`** and **`SOCCER_RUSSIA_PREMIER_LEAGUE` / `soccer_russia_premier_league`** — they have NO
+  `LEAGUE_REGISTRY` entry. Left UNTOUCHED by the migration.
+
+Artifact (executor input): `scratchpad/classification.json` (raw → canonical, with `AMBIGUOUS`/`UNRESOLVED` markers).
+
+### OPERATOR DECISION NEEDED — China Super League + Russia Premier League
+
+These two leagues appear in the captured odds data but are not in the canonical trading universe (`LEAGUE_REGISTRY`).
+Either (a) they ARE intended to be in-universe → add canonical slugs to `LEAGUE_REGISTRY` and include them in the
+migration, or (b) they are out-of-universe → leave untouched now, and dispose of them under the delete-safety protocol
+separately. Default until decided: **left untouched** (never guess a canonical target for an unregistered league).
