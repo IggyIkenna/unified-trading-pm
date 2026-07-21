@@ -155,8 +155,12 @@ Full audit transcript available on request; the load-bearing facts:
       from the inventory response and renders an explicit amber banner — distinct from the red fetch-error banner —
       instead of a silent clipped/partial result; mock API mirrors the same 30-day `_archive_floor_date` computation for
       pw:L2 coverage) | pw:L2 ✓ | regression: tests/smoke/deployments-date-range-out-of-range.spec.ts
-- [ ] [UI] P2. Service dropdown filter (WS-3) — options from distinct `service` values in the loaded inventory,
-      URL-backed (`?service=`), client-side.
+- [x] ✅ [UI] P2. Service dropdown filter (WS-3) — options from distinct `service` values in the loaded inventory,
+      URL-backed (`?service=`), client-side. — deployment-ui@79cf1dc (`serviceOptions` in `Deployments.tsx` mirrors
+      `assetGroupOptions`'s pattern — distinct values from the loaded `items`; `FilterSelect` + `?service=` param;
+      folded into the client-side `items.filter(...)` predicate alongside kind/launched_by — the inventory endpoint's
+      own `service` query param stays unused by this control, deliberately client-side per the decision) | pw:L2 ✓ |
+      regression: tests/smoke/deployments-page.spec.ts
 - [ ] [UI] P2. Target search box (WS-3) — free-text substring match on the Target column (`item.name`),
       case-insensitive, URL-backed (`?q=`), debounced, clears with an ✕.
 - [ ] [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
