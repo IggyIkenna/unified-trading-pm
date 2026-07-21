@@ -212,12 +212,15 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
    states the scale in two mutually inconsistent forms (a "1.47M-object purge" and "1,696,166 objects"). Neither was
    independently re-measured for this doc. Treat the scale as ~1.5M and re-measure before any purge; do not cite either
    figure as settled.
-4. **Anything touching `instrument_type` casing while C2a is unruled.** `cross-asset-canonical-target-ssot.md` §7/§11
-   says LOWERCASE; `plans/active/tradfi_consolidated_closeout_2026_07_18.md` Phase-B says UPPERCASE with the catalogue
-   as SSOT — **both citing the same operator on the same date (2026-07-18)**, and both cefi and tradfi have already
-   shipped scripts that uppercase the column. The direction determines >12M row rewrites. **This doc does NOT pick a
-   side.** Until the operator rules, no casing migration, no casing-based delete, and no reporting of casing as a
-   finding. See § 4.
+4. **Anything touching `instrument_type` casing — RULED UPPERCASE (TARGET, D1), `migration_pending` today; still a
+   human-only hard stop for prod-scale rewrites.** ⛔ corrected 2026-07-20 (re-reconciled same day, acceptance review):
+   this axis was previously "unruled / this doc does not pick a side"; the operator **ruled the TARGET is UPPERCASE for
+   the manifest COLUMN** on 2026-07-20 (D1), but it is **NOT yet implemented — the column is `migration_pending` (mixed
+   on disk today)**, so a reconciliation pass compares casing **case-INSENSITIVELY** and emits **no** casing finding
+   until the migration completes (never "enforce UPPERCASE now"). The delete-safety consequence is **unchanged** — an
+   object or row whose only non-canonical attribute is `instrument_type` casing is a `migration_pending` fold-UP item
+   (repaired in place, **never a delete candidate**), and prod-scale casing rewrites (>12M rows, incl. defi rows not yet
+   folded UP) remain a human-only hard stop. See § 4.
 5. **The defi `dex_pools/` + `lending_indices/` delete.** The standing delete orders in
    `defi_consolidated_closeout_2026_07_18.md` Track 2 and `canonical_closeout_open_questions_2026_07_18.md` §A6 are
    **STALE and would destroy data** — overturned by R5 in the same plan (Part 2 above). Current disposition is
@@ -233,30 +236,32 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
 
 ---
 
-## 4. Open questions this doc deliberately does not resolve
+## 4. Formerly-open axes — both RULED 2026-07-20 (retained as delete-safety guidance)
 
-An SSOT that silently picks a side in a live dispute launders a guess into a rule. Where the record genuinely disagrees,
-this doc reports the disagreement and refuses the axis.
+> **⛔ corrected 2026-07-20, operator rulings D1 + D2.** ~~"Open questions this doc deliberately does not resolve … this
+> doc reports the disagreement and refuses the axis."~~ Both axes below were **RULED 2026-07-20** (recorded in
+> `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § "OPERATOR DECISIONS"). The delete-safety consequence
+> is UNCHANGED by the rulings — neither axis ever makes an object a delete candidate — but they are no longer "open".
 
-**C2a — manifest `instrument_type` column case.** Sides, both `status: current`, both dated 2026-07-18, both citing the
-operator:
+**C2a — manifest `instrument_type` column case. ✅ RULED UPPERCASE (TARGET, D1); `migration_pending` today.** Was
+contested (both sides `status: current`, both dated 2026-07-18, both citing the operator: LOWERCASE =
+`cross-asset-canonical-target-ssot.md` §7/§11; UPPERCASE catalogue-as-SSOT =
+`plans/active/tradfi_consolidated_closeout_2026_07_18.md` Phase-B). **Operator ruled the canonical TARGET is UPPERCASE
+for the manifest COLUMN**; the shipped cefi/tradfi uppercase scripts are RATIFIED. **Re-reconciled 2026-07-20
+(acceptance review): the UPPERCASE column is NOT yet implemented — the column is `migration_pending` (mixed on disk
+today), so the reconciliation skill compares it case-INSENSITIVELY and emits NO casing finding until the migration
+completes; UPPERCASE is enforced POST-migration. The PATH segment stays lowercase and the ID middle segment stays UPPER
+— both always enforced.** **Consequence for delete safety (unchanged)**: an object or row whose only "non-canonical"
+attribute is `instrument_type` casing is a `migration_pending` fold-UP item, **never a delete candidate** — a casing
+difference is repaired in place, not deleted.
 
-- LOWERCASE — `codex/02-data/cross-asset-canonical-target-ssot.md` §7/§11.
-- UPPERCASE, catalogue as SSOT — `plans/active/tradfi_consolidated_closeout_2026_07_18.md` Phase-B (which the audit
-  reports contradicts itself within one file, its own worklist ordering the fold in the opposite direction).
-
-Shipped code has already moved in the UPPERCASE direction for cefi and tradfi. Blast radius >12M rows. **Consequence for
-delete safety**: an object or row whose only "non-canonical" attribute is `instrument_type` casing is `unknown`, never a
-delete candidate, until ruled.
-
-**Defi flat `LENDING` instrument_type.** `cross-asset-canonical-target-ssot.md` §5 asserts `LENDING` is RETIRED in
-favour of the A_TOKEN/DEBT_TOKEN split (~16.7M rows scheduled); the audit reports the retire was **reversed in code**
-because it broke 5+ MTDS lending writers into `attempted_failed`/zero-data. Codex currently asserts a state the code
-deliberately does not implement. **Consequence**: flat `LENDING` on market/event data_types is an accepted exception,
-not a finding, and never a delete trigger.
-
-Both are BLOCKING contradictions tracked as todos P0-02 in
-[`plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`](../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md).
+**Defi flat `LENDING` instrument_type. ✅ RULED — full retire is the TARGET, NOT yet implemented (D2).**
+`cross-asset-canonical-target-ssot.md` §5's "`LENDING` is RETIRED (A_TOKEN/DEBT_TOKEN split, ~16.7M rows)" is the
+correct TARGET, but the first attempt was **reversed in code** because it broke 5+ (really 8) MTDS lending writers into
+`attempted_failed`/zero-data. Order: fix writers → migrate → re-sync atom, gated on
+`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`. **Consequence for delete safety (unchanged)**:
+flat `LENDING` on market/event data_types is `migration_pending` — never a finding, never a delete trigger — until the
+migration lands.
 
 ---
 

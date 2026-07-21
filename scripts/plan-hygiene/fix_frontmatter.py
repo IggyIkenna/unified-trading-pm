@@ -23,9 +23,11 @@ Usage:
   python3 scripts/plan-hygiene/fix_frontmatter.py plans/active/my_plan_2026_06_27.md
 """
 
+import importlib.util
 import pathlib
 import re
 import sys
+from typing import cast
 
 import yaml
 
@@ -61,6 +63,49 @@ SKIP_ACTIVE = {"INDEX.md", "task_template.md"}
 
 # Valid assigned_vm values per PLAN_FORMAT.md
 VALID_ASSIGNED_VM = {"planning", "NA"}
+
+
+def _load_enum_sets() -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
+    """Load the nature/stage/scope enum vocabularies from docspec (the schema SSOT).
+
+    Sourced live rather than hardcoded so this fixer can never drift from the checker that gates
+    the corpus (``check_frontmatter_schema.py`` loads the same docspec). Degrades to empty sets if
+    docspec cannot be imported — enum-normalisation then no-ops, never crashes the fixer.
+    """
+    try:
+        spec = importlib.util.spec_from_file_location("docspec", PM_DIR / "scripts" / "docs" / "docspec.py")
+        if spec is None or spec.loader is None:
+            return frozenset(), frozenset(), frozenset()
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["docspec"] = mod  # docspec self-references; must be registered before exec
+        spec.loader.exec_module(mod)
+        # cast (not type:ignore): a dynamically-loaded module's attrs are Unknown to the type checker.
+        return (
+            cast("frozenset[str]", mod.NATURE),
+            cast("frozenset[str]", mod.STAGE),
+            cast("frozenset[str]", mod.SCOPE),
+        )
+    except Exception as exc:  # any import failure must degrade to a no-op, never crash the fixer
+        print(
+            f"  WARN fix_frontmatter: could not load docspec enums ({exc}); skipping enum-normalisation",
+            file=sys.stderr,
+        )
+        return frozenset(), frozenset(), frozenset()
+
+
+_NATURE, _STAGE, _SCOPE = _load_enum_sets()
+
+# Present-but-INVALID enum remapping (2026-07-21). Historically the fixer only ADDED missing fields;
+# a field present with a value outside its docspec enum (an issue doc with nature: test-harness-gap,
+# or stage: foundation) still red-lined the corpus gate for the WHOLE FLEET. Such values are
+# PARSEABLE (valid YAML, wrong vocabulary), so the refuse-on-unparseable contract does not apply and
+# they are safe to normalise. Conservative by design: nature is doc_type-derived (high confidence);
+# stage/scope keep any already-valid elements, apply a small explicit alias, else fall back to a
+# NEUTRAL catch-all — never a specific guess. Every remap is logged so it shows in the diff.
+_DOC_TYPE_NATURE = {"issue": "issue", "plan": "process", "audit-result": "record", "runbook": "process"}
+_STAGE_ALIAS = {"foundation": "data"}  # operator ruling 2026-07-20: foundation work == data layer here
+_STAGE_DEFAULT = "meta"  # neutral "cross-cutting/unclassified", not a guess at a specific stage
+_SCOPE_DEFAULT = ["engineer", "admin"]  # same safe default the missing-field path uses
 
 # Map filename prefix → parent_epic slug
 EPIC_MAPPING = {
@@ -384,6 +429,63 @@ def get_field_value(fm_lines: list[str], field: str) -> str | None:
     return None
 
 
+def _enum_list_tokens(raw: str) -> list[str]:
+    """Extract candidate tokens from a frontmatter value that may be ``[a, b]``, a bare scalar,
+    or free text. Free text (no brackets) collapses to a single token that will match no enum —
+    the desired behaviour (free-text scope has no recoverable member, so it falls to the default)."""
+    raw = raw.strip()
+    if raw.startswith("[") and raw.endswith("]"):
+        return [t.strip().strip("'\"") for t in raw[1:-1].split(",") if t.strip()]
+    return [raw.strip("'\"")] if raw else []
+
+
+def _replace_field_line(fm_lines: list[str], field: str, new_value: str) -> bool:
+    for i, ln in enumerate(fm_lines):
+        if re.match(rf"^{re.escape(field)}:", ln):
+            fm_lines[i] = f"{field}: {new_value}\n"
+            return True
+    return False
+
+
+def normalize_invalid_enums(new_fm: list[str], changes: list[str]) -> None:
+    """Remap PRESENT-but-invalid nature/stage/scope values to valid docspec vocabulary (in-place).
+
+    Valid values are never touched. See the _DOC_TYPE_NATURE / _STAGE_ALIAS constants for the
+    (deliberately conservative) mapping policy.
+    """
+    if not (_NATURE and _STAGE and _SCOPE):  # docspec unavailable → no-op
+        return
+
+    # nature (single enum) — doc_type-derived, high confidence; unknown doc_type → leave for a human.
+    nature = get_field_value(new_fm, "nature")
+    if nature is not None and nature not in _NATURE:
+        mapped = _DOC_TYPE_NATURE.get(get_field_value(new_fm, "doc_type") or "")
+        if mapped and _replace_field_line(new_fm, "nature", mapped):
+            changes.append(f"remapped invalid nature={nature!r} → {mapped}")
+
+    # stage (enum_list) — keep valid elements; alias known-wrong tokens; else neutral default.
+    stage_raw = get_field_value(new_fm, "stage")
+    if stage_raw is not None:
+        toks = _enum_list_tokens(stage_raw)
+        valid = [t for t in toks if t in _STAGE]
+        if not valid or len(valid) != len(toks):
+            if not valid:
+                valid = [_STAGE_ALIAS[t] for t in toks if t in _STAGE_ALIAS] or [_STAGE_DEFAULT]
+            new_val = "[" + ", ".join(dict.fromkeys(valid)) + "]"
+            if new_val != stage_raw and _replace_field_line(new_fm, "stage", new_val):
+                changes.append(f"remapped invalid stage={stage_raw!r} → {new_val}")
+
+    # scope (enum_list) — keep valid elements; free-text/invalid → neutral default.
+    scope_raw = get_field_value(new_fm, "scope")
+    if scope_raw is not None:
+        toks = _enum_list_tokens(scope_raw)
+        valid = [t for t in toks if t in _SCOPE]
+        if not valid or len(valid) != len(toks):
+            new_val = "[" + ", ".join(dict.fromkeys(valid or _SCOPE_DEFAULT)) + "]"
+            if new_val != scope_raw and _replace_field_line(new_fm, "scope", new_val):
+                changes.append(f"remapped invalid scope={scope_raw!r} → {new_val}")
+
+
 def remove_deprecated_fields(fm_lines: list[str], deprecated_set: set[str]) -> list[str]:
     """Remove deprecated fields and their multiline continuations."""
     result = []
@@ -578,6 +680,9 @@ def _apply_field_defaults(  # noqa: C901
         new_fm.append("locked_by: live-defi-rollout\n")
         new_fm.append("locked_since: 2026-05-21\n")
         changes.append("added locked_by")
+
+    # Present-but-invalid enum remapping (runs last, over the fully-populated frontmatter).
+    normalize_invalid_enums(new_fm, changes)
 
 
 def fix_active_plan(fp: pathlib.Path) -> bool:

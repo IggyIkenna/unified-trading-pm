@@ -60,6 +60,11 @@ is per-CQG bundle. These are different grains and the mapping is many-to-one.
 `VENUE:PREDICTION_MARKET:{condition_id|ticker}` — e.g. `POLYMARKET:PREDICTION_MARKET:0x1a2b…`,
 `KALSHI:PREDICTION_MARKET:INXD-26JUL01-B5000`. This id identifies an **object**, never a manifest row's key.
 
+> ⚠️ **The manifest `instrument_id` COLUMN is a display-only `OTHER`/blank placeholder for CQG rows — do NOT compute an
+> id-form % over it** (measured 2026-07-20: naively it reads ~39% id-form and manufactures a false finding). Check
+> id-form on the on-disk **filename stem** (`VENUE:PREDICTION_MARKET:{id}`) instead; the manifest key is
+> `canonical_question_group`, not `instrument_id` (H1).
+
 ## Catalogue (surface 4)
 
 `instruments-store-pred-prd-{pid}/prod/catalog.parquet` — the only AG whose `CATALOG_COLUMNS` carry a `data_type` grain
@@ -106,8 +111,10 @@ mechanism behind it.
 
 ### H5 — cross-AG bleed INTO the sports bucket
 
-**4,097 `asset_group="prediction"` manifest rows are physically in the sports bucket manifest** (dates 2026-06-26 →
-2026-07-18). Root cause **unlocated** as of 2026-07-20. Two consequences:
+**≥6,597 `asset_group="prediction"` manifest rows are physically in the sports bucket manifest** (a **growing floor** —
+was 4,097 dated 2026-06-26 → 07-18, re-measured **≥6,597 dated 07-16 → 07-19 on 2026-07-20**; the sports index was in
+stale per-VM-shard fallback so treat the count as a lower bound and re-measure). Root cause **unlocated** as of
+2026-07-20. Two consequences:
 
 1. A prediction-scoped manifest read against only the prediction bucket **under-counts** by those rows.
 2. Do not "fix" them from this skill — it is read-only, and the root cause is unknown. Report the count and cross-link
@@ -129,6 +136,18 @@ evidence once you have confirmed you probed the vocabulary the writer actually e
 4. Pick one `(date, venue)` known-captured and confirm your probe returns non-zero, remembering the object stem is a
    `conditionId` — and that `_unknown_` is a legitimate stem, not corruption.
 5. Only then treat a zero as a finding.
+
+## Census / vocabulary nuance
+
+Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+1).
+
+- **No `chain=` axis** — `chain` is defi-only; the census skips it for prediction.
+- **The GCS-side census descent is `conditionId`-keyed and the templates stop at `asset_group=prediction/`**
+  (`_AG_SEGMENT_SHAPE[PREDICTION]` is empty, H1 caveat) — derive the `venue=` / `instrument_type=` / `data_type=`
+  vocabulary from the AG grammar + manifest rows, **NOT** an `asset_group=` delimiter descent.
+- **Canonical `instrument_type` = `prediction_market` / `event_contract`** (`_instrument_enums.py:94,90`) — badge the
+  census set against those two; anything else is a `non_canonical_axis_value`.
 
 ## Cross-links
 

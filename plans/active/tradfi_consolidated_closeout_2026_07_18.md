@@ -717,6 +717,42 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **2026-07-21 (slot-1) — TradFi MVP-set EXPANSION shipped (operator directive): 4 instrument groups flipped into tradfi
+  MVP.** SSOT change in UAC `MVP_SCOPE["tradfi"]` — `unified-api-contracts@afa2dd64` (MVP_SCOPE_CONFIG_VERSION 18→19).
+  Two mechanisms, both at the registry layer (NOT a post-hoc catalogue patch):
+  - `_mvp_scope_rules.py::TradFiMvpRule` — added `BTC/ETH/MBT/MET` to `underliers` (CME crypto FUTURES; FUTURE cells
+    only — `option_underliers={"ES"}` keeps CME BTC/ETH OPTIONS out per operator "no CME option for BTC and ETH"; also
+    flows into `MVP_CME_EXCHANGE_CODES` so the CME databento download universe gains BTC.FUT/ETH.FUT/MBT.FUT/MET.FUT).
+  - New declarative field `TradFiMvpRule.extra_mvp_cells` (exact `(venue_root, itype, base)` triples), matched by a new
+    check in `_mvp_scope_predicate.py::is_mvp`: `(CBOE,FUTURE,VX)` + `(CBOE,INDEX,{US2Y,US5Y,US10Y,US30Y,US3M})` +
+    `(FX,SPOT_PAIR,KRW)`. Kept out of the flat `venues`/`instrument_types` sets so "CBOE" doesn't sweep in the ~33k CBOE
+    SPX/VIX OPTION rows. Tests added (`test_mvp_scope.py::TestTradFiMvpExpansionV19`), UAC QG green (312s).
+  - **Projected mvp delta on the served catalogue (`prod/catalog.parquet`, identical `is_mvp` predicate): +409** — VIX
+    FUTURE **82**, CBOE treasury-yield INDEX **10** (VIX cash INDEX excluded), FX KRW **1**, CME BTC/ETH/MBT/MET FUTURE
+    **316** (BTC 92 + ETH 81 + MBT 76 + MET 67). Prior mvp=True set (70,930 on the current served artifact: CME OPTION
+    69,822 + CME FUTURE 895 + NASDAQ/NYSE/KRX EQUITY 185 + ETF 28) unchanged → projected new total ≈ 71,339. NOTE:
+    operator's ~1,602 VIX-futures estimate ≠ the 82 CBOE:FUTURE rows actually present in the served catalogue — flagged;
+    the `--mode full` rebuild measures the true served count.
+  - **Catalogue rebuild**: `build_instrument_catalogue.py --asset-group tradfi --mode full --allow-catalogue-shrink`
+    launched locally (env `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod`); checkout includes the
+    `_iter_by_date_snapshots` litter-exclusion fix (`instruments-service@1a73082e`). 27,104 by_date parquets; **no OOM**
+    (RSS steady ~1 GB, peak 1.45 GB) but CPU-bound rollup is slow on the local box — see report for served-artifact
+    verification status.
+  - **PART B — backfill DOWNLOAD coverage for the 4 groups (exact launcher invocations):**
+    - VIX futures (CBOE:FUTURE:VX) — ALREADY covered: `launch-tradfi-bf-cfe-ohlcv-1m.sh` (VX.FUT via Databento
+      XCBF.PITCH, routed VM_VENUE=CBOE, full history from 2018-11-04). (`launch-tradfi-bf-cboe-ohlcv-1m.sh` = the
+      2026-YTD gap-filler for the same VX.FUT.)
+    - CME BTC/ETH futures — ALREADY covered: `launch-tradfi-bf-cme-ohlcv-1m.sh` (CME_ROOTS already lists
+      BTC/ETH/MBT/MET; per-root: `--only-root BTC` / `ETH` / `MBT` / `MET`).
+    - KRW — ALREADY covered: `launch-tradfi-bf-fx-ohlcv-24h.sh` (Yahoo daily iterates the whole FX_SPOT_PAIRS universe;
+      `FxSpotPairDef("KRW","USD","KRWUSD=X")` is in it).
+    - Treasuries (CBOE:INDEX:US*) — **GAP CLOSED**: no launcher emitted VM_VENUE=CBOE + ohlcv_24h. Added
+      `deployment-service/scripts/vm/launch-tradfi-bf-cboe-indices-ohlcv-24h.sh` (routes
+      `route_yahoo_tradfi("CBOE", {ohlcv_24h})` → `fetch_yahoo_indices("CBOE")` → the 5 Yahoo treasury tenors). Ship
+      BLOCKED locally by a PRE-EXISTING deployment-service QG red
+      (`tests/integration/test_zone_failover_integration.py:39` imports the removed `unified_trading_library.sink` →
+      collection pollution) — see report finding.
+
 - **2026-07-18 (slot-1) — Autonomous close-out loop STARTED; baseline re-measured live + core shape problem
   pinpointed.** Re-verified the climbing metric directly against live prod GCS (not docs), confirming the plan's ground
   truth:
@@ -1314,8 +1350,13 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     WITHOUT deleting on a failed write (`:444-447`). A 40-object random sample of quarantined garbage: 39 preserved, 1
     absent — which conservation proves was one of the 428 content-recovered, not a loss.
   - **VERDICT: 0 orphan · 0 garbage-root-in-limbo · 0 per-contract un-rebundled · garbage preserved, never deleted.**
-    The recovery-selector fix is validated (6,510 tests pass) but awaiting a green-tree window (peer WIP in this shared
-    slot); patch backed up so it cannot be lost. Shipping it only prevents recurrence — the DATA is already terminal.
+  - **✅ SHIPPED: recovery-selector filename fix landed `market-tick-data-service@1bdbb4e0` (on
+    origin/live-defi-rollout, 2026-07-20).** Green-tree window arrived after peer WIP cleared (`sentinels.py` back
+    ≤900L + the prediction-canonical SPORTS-shard expectation corrected by its owner); full QG FOREGROUND exit-0 (6,529
+    passed, 17 skipped; sentinel `8d7743cb`). Quickmerged the 2 files by name only
+    (`recover_tradfi_garbage_underlying_2026_07.py` + `test_recover_tradfi_garbage_underlying_2026_07.py`, +56/-2) — no
+    foreign files swept in. Prevents recurrence of the 14-object filename-predicate strand; the DATA was already
+    terminal (all 14 recovered + GCS-verified at tick 25).
 
 - **2026-07-20 (slot-1, tick 25) — 🛑 Massive purge NOT executed: the prescribed launcher invocation is broken in a
   destructive direction. Authorization is fine; the execution path is not.**
@@ -1420,6 +1461,63 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       it from existing `vm-logs/tradfi-bf-cme-ohlcv-1m-<root>-<year>-*/run.log` — no new VM launch required. (repo:
       unified-trading-pm)
 
+- **2026-07-20 (slot-1·laptop) — P0 nightly tradfi T+1 collection RESTORED (schema_version string regression) + P1
+  yfinance disposition.** The live tradfi `_index/availability_index.parquet` carried `schema_version` as the STRING
+  `"9"` across all 5,209,585 rows (arrow `string`, dtype object), so UTL `check_shard_freshness`
+  (`manifest_writer/_queries.py:130/165`) hit `"9" < 9` → `TypeError`, crash-looping every UN-FORCED T+1 run (a
+  `--force` run bypasses the freshness skip, which masked it).
+  - **Root cause (proven, not timing):** writer
+    `market-tick-data-service/scripts/restamp_tradfi_schema_v9_tail_2026_07_16.py:427`
+    (`shard_df["schema_version"] = "9"`, a str) → the consolidator's DuckDB `read_parquet(union_by_name=true)` merge
+    promotes an int64∪VARCHAR column to VARCHAR for the WHOLE corpus. Same class as
+    `tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12` (row_count VARCHAR). Proof: the pre-restamp
+    snapshot `_index/snapshots/pre_tradfi_schema_v9_tail_restamp_20260716T070255Z.parquet` ALREADY shows
+    `schema_version` as arrow `string` — a direct causal artifact of the string-stamping writer. Ruled out:
+    `migrate_tradfi_manifest_usd_lin` (never touches schema_version), the `tradfi-catalogue-canon` VM (instruments-store
+    only, never the tick `_index`), `_rebuild_tradfi_cf11` (stamps int via record_empty/failed).
+  - **Writer fix + regression test:** `market-tick-data-service@ac051bfe` — `restamp:427` now stamps int
+    `MANIFEST_SCHEMA_VERSION` via new `stamp_v9_shard` helper;
+    `tests/unit/scripts/test_restamp_tradfi_schema_v9_tail.py` asserts integer dtype + non-string arrow roundtrip.
+    QG-green (`6550 passed`).
+  - **Data repair (route: targeted in-place CAS re-stamp, NOT waiting on the blocked force-rebuild peer):** re-stamped
+    the live `_index` schema_version → int64 (pre-snapshot
+    `_index/snapshots/pre_schema_version_int64_restamp_20260720T184042Z.parquet`; gen `...840535586`→`...895173237`).
+    **Held** across the next consolidator merge (post-merge gen `...598529744`, arrow int64, all rows int 9).
+    **COORDINATION:** the `_index` is the shared object the manifest force-rebuild peer also targets — the re-stamp is a
+    dtype-only change (0 rows added/dropped), so their subsequent object-scan rebuild (writes int schema_version via the
+    manifest writer) is compatible + idempotent.
+  - **Verified un-forced:** `check_shard_freshness` returns clean tuples on the int64 index; the exact nightly caller
+    `TickDataHandler._apply_freshness_skip(date, ["tradfi"], None)` (`_force=False`) completes with real verdicts
+    (`PARTIAL date=2026-07-19: 6/7 venues need processing … [CBOE, NASDAQ, NYSE, ICE, FX, KRX]`), not a TypeError.
+  - **P1 yfinance:** ICE/FX/KRX fail every run because `Dockerfile:189 uv pip install -e . --no-deps` skips MTDS's
+    declared deps and the base image lacks `yfinance` (lazy import in `yahoo_finance_adapter.py` dodges the import
+    smoke). Ruled TOO RISKY to co-ship with the P0 (removing `--no-deps` re-resolves the whole image; a targeted install
+    needs a Cloud Build to verify, and gcloud CLI reauth was broken this session). Filed with a concrete targeted-fix
+    recommendation → `issues/mtds_image_missing_yfinance_no_deps_2026_07_20.md`.
+  - Full write-up: `issues/tradfi_schema_version_string_regression_2026_07_20.md` (incl. a P2 consolidator
+    `TRY_CAST(schema_version AS BIGINT)` defense-in-depth recommendation).
+
+- **2026-07-20 (slot-1) — P1 yfinance MVP coverage gap RESOLVED + verified.** The MTDS image lacked `yfinance` so the
+  Yahoo-routed tradfi MVP venues (ICE / FX / KRX — KRX is an operator deliverable) failed data collection every run. Fix
+  (targeted, low blast-radius, per the issue doc): added a pinned
+  `RUN uv pip install --system --no-cache-dir "yfinance==0.2.66"` (== uv.lock resolution / pyproject floor) **after**
+  the `-e . --no-deps` line in the Dockerfile (kept `--no-deps`; did NOT `--no-deps` the yfinance install so its small
+  new transitive deps — beautifulsoup4/curl-cffi/frozendict/multitasking/peewee — come along, rest are
+  base-image-provided). Extended the cloudbuild `image-import-smoke` with `import yfinance` so a missing lazily-imported
+  dep now FAILS THE BUILD instead of silently degrading a venue. **Other-absent-deps audit:** `yfinance` is the ONLY
+  silently-absent declared runtime dep — the other lazily-imported venue deps (databento/web3/ccxt) are
+  UTL-base-image-provided (their venues collect fine); `ib_insync` is undeclared (non-MVP IBKR), `polars` is
+  benchmark-only. Shipped `market-tick-data-service@d8dc04e1` (Dockerfile + cloudbuild.yaml, quickmerge → LDR).
+  **Runtime-verified:** `Evidence: cloudbuild=ce814d53-1648-4cf4-b2dc-7ac6bffefecd` (SUCCESS, built shipped sha
+  `d8dc04e1`) — in-image smoke printed `YFINANCE OK 0.2.66` +
+  `IMPORT SMOKE OK: market_tick_data_service.__main__ imported cleanly`; the smoke gates `push`, so the image cannot
+  ship without yfinance. Live KRX/ICE/FX fetch deliberately not run (prod tick bucket + manifest under concurrent-agent
+  contention); in-image import proof is the closing evidence. Issue doc →
+  `issues/mtds_image_missing_yfinance_no_deps_2026_07_20.md` flipped `status: resolved`. (Un-blocked while shipping: the
+  MTDS gate was red at the origin tip on an unrelated concurrent-agent regression — the durability `fail-on-raw`
+  canonical-stem guard rejecting an un-updated `book_microstructure` CEFI test fixture; the peer's fix `mtds@953679de`
+  landed mid-session and I rebased onto it, then the gate went green.)
+
 ## Deferred work after 2026-07-20 (tick 25)
 
 | Item                                                               | Why deferred                                   | Tracked in                                                        |
@@ -1428,3 +1526,75 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 | Purge verification (0 massive + zero collateral)                   | Downstream of the purge                        | `massive_purge_blocked_databento_l1_entitlement_2026_07_20`       |
 | Manifest force-rebuild + phantom-row (16,389) verification (a)-(d) | Sequenced behind the purge; decouplable        | `massive_purge_blocked_databento_l1_entitlement_2026_07_20`       |
 | Operator confirmation: purge-only vs purge + estate-wide migration | Ambiguous intent; destructive either way       | `tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20` |
+
+- **2026-07-20 (slot-1, tick 26) — ✅ Massive purge EXECUTED + VERIFIED (0 collateral); launcher fixed; manifest cleanup
+  handed off for coordination.**
+  - **Purge DONE**: `RUN_TS=20260720-193849`, 20-shard fan-out (exactly 20 VMs verified — no runaway), gated
+    massive-only path (`TRADFI_PURGE_MASSIVE_ONLY=1`, `MTDS_TARBALL_SHA=1bdbb4e0`, VM-side sentinel). **1,701,414
+    PURGED** (all rc=0, 0 PURGE_REFUSED, 0 ORPHAN) **+ 8 corrupt-Hive `batch_massive` stragglers deleted directly**
+    (they classify QUARANTINE before the massive branch; 1,701,414 + 8 = 1,701,422 = full enumeration) → **batch_massive
+    → 0**.
+  - **Zero collateral (Phase 2)**: every sampled `batch_databento` count IDENTICAL before/after (191/187/189/597/612/599
+    on the 6 baseline days; 57 + 1,364 present on the 2 straggler days); `_quarantine/` intact (146,288 objects,
+    untouched); soft-delete ACTIVE 604800s (reversible ~2026-07-27); all 20 VMs self-deleted.
+  - **Ships**: `market-tick-data-service@8d7743cb` (honest sentinel docstring), `deployment-service@2c00c740` (launcher:
+    REJECT silently-dropped `MIGRATION_EXTRA_ARGS` for `cat=tradfi` + gated `TRADFI_PURGE_MASSIVE_ONLY=1` migrate-only
+    path). Pinned tarballs uploaded via ADC token (the interactive `gsutil` auth had expired): `mtds-code@1bdbb4e0` +
+    UAC/UTL/DS pins.
+  - **Manifest cleanup NOT yet applied — coordinate-before-cutover.** Post-purge the live `_index` still has 686,005
+    stale `batch_massive` rows + 16,389 phantom `batch_databento` trades/tbbo `captured` rows + 35.5% blank id + 0%
+    `-USD@LIN`. **A `consolidate(force=True)` does NOT drop them** (deletion-resurrection gap,
+    `manifest_consolidator.py:850-862`); (a)+(b) need surgical index removal, (c)+(d) need the object-walk
+    `rebuild_tradfi_manifest.py`. The live index is being rebuilt by a peer RIGHT NOW (`384f0345a`, `mtds@ac051bfe`), so
+    per the operator's Phase-3 "coordinate and announce" instruction this is handed off rather than blind-overwritten.
+    Corrected projection computed + verified locally ((a)→0, (b)→0). Full finding:
+    `plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`.
+  - Issue docs flipped RESOLVED: `massive_purge_blocked_databento_l1_entitlement_2026_07_20.md`,
+    `tradfi_canonical_migration_launcher_drops_extra_args_2026_07_20.md`.
+
+## Deferred work after 2026-07-20 (tick 26)
+
+| Item                                                                                  | Why deferred                                                                                                                                                                               | Tracked in                                                     |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| ✅ ~~Drop 686,005 stale `batch_massive` + phantom manifest rows~~ **DONE tick 27**    | applied surgically (see tick 27)                                                                                                                                                           | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| ✅ ~~Object-walk id re-derivation (c) blank-id + (d) `-USD@LIN`~~ **RESOLVED-MOOTED** | consumer-trace: no consumer keys off manifest `instrument_id` value (coverage seeds from own rows; render from catalogue); ids 89.1% `@LIN`, self-converging — no surgery (`PM@6bdbae4b6`) | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+| manifest-vs-disk consistency check (captured with no object = loud fail)              | P1 hardening, prevents phantom-row recurrence                                                                                                                                              | `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20` |
+
+- **2026-07-20 (slot-1, tick 27) — ✅ Post-purge tradfi tick `_index` surgical cleanup (a)+(b) APPLIED +
+  durability-proven; (c)/(d) scoped.**
+  - **Field was CLEAR for the tick `_index`** (the only in-flight peer rebuild, `rebuild_gated.py` PID 78208, writes the
+    instruments-store CATALOGUE, not this tick bucket; only per-VM shard = frozen `_legacy_seed`). Consolidator PAUSED
+    (`uts-prod-manifest-consolidator-market-data-tradfi-cron`) → snapshot
+    `_index/snapshots/pre_manifest_surgical_cleanup_20260720T200716Z.parquet` (gen `1784578000150929`) → CAS write
+    (`if_generation_match`) → RESUMED + watched **2 clean no-op cycles** (no resurrection, no
+    `ManifestConsolidatorStaleError`).
+  - **CRITICAL: the "16,389 phantom" was CONTAMINATED.** On-disk re-verification of all 2,393 candidate `(venue,day)`
+    prefixes found 79 shards actually HAVE `batch_databento` objects (CME = databento-native GLBX) carrying **12,790
+    real captured rows**. TRUE phantom = **3,615** rows (3,413 zero-object shards). Blind-dropping the stale list would
+    have deleted 12,790 rows of real coverage.
+  - **Applied**: dropped **686,005** `batch_massive` (GCS re-verified 0 objects, 12 sampled days) + **3,615**
+    disk-verified phantom → 5,209,585 → **4,519,965**; `schema_version` preserved **int64**; markers preserved. New gen
+    `1784578157569319`.
+  - **(c)/(d) scoped, not forced**: (d) already **91.08% `-USD@LIN`** (the "0%" was pre-migration); (c) real defect is
+    ~82k blank-no-underlying (1.76M "blank" are legit Option-A bundle atoms). Object-walk re-derivation is entangled
+    (`instrument_id` ∈ `_OPTIONAL_DEDUP_COLS` → new key, not a flip) → P1 follow-up.
+  - **Ships (docs)**: `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL"; issue doc
+    `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md` (a)+(b) → RESOLVED.
+
+- **2026-07-21 (sub-agent) — ✅ P2 defense-in-depth: VARCHAR-numeric-shard poisoning CLASS killed in the consolidator**
+  (`unified-trading-library@02fc4661`). Closes the P2 follow-up in
+  `tradfi_schema_version_string_regression_2026_07_20.md` (the source dispatch for this plan's nightly-T+1-down P0). The
+  consolidator merge (`_duckdb_merge_payload`) unions the canonical + per-VM shards via
+  `read_parquet(union_by_name=true)` + `UNION ALL`; a numeric column stored VARCHAR in ONE shard while BIGINT in the
+  canonical promoted the WHOLE merged column to VARCHAR — which bit `row_count` (2026-07-12) and `schema_version`
+  (2026-07-20), corrupting every row and later crashing `manifest_writer/_queries.py`. Fix generalises the point
+  `TRY_CAST(row_count AS BIGINT)` to the full declared-non-string column set via a new `_typed_col_projection` helper on
+  BOTH `shard_proj` + `canon_proj` (`schema_version`/`row_count`/`instrument_count` → BIGINT,
+  `expected_window_completeness_fraction` → DOUBLE, `expected`/`available` → BOOLEAN; mirrors
+  `manifest_writer/_writer_io.py`). A single mistyped shard can no longer poison the corpus and a poisoned column
+  auto-repairs next cycle; no-op for correctly-typed inputs. Anti-regression
+  `tests/unit/test_manifest_consolidator_numeric_varchar_hardening.py` (mixed-type merge, full-rebuild AND incremental —
+  fails on the pre-fix bare projection). Full `quality-gates.sh` green (119s). **Coordination note:** additive/defensive
+  TRY_CAST only — it does NOT touch manifest data, the tick bucket, or the migrate/rebundle/recover scripts, so it
+  composes cleanly with any concurrent manifest id-canonicalization that runs THROUGH this consolidator (the id work
+  changes VALUES; this pins TYPES).

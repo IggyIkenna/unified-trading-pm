@@ -77,11 +77,19 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
       Original `config.db_path()`/CLI-agreement gate was already true by construction (config.py's default was never
       wrong — only the systemd unit + bootstrap duplicated a different path). Source: doc #8 todo 2 + operator
       2026-07-18.
-- [ ] [INFRA] P1. **Migrate the running state (operator-gated, live).** Move `/var/lib/orchestrator/*.db` →
-      `data/state/` on the VM, then restart. **Do NOT run this unilaterally** — it stops the orchestrator briefly and
-      moves the live database. Propose it, get approval, take a snapshot first, and verify the service comes back
-      reading the new path with its task/slot counts intact. **Gate**: post-migration row counts match pre-migration;
-      the service is healthy; the old path is empty and nothing recreates it.
+- [x] ✅ [INFRA] P1. **Migrate the running state (operator-gated, live).** — DONE 2026-07-21 on the planning VM
+      (`i-0c9b283b31d6b5ca7`), operator-authorized maintenance window (slot-16 interactive). Sequence: `disable` →
+      graceful `stop` (S3 DR snapshot `state_20260721T025351Z.json`; WAL checkpointed `integrity_check=ok`) → full local
+      backup `/var/lib/orchestrator.bak.20260721T025531Z` → moved `state.db`+`state.json` → `data/state/` (overwrote the
+      stale 4 KB stub the two-places bug had created) → **fixed the STALE DEPLOYED UNIT** (the trap: repo template was
+      clean at `0fa79bae6c1` but `/etc/systemd/system/orchestrator.service` still carried
+      `Environment=ORCHESTRATOR_DB_PATH/STATE_JSON` + `ReadWritePaths=/var/lib/orchestrator`) via
+      `install-orchestrator-service.sh --operator ubuntu` (no `--restart`) + `daemon-reload` → `enable` + `start`. Then
+      cleaned up the defunct `/var/lib/orchestrator/` entirely (removed the stale `state.pre-orphan-gc-20260717.db`
+      backup + the empty dir). **Gate MET**: post-migration row counts EXACT vs pre
+      (`tasks=25 agents=97 slots=17     accounts=4 blocked_queue=471`); service healthy (`/health` 200, `mode=live`);
+      backend reads the new path (`/api/mode` → `db_path=…/agent-orchestrator/data/state/state.db`); old path is GONE
+      and NOT recreated; killed worker respawned into slot 4 (working). Rollback backups retained.
 - [x] [INFRA] P2. ✅ **Duplicate-purpose env-var sweep — verify consumer, THEN remove.** —
       agent-orchestrator@0fa79bae6c1 (same commit as todo 1, landed together). `bootstrap_vm.sh` no longer
       `_upsert_env`s `ORCHESTRATOR_OPERATOR` (now `_remove_env`s it on already-bootstrapped hosts, same pattern as the
@@ -128,22 +136,22 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
       unreachable this session).
 
       **⚠️ GATE CORRECTION + RE-MEASURE 2026-07-20 (hk host).** The "zero frozen clones remain" claim above was
-              **overclaimed when written**: the 5 `deployment-api` clones (slots 25/27/28/29/30) whose ref-corruption this todo
-              un-masked were left at **249 behind, explicitly un-approved and un-FF'd** ("reported, not yet approved"), and the
-              "✅ FF-unfroze all 4" sentence covers only the four TRACKED-DIRTY clones — a different set. Nothing anywhere
-              tracked those 5. Re-swept all **375 hk-host slot clones + 25 root repos** today with a measured survey
-              (`git fetch` + `HEAD..origin/<branch>` per clone): **`deployment-api` is `behind=0` on all 15 slots** — the
-              249-behind class is genuinely gone here, so the gate is NOW met on this host, but it was met by later cron
-              catch-up, not by this todo. Worst observed anywhere was **7** (an actively-committed PM clone). FF'd 42 clean
-              clones across two passes (0 failures); **2 dirty clones deliberately PROTECTED** (slots 27/28 `unified-trading-pm`
-              — live agent WIP, mtimes minutes old, per the liveness-gated inherited-WIP rule).
+                      **overclaimed when written**: the 5 `deployment-api` clones (slots 25/27/28/29/30) whose ref-corruption this todo
+                      un-masked were left at **249 behind, explicitly un-approved and un-FF'd** ("reported, not yet approved"), and the
+                      "✅ FF-unfroze all 4" sentence covers only the four TRACKED-DIRTY clones — a different set. Nothing anywhere
+                      tracked those 5. Re-swept all **375 hk-host slot clones + 25 root repos** today with a measured survey
+                      (`git fetch` + `HEAD..origin/<branch>` per clone): **`deployment-api` is `behind=0` on all 15 slots** — the
+                      249-behind class is genuinely gone here, so the gate is NOW met on this host, but it was met by later cron
+                      catch-up, not by this todo. Worst observed anywhere was **7** (an actively-committed PM clone). FF'd 42 clean
+                      clones across two passes (0 failures); **2 dirty clones deliberately PROTECTED** (slots 27/28 `unified-trading-pm`
+                      — live agent WIP, mtimes minutes old, per the liveness-gated inherited-WIP rule).
 
-              **Lesson that outlives this todo — `behind=1` is CHURN, not a freeze.** Between two full sweeps ~4 min apart the
-              behind>0 count went 16 → 29, purely because other agents kept pushing to LDR. Chasing an absolute behind-count is
-              a treadmill; a frozen clone is one whose behind-count **grows monotonically without recovery**, which is a
-              STREAK signal, not a threshold. This is exactly why the per-repo freeze-streak detector (re-homed todos 4/5 →
-              `monitoring_control_plane_master_2026_06_10.md`) matters more than any manual sweep: a sweep is stale the moment
-              it finishes. **Do not re-run a manual sweep as a substitute for landing the detector.**
+                      **Lesson that outlives this todo — `behind=1` is CHURN, not a freeze.** Between two full sweeps ~4 min apart the
+                      behind>0 count went 16 → 29, purely because other agents kept pushing to LDR. Chasing an absolute behind-count is
+                      a treadmill; a frozen clone is one whose behind-count **grows monotonically without recovery**, which is a
+                      STREAK signal, not a threshold. This is exactly why the per-repo freeze-streak detector (re-homed todos 4/5 →
+                      `monitoring_control_plane_master_2026_06_10.md`) matters more than any manual sweep: a sweep is stale the moment
+                      it finishes. **Do not re-run a manual sweep as a substitute for landing the detector.**
 
 - [x] [INFRA] P2. ✅ **Dispatch-time full-QG throttle — coordinate, do NOT build a second governor.** The shared-host
       "≤2 full QG" cap is unenforced at dispatch; 4-6 concurrent full-QG pytests saturated the VM on 07-17. The RAM/CPU

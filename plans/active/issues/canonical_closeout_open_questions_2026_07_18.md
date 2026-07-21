@@ -170,7 +170,18 @@ residual).
 **5 operator-rulings** (C2, +the SSOT §7 self-correction) parked here. routed_to_operator == parked. agent skips: 0. 4
 items = scope/time/history (not findings — durability sweeps still running, foreign-tfvars-blocked flip).
 
-## D — NEW parked decision (2026-07-19): market/event lending DATA_TYPE canonical keying
+## D — market/event lending DATA_TYPE canonical keying — ✅ RULED 2026-07-20 (was parked 2026-07-19)
+
+> **⛔ RULED 2026-07-20, operator ruling D2 — this is no longer a parked/open decision.** ~~"NEW parked decision
+> (2026-07-19)"~~. The operator ruled the **FULL retire** — market/event lending data_types adopt the A_TOKEN/DEBT_TOKEN
+> split too (NOT the Option-A "keep `LENDING`" worker-rec interim). Recorded in
+> [`../data_pipeline_reconciliation_skill_2026_07_20.md`](../data_pipeline_reconciliation_skill_2026_07_20.md) §
+> "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20" (D2). **It is the TARGET, NOT yet implemented** — the first attempt
+> was reversed after breaking 5+ (really 8) MTDS lending writers, so the mandatory order is **fix the writers → migrate
+> ~16.7M rows → re-sync the shard atom**, gated on
+> [`../defi_lending_writer_retire_prerequisite_2026_07_20.md`](../defi_lending_writer_retire_prerequisite_2026_07_20.md).
+> Until the migration lands, the uniform-`LENDING` interim holds and market/event flat `LENDING` is `migration_pending`
+> (neither a fresh finding nor an open axis). The option-set below is HISTORY; Option A did NOT win.
 
 **Context**: the DeFi close-out shipped the operator-ruled lending SSOT — aToken/debtToken as the canonical type for
 lending **HOLDINGS** (IS adapters `@1af1be34`, all 7-adapter guards + the builder bake). Wave B then also retired flat

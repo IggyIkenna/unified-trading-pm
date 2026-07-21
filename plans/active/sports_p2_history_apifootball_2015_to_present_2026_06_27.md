@@ -245,6 +245,31 @@ drift_direction: advance-code
       daily quota (never exceed the shared per-key budget — registry `allocate_rate_budget("api_football", …)` is the
       SSOT math). **Gate** (the original todo-9 verify gate): full-history query → all AF enrichment data_types
       `expected_unattempted_pending_fetch == 0` within coverage windows, 0 blank-reason.
+- [ ] [INFRA] P0. **Relaunch the 2 dead af-backfill shards (FIXTURE_EVENTS, FIXTURE_STATS) from their durable checkpoint
+      — main-agent-ruled recovery for `BLK-32c04851` (2026-07-21).** `af-backfill-20260719-180520` (FIXTURE_EVENTS) and
+      `af-backfill-20260719-180603` (FIXTURE_STATS) went `GONE` ~2026-07-20T05:25Z (no `PREEMPTED` marker; abrupt kill,
+      cause inconclusive) and were never auto-relaunched — `PROGRESS.json` frozen at `last_completed_date=2021-05-01` /
+      `2021-03-20` respectively as of 2026-07-21T03:11Z (~22h stale), while the sibling shards LINEUPS (`-180545`) and
+      PLAYER_STATS (`-180620`) remained `RUNNING` and advancing throughout. Run (from `deployment-service/scripts/vm/`),
+      mirroring the original fleet launch exactly (same window, same `--fleet-vms` divisor so the rate-budget math stays
+      correct against the 2 already-running siblings) — **NO `--force`/`--redo_all`** (would replay from `START_DATE`
+      and discard the durable checkpoint per the PROGRESS-checkpoint contract; presence-skip resumes each shard from
+      where it stopped):
+      `     bash launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity FIXTURE_EVENTS 2020-06-06 2026-05-10     bash launch-api-football-backfill-vm.sh --skip-lock --fleet-vms 4 --entity FIXTURE_STATS  2020-06-06 2026-05-10     `
+      `af-backfill-*` is already a registered `VM_PREFIX_TO_BUCKET` prefix (`vm_zombie_watchdog.py`) — do not hand-roll
+      a new name. **No fire-and-forget**: verify `STARTED` within 60s, `run.log` shows live fetches within ~3 min, and
+      at T+10min confirm `PROGRESS.json` has advanced PAST the frozen checkpoint (count of TARGET fixtures written,
+      entity-scoped — not just VM-RUNNING activity). Evidence + full context: Progress Log entry
+      `2026-07-21T03:11Z — data_engineering slot-4` below.
+- [ ] [INFRA] P1. **Root-cause why the SPOT preemption/kill self-heal watchdog did not cover this kill class.** Two of
+      four `af-backfill-*` shards (`-180520` FIXTURE_EVENTS, `-180603` FIXTURE_STATS) died ~2026-07-20T05:25Z with no
+      `PREEMPTED` marker and sat dead ~22h with zero auto-relaunch, while
+      `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`'s fixes (all `[x]` complete) were assumed to cover
+      exactly this VM class. Determine: (a) did the watchdog daemon never see these 2 kills (heartbeat blob gap?), (b)
+      did it see them but decline to relaunch (threshold tuned for a different failure signature — e.g. requires a
+      `PREEMPTED` marker that an abrupt non-preemption kill never writes), or (c) is the daemon itself down/stale. This
+      is a real coverage gap, not a one-off — file findings as a todo update here or a fresh issue doc if the root cause
+      implicates infra beyond this one fleet.
 - [ ] [DATA] P2. **Features recompute for enriched dates** — after GW enrichment lands, re-run sports features with
       `--force`/`--no-skip-existing` for the enriched dates: `derived_features` + `fixture_features` ONLY
       (`odds_features` unaffected — odds inputs unchanged by enrichment). Mechanics + gates per
@@ -3206,3 +3231,70 @@ future dispatch notices these 2 VM slots (FIXTURE_EVENTS/FIXTURE_STATS coverage 
 not-relaunched after a reasonable window, that's worth a `/blocked` to the operator/main agent (self-heal watchdog
 possibly not covering this VM class) rather than a unilateral relaunch — per the same guardrail, confirming genuine
 staleness (not a sibling's in-flight work) is required before any VM-lifecycle action.
+
+### 2026-07-21T03:11Z — data_engineering slot-4 (Todo `-001`, resumed after an unrelated cicd escalation on this slot — confirms the 2 dead VMs remain un-relaunched ~22h later, crossing the prior entry's own escalation bar)
+
+Dispatched (resumed) onto `-001`. Fresh-pulled slot repos clean, no dirty state inherited.
+
+**Fleet-liveness + checkpoint check** (non-snap SDK `/home/ubuntu/google-cloud-sdk/bin/gcloud`; `gcloud storage cat` for
+`PROGRESS.json` — plain `gsutil` reports invalid creds in this environment, `gcloud storage` works fine on the same
+ADC):
+
+- `gcloud compute instances list --filter="name~af-backfill"` → only 2 VMs resolve: `af-backfill-20260719-180545`
+  (FIXTURE_LINEUPS) and `af-backfill-20260719-180620` (PLAYER_STATS), both `RUNNING`.
+- `af-backfill-20260719-180520` (FIXTURE_EVENTS) and `af-backfill-20260719-180603` (FIXTURE_STATS) — confirmed GONE
+  (absent from the instance list), consistent with the prior entry's finding.
+- `PROGRESS.json` checkpoints (current UTC 03:11:19Z):
+  - `-180545` LINEUPS: `last_completed_date=2024-04-25`, `updated=2026-07-21T03:10:31Z` — ~1 min old, actively
+    advancing.
+  - `-180620` PLAYER_STATS: `last_completed_date=2025-08-31`, `updated=2026-07-21T02:21:53Z` — ~49 min old, actively
+    advancing, now within ~8 months of the window end (`2026-05-10`).
+  - `-180520` FIXTURE_EVENTS: `last_completed_date=2021-05-01`, `updated=2026-07-20T05:25:00Z` — frozen, ~22h stale.
+    Dead.
+  - `-180603` FIXTURE_STATS: `last_completed_date=2021-03-20`, `updated=2026-07-20T05:25:21Z` — frozen, ~22h stale.
+    Dead.
+
+**This crosses the prior entry's own escalation bar** ("if a future dispatch notices these 2 VM slots still show as
+not-relaunched after a reasonable window, that's worth a `/blocked` ... rather than a unilateral relaunch"): ~22h with
+zero self-heal, no `PREEMPTED` marker on either (consistent with an abrupt kill, inconclusive on cause). VM relaunch is
+out of `data_engineering` craft scope (`data_engineering.md` `does_not`: "infra/VM launches (→ infra)"), and STEP 0.55's
+guardrail counsels `/blocked` over unilateral action when uncertain. Filed `/blocked` (see slot-4 dashboard)
+recommending an `infra`-craft relaunch of the 2 dead entity shards resuming from their durable checkpoints
+(`FIXTURE_EVENTS` from `2021-05-01`, `FIXTURE_STATS` from `2021-03-20`) per the shipped PROGRESS-checkpoint auto-resume
+contract — explicitly NOT a `--force`/`redo_all` restart, which would replay from `START_DATE` and lose the durable
+progress. Not flipping the checkbox — gate still far from green (2/4 shards stalled, the other 2 mid-window).
+`/skip-current-task` after filing — resume once either (a) the 2 dead shards are relaunched (infra) and reach parity
+with the other 2, or (b) a fresh full-history gate read is independently due.
+
+**`BLK-32c04851` answered by main (2026-07-21T03:14Z): Option A confirmed** — checkpoint-resume (no `--force`) is safe
+whether the kill was SPOT-preemption or a delete, since the monotonic-gated `PROGRESS.json` resumes exactly where each
+shard stopped either way; this clears the `data_engineering` STEP 0.55 accidental-delete concern (that guardrail is
+about `--force` replays / unilateral deletes, not checkpoint-gated resume). Per the ruling, did NOT relaunch ad-hoc as
+`data_engineering` — instead added two tracked `[INFRA]` todos above (P0 relaunch with the exact launcher invocation, P1
+self-heal-watchdog-coverage-gap root-cause) so the recovery dispatches through the correct craft. `/skip-current-task`
+on `-001` — resume once the new `[INFRA]` P0 todo is picked up and the 2 shards rejoin the fleet.
+
+### 2026-07-21T03:32Z — data_engineering slot-8 (Todo `-001` re-dispatched, ~18min after the `[INFRA]` todos landed — cheap re-check, still gated, decline)
+
+Dispatched (again) onto `-001`. Fresh-pulled `unified-trading-pm` (was behind by 3 commits — `b9fcfec68`/`d360a854d`/
+`d54b4f62f`, the `BLK-32c04851` resolution + `[INFRA]` P0/P1 todo additions).
+
+**Fleet re-check** (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud`, `CLOUDSDK_AUTH_ACCESS_TOKEN` from
+`gcloud auth application-default print-access-token` — the default gcloud user/SA credential both fail to refresh
+non-interactively in this slot, ADC works fine):
+
+- `gcloud compute instances list --filter="name~af-backfill"` → still only 2 VMs resolve: `af-backfill-20260719-180545`
+  (LINEUPS) and `af-backfill-20260719-180620` (PLAYER_STATS), both `RUNNING`. `af-backfill-20260719-180520`
+  (FIXTURE_EVENTS) / `-180603` (FIXTURE_STATS) still absent — **not yet relaunched**.
+- `PROGRESS.json` (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/PROGRESS.json`): LINEUPS
+  `last_completed_date=2024-05-11` (updated `2026-07-21T03:31:55Z`, live) · PLAYER_STATS `2025-12-01` (updated
+  `03:31:56Z`, live) · FIXTURE_EVENTS still frozen `2021-05-01` (`updated=2026-07-20T05:25:00Z`, unchanged) ·
+  FIXTURE_STATS still frozen `2021-03-20` (`updated=2026-07-20T05:25:21Z`, unchanged).
+
+No material change since the 03:11Z entry — same 2 dead / 2 alive split, same frozen checkpoints. The `[INFRA] P0`
+relaunch todo (line 248 above) is the correctly-scoped fix and hasn't been picked up yet (only ~18 min old). Per the
+just-landed ruling, relaunching the 2 dead shards is explicitly out of `data_engineering` craft scope now that a
+dedicated `[INFRA]` todo exists for it — doing it here would duplicate/race that todo's own dispatch. Not flipping the
+checkbox (gate still 2/4 shards stalled). `/skip-current-task` — resume once the `[INFRA] P0` todo lands (both dead
+shards relaunched + confirmed advancing past their frozen checkpoints) or a fresh full-history gate read is
+independently due.

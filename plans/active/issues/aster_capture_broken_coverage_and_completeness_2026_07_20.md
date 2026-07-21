@@ -125,13 +125,96 @@ REST API needs per-PROCESS request discipline; VM count is irrelevant when the b
 
 ## Fix plan (mirror the HL playbook this session)
 
-- ⬜ **A. Trades pagination fix** — page aggTrades past `limit=1000` (loop on `fromId`/time until day complete) in
-  `_umi_aster.py`; ensure the batch caller passes the FULL resolved instrument list (never `instrument_ids=None` →
-  20-cap). Ship via quickmerge + rebuild MTDS tarball.
-- ⬜ **B. Universe: admit the 1000-multiplier bases** (operator scope call — same decision class as the HL k-coins,
-  which the operator approved 2026-07-20). Add `1000PEPE`/`1000BONK`/… to `CEFI_BASE_ASSET_UNIVERSE` OR normalize the
-  `1000`/`k` multiplier prefix in the base-membership check. Then catalogue rebuild → mvp=True.
-- ⬜ **C. Run the ASTER trades backfill** for the full 448-perp universe (2023-07-22→today, genesis-clipped) via
-  `launch-cefi-hl-aster-historical-backfill.sh VENUES=ASTER` with the finer sharding shipped this session; verify the
-  448-instrument coverage lands.
-- ⬜ **D. Provenance hardening** — add the host-assertion guard (footgun) + clip GAP-4 genesis to 2023-07-22.
+- ✅ **A. Trades pagination fix** — SHIPPED mtds@accd8aa4 (correction: the real batch path is
+  `market_interface/adapters/onchain_perps/aster_adapter.py`, not `_umi_aster.py` — that module is the separate
+  UMI/Tardis-side path, unused by `onchain_perp_batch_handler._fetch_aster`). `_fetch_agg_trades_response` now pages on
+  `fromId` up to `_AGG_TRADES_MAX_PAGES` until a short page or a record crossing `end_ms` signals the tail, instead of a
+  single `limit=1000` request truncating the day. Also bundled: `AsterBaseClient.throttle()` enforces the
+  previously-dead `rate_limit_per_second` config (2026-07-20 429 incident), handler-level adapter reuse, exchangeInfo
+  failure cooldown, and 429/transport → raise (not fabricated `empty_confirmed`). +4 regression tests.
+- ✅ **B. Universe: admit the 1000-multiplier bases** — SHIPPED uac@34580d92. All 10 ASTER 1000-multiplier bases
+  (1000PEPE/1000BONK/1000SHIB/1000FLOKI/1000LUNC/1000CHEEMS/1000SATS/1000WOJAK/1000NEX/1000XEC) added to
+  `CEFI_BASE_ASSET_UNIVERSE`; `is_in_mvp_capture_universe(ASTER, 1000PEPE)` verified True. Catalogue rebuild + backfill
+  still pending (folds into STEP 3 of the HL k-coin plan — same UAC-deploy-gated blocker, see
+  `hl_multiplier_kcoins_excluded_from_mvp_universe_2026_07_20.md`).
+- ✅ **C. Run the ASTER trades backfill — COMPLETE + VERIFIED.**
+  - ✅ **1000-multiplier coins.** Surgical run
+    `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS="1000PEPE;1000BONK;1000SHIB;1000FLOKI;1000LUNC;1000CHEEMS; 1000SATS;1000WOJAK;1000NEX;1000XEC" YEARS="2024 2025 2026" SHARD_DAYS=21`
+    (RUN_TS 20260720-205932, 32 VMs, all self-shut-down clean, real rows confirmed for 1000PEPE/1000SHIB/1000FLOKI in
+    spot-checks).
+  - ✅ **Full 448-perp universe re-run — COMPLETE.** mtds@accd8aa4 (rate-limit bundle) + mtds@aa72787b (row_key fix) via
+    `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS=ALL YEARS="2024 2025 2026" SHARD_DAYS=21` (RUN_TS
+    20260720-203019, 46 VMs, all 46/46 self-shut-down over ~3.7h). VERIFIED: instrument-parquet counts across the full
+    range (2024-01-01 → 2026-07-20) grow from 60 → 453 tracking ASTER's real universe growth over time (sampled 12
+    dates); `capture_status` for 2026-07-01 ties out EXACTLY against GCS (441 `captured` manifest rows = 441 real
+    parquet files); **zero `attempted_failed` rows across the entire backfill** — the rate-limit fix worked well enough
+    that no persistent 429 exhaustion occurred at all (no failure-path exercise needed, so the row_key fix's correctness
+    here is unexercised-but-present, confirmed separately via the earlier 1000-coin run's 105 logged
+    429-retry-then-succeed sequences). Total canonical manifest rows grew 9,847,687 → 10,409,187 organically (matches
+    the ~561k new ASTER/trades rows written), confirming the earlier 429-incident CAS cleanup remained durable
+    throughout (no resurrected poisoned rows).
+  - NOT yet done: genesis clip to the native 2023-07-22 (currently backfilling from ASTER's UAC start_date 2024-01-01,
+    which already excludes the pre-launch Astherus-proxied window — GAP-4's specific clip to the databento-verified date
+    is a separate, smaller, still-open item).
+- ✅ **D. Provenance hardening (host-guard half)** — SHIPPED mtds@accd8aa4. `_assert_aster_host()` guards all 3 ASTER
+  live-WS connector construction sites (`aster_book_liq_ws.py`) against the latent Binance-host footgun; +3 regression
+  tests (`test_aster_ws_connector.py::TestAsterHostGuard`). GAP-4 genesis clip to 2023-07-22 NOT yet done.
+
+## Status (2026-07-20/21): A, B, C, D(host-guard) all shipped + verified with real data. Remaining open: GAP-4 genesis
+
+clip (small, separate) and the "why did capture stop 2026-06-20" historical question (moot now — full backfill re-run
+supersedes it). Not yet `status: resolved` pending the GAP-4 clip.
+
+## INCIDENT 2026-07-21 — duplicate instrument_id from explicit-symbol surgical re-runs (found + fixed)
+
+Surfaced while verifying, for the operator, that MTDS writes exactly one parquet per instrument for the 10
+1000-multiplier coins. It doesn't — 8-10 of the 10 coins had trade data written under **two different canonical
+instrument_ids** for the SAME real trades: `ASTER:PERPETUAL:1000BONK-USDT@LIN` (correct) and
+`ASTER:PERPETUAL:1000BONK@LIN` (wrong, quote-less). Spot-checked pairs were byte-identical (same row counts, timestamp
+ranges, price sums) — a genuine mechanical duplicate, not two real markets.
+
+**Root cause:** `resolve_venue_symbols()` (`_onchain_perp_batch_symbols.py`) passes an explicit `--onchain-perp-symbols`
+list through **verbatim** ("surgical re-run path") — correct for HYPERLIQUID/LIGHTER/EXTENDED, whose
+`native_symbol_to_instrument_id` branches never need to recover a quote asset from the input string. ASTER's branch
+does: it suffix-matches the input against `_ASTER_QUOTE_SUFFIXES` to split `base` from `quote`. The catalogue-driven
+`ALL` path always passes the real wire symbol (`1000BONKUSDT`), so suffix-matching works. My earlier surgical 1000-coin
+backfill this session passed **bare base-asset names** (`1000BONK`, matching the UAC universe naming convention used
+everywhere else) — no suffix matches, so the function silently fell through to a quote-less id. Two different valid ways
+of naming the same instrument → two different canonical ids → duplicate writes. Measured scope: **2,390 (day, coin)
+pairs** with wrong-form data across the full 2025-05-25→2026-07-20 range (2,373 true duplicates + 17
+initially-bare-only, see remediation below); **4,715 manifest rows** under the 10 wrong bare-form instrument_ids (all
+`data_type=trades` — `derivative_ticker` was never affected).
+
+**Fix — SHIPPED mtds@a7f7769a.** `native_symbol_to_instrument_id`'s quote-split logic extracted into
+`_aster_native_quote_split()`; new `_resolve_aster_native_symbols()` cross-references the day's catalogue-native symbols
+(already real wire form) by base-asset so an explicit ASTER symbol resolves to the SAME id the `ALL` path would produce
+for the identical instrument. A symbol absent from that day's catalogue (not yet listed) passes through unchanged — no
+regression on the not-yet-listed case. +5 regression tests (`TestAsterExplicitSymbolQuoteResolution`). Other venues
+unaffected (verbatim passthrough unchanged).
+
+**Remediation — COMPLETE + VERIFIED:**
+
+1. Rebuilt + uploaded the UAC/UTL/MTDS/deployment-service code tarballs (VMs deploy from GCS tarballs, not a live git
+   pull — the fix needed a fresh tarball before any new backfill VM would pick it up).
+2. Corrective re-backfill:
+   `VENUES=ASTER DATA_TYPES=trades FORCE=true SYMBOLS="<the 10 coins>" YEARS="2025 2026" SHARD_DAYS=21 OVERRIDE_START_DATE=2025-05-25`
+   (RUN_TS 20260721-025937, 21 VMs, ~18min to full self-shutdown — much faster than the ~3.7h general 46-VM run since
+   this is a narrow 10-symbol universe per VM). Post-run sweep found 2 of 422 days (2026-06-19/20) still bare-only — a
+   transient VM-startup hiccup, not a code defect (a narrow 3-day retry, RUN_TS 20260721-032600, resolved it cleanly on
+   the first attempt).
+3. Deleted all 2,390 wrong-form (bare, no `-USDT`) parquet files, each individually re-verified to have a non-empty
+   `-USDT` replacement immediately before deletion (0 skipped for safety). A final full-range sweep confirms **zero**
+   bare-form files remain anywhere.
+4. Manifest cleanup: paused `uts-prod-manifest-consolidator-market-data-cefi-cron`, removed the 4,715
+   wrong-instrument-id rows via generation-matched CAS. **Gotcha (documented for next time):** a raw CAS write that
+   doesn't carry the consolidator's `consolidator_content_write_at` blob-metadata marker forward gets treated by the
+   next consolidator cycle as an unprovable-cutoff out-of-band rewrite — it fails closed and re-merges every per-VM
+   shard, and (this session) the bad rows briefly resurrected from that path before self-clearing. Second pass: redid
+   the CAS removal, then immediately called `manifest_consolidator.consolidate(bucket, force=True)` directly (the
+   officially-supported write path) rather than waiting on the cron, so the marker is stamped correctly in the same
+   operation. Verified 0 bad rows immediately after, and via a follow-up multi-cycle check.
+
+**Lesson:** an explicit `--onchain-perp-symbols` surgical list is safe for venues whose `native_symbol_to_instrument_id`
+never has to recover information from the input string — it is NOT safe by inspection alone for a venue that
+suffix-guesses a quote asset. Any future venue added with similar quote-suffix inference needs the same
+catalogue-cross-reference treatment `_resolve_aster_native_symbols` provides.

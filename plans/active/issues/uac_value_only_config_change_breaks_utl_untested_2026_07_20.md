@@ -137,19 +137,77 @@ change.
    `sit-unlock.yml` opens a GitHub Issue + Slack. The one auto-escalation for repeated SIT failure sends
    `wall_type: "sit_retry_cap"`, which is not in `escalate-to-orchestrator.yml`'s accepted set, so it hard-errors.
 
+## The DEEPER root cause (adversarially verified 2026-07-20) — and why the obvious fix does NOT work
+
+The count reached **6 instances in 2 days** (add: 9 DeFi venues + 20 sportsbooks reddened IS goldens + MTDS shard-count
+fixtures). A design workflow + independent verification established the systemic hole and refuted the originally-planned
+fix (listener + differ→`is_breaking`) on three counts. **Do not implement the two todos below as originally written —
+they are struck through with the reason.**
+
+### The real linchpin: the v2 content-sentinel keys on OWN tree-hash only
+
+`.github/workflows/python-quality-gates-v2.yml` (PM's reusable v2, line ~120-127) computes its skip key as
+`TREE="$(git rev-parse HEAD^{tree})"` + gate-version fingerprint, and **"deliberately does NOT hash the deps' resolved
+CONTENT, so [it relies on] the dep RANGE pins"** (its own comment, line ~87). A value-only UAC change is
+**within-range** (a 0.x dict-value edit bumps no version), so it perturbs neither the downstream's tree hash nor the
+range pin → the sentinel **skips the gate and returns the last green**. This is why re-running a dependent's v2 does
+nothing: it is architecturally cached against exactly the input that changed.
+
+### Three verified blockers on the originally-planned fix
+
+1. **Coupling registry-value detection to `is_breaking` FALSE-BREAKS the fleet (verified).** `is_breaking` drives the
+   global staging lock (`update-repo-version.yml:171`) AND the fail-closed SIT-race gate
+   (`ldr-to-main-promote-fleet.yml:613-642`). A routine recalibration —
+   `EMISSION_LATENCY_MS_BY_SOURCE['yahoo'] = 900_000 → 840_000`, a value the module docstring itself calls a
+   CONSERVATIVE estimate awaiting recalibration — is a registry in the allowlist, so a value-aware differ tied to
+   `is_breaking` would jam **every** promote on a benign latency tweak. The signal must be **decoupled** from
+   `is_breaking`.
+2. **Shipping the value-aware differ ALONE makes it worse (verified).** `is_breaking` is the cascade trigger
+   (`update-repo-version.yml:715-718`). Making the differ fire the cascade while the cascade is still false-green
+   (blocker 3) means it now actively fires and reports green — false confidence where there was previously silence.
+3. **The `quality-gate-run` listener is a NO-OP (verified).** Even wired in, a cascade-dispatched v2 on a dependent
+   whose tree is unchanged hits the content-sentinel above and returns the stale green. The listener cannot help until
+   the sentinel keys on resolved-dependency content. Separately, the v2 template has **drifted** ahead of the 22
+   deployed copies (a second "loaded gun" — see
+   `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md`), so a rollout must reconcile the drift
+   first.
+
+### The real fix (verified design, bigger than the original scope — needs operator direction)
+
+- **[A] Make the content-sentinel dependency-content-aware.** Key it on `own-tree-hash + resolved-UAC/UTL-tree-hash` (or
+  a hash of the installed dep contents) so a dependency change busts the skip and forces a genuine re-run. This is the
+  single highest-leverage change — it makes EVERY existing re-run path (nightly sweeps, promote-gate re-runs, any
+  dispatch) actually catch dependency-content changes, with no listener or differ needed. **Highest blast radius in the
+  fleet** (it is the core gate's cache: wrong key → either 4× redundant CI cost or over-skipped real breaks), so it is
+  operator-sign-off territory, not an autonomous ship.
+- **[B] Value detection as a DECOUPLED signal.** Extend `detect_breaking_change.py` with a narrow
+  `CROSS_REPO_REGISTRY_ALLOWLIST` (SOURCE_PRIORITY, VENUE_TO_ADAPTER_KEY, the DeFi-venue/sportsbook registries, …) that
+  emits a **separate `registry_value_changed`** field — NOT `is_breaking` — using an order-normalizing AST canonicalizer
+  (dict keys sorted so a reorder is not flagged; priority-list order preserved; comments/whitespace excluded — verified
+  6/6 on the real cases). That signal drives a targeted re-dispatch of direct dependents, whose sentinel (fixed by [A])
+  now actually re-runs. Config YAMLs (cloud-providers.yaml) get the same path-scoped treatment. The differ is a single
+  centralized PM file (semver-agent + fleet-promote fetch PM's copy at runtime), so [B]'s code has zero fleet footprint.
+
 ## Todos
 
 - [x] [DEVOPS] P0. Establish which `cloud-providers.yaml` the bucket-naming sweep is authoritative against, fix the
       collection-vs-runtime precedence mismatch, and make instance 2 green — do NOT just delete the fixture's `SPORTS`
       lines without resolving precedence first. ✅ unified-trading-library@c26a5297 — deleted the conftest override +
       fixture, repointed 6 consumers at UAC's packaged copy, added a cross-copy parity pin. UTL quality-gates green.
-- [ ] [DEVOPS] P0. Add a `repository_dispatch: types: [quality-gate-run]` listener to consumer `quality-gates-v2.yml` so
-      `cascade-qg-ordering.yml`'s fan-out actually lands, and make `poll_level` distinguish "the dependent really
-      re-ran" from "a stale ci_status was already green" (the current false-green is dangerous independently of the
-      trigger).
-- [ ] [DEVOPS] P1. Make `detect_breaking_change.py` value-aware for registry constants: hash the VALUES of the known
-      cross-repo registries (`SOURCE_PRIORITY` and peers) plus the config YAMLs UAC ships, so a value-only edit sets
-      `is_breaking` and the cascade fires.
+- [ ] [DEVOPS] P0. **[A] Make the v2 content-sentinel dependency-content-aware** — key it on
+      `own-tree-hash + resolved-UAC/UTL-content` in `.github/workflows/python-quality-gates-v2.yml` so a dependency
+      change busts the skip. Highest-leverage + highest-blast-radius (core gate cache) → **operator sign-off required**,
+      not an autonomous ship. This ALONE fixes the class for every existing re-run path.
+- [ ] [DEVOPS] P1. **[B] DECOUPLED registry-value signal in `detect_breaking_change.py`** — narrow allowlist +
+      order-normalizing AST canonicalizer, emit a **separate `registry_value_changed`** field (NOT `is_breaking` — that
+      false-breaks the fleet on benign recalibrations, verified) that drives a targeted re-dispatch once [A] lands.
+      Config YAMLs get the same path-scoped treatment. Code is ready + verified 6/6; blocked on [A] so a re-dispatch is
+      not a no-op.
+- [ ] [DEVOPS] P2. ~~Add a `quality-gate-run` listener + fix `poll_level`~~ **SUPERSEDED** — verified a no-op while the
+      content-sentinel keys on own-tree-hash (blocker 3). Reconsider only after [A]; and reconcile the v2-template drift
+      first (second loaded gun).
+- [ ] [DEVOPS] P2. ~~Make the differ set `is_breaking` on value change~~ **DO NOT** — verified to false-break the fleet
+      on benign recalibrations (e.g. `EMISSION_LATENCY_MS_BY_SOURCE`). Use the decoupled signal in [B] instead.
 - [ ] [DEVOPS] P2. Fix the invalid `sit_retry_cap` wall_type in `sit-debounce-trigger.yml` (it can never succeed) and
       decide whether a red SIT should escalate to a background worker rather than Issue + Slack only.
 - [ ] [DEVOPS] P2. Correct the `full-workspace-sit` messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved
@@ -161,3 +219,14 @@ change.
   onto still-multi-source cells; `(tradfi, ohlcv_15m)` remains `["databento","yahoo"]` while `trades` collapsed to
   single-source). The SIT-laundering half is fixed separately in `ci_status_store.resolve_status`. Instance 2 diagnosed
   to a collection-vs-runtime YAML precedence mismatch and left open — deliberately not band-aided.
+- **2026-07-20 (later)** — Count reached 6 instances. Ran a design workflow + INDEPENDENT verification of the operator's
+  chosen fix (listener + value-aware differ). **Verdict: the chosen fix does not work; the real root cause is deeper.**
+  Verified myself: (1) `EMISSION_LATENCY_MS_BY_SOURCE` is a docstring-declared "conservative" recalibratable value, so
+  coupling value-detection to `is_breaking` would false-break the fleet; (2) PM's reusable v2 content-sentinel keys on
+  `git rev-parse HEAD^{tree}` + gate-version and "deliberately does NOT hash the deps' resolved CONTENT" (its own
+  comment) — so a within-range value-only UAC change skips the gate and returns stale-green, making the listener a
+  no-op. **Nothing shipped for Item 5** — this is a big finding that changes the scope. Recommended real fix ([A]
+  dependency-content-aware sentinel + [B] decoupled `registry_value_changed` signal) recorded above; [A] is the core
+  gate cache (highest blast radius) → needs operator direction before implementation. The adversarial verification
+  earned its cost: it prevented shipping a fleet-wedging (false-break) or actively-worse (unmasked false-green) change
+  under autonomous momentum.

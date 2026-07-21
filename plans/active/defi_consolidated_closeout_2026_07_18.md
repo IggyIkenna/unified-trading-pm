@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -401,7 +401,11 @@ Discriminator = **does a manifest row exist**.
 - **Two-id model kept** (Option A) — no mass address→symbol rewrite; ensure symbolic `canonical_instrument_id` coexists
   on every row + downstream reads the right id.
 - **Retire legacy `LENDING`** → migrate ~16.7M rows to the A_TOKEN/DEBT_TOKEN split + bake into the catalogue builder.
-- **instrument_type case**: lowercase in the PATH + manifest COLUMN (writer grain), UPPER stays only in the id SEGMENT.
+- **instrument_type case**: **⛔ corrected 2026-07-20, operator ruling D1 — ~~"lowercase in the PATH + manifest COLUMN
+  (writer grain), UPPER stays only in the id SEGMENT"~~.** Three separate legs: manifest **COLUMN → UPPERCASE**
+  (catalogue wins, ruling D1) · GCS **path segment → lowercase** (unchanged) · **id middle segment → UPPER**
+  (unchanged). Do not bundle path and column into one case. SSOT:
+  `../../codex/02-data/cross-asset-canonical-target-ssot.md` §7.
 - **Culled-venue purge = dead-only, snapshot-first, keep LIGHTER + EXTENDED** (see Track 7).
 - **Combos = leg-aware signed-weight spec** (cross-AG) — see Track 1 + the cefi/tradfi hand-offs.
 - **Restore the removed data-status enumeration** (raw distinct-values audit view) — Track 6.
@@ -437,12 +441,18 @@ Discriminator = **does a manifest row exist**.
       v4–v8→v9; C9 object paths still carrying `category=`/no `pipeline_mode=`; C11 phantom walk; C12 `{VENUE}_V{N}`
       underscore canonicalisation (`TRADER_JOE_V2`/`VELODROME_V2`/`AERODROME_V3`). (repos: market-tick-data-service,
       instruments-service)
-- [ ] [DATA] P0. **Manifest instrument_type case + venue-spelling unify** (from the live distinct-values audit):
-      case-fold the manifest `instrument_type` column to lowercase (`POOL`→`pool` 13,868 · `LENDING`→`lending` 179,164 ·
-      `PERPETUAL`→`perpetual` 4,221 · `YIELD_BEARING`/`STAKING`/`SPOT_PAIR` → lowercase); collapse venue-spelling dups
-      (`AAVEV3`/`AAVE`→`AAVE_V3` 64,218 · `MORPHOVAULTS`→`MORPHO` 50,266 · `COMPOUND`→`COMPOUND_V3` 13,904 ·
-      `YEARNV3`→`YEARN_V3` · `KAMINO_LENDING`→`KAMINO`); resolve `''`/`NULL` instrument_type (4.49M) from the id/grain.
-      (repos: market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P0. **Manifest instrument_type case + venue-spelling unify** (from the live distinct-values audit): **⛔
+      CASE DIRECTION CORRECTED 2026-07-20, operator ruling D1 — the manifest COLUMN is UPPERCASE (catalogue wins), NOT
+      lowercase.** ~~case-fold the manifest `instrument_type` column to lowercase (`POOL`→`pool` 13,868 ·
+      `LENDING`→`lending` 179,164 · `PERPETUAL`→`perpetual` 4,221 · `YIELD_BEARING`/`STAKING`/`SPOT_PAIR` →
+      lowercase)~~; **the fold is UP — normalise the manifest `instrument_type` COLUMN to the UPPERCASE catalogue enum
+      (`POOL`/`LENDING`/`PERPETUAL`/… ); the row counts are unchanged, only the direction. The GCS path segment stays
+      lowercase and the id middle segment stays UPPER — neither changed. Note the `LENDING`→`A_TOKEN/DEBT_TOKEN` full
+      retire (ruling D2) is a separate `migration_pending` axis gated on the MTDS lending-writer fix — do not conflate
+      the case-fold with the retire.** collapse venue-spelling dups (`AAVEV3`/`AAVE`→`AAVE_V3` 64,218 ·
+      `MORPHOVAULTS`→`MORPHO` 50,266 · `COMPOUND`→`COMPOUND_V3` 13,904 · `YEARNV3`→`YEARN_V3` ·
+      `KAMINO_LENDING`→`KAMINO`); resolve `''`/`NULL` instrument_type (4.49M) from the id/grain. (repos:
+      market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **perp_funding → `derivative_ticker`** as the canonical raw-funding home for ALL perps (drop the
       Drift-only 24h/7d/30d window aggregates). Ratify enum-member DeFi grains (`lst`/`staking`/`yield_bearing`) as
       canonical (case-fold only, already `InstrumentType` members). (repos: market-tick-data-service,
@@ -508,20 +518,21 @@ Discriminator = **does a manifest row exist**.
       `attempted_failed` → honest-empty; reconcile `spot_asset` absence from the enumerated catalogue (the v2 corpus
       predates SPOT_ASSET population; `spot_pair` 143K is partly the culled DRIFT SPOT leak). (repos:
       unified-api-contracts, instruments-service)
-- [ ] [DATA] P1. **DeFi catalogue `available_to` false-delisting** — the CATALOGUE twin of the subgraph-deindex reclass
-      above (same root cause: a subgraph/seed pool-set change misread as a mass delisting). Root fix SHIPPED
-      `instruments-service@c37d4f96` (defi drop-outs never last-seen-delist; gated `asset_group=="defi"`, both full +
-      incremental paths; truth-gate `delisted_at`/`expiry` preserved). PROVEN on real prod data: 947 clustered
-      false-delistings (06-26/07-06/07-08 across TRADER_JOE_V2/PANCAKESWAP_V3/AAVE_V3/MORPHO) → 0. Remaining to close:
-      **(a)** `--mode full` defi catalogue regen to purge the frozen stamps + verify; **(b)** historical manifest
-      un-delist + `NOT_ENOUGH_TVL` re-capture over the affected `(protocol,chain,date)` cells (reverse/supersede
-      `reclassify_defi_postdelist_eu_2026_06_24.py`; gate `validate_defi_no_delisted_on_live_pool`); **(c)** Option B
-      §12 on-chain factory/RPC truth-gate probe (feeds `delisted_at` for genuine removals). SSOT:
-      `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`. (repos: instruments-service,
-      market-tick-data-service, unified-api-contracts) **STATUS 2026-07-20: (a) + (b) DONE + VERIFIED on prod** —
-      catalogue non-blank `available_to` 2,349 → 105 (0 on the false-cluster dates) via `--mode full` regen + a targeted
-      frozen-tail purge; manifest `EXPECTED_INSTRUMENT_DELISTED` **219,738 → 3,874** across 45.8M rows via an
-      instrument_type-agnostic un-delist. (c) built, tested + runtime-verified, ship pending tree-green.
+- [x] ✅ [DATA] P1. **DeFi catalogue `available_to` false-delisting — DONE (2026-07-20).** Root fix SHIPPED + VERIFIED
+      `instruments-service@13c4f68a` (Option A: defi drop-outs never last-seen-delist, gated `asset_group=="defi"`, both
+      full + incremental paths; truth-gate `delisted_at`/`expiry` preserved for a future probe) — PROVEN on real prod
+      data: 947 clustered false-delistings (06-26/07-06/07-08 across TRADER_JOE_V2/PANCAKESWAP_V3/AAVE_V3/MORPHO) → 0.
+      **(a) prod catalogue CORRECTED + VERIFIED**: `--mode full` regen (monotonic guard ACCEPT, `CATALOGUE_PROMOTED`) +
+      a targeted frozen-tail purge (`purge_defi_false_available_to_2026_07_20.py`) — non-blank `available_to` 2,349 →
+      **105**, **0** on the 3 false-cluster dates. **(b) historical manifest un-delist DONE + VERIFIED**
+      (`undelist_defi_false_postdelist_eu_2026_07_20.py`, instrument_type-agnostic, the inverse of
+      `reclassify_defi_postdelist_eu_2026_06_24.py`) — `EXPECTED_INSTRUMENT_DELISTED` **219,738 → 3,874** across 45.8M
+      manifest rows. **(c) Option B (on-chain removal probe) SHIPPED** `instruments-service@13c4f68a` +
+      `deployment-service@9a36478` (daily Cloud Run job, `defi-removal-probe`, 00:30 UTC) — conservative by
+      construction, runtime-verified against prod (0/30 live targets confirmed gone — correct for a healthy universe).
+      CI green both repos. SSOT + full evidence: `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`.
+      **Residual, tracked separately**: the 215,864 un-delisted cells are honest-pending, not yet terminal — see the
+      next item. (repos: instruments-service, deployment-service)
 - [ ] [DECISION] P1. **DeFi non-POOL per-instrument EU has NO reconciliation path** (surfaced by the un-delist above).
       The catalogue-residual → typed-empty machinery is DEX-POOL-ONLY at all three layers, and SPOT_ASSET/A_TOKEN/
       DEBT_TOKEN are reference-only holdings with no per-day capture path — so 215,864 re-seeded cells cannot reach a
@@ -760,6 +771,29 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-21 (slot-4, /autonomous — operator ratified 4 rulings; executing the finish-list).** Operator answered the 4
+  batched decisions (all as recommended): re-emit opt-in-default-off · available_at keep-on-chain-tick · perf-bundle
+  ship-code-then-2VM-canary · glued-ids fix-write-path-and-re-migrate. **Shipped so far:**
+  - ✅ **available_at `mtds@f7af6ece`** — removed the wall-clock `now()` clobber at the 3 sites with an on-chain stamp
+    (evm_defi_collectors/solana_defi_handler/gas_fee_handler); on-chain tick now survives (+test). Broader ~20
+    direct-`now()` handlers flagged as a per-handler follow-up in the issue doc.
+  - ✅ **re-emit opt-in `mtds@05ad49f7`** — CF-11 re-emit is now `--reemit-absence`, default OFF for sharded rebuilds
+    (extracted `_reemit_absence_or_skip` to stay under the size cap; +2 tests; also fixed the 3 pre-existing dry-run
+    test failures that the unconditional re-emit caused).
+  - ✅ **stopped 2025d** — it was grinding ~40h of the now-ruled-off redundant re-emit; its 2025 captured rows are
+    flushed + in the index; the consolidator finalizes a stable manifest now.
+  - **Remaining finish-list:** checker collect-* route (deliverable #3), glued-id fix + re-migrate, perf bundle +
+    launcher-preemption + 2-VM canary.
+
+- **2026-07-20 (slot-4, /autonomous — `/data-pipeline-check-mtds` ran e2e on DeFi → CHECKER GAP found).** The check
+  MECHANISM is proven (VM launch → poll → report → write-prefix verify) but it **cannot FETCH DeFi**: its launcher runs
+  `op=download`, which logs `Skipping 98 DeFi venues (use collect-* handlers)` + `No active venues ... ['DEFI']`, so
+  every DeFi force-leg fails `no_parquet`. Checker gap, not a pipeline failure — DeFi collection needs the
+  `collect-evm-defi`/`collect-solana-defi` route the checker never invokes. Filed + fix-designed:
+  `plans/active/issues/data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md` (P1). Also confirmed the
+  timestamp-glued instrument-id pattern extends to AAVE `lending_indices`. Report:
+  `plans/audit/results/data_pipeline_e2e_check_mtds_2025_03_12.md`.
+
 - **2026-07-20 (slot-4, /autonomous — CF-11 re-emit CRASH root-caused + FIXED; manifest rebuild needs a clean fixed
   re-run).** The 2022 rebuild + every rebuild VM crashes in the CF-11 honest-absence re-emit: `MalformedRowKeyError` —
   UTL Phase-4 hard_schema_enforcement now REJECTS an EMPTY instrument_id in a row_key. The consolidated `_index` holds
@@ -801,6 +835,111 @@ Discriminator = **does a manifest row exist**.
     **DEFERRED-bespoke (flag, not MVP-blocking):** GMX POOL-vs-PERPETUAL shape; HYPERLIQUID-L1 gas (no EVM chain_id);
     CONVEX/SYMBIOTIC/KARAK MTDS fetch handlers. **Operator flag (non-blocking):** LIGHTER-ZKSYNC/EXTENDED-STARKNET same
     cefi-in-defi as ASTER/HL - purge too? Refs: wf w3f1fk89s (catalogue scope), wf wsdlolwkz (R5 audit).
+
+- **2026-07-20 (slot-4, /autonomous — auth RESTORED; `/data-pipeline-check-mtds` PROVEN-WORKING but blocked on manifest
+  freshness; 2025d re-emit is HANGING).**
+
+  - **gcloud CLI auth came back** (operator reauth after the account reset), unblocking VM ops + the check. Re-verified
+    fleet: the per-instrument migration VM is TERMINATED (migration done); only `…-2025d` rebuild remains.
+  - **`/data-pipeline-check-mtds` RAN and is PROVEN-WORKING** (Phase-0 defi `-test-` bucket exists; day 2025-03-12
+    data-verified at 26,402 captured rows). On the representative `DEFI:AAVE_V3-ETHEREUM:lending_indices` cell it
+    correctly **refused to emit false verdicts** — both legs `skipped/no_captured_data_for_cell` because
+    `--require-captured` could not read a FRESH consolidated manifest ("falling back to per-VM shards"). This is the
+    check DOING ITS JOB, not a pipeline failure: the consolidated `_index` is stale (updated 18:59, ~20min old; needs
+    <120s) because a rebuild is mid-rewrite. **The check is ready; it just needs a settled manifest** — re-run once the
+    consolidator lands a fresh index. (Also needed `GCP_PROJECT_ID` set for the non-interactive invocation.)
+  - **🔴 2025d rebuild is HANGING on the redundant re-emit.** Its date-scan finished at 2025-12-31 by 18:54; per-VM
+    shard writes continued to 5.34M entries then the run.log went SILENT at 19:19:36 (~60min, no heartbeat/no new
+    entries) — the same `UnprovenHonestAbsenceError` re-emit path 2022d hit, but 2025 is denser so the re-emit's 45M-row
+    index read + 13M-absence emit is likely OOM-hanging (the pre-fix OOM class, now on the re-emit leg). **Its useful
+    work is SAFE** — the 2025 per-instrument captured rows are already flushed to its per-VM shard, so the consolidator
+    will pick them up on its next run regardless of whether 2025d ever exits cleanly. This STRENGTHENS the re-emit
+    ruling case: the re-emit isn't just failing, it HANGS — another reason to make it opt-in/off for sharded rebuilds
+    (measured-redundant + now demonstrably a liveness risk). The consolidated index is stale because the consolidator
+    hasn't RUN since 18:59, NOT because 2025d blocks it (the consolidator reads per-VM shards independently).
+  - **Loop armed** to re-check manifest freshness + re-run `/data-pipeline-check-mtds` on the representative defi shards
+    (AAVE_V3 lending_indices, UNISWAP_V3 dex_pool_state/swaps, ORCA/KAMINO dex_pool_state [giant-cell], PYTH
+    oracle_prices, GMX perp_funding — the T3-designed all-pipeline-modes set) once the consolidator lands a fresh index.
+
+- **2026-07-20 (slot-4, /autonomous — SESSION SUMMARY + deferred-work handoff).**
+
+  **Shipped + verified this session (all on `origin/live-defi-rollout`):**
+  - DeFi catalogue lockstep COMPLETE across 3 repos — UAC venues (incl. CHAINLINK re-declared live), IS adapters +
+    venues + goldens (`is@6506b505`/`9267e0ea`, **IS 98 == UAC 98** verified), MTDS collectors + oracle resolution +
+    RULE-11 pins (`mtds@75cf4c3c`).
+  - CHAINLINK end-to-end (adapter-first was the right order): my `ChainlinkOracleReferenceDataAdapter` `is@6506b505` (45
+    addrs re-verified as a strict subset of MTDS's 52 production constants, zero invented) unblocked the peer's
+    re-declaration.
+  - **evm_defi pagination correctness fix `mtds@6e2677b9`** — history queries no longer truncate at The Graph's 1000 cap
+    (`_paginate_history` mirrors the proven `_paginate`; +2 tests; QG green 6544 passed).
+  - Migration/no-orphans **VERIFIED via ADC** on the live 51.9M-row `_index`: captured 18.6M->25.3M (per-instrument
+    grain landing), absence corpus present + growing (cell-level 4.6M->6.26M, expected_unattempted 11.6M visible),
+    `_migrated_`=0, `ticks_migrated_`=0.
+  - Filed: `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md` (73 glued ids, P2),
+    `defi_mvp_backfill_optimization_ready_2026_07_20.md` (the T3 workstream, dispatchable + fix-designed).
+
+  **## Deferred work after 2026-07-20 (all BLOCKED on the operator — reauth or a ruling — not on more code):**
+
+  | Item                                                    | Why deferred                                                                                             | Where it's captured                                                       |
+  | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+  | `/data-pipeline-check-mtds` on the 6 MVP shards         | gcloud CLI auth EXPIRED (account reset); needs interactive `gcloud auth login`                           | `defi_mvp_backfill_optimization_ready` § Auth block                       |
+  | Perf bundle (knobs+fanout+executor-offload, ONE commit) | risky live-write-path rewrite; REQUIRES the 2-VM TheGraph 429 canary, which is auth-blocked              | same doc § perf bundle (fix-designed, canary-gated)                       |
+  | Launcher preemption contract (defect #3)                | bash launcher; can't be VM-validated without auth; only bites when the canary-gated SPOT wave runs       | same doc, defect #3 (fix = mirror cefi `lc_write_preemption_signal_file`) |
+  | `available_at` clobbered by wall-clock `now()`          | data-semantics BIG FINDING — operator RULING needed                                                      | `defi_available_at_clobbered_by_wallclock_2026_07_20.md`                  |
+  | Rebuild re-emit `UnprovenHonestAbsenceError`            | operator ruling: grandfather legacy absence / drop the (measured-redundant) re-emit / map->record_failed | this plan, earlier entry; index is already correct via UPSERT             |
+  | LST/oracle timestamp-glued ids                          | LST/oracle workstream owns it (not catalogue scope)                                                      | `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`             |
+
+  **Handoff note:** the 3 correctness/optimization defects are a coherent workstream in
+  `defi_mvp_backfill_optimization_ready_2026_07_20.md`; defect #2 is DONE, #3 + the perf bundle are fix-designed against
+  proven in-repo patterns and gated purely on `gcloud auth login` + the 2-VM canary. The ETA is a PROVISIONAL band (N=8
+  ~3.7d baseline / ~1.0d aspirational at W=11.65M defi-MVP), unquotable-as-final until the calibration run.
+
+- **2026-07-20 (slot-4, /autonomous — ✅ FULL DeFi LOCKSTEP SHIPPED (UAC+IS+MTDS); MIGRATION/NO-ORPHANS VERIFIED on the
+  live index via ADC).**
+
+  - **The whole catalogue lockstep is now LANDED across all three repos:** `uac@3f79489f`+`ae83689b` (venues incl.
+    CHAINLINK re-declared live), `is@793125ad`+`6506b505`+`9267e0ea` (adapters + venues + goldens, IS 98 == UAC 98), and
+    **`mtds@75cf4c3c`** (METEORA/LIFINITY collectors + date-aware oracle-feed resolution + RULE-11 DEFI 2646 + SPORTS
+    308). The MTDS half took **6 ship attempts** — 4 lost to the QG-sentinel ship-race (a full MTDS QG is ~10-15 min
+    queued behind `[qg-governor] all 2 tokens busy`, and any peer commit in that window invalidates the sentinel), 1 to
+    a genuine pin-churn (2646->2511->2646 as CHAINLINK flipped), 1 to a sports pin drift a peer introduced
+    (`uac@b6a1d83a` +20 ODDS_API bookmakers, 88->308). Every pin was re-MEASURED against the live registry, never
+    derived on paper.
+  - **✅ "all migrations done, no orphans" — VERIFIED by direct ADC read** of
+    `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (gcloud CLI auth is
+    expired but ADC still works, so Python `google.cloud.storage` reads the index directly):
+    - **51,917,421 rows** — grown 45.8M -> 51.9M as the rebuild + consolidator accrete per-instrument CAPTURED rows.
+    - **capture_status:** captured **25,343,488** (up from 18.6M — the per-instrument grain is landing), empty_confirmed
+      14,713,729, expected_unattempted **11,632,059** (pending backfill VISIBLE = honest coverage, not hidden),
+      attempted_failed 228,145.
+    - **Cell-level (blank instrument_id) absence rows: 6,256,921** — the CF-11 corpus is present and grew (4.6M ->
+      6.26M), confirming both the UPSERT preservation AND the CF-11 fix's cell-level emission are working.
+    - **Orphans: `_migrated_` = 0, `ticks_migrated_` = 0** ✅ — the two migration-artifact orphan classes are clean.
+  - **⚠️ One NEW small finding, filed + triaged (NOT my scope):** 73 distinct `{protocol}_{chain}_{daily_epoch}`
+    timestamp-glued ids (`ethena_ETHEREUM_1782648000`, `oracle_prices_1782388800`, ...), all `lst_rates` +
+    `oracle_prices`, all `captured`, ~6 days of late-June captures. The `lst_rates`/`oracle_prices` write path glues a
+    capture epoch into the id instead of a stable `{PROTOCOL}-{CHAIN}` id — the same anti-pattern the R3 migration
+    removed elsewhere. Tiny blast radius (78/51.9M) but an ACTIVE write-path pattern. Filed
+    `plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md` (P2, LST/oracle workstream owns
+    the fix). The `_solana_stake_pool.py` untracked LST artifact in the MTDS tree is likely the same workstream.
+  - **⛔ gcloud CLI AUTH EXPIRED mid-session
+    (`Reauthentication failed. cannot prompt during non-interactive execution`).** ADC still works (GCS read/write via
+    Python), but the gcloud CLI account is needed for `gcloud compute` (VM launches/monitoring), `gcloud run`
+    (consolidator/job triggers), and `gcloud storage`. This HARD-BLOCKS: (a) `/data-pipeline-check-mtds` on the 6 MVP
+    shards (needs the `-test-` buckets provisioned via CLI), (b) any new backfill/canary VM, (c) the 2-VM TheGraph
+    canary the perf bundle REQUIRES before a wide wave. Needs an interactive `gcloud auth login` from the operator. NOT
+    escalated as a code failure — it is an environment credential expiry.
+  - **DELIVERABLE STATUS for the 6h mandate:** (1) migrations done / no orphans — ✅ VERIFIED (bar the 2 operator-gated
+    data-semantics items below + the small LST finding). (2) backfill code ready + ETA — the T3 design + 3 correctness
+    defects + demolished premises are DONE and the ETA methodology + provisional band exist (N=8 ~3.7d baseline / ~1.0d
+    aspirational at W=11.65M defi-MVP); the perf-bundle CODE is the risky rewrite whose gain needs the auth-blocked
+    canary, so it is designed-not-shipped by deliberate risk choice. (3) `/data-pipeline-check-mtds` all shards — ⛔
+    auth-blocked.
+  - **TWO items genuinely need an operator RULING (both flagged, neither freelanced — "data pipeline correctness is the
+    heartbeat" is exactly where not to invent semantics):** (i) `available_at` clobbered by wall-clock `now()` (BIG
+    FINDING `defi_available_at_clobbered_by_wallclock_2026_07_20.md`); (ii) the rebuild re-emit's
+    `UnprovenHonestAbsenceError` — whether to grandfather legacy pre-FetchEvidence absence, drop the
+    (measured-redundant) re-emit, or map unprovable->record_failed.
 
 - **2026-07-20 (slot-4, /autonomous — ✅✅ CHAINLINK FULLY FIXED end-to-end; the adapter-first bet paid off).**
 

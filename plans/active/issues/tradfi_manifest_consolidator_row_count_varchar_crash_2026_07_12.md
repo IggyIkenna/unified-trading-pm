@@ -184,6 +184,21 @@ against the live tradfi bucket — it wrote a fresh consolidated index successfu
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-21** — **Follow-up: the VARCHAR-poisoning CLASS this incident is an instance of is now killed
+  defense-in-depth** (`unified-trading-library@02fc4661`). This incident's fix was a point
+  `TRY_CAST(row_count AS BIGINT)` inside the ORDER BY; the same mechanism recurred 2026-07-20 with `schema_version`
+  (`tradfi_schema_version_string_regression_2026_07_20.md`). Root mechanism: `_duckdb_merge_payload` merges the
+  canonical + per-VM shards with `read_parquet(..., union_by_name=true)` + `UNION ALL`, and a numeric column that is
+  BIGINT in the canonical but VARCHAR in ONE shard promotes the WHOLE merged column to VARCHAR (corrupting every row +
+  later crashing typed comparisons in `manifest_writer/_queries.py`). The consolidator's `shard_proj`/`canon_proj`
+  column projections now route through a new `_typed_col_projection` helper that `TRY_CAST`s every declared-non-string
+  manifest column to its declared type (`schema_version`/`row_count`/`instrument_count` → BIGINT,
+  `expected_window_completeness_fraction` → DOUBLE, `expected`/`available` → BOOLEAN — mirroring
+  `manifest_writer/_writer_io.py`'s own coercion), so a single mistyped shard can never again poison the corpus (and a
+  poisoned column auto-repairs next cycle). Anti-regression
+  `tests/unit/test_manifest_consolidator_numeric_varchar_hardening.py` (mixed-type merge, full-rebuild AND incremental;
+  fails pre-fix). Full QG green (119s).
+
 - **2026-07-14** — Doc-reconciliation fixer (verify-rerun-2, finding 149). Frontmatter `status` was `open` /
   `resolved_by:` blank, contradicting this doc's own body 🟢 RESOLVED banner and all 4 `## Todos` items already `[x]`
   with cited evidence (root-cause, `TRY_CAST` fix, deploy `Evidence: cloudbuild=2d7715a8-6074-4a17-92f7-a58460ae88bf`

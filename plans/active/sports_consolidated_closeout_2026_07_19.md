@@ -170,7 +170,21 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [ ] [CODE] P1. **F1/F2 — venue/instrument_type cleanup**: fix the footystats legacy bundle mislabel
       (`venue=ODDS_API`→`FOOTYSTATS`, 42,476 rows); clean the `instrument_type` pollution (110,759 blank + 56,048 None +
       bookmaker-name rows). Do NOT touch the deliberate `mdps_odds_horizon_bucket` `venue=ODDS_API` aggregate (124,294,
-      reconciled 2026-07-14).
+      reconciled 2026-07-14). **Root cause of the bookmaker-name rows (annotated 2026-07-20,
+      `distinct_values_noncanonical_audit_2026_07_20.md` RESULT/RC-3)**: MDPS
+      `canonical_writer_shaping.py::_type_token_from_canonical_id` assumes a 3-segment CeFi `VENUE:TYPE:SYMBOL`
+      canonical id and takes `parts[1]` as the type token. Sports ids are 8-segment `SPORT:BOOKMAKER:MARKET:...`, so
+      `parts[1]` resolves to the BOOKMAKER, and that positional read OUTRANKS the explicit `instrument_type` column at
+      the same call site — this ONE function is the mechanism minting the entire 13-value bookmaker-in-instrument_type
+      cluster (PADDYPOWER, PINNACLE, betmgm, betway, bovada, coral, fanduel, ladbrokes_uk, paddypower, pinnacle, skybet,
+      unibet_uk, williamhill — confirmed via 13 independent adversarial verification passes, all CONFIRMED
+      "no-action-owned-elsewhere" pointing here). Same shape, neighbouring id segment: the sports `chains` axis carrying
+      `H2H`/`MATCH_ODDS`/`SPREADS` (the market-type segment) is the SAME positional- parse bug on an adjacent field —
+      verified those two readers (`measure_honest_coverage.py`, `_axis_census.py`) are faithful column readers, not the
+      corruption source; fixing them would HIDE the drift. **Fix the parse (`_type_token_from_canonical_id`), not the
+      readers or this todo's downstream cleanup** — a data re-stamp here without the parser fix just regenerates the
+      pollution on the next write. The same positional-parse shape also appears in `build_instrument_catalogue.py:705`'s
+      `_instrument_type_from_id` (IS catalogue side) and should be checked/fixed together.
 - [ ] [CODE] P1. **Promote the existing market vocabulary** (`ODDS_API_MARKET_TO_CANONICAL`, already UPPER on
       `market_key`) to the `instrument_type` axis — K1's "introduce a betting-market vocabulary" already exists, just on
       a different column. Reconcile `canonical_writer_shaping.py:218`'s "instrument_type IS 'odds'" claim first.
@@ -514,27 +528,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                                                                                          | -------------------------- | ---------------------- |
-                                                                                          | `PREMIER_LEAGUE`           | `EPL`                  |
-                                                                                          | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                                                                                          | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                                                                                          | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                                                                                          | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                                                                                                  | -------------------------- | ---------------------- |
+                                                                                                                  | `PREMIER_LEAGUE`           | `EPL`                  |
+                                                                                                                  | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                                                                                                  | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                                                                                                  | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                                                                                                  | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                                                                                          Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                                                                                          written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                                                                                          attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                                                                                          `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                                                                                          `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                                                                                                  Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                                                                                                  written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                                                                                                  attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                                                                                                  `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                                                                                                  `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                                                                                          **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                                                                                          DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                                                                                          they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                                                                                          namespace is reconciled.
+                                                                                                                  **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                                                                                                  DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                                                                                                  they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                                                                                                  namespace is reconciled.
 
-                                                                                          NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                                                                                          registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                                                                                          §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                                                                                                  NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                                                                                                  registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                                                                                                  §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [x] [CODE] P0. ✅ **WRITE PATH CANONICALISED — operator chose canonicalise-at-write (2026-07-20); shipped
       market-tick-data-service@ad4f1872.** `_canonical_league_id()` resolves via the NUMERIC `api_football_id`; all 30
@@ -560,7 +574,11 @@ All four resolved in interactive chat. These are now actionable, not gated:
       (`canonical_writer_shaping.py:467`), so a path-only move is insufficient — the content column must move too and
       MDPS historical days need reprocessing; (3) `league_id`/`instrument_type`/`data_type` are all segments of the SAME
       ~2M objects, so COMBINE with the K1 casing migration — one relocation, not two. Detail:
-      `issues/sports_league_id_namespace_migration_2026_07_20.md`.
+      `issues/sports_league_id_namespace_migration_2026_07_20.md` — which now carries the VERIFIED 9-step execution plan
+      (9-agent adversarial workflow): GO-WITH-CAVEATS, measured scope **256,954 objects / 4.56 GiB** across 3 path
+      shapes, `sport_key` as the PRIMARY disambiguation route (team-roster is fallback), and a HUMAN-ONLY delete at
+      STEP 9. Two peripheral buckets carry a different vocabulary from an untraced writer — filed separately
+      (`issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`), NOT folded in.
 - [ ] [CODE] P1. **LIVE BUG — canonicalise the bookmaker-league coverage registry.** Measured 2026-07-20: the sports v2
       sentinel calls `is_bookmaker_league_covered(bm, _canon_lid)` with a CANONICAL id (`sentinels.py:319`) but
       `BOOKMAKER_LEAGUE_COVERAGE` (`unified-api-contracts/.../sports_bookmaker_league_coverage.py`) is keyed on RAW
@@ -569,23 +587,14 @@ All four resolved in interactive chat. These are now actionable, not gated:
       `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` instead of surfacing as a real gap — a standing coverage false-negative
       TODAY, independent of the relocation. Fix: regenerate the registry JSON from `ODDS_API_DISPLAY_TO_CANONICAL` (or
       re-run `refresh_sports_bookmaker_league_coverage_2026_06_21.py` after the manifest is canonical).
-- [~] [CODE] P1. instruments-service per-fixture path — **CODE WRITTEN + TESTS GREEN, ship BLOCKED on a peer.**
-  `sports_reference_fixtures.py` always took the `fx.league.league_id` branch, making the numeric-id `elif` dead code
-  (`CanonicalLeague` always carries `league_id`, so the first branch always won). Precedence inverted to resolve by
-  numeric `api_football_id` first, falling back to the raw value only for an unregistered league (honest absence, not a
-  vanished map entry). 2 regression tests pin the precedence; 95 sports-pipeline tests + both new tests pass. **NOT
-  shipped — blocked by a CLONE-LEVEL conflict, not by this change (measured 2026-07-20 14:55Z).** (a) IS QG shows 4
-  failures (`expected_universe golden[defi]` + `golden[sports]`, `rule11_per_ag_dedup`,
-  `defi_set_equals_uac_denominator`) — **proven NOT mine** by stashing only these two files BY NAME and re-running: the
-  identical 4 fail without the change. (b) The `golden[sports]` drift (27→47 bookmaker venue triples) is **already fixed
-  upstream** — `793125ad`/`6506b505` regenerate every `expected_universe/*.json` incl. `sports.json`, so it resolves on
-  pull. (c) quickmerge could not rebase: `QUICKMERGE_BLOCKED code=AUTOSTASH_POP_CONFLICT`, 3 behind. Cause = **divergent
-  foreign WIP sitting in this clone**: `adapters/defi/chainlink.py` is 329 lines locally vs 260 upstream (229 diff
-  lines) and `factory.py` 724 vs 717 — a NEWER local iteration than what landed, i.e. real unique work. Those files are
-  **PROTECTED, not reconciled by me**: resolving another worker's divergence against upstream is their call, and
-  discarding it would destroy the only copy. All 3 incoming commits leave my two files untouched, so the rebase is clean
-  once only mine are dirty. Working tree verified intact (no unmerged paths); change also backed up outside the repo.
-  **Unblocks the moment the foreign WIP here is committed or reconciled.**
+- [x] [CODE] P1. ✅ instruments-service per-fixture path — **SHIPPED instruments-service@815ad06c.**
+      `sports_reference_fixtures.py` always took the `fx.league.league_id` branch, making the numeric-id `elif` dead
+      code (`CanonicalLeague` always carries `league_id`, so the first branch always won). Precedence inverted to
+      resolve by numeric `api_football_id` first, falling back to the raw value only for an unregistered league (honest
+      absence, not a vanished map entry). 2 regression tests pin the precedence. Earlier blocked by another worker's
+      divergent defi WIP in the clone (AUTOSTASH_POP_CONFLICT); verified green on the clean origin base via a sibling
+      worktree (160 tests incl. the previously-foreign golden/dedup failures now fixed upstream), then shipped once the
+      clone reconciled — foreign WIP never touched. Companion to the write-path fix mtds@ad4f1872.
 - [ ] [DATA] P2. Dispose of the genuinely-out-of-universe rows (decision 2): exclude from the denominator; purge only
       once confirmed. **STILL BLOCKED on the historical migration above** — until the 214,842 raw-named rows are
       canonicalised, a registry-membership test on the symbolic `league_id` still classifies Premier League / La Liga /

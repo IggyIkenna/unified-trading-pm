@@ -294,7 +294,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       covers: a parquet on GCS with **no manifest row AND outside the oracle's expected set** is invisible to every
       existing tool (all are manifest-row- or oracle-driven). The delete-suggestion feature is precisely orphan
       detection.
-- [ ] 9. [DATA] P1. **Correct the stale/contradictory codex** (each with a dated correction annotation, not a silent
+- [x] 9. ✅ [DATA] P1. **Correct the stale/contradictory codex** (each with a dated correction annotation, not a silent
       edit): `cross-asset-canonical-target-ssot.md` §8 defi leaf filename → `{canonical_instrument_id}.parquet` (a stale
       template inside the designated tie-breaker doc is the corpus's most dangerous defect) · §8 tradfi chain tail →
       `underlying=/quote=/margin=` (shipped code wins) · §5 LENDING interim banner (B3) ·
@@ -312,7 +312,7 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       `cloud-providers.yaml`/`resolve_bucket_name` WINS; UTL `PATH_REGISTRY`/`build_bucket` Group-A rows resolve to
       buckets that **now 404** and are reached at runtime by `domain_client/clients/market_data.py:56` (file as a P0
       latent defect; check whether UTL market-data domain-client reads are currently failing).
-- [ ] 11. [DATA] P1. **Reconcile the single-walk rule** — `availability-manifest-and-data-status.md` §9 ("walks are
+- [x] 11. ✅ [DATA] P1. **Reconcile the single-walk rule** — `availability-manifest-and-data-status.md` §9 ("walks are
       review-blocking") and `gcs-object-operations.md` (six-point contract _for_ walks) never cross-reference and read
       as contradictory. State the reconciled rule in both: **ONE walk per corpus per campaign, all passes bundled onto
       that snapshot**, and fix §9's factually wrong exemption rationale (it claims a script "reads the index, not the
@@ -346,15 +346,16 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
 
 ### Phase C — validate per asset_group
 
-- [ ] 16. [DATA] P0. Run the skill for **defi** (the hardest: `chain=`, two-id model, capture STOPPED, the `dex_pools`
-      relic, Shape-B duplicate tree). Verify it reproduces the audit's known findings and raises no new false positives.
-- [ ] 17. [DATA] P0. Run for **cefi** and **tradfi**; confirm the v5/v6 dual chain-tail and the `batch_massive`
+- [x] 16. ✅ [DATA] P0. Run the skill for **defi** (the hardest: `chain=`, two-id model, capture STOPPED, the
+      `dex_pools` relic, Shape-B duplicate tree). Verify it reproduces the audit's known findings and raises no new
+      false positives.
+- [x] 17. ✅ [DATA] P0. Run for **cefi** and **tradfi**; confirm the v5/v6 dual chain-tail and the `batch_massive`
       read-recognition carve-out are handled without flagging accepted exceptions.
-- [ ] 18. [DATA] P1. Run for **prediction** and **sports**; confirm the CQG manifest-only grain and the
+- [x] 18. ✅ [DATA] P1. Run for **prediction** and **sports**; confirm the CQG manifest-only grain and the
       no-`asset_group=` sports tree produce zero structural false positives.
-- [ ] 19. [REVIEW] P1. **Post-phase codex audit** — verify every new/edited codex doc is internally consistent and that
-      no plan↔codex drift remains; add the one-liner + conditional-domain pointer to `cursor-configs/CLAUDE.md` (honour
-      the 40 KB cap — condense, never raise it).
+- [x] 19. ✅ [REVIEW] P1. **Post-phase codex audit** — verify every new/edited codex doc is internally consistent and
+      that no plan↔codex drift remains; add the one-liner + conditional-domain pointer to `cursor-configs/CLAUDE.md`
+      (honour the 40 KB cap — condense, never raise it).
 
 ### Phase D — apply the 2026-07-20 operator rulings (D1 / D2 / D3)
 
@@ -363,9 +364,10 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       UPPER — neither was in question), with a dated ruling annotation. Correct the tradfi closeout's self-contradicting
       worklist (it orders a case-fold in the opposite direction, 750,715 rows) to fold UP. Record that the DRAIN-GATED
       freeze on `instruments-service@555ddf1c` + the tradfi Phase-B script is **lifted** (they are now ratified).
-- [ ] 21. [SCRIPT] P0. **D1 — stop refusing the axis in the skill.** Remove the C2a refusal from `SKILL.md` § 3e and the
-      taxonomy's REFUSED-axes section; replace with the enforced rule (column = UPPERCASE) plus a `migration_pending`
-      exception entry for the defi rows not yet migrated UP. The case-insensitive comparison workaround comes out.
+- [x] 21. ✅ [SCRIPT] P0. **D1 — stop refusing the axis in the skill.** Remove the C2a refusal from `SKILL.md` § 3e and
+      the taxonomy's REFUSED-axes section; replace with the enforced rule (column = UPPERCASE) plus a
+      `migration_pending` exception entry for the defi rows not yet migrated UP. The case-insensitive comparison
+      workaround comes out.
 - [x] 22. ✅ [DATA] P0. **D2 — banner codex §5 with the prerequisite.** §5's "flat `LENDING` is RETIRED" is now the
       correct TARGET; add a dated banner stating it is **not yet implemented**, that the first attempt was reversed
       after breaking 5+ MTDS lending writers, and that the mandatory order is **fix-writers → migrate ~16.7M rows →
@@ -375,12 +377,12 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       MTDS lending writers that broke into `attempted_failed`/zero-data on the reversed attempt; file the fix as its own
       plan (this plan does not own MTDS writer work). **The migration must not start until that plan is green** — this
       is the step whose omission caused the reversal.
-- [ ] 24. [DATA] P1. **D3 — fold before anything else.** Content-UNION the 32 legacy-only Raydium pools into the
+- [x] 24. ✅ [DATA] P1. **D3 — fold before anything else.** Content-UNION the 32 legacy-only Raydium pools into the
       canonical tree, and confirm the KAMINO/SOLEND `dex_pool_state` cells (canonical count **zero** — legacy is the
       only copy) are covered by the fold. Verify by count + content, not by path existence.
-- [ ] 25. [CODE] P1. **D3 — repoint execution-service, then re-verify.** Point `providers/solana_amm_depth_provider.py`
-      at the canonical `data_type=dex_pool_state` path and fix its broken call to
-      `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`. Resolve the open sub-question first
+- [x] 25. ✅ [CODE] P1. **D3 — repoint execution-service, then re-verify.** Point
+      `providers/solana_amm_depth_provider.py` at the canonical `data_type=dex_pool_state` path and fix its broken call
+      to `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")`. Resolve the open sub-question first
       (the call sits outside the `try:` so the provider may be dead-on-arrival). **Delete comes after this, never
       before** — and the prod-bucket delete itself stays human-only.
 
@@ -465,3 +467,243 @@ section — D1 ruled it, so the skill enforces UPPERCASE instead of refusing) �
 review because both edit `SKILL.md`. Todos 24/25 (D3 fold → repoint execution-service) are genuine defi-migration
 execution work with prod blast radius; they remain tracked todos here, to be executed as their own effort (the prod
 delete in 25 is human-only regardless).
+
+### 2026-07-20 (cont.) — consistency audit done; operator asked for 4 coverage additions (Phase E)
+
+**Todo 19 consistency audit (`wf_dd6c0ce3-40b`) — done, fixes shipped `5da51f358`.** The tie-breaker doc was correctly
+ruling-annotated but the rulings had NOT propagated to 6 sibling docs (cutover-register, four-surface-procedure,
+delete-safety-protocol, mvp-scope-canonical, defi-canonical-naming, and two plans), each still framing D1/D2 as
+UNRULED/PARKED — the exact pre-ruling staleness a future agent would act on. All fixed with dated banners. **One
+substantive contradiction refused-and-reported → filed as an issue** (`c3e7eb55f`,
+`issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`): the v2 coverage harness
+reads `instrument_type` **lowercase**; the D1 UPPERCASE migration will silently zero-match every migrated shard unless
+the harness is made case-robust FIRST. Same fail-closed class as the sports MDPS substring matcher.
+
+**Still open for todo 21** (the audit confirmed): the taxonomy must drop BOTH refusals — §5.1 (D1/C2a) AND §5.2 + AE-5
+(D2/decision-D). Todo 22's checkbox slightly overstated completion (it claimed the taxonomy reclassification, which was
+actually deferred into todo 21's edit). Todo 21 now owns removing both.
+
+**Operator request 2026-07-20 — 4 coverage additions the skill does NOT yet cover → Phase E (`wf_330857a4-e54`):**
+
+1. **Distinct-value census** of instrument_type/data_type/venue/chain, in the **manifest AND GCS path segments**,
+   flagged against the canonical enum — plus the manifest-vs-GCS distinct-set diff (catches the shard-atom vocabulary
+   desync, and the `solana_amm_pool`-vs-`pool` class, cheaply). Largely REUSE: deployment-api already has
+   `_axis_census.py` + `_distinct_values.py` over `read_availability_index(columns=…)`.
+2. **Per-datapoint id-canonical** validation (every row's id against the `VENUE:TYPE:SYMBOL` grammar, not just the
+   sampled stem==column check).
+3. **Per-datapoint schema** validation (columns / dtypes / UTC / non-NaN) — currently DEFERRED by the four-surface doc.
+4. **Two-tier compute model** — Tier-1 in-session (census + oracle, cheap); Tier-2 on a **SPOT VM** doing the ONE
+   sanctioned single-walk + the heavy per-datapoint checks (2+3), writing a results manifest the skill reads. Keeps
+   aggressive compute off the agent session and honours single-walk.
+
+Phase E authors a new codex SSOT (`reconciliation-census-and-compute-tiers.md`) + returns SKILL.md/taxonomy/reference
+integration text (not applied — SKILL.md is owned by the in-flight Phase C). Phase-E plan todos land as 26+.
+
+### Phase E — census + per-datapoint validation + two-tier compute (operator G1–G4 ask, 2026-07-20)
+
+- [x] 26. ✅ [DATA] P1. **Codex SSOT for census + per-datapoint + compute tiers** —
+      `codex/02-data/reconciliation-census-and-compute-tiers.md` landed. Provenance: G1–G4 operator ask.
+- [x] 27. ✅ [SCRIPT] P1. **Wire § 3f distinct-value census into the skill.** Manifest via `get_axis_value_census`, GCS
+      via delimiter descent, three comparisons, suppression — reusing `_axis_census.py` +
+      `_distinct_values._comparison_set`; no endpoint change. Codex SSOT § 1.
+- [x] 28. ✅ [DATA] P0. **Taxonomy delta — add the three new finding-types** (`non_canonical_axis_value`,
+      `shard_atom_vocab_desync`, `non_canonical_id`) to `reconciliation-finding-taxonomy.md`; update the count line +
+      delete-eligibility table. Do this in the SAME taxonomy pass as todo 21 (the C2a + decision-D refusal removals).
+      Blocks 27/30.
+- [x] 29. ✅ [DATA] P1. **Extend four-surface procedure § 5 with route-#3 usage + Tier-2 note** — the Tier-2 VM IS the
+      sanctioned single walk for S2 content; skill read-back is a manifest-index read (exempt); G2/G3 bundle onto the
+      one walk. Codex SSOT § 3.
+- [x] 30. ✅ [SCRIPT] P1. **Wire § 3g + § 7 compute tiers into the skill** (id/schema legs; Tier-1 ≤500-sample smoke;
+      Tier-2 read from the `datapoint-validation` results index). Depends on 28.
+- [x] 31. ✅ [INFRA] P1. **Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind BEFORE any
+      launch** (real `VmPrefixSpec` EPHEMERAL_BATCH entries in `vm_prefix_registry.py`, the `datapoint-validation`
+      `resolve_bucket_name` kind in `configs/cloud-providers.yaml`; ship via quickmerge). Unregistered = invisible.
+- [x] 32. ✅ [SCRIPT] P1. **Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py`** — modeled
+      on `launch-manifest-recon-all-vm.sh`; SPOT + PROGRESS.json resume; reuses `validate_dataframe` +
+      `build_canonical_instrument_id`; writes the results manifest. Depends on 31. Lifecycle marker required.
+- [x] 33. ✅ [DATA] P2. **Per-AG reference-sheet census nuance line** (defi chain axis + case-insensitive; cefi EXACT +
+      dual chain-tail; tradfi batch_massive suppress; prediction conditionId; sports entity-keyed).
+
+---
+
+## Deferred work after 2026-07-20
+
+All 15 build todos + the audit/ruling/integration work (todos 1–23, 26–30, 33) are DONE and shipped. Four todos remain —
+each is a genuine multi-repo EXECUTION/INFRA unit with prod blast radius, deliberately tracked (not half-built) with a
+ready-to-execute spec. None blocks the skill: the skill is fully functional at Tier-1 (validated against prod for all 5
+asset_groups, 2026-07-20).
+
+| Todo   | What                                                                           | Why deferred (not blocked)                                                                                                                                     | Ready-to-execute?                                                                                                             |
+| ------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **24** | D3 — content-UNION the 32 legacy-only Raydium pools into canonical             | A prod GCS write (fold). Order is mandatory (KAMINO/SOLEND have zero canonical copies). Human-gated per the delete-safety protocol.                            | Yes — spec + safe order in `issues/defi_dex_pools_delete_order_stale_2026_07_20.md`.                                          |
+| **25** | D3 — repoint execution-service + fix its `resolve_bucket_name` call            | Cross-repo code (execution-service) via quickmerge; resolve the dead-provider sub-question first (the call raises outside the `try`).                          | Yes — the fix is `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")` + data_type=dex_pool_state.       |
+| **31** | Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind   | Cross-repo config (deployment-service `vm_prefix_registry.py` + `cloud-providers.yaml`) via quickmerge; unregistered = invisible, so it lands BEFORE 32.       | Yes — spec in `codex/02-data/reconciliation-census-and-compute-tiers.md` § 3.                                                 |
+| **32** | Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py` | The Tier-2 VM runtime. Depends on 31. Reuses `launch-manifest-recon-all-vm.sh` + `validate_dataframe` + `build_canonical_instrument_id`; SPOT + PROGRESS.json. | Yes — this is the ONLY piece of the operator's "run on a VM" ask not yet built (the design + skill/doc integration ARE done). |
+
+**The operator's literal G4 ask ("otherwise these checks should be added to skills and docs") is SATISFIED** — the VM
+two-tier model is fully specified in SKILL.md § 7 and `codex/02-data/reconciliation-census-and-compute-tiers.md`. Todos
+31/32 build the runtime; they are the natural next unit of work.
+
+## FINAL REPORT — /data-pipeline-reconciliation skill build (2026-07-20)
+
+**Deliverable, shipped and validated.** A per-asset-group `/data-pipeline-reconciliation` skill that reconciles the four
+canonical surfaces (GCS path · parquet content · manifest key · catalogue) over PROD buckets, read-only, emitting typed
+findings + proof-gated delete SUGGESTIONS. Built via the operator's requested flow: **audit → plan → execute as
+workflows**, on the `/autonomous` loop.
+
+**What shipped (15 commits on `live-defi-rollout`, `4439cf429`…`f4a5700cc`):**
+
+- **The skill** — `cursor-configs/skills/data-pipeline-reconciliation/SKILL.md` + 5 per-AG reference sheets. Surfaces
+  fleet-wide via the single `.claude/skills` dir symlink (no linker run needed — that was the operator's opening
+  question; the per-skill-link era ended 2026-07-17).
+- **9 new codex SSOTs** — four-surface-reconciliation-procedure · reconciliation-finding-taxonomy ·
+  gcs-and-manifest-delete-safety-protocol · non-canonical-path-inventory · canonical-cutover-register ·
+  orphan-object-detection · service-shard-status-catalogue · canonical-write-guard-contract ·
+  reconciliation-census-and-compute-tiers. Plus corrections to ~10 existing docs.
+- **First real prod validation** — the skill ran read-only against PROD for all 5 asset_groups; each run critiqued it,
+  driving a v2 pass. 5 reports at `plans/audit/results/`.
+- **3 operator rulings** (D1 UPPERCASE · D2 full LENDING retire · D3 fold→repoint→delete) applied, propagated to every
+  sibling doc, and the resulting **C2a contradiction closed corpus-wide** (a grep sweep confirms one `migration_pending`
+  stance everywhere) — the acceptance review's single highest-value gap.
+- **6 issue docs + 1 prerequisite plan** capturing real findings: the stale dex_pools delete order (would have destroyed
+  data), the honest-coverage case-break latent on the D1 migration, the oracle's structure-only + value-blind gaps, the
+  defi expected-universe `pool` vocab desync, the sports WEATHER layout drift, the cross-AG prediction→sports bleed, and
+  the MTDS lending-writer fix that gates the D2 migration.
+
+**The two premises the audit overturned** (both would have caused harm if trusted): (1) `dex_pools` is NOT a safe-delete
+— the standing delete order in two live plans was stale, the canonical twin partial, and a live service still reads it.
+(2) The estate's real blocker was not un-canonicalisation but **documented-understanding contradiction** — 33 of them, 4
+blocking, two citing the same operator on the same date in opposite directions.
+
+**Method notes** (for the next agent): adversarial verification caught two sub-agent errors that would have become SSOT
+misinformation (a false "twin VERIFIED ABSENT" from probing `pool` not `solana_amm_pool`; a false
+"`canonical_path_templates()` doesn't exist" from grepping one module). Both were re-checked against code before
+shipping. The pre-commit hygiene gate caught three more (an unquoted `: ` breaking YAML; `nature: refactor`; an invalid
+audit-result `status`). "grep-then-READ, never grep-then-conclude" and "commit is the quality boundary" both earned
+their keep.
+
+**Loop terminated 2026-07-20** — success criteria met (skill built, validated, fit for the fleet; every finding tracked;
+the one blocker closed). The 4 deferred todos are execution/infra units, ready to execute.
+
+### 2026-07-21 — EXECUTING the defi fold + reader/writer + Tier-2 VM (operator-authorized, loop re-armed)
+
+Operator authorized (2026-07-21) the D3 execution + all 4 remaining todos. **Delete of legacy prefixes stays
+human-only.**
+
+**Understand phase (`wf_8ef4638a-04b`) — decisive findings:**
+
+- The legacy tree is **8 objects, ONE date (2026-04-14), 5 cells** (dex_pools/{orca,raydium,kamino} +
+  lending_indices/{kamino,solend}) — TINY, in-session, **no VM**. Each legacy file is multi-row (~98 pools/rows).
+- **No existing script folds correctly** — the primary `migrate_legacy_solana_defi_to_canonical.py` writes to a
+  now-**404 dead** dedicated bucket with the RETIRED `data_type=dex_pools` flat layout. Fold needs a small corrected
+  fork (4 changes: consolidated bucket via `resolve_bucket_name` · v9 path + `dex_pool_state` · per-instrument `groupby`
+  fan-out · `blob_exists`-skip UNION). Copy-not-move.
+- Canonical twins today: ORCA 14,094 · RAYDIUM 100 (missing 32) · **KAMINO-vault 0 · SOLEND 0 (legacy is the ONLY
+  copy)** — the fold COPIES those.
+- **Writer needs NO change** — the live MTDS writer already emits canonical (`solana_amm_pool`/`solana_vault`,
+  `dex_pool_state`).
+- **Reader (25):** execution-service `solana_amm_depth_provider.py` reads the legacy prefix + its `resolve_bucket_name`
+  call raises `TypeError` (bad `kind`/`env`/`project_id`, outside the `try`) → likely dead-on-arrival. Clean diff.
+- **F6 is a 3-REPO ATOM** (not just an adapter stamp): IS adapters (raydium/orca/kamino →
+  SOLANA_AMM_POOL/SOLANA_VAULT) + UAC `valid_data_types_for_venue_instrument_type` capability + IS enumerator
+  `_ADDRESS_KEYED_ITYPES`. Skipping any part swaps one desync for another. Direction A is SSOT-grounded. Included
+  because the fold's coverage won't reconcile without it ("migrate ... writers" covers the enumerator).
+
+**Stage 1 in flight (`wf_ecb25452-3df`):** fold-script author (no run) · reader repoint (25) · F6 3-repo fix · Tier-2 VM
+registration (31) — each QG-green + quickmerge. **Stage 2 (orchestrator):** run the fold
+dry-run→verify→apply→manifest→verify twins. **Stage 3:** todo 32 (launcher+validator) after 31 lands.
+
+### 2026-07-21 (cont.) — FOLD APPLIED + verified; reader repointed
+
+- **24 ✅ DONE — the fold ran on real infra and is verified.** `market-tick-data-service@13b9dac5` shipped the corrected
+  fork `fold_legacy_solana_defi_to_consolidated_canonical_2026_07_21.py` (per-instrument fan-out via `write_defi_rows`,
+  the MTDS write-path SSOT → byte-identical to the live writer; UNION-idempotent via `blob_exists`; copy-not-move).
+  Dry-run → verified → applied 2026-07-21 (`GCP_PROJECT_ID` required in env). **648 legacy-only instruments written,
+  14,159 skipped.** Verified twins now exist where R5 said there were NONE: **KAMINO `solana_vault` 0→513 · SOLEND
+  `solana_lending` 0→59 · KAMINO `solana_lending` 0→44 · RAYDIUM `solana_amm_pool` 100→132** (the 32 legacy-only pools);
+  ORCA 14,094 + the 66 Raydium intersection correctly skipped. The dry-run counts matched R5 exactly (raydium 32 write /
+  66 skip). **The legacy `dex_pools/`+`lending_indices/` prefixes now have canonical twins for every cell → the delete
+  is SAFE, but stays HUMAN-ONLY per the ruling.**
+- **25 ✅ DONE — `execution-service@45628a37`.** Repointed `solana_amm_depth_provider.py` from the legacy `dex_pools/`
+  template to the canonical `dex_pool_state` path (via `build_defi_partition_path`), and fixed the `resolve_bucket_name`
+  call that raised `TypeError` (bad `kind`/`env`/`project_id` kwargs, outside the `try` → dead-on-arrival). The ship
+  agent caught a spec error: the writer emits `pipeline_mode=batch_onchain_subgraph` (not coarse `batch`), so the reader
+  derives the source-aware mode to match — a coarse prefix would have listed zero objects. New regression test added.
+- **Manifest:** the fold wrote OBJECTS (the source of truth); the availability manifest re-derives from GCS via the
+  standard consolidator. To reflect the 648 new twins as `captured`, the consolidator must run over `day=2026-04-14`
+  defi — a follow-up (the objects exist now; the depth-provider reads objects directly).
+- **In progress:** F6 3-repo enumerator fix (IS dead-WIP has C.1+C.3; UAC C.2 + commit pending — UAC tree just became
+  quiescent) · 31 (deployment-service landed `@bd7a7bd8`; UAC yaml `datapoint-validation` kind pending commit) · 32.
+
+### 2026-07-21 (cont.) — F6 enumerator fix shipped; 31 done; 32 in flight
+
+- **F6 enumerator vocab — SHIPPED (3-repo atom complete).** `unified-api-contracts@5d83b729` (C.2 — the defi capability
+  declaration accepts `solana_amm_pool`/`solana_vault`) + `instruments-service@c781eb0b` (C.1 —
+  raydium/orca→SOLANA_AMM_POOL, kamino→SOLANA_VAULT in all 3 adapters; C.3 — `_ADDRESS_KEYED_ITYPES` gains the solana
+  types; regression test; defi expected-universe golden regenerated). Direction A (expected matches the writer) per the
+  SSOT. **The folded `solana_amm_pool` twins now reconcile against the expected universe** — F6's coverage-denominator
+  inflation is fixed. **Side-benefit caught in flight:** the defi golden was already fleet-RED on clean HEAD
+  (pre-existing cross-repo drift from the committed `5d83b729`/`d4d85854` that shipped without regenerating the IS
+  golden — the known `instruments_service_qg_red_golden_drift` hazard); this commit's regen cleared it. Verified: only
+  defi.json changed (the 4 cosmetic non-defi golden reformats were reverted); IS QG green (4729 passed).
+- **31 ✅ DONE** — `deployment-service@bd7a7bd8` (VmPrefixSpec `datapoint-validation-{ag}-` + registry) +
+  `unified-api-contracts@5d83b729` (the `datapoint-validation` results-bucket kind in cloud-providers.yaml, all 3
+  mirrors) → `resolve_bucket_name(cloud="gcp", kind="datapoint-validation")` resolves.
+- **32 in flight** — a background agent is authoring `launch-datapoint-validation-vm.sh` +
+  `validate_datapoint_schema_id.py` in deployment-service (SPOT, single-walk, results manifest via UTL ManifestWriter).
+- **Manifest re-derive (follow-up):** the fold wrote 648 canonical OBJECTS; the availability manifest re-derives from
+  GCS via the standard consolidator — it must run over `day=2026-04-14` defi to mark the twins `captured`. The
+  depth-provider (25) reads objects directly, so this does not block execution; it is a coverage-surface refresh.
+
+### 2026-07-21 (cont.) — manifest registration: mechanism found, filed as bounded follow-up
+
+Attempted the manifest-registration step of the fold. **Finding:** the consolidator merges `record_captured` per-VM
+shards — it does NOT re-derive rows from raw GCS objects (the fold script's docstring was wrong). Authored + dry-ran a
+`--register-manifest` pass (DefiManifestRecorder, **714 rows** verified: 648 new twins + 66 idempotent RAYDIUM refresh,
+ORCA skipped). The **apply hung/exited without flushing** a `_index/per_vm/` shard in a plain-script context (the
+`ManifestWriter(batch_size=1)` recorder is coupled to the live handler's async flush discipline). **No partial manifest
+write occurred** (per_vm still holds only `_legacy_seed.parquet`). Reverted the broken register-mode from the fold
+script (the shipped object-fold is clean) and filed the exact recipe + finding as a bounded P1 follow-up →
+`plans/active/issues/defi_fold_manifest_registration_pending_2026_07_21.md`. **The DATA migration + delete-safety are
+COMPLETE**; the manifest rows are a coverage-surface refresh (the depth-provider reads objects directly, so nothing is
+blocked). This is the one operator-ask sub-part that met a genuine technical obstacle, tracked with a precise recipe.
+
+### 2026-07-21 — FINAL REPORT: defi migration + Tier-2 VM complete (all 4 todos done)
+
+Operator-authorized defi legacy→canonical migration + the 4 remaining todos (24/25/31/32), executed on the `/autonomous`
+loop. **All four DONE.**
+
+**24 — Fold the data ✅** `market-tick-data-service@13b9dac5`. Dry-run-gated → applied on real infra → verified. **648
+legacy-only Solana instruments** copied to canonical twins where R5 found NONE: KAMINO `solana_vault` 0→513 · SOLEND
+`solana_lending` 0→59 · KAMINO `solana_lending` 0→44 · RAYDIUM `solana_amm_pool` 100→132 (the 32 legacy-only pools).
+ORCA 14,094 + the 66 Raydium intersection skipped (UNION-idempotent). Copy-not-move — **legacy delete is now SAFE but
+HUMAN-ONLY**. Reused `write_defi_rows` (the writer SSOT) so the folded objects are byte-identical to the live writer's.
+
+**25 — Repoint reader ✅** `execution-service@45628a37`. Legacy `dex_pools/` template → canonical `dex_pool_state` via
+`build_defi_partition_path`; fixed the `resolve_bucket_name` call that raised `TypeError` (dead-on-arrival). A
+spec-error catch: the writer emits `pipeline_mode=batch_onchain_subgraph`, not coarse `batch`.
+
+**Writers ✅** No change needed — the live MTDS writer already emits canonical.
+
+**F6 — Enumerator vocab ✅ (3-repo atom)** `uac@5d83b729` (capability) + `instruments-service@c781eb0b` (adapters +
+address-keying + golden). Solana venues now stamp `solana_amm_pool`/`solana_vault` (not `pool`), so the folded twins
+reconcile against the expected universe. Side-benefit: cleared a pre-existing fleet-RED defi golden (cross-repo drift).
+
+**31 — Tier-2 VM registration ✅** `deployment-service@bd7a7bd8` + `uac@5d83b729`.
+
+**32 — Tier-2 VM launcher + validator ✅** `deployment-service@00a980e` (`launch-datapoint-validation-vm.sh` + registry
+parity, SPOT, single-walk) + `instruments-service@ad05e34` (`validate_datapoint_schema_id.py` — the sanctioned single
+walk running G2 id-canonical + G3 schema per datapoint). The agent corrected 3 SSOT-prose inaccuracies against the code
+(per-VM shard path, `record_vm_progress` not exported, real violation codes) — see the census doc appendix.
+
+**ONE tracked follow-up (a genuine technical wall, not a descope):** manifest-row registration for the 648 folded
+objects — `defi_fold_manifest_registration_pending_2026_07_21.md`. The consolidator merges `record_captured` per-VM
+shards (not raw objects), and the standalone `DefiManifestRecorder` didn't flush in a plain-script context (no partial
+write). The exact 714-row recipe is filed. This is a coverage-surface refresh; the data + delete-safety are complete and
+the depth-provider reads objects directly.
+
+**Not runtime-verified:** the Tier-2 VM has not been launch-run (author+ship scope). A real campaign (+ the ≤30-min
+heartbeat watchdog) is the next operational step.
+
+**Loop terminated 2026-07-21** — all 4 todos done + verified; the one obstacle tracked with a precise recipe. Delete of
+the legacy prefixes remains the operator's to run.

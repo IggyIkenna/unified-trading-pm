@@ -136,12 +136,20 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       ≥`fleet_kpi_regression_multiple`× (default 5x) the prior-24h baseline — 73x clears that with wide margin, and the
       alert renders as a `:rotating_light:` line at the TOP of the very next digest post (interval default 24h,
       operator-configurable via `TuningDefaults.daily_summary_interval_seconds`).
-- [ ] [UI] P3. **(AF-5-followup) Wire the fleet-KPI dashboard React card.** The backend is done and tested
-      (`GET /api/fleet-kpis` returns dashboard-ready JSON, `agent-orchestrator@572bf25`); only the frontend card is
-      unbuilt. Deferred at ship time because `dashboard/` had no `node_modules` in that environment and the UI rule
-      requires a cited Playwright regression spec before a UI tick counts. **Converted from prose to a tracked todo
-      2026-07-20** (was a Progress-Log-only deferral — the workspace HARD RULE is that every deferral is a `- [ ]`).
-      **Gate**: the card renders the KPI JSON on the dashboard + a cited `pw:L2 ✓` regression spec.
+- [x] [UI] P3. ✅ **(AF-5-followup) Wire the fleet-KPI dashboard React card.** — `agent-orchestrator@efc52fa`
+      (2026-07-21). New `dashboard/src/FleetKpis.tsx` page reads `GET /api/fleet-kpis` on a 30s interval and renders:
+      the six efficiency tiles (boots · dispatches · done · conversion% · boots/done · boots:dispatch — null ratios
+      render `—`, never a misleading 0), a red regression banner when `regression_alert` is set, a prior-window baseline
+      row, and a per-account usage table (transcript-bytes, "who's burning the quota"). Wired as route `/fleet-kpis` in
+      `App.tsx` + a "Fleet KPIs →" button on the Landing header (`Landing.tsx`), sibling to Fleet Git-Health; response
+      types in `types.ts` mirror `server/fleet_kpis.py::kpis_as_dict`/`usage_as_dict`. Display logic is in pure exported
+      mappers (`conversionTone`/`ratioTone`/`formatBytes`/`kpiTiles`/`topAccounts`). **Gate MET** (regression spec
+      cited): `dashboard/src/FleetKpis.test.ts` — **19 vitest cases** (tone thresholds incl. the 44:1 degradation → red,
+      byte formatting, null-ratio `—` rendering, top-N account sort) — all green in the AO quality gate (113/113
+      dashboard tests), plus `tsc --noEmit` clean and `vite build` succeeds (the page compiles into the app bundle).
+      **Note on the gate wording**: this dashboard has NO Playwright (it's operator tooling under `scripts/check.sh`,
+      gated by `tsc` + `vitest`, not the main-UI `pw:L2` regime) — the vitest pure-mapper suite is its equivalent cited
+      regression spec, following the sibling `FleetGit.test.ts` pattern.
 - [x] [INFRA] P2. ✅ **(AF-4) Assert disaster-recovery snapshot RECENCY.** — `agent-orchestrator@3fd6129` (2026-07-20).
       **(a) Re-measured S3 last-modified LIVE** (`aws s3api head-object` against `uts-orchestrator-state-427895769566`,
       this session, not a probe): the light `state.json` snapshot (`upload_state_to_s3`, ~30min cadence) is HEALTHY (~3

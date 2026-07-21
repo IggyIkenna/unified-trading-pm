@@ -78,10 +78,11 @@ Two writers emit cefi chains on **different tails for the same shard**:
 **Do**: probe both tails per chain shard and report the divergence as a typed finding. **Do not** conclude "chain data
 absent" from a v6-only probe.
 
-> **OPEN QUESTION — carry it into the report, do not answer it silently.** Whether the W1 cefi-chain path is actually
-> reachable in prod (i.e. whether any cefi chain shard is routed through `PartitionedTickWriter` rather than the Tardis
-> lane) is **UNVERIFIED**. The code path exists; that a prod backfill traverses it is not established. Report measured
-> counts of each tail rather than asserting reachability.
+> **MEASURED 2026-07-20 — cefi chains are 0% captured.** `options_chain` / `futures_chain` hold 0 captured rows (all
+> `empty_confirmed` / `expected_unattempted`; 0 v6 rows behind the fork). **Neither tail exists in captured data**, so
+> the v5/v6 dual-tail hazard above is currently **latent**, not live. The OPEN QUESTION is therefore not "which tail
+> does W1 emit" but **"is ANY cefi chain shard captured at all"** — confirm at least one captured chain shard exists
+> before probing tails, and report the measured 0-capture state rather than asserting either tail is reachable.
 
 ### H2 — the write-time canonical guard does not cover cefi batch
 
@@ -113,6 +114,12 @@ phantom findings there is **absence of evidence**, not evidence of absence — s
 cefi cells land with `source=""`. Do not read an empty `source` as a data defect per-shard; report it once as the known
 wiring gap.
 
+### H7 — the `chain` content column is populated for on-chain perp DEXes — it is display residue, not a path defect
+
+~817k cefi rows (ASTER / HYPERLIQUID / EXTENDED / LIGHTER) carry a non-null `chain` **content** column even though cefi
+has **no `chain=` path axis** (measured 2026-07-20). This is display residue, not a canonicalisation defect — do not
+flag it as a path/atom violation; report it once if at all.
+
 ## Known-good spot-check — run BEFORE trusting any absence result
 
 The generalised lesson from the defi `solana_amm_pool` false negative (SKILL.md § 4b): **an absence result is only
@@ -122,10 +129,28 @@ evidence once you have confirmed you probed the vocabulary the writer actually e
    `unified-api-contracts/unified_api_contracts/registry/possible_manifest.py:352`. It emits **both**
    `pipeline_mode=batch_<source>/` and `pipeline_mode=live_<source>/` prefixes per source (`:315-336`) — probing only
    `batch_` false-phantoms every live-captured cell.
-2. Pick one `(date, venue)` you already know is captured from the manifest, and confirm your probe returns non-zero
+2. **Tardis N=1 — only ONE pipeline_mode/venue is captured per recent day.** `list` the `day={D}/` child prefixes FIRST
+   to see which venue actually captured that day; do not assume an arbitrary `(date, venue)` has data (measured: two
+   probe rounds burned on recent days with no data for the chosen venue).
+3. Pick one `(date, venue)` you already know is captured from the manifest, and confirm your probe returns non-zero
    there.
-3. For a **chain** shard, probe the v5 tail **and** the v6 tail (H1) before recording absence.
-4. Only then treat a zero as a finding.
+4. For a **chain** shard, first confirm ANY chain shard is captured (H1 — currently 0%), then probe the v5 tail **and**
+   the v6 tail before recording absence.
+5. Only then treat a zero as a finding.
+
+## Census / vocabulary nuance
+
+Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+1).
+
+- **`instrument_type` is compared EXACT case-sensitive** (cefi/tradfi grain rule) — but a case-ONLY difference is the
+  C2a column-casing axis (RULED UPPERCASE-target, `migration_pending`), SUPPRESSED during the window (no casing
+  finding); a non-case out-of-enum value IS a `non_canonical_axis_value`.
+- **The v5/v6 dual chain-tail (H1) means the GCS-side census descent collects `underlying=` at TWO depths** —
+  `underlying={U}/ticks.parquet` (v5) and `underlying={U}/quote=/margin=/ticks.parquet` (v6); descend both or
+  under-count the `underlying` vocabulary by a whole lane.
+- **A blank `instrument_type` is a dropped sentinel, not a finding** — the census drops blank axis values before
+  badging, never a `non_canonical_axis_value`.
 
 ## Cross-links
 

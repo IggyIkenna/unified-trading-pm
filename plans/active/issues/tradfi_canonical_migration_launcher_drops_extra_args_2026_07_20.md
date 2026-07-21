@@ -9,12 +9,15 @@ summary:
   the destructive `--purge-massive` / `--massive-backfill-verified` gate. A run intending an authorized massive purge
   would purge NOTHING while `full` mode simultaneously ran an `--apply` content migration (copy→verify→delete-source)
   over the whole non-massive tradfi estate. Caught in pre-flight audit; nothing was executed.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
 repos: [deployment-service, market-tick-data-service]
 scope: [engineer, admin]
+resolved_by:
+  "deployment-service@2c00c740 — REJECT (loud) MIGRATION_EXTRA_ARGS for cat=tradfi + gated TRADFI_PURGE_MASSIVE_ONLY=1
+  migrate-pass-only path; proven by RUN_TS=20260720-193849 (1,701,414 purged, 0 collateral); slot-1 tick 26"
 tags: [canonical-migration, vm-launcher, destructive-gate, massive-purge, data-correctness, silent-failure]
 related:
   [
@@ -33,7 +36,6 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm:
-resolved_by:
 ---
 
 # `tradfi` launcher branch silently drops `MIGRATION_EXTRA_ARGS`
@@ -76,7 +78,22 @@ The gate resolves the sentinel with `Path(args.massive_backfill_verified).is_fil
 sentinel written locally (repo or laptop) does not satisfy it. Any purge run must stage the sentinel onto the VM and
 pass its on-VM path.
 
-## Fix options (not applied — a destructive execution path should not be redesigned unreviewed)
+## RESOLVED (2026-07-20, slot-1 tick 26) — fix shipped + proven in prod
+
+`deployment-service@2c00c740` implemented options **A + C**:
+
+- **C (loud failure)**: the `tradfi` branch now REJECTS `MIGRATION_EXTRA_ARGS` (returns 1 with a pointer to
+  `TRADFI_PURGE_MASSIVE_ONLY=1`) instead of silently dropping it — a vanishing flag is worse than one that errors.
+- **A (purpose-built purge path)**: `TRADFI_PURGE_MASSIVE_ONLY=1` selects `_tradfi_massive_purge_cmd`, which runs the
+  **migrate pass ONLY** (no rebundle/recover, not `full` mode) over a `grep pipeline_mode=batch_massive`-filtered
+  enumeration, with the sentinel pulled from GCS onto the VM (`Path(...).is_file()` is VM-side) and
+  `--purge-massive --massive-backfill-verified`. Zero-collateral holds by construction (non-massive not in input).
+
+Proven end-to-end: `RUN_TS=20260720-193849`, 20 shards, **1,701,414 purged, 0 collateral, batch_massive → 0** (see
+`massive_purge_blocked_databento_l1_entitlement_2026_07_20.md`). The estate-wide content migration was NOT re-run
+(already complete, PM@15ab13f1a) — the operator confirmed massive-only.
+
+## Fix options (superseded by the shipped fix above; retained for context)
 
 - **A (recommended)** — give the purge its own narrow path rather than widening `full`: run `migrate_...` alone (no
   rebundle/recover, no `--quarantine`) against an enumeration **pre-filtered to `pipeline_mode=batch_massive`**, with
@@ -90,10 +107,10 @@ pass its on-VM path.
 
 ## Follow-up todos
 
-- [ ] [INFRA] P0. Fix the silent discard — implement **C** (loud failure for ignored `MIGRATION_EXTRA_ARGS`) in
-      `launch-canonical-migration-vm.sh`. (repo: deployment-service)
-- [ ] [INFRA] P0. Implement **A** — a purge-only invocation over a `batch_massive`-filtered enumeration with the
-      sentinel staged on the VM, before any authorized purge runs. (repo: deployment-service)
-- [ ] [OPERATOR] P0. Confirm intent: the authorized action is a massive-only purge. Was the estate-wide canonical
-      content migration (`full` mode, non-massive copy→delete-source) also intended in the same run, or must it be a
-      separate reviewed operation?
+- [x] [INFRA] P0. Fix the silent discard — implement **C** (loud failure for ignored `MIGRATION_EXTRA_ARGS`) in
+      `launch-canonical-migration-vm.sh`. — deployment-service@2c00c740
+- [x] [INFRA] P0. Implement **A** — a purge-only invocation over a `batch_massive`-filtered enumeration with the
+      sentinel staged on the VM, before any authorized purge runs. — deployment-service@2c00c740 (proven
+      RUN_TS=20260720-193849)
+- [x] [OPERATOR] P0. Confirm intent: massive-only purge. — CONFIRMED massive-only; estate-wide migration already
+      complete (PM@15ab13f1a), not re-run.

@@ -1,0 +1,239 @@
+{
+  "skill": "data-pipeline-reconciliation",
+  "asset_group": "prediction",
+  "run_date": "2026-07-20",
+  "read_only": true,
+  "status": "pass-with-findings",
+  "prod_buckets": {
+    "raw_tick": {
+      "kind": "market-data-tick-prediction",
+      "resolved": "market-data-tick-pred-prd-central-element-323112",
+      "tier_prd": true,
+      "reachable": true,
+      "top_level_prefixes": ["_index/", "_migration_backup/", "_vm_staging/", "processed_candles/", "raw_tick_data/"]
+    },
+    "reference": {
+      "kind": "instruments-store-prediction",
+      "resolved": "instruments-store-pred-prd-central-element-323112",
+      "tier_prd": true,
+      "reachable": true,
+      "top_level_prefixes": ["_backups/", "_index/", "instrument_availability/", "market_lifecycle/", "prd/", "prod/"]
+    },
+    "features": {
+      "kind": "features-prediction",
+      "resolved": "features-pred-prd-central-element-323112",
+      "tier_prd": true,
+      "reachable": true,
+      "top_level_prefixes": ["xinstrument/"]
+    },
+    "strategy": {
+      "kind": "strategy-store-prediction",
+      "resolved": "strategy-store-pred-prd-central-element-323112",
+      "tier_prd": true,
+      "reachable": true,
+      "top_level_prefixes": [],
+      "note": "EMPTY (matches non-canonical-path-inventory row 21)"
+    },
+    "unreachable": []
+  },
+  "manifest_raw_tick": {
+    "bucket": "market-data-tick-pred-prd-central-element-323112",
+    "total_rows": 745136,
+    "index_state": "consolidated read OK for prediction bucket",
+    "capture_status": {
+      "empty_confirmed": 690387,
+      "captured": 51809,
+      "expected_unattempted": 2885,
+      "attempted_failed": 55
+    },
+    "venue": { "POLYMARKET": 581136, "KALSHI": 164000 },
+    "data_type": {
+      "book_snapshot_5": 397608,
+      "trades": 277358,
+      "prediction_canonical_question_group": 67890,
+      "market_lifecycle": 2280
+    },
+    "instrument_type_column": {
+      "PREDICTION_MARKET": 741029,
+      "prediction_market": 4001,
+      "prediction": 76,
+      "None": 30
+    },
+    "pipeline_mode": {
+      "batch_polymarket_clob": 706742,
+      "live_kalshi": 17867,
+      "batch_kalshi": 17016,
+      "batch_polymarket_gamma_api": 2280,
+      "live_polymarket_clob": 1231
+    },
+    "source": { "polymarket_clob": 707973, "kalshi": 34883, "polymarket_gamma_api": 2280 },
+    "date_range": ["2018-01-01", "2026-07-20"],
+    "n_days": 3123,
+    "key_columns": {
+      "canonical_question_group_column_present": false,
+      "instrument_id_present_but_display_only": true,
+      "note": "pattern-#3 CQG bundle: canonical_question_group is the shard KEY but is NOT a materialized column in the consolidated index; instrument_id is display-only (OTHER/blank on CQG rows). Keying prediction on instrument_id is banned (H1)."
+    }
+  },
+  "coverage": {
+    "formula": "reachable_coverage = captured / (captured + attempted_failed + expected_unattempted); empty_confirmed EXCLUDED",
+    "captured": 51809,
+    "attempted_failed": 55,
+    "expected_unattempted": 2885,
+    "empty_confirmed_excluded": 690387,
+    "reachable_coverage_pct": 94.63,
+    "is_lower_bound": true,
+    "lower_bound_reason": "all 5 asset_groups gate Layer-2 (instrument_gates_download=true); empty_confirmed is 92.6% of rows (prediction markets resolve/close fast, so honest absence dominates)"
+  },
+  "machine_oracle": {
+    "function": "unified_api_contracts.canonical.partition_paths.canonical_path_violations",
+    "require_pipeline_mode_used": true,
+    "cutover_effective_from": "2026-05-19 (canonical-cutover-register.md §2, all 5 AGs)",
+    "surface_checked": "PATH STRUCTURE only (oracle drops the filename stem; no tradfi-style stem rule for prediction)",
+    "results": {
+      "KALSHI_pipeline_mode_present": "CANONICAL at rpm=False and rpm=True",
+      "POLYMARKET_pipeline_mode_present": "CANONICAL at rpm=False and rpm=True",
+      "bare_shape_no_pipeline_mode": "CANONICAL at rpm=False, VIOLATION at rpm=True (missing pipeline_mode segment) — demonstrates the §4.1 default-weaker-than-declaration gap and H4",
+      "legacy_category_hive": "VIOLATION (missing asset_group= segment)"
+    }
+  },
+  "surface_verdicts_per_sampled_shard": [
+    {
+      "shard": "KALSHI / batch_kalshi / trades",
+      "S1_path_structure": "CANONICAL",
+      "S2_content_idform": "CANONICAL (filename stem KALSHI:PREDICTION_MARKET:FEDHIKE-26DEC31 etc.)",
+      "S3_manifest_atom": "PRESENT (captured)",
+      "S4_catalogue": "UNAVAILABLE (no gating mechanism for prediction — H3)"
+    },
+    {
+      "shard": "POLYMARKET / batch_polymarket_clob / trades",
+      "S1_path_structure": "CANONICAL",
+      "S2_content_idform": "CANONICAL (stem POLYMARKET:PREDICTION_MARKET:0x76151c...)",
+      "S3_manifest_atom": "PRESENT (captured; day-2026-07-18 cell was empty_confirmed, verified not an absence bug)",
+      "S4_catalogue": "UNAVAILABLE (H3)"
+    },
+    {
+      "shard": "POLYMARKET / live_polymarket_clob / book_snapshot_5",
+      "S1_path_structure": "CANONICAL",
+      "S2_content_idform": "CANONICAL (stem verified; manifest instrument_id column 100% grammar for book_snapshot_5)",
+      "S3_manifest_atom": "PRESENT (captured)",
+      "S4_catalogue": "UNAVAILABLE (H3)"
+    },
+    {
+      "shard": "POLYMARKET|KALSHI / prediction_canonical_question_group (CQG bundle)",
+      "S1_path_structure": "N/A — CQG has NO path segment; on-disk objects are per-conditionId (canonical)",
+      "S2_content_idform": "manifest instrument_id column display-only (OTHER/blank) — pattern-#3, NOT a violation",
+      "S3_manifest_atom": "PRESENT (bundle grain; canonical_question_group KEY not a materialized column)",
+      "S4_catalogue": "UNAVAILABLE (H3)"
+    },
+    {
+      "shard": "POLYMARKET / batch_polymarket_gamma_api / market_lifecycle",
+      "S1_path_structure": "CANONICAL (template; not spot-probed)",
+      "S2_content_idform": "NOT PROBED",
+      "S3_manifest_atom": "PRESENT (2280 rows)",
+      "S4_catalogue": "UNAVAILABLE (H3)"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "type": "cross_ag_manifest_bleed (taxonomy gap — escalate)",
+      "severity": "MEDIUM",
+      "asset_group": "prediction",
+      "surfaces_disagreeing": "S3",
+      "summary": "asset_group=prediction manifest rows physically in the instruments-store-sports-prd manifest. Measured >=6597 (KALSHI 6562, POLYMARKET 35; trades 6484, CQG 113), dates 2026-07-16..2026-07-19. GROWN vs the documented 4097 (2026-06-26..07-18). Root cause unlocated (2026-07-20).",
+      "detector": "read_availability_index(instruments-store-sports-prd, columns=[date,venue,asset_group,data_type])",
+      "delete_eligible": false,
+      "notify_operator": true,
+      "cross_link": "reference-prediction.md H5 / reference-sports.md H4",
+      "measurement_caveat": "sports index was in stale per-VM-shard fallback (consolidated blob age 168.6s > 120s); 6597 is a partial recent-weighted count and a LOWER BOUND; market-data(tick)/sports manifest NOT read"
+    },
+    {
+      "id": "F2",
+      "type": "malformed_manifest_axis_value (taxonomy gap — escalate)",
+      "severity": "LOW-MEDIUM",
+      "asset_group": "prediction",
+      "surfaces_disagreeing": "S3 (vs fixed S1 path segment instrument_type=prediction_market)",
+      "summary": "106 recent manifest rows carry a malformed instrument_type axis value: 76 rows instrument_type='prediction' (CQG, KALSHI, captured) + 30 rows instrument_type=None (trades, POLYMARKET, empty_confirmed). All dated 2026-07-16..2026-07-19 (post-cutover). NOT a casing variant (case-insensitive != prediction_market), so OUTSIDE the C2a refusal. Consistent with H4 unguarded silent prediction writes.",
+      "detector": "manifest instrument_type column value_counts, case-insensitive filter",
+      "delete_eligible": false
+    },
+    {
+      "id": "F3",
+      "type": "catalogue-freshness / stale shadow object",
+      "severity": "LOW",
+      "asset_group": "prediction",
+      "surfaces_disagreeing": "S4",
+      "summary": "instruments-store-pred-prd carries BOTH prod/catalog.parquet (201,854,166 B, live) and a stale shadow prd/catalog.parquet (65,217,347 B, ~2026-06-27) — the 3-char DEPLOYMENT_ENV_SHORT leaked into the object key. Matches non-canonical-path-inventory row 2 (yes-after-verify). Register->reality re-verified EXACTLY (both sizes match).",
+      "detector": "gcs_describe_object on prod/ and prd/ catalog.parquet",
+      "delete_eligible": false,
+      "delete_disposition": "no-migrate-first / unknown (writer of prd/ unidentified; content-verify not done; prod-bucket delete = human-only hard stop)"
+    },
+    {
+      "id": "F4",
+      "type": "surface-4 mechanism absent (declared coverage gap)",
+      "severity": "MEDIUM",
+      "asset_group": "prediction",
+      "surfaces_disagreeing": "S4",
+      "summary": "prediction is NOT in MTDS _CATALOG_ASSET_GROUPS = ('sports','cefi','defi','tradfi') (catalog_registration.py:69) and NO prediction_catalog_reader.py exists (cefi/defi/sports/tradfi readers all present). Surface-4 catalogue-gates-download (G4) has NO mechanism for prediction, so every prediction shard's S4 verdict is UNAVAILABLE by construction, not a per-shard failure.",
+      "detector": "grep+READ catalog_registration.py:69 ; find *catalog_reader*",
+      "delete_eligible": false
+    },
+    {
+      "id": "F5",
+      "type": "non_canonical_path (latent writer defect)",
+      "severity": "MEDIUM",
+      "asset_group": "prediction",
+      "surfaces_disagreeing": "S1 (latent)",
+      "summary": "build_prediction_partition_path (partition_paths.py:383) has NO pipeline_mode kwarg — it emits the bare raw_tick_data/by_date/day=/asset_group=prediction/... shape; the pipeline_mode= segment is string-injected downstream by the dispatcher. The write-time canonical guard is tradfi-only (partitioned_writer.py:258 'if self._asset_group == \"tradfi\"'), so a missed pipeline_mode rewrite is a SILENT non-canonical write. Oracle confirms the bare shape violates at require_pipeline_mode=True (cutover 2026-05-19).",
+      "mitigating_evidence": "all spot-probed recent objects (KALSHI batch_kalshi, POLYMARKET batch_polymarket_clob/live_polymarket_clob) DO carry the pipeline_mode segment and are oracle-CANONICAL at rpm=True",
+      "detector": "READ partition_paths.py:383-435 + partitioned_writer.py:258 + oracle demo",
+      "delete_eligible": false,
+      "action": "todo on the MTDS/UAC writer plan — do NOT fix inline (belongs to that service's plan; collision risk)"
+    }
+  ],
+  "refused_axes": [
+    {
+      "axis": "C2a — manifest instrument_type COLUMN casing",
+      "measured": { "PREDICTION_MARKET": 741029, "prediction_market_lower": 4001, "pct_upper": 99.46 },
+      "action": "REFUSED — reported as count, NO finding, NO migration proposed",
+      "ssot_contradiction": "taxonomy §5.1 still lists C2a as genuinely UNRULED (refuse), while four-surface-procedure §7-O2, canonical-cutover-register §3c, and delete-safety §4 all say RULED UPPERCASE (D1) 2026-07-20 and 'the reconciler now ENFORCES UPPERCASE'. Either way the prediction lowercase tail is NOT a fresh finding (refused OR migration_pending)."
+    },
+    {
+      "axis": "decision D — defi market/event LENDING keying",
+      "action": "REFUSED but NOT APPLICABLE to prediction (defi-only axis)"
+    }
+  ],
+  "suppressed_exceptions": {
+    "AE-1_sports_blank_pipeline_mode_source": 0,
+    "AE-2_tradfi_combo": 0,
+    "AE-3_defi_two_id_pool": 0,
+    "AE-4_batch_massive": 0,
+    "AE-5_defi_flat_lending": 0,
+    "note": "None of the operator-accepted exceptions AE-1..AE-5 (reconciliation-finding-taxonomy.md §4) scope asset_group=prediction; suppressed count = 0. The _unknown_ conditionId stem and CF-15 live_-prefix union were honoured by enumerating from canonical_path_templates(prediction) (includes live_kalshi/live_polymarket_clob/live_polymarket_gamma_api), not as suppressions."
+  },
+  "delete_suggestions": {
+    "count_above_unknown": 0,
+    "note": "No prediction location rises above unknown. Catalogue prd/ shadow = no-migrate-first (content-verify not done, writer unidentified, prod-bucket delete human-only). strategy-store-pred-prd EMPTY = estate hygiene, not a delete candidate."
+  },
+  "orphans": "NOT ASSESSED (no whole-corpus walk in this run) — per orphan-object-detection.md §3 corollary, never report an unmeasured 0",
+  "inventory_reverify_prediction_scoped": {
+    "row_2_pred_catalog_shadow": "CONFIRMED present, both sizes match register exactly (disposition unchanged: yes-after-verify)",
+    "row_21_strategy_store_pred_empty": "CONFIRMED empty",
+    "reality_to_register_new": [
+      "market-data-tick-pred-prd/_migration_backup/ (operational backup dir; register row 23 lists _migration_backup/_migration_backups for cefi/defi only — pred is a new instance, disposition unknown)",
+      "market-data-tick-pred-prd/_vm_staging/ (operational staging dir; not in register; disposition unknown)"
+    ]
+  },
+  "coverage_gaps": [
+    "Surface-4 catalogue gating mechanism absent for prediction (H3/F4) — S4 unverifiable by construction",
+    "market-data(tick)/sports manifest NOT read for H5; instruments-store-sports index was in stale per-VM-shard fallback => exact full bleed count not pinned (>=6597)",
+    "Bare-shape legacy prefix tree (no pipeline_mode) NOT enumerated on disk => whether such resting prediction objects exist is unmeasured",
+    "Orphans NOT ASSESSED (no walk)",
+    "Parquet interiors (row-level content columns) NOT opened — S2 id-form verified via filename stem spot-sample only",
+    "CQG bundle S1<->S3 grain comparison NOT performed (canonical_question_group is not a materialized column; the many-to-one object->bundle mapping was not exhaustively reconciled — and MUST NOT be done by keying instrument_id, H1)",
+    "features-pred bucket: only reachability + top-level (xinstrument/) probed; features-layer four-surface NOT reconciled",
+    "strategy-pred: empty, nothing to reconcile"
+  ],
+  "sampled": "manifest full-index aggregate of the raw_tick prediction bucket (745,136 rows) + prefix-scoped S1/S2 probes on 3 captured shards + 1 empty-day negative probe + oracle on 4 path shapes + top-level reachability on all 4 buckets + catalogue describe (prod/+prd/) + H5 slim read of instruments-store-sports + code READs (partitioned_writer, build_prediction_partition_path, catalog_registration, catalog readers)"
+}

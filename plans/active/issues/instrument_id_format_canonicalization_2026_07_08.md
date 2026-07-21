@@ -352,11 +352,20 @@ All verified against real `prod/catalog.parquet` reads (both `cefi` and `defi` a
       raw fields and rewrite the parquet/partition), not a re-download from the source venue** — applies to every
       finding in this doc (Kraken-Futures historical collision, the dated-derivative `@LIN/@INV-YYYYMMDD` migration,
       TradFi combo/CBOE-VX decomposition, and any other backfill this canonicalization work triggers).
-- [ ] [VERIFY] P2. **Check whether the manifest / deployment-api key off instrument_id VALUE anywhere** (as opposed to
-      just the instrument_type field, already checked in
-      [[adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08]]) — if any downstream consumer
-      pattern-matches or parses the instrument_id string itself (e.g. extracting margin type from a `-inverse-`
-      substring), changing the format is a breaking change for that consumer, not just a cosmetic cleanup.
+- [x] [VERIFY] P2. **DONE 2026-07-21 — no consumer keys off the manifest `instrument_id` VALUE (for tradfi at least;
+      full consumer trace).** Traced every reader of `_index/availability_index.parquet`'s `instrument_id`: (1) served
+      honest-coverage takes a seeded internally-consistent 4-state path (numerator+denominator from the same manifest,
+      id string irrelevant); the one external-match path (`per_instrument_coverage` Tier-3) already NORMALISES ids
+      (`_normalize_instrument_id_for_match` strips `@LIN`/`@INV`+whitespace) so a format change is absorbed, and is
+      inactive for seeded tradfi dts anyway; (2) the catalogue/identity RENDER reads `prod/catalog.parquet`, not the
+      manifest; (3) `measure_honest_coverage.py` uses the id only as a cross-bucket dedup-key component with a
+      `(date,venue,data_type)` fallback; (4) MTDS `reader.py` resolves shards by
+      `(venue,data_type,instrument_type,date,captured)`, never the id; (5) ml/strategy/execution guards read the
+      features/strategy manifests keyed `asset_group×date`. **No consumer pattern-matches / parses the id string**, so a
+      format change is a cosmetic cleanup, not a breaking change. Full evidence: the "✅ RESOLVED (c)/(d) — MOOTED"
+      section in [[tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20]]. (Verified for tradfi end-to-end; the
+      cefi/defi manifests share the same reader code paths, so the conclusion carries — but the id-normaliser's
+      venue-token caveat still applies to a future full cefi/defi canonicalisation.)
 - [x] [DECISION] P3. **Builder-architecture question — RESOLVED 2026-07-08 (operator)**: ONE shared builder for every
       asset group + instrument type + sports fixtures, filled in by structured inputs. See "What this is NOT" above for
       the exact decision language.

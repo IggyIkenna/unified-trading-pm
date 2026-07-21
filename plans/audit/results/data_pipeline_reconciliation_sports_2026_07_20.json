@@ -1,0 +1,351 @@
+{
+  "doc_type": "audit-result",
+  "skill": "data-pipeline-reconciliation",
+  "asset_group": "sports",
+  "run_date": "2026-07-20",
+  "read_only": true,
+  "prod_only": true,
+  "structural_exception": "sports has no asset_group= hive key; oracle 100% false-positive on sports_reference/ + processed/; canonical_path_templates('sports')==[] (routing instruction)",
+  "sample_scope": {
+    "manifest_census": "full 4-state census of BOTH indexes (whole index, not a slice)",
+    "market_data_tick_index_rows": 1974679,
+    "instruments_store_index_rows": 5377883,
+    "four_surface_disk_probe_day": "2026-07-10",
+    "multi_day_confirmations": ["WEATHER: 2026-07-10/2026-07-05/2026-06-20", "ODDS: 2026-07-10/2026-07-05"],
+    "phantom_triage_read": "all 721154 lines",
+    "not_sampled": [
+      "whole_corpus_orphan_walk",
+      "deep_parquet_content_schema_pillars",
+      "reference_lane_S1_beyond_2026-07-10",
+      "features_sports_content",
+      "H5_6.72M_row_generational_comparison(carried_from_reference_sheet)",
+      "data-catalogue.instruments-service.yaml_staleness(deployment-api artifact)"
+    ]
+  },
+  "buckets": [
+    {
+      "kind": "market-data",
+      "resolved": "market-data-tick-sports-prd-central-element-323112",
+      "tier": "prd",
+      "reachable": true,
+      "top_level_prefixes": [
+        "_index/",
+        "_legacy_migrated_processed/",
+        "_legacy_migrated_scripts/",
+        "_legacy_migrated_vm_staging/",
+        "_vm_staging/",
+        "processed/",
+        "raw_tick_data/",
+        "scripts/"
+      ],
+      "surfaces": ["S1", "S2", "S3"]
+    },
+    {
+      "kind": "instruments-store",
+      "resolved": "instruments-store-sports-prd-central-element-323112",
+      "tier": "prd",
+      "reachable": true,
+      "top_level_prefixes": [
+        "_audits/",
+        "_catalogue/",
+        "_index/",
+        "_smoke_test/",
+        "_vm_staging/",
+        "availability_index/",
+        "instrument_availability/",
+        "legacy_football/",
+        "prod/",
+        "sports_reference/",
+        "sports_reference_v2/"
+      ],
+      "surfaces": ["S3", "S4"]
+    },
+    {
+      "kind": "features-sports",
+      "resolved": "features-sports-prd-central-element-323112",
+      "tier": "prd",
+      "reachable": true,
+      "top_level_prefixes": [
+        "_audits/",
+        "_index/",
+        "_leak_remediation_backup_20260718/",
+        "_vm_staging/",
+        "sports_features/"
+      ],
+      "surfaces": ["top-level-only"]
+    }
+  ],
+  "unreachable_buckets": [],
+  "test_tier_leak": false,
+  "negative_controls": {
+    "features_per_ag_dict_for_sports": "RAISES BucketNamingError (correct - use kind=features-sports)",
+    "legacy_flat_named_buckets_404": [
+      "instruments-store-sports-central-element-323112",
+      "market-data-tick-sports-central-element-323112"
+    ]
+  },
+  "oracle_behaviour": {
+    "canonical_path_templates_sports": [],
+    "sports_reference_path": "prefix-violation (oracle N/A)",
+    "raw_tick_data_path": "CANONICAL (structure only; id-form NOT machine-checked - no sports id grammar)",
+    "processed_path": "prefix-violation (oracle N/A)",
+    "id_form_machine_checked": false
+  },
+  "cutover_gate": {
+    "require_pipeline_mode_effective_from": "2026-05-19",
+    "sports_data_type_upper_in_force": false,
+    "note": "K1 live-writer fix NOT shipped; lowercase data_type is expected current output = migration_pending"
+  },
+  "coverage": {
+    "formula": "reachable_coverage = captured / (captured + attempted_failed + expected_unattempted); empty_confirmed EXCLUDED",
+    "lower_bound": true,
+    "lower_bound_reason": "instrument_gates_download=true",
+    "raw_tick_lane": {
+      "bucket": "market-data-tick-sports-prd",
+      "captured": 592835,
+      "attempted_failed": 112277,
+      "expected_unattempted": 0,
+      "empty_confirmed_excluded": 1269567,
+      "reachable_coverage_pct": 84.08
+    },
+    "reference_lane": {
+      "bucket": "instruments-store-sports-prd",
+      "captured": 1705641,
+      "attempted_failed": 637,
+      "expected_unattempted": 220190,
+      "empty_confirmed_excluded": 3444816,
+      "reachable_coverage_pct": 88.54,
+      "caveat": "captured inflated by cross-lane trades/odds_horizon_bucket rows (F5); phantom ceiling 721154 (F1)"
+    }
+  },
+  "per_shard_surface_verdicts": [
+    {
+      "shard": "TEAMS/COPPA_ITALIA",
+      "day": "2026-07-10",
+      "S1": "PRESENT(pipeline_mode=batch_api_football/entity=teams/league=/teams.parquet, oracle-N/A)",
+      "S2": "PRESENT",
+      "S3": "OK captured",
+      "S4": "OK instrument_type=team"
+    },
+    {
+      "shard": "PLAYER_VALUES/PRIMEIRA_LIGA(PER_DAY_PER_SEASON)",
+      "day": "2026-07-10",
+      "S1": "PRESENT(entity=player_values/season=2025/, full-list iteration)",
+      "S2": "PRESENT",
+      "S3": "OK captured",
+      "S4": "OK instrument_type=player"
+    },
+    {
+      "shard": "ODDS/footystats_odds(fetched_at_hour wildcard)",
+      "day": "2026-07-10",
+      "S1": "PRESENT(fetched_at_hour=2026-07-12T06/, needs prefix-resolution not exists('*'))",
+      "S2": "PRESENT(4 objs)",
+      "S3": "NOTE league_id blank on per-league type",
+      "S4": "OK"
+    },
+    {
+      "shard": "WEATHER/K_LEAGUE_2",
+      "day": "2026-07-10",
+      "S1": "NON-CANON-vs-UAC(entity=weather/league=K_LEAGUE_2/, writer=PER_DAY_PER_LEAGUE)",
+      "S2": "PRESENT",
+      "S3": "OK captured",
+      "S4": "n/a",
+      "finding": "F2"
+    },
+    {
+      "shard": "FIXTURES/K_LEAGUE_2",
+      "day": "2026-07-10",
+      "S1": "PRESENT bare entity=fixtures/league=K_LEAGUE_2/ (NO pipeline_mode)",
+      "S2": "PRESENT",
+      "S3": "NOTE data_type=FIXTURES superseded umbrella",
+      "S4": "OK instrument_type=fixture",
+      "finding": "F3"
+    },
+    {
+      "shard": "manifest instrument_type COLUMN",
+      "S3": "REFUSED(C2a): 4444492 NULL + 562102 odds + 364665 blank + 16 SPORT + 9 football"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "type": "phantom",
+      "severity": "HIGH(MEDIUM-confidence,drift-suspect)",
+      "location": "instruments-store-sports phantom_count=721154 (2026-07-14, 6d stale)",
+      "surfaces": ["S3", "S1"],
+      "detector": "published _index/phantom_audit_latest.json triage (not re-run)",
+      "delete_eligible": false,
+      "composition": {
+        "trades": 561048,
+        "odds_horizon_bucket": 143594,
+        "PLAYER_VALUES": 15176,
+        "STANDINGS": 460,
+        "TEAMS": 460,
+        "XG": 300,
+        "WEATHER": 106,
+        "MATCHES": 7,
+        "FIXTURES": 2
+      },
+      "note": "auditor confidence=MEDIUM reason=PHANTOM_NO_PARQUET rec=flip_to_attempted_failed; includes PROVEN false positives (WEATHER 106 via F2); treat as ceiling not truth",
+      "operator_notify": true
+    },
+    {
+      "id": "F2",
+      "type": "drift_axis_false_positive",
+      "severity": "HIGH(against tool)",
+      "location": "UAC SPORTS_DATA_TYPE_LAYOUT['WEATHER']=PER_DAY_BARE but writer emits PER_DAY_PER_LEAGUE (entity=weather/league={L}/weather.parquet)",
+      "surfaces": ["S1"],
+      "detector": "candidate_parquet_paths vs disk, 3-day proof (2026-07-10 K_LEAGUE_2, 2026-07-05 ELITESERIEN)",
+      "delete_eligible": false,
+      "cross_repo": ["unified-api-contracts", "instruments-service"],
+      "operator_notify": true
+    },
+    {
+      "id": "F3",
+      "type": "non_canonical_path(data_type/entity axis)",
+      "severity": "HIGH",
+      "location": "data_type=FIXTURES umbrella writer still live",
+      "surfaces": ["S1", "S3"],
+      "detector": "manifest census + disk bare entity=fixtures",
+      "delete_eligible": false,
+      "evidence": {
+        "FIXTURES_rows": 333697,
+        "last_written": "2026-07-20T18:01:07Z",
+        "FIXTURES_SCHEDULE_rows": 0,
+        "FIXTURES_OUTCOMES_rows": 0
+      },
+      "note": "2026-05-23 split never reached writer (H2); oracle blind (sports); instruments-service plan not fixed here",
+      "operator_notify": true
+    },
+    {
+      "id": "F4",
+      "type": "cross_asset_bleed(taxonomy-gap->escalated)",
+      "severity": "HIGH",
+      "location": "instruments-store-sports manifest holds foreign asset_group rows",
+      "surfaces": ["S3"],
+      "detector": "scoped manifest read by asset_group",
+      "delete_eligible": false,
+      "evidence": {
+        "prediction": 6597,
+        "prediction_venues": { "KALSHI": 6562, "POLYMARKET": 35 },
+        "cefi": 1,
+        "defi": 1,
+        "date_range": "2026-07-16..2026-07-19",
+        "written_at_max": "2026-07-20T13:10Z",
+        "ref_sheet_baseline": 4097
+      },
+      "note": "grown from 4097; active; root cause unlocated",
+      "operator_notify": true
+    },
+    {
+      "id": "F5",
+      "type": "manifest_only(cross-lane misattribution)",
+      "severity": "HIGH",
+      "location": "instruments-store-sports manifest carries trades 568728 + odds_horizon_bucket 354255 (raw-tick/MDPS lane data_types)",
+      "surfaces": ["S3", "S1"],
+      "detector": "manifest census + phantom triage venues (BETONLINEAG/ODDS_API, dates to 2020)",
+      "delete_eligible": false,
+      "note": "root of F1 phantom mass; parquet lives in market-data-tick lane not instruments-store",
+      "operator_notify": true
+    },
+    {
+      "id": "F6",
+      "type": "AE-1 boundary NOTE",
+      "severity": "MEDIUM",
+      "location": "18 of 13903 blank pipeline_mode+source rows carry attempted_at 2026-07-08 00:00-01:30 UTC",
+      "surfaces": ["S3"],
+      "detector": "blank-gate + attempted_at",
+      "delete_eligible": false,
+      "note": "AE-1 exit trigger is attempted_at>=2026-07-08; boundary case; max attempted_at 2026-07-08 01:30 (12d stale) => live gap NOT reopened; suppressed"
+    },
+    {
+      "id": "F7",
+      "type": "manifest_infra(consolidator locked)",
+      "severity": "MEDIUM",
+      "location": "instruments-store-sports _index/consolidator.lock present; latest.json error_reason=locked no_op",
+      "surfaces": ["S3"],
+      "detector": "JSON read",
+      "delete_eligible": false,
+      "note": "market-data-tick consolidator healthy (empty no-op, not locked)"
+    },
+    {
+      "id": "F8",
+      "type": "non_data(class C2)",
+      "severity": "INFO",
+      "location": "market-data-tick-sports-prd/scripts/ + _legacy_migrated_scripts/ (executable Python in data bucket, inv row 4)",
+      "surfaces": ["S1"],
+      "detector": "top-level ls",
+      "delete_eligible": false,
+      "note": "class-C2 NEVER delete; VM-bootstrap reader UNKNOWN (outside grep corpus)"
+    },
+    {
+      "id": "F9",
+      "type": "manifest_only/catalogue NOTE",
+      "severity": "LOW",
+      "location": "S4 prod/catalog.parquet (164771 rows): data_type column 100% NULL; instrument_type lowercase (fixture/player/team/league)",
+      "surfaces": ["S4"],
+      "detector": "catalogue read",
+      "delete_eligible": false
+    },
+    {
+      "id": "F10",
+      "type": "non_canonical_path(domain-root)->no-still-authoritative",
+      "severity": "LOW",
+      "location": "market-data-tick-sports-prd/processed/ (not processed_candles/) + half-applied _legacy_migrated_processed/ (both by_date/ + processed/) (inv row 13)",
+      "surfaces": ["S1"],
+      "detector": "top-level ls",
+      "delete_eligible": false,
+      "note": "DO-NOT-DELETE - live MDPS sports odds-horizon lane"
+    }
+  ],
+  "catalogue_freshness": {
+    "artifact": "data-catalogue.instruments-service.yaml shard_status",
+    "state": "UNVERIFIED this run (deployment-api artifact outside bucket scope); carried from skill 3c: last_updated 2026-02-06 auto_refreshed null",
+    "reported_once": true
+  },
+  "suppressed_exceptions": {
+    "AE-1": {
+      "condition": "sports IS blank pipeline_mode AND source (BLK-d48acae4 dec A)",
+      "occurrences": 13903,
+      "baseline": 19274,
+      "below_baseline": true,
+      "attempted_at_max": "2026-07-08T01:30:57Z",
+      "live_gap_reopened": false,
+      "boundary_rows_flagged": 18
+    },
+    "AE-2": { "occurrences": 0 },
+    "AE-3": { "occurrences": 0 },
+    "AE-4": { "occurrences": 0 },
+    "AE-5": { "occurrences": 0 }
+  },
+  "refused_axes": [
+    {
+      "axis": "C2a",
+      "name": "manifest instrument_type COLUMN casing",
+      "status": "REFUSED",
+      "sports_evidence": "4444492 NULL + 562102 odds(lower) + 364665 blank + 16 SPORT(upper) + 9 football(lower); sports barely uses instrument_type as axis"
+    },
+    { "axis": "decision-D", "name": "defi market/event LENDING keying", "status": "N/A to sports (defi-only)" },
+    {
+      "axis": "sports-K2-data_type-casing",
+      "name": "sports data_type UPPER migration",
+      "status": "OPEN DECISION reported not resolved",
+      "note": "UPPER ruled (K0-DECISION b) but K1 unshipped => lowercase = migration_pending not regression; trades=1806553 (91.5%); whether trades migrates with odds family NOT recorded as decided"
+    }
+  ],
+  "delete_suggestions": [],
+  "delete_summary": "No delete authorized. legacy flat-named buckets already 404; scripts/=non_data C2; processed/=no-still-authoritative; H5 market-data-tick legacy=DO-NOT-DELETE (net poorer by 6721872 rows per reference sheet, NOT re-measured this run)",
+  "orphans": "NOT ASSESSED (no whole-corpus walk in this run)",
+  "inventory_reconcile": {
+    "row1_legacy_flat_buckets": "CONFIRMED 404 both",
+    "row4_scripts_in_data_bucket": "CONFIRMED present (scripts/ + _legacy_migrated_scripts/); reader UNKNOWN -> F8",
+    "row13_processed_not_processed_candles": "CONFIRMED (processed/ present, no processed_candles/; _legacy_migrated_processed/ has both by_date/ + processed/) -> F10 no-still-authoritative",
+    "row16_instrument_availability_flat": "CONFIRMED present (instrument_availability/ + availability_index/); content not deep-probed",
+    "reality_to_register_new": [
+      "F2 WEATHER UAC-vs-writer layout drift",
+      "F4 prediction bleed grown 4097->6597",
+      "F5 cross-lane trades/odds_horizon_bucket in instruments-store"
+    ]
+  },
+  "verdict": "pass-with-findings: raw-tick lane structurally canonical where oracle applies; reference lane dispatcher-canonical once correct probe vocabulary used (pipeline_mode interposition + fetched_at_hour wildcard - first pass produced 4 false absences); real bounded defects F1-F7; no delete authorized; AE-1 suppressed; C2a REFUSED; sports K2 casing migration_pending open decision"
+}

@@ -140,12 +140,70 @@ This is the INVERSE of `PHANTOM_CAPTURED_NO_OBJECT` (manifest row, no object): h
 Root-cause it before the full-history backfill — either MDPS is not calling `record_captured` on these paths, or the
 rows are stranded in un-consolidated per-VM shards.
 
-## Decision required (operator) — which shape is canonical?
+### (iii) ADDENDUM 2026-07-20 — TWO structural candle shapes coexist on the SAME day + NO machine oracle governs candle paths
 
-**(A) [RECOMMENDED] The declared template is canonical → migrate the writers.** Add `instrument_type=` to the candle
-object path, use the aggregated `mdps_data_type_key` on the object path so path==manifest genuinely holds, canonicalise
-TradFi leaf ids, and give volatility its declared prefix. Do it **before** the full-history backfill so the corpus is
-born canonical; the existing corpus is small enough (cefi 6 rows) that migrating it is cheap. **Cost: a breaking
+Two facts verified today by bounded `gsutil ls` + running the UAC oracle directly (not inferred):
+
+**(iii-a) The writer emits BOTH a `pipeline_mode=`-partitioned shape AND a `pipeline_mode`-LESS shape into the same
+bucket on the same day.** Under `market-data-tick-cefi-prd-…/processed_candles/by_date/day=2026-05-23/` BOTH of these
+exist side by side:
+
+```
+# canonical-ish (has pipeline_mode):
+  .../day=2026-05-23/pipeline_mode=batch_tardis/timeframe=15m/data_type=…/venue=…/…parquet
+# ORPHAN (no pipeline_mode segment at all — timeframe= sits directly under day=):
+  .../day=2026-05-23/timeframe=15m/data_type=ohlcv_15m/venue=COINBASE-SPOT/COINBASE-SPOT:spot_pair:BTC-USDT.parquet
+```
+
+This is a DISTINCT orphan class from Finding 1 (missing `instrument_type=`): here the `pipeline_mode=` partition segment
+— required by `codex/02-data/pipeline-mode-partition.md` and inserted by the driver's canonical model — is present on
+some candle objects and absent on others **in the same bucket, for the same day**. A `pipeline_mode`-blind reader (glob
+`day=*/timeframe=*/…`) and a `pipeline_mode`-aware reader (glob `day=*/pipeline_mode=*/timeframe=*/…`) therefore see
+DIFFERENT, non-overlapping subsets of the same candle corpus — a silent split-brain over the candle estate. The leaf id
+itself (`COINBASE-SPOT:spot_pair:BTC-USDT.parquet`) IS canonical (VENUE:TYPE:SYMBOL), so this is purely a STRUCTURAL
+(partition-layout) orphan, not an id-form one.
+
+**(iii-b) ROOT CAUSE of why candle divergence goes unchecked: the UAC canonical oracle does not cover the
+`processed_candles/` namespace at all.** `unified_api_contracts.canonical.partition_paths.canonical_path_violations()`
+hardcodes `RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` (`partition_paths.py:67`) and returns a `structural`
+violation (`"path does not start with the canonical prefix 'raw_tick_data/by_date/'"`) for **every**
+`processed_candles/` path — the canonical shape AND the orphan shape are BOTH flagged identically, so the oracle cannot
+distinguish them. Verified by running `canonical_path_violations()` + `_classified()` on the two real objects above
+(both `require_pipeline_mode` values): identical `structural` verdict for canonical and orphan alike.
+
+Consequence: there is **no machine authority for derived-candle canonical shape** — only the PATH_REGISTRY template
+(which itself lacks `pipeline_mode` and includes `instrument_type`, i.e. matches NEITHER shape on disk) plus the prose
+pipeline-mode-partition rule. That is exactly why divergent shapes coexist unchecked, and why
+`/data-pipeline-check-mdps`'s canonical leg has to re-implement the check (a JUSTIFIED exception to "never re-implement
+the oracle" — the oracle simply doesn't cover this namespace). **The durable fix is to EXTEND the oracle to the
+`processed_candles/` (and features) namespace** so the ratified candle shape (post A/B/C ruling) becomes
+machine-checkable and the skill can call the oracle instead of a bespoke rule.
+
+## ✅ OPERATOR RULING 2026-07-21 — OPTION A (declared template wins → migrate writers + data + manifest)
+
+The operator chose **A** and explicitly directed: **"migrate data gcs paths and manifest"** — i.e. do the full breaking
+migration, not just the writer. Scope now:
+
+1. **Writer** emits the declared template:
+   `…/timeframe={tf}/data_type={mdps_data_type_key}/instrument_type={it}/venue={v}/{canonical_id}.parquet` (add
+   `instrument_type=`, use the AGGREGATED data_type so path==manifest, plus the `pipeline_mode=` segment).
+2. **Readers** (blast radius — every candle path-globber: features `delta_one`/`volatility` loaders, ml, anything)
+   update in lockstep or they silently miss the migrated corpus.
+3. **Existing GCS objects** migrate old→new canonical paths (copy→verify→delete; prod deletes operator-authorised here).
+4. **Manifest** populated/reconciled for the (migrated) candle shards (subsumes item-4 / todo 7 — path-independent
+   keys).
+5. **Genuine defects** fixed along the way: TradFi leaf ids, empty stems, split-brain `pipeline_mode`, volatility
+   prefix.
+
+Blast radius is being scoped by workflow BEFORE any code/data change (a missed reader = a silent corpus gap). Tracked in
+the plan Progress Log. **Todo 1 RULED → A.** Todos 2-10 fold into the migration phases below.
+
+## Decision (ruled A — historical options kept for context) — which shape is canonical?
+
+**(A) [RULED ✅] The declared template is canonical → migrate the writers.** Add `instrument_type=` to the candle object
+path, use the aggregated `mdps_data_type_key` on the object path so path==manifest genuinely holds, canonicalise TradFi
+leaf ids, and give volatility its declared prefix. Do it **before** the full-history backfill so the corpus is born
+canonical; the existing corpus is small enough (cefi 6 rows) that migrating it is cheap. **Cost: a breaking
 object-layout change — every reader that path-globs candles (features `delta_one`/`volatility` data loaders) must be
 updated in the same change (blast-radius rule).**
 
@@ -184,7 +242,34 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 
 - [ ] 7. [DATA] P0. **Root-cause the object↔manifest disconnect** (20,734 cefi candle objects on 2026-04-14 vs 6 MDPS
       manifest rows corpus-wide). Either `record_captured` is not firing on the candle write path or per-VM shards never
-      consolidated. Blocks trustworthy skip-if-fresh, honest coverage, and features input-gating.
+      consolidated. Blocks trustworthy skip-if-fresh, honest coverage, and features input-gating. **MEASURED +
+      CHARACTERIZED 2026-07-20** (direct pyarrow read of the consolidated
+      `market-data-tick-cefi-prd-…/_index/availability_index.parquet`, 166 MB / **10,363,628 rows**): by `service_name`
+      → `market-tick-data-service` 6.78M, `instruments-service` 3.47M, `None` 114,749,
+      **`market-data-processing-service` = 6**. The 6 candle rows are all `date=2026-04-14`, all written
+      `2026-04-16T15:25Z`, and **DEGENERATE**: `venue` is **empty**, `row_count` is **NaN**, exactly one row per SOURCE
+      data_type (book_snapshot_5, derivative_ticker, futures_chain, liquidations, options_chain, trades). So this is not
+      "some rows missing" — the candle manifest was **never systematically populated**; the 6 rows are a single one-off
+      degenerate write (venue-less, un-joinable to any instrument), while the real corpus is 20,734 objects across
+      multiple `pipeline_mode`s on that one day. Refined root-cause: the candle write path is not calling
+      `record_captured` per (instrument×data_type×day) shard at all (NOT a consolidation-lag problem — the per-VM shards
+      under `_index/per_vm/` that DO exist are `market-tick-data-service` raw-tick backfill shards, e.g. `cefi-aster-*`,
+      not candle shards). **Consequence for the backfill ETA**: prod skip-if-fresh reads this manifest, so it will
+      re-derive EVERY existing candle object (the skip optimization is moot in prod until candle-manifest population is
+      fixed). NOTE for future agents — a naive `read_availability_index()` call can return 0 rows on a COLD first
+      invocation (transient cache/download artifact); a clean re-run returns the full 10.36M (+~3,940 from the per-VM
+      merge). The reader is NOT broken — do not chase a phantom reader bug; the real defect is candle-manifest
+      under-population.
 - [ ] 8. [DATA] P1. **Fix the bundled-name rule**: decide the leaf by "is this write bundled by `underlying=`?" rather
       than "is data_type in CEFI_CHAIN_INSTRUMENT_TYPES", so every `underlying=`-bundled write gets `ticks.parquet`
       instead of an empty stem. Then repair/purge the existing empty-stem objects (measured 0.6-25% depending on day).
+- [ ] 9. [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
+      `pipeline_mode=…/timeframe=…` and `pipeline_mode`-less `timeframe=…` candle objects. Quantify the corpus-wide
+      split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
+      `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
+      1), not an independent decision.
+- [ ] 10. [SCRIPT] P1. **Extend the UAC canonical oracle to the `processed_candles/` (+ features) namespace** (addendum
+      iii-b): `canonical_path_violations()` today only knows `raw_tick_data/by_date/` and flags every candle path as a
+      structural violation, so it cannot govern candle shape. After the A/B/C ruling, teach the oracle the ratified
+      candle template (incl. the `pipeline_mode=` insert decision) and re-point the skill canonical legs at it (todo 6)
+      so candle canonicality becomes machine-checkable instead of bespoke.

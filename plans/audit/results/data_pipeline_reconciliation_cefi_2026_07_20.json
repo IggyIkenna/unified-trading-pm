@@ -1,0 +1,218 @@
+{
+  "skill": "data-pipeline-reconciliation",
+  "asset_group": "cefi",
+  "run_date": "2026-07-20",
+  "read_only": true,
+  "status": "pass-with-findings",
+  "prod_buckets": {
+    "market-data": {
+      "resolved": "market-data-tick-cefi-prd-central-element-323112",
+      "tier_prd": true,
+      "reachable": true
+    },
+    "instruments-store": {
+      "resolved": "instruments-store-cefi-prd-central-element-323112",
+      "tier_prd": true,
+      "reachable": true
+    },
+    "features": {
+      "resolved": "features-cefi-prd-central-element-323112",
+      "tier_prd": true,
+      "reachable": true
+    },
+    "legacy_flat_untiered": {
+      "market-data-tick-cefi-central-element-323112": "404",
+      "instruments-store-cefi-central-element-323112": "404"
+    },
+    "unreachable": []
+  },
+  "manifest": {
+    "consolidator_last_run": "2026-07-20T18:31:25Z",
+    "fresh": true,
+    "total_rows": 10282640,
+    "date_range": ["2019-03-30", "2026-07-20"],
+    "n_dates": 2670,
+    "phantom_count_cefi": 0,
+    "phantom_audit_generated_at": "2026-07-18T15:52:21Z"
+  },
+  "coverage": {
+    "formula": "reachable_coverage = captured / (captured + attempted_failed + expected_unattempted); empty_confirmed EXCLUDED (CK3)",
+    "reachable_coverage_pct": 44.85,
+    "lower_bound": true,
+    "denominator_scope": "full cefi manifest (all days/venues), NOT the MVP-scoped denominator behind the ~50.79% accepted ceiling",
+    "capture_status": {
+      "captured": 3235764,
+      "empty_confirmed": 3067920,
+      "expected_unattempted": 2768047,
+      "attempted_failed": 1210909
+    }
+  },
+  "surface_verdicts_per_shard": [
+    {
+      "shard": "HYPERLIQUID/perpetual/trades @2026-07-20",
+      "S1_structure": "canonical",
+      "S1_idform": "canonical",
+      "S2": "canonical:HYPERLIQUID:PERPETUAL:0G-USD@LIN",
+      "S3": "captured",
+      "S4": "partial",
+      "verdict": "CANONICAL"
+    },
+    {
+      "shard": "DERIBIT/perpetual/trades @2020-01-06",
+      "S1_structure": "canonical",
+      "S1_idform": "wire:BTC-PERPETUAL.parquet",
+      "S2": "double-wrap:DERIBIT:PERPETUAL:BTC-PERPETUAL",
+      "S3": "canonical:DERIBIT:PERPETUAL:BTC-USD@INV",
+      "S4": "n/a",
+      "verdict": "THREE_WAY_ID_DIVERGENCE",
+      "oracle_violations_both_settings": 0
+    },
+    {
+      "shard": "LIGHTER-ZKSYNC/perpetual/derivative_ticker @2026-07-10",
+      "S1_structure": "canonical",
+      "S1_idform": "non-canonical:0.parquet",
+      "S2": "non-canonical:LIGHTER-ZKSYNC:PERPETUAL:0",
+      "S3": "chain-col-populated",
+      "S4": "n/a",
+      "verdict": "NON_CANONICAL_IDFORM_LIVE_ADAPTER",
+      "oracle_violations_both_settings": 0
+    },
+    {
+      "shard": "COINBASE-CDE/future/trades @2026-07-10",
+      "S1_structure": "canonical",
+      "S1_idform": "canonical",
+      "verdict": "CANONICAL"
+    },
+    {
+      "shard": "DERIBIT/futures_chain/trades @2026-07-20",
+      "S1_structure": "absent",
+      "S3": "expected_unattempted",
+      "verdict": "HONEST_ABSENCE"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "type": "non_canonical_path",
+      "subtype": "id-form",
+      "severity": "MEDIUM",
+      "surfaces": ["S1", "S2"],
+      "scope": "LIGHTER-ZKSYNC perpetual live @2026-07-10",
+      "note": "live post-cutover adapter emits bare-integer market-index ids on filename+content; oracle blind; H4 re-drift",
+      "delete_eligible": false
+    },
+    {
+      "id": "F2",
+      "type": "non_canonical_path",
+      "subtype": "id-form + three-way id divergence",
+      "severity": "MEDIUM",
+      "surfaces": ["S1", "S2", "S3"],
+      "scope": "DERIBIT perpetual @2020-01-06 (legacy era)",
+      "note": "S1 wire != S2 double-wrap != S3 canonical; migration re-keyed manifest not object; unknown-vintage (id-form cutover UNKNOWN)",
+      "delete_eligible": false
+    },
+    {
+      "id": "F3",
+      "type": "divergent_empty_or_coverage",
+      "severity": "LOW",
+      "surfaces": ["S3"],
+      "scope": "cefi options_chain+futures_chain (17042 atoms)",
+      "note": "0% captured (10430 empty_confirmed + 6612 expected_unattempted); all v5-tail, 0 v6; H1 chain-tail fork is latent code with no captured data; reported once",
+      "delete_eligible": false
+    },
+    {
+      "id": "F4",
+      "type": "shard_atom_integrity_taxonomy_gap",
+      "severity": "MEDIUM",
+      "surfaces": ["S3"],
+      "scope": "5232 captured rows with blank instrument_type (of 130130 total blank)",
+      "note": "captured row missing non-KEY atom axis; no clean taxonomy name",
+      "delete_eligible": false
+    },
+    {
+      "id": "F5",
+      "type": "shard_atom_integrity_missing_key",
+      "severity": "LOW-MEDIUM",
+      "surfaces": ["S3"],
+      "scope": "36865 single rows with blank instrument_id KEY (36571 pre / 294 post cutover)",
+      "delete_eligible": false
+    },
+    {
+      "id": "F6",
+      "type": "non_canonical_path",
+      "subtype": "pipeline_mode",
+      "severity": "LOW",
+      "surfaces": ["S3"],
+      "scope": "4 BYBIT rows post-2026-05-19 (of 218492 blank; 218488 pre-cutover historical)",
+      "note": "date-gated against cutover 2026-05-19; W1 .replace bolt-on guarded by raise so post-cutover ~0",
+      "delete_eligible": false
+    },
+    {
+      "id": "F7",
+      "type": "source_write_wiring_gap_H6",
+      "severity": "KNOWN_CONDITION",
+      "surfaces": ["S3"],
+      "scope": "2810078 rows (27.3%) blank source",
+      "note": "reported once per H6",
+      "delete_eligible": false
+    },
+    {
+      "id": "F8",
+      "type": "manifest_content_column_anomaly",
+      "severity": "LOW",
+      "surfaces": ["S3"],
+      "scope": "817505 cefi rows with non-null chain column (ASTER 582225, HYPERLIQUID 130414, EXTENDED-STARKNET 90046, LIGHTER-ZKSYNC 14820)",
+      "note": "cefi atom has no chain axis; display-column residue on on-chain perp DEXes",
+      "delete_eligible": false
+    },
+    {
+      "id": "F9",
+      "type": "catalogue_freshness",
+      "severity": "INFO",
+      "surfaces": ["S4"],
+      "scope": "data-catalogue.instruments-service.yaml",
+      "note": "reported once per SKILL 3c; UNVERIFIED this run (yaml not re-opened); prod/catalog.parquet present+fresh 8.99MB",
+      "delete_eligible": false
+    }
+  ],
+  "suppressed_exceptions": {
+    "C2a_instrument_type_column_casing": {
+      "applies": true,
+      "action": "REFUSED",
+      "measured_mixed_case": {
+        "PERPETUAL_upper": 7220102,
+        "perpetual_lower": 9146,
+        "note": "FUTURE/OPTION/SPOT_PAIR/COMBO upper; chains lower"
+      }
+    },
+    "AE1_sports_blank": { "applies": false },
+    "AE2_tradfi_combo": { "applies": "analogous", "cefi_combo_rows": 662 },
+    "AE5_decisionD_defi_lending": { "applies": false }
+  },
+  "refused_axes": ["C2a_instrument_type_column_casing"],
+  "delete_suggestions": [],
+  "orphans": "NOT_ASSESSED_no_whole_corpus_walk",
+  "inventory_sweep_cefi_scoped": {
+    "row1_legacy_flat_buckets": "CONFIRMED_404",
+    "row14_bucket_template_literals": "unchanged_live",
+    "row16_instrument_availability_flat": "CONFIRMED_no_still_authoritative",
+    "row17_features_delta_one_no_bydate": "CONFIRMED_no_still_authoritative",
+    "row23_dual_backup_spellings": "CONFIRMED",
+    "row23_NEW": "_remediation_backups/ third spelling present, not in register - append owed"
+  },
+  "coverage_gaps": [
+    "filename id-form full distribution (needs single walk; independent est 20.82% canonical)",
+    "orphan enumeration (route 3, not run)",
+    "H5 instruments-store-cefi never phantom-checked (absence of evidence)",
+    "S4 per-instrument catalogue-manifest window join",
+    "register-append for _remediation_backups/ (not edited - concurrent siblings)"
+  ],
+  "hazards_checked": {
+    "H1_v5v6_chain_tail_fork": "measured: 0 captured chain shards, all 17042 atoms v5, 0 v6 - latent code fork",
+    "H2_write_guard_tradfi_gated": "CONFIRMED in partitioned_writer.py: _assert_canonical_tradfi_path under if asset_group=='tradfi'",
+    "H3_build_cefi_no_pipeline_mode_kwarg": "CONFIRMED: build_cefi_partition_path lacks pipeline_mode; wrapper bolts via .replace guarded by raise (post-cutover blank-pm ~4 rows)",
+    "H4_adapter_redrift": "MEASURED: LIGHTER-ZKSYNC non-canonical filenames on 2026-07-10 post-cutover write",
+    "H5_instruments_store_not_phantom_checked": "coverage gap declared",
+    "H6_source_blank": "2810078 blank-source rows reported once"
+  }
+}

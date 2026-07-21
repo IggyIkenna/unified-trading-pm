@@ -59,6 +59,32 @@ locked_by:
 
 # Silent-wrong-answer audit — candidate findings
 
+## Operator responses (2026-07-21)
+
+- **DeFi ML does NOT train in prod (ruled).** The ml-service fix (`ml-service@93309c5`, raise on a DeFi total feature
+  miss) therefore stands as a latent correctness guard, not an urgent P1 — do not prioritise it as if a live model
+  depended on it.
+- **`compute_pnl` is the rates-PnL engine, NOT dead code — it is UNFINISHED WIRING (reclassifies the earlier
+  wire-or-delete note).** Verified 2026-07-21: `strategy_service/pnl/engine/orchestrator.py::compute_pnl` (and the
+  `compute_pnl_breakdown` it drives) is the ONLY code that assembles a full `PnLBreakdown` — hold-day lending/staking
+  **interest/rates PnL** via the liquidity index, plus `delta_pnl` / `basis_pnl` / `funding_rate_pnl` /
+  `interest_rate_pnl` and the rate-impact adjustment. The **live** `--operation compute` handler
+  (`_compute_attribution_for_date`) computes **only execution alpha** (fill price vs VWAP benchmark) and **skips hold
+  days** (`if total_qty == 0: continue`). So production PnL attribution today measures trade quality, not realized /
+  interest / funding / basis PnL. **Do not delete `compute_pnl`** — the follow-up is to WIRE it into the compute handler
+  (its own scoped plan), which is what makes DeFi lending/staking interest and the shipped rate-impact fix
+  (`strategy-service@928a41cf`) actually flow. One open caveat: confirm position/interest PnL is intended to live in
+  strategy-service here (vs another service) before wiring.
+- **`lending_rates` canonical form (clarified; shard-name still an operator ruling).** Rows are already canonical
+  per-**reserve** — `PROTOCOL-CHAIN:LENDING:ASSET` (e.g. `AAVE_V3-ARBITRUM:LENDING:WETH`) with per-reserve
+  `supply_apy`/`borrow_apy`. That per-asset shape is correct for the **pooled** protocols in the data (Aave V3 /
+  Compound V3 / Spark = 99.97% of rows), where each reserve has its own supply and borrow rate. A `(collateral, debt)`
+  paired canonical form applies only to **isolated-pair** protocols (Morpho Blue, Aave isolated markets, Compound v2),
+  which are not yet onboarded. So the row id-form is right; the remaining ruling is only the **shard/feature_group
+  name** (a protocol-agnostic `lending_rates` — recommended, since rows carry `protocol` — vs the registry's
+  Aave-specific `aave_lending_rates`, which would mislabel the Compound/Spark rows). Add a paired form when an
+  isolated-pair protocol is added.
+
 ## Evidence status — READ THIS FIRST
 
 The finder lenses were rigorous: each finding below was read in the enclosing function and up its caller chain, and
@@ -117,10 +143,58 @@ shards, converting a detectable total miss into an undetectable partial success.
 | 23  | unified-trading-pm · `prediction_pipeline_e2e_check.py:303` | Prints "ALL PHASES PASSED" unconditionally and skips every Phase-2 assertion when zero trades come back. Manual driver, not gated — low blast radius.                                                                    |
 | 24  | execution-service · `tenderly.py:226`                       | Fork funding uses 18 decimals for WBTC (real: 8) — a request for 1 WBTC funds 10^10 WBTC. `_TOKEN_DECIMALS` omits WBTC and defaults to 18. Backtest/paper balance-constrained paths start effectively unbounded in WBTC. |
 
+## Verification outcome (2026-07-20) — adversarial pass run, survivors shipped
+
+The three-lens adversarial verification pass (refute / reachability / consequence, 72 agents) was run over all 24
+candidates. Result: **7 survived, 17 were refuted as _active_ defects, and ZERO became live crashes** — i.e. the UTL
+`BucketNamingError` raise shipped earlier this day broke no live path; it only surfaced latent brokenness. "Refuted"
+here means the panel voted (≥2 of 3) that the finding does not survive as an active, currently-reachable, consequential
+defect — **most of the 17 are real-but-LATENT** (dead/unreached code) or had an **overstated consequence**, not false
+positives. They remain on record as latent findings; none warrants an immediate fix.
+
+**All 6 safe survivors were fixed (adversarially re-reviewed); 4 SHIPPED, 2 DEFERRED on peer contention:**
+
+| survivor                                                 | sev  | status                                                                                    |
+| -------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------- |
+| deployment-service `meta_targets.py`+`cli.py` prediction | P2   | ✅ shipped `deployment-service@8ebdb79` — prediction override in both monitor sweeps      |
+| deployment-service `data_status_venue_utils.py` smoke    | P2   | ✅ shipped `@8ebdb79` — missing_venues derived from config, not from `found`              |
+| client-reporting-api credential None-guard               | P2   | ✅ shipped `client-reporting-api@7b93645` — None guard in 4 consumers (4th found)         |
+| MDPS `smoke_matrix.py` freshness                         | P3   | ✅ shipped `market-data-processing-service@25ca0dd` — bind to current-run signature       |
+| features-service `paired_dispatch.py` delta-one prefix   | P1\* | ⏸ DEFERRED (stash) — fix written+tested (29 pass); \*LATENT; blocked by peer contention   |
+| features-service `smoke_matrix.py` feature_group scope   | P2   | ⏸ DEFERRED (stash) — overlaps live peer work `features-service@9ce1f4ab` (--all-handlers) |
+
+**Why the two features-service fixes are DEFERRED, not shipped:** the fixes are written, adversarially reviewed, and
+green (29 targeted tests pass, ruff/basedpyright clean), stashed as
+`features-safe-survivor-fixes-2026-07-20-DEFERRED-peer-contention-on-smoke_matrix-allhandlers`. Two reasons to hold: (1)
+features-service had heavy active-peer push traffic — four `pull→gate→quickmerge` attempts each lost the branch-drift
+race (a peer landed a commit during every ~4-min QG window; the fix itself passed QG every time). (2) more importantly,
+a peer shipped
+`features-service@9ce1f4ab feat(smoke): extend smoke_matrix with --all-handlers per-handler coverage validation` —
+active development on the exact `smoke_matrix --all-handlers` surface FIX B touches, so FIX B must be **reconciled
+against that peer's code** before it lands (it may need rework or be partly redundant). Both are low-urgency
+(paired_dispatch is latent; smoke_matrix is dev tooling), so deferring is correct over clobbering live peer work.
+Recover with `git stash apply` in features-service and reconcile smoke_matrix against `9ce1f4ab`.
+
+The 7th survivor (`validate_shards_4pillar.py:181`, pillar-2/3 vacuous for 51 of 61 pairs) survived but was **not**
+flagged safe-to-fix-now — it needs a schema-contract decision, so it is left for a follow-up.
+
+**\*paired_dispatch is LATENT**: the reachability lens proved it is reachable only via a manual
+`--feature-groups paired_price_dispersion`; no cron/backfill/scheduled path enables it, so the finder's "no features
+every date since Fold-A" impact was overstated. The fix is still correct and safe; its effect is latent.
+
+**The `compute_pnl` discovery (confirmed by grep):** `strategy-service/pnl/engine/orchestrator.py::compute_pnl` — the
+function carrying the `rate_impact` "unadjusted P&L presented as adjusted" P0 that was fixed with a real loudness
+surface (`strategy-service@928a41cf`) — **has ZERO production callers**. Only `pnl/engine/__init__.py` re-exports it and
+tests reference it; the live `--operation compute` handler uses `execution_alpha.calculator`. So that P0 is **latent
+today** — the fix is correct and matches this doc's intent, but its production effect is deferred until `compute_pnl` is
+wired, OR `compute_pnl` is superseded dead code that should be deleted (an operator/plan decision — not deleted
+autonomously, as it may be an intended future engine). This is also why the gas-fee findings (2, and `pnl_input_builder`
+:56/:94) were refuted as _active_ defects: their write path runs through the same unwired orchestrator.
+
 ## Recommended handling
 
 1. **Do not mass-fix on finder evidence.** Re-run the adversarial verification pass (three lenses per finding) now that
-   limits have reset; ship only survivors, most-severe first.
+   limits have reset; ship only survivors, most-severe first. **(DONE — see the verification-outcome section above.)**
 2. **Findings 1, 4, 5, 16 and the smoke-matrix set (15, 17, 18)** overlap the DeFi featureless-shard work and the
    false-green harness class already being fixed — reconcile against those before touching, to avoid double edits.
 3. **Finding 2 (gas fees)** is not a code one-liner: it needs an answer to "where does DeFi gas-fee data actually live,

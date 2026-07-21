@@ -202,6 +202,49 @@ MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES
 FIX_MODE=false; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; IGNORE_TIMEOUT=${IGNORE_TIMEOUT:-false}; SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
     case $arg in
+        --help|-h)
+            # Added 2026-07-20: an agent fat-fingered `--help` expecting a no-op usage
+            # print, but it fell through this case statement (no default arm) and ran
+            # the FULL gate instead. Every recognized flag is listed here — grep this
+            # file for the case-match above if this list ever drifts.
+            cat <<'QG_USAGE'
+Usage: quality-gates.sh [FLAGS]
+
+Mode flags:
+  --no-fix                  Don't auto-reformat the tree (DEFAULT — safe for agents/CI;
+                             use for any run whose diff you intend to commit).
+  --fix                     Opt into tree-wide auto-fix (ruff --fix / prettier --write).
+                             Can dirty files outside your own change — use deliberately.
+  --quick                   Faster iteration pass (skips version-alignment / merge-sentinel
+                             write) — NOT a substitute for a full gate before shipping.
+  --fast                    Change-scoped codex-grep tier (scans only files changed vs the
+                             merge-base). Never writes the merge sentinel — the full gate
+                             still runs at quickmerge/CI. Local iteration only.
+
+Scope flags (skip one phase):
+  --lint                    Lint-only (skips tests).
+  --test                    Test-only (skips lint).
+  --skip-tests               Skip the pytest phase.
+  --skip-lint                Skip the lint phase.
+  --skip-typecheck           Skip basedpyright.
+  --skip-codex                Skip codex-compliance checks.
+  --skip-version-alignment    Skip the version-alignment check.
+
+Other:
+  --act                      Run under `act` (local GitHub Actions emulation).
+  --ignore-timeout           Ignore the MAX_DURATION enforcement.
+  --help, -h                 Show this message and exit 0 (no gate phases run).
+
+Env var:
+  QG_SLICE=tests|typecheck|lint-codex   CI parallel-job slice selector used by the
+                                         reusable workflow — not usually set by hand.
+
+NOTE: any OTHER flag is currently silently ignored (no error, no effect) — there is
+no catch-all/unknown-flag case below. If you are not sure a flag is real, run --help
+first rather than guessing; the gate will otherwise proceed with default settings.
+QG_USAGE
+            exit 0
+            ;;
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
         --lint) RUN_TESTS=false ;;    --test) RUN_LINT=false ;;
         --skip-tests) RUN_TESTS=false ;; --skip-lint) RUN_LINT=false ;;

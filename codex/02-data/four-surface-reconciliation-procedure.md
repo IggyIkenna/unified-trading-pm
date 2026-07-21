@@ -328,6 +328,18 @@ Where object listing is unavoidable, only these three no-walk routes are sanctio
 > to, see [`../05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md) — that doc
 > governs mechanics, this one governs WHETHER.
 
+### 5.1 Route #3 in practice — the Tier-2 per-datapoint VM is the sanctioned single walk for S2 (added 2026-07-20)
+
+When a **100% (not sampled) id/schema claim** on the **S2 (parquet content) surface** is required, the Tier-2
+per-datapoint validation VM IS an instance of route #3 above: the ONE fresh corpus walk per campaign, on a SPOT VM, that
+lifts the four-surface loop's sampled filename-stem/content check (Step 5) to the whole corpus. **G2 (id-canonical) and
+G3 (schema) bundle as two PASSES onto that ONE snapshot walk, run in order per object — never two separate walks, never
+two VMs.** The skill folds the results into this doc's S2 column by a **read-back of the VM's results manifest**, which
+is a slim manifest-`_index` read (single-walk-EXEMPT, exactly like Step 1) — it does **not** count as a second walk.
+Default stays Tier-1 sampled (≤500 objects/AG, reported as SAMPLED, never a 100% claim); Tier-2 is opt-in. SSOT for the
+compute-tier model, the VM launcher, and the results-manifest read-back:
+[`reconciliation-census-and-compute-tiers.md`](reconciliation-census-and-compute-tiers.md) § 3 — do not restate it here.
+
 ---
 
 ## 6. Per-asset-group deviations
@@ -363,11 +375,18 @@ path per AG.**
 
 ---
 
-## 7. Open questions — UNRULED, stated not decided
+## 7. Open questions — all four now RESOLVED (O2/O3 RULED 2026-07-20)
 
-**O2 and O3 are genuinely UNRULED and BLOCKING — they need an OPERATOR.** The reconciliation procedure **must surface
-them with both sides cited and refuse to migrate the affected axis**. It must not silently pick a side. Escalation is
-P0-02 of `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`.
+> **⛔ corrected 2026-07-20, operator rulings D1 + D2 — RE-RECONCILED 2026-07-20 (acceptance review).** ~~"O2 and O3 are
+> genuinely UNRULED and BLOCKING — they need an OPERATOR … refuse to migrate the affected axis."~~ **Both were RULED
+> 2026-07-20** (recorded in `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § "OPERATOR DECISIONS — ALL
+> THREE RULED 2026-07-20"). O2 → manifest `instrument_type` COLUMN TARGET is **UPPERCASE**, but is **NOT yet
+> implemented** — the column is `migration_pending` (mixed on disk today), so the reconciler does NOT refuse it,
+> compares it **case-INSENSITIVELY**, and emits **NO** casing finding until the migration completes (UPPERCASE enforced
+> POST-migration). ~~(enforce, do not refuse)~~ — "enforce UPPERCASE now" was an over-correction; the reconciled stance
+> is case-insensitive-until-migrated. O3 → defi flat `LENDING` full retire is the RULED **TARGET**, not yet implemented,
+> gated on the MTDS lending-writer fix — market/event flat `LENDING` is `migration_pending`, neither a fresh finding nor
+> an open axis. The per-item text below is updated in place; nothing in this section is now a live operator question.
 
 **O1 and O4 are RESOLVED** and are retained below only as an audit trail of how each was closed. Neither was ever a real
 operator question: both were doc drift — one stale template in the tie-breaker doc, and one formula stated three ways —
@@ -390,15 +409,27 @@ stalls forever or migrates something it had no mandate to touch.
     manifest rows, bundled with the pending ASTER/HYPERLIQUID cefi-misfiling decision (same doc `:1041-1044`). **The
     reconciler must NOT emit these as `legacy_duplicate` and must NEVER suggest deleting them** — they are the only copy
     of that data, and their re-migration is gated on an operator decision that has not been made.
-- **O2 — manifest `instrument_type` COLUMN case.** `cross-asset-canonical-target-ssot.md:212-214` (§7) says LOWERCASE in
-  the path segment and the manifest column; the tradfi close-out Phase B says UPPERCASE with the catalogue as SSOT,
-  **both citing the same operator on the same date (2026-07-18)**, and shipped cefi/tradfi scripts already uppercase the
-  column. This determines the direction of >12M row rewrites. **The reconciler MUST NOT report `instrument_type` column
-  casing as a finding and MUST NOT propose any casing migration** until ruled.
-- **O3 — defi flat `LENDING` instrument_type.** `cross-asset-canonical-target-ssot.md` §5 asserts `LENDING` is RETIRED
-  in favour of the A_TOKEN/DEBT_TOKEN split; the retire was **reversed in code** because it broke MTDS lending writers
-  into `attempted_failed`/zero-data. Codex currently asserts a state the code deliberately does not implement. **Do not
-  flag flat `lending` on market/event data_types as non-canonical** until ruled.
+- **O2 — manifest `instrument_type` COLUMN case. ✅ RULED UPPERCASE (TARGET) 2026-07-20 (operator ruling D1);
+  `migration_pending` today.** Was contested — `cross-asset-canonical-target-ssot.md` §7 said LOWERCASE while the tradfi
+  close-out Phase B said UPPERCASE, both citing the same operator on the same date (2026-07-18). **The operator ruled
+  the canonical TARGET is UPPERCASE for the manifest COLUMN** (catalogue enum wins; path segment stays lowercase, id
+  middle segment stays UPPER — both ALWAYS enforced, neither in question). The two shipped uppercase scripts
+  (`instruments-service@555ddf1c` + tradfi Phase-B) are RATIFIED and unfrozen. **The UPPERCASE column is NOT yet
+  implemented — the column is `migration_pending` (measured 2026-07-20: mixed on disk — defi both cases present,
+  prediction 99.46% UPPER, cefi ~99.41% adjusted).** ~~The reconciler now ENFORCES UPPERCASE for the column~~ **(⛔
+  re-reconciled 2026-07-20 — "enforce now" would false-flag all un-migrated data).** So the reconciler **(1)** does NOT
+  refuse the axis; **(2)** compares the `instrument_type` COLUMN **case-INSENSITIVELY** and emits **NO** casing finding
+  during the `migration_pending` window; **(3)** enforces UPPERCASE only POST-migration. Defi/other rows not yet folded
+  UP are `migration_pending`, not a fresh finding. **Gate**: the honest-coverage harness must be made case-robust BEFORE
+  the migration flips writers —
+  `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
+- **O3 — defi flat `LENDING` instrument_type. ✅ RULED 2026-07-20 (operator ruling D2 — full retire is the TARGET, NOT
+  yet implemented).** `cross-asset-canonical-target-ssot.md` §5's "`LENDING` is RETIRED (A_TOKEN/DEBT_TOKEN split)" is
+  the correct TARGET, but the first attempt was **reversed in code** because it broke 5+ (really 8) MTDS lending writers
+  into `attempted_failed`/zero-data. Mandatory order: **fix the writers → migrate ~16.7M rows → re-sync the shard atom**
+  — gated on `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`. **Until the migration completes,
+  market/event flat `lending` is `migration_pending`** — the reconciler neither flags it as non-canonical nor treats it
+  as an open/unruled axis.
 - **O4 — honest-coverage formula. ✅ RESOLVED 2026-07-20 — not an open question.** This one was never genuinely unruled:
   it was doc drift, and it is now closed in favour of [`honest-coverage-model.md`](honest-coverage-model.md) § Coverage
   formula — `reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)`, `empty_confirmed`

@@ -660,14 +660,20 @@ NOT AO and are deliberately out of scope here.
       dispatch race assertion. **Only the operational proof remains**: live `dispatched` count equals live-worker-held
       count across a 24h window. Needs the fix live for a full day before it means anything. **Gate**: the 24h
       comparison, stated explicitly. _Source: `ao_worker_lifecycle_reap_2026_07_20.md` (archived), todo 4._
-- [ ] [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM
-      `.env.local`.** Live on the VM but the field no longer exists (silently ignored via config `extra="ignore"`) —
-      inert no-op today, so no rush. Two routes: a re-bootstrap purges it (`agent-orchestrator@5ad97b9`), OR an SSM
-      `sed -i` backup-first + clean restart. **BLOCKED-OPERATOR-DECISION** — touches prod env. _Source:
+- [x] ✅ [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM
+      `.env.local`.** — DONE 2026-07-21 (operator authorized, superseding the A6 "fold into re-bootstrap" default — done
+      in-window alongside the DB migration). Took the `sed -i` backup-first route (backups
+      `.env.local.bak.20260721T025759Z` + `.bak2.20260721T030238Z`) with a clean `disable`/`stop`/`start`. **The var
+      removal alone would have left its 2-line explanatory comment ORPHANED above the unrelated
+      `ORCHESTRATOR_WATCHDOG_DAILY_CAP`** — caught on operator recheck and removed too, so the net change vs the
+      pre-edit backup is exactly 3 lines gone (the var + its 2 comments), file otherwise byte-identical. Behavioral
+      removal was effective before the restart (the field was already a silent no-op via `extra="ignore"`). _Source:
       `ao_config_env_var_consolidation_2026_07_18.md` (archived), Phase-0 P2._
-- [ ] [SCRIPT] P2. **Verify the `.env.local` cleanup landed** once the item above is applied —
-      `curl     localhost:8765/api/mode` + a clean restart via SSM. Pairs with, and fires after, the item above.
-      _Source: `ao_config_env_var_consolidation_2026_07_18.md` (archived), Phase-5._
+- [x] ✅ [SCRIPT] P2. **Verify the `.env.local` cleanup landed** — DONE 2026-07-21. Verified three ways: `diff` of the
+      current `.env.local` vs the pre-edit backup = exactly the 3 intended lines removed; a full redacted inventory read
+      confirmed no other retired/duplicate vars and no `ORCHESTRATOR_DB_PATH`/`STATE_JSON` present; and the backend came
+      back clean (`curl localhost:8765/api/mode` → `mode=live`, `db_path` in-repo). _Source:
+      `ao_config_env_var_consolidation_2026_07_18.md` (archived), Phase-5._
 
 ## Open questions — state as of 2026-07-20 (read this before picking up work)
 

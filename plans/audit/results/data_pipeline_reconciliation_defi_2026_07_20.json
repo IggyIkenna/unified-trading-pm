@@ -1,0 +1,286 @@
+{
+  "doc_type": "audit-result",
+  "skill": "data-pipeline-reconciliation",
+  "asset_group": "defi",
+  "run_date": "2026-07-20",
+  "read_only": true,
+  "prod_only": true,
+  "sample_scope": {
+    "primary_day": "2026-04-14",
+    "pipeline_mode": "batch_onchain_subgraph",
+    "manifest_rows_scoped": 64009,
+    "manifest_index_total_rows": 51917421,
+    "manifest_index_size_bytes": 1778569760,
+    "surfaces_exercised": ["S1_path", "S2_content", "S3_manifest", "S4_catalogue"],
+    "not_sampled": [
+      "other_defi_days(~2300)",
+      "non_solana_venue_S2_content",
+      "features_defi_onchain_content",
+      "whole_corpus_orphan_walk"
+    ]
+  },
+  "buckets": [
+    {
+      "kind": "market-data",
+      "resolved": "market-data-tick-defi-prd-central-element-323112",
+      "tier": "prd",
+      "reachable": true,
+      "surfaces": ["S1", "S2", "S3"]
+    },
+    {
+      "kind": "instruments-store",
+      "resolved": "instruments-store-defi-prd-central-element-323112",
+      "tier": "prd",
+      "reachable": true,
+      "surfaces": ["S4"]
+    },
+    {
+      "kind": "features",
+      "resolved": "features-defi-prd-central-element-323112",
+      "tier": "prd",
+      "reachable": true,
+      "surfaces": ["top-level-only"]
+    }
+  ],
+  "unreachable_buckets": [],
+  "test_tier_leak": false,
+  "cutover_gate": { "require_pipeline_mode_effective_from": "2026-05-19", "used_for_sampled_day": false },
+  "coverage": {
+    "formula": "reachable_coverage = captured / (captured + attempted_failed + expected_unattempted); empty_confirmed EXCLUDED",
+    "scope": "day=2026-04-14 defi sample only (NOT corpus)",
+    "captured": 40724,
+    "attempted_failed": 193,
+    "expected_unattempted": 16806,
+    "empty_confirmed_excluded": 6286,
+    "reachable_coverage_pct": 70.55,
+    "lower_bound": true,
+    "lower_bound_reason": "instrument_gates_download=true",
+    "denominator_note": "corpus expected_unattempted seed = 63.9M (H7); never derived from the 1.38M understatement"
+  },
+  "per_shard_surface_verdicts": [
+    {
+      "shard": "ORCA/SOLANA/solana_amm_pool/dex_pool_state",
+      "objects": 14094,
+      "S1": "OK(structure); id-form unknown-vintage",
+      "S2": "SUPPRESSED(AE-3 two-id) + NOTE canonical_instrument_id column absent",
+      "S3": "captured; NOTE row_count=0",
+      "S4": "OK(canonical spelling)"
+    },
+    {
+      "shard": "RAYDIUM/SOLANA/solana_amm_pool/dex_pool_state",
+      "objects": 100,
+      "S1": "OK",
+      "S2": "NOT-READ",
+      "S3": "NOTE dual-vocab pool(expected_unattempted) vs solana_amm_pool(captured)",
+      "S4": "OK"
+    },
+    {
+      "shard": "KAMINO/SOLANA/lending/lending_indices",
+      "objects": 47,
+      "S1": "OK",
+      "S2": "SUPPRESSED(AE-5 SOLANA_LENDING)",
+      "S3": "REFUSED(decision D)",
+      "S4": "OK"
+    },
+    {
+      "shard": "PHOENIX/SOLANA/solana_amm_pool/dex_pool_state",
+      "objects": 3,
+      "S1": "OK",
+      "S2": "NOT-READ",
+      "S3": "captured row_count=0 NOTE",
+      "S4": "NOT-READ"
+    },
+    {
+      "shard": "YEARN_V3/ETHEREUM/yield_bearing/vault_share_price",
+      "S1": "OK",
+      "S2": "NOT-READ",
+      "S3": "NOTE blank instrument_id + pm-source desync(F10)",
+      "S4": "OK(6 rows)"
+    },
+    {
+      "shard": "YEARNV3/ETHEREUM/yield_bearing/vault_share_price",
+      "S1": "NON-CANON(glued-V, objects exist=4)",
+      "S2": "NOT-READ",
+      "S3": "captured, blank instrument_id",
+      "S4": "ABSENT(no catalogue entry)"
+    },
+    {
+      "shard": "legacy dex_pools/ top-level",
+      "objects_per_day": 6,
+      "S1": "NON-CANON(prefix)",
+      "S2": "not-verified-here(R5 did)",
+      "S3": "ABSENT",
+      "S4": "n/a"
+    },
+    {
+      "shard": "legacy lending_indices/ top-level",
+      "objects_per_day": 2,
+      "S1": "NON-CANON(prefix)",
+      "S2": "not-verified-here",
+      "S3": "ABSENT",
+      "S4": "n/a"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "type": "non_canonical_path",
+      "severity": "MEDIUM",
+      "location": "venue=YEARNV3 (glued-V) + venue=AAVEV3",
+      "surfaces": ["S1"],
+      "detector": "canonical_path_violations",
+      "delete_eligible": false,
+      "note": "objects exist on disk (YEARNV3=4/day); canonical twins YEARN_V3/AAVE_V3 exist same day - coverage fragmentation"
+    },
+    {
+      "id": "F2",
+      "type": "non_canonical_path",
+      "severity": "MEDIUM",
+      "location": "dex_pools/ + lending_indices/ top-level",
+      "surfaces": ["S1"],
+      "detector": "oracle prefix clause + live probe",
+      "delete_eligible": false
+    },
+    {
+      "id": "F3",
+      "type": "legacy_duplicate",
+      "severity": "LOW-MEDIUM",
+      "location": "dex_pools/{orca,raydium} + lending_indices/kamino",
+      "surfaces": ["S1", "S3"],
+      "detector": "twin re-probe + issue-doc R5",
+      "delete_eligible": true,
+      "disposition": "no-migrate-first",
+      "hard_stop": "prod-bucket + defi-dex_pools"
+    },
+    {
+      "id": "F4",
+      "type": "orphan_real",
+      "severity": "HIGH",
+      "location": "dex_pools/kamino (solana_vault twin=0), lending_indices/solend (twin=0)",
+      "surfaces": ["S1"],
+      "detector": "twin re-probe",
+      "delete_eligible": false,
+      "note": "legacy = only copy; DO-NOT-DELETE"
+    },
+    {
+      "id": "F5",
+      "type": "manifest_only",
+      "severity": "MEDIUM",
+      "location": "dup-spelling venues (YEARNV3, MORPHOVAULTS, MORPHO_VAULTS, AAVEV3, COMPOUND) on disk+manifest, absent from catalogue",
+      "surfaces": ["S3", "S4"],
+      "detector": "catalogue vs manifest venue set",
+      "delete_eligible": false
+    },
+    {
+      "id": "F6",
+      "type": "expected_universe_vocab_desync",
+      "severity": "HIGH",
+      "location": "RAYDIUM it=pool expected_unattempted vs writer it=solana_amm_pool captured",
+      "surfaces": ["S3"],
+      "detector": "scoped manifest read + writer code",
+      "delete_eligible": false,
+      "note": "H1 class on expected side; permanently-unsatisfiable expected rows inflate denominator"
+    },
+    {
+      "id": "F7",
+      "type": "manifest_infra",
+      "severity": "INFO",
+      "location": "_index/consolidator.lock; latest.json verdict=empty error_reason=locked",
+      "surfaces": ["S3"],
+      "detector": "JSON read",
+      "delete_eligible": false,
+      "note": "corroborates H4 - capture STOPPED, consolidator stalled"
+    },
+    {
+      "id": "F8",
+      "type": "phantom",
+      "severity": "HIGH",
+      "location": "defi phantom_count=1558",
+      "surfaces": ["S3", "S1"],
+      "detector": "published _index/phantom_audit_latest.json (2026-07-19, read not re-run)",
+      "delete_eligible": false
+    },
+    {
+      "id": "F9",
+      "type": "row_count_population_note",
+      "severity": "MEDIUM",
+      "location": "captured rows carry row_count=0/nan while parquet has content",
+      "surfaces": ["S3", "S2"],
+      "detector": "scoped read + parquet read",
+      "delete_eligible": false,
+      "note": "NOT a confirmed phantom - content present"
+    },
+    {
+      "id": "F10",
+      "type": "pipeline_mode_source_desync",
+      "severity": "MEDIUM",
+      "location": "YEARN_V3 row pipeline_mode=batch_onchain_rpc but source=onchain_subgraph",
+      "surfaces": ["S3"],
+      "detector": "scoped read",
+      "delete_eligible": false
+    },
+    {
+      "id": "F11",
+      "type": "catalogue_freshness",
+      "severity": "LOW",
+      "location": "instruments-store-defi-prd/prd/catalog.parquet stale shadow @2026-06-28",
+      "surfaces": ["S4"],
+      "detector": "top-level ls",
+      "delete_eligible": false,
+      "hard_stop": "human-only"
+    },
+    {
+      "id": "F12",
+      "type": "s2_contract_gap_note",
+      "severity": "MEDIUM",
+      "location": "defi parquet lacks canonical_instrument_id column; catalogue canonical_instrument_id holds bare 0x address",
+      "surfaces": ["S2", "S4"],
+      "detector": "parquet read + catalogue read",
+      "delete_eligible": false,
+      "note": "cross-surface id-form inconsistency; AE-3-adjacent"
+    }
+  ],
+  "suppressed_exceptions": {
+    "AE-3": { "condition": "defi two-id POOL divergence", "occurrences": 14197 },
+    "AE-5": {
+      "condition": "defi interim flat LENDING/SOLANA_LENDING",
+      "occurrences": "all lending/liquidation rows day=2026-04-14"
+    }
+  },
+  "refused_axes": [
+    {
+      "axis": "C2a",
+      "name": "manifest instrument_type COLUMN casing",
+      "status": "REFUSED",
+      "live_evidence": "both LENDING/lending, POOL/pool, PERPETUAL/perpetual, SPOT_PAIR/spot_pair, STAKING/staking, YIELD_BEARING/yield_bearing present on sampled day"
+    },
+    {
+      "axis": "decision-D",
+      "name": "defi market/event LENDING keying",
+      "status": "REFUSED"
+    }
+  ],
+  "delete_suggestions": [
+    {
+      "location": "dex_pools/ + lending_indices/ (legacy top-level)",
+      "part1_twin": "ORCA=14094,RAYDIUM=100 resolve; SOLEND=0,KAMINO_dexpool=0 -> None",
+      "part2_content": "FAIL by default (R5: intersection 66 of 98/99, 32 legacy-only)",
+      "part3_writers": "NONE-FOUND (docstring stale, code emits canonical)",
+      "part4_readers": "FAIL - execution-service solana_amm_depth_provider.py:41,258 reads legacy",
+      "part5_twin_coverage": "PARTIAL (<100%)",
+      "disposition": "no-migrate-first",
+      "hard_stop": "prod-bucket + defi-dex_pools (human-only)"
+    }
+  ],
+  "orphans": "NOT ASSESSED (no whole-corpus walk in this run)",
+  "inventory_reconcile": {
+    "row2_prd_shadow": "CONFIRMED",
+    "row7_dex_pools": "CONFIRMED no-migrate-first",
+    "row8_lending_indices": "CONFIRMED (SOLEND twin=0, KAMINO lending twin=47)",
+    "row9_glued_flat_ticks_migrated": "NOT reproduced on sampled day - UNVERIFIED stands",
+    "row16_instrument_availability": "top-level present, not deep-probed",
+    "row23_dual_migration_backup": "CONFIRMED both present",
+    "row24_needs_attribution": "CONFIRMED day=2021-02-24"
+  },
+  "verdict": "pass-with-findings: structurally canonical on sampled canonical cells (oracle clean, id-form not machine-checked); bounded live non-canonical residue; 2 axes REFUSED; no delete authorized (single eligible candidate = no-migrate-first)"
+}

@@ -139,15 +139,35 @@ isolation, consolidator merge/dedup, stale-blob liveness and the `captured`-outr
 - [ ] 1. [DATA] P0. **VERIFY the prod projection before sizing the win** — is `_publish_emission_check` actually firing
       on prod MDPS backfills (are they ~4–5 min/instrument on cefi), or does a policy/short-circuit disable it in prod?
       The projection is INFERRED from a measured curve + measured sizes, not observed on a prod VM.
-- [ ] 2. [SCRIPT] P0. Implement F1 (filtered lookup) + F2 (memoize) in
-      `unified-trading-library/…/manifest_completeness.py`.
-- [ ] 3. [SCRIPT] P1. Implement F3 in MDPS `canonical_writer_stamping.py::_publish_emission_check` (thread
-      `manifest_index=`).
-- [ ] 4. [SCRIPT] P1. Tests: (a) equivalence vs `_build_capture_status_map` across all 4 `capture_status` states incl.
-      the `_DEDUP_NULL_SENTINEL` NULL≡`""` collapse; (b) perf guard — 1.4 M-row synthetic index,
+- [x] 2. ✅ [SCRIPT] P0. F1+F2 SHIPPED utl@80d2497e (16.7x, value-equivalent, proven). Implement F1 (filtered lookup) +
+      F2 (memoize) in `unified-trading-library/…/manifest_completeness.py`.
+- [x] 3. ✅ [SCRIPT] P1. F3 shipped mdps@b4db0af as a SAFE optional pass-through (forced snapshot REJECTED — MDPS
+      ohlcv_1m self-mutates the shard the ohlcv_1h/24h window reads). Implement F3 in MDPS
+      `canonical_writer_stamping.py::_publish_emission_check` (thread `manifest_index=`).
+- [x] 4. ✅ [SCRIPT] P1. Tests shipped (equivalence 4-state+sentinel+dup+absent; perf-guard 1.45M<0.5s; memo). Tests:
+      (a) equivalence vs `_build_capture_status_map` across all 4 `capture_status` states incl. the
+      `_DEDUP_NULL_SENTINEL` NULL≡`""` collapse; (b) perf guard — 1.4 M-row synthetic index,
       `compute_completeness_fraction` < 0.5 s (today: **13.14 s measured**); (c) memoization — 1 build for 3 calls.
 - [ ] 5. [DATA] P0. **The 1.58 GB defi-prd index is its own P0** — audit every `read_availability_index` caller on defi
       for a missing column/filter projection (OOM risk), and consider whether the index needs compaction/partitioning.
 - [ ] 6. [DOC] P2. Record in codex that the per-VM manifest flush is ALREADY debounced (50 entries/5.0s, `utl@6b6d53bd`)
     so the "flush is O(n²)" hypothesis is not re-derived by the next reader.
 </content>
+
+## 2026-07-20 — F1+F2 SHIPPED (16.7x, value-equivalent); F3 premise DISPROVEN
+
+**Shipped:** `unified-trading-library@80d2497e` (F1 filter-then-build + F2 memoize) +
+`market-data-processing-service@b4db0af` (F3 safe optional pass-through). **Measured 3.528s -> 0.211s at 1.45M rows
+(16.7x, <0.5s)**, value-equivalent to the full-corpus reference across all 4 capture states + the NULL-equals-empty
+sentinel + dup last-write-wins + absent key; memo 1 build / 3 calls. Both QGs green. The full speedup applies
+AUTOMATICALLY to the existing `_publish_emission_check -> publish_with_manifest_lookup -> compute_completeness_fraction`
+path with ZERO MDPS behavior change — no risky snapshot needed.
+
+**F3 SPEC PREMISE WAS FALSE (data-correctness finding).** Todo 3 said "the emission check is a read of UPSTREAM raw-tick
+capture state, which the candle write does not change, so a per-instrument snapshot is safe." That is WRONG:
+`mdps_data_type_key("trades","1m") == "ohlcv_1m"`, so MDPS's OWN ohlcv_1m candle write emits the exact
+`data_type=ohlcv_1m,timeframe=1m` manifest shard that `_build_ohlcv_1m_upstream_window` (for ohlcv_1h/ohlcv_24h) reads.
+A per-instrument snapshot taken BEFORE the ohlcv_1m write would give the later ohlcv_1h/24h checks a staler view ->
+different completeness fraction -> different emission verdict. So F3 was implemented as an honored optional pass-through
+defaulting to None (read-fresh), NOT a forced snapshot. Todo 3 is CLOSED as "pass-through only; forced snapshot rejected
+on correctness grounds."
