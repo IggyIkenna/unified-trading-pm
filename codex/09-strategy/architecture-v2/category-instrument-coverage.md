@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Category × Instrument Coverage Matrix (SSOT)
-summary: The SSOT coverage matrix — for every v2 archetype each (category, instrument_type) cell is declared SUPPORTED/PARTIAL/BLOCKED/NA with representative venues, signal variant, gap reason, lock_state, and fully-spelled slot_label examples; also the dated-future rolling-continuous representative-future roll spec.
+summary:
+  The SSOT coverage matrix — for every v2 archetype each (category, instrument_type) cell is declared
+  SUPPORTED/PARTIAL/BLOCKED/NA with representative venues, signal variant, gap reason, lock_state, and fully-spelled
+  slot_label examples; also the dated-future rolling-continuous representative-future roll spec.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +15,17 @@ tags: [strategy, catalogue, cefi, defi, tradfi, execution, data-quality]
 related: [block-list.md, restriction-policy.md, README.md, strategy-registry-v2.md]
 created: 2026-04-20
 authoritative_for: [architecture-v2 archetype coverage-status matrix (SUPPORTED/PARTIAL/BLOCKED/NA per cell)]
-referenced_by: [codex/09-strategy/architecture-v2/MIGRATION.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/event-driven.md, codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md, codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md]
+referenced_by:
+  [
+    codex/09-strategy/architecture-v2/MIGRATION.md,
+    codex/09-strategy/architecture-v2/README.md,
+    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
+    codex/09-strategy/architecture-v2/archetypes/event-driven.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
+    codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md,
+    codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md,
+    codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -1222,6 +1235,192 @@ MARKET_MAKING_EVENT_SETTLED@polymarket-sports-mm-usdc-prod
 
 ---
 
+### 20. `MARKET_MAKING_PASSIVE_SPREAD`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/passive_spread.py`.
+
+Passive symmetric-spread quoting around mid — the baseline CeFi MM style, no inventory-skew or ML adjustment.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues                                       | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | spot       | PARTIAL | binance, okx, bybit, hyperliquid, deribit, coinbase, kraken | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| CeFi     | perp       | PARTIAL | binance, okx, bybit, hyperliquid, deribit, coinbase, kraken | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+MARKET_MAKING_PASSIVE_SPREAD@binance-spot-1d-usdt-prod
+MARKET_MAKING_PASSIVE_SPREAD@binance-perp-1d-usdt-prod
+```
+
+---
+
+### 21. `MARKET_MAKING_INVENTORY_SKEW`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/inventory_skew.py`.
+
+Inventory-aware quoting — skews bid/ask around mid based on current position to mean-revert inventory toward flat.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues                                       | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | spot       | PARTIAL | binance, okx, bybit, hyperliquid, deribit, coinbase, kraken | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| CeFi     | perp       | PARTIAL | binance, okx, bybit, hyperliquid, deribit, coinbase, kraken | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+MARKET_MAKING_INVENTORY_SKEW@binance-spot-1d-usdt-prod
+MARKET_MAKING_INVENTORY_SKEW@binance-perp-1d-usdt-prod
+```
+
+---
+
+### 22. `MARKET_MAKING_ML_LEAN`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/ml_lean.py`.
+
+ML-informed quote placement — adjusts spread/skew using a short-horizon price-move forecast rather than pure inventory
+rules.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues                                       | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | spot       | PARTIAL | binance, okx, bybit, hyperliquid, deribit, coinbase, kraken | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| CeFi     | perp       | PARTIAL | binance, okx, bybit, hyperliquid, deribit, coinbase, kraken | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+MARKET_MAKING_ML_LEAN@binance-spot-1d-usdt-prod
+MARKET_MAKING_ML_LEAN@binance-perp-1d-usdt-prod
+```
+
+---
+
+### 23. `MARKET_MAKING_QUEUE_MICROSTRUCTURE`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/queue_microstructure.py`.
+
+Queue-position-aware quoting on CeFi order books — models queue priority/fill probability, not applicable to AMM venues.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues                                       | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | spot       | PARTIAL | binance, okx, bybit, hyperliquid, deribit, coinbase, kraken | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| CeFi     | perp       | PARTIAL | binance, okx, bybit, hyperliquid, deribit, coinbase, kraken | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+MARKET_MAKING_QUEUE_MICROSTRUCTURE@binance-spot-1d-usdt-prod
+MARKET_MAKING_QUEUE_MICROSTRUCTURE@binance-perp-1d-usdt-prod
+```
+
+---
+
+### 24. `MARKET_MAKING_PREDICTION`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/prediction.py`.
+
+Two-sided quoting on prediction markets — binary-outcome mechanics, time-to-resolution decay, distinct from CeFi/DeFi
+MM.
+
+#### Coverage
+
+| Category   | Instrument    | Status  | Representative venues | Notes / Gap                                                                                                  |
+| ---------- | ------------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Prediction | event_settled | PARTIAL | polymarket, unity     | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+MARKET_MAKING_PREDICTION@polymarket-event_settled-1d-usdt-prod
+```
+
+---
+
+### 25. `DEFI_LP_CONCENTRATED`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/lp_concentrated.py`.
+
+Concentrated-liquidity LP positioning (Uniswap V3-style) — active range management around current price.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues      | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| DeFi     | lp         | PARTIAL | uniswap_v3, pancakeswap_v3 | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+DEFI_LP_CONCENTRATED@uniswap_v3-lp-1d-usdt-prod
+```
+
+---
+
+### 26. `DEFI_LP_POOL`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/lp_pool.py`.
+
+Traditional full-range / weighted-pool LP positioning (Balancer/Curve/Maverick-style).
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues     | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | ------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| DeFi     | lp         | PARTIAL | balancer, curve, maverick | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+DEFI_LP_POOL@balancer-lp-1d-usdt-prod
+```
+
+---
+
+### 27. `DEFI_LP_VAULT`
+
+> Family: [market-making](families/market-making.md). Code:
+> `strategy_service/engine/strategies/v2/market_making/lp_vault.py`.
+
+LP-vault-wrapper positioning (Gamma/Arrakis/Steer) — delegates active range management to a third-party vault strategy.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| DeFi     | lp         | PARTIAL | gamma, arrakis, steer | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+DEFI_LP_VAULT@gamma-lp-1d-usdt-prod
+```
+
+---
+
 ## Family 6: Event-Driven
 
 ### 15. `EVENT_DRIVEN`
@@ -1337,6 +1536,437 @@ VOL_TRADING_OPTIONS@ibkr-cboe-qqq-term-structure-usd-prod
 
 ---
 
+### 28. `VOL_ARB_RV_IV`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/arb_rv_iv.py`.
+
+Trades realized-vs-implied volatility divergence: short vol structures when IV richly exceeds RV, long when IV is cheap
+relative to realized moves.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_ARB_RV_IV@deribit-option-1d-usdt-prod
+VOL_ARB_RV_IV@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 29. `VOL_SPREAD_STRUCTURES`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/spread_structures.py`.
+
+Multi-leg option spread structures (verticals, calendars, diagonals) expressing a directional-vol view with defined
+risk.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_SPREAD_STRUCTURES@deribit-option-1d-usdt-prod
+VOL_SPREAD_STRUCTURES@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 30. `VOL_CARRY`
+
+> Family: [vol-trading](families/vol-trading.md). Code: `strategy_service/engine/strategies/v2/vol_trading/carry.py`.
+
+Systematically harvests the vol risk premium — short-dated short-vol positions collecting the IV-over-RV carry, sized to
+survive tail moves.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_CARRY@deribit-option-1d-usdt-prod
+```
+
+---
+
+### 31. `VOL_OVERLAY_COVERED_CALLS`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/overlay_covered_calls.py`.
+
+Covered-call overlay on an existing spot/perp position — sells calls against holdings for premium income, caps upside.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_OVERLAY_COVERED_CALLS@deribit-option-1d-usdt-prod
+VOL_OVERLAY_COVERED_CALLS@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 32. `VOL_OVERLAY_PROTECTIVE_PUT`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/overlay_protective_put.py`.
+
+Protective-put overlay — buys downside protection against an existing position, insurance-style tail-risk hedge.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_OVERLAY_PROTECTIVE_PUT@deribit-option-1d-usdt-prod
+VOL_OVERLAY_PROTECTIVE_PUT@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 33. `VOL_STRADDLE`
+
+> Family: [vol-trading](families/vol-trading.md). Code: `strategy_service/engine/strategies/v2/vol_trading/straddle.py`.
+
+Long/short straddle and strangle structures around an expected volatility event (earnings-style catalysts, macro
+prints).
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_STRADDLE@deribit-option-1d-usdt-prod
+VOL_STRADDLE@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 34. `VOL_SYNTHETIC_DELTA`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/synthetic_delta.py`.
+
+Constructs synthetic directional exposure via options (risk reversals, synthetic longs/shorts) instead of spot/perp.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_SYNTHETIC_DELTA@deribit-option-1d-usdt-prod
+```
+
+---
+
+### 35. `VOL_MARKET_MAKING`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/market_making.py`.
+
+Two-sided options quoting — provides liquidity across the strike/tenor grid, manages delta/gamma/vega inventory.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_MARKET_MAKING@deribit-option-1d-usdt-prod
+VOL_MARKET_MAKING@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 36. `VOL_ML_LEAN`
+
+> Family: [vol-trading](families/vol-trading.md). Code: `strategy_service/engine/strategies/v2/vol_trading/ml_lean.py`.
+
+ML-informed vol-signal generation feeding into the vol-trading execution layer (skew/term-structure/RV forecasts).
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_ML_LEAN@deribit-option-1d-usdt-prod
+```
+
+---
+
+### 37. `VOL_0DTE_GAMMA_SCALPING`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/0dte_gamma_scalping.py`.
+
+Same-day-expiry gamma scalping — delta-hedges a 0DTE options position intraday, harvesting realized-vs-theoretical gamma
+P&L.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_0DTE_GAMMA_SCALPING@deribit-option-1d-usdt-prod
+VOL_0DTE_GAMMA_SCALPING@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 38. `VOL_0DTE_PIN_RISK`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/0dte_pin_risk.py`.
+
+Trades same-day-expiry pin-risk dynamics around high-open-interest strikes into the close.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_0DTE_PIN_RISK@deribit-option-1d-usdt-prod
+VOL_0DTE_PIN_RISK@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 39. `VOL_TERM_STRUCTURE_ARB`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/term_structure_arb.py`.
+
+Cross-tenor implied-vol term-structure arbitrage — trades the curve shape (contango/backwardation) rather than a
+single-tenor level.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_TERM_STRUCTURE_ARB@deribit-option-1d-usdt-prod
+VOL_TERM_STRUCTURE_ARB@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 40. `VOL_TERM_STRUCTURE_SLOPE`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/term_structure_slope.py`.
+
+Trades the SLOPE of the vol term structure specifically (front vs back tenor spread), distinct from full-curve arb.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_TERM_STRUCTURE_SLOPE@deribit-option-1d-usdt-prod
+VOL_TERM_STRUCTURE_SLOPE@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 41. `VOL_DISPERSION`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/dispersion.py`.
+
+Index-vs-component vol dispersion — short index vol, long component vol (or vice versa) on correlation-breakdown views.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_DISPERSION@deribit-option-1d-usdt-prod
+VOL_DISPERSION@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 42. `VOL_VARIANCE_SWAP`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/variance_swap.py`.
+
+Direct (where listed) or option-strip-replicated (Carr-Madan) variance-swap exposure — pure realized-variance payoff.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_VARIANCE_SWAP@deribit-option-1d-usdt-prod
+VOL_VARIANCE_SWAP@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 43. `VOL_LEAPS_CONVEXITY`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/leaps_convexity.py`.
+
+Long-dated (6m+) convex payoff structures via LEAPS — cheap synthetic delta-1 exposure or rolling portfolio-insurance
+ladders.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_LEAPS_CONVEXITY@deribit-option-1d-usdt-prod
+VOL_LEAPS_CONVEXITY@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 44. `VOL_CROSS_ASSET_SPREAD`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/cross_asset_spread.py`.
+
+Cross-asset vol relative value — trades vol BETWEEN assets (e.g. BTC vol vs ETH vol), distinct from single-underlying
+dispersion.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_CROSS_ASSET_SPREAD@deribit-option-1d-usdt-prod
+VOL_CROSS_ASSET_SPREAD@cboe-option-1d-usdt-prod
+```
+
+---
+
+### 45. `VOL_RATIO_SPREAD`
+
+> Family: [vol-trading](families/vol-trading.md). Code:
+> `strategy_service/engine/strategies/v2/vol_trading/ratio_spread.py`.
+
+Ratio-spread structures (1x2, 2x3, broken-wing flies) with signal-driven strike selection.
+
+#### Coverage
+
+| Category | Instrument | Status  | Representative venues | Notes / Gap                                                                                                  |
+| -------- | ---------- | ------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| CeFi     | option     | PARTIAL | deribit, okx, bybit   | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+| TradFi   | option     | PARTIAL | cboe, cme             | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+#### Representative slot_labels
+
+```
+# Illustrative naming-convention examples — no live/paper instance confirmed yet
+VOL_RATIO_SPREAD@deribit-option-1d-usdt-prod
+VOL_RATIO_SPREAD@cboe-option-1d-usdt-prod
+```
+
+---
+
 ## Family 8: Stat Arb / Pairs
 
 ### 17. `STAT_ARB_PAIRS_FIXED`
@@ -1435,6 +2065,73 @@ STAT_ARB_CROSS_SECTIONAL@ibkr-sp500-sector-rotation-usd-prod
 STAT_ARB_CROSS_SECTIONAL@ibkr-russell2000-mr-usd-prod
 STAT_ARB_CROSS_SECTIONAL@ibkr-sector-tercile-momentum-usd-prod
 ```
+
+---
+
+## Family 9: Portfolio
+
+> Cross-category — Portfolio archetypes allocate across other archetypes' sleeves rather than trading a single
+> instrument directly, so `asset_group = CROSS_CATEGORY` and `instrument_type = sleeve_mix` (both added 2026-07-21
+> alongside this family's Phase-9 manifest materialisation — the family enum itself shipped 2026-04-25 but never had
+> capability-manifest cells until now).
+
+### 46. `PORTFOLIO_MULTI_STRATEGY`
+
+> Family: [portfolio](families/portfolio.md). Code: `strategy_service/engine/strategies/v2/portfolio/multi_strategy.py`.
+
+Allocates capital across multiple underlying strategy sleeves at a fixed risk-tier mix — a meta-strategy over the
+catalogue, not a single-instrument trader.
+
+#### Coverage
+
+| Category       | Instrument | Status  | Canonical configs                                     | Notes / Gap                                                                                                  |
+| -------------- | ---------- | ------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Cross-category | sleeve_mix | PARTIAL | 3 — Conservative / Balanced / Aggressive sleeve mixes | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+---
+
+### 47. `PORTFOLIO_RISK_PARITY`
+
+> Family: [portfolio](families/portfolio.md). Code: `strategy_service/engine/strategies/v2/portfolio/risk_parity.py`.
+
+Risk-parity allocation across sleeves — weights each sleeve by inverse volatility contribution rather than equal
+notional.
+
+#### Coverage
+
+| Category       | Instrument | Status  | Canonical configs                    | Notes / Gap                                                                                                  |
+| -------------- | ---------- | ------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Cross-category | sleeve_mix | PARTIAL | 2 — Crypto-only / Multi-asset parity | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+---
+
+### 48. `PORTFOLIO_FACTOR_ALLOCATION`
+
+> Family: [portfolio](families/portfolio.md). Code:
+> `strategy_service/engine/strategies/v2/portfolio/factor_allocation.py`.
+
+Factor-tilted allocation across sleeves grouped by exposure factor (momentum, carry, value).
+
+#### Coverage
+
+| Category       | Instrument | Status  | Canonical configs                         | Notes / Gap                                                                                                  |
+| -------------- | ---------- | ------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Cross-category | sleeve_mix | PARTIAL | 2 — Momentum+Carry / Momentum+Value+Carry | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
+
+---
+
+### 49. `PORTFOLIO_TACTICAL_OVERLAY`
+
+> Family: [portfolio](families/portfolio.md). Code:
+> `strategy_service/engine/strategies/v2/portfolio/tactical_overlay.py`.
+
+Tactical overlay that shifts sleeve weights based on a regime signal, on top of a static base allocation.
+
+#### Coverage
+
+| Category       | Instrument | Status  | Canonical configs                              | Notes / Gap                                                                                                  |
+| -------------- | ---------- | ------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Cross-category | sleeve_mix | PARTIAL | 2 — Regime-switch / Signal-weighted allocation | Capability-manifest cell only (2026-07-21 Phase-9 regen) — not yet confirmed by a live batch/paper instance. |
 
 ---
 
