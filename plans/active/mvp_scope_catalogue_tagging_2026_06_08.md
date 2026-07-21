@@ -231,4 +231,7 @@ which leagues, which market-groups — has no independent version.
 
 CF-14 (could-exist root — MVP is its subset) · `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (the
 catalogue MVP is filtered from) · `macro_micro_econ_data_capture_audit_2026_06_05.md` (capability vs backfill — MVP is
-the "what we intend to capture for launch" cut) · the G3 deployment union view (the denominator machinery MVP refines).
+the "what we intend to capture for launch" cut) · the G3 deployment union view (the denominator machinery MVP refines) ·
+`mtds_data_status_page_parity_2026_07_21.md` (2026-07-21 — extends this plan's `is_mvp`/`CoverageScope` toggle to MTDS,
+which has no MVP wiring today, and precomputes the sports/prediction catalogue `mvp` column this plan left as a live
+`df.apply` fallback — annotated here rather than duplicated as a new MVP-scope plan).
