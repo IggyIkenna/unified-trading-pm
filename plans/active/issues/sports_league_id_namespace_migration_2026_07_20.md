@@ -581,3 +581,14 @@ covered):** collisions — `Bundesliga - Germany`→BUNDESLIGA · `Austrian Foot
 
 Session-local map artifacts (to be committed with the executor to the mtds scripts home before apply):
 `scratchpad/sportkey_canon_final.json`, `scratchpad/classification.json`, `scratchpad/relocate_league_id.py`.
+
+## STATUS 2026-07-21 — reversible+verified work DONE; irreversible apply gated on drain
+
+- ✅ **China + Russia added to the canonical registry** — `unified-api-contracts@beec78aa` (football universe 94→96;
+  count-pinned tests updated; shipped write-path verified unaffected). **0 raw league_ids now UNRESOLVED.**
+- ✅ **Classification validated end-to-end** — full-corpus DRY-RUN over all 267,605 `league_id=` objects PASSED with
+  ZERO unresolved: 128,450 already-canonical (skip) · 75,055 per-row-split (6 collisions) · 64,100 relocate (raw→canon).
+- ⏳ **Executor APPLY machinery** (per-row split + copy + content-rewrite + crc-verify + manifest-swap + delete) — NOT
+  YET BUILT; the dry-run cut deliberately stubs `--apply`. To be built as a focused effort + committed to the mtds
+  scripts home, then run behind BOTH gates: dry-run success (met) AND all `features-sports-sports-*` VMs drained (they
+  read the tick bucket). Delete authorised by the operator on those two conditions.
