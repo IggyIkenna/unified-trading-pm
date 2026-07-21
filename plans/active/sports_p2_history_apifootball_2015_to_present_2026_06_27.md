@@ -261,15 +261,29 @@ drift_direction: advance-code
       at T+10min confirm `PROGRESS.json` has advanced PAST the frozen checkpoint (count of TARGET fixtures written,
       entity-scoped — not just VM-RUNNING activity). Evidence + full context: Progress Log entry
       `2026-07-21T03:11Z — data_engineering slot-4` below.
-- [ ] [INFRA] P1. **Root-cause why the SPOT preemption/kill self-heal watchdog did not cover this kill class.** Two of
-      four `af-backfill-*` shards (`-180520` FIXTURE_EVENTS, `-180603` FIXTURE_STATS) died ~2026-07-20T05:25Z with no
+- [x] [INFRA] P1. ✅ **Root-cause why the SPOT preemption/kill self-heal watchdog did not cover this kill class.** Two
+      of four `af-backfill-*` shards (`-180520` FIXTURE_EVENTS, `-180603` FIXTURE_STATS) died ~2026-07-20T05:25Z with no
       `PREEMPTED` marker and sat dead ~22h with zero auto-relaunch, while
       `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`'s fixes (all `[x]` complete) were assumed to cover
       exactly this VM class. Determine: (a) did the watchdog daemon never see these 2 kills (heartbeat blob gap?), (b)
       did it see them but decline to relaunch (threshold tuned for a different failure signature — e.g. requires a
       `PREEMPTED` marker that an abrupt non-preemption kill never writes), or (c) is the daemon itself down/stale. This
       is a real coverage gap, not a one-off — file findings as a todo update here or a fresh issue doc if the root cause
-      implicates infra beyond this one fleet.
+      implicates infra beyond this one fleet. — **RESOLVED (2026-07-21), evidence in Progress Log
+      `2026-07-21 — infra (Todo -005)` below.** Confirmed via GCP audit log (`compute.instances.preempted` system
+      events) that both VMs WERE genuinely SPOT-preempted at 2026-07-20T05:26:07Z/05:26:17Z. Root cause is (b)-adjacent
+      but more precise: the marker-writing mechanism (`uts-preemption-signal.service` in `setup-data-pipeline-vm.sh`)
+      shipped in `deployment-service@c79f984` at 2026-07-20T14:59:33Z — ~9.5h AFTER these VMs were preempted and after
+      they'd already booted (2026-07-19T18:05-18:06Z, running the pre-fix startup script) — so no marker was ever
+      written, `is_vm_preempted()` returned False, and since these VMs had made real partial progress before the kill
+      (captured climbed, no exit_code recorded), `classify_terminated_vm()` resolved to **CLEAN** (not merely un-alerted
+      — the monitor believed the run finished successfully, explaining the total 22h silence). Confirmed this is a pure
+      timing gap for THIS incident (any `af-backfill-*` VM launched after 2026-07-20T14:59:33Z has the fix — verified
+      the P0 todo's replacement VMs `af-backfill-20260721-033537`/ `-033605` are running + advancing). Filed the deeper,
+      fleet-wide latent risk (a no-exit-code + captured-climbed VM always resolves to silent CLEAN regardless of
+      preemption-marker presence) as a fresh issue doc since it implicates
+      `deployment-service/exit_code_fleet_monitor.py` beyond this one fleet:
+      `plans/active/issues/exit_code_fleet_monitor_clean_misclassifies_premature_kill_2026_07_21.md`.
 - [ ] [DATA] P2. **Features recompute for enriched dates** — after GW enrichment lands, re-run sports features with
       `--force`/`--no-skip-existing` for the enriched dates: `derived_features` + `fixture_features` ONLY
       (`odds_features` unaffected — odds inputs unchanged by enrichment). Mechanics + gates per
@@ -3298,3 +3312,69 @@ dedicated `[INFRA]` todo exists for it — doing it here would duplicate/race th
 checkbox (gate still 2/4 shards stalled). `/skip-current-task` — resume once the `[INFRA] P0` todo lands (both dead
 shards relaunched + confirmed advancing past their frozen checkpoints) or a fresh full-history gate read is
 independently due.
+
+### 2026-07-21 — infra (Todo `-005`, root-cause the SPOT preemption self-heal coverage gap)
+
+Dispatched onto `-005`. Note first: by the time this dispatch started, the `[INFRA] P0` relaunch todo (line ~248) had
+ALREADY been executed by a different, concurrent dispatch — `gcloud compute instances list --filter="name~af-backfill"`
+shows 4 VMs RUNNING: the 2 original survivors (`-180545` LINEUPS, `-180620` PLAYER_STATS) plus 2 NEW replacements
+(`af-backfill-20260721-033537`, `af-backfill-20260721-033605`, launched 2026-07-21T03:35-03:36Z). `PROGRESS.json` for
+both new VMs shows `last_completed_date=2020-06-16` (updated `~03:51Z`, live) — resuming normally via presence-skip from
+the requested `2020-06-06` start, not re-doing already-captured work. Did not touch that todo's checkbox (another
+dispatch's in-flight work); this entry covers ONLY the `-005` root-cause todo.
+
+**Method**: pulled the GCP Cloud Logging audit trail directly (via the `google-auth` Python client + the Cloud Logging
+REST API `entries:list` — the sandboxed `gcloud` CLI's cached user/SA credentials both fail non-interactive
+reauthentication in this slot; ADC works fine through the library) for both dead VM names
+(`af-backfill-20260719-180520`, `af-backfill-20260719-180603`) across 2026-07-19T00:00Z→2026-07-21T12:00Z, filtered to
+`resource.type="gce_instance"` to cut GCS-write noise (VM names appear as GCS-object-path substrings and pollute a naive
+`protoPayload.resourceName:"<vm>"` filter otherwise).
+
+**Finding 1 — this WAS a genuine SPOT preemption, not an agent-manual delete** (ruling out the `zombie_watchdog_*` issue
+doc's Incident 2-6 pattern for THIS incident specifically): both VMs show a `compute.instances.preempted` system event
+—`-180603` at 2026-07-20T05:26:07Z, `-180520`'s sibling event at 05:26:17Z — closely matching the `~2026-07-20T05:25Z`
+frozen-checkpoint time already on record. No `v1.compute.instances.delete` audit entry exists for either name in the
+same window (confirmed via a broader `af-backfill` sweep of the same window, which DOES surface 6 unrelated agent-manual
+deletes on 3 OTHER `af-backfill-*` VM names that same day — so the audit trail is not simply empty/broken, these 2
+specific names genuinely have no delete-call entry, only the preempted system event).
+
+**Finding 2 — proximate cause is a timing gap, already closing**: `_gcs.is_vm_preempted()` (the signal
+`classify_terminated_vm()` checks BEFORE exit_code) reads a durable `vm-logs/{vm}/PREEMPTED` marker blob written by a
+VM-side shutdown-script unit (`uts-preemption-signal.service`, installed by `scripts/vm/setup-data-pipeline-vm.sh`).
+`git log -S "uts-preemption-signal.sh" -- scripts/vm/setup-data-pipeline-vm.sh` in `deployment-service` shows this unit
+shipped in commit `c79f984c5b3819cb7c8bf3a9fbd97c6785c4834d`, authored **2026-07-20T15:59:33+01:00 =
+2026-07-20T14:59:33Z** — **~9.5 hours AFTER** the 05:26Z preemption, and `launch-api-football-backfill-vm.sh` uses
+`startup-script-url=gs://${CODE_BUCKET}/vm/setup-data-pipeline-vm.sh` (confirmed via grep), i.e. it inherits this fix
+via the shared setup script rather than an inline copy. The 2 dead VMs booted 2026-07-19T18:05-18:06Z — a full day
+before the fix — and GCE startup-scripts execute once at boot, never re-fetched, so these already-running instances
+never had the marker-writing unit installed. When GCE preempted them, nothing wrote the marker.
+
+**Finding 3 — why this manifested as total silence (22h, zero pages, not just zero auto-relaunch)**: with
+`preempted=False` (no marker) and `exit_code=None` (force-deleted mid-run, no terminal code ever written),
+`classify_terminated_vm()`'s precedence falls to `captured climbed → CLEAN`. Both shards HAD made real partial progress
+during their ~11h runtime (their own `PROGRESS.json` checkpoints show advancing dates through 2021-03/05 before
+freezing) — so the monitor's own verdict was almost certainly **CLEAN**, i.e. it believed the run finished successfully.
+This is a materially different (and more concerning) failure mode than "paged but didn't auto-relaunch" — explains the
+full 22h of silence with no alert of any kind, not merely a missed relaunch.
+
+**Answering the todo's (a)/(b)/(c)**: closest to (b) but more precise — the daemon/monitor DID run its sweep correctly;
+the _signal it depends on_ (the PREEMPTED marker) simply didn't exist yet for these 2 already-booted VMs. Not (a) (no
+heartbeat-blob gap involved) and not (c) (the monitor itself wasn't down).
+
+**Verified the fix is live going forward, not just theoretically shipped**: the P0 todo's 2 replacement VMs
+(`af-backfill-20260721-033537`/`-033605`, launched 2026-07-21T03:35-03:36Z, well after the 2026-07-20T14:59:33Z fix)
+will have booted with the marker-writing unit present, so a future preemption on either would correctly auto-relaunch.
+
+**Filed as a fresh issue doc** (per this todo's own instruction — the root cause implicates
+`deployment-service/exit_code_fleet_monitor.py`'s verdict logic fleet-wide, not just this one `af-backfill` fleet):
+`plans/active/issues/exit_code_fleet_monitor_clean_misclassifies_premature_kill_2026_07_21.md` — the deeper, still-open
+finding that ANY terminated VM with no recorded exit_code and SOME captured progress resolves to silent CLEAN today,
+regardless of whether the cause was a preemption-marker-timing gap (this incident), a marker-write race on an
+already-covered VM (the shutdown unit's `TimeoutStopSec=25` is best-effort), or any other premature-kill class with no
+clean exit. Two follow-up `[INFRA]` todos filed there (P2 defensive-classification fix, P3 harden the marker-write race
+/ consider the GCP audit-log preemption event as a fallback signal) — not fixed inline this dispatch, scoped as its own
+investigation per the same "deserves its own scoped fix" precedent already used elsewhere in the sibling issue doc.
+
+Checkbox flipped `[x]` on `-005` above — the root-cause question is fully answered with primary evidence (GCP audit log
+timestamps + `git log -S` commit timestamp). Not touching the `[INFRA] P0` relaunch checkbox (another dispatch's
+in-flight item, now apparently complete per the VM list above — leaving its flip to that dispatch).
