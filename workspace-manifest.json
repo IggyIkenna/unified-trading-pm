@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 16,
         "qg_red_reason": null,
         "large_file_count": 4,
-        "coverage_pct": null
+        "warn_file_count": 16,
+        "coverage_pct": 82.66
       }
     },
     "deployment-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "large_file_count": 7,
         "qg_red_reason": "pytest",
-        "coverage_pct": 90.7,
-        "warn_file_count": 9
+        "warn_file_count": 9,
+        "coverage_pct": 90.71,
+        "large_file_count": 7
       }
     },
     "market-data-processing-service": {
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
         "qg_red_reason": null,
-        "warn_file_count": 9,
-        "large_file_count": 2
+        "large_file_count": 3,
+        "warn_file_count": 8,
+        "coverage_pct": null
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": "pytest",
         "warn_file_count": 38,
-        "large_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "coverage_pct": 83.19,
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -1011,9 +1011,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 85.45,
         "qg_red_reason": null,
         "large_file_count": 3,
+        "coverage_pct": null,
         "warn_file_count": 9
       }
     },
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": "ruff",
+        "warn_file_count": 21,
         "large_file_count": 6,
-        "qg_red_reason": null,
-        "coverage_pct": 88.5,
-        "warn_file_count": 21
+        "coverage_pct": 88.45
       }
     },
     "unified-trading-pm": {
@@ -1366,7 +1366,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1401,7 +1401,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
