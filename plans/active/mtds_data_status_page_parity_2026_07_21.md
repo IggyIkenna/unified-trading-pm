@@ -255,15 +255,45 @@ the same fixes.
       to both debounced search flows (`runSymbolSearch`, `fetchInstruments`). See the Progress Log entry above for the
       full detail, including the correction that the operator's screenshot traces to a THIRD search flow
       (`searchInstruments`/cross-category), not the originally-cited one.
-- [ ] [BACKEND] P1. **New — `GET /instruments` (`get_instruments_list`) is doubly broken**, found while fixing Bug B,
-      deliberately NOT fixed in the same tick (needs real design, not a quick patch): (a) the `search` query param the
-      frontend already sends is never read or applied by the route/service — the "Instrument-Level Search" box's text
-      input currently does nothing; (b) the service returns `instruments: list[str]` (bare filenames) while the
-      frontend's `InstrumentsListResponse.instruments` type expects `InstrumentSearchResult[]` objects
-      (`venue`/`instrument_type`/etc.) — every result the box shows today is likely rendering broken/undefined fields.
-      Fix: parse `venue`/`instrument_type` out of each GCS object path (mirror `_load_corpus_from_per_venue_parquets`'s
-      existing pattern in the same file) and apply substring+token-AND filtering matching `search_instruments`'s
-      convention, so both boxes share one filtering rule.
+- [x] N. ✅ [BACKEND] P1. **`GET /instruments` (`get_instruments_list`) doubly-broken bug — FIXED.**
+      `deployment-api@b8a1426`, verified on origin, full QG green, 19 unit tests (7 rewritten + all passing). Rather
+      than parsing venue/instrument_type off raw GCS object paths (the originally-sketched approach), reused the
+      EXISTING `_load_search_corpus`/`_load_corpus_from_per_venue_parquets` corpus loader that `search_instruments`
+      already relies on (same 5-min in-process cache, same per-venue `instruments.parquet` reads) — lower risk than a
+      new path-parsing scheme, and it already carries real `venue`/`instrument_type` columns per row. `search` now
+      applies whitespace-tokenized AND-match substring filtering (mirrors `search_instruments`'s own convention);
+      response reshaped to `{instrument_key, venue, instrument_type}` objects matching the frontend's
+      `InstrumentSearchResult` contract, with `total_in_file`/`returned_count`/`search` fields matching
+      `InstrumentsListResponse` (confirmed via grep that `deployment-ui` never reads the old `total_count`/`truncated`/
+      venue/instrument_type-echo fields, so dropping them is safe). Also expanded scope beyond the original ask:
+      `sports` now works through this endpoint too (free, since `_load_search_corpus` already special-cases it) — the
+      old code only ever supported cefi/tradfi/defi.
+- [x] N. ✅ [BACKEND] P1. **Wire UAC `is_mvp` into MTDS coverage — SHIPPED** (`deployment-api@724910e`, verified on
+      origin, full QG green, 20/20 tests in the target file incl. 3 new MVP-scope tests). Scoped to where the semantics
+      are actually well-defined: the per-instrument-shard (Tier-3) branch, via a new `scope`/`instrument_types` param
+      threaded `_status_core.py` route (`GET /data-status/manifest`, the "drilldown" surface the operator's screenshot
+      was about) → `_get_manifest_status_sync` → `_dispatch_category_builds` (gates the process-pool fast-path off for
+      `scope=mvp`, same way `row_filters`/`pipeline_modes`/`venue` already do, so it falls through to the thread/serial
+      path without touching the pickled subprocess boundary) → `_build_manifest_category` →
+      `_apply_mtds_honest_coverage` → `mtds_honest_coverage_for_venue` → `per_instrument_coverage`, which filters
+      `expected_instruments` to UAC `is_mvp(asset_group, venue, instrument_type, dt, base_ccy=None)`-true instruments.
+      `instrument_type` per instrument comes from a NEW combined read (`_read_cefi_catalogue_metadata`, replacing Bug
+      C's `_read_cefi_catalogue_existence_windows`) that projects `instrument_type` alongside `available_from`/
+      `available_to` from the SAME `prod/catalog.parquet` object in one pass (no second GCS round-trip); an instrument
+      absent from `instrument_types` fails CLOSED under `scope=mvp` (documented as the deliberate opposite of the
+      existence-window clipping's fail-OPEN convention — an unknown instrument_type cannot be proven MVP).
+      `build_cefi_is_instruments_provider`'s return grew from a 2-tuple to a 3-tuple
+      (`provider, windows,     instrument_types`) — its one caller (`venue_resolution.py`) and 4 existing unit tests
+      updated to match. Default `scope="could_exist"` everywhere = zero behavior change for every existing caller that
+      doesn't pass it. **Deliberately NOT covered by this ship** (both now separate follow-up todos below, not silently
+      dropped): venue-level (non-per-instrument) dt entries have no single `instrument_type` to evaluate `is_mvp(...)`
+      against, so `scope=mvp` is a documented no-op there; and the `/turbo` endpoint (`get_data_status_turbo` in
+      `_deploy_turbo.py`, the OTHER surface behind the operator's second screenshot) has no `scope` param at all today —
+      only `/manifest` (the drilldown) was wired.
+- [ ] [BACKEND] P2. **MDPS parity / `/turbo` scope gap**: `get_data_status_turbo` (`_deploy_turbo.py`, backs the "TURBO
+      Data Coverage" panel from the operator's 2nd screenshot) has no `scope` query param at all — add it, threading
+      through the `_manifest_source` closure into `get_manifest_status(scope=...)` the same way `/manifest`'s route now
+      does, so the MVP toggle works on both MTDS surfaces, not just the drilldown.
 - [ ] [UI] P1. **Build the universal MTDS search bar** per the "Desired UX" section above: one search box for
       fixtures/leagues/instruments, type-aware click-through (sports → league → odds + day availability; instrument →
       day availability drilldown), additive to (not replacing) the existing macro asset-group drilldown. Reuse Bug B's
