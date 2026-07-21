@@ -11,7 +11,7 @@ summary: >-
   archetype slot) silently instantiates ArbitragePriceDispersionEngine instead — a different engine expecting a
   different features shape (candidate_venues dispersion, not decimal_odds_{outcome}_{venue} books). Found while building
   a hermetic Group-B sports backtest smoke script.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [strategy]
@@ -30,7 +30,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [sports_predictions_live_mode_and_backtest_execution_orphaned-006]
-resolved_by:
+resolved_by: slot-3, review, 2026-07-21
 locked_by:
 depends_on: []
 ---
@@ -128,10 +128,14 @@ Needs an architecture decision, not a mechanical fix — filing the facts + opti
       `venues`/`edge_method`/`min_margin_pct` keys were never read by `SportsArbDutchingEngine`), removed the
       `GREENFIELD_ARCHETYPES` entry, and regenerated the migration content-hash pin. Full test suite +
       `quality-gates.sh` green.
-- [ ] [SCRIPT] P3. Once wired, extend or replace `strategy-service/scripts/run_sports_arb_backtest.py` (currently
-      targets `SPORTS_VALUE_BETTING` / `ML_DIRECTIONAL_EVENT_SETTLED` as a workaround for this gap) to also exercise the
-      real `SportsArbDutchingEngine` path with the multi-venue odds-book fixture shape already proven in
-      `tests/unit/engine/strategies/v2/test_sports_arb_dutching.py`. (repo: strategy-service)
+- [x] ✅ [SCRIPT] P3. Extended `run_sports_arb_backtest.py` — strategy-service@42e77acf. Added `run_dutching_backtest()`
+      alongside the existing `SPORTS_VALUE_BETTING` run: 3 synthetic EPL matches, each carrying the same 3-way
+      overround-negative decimal-odds book proven in `test_sports_arb_dutching.py::_arb_book` (pinnacle/bet365/betfair,
+      `1/2.20 + 1/3.60 + 1/4.50 = 0.9545`), registered as
+      `ARBITRAGE_SPORTS_DUTCHING@unity-betfair-matchbook-epl-1x2-gbp-v5-smoke` and replayed through `GroupBRunner`. Ran
+      it locally (not just QG): 3/3 ticks fired, 3 three-leg `AtomicInstruction`s emitted, 9 benchmark fills, real P&L
+      computed — genuine end-to-end proof the factory now dispatches `SportsArbDutchingEngine` for real. `main()` runs
+      both scenarios; exit code is the OR of both. (repo: strategy-service)
 
 ## Codex SSOTs
 
