@@ -240,19 +240,28 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 5. Cloud-build-failure-watcher persists the failure reason only as free text in a Slack message and stamps
    `repo: unified-trading-pm` (its own repo), not the repo that failed.
 6. Tarball VM BoM never stamped (see Honest gaps) — the runtime-provenance gap.
-7. **AWS App Runner: both prod services PAUSED after a 13-failure deploy storm on 2026-05-22** (NEW, measured live
-   2026-07-21). `uts-deployment-api-prod` = 7 of 9 ops FAILED; `uts-alerting-service-prod` = 6 of 8 FAILED incl. a
-   failed `CREATE_SERVICE`. Both ended `PAUSE_SERVICE` at 14:38Z. The builds were green — the **deploys** broke, a class
-   the build feed can't see. Evidence: `aws apprunner list-operations`. (deployment-api-prod was already a known gap;
-   the second paused service + the true failure count are the new facts.)
-8. **AWS ECR estate is orphaned — 0 of 20 repos have a running task** (NEW, measured live 2026-07-21). 2 App-Runner
-   PAUSED, 3 ECS `uts-defi-prod` at `desired=0`, the other 15 have no AWS runtime; 4 repos are **empty** (0 images:
-   risk-and-exposure-service, unified-trading-system, position-balance-monitor-service, deployment-ui); **18 of 20 last
-   pushed 2026-06-27** — AWS image builds went quiet that day; only `market-tick-data-service` still pushes and it is
-   `latest`-only (no version tag → corroborates bug #1). ~393 images retained, nothing serves them. Evidence:
-   `aws ecr describe-images` + App Runner/ECS state.
-9. **~40% of Cloud Run deploys ship nothing** (config-only redeploys, same digest) — churn that reads as activity; cheap
-   to flag, noise unlabelled. Evidence: Cloud Run revision digests for `uts-shared-deployment-api` (192 revs).
+7. **~40% of Cloud Run deploys ship nothing** (config-only redeploys, same digest) — churn that reads as activity; cheap
+   to flag, noise unlabelled. GCP, the active cloud. Evidence: Cloud Run revision digests for
+   `uts-shared-deployment-api` (192 revs).
+
+### AWS is intentionally parked — NOT bugs to fix (operator 2026-07-21)
+
+**Load-bearing operator fact:** all deployments run on **GCP** and are healthy; **GCP is the sole active production
+path**. **AWS is intentionally deferred — no AWS credits.** The App Runner services, ECS services, and ECR estate are
+**deliberately stopped** and kept intact; they resume when credits return. The two AWS states below are NOT defects and
+must NOT be framed as breakage in the page or the issue doc, nor "fixed":
+
+- **AWS App Runner — both prod services PARKED (PAUSED)** (measured live 2026-07-21). `uts-deployment-api-prod` +
+  `uts-alerting-service-prod` deliberately paused; the 2026-05-22 op-failure history (7/9 and 6/8) is _historical_, from
+  before parking. Not actionable. Evidence: `aws apprunner list-operations`.
+- **AWS ECR — entire estate PARKED** (measured live 2026-07-21). 0 of 20 repos run a task (2 App-Runner paused, 3 ECS
+  `desired=0`, rest idle); 4 empty; 18/20 last pushed 2026-06-27 = when AWS was parked. ~393 images kept for resume —
+  **not GC candidates.** Evidence: `aws ecr describe-images` + App Runner/ECS state.
+
+The **AWS-side code bugs** #3 (build*id) / #4 (freeze-deferred replay) and the AWS half of the tarball-lane breakage are
+\_genuine latent bugs* but are **deferred with AWS** — fix them only when AWS resumes, not now. The mock reflects all of
+this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "not a defect"), and Artifacts states
+`parked`/`legacy` instead of `orphaned · GC`.
 
 ## Todos
 
@@ -313,6 +322,12 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
       deploy-lane findings (App Runner storm, orphaned ECR estate, ~40% config churn → 13 conditions), added severity
       **tiles + filter**, an **Area** column, and a **"see in <tab> ↗"** cross-link from every condition to the view
       that proves it. Note now states none of these fires an alert today.
+- [ ] [OPERATOR] P0. **AWS-deferred reframe applied across the mock** (operator 2026-07-21) — the AWS state is
+      **intentional parking (no credits)**, not breakage. Added a top **GCP-active / AWS-parked banner**; Deploy
+      timeline tiles + section headers reframed to "intentionally parked · last active 2026-05-22"; Artifacts states
+      `orphaned · GC` → **`parked · AWS deferred`** (kept, not GC) with the GCP legacy AR aggregate as the only true GC
+      row; Health demoted the 2 AWS conditions to a blue **`deferred` (not a defect)** tier (now high 5 / med 3 / low 3
+      / deferred 2). Awaiting review with the rest.
 - [ ] [OPERATOR] P0. **Final sign-off on the whole mock** → unblocks Phases 1–6.
 
 ### Phase 1 — backend read + snapshot layer (deployment-api)
@@ -518,12 +533,13 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 usefulness pass applied this turn and now await scrutiny; that review is the only unblocked forward step. Everything
 below whole-mock sign-off is deliberately not started.
 
-| Item                                                    | State / why deferred                                                                                                                                     | Blocked on                            |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Tab 1 final sign-off                                    | **Operator-owned** — reviewed + iterated, awaiting the green tick                                                                                        | operator                              |
-| Tabs 2–5 mock review (Deploy/Pipeline/Artifacts/Health) | **Operator-owned** — iterated this turn (correctness + usefulness), awaiting operator scrutiny                                                           | operator                              |
-| Whole-mock final sign-off                               | **Operator-owned** — the gate that unblocks all implementation                                                                                           | tabs 1–5 signed off                   |
-| Phase 1–6 implementation (backend, page, absorb, codex) | **Cannot be done yet** — gated by the mock sign-off above                                                                                                | whole-mock sign-off                   |
-| (A) tarball commit stamp                                | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS, but part of Phase 3c; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file) | mock sign-off + Phase 3c start        |
-| Fill the mock's 2 `n/a — re-auth` build dates           | **Cannot be done yet** — needs a fresh GCP `gcloud auth login`                                                                                           | operator re-auth (optional, cosmetic) |
-| Issue doc: 9 pipeline bugs + bucket-resolution bypass   | **Not done** — Phase 5 todo; now 9 (added AWS App Runner storm, orphaned ECR estate, config churn — all measured 2026-07-21); notify Ikenna (CI-area)    | nobody — but coordinate w/ Ikenna     |
+| Item                                                       | State / why deferred                                                                                                                                                                       | Blocked on                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Tab 1 final sign-off                                       | **Operator-owned** — reviewed + iterated, awaiting the green tick                                                                                                                          | operator                              |
+| Tabs 2–5 mock review (Deploy/Pipeline/Artifacts/Health)    | **Operator-owned** — iterated this turn (correctness + usefulness), awaiting operator scrutiny                                                                                             | operator                              |
+| Whole-mock final sign-off                                  | **Operator-owned** — the gate that unblocks all implementation                                                                                                                             | tabs 1–5 signed off                   |
+| Phase 1–6 implementation (backend, page, absorb, codex)    | **Cannot be done yet** — gated by the mock sign-off above                                                                                                                                  | whole-mock sign-off                   |
+| (A) tarball commit stamp                                   | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS, but part of Phase 3c; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                   | mock sign-off + Phase 3c start        |
+| Fill the mock's 2 `n/a — re-auth` build dates              | **Cannot be done yet** — needs a fresh GCP `gcloud auth login`                                                                                                                             | operator re-auth (optional, cosmetic) |
+| Issue doc: GCP/CI pipeline bugs + bucket-resolution bypass | **Not done** — Phase 5 todo; scope is the GCP/CI defects (config churn is the only NEW one — the AWS App Runner/ECR states are **intentional parking, not bugs**); notify Ikenna (CI-area) | nobody — but coordinate w/ Ikenna     |
+| AWS resume (App Runner + ECS + ECR)                        | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                               | AWS credits                           |
