@@ -46,7 +46,7 @@ drift_direction: advance-code
 source: [pm_qg_plan_discipline_and_frontmatter_regression-006]
 resolved_by:
 locked_by:
-depends_on: []
+depends_on: [plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md]
 ---
 
 # What I found
@@ -128,8 +128,18 @@ overhead.
 - [ ] [CODE] P3. Add `quote_asset`/`margin_type` to the deployment-api data-status API response for cefi chain shards —
       gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` landing first (surfacing pre-migration data would be
       misleading). (repo: deployment-api)
+
+  **BLOCKED on dependency (2026-07-21, BLK-3f4c6134, confirmed by main)**: dispatched to a worker who checked
+  `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` and found todos 5-8 (prove W1 emits v6, migrate v5→v6 objects,
+  resync manifest/data-status, record cutover date) still open/unchecked — only the code-fix todos (1-4) have landed.
+  Implementing this now would surface pre-migration/inconsistent data through the API, tripping the data-pipeline-
+  correctness heartbeat rule. Recorded as a formal `depends_on` in this doc's frontmatter (see above) so this todo
+  re-dispatches once that migration's remaining todos land and its cutover date is recorded — do NOT implement until
+  then.
+
 - [ ] [UI] P3. Make the deployment-ui coverage heatmap filterable by `quote_asset`/`margin_type` once the API exposes
-      them (previous todo). pw:L2 regression spec required. (repo: deployment-ui)
+      them (previous todo). pw:L2 regression spec required. (repo: deployment-ui) — same `depends_on` gate as above
+      (transitively blocked on the API todo, which is blocked on the v6 migration).
 
 ## Codex SSOTs
 
