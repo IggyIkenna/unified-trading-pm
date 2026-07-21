@@ -110,7 +110,7 @@ rather than a single CSS var.
       pre-existing sanity-check spec; it failed (`net::ERR_CONNECTION_RESET`-class timeouts) under severe host
       contention (load 31-35 on 8 cores) — same environment blocker confirmed in the prior any-type-sweep task, not a
       regression from this change. No fabricated `pw:L2 ✓`.
-- [ ] [UI] P2. Batch 2 — widgets/\_primitives + widgets/\* (11 files, 1–8 hits each):
+- [x] ✅ [UI] P2. Batch 2 — widgets/\_primitives + widgets/\* (11 files, 1–8 hits each):
       `components/widgets/_primitives/metric-gauge.tsx`, `components/widgets/_primitives/flow-chart.tsx`,
       `components/widgets/_primitives/categorical-matrix.tsx`, `components/widgets/_primitives/depth-area-chart.tsx`,
       `components/widgets/_primitives/continuous-heatmap.tsx`, `components/widgets/pnl/pnl-data-context.tsx`,
@@ -119,7 +119,31 @@ rather than a single CSS var.
       `components/widgets/strategies/strategies-catalogue-widget.tsx`,
       `components/widgets/cefi/volume-dominance-widget.tsx`, `components/widgets/workspace-toolbar.tsx`. The
       `_primitives/` chart files are the most likely `chart-theme.ts` candidates (they're the shared chart-primitive
-      layer every other chart widget builds on). (repo: unified-trading-system-ui)
+      layer every other chart widget builds on). (repo: unified-trading-system-ui) —
+      `unified-trading-system-ui@252ed295`. All 11 files migrated to semantic CSS-var/`color-mix()` tokens (mostly
+      `--pnl-positive`/`--pnl-negative`/`--status-*`/`--risk-*`/`--chart-N`, matched to each hardcoded hex's real
+      semantic meaning rather than nearest-visual-match — e.g. `severity-breakdown-widget.tsx`'s `#dc2626` had an
+      existing `// status-critical` comment confirming the exact intended token, 3 of its 5 severities landed on
+      exact-value token matches). `flow-chart.tsx`/`depth-area-chart.tsx` had genuinely dead `var(--x, #hex)` fallbacks
+      (the primary token is always defined at `:root`, confirmed via `app/globals.css` import in `app/layout.tsx`) —
+      stripped rather than reworded. `pnl-data-context.tsx`'s 8-category DeFi P&L palette preserved the original
+      author's income-vibrant/cost-muted design intent using existing tokens (no new CSS needed).
+      `use-terminal-page-data.ts`'s SMA/EMA/Bollinger-Band overlay colours feed
+      `components/trading/candlestick-chart.tsx` (confirmed via
+      `chart.addSeries(LineSeries, { color: indicator.color })`) — the same `lightweight-charts` series-config path
+      Batch 1 empirically verified resolves `var(--x)` correctly (unlike raw canvas calls). `workspace-toolbar.tsx`'s
+      `#0a0a0a` was a `html-to-image` canvas-fill colour (can't reference a CSS var directly, same canvas-vs-DOM
+      distinction as Batch 1's finding) — resolved the live `--background` value via `getComputedStyle` at call time
+      instead, so screenshots now match whichever theme is active rather than forcing one hardcoded dark hex.
+      `strategies-catalogue-widget.tsx`'s `shadow-[...rgba(0,0,0,0.4)]` split into `shadow-[0_2px_8px] shadow-black/40`
+      (Tailwind arbitrary-value + colour-utility split, same pattern Batch 1 established for its 2 Tailwind-only hits).
+      `volume-dominance-widget.tsx`'s 8-colour categorical array replaced with the shared `CHART_COLORS` (6 entries,
+      existing modulo-cycling logic handles the overflow safely). **Merge conflict during ship**: sibling batch `-003`
+      (slot-2) concurrently landed `unified-trading-system-ui@2bb398c1` (colour/localhost exclude-glob triage, 947→501)
+      touching the same `codex_ui_violation_baseline.json`. Resolved via `ff-only` pull + re-measuring the TRUE combined
+      state on the fully-merged tree (both diffs are additive/composable — different files, no overlap) rather than
+      guessing: combined colour count 501→465. `quality-gates.sh` green end-to-end (345s: typecheck/lint/286
+      tests/build/DeFi- citation all passed), sentinel `2d7d8ca6`→`252ed295` after quickmerge.
 - [ ] [UI] P3. Batch 3 — trading/sports (10 files, 1–27 hits each):
       `components/trading/sports/fixtures-detail-panel.tsx`, `components/trading/sports/arb-grid.tsx`,
       `components/trading/sports/shared.tsx`, `components/trading/sports/my-bets-tab.tsx`,
