@@ -122,9 +122,15 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
 
 ## Todos
 
-- [ ] [BACKEND] P2. Regenerate `archetype_capability_manifest.json` with real cells for the 19 VOL / 10 MM / 4 PORTFOLIO
+- [x] [BACKEND] P2. Regenerate `archetype_capability_manifest.json` with real cells for the 19 VOL / 10 MM / 4 PORTFOLIO
       archetypes added in Phase 9 (currently only 23 legacy archetypes have cells); add `bespoke_capable: bool` to
-      `ArchetypeCapabilityClaim`. (repo: unified-api-contracts)
+      `ArchetypeCapabilityClaim`. (repo: unified-api-contracts) — ✅ unified-api-contracts@e5dc6e7f (manifest 23→53
+      archetypes, `bespoke_capable` field, `CROSS_CATEGORY` enum fix for the new PORTFOLIO cells) +
+      unified-trading-pm@7ee0fbb87 (30 codex narrative sections, new Family 9: Portfolio). Full `quality-gates.sh` green
+      in both repos; `test_archetype_capability_manifest_parity.py` (17/17) +
+      `test_archetype_capability_may_23_coverage.py` pass. `enumerate_envelope.py` simplification (issue-doc prose
+      bullet, not a separate todo) deferred — its mocking logic is now dead code but simplifying it was not part of this
+      checkbox's scope.
 - [ ] [BACKEND] P3. Build the `admin_assignment.py` (`AdminStrategyAssignment`) model + wire it as the real backing
       store for `lib/entitlements/strategy-route.ts`'s resolvers (currently a UI-side approximation with no backend).
       Build `AdminStrategyAssignmentTable.tsx` + `app/(ops)/admin/strategy-assignments/page.tsx`. Wire
