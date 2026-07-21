@@ -338,7 +338,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "coverage_pct": 82.32,
@@ -1262,7 +1262,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": 88.48,
         "qg_red_reason": "pytest",
