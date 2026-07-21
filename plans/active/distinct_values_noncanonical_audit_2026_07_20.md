@@ -601,3 +601,37 @@ computed as 0 (nothing was blindly dropped), so no real data was ever at risk in
 bottleneck). Once reviewed, APPLY proceeds as: CAS-write (generation-matched) the final in-memory dataframe back to the
 SAME index path, verify HOLDS across ≥2 consolidator cycles including one `--force`. Recovery point unchanged: the
 pre-restamp snapshot above.
+
+### 2026-07-21 — MTDS re-stamp APPLY: found + fixed a real bug, then hit a genuine CAS-race wall
+
+**Bug found + fixed (no data at risk at any point):** the first real apply attempt correctly computed everything but its
+OWN pre-write invariant check had a formula bug — it only counted `drop_pre_stale`-mode B1 drops toward the expected
+captured-row delta, missing that `promote_pre_newer`-mode B1 drops (54 of 934 in that run) ALSO remove a captured row
+from the corpus (the surviving row was already captured too, by construction of a rank-tie). The pre-write gate
+correctly ABORTED with **zero write performed** rather than proceed on a mismatched invariant — exactly the intended
+fail-safe behaviour. Fixed formula verified against real production data via a fast classification-only check before
+re-running: `934` (actual) == `934` (new formula) vs `880` (old, wrong formula).
+
+**Second attempt: all invariants passed cleanly, but LOST THE CAS RACE.** This manifest
+(`market-data-tick-cefi-prd-* /_index/availability_index.parquet`, ~10.47M rows) is under continuous live write traffic
+— its GCS object generation changes roughly every 30-40 minutes from other legitimate writers (MTDS captures, the
+consolidator, the IS enumerator). The read-classify-build-verify-serialize pipeline took ~37 minutes end to end, so by
+the time the CAS (`if_generation_match`) write was attempted, a concurrent writer had already landed a new generation.
+**No data was written or corrupted** — `conditional_upload_bytes` failed its precondition cleanly, exactly as designed.
+
+**Third attempt: rebuilt with a fast, PROOF-based pre-write gate + a 5x auto-retry loop, but still lost every race
+across 3.26 hours total.** Removed the full-corpus composite-key dedup rebuild from the pre-write gate — it is
+mathematically redundant given (a) the corpus has zero pre-existing duplicate keys (verified fresh every run) and (b)
+Phase A rows are individually proven non-colliding during classification, so two Phase A rows colliding with EACH OTHER
+would require them to already be duplicates pre-transform, a contradiction; B1/B2 never touch a surviving row's row-key
+columns. **This did not meaningfully speed up the pipeline** — each of the 5 attempts still took ~1900-2200s between
+classification and the write attempt, meaning the actual bottleneck is elsewhere (likely
+`sort_values(["date", "venue", "data_type"])` over ~10.47M string-column rows, needed to preserve the production
+writer's row-group predicate-pushdown convention — profiling in progress to confirm precisely). The manifest's write
+cadence (~30-40 min) is close enough to this processing window that all 5 retries lost the race; **the manifest remains
+completely unchanged** (verified: each failed attempt's CAS precondition failure means no bytes were written).
+
+**Status: NOT YET APPLIED. No data mutation has occurred at any point in this multi-attempt process** — every snapshot,
+dry-run, and failed apply attempt has been either read-only or safely aborted before any write. Continuing to profile +
+optimize the pipeline to shrink the window well below the manifest's write cadence, or considering an alternative
+strategy (e.g. a much smaller, targeted patch that avoids reprocessing the full 10.47M-row corpus).
