@@ -101,10 +101,12 @@ Full audit transcript available on request; the load-bearing facts:
       Heartbeat-derived rows get `basis: "approx"`. — deployment-api@ff5bb06 (`_vm_overlap_basis`/`_apply_date_range` in
       `deployments_inventory.py`; `DeploymentItem` gained `started_at`/`completed_at`/`last_heartbeat_at`/`basis`; 12
       new unit tests incl. route-level date_from/date_to wiring; `quality-gates.sh` green)
-- [ ] [BACKEND] P0. Archive range-read — bypass the existing 7-day `_ARCHIVE_WINDOW_DAYS` cap for date-range queries
+- [x] ✅ [BACKEND] P0. Archive range-read — bypass the existing 7-day `_ARCHIVE_WINDOW_DAYS` cap for date-range queries
       specifically; read day-partitioned `deployments/archive/<day>/` prefixes directly for the requested range (bounded
       listing only, no whole-corpus walk) up to the real 30-day GCS floor. Beyond 30 days → structured out-of-range
-      response.
+      response. — deployment-api@42191d9 (`_load_registry_entries_for_date_range`/`_archive_floor_date`; route merges
+      the extra range-scoped VM rows, deduped against the cached 7-day census; response carries `archive_floor` +
+      `date_range_out_of_range` for the UI banner; 8 new unit tests; `quality-gates.sh` green)
 - [ ] [BACKEND] P1. Unmanaged VMs + Cloud Run Job/AWS Batch/Scheduler — match via their single available timestamp
       (`last_run_at`/`last_attempt_at`) where no true interval exists, marked `basis: "approx"`. Document the per-kind
       support matrix (interval / single-timestamp / none) on the field.
