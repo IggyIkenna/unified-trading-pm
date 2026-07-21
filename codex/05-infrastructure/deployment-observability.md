@@ -52,6 +52,9 @@ code_refs:
     deployment-ui/src/pages/Deployments.tsx,
     deployment-ui/src/components/RunLogPanel.tsx,
     deployment-ui/src/components/StreamingLogsPanel.tsx,
+    deployment-ui/src/components/filters,
+    deployment-ui/src/hooks/useColumnSort.ts,
+    deployment-ui/src/lib/columnSort.ts,
   ]
 ---
 
@@ -117,6 +120,61 @@ Cloud Run jobs (kind icon, GCP/AWS cloud badge, status badge, exit_code with `13
 captured-progress), a per-umbrella summary header, and URL-param-backed cloud/status/asset_group filters
 (`useSearchParams` → deep-linkable). Drill-down `/deployments/:name` reuses `VmEventsTimeline` + `StreamingLogsPanel`
 (live log tail + event timeline) + the GCS `run.log` link. pw:L2-gated (`tests/smoke/deployments-page.spec.ts`).
+
+## Date-range filter, kind multi-select, always-on treatment (WS-2/WS-3, 2026-07-21)
+
+Plan: `deployment_ui_date_range_filter_and_search_2026_07_20.md`. "What was running between date A and B" on
+`/deployments`, plus the `kind` filter becoming multi-select and a service dropdown + target search box sharing the same
+filter bar.
+
+**Per-kind date-filter support matrix** (`_apply_date_range`, `deployment-api/routes/deployments_inventory.py`) — every
+kind is either interval-backed, single-timestamp, or has no timestamp signal at all:
+
+| Kind(s)                                                                                  | Signal                                                    | Overlap test                                                                                                                                                     | `basis`                                                                |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| VM / registry rows                                                                       | `started_at` + `completed_at`/`last_heartbeat_at`         | `started_at ≤ date_to` AND `effective_end ≥ date_from`, where `effective_end` = `completed_at` if terminal, else `last_heartbeat_at` once stale, else open-ended | `"approx"` only on the stale-heartbeat branch; `None` otherwise        |
+| `CLOUD_RUN_JOB` (GCP **and** AWS Batch/Fargate — share the wire kind) / `SCHEDULER`      | one timestamp (`last_run_at`/`last_attempt_at`)           | point-in-range: `date_from ≤ ts ≤ date_to`                                                                                                                       | always `"approx"` on a match — one instant standing in for an interval |
+| Unmanaged VMs with no registry `started_at`                                              | `last_run_at` (falls into the same single-timestamp path) | same point-in-range test                                                                                                                                         | `"approx"`                                                             |
+| `CLOUD_RUN_SERVICE` / `ECS_SERVICE` / `LAMBDA` / `CLOUD_FUNCTION` / `DISK` / `STATIC_IP` | none                                                      | always passes through unfiltered — **"always-on"**                                                                                                               | n/a — not scoped by the filter at all                                  |
+
+A row with `started_at`/`last_run_at` missing entirely is never filtered out (honest-absence: no signal ⇒ don't guess).
+**Heartbeat-stale threshold: `_REAP_STALE_HOURS = 6`**, deliberately reused from `DeploymentsRegistry.reap_stale`'s own
+6h reap constant (UTL `deployment_registry.py`) — the same audit finding that motivated this whole workstream (219 rows
+read `status=running` while only 12 GCE instances actually were).
+
+**Always-on kinds never silently vanish from a date-filtered view.** `ALWAYS_ON_KINDS`
+(`deployment-ui/src/pages/Deployments.tsx`) is the frontend's exact complement of the backend's
+`_SINGLE_TIMESTAMP_KINDS ∪ {VM}` — `{CLOUD_RUN_SERVICE, ECS_SERVICE, LAMBDA, CLOUD_FUNCTION, DISK, STATIC_IP}`. These
+rows sort **last** and carry a distinct cyan "always-on" badge (`LastRunCell`) whenever a date range is active —
+deliberately NOT the amber `basis === "approx"` tone reused from the Cost/day convention above: amber means "this data
+point is uncertain," cyan means "not applicable — this row was never scoped by the filter at all." Two different
+meanings, two different colours, same page.
+
+**Archive range-read bypasses the 7-day cheap-census cap.** The live inventory endpoint's default cold-path caps its own
+archive read at `_ARCHIVE_WINDOW_DAYS = 7` days, but GCS actually retains `deployments/archive/` for 30 days
+(live-confirmed 2026-07-20). A date-range query reads the requested `deployments/archive/<day>/` day-partitions
+**directly** (still bounded, single-walk discipline preserved — never a whole-corpus walk), clipped to the real floor:
+`_archive_floor_date = now − (_ARCHIVE_RETENTION_DAYS − 1) days` = **29 days back** (a 30-day inclusive window). A
+request whose `date_from` predates that floor sets `date_range_out_of_range: true`
+
+- `archive_floor: "<ISO date>"` on `DeploymentInventoryResponse`, rendered as an explicit **amber** banner
+  (`AlertTriangle`, testid `deployments-date-range-out-of-range`) — distinct from the **red** fetch-error banner
+  (`AlertCircle`, testid `deployments-error`) and mutually exclusive with it — never a silently-clipped partial result.
+
+**`kind` filter is multi-select**, client-side only (not a server param, unlike umbrella/cloud/status/asset_group) —
+`KindFilterChips`, comma-separated `?kind=`, URL-backed. An old single-value deep link (`?kind=VM`) still parses as a
+1-element set, so no deep-link breakage.
+
+**`CLOUD_RUN_SERVICE` timestamp asymmetry (found in the 2026-07-20 audit) — closed.** It previously carried NO timestamp
+field at all, unlike its AWS twin `ECS_SERVICE` (`last_run_at = updated_at or created_at`). Fix: `last_deployed_at`
+sourced from the Cloud Run **Service** resource's own `update_time` (falls back to `create_time`) off the
+already-fetched list call — a free win, deliberately NOT a per-service `GetRevision` RPC. Lands on the **existing**
+`DeploymentItem.last_modified_at` field (reused, not a duplicate — that field already meant "deploy/modify time,
+distinct from last-invoke" for AWS Lambda).
+
+**Date-range URL params**: `?date_from=&date_to=` (`DateRangeFilter`), both bounds independently clearable via their own
+`✕`; a separate atomic clear-both action exists because two sequential single-param URL updates were found to race
+against the same stale `searchParams` snapshot and clobber each other.
 
 ## Cost/day attribution contract (per-target cost cell)
 

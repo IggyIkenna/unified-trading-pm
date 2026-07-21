@@ -380,6 +380,33 @@ fresh worker picks up later work. So: **crafts** stay `working` until `/done` (n
 
 ---
 
+## Orphaned singleton-agent process — the two-mains-on-the-dashboard failure mode (2026-07-21)
+
+`KillMode=process` (deliberate — workers survive a backend redeploy) means a `systemctl restart` kills only uvicorn; a
+main's `claude` process keeps running. If that main's tmux server has meanwhile lost the default socket (a fresh server
+took `/tmp/tmux-<uid>/default`; the old server is left alive but socketless, invisible to `tmux ls`), the keeper's
+`has_session("orch-agent-main")` reads False → it reaps the record and spawns a **replacement** main beside the
+still-running orphan. `kill_session` can never reach the orphan (it only talks to the current socket). The orphan keeps
+`/poll`-ing, and `update_agent_ping`'s **restore-on-ping** flips its archived row back to `active` every tick → **two
+mains on the dashboard + a second account burning** (incident 2026-07-21;
+`plans/active/issues/ao_orphaned_main_duplicate_2026_07_21.md`).
+
+Two closures (`agent-orchestrator@4f34391`):
+
+- **Process-level reap** — `orphan_reap.reap_orphan_agent_session(<singleton session>)` SIGTERMs any `claude` whose
+  `CLAUDE_CONFIG_DIR` is that session's config dir but which is NOT the live-pane occupant
+  (`pid_belongs_to_live_session`), anchored on a live session so a transient tmux hiccup can't misfire, honouring
+  `boot_grace_seconds`. Always-live (a singleton has exactly one legit occupant). Wired into `AgentKeeper.tick_once` for
+  `main`; review is a residual todo in the issue doc.
+- **Restore-on-ping guard** — `update_agent_ping` never resurrects a `main` that has a newer-registered sibling
+  (definitionally superseded). The old comment's claim that "a superseded main can't resurrect itself — it isn't
+  pinging" is false when the process leaks; the newest-registered main is the singleton, everywhere.
+
+**Invariant:** the live occupant of a singleton agent session is identified per-PID (config-dir + pane-tree membership),
+never by `has_session` name alone or by `last_ping` recency (which flaps between an orphan and the real main).
+
+---
+
 ## Self-healing hardening (2026-06-21 — `orchestrator_self_healing_hardening_2026_06_21`)
 
 Five robustness closures (all in `agent-orchestrator`, tested) for the operator's "always pick accounts with usage left,

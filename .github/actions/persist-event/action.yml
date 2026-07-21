@@ -223,17 +223,26 @@ runs:
         DATE_PARTITION: ${{ steps.build-event.outputs.date_partition }}
         REPO_NAME: ${{ inputs.repo_name }}
         CICD_EVENTS_BUCKET: ${{ steps.build-event.outputs.events_bucket }}
+        RUN_ID: ${{ inputs.run_id }}
+        JOB_ID: ${{ github.job }}
       run: |
         set -uo pipefail
-        OBJECT_PATH="cicd/events/${REPO_NAME}/${DATE_PARTITION}/events.jsonl"
+        # ONE OBJECT PER EVENT (root-cause fix, not a mitigation — 2026-07-21):
+        # the OLD path (cp-down -> append -> cp-up onto one shared events.jsonl per repo/day)
+        # was an unlocked read-modify-write — two overlapping writers silently clobbered each
+        # other (persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md). The reader
+        # (deployment-api's _repo_ci_alerts.py::_read_ledgers_sync) already walks the WHOLE
+        # cicd/events/ prefix and parses every blob it finds — it never assumed a single
+        # filename — so writing each event straight to its OWN never-overwritten object
+        # eliminates the race with zero reader changes: no read, no local merge, no lock.
+        UNIQUE_KEY="${RUN_ID}-${JOB_ID}-$(date -u +%s%N)-${RANDOM}"
+        OBJECT_PATH="cicd/events/${REPO_NAME}/${DATE_PARTITION}/${UNIQUE_KEY}.jsonl"
         GCS_URI="gs://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
-        LOCAL_FILE="${RUNNER_TEMP}/events.jsonl"
 
         # `timeout` replaces the reusable's job-level `timeout-minutes: 5`, which composite steps
         # do not support. Without it a hung transfer hangs the CALLER's job, not just this write.
-        timeout 60 gsutil cp "$GCS_URI" "$LOCAL_FILE" 2>/dev/null || touch "$LOCAL_FILE"
-        echo "$EVENT_JSON" >> "$LOCAL_FILE"
-        timeout 60 gsutil cp "$LOCAL_FILE" "$GCS_URI" || echo "::warning::GCS write failed — event not persisted"
+        printf '%s\n' "$EVENT_JSON" | timeout 60 gsutil cp - "$GCS_URI" \
+          || echo "::warning::GCS write failed — event not persisted"
 
         echo "Persisted event to $GCS_URI"
 
@@ -256,15 +265,18 @@ runs:
         DATE_PARTITION: ${{ steps.build-event.outputs.date_partition }}
         REPO_NAME: ${{ inputs.repo_name }}
         CICD_EVENTS_BUCKET: ${{ steps.build-event.outputs.events_bucket }}
+        RUN_ID: ${{ inputs.run_id }}
+        JOB_ID: ${{ github.job }}
       run: |
         set -uo pipefail
-        OBJECT_PATH="cicd/events/${REPO_NAME}/${DATE_PARTITION}/events.jsonl"
+        # ONE OBJECT PER EVENT — same root-cause fix as the GCS branch above
+        # (persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md).
+        UNIQUE_KEY="${RUN_ID}-${JOB_ID}-$(date -u +%s%N)-${RANDOM}"
+        OBJECT_PATH="cicd/events/${REPO_NAME}/${DATE_PARTITION}/${UNIQUE_KEY}.jsonl"
         S3_URI="s3://${CICD_EVENTS_BUCKET}/${OBJECT_PATH}"
-        LOCAL_FILE="${RUNNER_TEMP}/events.jsonl"
 
-        timeout 60 aws s3 cp "$S3_URI" "$LOCAL_FILE" 2>/dev/null || touch "$LOCAL_FILE"
-        echo "$EVENT_JSON" >> "$LOCAL_FILE"
-        timeout 60 aws s3 cp "$LOCAL_FILE" "$S3_URI" || echo "::warning::S3 write failed — event not persisted"
+        printf '%s\n' "$EVENT_JSON" | timeout 60 aws s3 cp - "$S3_URI" \
+          || echo "::warning::S3 write failed — event not persisted"
 
         echo "Persisted event to $S3_URI"
 

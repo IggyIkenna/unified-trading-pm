@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                      these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                      un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -465,6 +465,66 @@ Discriminator = **does a manifest row exist**.
       `build_leg()` path to the DERIBIT-COMBO builders (`cefi/deribit_combo_adapter.py`, `tardis/combos.py`) —
       `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` open P2. DeFi has no combos; this rides here
       only because the DERIBIT-COMBO fix is cefi-side and passed to `cefi_consolidated_closeout_2026_07_18.md`.
+- [ ] [BACKEND] P0. **NEW 2026-07-21 (operator ruling) — eliminate the address/UUID fallback in
+      `canonical_instrument_id` for POOL + LENDING; resolve token symbols for real, don't fall back.** Operator: "it
+      needs to be fully canonical no fallback and migrated." Does NOT touch the two-id model or the machine
+      `instrument_id` (`pool_address.lower()` stays — 2026-07-18 ruling unchanged, `engine/defi_catalog_reader` still
+      joins on it). Scope is narrower than it first looks: `DefiPoolIdentity.glued_pair_id`
+      (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py:333-361`) only falls back to
+      `pool_address.lower()` when `base_asset`/`quote_asset` arrive blank — the fallback is a SYMPTOM of upstream token
+      resolution never being attempted, not a structural need. Measured root cause (research this session): no adapter
+      does independent on-chain/registry symbol resolution — `orca.py`/`raydium.py::_build_pool_record` DROP the pool
+      when the DEX's own subgraph/REST response lacks a symbol; `raydium.py::_build_historical_pool_record` hardcodes
+      `"UNKNOWN"`; `balancer.py:222-231` defaults to the literal string `"UNKNOWN"`; Solana LENDING
+      (`lending_indices_handler.py:420-423`) falls back to DeFiLlama's own pool UUID when DeFiLlama's `symbol` field is
+      blank — measured **49.7% raw-address + 17.6% UUID** of 707,803 live LENDING rows are non-symbolic today. A real,
+      unused resolution path already exists: `unified_api_contracts.external.alchemy.schemas.AlchemyTokenMetadata` is
+      declared (`registry/endpoints.py:302`, `registry/venue_manifest/defi.py`) with **zero real callers**
+      workspace-wide. **Design (decided this session):** a new shared, cached resolver module —
+      `unified_trading_library` (both instruments-service and market-tick-data-service already depend on it; UAC stays
+      schema-only) — `unified_trading_library/defi/token_metadata_resolver.py`: EVM via a real
+      `alchemy_getTokenMetadata` call (MTDS `alchemy_base_client.py` gets the calling method; UTL wraps it with an
+      on-disk/GCS-backed cache since token metadata is immutable — same address never needs a second live call); Solana
+      via the static `solana-labs/token-list` JSON (mint→symbol; confirmed reachable, HTTP 200, unlike `token.jup.ag`
+      which is dead — verified this session) — refreshed periodically, not a live call per-row. **Todos**: (1) build +
+      unit-test the UTL resolver (both legs); (2) wire it into `balancer.py`/`orca.py`/`raydium.py` + the other POOL
+      adapters as the enrichment step BEFORE the drop/`"UNKNOWN"` branches; (3) wire it into
+      `lending_indices_handler.py`/`_solana_defi_fetch.py` replacing the `market_id`-as-symbol fallback; (4) re-run
+      `build_instrument_catalogue.py` so POOL `glued_pair_id` re-resolves; (5) re-derive existing address/UUID-fallback
+      `canonical_instrument_id` values for LIVE rows via a one-off backfill (pattern:
+      `scripts/backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`), idempotent, verify 0 address/UUID-shaped
+      `canonical_instrument_id` remain for a resolvable token; a token genuinely absent from BOTH Alchemy AND the Solana
+      list (e.g. a rugged/delisted token with no metadata anywhere) is the only acceptable residual — route those
+      through `needs_attribution`/`empty_confirmed`, never silently re-embed the address. (repos:
+      unified-trading-library, unified-api-contracts, market-tick-data-service, instruments-service)
+
+### Operator decisions applied (2026-07-21, /autonomous — decided per AUTONOMOUS_AGENT_RULES.md rule 2, documented not asked)
+
+- **Solana pool vocab desync (`defi_expected_universe_solana_pool_instrument_type_vocab_desync_2026_07_20.md`) → Option
+  A, expected matches writer.** The grammar table above (line ~343) already ratified `SOLANA_AMM_POOL` as the canonical
+  Solana DEX-pool grain (2026-07-18) — the writer emitting `solana_amm_pool` is already correct; the expected-universe
+  side using plain `pool` for Solana cells is the stale side. Fix the expected-universe enumerator, not the writer.
+- **SOLANA_LENDING is OUT of the D2 `LENDING`→A_TOKEN/DEBT_TOKEN retire scope.** The grammar table already carries
+  `SOLANA_LENDING` as its own canonical Solana grain, distinct from the EVM A_TOKEN/DEBT_TOKEN split (Kamino/Solend/
+  MarginFi markets don't share Aave's dual-token-per-reserve shape). The retire applies to the legacy flat EVM `lending`
+  rows only; Solana rows keep `SOLANA_LENDING`. `defi_lending_writer_retire_prerequisite_2026_07_20.md`'s todo 6 ("rule
+  SOLANA_LENDING scope") is answered by this.
+- **Non-POOL per-instrument EU (215,864 honest-pending cells) → fold into the SAME `expected_unattempted` seeding pass**
+  Track 3 already runs (the 63.9M seed), not a new terminal state/mechanism. Reuses proven machinery instead of
+  inventing new denominator policy; verify at seed-time that these cells behave like every other `expected_unattempted`
+  cell.
+- **Bare SUSHISWAP/UNISWAP version (199,397 rows) → derive from the deploying factory contract address**, not
+  "undecidable." Uniswap V2/V3/V4 and SushiSwap V2/V3 factory addresses are permanent, public constants — a static
+  factory-address→version map resolves the overwhelming majority; a pool whose factory matches none of the known
+  contracts is the genuine residual (surface it, don't guess).
+- **`_ID_FORM_CHECKED_ASSET_GROUPS` widening for `defi` → use the grammar already ratified in this plan** ("Instrument-
+  uid grammar per DeFi type" above) — not a new decision, just wiring it into
+  `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`'s checker. `prediction`'s id-form stays out of scope here
+  — it's already flagged cross-AG as its own future closeout.
+- **UTL `_derive_instrument_id.py` dispatch key `('defi','lending')`** — once the EVM retire lands, `lending` stops
+  being produced for EVM; retarget/split the dispatch so Solana's `SOLANA_LENDING` grain (untouched by the retire, per
+  above) keeps a live dispatch entry. Concrete implementation task, not a standing fork — resolves
+  `defi_consolidated_closeout_2026_07_18.md`'s "MOOT unless..." CODE-section todo.
 
 ## Track 2 — STORE: path authority + bucket hygiene (⛔ flat-vs-hive must be pinned) · P0
 

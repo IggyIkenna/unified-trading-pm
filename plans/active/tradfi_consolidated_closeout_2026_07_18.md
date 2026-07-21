@@ -1692,7 +1692,8 @@ fleet/logs directly).**
 3. **Verify** id-form re-measured toward ~100%.
 4. **Catalogue MVP promote** (+409) — rebuild+promote served `catalog.parquet` (still old mvp=70,930); verify
    data-status/deployment-api.
-5. **Apply doc fixes**: 35 verified contradictions (in scratch `docs_findings.json`) + reconciliation's 4 stale codex
+5. **Apply doc fixes**: 35 verified contradictions (tracked in
+   `plans/active/issues/tradfi_docs_reconciliation_findings_2026_07_21.md` + `.json`) + reconciliation's 4 stale codex
    docs (`non-canonical-path-inventory.md` row 10 / `reconciliation-finding-taxonomy.md` AE-4 /
    `gcs-and-manifest-delete-safety-protocol.md` §3.3 / `tradfi-databento-sourcing-ssot.md` — all still say Massive purge
    PENDING; it EXECUTED) + register patch (rows 10/11/22/24 count updates + new
@@ -1704,3 +1705,28 @@ fleet/logs directly).**
 - Purge every Massive item (DONE — was already 0). Delete old/bad data, completely clean tradfi buckets IS+MTDS, hard
   storage requirement (EXECUTING ~47 GB). Run content-migration NOW (approved; sequenced after drain). Both AWS tradfi
   buckets empty. Data types: `ohlcv_1m`+`ohlcv_1s` (L0 free) accepted; order-book L1/L2 is documented nice-to-have.
+
+---
+
+## Pre-compact lessons — 2026-07-21 (carry forward, don't re-learn the hard way)
+
+- **gcloud user-token expiry LOOKS like mass VM/data loss — always cross-check with a second signal before reacting.**
+  Mid-session `ikenna@odum-research.com`'s token expired (non-interactive, can't reprompt); every
+  `gcloud compute instances list` silently returned EMPTY (not an error string in the piped grep). A fleet legitimately
+  at 76 read as "76→0 in 10 min" — indistinguishable from mass preemption/deletion without checking. **Caught it** by
+  testing a DIFFERENT project-wide query before concluding — the real error (`Reauthentication failed`) only showed up
+  unpiped. Fix: switched active account to a service account (`*-compute@developer.gserviceaccount.com`) with standing
+  creds; every subsequent monitor greps the raw output for `Reauthentication|invalid_grant` and treats a "0" alongside
+  that as `AUTH-ERROR`, never real completion. **Any monitor loop that greps a gcloud/gsutil count MUST carry this
+  guard.**
+- **A `git commit` block from this workspace's pre-commit hooks is NOT always "branch drift."** Wasted 5 retry cycles
+  re-pulling before actually reading `/tmp/dc.log` — the real blocker was `plan-hygiene` frontmatter-schema validation
+  (missing `stage`/`repos`/`scope`/`parent_epic`/`priority`/`source` on an `issue` doc; missing `auditor`/`severity`/
+  `audited_scope`/`date` on an `audit-result` doc — the two doc_types have DIFFERENT required-field sets, see
+  `codex/11-project-management/doc-frontmatter-schema.md`). **Read the actual hook output before assuming drift** —
+  `git commit` prints both under one non-zero exit and a `grep -c 'drift'` on the log false-matched on unrelated text.
+- **My own operator-facing "migration complete / ~99.65% canonical" claim was overstated** (verified + corrected this
+  session, see reconciliation report + `tradfi_docs_reconciliation_findings_2026_07_21.md`): catalogue + GCS paths +
+  forward-writes were genuinely canonical, but I conflated that with the HISTORICAL manifest/parquet-content id-form,
+  which measured 30.8% (0% pre-2023). Lesson: "paths migrated" and "content migrated" are different surfaces — say which
+  one, every time.

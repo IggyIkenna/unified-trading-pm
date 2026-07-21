@@ -62,17 +62,26 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 0 — Reality verification (read-only / on-chain; no ship) — pins the TRUE denominator
 
-- [ ] [ONCHAIN] P0. **AAVE reserve oracle reality** — `eth_call getAssetPrice(token)` at a recent block for each
-      candidate reserve (wstETH, weETH, rETH, cbETH, rsETH, ezETH, osETH) against `AAVE_ORACLE_ADDRESS` on the main
-      Pool; record which return non-zero. rsETH/ezETH may be Lido/Prime-instance-only. Provenance: audit doc §#3.
-- [ ] [EXTERNAL] P0. **Chainlink aggregator reality** — confirm on docs.chain.link which of wstETH/weETH/rsETH/ezETH
-      have a real PRICE aggregator (not PoR/exchange-rate). Only those get a feed-map entry.
-- [ ] [MTDS] P0. **CEX listing reality** — Tardis `availableSymbols` per `*-SPOT` venue per LST base; record genuinely
-      listed (LST,venue) vs honest `EXPECTED_INSTRUMENT_NOT_LISTED`. Confirms #1 is backfill-only, no catalogue edit.
-- [ ] [MTDS] P0. **DEX endpoint reality** — confirm Curve stETH/ETH + target UniV3/Balancer LST pools roll into
-      `catalog.parquet` after a discovery run; identify a live replacement for the dead Curve/Balancer/Sushi subgraphs
-      (Graph decentralized-network key / self-host / direct-RPC). If none exists → the DEX collector phase is
-      `BLOCKED-CREDENTIALS` (endpoint/key), scaffold + status, not silently dropped.
+- [x] [ONCHAIN] P0. ✅ **AAVE reserve oracle reality** — `eth_call getAssetPrice` VERIFIED (wf_f629fbb4-7da, real
+      returns): **REGISTER 6** — wstETH `0x7f39C581…`=$2393.27, weETH `0xCd5fE23C…`=$2122.85, rETH
+      `0xae78736C…`=$2254.42,
+      cbETH `0xBe989514…`=$2191.60, rsETH
+      `0xA1290d69…`=$2077.76 (AAVE-path-only), ezETH via `0xbf5495Efe5DB9ce00f80364C8B423567e58d2110` ONLY=$2088.92.
+      **EXCLUDE** osETH (`getAssetPrice` REVERTS, aToken=0x0 — not a reserve) and ezETH@`0x2416092f…` (REVERTS) → would
+      seed permanent-false-RED.
+- [x] [EXTERNAL] P0. ✅ **Chainlink aggregator reality** — VERIFIED: add exactly **2 RefPrice feeds** — weETH/ETH
+      `0x5c9C449BbC9a6075A2c061dF312a35fd1E05fF22` (dec 18, live 1.0995) + ezETH/ETH
+      `0x636A000262F6aA9e1F094ABF0aD8f645C44f641C` (dec 18, live 1.0796). **Do NOT add** rsETH (`0x9d2F2f…` is ExRate,
+      not price) or wstETH (only a _Calculated_ USD feed exists — operator decision; wstETH is fully AAVE-covered).
+- [x] [MTDS] P0. ✅ **CEX listing reality** — confirmed **NO catalogue edit** (the LST bases are already in
+      `CEFI_BASE_ASSET_UNIVERSE`+`STAKING_SPOT_EXCEPTION`; catalogue-add is the documented phantom-mint anti-pattern).
+      #1 is a Tardis backfill only. (The per-venue listing sub-check didn't fully complete — verify exact listed
+      (LST,venue) cells at backfill time, Phase 5.)
+- [x] [MTDS] P0. ✅ **DEX endpoint reality — WORKS TODAY, NOT blocked.** Live-probed 2026-07-21: Curve stETH/ETH pool
+      `0xDC24316b9AE028F1497c275EB9192a3Ea0f67022` + Balancer via the EXISTING `thegraph-api-key` secret + shipped
+      `dex_swaps_handler` cascade + UAC `SUBGRAPH_IDS` — HTTP 200, hasIndexingErrors:false, at-head, real swaps. The
+      codex "decommissioned subgraphs" claim is STALE for these ETH LST endpoints → #2 is a normal collector/backfill
+      task, NOT `BLOCKED-CREDENTIALS`. Curve REST (`api.curve.finance`, no key) is a live direct-alternative.
 
 ## Phase 1 — Denominator registration (smallest first-shippable; makes gaps HONEST)
 
@@ -138,7 +147,49 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 ## Progress Log
 
 - **2026-07-21** — Plan authored from the pipeline-add understand sweep. Codex SSOT `lst-exchange-rate-surfaces.md`
-authored alongside. Key reframes captured: #1 CEX = backfill-not-build (catalogue already complete; list edits are
-phantom-minting); #3 Aave oracle = plumbing (dormant RPC, not missing); #2 DEX = collector/endpoint problem;
-denominator-first honest-coverage invariant. Executing Phase 0 (reality verification) next.
+  authored alongside. Key reframes captured: #1 CEX = backfill-not-build (catalogue already complete; list edits are
+  phantom-minting); #3 Aave oracle = plumbing (dormant RPC, not missing); #2 DEX = collector/endpoint problem;
+  denominator-first honest-coverage invariant. Executing Phase 0 (reality verification) next.
+
+## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
+
+- **Phase 0 is DONE (verified denominator below).** Phase 1 is the next executable step, and it is ready NOW.
+- **The VERIFIED denominator to register in Phase 1 (ETHEREUM, conservative — only real-eth_call/probe YES items):**
+  - **AAVE `(AAVE, spot_asset, oracle_prices)` — 6 reserves:** wstETH `0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0`,
+    weETH `0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee`, rETH `0xae78736Cd615f374D3085123A210448E74Fc6393`, cbETH
+    `0xBe9895146f7AF43049ca1c1AE358B0541Ea49704`, rsETH `0xA1290d69c65A6Fe4DF752f95823fAe25cB99e5A7`, ezETH
+    `0xbf5495Efe5DB9ce00f80364C8B423567e58d2110` (this address ONLY; `0x2416092f…` REVERTS).
+    `instrument_id=<symbol_lower>`. EXCLUDE osETH (not a reserve).
+  - **Chainlink feed-map (mirror BOTH MTDS dict + IS tuple) — 2 RefPrice feeds:** weETH/ETH
+    `0x5c9C449BbC9a6075A2c061dF312a35fd1E05fF22` (dec 18), ezETH/ETH `0x636A000262F6aA9e1F094ABF0aD8f645C44f641C` (dec
+    18). NOT rsETH (ExRate), NOT wstETH (Calculated-USD only — operator decision).
+  - **CEX (#1): NO catalogue edit.** **DEX (#2): endpoints work today — normal collector task, NOT blocked.**
+- **Phase 1 execution** (smallest shippable first): add the 2 Chainlink feeds to BOTH mirrored maps (MTDS
+  `_oracle_prices_constants.py` dict + IS `chainlink.py` tuple; the mirror-invariant test must pass) → one quickmerge
+  per repo; then the AAVE oracle venue registration (UAC `expected_coverage`/`defi_venues` phase
+  flip/`venue_adapter_keys`/ `capability_declarations`) + IS `aave_oracle` adapter enumerating the 6 reserves; regen
+  catalogue; confirm the new `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` + `(AAVE, spot_asset, oracle_prices)`
+  cells render `expected_unattempted` (honest RED).
+- **Deferred to operator/scope (do NOT register without a ruling):** wstETH Chainlink (Calculated-USD feed — is that
+  shape allowed in the RefPrice map?); L2 (Arbitrum/Base/…) LST feeds + AAVE reserves (Ethereum-only Phase 0). Full
+  evidence: `wf_f629fbb4-7da` journal.
+- **Held artifacts (on-disk, survive compaction, NOT shipped):**
+  `strategy-service/strategy_service/engine/backtest/ index_ratio_accrual.py` + its test (the correct pure
+  staking/borrow accrual helper for Phase 6, held until the leg wiring). Two labeled stashes: `strategy-service`
+  (superseded blocked fix — droppable) and `features-service` (deferred safe-survivor fixes — recover with
+  `git stash apply`, reconcile against peer `features-service@9ce1f4ab`).
+
+## Lessons (avoid re-learning)
+
+- **CEX catalogue-add is a PHANTOM-MINTING anti-pattern** — the LST bases are already in `CEFI_BASE_ASSET_UNIVERSE` +
+  `STAKING_SPOT_EXCEPTION`; #1 is a Tardis BACKFILL, never a list edit. (Codex §#1.)
+- **Plan todos use P0–P3, NOT the phase number** — `P4/P5/P6` fail `check_todo_format` ("missing P-priority"); priority
+  is importance, conveyed separately from the phase header.
+- **A new codex-ssot doc needs** `referenced_by`/`owner`/`last_reviewed`/`code_refs` present-but-empty; a plan's
+  `assigned_role` must be from `agents/*.md` (e.g. `backend_engineer`, not `backend`); run
+  `scripts/plan-hygiene/fix_frontmatter.py` + `fix_todo_format.sh` then the pre-commit passes.
+- **PM has heavy peer commit traffic** — a tight `pull→add→commit→push` retry loop (up to ~5) lands past the
+  branch-drift hook; doc-only PM commits may also go direct-push under the `docs(plans):` carve-out.
+- **The `getAssetPrice` RPC is DORMANT, not missing** — lift it from
+`market-tick-data-service aave_positions.py:: _fetch_rpc_oracle_prices`, never re-implement.
 </content>

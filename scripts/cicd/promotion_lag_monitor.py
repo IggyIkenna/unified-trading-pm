@@ -48,6 +48,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -228,13 +229,24 @@ def _workflow_present_on_ref(repo: str, name: str, ref: str) -> bool | None:
     return None
 
 
+class _Unmeasured:
+    """Sentinel: the compare API call could not be evaluated this run (a transient/systemic `gh` error
+    made `_gh_json` return None). This is DISTINCT from a measured `None` ("genuinely in sync"). The
+    clear-diff must never treat an unmeasured pair as cleared — see `_emit_clear_diff`. A single
+    module-level instance (`UNMEASURED`) so `is`-identity narrows cleanly."""
+
+
+UNMEASURED = _Unmeasured()
+
+
 def _lag(
     repo: str, base: str, head: str, now: dt.datetime, thresh_s: float, skip_ci_counts: bool
-) -> tuple[int, float, str] | None:
-    """Return (n_commits, oldest_age_s, oldest_msg) for head-commits-not-on-base, or None."""
+) -> tuple[int, float, str] | _Unmeasured | None:
+    """Return (n_commits, oldest_age_s, oldest_msg) if lagging; None if measured-in-sync; UNMEASURED
+    if the compare API call could not be evaluated (so callers never conflate error with in-sync)."""
     d = _gh_json(f"repos/{OWNER}/{repo}/compare/{base}...{head}")
     if not isinstance(d, dict):
-        return None
+        return UNMEASURED  # compare call failed (403/5xx/network) — UNKNOWN, not "in sync"
     # Squash-skew guard: a squash-merge keeps `head` ahead-by-commit-count of `base` even when the
     # tree content is byte-identical (the squashed commit on `base` is a new SHA, so the original
     # head commits stay "ahead"). The compare `files` array is the NET diff — empty means the
@@ -458,6 +470,166 @@ def _write_firestore_promotion_lag(
         pass
 
 
+# ── Per-pair clear-diff (name WHICH pair cleared, as it clears) ───────────────────────────
+# The fleet-wide "any-lag → no-lag" edge announced only "all branch-pairs back in sync" and only
+# when the WHOLE fleet went green — so a single repo clearing while another still lagged was never
+# announced, and the all-clear never named the repair. These helpers persist the set of currently-
+# lagging pairs across runs and diff prev→current: a pair present last run and absent this run is a
+# CLEAR, named individually. Pure + stdlib so they unit-test without `gh`.
+# SSOT: codex/04-architecture/ci-alerting.md (recovery-gated all-clears, per-condition dedup).
+
+
+def _lagging_summaries(repo_lags: dict[str, dict[str, object]]) -> dict[str, str]:
+    """Map every CURRENTLY-lagging branch-pair to `{"repo|label": one-line summary}`.
+
+    The summary is what a later CLEAR announces ("was N commit(s), oldest Mm"). Only per-direction
+    entries with `lag is True` are included — the non-pair bookkeeping entries (e.g.
+    `staging_backmerge_present`, whose value has no `lag` key) are skipped.
+    """
+    out: dict[str, str] = {}
+    for repo, labels in repo_lags.items():
+        for label, info in labels.items():
+            if not isinstance(info, dict):
+                continue
+            d = cast("dict[str, object]", info)
+            if d.get("lag") is not True:
+                continue
+            n = d.get("n_commits")
+            age_s = d.get("age_s")
+            n_i = n if isinstance(n, int) else 0
+            age_m = int(age_s // 60) if isinstance(age_s, (int, float)) else 0
+            blocked = " (was provenance-blocked)" if d.get("provenance_blocked") is True else ""
+            out[f"{repo}|{label}"] = f"{repo} {label} — was {n_i} commit(s), oldest {age_m}m{blocked}"
+    return out
+
+
+def _evaluated_keys(repo_lags: dict[str, dict[str, object]]) -> set[str]:
+    """Every branch-pair actually PROBED this run — any per-direction entry carrying a `lag` verdict
+    (True or False, incl. unmeasured which is `lag: False, unmeasured: True`). Excludes the non-pair
+    bookkeeping entries (`staging_backmerge_present`, no `lag` key) and any pair that was `continue`d
+    (main-direct/staging-dormant) so never got an entry — those are 'no longer monitored', not cleared.
+    """
+    out: set[str] = set()
+    for repo, labels in repo_lags.items():
+        for label, info in labels.items():
+            if isinstance(info, dict) and "lag" in cast("dict[str, object]", info):
+                out.add(f"{repo}|{label}")
+    return out
+
+
+def _unmeasured_keys(repo_lags: dict[str, dict[str, object]]) -> set[str]:
+    """Pairs whose compare probe FAILED this run (`unmeasured is True`) — status unknown, never a clear."""
+    out: set[str] = set()
+    for repo, labels in repo_lags.items():
+        for label, info in labels.items():
+            if isinstance(info, dict) and cast("dict[str, object]", info).get("unmeasured") is True:
+                out.add(f"{repo}|{label}")
+    return out
+
+
+def _cleared_keys(prev: dict[str, str], evaluated: set[str], lagging: set[str], unmeasured: set[str]) -> list[str]:
+    """Pairs that just cleared: lagging last run (`prev`) AND this run POSITIVELY measured in sync.
+
+    A pair clears ONLY when it was AFFIRMATIVELY re-checked and found not-lagging — i.e. it is in
+    `evaluated`, not in `lagging`, and not in `unmeasured`. This deliberately excludes two false-clear
+    classes the fleet-wide edge never hit: (1) a transient compare-API error (`unmeasured` — carried
+    forward, not cleared) and (2) a pair no longer monitored because its repo toggled main-direct /
+    staging-dormant (absent from `evaluated` — dropped, not announced as "back in sync").
+    """
+    return [k for k in sorted(prev) if k in evaluated and k not in lagging and k not in unmeasured]
+
+
+def _load_lag_state(path: str) -> dict[str, str]:
+    """Load the previous run's lagging map ({key: summary}).
+
+    Tolerates absent / corrupt / OLD-SCHEMA (`{"lag": bool}`, pre per-pair) files → returns {} so a
+    first run after deploy never false-fires a CLEAR. Only a well-formed `{"lagging": {str: str}}` is
+    honoured.
+    """
+    try:
+        with open(path) as f:
+            raw = cast("object", json.load(f))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    lagging = cast("dict[str, object]", raw).get("lagging")
+    if not isinstance(lagging, dict):
+        return {}
+    out: dict[str, str] = {}
+    for k, v in cast("dict[str, object]", lagging).items():
+        if isinstance(k, str) and isinstance(v, str):
+            out[k] = v
+    return out
+
+
+def _write_lag_state(path: str, curr: dict[str, str]) -> None:
+    """Persist the current lagging map for the next run's clear-diff. Best-effort."""
+    try:
+        with open(path, "w") as f:
+            json.dump({"lagging": curr}, f)
+    except OSError:
+        pass
+
+
+def _cleared_dedup_key(cleared_keys: list[str]) -> str:
+    """A per-cleared-SET dedup key so two distinct clears each post once.
+
+    notify-slack dedups on `dedup_key` ALONE (not key+message), so a static key would let the first
+    clear swallow a second repo's clear within the cooldown. A short stable digest of the cleared set
+    gives each distinct set its own lane; the SAME pair re-clearing within the cooldown is (correctly)
+    flap-suppressed. sha256 (not md5/sha1) to avoid the weak-hash lint; this is an identity, not a
+    security boundary.
+    """
+    joined = ",".join(sorted(cleared_keys))
+    digest = hashlib.sha256(joined.encode("utf-8")).hexdigest()[:12]
+    return f"promotion-lag-cleared:{digest}"
+
+
+def _build_cleared_block(cleared_keys: list[str], prev: dict[str, str], still_lagging: int) -> str:
+    """The CLEARED payload written to --cleared-out: line 1 = dedup key, line 2 = Slack message.
+
+    Empty string when nothing cleared (the workflow reads a 0-byte file as cleared=false). The
+    message uses literal ``\\n`` line breaks to match the lag report — branch-health.yml passes it
+    VERBATIM to notify-slack, which renders ``\\n`` as Slack line breaks.
+    """
+    if not cleared_keys:
+        return ""
+    key = _cleared_dedup_key(cleared_keys)
+    header = f":ballot_box_with_check: *PROMOTION LAG CLEARED* — {len(cleared_keys)} branch-pair(s) back in sync"
+    body = "\\n".join(f"  • {prev[k]}" for k in cleared_keys)
+    tail = f"\\n({still_lagging} pair(s) still lagging)" if still_lagging else "\\n— all branch-pairs now in sync"
+    message = header + "\\n" + body + tail
+    return key + "\n" + message + "\n"
+
+
+def _emit_clear_diff(repo_lags: dict[str, dict[str, object]], state_in: str, state_out: str, cleared_out: str) -> None:
+    """Diff prev→current per branch-pair and (opt-in) persist state + write the named CLEARED block.
+
+    Three run-states per pair drive the diff (see `_cleared_keys`): affirmatively LAGGING, affirmatively
+    IN-SYNC (the only state that clears), and UNMEASURED (compare probe failed). A prev-lagging pair that
+    is UNMEASURED this run is carried FORWARD into the persisted set (not cleared, not forgotten) so it
+    re-decides on the next successful probe; a prev pair that is no longer monitored (absent from
+    `evaluated`) is simply dropped.
+    """
+    lagging = _lagging_summaries(repo_lags)  # affirmatively lagging → {key: summary}
+    prev = _load_lag_state(state_in) if state_in else {}
+    unmeasured = _unmeasured_keys(repo_lags)
+    # Carry a prev-lagging pair forward when this run could not measure it (transient gh error).
+    carried = {k: prev[k] for k in unmeasured if k in prev}
+    new_state = {**lagging, **carried}
+    if cleared_out:
+        cleared_keys = _cleared_keys(prev, _evaluated_keys(repo_lags), set(lagging), unmeasured)
+        block = _build_cleared_block(cleared_keys, prev, still_lagging=len(new_state))
+        try:
+            with open(cleared_out, "w") as f:
+                f.write(block)
+        except OSError:
+            pass
+    if state_out:
+        _write_lag_state(state_out, new_state)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--threshold-min", type=int, default=60)
@@ -471,6 +643,21 @@ def main() -> int:
     )
     ap.add_argument("--now-iso", default="", help="UTC now (no wallclock in CI sandbox); else uses gh server time")
     ap.add_argument("--slack", action="store_true")
+    ap.add_argument(
+        "--state-in",
+        default="",
+        help="Path to the PREVIOUS run's lagging-state JSON — the clear-diff baseline (missing/old-schema → none).",
+    )
+    ap.add_argument(
+        "--state-out",
+        default="",
+        help="Write the CURRENT lagging-state JSON here for the next run's clear-diff.",
+    )
+    ap.add_argument(
+        "--cleared-out",
+        default="",
+        help="Write the named CLEARED Slack block here (line 1 = dedup key, line 2 = message); empty if none cleared.",
+    )
     args = ap.parse_args()
     thresh_s = cast(int, args.threshold_min) * 60.0
     ldr_main_thresh_s = cast(int, args.ldr_main_threshold_min) * 60.0
@@ -522,7 +709,12 @@ def main() -> int:
             # directions keep the base --threshold-min (60m).
             eff_thresh = ldr_main_thresh_s if label == "LDR→main" else thresh_s
             res = _lag(repo, base, head, now, eff_thresh, skip_ci_counts)
-            if res:
+            if res is UNMEASURED:
+                # The compare call failed this run — status UNKNOWN, NOT a clear. Record it distinctly
+                # so the clear-diff carries a prev-lagging pair FORWARD instead of false-announcing it
+                # cleared (a transient 403/5xx must never post a "back in sync" for a still-stuck pair).
+                repo_lags[repo][label] = {"lag": False, "unmeasured": True}
+            elif isinstance(res, tuple):
                 n, age, omsg = res
                 # A provenance-blocked forward pair is NOT a wedged pipeline — the bot deliberately
                 # refused to arm it and the remedy is specific. Say so, so nobody "unblocks" it by
@@ -576,6 +768,15 @@ def main() -> int:
     gcp_project = os.environ.get("GCP_PROJECT_ID")
     if gcp_project:
         _write_firestore_promotion_lag(repo_lags, now.isoformat(), gcp_project)
+
+    # Per-pair clear-diff (opt-in via the state/cleared paths). MUST run before the all-green
+    # early-return: a pair clearing is exactly when `findings` shrinks (possibly to empty), so the
+    # diff has to see both the lagging and the fully-synced case.
+    state_in = cast(str, args.state_in)
+    state_out = cast(str, args.state_out)
+    cleared_out = cast(str, args.cleared_out)
+    if state_in or state_out or cleared_out:
+        _emit_clear_diff(repo_lags, state_in, state_out, cleared_out)
 
     if not findings:
         print(

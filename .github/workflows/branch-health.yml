@@ -62,6 +62,8 @@ jobs:
     outputs:
       lag: ${{ steps.scan.outputs.lag }}
       cleared: ${{ steps.scan.outputs.cleared }}
+      cleared_key: ${{ steps.scan.outputs.cleared_key }}
+      cleared_report: ${{ steps.scan.outputs.cleared_report }}
       report: ${{ steps.scan.outputs.report }}
     steps:
       - uses: actions/checkout@v5
@@ -111,21 +113,39 @@ jobs:
           GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
         run: |
           set +e
-          LAST_LAG=false
-          if [ -f .lag-state.json ]; then
-            LAST_LAG=$(jq -r '.lag // false' .lag-state.json 2>/dev/null || echo "false")
-          fi
-          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH" --ldr-main-threshold-min "$LDR_MAIN_THRESH" --slack)
+          # `.lag-state.json` (restored from the prior run's actions/cache) is the PREVIOUS lagging
+          # set. The monitor diffs prev→current PER branch-pair: any pair that WAS lagging and now is
+          # not writes a NAMED CLEARED block to .lag-cleared.txt (line 1 = per-set dedup key, line 2 =
+          # the Slack message). It writes the NEW lagging set to .lag-state.next.json, which we move
+          # into place so the post-job cache save persists it for the next run's diff. This replaces
+          # the old fleet-wide "any-lag→no-lag" edge, which only fired when the WHOLE fleet went green
+          # and never named which repair cleared.
+          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py \
+            --threshold-min "$THRESH" --ldr-main-threshold-min "$LDR_MAIN_THRESH" --slack \
+            --state-in .lag-state.json --state-out .lag-state.next.json --cleared-out .lag-cleared.txt)
           RC=$?
           echo "$REPORT"
           if [ "$RC" -eq 1 ]; then LAG=true; else LAG=false; fi
-          echo "{\"lag\": $LAG}" > .lag-state.json
-          if [ "$LAST_LAG" = "true" ] && [ "$LAG" = "false" ]; then CLEARED=true; else CLEARED=false; fi
+          # Persist the new lagging set (overwrite the restored prev) so the post-job cache save carries
+          # it forward. Skip if the monitor did not write it (crash) — keep the prev rather than wipe it.
+          [ -f .lag-state.next.json ] && mv -f .lag-state.next.json .lag-state.json
+          CLEARED=false
+          CLEARED_KEY=""
+          CLEARED_REPORT=""
+          if [ -s .lag-cleared.txt ]; then
+            CLEARED=true
+            CLEARED_KEY=$(head -n 1 .lag-cleared.txt)
+            CLEARED_REPORT=$(tail -n +2 .lag-cleared.txt)
+          fi
           {
             echo "lag=$LAG"
             echo "cleared=$CLEARED"
+            echo "cleared_key=$CLEARED_KEY"
             echo "report<<__EOR__"
             echo "$REPORT"
+            echo "__EOR__"
+            echo "cleared_report<<__EOR__"
+            echo "$CLEARED_REPORT"
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
 
@@ -143,6 +163,9 @@ jobs:
       # hourly. The measured promote cadence is ~40 min (declared */15 is throttled to ~37%),
       # so a standing lag re-fired ~hourly (~24/day). 120 = ~3 real promote cycles.
       cooldown_min: 120
+      # Distinct concurrency lane — this run also fires lag-notify-resolved and ar-lag-notify; without
+      # per-caller suffixes GitHub would cancel a previously-pending sibling in the shared group.
+      concurrency_suffix: lag
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
 
@@ -151,15 +174,19 @@ jobs:
     if: needs.lag-monitor.outputs.cleared == 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message:
-        ":ballot_box_with_check: *PROMOTION LAG CLEARED* — all branch-pairs back in sync (lag was >${{
-        github.event.inputs.threshold_min || '60' }}m)"
+      # Names the specific branch-pair(s) that just cleared (per-pair diff in promotion_lag_monitor),
+      # not a generic fleet all-clear — so a repair is visible AS it lands, even while others still lag.
+      message: ${{ needs.lag-monitor.outputs.cleared_report }}
       severity: INFO
       recovery: true
       workflow_name: branch-health
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      dedup_key: promotion-lag-cleared
+      # Per-cleared-SET key (from the monitor) so two distinct clears each post once; a static key would
+      # let the first clear's cooldown swallow a second repo's clear.
+      dedup_key: ${{ needs.lag-monitor.outputs.cleared_key }}
       cooldown_min: 30
+      # Own concurrency lane so a same-run lag-notify/ar-lag-notify never cancels this pending all-clear.
+      concurrency_suffix: lag-cleared
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
 
@@ -250,5 +277,7 @@ jobs:
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       dedup_key: ar-dep-publish-lag
       cooldown_min: 60
+      # Own concurrency lane (see lag-notify) so this never cancels a pending promotion-lag notify.
+      concurrency_suffix: ar-lag
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}

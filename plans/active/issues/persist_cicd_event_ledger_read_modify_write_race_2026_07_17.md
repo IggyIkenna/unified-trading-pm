@@ -18,7 +18,7 @@ summary: >
   cluster in bursts, so a uniform-arrival estimate understates it. Found 2026-07-17 while converting the reusable
   workflow to a composite action for CI-cost STEP 2c; the conversion REPRODUCES the existing behaviour faithfully (it
   does not add or worsen the race) because changing it alters the reader contract and is a design call, not a cleanup.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -43,9 +43,9 @@ assigned_vm: NA
 execution_scope: local-only
 assigned_role: devops
 drift_direction: advance-code
-last_updated: 2026-07-17
+last_updated: 2026-07-21
 locked_by:
-resolved_by:
+resolved_by: "unified-trading-pm@4cbf2006d — see Resolution section below"
 depends_on: []
 ---
 
@@ -149,3 +149,26 @@ The STEP 2c composite-action conversion (`d0e25fcb6`) **reproduces this behaviou
 each `gsutil` call (composite steps cannot take `timeout-minutes`, so an unbounded transfer would otherwise hang the
 CALLER's job). Fixing the race inside that conversion would have bundled a silent behaviour change into a cost refactor
 — two unrelated risks in one diff, in a file that 22 workflows depend on. It is filed instead.
+
+## Resolution (2026-07-21)
+
+**The blocking question — WHO READS THIS LEDGER — is answered**: `deployment-api`'s `_repo_ci_alerts.py`
+(`_read_ledgers_sync()`), the CI-alerts dashboard reader built out under
+`deployment_alerts_ingestion_completeness_2026_07_20.md`. Critically, it was **already** a prefix walk
+(`client.list_blobs(prefix="cicd/events/")`, filtered client-side on `/{date}/`), not a fixed-filename read — it never
+assumed exactly one `events.jsonl` per repo per day.
+
+That makes **Option 1 (one object per event)** free rather than expensive: no reader change was needed at all.
+`unified-trading-pm@4cbf2006d` changed `.github/actions/persist-event/action.yml`'s GCS + S3 write steps from the
+cp-down→append→cp-up dance onto a shared `events.jsonl` to a single `printf | gsutil cp -` straight to a
+never-overwritten unique object (`cicd/events/{repo}/{date}/{run_id}-{job}-{nanosecond-timestamp}-{$RANDOM}.jsonl`).
+This is strictly simpler than the code it replaces (no local temp file, no download, no merge) and eliminates the race
+outright rather than reducing its probability.
+
+The alerts-ledger sibling (`cicd/alerts/{date}/alerts.jsonl`, same shape, same race) is fixed for the
+`deployment-api::_persist_alert()` writer the same way (`deployment-api@dbeb5c9`,
+`deployment_alerts_ingestion_completeness_2026_07_20.md` todo 6b) — but **two other writers into that same file**
+(`notify-slack.yml`'s own persist step, and `semver-agent.yml.tmpl`'s fleet-wide "Persist CRITICAL pages" step) still do
+the old unlocked read-modify-write and are NOT fixed by this pass. See that plan's Progress Log for the scope note —
+closing the alerts-ledger race fully is a follow-up, not bundled into this issue's closure (this issue's title and scope
+is the EVENTS ledger specifically, which is now fully fixed).

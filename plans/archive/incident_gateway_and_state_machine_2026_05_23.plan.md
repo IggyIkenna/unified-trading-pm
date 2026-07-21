@@ -6,32 +6,47 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, strategy-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-service,
+    execution-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [agent_recovery_controller_layer0_deterministic_2026_05_23.md, ai_recovery_audit_signoff_agent_2026_05_23.md, audit_acknowledgement_sla_and_state_2026_05_23.md, incident_runbooks_and_evidence_store_2026_05_23.md]
-created: '2026-05-23'
+related:
+  [
+    agent_recovery_controller_layer0_deterministic_2026_05_23.md,
+    ai_recovery_audit_signoff_agent_2026_05_23.md,
+    audit_acknowledgement_sla_and_state_2026_05_23.md,
+    incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 10.8
-estimate_calibration_note: 'Design class (operator-judgment state machine + dedup-key semantics + recovery-verification gate; UAC schema is small,
+estimate_calibration_note: "Design class (operator-judgment state machine + dedup-key semantics + recovery-verification
+  gate; UAC schema is small,
 
   alerting-service router refactor is the bulk). Baseline 18 days = ~1 day per substantive todo across 6 phases.
 
   × 0.6 design multiplier = 10.8 cal AI-days.
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_since: 2026-05-23
 depends_on: []
 extends: [alerting_service_live_rules_2026_05_07]
-gates: ['master_to_live_defi_2026_05_23:Group-F', 'master_to_live_defi_2026_05_23:Group-G']
+gates: ["master_to_live_defi_2026_05_23:Group-F", "master_to_live_defi_2026_05_23:Group-G"]
 ---
 
-## Deferred work — none (all items completed)
+## Deferred work — migrated to: **None** — successor: not applicable (all items completed)
 
 # Incident Gateway + 13-State Machine + Audit-Ack Queue
 

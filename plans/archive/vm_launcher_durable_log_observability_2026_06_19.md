@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: VM launcher durable log + lifecycle observability — ship every launch's logs+events to GCS/S3
-summary: Ship every VM launch logs and lifecycle events to durable GCS/S3 storage so progress is visible without SSH and logs survive termination.
+summary:
+  Ship every VM launch logs and lifecycle events to durable GCS/S3 storage so progress is visible without SSH and logs
+  survive termination.
 status: complete
 nature: process
 asset_group: [cross-cutting]
@@ -26,19 +28,29 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-- {operator incident 2026-06: 'SFI + gas-fees + AWS-backfill VM logs to VM-local /tmp froze + were lost on termination, forcing serial-port/SSH diagnosis'}
-- audit 2026-06-19 of deployment-service/scripts/vm/ (134 launchers) vs the canonical vm-exec-with-gcs-tee.sh observability stack
+  - {
+      operator incident 2026-06:
+        "SFI + gas-fees + AWS-backfill VM logs to VM-local /tmp froze + were lost on termination, forcing
+        serial-port/SSH diagnosis",
+    }
+  - audit 2026-06-19 of deployment-service/scripts/vm/ (134 launchers) vs the canonical vm-exec-with-gcs-tee.sh
+    observability stack
 assigned_role: infra-engineer
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to: `plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md` — successor:
+
+long_lived_vm_logs_not_backed_up_2026_07_02 (the one remaining P3 item — sweeping the 3 long-lived `*-aws.sh` launchers
+— was DEFERRED by operator decision 2026-07-02 and migrated to that issue doc; see the item's own note below)
+
 # VM launcher durable log + lifecycle observability
 
 > **🗄️ ARCHIVED 2026-07-02 (operator-directed).** Core goal shipped: every **batch/backfill** VM launch streams its
-> run.log + heartbeat + terminal `EXIT_STATUS` to durable GCS/S3, and a coverage guard prevents regression. Remaining-item
-> review (2026-07-02) confirmed **6 of 7 open items were already done or resolved-by-decision** (see below); the one
-> genuinely-open item — **durable logs for long-lived orchestrator VMs (Tier 3, GCP + AWS)** — is consciously **DEFERRED,
-> not lost**, and migrated to
+> run.log + heartbeat + terminal `EXIT_STATUS` to durable GCS/S3, and a coverage guard prevents regression.
+> Remaining-item review (2026-07-02) confirmed **6 of 7 open items were already done or resolved-by-decision** (see
+> below); the one genuinely-open item — **durable logs for long-lived orchestrator VMs (Tier 3, GCP + AWS)** — is
+> consciously **DEFERRED, not lost**, and migrated to
 > [`plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
 > Codex SSOT for the shipped contract: `codex/05-infrastructure/vm-tarball-deployment.md` § "Observability + lifecycle —
 > two tiers" + runbook `codex/15-runbooks/vm-log-observability-verify.md`.
@@ -81,14 +93,14 @@ class), but they roll their own loop with non-canonical log paths and **lack the
 Migrate each to source `lib/launcher_common.sh` + emit `lc_log_upload_trap_block` (deleting the bespoke loop) so they
 converge on the canonical `vm-logs/`/`vm-heartbeat/`/`EXIT_STATUS` contract. Target repo: **deployment-service**.
 
-**Closure review 2026-07-02**: verified each remaining item against the actual tree. The four P2 launchers + the coverage
-guard shipped in **deployment-service@5d07bb1** (2026-06-22, Phase 4). The epic/planning migration was superseded by a
-re-classification decision (added to the guard's EXEMPT whitelist as LONG_LIVED). Only the AWS long-lived sweep is
-genuinely open, and is migrated to the Tier-3 issue doc (deferred per operator).
+**Closure review 2026-07-02**: verified each remaining item against the actual tree. The four P2 launchers + the
+coverage guard shipped in **deployment-service@5d07bb1** (2026-06-22, Phase 4). The epic/planning migration was
+superseded by a re-classification decision (added to the guard's EXEMPT whitelist as LONG_LIVED). Only the AWS
+long-lived sweep is genuinely open, and is migrated to the Tier-3 issue doc (deferred per operator).
 
 - [x] [SCRIPT] P2. `launch-aave-lending-rate-validation-vm.sh` — replace bespoke stream loop with
-      `lc_log_upload_trap_block`. ✅ deployment-service@5d07bb1 — wired at `launch-aave-lending-rate-validation-vm.sh:138`;
-      bespoke loop removed; `bash -n` clean.
+      `lc_log_upload_trap_block`. ✅ deployment-service@5d07bb1 — wired at
+      `launch-aave-lending-rate-validation-vm.sh:138`; bespoke loop removed; `bash -n` clean.
 - [x] [SCRIPT] P2. `launch-amm-golden-fixture-validation-vm.sh` — same (already sources launcher_common; swap to the
       helper). ✅ deployment-service@5d07bb1 — `launch-amm-golden-fixture-validation-vm.sh:203`; `bash -n` clean.
 - [x] [SCRIPT] P2. `launch-gcs-migration-bundle-vm.sh` — same. ✅ deployment-service@5d07bb1 —
@@ -104,8 +116,8 @@ genuinely open, and is migrated to the Tier-3 issue doc (deferred per operator).
       this means their runtime logs are NOT backed up off-box — tracked as a separate deferred gap, see the Tier-3 issue
       doc below.
 - [ ] [SCRIPT] P3. Sweep the remaining `*-aws.sh` non-backfill launchers (`launch-central-brain-aws.sh`,
-      `launch-orchestrator-worker-vm.sh`, `launch-epic-vm-aws.sh`) for the same lc_aws_log_upload_trap_block wiring.
-      → **DEFERRED (operator, 2026-07-02) & MIGRATED** to
+      `launch-orchestrator-worker-vm.sh`, `launch-epic-vm-aws.sh`) for the same lc_aws_log_upload_trap_block wiring. →
+      **DEFERRED (operator, 2026-07-02) & MIGRATED** to
       [`plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
       These three are long-lived orchestrator VMs (their GCP twins are EXEMPT); today they only `tee` to VM-local
       `/var/log/*-bootstrap.log` with no S3 backup. Closing this is the Tier-3 continuous-tail shipper, not the batch

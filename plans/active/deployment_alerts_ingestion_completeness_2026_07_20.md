@@ -194,17 +194,53 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       rides on. Updated `test_route_deployments_inventory.py:854`'s literal-bucket assertion + added
       `TestReadLedgersSync` (2 new tests: resolves + reads correctly; a resolution failure degrades to the
       alerting-service-only merge, never blanking the ledger). `quality-gates.sh` green in both repos.
-- [ ] [BACKEND] P1. **Fix the read-modify-write row-drop race — BOTH instances.** (a) The one in
+- [x] ✅ [BACKEND] P1. **Fix the read-modify-write row-drop race — BOTH instances.** (a) The one in
       `issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` (the GHA composite action
       `.github/actions/persist-event` writing `cicd/events/…` — a bash fix via the template +
       `rollout-workflow-templates.sh`, not a same-repo Python patch); AND (b) a structurally-identical,
       currently-UNADDRESSED race in `deployment_api/routes/deployments_inventory.py::_persist_alert` (~L604-609) writing
       `cicd/alerts/…` — right next to the hardcoded-bucket fix. Fix both. Close the issue doc when (a) is done; note (b)
-      in the Progress Log.
-- [ ] [BACKEND] P1. **Retention + window** — `_DEFAULT_DAYS = 2` / `_MAX_ITEMS = 400` cannot support the date-range
+      in the Progress Log. — Both fixed via **one object per event/alert** (Option 1 from the issue doc), verified
+      reader-compatible with ZERO reader changes since `_repo_ci_alerts.py::_read_ledgers_sync()` already walks the
+      whole `cicd/events/` and `cicd/alerts/{date}/` prefixes rather than assuming one fixed filename.
+      `unified-trading-pm@4cbf2006d`: (a) `.github/actions/persist-event/action.yml`'s GCS + S3 write steps now write
+      straight to a unique per-call object (`{run_id}-{job}-{nanosecond-timestamp}-{$RANDOM}.jsonl`) instead of
+      cp-down→append→cp-up onto a shared `events.jsonl` — no read, no local merge, no lock; strictly simpler than the
+      code it replaces. `.github/actions/` is a single canonical copy (confirmed: every real caller of
+      `uses: ./.github/actions/persist-event` lives inside unified-trading-pm itself; no other repo has a
+      `.github/actions/` dir, so no `rollout-workflow-templates.sh` involvement was needed or possible — that script
+      only rolls out `.github/workflows/*.yml`, confirmed by reading it in full). **Issue doc
+      `persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` closed** (status flipped, resolution recorded
+      there). `deployment-api@dbeb5c9`: (b) `_persist_alert()` now writes to `cicd/alerts/{date}/{uuid4}.jsonl` instead
+      of a shared `alerts.jsonl`; the now-unused `download_from_storage` import removed; 3 existing tests updated for
+      the new no-download shape + a new `test_persist_alert_writes_unique_object_per_call` proving two calls land at two
+      distinct paths. **Scope note (see Progress Log for detail)**: `cicd/alerts/{date}/alerts.jsonl` also has TWO OTHER
+      writers not named in this todo — `notify-slack.yml`'s own alert-ledger persist step (its comment literally says
+      "KNOWN-LOSSY under concurrency — the open D2 ledger-race decision") and `semver-agent.yml.tmpl`'s fleet-wide
+      "Persist CRITICAL pages" step — both still doing the unlocked read-modify-write. Fixing only (b) makes
+      deployment-api's own contribution race-free but does NOT fully close the alerts-ledger race until those two are
+      fixed the same way; flagged as a follow-up, not silently absorbed into this todo's scope.
+- [x] ✅ [BACKEND] P1. **Retention + window** — `_DEFAULT_DAYS = 2` / `_MAX_ITEMS = 400` cannot support the date-range
       filter Plan B needs. Implement a retention/window policy (proposed default: 30 days queryable via bounded
       day-partitioned reads, response paginated rather than truncated at a silent cap). A silent 400-item truncation
-      must become an explicit "results capped" signal — never a silently short list.
+      must become an explicit "results capped" signal — never a silently short list. — `deployment-api@cda7a89`:
+      `_repo_ci_alerts.py`'s `_DEFAULT_DAYS`/`_MAX_ITEMS` (2 / 400) widened to `_DEFAULT_DAYS = _MAX_DAYS = 30` +
+      `_DEFAULT_PAGE_SIZE = 400` / `_MAX_PAGE_SIZE = 2000`; the day-partitioned reads stay bounded (single-walk
+      discipline unchanged) but the cache is now keyed per `days` window
+      (`_entries_cache: dict[int, tuple[float, list[AlertEntryDict]]]`) so re-paginating the SAME window never
+      re-triggers a GCS read. `load_alerts_payload()` gained `offset`/`limit` params and the response gained
+      `days`/`total_count`/`returned_count`/`offset`/`limit`/`capped` — `capped=True` whenever more rows exist past the
+      current page, replacing the old silent `[:_MAX_ITEMS]` truncation. Streams derive from the FULL window (not just
+      the page) since the (repo, workflow) roll-up is cardinality-bounded, not row-count-bounded — slicing it by page
+      would have silently dropped streams whose entries all fall outside the current page. Both routes
+      (`unified_alerts.py` `GET /api/alerts`, `repo_ci.py` `GET /api/repo-ci/alerts`) now accept `days`/`offset`/`limit`
+      query params (FastAPI `Query`, clamped server-side) so Plan B's date-range filter has something to call.
+      `health_overview.py`'s `_alerts_tile()` pins an explicit `days=2` rather than silently inheriting the new wider
+      default — its "open alerts right now" health signal predates this todo and would otherwise degrade to "critical"
+      almost permanently once any CRITICAL alert exists anywhere in a 30-day window. `_mock_alerts()` updated to
+      populate the new required fields (static fixture, always `capped=False`). New tests
+      (`TestLoadAlertsPayloadPagination`, 5 cases: capped true/false, offset paging, days-clamped-to-max, streams derive
+      from the full window not just the page). `quality-gates.sh` green (4841 tests incl. the 5 new, 80.27% coverage).
 - [ ] [BACKEND] P1. **zombie-watchdog reaps — add persistence.**
       `deployment-service/scripts/vm/vm_zombie_watchdog.py:247` fires a raw Slack webhook with no durable record; route
       it through the normalised persist path so the reap history survives on the page.
@@ -369,6 +405,37 @@ Notes worth surfacing beyond the matrix:
   `resolve_bucket_name` at the test level (the pattern the existing `alerting-service` tests already use) makes the test
   both correct (it isn't asserting on live filesystem state from a sibling repo) and immune to whatever the
   environmental difference is. Flagging in case this resurfaces for a future bucket-resolution test in this file.
+
+- **2026-07-21** — Todo 6 (read-modify-write row-drop race, both instances) shipped, `unified-trading-pm@4cbf2006d`
+  - `deployment-api@dbeb5c9`. Fixed both via **one object per event/alert** (Option 1 from
+    `persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`) — verified reader-compatible with ZERO reader
+    changes since `_repo_ci_alerts.py::_read_ledgers_sync()` already prefix-walks `cicd/events/` and
+    `cicd/alerts/{date}/` rather than assuming one fixed filename (this answers the issue doc's open "who reads this
+    ledger" question). (a) `.github/actions/persist-event/action.yml`'s GCS + S3 write steps now write straight to a
+    unique per-call object instead of the cp-down->append->cp-up dance — confirmed this action has a SINGLE canonical
+    copy in unified-trading-pm (every real caller lives inside PM itself; no other repo has a `.github/actions/` dir),
+    so no `rollout-workflow-templates.sh` involvement was needed (that script only rolls out `.github/workflows/*.yml`,
+    confirmed by reading it in full — the todo's phrasing meant "a bash/template fix" generically, not literally
+    invoking that script). Issue doc closed (status: resolved, Resolution section added). (b)
+    `deployment-api::_persist_alert()` now writes to a uuid4-named object instead of a shared `alerts.jsonl`; removed
+    the now-unused `download_from_storage` import; updated 3 tests + added
+    `test_persist_alert_writes_unique_object_per_call`. **Scope finding, filed as a follow-up (NOT silently absorbed
+    into this todo)**: a workspace-wide grep for other writers into `cicd/alerts/{date}/alerts.jsonl` surfaced TWO MORE
+    writers doing the identical unlocked read-modify-write, neither named in todo 6: `notify-slack.yml`'s own persist
+    step (already flagged in its own code comment as "KNOWN-LOSSY under concurrency — the open D2 ledger-race decision")
+    and `semver-agent.yml.tmpl`'s fleet-wide "Persist CRITICAL pages" step (newly discovered, not previously documented
+    anywhere). Filed as `issues/alerts_ledger_race_two_remaining_writers_2026_07_21.md` with 2 concrete P2 todos (same
+    one-object-per-write fix, one per writer) — closing the alerts-ledger race fully requires those too, but they were
+    outside todo 6's explicit scope (which named only deployment-api's writer).
+
+- **2026-07-21** — Todo 8 (retention + window) shipped, `deployment-api@cda7a89`. `_DEFAULT_DAYS`/`_MAX_ITEMS` (2 / 400)
+  widened to `_DEFAULT_DAYS = _MAX_DAYS = 30` / `_DEFAULT_PAGE_SIZE = 400` / `_MAX_PAGE_SIZE = 2000`, with real
+  `offset`/`limit` pagination + an explicit `capped` signal replacing the old silent `[:_MAX_ITEMS]` slice. The
+  per-request entries cache is now keyed by the `days` window so paginating within a window costs zero extra GCS reads.
+  Both `/api/alerts` and `/api/repo-ci/alerts` accept `days`/`offset`/`limit` query params now — Plan B's date-range
+  filter has a real API to call. `health_overview`'s alerts health tile was pinned to an explicit `days=2` so its
+  pre-existing "recent" semantics didn't silently widen to 30 days (which would have made it read near-permanently
+  critical). `quality-gates.sh` green.
 
 ## Codex SSOTs
 

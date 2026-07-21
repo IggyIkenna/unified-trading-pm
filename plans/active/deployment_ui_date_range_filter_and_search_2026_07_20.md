@@ -167,23 +167,56 @@ Full audit transcript available on request; the load-bearing facts:
       in-memory array filter, no reason to lag the actual filtering; only the `?q=` URL write is debounced 300ms via the
       house `useDebounce` hook, so typing doesn't spam browser history) | pw:L2 ✓ | regression:
       tests/smoke/deployments-page.spec.ts
-- [ ] [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
+- [x] ✅ [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
       `StatusFilterChips` (`:924-961`), and the column-sort machinery (`SortKey` / `columnSortValue` / `compareByColumn`
       at `:256-320`, plus `onHeaderClick` at `:821` — note it lives in the table component, NOT co-located with the pure
       sort fns) are currently LOCAL to `Deployments.tsx` and not exported. Lift them into shared components (e.g.
       `src/components/filters/`) as part of this work, preserving behaviour, and re-consume them here. **This plan owns
       the extraction** — the WS-5 alerts-page rebuild (`deployment_ui_alerts_page_rebuild_2026_07_20.md`) declares
-      `depends_on` this plan and consumes the extracted primitives rather than duplicating or re-editing this file
+      `depends_on` this plan and consumes the extracted primitives rather than duplicating or re-editing this file —
+      deployment-ui@1cf191b (`FilterSelect`/`StatusFilterChips`/`chipTone` → `src/components/filters/`;
+      `StatusFilterChips` generalized to take a pre-computed `chips: StatusChip[]` prop instead of a deployment-specific
+      `UmbrellaSummaryResponse`, so alerts can supply its own status vocabulary/summary shape; the click-to-sort state
+      machine → generic `useColumnSort<K>()` in `src/hooks/`; the nulls-last/tie-break comparator → generic
+      `compareByColumn<T,K>(..., columnValue, defaultCmp, forceLast?)` in `src/lib/columnSort.ts` (+ unit test,
+      `columnSort.test.ts`) — `columnValue`/`defaultHierarchyCmp`/`SortKey`/the always-on `forceLast` override stay
+      LOCAL to `Deployments.tsx` as deployment-item-specific plug-in callbacks, wired into the generic utilities via a
+      thin `deploymentCompareByColumn` wrapper. Behaviour-preserving: same markup/classes/`data-testid` contract,
+      verified against the full vitest suite + all 9 deployment Playwright specs (49 tests), zero regressions) | pw:L2 ✓
+      | regression: tests/smoke/deployments-page.spec.ts, tests/smoke/deployments-wsd.spec.ts (sort-behavior tests)
       (operator decision 2026-07-20 — one agent owns `Deployments.tsx`, no same-file collision, no divergent filter
       bars).
-- [ ] [REVIEW] P1. Tests — overlap formula (fresh-running / heartbeat-stale / completed cases); archive bounded-read +
-      30-day floor behaviour; out-of-range banner trigger; per-kind `basis` assignment; kind-multi-select +
-      service/search URL param round-trip. `pw:L2 ✓` + cited regression spec for the UI pieces;
-      `bash     scripts/quality-gates.sh` green in both deployment-api and deployment-ui.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
-- [ ] [REVIEW] P2. Post-phase codex audit — document the per-kind date-filter support matrix, the approx-colour
+- [x] ✅ [REVIEW] P1. Tests — overlap formula (fresh-running / heartbeat-stale / completed cases); archive
+      bounded-read + 30-day floor behaviour; out-of-range banner trigger; per-kind `basis` assignment;
+      kind-multi-select + service/search URL param round-trip. `pw:L2 ✓` + cited regression spec for the UI pieces;
+      `bash     scripts/quality-gates.sh` green in both deployment-api and deployment-ui. — VERIFIED, no gaps found: all
+      required coverage was already shipped by the prior BACKEND/UI todos (each cited SHA confirmed reachable from
+      current HEAD in both repos). Independently re-ran (not just read self-reports): deployment-api@bb13425
+      `quality-gates.sh` green (140s) — 7 `test_vm_overlap_basis_*` (truly-live/heartbeat-stale/terminal-inside/
+      terminal-before/no-interval/started-after cases), 7 archive-range tests (`test_archive_floor_date_is_29_days...`,
+      `test_load_registry_entries_for_date_range_*`, `test_inventory_route_date_range_*`), 6
+      `test_single_timestamp_overlaps_*` + `test_apply_date_range_*` per-kind basis tests. deployment-ui@6101449
+      `quality-gates.sh` green (65s, 98 unit tests, 74.24% coverage) + live pw:L2 run of the 5 cited regression specs —
+      34/34 passed (`deployments-page.spec.ts` incl. date-range URL round-trip, kind multi-select
+      union/revert/old-deeplink, service dropdown, target search debounce+deeplink; `deployments-approx-marker.spec.ts`;
+      `deployments-always-on-marker.spec.ts`; `deployments-date-range-out-of-range.spec.ts`; `deployments-wsd.spec.ts`).
+      No code changes required.
+- [x] ✅ [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`). —
+      VERIFIED, no code changes required: every prior todo's cited SHA (deployment-api@ff5bb06, @42191d9, @fbb5ac9,
+      @1ff8699, @bb13425; deployment-ui@31d862c, @234130a, @e4f893e, @c7d0c04, @1880424, @79cf1dc, @0dd3438, @1cf191b,
+      @6101449) confirmed as an ancestor of `origin/live-defi-rollout` via `git merge-base     --is-ancestor` in both
+      repos — all already shipped by the workers who did the implementation. Both deployment-api and deployment-ui (+
+      unified-trading-library) worktrees are clean, `ahead=0`/`behind=0`. Nothing left to ship.
+- [x] ✅ [REVIEW] P2. Post-phase codex audit — document the per-kind date-filter support matrix, the approx-colour
       convention reuse, the always-on-service treatment, and the 7-day-cap-bypass/30-day-floor behaviour in
-      `codex/05-infrastructure/deployment-observability.md`.
+      `codex/05-infrastructure/deployment-observability.md`. — unified-trading-pm (this commit): added a new "Date-range
+      filter, kind multi-select, always-on treatment" section with the verified (not assumed) per-kind support-matrix
+      table, the `_REAP_STALE_HOURS=6` threshold, the exact `ALWAYS_ON_KINDS` / `_SINGLE_TIMESTAMP_KINDS` sets, the
+      amber-vs-cyan colour-convention distinction, the 29-day archive floor + out-of-range banner fields, the
+      multi-select `kind` filter, and the `CLOUD_RUN_SERVICE.last_deployed_at` fix (sourced from the Service resource's
+      own `update_time`, not a per-revision RPC — corrected from the plan's "revision create_time" framing after reading
+      the actual code). `code_refs` extended with the extracted filter/sort primitive files. All facts independently
+      verified against the shipped code (not copied from the plan's todo summaries) before writing.
 
 ## Success criteria
 

@@ -70,6 +70,16 @@ on:
         required: false
         type: boolean
         default: false
+      concurrency_suffix:
+        description: >-
+          Distinct-lane token. The run-scoped concurrency group is notify-slack-<ref>-<run_id>-<suffix>; callers that
+          fire MORE THAN ONE notify-slack in the same run MUST pass a distinct suffix per call, else they land in one
+          group and GitHub cancels the previously-PENDING member when a newer one queues (cancel-in-progress:false only
+          protects the RUNNING one) — silently dropping an all-clear. Empty (default) keeps the pre-existing single-lane
+          behaviour for single-call callers.
+        required: false
+        type: string
+        default: ""
     secrets:
       SLACK_WEBHOOK_URL:
         required: false
@@ -88,7 +98,10 @@ on:
 permissions: {}
 
 concurrency:
-  group: notify-slack-${{ github.ref }}-${{ github.run_id }}
+  # Per-caller lane (…-<suffix>) so multiple notify-slack calls in ONE run never cancel each other's
+  # PENDING member — GitHub cancels a previously-pending group member when a newer one queues, even
+  # with cancel-in-progress:false. Empty suffix = the prior single-lane behaviour.
+  group: notify-slack-${{ github.ref }}-${{ github.run_id }}-${{ inputs.concurrency_suffix }}
   cancel-in-progress: false
 
 jobs:

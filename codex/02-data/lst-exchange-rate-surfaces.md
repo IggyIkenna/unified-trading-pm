@@ -99,8 +99,12 @@ it.** The build is a 3rd collection branch + venue registration + denominator.
 
 IS pool-discovery needs no change (CURVE/UNISWAP_V3/BALANCER-ETHEREUM are live+MVP; Curve auto-discovers stETH/ETH via
 its REST registry). The gap is the **collector**: Uniswap-V3 `dex_pool_swaps` is ~6 days shallow with no materialised
-mid; Curve/Balancer/Sushi subgraphs are decommissioned Graph hosted-service endpoints (11/12 yield zero). Needs a live
-endpoint (Graph decentralized-network key / self-host / direct-RPC pool-state read) + a reserve→mid derivation.
+mid. **CORRECTION (verified 2026-07-21, `wf_f629fbb4-7da`):** the Ethereum LST subgraph endpoints are NOT dead — a live
+probe hit the Curve stETH/ETH pool (`0xDC24316b9AE028F1497c275EB9192a3Ea0f67022`) + Balancer via the existing
+`thegraph-api-key` secret + the shipped `dex_swaps_handler` cascade + UAC `SUBGRAPH_IDS`, all HTTP 200 /
+`hasIndexingErrors:false` / at-head with real swaps. So #2 is a normal collector/backfill task (deepen UniV3 + derive
+the per-interval mid), **not** an endpoint-dead blocker. Curve REST (`api.curve.finance`, no key) is a live
+direct-alternative for pool-state.
 
 ### Surface #4 — Protocol redemption: HAVE, but the feature window is narrow
 
