@@ -183,6 +183,25 @@ _(no plans currently assigned at this priority)_
       jsonl in `alerts_audit/`. (Pure observation window — same 24–48 h wait as AO WS-E.) (FOLDED IN from
       ci_failures_channel_cleanup_2026_07_13, 2026-07-15, plan-reconcile §6 operator ruling)
 
+## Folded-in scope 2026-07-21 (plan-reconcile consolidation pass)
+
+- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
+      Discovered while wiring the BATCH row (deployment-api@29f3be5): LIVE `stalled` needs an expected-active-window
+      calendar (market-hours-aware, so an idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta`
+      (rows-out-delta) tracker (the D.1 rolling window @970bcdc samples `/proc` cpu/mem/disk, NOT `rows_out`, so it
+      would have to be extended to carry the counter history first). **Decision**: both are genuinely NEW subsystems — a
+      market calendar and a counter-history tracker — disproportionate to build for a P3 `stalled` refinement, so they
+      are DEFERRED to a future phase. The current **honest-`"unknown"` degradation is confirmed correct** as the v1:
+      `_composite_health_status` returns `"unknown"` for LIVE/PAPER `stalled` rather than guessing from a proxy (WS-D.0
+      principle 2), and the oom-risk/`stalled` alert wiring (deployment-api@5e25dce) only fires on a REAL state, so
+      nothing misfires while these stay unknown. BATCH — the one umbrella with a real signal (`object_delta`) — is
+      wired + shipped. This item stays open (not a fake `[x]`) as an explicit, tracked deferral. No sibling plan under
+      this epic owns VM/job work-health signals or a market-hours calendar today (checked
+      `consolidator_throughput_backlog_monitor_2026_07_09.md` — different surface, backlog/throughput not
+      liveness-stalled detection). (FOLDED IN from deployment_observability_expansion_2026_07_08.md, originally from
+      deployment_obs_backend_kinds_health_2026_07_09, via 2026-07-15 plan-reconcile §6 operator ruling — second-hop fold
+      2026-07-21, source plan archived)
+
 ## Archived plans
 
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
