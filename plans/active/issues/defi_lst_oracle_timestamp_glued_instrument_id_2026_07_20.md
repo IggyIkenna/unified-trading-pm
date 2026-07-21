@@ -22,7 +22,11 @@ priority: P2
 estimate_class: refactor
 drift_direction: worsening-slowly
 depends_on: []
-source: ["filed 2026-07-20 during DeFi LST/oracle canonical-write work; frontmatter completed 2026-07-21 to pass the schema gate"]
+source:
+  [
+    "filed 2026-07-20 during DeFi LST/oracle canonical-write work; frontmatter completed 2026-07-21 to pass the schema
+    gate",
+  ]
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -86,3 +90,25 @@ R3). Verify by re-scanning the index for `_<10-digit>$` → 0.
 Found during the DeFi-catalogue-closeout index verification (`defi_consolidated_closeout_2026_07_18.md` Progress Log,
 2026-07-20). The `_solana_stake_pool.py` untracked LST artifact seen in the MTDS tree the same day is likely part of the
 same LST workstream — worth checking whether it emits this id shape.
+
+## Root cause + TRUE scope (2026-07-21) — SYSTEMIC across ~15 handlers, bigger than first filed
+
+**Root cause:** the filename (which becomes the manifest `instrument_id`) is built as `f"{...}_{ts_label}.parquet"`
+where `ts_label = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")` — the WALL-CLOCK capture time. The `date={YYYY-MM-DD}/`
+is ALREADY in the path, so `ts_label` is redundant AND non-idempotent (each re-run writes a NEW file instead of
+overwriting → id explosion, un-re-fetchable, breaks skip-if-fresh).
+
+**Grep-confirmed sites (`_{ts}` / `_{ts_label}` / `_{noon_ts}` in the filename), ~15 handlers:**
+`oracle_prices_handler:378`, `lst_rates_handler:570,691`, `solana_defi_handler:650,651`, `risk_params_handler:655`,
+`evm_defi_handler:214`, `lending_indices_handler:433,866`, `dex_swaps_handler:519`, `liquidations_handler:647`,
+`_dex_pools_subgraph:365`, `_perp_funding_kalshi_polymarket:323`, `_perp_funding_gmx:264,280`,
+`deribit_options_chain_handler:517` (cefi — separate).
+
+**This is a SYSTEMIC per-instrument-model gap, not a 3-handler fix.** Correct fix (bigger than the ratified scope
+implied): a SHARED stable-filename helper (drop `ts_label`; name by the per-instrument identity — per-reserve for
+lending, per-feed for oracle, per-pool for dex, per-token for lst) that all ~15 handlers adopt, + a full re-migration
+renaming the existing `{...}_{ts}.parquet` objects to the stable id (idempotent, keep-latest). Each handler's correct
+grain differs (some write one file per protocol-chain, some per-instrument), so this needs per-handler grain analysis +
+a shared helper, then one migration pass — a focused project, not a marathon-tail edit. The minimal-safe first step
+(drop `ts_label` → stable `{protocol}_{chain}` per date, idempotent overwrite) removes the glued timestamp everywhere
+but keeps the current (coarse) grain; the per-instrument sharding is the finer follow-up.

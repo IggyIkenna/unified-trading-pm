@@ -24,7 +24,8 @@ priority: P1
 estimate_class: refactor
 drift_direction: stable
 depends_on: []
-source: ["filed 2026-07-20 during MTDS DeFi pipeline-check work; frontmatter completed 2026-07-21 to pass the schema gate"]
+source:
+  ["filed 2026-07-20 during MTDS DeFi pipeline-check work; frontmatter completed 2026-07-21 to pass the schema gate"]
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -91,3 +92,27 @@ Route DeFi cells through the collect-* path instead of `op=download`:
 Found running deliverable #3 of the DeFi catalogue closeout (`defi_consolidated_closeout_2026_07_18.md` Progress Log,
 2026-07-20). The checker report is at `plans/audit/results/data_pipeline_e2e_check_mtds_2025_03_12.md` (total=2
 failed=2, both `no_parquet`). Test VMs self-deleted (VM_SHUTDOWN_ON_COMPLETION); no lingering spend.
+
+## Precise fix (mapped 2026-07-21) — fleet-blast-radius, needs validated rollout NOT a blind edit
+
+The VM dispatches by `VM_TASK` in `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` (an elif chain). The checker
+sets `VM_TASK=mtds-backfill` → branch `:1282` builds
+`--operation download --mode batch --asset-group $VM_ASSET_GROUP --venues $VM_VENUE --instrument-ids ...`. `download`
+skips all DeFi venues. There is a `collect-solana-defi` VM path (`:1435`, `VM_TASK=solana-defi-backfill`, scopes by
+`--protocols`) but NO `collect-evm-defi` VM path (EVM DeFi runs only via the Cloud Run cron
+`uts-prod-mtds-collect-evm-defi-cron`).
+
+**Fix:** inside the `mtds-backfill` branch, when `VM_ASSET_GROUP=defi`, swap `--operation download` for
+`--operation collect-evm-defi --venues $VM_VENUE` (EVM venues) OR
+`--operation collect-solana-defi --protocols <lowercased venue>` (Solana venues:
+ORCA/RAYDIUM/KAMINO/PHOENIX/METEORA/LIFINITY/MARINADE/JITO/ SOLEND/MARGINFI/SANCTUM/SOLBLAZE/JITORESTAKING), keeping
+`--force`/day-range/`--test-run`. The checker + `launch-mtds-backfill-vm.sh` need NO change (they already pass
+VM_TASK=mtds-backfill + VM_ASSET_GROUP + venue
+
+- instrument-ids); the entire fix is the operation-select in that one branch.
+
+**Why NOT done blind here:** `setup-data-pipeline-vm.sh` is the FLEET-SHARED VM startup script
+(`gs://<code-bucket>/vm/setup-data-pipeline-vm.sh`) — every backfill/migration VM downloads + runs it. A wrong edit
+breaks every launch, and validation requires a GCS rollout of the modified script + a real DeFi collect VM. That is a
+focused, validated-rollout task, not a tail-of-session change. The divergent scoping (EVM `--venues` vs Solana
+`--protocols`) + the missing evm-defi VM path are the two substantive pieces.
