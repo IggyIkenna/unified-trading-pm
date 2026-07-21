@@ -541,6 +541,19 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   two real-page requirements as gate-item notes (Tab-4 per-repo size + GC-candidate flag; Tab-2 date cursor). Verified
   in jsdom (all 5 tabs render, 0 errors); content-verified on origin (ahead=0). **Still mock-only; awaiting operator
   sign-off on Tabs 2–5 before any page code.**
+- **2026-07-21 (later) — build STARTED (operator signed off all 5 tabs); backend Phase 1/2 first vertical shipped.**
+  Operator: "good to start … on all the tabs 1 to 5" + AWS-lane framing confirmed ("what's broken is broken"). Flipped
+  the DO-NOT-START banner → 🟢 BUILD STARTED and ticked all 5 tab gates + the final sign-off (`pm@161200196`). Built
+  `deployment_api/services/artifact_pipeline/` on the cost-observability shape and shipped the first end-to-end vertical
+  — the **Pipeline (builds) view** — as **`deployment-api@8eda1f8`**: the normalized contract for ALL 5 views
+  (`models.py` — internal `BuildFact`/`DeployFact`/`ImageFact` + Pydantic response models), the TTL cache, the `safe[T]`
+  per-source isolation wrapper, the `gcp_cloud_builds` provider (Cloud Build → `BuildFact`, adding the structured
+  `failure_info` + `steps` the old build-history route dropped), `service.builds()` (window resolution, dup + cross-lane
+  detection, data-derived stats), `GET /api/artifacts/builds` + the loud `_resolve_range` 400 gate, main.py
+  registration, and 13 `--block-network` unit tests. Full deployment-api gate green (basedpyright 0, ruff clean, 4783
+  tests). **Remaining backend:** 4 views (images / deploys / running-join+drift / health) + their providers (AR
+  versions, Cloud Run revisions, ECR, App Runner/ECS, CodeBuild, tarball manifests) + the snapshot worker + the runtime
+  digest→SHA join; then the UI page + Phase 3c tarball stamp.
 
 ## Lessons this session (so they are not re-learned the hard way)
 
@@ -581,6 +594,15 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   fixing the bugs, the real blocker surfaced as collision (Ikenna is live in every file these bugs live in), not cost.
   Surfaced it and parked the fixes in the issue doc with "loop Ikenna in first" rather than barging into fleet-critical
   CI/boot files. Recurring: the multi-agent-safety "never edit recently-pushed files" rule is about blast radius.
+- **A new `deployment_api.services.*` submodule is INVISIBLE to the unit suite until registered in
+  `tests/unit/conftest.py` (2026-07-21).** That conftest replaces `deployment_api.services` with a stub package whose
+  `__path__ = []`, then hand-injects a curated list of real submodules into `sys.modules` (`cost_observability` is one).
+  A new service dotted-imports fine under plain `python` and passes basedpyright, but pytest collection dies with
+  `ModuleNotFoundError: No module named 'deployment_api.services.<new>'` — and because `main.py` imports the new route,
+  it CASCADES to break every test that imports the app. Fix: register the new service exactly like `cost_observability`
+  (pre-import + `sys.modules["deployment_api.services.<new>"] = real_<svc>`). Plain-import / basedpyright / ruff all
+  hide it because only pytest loads that conftest — only the FULL gate catches it. Cost one gate cycle; now fixed once
+  for the whole `artifact_pipeline` package (the remaining 4 views won't re-hit it).
 
 ## Deferred work after 2026-07-21
 
