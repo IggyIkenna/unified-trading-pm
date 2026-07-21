@@ -84,8 +84,16 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
 
 ## Todos
 
-- [ ] [SCRIPT] P3. Implement `spread_calculator` in features-service (sports + predictions), mirroring the shipped
-      `arb_calculator` pattern — the recurring gap across all 3 source plans. (repo: features-service)
+- [x] ✅ [SCRIPT] P3. ~~Implement `spread_calculator`~~ — **CORRECTION, not orphaned**: verified live in
+      features-service that the sharp-soft-spread/vig/max-min FUNCTIONALITY this todo describes already ships, wired
+      into the real feature-export pipeline (`odds_features_exporter.py:225`), just under different names than a single
+      `spread_calculator.py` module mirroring `arb_calculator.py`'s file layout: `sharp_soft_gap_home/     draw/away` +
+      `book_range_prob_home/draw/away` (= max-min across books) in
+      `features_service/sports/calculators/odds_prob_space.py` (`compute_prob_space_features`), and `market_vig`/
+      `vig_pct` (+ a bucketed `vig_bucket`) in `odds_calculator.py`/`bucketed_features_calculator.py`. My original
+      GENUINELY_ORPHANED verdict was wrong — it grepped only for a literal `spread_calculator` symbol and didn't find
+      the equivalent functionality under its actual names. Writing a duplicate `spread_calculator.py` now would be
+      redundant tech debt, not a real gap — no code shipped, none needed. (repo: features-service)
 - [ ] [SCRIPT] P3. Run a strategy-service backtest for sports/predictions archetypes through the shipped execution
       matching-engine (L0 Sports TOB matcher), including an arb-decay-window analysis and a paper-trade alpha gate.
       (repo: strategy-service)

@@ -119,18 +119,44 @@ Key audit facts driving the merges:
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Orphan/idle data on the Deployments surface** — make the reap-verdict, grace, `stopped_age_hours`,
-      and idle disk `monthly_disk_usd` available to the Deployments tab. Preferred: have Deployments/its inventory
-      consume the existing `/api/fleet/orphans` data (join by name) rather than duplicating the estimator; if a
-      row-level merge is cleaner, add the fields to the inventory item. No new cost model — reuse the existing list-rate
-      estimate.
-- [ ] [UI] P1. **Idle-spend rollup cards on Deployments** — port the four FleetOrphans rollup cards (Stopped VMs ·
-      Reapable · Idle disk $/mo · Reclaimable $/mo) as a header/section on the Deployments tab.
-- [ ] [UI] P1. **Reap-verdict + stopped-age on orphan rows** — surface the verdict badge (reapable / within-grace /
-      retained / no-stop-time) and stopped-age on the relevant Deployments rows.
-- [ ] [UI] P1. **Reap/delete actions on Deployments** — port FleetOrphans' dry-run-first bulk reap (`reapOrphans` →
-      `/api/fleet/reap`) and per-instance delete-with-boot-disk (`DELETE /api/fleet/instances/{name}`), keeping the
-      confirm-dialog + dry-run-preview safety pattern. Destructive actions stay behind explicit confirm.
+- [x] [BACKEND] P0. ✅ **Orphan/idle data on the Deployments surface** — deployment-api@aa6dbff. Added
+      `reap_verdict`/`grace_hours`/`stopped_age_hours`/`monthly_disk_usd` to `DeploymentItem`
+      (`deployments_inventory.py`), populated inside `build_inventory` via a name-joined
+      `build_orphan_inventory(vm_details_by_name, disk_details, now, DEFAULT_GRACE_HOURS)` call — the SAME orphans SSOT
+      `/api/fleet/orphans` uses (`_fleet_inventory.py`), computed once per census cycle from data already fetched (no
+      new GCE call, no second cost estimator). Fields populate only for VM rows currently STOPPED/SUSPENDED/TERMINATED
+      (the orphan candidate set); a running VM honestly reports all four as `None`. Added `DEFAULT_GRACE_HOURS = 24.0`
+      to `_fleet_inventory.py` for this new call site (existing `/orphans`+`/reap` endpoint defaults left untouched —
+      unrelated blast radius). 2 new unit tests (`test_build_inventory_surfaces_orphan_reap_verdict_on_stopped_vm`,
+      `test_build_inventory_running_vm_has_no_orphan_fields`) plus the existing 105-test file all green; full
+      `quality-gates.sh` clean (basedpyright error count unchanged vs pre-edit baseline — verified by diffing
+      before/after). Next: the UI-facing todos below (rollup cards, verdict badges, reap/ delete actions) consume these
+      new fields. (repo: deployment-api)
+- [x] [UI] P1. ✅ **Idle-spend rollup cards on Deployments** — deployment-ui@d12843e. Ported the four FleetOrphans
+      rollup cards (Stopped VMs · Reapable · Idle disk $/mo · Reclaimable $/mo) verbatim (same markup/formatting) into
+      `Deployments.tsx`, right below `StrandedCostBadge` in the page header. Fetches `GET /api/fleet/orphans`
+      independently of the main inventory load (own `useVisibilityPausedInterval` cadence, same as the rest of the page)
+      — honest `"—"` placeholders on fetch failure, never stale/fabricated data. tsc/ESLint clean; 2 new Vitest tests
+      (cards render the rollup figures; cards degrade to `"—"` on fetch failure) + full existing suite green (1042
+      tests); full `quality-gates.sh` (base-ui.sh v2.0) green. Playwright verification is bundled into the plan's
+      consolidated `[REVIEW] P1. Playwright specs` todo below (covers this + the remaining UI todos together, per the
+      plan's own structure — not a separate spec per card). (repo: deployment-ui)
+- [x] [UI] P1. ✅ **Reap-verdict + stopped-age on orphan rows** — deployment-ui@02b08c2. Added the 4 backend orphan-join
+      fields to the TS `DeploymentItem` interface + a new `OrphanVerdictCell` (same verdict label/variant mapping as
+      `FleetOrphans.tsx`'s `VerdictBadge`), rendered in `StatusCell` next to the status chip: verdict badge (reapable /
+      within-grace / retained / no-stop-time) + compact stopped-age ("2.1d"). Renders nothing for a running VM or non-VM
+      kind (the field is honestly absent, not hidden by a conditional guess). tsc/ESLint clean; 2 new tests (stopped
+      orphan row shows the badge + age; running row shows neither) + full 1049-test suite green; full `quality-gates.sh`
+      (base-ui.sh v2.0) green.
+- [x] [UI] P1. ✅ **Reap/delete actions on Deployments** — deployment-ui@eef5acf. Ported FleetOrphans' dry-run-first
+      bulk reap (`reapOrphans` → `/api/fleet/reap`) and per-instance delete-with-boot-disk
+      (`DELETE /api/fleet/instances/{name}`) verbatim, same two-dialog safety pattern (dry-run preview populates the
+      confirm dialog; destructive execute only fires on an explicit confirm click). Per-row delete button replaces
+      `VmControls`' inert "—" for a stopped/orphan row (a new `OrphanDeleteContext` threads the click handler to
+      `DeploymentRow`, mirroring the existing `DrillContext` pattern rather than prop-drilling through
+      `DeploymentMatrix`). Both actions refresh the main inventory + the idle-spend rollup together on success.
+      tsc/ESLint clean; 2 new tests (delete flow, bulk-reap flow) + full 1051-test suite green; full `quality-gates.sh`
+      (base-ui.sh v2.0) green.
 - [ ] [UI] P2. **Idle-spend discoverability** — since Deployments defaults `status=running`, add a quick entry point (an
       "idle spend" filter/chip or a rollup-card click that applies `status=stopped`/orphan filters) so idle resources
       aren't hidden.

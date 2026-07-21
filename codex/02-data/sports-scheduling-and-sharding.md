@@ -290,7 +290,7 @@ reflect the state as-of the fixture date.
 
 Every raw-data `sink.write(...)` in `instruments-service` with a `day={D}` partition runs through `InstrumentsWriteGate`
 from `unified_trading_library.instruments_write_gate`. The gate scans the `DEFAULT_AS_OF_COLUMNS` families
-(`as_of_date`, `valuation_date`, `data_available_at`, `kickoff_utc`, `event_time`, `computed_at`) and emits
+(`as_of_date`, `valuation_date`, `available_at`, `kickoff_utc`, `event_time`, `computed_at`) and emits
 `DATA_ALIGNMENT_VIOLATION` (warn mode) or raises `TimestampAlignmentError` (strict mode) if any non-null value satisfies
 `value.date() > D`. See
 [`06-coding-standards/validation-and-errors.md` §5 InstrumentsWriteGate](../06-coding-standards/validation-and-errors.md#5-instrumentswritegate-raw-data-sink-writes)

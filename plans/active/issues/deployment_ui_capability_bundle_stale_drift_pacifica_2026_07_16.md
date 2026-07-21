@@ -221,3 +221,28 @@ shipping (no `unified-api-contracts` quality-gate reads `openapi/prospectus/`), 
 prospectus-generator/committed-copy resync.
 
 ## Progress log
+
+- **2026-07-21 (slot-4, Track 6 `defi_consolidated_closeout_2026_07_18.md`) — the FIRST instance
+  (`deployment-ui/src/data/capability-manifest.json` + `capability-verdict-matrix.json`) is now PRUNED, not fully
+  regenerated.** Confirmed the recommended-fix's step 1/2 (recover or rebuild the real generator) is not achievable in
+  scope: no committed generator exists anywhere searched (deployment-ui `scripts/`, UAC `scripts/`), and
+  `capability-verdict-matrix.json`'s own `reason` strings cite a `config_space_fuzzer` module that does not exist either
+  — this is a genuinely lost, bespoke, ad-hoc-run tool, not a case of "we didn't look hard enough." Given that, did a
+  **formula-verified, referential-integrity-checked surgical prune** instead of a blind full rewrite (the exact risk
+  this doc already flagged): removed the `venue:drift`/`collateral:drift` nodes + their 21 edges from the manifest
+  (574→572 nodes, 2433→2412 edges — confirmed zero NEW dangling edge references vs. the pre-existing baseline, which
+  already had one unrelated dangling `venue:ibkr` ref and one unrelated duplicate `EVENT_DRIVEN` node, both left
+  untouched/out of scope), fixed one stale free-text "Jito/Marinade + Kamino + Drift" mention in a `CARRY_STAKED_BASIS`
+  edge's `reason` field, and removed the 66 `venue=drift` cells from the verdict-matrix with correctly recomputed
+  per-archetype + top-level summary counts (formula verified byte-for-byte against every OTHER archetype in the file
+  before editing: `available_count=Σlen(available_algos)`, `blocked_count=Σlen(blocked_algos)`, `cell_count`=their sum;
+  new summary total=20,544, available=12,122, blocked=7,974, not_registered=448 unchanged). Both files' custom
+  pretty-printing (dicts always expand, scalar-only lists inline up to a 111-char line width) was reverse-engineered and
+  round-trip-verified byte-for-byte BEFORE editing, so the diff is minimal and reviewable rather than a full-file
+  reformat. `generated_from_commit` left UNCHANGED (still ~1000+ commits stale) — this is a documented delta on the
+  stale base, not a claim of freshness; recovering/building the real generator (this doc's step 1-3) remains the actual
+  durable fix and stays open. Also updated the 2 Playwright assertions in `tests/smoke/capability_tab.spec.ts` that
+  hardcoded the old (bug-including) counts; `tsc`/`eslint`/`vitest` (1038 tests) + `pw:L2` (all 9
+  `capability_tab.spec.ts` cases, incl. a real browser render confirming DRIFT no longer shown) all green. Shipped:
+  `deployment-ui@83ec561`. The second/third/fourth instances in this doc (unified-trading-system-ui, UAC `openapi/`,
+  prospectus generator) are UNCHANGED by this pass — out of this dispatch's deployment-api/deployment-ui scope.

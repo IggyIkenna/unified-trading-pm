@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -679,8 +679,48 @@ Discriminator = **does a manifest row exist**.
       `deployment-api@593327a` (R2c's new `EXPECTED_ACQUISITION_PENDING` hadn't been mirrored into
       `coverage_metrics.py::EMPTY_REASON_KEYS` → tree-break on LDR — via quickmerge). (repos: deployment-api,
       deployment-ui, instruments-service)
-- [ ] [BACKEND] P2. **Fix the turbo-API captured-data hiding** (HYPERLIQUID/ASTER dual-count cefi/defi) + refresh the
-      stale UI capability bundles (drift/pacifica residue). (repos: deployment-api, deployment-ui)
+- [x] ✅ [BACKEND] P2. **SHIPPED 2026-07-21: `deployment-api@427ede5` (turbo-API fix) + `deployment-ui@83ec561`
+      (capability-bundle DRIFT residue prune).** **Root cause (turbo-API)**: `_read_defi_merged_index`'s DEFI-venue
+      whitelist (`_allowed_defi_venue_chain_pairs`) is sourced purely from UAC `ALL_DEFI_VENUES` +
+      `LEGACY_DEFI_VENUE_ALIASES`; HYPERLIQUID and ASTER are CEFI-registered hybrid on-chain-CLOB venues never declared
+      in UAC's DEFI registry, so their real, currently-captured chain-side rows under `asset_group=defi` (confirmed live
+      2026-07-10: 3.77M `(HYPERLIQUID, HYPERLIQUID)` rows 2023-11-01→2026-05-31, 1.07M `(ASTER, BSC)` rows
+      2024-04-03→2026-05-31) were silently dropped BEFORE the aggregator ever saw them — not a stale cache, not a naming
+      mismatch, a pure registry-completeness gap in the whitelist filter. **Fix**: added a deployment-api-local
+      supplemental whitelist (`_CEFI_DEFI_HYBRID_VENUE_CHAIN_PAIRS`, `defi.py`) admitting these two confirmed
+      `(venue, chain)` pairs — NOT a double-counting risk since this whitelist only gates DEFI-category bucket reads,
+      completely separate from CEFI's own coverage computation (matches the operator-confirmed hybrid architecture,
+      `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` Update §3: CEFI holds instrument
+      definitions, DEFI holds chain-level settlement data). Traced the downstream `dates_expected`/`venue_start`
+      resolution (`venue_resolution.py`) to confirm it gracefully falls back to observed-date-range for undeclared
+      venues (no crash, no stale-cache dependency). Durable fix still belongs in UAC's `ALL_DEFI_VENUES` (out of this
+      dispatch's deployment-api/deployment-ui scope) — this is the documented stopgap, flagged in the code comment +
+      `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`. 2 new regression tests
+      (`TestCefiDefiHybridVenueWhitelist`, `test_data_status_service.py`), full `quality-gates.sh` green. Shipped via
+      the **dirty-deps carve-out** (direct push, `Quickmerge: agent` trailer) — quickmerge's pre-flight audit was
+      blocked by foreign concurrent-agent WIP in unified-trading-library (`defi/` module) and deployment-service
+      (`launch-canonical-migration-vm.sh`), neither touched. **Live re-verification attempt**: inconclusive — the real
+      GCS DEFI manifest (`_index/availability_index.parquet`, ~1.9GB) is being actively rewritten by the manifest
+      consolidator several times per minute right now (confirmed generation churn across repeated read attempts, all
+      raced to 404), so a fresh full-file read couldn't complete; the fix rests on the 2026-07-10 live-verified evidence
+      above + the code-path trace + passing regression tests, not a fresh live pull. **Capability bundle (Track 6 + the
+      sibling issue doc's DRIFT-residue finding)**: no generator for
+      `capability-manifest.json`/`capability-verdict-matrix.json` exists anywhere in this workspace (confirmed — no
+      committed script in deployment-ui or UAC; the verdict-matrix's own reasons cite a `config_space_fuzzer` module
+      that doesn't exist either), so per the issue doc's own fallback guidance this was a surgical,
+      referential-integrity-verified prune rather than a blind full regen: removed the `venue:drift`/`collateral:drift`
+      nodes + their 21 edges from the manifest (574→572 nodes, 2433→2412 edges; zero NEW dangling edge references — the
+      pre-existing `venue:ibkr` dangling ref and the pre-existing duplicate `EVENT_DRIVEN` node are untouched, out of
+      scope), one stale free-text "Kamino + Drift" mention fixed in a `CARRY_STAKED_BASIS` edge reason, and removed the
+      66 `venue=drift` cells from the verdict-matrix with recomputed per-archetype + top-level summary counts (verified
+      formula: `available_count=Σlen(available_algos)`, `blocked_count=Σlen(blocked_algos)`, `cell_count`=their sum; new
+      summary total=20,544, available=12,122, blocked=7,974, not_registered=448 unchanged). `generated_from_commit` left
+      unchanged (still 1000+ commits stale) since this is a documented delta on top of the stale base, not a full regen
+      — the durable fix is still recovering/ building the real generator, tracked in the sibling issue doc.
+      **Verification**: `tsc`/`eslint`/`vitest` (1038 passed) all clean; updated the 2 hardcoded stale-count assertions
+      in `tests/smoke/capability_tab.spec.ts` (574/2433 → 572/2412; summary 21,600/12,977/8,175 → 20,544/12,122/7,974)
+      and re-ran — **`pw:L2 ✓` all 9 tests green**, incl. a real browser render of the Capability tab confirming DRIFT
+      no longer shown. (repos: deployment-api, deployment-ui)
 
 ## Track 7 — CULL: purge the removed venues everywhere (dead-only, snapshot-first) · P1
 
@@ -839,6 +879,18 @@ Discriminator = **does a manifest row exist**.
 
 ## Progress Log
 
+- **2026-07-21 (slot-4 — Track 6 SHIPPED: turbo-API HYPERLIQUID/ASTER fix + capability-bundle DRIFT prune).**
+  `deployment-api@427ede5` + `deployment-ui@83ec561` — see the flipped Track 6 P2 todo above for the full root-cause +
+  fix + verification writeup. Two notable process points not already in the todo: (1) deployment-api shipped via the
+  **dirty-deps carve-out** (direct push) — quickmerge's pre-flight audit was blocked by foreign concurrent-agent WIP in
+  `unified-trading-library` and `deployment-service`, neither of which this dispatch touched or committed on behalf of;
+  (2) the capability-bundle fix intentionally did NOT attempt a full regeneration — no generator for either bundled JSON
+  exists anywhere in the workspace (confirmed by search), so a blind full rewrite would have been exactly the
+  referential-integrity risk `deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` already flagged as the
+  reason not to hand-patch; this dispatch instead did a formula-verified, referential-integrity-checked surgical prune
+  (byte-for-byte round-trip-tested custom pretty-printer, confirmed zero new dangling edge references) and fixed the 2
+  Playwright assertions that hardcoded the old (bug-including) counts. Recovering/building the real generator remains
+  open, tracked in the sibling issue doc.
 - **2026-07-21 (deployment-service worker — checker collect-\* route SHIPPED, deliverable #3).**
   `deployment-service@56a451f8669184351792079e8f37c0af048c5475`. Fixed the mapped gap in
   `data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md`: `setup-data-pipeline-vm.sh`'s `mtds-backfill` branch

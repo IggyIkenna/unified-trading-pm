@@ -55,7 +55,7 @@ instruments-service:
       COINBASE: "2019-03-30" # Tardis: approximate based on API
       # On-chain CLOBs (reclassified from DEFI - CLOB-style like CeFi exchanges)
       HYPERLIQUID: "2023-05-01" # Hyperliquid S3 data start (L2 book) - actual data begins May 1
-      ASTER: "2021-08-30" # Earliest aggTrades observed (BTCUSDT); trades-only; pre-launch data may be proxy/aggregated
+      ASTER: "2023-07-22" # Native genesis (GAP-4 clip from 2021-08-30 — pre-2023-07-22 fapi.asterdex.com history is Astherus-pre-rebrand, Binance-proxied)
 
   TRADFI:
     # Databento data availability (varies by dataset and instrument type)
@@ -157,7 +157,7 @@ market-tick-data-service:
       #
       #   NOTE: Liquidations NOT available from any source for Hyperliquid
       HYPERLIQUID: "2023-05-01" # L2 book start (actual data begins May 1)
-      ASTER: "2021-08-30" # Earliest aggTrades observed (BTCUSDT); trades-only; pre-launch data may be proxy/aggregated
+      ASTER: "2023-07-22" # Native genesis (GAP-4 clip from 2021-08-30 — pre-2023-07-22 is Astherus-pre-rebrand, Binance-proxied)
     data_type_start_dates:
       # Bybit has different start dates for futures vs spot
       BYBIT:
@@ -176,7 +176,7 @@ market-tick-data-service:
         trades: "2024-10-29" # Tardis.dev (S3 only from 2025-03-22)
         liquidations: null # NOT AVAILABLE from any source
       ASTER:
-        trades: "2021-08-30" # Earliest aggTrades observed (BTCUSDT)
+        trades: "2023-07-22" # Native genesis (GAP-4 clip from 2021-08-30 aggTrades-observed — that window is Astherus-pre-rebrand, Binance-proxied)
         # Genesis 2023-07-22 (operator-confirmed 2026-06-17) via /fapi/v1/fundingRate;
         # pre-2024 funding is BINANCE-PROXIED (Astherus pre-rebrand) — imported, NOT
         # Aster-native → label source honestly. SSOT:
@@ -245,7 +245,7 @@ market-tick-data-handler:
       UPBIT: "2021-09-01"
       COINBASE: "2019-03-30"
       HYPERLIQUID: "2023-05-01"
-      ASTER: "2021-08-30"
+      ASTER: "2023-07-22" # Native genesis (GAP-4 clip from 2021-08-30, Astherus-pre-rebrand Binance-proxied)
     data_type_start_dates:
       BYBIT:
         trades: "2019-11-07"
@@ -260,7 +260,7 @@ market-tick-data-handler:
         trades: "2024-10-29"
         liquidations: null
       ASTER:
-        trades: "2021-08-30"
+        trades: "2023-07-22" # Native genesis (GAP-4 clip from 2021-08-30, Astherus-pre-rebrand Binance-proxied)
         # Genesis 2023-07-22 (operator-confirmed 2026-06-17); pre-2024 funding is
         # BINANCE-PROXIED (Astherus pre-rebrand) — imported, NOT Aster-native.
         derivative_ticker: "2023-07-22"
@@ -324,7 +324,7 @@ features-delta-one-service:
       UPBIT: "2022-03-20" # 2021-09-01 + 200 days
       COINBASE: "2019-10-16" # 2019-03-30 + 200 days
       HYPERLIQUID: "2023-11-17" # 2023-05-01 + 200 days
-      ASTER: "2022-03-18" # 2021-08-30 + 200 days
+      ASTER: "2024-02-07" # 2023-07-22 + 200 days (GAP-4 clip)
     venues_1h:
       BINANCE-SPOT: "2019-04-08" # 2019-03-30 + 9 days
       BINANCE-FUTURES: "2019-11-26" # 2019-11-17 + 9 days
@@ -334,7 +334,7 @@ features-delta-one-service:
       UPBIT: "2021-09-10" # 2021-09-01 + 9 days
       COINBASE: "2019-04-08" # 2019-03-30 + 9 days
       HYPERLIQUID: "2023-05-10" # 2023-05-01 + 9 days
-      ASTER: "2021-09-08" # 2021-08-30 + 9 days
+      ASTER: "2023-07-31" # 2023-07-22 + 9 days (GAP-4 clip)
   TRADFI:
     asset_group_start: "2020-01-01"
     venues_24h:

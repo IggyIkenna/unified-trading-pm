@@ -104,33 +104,60 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
   Dispatched the Phase-1 scaffold to a sub-agent in parallel with unrelated ASTER manifest remediation work. Codex
   updated (data-lineage doc's MDPS path correction + coverage-gap note; manifest-consolidator-ssot.md's CAS-marker
   gotcha, a related-but-separate finding from the same session).
+- 2026-07-21 (later) — Resumed after context compaction; the dispatched sub-agent (`a52c04d559875393f`) was no longer
+  tracked (task registry had no record of it — likely lost across the compaction boundary) and had never shipped.
+  `adv.py` + `test_adv.py` were still present on disk, untracked. Reviewed the module directly: reads
+  `resolve_bucket(kind="market-data", asset_group=...)` + `derive_pipeline_mode_for_row(venue, asset_group, data_type)`
+  (the same SSOT resolver `perp_funding_rates` uses — no hardcoded per-venue if/elif), probes the
+  `pipeline_mode=`-partitioned path before a bare fallback (mirrors `DataLoader._resolve_blob_paths`), and returns a
+  three-state `AdvStatus` (`OK` / `INSUFFICIENT_HISTORY` / `NO_DATA`) via a frozen `RollingAdvResult` dataclass with an
+  `is_tradeable` property. First `quality-gates.sh --no-fix` run: 17,776 tests passed (19 new, `test_adv.py`) but ONE
+  real gate failure — `RollingAdvReader.compute_rolling_adv()` at 80 lines, over the workspace's 50-line method-size
+  cap. Refactored twice: round 1 split the day-loop into `_collect_observed_quote_volumes` and the reduction into
+  `_build_result` (80L → but `_build_result` itself landed at 55L, still over); round 2 collapsed the duplicate
+  `RollingAdvResult(...)` construction and extracted `_status_for_observed_days` + `_log_rolling_adv_outcome` as
+  module-level helpers, bringing every method under the cap. Re-ran QG twice more to converge; final run:
+  `✅ ALL QUALITY GATES PASSED (244s)`, 17,776 tests still green, zero violations. Ship was blocked twice by other
+  slots' live path-dependency WIP (`unified-trading-library`, then `unified-api-contracts`) — confirmed via mtime
+  liveness each time (both <30s old, repeatedly), left untouched, waited for each to clear. **Shipped:
+  `features-service@8608ea5d`** ("feat(cross_instrument): rolling ADV consumer over MDPS processed_candles"),
+  `git rev-list --count origin/live-defi-rollout..HEAD` = 0. Same dirty-dep churn also delayed the independent GAP-4
+  genesis-clip fix (see the ASTER issue doc) across execution-service/unified-trading-pm/market-tick-data-service,
+  worked on in parallel while waiting.
 
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 
-- [ ] [DATA] P1. Implement a reusable rolling-window ADV reader in
-      `features-service/features_service/cross_instrument/app/calculators/adv.py` (sibling to `book_depth.py`, matching
-      its calculator/interface conventions) that reads MDPS `timeframe=24h` candles for
-      `(venue, instrument_id, asset_group)` across a trailing window (parameterized `window_days`, default 7),
-      summing/averaging `quote_volume`, resolving the bucket via `resolve_bucket_name(...)` (never a hardcoded bucket
-      name). — _dispatched to a sub-agent 2026-07-21; the file exists on disk with a companion
-      `tests/cross_instrument/unit/test_adv.py` (confirmed via `git status`, both still uncommitted as of this write) —
-      the sub-agent reported its own quality-gate run passing 17,766 tests (19 of them the new ADV tests) but had not
-      yet completed its final quickmerge ship as of this session's pre-compact checkpoint. If a fresh session picks this
-      up: check `git -C features-service log --oneline -3` and `git -C features-service status --short` first — the
-      agent may have since shipped independently; if the files are still uncommitted and no agent is running, review +
-      ship them yourself (or re-dispatch) rather than re-implementing from scratch. Update this line with the exact
-      commit SHA once shipped._
-- [ ] [DATA] P1. Distinguish three result states in the return type: real ADV + `days_observed`, insufficient-history
-      (fewer than `window_days` real candles — the "not yet tradeable" gate), and zero-coverage (venue not yet
-      candle-built by MDPS at all, e.g. ASTER/HYPERLIQUID/LIGHTER/EXTENDED today) — missing candle files must be treated
-      as "no data that day," never an error.
-- [ ] [DATA] P1. Unit tests covering: full window of real data, partial window (correct partial-average or correctly
-      flagged insufficient), zero data at all, and a known-value correctness check against mocked `quote_volume` inputs
-      (mock the storage client the same way `test_book_depth.py` does).
-- [ ] [REVIEW] P1. Confirm the shipped module against this plan + the data-lineage codex doc — file path, function
-      signature, and `pipeline_mode` resolution approach must match what actually shipped (update both this plan and the
-      codex doc with the real values once the sub-agent's final report lands; do not leave placeholder text in either
-      doc).
+- [x] [DATA] P1. Implement a reusable rolling-window ADV reader — **features-service@8608ea5d**. Module:
+      `features-service/features_service/cross_instrument/app/calculators/adv.py`, class `RollingAdvReader` with
+      `compute_rolling_adv(venue, instrument_id, asset_group, as_of_date, window_days=7, *, data_type="derivative_ticker")`
+      (module-level `compute_rolling_adv()` / `compute_rolling_adv_7d()` convenience wrappers). Reads MDPS
+      `timeframe=24h` candles per `(venue, instrument_id, asset_group)` across the trailing window, averaging
+      `quote_volume` over the OBSERVED days only (never diluted by `window_days` — see module docstring). Bucket via
+      `features_service.common.resolve_bucket(kind="market-data", asset_group=...)`; `pipeline_mode` via the SSOT
+      resolver `derive_pipeline_mode_for_row(venue, asset_group, data_type)` (no hardcoded per-venue if/elif), probing
+      the `pipeline_mode=`-partitioned path before a bare fallback. The originally-dispatched sub-agent
+      (`a52c04d559875393f`) had built the file but was no longer tracked after a context-compaction boundary and never
+      shipped; picked up directly, fixed a 50-line method-size-gate violation (`compute_rolling_adv` was 80L; split into
+      `_collect_observed_quote_volumes` + `_build_result`, then further extracted module-level
+      `_status_for_observed_days` / `_log_rolling_adv_outcome` to clear `_build_result`'s own 55L overage), reran QG to
+      convergence, shipped.
+- [x] [DATA] P1. Distinguish three result states — `AdvStatus` (`OK` / `INSUFFICIENT_HISTORY` / `NO_DATA`) StrEnum +
+      frozen `RollingAdvResult` dataclass with `days_observed`, `adv_usd: float | None`, and an `is_tradeable` property
+      (`status is AdvStatus.OK`). A missing candle file (`blob_exists` False on both candidate paths, or a
+      download/parse exception routed through `classify_and_emit_error`) is counted as an unobserved day, never an error
+      — verified this is the actual behavior for ASTER/HYPERLIQUID/LIGHTER/EXTENDED today (zero MDPS candle coverage,
+      `NO_DATA` on every call). Shipped in the same commit, **features-service@8608ea5d**.
+- [x] [DATA] P1. Unit tests — `tests/cross_instrument/unit/test_adv.py`, 19 tests: full window (all days observed),
+      exact-mean value correctness, partial window (`INSUFFICIENT_HISTORY`, averaged over observed days only), zero
+      candles (`NO_DATA`, `download_bytes` never called), `blob_exists` guard, `pipeline_mode`-partitioned path probed
+      before the bare fallback, null/missing `quote_volume` not counted, download-exception classified + day skipped,
+      `window_days<=0` raises `ValueError`, module-level wrapper behavior, `is_tradeable` across all three states.
+      Storage client mocked the same way `test_book_depth.py`/`test_raw_data_loader.py` do (`MagicMock` substituted for
+      `RollingAdvReader._storage_client`). All 19 passing as part of the shipped commit's 17,776-test green run.
+- [x] [REVIEW] P1. Confirmed the shipped module against this plan + the data-lineage codex doc — this checklist item's
+      values above ARE the real shipped path/signature/resolution-approach (no placeholder text). Codex doc
+      (`codex/02-data/data-lineage-MTDS-features-ml.md`) cross-referenced with the actual module path in the same commit
+      as this plan update.
 
 ## Phase 2 — extend MDPS candle coverage to on-chain-perp CeFi venues (NOT STARTED — separate future work)
 

@@ -22,7 +22,17 @@ related:
 created: 2026-05-08
 authoritative_for:
   [write-gate quartet at record_captured, four-category empty-output decision, InstrumentsWriteGate raw-data alignment]
-referenced_by: [codex/02-data/partitioning.md, codex/02-data/prediction-schema-paths.md, codex/02-data/shard-granularity-cefi.md, codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/shard-level-failure-isolation.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/06-coding-standards/README.md, codex/06-coding-standards/retry-pattern.md]
+referenced_by:
+  [
+    codex/02-data/partitioning.md,
+    codex/02-data/prediction-schema-paths.md,
+    codex/02-data/shard-granularity-cefi.md,
+    codex/02-data/sports-scheduling-and-sharding.md,
+    codex/04-architecture/shard-level-failure-isolation.md,
+    codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    codex/06-coding-standards/README.md,
+    codex/06-coding-standards/retry-pattern.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -288,7 +298,6 @@ For every DataFrame written to `by_date/day={D}/entity={E}/...`, every column in
 DEFAULT_AS_OF_COLUMNS = (
     "as_of_date",
     "valuation_date",
-    "data_available_at",
     "available_at",          # canonical column required per row (post-2026-05-06)
     "kickoff_utc",
     "event_time",

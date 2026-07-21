@@ -126,10 +126,14 @@ venues (ASTER, HYPERLIQUID, LIGHTER-ZKSYNC, EXTENDED-STARKNET) have **zero** pro
 spot-check, even for HYPERLIQUID which has 2+ years of raw trade history — MDPS candle-building has never been pointed
 at their `pipeline_mode=batch_aster` / `batch_hyperliquid` / `batch_lighter_api` / `batch_extended` raw tick data.
 Extending MDPS's candle-building scope to these 4 venues is deliberately deferred (separate future work);
-`features-service/features_service/cross_instrument/app/calculators/adv.py` (rolling-ADV consumer, in progress
-2026-07-21 — see `plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md` for status) is written against this
-canonical path/schema regardless, so it starts working the moment this gap closes with no further wiring. Until then it
-correctly reports "insufficient history" for these 4 venues' instruments (missing files, not an error).
+`features-service/features_service/cross_instrument/app/calculators/adv.py` (rolling-ADV consumer, shipped
+`features-service@8608ea5d` — see `plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md` for status) is written
+against this canonical path/schema regardless, so it starts working the moment this gap closes with no further wiring.
+Its `RollingAdvReader.compute_rolling_adv(venue, instrument_id, asset_group, as_of_date, window_days=7)` reads
+`derive_pipeline_mode_for_row(venue, asset_group, data_type)` to resolve `pipeline_mode` (same SSOT resolver
+`perp_funding_rates` uses — no hardcoded per-venue if/elif) and returns a three-state `AdvStatus`: `NO_DATA` when a
+venue has zero candles at all (the case for these 4 venues today — missing files are honest absence, not an error),
+`INSUFFICIENT_HISTORY` when some but fewer than `window_days` were observed, `OK` once the full window is populated.
 
 SchemaContract key: `(category, instrument_type, source_data_type, ohlcv_{timeframe})` — see plan § 5b.1. TradFi
 `ohlcv_1m` is pass-through from Databento; higher timeframes aggregate from 1m. Every write adds a `timeframe` column +
