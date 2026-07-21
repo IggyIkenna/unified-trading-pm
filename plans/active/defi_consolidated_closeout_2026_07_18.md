@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                                                      these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                                                      un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -756,14 +756,28 @@ Discriminator = **does a manifest row exist**.
 
 ## Track 4 — CAP: zero-capture protocols · P2
 
-- **Sources**: `mtds_defi_dex_zero_capture_protocols_2026_07_14.md` (2 open),
+- **Sources**: `mtds_defi_dex_zero_capture_protocols_2026_07_14.md` (folded in + archived 2026-07-21, consolidation pass
+  — all 6 wiring todos shipped incl. an 8/8-shard-combo smoke test; 2 residual todos folded below),
   `issues/defi_morpho_lending_indices_never_wired_2026_07_12.md`,
   `issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`.
 - **Close-out criterion**: every MVP protocol/data_type captures or is honestly `empty_confirmed`.
 
-- [ ] [BACKEND] P2. **Wire the remaining zero-capture protocols** (uniswap_v2/v4, trader_joe_v2, velodrome_v2 nearly
-      done; Morpho lending indices; Solana ORCA/RAYDIUM swap indexer as a new capability). (repos:
-      market-tick-data-service)
+- [ ] [BACKEND] P2. **Wire the remaining zero-capture protocols** (uniswap_v2/v4, trader_joe_v2, velodrome_v2 DONE —
+      wired + smoke-tested 2026-07-14; Morpho lending indices; Solana ORCA/RAYDIUM swap indexer as a new capability —
+      both still open per the two sibling issues above). (repos: market-tick-data-service)
+- [ ] [DATA] P2. **Verify the mtds-dex-pools/dex-swaps backfill VMs (uniswap_v2/v4, trader_joe_v2, velodrome_v2,
+      launched 2026-07-14 for 2023-01-01→today) actually produced real historical rows** — spot-check row counts +
+      manifest `capture_status=captured` for a sample of dates for each of the 4 protocols, both `dex_pool_state` and
+      `dex_pool_swaps`. **Known risk**: these exact VM names (`mtds-dex-pools-backfill`, `mtds-dex-swaps-backfill`) hit
+      the `issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md` OOM SIGKILL crash-loop the SAME day they were
+      launched; the eventual fix (`unified-trading-library@a5b07ff7e` + follow-ons) was only production-verified on
+      short smoke windows (a 3-day uniswap_v2 dex_pools run, a 108-day Morpho lending_indices run) — NOT on this
+      specific full-range, 4-protocol launch. A relaunch may be required if the original run predates the fix landing.
+      (repos: market-tick-data-service, deployment-service)
+- [ ] [BACKEND] P3. **Post-phase codex audit for the dex_pools/dex_swaps protocol dispatch list** — check whether
+      `codex/02-data/defi-canonical-naming-ssot.md` documents the MTDS `_DEFAULT_PROTOCOLS`/fallbacks dispatch set; it
+      currently does not (only data_type/venue/bucket path-naming rules) — add it if the audit confirms no stale list
+      exists elsewhere. (repos: unified-trading-pm)
 
 ## Track 5 — COVERAGE: backfill → MVP-100% (largest open track) · P1 (C-GREEN gated on T1→T3)
 

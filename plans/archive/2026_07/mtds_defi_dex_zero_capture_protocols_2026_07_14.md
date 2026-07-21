@@ -113,19 +113,19 @@ independently verified**, first todo below.
       (2026-07-12), real live subgraph calls — 100% success, zero errors:**
 
       | protocol       | chain     | pools rows | swaps rows |
-                              | -------------- | --------- | ---------: | ---------: |
-                              | velodrome_v2   | OPTIMISM  |        296 |       1000 |
-                              | trader_joe_v2  | AVALANCHE |        950 |       1000 |
-                              | uniswap_v4     | ETHEREUM  |       1000 |       1000 |
-                              | uniswap_v2     | ETHEREUM  |       1000 |       1000 |
+                                  | -------------- | --------- | ---------: | ---------: |
+                                  | velodrome_v2   | OPTIMISM  |        296 |       1000 |
+                                  | trader_joe_v2  | AVALANCHE |        950 |       1000 |
+                                  | uniswap_v4     | ETHEREUM  |       1000 |       1000 |
+                                  | uniswap_v2     | ETHEREUM  |       1000 |       1000 |
 
-                              Called `_query_and_parse`/`_run_cascade` directly against the real subgraph endpoints (bypassing manifest
-                              writes, so nothing touched prod GCS) with a real loaded `TheGraph` API key pool (9 keys). uniswap_v4's swaps
-                              side — the exact shard the adversarial review's uniswap_v4/`recipient` finding predicted would fail — came back
-                              1000 real rows with the `token_a`/`token_b` normalized columns present, confirming the dedicated-query fix
-                              actually works against the live schema, not just the unit tests. velodrome_v2/trader_joe_v2 pools legitimately
-                              hit the messari-schema-drift fallback path once each before landing on the working schema — expected cascade
-                              behavior, not an error.
+                                  Called `_query_and_parse`/`_run_cascade` directly against the real subgraph endpoints (bypassing manifest
+                                  writes, so nothing touched prod GCS) with a real loaded `TheGraph` API key pool (9 keys). uniswap_v4's swaps
+                                  side — the exact shard the adversarial review's uniswap_v4/`recipient` finding predicted would fail — came back
+                                  1000 real rows with the `token_a`/`token_b` normalized columns present, confirming the dedicated-query fix
+                                  actually works against the live schema, not just the unit tests. velodrome_v2/trader_joe_v2 pools legitimately
+                                  hit the messari-schema-drift fallback path once each before landing on the working schema — expected cascade
+                                  behavior, not an error.
 
 - [x] ✅ [BACKEND] P2. **CORRECTION to the todo below's original claim: the 4 protocols ARE already MVP — no scope
       change needed.** My first check used wrong parameter names (`is_mvp(venue="UNISWAP_V2", data_type="dex_pools")` —
