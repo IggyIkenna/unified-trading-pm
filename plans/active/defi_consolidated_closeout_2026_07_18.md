@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                  these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                  un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                      these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                      un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -564,9 +564,21 @@ Discriminator = **does a manifest row exist**.
       the dead top-level Solana `dex_pools/`+`lending_indices/` prefixes (frozen 2026-04-14, "Shape-B")~~ **← DELETE
       CLAUSE SUPERSEDED — see the ⛔ correction banner directly above** and kill the second dexpool writer path.
       **Snapshot-before-delete** (pre-migration drain per the VM runbook). (repos: market-tick-data-service)
-- [ ] [INFRA] P1. **Correct the STALE codex path docs** — `codex/02-data/per-asset-group-bucket-layouts.md` (documents
-      chain-before-venue + omits pipeline_mode) and `market-tick-data-service/docs/GCS_PATHS.md` (shows dead Shape-B) →
-      match the operator-locked SSOT + live writer. (repos: unified-trading-pm, market-tick-data-service)
+- [x] ✅ [INFRA] P1. **Correct the STALE codex path docs — checklist item was itself stale; both docs were ALREADY fixed
+      (verified 2026-07-21).** Re-read both target docs in full + re-derived from this plan's own "Path template
+      (operator-locked...)" section + a fresh live GCS listing
+      (`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-04-14/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=AAVE_V3/chain=ARBITRUM/`
+      — venue segment confirmed BEFORE chain). **Finding: both docs already state venue-before-chain + carry
+      `pipeline_mode=` left of `asset_group=`, and neither contains any "Shape-B" text** — grepped
+      `market-tick-data-service/docs/` for `Shape-B` (0 hits). The underlying fix landed same-day this bullet was
+      authored (`58a6a54edb` @ 2026-07-18 14:14), just ~2.5h before the checklist text could reflect it:
+      **`unified-trading-pm@709274a5c`** (2026-07-18 16:50, "…venue-before-chain…", corrected the DEFI row in
+      `per-asset-group-bucket-layouts.md` to `venue={v}/chain={chain}` + added `pipeline_mode={mode}_{source}` left of
+      `asset_group=`) and **`market-tick-data-service@5f498858`+`@e9764b38`** (2026-07-18 16:46 / 2026-07-19 05:02, same
+      "venue-before-chain path" DEFI-align pass to `docs/GCS_PATHS.md`, which already showed
+      `venue={PROTOCOL}/chain={CHAIN}` with an explicit "(venue BEFORE chain)" comment and never referenced Shape-B).
+      **No further doc edit required** — this bullet was simply never flipped after the fix shipped; flipping it now
+      closes the gap. (repos: unified-trading-pm, market-tick-data-service)
 - [ ] [INFRA] P1. **Delete the lending-indices legacy bucket (C0f)** + resolve TF estate drift
       (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket. All
       GCS/bucket DELETEs are snapshot-first. (repos: deployment-service, market-tick-data-service)
