@@ -19,8 +19,10 @@ priority: P2
 assigned_vm: planning
 resolved_by:
 locked_by:
-author: slot-3
 source: [deployment_ui_vm_log_viewer_2026_07_20.md]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # What I found
