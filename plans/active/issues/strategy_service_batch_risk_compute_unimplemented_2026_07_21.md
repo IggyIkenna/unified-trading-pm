@@ -99,7 +99,26 @@ it's a real functional gap in an operator-facing tool.
       files) + the now-stale `pyproject.toml` per-file-ignore for it — matches this workspace's "delete deprecated code,
       no shims" rule. `strategy-service@53839a6a`. `quality-gates.sh` green (content-sentinel confirmed the full suite
       ran clean at commit time, no test referenced the deleted files). (repo: strategy-service)
-- [ ] [BACKEND] P3. Verify `balancer-eth-venue-implementation`'s current status — is `unified-market-interface` (or
+- [x] ✅ [BACKEND] P3. Verify `balancer-eth-venue-implementation`'s current status — is `unified-market-interface` (or
       whatever superseded it) still missing a BALANCER-ETH venue adapter, or was this closed elsewhere and the
       GH-BACKLOG item just never got checked off? Close this item honestly either way. (repo: unified-market-interface
-      or its successor)
+      or its successor) — **verified: implemented, deliberately not-MVP (a real decision, not an oversight).**
+      `unified-market-interface` doesn't exist in `unified-trading-pm/workspace-manifest.json` at all (predates even the
+      `removedEntries` archive-tracking); its DeFi adapters were folded into `market-tick-data-service`. The successor
+      implementation is
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/balancer_adapter.py` (631 lines)
+      — a real, substantive implementation (pool discovery via Balancer API v3 GraphQL, historical swaps via The Graph
+      subgraph, RPC `eth_getLogs` fallback, registered in `factory.py`'s adapter map as
+      `"balancer": ("defi", BalancerAdapter)`, exported from `market_interface/__init__.py`) — zero
+      `NotImplementedError` stubs remain, so the original GH-BACKLOG ask ("implement when Balancer v3 adapter is
+      available") is functionally done. BUT the file's own header is explicit and CURRENT (last touched
+      `market-tick-data-service@e4dab8c2`, 2026-07-19 — 2 days before this verification, not stale documentation):
+      `"""FUTURE IMPLEMENTATION - NOT MVP ... DO NOT include BALANCER-ETHEREUM in any deployment configurations or     validation. Reason: The Graph hosted service has been deprecated. The RPC fallback approach requires additional     development for reliable historical data retrieval."""`.
+      So this is a deliberate, documented, standing pause on activation (an upstream-dependency gap, not a code gap) —
+      the same shape as an `EXPECTED_*`/`BLOCKED-*` honest- absence classification, just expressed in a code comment
+      rather than a manifest status. `BALANCER-ETHEREUM` is still registered fleet-wide in `unified-api-contracts`
+      (`venue_mapping.py`, `defi_venues.py`'s `ALL_DEFI_VENUES`, `venue_adapter_keys.py`, `session_times.py`,
+      `venue_instrument_config.py`) — the registry entries and the adapter code are consistent with "known venue,
+      deliberately paused," not "forgotten stub." No code change needed; closing this honestly as DONE (implemented) +
+      PAUSED (documented, current, upstream-blocked) rather than OPEN. (repo: market-tick-data-service, successor of
+      unified-market-interface)
