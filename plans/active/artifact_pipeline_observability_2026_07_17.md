@@ -453,5 +453,47 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
   constant (`setup-data-pipeline-vm.sh:703`, because tarballs ship without `.git`) — it carries zero provenance, but the
   BoM is not lying; the mock's wording must reflect that distinction.
 - **2026-07-17 — operator DROPPED option (B) entirely.** Only (A), the measured stamp, gets built. Pre-(A) VMs render as
-  ⚪ unknown-with-reason rather than carrying a falsely-precise inferred commit, and age out as the fleet recycles. **No
-  page code started; running-tab mock rebuild in progress.**
+  ⚪ unknown-with-reason rather than carrying a falsely-precise inferred commit, and age out as the fleet recycles.
+- **2026-07-20/21 — Tab 1 iterated + signed-off-pending.** Rebuilt to service × version with expandable hosts, made
+  service groups collapsible + an expand/collapse-all control (verified in jsdom), and added the "Built from · when"
+  build-datetime column (operator ask). Interactions and stat tiles verified against the data, not eyeballed. All tab-1
+  review findings folded into the per-tab gate item above. **No page code started — still mock-only, per the working
+  mode banner.**
+
+## Lessons this session (so they are not re-learned the hard way)
+
+- **Verify a push landed by CONTENT on origin, not by a push exit code or an is-ancestor check.** A retry loop reported
+  "landed" falsely: `git pull --rebase --autostash` popped a _staged_ edit back as _unstaged_, the loop's conditional
+  `git commit` then had nothing staged, and the `merge-base --is-ancestor HEAD origin` check passed anyway (HEAD was the
+  pulled tip). Fix: after an autostash pop, **re-stage by name before committing**, and gate success on
+  `git show origin/<branch>:<file> | grep <expected-content>`. Every ship in this session's later half uses that
+  content-gated loop.
+- **Compute UI stat tiles from the data; never hand-write them.** A consistency check caught the running-tab tiles
+  (claimed 3 fragmented / 11 floating / 3 hand) disagreeing with the rendered rows (real: 4 / 19 / 2), and caught a row
+  silently dropped in a rebuild. The real page must derive these server-side.
+- **Do not fabricate data to fill a cell.** GCP `gcloud` auth expired mid-session (measured: "Reauthentication failed …
+  cannot prompt"); AWS still worked. Two image build-dates I could not re-pull render `n/a — re-auth` rather than a
+  made-up date. A `gcloud auth login` on the operator side refills them; the real backend holds live creds so this is a
+  mock-only gap.
+- **Three earlier claims I made were wrong and are corrected above** — do not let the stale versions survive: memory
+  ceiling is **16 GiB** not 4 (I quoted a stale plan decision over the deployed `cloudbuild.yaml`); the AWS tarball
+  uploader/setup-script **agree** on the bucket (the breakage is an empty prefix + a different nonexistent bucket); and
+  the `0.99.0` `dep_versions` value is an **honest** constant (`SETUPTOOLS_SCM_PRETEND_VERSION`), not the BoM lying.
+- **The tarball-audit agent's completion record was lost across a compaction** — its findings had already been folded
+  into the plan, but I re-verified every load-bearing Lane-B claim with a fresh live probe rather than trusting them.
+  Treat any pre-compaction agent finding as unverified until re-probed.
+
+## Deferred work after 2026-07-21
+
+**Recommended NEXT: review Tab 2 (Deploy timeline) with the operator** — continue the per-tab gate; it is the only
+unblocked forward step. Everything below Tab-5 sign-off is deliberately not started.
+
+| Item                                                    | State / why deferred                                                                                                                                     | Blocked on                            |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Tab 1 final sign-off                                    | **Operator-owned** — reviewed + iterated, awaiting the green tick                                                                                        | operator                              |
+| Tabs 2–5 mock review (Deploy/Pipeline/Artifacts/Health) | **Not done** — real work, next up, one tab at a time                                                                                                     | nobody — pick it up                   |
+| Whole-mock final sign-off                               | **Operator-owned** — the gate that unblocks all implementation                                                                                           | tabs 1–5 signed off                   |
+| Phase 1–6 implementation (backend, page, absorb, codex) | **Cannot be done yet** — gated by the mock sign-off above                                                                                                | whole-mock sign-off                   |
+| (A) tarball commit stamp                                | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS, but part of Phase 3c; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file) | mock sign-off + Phase 3c start        |
+| Fill the mock's 2 `n/a — re-auth` build dates           | **Cannot be done yet** — needs a fresh GCP `gcloud auth login`                                                                                           | operator re-auth (optional, cosmetic) |
+| Issue doc: 6 pipeline bugs + bucket-resolution bypass   | **Not done** — Phase 5 todo; notify Ikenna (CI-area overlap)                                                                                             | nobody — but coordinate w/ Ikenna     |
