@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -503,7 +503,15 @@ Discriminator = **does a manifest row exist**.
 - **Solana pool vocab desync (`defi_expected_universe_solana_pool_instrument_type_vocab_desync_2026_07_20.md`) → Option
   A, expected matches writer.** The grammar table above (line ~343) already ratified `SOLANA_AMM_POOL` as the canonical
   Solana DEX-pool grain (2026-07-18) — the writer emitting `solana_amm_pool` is already correct; the expected-universe
-  side using plain `pool` for Solana cells is the stale side. Fix the expected-universe enumerator, not the writer.
+  side using plain `pool` for Solana cells is the stale side. Fix the expected-universe enumerator, not the writer. **✅
+  DONE `instruments-service@c781eb0b`** (+ `unified-api-contracts@5d83b729` for the capability-declaration half of the
+  3-repo atom): raydium/orca adapters POOL→SOLANA_AMM_POOL, kamino POOL→SOLANA_VAULT, enumerator `_ADDRESS_KEYED_ITYPES`
+  gains both types, regression test + golden regen (0 residual `pool`-vocab tuples for ORCA/RAYDIUM/KAMINO-SOLANA, was
+  6). Measured live blast radius (scoped manifest read, 2026-07-21): **812,055** stale `pool`/`POOL`-vocab
+  `expected_unattempted` rows across the 3 venues, **406,015** confirmed permanently-unsatisfiable (captured
+  `solana_amm_pool`/`solana_vault` twin on the same atom) — now closed at the CODE level (see
+  `defi_expected_universe_solana_pool_instrument_type_vocab_desync_2026_07_20.md`, RESOLVED); the 812,055
+  already-materialized stale rows need a live re-seed, gated behind Track 3's own purge-first ordering below.
 - **SOLANA_LENDING is OUT of the D2 `LENDING`→A_TOKEN/DEBT_TOKEN retire scope.** The grammar table already carries
   `SOLANA_LENDING` as its own canonical Solana grain, distinct from the EVM A_TOKEN/DEBT_TOKEN split (Kamino/Solend/
   MarginFi markets don't share Aave's dual-token-per-reserve shape). The retire applies to the legacy flat EVM `lending`

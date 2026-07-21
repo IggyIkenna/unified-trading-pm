@@ -17,7 +17,7 @@ summary: >-
   every Solana DEX-pool venue. This is an H1-class defect on the EXPECTED side (the enumerator emits a vocabulary the
   writer never produces), distinct from the honest-coverage UPPERCASE/lowercase READ-side case break and from the
   phantom (captured-without-object) class.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -63,6 +63,9 @@ source:
   "/data-pipeline-reconciliation defi run 2026-07-20 (finding F6); code-verified against the MTDS writer + IS catalogue
   adapters + UAC instrument-type alias table"
 resolved_by:
+  "instruments-service@c781eb0b (Option A — adapters + enumerator address-keying + regression test + golden regen);
+  ruling recorded in defi_consolidated_closeout_2026_07_18.md § Operator decisions applied (2026-07-21); live blast
+  radius measured 2026-07-21 (812,055 stale-vocab rows, 406,015 confirmed permanently-unsatisfiable)"
 ---
 
 # DeFi Solana pools — expected-universe seeds `pool` while the writer emits `solana_amm_pool`
@@ -126,18 +129,63 @@ architecture call — do NOT blind-pick):
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Measure the live blast radius — count `expected_unattempted` cells keyed `instrument_type=pool` on
+- [x] 1. [DATA] P1. Measure the live blast radius — count `expected_unattempted` cells keyed `instrument_type=pool` on
       Solana venues (RAYDIUM/ORCA/PHOENIX/KAMINO) in the defi `_index` that have a `captured` twin keyed
       `solana_amm_pool`/`solana_vault` on the same `(venue, chain, data_type, instrument_id, day)` — the permanently-
-      unsatisfiable set (repo: instruments-service / manifest read).
-- [ ] 2. [DECISION] P1. Operator/architecture ruling — direction A (expected matches writer) vs B (writer matches
+      unsatisfiable set (repo: instruments-service / manifest read). **DONE 2026-07-21** — scoped, bounded-column
+      pyarrow predicate-pushdown read of the live
+      `market-data-tick-defi-prd-central-element-323112/_index/     availability_index.parquet` (NOT a new whole-corpus
+      walk — column-projected + `chain=='SOLANA' AND venue IN     (RAYDIUM,ORCA,PHOENIX,KAMINO)` pushdown filter on the
+      existing manifest, same pattern as `measure_honest_coverage.py::_read_parquet_eu_only`): **812,055**
+      `expected_unattempted` rows keyed `instrument_type IN (pool, POOL)` — ORCA 416,797 (`dex_pool_state` 208,405 +
+      `dex_pool_swaps` 208,392) · RAYDIUM 185,178 (`dex_pool_state` 92,573 + `dex_pool_swaps` 92,605) · KAMINO 210,080
+      (`dex_pool_state` 105,037 + `lending_indices` 105,043). Of these, **406,015** sit on a `(venue, data_type)` atom
+      that ALSO carries a `captured` twin keyed `solana_amm_pool`/`solana_vault` (ORCA `dex_pool_state` 7,133,696
+      captured · RAYDIUM `dex_pool_state` 49,964 · KAMINO `dex_pool_state` 513) — the strict permanently-unsatisfiable
+      subset that proves the H1 defect live. PHOENIX carries zero stale-vocab rows.
+- [x] 2. [DECISION] P1. Operator/architecture ruling — direction A (expected matches writer) vs B (writer matches
       catalogue) vs a UAC alias fold. Blocks the code fix; must keep the writer, the enumerator, the honest-coverage
       join, and the phantom/orphan `is_valid_shard_key` all on ONE unified `instrument_type` vocabulary for Solana
-      pools.
-- [ ] 3. [CODE] P1. Apply the ruling and add a regression test that a Solana AMM pool captured under `solana_amm_pool`
+      pools. **DECIDED 2026-07-21 — Option A (expected matches writer)**, recorded in
+      `defi_consolidated_closeout_2026_07_18.md` § "Operator decisions applied (2026-07-21...)": the grammar table
+      already ratified `SOLANA_AMM_POOL`/`SOLANA_VAULT` as the canonical Solana DEX-pool/vault grain (2026-07-18) — the
+      writer was already correct; the enumerator/catalogue side was the stale one.
+- [x] 3. [CODE] P1. Apply the ruling and add a regression test that a Solana AMM pool captured under `solana_amm_pool`
       reconciles (flips to captured) the enumerator's expected cell for the same instrument — i.e. the writer emission
       and the enumerator seed produce the SAME atom (repos: market-tick-data-service, instruments-service,
-      unified-api-contracts).
+      unified-api-contracts). **DONE — `instruments-service@c781eb0b`.**
+      `reference_data/adapters/defi/{raydium,orca}.py` POOL→SOLANA_AMM_POOL and `kamino.py` POOL→SOLANA_VAULT (all call
+      sites + docstrings); `scripts/     enumerate_expected_universe.py::_ADDRESS_KEYED_ITYPES` gains
+      `solana_amm_pool`/`solana_vault` so the seed re-keys to the on-chain pool address like every other address-keyed
+      type; new regression test `test_defi_v2_solana_amm_pool_capture_flips_expected_unattempted_to_captured`
+      (`tests/unit/scripts/test_enumerate_expected_universe_v2.py`) asserts the flip on the SAME
+      `(venue,chain,data_type,instrument_id,day)` atom; golden `tests/unit/scripts/goldens/expected_universe/defi.json`
+      regenerated — `KAMINO-SOLANA pool→solana_vault`, `ORCA-SOLANA pool→solana_amm_pool`,
+      `RAYDIUM-SOLANA pool→solana_amm_pool` (6 tuples converged; 0 residual `pool`-vocab tuples for these 3 venues in
+      the enumerator's golden). No MTDS-side change needed (writer already emitted the correct vocabulary,
+      `dex_pools_handler.py:229-234,721,733`). QG green (4729 tests). Already shipped + on `main` (quickmerge,
+      backmerged).
 - [ ] 4. [DATA] P2. After the fix, re-run the defi expected-universe scan and confirm the Solana-pool
       `expected_unattempted` count drops to the genuinely-outstanding set (no permanently-unsatisfiable residue), and
-      the defi honest-coverage denominator refreshes (repo: instruments-service).
+      the defi honest-coverage denominator refreshes (repo: instruments-service). **Genuinely open, correctly NOT
+      bundled into this fix.** The shipped code stops NEW mis-vocabularied seeds (proven: 0 residual in the regenerated
+      golden) but does not retroactively rewrite the 812,055 already-materialized stale rows measured in todo 1 above —
+      that is a live-manifest re-seed, and `defi_consolidated_closeout_2026_07_18.md` Track 3's own P0 ordering is
+      "PURGE first, then seed" (the ~1.79M duplicate + ~219.5K phantom rows purge has not run yet); re-seeding out of
+      that order risks interacting with the rows Track 3 is purging. Tracked there — pick up after Track 3's purge
+      lands.
+
+## ✅ RESOLVED 2026-07-21 — Option A shipped (3-repo atom), live blast radius measured
+
+Direction A (expected matches writer) ratified per the closeout plan's own already-ratified grammar table — the writer
+was correct, the enumerator/catalogue was stale. Fix is a 3-repo atom: `instruments-service@c781eb0b` (adapters
+raydium/orca→`SOLANA_AMM_POOL`, kamino→`SOLANA_VAULT`; enumerator `_ADDRESS_KEYED_ITYPES` gains the two Solana types;
+regression test; golden regen) + `unified-api-contracts@5d83b729` (the defi capability declaration accepts
+`solana_amm_pool`/`solana_vault` for `valid_data_types_for_venue_instrument_type`, otherwise the enumerator over-seeds
+or drops the cell) — cross-referenced in `data_pipeline_reconciliation_skill_2026_07_20.md`'s 2026-07-21 execution log.
+Measured before-state (this session, scoped manifest read): **812,055** stale `pool`/`POOL`-vocab `expected_unattempted`
+rows across ORCA/RAYDIUM/KAMINO, of which **406,015** are confirmed permanently-unsatisfiable (a captured
+`solana_amm_pool`/`solana_vault` twin exists on the same venue+data_type atom). After-state (code level, proven via the
+regenerated golden + new regression test): **0** residual `pool`-vocab tuples for these 3 Solana venues — the class
+cannot recur going forward. Residual: the 812,055 already-materialized stale rows need a live-manifest re-seed, which is
+Track 3's job (gated behind its own purge-first ordering) — todo 4 stays open there, not a gap in this fix.
