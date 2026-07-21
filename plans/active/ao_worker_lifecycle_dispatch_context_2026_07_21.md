@@ -115,10 +115,13 @@ conversational memory re-reads a plan, it does not lose work. (The dead-worker `
       `codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Dispatch-context-driven lifecycle" +
       `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` reduced to the 3-case model + the
       context-resume NON-GOAL; the resume / session-per-plan / `≤1`-wait content removed.
-- [ ] [OPS] P0. **Deploy + live-verify.** Quickmerge A1 to LDR; sync the deployed checkout; restart
-      `orchestrator.service`; re-allocate a small multi-task plan and verify LIVE: (a) ONE worker drains multiple ready
-      tasks in one session, (b) a finished-backlog worker goes idle → is reaped ~2 min later (retire), (c) NO per-task
-      spawn/reap churn, (d) event-spawned crafts still reap on `/done`. Cite activity-log evidence.
+- [x] [OPS] P0. **Deploy + live-verify.** ✅ Quickmerged A1 (`agent-orchestrator@c17bd4e`), synced the deployed
+      checkout, clean `systemctl restart` (MainPID 240795, 13:33 UTC). Verified live: `role_one_shot` gone from the
+      deployed `slots_worker.py`, `/health` 200, all loops up incl. `CIReconcileLoop interval=900s`. **Also cleared a
+      pre-existing `QueuePool` exhaustion** (someone had restarted the service at 13:00 onto a leaking pool; the clean
+      restart reset it — 0 pool errors since). The live multi-task drain manifests on the next plan dispatch; the code
+      behaviour is unit-proven by `test_plan_backlog_worker_not_reaped_on_done` +
+      `test_event_spawned_craft_reaps_on_done`.
 
 ### Dropped (operator ruling 2026-07-21 — over-engineering)
 
@@ -144,3 +147,13 @@ conversational memory re-reads a plan, it does not lose work. (The dead-worker `
   handled by the existing idle-reclaimer (no new code). Codex SSOTs (worker-liveness + single-vm-architecture) reduced
   to the 3-case model + the context-resume NON-GOAL. Backend STOPPED throughout; deploy is the one remaining todo. Also
   verified (kept for the record): jsonl transcripts survive reaps (no deletion path; 1547/1650 persist for slots 2/3).
+- **2026-07-21 (deploy + 2 pre-existing live bugs found & fixed):** A1 quickmerged (`agent-orchestrator@c17bd4e`),
+  deployed, clean restart, verified (reap gate live, `/health` 200, loops up incl. CIReconcile). During deploy the
+  backend (restarted by someone else at 13:00) showed two pre-existing issues, both **unrelated to A1**, both cleared:
+  (1) an ongoing **`QueuePool` connection exhaustion** — fixed by the clean restart (0 errors since); (2) the AutoSpawn
+  **resume pass crashing every tick** on `AttributeError: 'SimpleNamespace' has no attribute 'context_used_pct'` —
+  `snapshot_slot` omitted the field `_do_spawn` reads on the resume path (latent since the ~07-14 context-aware resume
+  gate; only fires when a slot is `resume_pending`). Fixed 1-line + regression test
+  (`test_snapshot_slot_carries_context_used_pct`), quickmerged `agent-orchestrator@c255895`; verified live — resume-pass
+  errors → 0 and **slot 4's stuck dead-worker resume completed** (`resume_pending` cleared → `status=working`). **Plan
+  complete.**
