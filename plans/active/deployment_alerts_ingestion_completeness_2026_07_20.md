@@ -548,6 +548,20 @@ Notes worth surfacing beyond the matrix:
   the numbers themselves reveal most of this plan's fixes aren't live yet, which is the correct, valuable outcome of an
   honest re-measure, not a failure to finish.
 
+- **2026-07-21 (todo 11 — RE-re-measure after the Cloud Build fix landed)**: the P0 blocker above resolved on its own
+  timeline — 3 consecutive deployment-api Cloud Build `SUCCESS` runs (18:43/18:46/19:19 UTC, `deploy` step included) and
+  the live `latestReadyRevision` (`uts-shared-deployment-api-00235-9dl`, image `7f505a7`) is confirmed serving, verified
+  independently (Cloud Build history + `git merge-base --is-ancestor` + Cloud Run API, not a self-report). **The
+  original `vendor-deps` root-cause hypothesis was wrong** — full corrected root cause + fix commit
+  (`deployment-api@e8679a3`, an automated `BASE_IMAGE_DIGEST` pin-refresh, not a hand-written code fix) is in
+  `deployment_api_cloudbuild_operability_probe_failure_2026_07_21.md`'s todo 1. All 5 previously-stale fixes
+  (subject_repo/bucket-resolution/row-drop-race/retention/kill-switch) are confirmed present in the deployed image via
+  commit ancestry, and subject_repo's writer side is confirmed producing correctly-shaped data in prod (a live row at
+  `19:19:58Z`, 36 min post-deploy, carries `subject_repo` correctly). Could not exercise the live HTTP API directly for
+  the read-path/response-shape behaviors (retention pagination, repo-filter correctness, kill-switch read results) —
+  this sandbox only has interactive-user ADC, not a service account, so no Cloud-Run-invoker ID token could be minted;
+  full detail + the honest limitation statement is in the issue doc's todo 2. Issue doc closed (`status: resolved`).
+
 ## Codex SSOTs
 
 - `codex/04-architecture/ci-alerting.md` — the `notify-slack.yml` carrier, dedup keys/cooldowns, fail-open reads; (to
