@@ -41,6 +41,7 @@ superseded_by:
 resolved_by:
 source:
   operator question 2026-07-21 — "all downstream code using canonical buckets? funding + staking from canonical data?"
+depends_on: []
 ---
 
 # Funding + staking downstream readers — canonical on the production path (audit + cleanup)
