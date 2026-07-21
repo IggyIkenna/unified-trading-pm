@@ -119,11 +119,19 @@ Key audit facts driving the merges:
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Orphan/idle data on the Deployments surface** — make the reap-verdict, grace, `stopped_age_hours`,
-      and idle disk `monthly_disk_usd` available to the Deployments tab. Preferred: have Deployments/its inventory
-      consume the existing `/api/fleet/orphans` data (join by name) rather than duplicating the estimator; if a
-      row-level merge is cleaner, add the fields to the inventory item. No new cost model — reuse the existing list-rate
-      estimate.
+- [x] [BACKEND] P0. ✅ **Orphan/idle data on the Deployments surface** — deployment-api@aa6dbff. Added
+      `reap_verdict`/`grace_hours`/`stopped_age_hours`/`monthly_disk_usd` to `DeploymentItem`
+      (`deployments_inventory.py`), populated inside `build_inventory` via a name-joined
+      `build_orphan_inventory(vm_details_by_name, disk_details, now, DEFAULT_GRACE_HOURS)` call — the SAME orphans SSOT
+      `/api/fleet/orphans` uses (`_fleet_inventory.py`), computed once per census cycle from data already fetched (no
+      new GCE call, no second cost estimator). Fields populate only for VM rows currently STOPPED/SUSPENDED/TERMINATED
+      (the orphan candidate set); a running VM honestly reports all four as `None`. Added `DEFAULT_GRACE_HOURS = 24.0`
+      to `_fleet_inventory.py` for this new call site (existing `/orphans`+`/reap` endpoint defaults left untouched —
+      unrelated blast radius). 2 new unit tests (`test_build_inventory_surfaces_orphan_reap_verdict_on_stopped_vm`,
+      `test_build_inventory_running_vm_has_no_orphan_fields`) plus the existing 105-test file all green; full
+      `quality-gates.sh` clean (basedpyright error count unchanged vs pre-edit baseline — verified by diffing
+      before/after). Next: the UI-facing todos below (rollup cards, verdict badges, reap/ delete actions) consume these
+      new fields. (repo: deployment-api)
 - [ ] [UI] P1. **Idle-spend rollup cards on Deployments** — port the four FleetOrphans rollup cards (Stopped VMs ·
       Reapable · Idle disk $/mo · Reclaimable $/mo) as a header/section on the Deployments tab.
 - [ ] [UI] P1. **Reap-verdict + stopped-age on orphan rows** — surface the verdict badge (reapable / within-grace /
