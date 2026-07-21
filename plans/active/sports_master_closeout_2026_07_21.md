@@ -414,3 +414,26 @@ Terminate when: pre-floor wiped + floor enforced; every sports odds/feature obje
 (reconciliation green); relocation copy+swap+delete complete; and the master plan's todos are all flipped with evidence.
 Write the rule-9 final report. Hard-stops stay human-only.
 ```
+
+## Manifest MUST be rebuilt after EVERY delete (2026-07-21 — do not skip)
+
+Deleting GCS objects does NOT update the manifest: the sports index is a consolidated (seed + per-VM shard) artifact, so
+deleted objects leave PHANTOM rows (manifest claims data that no longer exists on GCS), and the next consolidation can
+re-assert them from the seed. Every delete pass in this plan therefore ENDS with a GCS-walk manifest rebuild
+(`deployment-service/scripts/rebuild_sports_manifest.py` → `_clean_stale_league_entries` + re-derive from disk) and a
+re-verify that manifest rows == GCS objects. This applies to: the pre-floor WIPE (prune all pre-2020-06 rows), the
+relocation DELETE (the manifest-swap step), AND the twin delete below.
+
+- [x] [DATA] P1. ✅ **6,110 lowercase-twin duplicate objects DELETED** — the `league_id=soccer_*` objects (2025-07-31…
+      12-31) proven 100% crc-identical to their `SOCCER_*` uppercase twins were deleted (per-object twin re-verify;
+      snapshot `scratchpad/lowercase_twin_delete_snapshot.json` [session-local] + GCS soft-delete as the net). Resolves
+      `mdt_t2_6_league_case_duplicate_population_2026_07_16`.
+- [ ] [DATA] P1. **Prune the twin-delete phantom manifest rows.** The live sports index carries 7,295 lowercase
+      `league_id=soccer_*` rows; the 6,110 deleted-object rows are now PHANTOM (redundant — the real data is still
+      covered by the `SOCCER_*` uppercase rows, so it is drift, not a coverage gap). Clean via the GCS-walk rebuild
+      (above); it is subsumed by the relocation manifest-swap, which reconciles the whole lowercase set. NOT hand-edited
+      at session depth (a manual index write with the consolidator running is where corruption happens).
+- [x] [CODE] P0. ✅ **2020-06 floor conflict RESOLVED** — `unified-api-contracts@8cdf7808`: all 7 sports
+      `SOURCE_COVERAGE_START`/override floors clamped to `date(2020, 6, 6)`, reverting the 2026-07-15 amendment; tests
+      rewritten. The remaining floor-enforcement surface (gates, launcher START_DATEs, data-status UI, codex SSOT) is in
+      the pending-execution list above.
