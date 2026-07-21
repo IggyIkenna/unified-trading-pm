@@ -1,13 +1,13 @@
 ---
 doc_type: codex-ssot
 title: The 2020-06 sports data floor (odds start 2020-06-06; pre-floor is fabrication-by-construction)
-summary: >-
-  Operator ruling 2026-07-21: sports ODDS tick data starts 2020-06-06 (measured: the tick bucket has ZERO day-partitions
-  before it), so 2020-06 is the base month for ALL sports honest-coverage denominators, MDPS candle derivation, features
-  computation, and fixture EXPECTATIONS. Nothing downstream is legitimately computable without odds, so every sports
-  artifact dated before 2020-06-06 is fabrication-by-construction and is WIPED from GCS + manifest (delete, do not
-  backfill). This doc is the SSOT for the floor date, its rationale, and the enforcement surface every producer/consumer
-  must clamp to.
+summary:
+  "Operator ruling 2026-07-21: sports ODDS tick data starts 2020-06-06 (measured: the tick bucket has ZERO
+  day-partitions before it), so 2020-06 is the base month for ALL sports honest-coverage denominators, MDPS candle
+  derivation, features computation, and fixture EXPECTATIONS. Nothing downstream is legitimately computable without
+  odds, so every sports artifact dated before 2020-06-06 is fabrication-by-construction and is WIPED from GCS + manifest
+  (delete, do not backfill). This doc is the SSOT for the floor date, its rationale, and the enforcement surface every
+  producer/consumer must clamp to."
 status: current
 nature: ssot
 asset_group: [sports]
@@ -38,6 +38,7 @@ authoritative_for:
     pre-floor sports data is fabrication-by-construction,
     the sports floor enforcement surface,
   ]
+referenced_by:
 owner:
 last_reviewed: 2026-07-21
 code_refs:
@@ -46,6 +47,7 @@ code_refs:
     instruments-service/instruments_service/engine/validation_utils.py,
     deployment-service/scripts/vm/launch-sports-entity-sweep-vm.sh,
   ]
+implementation_status:
 ---
 
 # The 2020-06 sports data floor
