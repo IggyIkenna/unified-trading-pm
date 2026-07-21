@@ -232,10 +232,15 @@ source:
       — deployment-service@389a598, deployment-api@e3d283e, deployment-ui@3584da7, unified-trading-library@a760fc93,
       unified-api-contracts@21510159. No un-shipped WIP remained; this todo closes the shipping loop the prior REVIEW
       todos' verification already confirmed was green.
-- [ ] [REVIEW] P2. Post-phase codex audit — document the log-path resolution contract (live-first/archive-fallback,
+- [x] ✅ [REVIEW] P2. Post-phase codex audit — document the log-path resolution contract (live-first/archive-fallback,
       final-snapshot writer contract, no date-guessing), the size/tail/download endpoints, and the events-vs-logs panel
       distinction in `codex/05-infrastructure/deployment-observability.md` +
-      `codex/05-infrastructure/gcs-object-operations.md`.
+      `codex/05-infrastructure/gcs-object-operations.md`. — `unified-trading-pm@ae9151289`. Added a "Run.log viewer —
+      resolution contract, endpoints, events-vs-logs distinction" section to `deployment-observability.md` (grounded in
+      the actual shipped code: `_run_log_resolution.py`, `_run_log_tail.py`,
+      `HeartbeatDaemon._write_final_log_snapshot`, the SIGKILL shell fallback, and the metadata/tail/download
+      endpoints), updated its `code_refs`, and added `gcs_read_object_range` to `gcs-object-operations.md`'s function
+      reference + `code_refs`/`last_reviewed`.
 
 ## Success criteria
 
@@ -321,6 +326,19 @@ source:
   TODAY by the shipped writer for real completed VMs (`canonical-migration-cefi-*`) — positive proof the writer is live
   in prod — and ran the full `resolve_run_log_location()` + `read_run_log_tail()` path against two of them, confirming
   real log content reads back correctly through the bounded byte-range tail.
+- **2026-07-21** (slot 3) — Shipped the post-phase codex audit (todo 10, final todo), `unified-trading-pm@ae9151289`:
+  read the actual shipped code (not just prior flip claims) — `_run_log_resolution.py`, `_run_log_tail.py`,
+  `HeartbeatDaemon._write_final_log_snapshot`/`_archive_terminal_state`, the `vm-exec-with-gcs-tee.sh` SIGKILL fallback,
+  the three endpoints in `deployments_inventory.py`, `RunLogPanel.tsx`, and confirmed `vm_run_log_rolling_uri` has zero
+  remaining references anywhere in UTL — then wrote a new "Run.log viewer" section into `deployment-observability.md`
+  covering the live-first/archive-fallback resolver, the writer contract (incl. the SIGKILL belt-and-braces path), the
+  bounded metadata/tail/download endpoints (with their honest-absence contract), and the
+  StreamingLogsPanel(events)-vs-RunLogPanel(logs) distinction; added `gcs_read_object_range` to
+  `gcs-object-operations.md`'s function reference. Both docs' `code_refs`/`last_reviewed` updated. Ran `prek` on the two
+  changed doc files (full `quality-gates.sh` skipped for this pure-doc change per the doc-commit convention — its one
+  failure, `evidence-backed-completion` sub-rule B, is a pre-existing false positive already tracked in
+  `plans/active/issues/pm_evidence_backed_completion_false_positive_2026_07_21.md`, confirmed unrelated via
+  `git stash`). This closes the plan's final todo.
 
 ## Codex SSOTs
 
