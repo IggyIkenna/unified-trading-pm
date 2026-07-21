@@ -431,3 +431,23 @@ leg still correctly reports `content_check=non_canonical` (todo 6, re-point the 
 still pending — expected, not a failure of the writer).
 
 **Gate verdict: the writer + manifest are proven correct on real infra. Proceeding to the P5 executor.**
+
+### 2026-07-21 — P5 executor build dispatched (workflow); raw-tick fleet CHECKED — P6/P7 must wait for it
+
+Dispatched a workflow (build agent + 3 parallel adversarial-review lenses — data-loss safety, dedup/shape correctness,
+operational safety — + a conditional fix pass) to write
+`market-data-processing-service/scripts/ migrate_candle_canonical_2026_07.py`, cloning
+`market-tick-data-service/.../migrate_tradfi_canonical_2026_07.py`'s proven safety structure (dry-run default,
+mapping-manifest + 0-orphan reconcile before any write, copy→verify→delete with the target==source no-delete guard,
+per-object try/except isolation, sharding) while explicitly NOT cloning its `source→aggregated data_type` transform —
+the candle migration's `data_type` axis is UNCHANGED (already SOURCE on existing objects, per the -test- gate proof
+above); only `instrument_type=`/`pipeline_mode=` are added + the 3 genuine defects (empty-stem, TradFi leaf-id,
+split-brain) repaired. Not yet reviewed/shipped — awaiting the workflow.
+
+**Checked the running raw-tick fleet before considering P6/P7 timing**:
+`gcloud compute instances list --filter="name~'canonical-migration-cefi'"` → **11 RUNNING / 7 TERMINATED (18 total)**,
+so the fleet is well underway but NOT complete. Per the coordination note already in the master catalogue row (sequence
+P7 AROUND the raw-tick fleet's completion, disjoint prefix but shared manifest-shard write contention): **P0 census / P6
+drain / P7 apply are correctly BLOCKED-pending on this external fleet finishing, not something to force through now.**
+This is a "cannot be done yet" deferral (elapsed time / external event), not a gap — re-check fleet status before
+starting P6.
