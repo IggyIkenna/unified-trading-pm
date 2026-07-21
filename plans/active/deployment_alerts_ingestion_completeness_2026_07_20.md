@@ -306,8 +306,11 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       `plans/active/issues/deployment_api_cloudbuild_operability_probe_failure_2026_07_21.md` (P0) with the exact root
       cause (`ImportError: gcs_read_object_range` — a stale vendored `unified-trading-library` snapshot, suspected
       `vendor-deps` cache-skip bug in `cloudbuild.yaml`) + follow-up todos. See details below.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the repos) + flip todos same turn
-      (`docs(plans):`).
+- [x] [INFRA] P1. ✅ Already satisfied incrementally — every prior todo in this plan shipped via
+      `quickmerge --agent --files` + a same-turn `docs(plans):` plan-flip commit as it landed (the commit-push-flip-rule
+      discipline), not deferred to a single end-of-plan batch. No unshipped code or unflipped checkbox remained by the
+      time this todo was reached (verified: every repo in the slot clean + 0 commits ahead of `origin/live-defi-rollout`
+      across alerting-service, deployment-api, deployment-service, unified-trading-pm).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the normalised alert schema, the per-source coverage matrix, the
       "diagnostic surface / mirror-cheap-Slack-sources" principle, the persist-vs-page distinction, and the retention
       policy in `codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act.
