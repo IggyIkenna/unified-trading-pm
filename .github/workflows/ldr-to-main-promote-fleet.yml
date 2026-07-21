@@ -680,7 +680,15 @@ jobs:
                   fi
                 fi
               fi
-              LATEST_SUBJECT=$(printf '%s\n' "$RANGE_MSGS" | head -1)
+              # Pure bash parameter expansion (no subprocess/pipe): a `printf | head -1` here reliably
+              # SIGPIPEs when RANGE_MSGS is a large multi-line commit-range (head -1 closes the pipe
+              # before printf finishes writing) — under `set -euo pipefail` this aborted the per-repo
+              # `process_repo` subshell right here, silently dropping that repo from PROMOTED/BLOCKED/
+              # CONFLICTED (all three fleet-summary buckets show 0 while the repo never advances).
+              # Reproduced 2/2 on market-tick-data-service (large same-day commit range) — its LDR→main
+              # promote PR sat stale for hours because of this. SSOT:
+              # plans/active/issues/ldr_to_main_promote_fleet_sigpipe_silent_drop_2026_07_21.md.
+              LATEST_SUBJECT="${RANGE_MSGS%%$'\n'*}"
               EXPECTED="none"
               if printf '%s' "$LATEST_SUBJECT" | grep -qE "^[a-z]+!(\(.+\))?:" || printf '%s' "$LATEST_SUBJECT" | grep -qi "BREAKING CHANGE"; then
                 EXPECTED="breaking"
