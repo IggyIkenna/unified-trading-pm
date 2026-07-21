@@ -126,6 +126,39 @@ Smallest safe increment, one repo (strategy-service), refactor-class, in the sha
    batch-rerun re-derive identical passive rows), and a golden-value test of the ratio math.
 6. Do NOT touch `compute_handler`, `compute_pnl`, or the reader-less Surface-A sink in this increment.
 
+## REFINEMENT after the build (2026-07-21) — option A has a leg-mapping sub-decision
+
+The build correctly BLOCKED rather than wire the brief, and a deeper read (verified) found the spine's interest is a
+**3-leg construct that does not map to the 2-index (supply/debt) model** the brief assumed:
+
+- `LENDING_INTEREST` — a genuine Aave lending accrual. The index-ratio form applies cleanly here (codex Hard Rule #4).
+- `STAKING_REWARD` — should use the **LST exchange-rate index** (`lst_rates` corpus, Hard Rule #5), NOT the Aave
+  liquidity index. Different data source; a separate fix.
+- `FUNDING_ACCRUAL` — perp funding, quoted as a rate (not a cumulative index) — leave on the rate form.
+- `carry_staked_basis` has **no debt position** (stake-long + perp-short), so there is no `debt_notional` to apply the
+  borrow-index term to. The borrow index is only relevant when a strategy actually borrows.
+
+**Data precondition RESOLVED (verified against GCS, which the build agent could not):** `aave_liquidity_index` and
+`aave_borrow_index` are 100% populated in `lending_rates`, RAY-normalized (supply 1.0→1.22, borrow 1.0→5.45), with the
+expected ~3× duplicate-row noise the sort+dedup+min/max design already handles. So the "hold until data confirmed"
+concern is cleared — the data is there.
+
+**Shipped-as-prepared (unwired, correct, held):** `strategy_service/engine/backtest/index_ratio_accrual.py` — the pure
+`index_ratio_accrual(notional, prev, now) = notional*(now/prev−1)` helper (guard prev>0, honest-absence→0), plus golden
+math tests (10 pass, matches the `orchestrator.py`/`settlement_service.py` reference). Held (not shipped orphaned) until
+the leg-mapping is confirmed, then wired.
+
+### Leg-mapping decision (money-path, needs a ruling)
+
+- **A1 — LENDING leg only [recommended].** Wire ONLY `LENDING_INTEREST` to the Aave index-ratio form; leave
+  `STAKING_REWARD` (needs the LST index — file as follow-up), `FUNDING_ACCRUAL`, and all non-carry-staked-basis
+  archetypes on their current form. Minimal, faithful, no invented debt leg, no staking mislabel. But: confirm the
+  LENDING leg's economic basis in `carry_staked_basis` (supply-only yield vs net supply−borrow) and which reserve drives
+  it — a strategy-semantics question that sets the number.
+- **A2 — LENDING + STAKING now.** Also fix the staking leg via the LST exchange-rate index (`lst_rates`) in the same
+  change. More correct-in-full, more work (new data source), larger NAV delta.
+- **Hold.** Keep only the prepared helper + tests; defer wiring until the leg semantics are ratified.
+
 ## The prod-NAV RECOMPUTE is a separate operator-gated step
 
 Landing option A on LDR changes the code; it does NOT retroactively recompute historical client-reports. Rerunning
