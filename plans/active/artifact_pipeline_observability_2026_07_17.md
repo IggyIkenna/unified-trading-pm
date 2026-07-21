@@ -223,26 +223,30 @@ never a fabricated green (the `_image_signal` principle).
 - Says "router is the canonical AWS trigger" — a real build showed `initiator: GitHub-Hookshot` (a webhook fired it).
 - Says the manifest is the provenance audit trail — `deployed_versions` is empty and `deployed_versions_aws` is absent.
 
-## Pipeline bugs found (page-first: file an issue doc + notify Ikenna, do NOT fix here)
+## Pipeline bugs found (page-first: parked in an issue doc, do NOT fix here)
 
-Operator decision 2026-07-17: the page reads the clouds directly so it works regardless of these; fixing them touches
-v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/` and notify.
+Operator decision 2026-07-17/21: the page reads the clouds directly so it works regardless of these; fixing them touches
+CI files in Ikenna's active area → **parked, not fixed.** **RE-VERIFIED 2026-07-21 (the CI area was actively fixed
+2026-07-20) and filed:** `plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`.
+Most of the 2026-07-17 list resolved itself — see the issue doc for the full verified status. Summary:
 
-1. `version` never sent in any live `qg-passed` payload → router reads `client_payload.version` with no fallback →
-   `IMAGE_TAG=""` → image tags lost their version fleet-wide (corroborated by the AR tag history flip in late June).
-2. `deployment-api` per-service Cloud Build history filters on `REPO_NAME` (auto substitution) but the router passes
-   `_REPO_NAME` (custom), no fallback → router-triggered builds may be invisible. **UNVERIFIED — I could not reproduce
-   it on 5 sampled builds (all had `REPO_NAME` set); needs a confirmed router-triggered build before designing around
-   it.**
-3. GCP build events never carry `build_id` into the GCS ledger; AWS does.
-4. `freeze-deferred-build-replay.yml` filters `startswith("deferred-build-")` → never matches the AWS
-   `deferred-aws-build-…` artifact → AWS freeze-deferred builds never replay.
-5. Cloud-build-failure-watcher persists the failure reason only as free text in a Slack message and stamps
-   `repo: unified-trading-pm` (its own repo), not the repo that failed.
-6. Tarball VM BoM never stamped (see Honest gaps) — the runtime-provenance gap.
+1. `version` never sent → image tags SHA-only ~late June. **STILL OPEN but root-cause UNCONFIRMED** (could be
+   intentional SHA-only tagging) — issue doc #1.
+2. `REPO_NAME` vs `_REPO_NAME` build-history blind spot. **NOT A BUG** — never reproduced; code asserts `REPO_NAME`
+   universal, manual path gained a `_SERVICE_NAME` fallback. Dropped.
+3. GCP build events never carry `build_id` into the GCS ledger. **LOW-confidence / minor** — issue doc #3.
+4. `freeze-deferred-build-replay.yml` filters `startswith("deferred-build-")` → never matches AWS `deferred-aws-build-*`
+   (`cloud-build-router-aws.yml:83`). **CONFIRMED 2026-07-21 · AWS-deferred** — issue doc #4.
+5. Cloud-build-failure-watcher wrong-repo stamp / free-text only. **FIXED 2026-07-20** — now `REPO_KEYS` fallback +
+   notify-slack dedup ledger (`cloud-build-failure-watcher.yml:137,183`). Dropped.
+6. Tarball VM BoM never stamped (see Honest gaps). **Plan-tracked here (Phase 3c)** — SHA now measured at boot
+   (`setup-data-pipeline-vm.sh:706`); stamp-to-registry remains. Not in the issue doc. 7 (bucket). AWS tarball
+   uploader/launcher bucket mismatch — launcher expects `unified-trading-deployment-scripts-<account>` (live: **404**),
+   uploader writes `uts-prod-deployment-state/code/` (populated). **CONFIRMED 2026-07-21 · AWS-deferred** — issue doc
+   #7.
 7. **~40% of Cloud Run deploys ship nothing** (config-only redeploys, same digest) — churn that reads as activity; cheap
-   to flag, noise unlabelled. GCP, the active cloud. Evidence: Cloud Run revision digests for
-   `uts-shared-deployment-api` (192 revs).
+   to flag, noise unlabelled. GCP, the active cloud. Not in the issue doc (informational, not a defect). Evidence: Cloud
+   Run revision digests for `uts-shared-deployment-api` (192 revs).
 
 ### AWS is intentionally parked — NOT bugs to fix (operator 2026-07-21)
 
@@ -533,13 +537,13 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 usefulness pass applied this turn and now await scrutiny; that review is the only unblocked forward step. Everything
 below whole-mock sign-off is deliberately not started.
 
-| Item                                                       | State / why deferred                                                                                                                                                                       | Blocked on                            |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
-| Tab 1 final sign-off                                       | **Operator-owned** — reviewed + iterated, awaiting the green tick                                                                                                                          | operator                              |
-| Tabs 2–5 mock review (Deploy/Pipeline/Artifacts/Health)    | **Operator-owned** — iterated this turn (correctness + usefulness), awaiting operator scrutiny                                                                                             | operator                              |
-| Whole-mock final sign-off                                  | **Operator-owned** — the gate that unblocks all implementation                                                                                                                             | tabs 1–5 signed off                   |
-| Phase 1–6 implementation (backend, page, absorb, codex)    | **Cannot be done yet** — gated by the mock sign-off above                                                                                                                                  | whole-mock sign-off                   |
-| (A) tarball commit stamp                                   | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS, but part of Phase 3c; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                   | mock sign-off + Phase 3c start        |
-| Fill the mock's 2 `n/a — re-auth` build dates              | **Cannot be done yet** — needs a fresh GCP `gcloud auth login`                                                                                                                             | operator re-auth (optional, cosmetic) |
-| Issue doc: GCP/CI pipeline bugs + bucket-resolution bypass | **Not done** — Phase 5 todo; scope is the GCP/CI defects (config churn is the only NEW one — the AWS App Runner/ECR states are **intentional parking, not bugs**); notify Ikenna (CI-area) | nobody — but coordinate w/ Ikenna     |
-| AWS resume (App Runner + ECS + ECR)                        | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                               | AWS credits                           |
+| Item                                                    | State / why deferred                                                                                                                                                                                                           | Blocked on                            |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| Tab 1 final sign-off                                    | **Operator-owned** — reviewed + iterated, awaiting the green tick                                                                                                                                                              | operator                              |
+| Tabs 2–5 mock review (Deploy/Pipeline/Artifacts/Health) | **Operator-owned** — iterated this turn (correctness + usefulness), awaiting operator scrutiny                                                                                                                                 | operator                              |
+| Whole-mock final sign-off                               | **Operator-owned** — the gate that unblocks all implementation                                                                                                                                                                 | tabs 1–5 signed off                   |
+| Phase 1–6 implementation (backend, page, absorb, codex) | **Cannot be done yet** — gated by the mock sign-off above                                                                                                                                                                      | whole-mock sign-off                   |
+| (A) tarball commit stamp                                | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS, but part of Phase 3c; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                                                       | mock sign-off + Phase 3c start        |
+| Fill the mock's 2 `n/a — re-auth` build dates           | **Cannot be done yet** — needs a fresh GCP `gcloud auth login`                                                                                                                                                                 | operator re-auth (optional, cosmetic) |
+| Issue doc for the pipeline bugs                         | ✅ **DONE 2026-07-21** — filed `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; re-verified all findings (#5 fixed, #2 not-a-bug, #6 plan-tracked); only #4/#7 (AWS-deferred) + #1/#3 (GCP) open | Ikenna (his active CI files)          |
+| AWS resume (App Runner + ECS + ECR)                     | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                                                                   | AWS credits                           |
