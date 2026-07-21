@@ -764,3 +764,13 @@ strictly biggest; the set CHURNS over quarters. The 12 added in 0fe9067e are a s
 - [ ] [DESIGN] P2. strategy-service — note: XAU (gold) perp is the deepest non-crypto leg ($327M) → if gold carry flips
       to backwardation (or for non-basis gold strategies), it's the most size-able crypto-venue commodity. Repo:
       strategy-service.
+
+## Deferred work — migrated to:
+
+**`plans/archive/issues/krx_equity_twin_no_source_2026_06_28.md`** — the identical KRX-equity-twin sourcing question (SK
+Hynix/Hyundai Motor/Samsung, no Databento KRX dataset, no launcher) was already raised and operator-decided 2026-06-28:
+Option C (reclassify as `EXPECTED_SOURCE_NOT_AVAILABLE` honest-empty) was chosen over sourcing a vendor/adapter, which
+closed the tradfi manifest-completeness gate (KRX eu 378→0) but did NOT acquire a real cash-hedge feed. This plan's
+`[DATA] P2` **BLOCKED-DATA** item is a different, still-open need (a live cash-equity twin for crypto-perp BASIS
+execution, not manifest completeness) — the cited issue doc is the closest precedent ruling (operator declined to source
+a vendor at that time), not a code successor; a fresh operator ask is needed if the basis trade is prioritized.

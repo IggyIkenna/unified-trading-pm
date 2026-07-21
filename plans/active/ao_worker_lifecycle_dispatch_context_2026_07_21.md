@@ -181,3 +181,13 @@ conversational memory re-reads a plan, it does not lose work. (The dead-worker `
 - **The backend can be restarted by someone else mid-session.** It was stopped for this work, yet a peer
   `systemctl restart`'d it at 13:00 onto the pre-fix code — verify the live `ExecMainStartTimestamp` / running SHA
   before assuming the state you left it in.
+
+## Deferred work — migrated to:
+
+**Not yet identified** — the "Role lifecycle-field reclassification" `[DEFERRED]` P3 item (align the declared
+`lifecycle` on plan-worker roles — `backend_engineer`/`ui_developer`/`quant_dev`/`infra` `one_shot → persistent`;
+resolve `data_engineering` scheduled-vs-persistent — with reality) is explicitly out of this plan's scope ("Deferred
+(tracked, not this plan's scope)") with operator-owned timing ("after updating docs, fixing this, and everything
+discussed", 2026-07-21), but no successor plan currently owns it — grepped `plans/active/` and `plans/epics/` for "role
+lifecycle"/"one_shot"/"persistent" reclassification with no hit. This plan remains the record of the deferral until a
+successor plan is authored.

@@ -166,3 +166,11 @@ drift_direction: advance-code
 **Full-execution criterion** (per "Plans Run To Actual Completion" HARD RULE): the ≥7-day live run executes on real
 capital with live telemetry; the backtest grid runs to completion on real history. Hard-stops (operator-only): wallet
 keys, live-trading kill-switch arming, capital ramp beyond the locked schedule.
+
+## Deferred work — migrated to:
+
+**Not yet identified** — the "Volume as a first-class feature for the cs/ext ML models" `[RESEARCH] P2` item
+(Model-improvement backlog, provenance: research session 2026-06-24) is `**DEFERRED**` — "model improvement for after
+the window/universe work lands" — but no plan currently tracks that window/universe work as a distinct, named item;
+grepped `plans/active/` and `plans/epics/` for "window/universe sweep"/"cs/ext window" with no hit outside this plan.
+This plan's own "Model-improvement backlog" section remains the owner until a successor is authored.

@@ -272,3 +272,10 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   documented in `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip /
   cooldown / park"), which is now the SSOT for this mechanism. **AF-1b is unblocked** — build the escalation backoff
   directly on `register_cooldown`, do not write a second cooldown/backoff engine.
+
+## Deferred work — migrated to:
+
+**This plan's own todo "(AF-5-followup) Wire the fleet-KPI dashboard React card"** — the dashboard REACT card was
+explicitly `**DEFERRED**` inline at the AF-5 backend todo (no `node_modules` + no cited Playwright/regression spec at
+the time) but was completed within this SAME plan one session later (`agent-orchestrator@efc52fa`, 2026-07-21, 19 vitest
+cases + `tsc`/`vite build` clean). No external successor plan was needed — the deferred item shipped in-plan.
