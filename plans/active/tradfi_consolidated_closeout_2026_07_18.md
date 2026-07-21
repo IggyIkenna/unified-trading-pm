@@ -717,6 +717,42 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Progress Log
 
+- **2026-07-21 (slot-1) — TradFi MVP-set EXPANSION shipped (operator directive): 4 instrument groups flipped into tradfi
+  MVP.** SSOT change in UAC `MVP_SCOPE["tradfi"]` — `unified-api-contracts@afa2dd64` (MVP_SCOPE_CONFIG_VERSION 18→19).
+  Two mechanisms, both at the registry layer (NOT a post-hoc catalogue patch):
+  - `_mvp_scope_rules.py::TradFiMvpRule` — added `BTC/ETH/MBT/MET` to `underliers` (CME crypto FUTURES; FUTURE cells
+    only — `option_underliers={"ES"}` keeps CME BTC/ETH OPTIONS out per operator "no CME option for BTC and ETH"; also
+    flows into `MVP_CME_EXCHANGE_CODES` so the CME databento download universe gains BTC.FUT/ETH.FUT/MBT.FUT/MET.FUT).
+  - New declarative field `TradFiMvpRule.extra_mvp_cells` (exact `(venue_root, itype, base)` triples), matched by a new
+    check in `_mvp_scope_predicate.py::is_mvp`: `(CBOE,FUTURE,VX)` + `(CBOE,INDEX,{US2Y,US5Y,US10Y,US30Y,US3M})` +
+    `(FX,SPOT_PAIR,KRW)`. Kept out of the flat `venues`/`instrument_types` sets so "CBOE" doesn't sweep in the ~33k CBOE
+    SPX/VIX OPTION rows. Tests added (`test_mvp_scope.py::TestTradFiMvpExpansionV19`), UAC QG green (312s).
+  - **Projected mvp delta on the served catalogue (`prod/catalog.parquet`, identical `is_mvp` predicate): +409** — VIX
+    FUTURE **82**, CBOE treasury-yield INDEX **10** (VIX cash INDEX excluded), FX KRW **1**, CME BTC/ETH/MBT/MET FUTURE
+    **316** (BTC 92 + ETH 81 + MBT 76 + MET 67). Prior mvp=True set (70,930 on the current served artifact: CME OPTION
+    69,822 + CME FUTURE 895 + NASDAQ/NYSE/KRX EQUITY 185 + ETF 28) unchanged → projected new total ≈ 71,339. NOTE:
+    operator's ~1,602 VIX-futures estimate ≠ the 82 CBOE:FUTURE rows actually present in the served catalogue — flagged;
+    the `--mode full` rebuild measures the true served count.
+  - **Catalogue rebuild**: `build_instrument_catalogue.py --asset-group tradfi --mode full --allow-catalogue-shrink`
+    launched locally (env `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod`); checkout includes the
+    `_iter_by_date_snapshots` litter-exclusion fix (`instruments-service@1a73082e`). 27,104 by_date parquets; **no OOM**
+    (RSS steady ~1 GB, peak 1.45 GB) but CPU-bound rollup is slow on the local box — see report for served-artifact
+    verification status.
+  - **PART B — backfill DOWNLOAD coverage for the 4 groups (exact launcher invocations):**
+    - VIX futures (CBOE:FUTURE:VX) — ALREADY covered: `launch-tradfi-bf-cfe-ohlcv-1m.sh` (VX.FUT via Databento
+      XCBF.PITCH, routed VM_VENUE=CBOE, full history from 2018-11-04). (`launch-tradfi-bf-cboe-ohlcv-1m.sh` = the
+      2026-YTD gap-filler for the same VX.FUT.)
+    - CME BTC/ETH futures — ALREADY covered: `launch-tradfi-bf-cme-ohlcv-1m.sh` (CME_ROOTS already lists
+      BTC/ETH/MBT/MET; per-root: `--only-root BTC` / `ETH` / `MBT` / `MET`).
+    - KRW — ALREADY covered: `launch-tradfi-bf-fx-ohlcv-24h.sh` (Yahoo daily iterates the whole FX_SPOT_PAIRS universe;
+      `FxSpotPairDef("KRW","USD","KRWUSD=X")` is in it).
+    - Treasuries (CBOE:INDEX:US*) — **GAP CLOSED**: no launcher emitted VM_VENUE=CBOE + ohlcv_24h. Added
+      `deployment-service/scripts/vm/launch-tradfi-bf-cboe-indices-ohlcv-24h.sh` (routes
+      `route_yahoo_tradfi("CBOE", {ohlcv_24h})` → `fetch_yahoo_indices("CBOE")` → the 5 Yahoo treasury tenors). Ship
+      BLOCKED locally by a PRE-EXISTING deployment-service QG red
+      (`tests/integration/test_zone_failover_integration.py:39` imports the removed `unified_trading_library.sink` →
+      collection pollution) — see report finding.
+
 - **2026-07-18 (slot-1) — Autonomous close-out loop STARTED; baseline re-measured live + core shape problem
   pinpointed.** Re-verified the climbing metric directly against live prod GCS (not docs), confirming the plan's ground
   truth:
