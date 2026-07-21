@@ -104,8 +104,19 @@ This is a cross-repo SSOT-wiring gap, not something to unilaterally fix mid-way 
       fix `rollout-quality-gates-unified.py --ui-only` to wire it in correctly for ESLint 9 flat-config, or update the
       base file itself to the flat-config format both repos actually use, then propagate. (repo: unified-trading-pm,
       unified-trading-system-ui, deployment-ui)
-- [ ] [INFRA] P3. Once wired, reconcile `deployment-ui`'s inline `no-explicit-any: "warn"` (drifted below even the
-      pre-fix SSOT) and `no-unused-vars: "warn"` against the base file's `error` level. (repo: deployment-ui)
+- [x] ✅ [INFRA] P3. Once wired, reconcile `deployment-ui`'s inline `no-explicit-any: "warn"` (drifted below even the
+      pre-fix SSOT) and `no-unused-vars: "warn"` against the base file's `error` level. (repo: deployment-ui) —
+      **already accomplished** by the todo-1 wiring work itself: `deployment-ui@01e455f` ("wire deployment-ui
+      flat-config to the SSOT .cjs base rules") replaced the hardcoded local rules block with `...uiBaseRules.rules`
+      spread from `eslint.config.base.cjs` — there is no remaining local override to reconcile,
+      `no-explicit-any`/`no-unused-vars`/`no-console` are now literally the base file's `error` values, not a
+      separately-declared match. Verified 2026-07-21 (slot-9), independently: `npm run lint` (the real gate —
+      package.json scopes it to `eslint src`, not the whole repo) passes with ZERO output on the current tree;
+      deployment-ui genuinely has 0 real `any`-type usages today (confirmed by the original issue's own finding), so
+      this todo's deliverable is the rule now being correctly ACTIVE for the next violation, not a backlog of existing
+      ones to fix. Note: `unified-trading-system-ui`'s half of todo 1 (the wiring) is NOT yet done — that repo's
+      `eslint.config.mjs` still has zero reference to `eslint.config.base.js` as of this check; todo 1 stays open for
+      that repo.
 
 ## Codex SSOTs
 
