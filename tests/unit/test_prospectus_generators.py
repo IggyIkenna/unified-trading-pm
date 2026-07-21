@@ -213,19 +213,25 @@ def test_audit_output_deterministic() -> None:
         pytest.skip(f"UAC import unavailable: {e}")
 
 
-def test_audit_57_archetypes() -> None:
-    """Audit should report exactly 58 StrategyArchetype enum values."""
+def test_audit_archetype_count() -> None:
+    """Audit's reported archetype count should match the live StrategyArchetype
+    enum — derived, not hardcoded (a fixed number here drifted stale twice
+    already; see capability_verdict_matrix_archetype_count_60_vs_59_regression_2026_07_21.md).
+    """
     uac_path = str(_UAC_ROOT)
     if uac_path not in sys.path:
         sys.path.insert(0, uac_path)
 
     try:
         from audit_prospectus_vs_codex import run_audit
+        from unified_api_contracts.internal.architecture_v2.enums import StrategyArchetype
 
         result = run_audit()
-        assert result["total_archetype_ids"] == 59, (
-            f"Expected 59 archetypes but got {result['total_archetype_ids']}. "
-            "Update the plan if new archetypes were added (see F9 in findings tracker)."
+        expected = len(StrategyArchetype)
+        assert result["total_archetype_ids"] == expected, (
+            f"Expected {expected} archetypes (len(StrategyArchetype)) but got "
+            f"{result['total_archetype_ids']}. Update the plan if new archetypes were added "
+            "(see F9 in findings tracker)."
         )
     except ImportError as e:
         pytest.skip(f"UAC import unavailable: {e}")

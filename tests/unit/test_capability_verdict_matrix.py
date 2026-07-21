@@ -3,7 +3,9 @@
 Pins:
   - Every cell gets an explicit verdict (available | blocked | not_registered) —
     no absent cells; counts add up.
-  - All 58 archetypes appear as blocks.
+  - All StrategyArchetype members appear as blocks (count NOT hardcoded here —
+    see test_all_archetypes_are_blocks; a fixed number drifted stale twice
+    already, see capability_verdict_matrix_archetype_count_60_vs_59_regression_2026_07_21.md).
   - not_registered archetypes (no leg structure) are explicit blocks.
   - Impossible algo combinations are BLOCKED (operator requirement).
   - Determinism: build_matrix(_FIXTURE_ENGINE_BACKED) is byte-stable across two runs.
@@ -72,16 +74,24 @@ _FIXTURE_ENGINE_BACKED: frozenset[str] = frozenset(
         "STAT_ARB_PAIRS_FIXED",
         "STAT_ARB_CROSS_SECTIONAL",
         "CARRY_FUNDING_DISPERSION",
+        "ARBITRAGE_SPORTS_DUTCHING",
     }
 )
 
 
-def test_all_57_archetypes_are_blocks() -> None:
+def test_all_archetypes_are_blocks() -> None:
+    """Every live StrategyArchetype member appears as a block — derived from the
+    enum itself, not a hardcoded count (a fixed number here has drifted stale
+    twice already as UAC grew the enum; see
+    capability_verdict_matrix_archetype_count_60_vs_59_regression_2026_07_21.md).
+    """
+    from unified_api_contracts.internal.architecture_v2.enums import StrategyArchetype
+
     matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     blocks = matrix["archetypes"]
     assert isinstance(blocks, list)
     archetypes = {b["archetype"] for b in blocks}  # type: ignore[index]
-    assert len(archetypes) == 59
+    assert archetypes == {a.value for a in StrategyArchetype}
 
 
 def test_counts_add_up_and_no_absent_cells() -> None:
@@ -114,6 +124,12 @@ def test_f48_engineless_archetypes_are_not_registered() -> None:
     engine are demoted from AVAILABLE to not_registered(no_v2_engine), while the
     three engined ones (VOL_TRADING_OPTIONS / MARKET_MAKING_CONTINUOUS /
     MARKET_MAKING_EVENT_SETTLED) stay real (engined) blocks.
+
+    ARBITRAGE_SPORTS_DUTCHING is NOT in this set: SportsArbDutchingEngine is now
+    wired into strategy-service's ARCHETYPE_ENGINE_REGISTRY (Option A,
+    unified-api-contracts@cf28a962 + strategy-service@545a527b — see
+    sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md), so it is a
+    real (engined) block, not an F48 demotion.
     """
 
     matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
@@ -129,6 +145,9 @@ def test_f48_engineless_archetypes_are_not_registered() -> None:
     for engined in ("VOL_TRADING_OPTIONS", "MARKET_MAKING_CONTINUOUS", "MARKET_MAKING_EVENT_SETTLED"):
         assert by_arch[engined]["not_registered"] is False
         assert engined not in engineless
+    # ARBITRAGE_SPORTS_DUTCHING is engine-backed now — not in engineless either.
+    assert by_arch["ARBITRAGE_SPORTS_DUTCHING"]["not_registered"] is False
+    assert "ARBITRAGE_SPORTS_DUTCHING" not in engineless
 
 
 def test_f47_unbuildable_venue_cells_are_not_available() -> None:
