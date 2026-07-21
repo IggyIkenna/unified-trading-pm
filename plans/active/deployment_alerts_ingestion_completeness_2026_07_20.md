@@ -311,9 +311,19 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       discipline), not deferred to a single end-of-plan batch. No unshipped code or unflipped checkbox remained by the
       time this todo was reached (verified: every repo in the slot clean + 0 commits ahead of `origin/live-defi-rollout`
       across alerting-service, deployment-api, deployment-service, unified-trading-pm).
-- [ ] [REVIEW] P2. Post-phase codex audit — document the normalised alert schema, the per-source coverage matrix, the
+- [x] ✅ [REVIEW] P2. Post-phase codex audit — document the normalised alert schema, the per-source coverage matrix, the
       "diagnostic surface / mirror-cheap-Slack-sources" principle, the persist-vs-page distinction, and the retention
-      policy in `codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act.
+      policy in `codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act. —
+      `unified-trading-pm@<SHA>`: added § "The unified alerts ledger (`/alerts` page) — a diagnostic surface, not a
+      paging surface" to `ci-alerting.md`, covering the persist-vs-page distinction, the normalised-schema coverage
+      table (re-derived from live shipped state, not copy-pasted from todo 1's original — several `p`→`P` upgrades as
+      todos 2/4/7/9 landed, one `p`→`P` reverted back to `p` after confirming `deployment_api`'s `_persist_alert()`
+      still has no `deployment_target` param), the subject_repo-vs-emitting_repo distinction, and the retention/
+      pagination policy. Cross-referenced the todo-11 partial-enrichment finding (~23% of alerting-service objects carry
+      the enriched shape) so the doc doesn't overclaim production completeness. **Flip Plan B**: already done —
+      `deployment_ui_alerts_page_rebuild_2026_07_20.md` was flipped `draft` → `active` (+ `gate_on_depends: true`) by a
+      prior agent turn (`ca7e7bec5`, ahead of this todo's dispatch); verified current state matches, no action needed
+      there.
 
 ## Normalised alert schema (contract)
 
