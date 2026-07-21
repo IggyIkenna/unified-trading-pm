@@ -146,9 +146,20 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       only when `alert_from` predates the floor, the widget's own atomic clear, page-level clear-filters also clears the
       date range) — all 16 pre-existing assertions stay green (20/20 passed). `quality-gates.sh` green (sentinel
       e6234d16).
-- [ ] [UI] P1. **Drill-down links** — per-row deep-links: `deployment_target` → `/deployments/:name` (preserve the
+- [x] ✅ [UI] P1. **Drill-down links** — per-row deep-links: `deployment_target` → `/deployments/:name` (preserve the
       pinned href shape), `run_url` → the external run, log stream → `?logs=<target>`, runbook link where the normalised
-      row carries one. A row with an `alert_class`/source that has a detail view links to it.
+      row carries one. A row with an `alert_class`/source that has a detail view links to it. — deployment-ui@fe767f19.
+      The `/deployments/:name` link and the external `run_url` link were already shipped (parity #4 + the original
+      page). New: a "Stream logs" button on any row carrying `deployment_target`, calling the page's own `setParam` to
+      set the SAME `?logs=<target>` sub-param `AlertsLogsTab.tsx` already owns and reads (its own header comment
+      described this exact deep-link as the intended contract — `AlertsContent` is always rendered inside
+      `AlertsLogsTab`, so both components observe the one shared `useSearchParams()` location; setting `?logs=` here
+      correctly swaps `cockpit-logs-empty` for the live `StreamingLogsPanel`). Runbook link: grepped the full
+      `AlertEntryDict` (backend TypedDict), `RepoCiAlertEntry` (frontend type), and `mockRepoCiAlerts()` — no
+      `runbook`/`runbook_url` field exists in any of the three, so no row can ever carry one today; not implemented (a
+      speculative field nothing populates), left for whichever future ingestion todo adds it. 1 new `pw:L2` case in
+      `tests/smoke/alerts-page.spec.ts` (click → `?logs=` set → empty-state placeholder replaced) — all 20 pre-existing
+      assertions stay green (21/21 passed). `quality-gates.sh` green (sentinel 32a14ebb).
 - [ ] [UI] P2. **Layout / "proper view"** — restructure the two-card layout into a usable table-first view per the
       operator's "not proper right now" complaint; keep the streams summary but make the timeline the primary,
       filterable/sortable surface. Preserve every `data-testid` the regression spec depends on.
