@@ -355,8 +355,10 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   resolved · git RECOVERED · escalation resolved-if-it-paged; webhook-only correlation via opened-at ts, no threading).
   SSOT: `codex/04-architecture/agent-orchestrator-alerting.md`. **CI alerts (`ci-failures` channel)** route through the
   reusable `notify-slack.yml` carrier (read-back dedup: `dedup_key`+`cooldown_min`, `recovery`-gated all-clears,
-  fail-open); cooldowns track a condition's MEASURED cadence, not its declared cron (GH throttles `schedule:` ≈37%).
-  SSOT: `codex/04-architecture/ci-alerting.md`.
+  fail-open); cooldowns track a condition's MEASURED cadence, not its declared cron (GH throttles `schedule:` to ≈80-90%
+  delivery, corrected 2026-07-21 per `github_actions_ci_cost_reduction_2026_07_15.md`'s dated re-measurement — hourly
+  crons landed 9/10, `*/30` landed 16/20; was: ≈37%, an earlier and apparently stale estimate). SSOT:
+  `codex/04-architecture/ci-alerting.md`.
 - **Runbooks**: declare `owner`/`cadence`/`verifier`/`last_executed` (missing = review-blocking). **Cross-plan
   banners**: launching a VM / in-flight refactor → add `> **🟢/🟡 …**` to every affected plan.
 

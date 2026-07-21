@@ -16,7 +16,7 @@ summary: >-
   produces — the two cases are indistinguishable at that data layer. Filing as its own
   backend_engineer/agent-orchestrator task rather than fixing it live mid-session, since a dispatch-logic change has
   fleet-wide blast radius and deserves its own reviewed, tested change.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -35,7 +35,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [manifest_v6_batch3_residual_orphaned_work-002]
-resolved_by:
+resolved_by: agent-orchestrator@7b3f909
 locked_by:
 depends_on: []
 ---
@@ -106,10 +106,19 @@ open" from "upstream ingested and now fully done+pruned":
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `_wire_gate_on_depends_prereqs`/`_completed_task_satisfied` (or add a new named-prerequisite
+- [x] ✅ [BACKEND] P1. Fix `_wire_gate_on_depends_prereqs`/`_completed_task_satisfied` (or add a new named-prerequisite
       derivation) in `agent-orchestrator/server/regen_backlog_from_plan.py` + `dispatch.py` so `gate_on_depends`
       correctly blocks on a `local-only`/`NA` upstream plan that still has open `- [ ]` todos, per the design above. Add
-      regression tests mirroring `tests/test_dispatch_completed_prereqs.py`. (repo: agent-orchestrator)
+      regression tests mirroring `tests/test_dispatch_completed_prereqs.py`. (repo: agent-orchestrator) —
+      agent-orchestrator@7b3f909. Fixed a SECOND compounding bug found while implementing: `depends_on` entries authored
+      with a directory prefix (the real-world form this doc itself uses) never matched the wiring pass's bare-stem
+      lookup, so the gate never fired regardless of upstream state — normalized both sides via a shared `_stem()`. For
+      the never-ingested-upstream case, added a derived named prerequisite (`gate-upstream-open:<stem>`) read from the
+      upstream plan's own live open-todo count and synced into `state.db.prerequisites` every regen tick (dispatch.py's
+      `_prereqs_met` already honours named prerequisites — no dispatch.py change needed). 4 new regression tests in
+      `test_regen_backlog_from_plan.py` (directory-qualified `depends_on` match, never-ingested-with-open-todos holds,
+      DB condition lifecycle 0→1 on upstream completion), all passing; full `quality-gates.sh` green (basedpyright 0
+      errors, 1567 tests passed).
 
 ## Codex SSOTs
 

@@ -204,11 +204,11 @@ rather than a single CSS var.
       under severe host contention (measured load 27.64/8 cores — same environment-blocker class Batch 1 hit, not a
       regression); re-ran with `--timeout=120000 --workers=1` and all 3 passed (49.9s/18.5s/5.5s). No fabricated
       `pw:L2 ✓`.
-- [ ] [UI] P3. Batch 5 — marketing + platform pages + misc (28 files, 1–32 hits each): `app/(public)/_home-client.tsx`,
-      `components/marketing/market-galaxy.tsx`, `components/marketing/arbitrage-galaxy.tsx`,
-      `components/marketing/galaxy-canvas.tsx`, `components/marketing/strategy-family-catalogue.tsx`,
-      `components/marketing/platform-architecture-grid.tsx`, `components/marketing/operating-model-stages.tsx`,
-      `app/(public)/services/investment/page.tsx`,
+- [x] ✅ [UI] P3. Batch 5 — marketing + platform pages + misc (28 files, 1–32 hits each):
+      `app/(public)/_home-client.tsx`, `components/marketing/market-galaxy.tsx`,
+      `components/marketing/arbitrage-galaxy.tsx`, `components/marketing/galaxy-canvas.tsx`,
+      `components/marketing/strategy-family-catalogue.tsx`, `components/marketing/platform-architecture-grid.tsx`,
+      `components/marketing/operating-model-stages.tsx`, `app/(public)/services/investment/page.tsx`,
       `app/(platform)/investor-relations/board-presentation/components/board-presentation-slide-part-a.tsx`,
       `app/(platform)/services/trading/strategies/[id]/components/strategy-detail-tab-panels.tsx`,
       `app/(platform)/services/trading/strategies/[id]/strategy-detail-page-client.tsx`,
@@ -222,7 +222,36 @@ rather than a single CSS var.
       `components/promote/paper-trading-ledger-panels.tsx`, `components/ops/venue-connectivity.tsx`,
       `components/staging-gate.tsx`, `components/briefings/strategy-coverage-matrix.tsx`,
       `components/research/strategies/strategy-detail-panel.tsx`, `components/cockpit/cockpit-widget-grid.tsx`. (repo:
-      unified-trading-system-ui)
+      unified-trading-system-ui) — `unified-trading-system-ui@816a0c53`. Delegated to 3 parallel sub-agents on disjoint
+      file sets (marketing components; platform/app pages; lib/config/misc) to conserve context on this large batch,
+      each pasted `SUB_AGENT_MANDATORY_RULES.md` in full, none ran QG/commit/quickmerge themselves — I consolidated,
+      verified, and shipped all 26 edited files together. Highlights: `_home-client.tsx`'s bespoke "Odum institutional
+      palette" is deliberately theme-invariant (always near-black, ignoring the app's light/dark toggle per its own doc
+      comment) — mapped neutrals to Tailwind v4's static default-palette vars (`--color-zinc-950` etc.) and accents to
+      theme-reactive semantic tokens; flagged the near-black/gold shades as close-but-not-pixel-exact approximations for
+      design review (no dedicated "brand gold" token exists). `market-galaxy.tsx`/`strategy-family-catalogue.tsx`/ etc.
+      are pure SVG/DOM (CSS vars resolve fine); `galaxy-canvas.tsx`/`arbitrage-galaxy.tsx` are genuine raw Canvas 2D
+      (`ctx.fillStyle`) — resolved tokens once via `getComputedStyle` at mount into colour arrays, matching the
+      `workspace-toolbar.tsx` precedent from Batch 2, rather than passing `var()` strings directly to canvas calls (a
+      real regression class already caught once this session). `heatmap/page.tsx`'s hand-rolled RGB-channel
+      interpolation rewritten as `color-mix()` between `--risk-healthy/--risk-warning/--risk-critical`.
+      `app/opengraph-image.tsx` (Satori/`ImageResponse` build-time renderer) and `app/layout.tsx` (`theme-color` →
+      `<meta>` tag read by browser chrome) are genuinely unfixable — neither has DOM/CSS-custom-property access ever —
+      added both to `CODEX_COLOUR_EXCLUDE_GLOBS` (sanctioned pattern, category (d), matching `lib/chart-theme.ts`'s own
+      hardcoded exemption in `base-ui.sh`). `lib/api/mock-handler.ts` confirmed genuinely exempt (already listed,
+      matches the mock/fixture-data exemption class exactly) — left untouched, 0 changes. `seed-demo/page.tsx`'s 2
+      "hits" were HTML-entity-encoded `{id}` text, not colours — false positives, 0 real hits. **Adjacent finding (not
+      fixed here, outside this todo's file list)**: `pnl.config.ts`'s `PNL_FACTOR_CHART_COLORS` values are consumed by
+      `components/widgets/pnl/pnl-time-series-widget.tsx:141` via string concatenation (`` `${C[f.key]}18` ``, a hex +
+      2-digit-alpha-suffix trick) — this only works with a literal hex string and would have silently dropped the alpha
+      (invalid CSS, chip background falling back to unset) now that the value is a CSS `var()`. Small + clear + directly
+      caused by this change, so fixed inline rather than filed separately: replaced with
+      `` `color-mix(in srgb, ${C[f.key]} 9.4%, transparent)` `` (9.4% ≈ hex `18`/255), verified no other hex-suffix
+      tricks remain in that file — shipped separately as `unified-trading-system-ui@f370d853`. Reconciled 6 separate
+      quickmerge sentinel/branch-drift races against concurrent Batch-3/Batch-4/unrelated commits landing on this very
+      high-churn repo (all clean fast-forwards or a single-key `codex_ui_violation_baseline.json` conflict, resolved by
+      re-measuring the true combined state on each merged tree rather than guessing — final combined colour count
+      171→96). `tsc --noEmit`/`eslint` clean across all 26 files, `quality-gates.sh` green end-to-end.
 
 ## Codex SSOTs
 

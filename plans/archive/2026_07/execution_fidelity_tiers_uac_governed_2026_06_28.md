@@ -162,4 +162,7 @@ both reasoned together.
   WAS wired into `live/matching_engine.py` (execution-service@42956add), replacing the live path's
   `get_book_type_for_asset_group()` book-type resolution. The live matching-engine's book-type selection logic DID
   change. Anyone using this Note to skip a live-safety review of this plan must not — the live-path change is real and
-  should get the standard live-safety review if it hasn't already.]**
+  should get the standard live-safety review if it hasn't already.]** **[✅ CONFIRMED 2026-07-21, operator, via
+  `/plan-reconcile`: the live-safety review of `execution-service@42956add` happened, just wasn't documented at the time
+  — this closes the open question first raised 2026-07-14 and re-surfaced in
+  `plans/active/issues/plan_reconcile_parked_decisions_2026_07_15.md` §5. Archival-blocking condition cleared.]**
