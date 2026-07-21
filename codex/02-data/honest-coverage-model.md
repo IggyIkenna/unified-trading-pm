@@ -557,18 +557,28 @@ the v1 harness already wrote stays byte-for-byte compatible.
 
 ## Where the axes live (canonical)
 
-| Axis                                                              | Canonical location                                                                     |
-| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Instruments in the universe                                       | IS catalogue (`build_instrument_catalogue.py`; `mvp` is a stamped column)              |
-| Expected data_types per (ag, instrument_type)                     | UAC `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`                                       |
-| Per-venue capability + listing windows                            | UAC `VENUE_DATA_TYPE_CAPABILITIES` (+ `FUTURE_BUNDLE_VENUES` for bundle grain)         |
-| MVP filter (which instruments are in-scope for the current phase) | UAC `is_mvp` / `mvp_scope.py`                                                          |
-| Shard atom per AG                                                 | `codex/02-data/availability-manifest-and-data-status.md` § per-asset-group shard atoms |
-| 4-state `capture_status` / typed `error_reason`                   | UTL `manifest_writer/_schema.py` `CaptureStatus`; UAC `EmptyConfirmedReason`           |
+| Axis                                                                   | Canonical location                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Instruments in the universe                                            | IS catalogue (`build_instrument_catalogue.py`; `mvp` is a stamped column)                                                                                                                                                                                                 |
+| Expected data_types per (ag, instrument_type)                          | UAC `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`                                                                                                                                                                                                                          |
+| Per-venue capability + listing windows                                 | UAC `VENUE_DATA_TYPE_CAPABILITIES` (+ `FUTURE_BUNDLE_VENUES` for bundle grain)                                                                                                                                                                                            |
+| MVP filter (which instruments are in-scope for the current phase)      | UAC `is_mvp` / `mvp_scope.py`                                                                                                                                                                                                                                             |
+| Shard atom per AG                                                      | `codex/02-data/availability-manifest-and-data-status.md` § per-asset-group shard atoms                                                                                                                                                                                    |
+| 4-state `capture_status` / typed `error_reason`                        | UTL `manifest_writer/_schema.py` `CaptureStatus`; UAC `EmptyConfirmedReason`                                                                                                                                                                                              |
+| MDPS candle `timeframe` (extra axis beyond MTDS raw-tick's shard atom) | UAC `MDPS_CANONICAL_TIMEFRAMES`/`MDPS_DERIVABLE_DATA_TYPES` (`registry/processed_data_dependencies.py`); consumed in `deployment-api`'s `per_instrument_coverage`/`mtds_honest_coverage_for_venue` via an optional `timeframes` param (`None` = MTDS raw-tick, unchanged) |
 
 **Do NOT derive the expected universe from the manifest.** The manifest is the write ledger; the expected universe is
 the IS catalogue × UAC matrix. Treating the manifest as both numerator and denominator circular-references honest
 coverage.
+
+**MDPS timeframe-awareness (added 2026-07-21, `mtds_data_status_page_parity_2026_07_21.md`)**: MDPS derives candles at 7
+timeframes from the same raw source data_types MTDS captures, over the SAME manifest (service-partitioned by
+`service_name`) — a finer shard grain than MTDS's per-(instrument, date) atom. Extended, not replaced: the Tier-3
+per-instrument denominator/found-set becomes per-(instrument, date, timeframe) ONLY when a `timeframes` list is supplied
+(MDPS callers only); every MTDS call path is byte-for-byte unchanged. The Tier-2 (venue-level) branch is NOT yet
+timeframe-aware — a known, tracked gap (see the plan's follow-up todos), not a silent omission. Two open design
+questions (pre-cutover historical-row visibility; whether any venue has per-timeframe start-date divergence) are
+deliberately unresolved pending operator input — see the plan's Progress Log for the full reasoning.
 
 ---
 
