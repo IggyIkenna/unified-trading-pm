@@ -314,7 +314,7 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
 - [x] ✅ [REVIEW] P2. Post-phase codex audit — document the normalised alert schema, the per-source coverage matrix, the
       "diagnostic surface / mirror-cheap-Slack-sources" principle, the persist-vs-page distinction, and the retention
       policy in `codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act. —
-      `unified-trading-pm@<SHA>`: added § "The unified alerts ledger (`/alerts` page) — a diagnostic surface, not a
+      `unified-trading-pm@15158123c`: added § "The unified alerts ledger (`/alerts` page) — a diagnostic surface, not a
       paging surface" to `ci-alerting.md`, covering the persist-vs-page distinction, the normalised-schema coverage
       table (re-derived from live shipped state, not copy-pasted from todo 1's original — several `p`→`P` upgrades as
       todos 2/4/7/9 landed, one `p`→`P` reverted back to `p` after confirming `deployment_api`'s `_persist_alert()`
