@@ -99,30 +99,36 @@ Whoever owns the CEFI canonicalization migration (check `cefi_consolidated_close
 
 ## Todos
 
-- [ ] [BACKEND] P1. SHIP the orphaned instruments-service#886 `available_at` fix (the core reason this issue exists — it
-      was left UNSHIPPED). Worker agt-9df557 completed the fix (excluded `available_at` from the InstrumentsWriteGate
-      alignment scan, in `instruments_service/engine/orchestrator/__init__.py`) but exited via `slot_done_one_off`
-      (2026-07-21 16:55) on a blocked question BEFORE main's answer landed (16:59), leaving the diff UNCOMMITTED in
-      slot-10's instruments-service worktree. INHERIT that orphaned diff (do NOT re-derive it — dead claim,
-      LIVENESS-gated safe per inherited-dirty-WIP rule), then bundle it with the 3 DERIBIT-COMBO test/golden fixes below
-      and quickmerge all together (main's blocked-answer C for BLK-61faee02). GUARD: before touching the DERIBIT-COMBO
-      test/golden files, verify the owning CEFI-migration agent is not concurrently editing them (same-file collision
-      safety); if the orphaned diff is gone (a later slot-10 dispatch already committed/discarded it), re-derive the
-      one-line scan exclusion. This is an LDR-QG-failure fix — it will NOT self-heal until shipped (repo:
-      instruments-service).
-- [ ] [BACKEND] P1. Update instruments-service's DERIBIT-COMBO-specific factory/routing tests
+- [x] ✅ [BACKEND] P1. SHIP the orphaned instruments-service#886 `available_at` fix (the core reason this issue exists —
+      it was left UNSHIPPED). — instruments-service@2b6a27d0
+      (`fix(write-gate): exclude available_at from     InstrumentsWriteGate no-lookahead check (fetch_completed_at semantic)`),
+      shipped by slot-4. Verified live at `instruments_service/engine/orchestrator/__init__.py:209`
+      (`_INSTRUMENTS_SERVICE_AS_OF_COLUMNS: tuple[str, ...] = tuple(c for c in DEFAULT_AS_OF_COLUMNS if c != "available_at")`).
+- [x] ✅ [BACKEND] P1. Update instruments-service's DERIBIT-COMBO-specific factory/routing tests
       (`tests/unit/test_factory_comprehensive.py::TestFactoryTardisRouting`,
       `tests/unit/test_cefi_tradfi_comprehensive.py::TestDeribitComboAdapter`) to match UAC `11adf279`'s deregistration
-      (repo: instruments-service).
+      — instruments-service@2b6a27d0 + @1a6be004 (`fix(tests): keep DERIBIT-COMBO skip reason on one physical line`,
+      slot-4), both by slot-4. Verified: all 3 tests now
+      `@pytest.mark.skip(reason=_DERIBIT_COMBO_DEREGISTERED_SKIP_REASON)` with a clear, documented reason; full
+      `quality-gates.sh` confirms zero failures (repo: instruments-service).
 - [ ] [BACKEND] P1. Regenerate the CEFI expected-universe golden fixture consumed by
       `tests/unit/scripts/test_expected_universe_golden.py::TestGoldenByteIdentical::test_expected_matches_golden[cefi]`
-      via the canonicalization migration's own regen script (repo: instruments-service).
-- [ ] [BACKEND] P1. Fix `_PER_AG_TARGET_COUNTS["CEFI"]` in `tests/unit/test_pipeline_e2e_prediction.py` (currently
-      hard-coded `25`, observed `26` post-purge) + the 2 related `test_check_enumeration_completeness.py` failures
-      (repo: instruments-service).
-- [ ] [BACKEND] P2. Re-run instruments-service `quality-gates.sh` full (not `--no-fix`) after the above 3 land, to
+      via the canonicalization migration's own regen script (repo: instruments-service). **STATUS UPDATE 2026-07-21**:
+      no longer a bare test failure — the test is now a clean, documented SKIP
+      (`scripts/regenerate_expected_universe_golden.py` self-guards and refuses to run while any UAC/UTL editable
+      sibling clone has uncommitted changes; this session's `unified-trading-library` clone currently carries untracked
+      WIP under `unified_trading_library/defi/` + `tests/unit/defi/` from a concurrent agent). Correctly left
+      open/deferred rather than forced past the guard — regenerate once that sibling clone is clean.
+- [x] ✅ [BACKEND] P1. Fix `_PER_AG_TARGET_COUNTS["CEFI"]` in `tests/unit/test_pipeline_e2e_prediction.py` (currently
+      hard-coded `25`, observed `26` post-purge) + the 2 related `test_check_enumeration_completeness.py` failures —
+      instruments-service@2b6a27d0 (slot-4). Verified: `_PER_AG_TARGET_COUNTS = {"CEFI": 26, ...}` at
+      `tests/unit/test_pipeline_e2e_prediction.py:236`; `test_check_enumeration_completeness.py` has zero failures in
+      the full QG run (repo: instruments-service).
+- [x] ✅ [BACKEND] P2. Re-run instruments-service `quality-gates.sh` full (not `--no-fix`) after the above 3 land, to
       confirm the whole suite is green before UAC's `11adf279` promotes LDR→main and starts failing `quality-gates-v2`
-      on every instruments-service PR (repo: instruments-service).
+      on every instruments-service PR. — instruments-service@35d9e707: `✅ ALL QUALITY GATES PASSED (340s)`,
+      `4759 passed, 8 skipped, 10 warnings`, sentinel `.qg_last_passed_sha=35d9e7074088809a3b3011b014178b0cb17466d2`
+      matches HEAD (repo: instruments-service).
 
 ## Codex SSOTs
 

@@ -6,11 +6,19 @@ status: phase-1-tier-1-partial-shipped
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-ui, execution-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-ui,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-06'
+created: "2026-05-06"
 type: plan
 companion_handover: shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
 locked_by: live-defi-rollout
@@ -18,6 +26,20 @@ locked_since: 2026-05-06
 owner: harsh
 auditor: claude
 ---
+
+## Deferred work — migrated to: `plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md`,
+
+`plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`,
+`plans/active/issues/manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md`,
+`plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md` — successor:
+writegate_honest_coverage_endtoend_2026_05_06, sports_p2_features_history_to_ml_ready_2026_06_27,
+manifest_writer_record_captured_available_at_never_persisted_2026_07_13,
+mtds_available_at_cross_asset_backfill_2026_07_13 (the Phase 0→1 gate + MDPS 1440-NaN repro are stale
+process/superseded-shipped; the sports raw-tables `available_at` migration is actively owned by
+`sports_p2_features_history_to_ml_ready_2026_06_27.md`; the Phase-2 validation checklist's `available_at` end-to-end
+smoke item is owned by the two `available_at` plans above, and its remaining 6 generic acceptance-criteria items are
+distributed across current canonicalisation plans rather than independently orphaned. No genuinely orphaned items found.
+NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
 
 # Shard-Granularity SSOT Propagation — Plan
 
@@ -148,20 +170,20 @@ stream — not added here.
       shapes:
 
       | Shape | Pros | Cons |
-      |---|---|---|
-      | **(a) Typed exception** `EmptyAfterIntervalFilter` raised in adapter, caught in orchestrator → `record_empty(row_key=...)` | • CandleOutput shape stays invariant (no downstream consumer changes) <br>• Mirrors how MDPS already shard-isolates per-instrument failures via `continue` <br>• One change site per adapter (raise instead of return placeholder) <br>• Honest: clearly signals "tried, no usable data" not "fake bars" | • Adds a new exception type that orchestrator must catch in 2-3 spots |
-      | (b) Zero-row CandleOutput | • No exception machinery <br>• Already legal Python | • Every consumer of CandleOutput has to handle empty case (audit found 5+ sites that don't currently) <br>• Easy to confuse "intentional empty" with "bug returning zero" |
-      | (c) `is_empty: bool` flag on CandleOutput | • Backward-compat with current callers | • Every consumer must check the flag → high risk of "forgot to check" silent leak <br>• Same anti-pattern as the bug we're fixing |
+                      |---|---|---|
+                      | **(a) Typed exception** `EmptyAfterIntervalFilter` raised in adapter, caught in orchestrator → `record_empty(row_key=...)` | • CandleOutput shape stays invariant (no downstream consumer changes) <br>• Mirrors how MDPS already shard-isolates per-instrument failures via `continue` <br>• One change site per adapter (raise instead of return placeholder) <br>• Honest: clearly signals "tried, no usable data" not "fake bars" | • Adds a new exception type that orchestrator must catch in 2-3 spots |
+                      | (b) Zero-row CandleOutput | • No exception machinery <br>• Already legal Python | • Every consumer of CandleOutput has to handle empty case (audit found 5+ sites that don't currently) <br>• Easy to confuse "intentional empty" with "bug returning zero" |
+                      | (c) `is_empty: bool` flag on CandleOutput | • Backward-compat with current callers | • Every consumer must check the flag → high risk of "forgot to check" silent leak <br>• Same anti-pattern as the bug we're fixing |
 
-      **Claude recommends (a) typed exception**. ~2-3 adapters need the raise;
-      orchestrator's `_handle_empty_tick_data` extends to also catch the typed
-      exception. `defi/swap_adapter.py:106` + `cefi/trades_adapter.py:74` are the
-      confirmed reproduction paths; the 15 other suspect `_create_empty_output` sites
-      get audited before/while shipping.
+                      **Claude recommends (a) typed exception**. ~2-3 adapters need the raise;
+                      orchestrator's `_handle_empty_tick_data` extends to also catch the typed
+                      exception. `defi/swap_adapter.py:106` + `cefi/trades_adapter.py:74` are the
+                      confirmed reproduction paths; the 15 other suspect `_create_empty_output` sites
+                      get audited before/while shipping.
 
-      Overlaps Item 1 (cluster validation) `record_captured` surface — handover
-      coordination rule says ping first. **AWAITING USER DIRECTION** on contract
-      shape choice + whether to ship now or stage with parallel-stream Item 1.
+                      Overlaps Item 1 (cluster validation) `record_captured` surface — handover
+                      coordination rule says ping first. **AWAITING USER DIRECTION** on contract
+                      shape choice + whether to ship now or stage with parallel-stream Item 1.
 
 ### Phase 1 Tier 2 — UTL/UAC lifts that unblock multiple services
 
@@ -181,10 +203,12 @@ stream — not added here.
       (kickoff-60min default), `stamp_available_at_event_time(df, event_time_col=)` (generic for injuries / pre-match
       odds / weather forecast-issue),
       `stamp_     available_at_post_match(df, match_end_col=, kickoff_col=, default_match_     duration=)`
-      (match*end_time with kickoff+120min fallback for NaT rows), `stamp* available_at_offset(df, kickoff_col=,
-      offset=)`(generic kickoff+offset),    `stamp_available_at_explicit(df,
-      when=)`(one-shot snapshot pulls). All raise    `AvailableAtStampingError`loud on missing columns / all-NaT results — no silent     midnight fallbacks. All return copies (never mutate input). 22 unit tests cover     every helper + edge cases (empty df, naive datetime, fallback paths, custom     offsets). Exported from`unified_trading_library`. Repo: `unified-trading-
-      library@live-defi-rollout`commit`cf312f6`.
+      (match*end_time with kickoff+120min fallback for NaT rows),
+      `stamp* available_at_offset(df, kickoff_col=,     offset=)`(generic kickoff+offset),
+      `stamp_available_at_explicit(df,     when=)`(one-shot snapshot pulls). All raise `AvailableAtStampingError`loud on
+      missing columns / all-NaT results — no silent midnight fallbacks. All return copies (never mutate input). 22 unit
+      tests cover every helper + edge cases (empty df, naive datetime, fallback paths, custom offsets). Exported
+      from`unified_trading_library`. Repo: `unified-trading-     library@live-defi-rollout`commit`cf312f6`.
 - [x] **features-sports `_ensure_timestamp` deprecation marker** —
       `features_sports_     service/cli/handlers/batch_handler.py:_ensure_timestamp` docstring updated with
       `⚠️ DEPRECATED INTERIM SHIM` warning + per-export-fn migration guide listing the canonical LIFT-3 helper for each
@@ -209,39 +233,39 @@ stream — not added here.
       this up:
 
       | | Option A (extend fetch_runner) | Option B (extend schemas with kickoff_utc) |
-      |---|---|---|
-      | **Touch points** | `_fetch_runner.py` (add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache + `get_fetch_completed_at(table_name)` accessor; populate inside each `run_fetch_*`) + per-export `stamp_available_at_explicit(...)` calls in `exports.py` | Each fixture-keyed schema (FIXTURE_STATS_COLUMNS, FIXTURE_EVENTS_COLUMNS, FIXTURE_LINEUPS_COLUMNS, FIXTURE_PLAYER_STATS_COLUMNS, INJURIES_COLUMNS) gets `kickoff_utc` added; fetch_runner joins fixtures cache when populating each table; per-export uses `stamp_available_at_post_match` |
-      | **Honesty for post-match** | Wrong: stamps the *fetch time* (when we discovered the data), not match_end_time. Fetch could happen weeks after match end → over-stamps available_at later than truth | Correct: per-fixture match_end_time |
-      | **Honesty for reference data** | Right: snapshot fetch time | Wrong: reference data has no fixture |
-      | **Schema migration** | None — purely additive runtime metadata | Schema bump for 5 schemas → potential downstream consumer breakage |
-      | **Verdict** | Fine for reference data (8 tables: players, venues, leagues, teams, referees, coaches, standings, rounds) but wrong for post-match (5 tables) | Right for post-match, wrong for reference |
+                      |---|---|---|
+                      | **Touch points** | `_fetch_runner.py` (add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache + `get_fetch_completed_at(table_name)` accessor; populate inside each `run_fetch_*`) + per-export `stamp_available_at_explicit(...)` calls in `exports.py` | Each fixture-keyed schema (FIXTURE_STATS_COLUMNS, FIXTURE_EVENTS_COLUMNS, FIXTURE_LINEUPS_COLUMNS, FIXTURE_PLAYER_STATS_COLUMNS, INJURIES_COLUMNS) gets `kickoff_utc` added; fetch_runner joins fixtures cache when populating each table; per-export uses `stamp_available_at_post_match` |
+                      | **Honesty for post-match** | Wrong: stamps the *fetch time* (when we discovered the data), not match_end_time. Fetch could happen weeks after match end → over-stamps available_at later than truth | Correct: per-fixture match_end_time |
+                      | **Honesty for reference data** | Right: snapshot fetch time | Wrong: reference data has no fixture |
+                      | **Schema migration** | None — purely additive runtime metadata | Schema bump for 5 schemas → potential downstream consumer breakage |
+                      | **Verdict** | Fine for reference data (8 tables: players, venues, leagues, teams, referees, coaches, standings, rounds) but wrong for post-match (5 tables) | Right for post-match, wrong for reference |
 
-      **Claude recommends a hybrid**: Option A for the 8 reference tables,
-      Option B for the 5 post-match tables (FIXTURE_STATS, FIXTURE_EVENTS,
-      FIXTURE_LINEUPS, FIXTURE_PLAYER_STATS, INJURIES). The 1 remaining
-      (`fixtures` itself) already has `kickoff_utc` — trivial.
+                      **Claude recommends a hybrid**: Option A for the 8 reference tables,
+                      Option B for the 5 post-match tables (FIXTURE_STATS, FIXTURE_EVENTS,
+                      FIXTURE_LINEUPS, FIXTURE_PLAYER_STATS, INJURIES). The 1 remaining
+                      (`fixtures` itself) already has `kickoff_utc` — trivial.
 
-      **Blast-radius confirmed 2026-05-06**: `rg` across the workspace for
-      `FIXTURE_STATS_COLUMNS|FIXTURE_EVENTS_COLUMNS|FIXTURE_LINEUPS_COLUMNS|FIXTURE_PLAYER_STATS_COLUMNS|INJURIES_COLUMNS`
-      finds matches **only inside features-sports-service** (the schema module
-      itself, `exports.py`, and two test files). No MDPS / strategy-service /
-      features-onchain / instruments-service / market-tick-data-service
-      consumer reads these schema column constants. Schema bump for Option B
-      is therefore a free contained change — no cross-repo coordination
-      required. **Hybrid (A for 8 reference, B for 5 post-match) is the
-      go-ahead for next session**; the only remaining pre-work is implementing
-      the `_FETCH_COMPLETED_AT` cache in `_fetch_runner` (Option A) and adding
-      `kickoff_utc` to the 5 fixture-keyed schemas + their fetch_runner
-      population paths (Option B).
+                      **Blast-radius confirmed 2026-05-06**: `rg` across the workspace for
+                      `FIXTURE_STATS_COLUMNS|FIXTURE_EVENTS_COLUMNS|FIXTURE_LINEUPS_COLUMNS|FIXTURE_PLAYER_STATS_COLUMNS|INJURIES_COLUMNS`
+                      finds matches **only inside features-sports-service** (the schema module
+                      itself, `exports.py`, and two test files). No MDPS / strategy-service /
+                      features-onchain / instruments-service / market-tick-data-service
+                      consumer reads these schema column constants. Schema bump for Option B
+                      is therefore a free contained change — no cross-repo coordination
+                      required. **Hybrid (A for 8 reference, B for 5 post-match) is the
+                      go-ahead for next session**; the only remaining pre-work is implementing
+                      the `_FETCH_COMPLETED_AT` cache in `_fetch_runner` (Option A) and adding
+                      `kickoff_utc` to the 5 fixture-keyed schemas + their fetch_runner
+                      population paths (Option B).
 
-      Note: the batch_handler `_stamp_available_at` dispatcher
-      (commit `52602fe`) ALREADY applies the right rule for both buckets at
-      the per-export-call site — the source-of-truth fix here is making the
-      stamp use a real timestamp (fetch-time for reference, match-end for
-      post-match) rather than the conservative `target_date + 23:59 UTC`
-      fallback. Until the per-export sources land, the dispatcher's fallback
-      is honest-conservative (over-stamps available_at slightly later than
-      truth, never earlier — so it never leaks).
+                      Note: the batch_handler `_stamp_available_at` dispatcher
+                      (commit `52602fe`) ALREADY applies the right rule for both buckets at
+                      the per-export-call site — the source-of-truth fix here is making the
+                      stamp use a real timestamp (fetch-time for reference, match-end for
+                      post-match) rather than the conservative `target_date + 23:59 UTC`
+                      fallback. Until the per-export sources land, the dispatcher's fallback
+                      is honest-conservative (over-stamps available_at slightly later than
+                      truth, never earlier — so it never leaks).
 
 - [ ] **Delete `_ensure_timestamp` shim** — once all 14 raw tables migrate, drop the midnight UTC fallback at
       `batch_handler.py:_ensure_timestamp` entirely.

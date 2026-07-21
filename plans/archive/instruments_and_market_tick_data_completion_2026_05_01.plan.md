@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -15,17 +23,28 @@ priority: P0
 owner: agent
 type: epic
 epic: data-pipeline-completion
-completion_gates: {code: C2, deployment: D2, business: B1}
+completion_gates: { code: C2, deployment: D2, business: B1 }
 repo_gates:
-- {repo: deployment-ui, deployment: D1}
-- {repo: deployment-api, deployment: D1}
-- {repo: instruments-service, deployment: D2}
-- {repo: market-tick-data-service, deployment: D2}
-- {repo: market-data-processing-service, deployment: D2}
-- {repo: unified-api-contracts, deployment: D1}
+  - { repo: deployment-ui, deployment: D1 }
+  - { repo: deployment-api, deployment: D1 }
+  - { repo: instruments-service, deployment: D2 }
+  - { repo: market-tick-data-service, deployment: D2 }
+  - { repo: market-data-processing-service, deployment: D2 }
+  - { repo: unified-api-contracts, deployment: D1 }
 depends_on: []
 isProject: true
 ---
+
+## Deferred work — migrated to: `plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md`,
+
+`plans/active/sports_master_closeout_2026_07_21.md`, `plans/active/data_completion_cefi_2026_07_15.md`,
+`plans/active/tradfi_consolidated_closeout_2026_07_18.md`,
+`plans/active/prediction_consolidated_closeout_2026_07_18.md`, `plans/active/defi_consolidated_closeout_2026_07_18.md`,
+`plans/active/data_completion_to_100_all_ag_2026_06_21.md`,
+`plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md` — successor: (see list above) (all 32 open
+items — Phase 0 UI unblockers, per-AG backfills for sports/cefi/tradfi/prediction/defi, and Phase 6 final verification —
+trace cleanly to the current per-AG consolidated-closeout family + the umbrella
+`data_completion_to_100_all_ag_2026_06_21.md`. No genuinely orphaned items found.)
 
 ## Audit 2026-05-07
 
@@ -171,9 +190,9 @@ verify shards, can't iterate.
 - [ ] [AGENT] P0. **Day-shard scroll** — `deployment-ui/src/components/DataStatusTab.tsx#L4480` hard-codes
       `.slice(0, 60)` on date lists. Replace with `useState(60)` + "Load more" button OR react-virtualised infinite
       scroll. Backend `/api/data-status/manifest` already supports offset/limit. Same pattern at `#L4523` for
-      `missingDatesList`. [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE — current `DataStatusTab.tsx:194` uses `expanded ?
-      filtered : filtered.slice(0, MAX_VISIBLE)` toggle pattern; line 245 uses `dates.slice(0, limit)`; hard-coded
-      `slice(0, 60)` no longer present; verify "Load more" UX with 1-min Playwright check then flip]
+      `missingDatesList`. [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE — current `DataStatusTab.tsx:194` uses
+      `expanded ?     filtered : filtered.slice(0, MAX_VISIBLE)` toggle pattern; line 245 uses `dates.slice(0, limit)`;
+      hard-coded `slice(0, 60)` no longer present; verify "Load more" UX with 1-min Playwright check then flip]
 - [ ] [AGENT] P0. **CSV download returns headers-only** — root cause is inconsistent endpoints across the three download
       paths (`/api/data-status/download-csv`, `/api/data-status/download-shard-csv`, `csv_projected` URL from
       `shard-detail`). Unify on a single endpoint that accepts
@@ -186,8 +205,8 @@ verify shards, can't iterate.
       `deployment-ui/src/api/client.ts#L2011` already exists; just unwired in the FixtureBreakdown view. Add "Download
       day CSV" button next to the day badge in DataStatusTab's sports drilldown. Per-fixture download already works.
       [AUDIT 2026-05-07: DONE — verified `buildFixturesCsvDownloadUrl` is now imported at `DataStatusTab.tsx:35` and
-      wired at line 4995 via `downloadUrl={(date) => buildFixturesCsvDownloadUrl({ day: date, league_id: leagueName
-      })}`; flip checkbox]
+      wired at line 4995 via
+      `downloadUrl={(date) => buildFixturesCsvDownloadUrl({ day: date, league_id: leagueName     })}`; flip checkbox]
 - [ ] [AGENT] P1. **Unified market-tick-data + market-data-processing view** — currently parent-tab-level service
       selection forces one or the other. Either (a) split-pane view showing raw left / processed right for the same
       date+venue, or (b) service multi-select inside DataStatusTab. Backend single endpoint `/api/data-status/manifest`
@@ -258,8 +277,8 @@ prediction-vs-reference league filters applied.
 - [ ] [AGENT] P1. After all sports backfills complete: run
       `instruments-service/scripts/reconcile_phantom_manifest_rows.py     --asset-group sports` to flip any phantom
       captured-no-parquet rows. [AUDIT 2026-05-07: BLOCKED-ON
-      instruments_and_market_tick_data_completion:Phase-1-sports-VMs; switch to `reconcile_phantom_manifest_rows_all.py
-      --asset-group sports` per CLAUDE.md phantom-audit rule]
+      instruments_and_market_tick_data_completion:Phase-1-sports-VMs; switch to
+      `reconcile_phantom_manifest_rows_all.py     --asset-group sports` per CLAUDE.md phantom-audit rule]
 - [ ] [AGENT] P1. Re-snapshot the sports drilldown — expect every data type ≥95% captured+empty_confirmed under the
       secondary-cutoff denominator. [AUDIT 2026-05-07: BLOCKED-ON
       instruments_and_market_tick_data_completion:Phase-1-sports-VMs]

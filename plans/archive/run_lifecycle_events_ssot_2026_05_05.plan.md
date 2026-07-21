@@ -6,7 +6,15 @@ status: in_progress
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-library, unified-trading-pm]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    instruments-service,
+    strategy-service,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -26,15 +34,25 @@ priority: P0
 owner: Iggy
 locked_by: live-defi-rollout
 locked_since: 2026-05-05
-completion_gates: {code: C5, deployment: D2, business: B1}
+completion_gates: { code: C5, deployment: D2, business: B1 }
 repo_gates:
-- {repo: unified-trading-library, code: C0, deployment: D0, business: B0}
-- {repo: market-tick-data-service, code: C0, deployment: D0, business: B0}
-- {repo: market-data-processing-service, code: C0, deployment: D0, business: B0}
-- {repo: instruments-service, code: C0, deployment: D0, business: B0}
-- {repo: deployment-service, code: C0, deployment: D0, business: B0}
-- {repo: feature-service-sports, code: C0, deployment: D0, business: B0}
+  - { repo: unified-trading-library, code: C0, deployment: D0, business: B0 }
+  - { repo: market-tick-data-service, code: C0, deployment: D0, business: B0 }
+  - { repo: market-data-processing-service, code: C0, deployment: D0, business: B0 }
+  - { repo: instruments-service, code: C0, deployment: D0, business: B0 }
+  - { repo: deployment-service, code: C0, deployment: D0, business: B0 }
+  - { repo: feature-service-sports, code: C0, deployment: D0, business: B0 }
 ---
+
+## Deferred work — migrated to: `plans/active/codex_violations_ratchet_to_five_2026_06_10.md` — successor:
+
+codex_violations_ratchet_to_five_2026_06_10 (all 20 open items are shipped-but-unflipped: the UTL `run_lifecycle`
+helper + tests, the audit + its findings, and the STEP 5.63/5.64 QG enforcement are all live in the codebase; the
+per-repo rollout is now driven by the QG gate itself rather than a hand-maintained checklist, actively tracked in the
+successor plan. The specific scripts named in the original plan — `migrate_sports_canonical.py`,
+`feature-service-sports`, `risk-and-exposure-service` — are themselves stale/renamed/retired. No genuinely orphaned
+items. NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]`
+cleanup.)
 
 # Run-Lifecycle Events SSOT
 
