@@ -85,3 +85,15 @@ inline.
       `unified-trading-library` test suite to confirm no regression. (repo: unified-trading-library)
 - [ ] 2. [REVIEW] P2. Once green, sweep for any quickmerge attempts in this repo that were silently blocked by this same
       pip-audit failure and ship them. (repo: unified-trading-library)
+
+## Independent re-confirmation (2026-07-21, separate session)
+
+Hit the identical wall shipping `downstream_funding_staking_canonical_reader_audit_2026_07_21.md` todo 4 (a 5-row
+`PATH_REGISTRY` `bucket_template` env-tiering fix — unrelated to `pipeline_mode_resolver.py`). Same `git stash`
+isolation technique, same result: `❌ pip-audit vulnerabilities` / `pyasn1 0.6.3: CVE-2026-59885` / `CVE-2026-59886` /
+`❌ Codex compliance FAILED: 1 violations (max allowed: 0)`, reproduced twice (`QG_SENTINEL_DISABLE=true` re-runs),
+persisting identically whether the isolated diff is present or fully reverted. This is now confirmed across 2 sessions
+with 2 completely different diffs — strengthens todo 2 above ("sweep for any quickmerge attempts... that were silently
+blocked") since it's clearly not a one-off. The todo-4 fix itself was reverted from the working tree (not left as stale
+uncommitted WIP) with the exact replacement documented inline in that issue doc's todo 4, ready to re-apply the moment
+this is resolved.
