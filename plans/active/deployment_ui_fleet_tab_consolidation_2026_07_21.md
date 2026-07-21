@@ -162,9 +162,19 @@ Key audit facts driving the merges:
       Vitest `Card` mock to spread all props through (it previously dropped `onClick`/`role`/etc., silently discarding
       any click handler in tests) — matches the real `Card` component's forwarding contract. 1 new test + full existing
       suite green (1052 tests); full `quality-gates.sh` (base-ui.sh v2.0) green.
-- [ ] [UI] P1. **Fold /vm-deployments history into Deployments** — bring the archive/history table (Outcome, Duration,
-      Rows Captured, Completed) into the Deployments detail view / a history section. For the archive **log links**,
-      link to WS-4's run.log viewer (`deployment_ui_vm_log_viewer_2026_07_20.md`) — do NOT build a second log renderer.
+- [x] [UI] P1. ✅ **Fold /vm-deployments history into Deployments** — deployment-ui@678449a. Added a VM-kind-only
+      `VmRunHistoryCard` to `DeploymentDetail.tsx` (folded from `VmDeployments.tsx`'s archive table): Outcome / Duration
+      / Rows Captured / Completed + GCS-console archive log links. Reused the existing `logUriToConsoleUrl` link pattern
+      rather than building a second log-tail viewer — the current run's tail already has its own `RunLogPanel` card
+      (WS-4), which can only address the LATEST run for a name (not historical rows), so per-row historical log access
+      stays a console deep-link, same as the standalone page always did. Exported 5 formatting helpers from
+      `VmDeployments.tsx` (`formatTimestamp`/`formatDuration`/
+      `getOutcomeVariant`/`getOutcomeLabel`/`logUriToConsoleUrl`) for reuse instead of re-implementing. No
+      per-name-scoped history endpoint exists, so it client-side filters `fetchVmDeployments(30)`'s `recent[]` by
+      `vm_name === name` (same cost the standalone page always paid — not this ticket's scope to add a scoped endpoint).
+      tsc/ESLint clean; full 1050-test suite green; full `quality-gates.sh` (base-ui.sh v2.0) green. `/vm-deployments`
+      itself is untouched (still routed, still the `VmDeploymentsContent` the `/fleet` cockpit embeds) — retiring it is
+      the separate todo below.
 - [ ] [UI] P1. **Cheap merged columns** — add `rows_error` (Errors) and throughput (`rows_in`/`events_emitted`) to
       Deployments where useful; the data already exists on `DeploymentItem`, no backend work.
 - [ ] [UI] P1. **Retire /vm-deployments** — remove the `/vm-deployments` route (`App.tsx`) + its nav entry
