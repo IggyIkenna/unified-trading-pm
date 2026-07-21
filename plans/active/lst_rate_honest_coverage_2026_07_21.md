@@ -233,6 +233,24 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   isolated/touched per the liveness-gating rule. IS's 2 commits sit safely local (ahead of origin, clean tree) pending
   UTL's WIP clearing; ship it + this plan's own UTL fix (the `_VENUE_OVERRIDES["AAVE"]` provenance bug, see Phase 2
   above) together the next time that tree is genuinely clear.
+- **2026-07-21 (IS divergence reconciled; new UTL blocker found)** — this session's IS clone (the "different slot's
+  session" the `fd0d12a9` commit message refers to) confirmed its own local `d13fb68d`+`@02e5215b` were never pushed
+  (dirty-deps UTL block, per the entry above) and had been independently superseded by slot-9's equivalent,
+  successfully-shipped `aave_oracle.py`. Rather than duplicate that work, reset this clone's local branch to origin
+  (safe — the 2 commits were local-only, never visible to any other clone) after first extracting the two pieces
+  `fd0d12a9` did NOT cover: the `chainlink.py` weETH/ezETH mirror, and the `_dex_factory_registry.py` citation-gate fix.
+  Re-applied both cleanly on top of `fd0d12a9`, plus fixed 6 newly-uncited addresses in `fd0d12a9`'s own
+  `aave_oracle.py` reserve registry (a different citation style than this plan's original, not caught when that commit
+  shipped since it didn't touch `chainlink.py`) — `instruments-service@ae523a5e`, `quality-gates.sh` green twice
+  (sentinel matching HEAD both times), **still quickmerge-blocked** by the same UTL dirty-deps guard. Attempting to
+  clear THAT this session surfaced a NEW, unrelated blocker: `unified-trading-library`'s own `quality-gates.sh` fails
+  `pip-audit` on 2 disclosed CVEs in the transitive `pyasn1` dependency (CVE-2026-59885/59886) — confirmed via isolation
+  this is unrelated to this plan's `pipeline_mode_resolver.py` fix (a dependency CVE cannot be caused by a 6-line source
+  addition) and NOT something to fix inline (a transitive-dependency version bump has workspace-wide reach, out of scope
+  for a quick unblock). Filed `plans/active/issues/utl_pyasn1_cve_pip_audit_blocks_quickmerge_2026_07_21.md`. **Both
+  `instruments-service` and `unified-trading-library`'s Phase-1/2 pieces for this plan are now content-complete and
+  gated green, waiting purely on that CVE issue's resolution** (not a dirty-deps/liveness question anymore — a real, if
+  unrelated, security gate).
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 
