@@ -158,6 +158,18 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
       implemented / current pre-fix code" markers come out once the code lands. **Gate**: role docs point at codex; no
       in-flight markers remain; no plan↔codex drift.
 
+### Operational follow-ups (not workstream tasks)
+
+- [ ] [OPS] P1. **Re-activate the `CIReconcileLoop`** — paused 2026-07-21 to stop a false-red credit burn while this
+      plan is implemented. It was escalating three **GREEN** repos (`unified-trading-pm` / `unified-trading-library` /
+      `deployment-api`) as `ldr_qg_failure` on `live-defi-rollout`, spawning cicd agents that correctly resolved
+      `qg_v2_green` (pure wasted work + Claude credits — confirmed all three green via `gh`). Paused via
+      `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS=0` (interval ≤ 0 → `start()` is a no-op; LoopSupervisor won't revive a
+      disabled loop) + a backend restart. **Re-enable = remove that env override (restore the default interval) +
+      restart the backend — but FIRST fix the false-red root cause** (why it reads green repos as red: likely a stale
+      `ci_reconcile_etag_cache.json` or a missing/`None` conclusion treated as failing), else it immediately re-storms.
+      The 72 cancelled escalations are backed up in the session scratchpad (`escalations_cancelled_backup.json`).
+
 ## Design note (todo 1) — the uniform agent-liveness contract
 
 > **Status: APPROVED (operator, 2026-07-21); reconciled to the `/done`-then-stop decision.** Written before any code,
