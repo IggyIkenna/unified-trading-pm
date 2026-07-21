@@ -226,8 +226,12 @@ source:
       log content read back via the bounded byte-range tail (e.g. 52790 bytes read, last line
       `"2026-07-21 13:19:18,764 INFO Files discovered: 21684"`) — confirms the full read path works against real
       production data, not just mocked tests.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the 4 repos — incl.
-      `unified-trading-library` for the new path helper) + flip todos same turn (`docs(plans):`).
+- [x] ✅ [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the 4 repos — incl.
+      `unified-trading-library` for the new path helper) + flip todos same turn (`docs(plans):`). — verified 2026-07-21
+      (slot 5): all 5 touched repos already fully landed on `origin/live-defi-rollout` (ahead=0, behind=0, clean trees)
+      — deployment-service@389a598, deployment-api@e3d283e, deployment-ui@3584da7, unified-trading-library@a760fc93,
+      unified-api-contracts@21510159. No un-shipped WIP remained; this todo closes the shipping loop the prior REVIEW
+      todos' verification already confirmed was green.
 - [ ] [REVIEW] P2. Post-phase codex audit — document the log-path resolution contract (live-first/archive-fallback,
       final-snapshot writer contract, no date-guessing), the size/tail/download endpoints, and the events-vs-logs panel
       distinction in `codex/05-infrastructure/deployment-observability.md` +
