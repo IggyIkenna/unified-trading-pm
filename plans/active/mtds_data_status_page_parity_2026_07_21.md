@@ -328,9 +328,57 @@ the same fixes.
       stamping `mvp` there, so `_row_is_mvp`/ `_is_mvp_series` can add an `"mvp" in df.columns` fast path for
       manifest-backed rows too, mirroring the identity-catalogue branch exactly. Left at P2 (was P1) given the bounded,
       non-regressed cost and the real risk of rushing a fix in a spot with documented prior near-misses.
-- [ ] [BACKEND] P1. **MDPS parity**: trace whether `market-data-processing-service`'s data-status view shares
-      deployment-api service code with MTDS or has its own parallel path; apply every fix above (Bug A/B/C, MVP wiring,
-      universal search) to MDPS's view too, so it shows the same shards/state as MTDS rather than drifting behind it.
+- [x] N. ✅ [BACKEND] P1. **MDPS parity — traced + backend honest-coverage SHIPPED** (`unified-api-contracts@a7798b93` +
+      `deployment-api@60a23ae`, both verified landed on origin by SHA). **Traced first** (Explore agent, before writing
+      any code): MDPS was hard-excluded from the entire honest-coverage path (`is_mtds_honest_coverage_target`:
+      `service != "market-tick-data-service"` → always `False` for MDPS) and fell back to a generic, imprecise path —
+      NOT a free UI fix, confirmed MDPS has a genuine timeframe axis (7 timeframes × 2 data_types today) that MTDS's
+      coverage code has zero model of; naively flipping the gate would have conflated all 7 timeframes into one
+      denominator cell. Ran a full design→3-way-adversarial-review→ implement→independent-verify pipeline given the
+      data-correctness stakes: - **Design** (research + concrete design): generalized `is_mtds_honest_coverage_target`
+      to a `_HONEST_COVERAGE_SERVICES` frozenset covering both services; reused `MTDS_CATEGORY_META`/
+      `mtds_expected_dates_for_venue_dt` unchanged (venue-list resolution and calendar math are service-agnostic); added
+      an optional `timeframes` param to `per_instrument_coverage`/`mtds_honest_coverage_for_venue`, defaulting to `None`
+      (byte-for-byte unchanged for every MTDS caller); two new additive UAC registries (`MDPS_DERIVABLE_DATA_TYPES`,
+      `MDPS_CANONICAL_TIMEFRAMES`) plus a `service`-scoped branch on `get_expected_data_types_for_venue`. - **3
+      independent adversarial reviews** (mtds-regression / denominator-correctness / completeness lenses) ALL THREE
+      converged on one critical, ship-blocking gap the design itself missed: `service` was never actually threaded from
+      `manifest.py`'s gate down to the `get_expected_data_types_for_venue(venue, service=service)` call — without the
+      fix, MDPS's expected-data-type list would have resolved to the FULL MTDS raw vocabulary instead of the narrowed
+      derivable subset, permanently inflating `missing_data_types` and tanking `completion_pct` for real venues
+      (measured: BINANCE-FUTURES declares 5 data types, only 2 MDPS-derivable). 2 of 3 reviews also independently found
+      a real pandas index-misalignment bug in the new timeframe branch (a `tf_str` built from the unfiltered row slice
+      vs. the legacy-masked `iid_str`/`rd_str`), and 1 review found the legacy-row-fallback branch was silently
+      untouched by the new timeframe multiplier. - **Implementation incorporated all three fixes**: `service` now
+      threads `manifest.py` → `_apply_mtds_honest_coverage` → `mtds_honest_coverage_for_venue` →
+      `get_expected_data_types_for_venue`; the pandas index-alignment bug is fixed (timeframe series derived from the
+      same masked slice); the legacy-row fallback gets BOTH a `len(timeframes)` multiplier AND an explicit
+      `denominator_timeframe_aware: False` provenance marker (belt-and-suspenders, exceeds what either review asked for
+      individually). Also fixed a pre-existing, unrelated bug found along the way: `path_combinatorics.py`'s
+      `PROCESSING_TIMEFRAMES` carried a stale `"24h"` token no real manifest row has ever written (the writer normalizes
+      to `"1d"`) — now single-sourced from the new UAC registry. - **Verified independently** (separate agent, re-read
+      the diff + re-ran both test suites from scratch, did not trust the implementer's own report): service-threading
+      fix confirmed present at the exact call site; 977 existing deployment-api tests + 44 UAC registry tests pass with
+      ZERO regressions (only 6 source files + 2 new test files touched, no existing test modified); pandas fix confirmed
+      correct; legacy-fallback fix confirmed present. I additionally ran the full local `quality-gates.sh` (not just the
+      workflow's own test run) in both repos before shipping. - **Two open design questions deliberately left
+      unresolved, not silently assumed** (flagged in code comments + an additive `historical_coverage_gap: true`
+      response field for MDPS entries): (1) whether pre-cutover MDPS manifest rows — written under the legacy aggregated
+      `data_type` convention before today's `752eaff` commit — should count toward the new source-keyed denominator at
+      all, or are invisible until a backfill/relabel migration (implemented: invisible, flagged via the new field, not
+      reverse-mapped); (2) whether any `(venue, data_type)` pair has genuine per-timeframe start-date divergence
+      (implemented: flat `MDPS_CANONICAL_TIMEFRAMES` applied uniformly, with `get_expected_timeframes_for_venue_dt`'s
+      signature left open for a future per-venue override). - **Deliberately out of scope for this ship** (each is its
+      own follow-up, not silently dropped): the Tier-2 venue-level (non-per-instrument) branch is NOT timeframe-aware
+      yet — MDPS's one current venue-level derivable dt (`liquidations`) will under-multiply there;
+      `deployment_api/services/data_status/coverage.py`'s separate offline-rollup `completion_pct` surface is untouched
+      (independent 4-state tally, noted in a new docstring comment); the universal-search-bar UI work (separate todo
+      below) is unrelated to this backend ship. - **Independent side-discovery, filed separately, NOT part of this
+      ship**: the same `752eaff` commit that switched MDPS's manifest `data_type` to the SOURCE-key convention (the fix
+      this whole design depends on) also silently broke deployment-api's UNRELATED generic processed/raw classifier
+      (`_classify_data_type_for_venue` in `breakdowns_core.py`, keyed on the old aggregated tokens) — filed as
+      `plans/active/issues/mdps_datatype_axis_switch_breaks_generic_classifier_2026_07_21.md` and already landed on
+      origin; not this plan's scope to fix.
 - [ ] [BACKEND] P2. Also investigate whether `data_status_cell_grid_rearchitecture_2026_07_18.md`'s known OOM/slowness
       (81GB for full-history MTDS manifest loads) is the SAME root cause as the operator's "the whole mtds needs to be
       much faster" complaint, or a distinct perf issue specific to this page's coverage/search paths — annotate that
@@ -342,6 +390,25 @@ the same fixes.
       `mvp_scope_catalogue_tagging_2026_06_08.md` (which has its own open Phase-2+ features/strategy/model items,
       unrelated to this plan — don't pull those in) and annotate that plan's "Composes with" section with a pointer back
       here so a future reader doesn't re-discover the MTDS gap from scratch.
+- [ ] [BACKEND] P2. MDPS honest-coverage follow-up: make the Tier-2 (venue-level, non-per-instrument) branch in
+      `mtds_honest_coverage_for_venue` timeframe-aware too — deliberately deferred from the shipped
+      `unified-api-contracts@a7798b93`/`deployment-api@60a23ae` work since the reviewed scope was Tier-3-only.
+      Concretely affects MDPS's `liquidations` data_type (the one current `MDPS_DERIVABLE_DATA_TYPES` member that
+      dispatches to the venue-level branch, not Tier-3) — its denominator currently under-multiplies by
+      `len(timeframes)` for MDPS. Also single-source `path_combinatorics.py`'s `PROCESSING_DATA_TYPES` from the new UAC
+      `MDPS_DERIVABLE_DATA_TYPES` registry (the design's item 14, not done in the shipped commit — currently a duplicate
+      hardcoded list with the same 2 values, so no live bug today, but will silently drift the next time either list
+      changes).
+- [ ] [DATA] P3. Decide + implement the real fix for MDPS honest-coverage's `historical_coverage_gap` flag (shipped
+      2026-07-21 as an honest "we know this is incomplete" marker, not a fix): pre-`752eaff` MDPS manifest rows (legacy
+      aggregated `data_type`, e.g. `"ohlcv_1m"`) are invisible to the new source-keyed query and understate
+      `completion_pct` for historical windows until either a backfill/relabel migration runs, or a dual-read compat shim
+      is added. Needs an operator decision on which — flagged, not resolved, per the design's Open Question 1.
+- [ ] [DATA] P3. Confirm whether any `(venue, data_type)` pair genuinely has per-timeframe start-date divergence (e.g.
+      cost-gating `15s` candles to only top venues, starting later than `1m`/`5m` for the same venue) — the shipped MDPS
+      coverage applies `MDPS_CANONICAL_TIMEFRAMES` uniformly for every venue absent evidence otherwise (design's Open
+      Question 2). If divergence is confirmed, `get_expected_timeframes_for_venue_dt`'s per-(venue, data_type) signature
+      is already in place for a follow-up override — no call-site changes needed, just the real per-venue data.
 
 ## Codex SSOTs
 
