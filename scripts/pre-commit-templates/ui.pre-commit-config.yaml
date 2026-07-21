@@ -1,7 +1,13 @@
 # Canonical pre-commit config for TypeScript/React UI repos.
 # Template SSOT: unified-trading-pm/scripts/pre-commit-templates/
 # Rollout: bash unified-trading-pm/scripts/propagation/rollout-pre-commit-configs.sh
-# Setup: pre-commit install --install-hooks
+# Setup: these repos are husky-managed (core.hooksPath=.husky/_) — do NOT run
+# `pre-commit install`/`prek install --install-hooks` here, it non-deterministically
+# overwrites husky's .husky/_/ dispatcher (see
+# deployment_ui_prettier_version_skew_blocks_quickmerge_2026_07_21.md). Instead
+# point the tracked `.husky/pre-commit` at `exec prek run --hook-stage pre-commit`
+# (falling back to `pre-commit run`, then `lint-staged` only if neither binary is
+# on PATH) so husky's dispatcher runs these fleet-canonical hooks either way.
 
 default_install_hook_types:
   - pre-commit
