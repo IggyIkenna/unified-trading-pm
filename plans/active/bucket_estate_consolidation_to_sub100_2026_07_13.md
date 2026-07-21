@@ -331,12 +331,38 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 - [x] ✅ [DATA] P2. Execute the folds per design — **ALL 5 WAVE-3 FOLDS COMPLETE 2026-07-19** (bucket_fold_{features,ml,
       execution_strategy,portfolio_state}_2026_07_17). Each ran the playbook: parity verify → code cutover (multi-agent
       implement→adversarial-verify→fix, which caught a silent-P&L reader bug + stale-PM-yaml CI break) → consolidator
-      retarget via direct gcloud (single-root _index, apply-unsafe) → delete sources → TF import folded + state-rm sources.
-      **~30 source buckets removed; estate now 114 total** (down from ~140+). BQ feature_external re-mounted (766k rows).
-      Remaining toward the ≈100 target: the 114-vs-59-TF gap is PRE-EXISTING estate drift (market-data/billing buckets
-      not in canonical TF — operator-aware, separate from the folds). Soft-window alias sunset + a few loose ends
-      (deployment-api C+D display, execution-service tenderly_budget prefix, UAC replay WIP, consolidator job renames)
-      tracked in bucket_fold_closeout.
+      retarget via direct gcloud (single-root _index, apply-unsafe) → delete sources → TF import folded + state-rm
+      sources. **~30 source buckets removed; estate now 114 total** (down from ~140+). BQ feature_external re-mounted
+      (766k rows). Remaining toward the ≈100 target: the 114-vs-59-TF gap is PRE-EXISTING estate drift
+      (market-data/billing buckets not in canonical TF — operator-aware, separate from the folds). Soft-window alias
+      sunset + a few loose ends (deployment-api C+D display, execution-service tenderly_budget prefix, UAC replay WIP,
+      consolidator job renames) folded in below (`bucket_fold_closeout_2026_07_17.md`, folded + archived 2026-07-21,
+      consolidation pass — Phase 1 + Phase 2 Part A done, Part B's coupling gate cleared, one residual remains).
+- [ ] [DATA] P3. **`_KIND_ALIASES` hard-removal — 11 coupled aliases still need a per-consumer repoint before their
+      alias can be removed** (folded in from `bucket_fold_closeout_2026_07_17.md`, its sole open todo). Phase 1 + Phase
+      2 Part A are DONE: 6 alias-only/grep-clean kinds already hard-removed (`pnl-attribution-store`,
+      `risk-metrics-store`, `pnl-attribution-output`, `positions-store`, `archetype-state`, `position-store-sports` —
+      UTL@c8f5bf39/384e0b28), every LIVE `resolve_bucket_name(kind=<retired>)` consumer across ml-service,
+      features-service, execution-service, UTL, deployment-service, and deployment-api now calls the folded kind
+      directly (behaviorally no-op), and the yaml-key/terraform coupling that gated Part B is CLEARED (13 retired yaml
+      keys stripped from all 5 copies, `tofu plan` 0 bucket-create/0 bucket-destroy). **Remaining = 11 aliases** whose
+      readers deliberately still resolve the retired vocab and are NOT yet repointed:
+      `features-{delta-one,volatility,onchain,xinstrument,mtf}` (features-service `run_pipeline_e2e.py`
+      `_test_bucket`/`_delta_one_test_bucket` + `smoke_matrix.py` SMOKE_INPUT_KIND + data-status-drilldown service→kind
+      maps + the still-present `upgrade_manifest_to_v8.py` loop resolver for xinstrument/mtf),
+      `ml-{models,predictions,configs,training-artifacts,artifacts}-store` (deployment-api `deployment_api_config.py`
+      resolvers + ml-service), and `execution-store-prediction` (same `upgrade_manifest_to_v8.py` loop — delete the dead
+      migration OR repoint). Each needs its caller repointed to the folded kind
+      (`features`/`ml-store`/`execution-store`) + an explicit object-key prefix BEFORE its `_KIND_ALIASES` entry (UTL
+      `bucket_naming.py`) is removed. **KEEP permanently**: `tick-data`, `features-cross-instrument`,
+      `features-multi-timeframe` (live consumer vocabulary, not retired). **Gate**: each of the 11 grep-clean of
+      `resolve_bucket_name(kind=<retired>)`, its alias removed, and `terraform plan` stays green after removal. "No
+      double SSOT." > **Not this todo's scope, deferred separately (found during the fold, not omitted)**: a
+      `deployment-service` > git stash reverting a digest-pin fix on
+      `terraform/services/features-service-sports/gcp/terraform.tfvars` > (owner: features-service-sports, "NOT decided
+      autonomously" — a real pin-vs-`:latest` tradeoff); 4 UAC git > stashes (replay/source-capability WIP, a different
+      feature's WIP, not bucket-fold scope). Neither is tracked > anywhere else yet — flagging so they don't get lost,
+      not claiming them here.
 - [ ] [CONFIG] P2. **Residual asset-group-parity drift the 2026-07-17 sweep found but left** (all cosmetic/waste, none
       blocking; the GCP live path is fully reconciled): (a)
       `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf:35` + `terraform/aws/main.tf:74` still
@@ -352,12 +378,19 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       deleted names (`deployment-service/scripts/archive-flat-buckets.sh`,
       `scripts/aws/migrate-bucket-names-unified-to-canonical.sh`) — these are historical records of an executed
       migration; decide delete-vs-annotate per the one-off lifecycle rule rather than editing in place.
-- [ ] [DOCS] P2. **Post-phase codex audit**: give the bucket-SSOT rule a live codex home (audit found
+- [x] ✅ [DOCS] P2. **Post-phase codex audit**: give the bucket-SSOT rule a live codex home (audit found
       `bucket-naming-and-config.md` superseded pointing at a CLAUDE.md section that no longer exists + CLAUDE.md
       pointing at an archived plan — fix both); update `bucket-isolation-model.md`, `gcs-lifecycle-policies.md`,
       `per-asset-group-bucket-layouts.md`; final estate re-count (corrected 2026-07-15, plan-reconcile:
       [[bucket_env_split_rollout_2026_06]] already flipped to status: superseded / archived same-day per line-68 banner,
-      so that sub-clause is dropped as done); close the three audit issue docs.
+      so that sub-clause is dropped as done). — DONE per `bucket_fold_closeout_2026_07_17.md`'s Progress Log (todo 4
+      entry, `unified-trading-pm@c6f97b239` — corrected 2026-07-21, plan-reconcile: this checkbox was never flipped
+      despite the claim, caught during the consolidation-fold pass). The "close the three audit issue docs" sub-clause
+      was split out — see the new [DOCS] todo directly below; those were deliberately assessed and left open, not
+      fold-resolved.
+- [ ] [DOCS] P3. **Close (or re-confirm still-open) the three bucket-SSOT audit issue docs** referenced by the
+      codex-audit todo above — assessed during that audit and deliberately left open rather than closed by the fold;
+      re-verify their current status before closing.
 
 ## Deferred work after 2026-07-13 (autonomous dispatch session end)
 
