@@ -120,6 +120,14 @@ Needs an architecture decision, not a mechanical fix — filing the facts + opti
       `catalog.py`'s `_BUILDERS_BY_ARCHETYPE`. Updated `test_sports_arb_dutching.py`'s identity fixture +
       `test_ml_directional_continuous.py`'s `family_map`/`_archetype_min_params` + `test_archetype_leg_spec.py`'s
       hardcoded real/not_registered counts (53→54) to match. (repo: strategy-service, unified-api-contracts)
+      **Correction (2026-07-21) — strategy-service@28c534af**: `GREENFIELD_ARCHETYPES` classification above was wrong.
+      `legacy_strategy_mapping.yaml`'s `SPORTS_ARB_CROSS_BOOK` row (venues `unity,betfair,matchbook`, identical to the
+      live slot) was already tagged `ARBITRAGE_PRICE_DISPERSION` — a real legacy predecessor that was never re-pointed
+      alongside the live slot, not a genuinely greenfield archetype. Re-pointed the row to `ARBITRAGE_SPORTS_DUTCHING`,
+      updated its `initial_config` to the engine's real params (matching the live-slot fix — the old
+      `venues`/`edge_method`/`min_margin_pct` keys were never read by `SportsArbDutchingEngine`), removed the
+      `GREENFIELD_ARCHETYPES` entry, and regenerated the migration content-hash pin. Full test suite +
+      `quality-gates.sh` green.
 - [ ] [SCRIPT] P3. Once wired, extend or replace `strategy-service/scripts/run_sports_arb_backtest.py` (currently
       targets `SPORTS_VALUE_BETTING` / `ML_DIRECTIONAL_EVENT_SETTLED` as a workaround for this gap) to also exercise the
       real `SportsArbDutchingEngine` path with the multi-venue odds-book fixture shape already proven in
