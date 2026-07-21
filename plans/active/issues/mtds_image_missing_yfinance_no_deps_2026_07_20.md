@@ -36,6 +36,9 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.2
 estimate_calibrated_ai_days: 0.16
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 > **🟢 RESOLVED 2026-07-20 — `market-tick-data-service@d8dc04e1`.** Targeted pinned `yfinance==0.2.66` install added to
