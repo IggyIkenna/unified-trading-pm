@@ -56,7 +56,13 @@ SETUP_SH_SOURCE = PM_ROOT / "scripts" / "setup.sh"
 QG_LIBRARY_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-library-template.sh"
 QG_SERVICE_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-service-template.sh"
 QG_UI_TEMPLATE = CODEX_ROOT / "06-coding-standards" / "quality-gates-ui-template.sh"
-ESLINT_CONFIG_BASE = PM_ROOT / "scripts" / "quality-gates-base" / "eslint.config.base.js"
+ESLINT_CONFIG_BASE = PM_ROOT / "scripts" / "quality-gates-base" / "eslint.config.base.cjs"
+# Retired 2026-07-21 — the .js copy was never actually importable by either consumer's real
+# ESLint 9 flat config (a plain .js parses as CJS or ESM depending on the repo's own package.json
+# "type", so a single syntax choice couldn't satisfy both repos); superseded by the .cjs file
+# above, which is unambiguously CommonJS regardless of the consuming repo. Old copies are deleted
+# by propagate_eslint_config() below when found, rather than left to drift.
+_STALE_ESLINT_CONFIG_BASE_JS_NAME = "eslint.config.base.js"
 TEMPLATES_DIR = SCRIPT_DIR / "templates"
 CURSORIGNORE_PYTHON = TEMPLATES_DIR / "cursorignore-python.txt"
 CURSORIGNORE_NODE = TEMPLATES_DIR / "cursorignore-node.txt"
@@ -549,30 +555,43 @@ def copy_ui_integration_test(repo_path: Path, repo_name: str, dry_run: bool) -> 
 
 
 def propagate_eslint_config(repo_path: Path, dry_run: bool) -> bool:
-    """Propagate eslint.config.base.js from PM into a UI repo.
+    """Propagate eslint.config.base.cjs from PM into a UI repo.
 
-    Strategy: if the repo has an eslint.config.base.js already and it matches the PM SSOT,
+    Strategy: if the repo has an eslint.config.base.cjs already and it matches the PM SSOT,
     skip. If it differs or is absent, create/update it. Never touch a hand-crafted
-    eslint.config.js or .eslintrc.cjs — those are left as-is (per-repo overrides are valid).
-    Returns True if a file was created or updated.
+    eslint.config.js/.mjs — those are left as-is (per-repo overrides are valid); the consuming
+    repo is responsible for importing + spreading `.rules` from this file into its own config.
+    Also removes a stale `eslint.config.base.js` copy (the pre-flat-config, never-importable
+    predecessor) if one is still present, so it can't silently drift forever.
+    Returns True if a file was created, updated, or a stale copy was removed.
     """
     if not ESLINT_CONFIG_BASE.exists():
-        print(f"  ⚠️ eslint.config.base.js not found at {ESLINT_CONFIG_BASE} — skipping ESLint propagation")
+        print(f"  ⚠️ eslint.config.base.cjs not found at {ESLINT_CONFIG_BASE} — skipping ESLint propagation")
         return False
+
+    changed = False
+    stale = repo_path / _STALE_ESLINT_CONFIG_BASE_JS_NAME
+    if stale.exists():
+        if dry_run:
+            print(f"  [dry-run] Would remove stale {_STALE_ESLINT_CONFIG_BASE_JS_NAME}")
+        else:
+            stale.unlink()
+            print(f"  ✅ Removed stale {_STALE_ESLINT_CONFIG_BASE_JS_NAME} (superseded by eslint.config.base.cjs)")
+        changed = True
 
     source_content = ESLINT_CONFIG_BASE.read_text()
-    dest = repo_path / "eslint.config.base.js"
+    dest = repo_path / "eslint.config.base.cjs"
 
     if dest.exists() and dest.read_text() == source_content:
-        return False
+        return changed
 
     if dry_run:
-        print(f"  [dry-run] Would {'create' if not dest.exists() else 'update'} eslint.config.base.js")
+        print(f"  [dry-run] Would {'create' if not dest.exists() else 'update'} eslint.config.base.cjs")
         return True
 
     existed = dest.exists()
     dest.write_text(source_content)
-    print(f"  ✅ {'Created' if not existed else 'Updated'} eslint.config.base.js (SSOT from PM)")
+    print(f"  ✅ {'Created' if not existed else 'Updated'} eslint.config.base.cjs (SSOT from PM)")
     return True
 
 
