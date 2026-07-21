@@ -85,9 +85,46 @@ overhead.
 
 ## Todos
 
-- [ ] [DIAG] P3. Re-scope the `_write_with_generation_match` legacy-CAS-path cleanup against current architecture (it's
+- [x] [DIAG] P3. Re-scope the `_write_with_generation_match` legacy-CAS-path cleanup against current architecture (it's
       now also used for canonical-index force-rewrites) — determine whether a clean deletion is still possible, or
-      whether the 2026-04-25 todo's premise needs updating. (repo: unified-trading-library)
+      whether the 2026-04-25 todo's premise needs updating. (repo: unified-trading-library) — ✅ RE-SCOPED, no code
+      change: **deletion is NOT safe, the 2026-04-25 premise is stale.**
+
+  Live-code trace (`unified_trading_library/manifest_writer/_writer_io.py`,
+  `unified_trading_library/manifest_writer/_maintenance.py`, `unified_trading_library/manifest_writer/_state.py`,
+  2026-07-21):
+
+  1. `ManifestWriter.write()` (`_writer_io.py:658-662`) branches on `self._per_vm_enabled` (`_resolve_per_vm_shards()`)
+     — per-VM shard write when true, `_write_with_generation_match` (the legacy CAS path) when false.
+     `MANIFEST_PER_VM_SHARDS` defaults `False` and is set `true` by ~80+ `deployment-service/scripts/vm/launch-*.sh`
+     launchers — so per-VM IS now the norm for VM-launched backfill/live jobs, confirming the flag rollout itself
+     succeeded.
+  2. BUT `unified_trading_library/manifest_writer/_maintenance.py:430`'s `emit_migration_manifest_updates()` — the
+     migration-tooling function that applies canonical-dimension rewrites during a live migration (e.g. the in-flight
+     `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` v5→v6 work, and the recently-landed DeFi-fold registration) —
+     constructs `ManifestWriter(service_name=..., catalogue_bucket=...)` with NO `per_vm_shards` override, and its
+     docstring is explicit that "the write uses the same GCS generation-match path as `ManifestWriter.write`, so
+     concurrent migration VMs are safe." This is a DELIBERATE, current-day production dependency on
+     `_write_with_generation_match`'s CAS retry-loop semantics — a one-shot canonical-index mutation needs the immediate
+     atomicity CAS provides; the per-VM path's "write your own shard, consolidate later" model doesn't fit a migration
+     that must land its rewrite before returning.
+  3. `_write_with_generation_match` → `_try_conditional_write` → `_refuse_if_index_shrink` (the 2026-07-15
+     328k-row-clobber regression guard) and its `allow_index_shrink=True` deliberate-force-rewrite override
+     (`_writer.py:102`, docstring: "Explicit force flag for the direct-canonical-index...") are layered specifically on
+     this write path. Deleting the path deletes the only sanctioned way to do a guarded, forced, atomic one-off
+     canonical-index rewrite.
+
+  **Conclusion**: the archived plan's Phase 6 framing ("after last bucket cutover: delete `_write_with_generation_match`
+  legacy path, delete feature flag") assumed per-VM sharding would become universal and retire the single-blob path
+  entirely. That premise is now stale — per-VM sharding solved the _concurrent incremental-write_ contention problem it
+  targeted, but a _second, distinct_ use case (atomic direct-canonical-index rewrites for migrations/maintenance)
+  emerged afterward and deliberately keeps building on the "legacy" path. `MANIFEST_PER_VM_SHARDS` is not a temporary
+  rollout flag to be deleted — it is a permanent mode selector between two write strategies with different consistency
+  needs. No deletion, no code change. Archived plan `plans/archive/manifest_429_per_vm_sharding_2026_04_25.plan.md`
+  Phase 6's unchecked "delete the legacy path" todo is superseded by this finding (archived plans are not re-executed
+  per this workspace's SSOT-direction rule; this issue doc is the resolution record — no edit made to the archive
+  itself).
+
 - [ ] [CODE] P3. Add `quote_asset`/`margin_type` to the deployment-api data-status API response for cefi chain shards —
       gate on `cefi_chain_tail_v6_canonicalisation_2026_07_21.md` landing first (surfacing pre-migration data would be
       misleading). (repo: deployment-api)
