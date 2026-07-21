@@ -45,7 +45,13 @@ code_refs:
     deployment-api/deployment_api/services/cost_observability/service.py,
     deployment-api/deployment_api/services/cost_observability/models.py,
     deployment-api/deployment_api/routes/deployments_inventory.py,
+    deployment-api/deployment_api/routes/_run_log_resolution.py,
+    deployment-api/deployment_api/routes/_run_log_tail.py,
+    unified-trading-library/unified_trading_library/deployment_registry.py,
+    unified-trading-library/unified_trading_library/lifecycle/daemon.py,
     deployment-ui/src/pages/Deployments.tsx,
+    deployment-ui/src/components/RunLogPanel.tsx,
+    deployment-ui/src/components/StreamingLogsPanel.tsx,
   ]
 ---
 
@@ -183,6 +189,59 @@ Every GCP VM launcher streams run.log + heartbeat + `EXIT_STATUS` to `gs://deplo
 (self-delete-proof) via `vm-exec-with-gcs-tee.sh` / `setup-data-pipeline-vm.sh` / `lc_log_upload_trap_block`. A coverage
 guard (`tests/unit/test_vm_launcher_scripts.py::TestDurableLogStreamerCoverage`) **fails if a GCP `launch-*.sh` doesn't
 stream** (whitelist for long-lived/systemd-logged service VMs + AWS + fan-out wrappers, each with a reason).
+
+## Run.log viewer — resolution contract, endpoints, events-vs-logs distinction (WS-4, 2026-07-21)
+
+Repro audit finding: before this workstream, `run.log` content was **never fetched into the browser** — the "Live log
+tail" panel was actually `StreamingLogsPanel` reading lifecycle EVENTS (`vm_events.py`, a different bucket entirely),
+and the archive-path lookup 404d live because it guessed a date (`completed_at[:10]`) instead of matching the archiver's
+actual write key. Plan: `plans/active/deployment_ui_vm_log_viewer_2026_07_20.md`.
+
+**Final-snapshot writer contract** (the fix at the source): `HeartbeatDaemon._write_final_log_snapshot()`
+(`unified_trading_library/lifecycle/daemon.py`) writes ONE durable copy of the local run.log to
+`vm_run_log_final_uri(vm_name, project_id)` → `gs://deployment-scripts-{project}/log-archive/final/{vm}/run.log` (no
+date component, no TTL, plain replace) — called from `_archive_terminal_state()` at actual VM completion (alongside the
+existing interval-uploader's final flush), best-effort and shard-level-isolated (a write failure logs + never blocks the
+terminal-event emission that already happened). Wired in `deployment-service`'s `heartbeat_cli.py` via
+`final_log_uri=vm_run_log_final_uri(vm_name, project_id=...)`. The **SIGKILL fallback**
+(`deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`) writes the same fixed path inline (bucket parsed from
+`GCS_LOG_URI`) so a hard-killed daemon still leaves a final copy — the only remaining writer for that case. The old
+`vm_run_log_rolling_uri` (date-guessing) helper had **zero production callers** anywhere (the daily archival cron builds
+its rolling-copy path inline) and was deleted outright from UTL, not left as dead code.
+
+**Read-path resolution — live-first, archive-fallback**: `resolve_run_log_location(vm_name, project_id)`
+(`deployment-api/deployment_api/routes/_run_log_resolution.py`) always tries `vm_log_stream_uri` (the live streaming
+path, 14-day TTL **from last write, not from VM start**) first, for ANY vm regardless of `completed_at`; on a miss,
+falls back to `vm_run_log_final_uri` (the archive above). At most 2 `gcs_describe_object` calls (1 on a live hit).
+`metadata is None` on both misses ⇒ honest "no log available", never a fabricated hit — this is the state for any VM
+that completed before the writer shipped. **Deliberately per-VM/request-time only** — the bulk 45s-SWR-cached whole-
+fleet census endpoints (`deployments_inventory.py::_vm_item`, `vm_deployments.py::_to_model`) do NOT call this resolver;
+they only compute the two deterministic URIs (no existence-check I/O) so the fleet-wide background refresh stays pure.
+
+**Size/tail/download endpoints** (`deployment-api/routes/deployments_inventory.py`), each reusing
+`resolve_run_log_location` and returning `location: "live"|"archive"|None` so the UI can label which copy resolved:
+
+- **`GET /api/deployments/{name}/run-log/metadata`** → size + last-modified (`gcs_describe_object` metadata already
+  fetched by the resolver).
+- **`GET /api/deployments/{name}/run-log/tail?lines=`** → bounded byte-range read of only the last
+  `DeploymentApiConfig.run_log_tail_max_bytes` (default 256KB, `unified_trading_library.gcs_read_object_range`), split
+  to the last `run_log_tail_max_lines` (default 300, clampable via `lines=`) — never loads the full object (observed
+  362KB–13.4MB in the wild, 20-30MB a plausible worst case). A read that doesn't start at byte 0 drops its leading
+  partial line (`_run_log_tail.py::tail_lines_from_bytes`).
+- **`GET /api/deployments/{name}/run-log/download`** → short-lived signed URL (`generate_download_url`, expiry via
+  `DeploymentApiConfig.run_log_download_url_expiry_minutes`, default 15 min) — the client downloads directly from GCS;
+  the API never streams the object through itself.
+
+All three return `exists=False` (no `download_url`/no `lines`) when neither path resolves — an honest empty state, not a
+dead link or blank panel.
+
+**Events-vs-logs panel distinction** (`deployment-ui`, `DeploymentDetail.tsx`): the pre-existing `StreamingLogsPanel` is
+genuinely lifecycle EVENTS under the hood (both its WS path here and the cockpit `AlertsLogsTab`'s SSE path convert
+`VMLifecycleEvent` → a `VmLogLine` envelope) — renamed to "Live event stream" with a subtitle pointing at the new panel,
+rather than rebuilt, since its functionality was never broken, only mislabeled. The genuinely new `RunLogPanel.tsx` is
+the actual run.log viewer: size + capped tail + working download, with honest states — `run-log-empty` (`exists=false`),
+an amber `run-log-archive-notice` banner when `location=archive` (14-day-TTL expired, showing the archive copy), and
+surfaced (never swallowed) `run-log-error`/`run-log-download-error` alerts.
 
 ## Coverage status
 
