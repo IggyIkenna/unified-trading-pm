@@ -156,23 +156,34 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
 
 ### Workstream C — remove the duplication (LAST — only once A + B are proven live)
 
-- [ ] [BACKEND] P1. **C1 — Delete the three carve-outs.** ⚠️ **GATED ON LIVE-VERIFY (2026-07-21):** A+B are now in place
-      (a one-off is `working` throughout — claim sets it, and B1 stops `/boot` resetting it — and archives on `/done`),
-      so the idle-scanner carve-outs are redundant IN PRINCIPLE. But the plan's own Safeguard forbids deleting them
-      before the replacement is **proven live**, and the historical failure was a **restart flipping `working` →
-      `idle`** (07:30 restart). The backend is currently STOPPED for this plan's work, so that can't be verified. **Do
-      C1 only after the coordinated restart confirms one-offs reliably stay `working` (esp. across the restart).** The
-      carve-outs are harmless to keep meanwhile — they are now-redundant guards, not bugs. (a) prereq-reaper AgentRow
-      guard (`1e7fec0`), (b) `_reclaim_idle_lingering_sessions` AgentRow guard (`f641968`), (c) boot-gate typed-spawn
-      recognition (`5907317`) if the uniform contract subsumes it. Each deletion ships with a test proving the uniform
-      signal (status=`working` + heartbeat, or archived-on-`/done`) now protects that agent instead. **Gate**: `rg`
-      finds no typed-agent special-case in any reaper; the original regression tests still pass, protected by the
-      contract.
-- [ ] [DOC] P2. **C2 — Finish the codex / role-doc SSOT.** The two codex SSOTs are already reconciled (2026-07-21:
-      `agent-orchestrator-single-vm-architecture.md` § Class B, `agent-orchestrator-worker-liveness.md` § completion
-      contract). Remaining: every role doc references the codex SSOT rather than restating it, and the "being
-      implemented / current pre-fix code" markers come out once the code lands. **Gate**: role docs point at codex; no
-      in-flight markers remain; no plan↔codex drift.
+- [x] [BACKEND] P1. **C1 — Delete the carve-outs.** ✅ **DONE `agent-orchestrator@0d510e9`** — `f641968` + `1e7fec0`
+      idle-scanner AgentRow guards DELETED; **`5907317` KEPT** (the boot-gate `spawn_base_role` recognition B1 depends
+      on — NOT subsumed). Carve-out regression tests flipped to the new contract
+      (`test_idle_reclaimer_skips_a_working_one_off` + `..._now_reaps_a_finished_one_off_slot`;
+      `test_prereq_reaper_skips_a_working_one_off`); QG green (1546); deployed carve-out-less via `--reload` + backend
+      healthy. The live-verify gate below is now **MET**: restart-preservation is proven at the code level —
+      `seed_worker_slots_from_tabs` (autospawn.py:739) revives only killed/stale→idle and leaves a `working` row
+      untouched; sessions survive restart (`KillMode=process`) so the watchdog (session-gated) doesn't reclaim;
+      HealthMonitor's silence clock resets on restart; idle-scanners query `idle`/`stale` only. Historical gate context:
+      ~~GATED ON LIVE-VERIFY (2026-07-21):~~ A+B were in place (a one-off is `working` throughout — claim sets it, and
+      B1 stops `/boot` resetting it — and archives on `/done`), so the idle-scanner carve-outs are redundant IN
+      PRINCIPLE. But the plan's own Safeguard forbids deleting them before the replacement is **proven live**, and the
+      historical failure was a **restart flipping `working` → `idle`** (07:30 restart). The backend is currently STOPPED
+      for this plan's work, so that can't be verified. **Do C1 only after the coordinated restart confirms one-offs
+      reliably stay `working` (esp. across the restart).** The carve-outs are harmless to keep meanwhile — they are
+      now-redundant guards, not bugs. (a) prereq-reaper AgentRow guard (`1e7fec0`), (b)
+      `_reclaim_idle_lingering_sessions` AgentRow guard (`f641968`), (c) boot-gate typed-spawn recognition (`5907317`)
+      if the uniform contract subsumes it. Each deletion ships with a test proving the uniform signal
+      (status=`working` + heartbeat, or archived-on-`/done`) now protects that agent instead. **Gate**: `rg` finds no
+      typed-agent special-case in any reaper; the original regression tests still pass, protected by the contract.
+- [x] [DOC] P2. **C2 — Finish the codex / role-doc SSOT.** ✅ **DONE `unified-trading-pm@16b3b9242`** — both codex SSOTs
+      flipped from in-flight → **LANDED** (`single-vm-architecture.md` Class-B banner + §Reap now describe the live
+      behavior; `worker-liveness.md` completion-contract marked LANDED, `f641968`/`1e7fec0` noted DELETED, `5907317`
+      kept). Role docs reference the contract plan (A2). No in-flight markers remain. The two codex SSOTs were already
+      reconciled (2026-07-21: `agent-orchestrator-single-vm-architecture.md` § Class B,
+      `agent-orchestrator-worker-liveness.md` § completion contract). Remaining: every role doc references the codex
+      SSOT rather than restating it, and the "being implemented / current pre-fix code" markers come out once the code
+      lands. **Gate**: role docs point at codex; no in-flight markers remain; no plan↔codex drift.
 
 ### Operational follow-ups (not workstream tasks)
 
@@ -376,3 +387,22 @@ one-off looks identical to a live fleet worker on both.
   archive + free + stop-nudge on it; rewrite all 5 role docs' non-functional "then EXIT" to the real `/done`+stop call
   (`cicd`, `conflict_resolver`, `data_pipeline_failure`, `plan_health`, `plan_reconciler`); add the completion step to
   the boot prompt; then delete the `f641968`/`1e7fec0` carve-outs.
+- **2026-07-21 (execution complete) — A + B + C all landed, deployed, and verified.** Implemented in the slot-16
+  worktrees (operator: commit-local-while-backend-stopped, then push once stopped):
+  - **A1** `agent-orchestrator@da0f7df` — `DoneRequest.one_shot_complete` + `_done_one_off` (archive
+    `lifecycle-complete`
+    - free slot; 400 if the caller isn't a live one-off); Class-A `/done` byte-for-byte unchanged; 4 new tests.
+  - **A2** `unified-trading-pm@f793a90e` — all 5 role docs' "then EXIT" → real `POST /done {one_shot_complete:true}` +
+    stop.
+  - **A3** `agent-orchestrator@da0f7df` — uniform STEP 3 completion reminder in the `_compose` boot message.
+  - **B1** `agent-orchestrator@f393d7a` — the mid-work-reap root cause: `/boot`'s no-task path reset a one-off from its
+    claimed `working` back to `idle`; now it HOLDS `working` so idle-scanners skip it by construction. **B2** satisfied
+    by existing STEP-0 heartbeat + first-contact-anchored silence.
+  - **C1** `agent-orchestrator@0d510e9` — deleted `f641968` + `1e7fec0`; kept `5907317` (B1 depends on it); carve-out
+    tests flipped; restart-preservation proven at code level (`seed_worker_slots_from_tabs` leaves `working` untouched).
+  - **C2** `unified-trading-pm@16b3b9242` — both codex SSOTs flipped in-flight → LANDED.
+  - **Deploy + live-verify:** `ao-self-pull` FF'd the deployed checkout to `0d510e9`, `--reload` applied it; backend
+    `/health` 200, `mode=live`, CIReconcile disabled, fleet healthy carve-out-less. AO quality gate green throughout
+    (1546 py + 113 vitest).
+  - **Still open (the OPS todo above):** re-enabling `CIReconcileLoop` needs its false-red root cause fixed first (it
+    was escalating 3 GREEN repos → wasted cicd credits; paused via env `interval=0`).
