@@ -261,8 +261,25 @@ v2-gated CI workflows in Ikenna's current area. Capture in `plans/active/issues/
 
 **Per-tab review gate — real work starts only when ALL of these are signed off:**
 
-- [x] [OPERATOR] P0. **Tab 1 — What's running** — reviewed 2026-07-20; rebuilt to service × version + collapsible.
-      _Awaiting final sign-off._
+- [x] [OPERATOR] P0. **Tab 1 — What's running** — reviewed 2026-07-20; rebuilt to service × version + collapsible +
+      **build-datetime column**. _Awaiting final sign-off._ Review findings folded in (drive the real page from these):
+  - **Row unit** = service × artifact version, expandable host list, collapsible service groups + expand/collapse-all.
+  - **"Built from · when" column** (operator ask): each row shows the artifact's creation time, because a SHA points to
+    a commit but not a date. Images → Artifact Registry `createTime`; tarballs → **"frozen at launch"** (a VM never
+    self-updates, so its code is frozen at boot; the exact tarball `created_at` is unresolvable until the stamp — this
+    is a THIRD concrete argument for the stamp, alongside the missing commit and the fragmentation risk). Once (A)
+    lands, tarball rows get a real build time from the manifest `created_at`.
+  - **Artifact-type + pin-strength must be legible in the real page** (operator asked what the raw strings meant — the
+    mock made them decode it). Teach the two ladders explicitly:
+    `image: :latest (floating) → :sha (tag, traceable) → @sha256 (digest, provable)` and
+    `tarball: x.tar.gz (floating) → x@sha.tar.gz (pinned)`. The SHA-tag is legible-but-mutable; the digest is
+    immutable-but-opaque-to-the-commit (so a digest-pinned row shows `Built from = unknown` even though its build time
+    is known). Consider a per-row type/pin chip + a one-line legend of the ladders.
+  - **Stat tiles computed from data**, not hand-written (a check caught them disagreeing). Do the same in the real page
+    — derive counts server-side, never hardcode.
+  - Data source for build-time is confirmed available (image `createTime`, manifest `created_at`); a couple of GCP
+    createTimes in the MOCK are deploy-derived only because gcloud auth expired mid-session — a non-issue for the real
+    backend (it holds live creds).
 - [ ] [OPERATOR] P0. **Tab 2 — Deploy timeline** — not yet reviewed.
 - [ ] [OPERATOR] P0. **Tab 3 — Pipeline** — not yet reviewed.
 - [ ] [OPERATOR] P0. **Tab 4 — Artifacts** — not yet reviewed.
