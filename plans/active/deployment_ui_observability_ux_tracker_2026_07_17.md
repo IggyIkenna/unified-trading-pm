@@ -440,13 +440,13 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
 
 ## Split map (when the operator finalises — before ANY dispatch)
 
-| Child plan                   | Contents                                                                                                                                 | Readiness                                                                                           |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                                                                           | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test, must-do fixes applied)               |
-| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`                                                                    | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test; owns the Deployments.tsx extraction) |
-| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                                                                                   | done — repro audit reframed scope (no viewer existed); kept `draft`, dispatch held                  |
-| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                          | done — both audits run live; reframed to ingestion-first; kept `draft`, dispatch held               |
-| WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend; git-health dropped) | done — write-path decided; kept `draft`, dispatch held                                              |
+| Child plan                   | Contents                                                                                                                                 | Readiness                                                                                            |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| WS-1 cost accuracy           | ✅ split — `deployment_ui_cost_per_day_accuracy_2026_07_20.md`                                                                           | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test, must-do fixes applied)                |
+| WS-2 + WS-3 filters & search | ✅ split — `deployment_ui_date_range_filter_and_search_2026_07_20.md`                                                                    | 🟢 **ACTIVE 2026-07-21** — dispatched to AO (reliability test; owns the Deployments.tsx extraction)  |
+| WS-4 VM logs                 | ✅ split — `deployment_ui_vm_log_viewer_2026_07_20.md`                                                                                   | 🟢 **ACTIVE 2026-07-21** — 2nd-wave dispatch (must-do fixes applied; do NOT co-run with WS-6/daemon) |
+| WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                          | 🟢 **Plan A ACTIVE 2026-07-21** — 2nd-wave dispatch; Plan B stays `draft` (gated on A)               |
+| WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend; git-health dropped) | done — write-path decided; kept `draft`, dispatch held                                               |
 
 Per task_template §4 — each child gets 10–20 todos, one plan = one agent, audits separable, draft-gated phases where a
 build depends on an audit/decision.
@@ -529,6 +529,13 @@ build depends on an audit/decision.
   gating, and WS-2/3 is the upstream owner of the `Deployments.tsx` shared-primitive extraction — a good first pair. All
   remaining plans (WS-4, WS-5A, WS-5B, Fleet consolidation, durable-operational-data) STAY `draft` until these two
   complete and AO looks stable. Fleet + durable-operational-data pushed to remote as durable drafts.
+
+- **2026-07-21 (2nd-wave dispatch)** — WS-1/WS-2-3 progressed cleanly, so activated the next collision-safe pair for
+  throughput: **WS-4** (VM log viewer) + **WS-5A** (alerts ingestion). Must-do review fixes applied to both before
+  activation. Now 4 concurrent serial workers. Still `draft`: WS-5B (gated on WS-5A + WS-2/3), Fleet consolidation
+  (gated on WS-2/3 `Deployments.tsx` merge), WS-6 durable-operational-data (safe alone but **collides with WS-4 on the
+  UTL heartbeat daemon** — do NOT co-run). Next eligible when a slot frees: WS-6 (only once WS-4's daemon work is done),
+  then WS-5B / Fleet once their gates clear.
 
 ## Codex SSOTs
 
