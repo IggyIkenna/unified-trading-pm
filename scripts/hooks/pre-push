@@ -120,9 +120,17 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
         _fm_rng="${_rsha}..${_lsha}"
       fi
       # Added/Copied/Modified/Renamed only — a DELETED doc has no frontmatter to validate.
+      # The tree set MUST cover check_frontmatter_schema.py's DOC_TREES, else a doc in a tree this
+      # guard omits (measured 2026-07-21: plans/audit/results, plans/audit/instructions, **/*.mdc
+      # were covered by the CI corpus scan but MISSING here) bypasses this client guard yet still
+      # reds the fleet-wide PM gate from CI. NOTE on git pathspec semantics: a plain `*` matches `/`,
+      # so a single-star `dir/*.md` catches BOTH direct and nested docs (verified) — a `**` form
+      # would MISS files directly in the dir. The checker skips any matched non-doc (doc_type=None),
+      # so a slightly-broad glob never false-blocks.
       _fm_files="${_fm_files} $(git diff --name-only --diff-filter=ACMR "$_fm_rng" -- \
-        'plans/active/*.md' 'plans/active/issues/*.md' 'plans/epics/*.md' 'codex/**/*.md' \
-        'agents/*.md' 2>/dev/null | tr '\n' ' ')"
+        'plans/active/*.md' 'plans/active/issues/*.md' 'plans/epics/*.md' \
+        'plans/audit/results/*.md' 'plans/audit/instructions/*.md' \
+        'codex/*.md' 'agents/*.md' '*.mdc' 2>/dev/null | tr '\n' ' ')"
     done <<<"$STDIN_DATA"
     # De-dup + drop paths deleted in the working tree (a range can name a since-removed file).
     _fm_list=""
