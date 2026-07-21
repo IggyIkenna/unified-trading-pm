@@ -181,8 +181,8 @@ contract under the SOURCE key as an alias. The workflow chooses + verifies befor
 - [ ] 3. [DATA] P1. Sweep the OTHER candle data_types for the same class of contract drift before the backfill
       (`trades`, `book_snapshot_5`, `liquidations`, `options_chain`, `futures_chain`, the DeFi set). A scoped
       `/data-pipeline-check-mdps --legs force --require-captured --auto-day` per data_type is exactly the tool.
-- [ ] 4. [SCRIPT] P2. `/data-pipeline-check-mdps` driver improvement — **EXACT root cause + fix pinned 2026-07-21** (now
-      the ONLY reason the skill reports "failed" on a fully-successful write). The force-leg manifest verify
+- [x] 4. ✅ [SCRIPT] P2. DONE (utl@69ff7fee + mdps@8890508) — **EXACT root cause + fix pinned 2026-07-21** (now the ONLY
+      reason the skill reports "failed" on a fully-successful write). The force-leg manifest verify
       (`_verify_tf_output`, scripts/pipeline_e2e_check.py:1057) calls the engine
       `verify_manifest_row(bucket, match, day)` which reads the **MERGED** index (`read_availability_index` merges
       consolidated + ALL per-VM shards) and takes `.iloc[-1]` — so when a cell has BOTH a stale `attempted_failed` row
