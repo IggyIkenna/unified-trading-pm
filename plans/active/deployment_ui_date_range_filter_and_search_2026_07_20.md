@@ -167,13 +167,23 @@ Full audit transcript available on request; the load-bearing facts:
       in-memory array filter, no reason to lag the actual filtering; only the `?q=` URL write is debounced 300ms via the
       house `useDebounce` hook, so typing doesn't spam browser history) | pw:L2 ✓ | regression:
       tests/smoke/deployments-page.spec.ts
-- [ ] [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
+- [x] ✅ [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
       `StatusFilterChips` (`:924-961`), and the column-sort machinery (`SortKey` / `columnSortValue` / `compareByColumn`
       at `:256-320`, plus `onHeaderClick` at `:821` — note it lives in the table component, NOT co-located with the pure
       sort fns) are currently LOCAL to `Deployments.tsx` and not exported. Lift them into shared components (e.g.
       `src/components/filters/`) as part of this work, preserving behaviour, and re-consume them here. **This plan owns
       the extraction** — the WS-5 alerts-page rebuild (`deployment_ui_alerts_page_rebuild_2026_07_20.md`) declares
-      `depends_on` this plan and consumes the extracted primitives rather than duplicating or re-editing this file
+      `depends_on` this plan and consumes the extracted primitives rather than duplicating or re-editing this file —
+      deployment-ui@1cf191b (`FilterSelect`/`StatusFilterChips`/`chipTone` → `src/components/filters/`;
+      `StatusFilterChips` generalized to take a pre-computed `chips: StatusChip[]` prop instead of a deployment-specific
+      `UmbrellaSummaryResponse`, so alerts can supply its own status vocabulary/summary shape; the click-to-sort state
+      machine → generic `useColumnSort<K>()` in `src/hooks/`; the nulls-last/tie-break comparator → generic
+      `compareByColumn<T,K>(..., columnValue, defaultCmp, forceLast?)` in `src/lib/columnSort.ts` (+ unit test,
+      `columnSort.test.ts`) — `columnValue`/`defaultHierarchyCmp`/`SortKey`/the always-on `forceLast` override stay
+      LOCAL to `Deployments.tsx` as deployment-item-specific plug-in callbacks, wired into the generic utilities via a
+      thin `deploymentCompareByColumn` wrapper. Behaviour-preserving: same markup/classes/`data-testid` contract,
+      verified against the full vitest suite + all 9 deployment Playwright specs (49 tests), zero regressions) | pw:L2 ✓
+      | regression: tests/smoke/deployments-page.spec.ts, tests/smoke/deployments-wsd.spec.ts (sort-behavior tests)
       (operator decision 2026-07-20 — one agent owns `Deployments.tsx`, no same-file collision, no divergent filter
       bars).
 - [ ] [REVIEW] P1. Tests — overlap formula (fresh-running / heartbeat-stale / completed cases); archive bounded-read +
