@@ -137,14 +137,26 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       the decision-record path in `core/alert_store.py::AlertStore.record_fired` (from `event.code` else
       `event.rule_id`) so both writers into `alerting/history/` conform to the same schema. `quality-gates.sh` green
       (874 tests, 79.78% coverage).
-- [ ] [BACKEND] P0. **deployment-api — ingest the alerting-service store.** Read `alerting/history/date=…/*.jsonl` into
-      the unified alerts response. **This single item mirrors ~12 alert classes at once** — the highest-leverage change
-      in the workstream, and the cheapest (an existing durable store, just read it). **Bucket-resolution caveat
+- [x] ✅ [BACKEND] P0. **deployment-api — ingest the alerting-service store.** Read `alerting/history/date=…/*.jsonl`
+      into the unified alerts response. **This single item mirrors ~12 alert classes at once** — the highest-leverage
+      change in the workstream, and the cheapest (an existing durable store, just read it). **Bucket-resolution caveat
       (verified):** the alerting-service bucket (`alerting-service-{project}`, derived by alerting-service's own private
       `_bucket_name()`) has **no kind entry** in `deployment-service/configs/cloud-providers.yaml` today, so
       `resolve_bucket_name()` cannot resolve it as-is — FIRST add a `gcp.storage` kind entry for it to that config, THEN
       resolve via `resolve_bucket_name()`. Do NOT hardcode the literal (that recreates the QG 5.69 violation a sibling
-      todo fixes). Bounded day-partitioned reads only (no whole-corpus walk).
+      todo fixes). Bounded day-partitioned reads only (no whole-corpus walk). — `deployment-service@5f6d4e1`: added flat
+      `gcp.storage`/`aws.storage` `alerting-service` kind (`alerting-service-${GCP_PROJECT_ID}` /
+      `...-${AWS_ACCOUNT_ID}`, matching alerting-service's private `_bucket_name()` template exactly).
+      `deployment-api@35c1495`: `_repo_ci_alerts.py` gained `_read_alerting_service_sync()` +
+      `_parse_alerting_service_line()` — resolves the bucket via `resolve_bucket_name()` (never hardcoded), walks
+      `alerting/history/date={date}/` per day (bounded, single-walk-compliant), parses both row shapes that land there
+      (delivery records and decision records) into the existing `AlertEntryDict`, and merges into
+      `_read_ledgers_sync()`'s existing CI-ledger walk (a resolution/ read failure degrades to empty + a log line, never
+      blanks the CI ledgers). `alert_class` doubles as `kind` and `workflow_name` so alerting-service's classes group
+      into their own lifecycle streams (`repo=""` — structurally absent, not a bug, per the FIELD_COVERAGE table above).
+      New tests: `TestParseAlertingServiceLine` (both row shapes, missing-timestamp skip, junk-line skip) +
+      `TestReadAlertingServiceSync` (blob-merge happy path, bucket-resolution-failure → empty). `quality-gates.sh` green
+      in both repos.
 - [ ] [BACKEND] P0. **Fix the emitting-vs-subject repo defect** — populate `subject_repo` distinctly from the emitting
       repo on the GHA/ci-failures path, so repo filtering returns correct results.
 - [ ] [BACKEND] P1. **Fix the hardcoded bucket** (QG 5.69) — `_repo_ci_alerts.py:27` and `deployments_inventory.py:342`
