@@ -291,8 +291,15 @@ Key audit facts driving the merges:
       (`cockpit.spec.ts` + `fleet-git-tab.spec.ts` + `nav-menu-dedup.spec.ts` + `nav_and_header.spec.ts` +
       `vm_deployments_archive_history.spec.ts` + `vm_deployments_reconcile.spec.ts` + `deployments-page.spec.ts` +
       `venue_tardis_windows.spec.ts` + `routes.spec.ts`): **114 passed, 0 failed**. `pw:L2 ✓`.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across deployment-ui + deployment-api if
-      touched) + flip todos same turn (`docs(plans):`).
+- [x] [INFRA] P1. ✅ Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across deployment-ui + deployment-api if
+      touched) + flip todos same turn (`docs(plans):`). — ✅ Already satisfied by construction: every todo in this plan
+      (from "Remove FleetInfra" through the Playwright-review audit) was individually shipped via `quickmerge.sh` and
+      its plan checkbox flipped in the SAME turn, per the commit-push-flip HARD RULE — not deferred to a single
+      end-of-plan mega-commit. Final shipped chain on `deployment-ui`: `84b6a17` → `e2cf84b` → `fce06fb` → `8c23e7b` →
+      `509f3b9` → `ddecdec` (the last one landed by a concurrent slot closing the venue-panels gap found during review).
+      `deployment-api` was untouched throughout (every backend endpoint stayed intentionally out of scope per each
+      todo's own text). Verified both repos' trees are clean and fast-forwarded to `origin/live-defi-rollout` before
+      flipping this todo — nothing outstanding to ship.
 - [ ] [REVIEW] P2. Post-phase codex audit — document the consolidated contract (Deployments owns VM inventory + idle
       spend + reap actions + history; Fleet = git-health-only; `/vm-deployments` retired) in
       `codex/05-infrastructure/deployment-observability.md`.
