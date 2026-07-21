@@ -53,8 +53,9 @@ locked_by:
 locked_since:
 assigned_vm: NA
 resolved_by:
-  "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback); residual
-  followups tracked in § 7 and the batch=live divergence issue"
+  "uac@d40c5d7d (default-on stem check) + mtds@953679de (sanitize_file_stem writers + reader fallback) + uac@502ef57e
+  (colon-guard fail-loud on build_instrument_id + defi ID_FORM widening, § 7 items 2+4); residual followups tracked in §
+  7 (P1 surface-A re-run; P2 quarantine disposition) and the batch=live divergence issue"
 ---
 
 # The canonical-path machine oracle was blind to the filename stem
@@ -240,14 +241,48 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
 - [x] [SERVICE] P0. Remove the `_sanitize_symbol` call from `live_tick_blob_path` + `_microstructure_blob_path` so live
       filenames carry the literal-colon canonical id (matching batch) — `market-tick-data-service@953679de`
       (`sanitize_file_stem`). Migration population measured 0 (§ 6.1a); reader tolerates the legacy form (§ 6.1b).
-- [ ] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints the
+- [x] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints the
       double-wrapped `VENUE:ITYPE:<raw wire>` ids — tolerance is the mechanism that polluted the corpus. (Provenance:
-      operator ruling 2026-07-20. Tracked in the batch=live divergence issue doc.)
+      operator ruling 2026-07-20. Tracked in the batch=live divergence issue doc.) **DONE
+      `unified-api-contracts@502ef57e`**: the actual mechanism lives in the SHARED builder, not any one caller — the
+      real caller (`market-tick-data-service/.../adapters/cefi/tardis_shared.py::derive_row_instrument_id`'s bare
+      `return build_instrument_id(venue, instrument_type, symbol)` fallback, `[SERVICE]`-tagged as a MTDS file, out of
+      this session's repo scope) was left untouched, but `build_instrument_id` itself now FAILS LOUD (`ValueError`) on
+      any `symbol` carrying an embedded `:` for every asset group except sports/prediction (whose `symbol` is itself a
+      pre-built domain id that legitimately embeds colons) — `:` is the builder's own top-level `VENUE:TYPE:SYMBOL`
+      delimiter, so a colon-bearing symbol (e.g. Bitfinex's own wire notation `ADAF0:USTF0`) is never well-formed input
+      regardless of which repo's caller supplies it. This closes the defect at the shared root dependency: MTDS's
+      catalogue-miss fallback will now raise instead of silently minting `BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0`,
+      surfacing as a proper per-shard `record_failed` via the existing shard-isolation machinery rather than a silent
+      corrupt write. Regression tests: `tests/internal/unit/test_canonical_id_builder.py::TestSymbolColonGuard`.
 - [ ] [DATA] P1. Re-run CeFi surface-A reconciliation with the fixed oracle and restate the verdict; every
       pre-2026-07-20 surface-A verdict is structure-only. (The 1,697 colon_wire live objects in § 6.1a are now flagged.)
-- [ ] [DATA] P2. Decide the id grammar for `defi` / `prediction` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; until
-      then those AGs report "not checked".
+- [x] [DATA] P2. Decide the id grammar for `defi` so `_ID_FORM_CHECKED_ASSET_GROUPS` can widen; `prediction` stays out
+      of scope (its own future closeout). **DONE `unified-api-contracts@502ef57e`**: not a new decision — the DeFi
+      instrument-uid grammar was already ratified in `plans/active/defi_consolidated_closeout_2026_07_18.md`'s
+      "Instrument-uid grammar per DeFi type" section (`VENUE-CHAIN:TYPE:SYMBOL`, per-type SYMBOL variants for
+      SPOT_ASSET/POOL/A_TOKEN/DEBT_TOKEN/LST/PERPETUAL(GMX, chain-less)/SOLANA_AMM_POOL/SOLANA_LENDING). Wired a
+      `_DEFI_INSTRUMENT_ID_RE` into `unified_api_contracts/canonical/partition_paths.py` and widened
+      `_ID_FORM_CHECKED_ASSET_GROUPS` to `{"cefi", "defi"}`. **Measured consequence (honest-disclosure, same shape as
+      the original CeFi widening)**: today's DeFi single-instrument filenames are the BARE `symbol` column value, not
+      yet the wrapped id (MTDS `partitioned_writer.py::_resolve_file_symbol`'s own docstring: "defi/sports are untouched
+      — they fall straight through to `symbol_str`") — so this widening is EXPECTED to report most of the current DeFi
+      corpus `NON_CANONICAL` by id-form (mirrors CeFi's 20.82%-canonical disclosure, § 1); fixing the DeFi writer to
+      emit the wrapped filename is separate, service-side work, not done here. `prediction` remains explicitly
+      unchecked. Regression tests: `tests/unit/test_partition_path_is_canonical.py`
+      (`test_defi_canonical_stem_per_type_is_clean`, `test_defi_bare_symbol_stem_is_non_canonical_by_id_form`,
+      `test_defi_gmx_chainless_perpetual_is_canonical`, `test_is_canonical_instrument_id` DeFi cases).
 - [ ] [DATA] P2. The legitimately-unresolvable objects need a quarantine / honest-absence disposition (separate design).
+      **NOT resolved by this session's work** — noting state found while investigating: a STANDALONE building block
+      already exists (`unified_api_contracts/canonical/quarantine.py` — `is_quarantined_instrument_id` /
+      `ResolutionEvidence` / `QUARANTINE_REGISTRY` / `classify_id_form`, `unified-api-contracts@989e9d16`), shipped
+      against a DIFFERENT, more recent design doc:
+      `plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`. Per that module's own docstring it is
+      "standalone — nothing here is wired into any write or read guard"; the design doc's own §7 todo list (Stage 0
+      OBSERVE / Stage 1 WRITE ENFORCE / Stage 2 MANIFEST CLASSIFY / Stage 3 READ ENFORCE) is a materially larger,
+      separately-gated program (3 adversarially-CONFIRMED gaps in its own §5 must close before write-enforce ships) —
+      out of scope for this session. This item stays open until that program's registry-gated enforcement actually wires
+      a disposition for the legitimately-unresolvable population.
 
 ## 8. Codex SSOTs updated
 

@@ -134,8 +134,17 @@ edited.)
       id cannot forge a hive segment; migrate the 48+ KRAKEN-SPOT `ADA/USD.parquet`-style corrupt objects.
 - [ ] [SERVICE] P1. Turn `validate=True` on the two `tardis_cefi_shards.py` write sites and make
       `finalise_rows_and_path` violations FATAL, not advisory (fail hard, per the operator's write-path directive).
-- [ ] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints
-      double-wrapped `VENUE:ITYPE:<raw wire>` ids (shared with the oracle issue doc).
+- [x] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints
+      double-wrapped `VENUE:ITYPE:<raw wire>` ids (shared with the oracle issue doc). **DONE at the shared root
+      `unified-api-contracts@502ef57e`**: `build_instrument_id` now raises `ValueError` on any `symbol` carrying an
+      embedded `:` for every asset group except sports/prediction — the exact shape a catalogue-miss fallback passing a
+      raw wire symbol through produces. The literal MTDS caller
+      (`market-tick-data-service/.../adapters/cefi/tardis_shared.py::derive_row_instrument_id`'s bare
+      `return build_instrument_id(venue, instrument_type, symbol)` fallback, lines ~592/595) is UNCHANGED code — it is a
+      `[SERVICE]`-repo file, out of the UAC-scoped session that shipped this fix — but is now functionally moot: on a
+      catalogue miss it will raise instead of silently minting a double-wrapped id, surfacing as a per-shard
+      `record_failed` via the existing shard-isolation machinery. Full detail:
+      `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` § 7.
 - [ ] [DATA] P1. Migrate/restate the historical non-canonical live objects (1,697 colon_wire cefi) as part of the
       surface-A re-run with the fixed oracle.
 
