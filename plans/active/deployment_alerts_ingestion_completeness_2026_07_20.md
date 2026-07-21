@@ -126,9 +126,17 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       Human-readable coverage table below (§ "Normalised alert schema (contract)"). Widened `source_plane` to 5 values
       (added `zombie_watchdog` + `kill_switch_audit`) so the P1/P2 ingestion todos below don't need a schema change
       later.
-- [ ] [BACKEND] P0. **alerting-service — persist the full payload** (decision 2). Extend `persistence/storage_store.py`
-      writes so `alerting/history/` carries severity, message body, target, and alert_class alongside the existing
-      delivery-status fields, conforming to the normalised schema.
+- [x] ✅ [BACKEND] P0. **alerting-service — persist the full payload** (decision 2). Extend
+      `persistence/storage_store.py` writes so `alerting/history/` carries severity, message body, target, and
+      alert_class alongside the existing delivery-status fields, conforming to the normalised schema. —
+      `alerting-service@d2f585c`: extended `notifiers/router.py::_build_delivery_record` (+ its 2 `_deliver_to_channels`
+      call sites, the `_route_synthetic_log_only` call site, and `_record_batch_audit`'s inline dict) to carry
+      `alert_class` (=event_name), `severity`, `message`, `service`, `deployment_target` — new `_persisted_severity()` /
+      `_extract_deployment_target()` helpers reuse what routing already computes (`pd_severity`/`summary`/`source`, and
+      the `vm_name`/`vm`/`deployment_id` convention `_repo_ci_alerts.py` already reads). Also stamped `alert_class` on
+      the decision-record path in `core/alert_store.py::AlertStore.record_fired` (from `event.code` else
+      `event.rule_id`) so both writers into `alerting/history/` conform to the same schema. `quality-gates.sh` green
+      (874 tests, 79.78% coverage).
 - [ ] [BACKEND] P0. **deployment-api — ingest the alerting-service store.** Read `alerting/history/date=…/*.jsonl` into
       the unified alerts response. **This single item mirrors ~12 alert classes at once** — the highest-leverage change
       in the workstream, and the cheapest (an existing durable store, just read it). **Bucket-resolution caveat
@@ -267,6 +275,19 @@ Notes worth surfacing beyond the matrix:
   `deployment_api._persist_alert()` needs a writer-side signature change for BOTH `subject_repo` (todo 4) and
   `deployment_target` (not previously called out as needing a writer change) — the reader (`_repo_ci_alerts.py`) already
   knows how to parse `deployment_target` from `details`, but nothing writes `details` today.
+
+- **2026-07-21** — Todo 2 (alerting-service persist full payload) shipped, `alerting-service@d2f585c`. Scope note for
+  the todo-11 post-ingestion coverage re-measure: `alerting_service/rules/data_pipeline_rules.py` documents an EXISTING,
+  INTENTIONAL design contract (from `data_pipeline_hardening_self_monitoring_2026_06_22.md`) that INFO/WARN
+  DP__/DEPLOYMENT__ alerts are Slack-**channel-only** — `_route_data_pipeline_event()` never calls
+  `_persist_delivery_record()` for them; only `severity == CRITICAL` reaches the incident path that persists. Only
+  `AlertStore.record_fired()` (a separate, apparently-unwired decision-record path off `api/routes/alerts.py`) and
+  CRITICAL-tier deliveries write to `alerting/history/` today. This wasn't in scope to change here (a persistence-gate
+  widening beyond "enrich what's already written" would be a bigger, unplanned behavior change to a documented prior
+  design decision) — but it means the "~12 alert classes at once" leverage todo 3 expects may be smaller than assumed if
+  most of those classes are INFO/WARN. Flagging so the coverage re-measure treats an INFO/WARN class reading as
+  "genuinely absent from the store" (not a todo-3 ingestion bug) and files a follow-up if the operator wants those
+  persisted too.
 
 ## Codex SSOTs
 
