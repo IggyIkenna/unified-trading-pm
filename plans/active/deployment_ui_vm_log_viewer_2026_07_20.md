@@ -141,10 +141,16 @@ source:
       honest-absence when neither live nor archive object exists (no GCS read attempted). Unit tests:
       `tests/cloud_interface/unit/test_gcs_blob_ops.py` (UTL), `tests/unit/test_run_log_tail.py` +
       `tests/unit/test_route_deployments_inventory.py` (deployment-api). Both repos' `quality-gates.sh` green.
-- [ ] [BACKEND] P1. Signed-URL download endpoint (decision 4) — short-lived signed URL for the resolved log object; no
-      server-side streaming of the object itself.
-- [ ] [BACKEND] P1. Signed-URL download endpoint (decision 4) — short-lived signed URL for the resolved log object; no
-      server-side streaming of the object itself.
+- [x] ✅ [BACKEND] P1. **Signed-URL download endpoint** (decision 4) — short-lived signed URL for the resolved log
+      object; no server-side streaming of the object itself. — `deployment-api@e0b5edaa`. New
+      `GET /api/deployments/{name}/run-log/download` in `deployments_inventory.py`: resolves the object via
+      `resolve_run_log_location` (reused, live-first/archive-fallback), splits the resolved URI via UTL's
+      `split_gcs_uri()`, and calls UTL's existing `generate_download_url(bucket, object_path, expiry_minutes=...)` — no
+      new UTL code needed, the pre-signed-URL helper already existed. Expiry configurable via
+      `DeploymentApiConfig.run_log_download_url_expiry_minutes` (default 15 min). Honest `exists=False` /
+      `download_url=""` when neither live nor archive object exists (no signed URL generated). Unit tests added to
+      `tests/unit/test_route_deployments_inventory.py`. `quality-gates.sh` green. (Note: this todo was found duplicated
+      in the plan file — deduped to one entry as part of this flip.)
 - [ ] [UI] P0. New "Run log" panel on `DeploymentDetail` (decision 3) — separate component from the events panel; shows
       size (human units), the capped tail with a "last N lines of X MB" label, and a working Download button using the
       signed URL. Honest states — "no log yet", "log expired (14-day TTL), showing archive copy", errors surfaced, never
@@ -209,6 +215,11 @@ source:
   missing `referenced_by` frontmatter key) — filed
   `plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md` rather than absorb that unscoped
   debt into this task.
+- **2026-07-21** (slot 3) — Shipped the signed-URL download endpoint (todo 5), `deployment-api@e0b5edaa`: new
+  `GET /run-log/download` reusing `resolve_run_log_location` (todo 3) + UTL's pre-existing `split_gcs_uri()` /
+  `generate_download_url()` — no new UTL code needed. Expiry via
+  `DeploymentApiConfig.run_log_download_url_expiry_minutes` (default 15 min). Found this todo duplicated (two identical
+  `- [ ]` entries) in the plan file, likely from a concurrent-slot merge artifact — deduped to one flipped entry.
 
 ## Codex SSOTs
 
