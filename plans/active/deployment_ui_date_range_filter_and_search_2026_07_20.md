@@ -131,9 +131,15 @@ Full audit transcript available on request; the load-bearing facts:
       deployment-ui@234130a (`KindFilterChips` toggle-chip group replaces the single `<select>`; comma-separated
       `?kind=` URL, old single-value deep-link still works as a 1-element set; `cockpit.spec.ts`'s `.selectOption(...)`
       updated to click the chip) | pw:L2 ✓ | regression: tests/smoke/deployments-page.spec.ts
-- [ ] [UI] P1. Approx-row colour marker (decision 4) — reuse the WS-1 partial-day colour convention for any
+- [x] ✅ [UI] P1. Approx-row colour marker (decision 4) — reuse the WS-1 partial-day colour convention for any
       `basis: "approx"` row (heartbeat-stale VMs, unmanaged fallback, single-timestamp kinds). One consistent visual
-      language across the whole table.
+      language across the whole table. — deployment-ui@e4f893e (`LastRunCell` in `Deployments.tsx` wraps the existing
+      Last-Run column; amber `text-amber-400` when `item.basis === "approx"`, colour only, no text label, mirroring
+      `CostCell`'s `cost_basis === "partial"` convention exactly;
+      `DeploymentItem.started_at/completed_at/     last_heartbeat_at/basis` added to `deploymentApi.ts` — the backend
+      shipped these fields (deployment-api@ff5bb06) but the UI type never declared them; mock fixture
+      `funding-ensemble-paper-week` (a single-timestamp CLOUD_RUN_JOB) marked `basis: "approx"`) | pw:L2 ✓ | regression:
+      tests/smoke/deployments-approx-marker.spec.ts
 - [ ] [UI] P1. Always-on rows (CLOUD_RUN_SERVICE, any other no-interval kind) sort **last** in date-range-filtered
       results and stay visible regardless of range, with a distinct "always-on" visual treatment (decision 2) — visibly
       different from the approx marker, since this means "not applicable," not "uncertain."
