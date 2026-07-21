@@ -127,17 +127,35 @@ issue doc can point to whichever plan actually ends up owning each thread.
       precision, L0/tbbo fallback).
 
       **Verification run**: `execution-service`'s full unit suite (`quality-gates.sh --test`) completed clean —
-          7876 passed, 21 skipped, 1 xpassed, 0 failed (includes the Phase C tests above).
-          `features-service`'s full suite (16k+ tests) could not be driven to a clean finish in-session — two attempts
-          both died to shared-host resource contention (other slots' concurrent QG runs observed on the same host) at
-          ~66-94% progress with **zero** `FAILED`/`F` markers in either partial run; both target test files were also
-          confirmed importable and syntactically sound by direct read. Re-running `features-service` QG to full green is
-          left as a lightweight follow-up for whoever next touches that repo — it is a verification-only gap (no code
-          change pending), not a code gap.
+              7876 passed, 21 skipped, 1 xpassed, 0 failed (includes the Phase C tests above).
+              `features-service`'s full suite (16k+ tests) could not be driven to a clean finish in-session — two attempts
+              both died to shared-host resource contention (other slots' concurrent QG runs observed on the same host) at
+              ~66-94% progress with **zero** `FAILED`/`F` markers in either partial run; both target test files were also
+              confirmed importable and syntactically sound by direct read. Re-running `features-service` QG to full green is
+              left as a lightweight follow-up for whoever next touches that repo — it is a verification-only gap (no code
+              change pending), not a code gap.
 
-- [ ] [HUMAN] P3. Rebuild + push the features-onchain-service Docker `:latest` image so the LST-seasonal-rewards Cloud
-      Run cron picks up the Phase B inner-instruction walker before the cron is (re-)enabled. (repo:
-      features-onchain-service)
+- [x] ✅ [HUMAN] P3. **RESOLVED 2026-07-21 — premise moot, not a manual action.** `features-onchain-service` no longer
+      exists as a standalone repo (`git subtree`-merged into `features-service` at `b0e63608` "feat(onchain): import
+      features-onchain-service into features-service via git subtree", 2026-05-08, imports rewritten
+      `features_onchain_service`→`features_service.onchain` at `b5c4b721`), and `features-service`'s own Cloud Build
+      trigger (`features-service-build`, `cloudbuild.yaml`) auto-rebuilds + pushes
+      `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/features-service:latest` on every
+      merge to `main` — there is no manual `:latest` push step to trigger. Verified the currently-live `:latest` image
+      already contains the Phase B inner-instruction walker: the last SUCCESSFUL Cloud Build
+      (`69789dfb-aacc-407a-85b4-1fc9ce330880`, finished 2026-07-21T16:10:28Z, pushed `:latest`) built commit `889ce87`
+      on `main`, and `git merge-base --is-ancestor b0e63608 889ce87` confirms the subtree-merge (carrying
+      `tests/onchain/unit/test_solana_inner_instruction_walk.py` +
+      `features_service/onchain/collectors/chain_event_scanners.py`) is an ancestor — the image the cron would pull
+      today already has this code, and has for the ~2.5 months since the merge (every successful build since included
+      it). (Not blocking this item, noted for transparency: the _next_ build after 69789dfb,
+      `a2c85a95-55ae-436f-92de-7793a736fc24` at 16:29:01Z, FAILED on an unrelated
+      `ImportError: cannot import name     'candle_read_prefixes' from 'unified_trading_library'` in
+      `tests/delta_one/unit/*` — confirmed transient cross-repo version-skew, not a real break: the symbol exists
+      correctly in UTL's current source (`unified_trading_library/config_interface/paths/registry.py:429`, landed
+      `af3dc71` at 16:23:16Z — published just ahead of that build's dependency pull); since Cloud Build only pushes
+      `:latest` after quality-gates passes, that failed build never overwrote the good image — `:latest` today is still
+      889ce87.) (repo: features-service)
 - [ ] [HUMAN] P3. Run the TM backfill VM post-merge validation (cold vs warm-cache wall-clock comparison,
       `launch-transfermarkt-backfill-vm.sh --entity PLAYER_VALUES 2025-06-01 2025-06-14`) and confirm ≥80% speedup; only
       then approve the `[unlock-plan]` on
