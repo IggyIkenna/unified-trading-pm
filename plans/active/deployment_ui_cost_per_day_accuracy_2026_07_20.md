@@ -121,14 +121,29 @@ principle, wrong in aggregation.
       `cost_basis: "complete"`, `cefi-live-trading-1` → `cost_basis: "partial"`. `pw:L2 ✓` | regression:
       `tests/smoke/deployments-cost-cell.spec.ts` (two new cases: complete-day renders the normal tone, not amber;
       partial-day renders `text-amber-400` and asserts no "partial" text is added to the visible figure).
-- [ ] [REVIEW] P1. Unit tests — (a) 1-day-in-window → avg == actual (regression for the reported symptom); (b) N active
-      days → avg == sum/N; (c) 24h basis is complete-day/normalised, not `max`; (d) AWS ARN→name mapping attributes a
-      known CUR row; (e) unmapped AWS row stays `None`; (f) `cost_basis` is `"partial"` iff no complete day exists.
-      `bash scripts/quality-gates.sh` green in deployment-api.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
-- [ ] [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions, active-days
-      average, 24h basis, GCP-name/AWS-ARN join, `cost_basis` colour convention) in
-      `codex/05-infrastructure/deployment-observability.md`.
+- [x] ✅ [REVIEW] P1. Unit tests — (a) 1-day-in-window → avg == actual (regression for the reported symptom); (b) N
+      active days → avg == sum/N; (c) 24h basis is complete-day/normalised, not `max`; (d) AWS ARN→name mapping
+      attributes a known CUR row; (e) unmapped AWS row stays `None`; (f) `cost_basis` is `"partial"` iff no complete day
+      exists. `bash scripts/quality-gates.sh` green in deployment-api. — deployment-api@de1f680: added
+      `test_per_resource_daily_one_day_in_window_avg_equals_actual` (a, using the live-reproduced `$4.432787` figure),
+      `test_per_resource_daily_n_active_days_avg_equals_sum_over_n` (b),
+      `test_per_resource_daily_cost_basis_is_partial_iff_no_complete_day_exists` (f) in
+      `tests/unit/api/test_cost_per_resource.py`; (c)/(d)/(e) were already covered by
+      `test_per_resource_daily_three_values`, `test_per_resource_daily_24h_partial_day_normalized`,
+      `test_attach_costs_resolves_aws_arn_via_instance_census`, and
+      `test_attach_costs_unmapped_aws_row_stays_honest_none` from the earlier BACKEND/DATA todos. Full
+      `bash scripts/quality-gates.sh` green (4804 passed, 16 skipped, coverage 80.06%).
+- [x] ✅ [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`). —
+      all six BACKEND/DATA/UI/REVIEW commits above were already pushed to `origin/live-defi-rollout` at task pickup
+      (deployment-api@de1f680, deployment-ui@6a32408) — verified via
+      `git rev-list --count HEAD ^origin/live-defi-rollout` == 0 in both repos, no local WIP to ship. This todo covers
+      the plan-flip confirmation itself.
+- [x] ✅ [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions,
+      active-days average, 24h basis, GCP-name/AWS-ARN join, `cost_basis` colour convention) in
+      `codex/05-infrastructure/deployment-observability.md`. — unified-trading-pm: added "Cost/day attribution contract"
+      section (the three `ResourceDailyCost` definitions, the active-days-average fix, the GCP-name/AWS-ARN join via the
+      EC2 census, the best-effort-never-breaks-census enrichment, and the amber-only `cost_basis` colour convention);
+      frontmatter `code_refs`/`tags`/`related`/`last_reviewed` updated.
 
 ## Success criteria
 
@@ -164,6 +179,19 @@ principle, wrong in aggregation.
   - Confirms the exact symptom named in the todo: `avg == actual/7` and `projected == actual`. After the decision-1 fix
     (divide by `len(day_net)`), `avg_7d_usd` for both examples above should read equal to `actual_usd` (`4.43` and
     `5.76` respectively), not `0.63`/`0.82`.
+- **2026-07-21** — [INFRA] Ship-and-flip todo picked up (slot 2). All code for the BACKEND/DATA/UI/REVIEW todos was
+  already committed and pushed to `origin/live-defi-rollout` in both `deployment-api` (HEAD `de1f680`) and
+  `deployment-ui` (HEAD `6a32408`, since fast-forwarded to `e4f893e` by an unrelated sibling-plan push) — confirmed zero
+  unpushed commits in either repo before flipping this checkbox. Remaining open todo: the P2 post-phase codex audit of
+  `codex/05-infrastructure/deployment-observability.md`.
+- **2026-07-21** — [REVIEW] P2 post-phase codex audit picked up (slot 2). Added a "Cost/day attribution contract"
+  section to `codex/05-infrastructure/deployment-observability.md` documenting: the three `ResourceDailyCost`
+  definitions read off the live `service.py`/`models.py` docstrings; the active-days-average fix (`len(day_net)`, not
+  fixed window); the 24h basis (complete-day, partial-day-normalised fallback with `hours_billed` floored at 1h); the
+  GCP-name/AWS-ARN join (`_aws_instance_id_from_resource_id` + the EC2-census `instance_id_by_name` map threaded through
+  `_attach_costs`); the best-effort try/except so a billing-source outage never breaks the census; and the amber-only
+  `cost_basis` colour convention (shared with the page's other "approximate" figures, not cost-specific). Frontmatter
+  `code_refs`/`tags`/`related`/`last_reviewed` updated. All plan todos now complete — this plan is ready for archival.
 
 ## Codex SSOTs
 

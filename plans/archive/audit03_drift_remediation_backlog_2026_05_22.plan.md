@@ -25,6 +25,11 @@ source: audits/audit-files/audit_03_defi_archetypes_e2e.md (§6 + §6.1 re-verif
 gate: none (independent cleanups; not on the May-23 critical path but all Opus-confirmed real)
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
 # AUDIT-03 remediation — confirmed P1/P2 drift backlog
 
 > **ARCHIVED 2026-05-22** — All 14 items ✅ shipped. No deferred items. Unrouted findings F-22 + F-25 added to

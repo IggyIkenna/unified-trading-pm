@@ -13,13 +13,14 @@ stage: [meta]
 repos:
   [agent-orchestrator, alerting-service, deployment-api, deployment-service, deployment-ui, unified-trading-system-ui]
 scope: [engineer, admin]
-tags: [observability, monitoring, deployment, self-healing, ui]
+tags: [observability, monitoring, deployment, self-healing, ui, cost, billing]
 related:
   [
     codex/05-infrastructure/data-pipeline-alerts.md,
     codex/05-infrastructure/deployment-ui-architecture.md,
     codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
     codex/05-infrastructure/live-deployment-monitoring.md,
+    plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
   ]
 created: 2026-06-22
 authoritative_for:
@@ -38,8 +39,20 @@ referenced_by:
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
-last_reviewed: 2026-06-22
+last_reviewed: 2026-07-21
 code_refs:
+  [
+    deployment-api/deployment_api/services/cost_observability/service.py,
+    deployment-api/deployment_api/services/cost_observability/models.py,
+    deployment-api/deployment_api/routes/deployments_inventory.py,
+    deployment-api/deployment_api/routes/_run_log_resolution.py,
+    deployment-api/deployment_api/routes/_run_log_tail.py,
+    unified-trading-library/unified_trading_library/deployment_registry.py,
+    unified-trading-library/unified_trading_library/lifecycle/daemon.py,
+    deployment-ui/src/pages/Deployments.tsx,
+    deployment-ui/src/components/RunLogPanel.tsx,
+    deployment-ui/src/components/StreamingLogsPanel.tsx,
+  ]
 ---
 
 # Deployment Observability — live/batch/paper × GCP/AWS at /repos grade (SSOT)
@@ -105,6 +118,51 @@ captured-progress), a per-umbrella summary header, and URL-param-backed cloud/st
 (`useSearchParams` → deep-linkable). Drill-down `/deployments/:name` reuses `VmEventsTimeline` + `StreamingLogsPanel`
 (live log tail + event timeline) + the GCS `run.log` link. pw:L2-gated (`tests/smoke/deployments-page.spec.ts`).
 
+## Cost/day attribution contract (per-target cost cell)
+
+The Deployments table's Cost/day column (`CostCell`, `deployment-ui/src/pages/Deployments.tsx`) reads real GCP BigQuery
+resource-level billing export + AWS Athena CUR data via `deployment-api`'s
+`CostObservabilityService.per_resource_daily()` (`deployment_api/services/cost_observability/service.py`) — **no rate
+card, no fabrication**. It attaches three USD figures per deployment target by joining on billing
+`resource_id == item.name`. Fixed 2026-07-21 (`plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md`) after
+all three figures were individually correct in source but wrong in aggregation.
+
+**The three definitions** (`ResourceDailyCost`, `cost_observability/models.py`) — net = cost + credit, USD (GCP already
+converted from GBP at query time):
+
+| Field               | Definition                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `actual_usd`        | Net cost on the most recent **COMPLETE** billing day (a day strictly before UTC-today); falls back to the latest (still-accruing) day only if no complete day exists yet.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `avg_7d_usd`        | Total net over the trailing window ÷ **the count of days the resource actually has billing rows** (`len(day_net)`) — NOT the fixed window length. A 1-day-old resource averages over its 1 day, so it reads `$4.4 · 7d ~$4.4`, not `$4.4 · 7d $0.63` (the reported symptom — divided by the fixed `days=7` even when the resource only had 1 billing day).                                                                                                                                                                                                                                                         |
+| `projected_24h_usd` | The same most-recent COMPLETE day's net (so `actual_usd == projected_24h_usd` is expected + correct for any resource with a complete day); falls back to **partial-day normalisation** (`day_cost / hours_billed × 24`) only when no complete day exists — `hours_billed` = wall-clock hours elapsed since UTC midnight (floored at 1h to avoid a runaway multiplier in the first minutes of a new UTC day). Not a new hourly billing query — the billing snapshot stays daily-grained. Previously `max(daily)` (peak observed day), which silently overstated any resource whose peak day wasn't its most recent. |
+| `cost_basis`        | `"complete"` when a complete billing day exists (both figures above derive from it); `"partial"` when no complete day exists yet and both fall back to the latest, still-accruing day. Carried onto `DeploymentItem.cost_basis: str \| None` (`None` = no billing row yet, honest absence) — never fabricated.                                                                                                                                                                                                                                                                                                     |
+
+**Active-days average, not fixed-window** is the core fix: `per_resource_daily(days=N)` GROUP BYs `(resource_id, day)`
+over the window, then divides each resource's sum by however many distinct days THAT resource has rows for, not `N`. A
+resource billed on only 1 of the last 7 days no longer reads as if it cost 1/7th of what it actually cost.
+
+**GCP-name / AWS-ARN join** (`_attach_costs`, `deployment_api/routes/deployments_inventory.py`): a GCP VM's billing
+`resource.name` already equals its instance name (== `item.name`), so GCP rows join directly. AWS Athena CUR's
+`line_item_resource_id` is an ARN or bare instance-id (`arn:aws:ec2:<region>:<acct>:instance/i-...`), which won't match
+a friendly name — `_load_aws_items` builds `{instance_id: Name tag}` from the EC2 census
+(`deployment-service/backends/aws_census.py` `AwsInstanceCensus` / `list_ec2_census()`) and threads it into
+`_attach_costs` as `aws_instance_id_by_name`. `_aws_instance_id_from_resource_id` parses the trailing `instance/i-…`
+segment off the ARN (or accepts a bare `i-…`), resolves it through the map, and re-keys the cost record under the
+friendly name before the by-name join runs. No mapping found (unmapped instance, non-EC2 AWS resource) → the item's cost
+fields stay `None` — **never a fabricated `$0`**.
+
+**Cost enrichment is best-effort and never breaks the census**: `_attach_costs` wraps the `per_resource_daily()` call in
+a try/except — a billing-source failure (Athena/BigQuery down) logs a warning and leaves every item's cost fields
+`None`; the inventory itself still returns.
+
+**UI colour convention (no text label)**: `CostCell` renders `cost_actual_usd` in `text-amber-400` when
+`item.cost_basis === "partial"`, else the normal `text-[var(--color-text-primary)]` tone — colour is the ONLY signal
+distinguishing a still-accruing partial-day figure from a settled complete-day one (operator decision 2026-07-20;
+refines an earlier tooltip proposal). The same `text-amber-400` convention is reused elsewhere on the page for
+"estimated, not billing-derived" figures (e.g. the unmanaged-VM cost fallback) — one consistent amber = "approximate /
+provisional" signal across the table, not cost-specific. pw:L2 regression: `tests/smoke/deployments-cost-cell.spec.ts`
+(complete-day renders the normal tone; partial-day renders amber with no added text).
+
 ## Slack parity + alert enrichment
 
 - **Deployment lifecycle** (`DEPLOYMENT_STARTED/COMPLETED/FAILED`, UTL events) routes via
@@ -131,6 +189,59 @@ Every GCP VM launcher streams run.log + heartbeat + `EXIT_STATUS` to `gs://deplo
 (self-delete-proof) via `vm-exec-with-gcs-tee.sh` / `setup-data-pipeline-vm.sh` / `lc_log_upload_trap_block`. A coverage
 guard (`tests/unit/test_vm_launcher_scripts.py::TestDurableLogStreamerCoverage`) **fails if a GCP `launch-*.sh` doesn't
 stream** (whitelist for long-lived/systemd-logged service VMs + AWS + fan-out wrappers, each with a reason).
+
+## Run.log viewer — resolution contract, endpoints, events-vs-logs distinction (WS-4, 2026-07-21)
+
+Repro audit finding: before this workstream, `run.log` content was **never fetched into the browser** — the "Live log
+tail" panel was actually `StreamingLogsPanel` reading lifecycle EVENTS (`vm_events.py`, a different bucket entirely),
+and the archive-path lookup 404d live because it guessed a date (`completed_at[:10]`) instead of matching the archiver's
+actual write key. Plan: `plans/active/deployment_ui_vm_log_viewer_2026_07_20.md`.
+
+**Final-snapshot writer contract** (the fix at the source): `HeartbeatDaemon._write_final_log_snapshot()`
+(`unified_trading_library/lifecycle/daemon.py`) writes ONE durable copy of the local run.log to
+`vm_run_log_final_uri(vm_name, project_id)` → `gs://deployment-scripts-{project}/log-archive/final/{vm}/run.log` (no
+date component, no TTL, plain replace) — called from `_archive_terminal_state()` at actual VM completion (alongside the
+existing interval-uploader's final flush), best-effort and shard-level-isolated (a write failure logs + never blocks the
+terminal-event emission that already happened). Wired in `deployment-service`'s `heartbeat_cli.py` via
+`final_log_uri=vm_run_log_final_uri(vm_name, project_id=...)`. The **SIGKILL fallback**
+(`deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`) writes the same fixed path inline (bucket parsed from
+`GCS_LOG_URI`) so a hard-killed daemon still leaves a final copy — the only remaining writer for that case. The old
+`vm_run_log_rolling_uri` (date-guessing) helper had **zero production callers** anywhere (the daily archival cron builds
+its rolling-copy path inline) and was deleted outright from UTL, not left as dead code.
+
+**Read-path resolution — live-first, archive-fallback**: `resolve_run_log_location(vm_name, project_id)`
+(`deployment-api/deployment_api/routes/_run_log_resolution.py`) always tries `vm_log_stream_uri` (the live streaming
+path, 14-day TTL **from last write, not from VM start**) first, for ANY vm regardless of `completed_at`; on a miss,
+falls back to `vm_run_log_final_uri` (the archive above). At most 2 `gcs_describe_object` calls (1 on a live hit).
+`metadata is None` on both misses ⇒ honest "no log available", never a fabricated hit — this is the state for any VM
+that completed before the writer shipped. **Deliberately per-VM/request-time only** — the bulk 45s-SWR-cached whole-
+fleet census endpoints (`deployments_inventory.py::_vm_item`, `vm_deployments.py::_to_model`) do NOT call this resolver;
+they only compute the two deterministic URIs (no existence-check I/O) so the fleet-wide background refresh stays pure.
+
+**Size/tail/download endpoints** (`deployment-api/routes/deployments_inventory.py`), each reusing
+`resolve_run_log_location` and returning `location: "live"|"archive"|None` so the UI can label which copy resolved:
+
+- **`GET /api/deployments/{name}/run-log/metadata`** → size + last-modified (`gcs_describe_object` metadata already
+  fetched by the resolver).
+- **`GET /api/deployments/{name}/run-log/tail?lines=`** → bounded byte-range read of only the last
+  `DeploymentApiConfig.run_log_tail_max_bytes` (default 256KB, `unified_trading_library.gcs_read_object_range`), split
+  to the last `run_log_tail_max_lines` (default 300, clampable via `lines=`) — never loads the full object (observed
+  362KB–13.4MB in the wild, 20-30MB a plausible worst case). A read that doesn't start at byte 0 drops its leading
+  partial line (`_run_log_tail.py::tail_lines_from_bytes`).
+- **`GET /api/deployments/{name}/run-log/download`** → short-lived signed URL (`generate_download_url`, expiry via
+  `DeploymentApiConfig.run_log_download_url_expiry_minutes`, default 15 min) — the client downloads directly from GCS;
+  the API never streams the object through itself.
+
+All three return `exists=False` (no `download_url`/no `lines`) when neither path resolves — an honest empty state, not a
+dead link or blank panel.
+
+**Events-vs-logs panel distinction** (`deployment-ui`, `DeploymentDetail.tsx`): the pre-existing `StreamingLogsPanel` is
+genuinely lifecycle EVENTS under the hood (both its WS path here and the cockpit `AlertsLogsTab`'s SSE path convert
+`VMLifecycleEvent` → a `VmLogLine` envelope) — renamed to "Live event stream" with a subtitle pointing at the new panel,
+rather than rebuilt, since its functionality was never broken, only mislabeled. The genuinely new `RunLogPanel.tsx` is
+the actual run.log viewer: size + capped tail + working download, with honest states — `run-log-empty` (`exists=false`),
+an amber `run-log-archive-notice` banner when `location=archive` (14-day-TTL expired, showing the archive copy), and
+surfaced (never swallowed) `run-log-error`/`run-log-download-error` alerts.
 
 ## Coverage status
 

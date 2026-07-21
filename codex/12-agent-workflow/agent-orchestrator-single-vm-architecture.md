@@ -52,13 +52,14 @@ authoritative_for:
   ]
 referenced_by: [cursor-configs/CLAUDE.md, cursor-configs/skills/check-agent-orchestrator/SKILL.md]
 owner:
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-21
 code_refs:
   [
     agent-orchestrator/server/regen_backlog_from_plan.py,
     agent-orchestrator/server/dispatch.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/role_registry.py,
+    agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/plan_health.py,
     agent-orchestrator/server/tmux_pruner.py,
@@ -121,8 +122,9 @@ autospawn machinery below governs.
   `[DATA]`→`data_engineering`, `[INFRA]`→`infra`, `[UI]`→`ui_developer`, `[REVIEW]`→`review`. Generic
   `[CODE]`/`[SCRIPT]` fall back to the plan's `assigned_role`. Charters live in `unified-trading-pm/agents/<role>.md`.
 - **Trigger**: a `queued`, prereq-met, role-matched task exists and AutoSpawn wakes a free slot for it.
-- **Lifecycle**: `/boot` → claim a task → work → `/done` (clean-tree + checkbox-flip gated) → idle → next task. A dead
-  worker mid-task RESUMES (`--resume`) or requeues (§ Worker lifecycle).
+- **Lifecycle**: `/boot` → claim a task → work → `/done` (clean-tree + checkbox-flip gated) → **drains the next ready
+  task in the same session** (persistent; when no task is ready it goes idle → the reclaimer retires it — NOT reaped per
+  task, see § Worker-lifecycle Reap). A dead worker mid-task RESUMES (`--resume`) or requeues.
 - **Identity**: the task carries `dispatched_to`, `done_sha`, `brief_hash`; the slot carries `current_task`.
 
 ### Class B — Standing & event-driven agents (NOT plan-driven)
@@ -140,20 +142,19 @@ and most are one-shot or scheduled.
 > completing, POSTs an explicit **role-aware `/done`** (task-less for a task-less one-off, `one_shot_complete=true`) →
 > the backend archives it `lifecycle-complete`, frees the slot → the agent then stops → the reap cleans the session.
 > **Landed `agent-orchestrator@0d510e9`:** A1 (`/done` task-less path) + A2 (5 role docs) + A3 (boot-prompt STEP 3) + B1
-> (`/boot` holds a one-off `working`) + C1 (the `f641968`/`1e7fec0` idle-scanner carve-outs deleted). The cicd/
-> plan_health rows above still name the historical "EXITS without /done" for context; the § Worker-lifecycle Reap below
-> is updated to the live behavior.
+> (`/boot` holds a one-off `working`) + C1 (the `f641968`/`1e7fec0` idle-scanner carve-outs deleted). The Class-B rows
+> above and the § Worker-lifecycle Reap below reflect the live `/done`-then-reap behavior.
 
-| Agent                     | Kind / lifecycle                    | Trigger                                             | Notes                                                                                                                                                                                           |
-| ------------------------- | ----------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **main**                  | persistent, one per fleet           | keeper (`main_agent_keeper`) respawns it            | The coordinator/keeper agent; owns auto-answers to `authority=main_agent` blocked-questions, context-recycle, and fleet reconcile. Never dispatched from a plan.                                |
-| **review**                | persistent singleton                | standing                                            | Reviews shipped work; a member of `_SINGLETON_AGENT_KINDS`, so a sessionless straggler is fast-reaped. Also usable as a `[REVIEW]` craft tag, but the standing reviewer is not backlog-driven.  |
-| **cicd**                  | one-shot escalator                  | GHA `escalate-to-orchestrator` webhook on a CI wall | `escalation.escalate()` grabs a free slot, fixes the wall, pings the authoring slot, EXITS without `/done`. Multi-instance (absent from `_SINGLETON_AGENT_KINDS`). Reaped `lifecycle-complete`. |
-| **conflict_resolver**     | one-shot escalator                  | merge-conflict event                                | Same escalator pattern as cicd.                                                                                                                                                                 |
-| **data_pipeline_failure** | one-shot escalator                  | data-pipeline-failure event                         | Same escalator pattern.                                                                                                                                                                         |
-| **plan_health**           | scheduled report + escalation fixer | daily cron + LDR→main back-merge ping + PR gate     | Cross-plan contradiction + governance-doc-drift check; POSTs findings, exits. Dispatched via `POST /api/plan-health/dispatch` (`server/plan_health.py`), NOT the backlog.                       |
-| **plan_reconciler**       | scheduled                           | systemd timer, daily 01:00 UTC                      | Deep plan reconciliation (opus/max, server-forced). `install-plan-reconciler-timer.sh` → `plan-reconciler-dispatch.sh` → `POST /api/plan-health/dispatch {"mode":"reconcile"}`.                 |
-| **monitor**               | standing                            | standing                                            | Fleet/observability monitor.                                                                                                                                                                    |
+| Agent                     | Kind / lifecycle                    | Trigger                                             | Notes                                                                                                                                                                                                                                |
+| ------------------------- | ----------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **main**                  | persistent, one per fleet           | keeper (`main_agent_keeper`) respawns it            | The coordinator/keeper agent; owns auto-answers to `authority=main_agent` blocked-questions, context-recycle, and fleet reconcile. Never dispatched from a plan.                                                                     |
+| **review**                | persistent singleton                | standing                                            | Reviews shipped work; a member of `_SINGLETON_AGENT_KINDS`, so a sessionless straggler is fast-reaped. Also usable as a `[REVIEW]` craft tag, but the standing reviewer is not backlog-driven.                                       |
+| **cicd**                  | one-shot escalator                  | GHA `escalate-to-orchestrator` webhook on a CI wall | `escalation.escalate()` grabs a free slot, fixes the wall, pings the authoring slot, then POSTs a task-less `/done` (`one_shot_complete=true`) → reaped `lifecycle-complete`. Multi-instance (absent from `_SINGLETON_AGENT_KINDS`). |
+| **conflict_resolver**     | one-shot escalator                  | merge-conflict event                                | Same escalator pattern as cicd.                                                                                                                                                                                                      |
+| **data_pipeline_failure** | one-shot escalator                  | data-pipeline-failure event                         | Same escalator pattern.                                                                                                                                                                                                              |
+| **plan_health**           | scheduled report + escalation fixer | daily cron + LDR→main back-merge ping + PR gate     | Cross-plan contradiction + governance-doc-drift check; POSTs findings, exits. Dispatched via `POST /api/plan-health/dispatch` (`server/plan_health.py`), NOT the backlog.                                                            |
+| **plan_reconciler**       | scheduled                           | systemd timer, daily 01:00 UTC                      | Deep plan reconciliation (opus/max, server-forced). `install-plan-reconciler-timer.sh` → `plan-reconciler-dispatch.sh` → `POST /api/plan-health/dispatch {"mode":"reconcile"}`.                                                      |
+| **monitor**               | standing                            | standing                                            | Fleet/observability monitor.                                                                                                                                                                                                         |
 
 **Free-slot semantics are shared** (`escalation._pick_free_slot` == `plan_health._pick_free_slot`): a slot is "free"
 when it is configured (worktree+branch+operator), not `paused`/`killed`, and has no live tmux session. So Class-B agents
@@ -188,6 +189,19 @@ dead worker's task or process stranded.
   `/done`, cleanup relies on session death — assumed the agent becomes _sessionless_ on completion, which it does not: a
   finished one-off lingers session-alive, so the session-death-gated pruner/reaper never fire and it was never reaped —
   the exact leak (15 zombies pinned 15/16 slots) the live contract above fixes.
+- **Class-A backlog workers are PERSISTENT — NOT reaped on `/done`** (dispatch-context lifecycle, 2026-07-21). Reaping
+  is a property of WHO fired the worker, **not** the role's static `lifecycle` field — roles are just boot prompts (the
+  same prompt can back a plan worker or a scheduled one). A plan-backlog worker (no `one_shot`/`scheduled` `AgentRow`)
+  drains the next ready task in the **same live session**; when it has **no ready task** (backlog drained, or the only
+  remaining tasks are prereq-blocked) it goes **idle → the idle-reclaimer retires it** (~2 ticks), and a **fresh**
+  worker picks up later work (a cleared blocked task re-reads the plan — durable state lives in the plan/Progress Log,
+  so conversational context-resume is an explicit NON-GOAL). Only Class-B event-spawned crafts (which carry a
+  one_shot/scheduled `AgentRow`) reap on `/done`. Full model:
+  [worker-liveness.md § "Dispatch-context-driven lifecycle"](../04-architecture/agent-orchestrator-worker-liveness.md) +
+  [`ao_worker_lifecycle_dispatch_context`](../../plans/active/ao_worker_lifecycle_dispatch_context_2026_07_21.md). This
+  corrects a live defect where four plan-worker roles declared `lifecycle: one_shot` were reaped per task via a
+  static-role gate (`role_one_shot`); the gate now keys on dispatch context, and role-field reclassification is
+  deferred.
 - **Account failover**: usage-cap / auth-failure evicts a slot off a dead/exhausted account onto a headroom account
   (resume-preserving where a `claude_session_id` exists). Health is a poller verdict, never a heartbeat inference. Full
   contract:

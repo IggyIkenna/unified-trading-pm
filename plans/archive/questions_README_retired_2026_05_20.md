@@ -11,11 +11,18 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-08
-overview: Architectural Q&A staging — operator questions become canonical plans via audit + back-and-forth + codex SSOT alignment.
+overview:
+  Architectural Q&A staging — operator questions become canonical plans via audit + back-and-forth + codex SSOT
+  alignment.
 type: process
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 # `plans/questions/` — Architectural question staging
 

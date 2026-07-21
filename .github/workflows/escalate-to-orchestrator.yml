@@ -297,6 +297,9 @@ jobs:
         Escalation FAILED for {0}#{1} — the orchestrator dispatch errored (auth/DNS/TLS or a bad request; see the run
         log). The wall is STILL OPEN and no worker was spawned. → <{2}|open dashboard>.', needs.escalate.outputs.repo,
         needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) }}
+      # This job runs IN unified-trading-pm; the alert is ABOUT the repo whose PR was escalated
+      # (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ needs.escalate.outputs.repo }}
       severity: ${{ needs.escalate.outputs.dispatched == 'true' && 'INFO' || 'WARNING' }}
       conclusion: ${{ needs.escalate.result }}
       workflow_name: ${{ github.workflow }}

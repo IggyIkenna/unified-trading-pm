@@ -70,6 +70,14 @@ _RUNTIME_VERB_RE = re.compile(
 )
 _GREEN_TOKEN_RE = re.compile(r"\b(green|SUCCESS|succeeded)\b", re.IGNORECASE)
 
+# Sentence/clause boundary for the same-clause proximity check below: a `.`/`!`/`?` followed by
+# whitespace and then an uppercase letter or a backtick (prose/markdown convention — a new clause
+# starts a fresh code-span or capitalized word). Deliberately does NOT split on a period with no
+# following whitespace, so it never fires mid-filename/identifier (`cloud-build-router.yml`,
+# `needs.route-build.outputs.repo`) — those periods are always followed immediately by another
+# non-whitespace character, not a space.
+_CLAUSE_BOUNDARY_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z`])")
+
 # Terminal Cloud Build statuses that are NOT success → an over-claim if cited on a `- [x]` todo.
 _TERMINAL_NONSUCCESS = {"FAILURE", "TIMEOUT", "CANCELLED", "INTERNAL_ERROR", "EXPIRED"}
 
@@ -201,8 +209,23 @@ def _check_builds(
     return out
 
 
+def _split_into_clauses(text: str) -> list[str]:
+    """Split a todo block into rough sentence/clause units. Collapses newlines/indentation to a
+    single space first so a line-wrapped sentence isn't mistaken for two separate clauses, then
+    splits on `_CLAUSE_BOUNDARY_RE`."""
+    normalized = re.sub(r"\s+", " ", text).strip()
+    return _CLAUSE_BOUNDARY_RE.split(normalized)
+
+
 def _check_claims_without_evidence(blocks: list[TodoBlock]) -> list[EvidenceViolation]:
-    """Sub-rule B: a `- [x]` runtime-green claim with no Evidence/cloudbuild ref."""
+    """Sub-rule B: a `- [x]` runtime-green claim with no Evidence/cloudbuild ref.
+
+    The runtime-verb and green-token must co-occur in the SAME clause, not just anywhere in a
+    long multi-line block — a whole-block AND false-positives on prose that mentions an infra
+    filename (e.g. `cloud-build-router.yml`, a GHA call-site) in one clause and an unrelated
+    `quality-gates.sh` "green" mention in a later, unconnected clause of the same todo (see
+    plans/active/issues/pm_evidence_backed_completion_false_positive_2026_07_21.md).
+    """
     out: list[EvidenceViolation] = []
     for b in blocks:
         if b.cloudbuild_ids:
@@ -210,16 +233,18 @@ def _check_claims_without_evidence(blocks: list[TodoBlock]) -> list[EvidenceViol
         has_evidence = bool(_EVIDENCE_LINE_RE.search(b.text))
         if has_evidence:
             continue
-        if _RUNTIME_VERB_RE.search(b.text) and _GREEN_TOKEN_RE.search(b.text):
-            first = b.text.splitlines()[0].strip()
-            out.append(
-                EvidenceViolation(
-                    rule="B-claim-without-evidence",
-                    path=b.path,
-                    line_no=b.line_no,
-                    detail=f"runtime-green claim without `Evidence: cloudbuild=<id>`: {first[:120]}",
+        for clause in _split_into_clauses(b.text):
+            if _RUNTIME_VERB_RE.search(clause) and _GREEN_TOKEN_RE.search(clause):
+                first = b.text.splitlines()[0].strip()
+                out.append(
+                    EvidenceViolation(
+                        rule="B-claim-without-evidence",
+                        path=b.path,
+                        line_no=b.line_no,
+                        detail=f"runtime-green claim without `Evidence: cloudbuild=<id>`: {first[:120]}",
+                    )
                 )
-            )
+                break
     return out
 
 

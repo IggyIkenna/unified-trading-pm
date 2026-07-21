@@ -55,9 +55,11 @@ source: operator dictation 2026-07-17 (interactive session — six deployment-ui
 > **🟡 TRACKER — DO NOT DISPATCH THIS FILE, EVER.** Operator 2026-07-17 — _"its going to be a tracker for now and we
 > will split them once we are done."_ This file exists to capture every workstream NOW so nothing is missed; it stays
 > `status: draft` (never ingested) and **must never flip `active` itself** — it exceeds the 10–20-todo AO cap by design.
-> When the operator finalises, SPLIT per the "Split map" section into per-WS AO plans (one plan = one agent), then this
-> tracker archives with pointers. Frontmatter carries AO fields (`assigned_vm: planning`) per operator instruction so
-> the split children inherit them.
+> When the operator finalises, SPLIT per the "Split map" section into per-WS AO plans (≤10–20 todos each; intra-plan
+> concurrency per `task_template.md` §4 — a plan's independent same-priority todos fan out across workers, so split for
+> the todo cap / partial-parallelism dep gates, NOT the superseded "one plan = one agent"), then this tracker archives
+> with pointers. Frontmatter carries AO fields (`assigned_vm: planning`) per operator instruction so the split children
+> inherit them.
 >
 > **PUSHED TO REMOTE (operator 2026-07-17)** so it's durable and visible to the team — still `draft`, still never
 > dispatched. The split into per-WS plans happens after the open decisions land and the scope is finalised.
@@ -448,8 +450,27 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
 | WS-5 alerts overhaul         | ✅ split — ingestion (Plan A, P0) + rebuild (Plan B, gated); AO alerts deferred                                                          | 🟢 **Plan A ACTIVE 2026-07-21** — 2nd-wave dispatch; Plan B stays `draft` (gated on A)               |
 | WS-6 resource timeline       | ✅ resolved — `deployment_durable_operational_data_bigquery_2026_07_21.md` (event-spine→BQ; +run-ledger +idle-spend; git-health dropped) | done — write-path decided; kept `draft`, dispatch held                                               |
 
-Per task_template §4 — each child gets 10–20 todos, one plan = one agent, audits separable, draft-gated phases where a
-build depends on an audit/decision.
+Per task_template §4 — each child gets 10–20 todos, intra-plan concurrency (independent same-priority todos fan out
+across workers; use `sequential: true` / `depends_on`+`gate_on_depends` for real chains), audits separable, draft-gated
+phases where a build depends on an audit/decision.
+
+## Pre-activation fix checklist (still-draft plans — apply BEFORE flipping each to `active`)
+
+> The established pattern this session: adversarial code-review each plan, then apply the must-do fixes to the plan text
+> immediately before flipping `status: active` (done for WS-1/WS-2-3/WS-4/WS-5A). The items below are the outstanding
+> pre-activation work for the plans still `draft`, captured here so a fresh session doesn't lose them.
+
+- [ ] [OPERATOR] P1. Before activating **WS-5B** (`deployment_ui_alerts_page_rebuild_2026_07_20.md`): fix the stale line
+      refs (`onHeaderClick` is `Deployments.tsx:821`, not `:256-320`; `StatusFilterChips` is `:924-961`); **correct the
+      "7 regression assertions" enumeration** — the review found it lists 7 but misses TWO actually-pinned tests
+      (`cockpit-tab-alerts`/`cockpit-tab-health` reachability, and the `stream-previous`/`stream-current` CRITICAL→INFO
+      pair) in `tests/smoke/alerts-page.spec.ts`; optionally name the shared-primitive import path. Also WS-5B is
+      draft-gated on WS-5A (schema) + WS-2/3 (Deployments.tsx extraction) — do not activate until both complete.
+- [ ] [OPERATOR] P1. Before activating **Fleet consolidation** (`deployment_ui_fleet_tab_consolidation_2026_07_21.md`)
+      and **WS-6 durable-operational-data** (`deployment_durable_operational_data_bigquery_2026_07_21.md`): run an
+      adversarial code-review first — both were authored AFTER the WS-1..WS-5B review batch and have NOT yet been
+      reviewed. Fleet is gated on WS-2/3's `Deployments.tsx` merge; WS-6 must NOT co-run with WS-4 (both edit the UTL
+      heartbeat daemon `lifecycle/daemon.py`).
 
 ## Progress Log
 
@@ -536,6 +557,43 @@ build depends on an audit/decision.
   (gated on WS-2/3 `Deployments.tsx` merge), WS-6 durable-operational-data (safe alone but **collides with WS-4 on the
   UTL heartbeat daemon** — do NOT co-run). Next eligible when a slot frees: WS-6 (only once WS-4's daemon work is done),
   then WS-5B / Fleet once their gates clear.
+- **2026-07-21 (pre-compact checkpoint)** — Also this session: audited the AO plan-authoring guidance against the actual
+  `regen_backlog_from_plan.py` + `dispatch.py`, found a contradiction (docs said "one plan = one agent" AND "add
+  explicit per-task prereqs" — both wrong), and per operator decision (1a intra-plan concurrency IS the model; 2a
+  document split-into-plans, don't build per-task prereq syntax) **fixed the guidance across `task_template.md`,
+  `PLAN_FORMAT.md`, `doc-frontmatter-schema.md`, `CLAUDE.md`** (pushed `unified-trading-pm@def0234d1`).
+
+  ### Deferred work after 2026-07-21
+
+  | Item                                                          | State / why deferred                                                          | Blocked-on                         |
+  | ------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------- |
+  | WS-1/WS-2-3/WS-4/WS-5A execution                              | **Cannot be done yet** — active in AO, workers running them serially          | AO workers (in flight)             |
+  | Activate next wave (WS-6, then WS-5B/Fleet)                   | **Not done** — pre-activation fixes + gates apply (see checklist above)       | operator go-ahead + gates clearing |
+  | WS-5B pre-activation fixes                                    | **Not done** — line-ref + regression-spec-enumeration fixes (checklist above) | before WS-5B flip                  |
+  | Fleet + WS-6 adversarial review                               | **Not done** — authored after the review batch, unreviewed                    | before their flip                  |
+  | WS-6 (idle-spend reap-event logging) hooks the reap endpoints | **Cannot be done yet** — relates to Fleet plan surfacing reap actions         | Fleet/WS-6 build                   |
+
+  **Recommended NEXT when a slot frees:** activate **WS-6** (independent, high-value) _once WS-4's daemon work is
+  merged_ (they collide on `lifecycle/daemon.py`) — or WS-5B/Fleet once WS-2/3's `Deployments.tsx` extraction lands
+  (unblocks both). Do the pre-activation fix checklist first.
+
+  ### Lessons (would be re-learned the hard way otherwise)
+  - **AO backend is a mechanical translator, not a planner** — it can't decide parallel-vs-serial; the plan-writer
+    encodes it. Intra-plan same-priority todos run CONCURRENTLY by default (stickiness NOT enforced) — a FEATURE (one
+    plan → N agents) as long as concurrent todos touch DIFFERENT files.
+  - **No per-todo prereq syntax exists** — prereqs come ONLY from `sequential: true` or
+    `depends_on`+`gate_on_depends: true`. Partial intra-plan DAGs are NOT expressible → SPLIT into plans. The old "add
+    explicit `prereqs.completed_tasks`" advice was not actionable (now corrected in the guides).
+  - **`depends_on` alone does NOT gate dispatch** — needs `gate_on_depends: true`. Verified in regen.
+  - **Regen's todo parser reads only the FIRST physical line** — keep load-bearing content there (now in task_template
+    §3).
+  - **Cost measurement trap (WS-1 / idle-spend)**: the deployment-ui Cost/day figures ALREADY come from real billing —
+    the bugs were aggregation (÷7 vs ÷days-billed), not a missing rate card. And idle-disk `$/mo` on BOTH Fleet and
+    Deployments is a _list-rate estimate_, not real billing.
+  - **Run history is lost at 30 days** — `deployments/archive/` has a live-confirmed 30-day GCS TTL (the operator
+    believed it wasn't deleted; it is). The WS-6 run-ledger fixes this.
+  - **Operator laptops (harsh-pc/Ikenna) are standalone/isolated** — no `ORCHESTRATOR_VM_ID` ⇒ never in the central
+    fleet view; the extra IP the operator saw was their own locally-run AO backend.
 
 ## Codex SSOTs
 

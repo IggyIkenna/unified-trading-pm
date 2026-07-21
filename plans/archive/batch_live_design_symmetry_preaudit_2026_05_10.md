@@ -6,19 +6,55 @@ status: ready-for-plan-extraction
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-service, execution-service, features-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-service,
+    execution-service,
+    features-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md, unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md, unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md, unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md, unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md, unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md, unified-trading-pm/plans/active/available_at_lookahead_bias_completion_2026_05_08.md, unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, unified-trading-pm/plans/active/defi_master_2026_05_07.md]
+related:
+  [
+    unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md,
+    unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md,
+    unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md,
+    unified-trading-pm/plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md,
+    unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md,
+    unified-trading-pm/plans/active/available_at_lookahead_bias_completion_2026_05_08.md,
+    unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md,
+    unified-trading-pm/plans/active/defi_master_2026_05_07.md,
+  ]
 created: 2026-05-10
-overview: Citadel-grade pre-execution audit manifest for the spawned plan derived from `batch_live_design_symmetry_2026_05_08.md`. Per-Tab pre-audit + service-readiness Groups A-G + QG STEP violation pre-flight + cross-plan banners + risk register + collision matrix + ServiceEmissionPolicy gaps + spawned-plan readiness checklist + Tab-8 paste-ready operator recipe.
+overview:
+  Citadel-grade pre-execution audit manifest for the spawned plan derived from
+  `batch_live_design_symmetry_2026_05_08.md`. Per-Tab pre-audit + service-readiness Groups A-G + QG STEP violation
+  pre-flight + cross-plan banners + risk register + collision matrix + ServiceEmissionPolicy gaps + spawned-plan
+  readiness checklist + Tab-8 paste-ready operator recipe.
 type: pre-audit-manifest
 operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 companion_to: unified-trading-pm/plans/questions/batch_live_design_symmetry_2026_05_08.md
-related_codex: [unified-trading-pm/codex/04-architecture/batch-live-architecture.md, unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md, unified-trading-pm/codex/05-infrastructure/replay-subsystem.md, unified-trading-pm/codex/02-data/pipeline-mode-partition.md, unified-trading-pm/codex/06-coding-standards/quality-gates.md]
+related_codex:
+  [
+    unified-trading-pm/codex/04-architecture/batch-live-architecture.md,
+    unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md,
+    unified-trading-pm/codex/05-infrastructure/replay-subsystem.md,
+    unified-trading-pm/codex/02-data/pipeline-mode-partition.md,
+    unified-trading-pm/codex/06-coding-standards/quality-gates.md,
+  ]
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 # Batch=Live design symmetry — Citadel-grade pre-execution audit (2026-05-10)
 
@@ -279,7 +315,7 @@ is influenced. Banner format: 🟢 VM RUNNING / 🟡 IN-FLIGHT REFACTOR / 🔴 B
 
 | #   | Risk                                                                          | L   | I   | Mitigation                                                                                                                                              | Owner            | Detection                                                  |
 | --- | ----------------------------------------------------------------------------- | --- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------- |
-| 1   | MDPS dual-handler silently diverges batch ↔ live during cutover              | M   | H   | Tab 2 D1 audit + shared base abstract methods + L7 sweep + schema/error-reason parity unit test; 24h cutover-smoke                                      | Tab 2 + Tab 6    | Recon-green threshold spike on cutover day                 |
+| 1   | MDPS dual-handler silently diverges batch ↔ live during cutover               | M   | H   | Tab 2 D1 audit + shared base abstract methods + L7 sweep + schema/error-reason parity unit test; 24h cutover-smoke                                      | Tab 2 + Tab 6    | Recon-green threshold spike on cutover day                 |
 | 2   | pipeline_mode migration runs out of GCS quota mid-flight                      | L   | H   | Pre-Phase-3 cost audit; Terraform budget +50%; CloudOps quota alert; nights-only fallback                                                               | Tab 5 + operator | GCS quota alert; Phase-4 VM throttled                      |
 | 3   | F21 reconciler ships but recon-green threshold uncalibrated → false alarms    | M   | M   | Tab 6 sweep against shipped 2-yr backtest; 7-day paper-trade calibration; 95p+2× margin starting point                                                  | Tab 6            | Recon alerts >5×/hr post-cutover                           |
 | 4   | carry_staked_basis paper-trade soak hits venue testnet rate limits            | M   | H   | Pre-soak rate-limit confirmation across all 6 perp venues; staged Secret Manager keys; watchdog VM                                                      | Tab 8            | 429 errors in events; >10s order-place latency             |

@@ -1,7 +1,10 @@
 ---
 doc_type: plan
 title: Mechanical frontmatter auto-seed + 5-per-doc_type sample (W3, cheap pass)
-summary: The cheap/mechanical frontmatter pass — a docspec-driven auto-seed that fills only the derivable universal-core + per-type fields (leaving summary/tags present-but-empty), applied breadth-first as a 5-per-doc_type in-place sample for operator review, ahead of the full rollout.
+summary:
+  The cheap/mechanical frontmatter pass — a docspec-driven auto-seed that fills only the derivable universal-core +
+  per-type fields (leaving summary/tags present-but-empty), applied breadth-first as a 5-per-doc_type in-place sample
+  for operator review, ahead of the full rollout.
 status: complete
 nature: process
 asset_group: [cross-cutting]
@@ -28,6 +31,11 @@ depends_on: [doc_frontmatter_schema_and_validator_2026_06_24]
 source:
 drift_direction: advance-code
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 # Mechanical frontmatter auto-seed + 5-per-doc_type sample (W3, cheap pass)
 
@@ -81,10 +89,10 @@ present-but-empty for the later content pass. Run breadth-first over a 5-per-doc
 
 - [x] [SCRIPT] P1. **Full rollout** — `--apply` the mechanical seed to ALL docs of every type (not just the 5-per-type
       sample), in collision-aware batches. ✅ DONE ELSEWHERE — `plans/active` top-level via
-      `plans_active_frontmatter_mechanical_rollout_2026_06_27` (unified-trading-pm@4d3083639, 102 docs); the rest of
-      the corpus via `frontmatter_full_corpus_coverage_2026_06_30` (archived complete). Verified at archival:
-      issues 77/77 · epics 27/28 · audit-results 51/52 · instructions 20/21 · codex 807/842 carry `doc_type` — every
-      gap is an exempt class (READMEs ×35, `_template`, index/ledger files).
+      `plans_active_frontmatter_mechanical_rollout_2026_06_27` (unified-trading-pm@4d3083639, 102 docs); the rest of the
+      corpus via `frontmatter_full_corpus_coverage_2026_06_30` (archived complete). Verified at archival: issues 77/77 ·
+      epics 27/28 · audit-results 51/52 · instructions 20/21 · codex 807/842 carry `doc_type` — every gap is an exempt
+      class (READMEs ×35, `_template`, index/ledger files).
 - [x] [DOCS] P1. **`summary` + `tags` content pass** — ✅ MIGRATED (owned by the live
       `frontmatter_content_pass_and_gate_consolidation_2026_06_30.md`, explicit P3 todos for
       `summary`/`authoritative_for`/`tags`).

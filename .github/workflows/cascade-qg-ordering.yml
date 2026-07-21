@@ -520,6 +520,9 @@ jobs:
         github.event.client_payload.source_version || inputs.source_version }} | ${{
         needs.cascade.outputs.total_affected }} repos across ${{ needs.cascade.outputs.levels_processed }} levels — all
         green."
+      # This job runs IN unified-trading-pm; the alert is ABOUT the repo whose major bump triggered
+      # the cascade (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+      subject_repo: ${{ github.event.client_payload.source_repo || inputs.source_repo }}
       severity: "INFO"
       conclusion: "success"
       workflow_name: ${{ github.workflow }}
@@ -537,6 +540,7 @@ jobs:
         github.event.client_payload.source_version || inputs.source_version }} | Failed repos: ${{
         needs.cascade.outputs.failed_repos }} | Processed ${{ needs.cascade.outputs.levels_processed }} of planned
         levels. Downstream repos invalidated (ci_status=STAGING_PENDING)."
+      subject_repo: ${{ github.event.client_payload.source_repo || inputs.source_repo }}
       severity: "CRITICAL"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
@@ -555,6 +559,7 @@ jobs:
         "Cascade QG — no affected repos | Source: ${{ github.event.client_payload.source_repo || inputs.source_repo }}
         v${{ github.event.client_payload.source_version || inputs.source_version }} | No downstream dependents found.
         Nothing to cascade."
+      subject_repo: ${{ github.event.client_payload.source_repo || inputs.source_repo }}
       severity: "INFO"
       conclusion: "success"
       workflow_name: ${{ github.workflow }}

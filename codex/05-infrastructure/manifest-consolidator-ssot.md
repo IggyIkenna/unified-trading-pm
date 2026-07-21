@@ -35,7 +35,7 @@ referenced_by:
     plans/epics/mtds_mdps_master.md,
   ]
 owner:
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-21
 code_refs:
 ---
 
@@ -542,7 +542,18 @@ the tradfi tick `_index`, 2026-07-20 — dropped 686,005 `batch_massive` + 3,615
    residual-drop-target == 0.
 5. **CAS write** with `if_generation_match=<snapshotted gen>` (mirror `_write_consolidated`); ABORT on drift, never
    blind-overwrite. **Preserve `consolidator_content_write_at`** (keeps the next cycle a no-op) and refresh
-   `consolidator_run_at`.
+   `consolidator_run_at`. **Gotcha, confirmed 2026-07-21**: the sanctioned CAS helpers
+   (`unified_trading_library.cloud_interface.gcs_conditional_put` / the underlying
+   `StorageClient.conditional_upload_bytes`) take **no `metadata` kwarg at all** — there is currently no way to carry
+   the marker forward through the sanctioned write path itself. A plain CAS write via these helpers strips it every
+   time, and the NEXT consolidator cycle then fails closed on the missing marker (§ above, "canonical EXISTS but carries
+   no marker") — merges every per-VM shard again with pruning disabled. **Verified recovery**: immediately after your
+   CAS write (same operation, don't wait for the cron), call `manifest_consolidator.consolidate(bucket, force=True)`
+   yourself — this is the officially-supported write path and re-stamps the marker correctly in the same pass (its own
+   `log_event` call needs `setup_events()` first; that's a separate, non-blocking failure — the CAS write itself already
+   lands before that call). Skipping this step measured as a real, if narrow, resurrection window: a paused-then-resumed
+   cron's first post-edit cycle can transiently restore rows you just removed before a later cycle re-derives cleanly —
+   durability-check across ≥4 consolidator cycles after the write, not just one.
 6. **RESUME** the cron; watch ≥2 cycles — a durable drop shows `verdict=empty, shards_changed=0, rows_added=0` and the
    row count holds. **Durability holds because `_legacy_seed` is EXCLUDED from every merge path once a canonical
    exists** (`manifest_consolidator.py:783` marker-strip branch, `:873-875` force branch; the incremental path never

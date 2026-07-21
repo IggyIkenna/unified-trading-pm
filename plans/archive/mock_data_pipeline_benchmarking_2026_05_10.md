@@ -1,6 +1,6 @@
 ---
 name: mock-data-pipeline-benchmarking
-overview:
+overview: >-
   Can we benchmark feature-processing / ML / strategy-backtest / execution-backtest bottlenecks on a VM today using
   synthetic mock data — without first completing the full multi-year market-tick backfill? Audits whether schemas,
   generators, and harnesses already exist or what's missing. **Strict reuse principle**: use `e2e-testing` +
@@ -38,6 +38,11 @@ related_questions:
   - plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
   - plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 # Mock-data pipeline benchmarking — feature / ML / strategy / execution-backtest bottleneck audit
 

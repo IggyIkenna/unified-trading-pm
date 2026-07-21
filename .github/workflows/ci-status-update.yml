@@ -375,6 +375,11 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: ${{ needs.build-message.outputs.message }}
+      # This job runs IN unified-trading-pm (the fleet-wide ci-status consolidator) but reports on
+      # the repo whose dispatch triggered it — without this the ledger's `repo` field wrongly
+      # records unified-trading-pm as the alert's subject (deployment_alerts_ingestion_completeness
+      # _2026_07_20.md todo 4; ~14.3k runs/30d, the highest-volume caller of this reusable workflow).
+      subject_repo: ${{ github.event.client_payload.repo }}
       # severity + conclusion derive from the UNDERLYING repo's CI status, NOT this
       # meta-job's result. Otherwise FAILING repos render with ✅/Conclusion: success
       # because the manifest write itself succeeded. Manifest-job failure also flips to

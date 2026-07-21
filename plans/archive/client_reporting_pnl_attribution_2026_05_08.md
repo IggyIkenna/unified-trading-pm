@@ -9,9 +9,18 @@ stage: [meta]
 repos: [deployment-api, execution-service, market-tick-data-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md, plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md, plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md,
+    plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md,
+    plans/active/issues/missing_question_docs_orphan_references_2026_05_10.md,
+  ]
 created: 2026-05-08
-overview: Client reporting API + unified-trading-system UI surface — NAV / PnL / metrics per client, invoicing, PnL attribution. Internal-strategy vs external-strategy (via client-supplied API keys). Is it solved end-to-end and could PnL attribution be offered as a standalone service?
+overview:
+  Client reporting API + unified-trading-system UI surface — NAV / PnL / metrics per client, invoicing, PnL attribution.
+  Internal-strategy vs external-strategy (via client-supplied API keys). Is it solved end-to-end and could PnL
+  attribution be offered as a standalone service?
 type: question
 plan_spawned: 2026-05-10
 operator: ikenna
@@ -20,6 +29,11 @@ locked_since: 2026-05-08
 spawned_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md
 related_codex: [codex/04-architecture/separation-of-concerns.md]
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 # Client reporting + PnL attribution — end-to-end question
 

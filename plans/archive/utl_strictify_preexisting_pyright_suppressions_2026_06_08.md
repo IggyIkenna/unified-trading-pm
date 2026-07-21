@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: 'unified-trading-library: strict-ify the ~116 pre-existing pyright/type suppressions (out of scope of the QG-green plan)'
+title:
+  "unified-trading-library: strict-ify the ~116 pre-existing pyright/type suppressions (out of scope of the QG-green
+  plan)"
 summary:
 status: resolved
 nature: record
@@ -11,10 +13,16 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-08
-source: [plans/active/utl_full_quality_gates_green_2026_06_01.md, 'unified-trading-library (committed HEAD, pre-2026-06-08)']
+source:
+  [plans/active/utl_full_quality_gates_green_2026_06_01.md, "unified-trading-library (committed HEAD, pre-2026-06-08)"]
 locked_by: live-defi-rollout
 priority: P2
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 > **✅ RESOLVED 2026-06-09 — acked into plan + shipped.** Wrapper plan:
 > `plans/active/utl_strictify_preexisting_pyright_suppressions_2026_06_09.md`. Shipped on `live-defi-rollout`:

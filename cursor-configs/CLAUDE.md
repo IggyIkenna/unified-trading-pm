@@ -259,7 +259,9 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   phantom-audit `--apply` only after `prefix_tpls` cover the new shape. SSOTs:
   `codex/02-data/availability-manifest-and-data-status.md`, `…/honest-absence-downstream-handling.md`,
   `…/pipeline-mode-partition.md`, `plans/epics/infrastructure_master.md`. **Honest Coverage v2 (two-layer / two-view /
-  instrument-gates-download model)** → `codex/02-data/honest-coverage-model.md`.
+  instrument-gates-download model)** → `codex/02-data/honest-coverage-model.md`. **Sports 2020-06 DATA FLOOR** (odds
+  start 2020-06-06; pre-floor is fabrication-by-construction — WIPED from GCS + manifest, denominators/launchers/gates
+  clamp to it) → `codex/02-data/sports-2020-06-data-floor.md`.
 - **RECONCILING an AG's estate against canonical (paths ↔ manifest ↔ catalogue)?** Use `/data-pipeline-reconciliation`
   (per-AG, PROD-only, read-only; deletes are SUGGESTIONS gated on a 5-part proof — prod-bucket deletes are human-only).
   Canonical/non-canonical is the UAC `canonical_path_violations()` MACHINE ORACLE, never a re-implemented rule; pass

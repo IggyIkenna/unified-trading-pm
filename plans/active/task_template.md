@@ -103,6 +103,10 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 ## 3. Todo format
 
 - Every todo: `- [ ] [TAG] P0. <description>` (open) → `- [x] N. ✅ [TAG] P0. <desc> — <repo>@<sha> + evidence` (done).
+- **Keep each todo's load-bearing content on the FIRST physical line** _(verified in `regen_backlog_from_plan.py`
+  2026-07-21: `_parse_open_todos` captures only the first line matching `- [ ]`; wrapped/indented continuation lines are
+  NOT parsed into the task brief the dispatcher sees)._ The `[TAG]`, `P<n>`, and the essential verb-phrase MUST be on
+  line 1; treat continuation lines as human-only notes the worker's brief will not include.
 - **`[TAG]` → craft role** (per-task, AO): `[INFRA]`→infra · `[DATA]`→data_engineering · `[BACKEND]`→backend_engineer ·
   `[UI]`→ui_developer · `[REVIEW]`→review. Generic `[CODE]` / `[SCRIPT]` → the plan's `assigned_role`.
 - **Priority** `P0`–`P3` (P0 = most urgent). Same-priority tasks run in plan-file order (§4).

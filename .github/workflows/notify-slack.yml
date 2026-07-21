@@ -22,6 +22,16 @@ on:
         required: false
         type: string
         default: ""
+      subject_repo:
+        description: >-
+          The repo the alert is ABOUT (not the repo running this workflow). Leave blank for the common case where a repo
+          reports on its own CI/build/deploy — the ledger then defaults it to the caller repo. Set explicitly when a
+          fleet-wide watcher (running in unified-trading-pm) reports on a DIFFERENT repo via a repository_dispatch
+          payload (e.g. ci-status-update.yml, cascade-qg-ordering.yml) — otherwise the ledger's `subject_repo` wrongly
+          records the watcher itself (deployment_alerts_ingestion_completeness_2026_07_20.md todo 4).
+        required: false
+        type: string
+        default: ""
       run_url:
         description: URL to the GHA run (shown as context link)
         required: false
@@ -386,6 +396,7 @@ jobs:
           INPUT_MESSAGE: ${{ inputs.message }}
           INPUT_SEVERITY: ${{ inputs.severity }}
           INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
+          INPUT_SUBJECT_REPO: ${{ inputs.subject_repo }}
           INPUT_RUN_URL: ${{ inputs.run_url }}
           INPUT_CONCLUSION: ${{ inputs.conclusion }}
           INPUT_DEDUP_KEY: ${{ inputs.dedup_key }}
@@ -393,18 +404,25 @@ jobs:
           set -euo pipefail
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           DATE_PARTITION=$(date -u +"%Y-%m-%d")
+          # subject_repo: the repo the alert is ABOUT. Defaults to the caller (repo=emitter=self,
+          # the common case) when the caller didn't pass one explicitly — see the `repo` field's
+          # docstring above and deployment_alerts_ingestion_completeness_2026_07_20.md todo 4.
+          EMITTING_REPO="${CALLER_REPO#*/}"
+          SUBJECT_REPO="${INPUT_SUBJECT_REPO:-$EMITTING_REPO}"
           ALERT_JSON=$(jq -n -c \
             --arg event_type "slack_alert" \
             --arg timestamp "$TIMESTAMP" \
-            --arg repo "${CALLER_REPO#*/}" \
+            --arg repo "$EMITTING_REPO" \
+            --arg subject_repo "$SUBJECT_REPO" \
             --arg workflow_name "$INPUT_WORKFLOW_NAME" \
             --arg severity "$INPUT_SEVERITY" \
             --arg conclusion "$INPUT_CONCLUSION" \
             --arg run_url "$INPUT_RUN_URL" \
             --arg message "$INPUT_MESSAGE" \
             --arg dedup_key "${INPUT_DEDUP_KEY:-}" \
-            '{event_type:$event_type, timestamp:$timestamp, repo:$repo, workflow_name:$workflow_name,
-              severity:$severity, conclusion:$conclusion, run_url:$run_url, message:$message, dedup_key:$dedup_key}')
+            '{event_type:$event_type, timestamp:$timestamp, repo:$repo, subject_repo:$subject_repo,
+              workflow_name:$workflow_name, severity:$severity, conclusion:$conclusion, run_url:$run_url,
+              message:$message, dedup_key:$dedup_key}')
           # DEDUP MARKER first (root-cause fix 2026-07-17): the per-key object the dedup gate
           # reads. Atomic single-object overwrite — immune to the read-modify-write clobbering
           # that silently erased keys from the shared ledger and made every "dedup'd" alert

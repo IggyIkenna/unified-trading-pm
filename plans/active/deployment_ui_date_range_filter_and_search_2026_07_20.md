@@ -131,17 +131,42 @@ Full audit transcript available on request; the load-bearing facts:
       deployment-ui@234130a (`KindFilterChips` toggle-chip group replaces the single `<select>`; comma-separated
       `?kind=` URL, old single-value deep-link still works as a 1-element set; `cockpit.spec.ts`'s `.selectOption(...)`
       updated to click the chip) | pw:L2 ✓ | regression: tests/smoke/deployments-page.spec.ts
-- [ ] [UI] P1. Approx-row colour marker (decision 4) — reuse the WS-1 partial-day colour convention for any
+- [x] ✅ [UI] P1. Approx-row colour marker (decision 4) — reuse the WS-1 partial-day colour convention for any
       `basis: "approx"` row (heartbeat-stale VMs, unmanaged fallback, single-timestamp kinds). One consistent visual
-      language across the whole table.
-- [ ] [UI] P1. Always-on rows (CLOUD_RUN_SERVICE, any other no-interval kind) sort **last** in date-range-filtered
+      language across the whole table. — deployment-ui@e4f893e (`LastRunCell` in `Deployments.tsx` wraps the existing
+      Last-Run column; amber `text-amber-400` when `item.basis === "approx"`, colour only, no text label, mirroring
+      `CostCell`'s `cost_basis === "partial"` convention exactly;
+      `DeploymentItem.started_at/completed_at/     last_heartbeat_at/basis` added to `deploymentApi.ts` — the backend
+      shipped these fields (deployment-api@ff5bb06) but the UI type never declared them; mock fixture
+      `funding-ensemble-paper-week` (a single-timestamp CLOUD_RUN_JOB) marked `basis: "approx"`) | pw:L2 ✓ | regression:
+      tests/smoke/deployments-approx-marker.spec.ts
+- [x] ✅ [UI] P1. Always-on rows (CLOUD_RUN_SERVICE, any other no-interval kind) sort **last** in date-range-filtered
       results and stay visible regardless of range, with a distinct "always-on" visual treatment (decision 2) — visibly
-      different from the approx marker, since this means "not applicable," not "uncertain."
-- [ ] [UI] P1. Out-of-range "no data before `<date>`" banner (decision 5).
-- [ ] [UI] P2. Service dropdown filter (WS-3) — options from distinct `service` values in the loaded inventory,
-      URL-backed (`?service=`), client-side.
-- [ ] [UI] P2. Target search box (WS-3) — free-text substring match on the Target column (`item.name`),
-      case-insensitive, URL-backed (`?q=`), debounced, clears with an ✕.
+      different from the approx marker, since this means "not applicable," not "uncertain." — deployment-ui@c7d0c04
+      (`ALWAYS_ON_KINDS` = the exact complement of the backend's `_SINGLE_TIMESTAMP_KINDS ∪ {VM}` in `_apply_date_range`
+      — services/functions/orphaned DISK/STATIC_IP; `defaultHierarchyCmp`/`compareByColumn` in `Deployments.tsx` now
+      take a `dateFiltered` flag and sort always-on kinds after every other row, overriding even an explicit column
+      sort, only while `?date_from=`/`?date_to=` is active; `LastRunCell` renders a cyan "always-on" badge (distinct
+      from the amber `basis === "approx"` tone) gated on the same flag) | pw:L2 ✓ | regression:
+      tests/smoke/deployments-always-on-marker.spec.ts
+- [x] ✅ [UI] P1. Out-of-range "no data before `<date>`" banner (decision 5). — deployment-ui@1880424
+      (`archive_floor`/`date_range_out_of_range` added to `DeploymentInventoryResponse` in `deploymentApi.ts`, mirroring
+      the backend fields deployment-api@42191d9 already ships; `DeploymentsContent` in `Deployments.tsx` captures them
+      from the inventory response and renders an explicit amber banner — distinct from the red fetch-error banner —
+      instead of a silent clipped/partial result; mock API mirrors the same 30-day `_archive_floor_date` computation for
+      pw:L2 coverage) | pw:L2 ✓ | regression: tests/smoke/deployments-date-range-out-of-range.spec.ts
+- [x] ✅ [UI] P2. Service dropdown filter (WS-3) — options from distinct `service` values in the loaded inventory,
+      URL-backed (`?service=`), client-side. — deployment-ui@79cf1dc (`serviceOptions` in `Deployments.tsx` mirrors
+      `assetGroupOptions`'s pattern — distinct values from the loaded `items`; `FilterSelect` + `?service=` param;
+      folded into the client-side `items.filter(...)` predicate alongside kind/launched_by — the inventory endpoint's
+      own `service` query param stays unused by this control, deliberately client-side per the decision) | pw:L2 ✓ |
+      regression: tests/smoke/deployments-page.spec.ts
+- [x] ✅ [UI] P2. Target search box (WS-3) — free-text substring match on the Target column (`item.name`),
+      case-insensitive, URL-backed (`?q=`), debounced, clears with an ✕. — deployment-ui@0dd3438 (`TargetSearchBox` in
+      `Deployments.tsx`; local `searchInput` state drives the visible box AND the client-side filter instantly — cheap
+      in-memory array filter, no reason to lag the actual filtering; only the `?q=` URL write is debounced 300ms via the
+      house `useDebounce` hook, so typing doesn't spam browser history) | pw:L2 ✓ | regression:
+      tests/smoke/deployments-page.spec.ts
 - [ ] [UI] P1. **Extract the shared filter/sort primitives** — `FilterSelect` (`Deployments.tsx:878-908`),
       `StatusFilterChips` (`:924-961`), and the column-sort machinery (`SortKey` / `columnSortValue` / `compareByColumn`
       at `:256-320`, plus `onHeaderClick` at `:821` — note it lives in the table component, NOT co-located with the pure

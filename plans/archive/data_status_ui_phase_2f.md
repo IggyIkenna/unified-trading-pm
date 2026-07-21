@@ -10,8 +10,13 @@ repos: [deployment-api, deployment-service, deployment-ui, instruments-service, 
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-14'
+created: "2026-05-14"
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 > **ARCHIVED 2026-05-19** — 100% complete (5/5 items); deferred follow-ups migrated to named issue docs; preserved for
 > archaeology.

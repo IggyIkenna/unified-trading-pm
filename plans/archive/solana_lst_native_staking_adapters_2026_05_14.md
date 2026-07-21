@@ -22,6 +22,11 @@ estimate_calibrated_ai_days: 4
 deadline: 2026-05-23
 ---
 
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
+
 > **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.
 
 > **MIGRATED FROM**: `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` § "Recommended decision — Successor

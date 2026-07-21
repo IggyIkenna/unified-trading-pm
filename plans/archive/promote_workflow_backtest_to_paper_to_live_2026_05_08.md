@@ -6,12 +6,33 @@ status: plan-spawned
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [batch-live-reconciliation-service, deployment-api, deployment-service, e2e-testing, execution-service, strategy-service]
+repos:
+  [
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    e2e-testing,
+    execution-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md, plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md, plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md, plans/archive/risk_simulations_limits_alerting_2026_05_10.md, plans/questions/defi_readiness_catalogue_2026_05_08.md, plans/epics/strategy_and_dart_master_2026_05_07.md, plans/epics/defi_master_2026_05_07.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md,
+    plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md,
+    plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md,
+    plans/archive/risk_simulations_limits_alerting_2026_05_10.md,
+    plans/questions/defi_readiness_catalogue_2026_05_08.md,
+    plans/epics/strategy_and_dart_master_2026_05_07.md,
+    plans/epics/defi_master_2026_05_07.md,
+  ]
 created: 2026-05-08
-overview: End-to-end re-audit of the promote workflow — backtest is scored + ranked, operator picks a candidate via UI button click → API → "candidate" status → next paper-trading deployment → live production. Re-walk every code path, DART UI surface, configuration shape, event stream, service interaction, approval gate, rollback affordance.
+overview:
+  End-to-end re-audit of the promote workflow — backtest is scored + ranked, operator picks a candidate via UI button
+  click → API → "candidate" status → next paper-trading deployment → live production. Re-walk every code path, DART UI
+  surface, configuration shape, event stream, service interaction, approval gate, rollback affordance.
 type: question
 audit_completed: 2026-05-10
 operator: ikenna
@@ -19,8 +40,19 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-08
 spawned_plan: plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 spawned_plan_post_cutover: plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
-related_codex: [codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/04-architecture/operational-modes.md, codex/03-observability/lifecycle-events.md, codex/05-infrastructure/launcher-script-ssot.md]
+related_codex:
+  [
+    codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    codex/04-architecture/operational-modes.md,
+    codex/03-observability/lifecycle-events.md,
+    codex/05-infrastructure/launcher-script-ssot.md,
+  ]
 ---
+
+## Deferred work — migrated to:
+
+**None** — successor: not applicable. Plan archived as 100% completed (no open `- [ ]` items at archive time). Any
+incidental DEFERRED / post-cutover / out-of-scope tokens in the body are historical context, not unfinished work.
 
 # Promote workflow — backtest → ranked candidate → paper → live (end-to-end re-audit)
 

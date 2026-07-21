@@ -25,8 +25,12 @@ referenced_by:
     plans/audit/results/perf_benchmark_d8_2026_05_20.md,
   ]
 owner:
-last_reviewed:
+last_reviewed: 2026-07-21
 code_refs:
+  [
+    unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
+    deployment-api/deployment_api/routes/_run_log_tail.py,
+  ]
 ---
 
 # GCS Object Operations — Canonical Pattern
@@ -80,6 +84,15 @@ Deletes the object. Returns `None`. Raises `google.cloud.exceptions.NotFound` if
 
 Returns `BlobMetadata` (fields: `name`, `bucket`, `size`, `content_type`, `etag`, `crc32c`, `last_modified`). Returns
 `None` if the object does not exist. Internally calls `blob.reload()` to populate all fields.
+
+### `gcs_read_object_range(uri, start, end) -> bytes`
+
+Byte-range read `[start, end)` — never the full object. For a bounded tail read of a large object, pass
+`start=max(0, size - cap)` / `end=size` (`size` from a prior `gcs_describe_object` call) so at most `cap` bytes ever
+reach caller memory, independent of the object's real size. Added 2026-07-21 for deployment-api's `run.log` tail
+endpoint (`GET /api/deployments/{name}/run-log/tail`, capped at 256KB/300 lines by default) — see
+`codex/05-infrastructure/deployment-observability.md` § "Run.log viewer" for the full read-path contract this backs.
+Same URI-splitting convention as `gcs_describe_object`; wraps `StorageClient.download_bytes_range` across gcp/aws/local.
 
 ## Requirements
 
