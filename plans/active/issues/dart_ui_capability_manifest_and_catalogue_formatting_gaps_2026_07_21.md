@@ -130,17 +130,36 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
       Build `AdminStrategyAssignmentTable.tsx` + `app/(ops)/admin/strategy-assignments/page.tsx`. Wire
       `canEnterTerminal()` (currently dead code) into the actual terminal entry path. (repo: unified-api-contracts,
       unified-trading-system-ui)
-- [ ] [CODE] P3. Execute the `AssetClass` → `AssetGroup` rename repo-wide (UAC: ~20 files; UI: ~19+15 files/identifiers)
-      — the direction is already set by newer code (`terminology.ts`, `envelope-loader.ts`), this is finishing the
-      sweep. Follow with the codex terminology grep+replace pass. (repo: unified-api-contracts,
-      unified-trading-system-ui)
+- [ ] BLOCKED-SUPERSEDED [CODE] P3. ~~Execute the `AssetClass` → `AssetGroup` rename repo-wide~~ — SUPERSEDED
+      2026-07-21: the real blast radius is 9+ repos (not 2), touches a persisted-schema-adjacent field, and risks
+      conflating two distinct `AssetClass` enums (domain vs. `LedgerAssetClass`). See
+      `plans/active/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md` (the investigation) and
+      `plans/active/asset_class_to_asset_group_rename_2026_07_21.md` (the dedicated 6-todo phased plan that owns this
+      work now — human plan, `assigned_vm: NA`, pending operator dispatch decision). Non-dispatchable — do not execute
+      this line as scoped. (repo: unified-api-contracts, unified-trading-system-ui)
 - [ ] [CODE] P3. Apply `lib/strategy-display.ts` formatters (`formatFamily`/`formatArchetype`/`formatSlotLabel`) in
       `StrategyCatalogueSurface.tsx`'s `AdminUniverseGrid`, `signal-history-table.tsx`, and
       `admin/strategy-universe/page.tsx` — currently render raw underscore identifiers. (repo:
       unified-trading-system-ui)
-- [ ] [CODE] P3. Wire `derivePersonaInstruments()` into `personaToAuthUser()` (make it async, populate a new
+- [x] [CODE] P3. ✅ Wire `derivePersonaInstruments()` into `personaToAuthUser()` (make it async, populate a new
       `AuthUser.instruments` field); remove the now-redundant `QUESTIONNAIRE_PRESEEDS` mock once wired. (repo:
-      unified-trading-system-ui)
+      unified-trading-system-ui) — `unified-trading-system-ui@7967177b`
+
+  `personaToAuthUser()` (`lib/auth/demo-provider.ts`) is now `async`, awaits `derivePersonaInstruments(persona)`, and
+  populates a new `AuthUser.instruments?: readonly string[]` field (`lib/auth/types.ts`) when non-empty. Both call sites
+  updated: `restore()` (constructor fire-and-forget `void this.restore()`, now itself `async`) and `login()` (already
+  `async`, trivial `await`).
+
+  **Verified the "now-redundant" claim before removing** the `QUESTIONNAIRE_PRESEEDS` block from `login()` — grepped
+  `tests/e2e/` + `tests/unit/` for `desmond-signals-in`/`desmond-dart-full`/`elysium-defi`/`elysium-defi-full` and for
+  `questionnaire-response-v1`: no test asserts the preseed is written on login for these personas; the
+  `questionnaire-response-v1` key IS exercised elsewhere (`demo-perp-funding-journey.spec.ts`,
+  `refactor-g1-10-questionnaire.spec.ts`) but through the REAL questionnaire-submission flow for unrelated personas
+  (`prospect-perp-funding`), not this login-time mock. Safe to remove.
+
+  Typecheck clean, full `npx vitest run` (whole repo): 3282/3284 passed (2 pre-existing skips, unrelated
+  `ECONNREFUSED`/socket-hangup noise from an unrelated integration test's external-service probe). Shipped +
+  quality-gates.sh green.
 
 ## Codex SSOTs
 
