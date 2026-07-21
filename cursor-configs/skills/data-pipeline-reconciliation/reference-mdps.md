@@ -8,31 +8,40 @@ rules live in
 > tree in the SAME bucket, add a `timeframe` axis, and are NOT covered by the UAC machine oracle. Read this before
 > auditing any candle estate.
 
-> **🟡 LIVE MIGRATION (operator ruling A, 2026-07-21).** The candle-canonical migration (declared-template-wins, 8
-> phases, ~10–20M objects, sequenced defi → prediction → cefi → tradfi, tradfi LAST) is scoping/executing. NOTHING is
-> migrated on disk yet → the WHOLE candle corpus is `migration_pending`. Reconcile against the Option-A TARGET; treat
-> un-migrated shape as `migration_pending` (AE-6), never a defect. The genuine defects (H5) are findings regardless.
+> **⚠️→✅ CORRECTED 2026-07-21 (evening) — supersedes the "Option A" framing below.** The original Option-A framing
+> (declared-registry-template-wins, `data_type` rewritten to the AGGREGATED `mdps_data_type_key` on the path) was
+> RE-DECIDED with corrected info: the path **keeps the SOURCE `data_type`** (unchanged); only `instrument_type=` +
+> `pipeline_mode=` are ADDED to the path, and the **manifest** is what re-aligns (to SOURCE) instead. See
+> [`candle_feature_canonical_path_divergence_2026_07_20.md`](../../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
+> § "CORRECTED RULING 2026-07-21 (evening)" for the full detail. The migration is now **folded into**
+> `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (not a standalone effort) — as of
+> 2026-07-21 there is **NO VM running for this candle-path phase yet** (verified via `gcloud compute instances list`;
+> the running `canonical-migration-cefi-*` fleet is a SEPARATE `raw_tick_data/` column-patch migration). The candle
+> cutover is scheduled to start **after that raw-tick cefi fleet drains** (manifest-shard contention + the
+> pre-migration-drain rule) — state it as NOT YET STARTED, never "running elsewhere."
 
 ## Path grammar (candle layer)
 
-TARGET (Option A — the canonical the audit reconciles against):
+LOCKED shape (corrected 2026-07-21 evening — the canonical the audit reconciles against):
 
 ```
 processed_candles/by_date/day={D}/pipeline_mode={mode}_{source}/timeframe={tf}/
-  data_type={mdps_data_type_key}/instrument_type={it}/venue={v}/{canonical_id}.parquet
+  data_type={SOURCE_dt}/instrument_type={it}/venue={v}/{canonical_id}.parquet
 
 # prediction: … /instrument_type={it}/{canonical_id}.parquet   (NO venue=)
 # sports:     processed/by_date/day={D}/data_type=odds_horizon_bucket/league_id=…/timeframe=T-10m/bucketed.parquet
 ```
 
-Registry SSOT for the target shape:
-`unified-trading-library/unified_trading_library/config_interface/paths/registry.py:28` (`processed_candles`
-`path_template`). **The template today has NO `pipeline_mode=` segment** — Option-A decision 1 adds it so `build_path()`
-alone yields the shape above. Current on-disk shapes (all `migration_pending`, do NOT flag): missing `instrument_type=`;
-SOURCE `data_type` (`derivative_ticker`) instead of the aggregated `mdps_data_type_key`; and a split-brain where some
-objects carry `pipeline_mode=` and some drop it (`timeframe=` directly under `day=`) in the SAME bucket on the SAME day
+`data_type` is the **SOURCE** type (`derivative_ticker`/`trades`/`book_snapshot_5`/`dex_pool_swaps`/`ohlcv_1m`) —
+**unchanged by the migration**; the AGGREGATED `mdps_data_type_key` survives only as the schema-contract lookup key
+(S2), never the path or (post-migration) manifest axis. Registry SSOT for the shape:
+`unified-trading-library/unified_trading_library/config_interface/paths/registry.py` (`processed_candles`
+`path_template`, now carries the `pipeline_mode=` segment). Current on-disk shapes (all `migration_pending`, do NOT
+flag): missing `instrument_type=`; and a split-brain where some objects carry `pipeline_mode=` and some drop it
+(`timeframe=` directly under `day=`) in the SAME bucket on the SAME day
 ([`candle_feature_canonical_path_divergence_2026_07_20.md`](../../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
-findings 1/2 + iii-a).
+findings 1 + iii-a). The SOURCE-vs-aggregated `data_type` divergence is a **manifest-only** gap (pre-migration rows
+carry the aggregated key; going-forward writes carry SOURCE) — never a path finding.
 
 ## Buckets — resolve, never hand-build (SAME buckets as raw tick)
 
@@ -44,7 +53,7 @@ the layer ([`per-asset-group-bucket-layouts.md`](../../../codex/02-data/per-asse
 
 ## Shard atom + (KEY)
 
-`[service_name=market-data-processing-service, date, asset_group, (pipeline_mode), timeframe, data_type(mdps_data_type_key), (instrument_type), venue, (KEY), source]`.
+`[service_name=market-data-processing-service, date, asset_group, (pipeline_mode), timeframe, data_type(SOURCE type), (instrument_type), venue, (KEY), source]`.
 
 - **(KEY) = `instrument_id`** for flat-per-contract (leaf stem == the `instrument_id` column, e.g.
   `DERIBIT:PERPETUAL:BTC-PERPETUAL.parquet`).
@@ -52,13 +61,14 @@ the layer ([`per-asset-group-bucket-layouts.md`](../../../codex/02-data/per-asse
   SSOT for the filename rule:
   `market-data-processing-service/market_data_processing_service/app/core/output_path_helpers.py`
   (`is_chain_bundle_data_type()` / `candle_output_filename()` / `CHAIN_BUNDLE_FILENAME = "ticks.parquet"`).
-- **`data_type` is the AGGREGATED `mdps_data_type_key(src, tf)`** on BOTH manifest and (post-migration) path;
-  `timeframe` normalised `24h`→`1d`.
+- **`data_type` is the SOURCE type** (corrected 2026-07-21 evening — supersedes the earlier "aggregated on both"
+  framing) on BOTH the path (unchanged) and the (post-migration) manifest; `timeframe` normalised `24h`→`1d`. The
+  AGGREGATED `mdps_data_type_key(src, tf)` survives only as the schema-contract lookup key (S2), not a stored axis.
 - **`service_name` filter is load-bearing** — candle rows share the `_index` with raw-tick rows.
 
 ## The four surfaces (candle layer)
 
-- **S1** path under `processed_candles/` — checked against the Option-A template (oracle-exempt namespace, H2).
+- **S1** path under `processed_candles/` — checked against the LOCKED template (oracle-exempt namespace, H2).
 - **S2** MDPS candle contract via `lookup_mdps_contract(mdps_data_type_key)` — OHLC/`open` nullability is PER-TYPE
   (deriv + empty-window nullable, resolved P0 —
   [`mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
@@ -84,7 +94,7 @@ flags the whole sports estate — dispatch to the sports tree, don't probe `proc
 (`unified-api-contracts/unified_api_contracts/canonical/partition_paths.py:67`) and returns an identical `structural`
 violation for EVERY `processed_candles/` path — canonical and orphan alike (verified 2026-07-20,
 [`candle_feature_…`](../../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md) iii-b). Candle
-canonicality is a BESPOKE check against the Option-A template — a JUSTIFIED exception to "never re-implement the oracle"
+canonicality is a BESPOKE check against the LOCKED template — a JUSTIFIED exception to "never re-implement the oracle"
 (the oracle doesn't cover this namespace). State it in the report. The durable fix is the oracle-extension (that issue's
 todo 10); re-point here when it ships.
 
@@ -124,8 +134,9 @@ surviving duplicate copies are `legacy_duplicate` (content-verify before any ded
 ## Known-good spot-check — run BEFORE trusting any absence result
 
 The generalised lesson from the defi `solana_amm_pool` false negative ([`SKILL.md`](SKILL.md) § 4b): **an absence result
-is only evidence once you have confirmed you probed the vocabulary the writer actually emits** — for candles that
-vocabulary is the AGGREGATED `mdps_data_type_key`, never the source type.
+is only evidence once you have confirmed you probed the vocabulary the writer actually emits** — for candle **paths**
+that vocabulary is the SOURCE `data_type` (corrected 2026-07-21 evening), never the aggregated key; for **pre-migration
+manifest rows** the aggregated `mdps_data_type_key` still applies until the backward migration re-keys them.
 
 1. Resolve the SAME bucket (`kind="market-data"`, per AG); candles are the `processed_candles/` prefix inside it
    (sports: `processed/`).
@@ -133,8 +144,10 @@ vocabulary is the AGGREGATED `mdps_data_type_key`, never the source type.
    `(pipeline_mode?, timeframe, data_type)` actually wrote that day — do NOT assume an arbitrary
    `(day, timeframe, data_type)` has objects (the corpus is tiny and uneven).
 3. Probe BOTH the `pipeline_mode=`-present and `pipeline_mode`-less shapes (H4) or you see a disjoint subset.
-4. Badge `data_type` against the aggregated `mdps_data_type_key` set (`ohlcv_1m`, `deriv_ohlcv_1h`, …), NOT
-   `derivative_ticker`/`trades` — a source-type probe false-phantoms every aggregated cell.
+4. Badge object-path `data_type` against the SOURCE `DATA_TYPES_BY_ASSET_GROUP` vocabulary (`derivative_ticker`,
+   `trades`, …), NOT the aggregated `mdps_data_type_key` set (`ohlcv_1m`, `deriv_ohlcv_1h`, …) — corrected 2026-07-21
+   evening; an aggregated-key probe false-phantoms every SOURCE cell on disk. The aggregated key still applies when
+   probing pre-migration MANIFEST rows.
 5. Only then treat a zero as a finding. Remember S3 is near-empty (H3) — absence in the manifest is NOT absence on disk.
 
 ## Census / vocabulary nuance (candle layer)
@@ -142,16 +155,17 @@ vocabulary is the AGGREGATED `mdps_data_type_key`, never the source type.
 Added 2026-07-21 — the in-session distinct-value census
 ([`reconciliation-census-and-compute-tiers.md`](../../../codex/02-data/reconciliation-census-and-compute-tiers.md)).
 
-- The census axis set ADDS `timeframe`; `data_type` is badged against the AGGREGATED `mdps_data_type_key` vocabulary
-  (`get_valid_timeframes_for_data_type` × `mdps_data_type_key`), NOT the raw-tick `DATA_TYPES_BY_ASSET_GROUP`.
+- The census axis set ADDS `timeframe`; going-forward (corrected 2026-07-21 evening) object-path `data_type` is badged
+  against the SOURCE `DATA_TYPES_BY_ASSET_GROUP` vocabulary — the path was NEVER rewritten to the aggregated key, so
+  this is the vocabulary today, not just post-migration.
 - The manifest-side census must filter `service_name=="market-data-processing-service"` and add `timeframe` to the
   census columns — `deployment-api/deployment_api/routes/data_status/_axis_census.py:86` `AXIS_CENSUS_COLUMNS` has
   `venue/chain/instrument_type/data_type/source/pipeline_mode` and NO `timeframe` today.
 - The GCS-side descent order comes from the MDPS registry template (`registry.py` `processed_candles`), NOT
   `canonical_path_templates(ag)` (raw-tick-only; returns nothing for `processed_candles/`).
-- The SOURCE-vs-AGGREGATED `data_type` gap is exactly an `M △ G` `shard_atom_vocab_desync` — but it is the ruled
-  migration delta, so SUPPRESS it under AE-6 until the AG's candle migration completes; post-migration it becomes a
-  genuine desync detector.
+- The SOURCE-vs-AGGREGATED `data_type` gap is a **manifest-only** `M △ G` desync (pre-migration manifest rows carry the
+  aggregated key; the path always carried SOURCE) — SUPPRESS it under AE-6 until the backward manifest re-key completes;
+  post-migration it becomes a genuine desync detector.
 
 ## Cross-links
 

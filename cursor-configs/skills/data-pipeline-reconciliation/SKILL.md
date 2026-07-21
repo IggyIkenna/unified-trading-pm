@@ -45,20 +45,30 @@ default (an SSOT change first, per "Extending to a new LAYER" below).
 - **`candles`** — MDPS-derived candles under `processed_candles/by_date/` (sports: `processed/`), **co-located in the
   SAME `market-data-tick-{ag}` bucket** (no new bucket to resolve — Phase-0 resolution is unchanged). Governed by § 3h,
   `reference-mdps.md`, and SSOT `codex/02-data/mdps-candle-canonical-reconciliation.md`. Three things are DIFFERENT and
-  non-negotiable: (1) the candle shard atom adds a **`timeframe`** axis and keys `data_type` on the AGGREGATED
-  `mdps_data_type_key` (`ohlcv_1m`, `deriv_ohlcv_15m`), with S3 rows filtered
-  `service_name == "market-data-processing-service"`; (2) the machine oracle does **NOT** cover `processed_candles/`
-  (`canonical_path_violations()` hardcodes the `raw_tick_data/` prefix — candles are **oracle-exempt**, checked against
-  the ratified Option-A template); (3) candle reconciliation is **GCS-object-driven, not manifest-driven** (the candle
-  manifest is near-empty).
+  non-negotiable: (1) the candle shard atom adds a **`timeframe`** axis and keys `data_type` on the **SOURCE** type
+  (corrected 2026-07-21 evening — the path was never rewritten to the aggregated key; `mdps_data_type_key` survives only
+  as the schema-contract lookup key), with S3 rows filtered `service_name == "market-data-processing-service"`; (2) the
+  machine oracle does **NOT** cover `processed_candles/` (`canonical_path_violations()` hardcodes the `raw_tick_data/`
+  prefix — candles are **oracle-exempt**, checked against the ratified LOCKED template); (3) candle reconciliation is
+  **GCS-object-driven, not manifest-driven** (the candle manifest is near-empty).
 
-> **🟡 A LIVE MDPS candle-canonical migration is in flight (operator ruling A, 2026-07-21 — 8 phases, ~10–20M objects,
-> sequenced defi → prediction → cefi → tradfi).** The candle audit reconciles against the migration TARGET, not the
-> current disk shape: an un-migrated candle path (missing `instrument_type=`, source-not-aggregated `data_type`,
-> split-brain `pipeline_mode`) is **`migration_pending`, NOT a finding** — the WHOLE candle corpus is
-> `migration_pending` today because nothing is migrated yet. Only the genuine defects (empty stems, unresolvable TradFi
-> leaf ids, the object↔manifest disconnect) are findings. This skill is read-only against GCS and edits only the PM repo
-> (itself + codex), so it cannot collide with the migration.
+> **⚠️→✅ CORRECTED 2026-07-21 (evening) — supersedes the original "Option A" framing.** A LIVE MDPS candle-canonical
+> migration is in flight, but the RE-DECIDED shape is: `instrument_type=` is ADDED to the path (full migration,
+> unchanged from the original decision) while `data_type` **KEEPS the SOURCE value on the path** — it is the
+> **manifest** that aligns to source instead (a backward manifest re-key, not a path rewrite). See
+> [`candle_feature_canonical_path_divergence_2026_07_20.md`](../../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
+> § "CORRECTED RULING 2026-07-21 (evening)". The migration is **folded into**
+> `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` — NOT a standalone effort. As of
+> 2026-07-21 **NO VM is running for the candle-path phase yet** (verified via `gcloud compute instances list` — the
+> running `canonical-migration-cefi-*` fleet is the SEPARATE `raw_tick_data/` column-patch migration); the candle
+> cutover is scheduled to start **after that raw-tick fleet drains** (manifest-shard contention + the
+> pre-migration-drain rule) — say NOT YET STARTED, never "running elsewhere." The candle audit reconciles against the
+> LOCKED target, not the current disk shape: an un-migrated candle path (missing `instrument_type=`, split-brain
+> `pipeline_mode`) is **`migration_pending`, NOT a finding** — the WHOLE candle corpus is `migration_pending` today on
+> those two axes. The SOURCE-vs-aggregated `data_type` divergence is **manifest-only** (pre-migration rows carry the
+> aggregated key; the path always carried SOURCE) — also `migration_pending`, suppressed the same way. Only the genuine
+> defects (empty stems, unresolvable TradFi leaf ids, the object↔manifest disconnect) are findings. This skill is
+> read-only against GCS and edits only the PM repo (itself + codex), so it cannot collide with the migration.
 
 **The four surfaces**: (1) GCS object path + filename · (2) parquet **content** columns (`instrument_id`) · (3) the
 manifest `_index` shard-atom key · (4) the catalogue / data-status render. **defi note (measured 2026-07-20):** the
@@ -363,12 +373,14 @@ the canonical authority, the drive direction, and S4 all differ from raw tick �
   (sports: the `processed/` prefix, an entirely different tree — reference-mdps H1), NOT a separate bucket. Phase-0
   resolution is unchanged.
 - **The candle shard atom adds `timeframe`**:
-  `service_name=market-data-processing-service · date · asset_group · [pipeline_mode({mode}_{source})] · timeframe · data_type(mdps_data_type_key — AGGREGATED) · [instrument_type] · venue · (KEY) · source`.
-  `data_type` is the AGGREGATED `mdps_data_type_key(src, tf)` (`trades+1m→ohlcv_1m`,
-  `derivative_ticker+1h→deriv_ohlcv_1h`), never the source type; `timeframe` normalises `24h`→`1d`; `(KEY)` =
-  `instrument_id` (flat-per-contract, leaf stem == `instrument_id`) or the `ticks.parquet` bundle name for
-  `underlying=`-bundled writes; `instrument_type` is writer-inferred, absent on disk today, and ADDED by the Option-A
-  target (prediction candles use `instrument_type=` as the terminal axis in place of `venue=`).
+  `service_name=market-data-processing-service · date · asset_group · [pipeline_mode({mode}_{source})] · timeframe · data_type(SOURCE type) · [instrument_type] · venue · (KEY) · source`.
+  `data_type` is the **SOURCE** type (`trades`, `derivative_ticker`, …) on the path (corrected 2026-07-21 evening —
+  supersedes the earlier "aggregated on both" framing); the AGGREGATED `mdps_data_type_key(src, tf)`
+  (`trades+1m→ohlcv_1m`, `derivative_ticker+1h→deriv_ohlcv_1h`) survives only as the schema-contract lookup key (S2),
+  never the path or (post-migration) manifest axis; `timeframe` normalises `24h`→`1d`; `(KEY)` = `instrument_id`
+  (flat-per-contract, leaf stem == `instrument_id`) or the `ticks.parquet` bundle name for `underlying=`-bundled writes;
+  `instrument_type` is writer-inferred, absent on disk today, and ADDED by the LOCKED target (prediction candles use
+  `instrument_type=` as the terminal axis in place of `venue=`).
 - **Drive off GCS, not the manifest** — the candle S3 is essentially empty (6 candle rows corpus-wide vs 20,734 objects
   on one measured day; the write path is not calling `record_captured` per shard). Enumerate via bounded delimiter
   descent of `processed_candles/by_date/day={D}/…` (no-walk route #2, § 3) plus prefix-scoped listing per
@@ -376,18 +388,22 @@ the canonical authority, the drive direction, and S4 all differ from raw tick �
   `service_name == "market-data-processing-service"` — candle and raw-tick rows share one `_index`. Report every candle
   object with no matching S3 row as `missing_row`, and report the object↔manifest disconnect count as the **headline**
   candle finding.
-- **Canonical S1 = the ratified Option-A template, NOT the oracle.** `canonical_path_violations()` hardcodes
+- **Canonical S1 = the ratified LOCKED template, NOT the oracle.** `canonical_path_violations()` hardcodes
   `raw_tick_data/by_date/` and returns a `structural` violation for EVERY `processed_candles/` path — canonical and
   orphan alike — so the candle namespace is **oracle-EXEMPT** (a justified exception to "never re-implement the oracle"
   — the oracle simply does not cover this namespace, exactly like sports). Compare each object path against the target
-  `…/pipeline_mode=…/timeframe=…/data_type={mdps_data_type_key}/instrument_type=…/venue=…/{canonical_id}.parquet`
-  (prediction drops `venue=`; sports is `processed/`). State the oracle-exemption in every candle report; re-point here
-  when the oracle-extension ships (candle_feature issue todo 10).
-- **The WHOLE candle corpus is `migration_pending` today** — nothing is migrated on disk yet (operator ruled Option A
-  2026-07-21: declared registry template wins → 8-phase migration, defi → prediction → cefi → tradfi). A path divergence
-  that is one of the ruled migration deltas (missing `instrument_type=`, source-not-aggregated `data_type`, split-brain
-  `pipeline_mode`) is **`migration_pending` (taxonomy AE-6) — suppress it, migration-incomplete is NOT a defect**. Date-
-  condition against the candle rows of `canonical-cutover-register.md` (all PENDING today).
+  `…/pipeline_mode=…/timeframe=…/data_type={SOURCE_dt}/instrument_type=…/venue=…/{canonical_id}.parquet` (prediction
+  drops `venue=`; sports is `processed/`) — `data_type` is the SOURCE value, corrected 2026-07-21 evening. State the
+  oracle-exemption in every candle report; re-point here when the oracle-extension ships (candle_feature issue todo 10).
+- **The candle path↔instrument_type-add is `migration_pending` today; `data_type` on the path is NOT migrating** —
+  nothing is migrated on disk yet (corrected 2026-07-21 evening: `instrument_type=` + `pipeline_mode=` are ADDED to the
+  path; `data_type` KEEPS the SOURCE value it already carries — only the MANIFEST re-keys to source). A path divergence
+  that is one of the ruled migration deltas (missing `instrument_type=`, split-brain `pipeline_mode`) is
+  **`migration_pending` (taxonomy AE-6) — suppress it, migration-incomplete is NOT a defect**; the SOURCE-vs-aggregated
+  `data_type` gap is `migration_pending` on the **manifest side only**. This migration is folded into
+  `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`; as of 2026-07-21 no VM runs it yet
+  (scheduled after the raw-tick cefi fleet drains). Date-condition against the candle rows of
+  `canonical-cutover-register.md` (all PENDING today).
 - **S2 = the MDPS candle contract** via `lookup_mdps_contract(mdps_data_type_key)`, never the raw-tick contract (OHLC
   nullability is per-type — deriv/empty-window nullable). Sampled in-session (Tier-1); 100% only on a Tier-2 SPOT VM (§
   7), but Tier-2 candle validation is premature until the candle backfill runs.
@@ -544,7 +560,7 @@ locations to `codex/02-data/non-canonical-path-inventory.md`. The four-surface p
 
 **Extending to a new LAYER** (candles was the first): add its row to the SSOT table (§ intro) and a
 `reference-<layer>.md`, and add a codex SSOT that names the layer's four surfaces + shard atom + its canonical authority
-(for candles the ratified Option-A template, because the raw-tick oracle does not cover the namespace). A layer with a
+(for candles the ratified LOCKED template, because the raw-tick oracle does not cover the namespace). A layer with a
 different atom (candles add `timeframe`) is an **SSOT change FIRST** —
 `codex/02-data/cross-asset-canonical-target-ssot.md` is raw-tick-only; the candle atom's SSOT is
 `codex/02-data/mdps-candle-canonical-reconciliation.md`. Do not special-case a layer inside the raw-tick loop.

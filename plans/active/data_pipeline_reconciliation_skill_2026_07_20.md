@@ -554,13 +554,17 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       `codex/02-data/four-surface-reconciliation-procedure.md`** (dated 2026-07-21, pointer + 4 key deltas: `timeframe`
       atom, oracle-exempt, S4-unavailable, object-driven; migration_pending). Pointer only — no duplication. —
       `unified-trading-pm` (this batch).
-- [ ] 38. [DATA] P0. **Add taxonomy AE-6 + candle rows to the cutover register** — add the
-      `AE-6 — MDPS candle-layer     Option-A migration window` exception to
-      `codex/02-data/reconciliation-finding-taxonomy.md` §4 (suppress missing-`instrument_type=` / source-not-aggregated
-      `data_type` / split-brain `pipeline_mode` as `migration_pending` during the per-AG window), and add per-AG
+- [ ] 38. [DATA] P0. **Add taxonomy AE-6 + candle rows to the cutover register** (wording corrected 2026-07-21 evening
+      to match the CORRECTED RULING in `candle_feature_canonical_path_divergence_2026_07_20.md` — the earlier "Option-A"
+      framing this todo was drafted against is SUPERSEDED: `data_type` does NOT migrate on the path, it stays SOURCE;
+      only the MANIFEST re-aligns to source) — add the `AE-6 — MDPS candle-layer migration window` exception to
+      `codex/02-data/reconciliation-finding-taxonomy.md` §4 (suppress missing-`instrument_type=` / split-brain
+      `pipeline_mode` as `migration_pending` on the PATH during the per-AG window, and the source-vs-aggregated
+      `data_type` desync as `migration_pending` on the MANIFEST side only — never a path finding), and add per-AG
       `processed_candles/` effective-from candle rows (all PENDING, sequenced defi → prediction → cefi → tradfi) to
-      `codex/02-data/canonical-cutover-register.md`. **Concurrency note:** the cutover register is owned by another
-      agent right now — coordinate / hand this row-add to that owner rather than editing it in parallel.
+      `codex/02-data/canonical-cutover-register.md`. **Concurrency note (still blocking):** the cutover register is
+      owned by another agent right now — coordinate / hand this row-add to that owner rather than editing it in
+      parallel; NOT executed this session for that reason.
 - [ ] 39. [CODE] P1. **Extend the UAC machine oracle to `processed_candles/`** — `canonical_path_violations()` hardcodes
       `RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` (`unified-api-contracts/.../canonical/partition_paths.py:67`)
       and false-flags every candle path `structural`. Add the candle namespace + template so the oracle validates
