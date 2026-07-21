@@ -159,3 +159,34 @@ dex_swaps/dex_pool_state Solana paths) still have a residual coarse `file_name=f
 their `write_defi_rows` per-instrument path (the compound_v3 file dated 2026-07-20 proves it). Route those residual
 paths through `write_defi_rows` (or drop the `_{ts}`) so no new glued files appear when capture resumes. DeFi capture is
 currently STOPPED, so no new ones are being written now.
+
+## FINAL STATE 2026-07-21 (after 3 idempotent apply passes) — 98.7% DONE, precise remainder
+
+- **1,733 / 1,755 glued coarse files RE-SHARDED + retired to `_migrated_`** — their per-instrument twins are present
+  (mostly already created by R3 from sibling coarse files: measured present≈305k twins, ~8.4k genuinely new written for
+  the Solana lending/lst R3's matcher had missed). Verified end-to-end on the oracle canary.
+- **22 `dex_pool_state` files remain LIVE at the legacy `category=defi` path** (my harness now probes BOTH
+  `asset_group=`/`category=`). Their twins are present EXCEPT ~28 instruments whose `leaf_for_instrument_id` symbol
+  raises on `blob.exists()` (a bad GCS object name from a problematic dex_pool symbol, OR a persistent GCS 4xx/5xx —
+  consistent 28 across 3 passes, so NOT transient). The proof-gate CORRECTLY refuses to retire these 22 (can't confirm
+  those 28 twins exist → won't drop the coarse original).
+
+**RESUME (precise):**
+
+1. **Diagnose the 28** — scoped run over the 77 `dex_pool_state` glued rows (filter first, it's slow full-scan): for
+   each LIVE file, list its `instrument_id`s, compute `leaf_for_instrument_id`, and print the leaf + the exact
+   exception. Likely a symbol → invalid-leaf case; fix the sanitiser (or route those 28 to `needs_attribution`), write
+   their twins, THEN the 22 retire on a re-run of the harness `--apply`.
+2. **Rebuild the manifest** (VM-scale, ~hrs — run on a `canonical-migration` VM, not in-session):
+   `rebuild_defi_manifest --bucket market-data-tick-defi-prd-central-element-323112 --start-date 2020-01-01 --end-date 2026-12-31`
+   (reemit OFF, the mtds@05ad49f7 default). `_migrated_` originals skipped by Defect-A.
+3. **Verify 0 glued ids** in the fresh `_index` (`instrument_id ~ (_\d{8}_\d{6}|_\d{10})$` + captured → 0; expect ~22
+   until step 1 completes the last files).
+4. **Delete the `_migrated_` markers** (operator-authorized; proof-gated: only where the per-instrument twins exist) —
+   the retired coarse originals are dead weight once the manifest is rebuilt.
+5. **`category=defi` → `asset_group=defi` PATH canonicalization** — the 22 (and any other `category=` legacy objects)
+   are at the non-canonical `category=` path. That path migration is SEPARATE from this filename fix (out of scope here)
+   — track it under the broader canonicalization.
+
+Harness (durable, resumable, idempotent):
+`market-tick-data-service/scripts/one_offs/reshard_glued_defi_ids_2026_07_21.py`.
