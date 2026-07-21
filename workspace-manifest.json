@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 4,
-        "large_file_count": 0,
+        "coverage_pct": 74.7,
         "qg_red_reason": null,
-        "coverage_pct": 74.68
+        "large_file_count": 0,
+        "warn_file_count": 4
       }
     },
     "deployment-api": {
@@ -338,13 +338,13 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "coverage_pct": 82.32,
+        "qg_red_reason": "pytest",
         "warn_file_count": 16,
-        "large_file_count": 4,
-        "qg_red_reason": null,
-        "coverage_pct": 82.32
+        "large_file_count": 4
       }
     },
     "deployment-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 7,
-        "warn_file_count": 8,
+        "coverage_pct": 90.86,
         "qg_red_reason": null,
-        "coverage_pct": 90.84
+        "large_file_count": 7,
+        "warn_file_count": 9
       }
     },
     "market-data-processing-service": {
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 9,
-        "large_file_count": 2,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "coverage_pct": 88.55
+        "warn_file_count": 9,
+        "large_file_count": 2
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "warn_file_count": 38,
+        "coverage_pct": 83.15,
         "qg_red_reason": null,
-        "coverage_pct": 83.16
+        "large_file_count": 0,
+        "warn_file_count": 38
       }
     },
     "ml-service": {
@@ -1212,10 +1212,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 96.3,
         "qg_red_reason": null,
-        "large_file_count": 26,
-        "warn_file_count": 31
+        "large_file_count": 27,
+        "warn_file_count": 30
       }
     },
     "unified-trading-library": {
@@ -1241,7 +1241,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1262,12 +1262,12 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 21,
-        "large_file_count": 6,
+        "coverage_pct": 88.48,
         "qg_red_reason": "pytest",
-        "coverage_pct": 87.89
+        "large_file_count": 6,
+        "warn_file_count": 21
       }
     },
     "unified-trading-pm": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "large_file_count": 0,
-        "warn_file_count": 0,
+        "coverage_pct": 73.54,
         "qg_red_reason": "ruff",
-        "coverage_pct": 75.82
+        "large_file_count": 0,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
