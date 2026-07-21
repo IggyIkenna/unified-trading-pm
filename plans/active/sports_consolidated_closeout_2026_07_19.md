@@ -42,7 +42,7 @@ estimate_calibrated_ai_days: 9.6
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: sports_master_closeout_2026_07_21.md
 depends_on:
 source:
 assigned_role: data_engineering
@@ -528,27 +528,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                                                                                                                  | -------------------------- | ---------------------- |
-                                                                                                                  | `PREMIER_LEAGUE`           | `EPL`                  |
-                                                                                                                  | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                                                                                                                  | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                                                                                                                  | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                                                                                                                  | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                                                                                                      | -------------------------- | ---------------------- |
+                                                                                                                      | `PREMIER_LEAGUE`           | `EPL`                  |
+                                                                                                                      | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                                                                                                      | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                                                                                                      | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                                                                                                      | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                                                                                                                  Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                                                                                                                  written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                                                                                                                  attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                                                                                                                  `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                                                                                                                  `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                                                                                                      Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                                                                                                      written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                                                                                                      attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                                                                                                      `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                                                                                                      `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                                                                                                                  **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                                                                                                                  DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                                                                                                                  they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                                                                                                                  namespace is reconciled.
+                                                                                                                      **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                                                                                                      DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                                                                                                      they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                                                                                                      namespace is reconciled.
 
-                                                                                                                  NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                                                                                                                  registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                                                                                                                  §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                                                                                                      NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                                                                                                      registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                                                                                                      §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [x] [CODE] P0. ✅ **WRITE PATH CANONICALISED — operator chose canonicalise-at-write (2026-07-20); shipped
       market-tick-data-service@ad4f1872.** `_canonical_league_id()` resolves via the NUMERIC `api_football_id`; all 30
