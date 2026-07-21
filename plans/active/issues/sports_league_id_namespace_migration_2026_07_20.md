@@ -480,3 +480,42 @@ handles single-league, mixed, and unambiguous objects; the content-column rewrit
 Independently reconfirmed the two NON-collisions: `SERIE_B` = only `Serie B - Italy` (120/120), `CHAMPIONSHIP` = only
 `Championship` (120/120) — single-league in the data, as the workflow found. Evidence: `scratchpad/sportkey_probe.py`,
 `scratchpad/mixed_probe.py` (2026-07-21).
+
+## Scope refinement 2026-07-21 — 267K objects, 3 vocabularies, and the true classification shape
+
+A controlled walk of the whole `league_id=` surface (read-only) measured the real scope, larger than the workflow's
+raw-only figure:
+
+- **267,614 objects** carry a `league_id=` segment (the workflow's 139,155 counted only `pipeline_mode=batch_odds_api`;
+  the rest are the MDPS `processed/` odds_horizon_bucket objects, which ALSO carry `league_id=` and must migrate too).
+- **76 distinct raw league_id values across THREE coexisting naming schemes**: api-football display names (`BUNDESLIGA`,
+  `PREMIER_LEAGUE`), `SOCCER_`-prefixed machine keys (`SOCCER_SPAIN_LA_LIGA`), and `soccer_`-lowercase (`soccer_epl`).
+  The `sport_key` column likewise appears as both a display label (`Denmark Superliga`) and a machine slug
+  (`soccer_epl`).
+- **51 distinct sport_key values.**
+
+**The classification shape (this is what the executor implements):**
+
+1. **The 6 collision raw names** (`BUNDESLIGA` / `SERIE_A` / `SERIE_B` / `CHAMPIONSHIP` / `PRIMERA_DIVISION` /
+   `SUPER_LEAGUE`) — classify PER ROW by `sport_key` (10-entry map, all their sport_keys resolved; handles the 21-37%
+   row-mixed objects via split-and-rewrite).
+2. **The other ~70 raw league_id values are UNAMBIGUOUS** — one raw name → one canonical, so a raw-name map suffices and
+   `sport_key` is not needed. The "22 unresolved sport_keys" from the registry-derived pass are ALL of this kind
+   (`'EPL'`→`EPL`, `'La Liga - Spain'`→`LA_LIGA`, `'Bundesliga 2 - Germany'`→`BUNDESLIGA_2`,
+   `'Premiership - Scotland'`→`SCOTTISH_PREMIERSHIP`, …) — unresolved only because the registry's `odds_api_name` uses a
+   different display string than the parquet, NOT because they are ambiguous.
+
+Verified map artifact (executor input): `scratchpad/sportkey_map.json` (29 auto-resolved + 10 collision entries; 22
+unambiguous residuals to add to the raw-name map, each with a single clear target).
+
+## Where the IRREVERSIBLE line is (execution discipline, even with operator migrate+delete permission)
+
+The operator authorised migrate+delete. The reversible steps (build the verified maps, COPY to canonical targets +
+content-rewrite, content-verify, snapshot, atomic manifest-swap) proceed autonomously. The **irreversible delete of the
+old objects** runs ONLY when BOTH hold: (a) the executor is proven in a full DRY-RUN that emits a per-shard decision
+manifest with ZERO undecidable rows, and (b) all sports VMs are drained (the 4 features re-run VMs still read the tick
+bucket — relocating mid-run corrupts their odds features). Both are execution-safety gates, not permission gates; the VM
+drain is hours away (watchdog `bu8zw4ei2` fires on completion). This is the correct order regardless of permission: copy
+→ verify → swap → (drained + dry-run-proven) → delete.
+
+Evidence: `scratchpad/registry_map.py`, `scratchpad/sportkey_map.json`, `scratchpad/full_map.py` (2026-07-21).
