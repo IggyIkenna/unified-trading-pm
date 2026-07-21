@@ -12,13 +12,20 @@ stage: [meta]
 repos: [deployment-ui, e2e-testing, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer]
 tags: [ui, quality-gates, validation, frontend]
-related: [integration-testing-layers.md, ../02-data/vcr-cassette-ownership.md, ../14-customer-journeys/testing/README.md]
+related:
+  [integration-testing-layers.md, ../02-data/vcr-cassette-ownership.md, ../14-customer-journeys/testing/README.md]
 created: 2026-04-24
 authoritative_for: [8-layer UI testing strategy]
-referenced_by: [codex/06-coding-standards/test-coverage-data-status.md, codex/06-coding-standards/testing.md, codex/06-coding-standards/ui-branding.md, codex/06-coding-standards/ui-service-separation.md]
+referenced_by:
+  [
+    codex/06-coding-standards/test-coverage-data-status.md,
+    codex/06-coding-standards/testing.md,
+    codex/06-coding-standards/ui-branding.md,
+    codex/06-coding-standards/ui-service-separation.md,
+  ]
 owner:
-last_reviewed:
-code_refs:
+last_reviewed: 2026-07-21
+code_refs: [deployment-ui/tests/smoke/alerts-page.spec.ts]
 ---
 
 # UI Testing Layers
@@ -710,6 +717,12 @@ UI repo owns all layers. The surface split determines which layers apply most he
 | Deployment UI      | ✓   | ✓   | ✓    | ✓   | ✓   | —   | —   | —   |
 
 - Marketing has no L0 because it consumes no backend APIs today (it's a questionnaire + static pages + Resend).
+- **Deployment UI is a separate React Router + Vite app (`deployment-ui`), not the Next.js `app/**` this doc's L2/L3a
+  examples above are written against** — its own `tests/smoke/*.spec.ts` + `playwright.config.ts` + a frontend-side
+  `mock-api.ts` (no route-manifest.ts, no `NEXT_PUBLIC_MOCK_API`). `deployment-ui/tests/smoke/alerts-page.spec.ts` is a
+  canonical example of the pattern: URL-backed filter/sort/date-range state asserted via `page.goto` + `getByTestId`
+  against the Vite dev server, mock data fixed in `mock-api.ts` rather than cassettes — see
+  [ci-alerting.md](../04-architecture/ci-alerting.md) § "The `/alerts` page UI contract" for the feature-level detail.
 - L3a = playbook/persona flows; applies to user-journey surfaces (marketing, auth, onboarding, dashboard shell).
 - L3b = trader strategy workflows; applies only to the trading surface.
 - L4 visual is scoped to marketing + dashboard shell (where layout regressions are most visible to external users).

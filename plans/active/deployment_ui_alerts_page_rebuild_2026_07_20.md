@@ -146,19 +146,64 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       only when `alert_from` predates the floor, the widget's own atomic clear, page-level clear-filters also clears the
       date range) — all 16 pre-existing assertions stay green (20/20 passed). `quality-gates.sh` green (sentinel
       e6234d16).
-- [ ] [UI] P1. **Drill-down links** — per-row deep-links: `deployment_target` → `/deployments/:name` (preserve the
+- [x] ✅ [UI] P1. **Drill-down links** — per-row deep-links: `deployment_target` → `/deployments/:name` (preserve the
       pinned href shape), `run_url` → the external run, log stream → `?logs=<target>`, runbook link where the normalised
-      row carries one. A row with an `alert_class`/source that has a detail view links to it.
-- [ ] [UI] P2. **Layout / "proper view"** — restructure the two-card layout into a usable table-first view per the
+      row carries one. A row with an `alert_class`/source that has a detail view links to it. — deployment-ui@fe767f19.
+      The `/deployments/:name` link and the external `run_url` link were already shipped (parity #4 + the original
+      page). New: a "Stream logs" button on any row carrying `deployment_target`, calling the page's own `setParam` to
+      set the SAME `?logs=<target>` sub-param `AlertsLogsTab.tsx` already owns and reads (its own header comment
+      described this exact deep-link as the intended contract — `AlertsContent` is always rendered inside
+      `AlertsLogsTab`, so both components observe the one shared `useSearchParams()` location; setting `?logs=` here
+      correctly swaps `cockpit-logs-empty` for the live `StreamingLogsPanel`). Runbook link: grepped the full
+      `AlertEntryDict` (backend TypedDict), `RepoCiAlertEntry` (frontend type), and `mockRepoCiAlerts()` — no
+      `runbook`/`runbook_url` field exists in any of the three, so no row can ever carry one today; not implemented (a
+      speculative field nothing populates), left for whichever future ingestion todo adds it. 1 new `pw:L2` case in
+      `tests/smoke/alerts-page.spec.ts` (click → `?logs=` set → empty-state placeholder replaced) — all 20 pre-existing
+      assertions stay green (21/21 passed). `quality-gates.sh` green (sentinel 32a14ebb).
+- [x] ✅ [UI] P2. **Layout / "proper view"** — restructure the two-card layout into a usable table-first view per the
       operator's "not proper right now" complaint; keep the streams summary but make the timeline the primary,
-      filterable/sortable surface. Preserve every `data-testid` the regression spec depends on.
-- [ ] [REVIEW] P1. **Regression + new specs** — extend `tests/smoke/alerts-page.spec.ts` (or a sibling) to cover the new
-      filter/sort/date-range/deep-link behaviour while keeping every existing assertion in that spec green. `pw:L2 ✓`
-      with the spec cited. No tick without it.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`).
-- [ ] [REVIEW] P2. Post-phase codex audit — document the rebuilt alerts-page contract (diagnostic surface, the
+      filterable/sortable surface. Preserve every `data-testid` the regression spec depends on. —
+      deployment-ui@f47d0ac1. Filed BLK-de39d214 (todo was subjective operator language with no concrete spec) covering
+      two independent calls: (1) how to visually demote Streams vs Timeline, (2) whether the Timeline markup should
+      become a real `<table>`. Main answered: (1) Streams stays a visible compact single-line-per-stream summary strip
+      (dropped Card/CardHeader/CardContent chrome, `text-xs`, tighter padding — same DOM position above Timeline, zero
+      reorder) — option A of 3, chosen because C ("no change") ignores the operator's stated dissatisfaction and B
+      (collapsed `<details>`) violates "streams STAYS a summary" by hiding it. (2) Do NOT convert Timeline rows to a
+      `<table>` — "filterable/sortable" is behavior (state + handlers), not markup, and a flex-div→table rewrite is the
+      highest-risk change to the preserve-every-testid constraint for zero required benefit; added `role="table"`/
+      `role="row"` to the existing flex divs instead (semantic a11y, zero testid churn). A first attempt at the
+      `<table>` conversion was built, verified (21/21 pw:L2 green), then fully reverted per this answer before shipping
+      — the shipped commit only contains the Streams compaction + ARIA roles. New `pw:L2` case in
+      `tests/smoke/alerts-page.spec.ts` pins the visual-hierarchy contract main required (Streams summary label + DOM
+      order before Timeline; Timeline keeps its CardTitle; every pre-existing testid resolves) — all 21 pre-existing
+      assertions stay green (22/22 passed). `quality-gates.sh` green (sentinel fe767f19).
+- [x] ✅ [REVIEW] P1. **Regression + new specs** — extend `tests/smoke/alerts-page.spec.ts` (or a sibling) to cover the
+      new filter/sort/date-range/deep-link behaviour while keeping every existing assertion in that spec green.
+      `pw:L2     ✓` with the spec cited. No tick without it. — deployment-ui@4aa865c4. Each dimension already got
+      isolated coverage as its own todo shipped (filter bar +7 cases, date-range +4, drill-down +1, layout +1 — 13 cases
+      across 4 prior commits, all still green); this todo's own contribution is the one deliberately COMBINED case that
+      was genuinely missing — kind-filter + date-range + column-sort all active at once, proving the independent
+      `useMemo` layers (filter → sort) compose correctly instead of one clobbering another. Note on
+      `assigned_role:     review`: `agents/review.md` describes a persistent, non-committing UAT daemon
+      (`does_not: Edit / commit code`) — incompatible with this todo's own text (a concrete "extend the spec file"
+      change) and its `done_definition: "Checkbox flipped in plan + code shipped"`; treated the `[REVIEW]` prefix as the
+      per-task tag convention (routes-the-todo, not "become the daemon") and shipped it as a normal worker task. Full
+      spec now 23/23 green. `quality-gates.sh` green (sentinel f47d0ac1).
+- [x] ✅ [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'`) + flip todos same turn (`docs(plans):`). —
+      already cumulatively satisfied: every one of the 7 preceding todos was shipped via `quality-gates.sh` →
+      `quickmerge.sh --agent --files '<paths>'` → same-turn `docs(plans):` checkbox flip + push, individually
+      (deployment-ui@17fbb72/c631ef5/e6234d16/89cf1f87/fe767f19/f47d0ac1/4aa865c4). No new commit — nothing outstanding
+      to ship at this checkpoint.
+- [x] ✅ [REVIEW] P2. Post-phase codex audit — document the rebuilt alerts-page contract (diagnostic surface, the
       filter/sort/date-range dimensions, the shared-primitive reuse, the drill-down link map) in
-      `codex/06-coding-standards/ui-testing-layers.md` cross-ref + `codex/04-architecture/ci-alerting.md`.
+      `codex/06-coding-standards/ui-testing-layers.md` cross-ref + `codex/04-architecture/ci-alerting.md`. —
+      unified-trading-pm@c23a8c204. `ci-alerting.md` gained a new "The `/alerts` page UI contract" subsection (filter
+      dimensions, sort, date-range + the `data.days`-derived honesty-banner pattern, the drill-down link map incl. the
+      no-runbook-field gap, shared-primitive reuse vs the local `AlertDateRangeFilter`/sort-key-union plug-ins, and the
+      Layout decision citing BLK-de39d214) + `code_refs` for `Alerts.tsx`/`alerts-page.spec.ts`. `ui-testing-layers.md`
+      gained a short cross-ref note under "Testing Ownership by Surface" clarifying deployment-ui is a separate
+      React-Router+Vite app (not the Next.js `app/**` its L2/L3a examples are written against) and pointing at
+      `alerts-page.spec.ts` as the canonical pattern example.
 
 ## Success criteria
 

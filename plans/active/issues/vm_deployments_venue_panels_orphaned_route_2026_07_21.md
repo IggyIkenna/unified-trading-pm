@@ -7,7 +7,7 @@ summary: >-
   VenueCredentialsPanel/VenueDateRangePanel/VenueRelaunchEstimatePanel/VenueTardisWindowsPanel render — the /fleet
   cockpit embed only uses compact mode. The panels still work (route stays live), but they have no permanent,
   discoverable, canonical UI home. This is a P3 design/relocation follow-up, not a bug.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -19,7 +19,7 @@ created: "2026-07-21"
 parent_epic: observability_master
 priority: P3
 assigned_vm: planning
-resolved_by:
+resolved_by: [slot-2]
 locked_by:
 source: [deployment_ui_fleet_tab_consolidation_2026_07_21.md]
 execution_scope: orchestrator-agent
@@ -97,13 +97,31 @@ unilaterally mid-implementation of an unrelated consolidation task.
       touched files, unit tests (`NavMenu.test.tsx` + `TopNavBar.test.tsx`, 19 tests) pass. Playwright: could not run
       in-session (same host-contention/missing-libatk blocker already documented in this session's other UI tasks) —
       specs are written/retargeted, not fabricated-green.
-- [ ] [UI] P3. Relocate `VmDeploymentsContent`'s 2 remaining features (discovered above, not part of the original scope)
-      before `/vm-deployments` + `NavMenu.tsx`'s `legacy: true` group can be deleted for real: the fleet-wide "Reconcile
-      Registry" action (`reconcileVmDeployments()`) and the raw active+archive VM table. Natural candidates: the
-      reconcile action as a global button on `/deployments` (`DeploymentsPage`) or `/fleet`; the active+archive table
-      may be fully redundant with `/deployments`' own unified live/batch/paper listing (verify before assuming — don't
-      blind-duplicate). Once both have a real home, delete `VmDeployments.tsx` (its `.tsx` file, not
+- [x] ✅ [UI] P3. Relocate `VmDeploymentsContent`'s 2 remaining features (discovered above, not part of the original
+      scope) before `/vm-deployments` + `NavMenu.tsx`'s `legacy: true` group can be deleted for real: the fleet-wide
+      "Reconcile Registry" action (`reconcileVmDeployments()`) and the raw active+archive VM table. Natural candidates:
+      the reconcile action as a global button on `/deployments` (`DeploymentsPage`) or `/fleet`; the active+archive
+      table may be fully redundant with `/deployments`' own unified live/batch/paper listing (verify before assuming —
+      don't blind-duplicate). Once both have a real home, delete `VmDeployments.tsx` (its `.tsx` file, not
       `VmDeploymentDetails.tsx` — the `:deploymentId` drill-down stays, linked from `DeploymentDetail.tsx`'s History
       card), the `/vm-deployments` route in `App.tsx`, the `legacy: true` group in `NavMenu.tsx`, and retire
       `tests/smoke/vm_deployments_archive_history.spec.ts` + `vm_deployments_reconcile.spec.ts`'s `/vm-deployments`
-      navigation targets. (repo: deployment-ui)
+      navigation targets. (repo: deployment-ui) — `deployment-ui@32a14ebbd`. **Verified the redundancy claim rather than
+      assuming it**: `DeploymentItem` (the type `/deployments` already renders, with its own `VM` kind + an "all" status
+      toggle exposing historical/completed rows) carries `health_status`, `captured_progress`, `uptime_hours`,
+      `rows_error`, `machine_type`, `zone`, `cost_*`, `started_at`/`completed_at`/`last_heartbeat_at` — a strict
+      superset of the raw table's columns — so the active+archive table was DELETED, not relocated. "Reconcile Registry"
+      (a standalone action, not a data view) moved to `/deployments`' header, wired to the unchanged
+      `POST /api/vm-deployments/reconcile` endpoint. Trimmed `VmDeployments.tsx` to just its 5 shared formatting
+      utilities (`DeploymentDetail`'s History card still imports them) rather than an import-path refactor with no
+      functional payoff. Removed the `/vm-deployments` route + `NavMenu.tsx`'s now-empty `Legacy` group;
+      `/vm-deployments/:deploymentId` stays live. Found + fixed 2 additional broken back-links in
+      `VmDeploymentDetails.tsx` (still pointed at the deleted base route — orphan-route audit passed after the fix,
+      confirming no other dangling references) and a stale `Cockpit.tsx` "Consoles & tools" quick-link, neither named in
+      the todo's own scope. Updated/retargeted 8 test files total (`NavMenu.test.tsx`'s "legacy quarantine" now pins the
+      group's ABSENCE; `vm_deployments_reconcile.spec.ts` fully retargeted to `/deployments`;
+      `vm_deployments_archive_history.spec.ts` + `nav_and_header.spec.ts` drop their now-broken standalone-page checks).
+      `quality-gates.sh` green end-to-end (99 tests). **pw:L2 NOT claimed** — Playwright could not run in-session (same
+      host-contention/missing-libatk blocker documented throughout this session's UI work); specs are
+      written/retargeted, not fabricated-green — someone with UI access should confirm before considering this task's
+      regression coverage fully proven.
