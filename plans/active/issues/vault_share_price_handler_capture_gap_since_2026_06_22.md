@@ -140,5 +140,17 @@ bug, so it does not violate the data-pipeline-correctness hard rule the same way
 it is a small, low-risk follow-up (single ERC-4626 `convertToAssets` read per vault per missing day, well within RPC
 rate limits) that can be scheduled separately.
 
-**Status: resolved** (capture resumed and verified live; historical backfill tracked as separate, deferred, non-blocking
-follow-up work). Full ship record: `plans/active/issues/five_broken_defi_capture_paths_shipped_2026_07_22.md`.
+**Separately -- the pre-existing bad `day=2026-06-21` GTUSDCP data point is now corrected (2026-07-22, operator-
+approved prod-bucket mutation).** This was a genuinely different defect from the scheduling gap above: `day=2026-06-21`
+already had a GTUSDCP object, but it held a garbage `share_price~=1.06e12` from the wrong-seed-address bug (see the
+`GTUSDCP` entry's 2026-07-22 fix comment in `vault_share_price_handler.py`). Re-ran
+`market-tick-data-service --operation collect-vault-share-price --mode batch --start-date 2026-06-21 --end-date 2026-06-21 --force`
+against real prod infra with the corrected address; content-verified by reading the object back directly (not just the
+log): `gs://market-data-tick-defi-prd-central-element-323112/.../venue=MORPHO_VAULTS/.../ GTUSDCP.parquet` now holds
+`vault_address=0xdd0f28e19C1780eb6396170735D45153D261490d`, `share_price=1.120575`, `block_number=25365826` -- sane, in
+line with the same-day steakUSDC price (1.1305). The other 4 vaults' `day=2026-06-21` shards were harmlessly rewritten
+with identical values in the same run (idempotent re-derive, not a behavior change for them).
+
+**Status: resolved** (capture resumed and verified live; the one bad historical data point is corrected and content-
+verified; the ~30-day gap backfill remains separate, deferred, non-blocking follow-up work). Full ship record:
+`plans/active/issues/five_broken_defi_capture_paths_shipped_2026_07_22.md`.
