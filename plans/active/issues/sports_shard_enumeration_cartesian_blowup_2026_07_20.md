@@ -354,7 +354,14 @@ and currently invisible when they gap.
 `venue` set ⊆ scope; then a dry-run over one real prod day and confirm zero rows are emitted for
 `BETFAIR`/`ODDS_API`/`ONEXBET`.
 
-### 1.3 Normalize the capture-dedup key so captures actually suppress sentinels
+### 1.3 Normalize the capture-dedup key so captures actually suppress sentinels — ✅ SHIPPED 2026-07-22
+
+**✅ SHIPPED — `unified-api-contracts@719e8ea3` + `market-tick-data-service@f37b140f`.** Added
+`is_bookmaker_league_covered_exact(bookmaker, league_id)` to `sports_bookmaker_league_coverage.py` (no base-key suffix
+folding, unlike `is_bookmaker_league_covered`) + export; MTDS's `_emit_sports_v2_sentinels` now uses it instead of the
+folding version. New test `unified-api-contracts/tests/unit/test_sports_bookmaker_league_coverage_exact.py` (6 tests)
+proves the two functions genuinely diverge on real fixture data. No MTDS dependency-version bump needed (editable local
+path pin). Original spec below, retained for context.
 
 **File:** `sentinels.py:301-304` (`if (bm, _canon_lid, _fid_str) in captured_sports_shards: continue`) and the parallel
 league-pair check at `:344-347`. **Change:** after 1.2 the bare/suffixed grain mismatch is mostly gone, but the dedup
@@ -381,7 +388,14 @@ affects only the **v1 season-calendar fallback** path — the v2 path (dominant)
 assert every `empty_confirmed` row either carries real `FetchEvidence` or a structural reason (`EXPECTED_PAUSED_LEAGUE`
 / `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE`).
 
-### 1.5 Add a fan-out invariant guard in the writer
+### 1.5 Add a fan-out invariant guard in the writer — ✅ SHIPPED 2026-07-22
+
+**✅ SHIPPED — `market-tick-data-service@f37b140f`** (same commit as 1.3). Added the assert in
+`_emit_sports_tier2_sentinels` before the v1/v2 dispatch:
+`set(bookmakers_scope) == set(expected_odds_api_venue_keys())`, raises `ValueError` on drift. Tests:
+`test_emit_sports_tier2_sentinels_raises_on_scope_drift` (monkeypatched stray key),
+`test_emit_sports_tier2_sentinels_no_raise_when_scope_matches_by_construction`. Original spec below, retained for
+context.
 
 **File:** `sentinels.py:200-230` (`_emit_sports_tier2_sentinels`, before the v1/v2 dispatch). **Change:** assert
 `set(bookmakers_scope) == set(expected_odds_api_venue_keys())` and raise a loud `ValueError` on drift. This is the
@@ -398,6 +412,22 @@ data. **Action:** trace with `rg -n 'bookmaker_key' market_tick_data_service/` a
 check on those rows. If a second path exists, route it through `REQUESTED_ODDS_API_BOOKMAKERS`. If the data predates the
 exclusion, quarantine the 1,226 BETWAY rows before they reach features. **Verification:** either a code fix + test, or a
 dated finding appended to the issue doc in step 4.4.
+
+**✅ INVESTIGATED (2026-07-22) — legacy data, no active bypass, no quarantine needed.** GCS-verified
+(`market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`, read-only): all 3,667 rows for
+these 4 venues are `capture_status=captured`, `source` ∈ {`odds_api` (~83%), `api_football` (~17%)}, `service_name` ∈
+{`migrate-sports-canonical`, `market-tick-data-service`}, `written_at` clustering at 2026-05-05 (bulk v9 migration) and
+2026-07-13/16 (the same manifest-rebuild restamp already documented for the ODDS/odds case-duplicates) — **not** any
+recent/live timestamp. Git-history search (`git log --all -S`) in both `market-tick-data-service` and
+`execution-service` found zero trace of BETMGM anywhere, and confirmed BETWAY + a bare "unibet" scraper existed as one
+of **14 real Playwright HTML odds-scrapers** in `execution-service/sports_execution/adapters/scrapers/` (dynamically
+dispatched from MTDS's `market_interface/sports/registry.py::adapter_for_bookmaker()` — a genuine, legitimate second
+ingest path, entirely independent of `odds_api_adapter.py`'s `bookmakers=` list), removed from `_ADAPTER_PATHS`
+2026-05-12 and source-deleted 2026-07-08 (`execution-service@29a888a8d`). The `betway` exclusion in
+`odds_api_adapter.py:103-107` (dated 2026-03-28) governs only the Odds-API aggregator's own request and post-dates these
+rows' original ingestion. **Conclusion: the rows are legacy, honestly captured under an earlier/different bookmaker
+universe (the retired scraper path + `api_football`'s independent vocabulary), carried forward by the v9 canonical
+migration — not a currently-active bypass.** No quarantine needed; no code fix required.
 
 ---
 
@@ -421,7 +451,13 @@ to uppercase `ODDS` is in a migration/rebuild script, none in the live writer.
 `scripts/normalize_sports_mtds_data_type_case_2026_06_25.py:44-51` until the direction is re-confirmed — both currently
 point UPPER→lower, which K0 says is superseded, which GCS says is right.
 
-### 2.2 Add a write-time closed-set guard on `data_type` (do this regardless of 2.1's outcome)
+### 2.2 Add a write-time closed-set guard on `data_type` (do this regardless of 2.1's outcome) — ✅ SHIPPED 2026-07-22
+
+**✅ SHIPPED — `unified-api-contracts@50301e5f`.** New `tests/unit/test_sports_data_type_vocabulary.py`, skip-gated with
+a `TODO(K0-b)` reason (hoisted to a module-level `_SKIP_REASON_K0B` constant to satisfy the QG rule that
+`pytest.mark.skip` needs its `reason=` on the same physical line as the decorator). Now that 2.1/4.3 has decided
+lowercase is canonical, unskipping this + fixing the actual case-variant members is the next step (folds into 3.4).
+Original spec below, retained for context.
 
 **File:** `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`,
 `DATA_TYPES_BY_ASSET_GROUP["sports"]` (~`:211-245`) — currently registers **both** `"odds"` and `"ODDS"`. **Change:** do
@@ -430,7 +466,19 @@ pairs, gated behind a `# TODO(K0-b)` skip until the decision lands. Then flip it
 resolution. **Test:** `unified-api-contracts/tests/unit/test_sports_data_type_vocabulary.py` —
 `assert len({d.lower() for d in DATA_TYPES_BY_ASSET_GROUP["sports"]}) == len(DATA_TYPES_BY_ASSET_GROUP["sports"])`.
 
-### 2.3 Close the `(sports, odds)` hole in the instrument_type→data_type matrix
+### 2.3 Close the `(sports, odds)` hole in the instrument_type→data_type matrix — ✅ SHIPPED 2026-07-22
+
+**✅ SHIPPED — `unified-api-contracts@9b50a667`.** Added `("sports", "odds"): frozenset({"trades"})` to
+`VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` (landed at line 855; the matrix's sports block had shifted a few lines
+since the doc was written, same content/order). Verified
+`CONTRACT_REGISTRY[("sports","odds","trades")] = SPORTS_ODDS_TRADES` unchanged. 2 tests added to
+`tests/internal/unit/test_sports_prediction_contracts.py`, scoped to the sports odds-family instrument types this matrix
+actually declares (the doc's literal "every CONTRACT_REGISTRY key" test spec was measured to produce 424+207 false
+positives across unrelated ml_training/reference/derived contracts this matrix was never meant to cover — narrowed
+deliberately, see the shipped commit for detail). Did **not** touch the sibling `UNCERTAIN`
+`("sports","fixture"/"exchange_odds"/"fixed_odds"/"prop")` entries (no new evidence) or the other 3 `CONTRACT_REGISTRY`
+`("sports","odds",...)` entries (naming mismatch with `DATA_TYPES_BY_ASSET_GROUP`, separate issue). Original spec below,
+retained for context.
 
 **File:** `market_data_categories.py:832-843` — the matrix has **no** `("sports","odds")` entry, yet prod writes
 1,806,527 rows under exactly that pair. The neighbours (`fixture`, `exchange_odds`, `fixed_odds`, `prop`) are
@@ -441,7 +489,13 @@ entries you can now confirm. **Test:** assert every `(asset_group, instrument_ty
 has a matrix entry containing that contract's `data_type`. **Verification:** UAC QG green; re-run
 `unified-api-contracts/tests/unit/test_coverage_exclusions.py`.
 
-### 2.4 Fix the codex↔UAC↔prod contradiction on `instrument_type`
+### 2.4 Fix the codex↔UAC↔prod contradiction on `instrument_type` — ✅ SHIPPED 2026-07-22
+
+**✅ SHIPPED — `unified-trading-pm@2dbb62019`** (same commit as the K0-DECISION(b) reversal). Overview and every worked
+example's `instrument_type` changed from `sports_market` (confirmed zero rows in prod, not in `CONTRACT_REGISTRY`) to
+`odds` (confirmed canonical: `taxonomy.py:44` + `CONTRACT_REGISTRY[("sports","odds","trades")]` = `SPORTS_ODDS_TRADES`),
+and the previously-undocumented, production-dominant `trades` data type added to the Overview and Instrument Type
+Mapping table. Original spec below, retained for context.
 
 **File:** `unified-trading-pm/codex/02-data/sports-data-types-catalog.md:5-6, 48-54, 99-101`. **Change:** the doc omits
 `trades` from its 8 data types and prescribes `instrument_type=sports_market` — a value with **zero rows** in prod,
@@ -593,10 +647,33 @@ row is touched.
 `instruments-service/scripts/measure_honest_coverage.py` logic, which already matches
 `codex/02-data/honest-coverage-model.md:219-226` — as the **ONE global formula** for `compute_honest_coverage()`. This
 is **NOT sports-scoped**: it changes UAC's `compute_honest_coverage()` for **every asset group**, not just sports, and
-it moves every asset group's dashboard coverage percentage. **This is a SEPARATE, bigger piece of work, out of scope for
-this workflow phase** — it needs its own careful cross-asset-group impact-measurement pass before it ships. Do **not**
-touch `_honest_coverage_logic.py` in this phase; that file is unchanged by this run's shipped items. Track the global
-rollout as its own follow-up plan before implementation starts.
+it moves every asset group's dashboard coverage percentage. **This is a SEPARATE, bigger piece of work** — it needs its
+own careful cross-asset-group impact-measurement pass before it ships. Do **not** touch `_honest_coverage_logic.py`
+until that measurement (below) has been reviewed and the ship is explicitly re-authorized; that file is unchanged by
+this run's shipped items. Track the global rollout as its own follow-up plan before implementation starts.
+
+**📊 MEASURED (2026-07-22, real prod `central-element-323112`)** — every asset group's coverage moves **DOWN** under the
+proposed formula, some substantially. Measured via
+`unified-api-contracts/scripts/measure_honest_coverage_formula_delta.py` (drives the REAL production
+`compute_honest_coverage()` and `measure_honest_coverage.py::_count_statuses()` against the same merged + MVP-gated
+dataframe — the formulas are never reimplemented, only the row→`CaptureStatusCounts` folding is, verified against
+`read_capture_status_counts`'s classification rules):
+
+| Asset group | Total rows | Current % (credits `empty_confirmed`) | Proposed % (excludes it) | Δ pp       | `empty_confirmed` % of total |
+| ----------- | ---------- | ------------------------------------- | ------------------------ | ---------- | ---------------------------- |
+| CEFI        | 8,980,261  | 60.88%                                | 49.38%                   | **-11.50** | 28.2%                        |
+| DEFI        | 52,293,294 | 68.49%                                | 68.44%                   | -0.05      | 28.1%                        |
+| TRADFI      | 6,262,988  | 80.75%                                | 71.79%                   | **-8.96**  | 60.7%                        |
+| SPORTS      | 1,977,165  | 94.32%                                | 84.13%                   | **-10.19** | 64.2%                        |
+| PREDICTION  | 745,358    | 99.55%                                | 94.36%                   | **-5.19**  | 92.6%                        |
+
+DEFI barely moves because its `out_of_window` reclassification already absorbs almost all of its `empty_confirmed` rows
+(14.65M of 14.72M) — the other four asset groups have far smaller `out_of_window` carve-outs relative to their
+`empty_confirmed` count, so fully excluding `empty_confirmed` hits them much harder. **This means shipping 4.1 as a
+single global cutover would make EVERY asset-group dashboard number drop simultaneously** (CEFI and TRADFI by
+double-digit points), which will read as a coverage regression fleet-wide unless it is clearly communicated (and
+probably dashboarded) as a formula change, not a data-quality change, at ship time. Re-run the script above for a fresh
+number immediately before actually shipping — prod manifests move daily and this table has a date on it.
 
 ### 4.2 Which coverage semantics does sports want? — ✅ DECIDED 2026-07-22
 
