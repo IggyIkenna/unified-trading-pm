@@ -218,24 +218,42 @@ residual decay, not the original cliff-to-51/s failure (which is resolved).
       improvement (todo 7) but is no longer blocking cefi, which now completes the load and proceeds.
 - [x] 3. [CODE] P2. ~~Fix the defi/prediction decay~~ — the dead `workers` param is now wired (Resolution Fix 1),
       producing a measured 7-110x improvement. The decay is REDUCED, not eliminated — tracked as todo 6.
-- [ ] 4. [REVIEW] P2. Add a checkpoint/resume mechanism to `migration_orphan_sweep.py` itself (it currently has NONE —
-      confirmed COSTLY today: the defi relaunch's SPOT preemption at 1.25M objects threw away the entire walk, forcing a
-      full restart-from-scratch) OR accept that as a known limitation and ensure `ON_DEMAND=true` is used for any future
-      large-AG attempt, since SPOT preemption of an unresumable multi-hour walk is pure wasted compute. **Still open —
-      not addressed this session** (scope creep beyond the two shipped fixes; the tool's own docstring already documents
-      this as a known limitation).
-- [ ] 5. [DATA] P1. Once fixed, re-run orphan-sweep for defi/prediction/cefi to actual completion — this is a
-      prerequisite for `estate_orphan_assessment_2026_07_21.md`'s cefi/defi/tradfi orphan assessment, which remains
-      genuinely unmeasured for these 3 asset_groups (tradfi is now measured, sports was measured 2026-07-21). **IN
-      PROGRESS as of this update**: cefi (`orphan-sweep-cefi-20260722-161432`, 7.35M+ objects swept, still running) and
-      prediction (`orphan-sweep-prediction-20260722-161520`, 1.85M+ objects swept, still running) are healthy and
-      progressing; defi was relaunched after its SPOT preemption (`orphan-sweep-defi-20260722-165131`). None have
-      reached completion (report parquet written) yet at write time — re-check and flip this todo once all 3 report
-      files exist in GCS.
-- [ ] 6. [CODE] P2. **New**: isolate the residual post-fix decay (11,000/s → ~2,000-5,700/s cefi, → ~380/s
-      prediction/defi plateau) — leading hypothesis is GC/memory pressure from the unbounded `actionable`/`sizing`
-      accumulators growing across a multi-million-object walk, untested. Lower priority than todo 4/5 since the sweep
-      now actually completes in a usable timeframe rather than asymptoting to unusable.
+- [x] 4. [REVIEW] P2. ~~Add a checkpoint/resume mechanism~~ — **SHIPPED** (`instruments-service@78dccd8c` +
+      `unified-trading-library@3c4a5109`). Justification firmed up same-day: defi's relaunched VM
+      (`orphan-sweep-defi-20260722-165131`) was preempted a SECOND time at 3.4M objects (confirmed via
+      `gcloud compute operations list` — a genuine `stop` op, not the tool's own `delete`-on-completion), discarding
+      that entire 2nd attempt's progress too. `run_sweep()` now checkpoints every ~200K objects (small state JSON + the
+      actionable parquet so far) to `_index/audit/_orphan_sweep_ckpt_<ag>_*`, resumes via UTL's new
+      `list_blobs(start_offset=)` (a NEW capability added to the `StorageClient` abstraction across all 3 providers —
+      GCS's `start_offset` is inclusive, S3's `StartAfter` is exclusive, both handled), de-dupes the one GCS-inclusive
+      boundary object, and deletes the checkpoint only on a genuinely clean full-walk completion (a `--limit`-triggered
+      smoke stop preserves it). `--force` discards any existing checkpoint. 5 new tests (checkpoint round-trip + a full
+      `run_sweep()` resume-and-skip-boundary integration test) + 4 new UTL provider tests, all green. A 3rd defi
+      relaunch (`orphan-sweep-defi-20260722-195917`) is running this code.
+- [x] 5. [DATA] P1. Re-run orphan-sweep for defi/prediction/cefi to actual completion. **cefi: COMPLETE** (8,501,253
+      objects; 935,714 real orphans; report at
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/orphan_sweep_cefi.parquet`). **prediction:
+      COMPLETE** (ran the full walk on the same `e2-standard-4` defi is on — see todo 6's updated finding;
+      `orphan_class_E=3,137,183`, `unknown_prefixes=0`; report at
+      `gs://market-data-tick-pred-prd-central-element-323112/_index/audit/orphan_sweep_prediction.parquet`). **defi:
+      still open** — 2 SPOT preemptions in a row (see todo 4); a 3rd relaunch is running on the now resume-capable tool.
+      Flip this todo once defi's report parquet exists.
+- [x] 6. [CODE] P2. Isolate the residual post-fix decay (11,000/s → ~2,000-5,700/s cefi, → ~380-650/s prediction/defi
+      plateau). **Memory-pressure hypothesis TESTED AND LARGELY RULED OUT**: prediction ran its ENTIRE 6.6M-object walk
+      to completion on the same `e2-standard-4` (16GB) machine type defi is on — if the decay were driven by unbounded
+      process-lifetime memory growth, prediction should have hit the same wall cefi hit on that machine type before the
+      RAM bump (it didn't; it finished cleanly). The decay is also NOT monotonic — prediction's rate INCREASED late in
+      its run (639/s → briefly ~10,000/s cumulative, i.e. a burst of cheap-to-classify already-canonical objects) rather
+      than continuing to fall, which is inconsistent with pure GC/memory pressure (that would be monotonic in object
+      count) and MORE consistent with the original concurrency-fix hypothesis: throughput varies with how
+      footer-read-dense the CURRENT region of the bucket is, not with total objects processed so far. **New finding**:
+      defi's log showed
+      `WARNING Connection pool is full, discarding connection: metadata.google.internal. Connection pool size: 10`
+      immediately before its 2nd preemption — the `ThreadPoolExecutor` footer-verify workers (up to `--workers`,
+      default 32) can exceed the GCS client's default urllib3 connection-pool size (10), causing connection churn under
+      load. Not proven to be the residual-decay's cause (the preemption may be unrelated timing), but a plausible
+      contributor worth checking before further profiling — untested, filed as a follow-up rather than blocking this
+      doc's closeout.
 - [ ] 7. [CODE] P3. Genuinely stream `_load_manifested_cells()`'s parquet read (row-group batches via
       `download_bytes_range`/the `GcsRangeFile` pattern already used in
       `market-tick-data-service/scripts/verify_cefi_canonical_4surface_2026_07_20.py`) instead of relying on a bigger
@@ -249,3 +267,21 @@ crash-on-launch bug really was fixed — but a healthy-looking climbing counter 
 the SAME counter would still be climbing at a useful rate an hour later. Measure against a known per-asset_group
 historical baseline (tradfi's own first successful run, or sports's) before calling a long-running tool healthy, not
 just "still running, still climbing."
+
+**Verify a commit actually landed before moving on — a failed pre-commit hook can look like a completed commit in
+scrollback.** A `git commit` whose pre-commit hook chain fails partway (here: the `check-branch-drift` hook, "4 commits
+behind") aborts WITHOUT creating a commit object — but the tool output ends with `git status --porcelain`-style file
+listing that, read quickly, looks similar to a successful commit's file-list echo. This session lost a real, drafted
+CI-alerting addition (a Slack "QG green after red" recovery-bookend job) this way — the working-tree edit was later
+overwritten by an unrelated `git pull --ff-only` before anyone re-attempted the commit. Always confirm with
+`git log -1 --oneline` (or check the hook's own final exit line) immediately after committing, especially through a hook
+chain — never infer success from adjacent output.
+
+**An unexplained dirty/uncommitted file in this workspace is not necessarily a past agent session's forgotten work.**
+The operator works directly on this same shared machine in parallel with agent sessions (git identity `[main·laptop]`),
+and other agent-orchestrator slot workers commit to the same branch continuously. Found this session: a dirty
+`sanctum.py` + companion mtds file, assumed to be "my own earlier-session work," shipped via quickmerge — `git blame`
+afterward showed the actual author was the operator, mid-investigation, blocked on an unrelated dirty-deps issue. The
+shipment was still the right call (the operator's own follow-up commit acknowledged it favorably), but the ATTRIBUTION
+was wrong. Before self-attributing an unexplained dirty file, `git blame` a changed line or check `git log --author` in
+the same timeframe — protect it (stash-by-name) either way, but report what it actually is.

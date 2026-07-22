@@ -10,7 +10,7 @@ summary: >-
   false positives were independently corroborated: slot 2 hit the SAME already-open PM blocker moments after my "GREEN
   again" ping (RB-d34c1d03), and I directly confirmed the UI file is still missing on origin after a fresh fetch. Acting
   on the ping without re-verifying would have shipped against a red tree.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -25,7 +25,7 @@ priority: P2
 drift_direction: advance-code
 parent_epic: agent_operating_framework_master
 source: [unified_trading_system_ui_codex_violations_far_exceed_estimate-004]
-resolved_by:
+resolved_by: agent-orchestrator@5bf0ccf
 locked_by:
 depends_on: []
 ---

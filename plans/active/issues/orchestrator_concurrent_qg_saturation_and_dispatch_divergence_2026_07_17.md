@@ -7,7 +7,7 @@ summary:
   making the uvicorn backend slow-to-respond (request timeouts / transient 5xx, "not reachable") and contributing to
   worker recycles. Dead workers' tasks still showed status=dispatched (reconciliation lag), so backlog read "3
   dispatched" while only 1 worker was genuinely alive.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -31,7 +31,7 @@ source: >-
   main·planning session 2026-07-17 — filed after the concurrent-QG saturation incident; frontmatter repaired
   (doc_type/status/nature enums + missing keys) by slot main·harsh_pc to unblock the PM lint-codex gate, content
   untouched
-resolved_by:
+resolved_by: agent-orchestrator@91808dfeb5f9 (+ unified-trading-pm@e0350b904)
 last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -104,6 +104,18 @@ re-queue on the target-slot timeout). At filing time the incident had already cl
 - Not a crash — do NOT add uvicorn auto-restart/nohup logic (server was up throughout; that would mask the real cause).
 - The dispatch-divergence half overlaps existing `backlog_task_done_status_diverges_from_plan_checkbox` work — fold into
   that rather than building a parallel fix.
+
+## Resolution (2026-07-20, via `ao_fleet_infra_hardening_2026_07_20.md` todo 7)
+
+Fix direction 1 (throttle concurrent QG-heavy dispatch) landed via the shared-host RAM/CPU admission governor
+(`qg_host_adaptive_resource_governor_2026_07_14.md`), not a new dispatcher-side stagger — its reservation-ledger engine
+was already code-complete and soak-tested (42-run live soak, 0 OOM). Flipped live via `QG_GOVERNOR_MODE=reservation` +
+`QG_HOST_CONCURRENCY=6` (`agent-orchestrator@91808dfeb5f9`), plus `install-qg-governor-shell-env.sh`
+(`unified-trading-pm@e0350b904`) so interactive shells actually pick up `.env.local`'s governor mode instead of silently
+falling back to the legacy `token K=2` mode. Verified live on the VM: `MODE=reservation`, `RAM budget 22GB/70%`,
+`CPU slots=3`. Fix directions 2 (dispatch-status reconciliation latency) and 3 (backend resilience under load) were not
+separately pursued — folded into / superseded by the governor fix and the broader dispatch-hardening work tracked in
+`ao_open_issues_consolidated_close_out_2026_07_17.md`.
 
 ## Evidence (2026-07-17 ~14:05-14:07Z)
 
