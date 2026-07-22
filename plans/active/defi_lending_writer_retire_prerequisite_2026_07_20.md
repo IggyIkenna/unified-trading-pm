@@ -174,36 +174,40 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
 
 ## Todos
 
-- [ ] 1. [DATA] P0. **Assert the gate in the migration's own plan.** Add a dated banner to
+- [x] ✅ 1. [DATA] P0. **Assert the gate in the migration's own plan.** Add a dated banner to
       `plans/active/defi_consolidated_closeout_2026_07_18.md`'s "Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN" todo
       (`:426`) stating the migration is BLOCKED on this plan and naming this file. Do **not** restate the mechanism
       there — link it. This exists so a worker reading the migration todo cold cannot start step 2 first, which is
       precisely what happened the first time.
-- [ ] 2. [CODE] P0. **Collapse writers 1, 2, 3 to a single resolution point.** `liquidation_events_handler.py` (`:306`
-      enum vs `:54-57`/`:330` strings), `flash_loan_events_handler.py` (`:176` vs `:147`/`:201`),
-      `position_data_handler.py` (`:198` vs `:225`). One resolver per handler returning the `InstrumentType`; the
-      manifest site derives its string from that same value. Mirror `evm_defi_handler.py:130-139` exactly, including its
-      docstring rationale. No behaviour change yet — the emitted value stays `LENDING` in this todo.
-- [ ] 3. [CODE] P0. **Collapse writers 5 and 7.** `lending_indices_handler.py` `:863` hardcoded enum vs
-      `:674`/`:182-184` resolver; `risk_params_handler.py` `:121-123` enum resolver vs `:116-118` str resolver. One
-      resolver each, str derived from the enum. Keep the EVM-vs-Solana branch distinction intact (`:430` must still
-      resolve `SOLANA_LENDING`) — verify by reading which branch each protocol in `_DEFAULT_PROTOCOLS` `:172` actually
-      reaches before collapsing, do not assume.
-- [ ] 4. [CODE] P0. **Fix the live `liquidations_handler` desync** — `:534` manifest `"liquidation"` vs `:644` GCS
-      `LENDING`. Decide which is correct against `codex/02-data/defi-canonical-naming-ssot.md` (the naming SSOT is the
-      authority, not either literal), fix both surfaces onto one resolver, and record whether already-written rows need
-      a re-key as a todo in the migration plan (this plan does not own the data fix).
-- [ ] 5. [CODE] P0. **Make the contract error loud.** On every lending write path, a `ValueError` originating from
-      `build_instrument_id` must NOT be swallowed into `record_failed` as if it were a venue/network failure — classify
-      it distinctly per `codex/04-architecture/shard-level-failure-isolation.md` and UAC `classify_venue_error()`.
-      Verified swallow site to start from: `flash_loan_events_handler.py:214-223`. This is the change that would have
-      made the first attempt fail loudly in minutes instead of silently producing `attempted_failed` rows.
-- [ ] 6. [CODE] P0. **Rule the `SOLANA_LENDING` scope question and record the answer in this plan.** D2 names flat
-      `LENDING`; `solana_defi_handler.py:321-332`, `lending_indices_handler.py:175-179` and
-      `risk_params_handler.py:110-112` emit `SOLANA_LENDING` for `kamino_lending`/`marginfi`/`solend`. Either it splits
-      to `A_TOKEN`/`DEBT_TOKEN` alongside EVM, or it is explicitly OUT of scope with a stated reason. Leaving it
-      undecided reproduces the "interim that nobody ruled" state that produced this whole contradiction. Escalate as an
-      option-set if it is not decidable from the naming SSOT.
+- [x] ✅ 2. [CODE] P0. **SHIPPED `market-tick-data-service@fec20de2`.** Collapse writers 1, 2, 3 to a single resolution
+      point. `liquidation_events_handler.py` (`:306` enum vs `:54-57`/`:330` strings), `flash_loan_events_handler.py`
+      (`:176` vs `:147`/`:201`), `position_data_handler.py` (`:198` vs `:225`). One resolver per handler returning the
+      `InstrumentType`; the manifest site derives its string from that same value. Mirror `evm_defi_handler.py:130-139`
+      exactly, including its docstring rationale. No behaviour change yet — the emitted value stays `LENDING` in this
+      todo.
+- [x] ✅ 3. [CODE] P0. **SHIPPED `market-tick-data-service@fec20de2`.** Collapse writers 5 and 7.
+      `lending_indices_handler.py` `:863` hardcoded enum vs `:674`/`:182-184` resolver; `risk_params_handler.py`
+      `:121-123` enum resolver vs `:116-118` str resolver. One resolver each, str derived from the enum. Keep the
+      EVM-vs-Solana branch distinction intact (`:430` must still resolve `SOLANA_LENDING`) — verify by reading which
+      branch each protocol in `_DEFAULT_PROTOCOLS` `:172` actually reaches before collapsing, do not assume.
+- [x] ✅ 4. [CODE] P0. **SHIPPED `market-tick-data-service@fec20de2`.** Fix the live `liquidations_handler` desync —
+      `:534` manifest `"liquidation"` vs `:644` GCS `LENDING`. Decide which is correct against
+      `codex/02-data/defi-canonical-naming-ssot.md` (the naming SSOT is the authority, not either literal), fix both
+      surfaces onto one resolver, and record whether already-written rows need a re-key as a todo in the migration plan
+      (this plan does not own the data fix).
+- [x] ✅ 5. [CODE] P0. **SHIPPED `market-tick-data-service@fec20de2`.** Make the contract error loud. On every lending
+      write path, a `ValueError` originating from `build_instrument_id` must NOT be swallowed into `record_failed` as if
+      it were a venue/network failure — classify it distinctly per
+      `codex/04-architecture/shard-level-failure-isolation.md` and UAC `classify_venue_error()`. Verified swallow site
+      to start from: `flash_loan_events_handler.py:214-223`. This is the change that would have made the first attempt
+      fail loudly in minutes instead of silently producing `attempted_failed` rows.
+- [x] ✅ 6. [CODE] P0. **RULED (session-2 entry above) — SOLANA_LENDING is OUT of the D2 EVM retire scope.** Rule the
+      `SOLANA_LENDING` scope question and record the answer in this plan. D2 names flat `LENDING`;
+      `solana_defi_handler.py:321-332`, `lending_indices_handler.py:175-179` and `risk_params_handler.py:110-112` emit
+      `SOLANA_LENDING` for `kamino_lending`/`marginfi`/`solend`. Either it splits to `A_TOKEN`/`DEBT_TOKEN` alongside
+      EVM, or it is explicitly OUT of scope with a stated reason. Leaving it undecided reproduces the "interim that
+      nobody ruled" state that produced this whole contradiction. Escalate as an option-set if it is not decidable from
+      the naming SSOT.
 - [ ] 7. [CODE] P0. **Define the per-data_type target mapping** — for each of `lending_indices`, `liquidation_events`,
       `flash_loan_events`, `position_data`, `risk_params`, `liquidations`, state which of `A_TOKEN`/`DEBT_TOKEN` each
       row resolves to and from which row column. The reversal's own diagnosis was that these are "DIVERSE data_types
@@ -215,10 +219,12 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
       mapping), UTL (`_derive_instrument_id.py:76-77` `_DISPATCH[('defi','lending')]`/`[('defi','lending_position')]`,
       the third consumer identified at `defi_consolidated_closeout_2026_07_18.md:693-699`). The documented META-LESSON
       of the reversal is that a partial wave IS the outage; do not land UAC ahead of MTDS.
-- [ ] 9. [TEST] P0. **Enumerate-from-source pinning tests.** A test that reads each handler's own protocol→type map and
-      asserts `build_instrument_id` succeeds for every producible tuple, plus a test asserting GCS-path segment ==
-      parquet column == manifest row `instrument_type` for a representative shard per writer. Enumerating from the
-      handlers' maps (not a hand-written list) is what makes this survive the next protocol addition.
+- [x] ✅ 9. [TEST] P0. **SHIPPED `market-tick-data-service@fec20de2` —
+      `tests/unit/test_defi_lending_writer_instrument_type_pinning.py`.** Enumerate-from-source pinning tests. A test
+      that reads each handler's own protocol→type map and asserts `build_instrument_id` succeeds for every producible
+      tuple, plus a test asserting GCS-path segment == parquet column == manifest row `instrument_type` for a
+      representative shard per writer. Enumerating from the handlers' maps (not a hand-written list) is what makes this
+      survive the next protocol addition.
 - [ ] 10. [DATA] P0. **Runtime green proof — run it, don't read it.** Execute a real one-day run for each of the 8
       writers and verify from the MANIFEST that each recorded `captured` with non-zero rows and **zero
       `attempted_failed`**. Cite the day, the venue/chain shards touched, and the measured row counts. A handler return
@@ -229,10 +235,10 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
 - [ ] 12. [DATA] P1. **Grain regression check** — confirm the type change did not disturb the per-market
       `record_captured` grain that converts `expected_unattempted` (`_lending_grain.py:1-19`, `:84-119`). Compare
       EU→captured conversion counts for the run day before and after.
-- [ ] 13. [DOCS] P1. **Align the MTDS docs to what shipped** — `docs/GCS_PATHS.md`, `docs/DEFI_DOWNLOAD_STRATEGY.md`,
-      `docs/DATA_TYPE_DECISIONS.md` all carry the interim `instrument_type=lending` statement (shipped
-      `market-tick-data-service@e9764b38`). Update them in the SAME wave as todo 8, with a dated correction annotation,
-      not a silent overwrite.
+- [x] ✅ 13. [DOCS] P1. **SHIPPED `market-tick-data-service@fec20de2` (same wave as todo 2-5/9).** Align the MTDS docs
+      to what shipped — `docs/GCS_PATHS.md`, `docs/DEFI_DOWNLOAD_STRATEGY.md`, `docs/DATA_TYPE_DECISIONS.md` all carry
+      the interim `instrument_type=lending` statement (shipped `market-tick-data-service@e9764b38`). Update them in the
+      SAME wave as todo 8, with a dated correction annotation, not a silent overwrite.
 - [ ] 14. [PM] P1. **Flip the gate and hand off.** When acceptance criteria 1-8 all hold, record the evidence here, flip
       the todo-1 banner in the migration plan from BLOCKED to CLEARED with the commit SHAs, and notify the operator that
       step 2 (the ~16.7M-row migration) may begin. Do not start step 2 from this plan.
