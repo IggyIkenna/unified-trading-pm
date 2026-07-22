@@ -385,6 +385,17 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   > with the pending ASTER/HYPERLIQUID cefi-misfiling decision (same doc :1041-1044). They are a known gap, not a second
   > canonical form.
 
+- **instrument_availability / market_lifecycle / futures_contracts (RULED, todo 1 of the R2 issue, 2026-07-22)**:
+  `instrument_availability/by_date/day={D}/pipeline_mode={mode}_{src}/asset_group={ag}/venue={V}/instruments.parquet` —
+  **no `instrument_type=` segment**: an availability LISTING is per (day, pipeline_mode, asset_group, venue), the same
+  grain the writer has always used, just with the two missing hive keys added via the sink PREFIX (never the partition
+  dict — the sink sorts dict keys alphabetically, `protocol_impls.py:26`). `market_lifecycle` and `futures_contracts`
+  ride the identical shape (`market_lifecycle.parquet` / `futures_contracts.parquet` leaf). Shipped:
+  `unified-trading-library@43fa6f3f` (registry template + layout-tolerant readers), `instruments-service@a9be6ce9`
+  (writer sink-prefix + reader lockstep). `migration_pending` — the historical flat objects are not yet migrated; see
+  [`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+  todos 7-8.
+
 ## 9. empty_confirmed vs out-of-scope (the denominator basis)
 
 - **`empty_confirmed`** — a cell INSIDE the could-exist universe, attempted, source PROVABLY returned 0 (typed

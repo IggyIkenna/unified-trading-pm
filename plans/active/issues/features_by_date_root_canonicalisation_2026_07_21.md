@@ -128,14 +128,11 @@ THEN re-sync the manifest / data-status. Do not delete the old tree until the tw
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Repoint the features-cefi `delta_one` writer sink prefix from `"delta_one"` to `"delta_one/by_date"`
-      (`delta_one/app/core/feature_writer.py:132-136`) so the emitted tree matches `registry.py:57`; keep the partition
-      dict (`:610-615`) unchanged (day-first is fine once the prefix carries `by_date/`).
-- [ ] 2. [DATA] P1. Fix the `delta_one` `check_exists` probe (`:793-796`) in the SAME change so it probes the new
-      `delta_one/by_date/day=…` path — otherwise every backfill re-computes + re-writes each partition.
-- [ ] 3. [DATA] P1. Add `prefix="volatility/by_date"` to the volatility writer sink
-      (`volatility/core/feature_writer.py:152-155`) so it stops writing at bucket root; verify the volatility read /
-      idempotent-skip path matches the new prefix in lockstep.
+- [x] 1. ✅ [DATA] P1. Repointed the features-cefi `delta_one` writer sink prefix `"delta_one"` → `"delta_one/by_date"`
+      — `features-service@57f8b45d`.
+- [x] 2. ✅ [DATA] P1. Fixed the `delta_one` `check_exists` probe in the same commit — `features-service@57f8b45d`.
+- [x] 3. ✅ [DATA] P1. Added `prefix="volatility/by_date"` to the volatility writer sink; idempotent-skip test updated
+      in lockstep — `features-service@57f8b45d`.
 - [x] 4. [REVIEW] P1. Verify onchain — done, doc-only, unified-trading-pm@(this commit). Confirmed
       `onchain/adapters/onchain_writer.py:62` returns `by_date/day={date}/feature_group={group}/{protocol}.parquet`
       (canonical, matches `registry.py:74`). **Decision: `onchain/engine/feature_observation_writer.py:70` is OUT OF
@@ -145,9 +142,9 @@ THEN re-sync the manifest / data-status. Do not delete the old tree until the tw
       `archetype=`/`chain=`, not by a `day=` date + `feature_group=` key at all. It is not a features-by-date artifact
       in the sense this ruling targets (verified 2026-07-21: read both files directly, no production caller wires it to
       `write_versioned_features`-style day-partitioned output). No code change required.
-- [ ] 5. [REVIEW] P1. Verify sports: `sports/data/writer.py:26` is already canonical; align
-      `sports/data/feature_versioning.py:57` (`prefix="by_date"`) to the full `sports_features/by_date/…` shape if it
-      writes feature data, else record why it is exempt.
+- [x] 5. ✅ [REVIEW] P1. `sports/data/writer.py:26` confirmed canonical; `feature_versioning.py` aligned to
+      `sports_features/by_date/…` — currently unwired (zero production callers), fixed so it never lands non-canonical
+      if wired up later — `features-service@57f8b45d`.
 - [ ] 6. [DATA] P1. PROVE the fixed delta_one + volatility writers green on one real day (features write +
       skip-if-fresh), then migrate historical `delta_one/day=…` and bucket-root `day=…` objects UP into the
       `by_date/day=` tree.
