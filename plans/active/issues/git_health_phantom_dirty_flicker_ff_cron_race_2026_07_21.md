@@ -108,7 +108,34 @@ before POSTing.
       `agent-orchestrator/server/routes/git_health.py`; add a unit test that a single clean poll between two dirty polls
       does NOT reset `not_clean_since`.
 
+## Addendum 2026-07-22 — a distinct data-quality facet: dirty row for a worktree that does not exist on the host
+
+review(slot1, hk) reported (msg 1650, 2026-07-22 10:51Z) two more instances under a **fresh** `reported_at` (10:47Z):
+
+| Slot | Repo(s) reported dirty        | Ground truth on hk host                                           |
+| ---- | ----------------------------- | ----------------------------------------------------------------- |
+| 0    | deployment-api, deployment-ui | **`.tabs/0` does not exist as a directory on this host at all**   |
+| 4    | deployment-ui                 | `deployment-api`/`deployment-ui` both CLEAN via direct git status |
+
+The **slot-4** instance is the same flicker class already characterised above (FF-cron mtime churn on a
+present-and-clean repo → transient dirty). But the **slot-0** instance is a **different fingerprint** and is NOT
+explained by the flicker/FF-cron race: the reporter cannot have `git status`-churned a worktree that isn't on the host —
+so this row is a **stale/cached per-repo dirty state re-stamped with a fresh `reported_at`**, i.e. a git-health row
+surviving (or bleeding in cross-host) for a slot/worktree that is absent on the reporting host, presented as live
+because the timestamp is current. The masking risk is the same one already noted (a stale row can hide the true state of
+a real repo), but the mechanism is stale-row-survival / host-attribution, not a one-tick flicker — worth a distinct
+look. Not orphan-WIP (nothing to inherit; the directory isn't there). No page — digest-class, consistent with the rest
+of this doc.
+
+- [ ] [INFRA] P2. Determine why a git-health dirty row is emitted/retained for a worktree absent on the reporting host
+      (`.tabs/0` on hk): is `slot-git-status-report.sh` reporting a stale cached prior result when the worktree dir is
+      missing (should emit `absent`/skip, not a stale `dirty`), or is a row from another host being attributed to this
+      one? Reporter should treat "worktree directory missing" as an explicit `absent` state, never carry forward a prior
+      `dirty`. Add a guard + a test that a vanished worktree does not keep POSTing its last-known dirty.
+
 ## Triage
 
 Non-blocking, digest-class, no page. Outside every active plan → parked here per findings-triage. Filed by the main
 orchestrator on review(slot1)'s behalf after they consolidated the thread and stepped back from per-recurrence pings.
+2026-07-22 addendum appended by main from review msg 1650 (same subsystem — consolidated here rather than a duplicate
+doc).
