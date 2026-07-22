@@ -185,7 +185,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 5 — Fill on real infra (SPOT VMs; manifest-verified; monitored by TARGET-shard count, not log activity)
 
-- [ ] [MTDS] P2. **#3 oracle backfill** — SPOT-VM RPC backfill (getAssetPrice + Chainlink) over history; monitor by
+- [x] ✅ [MTDS] P2. **#3 oracle backfill** — SPOT-VM RPC backfill (getAssetPrice + Chainlink) over history; monitor by
       manifest count of `(AAVE, spot_asset, oracle_prices)` shards created (`time_created`), not log lines. **Pre-req
       CLOSED (2026-07-22)**: per-reserve listing-date gate shipped `market-tick-data-service@27e077da` — all 6 reserves'
       `ReserveInitialized` events verified on-chain (earliest wstETH 2023-01-27; latest ezETH 2025-08-17), so a
@@ -221,7 +221,14 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-151120/run.log` +
       manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity. **If this VM ALSO
       preempts, check `gcloud compute instances list --filter=status=RUNNING` and resume again from the last
-      confirmed-complete day in the manifest — do not replay from 2023-01-27.**
+      confirmed-complete day in the manifest — do not replay from 2023-01-27.** **✅ COMPLETED (2026-07-22)** —
+      `pyth-lst-backfill-20260722-151120` reached `day=2026-07-22` (the target end date) cleanly: `run.log` shows
+      `Batch complete: 96 results collected`, `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`,
+      and a clean self-delete (`VM_SHUTDOWN_ON_COMPLETION=true`) — no crash, no silent stall. Manifest evidence (not log
+      activity): this resumed VM's per-VM shard closed at 1134 total entries (`ManifestWriter ... process_final=True`
+      for `2026-07-22`); combined with the first segment's 6399 entries (confirmed complete through `2026-04-17` before
+      that VM preempted), the full `2023-01-27→2026-07-22` AAVE oracle + Chainlink LST-feed backfill is genuinely done
+      end-to-end across both resumed segments. **Phase 5 #3 is DONE.**
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
       `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key.
       **Per-venue listing sub-check CLOSED (2026-07-22)**: live exchange API sweep (all 8 Tardis-covered CEX venues × 6
@@ -462,6 +469,24 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   `2026-06-17`/`06-18` — roughly 61 days processed in ~38 minutes since the resume launch, on pace to reach today
   (`2026-07-22`) within another ~20-30 minutes. No intervention needed; will re-check for completion or a fresh
   preemption on the next pass (resume-from-measured-progress discipline applies again if it preempts).
+- **2026-07-22 (Phase 5 #3 AAVE oracle backfill — COMPLETED)** — `pyth-lst-backfill-20260722-151120` finished cleanly:
+  reached `day=2026-07-22`, `exit_code=0`, self-deleted. Combined with the first segment (complete through `2026-04-17`
+  before its preemption), the full `2023-01-27→2026-07-22` window is done. Todo flipped with manifest-count evidence
+  (see Phase 5's #3 todo). **Phase 5 #3 is now DONE — the only Phase 5 items remaining are #1 (BLOCKED on the filed P0
+  OOM issue) and #4's ezETH/rsETH sub-fix (deferred).**
+- **2026-07-22 (Phase 5 #2 DEX fill — T+10min VERIFIED healthy)** — `mtds-dex-swaps-backfill` (launched this session
+  with operator approval) confirmed healthy at T+10min via BOTH log freshness (`gsutil stat` Update-time within the last
+  minute) AND real manifest/row evidence, not just log activity: first processing pass wrote 63,448 real swap records
+  across the configured protocol/chain shards (`uniswap_v3_ETHEREUM`=12,540, `uniswap_v3_ARBITRUM`=14,125,
+  `uniswap_v3_POLYGON`=23,344, `curve_ETHEREUM`=504, `curve_AVALANCHE`=112, `sushiswap_ARBITRUM`=8,927,
+  `uniswap_v2_ETHEREUM`=3,896; most other configured shards 0 rows — dead/unindexed subgraphs, handled as an honest
+  cascade-fallback failure, not a crash:
+  `uniswap_v3/OPTIMISM: All 8 cascade schemas drifted ... check for 2024+ pool-entity renames`). RSS held steady at
+  ~700-750MiB (mem ~10.5%) across multiple `RESOURCE_SAMPLE` readings — nowhere near the 85%+ `mem_crit` threshold that
+  OOM-killed the unrelated CEFI Tardis VM earlier today; this collector's per-request GraphQL/aiohttp memory profile is
+  genuinely different from that Tardis download path, as expected. `PIPELINE_HEARTBEAT` firing every ~60s. Continuing to
+  monitor for eventual completion or any regression; a ~3.5-year multi-protocol/multi-chain backfill will take a while —
+  not treating log activity alone as proof, will check manifest shard counts at the next pass.
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 
