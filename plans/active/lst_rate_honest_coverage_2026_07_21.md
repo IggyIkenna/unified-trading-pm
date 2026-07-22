@@ -588,6 +588,29 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   **Relaunched**: `mtds-lst-rates-20260722-181845`, same date range, all 4 tarballs confirmed fresh at launch. T+10min
   re-verification pending — this time checking specifically that Solana rows appear (not just that EVM rows continue,
   which already worked before).
+- **2026-07-22 (Phase 5 #4 — T+10min re-check: aiodns fix CONFIRMED working, but zero Solana rows so far — traced to a
+  genuine, correct, non-bug data-source boundary)** — the `Failed to create HTTP session for Solana LST rates` warning
+  is GONE (confirmed via full-log grep across 1281 lines — the resolver fix works). But no Solana rows had appeared yet
+  either (no `Collected N Solana LST rate records` log line for ANY of the ~75 days processed so far, 2021-08-17 through
+  ~2021-11-01) and no error/warning logged for the Solana leg at all — genuinely puzzling at first glance. Traced it by
+  hand: `_tier4_defillama_historical_rate` requires BOTH legs (the LST's own USD price AND SOL's own USD price) to
+  compute the ratio, and several of its own absence branches log at DEBUG level (invisible at this service's INFO log
+  level) — so a silent empty result there produces no visible trace, unlike an actual error. Verified directly via curl
+  (both from my own environment and via SSH from the VM itself, confirming it's not a VM-side connectivity issue):
+  mSOL's OWN price IS genuinely available at every date checked between 2021-10-29 and 2021-11-01 (e.g. $197.93 at
+  2021-10-29), but **wrapped-SOL's (`So111...112`) own DefiLlama USD-price coverage — the QUOTE LEG shared by every
+  Tier-4 ratio — doesn't start until 2021-12-16** (binary-searched: absent 2021-12-15, present 2021-12-16). This means
+  jitoSOL/mSOL/bSOL/sanctumSOL's Tier-4 resolution is bounded by `max(token's own genesis, 2021-12-16)` regardless of
+  how far back each token's own price history goes — a real, previously-unchecked constraint on the SHARED quote leg,
+  not a per-token fact. **This is NOT a bug** — Tier 4's honest-absence contract is working exactly as designed (never
+  fabricates a ratio from only one leg); it just means mSOL (genesis 2021-08-17) and Sanctum (genesis 2021-10-15) will
+  correctly produce zero rows for their own ~4-month/~2-month windows before 2021-12-16, which is safe/correct, just not
+  the earliest POSSIBLE date those two tokens could otherwise resolve. Did **not** stop or modify the running VM —
+  letting it continue is correct; verifying real Solana rows appear once the daily loop passes 2021-12-16 (VM was at
+  ~2021-11-01 at last check, ~45 days out at the observed ~7-8s/day pace, so ~5-10 more minutes). **Not adding a
+  `max(..., 2021-12-16)` gate to the code this session** — the current behavior is already correct (honest, no
+  fabrication, just a few extra cheap no-op DefiLlama calls before the boundary); worth a minor future efficiency
+  tidy-up, not a correctness fix.
 - **2026-07-22 (Phase 5 #2 DEX fill — still running, healthy)** — `mtds-dex-swaps-backfill` continues; noted it spends
   real time on dead/unindexed subgraph shards (e.g. `uniswap_v3/OPTIMISM` cycling all 8 cascade-fallback schemas before
   giving up honestly) — this is a genuine efficiency cost, not a stall or OOM risk: heartbeats fresh, RSS stable
