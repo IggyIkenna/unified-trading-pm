@@ -305,7 +305,7 @@ our existing protocols/data sources, try them out and build the adaptors. If it'
 blind UAC addition; each of the 15 gets a real capture attempt first, and only proven-working venues get added to
 `VENUES_BY_ASSET_GROUP['defi']`.
 
-- [ ] [DATA] P1. For each of ANKR, FRAX, MAKER, STADER, STAKEWISE, SWELL, MANTLE, ACROSS, STARGATE, FLASHBOTS, ALCHEMY,
+- [x] [DATA] P1. For each of ANKR, FRAX, MAKER, STADER, STAKEWISE, SWELL, MANTLE, ACROSS, STARGATE, FLASHBOTS, ALCHEMY,
       JUPITER, BLAZESTAKE, KAMINO_LENDING, MORPHOVAULTS: check whether an `instruments-service`/MTDS adapter already
       exists and captures real data (sample-day backfill test); if none exists, assess whether one is buildable quickly
       against an existing protocol pattern/data source already in the codebase and attempt it; if a venue's capture
@@ -315,6 +315,25 @@ blind UAC addition; each of the 15 gets a real capture attempt first, and only p
       document the before/after `completeness_pct` delta from whatever subset actually gets added (per the original
       rule-11 blast-radius concern) — this is now expected, not a red flag, since the denominator only grows for venues
       we can actually now capture.
+
+      **DONE 2026-07-22.** Real sample-day backfill against all 15: 14/15 already had working, production-proven
+                                              capture (verified with real on-chain/API calls, no code changes needed for 12 of them); ACROSS + STARGATE
+                                              needed and got real fixes (`market-tick-data-service@a32dd58c`/`@4c21c7f6` — dead subgraph replaced with real
+                                              on-chain Swap-log queries); FLASHBOTS' pipeline_mode was wrong (subgraph→onchain_rpc, `mtds@6bf6012a`);
+                                              MORPHOVAULTS had a wrong on-chain vault address resolving to a different vault entirely (`mtds@6bf6012a`,
+                                              verified correct via `convertToAssets` at block 25573787); MAKER's capture moved handlers (vault_share_price→
+                                              lst_rates) without the capability registry following (`uac@328a5cea`). All 15 were **already** in
+                                              `VENUES_BY_ASSET_GROUP['defi']`/`ALL_DEFI_VENUES` — the "add" instruction was a no-op; nothing new to add.
+                                              JUPITER: router-only, swap volume already flows through directly-captured pools (Raydium/Orca/Meteora/Phoenix)
+                                              — kept as-is per the survey's "may be architecturally redundant" read, not force-built.
+
+                                              **One real finding NOT resolved, filed separately**: `DEFI_VENUE_PHASE` still labels 11 of these
+                                              (ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/MANTLE/ACROSS/STARGATE/FLASHBOTS/ALCHEMY) `"pipeline"` despite verified
+                                              real MTDS capture, because the registry carries two contradictory definitions of `"live"` (2026-05-07
+                                              data-availability vs 2026-06-29 IS-producibility invariant) — a genuine SSOT contradiction, not something to
+                                              silently resolve by picking one side. See
+                                              `plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md` for the full finding + the
+                                              design decision needed before either flipping the phase or correcting the misleading comment.
 
 **Sports ODDS_API bookmakers (19) — operator ruling**: "do NOT add them, in fact remove them everywhere so they don't
 come up in audit" — stronger than the original ask (not just "hold," but actively purge references so this class of
