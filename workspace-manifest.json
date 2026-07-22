@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
         "large_file_count": 8,
-        "warn_file_count": 9,
-        "coverage_pct": null
+        "qg_red_reason": null,
+        "coverage_pct": 90.69,
+        "warn_file_count": 9
       }
     },
     "market-data-processing-service": {
@@ -882,7 +882,7 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "coverage_pct": 83.43,
+        "coverage_pct": null,
         "qg_red_reason": null,
         "warn_file_count": 38
       }
