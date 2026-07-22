@@ -1,0 +1,103 @@
+{
+  "asset_group": "sports",
+  "layer": "raw-tick",
+  "run_at": "2026-07-22T16:58:00Z",
+  "tier": "tier1",
+  "buckets": {
+    "tick_data": {
+      "name": "market-data-tick-sports-prd-central-element-323112",
+      "reachable": true,
+      "index_last_run_at": "2026-07-22T16:55:47Z",
+      "index_success": true,
+      "index_no_op": true,
+      "consolidator_locked": false
+    },
+    "instruments_store": {
+      "name": "instruments-store-sports-prd-central-element-323112",
+      "reachable": true,
+      "index_last_run_at": "2026-07-22T16:56:34Z",
+      "index_success": true,
+      "consolidator_locked": true,
+      "consolidator_lock_started_at": "2026-07-22T16:55:41Z",
+      "phantom_audit_generated_at": "2026-07-14T06:32:49Z",
+      "phantom_audit_count": 721154,
+      "phantom_audit_stale": true
+    }
+  },
+  "surface1_oracle": {
+    "function": "unified_api_contracts.canonical_path_violations",
+    "require_pipeline_mode": true,
+    "sampled_canonical_path_violations": 0,
+    "sampled_noncanonical_cased_path_violations": 0,
+    "note": "casing not oracle-enforced by design (migration_pending axis, K1 unshipped)"
+  },
+  "census_instrument_type_data_type_casing_odds_trades_shape": {
+    "ODDS_TRADES_rows": 275136,
+    "odds_trades_lowercase_rows": 1337763,
+    "total_odds_trades_shape_rows": 1612899
+  },
+  "findings": [
+    {
+      "type": "migration_pending",
+      "axis": "instrument_type_data_type_casing",
+      "shape": "odds_trades",
+      "canonical_rows": 275136,
+      "noncanonical_rows": 1337763,
+      "tracked_in": [
+        "sports_consolidated_closeout_2026_07_19.md#K1",
+        "sports_consolidated_closeout_2026_07_19.md#K2",
+        "canonical-cutover-register.md#section-6"
+      ],
+      "new_finding": false,
+      "live_leak_confirmed": true
+    },
+    {
+      "type": "phantom_manifest_row",
+      "population": "mtds_t2_6_league_case_duplicate_population",
+      "rows": 6110,
+      "date_range": ["2025-07-31", "2025-12-31"],
+      "gcs_objects_status": "already_deleted",
+      "tracked_in": ["sports_master_closeout_2026_07_21.md#prune-twin-delete-phantom-rows"],
+      "new_finding": false,
+      "previously_measured_rows": 7295,
+      "delta_explanation": "partial incidental cleanup via this session's manifest-swap CAS-remove pass"
+    },
+    {
+      "type": "cross_ag_bleed",
+      "asset_group_polluting": "prediction",
+      "rows": 11727,
+      "tracked_in": ["sports_master_closeout_2026_07_21.md#cross-ag-bleed"],
+      "new_finding": false,
+      "growth_status": "writer_fix_shipped_not_yet_confirmed_halted"
+    }
+  ],
+  "delete_suggestions": [
+    {
+      "candidate": "old_non_canonical_relocated_objects",
+      "disposition": "no-migrate-first",
+      "failing_part": 3,
+      "reason": "live writer still creates new non-canonical objects daily (K1 unshipped)",
+      "human_only_hard_stop": true
+    },
+    {
+      "candidate": "phantom_soccer_lowercase_manifest_rows",
+      "disposition": "yes-twin-confirmed-equivalent",
+      "rows": 6110,
+      "is_gcs_delete": false,
+      "human_only_hard_stop": false,
+      "required_mechanism": "sanctioned GCS-walk manifest rebuild, not a session hand-edit"
+    }
+  ],
+  "coverage_gaps": [
+    "layer=candles not audited",
+    "reference-data entity= tree not audited",
+    "no Tier-2 100pct per-datapoint validation dispatched",
+    "venue/chain axes not census-swept",
+    "cross-AG bleed halt not yet confirmed (needs one more daily capture cycle)"
+  ],
+  "suppressed_accepted_exceptions": [
+    "sports instrument_type/data_type casing migration_pending axis (K0-DECISION)",
+    "19274-row instruments-store-sports operator-accepted historical exception"
+  ],
+  "big_picture_verdict": "not_yet_fully_canonical_one_tracked_axis_K1_K2_no_new_locations_found"
+}
