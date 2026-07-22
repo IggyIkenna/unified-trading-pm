@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": null,
-        "large_file_count": 1,
         "warn_file_count": 12,
-        "coverage_pct": null
+        "large_file_count": 1,
+        "coverage_pct": 73.23,
+        "qg_red_reason": null
       }
     },
     "execution-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 9,
         "large_file_count": 8,
-        "qg_red_reason": null,
-        "coverage_pct": 90.69,
-        "warn_file_count": 9
+        "coverage_pct": null,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "warn_file_count": 38,
         "large_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": null,
-        "warn_file_count": 38
+        "coverage_pct": 83.43,
+        "qg_red_reason": null
       }
     },
     "ml-service": {
@@ -1366,7 +1366,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1401,7 +1401,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1515,10 +1515,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 9,
         "warn_file_count": 7,
-        "qg_red_reason": null,
-        "coverage_pct": null
+        "large_file_count": 9,
+        "coverage_pct": null,
+        "qg_red_reason": "basedpyright"
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
