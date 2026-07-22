@@ -10,7 +10,7 @@ summary:
   the REST API dead 2026-05-15), and CHAINLINK has no IS adapter at all. The 5 IS drift-guard tests are correctly RED
   and block EVERY agent shipping in instruments-service. Registering the dead-upstream adapters would manufacture
   exactly the "expected-but-always-empty" honest-coverage pollution the IS defi builder explicitly forbids.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -28,9 +28,45 @@ depends_on: []
 locked_by:
 assigned_vm:
 resolved_by:
+  "defi_consolidated_closeout_2026_07_18.md session, 2026-07-22 (theme: Non-POOL EU decision + oracle dead-venue
+  honest-empty path)"
 ---
 
 # UAC↔IS DeFi adapter drift — 9 venues declared live, 1 actually producible
+
+## STATUS UPDATE 2026-07-22 — the REMAINING FINDING RESOLVED (Recommendation A applied)
+
+Re-verified live against all 3 upstreams 2026-07-22 (2 days after the original measurement below): **identical results,
+not transient** — `app.meteora.ag/api/pools` → 404, `api.lifinity.io/pools` → TLS handshake completes then no HTTP
+response within an 8s timeout (consistent with the original 522/origin-down finding), `api.phoenix.trade` → NXDOMAIN.
+`PYTH-SOLANA`'s Hermes control endpoint remains healthy. Applied **Recommendation A** (narrow to what's producible
+today), using the corrected mechanism this doc's own "Correction to Recommendation A" section already worked out
+(phase="pipeline" + omit the `VENUE_TO_ADAPTER_KEY` entry — NOT the `NO_ADAPTER_YET` sentinel) — the exact pattern
+`unified-api-contracts@83f17c46` used for CHAINLINK:
+
+- **`unified-api-contracts@9a047a31`**: `DEFI_VENUE_PHASE["METEORA-SOLANA"|"LIFINITY-SOLANA"|"PHOENIX-SOLANA"]`
+  `"live"`→`"pipeline"`; removed their `VENUE_TO_ADAPTER_KEY` entries (adapter classes stay registered in IS
+  `factory._ADAPTERS` for a future re-promotion); removed them from `MTDS_DEFI_VENUES`. **Also closed "Problem 2"**
+  (`expected_coverage.py`'s `EXPECTED_COVERAGE_BY_ASSET_GROUP["defi"]` is NOT phase-gated — confirmed CHAINLINK's own
+  entries are STILL sitting there as of 2026-07-22 despite `83f17c46`'s phase flip 2 days ago, i.e. that leak was never
+  actually closed for CHAINLINK) by removing the 3 venues' rows from `_DEFI` in `expected_coverage.py` too — going one
+  step further than the CHAINLINK precedent, not just repeating it.
+- **`instruments-service@52a1cb53`** (companion, same-session): removed the 3 venues from `orchestrator/defi.py`'s
+  `_SOLANA_DEFI_VENUES` (the actual IS producer-set source — confirmed
+  `test_defi_set_equals_uac_denominator_drift_guard` was RED on `origin/live-defi-rollout` in the gap between the two
+  commits landing, exactly the "expected intermediate state of a deliberately sequenced cross-repo change" this doc
+  already documented for the UAC-then-IS sequencing); regenerated the defi expected-universe golden (237→234 tuples,
+  removed exactly the 3 `(VENUE, 'pool', 'dex_pool_state')` tuples, nothing else changed); updated
+  `test_pipeline_e2e_prediction.py`'s `_PER_AG_TARGET_COUNTS["DEFI"]` 99→96.
+- Both repos' full `bash scripts/quality-gates.sh --no-fix` verified green (not just the touched files) before shipping;
+  both commits verified `git merge-base --is-ancestor <sha> origin/live-defi-rollout` after push.
+- **Re-promotion path** (for whoever picks up an upstream recovery): flip `DEFI_VENUE_PHASE` back to `"live"` + re-add
+  the `VENUE_TO_ADAPTER_KEY` entry + re-add the `expected_coverage.py` row + re-add the venue to IS's
+  `_SOLANA_DEFI_VENUES`, all in the SAME commit-pair (UAC first, IS companion second, golden regen), after re-measuring
+  the upstream actually produces `>=1` real instrument (do not trust the adapter file's mere existence).
+- This doc's stashed-WIP note (instruments-service `stash@{0}`) is refined, not resolved, by the SAME session — see
+  `plans/active/defi_consolidated_closeout_2026_07_18.md`'s Deferred-work table for the precise cherry-pick instructions
+  (the stash also carries genuinely-unshipped `is_defi_force_include_pool` wiring).
 
 ## STATUS UPDATE 2026-07-20 ~15:30 — ship-blocker RESOLVED by T2; a coverage-honesty finding REMAINS
 
