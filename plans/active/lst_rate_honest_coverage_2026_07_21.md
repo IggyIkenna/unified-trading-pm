@@ -775,3 +775,7 @@ tarball once; always check the launcher's own freshness warning output, and if s
 - **2026-07-22 23:00 UTC (VM re-check — both still healthy)** — `mtds-lst-rates-20260722-181845`: now at `2025-01-02`
   (from `2024-09-26`, ~98 days in 30min), est. ~3h more to reach `2026-07-22`. `mtds-dex-swaps-backfill`: RSS stable
   ~1326-1579MiB, heartbeats fresh, real rows still landing. Both correctly left running.
+
+- **2026-07-22 23:31 UTC (VM re-check — both still healthy)** — `mtds-lst-rates-20260722-181845`: now at `2025-04-15`
+  (from `2025-01-02`, ~103 days in 30min), est. ~2.25h more to reach `2026-07-22`. `mtds-dex-swaps-backfill`: manifest
+  at 45,726 entries (up from 34,698), RSS stable ~1151-1596MiB. Both correctly left running.
