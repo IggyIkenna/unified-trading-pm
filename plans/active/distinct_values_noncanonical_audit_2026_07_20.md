@@ -297,24 +297,62 @@ handler. → tracked as a P1 writer fix mirroring the IS pattern.
       instruments-service@981c5061.** Test extended
       (`test_split_by_instrument_type_canonicalizes_extended_legacy_aliases`), verified on origin.
 
-### Operator-gated (NOT autonomous) — decisions for the operator
+### Operator decisions — RULED 2026-07-22 (chat, this session), now executable todos
 
-- [ ] [OPERATOR] P1. BLOCKED-OPERATOR-DECISION — **UAC canonical-venue additions**. 15 defi protocols (ANKR, FRAX,
-      MAKER, STADER, STAKEWISE, SWELL, MANTLE, ACROSS, STARGATE, FLASHBOTS, ALCHEMY, JUPITER, BLAZESTAKE,
-      KAMINO_LENDING, MORPHOVAULTS) + 19 sports ODDS_API fan-out bookmakers. **NOT safe-code**:
-      `instruments-service/     scripts/enumerate_expected_universe.py` builds the coverage DENOMINATOR from
-      `VENUES_BY_ASSET_GROUP` and `measure_honest_coverage.py` derives `denominator_complete`/`completeness_pct` from it
-      — adding venues EXPANDS the denominator and DROPS measured coverage fleet-wide (rule-11 blast radius). The sports
-      half also supersedes the 2026-05-12 scraper deferral. Needs an operator call + a measured before/after coverage
-      delta.
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — `restaking` has no canonical `InstrumentType`. Add `RESTAKING` to the
-      enum, or re-stamp ezETH/rsETH/pufETH to `lst`/`yield_bearing`. Closeout Track1 P1 ratifies only
-      lst/staking/yield_bearing, so nothing owns this today.
-- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — `odds_horizon_bucket_{15m,1h,4h,1d}`: canonical is bare
-      `ODDS_HORIZON_BUCKET` with `timeframe` as its own column. Mechanism MUST be a seed-aware re-stamp/tombstone that
-      PARSES the suffix into `timeframe` — a row DELETE is verified-unsafe (`_legacy_seed.parquet` re-supplies deleted
-      atoms) and the 2026-07-13 rebuild cohort has `timeframe` NULL, making the suffix the only record of the horizon.
-      Scope the predicate away from the deliberate 124,294-row `mdps_odds_horizon_bucket` aggregate.
+**DeFi venue additions (15 protocols) — operator ruling**: "test the adaptors, try a sample day backfill for data types
+across each venue. If they are already built and work great, [add them]. If not and [an adapter is] easy enough given
+our existing protocols/data sources, try them out and build the adaptors. If it's not working, drop them." — i.e. NOT a
+blind UAC addition; each of the 15 gets a real capture attempt first, and only proven-working venues get added to
+`VENUES_BY_ASSET_GROUP['defi']`.
+
+- [ ] [DATA] P1. For each of ANKR, FRAX, MAKER, STADER, STAKEWISE, SWELL, MANTLE, ACROSS, STARGATE, FLASHBOTS, ALCHEMY,
+      JUPITER, BLAZESTAKE, KAMINO_LENDING, MORPHOVAULTS: check whether an `instruments-service`/MTDS adapter already
+      exists and captures real data (sample-day backfill test); if none exists, assess whether one is buildable quickly
+      against an existing protocol pattern/data source already in the codebase and attempt it; if a venue's capture
+      genuinely doesn't work (no adapter feasible / API unavailable / not actually a distinct protocol), drop it from
+      the UAC-addition list rather than adding a venue with structural 0% coverage. Add ONLY the venues that end up with
+      verified working capture to `VENUES_BY_ASSET_GROUP['defi']`, cited against the adapter/test evidence. Measure +
+      document the before/after `completeness_pct` delta from whatever subset actually gets added (per the original
+      rule-11 blast-radius concern) — this is now expected, not a red flag, since the denominator only grows for venues
+      we can actually now capture.
+
+**Sports ODDS_API bookmakers (19) — operator ruling**: "do NOT add them, in fact remove them everywhere so they don't
+come up in audit" — stronger than the original ask (not just "hold," but actively purge references so this class of
+finding stops resurfacing).
+
+- [ ] [DATA] P1. Find every place the 19 ODDS_API-fan-out bookmakers appear in the audit's non-canonical-value findings
+      / detector output / any registry that currently lists them as "expected but uncaptured," and remove those
+      references so they stop generating findings. Do NOT touch the underlying 2026-05-12 scraper-deferral decision
+      itself (the operator did not ask to reopen it) — this is purely about the audit/detector no longer flagging
+      bookmakers nobody has decided to capture. Confirm via a clean re-run of the audit's classification pass that these
+      19 no longer appear.
+
+**`restaking` InstrumentType — operator ruling**: add `RESTAKING` as its own canonical `InstrumentType` (confirmed,
+matches the recommendation) — PLUS two follow-up questions the operator raised that need answering before the re-stamp:
+should eETH/weETH be classified as `RESTAKING` too, and do other LRTs need their WRAPPED variants represented separately
+if that's the form AAVE (or other lending venues) actually accepts as collateral?
+
+- [ ] [DATA] P2. Add `RESTAKING` to the canonical `InstrumentType` enum (UAC). Research + answer the operator's two
+      follow-ups before re-stamping: (a) is eETH/weETH (ether.fi) a liquid RESTAKING token in the same class as
+      ezETH/rsETH/pufETH, or a plain LST — check ether.fi's actual mechanism (EigenLayer-restaking-backed vs. not)
+      rather than assuming from the name; (b) for every LRT this classification touches, check whether AAVE (and any
+      other lending venues this workspace tracks as a collateral consumer) accepts the base token, the wrapped form, or
+      both as collateral, and represent BOTH forms distinctly in the manifest/catalogue if a lending venue's
+      accepted-collateral list actually distinguishes them (don't collapse wrapped/unwrapped into one row if the
+      workspace's own DeFi collateral tracking needs to tell them apart). Re-stamp the affected manifest/catalogue rows
+      once the full token list + wrapped-variant question are resolved.
+
+**`odds_horizon_bucket_{15m,1h,4h,1d}` re-stamp — operator ruling**: "Yes, go ahead" — implement the seed-aware
+re-stamp/tombstone mechanism (bare `ODDS_HORIZON_BUCKET` + parsed `timeframe` column, row DELETE ruled unsafe per the
+`_legacy_seed.parquet` re-supply risk, scope the predicate away from the deliberate 124,294-row
+`mdps_odds_horizon_bucket` aggregate) and run it, verifying before/after like the venue-as-chain re-stamp.
+
+- [ ] [DATA] P1. Implement + run the `odds_horizon_bucket_{15m,1h,4h,1d}` → `ODDS_HORIZON_BUCKET` + parsed `timeframe`
+      seed-aware re-stamp. Mirror the venue-as-chain re-stamp's safety pattern (pre-apply snapshot, CAS-guarded write,
+      post-write verification of row counts + no duplicate keys + no unintended rows touched) — check whether this
+      manifest/bucket has the same high-frequency-consolidator-cron contention the venue-as-chain fix hit, and if so use
+      the same pause-cron-for-one-clean-write approach (already proven this session) rather than re-discovering the
+      problem from scratch.
 - [ ] [DATA] P2. Live-count `data_type=="futures_chain"` in the tradfi availability index to choose the remedy: zero-row
       non-issue / small legacy cohort (→ documented carve-out like `options_chain`'s T-OLD-2b) / active writer bug. Do
       NOT add it to `DATA_TYPES_BY_ASSET_GROUP['tradfi']` — `futures_chain` is an instrument_type; the data_type for
