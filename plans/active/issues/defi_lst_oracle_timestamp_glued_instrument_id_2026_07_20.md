@@ -197,3 +197,40 @@ currently STOPPED, so no new ones are being written now.
 
 Harness (durable, resumable, idempotent):
 `market-tick-data-service/scripts/one_offs/reshard_glued_defi_ids_2026_07_21.py`.
+
+## Update 2026-07-22 — the historical migration is 100% DONE; the "forward write-path fix" was ALREADY SHIPPED, not open
+
+**Historical migration: COMPLETE.** All 1,755/1,755 glued coarse files re-sharded + retired, 0 errors (the final 22-28
+were the Zalgo-symbol GCS-object-name-cap bug from step 1 above, fixed and re-run clean). The VM-scale manifest rebuild
+(RESUME step 2) is running as `canonical-migration-defi-per-instrument-20260722-033122`.
+
+**"FORWARD write-path fix (still open)" (line 157 above) — RE-INVESTIGATED, found already fixed, NOT open.** The "~15
+handlers" framing was accurate for whatever code existed when this issue was first filed (2026-07-20), but
+`market-tick-data-service@4ca2640d` ("shard DeFi writer to one parquet per instrument"), **landed 2026-07-18 — two days
+BEFORE this issue doc was even filed** — already fixed the actual defect at its root: `write_defi_rows()`
+(`canonical_write.py:158-349`) now ALWAYS shards non-empty rows by real `instrument_id`
+(`leaf = sanitize_defi_symbol(symbol)`) and its own docstring states "Caller `file_name` is empty-only" (verified by
+reading the current source — the `for _inst_id, group in df.groupby("instrument_id", ...)` loop at `:337` computes the
+leaf from the row data, never from the caller's `file_name=f"{...}_{ts_label}.parquet"` argument). Every one of the
+handlers named in the original "~15 handlers" list calls `write_defi_rows()` for its real data and gets this sharding
+for free — the `_{ts_label}`-glued `file_name=` they pass is dead for the non-empty case.
+
+**Empirically verified, not just read**: scanned live GCS for glued-pattern objects (`_\d{8}_\d{6}\.parquet$` /
+`_\d{10}\.parquet$`, excluding `_migrated_`) across `day=2026-07-14` through `day=2026-07-21` (8 consecutive days,
+spanning both sides of this issue's own filing date AND the "compound_v3 file dated 2026-07-20" cited as evidence of an
+ongoing problem) — **zero** new glued objects on every single day. The cited "compound_v3 2026-07-20" evidence was
+either an empty-marker file (the one case `file_name` still applies to — cosmetic, not a data-loss bug) or a stale read;
+either way, no REAL captured data has landed under a glued filename since `4ca2640d`.
+
+**Residual (P3, cosmetic, not blocking anything)**: the empty-marker case (`rows=[]` → `write_defi_rows` uses
+`file_name or "empty.parquet"` verbatim) still gets a wall-clock name from the ~11 handlers that pass
+`file_name=f"{...}_{ts_label}.parquet"`, so a genuinely-empty shard writes a NEW empty marker object every run instead
+of reusing one stable "no data" sentinel. This wastes a handful of tiny objects per empty day, does NOT affect
+instrument-id correctness, capture_status, or the manifest, and does NOT reproduce this issue's core defect. Fixing it
+(drop `ts_label` from the `file_name=` argument in each handler, or pass `None` and let the `"empty.parquet"` default
+apply) is a genuine but low-value cleanup — safe to defer indefinitely, no urgency.
+
+**`reshard_glued_defi_ids_2026_07_21.py`'s own `Delete-when` marker** ("0 glued ids remain in the defi _index + the
+write-path forward-fix has shipped") is now satisfied on BOTH conditions once the manifest rebuild (RESUME step 2, in
+flight) confirms 0 glued ids — the forward-fix half is DONE (shipped `4ca2640d`, verified above), it was never actually
+blocked on this session's work.
