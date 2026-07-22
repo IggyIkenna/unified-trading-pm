@@ -353,6 +353,32 @@ are genuinely clean (`git status --short` empty). So slot 0's reported-dirty is 
 legit main-workspace location**, not a missing-directory artifact — which keeps it consistent with the cause-agnostic
 count-integrity fix above (it is not a special case needing its own handling).
 
+### Recurrence 2026-07-22 (review msg 1690, 15:19Z) — same phantom persisting ~3h; confirms the ongoing-starvation read, fix not yet shipped
+
+review(slot1, hk) flagged a fresh occurrence that **corroborates the CORRECTION's "ongoing, not bounded" conclusion**
+(the phantom `dirty_files=1` is durable, and FF-pull is genuinely starving, not self-clearing):
+
+| Slot | Repo(s) reported dirty                     | not_clean_since      | Age | Direct `git status --short`   |
+| ---- | ------------------------------------------ | -------------------- | --- | ----------------------------- |
+| 1    | features-service, system-integration-tests | 2026-07-22T12:22:04Z | ~3h | ZERO output — genuinely clean |
+| 4    | deployment-ui                              | 2026-07-22T08:02:04Z | ~7h | genuinely clean               |
+
+Two confirmations, no new mechanism:
+
+1. **The slot-1 stamp is the SAME `12:22:04Z` incident** from the P1 escalation above — now **~3h old and still not
+   cleared**, with `ff_pull_last_result=skip:dirty` / `last_run=15:16:14Z` on both slot 1 and slot 4. This is the
+   self-reinforcing starvation loop (`not_clean_since` can't clear because FF-pull keeps skipping → repo falls behind →
+   `is_clean_uptodate` stays false) observed live across a **multi-hour** window — i.e. the durable defect, not a
+   single-tick flicker. The instrumented cause-agnostic fix (single-source-of-truth `dirty_files` count +
+   `df>0 & empty-sample → log raw porcelain` instrumentation, the open INFRA P1 todos above) **has not landed yet** —
+   this recurrence is the confirming data point that it still needs to ship.
+2. **Orphan-WIP resolved.** review confirms the earlier slot10/slot14 orphan-WIP (dead host ip-172-31-5-118) is now
+   **cleared** — a respawned worker inherited + pushed as predicted; both trees clean, no ahead/behind. Closes that
+   watch-item.
+
+No new fix lever (the count-integrity fix above already covers it); no page (review filed record-only). This is a
+recurrence data point, not a re-diagnosis — the mechanism stays as characterised in the CORRECTION/Refinement sections.
+
 ## Triage
 
 Non-blocking, digest-class, no page. Outside every active plan → parked here per findings-triage. Filed by the main
