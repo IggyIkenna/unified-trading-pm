@@ -320,12 +320,14 @@ blind UAC addition; each of the 15 gets a real capture attempt first, and only p
 come up in audit" — stronger than the original ask (not just "hold," but actively purge references so this class of
 finding stops resurfacing).
 
-- [ ] [DATA] P1. Find every place the 19 ODDS_API-fan-out bookmakers appear in the audit's non-canonical-value findings
-      / detector output / any registry that currently lists them as "expected but uncaptured," and remove those
+- [x] [DATA] P1. ✅ Find every place the 19 ODDS_API-fan-out bookmakers appear in the audit's non-canonical-value
+      findings / detector output / any registry that currently lists them as "expected but uncaptured," and remove those
       references so they stop generating findings. Do NOT touch the underlying 2026-05-12 scraper-deferral decision
       itself (the operator did not ask to reopen it) — this is purely about the audit/detector no longer flagging
       bookmakers nobody has decided to capture. Confirm via a clean re-run of the audit's classification pass that these
-      19 no longer appear.
+      19 no longer appear. **SHIPPED — `unified-api-contracts@9908520b` + `deployment-api@5295c76`**, both verified
+      ancestors of `origin/live-defi-rollout`. See "2026-07-22 (tick 3)" Progress Log entry below for the before/after
+      re-run evidence and the 19-vs-20 count discrepancy resolution.
 
 **`restaking` InstrumentType — operator ruling**: add `RESTAKING` as its own canonical `InstrumentType` (confirmed,
 matches the recommendation) — PLUS two follow-up questions the operator raised that need answering before the re-stamp:
@@ -864,3 +866,165 @@ independently confirmed by re-reading the log, so this had zero bearing on corre
 **Closed**: `chain=<venue>` → `chain=""` is now correctly stamped in the live manifest for HYPERLIQUID/ASTER/
 EXTENDED-STARKNET/LIGHTER-ZKSYNC historical rows, matching the already-shipped writer fix (`mtds@accd8aa4`). Both halves
 of this fix (writer + historical re-stamp) are now live. No further action needed on this item.
+
+### 2026-07-22 (tick 2) — `odds_horizon_bucket_{15m,1h,4h,1d}` re-stamp: script built + tested + dry-run verified;
+
+### CORRECTED a prior design error; **NOT yet applied** (confirmed CONTENDED); quickmerge blocked by an unrelated
+
+### concurrent dirty-dep
+
+**Ground truth re-verified live** (read-only,
+`market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`, `central-element-323112`) —
+matches the prior design report exactly: 1,337 rows total (`odds_horizon_bucket_15m`=357, `_1h`=336, `_4h`=328,
+`_1d`=316), 100% `empty_confirmed`, 100% `source=api_football`/ `venue=FOOTBALL`. Non-null-`timeframe` counts vs the
+suffix (243/230/226/211) and null counts (114/106/102/105) also match exactly — 0 contradictions between an existing
+`timeframe` and its suffix.
+
+**A load-bearing correction to the prior design pass (found by independently re-verifying, not by trusting it)**: the
+design report claimed "721 of 1,337 rows (54%) collide with each other" post-restamp and proposed a dedup pass, using a
+narrowed 7-column identity `(date, venue, data_type, service_name, timeframe, league_id, instrument_type)`. That
+identity **omits `instrument_id`** — but `instrument_id` IS a real member of the production dedup key
+(`unified_trading_library.manifest_consolidator._OPTIONAL_DEDUP_COLS`, confirmed against the module source, and
+independently cross-checked against `manifest_writer/_rows.py::_ROW_KEY_COLUMNS`). Re-running the collision check with
+the ACTUAL production dedup key against the live manifest finds **ZERO internal duplicates and ZERO external
+collisions** across all 1,337 rows — including the 427 `instrument_id`-null rows (`market-tick-data-service`-sourced),
+whose `(date, chain, instrument_type, new_timeframe, service_name)` combination was verified unique by direct groupby
+(max group size 1). The 721 "duplicates" the narrow key found were 721 DIFFERENT football fixtures/outcomes that
+legitimately share date/venue/timeframe/service_name/league_id/instrument_type but have distinct `instrument_id` — not
+duplicates. **No dedup pass is needed or implemented** — this is a pure 2-column (`data_type`, `timeframe`) metadata
+re-stamp, zero row drops.
+
+**Shipped**: `market-tick-data-service/scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py` (dry-run by default;
+`--apply` performs the live CAS-guarded write) + `tests/unit/scripts/test_restamp_sports_odds_horizon_bucket.py` (17
+unit tests: suffix-parsing correctness, the aggregate/seed-exclusion predicate — proves the 124,294-row
+`mdps_odds_horizon_bucket` aggregate and the seed population can never enter the affected set regardless of `source`,
+contradiction detection, the corrected collision-detection logic — including a synthetic genuine-collision case proving
+it still correctly ESCALATES rather than silently drops/merges, idempotency, and the pre-write gate). Mirrors
+`restamp_cefi_onchain_perp_venue_chain_2026_07_21.py`'s safety pattern: pre-apply GCS snapshot, CAS-guarded
+read-classify-write with `if_generation_match`, a pre-write invariant gate that ABORTS on any mismatch, and full
+post-write verification (row count, zero duplicate keys via the real production dedup key, the aggregate + seed
+populations' row counts unchanged, zero remaining suffixed rows outside the escalated set).
+
+**Live dry-run executed** (read-only, no write) — output matches the corrected analysis exactly:
+`SAFE to re-stamp: 1337`, `ESCALATE: 0`, pre-write gate would PASS. (The printed seed-population count read 2,486 at
+dry-run time vs 1,106 at the earlier read-only probe a few minutes prior — expected drift, not a bug: this bucket is
+under continuous live write traffic, see CONTENTION below.)
+
+**Quality gates**: `quality-gates.sh --no-fix` run for market-tick-data-service — my 2 new files pass 100% of their own
+tests; full-suite result 6,730 passed / 1 failed / 17 skipped. The 1 failure
+(`test_pipeline_e2e_prediction_canonical.py::test_rule11_per_ag_shard_counts_byte_unchanged`, SPORTS shard count 88≠308)
+is in a completely unrelated subsystem (MTDS shard-registry enumeration) and is caused by pre-existing, uncommitted
+concurrent WIP already present in this shared clone (`symbol_rules.py`, `partitioned_writer.py`, `tardis_*`,
+`bridge_events_handler.py`, `mev_events_handler.py` — none touched by this change, none imported by this script, which
+only imports `pandas` + `unified_trading_library`). Per the multi-agent safety rule ("never touch files you don't own
+even if dirty from concurrent work") this was left untouched.
+
+**Contention verdict CONFIRMED**: `market-data-sports` shares the exact `*/1 * * * *` Cloud Scheduler cron as
+`market-data-cefi` (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf:328`, job
+`uts-prod-manifest-consolidator-market-data-sports-cron`, `ENABLED`). Per the mandatory sub-agent rules, did **NOT**
+pause this cron or attempt the live `--apply` write. **Nothing has been written to the production manifest by this
+work.**
+
+**Blocked from shipping — NOT a defect in this work**: attempted
+`quickmerge.sh --agent --files 'scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py tests/unit/scripts/test_restamp_sports_odds_horizon_bucket.py'`
+3 times over ~20 min (with polling in between). Every attempt failed at Pre-Flight Audit — `unified-api-contracts` (a
+path dependency) has uncommitted changes from a DIFFERENT, concurrently-running agent actively working THIS SAME PLAN's
+sibling todos ("Sports ODDS_API bookmakers (19)" removal + the `restaking` InstrumentType addition — confirmed by
+reading the diff: touches `VENUES_BY_ASSET_GROUP['sports']` bookmaker list + `lst.py`/`instrument_validation.py`,
+unrelated to `DATA_TYPES_BY_ASSET_GROUP`/`odds_horizon_bucket`). Dirty-file count fluctuated 9→0(briefly)→6→3→3 across
+the polling window — genuinely still in progress, never stayed clean long enough for a retry to land. Per "never touch
+files you don't own even if dirty," did not commit/stash/touch it. My 2 files remain **untracked and unmodified** in the
+MTDS working tree, ready to ship the moment `unified-api-contracts` goes clean:
+
+```
+cd market-tick-data-service && bash scripts/quickmerge.sh \
+  "feat(sports): add odds_horizon_bucket suffix re-stamp script (dry-run by default, CAS-guarded apply)" \
+  --agent --files 'scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py tests/unit/scripts/test_restamp_sports_odds_horizon_bucket.py'
+```
+
+**Once shipped, to apply during an operator-authorized paused-writer window** (mirror the venue-as-chain 2026-07-22
+pause/impersonation/resume recipe above — pause `uts-prod-manifest-consolidator-market-data-sports-cron`, run, verify,
+resume):
+
+```
+GCP_PROJECT_ID=central-element-323112 nohup .venv/bin/python \
+  scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py --apply > /path/to/logfile 2>&1 &
+```
+
+**Not flipping the todo checkbox below** — per the commit-push-flip discipline, only a landed SHA earns the checkmark;
+this entry documents real, complete, verified progress (design corrected, script + tests built and green, live dry-run
+proven) pending only the unrelated quickmerge block above.
+
+### 2026-07-22 (tick 3) — Sports ODDS_API bookmakers purge SHIPPED: `uac@9908520b` + `deployment-api@5295c76`
+
+**19-vs-20 count reconciled**: the operator ruling text says "19"; the shipped 2026-07-20 addition (`uac@b6a1d83a`) and
+this session's own root-cause trace both count **20** bookmaker names
+(`BETMGM, BETONLINEAG, BETOPENLY, BETRIVERS, BETSSON, BETVICTOR, BETWAY, BOVADA, CASUMO, CORAL, LIVESCOREBET, MATCHBOOK, NOVIG, ONEXBET, PADDYPOWER, PROPHETX, SKYBET, UNIBET, VIRGINBET, WILLIAMHILL`).
+Treated 20 as authoritative (code-verified) per the same reconciliation already logged elsewhere in this plan; no name
+in the operator's intent was left un-purged.
+
+**Root cause (3 files, all from `uac@b6a1d83a`, 2026-07-20) — all reverted**:
+
+- `unified_api_contracts/registry/market_data_categories.py::VENUES_BY_ASSET_GROUP['sports']` — the 20 bookmakers
+  removed, restoring the pre-`b6a1d83a` 8-entry set
+  (`ODDS_API, PINNACLE, BETFAIR, BETFAIR_SB_UK, BETFAIR_EX_UK, BETFAIR_EX_EU, DRAFTKINGS, FANDUEL`). This is the direct
+  root cause: `deployment-api::_distinct_values.py ::_canonical_set()` reads this dict directly for the `venues` axis
+  is_canonical badge.
+- `unified_api_contracts/registry/venue_adapter_keys.py::VENUE_TO_ADAPTER_KEY` — the 20 `NO_ADAPTER_YET` sentinel
+  entries removed (a canonical venue must have an entry; a non-canonical one must not, per the coverage-gate test).
+- `unified_api_contracts/registry/tests/unit/test_venue_adapter_keys.py::EXPECTED_SENTINEL_VENUES` — the 20 entries
+  removed from the CI-gate set that must exactly equal `VENUE_TO_ADAPTER_KEY`'s sentinels.
+
+**The tension flagged by the prior research pass was real and required a 4th piece, not just a revert.** A bare 3-file
+revert reproduces the ORIGINAL problem: `market-tick-data-service`'s ODDS_API fan-out genuinely writes `venue=BETMGM`
+(etc.) into the manifest, so removing them from `VENUES_BY_ASSET_GROUP['sports']` alone would make `_distinct_values.py`
+start badging them `is_canonical=false` again — reopening the exact 20-value non-canonical finding the 2026-07-20
+addition existed to silence, which fails the operator's actual ask ("so they don't come up in audit," not "so they come
+up differently"). Resolved by adding a new, explicitly NON-canonical accepted-exception mechanism:
+
+- New UAC export `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS` (frozenset of the 20 names,
+  `market_data_categories.py`, NOT part of `VENUES_BY_ASSET_GROUP`/`ALL_VENUES`).
+- `deployment-api::_distinct_values.py` gained `_ACCEPTED_EXCEPTIONS` (keyed by `(axis, asset_group)`) +
+  `_is_accepted_exception()`, applied in `enumerate_distinct_values()` alongside the existing `_is_blank()` filter —
+  these 20 values are now dropped from the `venues` axis enumeration entirely for `asset_group=sports` (never badged,
+  never counted), while a genuine drift venue in the same axis still surfaces unaffected.
+
+**Verified clean before/after** (test `test_sports_odds_api_bookmakers_are_accepted_exceptions_not_findings` in
+`test_route_data_status_distinct_values.py`, plus an ad hoc before/after run against `enumerate_distinct_values()` with
+all 20 names + `DRAFTKINGS` + a synthetic `SOME_GENUINE_DRIFT_VENUE` in the payload):
+
+```
+VENUES_BY_ASSET_GROUP['sports'] (8 entries): [BETFAIR, BETFAIR_EX_EU, BETFAIR_EX_UK, BETFAIR_SB_UK, DRAFTKINGS,
+FANDUEL, ODDS_API, PINNACLE]  — none of the 20 bookmakers present
+venues axis entries returned: [DRAFTKINGS, SOME_GENUINE_DRIFT_VENUE]  — none of the 20 bookmakers present
+non_canonical_count['venues']: 1  — exactly the synthetic genuine-drift venue, zero bookmaker noise
+badge['DRAFTKINGS'] = True; badge['SOME_GENUINE_DRIFT_VENUE'] = False
+```
+
+A full re-run of the original 47-agent/175-finding classification-fan-out workflow (`wf_4d089da8-4db`) was not practical
+in this session (multi-agent async workflow, not a single re-runnable command); the above is the direct, code-level
+equivalent — it exercises the exact function (`enumerate_distinct_values`) and exact registry constant
+(`VENUES_BY_ASSET_GROUP['sports']`) the real endpoint reads, with the real post-purge registry content, so the guarantee
+is structural (the values are removed from every set the detector reads) rather than asserted.
+
+**Quality gates**: both repos ran `quality-gates.sh --no-fix` full-suite and landed via `quickmerge.sh --agent`.
+`unified-api-contracts`: 11,848 passed — the only 3 failures
+(`test_archetype_capability_manifest_parity.py::test_codex_markdown_*`) were isolated via `git stash` to be
+**pre-existing and unrelated**: they reproduce identically against bare `HEAD` with zero uncommitted changes, and were
+traced to `UNIFIED_TRADING_WORKSPACE_ROOT` (this machine's shell env, shared across all `.tabs/N` slots) resolving to a
+STALE top-level `unified-trading-pm` checkout
+(`/Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm`, itself independently dirty with unrelated
+WIP, one commit behind this slot's PM checkout) instead of this slot's own `.tabs/3/unified-trading-pm` — the correct
+codex section for the archetype in question already exists there. A one-off `UNIFIED_TRADING_WORKSPACE_ROOT=.../.tabs/3`
+override (scoped to this session's QG invocation only, not persisted) made all 3 pass, confirming the diagnosis; no
+content or config was changed to achieve this — flagging for the operator, not fixing (touching the shared shell rc file
+or the stale foreign top-level checkout is outside this task's scope and the latter has its own independent uncommitted
+state). `deployment-api`: 4,899 passed — the 1 failure
+(`test_route_deployments_inventory.py::test_list_cloud_run_services_degrades_on_gcp_error`) passed in isolation both
+with and without this change stashed, consistent with full-suite-only cross-test-order flake unrelated to this diff.
+
+**Landed + verified by SHA**:
+
+- `unified-api-contracts@9908520b` — ancestor of `origin/live-defi-rollout` (confirmed via
+  `git merge-base --is-ancestor`).
+- `deployment-api@5295c76` — ancestor of `origin/live-defi-rollout` (confirmed via `git merge-base --is-ancestor`).
