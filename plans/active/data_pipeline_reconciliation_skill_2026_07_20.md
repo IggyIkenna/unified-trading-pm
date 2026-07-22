@@ -584,11 +584,11 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       S4-UNAVAILABLE once as a coverage gap, and (d) surfaces only the genuine defects (empty stems, TradFi
       migration-artifact leaf ids, the object↔manifest disconnect). Read-only; prod deletes stay human-only. Depends
       on 38.
-- [ ] 42. [DATA] P2. **Add `timeframe` to the manifest-side census + `service_name` filter for candles** — the manifest
-      census `AXIS_CENSUS_COLUMNS` (`deployment-api/.../routes/data_status/_axis_census.py`) has no `timeframe` and does
-      not filter `service_name=="market-data-processing-service"`; the candle census badges `data_type` against the
-      AGGREGATED `mdps_data_type_key` vocabulary, not the raw-tick `DATA_TYPES_BY_ASSET_GROUP`. Extend it so the
-      distinct-value census (§3f) works on the candle layer. Depends on 39.
+- [x] 42. ✅ [DATA] P2. `timeframe` added to `AXIS_CENSUS_COLUMNS`, `service_name=="market-data-processing-service"`
+      filter added, `data_type` badged against SOURCE `DATA_TYPES_BY_ASSET_GROUP` (not the aggregated
+      `mdps_data_type_key` — corrected per the 2026-07-21-evening ruling) — `deployment-api@5564c52c`. The census does
+      not actually depend on todo 39's oracle (it is an independent vocabulary check, not built atop
+      `canonical_path_violations()`), so it did not block on 39 being unshipped.
 
 ---
 
