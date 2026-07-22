@@ -754,3 +754,10 @@ tarball once; always check the launcher's own freshness warning output, and if s
   correctly left untouched). **NOT forcing this ship** — will retry once that WIP clears (check again next tick; do not
   isolate/stash someone else's active edit). MTDS's own quality-gates.sh + deployment-api's (for the distinct-values
   `futures_chain` fix) started running in parallel while waiting.
+
+- **2026-07-22 19:51 UTC (VM re-check — both healthy, climbing, nothing actionable)** —
+  `mtds-lst-rates-20260722-181845`: manifest at 3799 entries, real progress now at `2023-03-31` (from `2021-08-17`),
+  real EVM (stETH/wstETH/rETH/ cbETH/ankrETH/idle/pendle) + Solana (mSOL/sanctumSOL/jito/marinade) rows landing every
+  day, RSS 1365MiB (healthy). `mtds-dex-swaps-backfill`: manifest at 9323 entries, 183,634+ real swap records collected
+  so far across working shards, RSS ~1000MiB (healthy, nowhere near OOM). Both correctly left running — no intervention
+  needed.
