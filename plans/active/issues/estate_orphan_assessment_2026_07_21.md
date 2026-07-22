@@ -76,15 +76,17 @@ operator-notified 2026-07-21.
 
 ## Todos
 
-- [ ] 1. [DATA] P1. **Back-fill the 214,319 sports ORPHAN_REAL rows** via `record_captured` (read the durable
+- [x] 1. [DATA] P1. **Back-fill the 214,319 sports ORPHAN_REAL rows** via `record_captured` (read the durable
       `orphan_sweep_sports.parquet` audit reports; NEVER delete — this is real data honest-coverage is missing). Verify
-      the sports honest-coverage rises after. **CAUTION (found 2026-07-22, see
-      `sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md`)**: 83,541 of the 186,971 reference-bucket rows
-      are `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` dated before the 2020-06-06 sports floor — a UAC registry gap (now
-      fixed, `unified-api-contracts@46d865df`) let them misclassify as `E_orphan_real` instead of
-      `C3_pre_launch_window`. **Exclude these from the backfill** (they are fabrication-by-construction per
-      `sports-2020-06-data-floor.md`, pending an operator-gated WIPE, not a manifest write) — the legitimate backfill
-      scope is 27,348 (odds) + 103,430 (reference) = 130,778 rows.
+      the sports honest-coverage rises after. **DONE 2026-07-22** — found + excluded 83,541 pre-2020-06-06-floor
+      `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` rows first (UAC registry gap, `unified-api-contracts@46d865df`, filed
+      `sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md` for the operator-gated WIPE ask on those),
+      wired a durable `split_pre_floor` filter into the backfill script (`instruments-service@fc5983a8`, regression test
+      added), then ran `backfill_orphan_class_e_sports.py --apply --consolidate` for both buckets: **odds — 4 cells
+      recorded** (27,323 of 27,348 report rows were already covered by normal capture since the 2026-07-21 audit);
+      **reference — 97,606 cells recorded, 0 errors** (103,426 of 103,430 legitimate rows still orphan at apply-time).
+      Consolidation deferred to the sibling cron (fresh lock present on both buckets at apply-time) — the per-VM-shard
+      write is durable and already correct; the canonical blob will reflect it on the cron's next cycle.
 - [ ] 2. [DATA] P1. **Triage the 34,385 sports LEGACY_DUPLICATE** (reference bucket) — content-verify each has a
       manifested canonical twin (the 5-part proof), then the human-only delete disposition.
 - [ ] 3. [INFRA] P1. **Run the orphan sweep for defi / cefi / tradfi / prediction on a VM** — deployment-service@f8e885f
@@ -100,8 +102,14 @@ operator-notified 2026-07-21.
       datapoint-validation branch, consumes `VM_BACKFILL_CMD` as-is) — `deployment-service@74eca154`. Tarball +
       setup-script republished, relaunched 2026-07-22 05:04-05:05 UTC: `orphan-sweep-cefi-20260722-050405`,
       `-defi-20260722-050426`, `-tradfi-20260722-050445`, `-prediction-20260722-050511` (all RUNNING,
-      asia-northeast1-c). Second heartbeat watchdog armed (30-min/5-min ticks) to confirm the fix actually holds this
-      time before marking done.
+      asia-northeast1-c). **Dispatch fix CONFIRMED HOLDING**: defi/tradfi/prediction ran the full 30-min watchdog window
+      with genuine climbing progress (tradfi swept 8.4M+ objects at ~10-11k/s; defi/prediction showed periodic
+      heartbeats + growing sweep counts) — no crash. **cefi stalled silently** — `orphan-sweep-cefi-20260722-050405`
+      stayed RUNNING but wrote ZERO bytes to `run.log` AND its independent GCS-blob heartbeat sidecar
+      (`vm-heartbeat/{vm}.txt`) never updated past its initial "starting" write at launch+2min — serial console
+      confirmed silent for 34+ minutes (no kernel/systemd/process output at all), a real stall by the measured-progress
+      rule, not just a slow cefi index load. Killed + relaunched (`orphan-sweep-cefi-20260722-055006`, 2026-07-22 05:50
+      UTC); a focused 3rd watchdog (18-min/3-min ticks) is confirming it makes real progress this time.
 - [ ] 4. [CODE] P2. **Make the manifest load resumable / streamed** in `migration_orphan_sweep.py` (chunked download
       with retry, or read the index in row-group batches) so a multi-GB index does not break a single connection — this
       is what blocked defi/cefi/tradfi in-session.
