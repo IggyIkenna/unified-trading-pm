@@ -288,7 +288,12 @@ uses ready-state + revision health in place of desired/running.
 - [x] [UI] P3. Decide the standalone `/deployments` route — keep vs fold. **✅ KEEP (operator-confirmed 2026-07-11)** —
       the standalone route ships (`deployment-ui/src/App.tsx:155` —
       `<Route path="/deployments" element={<Deployments />}` \+ the `/deployments/:name` detail route) alongside the
-      cockpit tab. Decision: KEEP.
+      cockpit tab. Decision: KEEP. > **⚠️ SUPERSEDED 2026-07-21** — the "alongside the cockpit tab" framing above is now
+      stale. > `deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md` retired the `?tab=` cockpit-tab scheme >
+      entirely (`deployment-ui@079b29e`): there is no separate "cockpit tab" left for `/deployments` to run > alongside
+      — every screen, including the former tab, is now the SAME plain, URL-param-backed route. The > underlying decision
+      (KEEP a URL-param-backed, filter-deep-linkable standalone `/deployments`) still holds > — it's exactly what the
+      plain-routes refactor made universal; only the "two schemes coexist" premise is gone.
 - [x] ✅ [UI] P3. EXPERIMENT badge label — kept as `batch·exp` (`ModeBadge` renders it). — done in UI-popover.
 - [x] ✅ [REVIEW] P1. Gate `/freshness` fetches to VM kinds only (services use error-rate health). — done
       (deployment-ui@e9b77ac; `Cockpit.tsx` + `Deployments.tsx` filter `kind === "VM"`).
@@ -408,16 +413,18 @@ Spec to lift into the future plan:
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
+- [x] ✅ [BACKEND] P3. **LIVE/PAPER `stalled` signals — DEFERRED (scope decision 2026-07-10, needs new subsystems)**.
       Discovered while wiring the BATCH row (deployment-api@29f3be5): LIVE `stalled` needs an expected-active-window
       calendar (market-hours-aware, so an idle-but-healthy off-hours window never misfires); PAPER needs a `work_delta`
       (rows-out-delta) tracker (the D.1 rolling window @970bcdc samples `/proc` cpu/mem/disk, NOT `rows_out`, so it
       would have to be extended to carry the counter history first). **Decision**: both are genuinely NEW subsystems — a
       market calendar and a counter-history tracker — disproportionate to build for a P3 `stalled` refinement, so they
-      are DEFERRED to a future phase (tracked in the parent `deployment_observability_expansion_2026_07_08.md`). The
-      current **honest-`"unknown"` degradation is confirmed correct** as the v1: `_composite_health_status` returns
-      `"unknown"` for LIVE/PAPER `stalled` rather than guessing from a proxy (WS-D.0 principle 2), and the
-      oom-risk/`stalled` alert wiring (deployment-api@5e25dce) only fires on a REAL state, so nothing misfires while
-      these stay unknown. BATCH — the one umbrella with a real signal (`object_delta`) — is wired + shipped. This item
-      stays open (not a fake `[x]`) as an explicit, tracked deferral. (FOLDED IN from
-      deployment_obs_backend_kinds_health_2026_07_09, 2026-07-15, plan-reconcile §6 operator ruling)
+      are DEFERRED to a future phase. The current **honest-`"unknown"` degradation is confirmed correct** as the v1:
+      `_composite_health_status` returns `"unknown"` for LIVE/PAPER `stalled` rather than guessing from a proxy (WS-D.0
+      principle 2), and the oom-risk/`stalled` alert wiring (deployment-api@5e25dce) only fires on a REAL state, so
+      nothing misfires while these stay unknown. BATCH — the one umbrella with a real signal (`object_delta`) — is
+      wired + shipped. (FOLDED IN from deployment_obs_backend_kinds_health_2026_07_09, 2026-07-15, plan-reconcile §6
+      operator ruling.) **MOVED ON 2026-07-21 (plan-reconcile consolidation pass, this plan archiving)**: this plan
+      itself is now archiving, so the still-open deferral moves one hop further to
+      `plans/epics/observability_master.md`'s "Folded-in scope 2026-07-21" section — see there for the live copy; this
+      bullet stays here checked as a closed provenance record only.

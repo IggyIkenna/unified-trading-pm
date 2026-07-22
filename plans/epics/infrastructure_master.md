@@ -32,7 +32,6 @@ codex_ssots:
 related_plans:
   - ../active/aster_and_cefi_rolling_adv_feature_2026_07_21.md
   - ../active/bucket_estate_consolidation_to_sub100_2026_07_13.md
-  - ../active/bucket_fold_closeout_2026_07_17.md
   - ../active/bucket_fold_execution_strategy_2026_07_17.md
   - ../active/bucket_fold_features_2026_07_17.md
   - ../active/bucket_fold_ml_2026_07_17.md
@@ -46,7 +45,6 @@ related_plans:
   - ../active/mtds_retry_safe_default_audit_2026_07_14.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
   - ../active/repo_scripts_governance_audit_2026_06_18.md
-  - ../active/sports_data_sources_canonical_completion_2026_07_13.md
   - ../active/stash_pile_workspace_cleanup_2026_06_03.md
   - ../active/ui_build_warm_cache_2026_06_17.md
   - ../active/utl_uac_reuse_consolidation_remediation_2026_06_10.md
@@ -496,7 +494,7 @@ sub-plan; this section is a pointer.
 
 ## Assigned active plans
 
-_20 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
+_18 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
 (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -551,11 +549,6 @@ off dedicated buckets onto the shared DeFi tick bucket
 **status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: Host-adaptive RAM+CPU QG admission governor —
 replace fixed-K with resource reservation
 
-### [`sports_data_sources_canonical_completion_2026_07_13`](../active/sports_data_sources_canonical_completion_2026_07_13.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Sports asset_group — drive every remaining
-data source to canonical 100%
-
 ### [`utl_uac_reuse_consolidation_remediation_2026_06_10`](../active/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
 
 **status**: active · **estimate**: 7.2 cal AI-days (class: refactor) **title**: UTL/UAC reuse consolidation — kill local
@@ -588,11 +581,6 @@ deprecate/delete audit + strict-quickmerge carve scope (D16)
 cache warm so only changed code rebuilds
 
 ## P3 — backlog; revisit quarterly
-
-### [`bucket_fold_closeout_2026_07_17`](../active/bucket_fold_closeout_2026_07_17.md)
-
-**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Bucket fold — Wave-3 cross-cutting closeout
-(codex audit, estate recount, alias sunset)
 
 ### [`mtds_retry_safe_default_audit_2026_07_14`](../active/mtds_retry_safe_default_audit_2026_07_14.md)
 

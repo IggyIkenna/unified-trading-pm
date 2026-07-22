@@ -83,8 +83,7 @@ Reconciliation — the Determinism Spine
 
 ### [`pipeline_mode_partition_migration_2026_06_01`](../active/pipeline_mode_partition_migration_2026_06_01.md)
 
-**status**: active · **estimate**: 1.2 cal AI-days (class: infra) **title**: pipeline_mode on-disk partition migration —
-bundle pipeline_mode= hive partition into each bucket's next whole-corpus walk
+**status**: active · **estimate**: 1.2 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 

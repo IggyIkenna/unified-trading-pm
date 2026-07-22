@@ -90,7 +90,7 @@ audit record only.
 | #   | Plan                                           | Scope                                                                | Status (2026-07-20)                         |
 | --- | ---------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------- |
 | 1   | `ao_dispatch_liveness_p0_2026_07_20.md`        | P0 — prereq reaper kills freshly-spawned agents; slot race           | ✅ **ARCHIVED** — residual → Phase 8        |
-| 2   | `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate            | 🟡 OPEN — e2e proof + R1/R2 residuals       |
+| 2   | `ao_scheduled_agent_hygiene_2026_07_20.md`     | P1 — make the daily reconciler observably work; boot gate            | ✅ ARCHIVED — residual → Phase 8            |
 | 3   | `ao_failover_multi_vm_readiness_2026_07_20.md` | P2 — keep failover for multi-VM's return; fix + prove untested paths | ✅ **ARCHIVED** — 8/8, no residual          |
 | 4   | `ao_backlog_regen_integrity_2026_07_20.md`     | P1 — regen/bootstrap data-integrity defects + the two rulings        | ✅ **ARCHIVED** — 7/7                       |
 | 5   | `ao_worker_lifecycle_reap_2026_07_20.md`       | P1 — orphan-process reap + stale-dispatch reclaim                    | ✅ **ARCHIVED** — residual → Phase 8        |
@@ -651,6 +651,25 @@ NOT AO and are deliberately out of scope here.
       dispatch race assertion. **Only the operational proof remains**: live `dispatched` count equals live-worker-held
       count across a 24h window. Needs the fix live for a full day before it means anything. **Gate**: the 24h
       comparison, stated explicitly. _Source: `ao_worker_lifecycle_reap_2026_07_20.md` (archived), todo 4._
+- [ ] [BACKEND] P1. **Prove ONE plan_reconciler run end-to-end (the reconciler's real gate) — plus pin two named
+      residuals from the root-cause fix.** Two runs have died so far (07-20 `agt-751738` at 07:33:30, same
+      `tmux_session_lost`/`archived_lifecycle_complete` signature as the historical 07-15/17/18 deaths) — root-caused to
+      an UNGUARDED `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` reaping a live-working reconciler whose
+      slot had flipped to `idle` (idle-reclaim, `ticks=2`), 1h38m BEFORE the `f641968` typed-agent-exemption guard was
+      even committed — so the fix is plausible but UNTESTED (no reconcile run since it deployed). **Gate**: (a) observe
+      a full run producing BOTH a `plan_health_result` activity row AND a pushed `plan_reconciler/<dispatch_id>` branch
+      — cite the dispatch_id, result row, and branch name; do not tick on a green-looking journal line alone; (b) **R1**
+      — pin the exact code path that flips a typed agent's slot `working`→`idle` (empirically happened at/around a
+      service restart on 07-20; not yet located in code — checked & excluded: seed-from-tabs, claim_slot, the
+      dispatch-ack requeue, the 25-min health stale-timeout); (c) **R2** — on the next run, confirm the watchdog logs an
+      EXEMPTION for the reconciler's slot (the `typed_agent_sessions` continue at `worker_liveness_watchdog.py:1172`)
+      instead of a kill, and capture the slot's status column during the run — if it still reaps, the `AgentRow` guard
+      is being defeated (investigate whether a restart archives/clears the AgentRow or its `tmux_session`). **Operator
+      direction 2026-07-20: hold this retry until the other concurrently-landing AO plans (`ao_dispatch_liveness_p0`,
+      `ao_failover_multi_vm_readiness`, `ao_fleet_infra_hardening`, `ao_fleet_observability_kpis`,
+      `ao_backlog_regen_integrity`, `ao_dispatch_cooldown_and_park`) settle** — a live central VM mid-restart-churn from
+      several concurrent plans is a bad environment to draw conclusions in. _Source:
+      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5)._
 - [x] ✅ [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM
       `.env.local`.** — DONE 2026-07-21 (operator authorized, superseding the A6 "fold into re-bootstrap" default — done
       in-window alongside the DB migration). Took the `sed -i` backup-first route (backups
