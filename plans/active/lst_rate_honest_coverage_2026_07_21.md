@@ -286,7 +286,22 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `test_lst_native_rates.py`, `test_lst_yields_path_resolution.py`, `test_lst_features_unit.py`) only ever construct
       SYMMETRIC today/prior token sets and never test ezETH/rsETH at all — they give false confidence and would not
       catch this exact drop scenario. Worth a real asymmetric-token-set test case once the underlying data gaps are
-      closed.
+      closed. - ✅ **Solana-LST sub-fix SHIPPED (2026-07-22)** — `market-tick-data-service@3dd16849` ("DefiLlama
+      historical ratio fallback for Solana LST rates"). Added a new Tier 4 to `solana_lst_archival.py`
+      (`_tier4_defillama_historical_rate` + `_defillama_historical_usd_price`), wired as the final fallback in
+      `_fetch_jito_rate`/`_fetch_marinade_rate`/ `_fetch_bsol_rate`/`_fetch_sanctum_rate` after Tiers 1-3 all miss:
+      fetches LST-USD and SOL-USD from `coins.llama.fi/prices/historical/{ts}/{mint}` at the same timestamp and divides,
+      honest-absence on any missing/zero/implausible price (never fabricates). Mint addresses live-verified via direct
+      `curl` against the real DefiLlama API before coding (jitoSOL `J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn`, mSOL
+      `mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So`, bSOL `bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1`, Sanctum INF
+      `5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm`, quote leg wrapped-SOL `So111...112`). Existing launch-date gates
+      in `fetch_solana_lst_rates()` (bSOL 2022-11-01, Sanctum 2024-01-25) already prevent pre-launch dates from reaching
+      this tier, so no new gating was needed. 20 new/updated unit tests (6 existing tests patched to mock the new tier
+      so they don't make live network calls; 14 new tests covering the price-fetch helper, the ratio tier itself —
+      unknown protocol/missing price/zero price/implausible ratio — and one positive end-to-end fallthrough case); full
+      MTDS `quality-gates.sh` green (exit 0) before commit. - **DEFERRED**: the ezETH/rsETH sub-fix (historical MTDS
+      `lst_rates` collector backfill) remains held — real-infra caution given this session's 2 prior incidents
+      (misdirected VM launch, confirmed OOM bug); not attempted this session.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
