@@ -13,7 +13,7 @@ summary: |
   CLEAN — never touch a tree with uncommitted work"). On 2026-07-17 slot 3 observed 4 "branch: Reset to
   origin/live-defi-rollout" reflog entries in ~90 min across 3 repos, and twice lost uncommitted edits mid-task.
   **Mechanism NOT fully proven** — see § Open question; filing on evidence, not a theory.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -40,7 +40,7 @@ depends_on: []
 source: >-
   slot session 2026-07-17 — authored while diagnosing the slot-3 dirty-worktree loss; frontmatter completed (stage enum
   + missing keys) by slot main·harsh_pc to unblock the PM lint-codex gate, content untouched
-resolved_by:
+resolved_by: agent-orchestrator@cd559390 (fix direction 1 only; see resolution note)
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -128,3 +128,34 @@ Found while shipping `bucket_estate_consolidation_to_sub100_2026_07_13`'s asset-
 via `git reflog show`, `git status`, and reading `_branch_state.py`. **agent-orchestrator was not modified** — the
 mechanism is unproven and that repo is the live orchestrator runtime; guessing at a fix there is precisely the overreach
 this session already made once (see the plan's ⚠️ CORRECTION MID-TASK banner).
+
+## Resolution (2026-07-22) — fix direction 1 only
+
+`agent-orchestrator@cd559390`. Implemented fix direction 1 exactly as specified: `heal_dead_slot_branch_quarantine` now
+runs a `git status --porcelain` check per stop-state repo, immediately before the `checkout -B` — a non-empty result
+refuses the realign (leaves the repo quarantined, logs the reason) regardless of ahead-commit count/age, closing the gap
+the ahead-commit guard never covered. Mirrors `_reclaim_leftover_merged_branch`'s existing clean-tree rule exactly, per
+the doc's own recommendation. New regression test `test_heal_refuses_realign_of_a_dirty_tree_with_zero_ahead_commits`
+reproduces the exact gap (a `wrong_branch` stop-state, 0 ahead commits, an uncommitted staged edit) and asserts the edit
+survives untouched. Full `agent-orchestrator quality-gates.sh` green (1579 passed).
+
+**Deliberately NOT implemented**: fix direction 2 (preserve the dirty tree via `git stash create` + push before
+realigning, so the repo can still be healed automatically rather than left quarantined). This would require actively
+clearing the dirty working tree as part of the automated heal — closer to the class of operation CLAUDE.md's own hard
+rule bans outright ("Never `git reset --hard`/`clean -fd`/`restore` uncommitted work") even with a preserve-first step,
+and the doc itself marks it P2 (lower priority than fix 1, which it explicitly calls "safe and correct regardless of
+which command turns out to be responsible"). Leaving the repo quarantined + paging a human (`_alert_branch_quarantine`,
+unchanged) is the safe outcome for now — todo/fix-direction 2 stays open as a follow-up if quarantine-and-page proves
+too disruptive in practice. Fix directions 3 (extend the reflog audit — it structurally cannot see this class either
+way) and 4 (docs note) also remain open.
+
+**On the "Open question" (mechanism NOT proven for the uncommitted case)**: while investigating the sibling
+`quickmerge_silently_reset_unpushed_commit_2026_07_22.md` / `utl_shared_clone_commits_repeatedly_reset_2026_07_22.md`
+docs the SAME session, `scripts/quickmerge.sh`'s `cascade_dep_branch()` was confirmed as the root cause for the
+**committed**-commit class of silent reset (unconditional `checkout -B` in a shared ancestor clone). That function also
+`git stash push -u` any dirty tree before switching branches and attempts a `stash pop` after — a plausible, NOT YET
+independently verified, candidate mechanism for THIS doc's uncommitted-edit case too (a stash that never gets popped
+back would read exactly as observed: file content reverted to HEAD, `git status --porcelain` clean, recoverable via
+`git stash list` rather than reflog). Recording this as a lead for whoever picks up the still-open "Open question", not
+as a second confirmed root cause — the fix shipped here (refuse-on-dirty in the heal path) is correct and complete
+regardless of which mechanism is eventually confirmed.
