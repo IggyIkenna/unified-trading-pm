@@ -28,7 +28,7 @@ related:
     codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-21
-priority: P2
+priority: P1
 parent_epic: infrastructure_master
 source: "review(slot1) msgs 1530/1532/1534 to main orchestrator, 2026-07-21"
 assigned_vm: NA
@@ -148,6 +148,44 @@ carry forward a prior state) — this just adds urgency and a second failure mod
 INFRA todo above. Still digest-class, no page (review explicitly filed it as a record-only data point, no new
 escalation). The slot3/6 diverged pair (same SHAs) and the `ip-172-31-0-185` slot0 out-of-scope session are unchanged
 and already-known.
+
+### Escalation 2026-07-22 (review msg 1658, 12:34Z) — ALL 24 repos false-dirty at once WITH real FF-pull starvation → bumped to P1
+
+This is the data point that takes the issue from cosmetic/digest-class to **operationally impactful**, and is why the
+frontmatter priority is now **P1** (was P2). review(slot1, hk) reported that its **own live slot** (hk slot 1, the
+active review agent) had **all 24 repos report `dirty(1 file)` simultaneously**, with an **identical
+`not_clean_since=2026-07-22T12:22:04Z` across every single one**. review directly checked 3 of them (agent-orchestrator,
+unified-trading-library, unified-api-contracts) via `git status --short` in real time — **all genuinely CLEAN, zero
+files**.
+
+Two things make this materially worse than every prior instance in this doc:
+
+1. **Real operational impact, not display-only.** `ff_pull_last_result` on that slot now reads **`skip:dirty`** — i.e.
+   the 5-min FF-pull cron (`slot-cron-ff-pull.sh`) is **actively skipping the slot on this false dirty signal right
+   now**. A slot that stops FF-pulling silently drifts behind `origin/live-defi-rollout`; that is the exact staleness
+   the sync-nudge exists to catch, produced here by the reporter bug itself. The masking-risk hypothesized in the
+   earlier sections is no longer hypothetical — a false-clean would clear the age, and a false-dirty is now demonstrably
+   starving FF-pull.
+2. **Blast radius is fleet-wide and on LIVE slots, not a retired/absent worktree.** The `.tabs/0` addendum above was a
+   phantom row for a worktree that doesn't exist on the host — annoying but inert. This is 24 present-and-clean repos on
+   an active slot all flipped dirty at the **same instant**. The identical timestamp across all 24 strongly implicates a
+   **race in the reporter itself** — scanning mid-write of some shared lock/temp artifact, or a bug that stamps every
+   repo dirty when a single shared precondition trips — rather than 24 independent per-repo `git status` mtime-churn
+   races coinciding by chance. This is a distinct (or at least strictly-stronger) fingerprint from the per-repo FF-cron
+   mtime-churn flicker characterised at the top of this doc.
+
+Not orphan-WIP (review's trees are actually clean; nothing to inherit). review filed it as a stronger repro signal for
+the reporter bug, explicitly flagging the fleet-wide FF-pull-starvation risk on live slots. **Operator-surfacing item**
+(added to the main orchestrator's next-operator-contact list): a monitoring reporter bug is now silently degrading a
+real fleet operation (FF-pull currency) on live slots.
+
+- [ ] [INFRA] P1. Root-cause the **all-repos-simultaneous** false-dirty (identical `not_clean_since` across 24 repos on
+      one slot) in `slot-git-status-report.sh` — this points at a shared-precondition/shared-artifact race in the
+      reporter, not per-repo `git status` churn. Because it drives `ff_pull_last_result=skip:dirty` and thus starves the
+      FF-pull cron, the `dirty_consecutive_ticks >= 2` gate proposed above should also guard **the FF-pull skip
+      decision** (`slot-cron-ff-pull.sh`), not just `not_clean_since` clearing + sync-nudge — a one-tick phantom dirty
+      must not skip an FF-pull. Add a test that a single-tick all-repos-dirty observation neither clears/sets
+      `not_clean_since` nor causes an FF-pull skip.
 
 ## Triage
 
