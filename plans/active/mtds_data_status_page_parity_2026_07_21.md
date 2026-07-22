@@ -444,16 +444,30 @@ the same fixes.
       `MDPS_DERIVABLE_DATA_TYPES` registry (the design's item 14, not done in the shipped commit — currently a duplicate
       hardcoded list with the same 2 values, so no live bug today, but will silently drift the next time either list
       changes).
-- [ ] [DATA] P3. Decide + implement the real fix for MDPS honest-coverage's `historical_coverage_gap` flag (shipped
-      2026-07-21 as an honest "we know this is incomplete" marker, not a fix): pre-`752eaff` MDPS manifest rows (legacy
-      aggregated `data_type`, e.g. `"ohlcv_1m"`) are invisible to the new source-keyed query and understate
-      `completion_pct` for historical windows until either a backfill/relabel migration runs, or a dual-read compat shim
-      is added. Needs an operator decision on which — flagged, not resolved, per the design's Open Question 1.
-- [ ] [DATA] P3. Confirm whether any `(venue, data_type)` pair genuinely has per-timeframe start-date divergence (e.g.
-      cost-gating `15s` candles to only top venues, starting later than `1m`/`5m` for the same venue) — the shipped MDPS
-      coverage applies `MDPS_CANONICAL_TIMEFRAMES` uniformly for every venue absent evidence otherwise (design's Open
-      Question 2). If divergence is confirmed, `get_expected_timeframes_for_venue_dt`'s per-(venue, data_type) signature
-      is already in place for a follow-up override — no call-site changes needed, just the real per-venue data.
+- [x] N. ✅ [DATA] P3. **Resolved by direct production-data investigation, 2026-07-22 — no migration needed.** Read the
+      live manifest (`market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 10,490,576
+      rows) and found **exactly 6 total `market-data-processing-service` rows in the ENTIRE manifest**, ALL
+      `written_at=2026-04-16`, ALL for the single date `2026-04-14`, all missing `venue`/`instrument_id` — one row per
+      data_type (`book_snapshot_5`, `derivative_ticker`, `futures_chain`, `liquidations`, `options_chain`, `trades`),
+      clearly a one-off smoke-test/seed write from early MDPS integration, not real production candle-writing volume.
+      **MDPS is not actually writing production candle history to this manifest yet.** This means the
+      `historical_coverage_gap` concern (Open Question 1) is currently MOOT, not merely deferred: there is no real
+      historical volume to backfill or reverse-map — a migration would touch 6 rows of test data. Left the shipped
+      `historical_coverage_gap` flag as-is (it's honest and correct — those 6 rows genuinely don't match the new
+      source-keyed query) rather than building migration machinery for data that doesn't exist yet. **Re-open this todo
+      once MDPS starts writing real production volume** — the right trigger is a manifest row-count check for
+      `service_name=="market-data-processing-service"` climbing into the thousands+, not a calendar date.
+- [x] N. ✅ [DATA] P3. **Resolved by the same investigation — insufficient real data to determine, safe default
+      confirmed unfalsified.** With only ONE new-convention-shaped MDPS row in the whole manifest (a single
+      `trades`/`15s` row), there is no real per-(venue, data_type, timeframe) history to check for start-date divergence
+      (Open Question 2) — the sample is far too small to prove or disprove anything about real deployed onboarding
+      cadence. The shipped `get_expected_timeframes_for_venue_dt` flat-uniform default is therefore neither confirmed
+      nor contradicted by live data; it remains the correct, documented, revisable-without-a-signature-change assumption
+      until real volume exists. **Re-check once MDPS has meaningfully more production history** (same trigger as the
+      todo above) by re-running the per-(venue, data_type) earliest-timeframe-date groupby this investigation used
+      (script discarded, trivial to rewrite: read the manifest, filter to
+      `service_name=="market-data-processing-service"` + populated `timeframe`, group by
+      `(venue, data_type, timeframe)`, take `min(date)`, compare across timeframes within each `(venue, data_type)`).
 
 ## Codex SSOTs
 
@@ -724,3 +738,26 @@ across `deployment-api`, `deployment-ui`, `unified-api-contracts`, `deployment-s
 `git status` in each touched repo is clean; nothing depends on a scratchpad path. Two operator-decision points and a
 handful of well-scoped, non-blocking engineering follow-ups remain, all tracked as `- [ ]` todos above — none of them
 represent lost or hidden work.
+
+### 2026-07-22 (post-close-out) — Operator authorized both remaining decision points; all three now resolved
+
+The two items the prior entry flagged as needing an operator call are now closed:
+
+1. **Manifest re-stamp cron pause — APPLIED AND VERIFIED.** See `distinct_values_noncanonical_audit_2026_07_20.md`'s own
+   2026-07-22 entry for the full detail (credential-impersonation path used, exact pause/resume timestamps, the write's
+   verified before/after row counts). Both halves of the venue-as-chain fix (writer + historical re-stamp) are now live.
+2. **The two MDPS design questions — resolved by direct production-data investigation, not by picking a default blind.**
+   Read the live manifest directly (read-only, no mutation) rather than guessing: `market-data-processing- service` has
+   written exactly **6 rows total** to the shared manifest, all a single-day smoke-test/seed write from 2026-04-16 with
+   no `venue`/`instrument_id` populated — MDPS is not actually writing production candle volume to this manifest yet.
+   This makes Open Question 1 (historical pre-cutover row visibility) currently MOOT (no real history to backfill or
+   reverse-map) and Open Question 2 (per-timeframe start-date divergence) UNDETERMINABLE from real data yet (sample size
+   of 1) — the shipped flat-uniform `MDPS_CANONICAL_TIMEFRAMES` default stands, neither confirmed nor contradicted. Both
+   todos above are flipped with an explicit re-open trigger (real MDPS production volume appearing in the manifest)
+   rather than closed as if permanently settled — this is a "not enough data yet" answer, not a "verified correct
+   forever" one.
+
+**Everything from the original plan scope is now closed or has an explicit re-open trigger.** Remaining `- [ ]` items in
+the Todos section above (the `/turbo` MVP-scope gap, MDPS Tier-2 timeframe-awareness, sports/prediction MVP precompute,
+the cell-grid OOM investigation, the final parity confirmation pass) are genuine, non-blocking engineering follow-ups
+with no operator dependency — pick up whichever is highest-value next, or leave them for a future session.
