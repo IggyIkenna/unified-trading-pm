@@ -158,7 +158,14 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 - [ ] [MTDS] P3. **Prove force + skip per surface** — sample download for the AAVE oracle (and DEX where endpoint
       available) against the `-test-` bucket: force-leg writes the canonical parquet + manifest `captured`; skip-leg
       fires the freshness skip. Read the VM `run.log` as ground truth. This is the "tested for sample data downloads"
-      requirement.
+      requirement. **BLOCKED-CREDENTIALS (2026-07-22)**: the `market-data-tick-defi-test-central-element-323112`
+      `-test-` bucket this proof needs does not exist (or `unified-trading-sa` lacks `storage.buckets.get` to confirm
+      either way — same account also lacks `storage.buckets.create`). The operator's own second GCP-credentialed account
+      (`ikenna@odum-research.com`) is present but its token needs an interactive `gcloud auth login`/reauth this session
+      can't perform non-interactively. Needs either (a) an operator with bucket-create IAM to provision it (mirror
+      `market-data-tick-cefi-test-…`'s region `asia-northeast1` / `STANDARD` class per
+      `deployment-service/configs/bucket_config.yaml`), or (b) a fresh interactive gcloud login for the admin account.
+      Not a data/day problem — operator already approved `--auto-day` for the day-selection question.
 
 ## Phase 4 — Daily-download / MVP gate
 
