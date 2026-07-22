@@ -2214,22 +2214,52 @@ questions when a decision is needed. Ran it. Findings:
     actual scope of the visibility gap this pass exists to close; the mapping is at `recovery_register.tsv` in this
     session's scratchpad, regenerable by re-running the script). The other 3,835 candidates have no corresponding GCS
     object — correctly left untouched (nothing to register).
-  - **NOT yet applied.** The register-phase `--apply` (additive insert of the 1,545 confirmed rows) has not been run yet
-    — low risk (no CAS, no race, per-VM-shard write the consolidator merges), but deliberately left as an explicit next
-    step rather than rushed at session-end. The retire phase has not been dry-run or applied at all.
-  - `- [ ] [DATA] P1. Run `recover_tradfi_chain_manifest_registration_2026_07_22.py
-    --apply` (register phase) against the live tradfi manifest — inserts the 1,545 GCS-confirmed canonical rows found by the 2026-07-22 dry-run. Additive/no-CAS, low risk. Re-run the dry-run first if this is picked up more than a day or two later (the confirmed set can drift as other migrations/rebundles land).`
-  - `- [ ] [DATA] P1. Dry-run `recover_tradfi_chain_manifest_registration_2026_07_22.py
-    --retire` (no --apply) AFTER the register apply above lands + is verified — review the retire candidate list carefully before ever passing --apply (in-place-CAS, destructive mutation of existing manifest rows) — per the plan's own "Do NOT delete-only" caution and this session's own near-miss with an unreviewed whole-corpus walk attempt on the CME monolith investigation.`
   - `[x] [SCRIPT] P2. Ship recover_tradfi_chain_manifest_registration_2026_07_22.py via quickmerge — mtds@c4cc819b1845f0c1a7f4546612f80229242fe265. Hit quickmerge's own documented untracked-file gotcha (`git
     diff
     origin/main`is blind to untracked files, silently early-exits "nothing to merge" without committing anything) — fixed by`git
     add`ing the file before invoking quickmerge, per the script's own inline comment.`
+  - `[x] [DATA] P1. Run recover_tradfi_chain_manifest_registration_2026_07_22.py --apply (register phase) against the live tradfi manifest.`
+    **Real, real bug caught by the real run, fixed, re-verified:** the FIRST `--apply` attempt CRASHED —
+    `ValueError: ManifestWriter.add() with bundled data_type='options_chain' is banned; use record_captured_from_counts() instead`.
+    The earlier design research (an Explore sub-agent) had concluded this ban could never fire for tradfi because
+    `data_type` is always the OHLCV-granularity axis — **that conclusion was wrong for this corpus**: 1,412 of the 1,545
+    confirmed candidates carry `data_type='options_chain'` literally (equal to `instrument_type`), which IS in UAC's
+    `BUNDLED_DATA_TYPES` closed set. Verified nothing partially wrote before the crash (per-VM shard listing showed no
+    new shard from the failed run — `ManifestWriter` buffers until `.flush()`, never reached). Fixed by branching
+    `apply_register()`: `data_type in BUNDLED_DATA_TYPES` → `record_captured_from_counts()` (cluster-coverage gate,
+    mirrors `rebuild_tradfi_manifest.py::_emit_bundled_shard_row`'s placeholder `row_count=1` /
+    `expected_root_clusters=observed_clusters={root: 1}` pattern — no independent per-cluster SSOT exists for a
+    manifest-registration reconstruction, same reasoning as that precedent); everything else → plain `add()`. Also fixed
+    a second, smaller bug in the same pass: `pipeline_mode`/`source` were being read from the raw candidate row (which
+    can be stale/blank — exactly the kind of legacy value this whole pass exists to route around) instead of freshly
+    DERIVED via `_pipeline_mode()` + `source_string_for()`, matching the derive-don't-preserve convention every other
+    script in this family already uses. Smoke-tested both write paths (bundled + non-bundled) on 4 real sample rows
+    before the full run — all landed correctly (`capture_status=captured`, correct `pipeline_mode=batch_databento`/
+    `source=databento`). Shipped the fix: `mtds@c8ace21dfeef294dc37d949264b1d373af55acca`. **Full apply run (re-used the
+    already-confirmed 1,545-key TSV from the crashed run rather than re-paying the ~40-min GCS existence-check pass —
+    the confirmed set hadn't gone stale in the ~15 minutes since)**: **1,545/1,545 rows written, 0 skipped.** Verified
+    via the resulting per-VM shard (`_index/per_vm/local-22055-99dd.parquet`, downloaded + read directly): all 1,545
+    rows `capture_status=captured`, `data_type` split 1,412 `options_chain` / 133 `ohlcv_1m` (matches the dry-run's own
+    split exactly), all `venue=CME`, 32 distinct `underlying` roots. The consolidator will merge this per-VM shard into
+    the canonical `_index/availability_index.parquet` on its next 60s cycle — not yet independently re-verified against
+    the CONSOLIDATED index (do that before declaring the register phase fully done end-to-end).
+  - `[x] [DATA] P1. Dry-run recover_tradfi_chain_manifest_registration_2026_07_22.py --retire (no --apply).` Fast (no
+    GCS calls — purely a fresh manifest re-read + in-memory classification, ~10s): **50,520 raw rows now have a
+    confirmed-registered canonical counterpart and would be retired.** Spot-checked the output TSV: candidates are
+    exactly the expected shape (`ESH1`/`ESZ3`/`ESH6`/etc. — genuine per-contract Databento symbol values in the
+    `underlying` field, the SAME class the register phase's `classify_databento_symbol` translation targets), nothing
+    surprising. **`--apply` for retire is explicitly NOT run this session** — per direct operator instruction ("do NOT
+    --apply retire without further review") and the plan's own standing caution: this is a single in-place-CAS REPLACE
+    dropping 50,520 rows from the live production manifest in one shot, meaningfully larger in scope than the earlier
+    112,839-row hygiene cleanup that turned out to have a wrong premise. Needs deliberate operator-visible review before
+    ever applying, not a same-session rush.
+  - `- [ ] [DATA] P1. Re-verify the register-phase 1,545 rows landed in the CONSOLIDATED _index/availability_index.parquet (not just the per-VM shard) — check post-consolidator-cycle, e.g. via honest-coverage re-measure or a direct manifest query filtered to the 32 registered underlying roots.`
+  - `- [ ] [DATA] P1-OPERATOR-REVIEW. Review the retire-phase candidate list (50,520 rows, recovery_retire.tsv in this session's scratchpad — regenerable via --retire dry-run) before ever running --apply. Once reviewed/approved: --apply is an in-place-CAS whole-index REPLACE (snapshot backup automatic) — re-run the dry-run first if picked up more than a day or two later (the manifest keeps moving).`
 
-**Remaining, in priority order for the next continuation: (1) run the register-phase --apply (script is shipped, ready
-to run for real now), (2) dry-run then carefully review the retire phase, (3) finish the CME monolith migration-tool
-build (P2, deferred), (4) Phase D gate (`data-pipeline-check-is` + `data-pipeline-check-mtds`, tradfi, all shards — the
-terminal completion gate for this whole plan).
+**Remaining, in priority order for the next continuation: (1) re-verify the register-phase rows landed in the
+consolidated index, (2) get operator review on the retire-phase candidate list before ever applying it, (3) finish the
+CME monolith migration-tool build (P2, deferred), (4) Phase D gate (`data-pipeline-check-is` +
+`data-pipeline-check-mtds`, tradfi, all shards — the terminal completion gate for this whole plan).
 
 **Lesson — QG sentinel friction under heavy shared-host contention (2026-07-22 late session):** `unified-api-contracts`
 was running under heavy multi-slot contention (12+ concurrent `quality-gates.sh` processes observed). Ran the FULL gate
