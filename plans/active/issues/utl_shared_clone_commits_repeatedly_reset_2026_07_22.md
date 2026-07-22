@@ -109,18 +109,35 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
 
 ## Todos
 
-- [ ] 1. [INFRA] P1. Identify the actual process producing the `branch: Reset to origin/live-defi-rollout` reflog
-      entries on `unified-trading-library` — instrument `slot-cron-ff-pull.sh` (or whatever else touches this clone) to
-      log its own PID + a stack/caller marker before any ref-changing git operation, then reproduce.
-- [ ] 2. [INFRA] P1. Once identified, fix the mechanism to be genuinely non-destructive per its own stated contract —
-      either skip entirely when local HEAD is ahead of origin (ahead-count check before any ref update, mirroring what
-      `git pull --ff-only` already guarantees), or convert any local-ahead commits to a protective stash/branch before
-      resetting (same pattern already used correctly elsewhere in the fleet for dirty WORKING-TREE changes — this gap is
-      specifically for local COMMITS, which the existing liveness-gate logic may not be checking).
+- [x] 1. [INFRA] P1. ✅ **Identified (2026-07-22)** — NOT `slot-cron-ff-pull.sh` (confirmed by full read: its only
+      ref-mutating paths are an ahead-only SKIP, a patch-id-verified adopt-rebase, and a strict `merge --ff-only`, none
+      of which can discard a genuinely-new local commit). The actual mechanism is `scripts/quickmerge.sh`'s
+      `cascade_dep_branch()` (line ~448): it walks every transitive internal-dependency ancestor of whatever repo a
+      **different, concurrent** agent is shipping (`--dep-branch <name>`, cascading to that branch) and runs
+      `git checkout -B "$branch_name" "origin/$branch_name"` unconditionally in the ancestor's directory — a single
+      shared clone on the host, not a private per-slot worktree. This resets `refs/heads/$branch_name` to origin
+      regardless of local-ahead commits (only dirty/uncommitted changes are stashed first), producing exactly the
+      observed `branch: Reset to origin/live-defi-rollout` reflog signature and exactly the "recoverable via reflog,
+      nothing permanently lost" profile (checkout -B moves the ref, never deletes the commit object). `branch_name` is
+      routinely the fleet's integration branch, so this fires whenever ANY concurrent agent's dependency-branch cascade
+      walks through a widely-depended-upon ancestor like `unified-trading-library`. Full writeup + evidence in the
+      sibling doc `quickmerge_silently_reset_unpushed_commit_2026_07_22.md`.
+- [x] 2. [INFRA] P1. ✅ **Fixed** — `unified-trading-pm@06dc7632`. Before `cascade_dep_branch`'s `checkout -B`, if
+      `refs/heads/$branch_name` already has commits ahead of `origin/$branch_name`, its tip is preserved to a named
+      local ref (`refs/wip-preserve/cascade-<ancestor>-<sha12>`, via `git update-ref`) before realigning — durable
+      (independent of reflog expiry), loudly logged with the exact recovery command, no-op for the common no-local-ahead
+      case. Verified against a real git fixture reproducing the exact incident. `slot-cron-ff-pull.sh` itself needed no
+      change (confirmed already safe by construction — see todo 1).
 - [ ] 3. [REVIEW] P2. Audit whether other repos' clones show the same pattern (this was only directly observed on
       `unified-trading-library`; `features-service` and `instruments-service` did NOT lose their equivalent commits
       during the same session window, which may mean this clone specifically is shared by more concurrent
-      sessions/agents than the others, or has a different cron/automation footprint).
+      sessions/agents than the others, or has a different cron/automation footprint). **Note (2026-07-22)**: with the
+      root cause now identified as `cascade_dep_branch`, this audit question changes shape — the exposure is any
+      ancestor repo that (a) is a transitive internal dependency of something being shipped with `--dep-branch`, and (b)
+      has concurrent agents landing local commits on the same branch name in its shared clone at the same time.
+      `features-service`/`instruments-service` not losing work is consistent with them not being on an ancestor path any
+      concurrent `--dep-branch` cascade walked through that session, not necessarily a different cron/automation
+      footprint.
 
 ## Related QG-infra findings this session (worktree isolation vs the QG harness)
 

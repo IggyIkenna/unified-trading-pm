@@ -443,7 +443,35 @@ PYEOF
         stashed=0
       fi
 
-      # Switch to (or create) the branch
+      # Switch to (or create) the branch.
+      #
+      # GUARD (2026-07-22, quickmerge_silently_reset_unpushed_commit_2026_07_22 /
+      # utl_shared_clone_commits_repeatedly_reset_2026_07_22 — confirmed root cause):
+      # `checkout -B branch_name origin/branch_name` unconditionally RESETS
+      # refs/heads/$branch_name to origin, discarding any local commits ahead of
+      # origin — and this ancestor clone ($ancestor_path) is a SINGLE SHARED
+      # directory, not a private per-slot worktree, so it can be a DIFFERENT
+      # concurrent agent's committed-but-unpushed work sitting on this exact
+      # branch (branch_name is routinely the fleet's own integration branch). The
+      # reflog message this produces ("branch: Reset to origin/<branch>") plus
+      # "the commit survived only via reflog until gc" matches both incident docs
+      # exactly. Preserve any local-ahead commits to a named, content-addressed
+      # ref BEFORE resetting — this does not change behavior for the common case
+      # (no local-ahead commits, the vast majority of cascades) and turns the rare
+      # case from silent, reflog-only-recoverable data loss into a loud, durably
+      # recoverable one. Local-only (not pushed) — deliberately minimal; durability
+      # beyond this clone is a possible follow-up, not required to close the gap.
+      if git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null; then
+        _cascade_ahead=$(git rev-list --count "origin/$branch_name..refs/heads/$branch_name" 2>/dev/null || echo 0)
+        if [ "${_cascade_ahead:-0}" -gt 0 ]; then
+          _cascade_preserve_sha=$(git rev-parse "refs/heads/$branch_name" 2>/dev/null || echo "")
+          if [ -n "$_cascade_preserve_sha" ]; then
+            _cascade_preserve_ref="refs/wip-preserve/cascade-${ancestor}-${_cascade_preserve_sha:0:12}"
+            git update-ref "$_cascade_preserve_ref" "$_cascade_preserve_sha" 2>/dev/null || true
+            echo "[cascade] ⚠️  $ancestor: refs/heads/$branch_name had ${_cascade_ahead} commit(s) ahead of origin/$branch_name — preserved at ${_cascade_preserve_ref} before realigning (local-only; NOT pushed). Recover: cd $ancestor_path && git checkout -B $branch_name $_cascade_preserve_ref"
+          fi
+        fi
+      fi
       if git show-ref --verify --quiet "refs/remotes/origin/$branch_name" 2>/dev/null; then
         git checkout -B "$branch_name" "origin/$branch_name" --quiet 2>/dev/null || \
           git checkout "$branch_name" --quiet 2>/dev/null || \
