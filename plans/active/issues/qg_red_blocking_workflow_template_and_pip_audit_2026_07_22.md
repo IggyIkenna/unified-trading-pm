@@ -100,8 +100,18 @@ and each needs real investigation/re-test, not a mechanical fix):
       0.6.4, pydantic-settings 2.14.2, setuptools 83.0.0, starlette 1.3.1, ujson 5.13.0), the `starlette>=1.3.1`
       transitive override pin is in `pyproject.toml`, and `uv run pip-audit` reports "No known vulnerabilities found".
       No new code needed from this task.
-- [ ] [BACKEND] P2. Same CVE bump as e2e-testing above — confirm same violation signature first (`uv run pip-audit`),
-      then bump + re-test + ship. (repo: system-integration-tests)
+- [x] ✅ [BACKEND] P2. Same CVE bump as e2e-testing above — confirm same violation signature first (`uv run pip-audit`),
+      then bump + re-test + ship. (repo: system-integration-tests) — SHIPPED: `system-integration-tests@55b1332`.
+      Confirmed same violation signature first (`uv run pip-audit`: 10 known vulnerabilities in 5 packages, same
+      CVE/PYSEC/GHSA ids as e2e-testing — pyasn1 0.6.3, pydantic-settings 2.13.1, setuptools 82.0.1, starlette 1.1.0,
+      ujson 5.12.1). Mirrored e2e-testing's fix exactly: added `starlette>=1.3.1` to `[tool.uv] override-dependencies`
+      in `pyproject.toml` (starlette is pulled in transitively via unified-trading-library's own `starlette<1.3.0` pin —
+      a plain re-lock alone doesn't clear it), then
+      `uv lock --upgrade-package pyasn1 --upgrade-package pydantic-settings --upgrade-package setuptools --upgrade-package starlette --upgrade-package ujson`.
+      Post-bump: `uv run pip-audit` → "No known vulnerabilities found"; only 2 files in `tests/` reference
+      starlette/TestClient (`test_auth_penetration.py`, `test_sports_arb_pipeline.py`) — no breaking-change fallout;
+      full `bash scripts/quality-gates.sh` → ALL QUALITY GATES PASSED (103 passed, 1 xfailed, 1 xpassed, pre-existing
+      and unrelated to this bump). Shipped via quickmerge --agent.
 - [ ] [INFRA] P3. Once each of the 3 repos above is independently QG-green, roll out `main-backmerge-to-ldr.yml`
       (`bash unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh     --template main-backmerge-to-ldr.yml --repo <repo>`)
       to fix the same escalation-dispatch-target bug fixed in deployment-api@4dafc9c3, then QG+quickmerge ship. (repos:
