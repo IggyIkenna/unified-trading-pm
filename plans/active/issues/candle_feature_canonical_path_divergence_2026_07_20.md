@@ -295,9 +295,15 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
       the manifest to match. LOCKED shape documented; codex `per-asset-group-bucket-layouts.md:166` amended
       (`mdps@752eaff`).
 - [ ] 2. [DATA] P1. Corpus-wide count of **zero-length-stem** candle objects (`…/venue=*/.parquet`); purge or repair.
-      These cannot be attributed to a shard. **Pending P5 executor (census phase).**
+      These cannot be attributed to a shard. **P0 census counted them exactly 2026-07-22**: cefi
+      `EMPTY_STEM_WITH_UNDERLYING`=2,576 + `EMPTY_STEM_WITHOUT_UNDERLYING`=2,198; tradfi
+      `EMPTY_STEM_WITH_UNDERLYING`=428,792 (!) + `EMPTY_STEM_WITHOUT_UNDERLYING`=6,780; defi/prediction had none of this
+      class. Repair itself is still **pending P7 `--apply`** (content-repair gated).
 - [ ] 3. [DATA] P1. Canonicalise **TradFi candle leaf ids** (`E1AF0_C3200_migrated_*` → `VENUE:TYPE:SYMBOL`) or rule the
-      migration naming acceptable. **Pending P5 executor (quarantine-if-unresolvable, per the LOCKED spec above).**
+      migration naming acceptable. **P0 census counted them exactly 2026-07-22**: `NEEDS_CONTENT_TRADFI_ID`=6,487,045 —
+      **84.8% of the entire 7.65M-object TradFi corpus** needs content-read leaf-id repair, by far the dominant
+      disposition class and the reason tradfi is sequenced LAST/hardest. Repair itself is still **pending P7 `--apply`**
+      (content-repair gated).
 - [x] 4. ✅ [SCRIPT] P1. **volatility writer**: pass the declared `prefix=` to `get_data_sink` so output lands under
       `volatility/by_date/` per its own SSOT. Fixed + shipped `features-service@99d5554e`.
 - [x] 5. ✅ [SCRIPT] P2. Reconcile the **UTL paths-registry `delta_one` entry** with the real writer — readers now
@@ -306,6 +312,16 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
 - [x] 6. ✅ [SCRIPT] P2. Re-point `/data-pipeline-check-mdps` + `/data-pipeline-check-features` canonical legs at the
       LOCKED template. Shipped `mdps@25ce29c37` + `features@d58b7760`, proven on real `-test-` infra — see Progress Log
       2026-07-22 entry below.
+- [ ] 17. [DATA] P2. CEFI census surfaced an **unregistered `pipeline_mode=batch_hyperliquid_rest`** value — every
+      HYPERLIQUID object carrying it silently defaults to `BATCH_DATABENTO` (`canonical_writer.py`'s own WARNING, seen
+      live in the cefi census `run.log`, 2026-07-22). Add it to UAC `PipelineMode` (or confirm it's a duplicate/typo of
+      an existing value) before P7 — an unregistered mode defaulting silently means the P7 backfill for those objects'
+      `pipeline_mode-less` siblings could resolve the WRONG mode.
+- [ ] 18. [DATA] P3. CEFI census `QUARANTINE_CORRUPT` = 130,906 objects — **13.9% of the whole 940,606-object CEFI
+      corpus**, an order of magnitude higher than defi (0.13%). Sample a batch from the staged mapping TSV
+      (`gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/20260722-031920/.../mappings/candle_census_mapping.tsv`)
+      and confirm the corruption class before P7 quarantines them at scale — a systematic (vs. genuinely-random)
+      corruption pattern might indicate a fixable upstream bug rather than true unrecoverable garbage.
 
 ## How the new skills currently handle this (no silent acceptance)
 
@@ -589,19 +605,89 @@ this session; doesn't affect correctness (canonical leg's own `tf_canon` compari
       way the data_type one was) or whether this is a genuine separate defect. Non-blocking; found during the todo-6
       real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`.
 
+### 2026-07-22 — ✅ P0 census COMPLETE, all 4 asset_groups, real GCS enumeration — ~10.9M total objects, ORPHAN=0 everywhere
+
+Operator explicitly approved starting the **read-only** P0 census in parallel with the still-running raw-tick fleet
+("start the read-only P0 census now in parallel, and hold P6/P7/P8 until wp21 finishes") — census is enumeration +
+classification only (no writes/deletes to any AG data bucket), genuinely disjoint from the fleet's write path.
+
+**Launcher wiring** (todo, new): `migrate_candle_canonical_2026_07.py` had no VM-launcher dispatch branch (todo 11's
+gap). Built 4 new categories (`{cefi,defi,tradfi,prediction}-candle-census`) in
+`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` via a workflow (build agent + 3 parallel adversarial
+lenses: no-mutation-safety / service-staging-correctness / bucket-scope-and-registry). The adversarial pass caught 2
+real bugs before any VM ever launched: a **CRITICAL** wrong-bucket-name bug (`prediction-candle-census` targeted the
+nonexistent `market-data-tick-prediction-*` bucket — real abbreviation is `pred` — would have silently produced zero
+census output on every invocation), and a **HIGH** shell-injection path via the unquoted `WORKERS`/`TRADFI_TICK_BUCKET`
+env vars in the VM-side `bash -c` execution (**pre-existing in this launcher file, affects every category, not just the
+new ones** — closed globally with a positive-integer / bucket-name-shape validation gate). Verified via `bash -n` + a
+`DRY_RUN=true` preview of the actual generated command string for both a normal and the previously-broken category.
+Shipped `deployment-service@865d0f9`, QG green (97s).
+
+**Launched all 4 as parallel SPOT VMs** (`cefi-candle-census`/`defi-candle-census`/`tradfi-candle-census`/
+`prediction-candle-census`, each `--dry-run`-only against `gs://<AG tick bucket>/processed_candles/**`, `2020-01-01`/
+`2026-07-22` cosmetic labels). Rebuilt VM-deployment code tarballs first (`refresh_code_tarballs.sh`) since the MDPS
+tarball predated today's launcher work — confirmed via `git merge-base --is-ancestor` that the pre-refresh "stale"
+tarball SHA already contained everything the census script needs (`6ce1a25`/`752eaff`/`2d720b4`), so the already-running
+`defi` VM (launched before the refresh) was left alone rather than killed/relaunched. All 4 VMs completed in 4-25
+minutes (`VM_SHUTDOWN_ON_COMPLETION=true`, self-deleted after finishing — **do not expect to find them in
+`gcloud compute instances list`**, their evidence lives in GCS logs/staged output only), `exit_code=0` on every one.
+
+**Full results** (source: each VM's `run.log` at
+`gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-{cat}-candle-census-<ts>/run.log`; mapping
+TSV + reconcile report staged to
+`gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/<ts>/canonical-migration-{cat}-candle-census-<ts>/mappings/`):
+
+| Asset group    |  Total objects |   MIGRATE |   SPLIT_BRAIN_DUPLICATE | QUARANTINE_CORRUPT | EMPTY_STEM (with/without underlying) | NEEDS_CONTENT_INSTRUMENT_TYPE | NEEDS_CONTENT_TRADFI_ID | CANONICAL_NOOP | ORPHAN |
+| -------------- | -------------: | --------: | ----------------------: | -----------------: | -----------------------------------: | ----------------------------: | ----------------------: | -------------: | -----: |
+| **defi**       |      1,124,849 | 1,123,407 | 0 (folded into MIGRATE) |              1,442 |                                0 / 0 |                             0 |                       0 |              0 |  **0** |
+| **prediction** |      1,165,459 |         1 |               1,165,458 |                  0 |                                0 / 0 |                             0 |                       0 |              0 |  **0** |
+| **cefi**       |        940,606 |        10 |                 804,670 |            130,906 |                        2,576 / 2,198 |                           238 |                       0 |              8 |  **0** |
+| **tradfi**     |      7,646,831 |         0 |                 724,214 |                  0 |                      428,792 / 6,780 |                             0 |               6,487,045 |              0 |  **0** |
+| **TOTAL**      | **10,877,745** |         — |                       — |                  — |                                    — |                             — |                       — |              — |  **0** |
+
+(`defi`'s disposition histogram reported `MIGRATE`/no separate split-brain line — its split-brain count folds into the
+1,123,407 MIGRATE figure per the script's own histogram, unlike the other 3 AGs which break it out; the executor's own
+"MIGRATE (incl. split-brain)" summary line confirms this convention.)
+
+**Reading the numbers** — every AG's `ORPHAN count = 0 (PASS — total map)`, the executor's own hard safety invariant
+(every enumerated object gets exactly one disposition or the run aborts loudly): this is the single most important line
+in each report, and it held cleanly across ~10.9M real objects. Beyond that:
+
+- **prediction is ~100% split-brain** (1,165,458/1,165,459) — virtually the entire prediction candle corpus exists as
+  duplicate pipeline_mode-partitioned + pipeline_mode-less pairs. Dedup is effectively the WHOLE prediction migration.
+- **tradfi is dominated by content-repair** (6,487,045/7,646,831 = 84.8% `NEEDS_CONTENT_TRADFI_ID`) — confirms the
+  LOCKED plan's own sequencing rationale ("tradfi LAST — ~99% id-canonicalisation"); P7 for tradfi will spend the vast
+  majority of its time doing parquet content reads + `_renormalize_legacy_instrument_ids`, not path-only rewrites.
+- **cefi's 13.9% QUARANTINE_CORRUPT rate is anomalously high** vs defi's 0.13% — filed as new todo 18, worth sampling
+  before quarantining 130,906 objects at scale in case it's a fixable systematic bug rather than true garbage.
+- **A genuinely new finding, not previously known**: cefi's `run.log` surfaced live WARNINGs for an **unregistered
+  `pipeline_mode=batch_hyperliquid_rest`** value, silently defaulting to `BATCH_DATABENTO` in `canonical_writer.py` —
+  filed as new todo 17, should be resolved before P7 backfills those objects' siblings with the wrong mode.
+- **defi and cefi both show `CANONICAL_NOOP` near-zero (0 and 8)** — confirms the corpus really is "born non-canonical"
+  as the original issue framed it; essentially nothing was already on the LOCKED shape before this migration.
+
+**Raw-tick fleet ALSO fully drained during this work** (checked 2026-07-22, after the census): `wp21` (the last VM, 1/8
+running as of the previous check) is gone entirely from `gcloud compute instances list` — self-deleted after completion,
+same as the census VMs. **This means the fleet-drain condition that was blocking P6/P7/P8 is now satisfied** — but per
+the operator's explicit instruction this session ("hold P6/P7/P8 until wp21 finishes"), P6 (drain/snapshot) and P7 (the
+actual destructive backward-migration `--apply`) are NOT started without a fresh operator go-ahead, since P7 is
+genuinely destructive (copy→verify→**delete** across ~10.9M objects) and deserves its own explicit authorization
+checkpoint even though the technical blocker has lifted.
+
 ## Deferred work after 2026-07-21
 
-| #   | Item                                                                                                                                                                                                                              | State / why deferred                                                                                                                                                | Blocked-on                                                                                                                                                                                                                         |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | P0 census (Tier-2 spot VM) → P6 drain/snapshot → P7 SPOT apply → P8 verify                                                                                                                                                        | **Cannot be done yet** — must run on sanctioned infra, not in-session; also sequenced to avoid manifest-shard write contention                                      | Raw-tick `canonical-migration-cefi-wp*` fleet finishing (**1/8 CEFI VMs RUNNING as of 2026-07-22 ~01:08 UTC** — `wp21`, actively writing; AWS side fully drained — **re-check before starting P6**, don't trust this number stale) |
-| 2   | ~~Todo 6~~ **DONE 2026-07-22** — `mdps@25ce29c37` + `features@d58b7760`, proven on real `-test-` infra (`data_pipeline_e2e_check_mdps_2026_06_27.md`)                                                                             | Shipped                                                                                                                                                             | —                                                                                                                                                                                                                                  |
-| 3   | Todos 11-15 on the P5 executor (launcher wiring for `migrate_candle_canonical_2026_07.py`, PROGRESS.json resume-checkpoint, target-index bucket-key precision, CeFi bare-wire-id scope confirmation, stale UTL docstring example) | **Not done** — P2/P3, non-blocking for a dry-run or small-scale apply, but todo 3 (launcher) + todo 12 (resume-checkpoint) should land BEFORE a real fleet-wide P7  | nobody — pick up any time, ideally before P7                                                                                                                                                                                       |
-| 4   | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (CEFI has no registered candle SchemaContract for standalone `instrument_type=FUTURE`)                                                                      | **Not done** — orthogonal finding, own issue doc, own todos. Re-confirmed live 2026-07-22: still `ALL FAILED (31/31)` on the same shard during todo-6 verification. | nobody — pick up any time; not on the candle-canonical migration's critical path                                                                                                                                                   |
-| 5   | Confirming the P5 executor's TradFi content-resolution rate against real prod parquet content (open question #1 in the build agent's own report — the `E1AF0_*_migrated_*` objects' `instrument_id` COLUMN shape is unverified)   | **Cannot be fully resolved yet** — needs a real content read against prod TradFi objects, which is exactly what the P0 census does                                  | Same as item 1 (P0 census)                                                                                                                                                                                                         |
-| 6   | Todo 16 (investigate `24h` force-leg `off_template=29` classification — possibly a stale §3A "RAW token" docstring, same class as the data_type staleness todo 6 just fixed)                                                      | **Not done** — P3, non-blocking, found during todo-6 real-infra verification 2026-07-22                                                                             | nobody — pick up any time                                                                                                                                                                                                          |
+| #   | Item                                                                                                                                                                                                                                                                 | State / why deferred                                                                                                                                                                                                                                                | Blocked-on                                                                                                           |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1   | ~~P0 census~~ **DONE 2026-07-22** — all 4 AGs, ~10.9M objects, ORPHAN=0 everywhere (see Progress Log entry above for the full disposition table)                                                                                                                     | Shipped (`deployment-service@865d0f9` launcher + 4 real SPOT VM runs; results in GCS, not in git — see Progress Log for exact paths)                                                                                                                                | —                                                                                                                    |
+| 2   | **P6 drain/snapshot → P7 SPOT apply → P8 verify** — the actual destructive backward migration+purge                                                                                                                                                                  | **Operator-owned** — the raw-tick fleet's technical blocker LIFTED (`wp21` fully drained, confirmed 2026-07-22) but P7 is a real delete across ~10.9M objects and was explicitly scoped this session to census-only; do not start without a fresh explicit go-ahead | Operator decision — ask before starting P6 (drain/snapshot is itself irreversible-ish: it stops ALL VMs both clouds) |
+| 3   | Todos 11-15 on the P5 executor (launcher wiring for `migrate_candle_canonical_2026_07.py` — **DONE, now item 1's launcher** — PROGRESS.json resume-checkpoint, target-index bucket-key precision, CeFi bare-wire-id scope confirmation, stale UTL docstring example) | **Not done** (todo 11 specifically is now satisfied by the census launcher wiring, which the P7 `--apply` path can extend) — todo 12 (resume-checkpoint) should land BEFORE a real fleet-wide P7 given ~10.9M objects at stake                                      | nobody — pick up any time, ideally before P7                                                                         |
+| 4   | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (CEFI has no registered candle SchemaContract for standalone `instrument_type=FUTURE`)                                                                                                         | **Not done** — orthogonal finding, own issue doc, own todos. Re-confirmed live 2026-07-22: still `ALL FAILED (31/31)` on the same shard during todo-6 verification.                                                                                                 | nobody — pick up any time; not on the candle-canonical migration's critical path                                     |
+| 5   | Confirming the P5 executor's TradFi content-resolution rate against real prod parquet content (open question #1 in the build agent's own report — the `E1AF0_*_migrated_*` objects' `instrument_id` COLUMN shape is unverified)                                      | **Not done** — the P0 census COUNTED the class exactly (6,487,045 `NEEDS_CONTENT_TRADFI_ID`) but did not sample/verify actual column shapes (dry-run never reads content); still needs a targeted content-read sample before trusting the resolution rate           | nobody — pick up any time; a small sampled read, doesn't need a full VM                                              |
+| 6   | Todo 16 (investigate `24h` force-leg `off_template=29` classification — possibly a stale §3A "RAW token" docstring, same class as the data_type staleness todo 6 just fixed)                                                                                         | **Not done** — P3, non-blocking, found during todo-6 real-infra verification 2026-07-22                                                                                                                                                                             | nobody — pick up any time                                                                                            |
+| 7   | Todo 17 (unregistered `pipeline_mode=batch_hyperliquid_rest` — CEFI census finding)                                                                                                                                                                                  | **Not done** — P2, found 2026-07-22, should resolve before P7 touches HYPERLIQUID objects                                                                                                                                                                           | nobody — pick up any time, ideally before P7                                                                         |
+| 8   | Todo 18 (CEFI's anomalous 13.9% QUARANTINE_CORRUPT rate — CEFI census finding)                                                                                                                                                                                       | **Not done** — P3, found 2026-07-22, worth sampling before P7 quarantines 130,906 objects at scale                                                                                                                                                                  | nobody — pick up any time, ideally before P7                                                                         |
 
-**Recommended NEXT session action**: re-check the raw-tick fleet
-(`gcloud compute instances list --filter="name~'canonical-migration-cefi'"`) — only `wp21` was left running as of
-2026-07-22 ~01:08 UTC; if it has finished, proceed straight to P0 census (Tier-2 spot VM) using the shipped
-`migrate_candle_canonical_2026_07.py --dry-run`; if still running, item 3 (P5 executor follow-ups, todos 11-15) or item
-6 (todo 16, the `24h` nuance) are the highest-value unblocked work available in the meantime.
+**Recommended NEXT session action**: the census is done and the fleet is drained — the technical blockers are gone.
+**Ask the operator for explicit go-ahead before starting P6/P7** (a real delete across ~10.9M objects). While waiting
+for that: todo 12 (PROGRESS.json resume-checkpoint) and todos 17/18 (the two fresh census findings) are the
+highest-value prep work that makes a real P7 run safer/faster once authorized.
