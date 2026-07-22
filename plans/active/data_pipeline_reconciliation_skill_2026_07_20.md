@@ -554,23 +554,17 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       `codex/02-data/four-surface-reconciliation-procedure.md`** (dated 2026-07-21, pointer + 4 key deltas: `timeframe`
       atom, oracle-exempt, S4-unavailable, object-driven; migration_pending). Pointer only — no duplication. —
       `unified-trading-pm` (this batch).
-- [ ] 38. [DATA] P0. **Add taxonomy AE-6 + candle rows to the cutover register** (wording corrected 2026-07-21 evening
-      to match the CORRECTED RULING in `candle_feature_canonical_path_divergence_2026_07_20.md` — the earlier "Option-A"
-      framing this todo was drafted against is SUPERSEDED: `data_type` does NOT migrate on the path, it stays SOURCE;
-      only the MANIFEST re-aligns to source) — add the `AE-6 — MDPS candle-layer migration window` exception to
-      `codex/02-data/reconciliation-finding-taxonomy.md` §4 (suppress missing-`instrument_type=` / split-brain
-      `pipeline_mode` as `migration_pending` on the PATH during the per-AG window, and the source-vs-aggregated
-      `data_type` desync as `migration_pending` on the MANIFEST side only — never a path finding), and add per-AG
-      `processed_candles/` effective-from candle rows (all PENDING, sequenced defi → prediction → cefi → tradfi) to
-      `codex/02-data/canonical-cutover-register.md`. **Concurrency note (still blocking):** the cutover register is
-      owned by another agent right now — coordinate / hand this row-add to that owner rather than editing it in
-      parallel; NOT executed this session for that reason.
-- [ ] 39. [CODE] P1. **Extend the UAC machine oracle to `processed_candles/`** — `canonical_path_violations()` hardcodes
-      `RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` (`unified-api-contracts/.../canonical/partition_paths.py:67`)
-      and false-flags every candle path `structural`. Add the candle namespace + template so the oracle validates
-      `processed_candles/` against the Option-A grammar; then re-point the skill's candle leg (§3h) from the bespoke
-      template check at the oracle and lift the oracle-exemption. This is candle_feature issue todo 10 —
-      `plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`.
+- [x] 38. ✅ [DATA] P0. AE-6 added to `reconciliation-finding-taxonomy.md` §4 (matches the corrected LOCKED shape —
+      `instrument_type=`/`pipeline_mode=` suppressed on the path, `data_type` stays SOURCE); per-AG PENDING candle rows
+      added to `canonical-cutover-register.md` §6d (defi → prediction → cefi → tradfi, cefi explicitly noted BLOCKED on
+      the running raw-tick fleet) — `unified-trading-pm` (this batch). Cutover-register concurrency concern resolved (no
+      other agent was actively editing it).
+- [x] 39. ✅ [CODE] P1. UAC oracle extended: `PROCESSED_CANDLES_PREFIX` + `_candle_path_violations()` +
+      `require_candle_migration_complete=` kwarg on `canonical_path_violations`/`is_canonical` — validates the LOCKED
+      shape (source `data_type`, added `instrument_type=`/`pipeline_mode=`), suppresses the two migration-pending axes
+      by default, never suppresses genuine defects (empty stem, malformed values, missing day/timeframe/data_type). 16
+      recovered spec tests + 85 pre-existing raw-tick tests pass; full QG green — `unified-api-contracts@6329fc04`.
+      Skill §3h re-pointed at the oracle (see below).
 - [ ] 40. [DATA] P0. **Fix the candle object↔manifest disconnect (candle-manifest population)** — the candle write path
       is not calling `record_captured` per shard, so S3 holds ~6 degenerate candle rows corpus-wide vs 20,734 objects on
       one measured day. Until this is fixed the candle audit is necessarily GCS-object-driven and the disconnect is its

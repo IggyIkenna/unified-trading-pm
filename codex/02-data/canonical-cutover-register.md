@@ -323,19 +323,23 @@ Until the delta_one + volatility writers ship the `by_date/` prefix, their exist
 
 **Target ruled: 2026-07-21** (operator R2, HARD RULE) — every data-at-rest bucket MUST use the FULL canonical hive
 grammar (canonical key set incl. `pipeline_mode=`/`asset_group=`, in canonical order), not a reduced/flat subset. This
-resolves the "`instrument_availability` FLAT vs hive" contested axis → **RULED HIVE**. **In force at the writer: NOT YET
-→ effective-from UNKNOWN.**
+resolves the "`instrument_availability` FLAT vs hive" contested axis → **RULED HIVE**. **In force at the writer:
+2026-07-22 → `unified-trading-library@43fa6f3f` + `instruments-service@a9be6ce9`. Historical flat objects:
+`migration_pending` (todo 7 of the issue doc, not yet run).**
 
-| Surface       | State today                                                                                                                 |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| registry SSOT | ❌ FLAT — `registry.py:35` `instrument_availability/by_date/day={date}/venue={venue}/` (2 keys)                             |
-| live writer   | ❌ FLAT — `process_write.py:612` prefix `"instrument_availability/by_date"` + `writers.py:201-208` partition `{day, venue}` |
-| siblings      | ❌ same reduced-flat shape: `market_lifecycle` (`process_write.py:614`), `futures_contracts` (`writers.py:359,382`)         |
+| Surface       | State today                                                                                                                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| registry SSOT | ✅ hive — `registry.py:35` `instrument_availability/by_date/day={date}/pipeline_mode={pipeline_mode}/asset_group={category}/venue={venue}/`                                                                          |
+| live writer   | ✅ hive — `process_write.py` + `writers.py` (`_instrument_availability_sink_for`/`_market_lifecycle_sink_for` sink-prefix helpers)                                                                                   |
+| siblings      | ✅ same fix applied: `market_lifecycle`, `futures_contracts`                                                                                                                                                         |
+| readers       | ✅ layout-tolerant across the cutover (day-scoped listing matched on the venue-tail): `cloud_data_provider.py`, `instrument_lifecycle_loader.py`, `manifest_writer/*`, `options_cluster_lookup.py`, `tradfi_live.py` |
 
-**Trap (do not repeat):** the UTL sink sorts partition-dict keys ALPHABETICALLY (`protocol_impls.py:26`), so
+**Trap (avoided):** the UTL sink sorts partition-dict keys ALPHABETICALLY (`protocol_impls.py:26`), so
 `pipeline_mode=`/`asset_group=` cannot be added to the partition dict — the fix bakes ordered keys into the sink PREFIX,
-and updates the registry template (SSOT). Flat objects are `migration_pending`, not a fresh finding. Fix + migration:
-[`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md).
+and updates the registry template (SSOT). Historical flat objects remain `migration_pending` (not yet migrated), NOT a
+fresh finding. Remaining work (historical migration + this register's effective-from date once it runs):
+[`../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](../../plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+todos 7-8.
 
 ---
 
@@ -356,6 +360,30 @@ shapes" contested axis → **RULED v6**. **In force at W1: NOT YET → cefi effe
 **Open first:** whether any native-REST cefi venue routes `options_chain`/`futures_chain` through W1 (vs the W2 Tardis
 lane) — this sizes the live v5 cefi migration blast radius. Fix + migration:
 [`../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`](../../plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md).
+
+---
+
+## §6d — Axis: `processed_candles/` LOCKED shape (MDPS, Option-A corrected 2026-07-21)
+
+**Target ruled: 2026-07-21** (operator Option-A, corrected the same evening) — `instrument_type=` added to the path for
+cefi/tradfi/defi (prediction already carries it); `pipeline_mode=` added; `data_type` STAYS SOURCE on the path (manifest
+re-aligns to source, not the reverse — the original framing had this backwards). See AE-6,
+`codex/02-data/mdps-candle-canonical-reconciliation.md`. **In force at the writer: NOT YET — no migration has run.
+Effective-from PENDING for every asset_group below.**
+
+| asset_group | effective-from | state                                                                                                                                                                                                                                                        |
+| ----------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| defi        | PENDING        | migration_pending — first in the ruled sequence                                                                                                                                                                                                              |
+| prediction  | PENDING        | migration_pending — already carries `instrument_type=` (terminal axis), needs `pipeline_mode=` only                                                                                                                                                          |
+| cefi        | PENDING        | migration_pending — **BLOCKED**: an active `canonical-migration-cefi-*` raw-tick fleet is running (verified 2026-07-22 via `gcloud compute instances list`); candle cutover must wait for it to drain (manifest-shard contention + pre-migration-drain rule) |
+| tradfi      | PENDING        | migration_pending — last in the ruled sequence                                                                                                                                                                                                               |
+
+**Machine-checkable now:**
+`unified_api_contracts.canonical_path_violations(path, require_candle_migration_complete=False)` (the default)
+suppresses the pending axes above for `processed_candles/` paths; pass `require_candle_migration_complete=True` to check
+against the fully-migrated LOCKED shape. Shipped `unified-api-contracts@6329fc04`. Folded into
+`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` as a new phase — the actual data migration
+is NOT owned by this reconciliation-skill plan.
 
 ---
 

@@ -388,13 +388,14 @@ the canonical authority, the drive direction, and S4 all differ from raw tick �
   `service_name == "market-data-processing-service"` — candle and raw-tick rows share one `_index`. Report every candle
   object with no matching S3 row as `missing_row`, and report the object↔manifest disconnect count as the **headline**
   candle finding.
-- **Canonical S1 = the ratified LOCKED template, NOT the oracle.** `canonical_path_violations()` hardcodes
-  `raw_tick_data/by_date/` and returns a `structural` violation for EVERY `processed_candles/` path — canonical and
-  orphan alike — so the candle namespace is **oracle-EXEMPT** (a justified exception to "never re-implement the oracle"
-  — the oracle simply does not cover this namespace, exactly like sports). Compare each object path against the target
+- **Canonical S1 = the oracle** (shipped `unified-api-contracts@6329fc04`, 2026-07-22 — candle_feature issue todo 10 /
+  plan todo 39). Call `canonical_path_violations(path, require_candle_migration_complete=False)` — the default
+  suppresses missing `instrument_type=`/`pipeline_mode=` during the migration window (taxonomy AE-6); pass
+  `require_candle_migration_complete=True` for the fully-migrated LOCKED-shape question instead. The oracle validates
   `…/pipeline_mode=…/timeframe=…/data_type={SOURCE_dt}/instrument_type=…/venue=…/{canonical_id}.parquet` (prediction
-  drops `venue=`; sports is `processed/`) — `data_type` is the SOURCE value, corrected 2026-07-21 evening. State the
-  oracle-exemption in every candle report; re-point here when the oracle-extension ships (candle_feature issue todo 10).
+  drops `venue=`; sports `processed/` falls through to the unrecognized-prefix branch, same as before) and NEVER
+  suppresses genuine defects (empty stem, malformed `pipeline_mode=` value, missing day/timeframe/data_type). Do not
+  re-implement this check bespoke.
 - **The candle path↔instrument_type-add is `migration_pending` today; `data_type` on the path is NOT migrating** —
   nothing is migrated on disk yet (corrected 2026-07-21 evening: `instrument_type=` + `pipeline_mode=` are ADDED to the
   path; `data_type` KEEPS the SOURCE value it already carries — only the MANIFEST re-keys to source). A path divergence
