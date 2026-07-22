@@ -133,6 +133,22 @@ of this doc.
       one? Reporter should treat "worktree directory missing" as an explicit `absent` state, never carry forward a prior
       `dirty`. Add a guard + a test that a vanished worktree does not keep POSTing its last-known dirty.
 
+### Follow-up 2026-07-22 (review msg 1654, 11:49Z) — the phantom `.tabs/0` row is unstable, and can now trip `drift_violation`
+
+review(slot1, hk) added a data point that **hardens** the stale-row-survival read above: the same phantom
+hk-slot0/deployment-ui entry (still on a `.tabs/0` that does not exist on this host) **mutated its reported state from
+`dirty` (1 file) to `ahead` (2 commits)** across ticks — while `not_clean_since` stayed pinned at the same `08:12:03Z`
+(unchanged) — and in the `ahead` form it now **trips `drift_violation=true`** where it previously did not. This is
+diagnostic in two ways: (1) it confirms the row is **unstable/flaky, not a one-off blip** — a genuinely-absent worktree
+cannot legitimately transition dirty→ahead, so the row is being fabricated/carried-forward from stale or cross-host
+state; (2) it raises the stakes slightly beyond "cosmetic masking" — a phantom row that flips into `drift_violation`
+could inject a **false drift signal** for a slot/worktree that isn't even on the host, which is a more actionable
+false-positive than a phantom `dirty`. Same fix lever (reporter must emit `absent` for a missing worktree dir, never
+carry forward a prior state) — this just adds urgency and a second failure mode (false `drift_violation`) to the open
+INFRA todo above. Still digest-class, no page (review explicitly filed it as a record-only data point, no new
+escalation). The slot3/6 diverged pair (same SHAs) and the `ip-172-31-0-185` slot0 out-of-scope session are unchanged
+and already-known.
+
 ## Triage
 
 Non-blocking, digest-class, no page. Outside every active plan → parked here per findings-triage. Filed by the main
