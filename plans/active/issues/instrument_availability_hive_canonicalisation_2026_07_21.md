@@ -140,24 +140,27 @@ consume these paths must be updated in lockstep with the writer.
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Decide the exact target hive key set for `instrument_availability` (does an availability listing
-      carry `instrument_type=`, or only `day/pipeline_mode/asset_group/venue`?) and write it into
-      `cross-asset-canonical-target-ssot.md` §8 as the canonical availability template before touching code.
-- [ ] 2. [DATA] P1. Update the UTL registry SSOT `registry.py:35` (`instruments` dataset) to the full-hive
-      `path_template` + `partition_keys` — this is the SSOT and drives `build_bucket`/readers.
-- [ ] 3. [DATA] P1. Fix the instruments-service writer (`process_write.py:612,624` + `writers.py:201-208`) to emit full
-      hive via the sink PREFIX mechanism (bake ordered `day/pipeline_mode/asset_group/venue` into the prefix per shard);
-      do NOT add the keys to the partition dict — cite the `protocol_impls.py:26` alphabetical-sort trap in the code
-      comment.
-- [ ] 4. [DATA] P1. Apply the same full-hive prefix fix to `futures_contracts` (`writers.py:359,382`) — it rides the
-      `instrument_availability/by_date` prefix and inherits the flat shape.
-- [ ] 5. [DATA] P1. Apply the same full-hive fix to `market_lifecycle` (`process_write.py:614,629`) — it carries the
-      reduced `by_canonical_group` shape and is the sibling that already hit the sort trap.
-- [ ] 6. [REVIEW] P1. Update the instruments-service reader + manifest-consolidator + data-status render that consume
-      these paths in lockstep so the shard atom stays identical across writer / manifest / status / gate / UI.
+- [x] 1. ✅ [DATA] P1. RULED — no `instrument_type=`, key set is `day/pipeline_mode/asset_group/venue` (an availability
+      listing is per-venue, not per-instrument-type). Written into `cross-asset-canonical-target-ssot.md` §8 —
+      `unified-trading-pm` (this batch).
+- [x] 2. ✅ [DATA] P1. UTL registry `registry.py:35` updated to the full-hive `path_template`/`partition_keys` —
+      `unified-trading-library@43fa6f3f`.
+- [x] 3. ✅ [DATA] P1. instruments-service writer fixed via the sink PREFIX mechanism
+      (`_instrument_availability_sink_for` helper, alphabetical-sort trap cited in the code comment) —
+      `instruments-service@a9be6ce9`.
+- [x] 4. ✅ [DATA] P1. `futures_contracts` full-hive prefix fix shipped in the same commit —
+      `instruments-service@a9be6ce9`.
+- [x] 5. ✅ [DATA] P1. `market_lifecycle` full-hive prefix fix (`_market_lifecycle_sink_for` helper) shipped in the same
+      commit — `instruments-service@a9be6ce9`.
+- [x] 6. ✅ [REVIEW] P1. Readers made layout-tolerant across the cutover (day-scoped listing matched on the venue-tail
+      so both pre-/post-cutover shapes resolve): `cloud_data_provider.py`, `instrument_lifecycle_loader.py`,
+      `manifest_writer/_maintenance.py`, `manifest_writer/_queries.py`, `options_cluster_lookup.py` —
+      `unified-trading-library@43fa6f3f`; `tradfi_live.py` reader — `instruments-service@a9be6ce9`.
 - [ ] 7. [DATA] P1. PROVE the fixed writers green on one real day (write + skip-if-fresh + manifest row), then migrate
       the historical flat `instrument_availability` / `market_lifecycle` / `futures_contracts` objects UP into full hive
-      (copy → verify → human-only purge of the flat tree).
+      (copy → verify → human-only purge of the flat tree). **Deferred to Round 2** — likely VM-scale given the volume of
+      prior capture days; size it before attempting.
 - [ ] 8. [REVIEW] P1. On writer ship, record the `instrument_availability` full-hive cutover date in
       `codex/02-data/canonical-cutover-register.md` (repo@sha) and flip the non-canonical-path-inventory row #16 to
-      EXECUTED with a dated post-migration probe.
+      EXECUTED with a dated post-migration probe. **Deferred to Round 2** (pairs with todo 7 — cutover date should be
+      the historical-migration date, not the writer-ship date, per the register's own convention).
