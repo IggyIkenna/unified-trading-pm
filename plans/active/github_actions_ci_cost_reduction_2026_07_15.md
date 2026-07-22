@@ -1785,3 +1785,49 @@ prove on ONE caller → only then fan out._
   fully pushed). If the scratchpad is gone, clean the stale registration with `git worktree prune` +
   `git branch -D tmp/step2c-rollout` — everything it held is on `origin/live-defi-rollout`. The worktree pattern itself
   is the documented way to work while the slot clone carries someone's live WIP.
+- **5-day post-migration system check (2026-07-22)** — operator asked "is everything working, did anything break due to
+  our migration?". Findings, evidence-first via `gh run list`/`gh api .../jobs`/`.../logs` (not Slack — this session's
+  gcloud ADC needed an interactive reauth this tool couldn't do, so live Slack alert-volume re-verification was skipped;
+  GH Actions run data is authoritative and sufficient on its own):
+  - **`ldr-docs-gate` (shipped 2026-07-17 as the frontmatter backstop) had NEVER completed a single run** — 39/40
+    sampled runs over 5 days show `cancelled`, 0 ever reached a verdict. Root cause:
+    `concurrency: cancel-in-progress: true` on a static group name, racing against LDR's real push cadence (a new
+    doc/plan push lands every few minutes fleet-wide, faster than this sub-minute check finishes) — every run got
+    pre-empted by the next push before it could report anything. The backstop has been silently inert this whole time.
+    **FIXED live this session**: `cancel-in-progress: false` (queue instead of cancel — self-hosted + sub-minute jobs
+    make queuing free) → `unified-trading-pm@efdeb6f41`.
+  - **CORRECTION (caught when the operator asked "what is this test and should we bump it to 2s?")**: I initially
+    reported UTL's `test_manifest_completeness.py::TestF1PerfGuard` (a perf-guard on `compute_completeness_fraction()`,
+    added alongside the 16.7x `80d2497e` filter-then-build/memoize optimization, asserting a 1.2M-row completeness
+    lookup stays fast so a revert to the old O(n) full-scan gets caught) as a **still-open** regression needing an
+    operator decision on its budget. That was wrong — I hadn't checked failure timestamps against the fix's landing
+    time. **It was already fixed by another agent BEFORE this system check started**: `unified-trading-library@9081e51c`
+    (authored 2026-07-21T02:09:30Z, already on `live-defi-rollout`) bumped the budget 0.5s → **3.0s** for exactly this
+    reason (docstring cites the same shared-host contention: "consistently measured 0.57–0.70s… ~4× headroom over the
+    worst observed CI time… a revert… exceeds it by 3.5×"). Re-checked all 9 "F1 build" failures in the original sample
+    — **every one is dated 2026-07-20T19:26Z–2026-07-21T01:35Z, i.e. before the 02:09Z fix**; every UTL failure _after_
+    the fix (6 of them, through 2026-07-21T23:20Z) was the unrelated pip-audit/CVE issue, not F1PerfGuard; and the last
+    15 UTL runs (through 2026-07-22T07:49Z) are all green. **Zero recurrences since the fix landed — already resolved,
+    no operator decision needed, do not re-open or lower the budget.**
+  - **Coincidental, NOT migration-caused, already fixed by others**: instruments-service's
+    `TestWriteVenueCanonicalPartition` tests hit `pytest_socket.SocketConnectBlockedError` on `169.254.169.254` for a
+    few hours today. Traced (via a dedicated sub-agent, `instruments-service` git history) to a same-day refactor
+    (`a9be6ce9`, 03:20 UTC) that changed `_write_venue` to build its own real `get_data_sink()` instead of using the
+    test's mocked sink, without updating the test's mocks — would have failed identically on a GitHub-hosted runner
+    (pytest-socket's `--allow-hosts` is the same either way). Two slots raced a fix within ~50 min
+    (`4ca56889`/`14a1548f`, reconciled `a74e0c46`); HEAD is clean.
+  - **Real, currently-live, fleet-wide, but NOT migration-caused**: a freshly-disclosed CVE pair in `pyasn1==0.6.3`
+    (CVE-2026-59885, CVE-2026-59886) is failing the pip-audit gate (part of the merged `checks` leg / Codex compliance)
+    on every repo that depends on it — confirmed red on unified-trading-library, features-service, and alerting-service
+    (instruments-service likely too). This predates and is unrelated to the CI-cost work; it needs a version bump/pin or
+    a documented waiver. Not actioned here (out of this plan's scope) — flagged to the operator.
+  - **Everything else sampled** (instruments-service hardcoded-test-project-ID / function-size / DeFi-citation-baseline
+    / UAC-adapter-registration-drift failures; the single `Escalate to Orchestrator` failure on a
+    `gh pr edit --add-label` call hitting GitHub's deprecated `projectCards` GraphQL field) is pre-existing/organic
+    fleet churn, unrelated to A1/A2/A5/STEP2b/notify-slack/prek/cron-cadence — each caught correctly by gates that were
+    unchanged by this plan's work.
+  - **Verdict for the operator**: the CI-cost-reduction changes themselves (A1/A2/A5/STEP2b/alert-dedup/cron-cadence)
+    are running clean — PM's own `quality-gates-v2` is 157 success / 12 failure / 31 cancelled (cancelled =
+    concurrency-superseded, benign) over 5 days, and none of the fleet failures trace back to those specific changes.
+    The one thing that WAS broken because of this plan's work (`ldr-docs-gate`) is fixed. The one open regression
+    plausibly tied to the broader self-hosted-runner migration (F1PerfGuard contention) needs a decision, tracked below.

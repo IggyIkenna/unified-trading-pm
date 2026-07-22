@@ -20,9 +20,14 @@ on:
       - "codex/**"
 
 concurrency:
-  # Newest push wins — an outdated corpus verdict is worthless.
+  # QUEUE, don't cancel: measured 2026-07-22 (5 days live) — LDR doc pushes land every
+  # few minutes fleet-wide, faster than this sub-minute check completes, so
+  # cancel-in-progress:true meant EVERY run got pre-empted by the next push before
+  # finishing (39/40 sampled runs = cancelled, 0 ever reached a verdict — the backstop
+  # never once fired). Queuing costs nothing extra (self-hosted, sub-minute jobs) and
+  # guarantees every push's corpus state actually gets checked, just with a short lag.
   group: ldr-docs-gate
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read

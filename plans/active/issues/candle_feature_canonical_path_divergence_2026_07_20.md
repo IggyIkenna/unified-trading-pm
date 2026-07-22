@@ -312,16 +312,29 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
 - [x] 6. ✅ [SCRIPT] P2. Re-point `/data-pipeline-check-mdps` + `/data-pipeline-check-features` canonical legs at the
       LOCKED template. Shipped `mdps@25ce29c37` + `features@d58b7760`, proven on real `-test-` infra — see Progress Log
       2026-07-22 entry below.
-- [ ] 17. [DATA] P2. CEFI census surfaced an **unregistered `pipeline_mode=batch_hyperliquid_rest`** value — every
-      HYPERLIQUID object carrying it silently defaults to `BATCH_DATABENTO` (`canonical_writer.py`'s own WARNING, seen
-      live in the cefi census `run.log`, 2026-07-22). Add it to UAC `PipelineMode` (or confirm it's a duplicate/typo of
-      an existing value) before P7 — an unregistered mode defaulting silently means the P7 backfill for those objects'
-      `pipeline_mode-less` siblings could resolve the WRONG mode.
-- [ ] 18. [DATA] P3. CEFI census `QUARANTINE_CORRUPT` = 130,906 objects — **13.9% of the whole 940,606-object CEFI
-      corpus**, an order of magnitude higher than defi (0.13%). Sample a batch from the staged mapping TSV
-      (`gs://deployment-scripts-central-element-323112/canonical-migration-candle-census/20260722-031920/.../mappings/candle_census_mapping.tsv`)
-      and confirm the corruption class before P7 quarantines them at scale — a systematic (vs. genuinely-random)
-      corruption pattern might indicate a fixable upstream bug rather than true unrecoverable garbage.
+- [x] 17. ✅ [DATA] P2. **`pipeline_mode=batch_hyperliquid_rest`** — investigated + fixed. Confirmed a
+      **duplicate/legacy alias, NOT a genuine new mode**: `batch_hyperliquid_rest` is the pre-R4 (2026-06-07,
+      `codex/02-data/pipeline-mode-partition.md`) glued-transport antipattern; a prior migration
+      (`migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py`) already renamed 19,361 `raw_tick_data/` objects to
+      `batch_hyperliquid` but was scoped to `raw_tick_data/by_date` only, never `processed_candles/`, stranding 31,640
+      real CEFI HYPERLIQUID candle objects (day=2023-11-01..2026-04-14) with the stale literal.
+      `resolve_pipeline_mode_from_source` now maps the legacy literal to `PipelineMode.BATCH_HYPERLIQUID` via an
+      explicit alias table (every OTHER unrecognized value still warns/defaults as before) — deliberately NOT a UAC enum
+      addition (would resurrect the retired antipattern) and NOT a separate standalone GCS rename migration
+      (unnecessary: P7 `--apply` already re-classifies + migrates these 31,640 objects normally, so fixing the resolver
+      alone is sufficient). `mdps@6b9ee49`.
+- [x] 18. ✅ [DATA] P3. **CEFI `QUARANTINE_CORRUPT` = 130,906 objects** — sampled + fixed, confirmed **systematic, not
+      random**. 97.9% (128,218) share one reason: bare wire-exchange leaf ids (e.g. `BTCUSDT`) that
+      `_renormalize_wire_cefi` already exists to resolve but was never wired in for CEFI (see todo 14, now also
+      resolved) — new `NEEDS_CONTENT_CEFI_WIRE_ID` disposition routes them through content-repair instead. 2.1% (2,688)
+      are a SEPARATE, newly-found class: 100% venue=KRAKEN-SPOT trades, whose pair symbol embeds a literal `/` (e.g.
+      `ADA/USD`), spilling the canonical colon-delimited leaf id across an extra Hive segment and breaking the path
+      parser before classification even ran — `_parse_candle_rel` now narrowly rejoins this one confirmed shape (a
+      genuinely corrupt trailing segment still quarantines exactly as before). Both proven via regression tests using
+      the exact ground-truthed real object shapes from the census. `mdps@6b9ee49`. **Not yet re-verified against a fresh
+      live census** (P7's own `--apply` re-derives classification fresh per object rather than trusting the stale
+      dry-run plan, so this isn't blocking, but the true residual QUARANTINE_CORRUPT count post-fix is unmeasured until
+      P7 actually runs — don't assume it drops to exactly 130,906-128,218-2,688).
 
 ## How the new skills currently handle this (no silent acceptance)
 
@@ -506,17 +519,25 @@ content-repair path (now explicitly narrowed, never assumed). basedpyright: 0 er
       and copy-pasting the existing tradfi pattern (`python -m ${base}.migrate_tradfi_canonical_2026_07`) would break
       (`ModuleNotFoundError`) since this script lives at `scripts/`, not inside the package — needs an explicit
       `python scripts/migrate_candle_canonical_2026_07.py` invocation branch before P7 can launch VMs.
-- [ ] 12. [SCRIPT] P2. No PROGRESS.json-style resume checkpoint for `--apply` — a SPOT preemption forces a full 3-pass
-      restart (both indices + reconcile) before resuming; under frequent preemption a shard could make zero net forward
-      progress. Worth adding before a real fleet-wide P7 run (per the workspace's mandatory
-      preemption-recovery-from-measured-progress rule).
+- [x] 12. ✅ [SCRIPT] P2. **SPOT-preemption resume checkpoint for `--apply`** — shipped `mdps@efa559a`. Per-shard
+      checkpoint (`vm-logs/{vm}/MIGRATION_PROGRESS-shard{N}.json`, distinct from the day-frontier `PROGRESS.json`
+      contract this migration has no date axis for): frontier advances ONLY over a contiguous prefix of checkpoint-SAFE
+      outcomes (never `ERROR:*`/KEPT_SRC — a straggler PINS the frontier and is retried, never silently skipped);
+      `enumeration_signature` is a full-content blake2b hash (not local mtime, which changes on every real VM restage
+      after preemption); draining switched to completion-order (`as_completed`) so the cadence bound holds under a
+      stalled object. Built + independently adversarially reviewed (3 lenses) via a workflow; caught 1 CRITICAL + 3
+      HIGH/MEDIUM findings, all fixed with regression tests — see Progress Log below. **`deployment-service@0ed7cf5`**
+      companion fix: `launch-canonical-migration-vm.sh` now pins `VM_NAME` + persists launch params on relaunch (the
+      review's own 4th finding — without it the checkpoint could never be found after a real SPOT preemption of the
+      actual launcher family).
 - [ ] 13. [DATA] P3. `ProvisionalTargetIndex` keys lack a bucket component, so the split-brain COUNT (not the actual
       migration safety) can be inflated by cross-asset-group path coincidences — cosmetic, fix before trusting the
       corpus-wide "quantify the split" number (todo 9) precisely.
-- [ ] 14. [DATA] P3. Non-colon CeFi "bare wire" leaf stems (e.g. on-chain `BTC-PERP`) route to QUARANTINE_CORRUPT rather
-      than attempting `_renormalize_wire_cefi` content-repair (which exists and could resolve them) — confirm this is an
-      intentional scope boundary (spec only names TradFi leaf-id repair) before the P0 census, since it affects the
-      QUARANTINE volume estimate.
+- [x] 14. ✅ [DATA] P3. **Resolved as a side effect of todo 18** — non-colon CeFi "bare wire" leaf stems now DO route
+      through `_renormalize_wire_cefi` content-repair (new `NEEDS_CONTENT_CEFI_WIRE_ID` disposition) instead of
+      QUARANTINE_CORRUPT. Confirmed: the TRADFI-only scope boundary was NOT intentional — `_renormalize_wire_cefi`
+      already existed, was already imported into the script, and was simply never wired into the CEFI branch.
+      `mdps@6b9ee49`.
 - [ ] 15. [DOC] P3. `unified-trading-library`'s `build_canonical_candle_path()` docstring example still shows the
       SUPERSEDED "aggregated data_type" semantics (`data_type='deriv_ohlcv_15m'`) — not a functional bug (the function
       is value-agnostic), but could mislead a future maintainer into "fixing" the correct SOURCE-keyed callers. Update
@@ -674,20 +695,80 @@ actual destructive backward-migration `--apply`) are NOT started without a fresh
 genuinely destructive (copy→verify→**delete** across ~10.9M objects) and deserves its own explicit authorization
 checkpoint even though the technical blocker has lifted.
 
-## Deferred work after 2026-07-21
+### 2026-07-22 — ✅ Prep work COMPLETE: todos 12/14/17/18 all shipped — operator authorized P6→P7→P8 pending this prep
 
-| #   | Item                                                                                                                                                                                                                                                                 | State / why deferred                                                                                                                                                                                                                                                | Blocked-on                                                                                                           |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| 1   | ~~P0 census~~ **DONE 2026-07-22** — all 4 AGs, ~10.9M objects, ORPHAN=0 everywhere (see Progress Log entry above for the full disposition table)                                                                                                                     | Shipped (`deployment-service@865d0f9` launcher + 4 real SPOT VM runs; results in GCS, not in git — see Progress Log for exact paths)                                                                                                                                | —                                                                                                                    |
-| 2   | **P6 drain/snapshot → P7 SPOT apply → P8 verify** — the actual destructive backward migration+purge                                                                                                                                                                  | **Operator-owned** — the raw-tick fleet's technical blocker LIFTED (`wp21` fully drained, confirmed 2026-07-22) but P7 is a real delete across ~10.9M objects and was explicitly scoped this session to census-only; do not start without a fresh explicit go-ahead | Operator decision — ask before starting P6 (drain/snapshot is itself irreversible-ish: it stops ALL VMs both clouds) |
-| 3   | Todos 11-15 on the P5 executor (launcher wiring for `migrate_candle_canonical_2026_07.py` — **DONE, now item 1's launcher** — PROGRESS.json resume-checkpoint, target-index bucket-key precision, CeFi bare-wire-id scope confirmation, stale UTL docstring example) | **Not done** (todo 11 specifically is now satisfied by the census launcher wiring, which the P7 `--apply` path can extend) — todo 12 (resume-checkpoint) should land BEFORE a real fleet-wide P7 given ~10.9M objects at stake                                      | nobody — pick up any time, ideally before P7                                                                         |
-| 4   | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (CEFI has no registered candle SchemaContract for standalone `instrument_type=FUTURE`)                                                                                                         | **Not done** — orthogonal finding, own issue doc, own todos. Re-confirmed live 2026-07-22: still `ALL FAILED (31/31)` on the same shard during todo-6 verification.                                                                                                 | nobody — pick up any time; not on the candle-canonical migration's critical path                                     |
-| 5   | Confirming the P5 executor's TradFi content-resolution rate against real prod parquet content (open question #1 in the build agent's own report — the `E1AF0_*_migrated_*` objects' `instrument_id` COLUMN shape is unverified)                                      | **Not done** — the P0 census COUNTED the class exactly (6,487,045 `NEEDS_CONTENT_TRADFI_ID`) but did not sample/verify actual column shapes (dry-run never reads content); still needs a targeted content-read sample before trusting the resolution rate           | nobody — pick up any time; a small sampled read, doesn't need a full VM                                              |
-| 6   | Todo 16 (investigate `24h` force-leg `off_template=29` classification — possibly a stale §3A "RAW token" docstring, same class as the data_type staleness todo 6 just fixed)                                                                                         | **Not done** — P3, non-blocking, found during todo-6 real-infra verification 2026-07-22                                                                                                                                                                             | nobody — pick up any time                                                                                            |
-| 7   | Todo 17 (unregistered `pipeline_mode=batch_hyperliquid_rest` — CEFI census finding)                                                                                                                                                                                  | **Not done** — P2, found 2026-07-22, should resolve before P7 touches HYPERLIQUID objects                                                                                                                                                                           | nobody — pick up any time, ideally before P7                                                                         |
-| 8   | Todo 18 (CEFI's anomalous 13.9% QUARANTINE_CORRUPT rate — CEFI census finding)                                                                                                                                                                                       | **Not done** — P3, found 2026-07-22, worth sampling before P7 quarantines 130,906 objects at scale                                                                                                                                                                  | nobody — pick up any time, ideally before P7                                                                         |
+Operator gave explicit go-ahead this session for the full P6→P7→P8 sequence, conditioned on resolving the prep risk
+items first ("resolve prep risks first, then P6→P7→P8"). All three (four, counting todo 14 as a free side effect of
+todo 18) are now shipped, real-infra-test-proven where applicable, and QG-green.
 
-**Recommended NEXT session action**: the census is done and the fleet is drained — the technical blockers are gone.
-**Ask the operator for explicit go-ahead before starting P6/P7** (a real delete across ~10.9M objects). While waiting
-for that: todo 12 (PROGRESS.json resume-checkpoint) and todos 17/18 (the two fresh census findings) are the
-highest-value prep work that makes a real P7 run safer/faster once authorized.
+**Todo 12 (resume checkpoint)** — built via a workflow (build agent + 3 parallel adversarial lenses: data-loss safety,
+resume correctness, operational safety) before touching production. The review caught real, concrete bugs, not style
+nits: (1) HIGH/CRITICAL (found independently by 2 lenses) — the checkpoint frontier advanced past `ERROR:*`/KEPT_SRC
+outcomes exactly like a real success, so a transient GCS failure or crc32c mismatch would be checkpointed as "done" and
+silently, permanently skipped on every future resumed/re-run invocation — a genuine regression versus the pre-diff
+behavior (a plain re-run always retried a straggler from line 0). (2) HIGH — `enumeration_signature` fingerprinted the
+local enum file via `(size, mtime_ns)`; a real SPOT preemption relaunches on a FRESH VM that re-stages the same file
+with a NEW mtime, so the signature would mismatch and the shard would replay from line 0 on every single preemption —
+the checkpoint would work in every synthetic test but never actually help in the one scenario it exists for. (3) MEDIUM
+— `ThreadPoolExecutor.map()`'s submission-order result consumption meant the checkpoint's advertised "~500 objects at
+risk" cadence bound didn't actually hold under a stalled object. (4) HIGH (operational-safety lens, cross-repo) — the
+checkpoint is keyed by `VM_NAME`, but the actual production launcher
+(`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`) regenerates a fresh `RUN_TS`-derived name on every
+invocation and never calls `lc_write_launch_params`, so a real preemption relaunch (automatic OR manual) could never
+find the checkpoint the preempted VM wrote — the whole mechanism would be dead weight for the one launcher family that
+matters. All 4 fixed with regression tests (mirroring `launch-mdps-backfill-vm.sh`'s proven `VM_NAME_OVERRIDE` +
+launch-param-persistence pattern for finding 4). Shipped `mdps@efa559a` + `deployment-service@0ed7cf5` (both via the
+closed dirty-deps carve-out — `unified-api-contracts` had live peer WIP both times), fresh QG green on both repos.
+
+**Todos 14/17/18 (classifier fixes)** — the follow-on workflow to BUILD these fixes hit the account's weekly
+agent-dispatch limit (all 3 subagents errored immediately, zero work done, `resets Jul 24 8pm London`) after the
+read-only investigation phase had already completed successfully with strong, evidenced findings. Rather than wait ~2
+days, did the implementation directly (no subagents) using the same investigation evidence:
+
+- **Todo 17**: confirmed `batch_hyperliquid_rest` is a duplicate/legacy alias of `batch_hyperliquid`, NOT a genuine new
+  pipeline_mode (would have resurrected the R4-retired glued-transport antipattern if registered in UAC). Root cause: a
+  prior migration (`migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py`) fixed `raw_tick_data/` but was never scoped
+  to `processed_candles/`, stranding 31,640 real CEFI HYPERLIQUID candle objects. Fixed
+  `resolve_pipeline_mode_from_source` with an explicit legacy-alias table — sufficient on its own (no separate GCS
+  rename migration needed) since P7 `--apply` will re-classify + migrate these objects normally anyway.
+- **Todos 14 + 18**: confirmed the CEFI `QUARANTINE_CORRUPT` over-classification (128,218 of 130,906, 97.9%) was a
+  simple wiring gap — `_renormalize_wire_cefi` already existed, was already imported, was simply never called for CEFI's
+  classify branch (only TRADFI was wired). New `NEEDS_CONTENT_CEFI_WIRE_ID` disposition closes it. Separately found +
+  fixed a genuinely NEW class (2,688 KRAKEN-SPOT objects, not previously tracked): a literal `/` embedded in the pair
+  symbol (e.g. `ADA/USD`) broke Hive-path parsing outright — `_parse_candle_rel` now narrowly rejoins this one confirmed
+  shape.
+- Both real-object shapes were ground-truthed directly against the P0 census's staged CEFI mapping TSV
+  (`gs:// deployment-scripts-central-element-323112/canonical-migration-candle-census/20260722-031920/.../candle_census_ mapping.tsv`)
+  before writing any code, and proven via regression tests using those exact shapes. Hit + fixed one self-inflicted lint
+  failure along the way (`_resolve_path_only` cyclomatic complexity 16>15 from the added CEFI branch — resolved by
+  factoring the TRADFI/CEFI dispatch into a small `_LEAF_STEM_CONTENT_REPAIR_KIND` mapping). Shipped together as
+  `mdps@6b9ee49` (dirty-deps carve-out again), fresh QG **fully green** (a concurrent peer fixed the pre-existing
+  unrelated `seed_mock_data.py` baseline overage mid-session, so unlike the todo-12 ship this one hit zero pre-existing
+  noise).
+
+**Also recovered dangling evidence**: this issue doc's own todo-6 Progress Log entry (2026-07-22, earlier this session)
+cited `plans/audit/results/data_pipeline_e2e_check_mdps_2026_06_27.md` as evidence, but that file was never actually
+committed — found uncommitted in the working tree during this session's routine `git pull` (autostash-pop surfaced it).
+Committed alongside this doc update so the citation isn't dangling for a fresh clone.
+
+**Residual, explicitly non-blocking**: the true post-fix CEFI QUARANTINE_CORRUPT count is unmeasured (a fresh dry-run
+census re-run would confirm it quantitatively, but P7's own `--apply` re-derives classification fresh per object rather
+than trusting a stale plan, so this doesn't gate starting P7 — just don't assume the residual count is exactly
+`130,906 - 128,218 - 2,688`).
+
+## Deferred work after 2026-07-22
+
+| #   | Item                                                                                                                                                                                                                                              | State / why deferred                                                                                                                                                                                                                                      | Blocked-on                                                                       |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 1   | ~~P0 census~~ **DONE 2026-07-22** — all 4 AGs, ~10.9M objects, ORPHAN=0 everywhere (see Progress Log entry above for the full disposition table)                                                                                                  | Shipped (`deployment-service@865d0f9` launcher + 4 real SPOT VM runs; results in GCS, not in git — see Progress Log for exact paths)                                                                                                                      | —                                                                                |
+| 2   | ~~Todos 12/14/17/18 (prep risk items)~~ **DONE 2026-07-22** — resume checkpoint (adversarially reviewed, 4 findings fixed) + CEFI wire-symbol/KRAKEN-SPOT classifier fixes (see Progress Log entry above)                                         | Shipped `mdps@efa559a`/`deployment-service@0ed7cf5`/`mdps@6b9ee49`, all QG-green                                                                                                                                                                          | —                                                                                |
+| 3   | **P6 drain/snapshot → P7 SPOT apply → P8 verify** — the actual destructive backward migration+purge                                                                                                                                               | **Operator explicitly authorized this session**, conditioned on the prep items above landing first — they have. Next action per this doc is to actually START P6.                                                                                         | Nothing — proceed                                                                |
+| 4   | Todo 13 (`ProvisionalTargetIndex` bucket-key precision — cosmetic split-brain COUNT inflation) + Todo 15 (stale UTL docstring example)                                                                                                            | **Not done** — P3, cosmetic, doesn't affect migration safety                                                                                                                                                                                              | nobody — pick up any time, not on the critical path                              |
+| 5   | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (CEFI has no registered candle SchemaContract for standalone `instrument_type=FUTURE`)                                                                                      | **Not done** — orthogonal finding, own issue doc, own todos.                                                                                                                                                                                              | nobody — pick up any time; not on the candle-canonical migration's critical path |
+| 6   | Confirming the P5 executor's TradFi content-resolution rate against real prod parquet content (the `E1AF0_*_migrated_*` objects' `instrument_id` COLUMN shape is unverified)                                                                      | **Not done** — the P0 census COUNTED the class exactly (6,487,045 `NEEDS_CONTENT_TRADFI_ID`) but did not sample/verify actual column shapes (dry-run never reads content); still needs a targeted content-read sample before trusting the resolution rate | nobody — pick up any time; a small sampled read, doesn't need a full VM          |
+| 7   | Todo 16 (investigate `24h` force-leg `off_template=29` classification — possibly a stale §3A "RAW token" docstring, same class as the data_type staleness todo 6 fixed)                                                                           | **Not done** — P3, non-blocking                                                                                                                                                                                                                           | nobody — pick up any time                                                        |
+| 8   | Fresh CEFI census re-run to measure the ACTUAL post-fix QUARANTINE_CORRUPT residual (todos 14/18's fix is proven correct via regression tests on the exact real shapes, but the aggregate corpus-wide count after the fix is not yet re-measured) | **Not done** — nice-to-have confidence check, not blocking (P7 `--apply` re-derives classification fresh regardless)                                                                                                                                      | nobody — pick up any time, or just let P7's own run be the measurement           |
+
+**Recommended NEXT session action**: start P6 (drain/snapshot) — the operator's explicit go-ahead ("resolve prep risks
+first, then P6→P7→P8") is now unblocked on every condition it named. Sequence P7 defi→prediction→cefi→tradfi per the
+already-ruled ordering (tradfi last, ~99% id-canonicalisation).
