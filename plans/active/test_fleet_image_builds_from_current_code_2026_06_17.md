@@ -170,11 +170,18 @@ Order: `unified-cloud-interface` → `unified-api-contracts` → `unified-intern
       `unified-trading-library` base image PASS (`.deps/UAC` recipe, `sha256:7b614fec…`, import OK).
       `unified-cloud-interface`
   - `unified-internal-contracts` NOT cloned → GCP-direct (below).
-- [ ] [INFRA] P1. GCP build each via
-      `gcloud builds triggers run <repo>-live-defi-rollout --branch live-defi-rollout --region asia-northeast1`; watch
-      to SUCCESS; confirm image/digest lands in AR. One at a time.
-- [ ] [INFRA] P1. After UTL rebuilds: record the NEW base digest → it becomes the `--build-arg BASE_IMAGE_DIGEST` for
-      Phase 2 service builds (build services against the fresh base).
+- [x] ✅ [INFRA] P1. **DONE 2026-07-22** — GCP build via `gcloud builds triggers run`:
+      `unified-api-contracts-live-defi-rollout` (build `885c218f-142f-4e85-846b-054ec34fa10b`, SUCCESS — wheel published
+      to AR) and `unified-trading-library-live-defi-rollout` (build `7ee1e533-0ba7-4cde-9bce-cc47bbce0a82`, SUCCESS —
+      base image rebuilt + pushed). `unified-cloud-interface` / `unified-internal-contracts` confirmed to have no
+      manually-runnable trigger (not cloned, GCP-direct-on-push-only per the Phase-0 finding) — no manual action
+      possible for these two; their `-build` triggers fire automatically on their next LDR push, which is the sanctioned
+      no-perm path already documented above. The credential blocker itself is confirmed RESOLVED (both triggers ran
+      successfully with the current session's active account — `roles/cloudbuild.builds.editor`-equivalent access now
+      works; the `harshkantariya`/`github-actions-deploy` viewer-only block described above is stale).
+- [x] ✅ [INFRA] P1. **DONE 2026-07-22** — new UTL base digest recorded:
+      `sha256:7f443e9ef81e2ce480935820838b57a345112342e9d1ea9b8d44e04d8bb5f18e` (verified via
+      `gcloud artifacts docker images describe ... :latest`). Used as `--build-arg BASE_IMAGE_DIGEST` for Phase 2 below.
 
 ### Phase 2 — Service images (local → GCP), against fresh base
 
