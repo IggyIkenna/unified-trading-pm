@@ -745,3 +745,12 @@ tarball once; always check the launcher's own freshness warning output, and if s
 `create-code-tarballs.sh --include <repo>...` and verify the GCS manifest SHA matches your fix commit before trusting a
 "launched successfully" message.
 </content>
+
+- **2026-07-22 19:35 UTC (Sanctum reconciliation ship — partially unblocked, one leg deferred)** — resumed shipping the
+  staged-uncommitted Sanctum work from the earlier checkpoint. `instruments-service` quality-gates.sh ran GREEN
+  (sentinel `09806f26c6fb17f62cf770d4f770bad72836129d` == HEAD). Attempted quickmerge — **blocked by the dirty-deps
+  pre-flight audit on `unified-trading-library`** (`cloud_interface/abstractions.py` + 3 provider files, all with mtime
+  ~12 SECONDS old at check time — genuinely LIVE foreign WIP, not stale/inheritable per the liveness-gating rule;
+  correctly left untouched). **NOT forcing this ship** — will retry once that WIP clears (check again next tick; do not
+  isolate/stash someone else's active edit). MTDS's own quality-gates.sh + deployment-api's (for the distinct-values
+  `futures_chain` fix) started running in parallel while waiting.
