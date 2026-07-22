@@ -1991,6 +1991,42 @@ to finish — that was the whole point of moving them here.**
   evenly distributed across the hash-based shards; check the AGGREGATE across all 20 shards'
   `rebundle_mapping.tsv.reconcile.txt` before concluding rebundle found nothing.
 
-**Session ending here on operator time/credit constraint. Nothing further will be done from this session — the 3 VM jobs
-above are the actual remaining migration work and will complete (or fail loudly into their run.log) on their own. Next
-session's first move: check the three bullets above, not re-derive from scratch.**
+### All 3 VMs finished — outcomes confirmed (operator asked "why can't these run in parallel", pushed a 4th)
+
+- **`tradfi-manifest-cas` — ✅ SUCCEEDED on attempt 4/8.**
+  `IN-PLACE CAS APPLY COMPLETE: 6,262,988 rows rewritten in place (generation 1784703405264029 -> 1784703464018171), 1,989 derivative rows corrected, 4,898 bundle underlyings translated, **1,751,779 CASH rows migrated to -USD**, 48,920 simple enum re-stamps.`
+  Matches the dry-run numbers exactly — the manifest is now genuinely canonical (not just paths/catalogue as before).
+  Verified live post-write (fast `gsutil stat` generation check — the consolidator has since re-merged once more,
+  expected/safe per the script's own docstring, not a regression).
+- **`tradfi-cid` (content-rewrite, 8 shards) — ✅ all 8 complete.** Aggregate: ~859K rows processed, effectively 100%
+  `already_canonical`, only **3 total `unresolved:numeric_surrogate_unresolved`** across the whole run (honest, tiny
+  residual — not fabricated as fixed). Confirms the finding above: this worklist's content was already fine.
+- **`tradfi` (rebundle, 20 shards) — ✅ all 20 complete, but "0 per-contract sources selected" in EVERY shard is
+  CORRECT, not a bug.** Direct-checked a sample of the 112,839 manifest rows with `data_type=options_chain`: their
+  `instrument_type` AND `underlying` columns are BLANK. This is the exact stale-manifest-artifact pattern the
+  content-rewrite script's own design doc had already flagged (2,078 similar rows, smaller scale): leftover bookkeeping
+  from an EARLIER bundling pass where the real GCS objects were already moved to their proper
+  `underlying=<ROOT>/quote=USD/margin=linear/ticks.parquet` bundle path (a separate, populated manifest row) — the
+  physical per-contract objects genuinely don't exist anymore, confirmed by rebundle's OWN fresh full-corpus GCS
+  enumeration (not the manifest) finding zero matches across all 20 shards. **Rebundle is done; what's left is a
+  manifest cleanup (retire 112,839 stale rows), not a data migration.**
+  - `- [ ] [DATA] P2. Retire the 112,839 stale options_chain manifest rows (blank instrument_type/underlying, data_type=options_chain) — confirmed no corresponding GCS objects exist. Needs its own small CAS-safe manifest pass (reuse the migrate_tradfi_manifest_usd_lin_2026_07_18.py --in-place-cas pattern), not urgent (doesn't affect data correctness, only manifest row-count hygiene).`
+
+- **`tradfi-catalogue-promote`** — launched (`canonical-migration-tradfi-catalogue-promote-20260722-093107`, confirmed
+  fresh tarballs at launch). Not yet confirmed complete as of this checkpoint — check
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-tradfi-catalogue-promote-20260722-093107/run.log`
+  for the monotonic-guard promote result (old row count -> new row count, `mvp=True` count before/after).
+
+- **CME MBO monolith migration — NOT started.** Attempted to enumerate the 107 `day=/venue=CME/ticks.parquet` objects
+  via a narrow `gsutil ls` wildcard to scope the tool; the listing ran 5+ min without returning (cross-region latency,
+  same class of problem the other in-region-VM fixes addressed) and was killed rather than burn more session time on it.
+  This is genuinely the one item that needs real design work before it's safe to build (content-read MBO/depth parsing
+  to derive canonical `mbp_10` ids from 604 numeric-id-per-file content, ONLY-COPY discipline, no existing reference
+  pattern to copy unlike everything else this session reused) — not a "just launch it" item like the other three turned
+  out to be. Next session: do the enumeration FROM an in-region VM (or via the manifest/a narrower known-day prefix
+  list) rather than a laptop wildcard listing, then design the id-derivation before writing any code.
+
+**Session ending here on operator time/credit constraint — 3 of 4 parallel VM jobs confirmed complete with real results
+(manifest CAS succeeded, content-rewrite confirmed clean, rebundle confirmed genuinely done + a stale-row cleanup
+follow-up filed), catalogue-promote launched but unconfirmed, CME monolith correctly deferred rather than rushed. Next
+session's first move: check catalogue-promote's log, then decide on the CME monolith design.**
