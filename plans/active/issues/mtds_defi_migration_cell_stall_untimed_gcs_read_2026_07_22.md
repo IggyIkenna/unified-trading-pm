@@ -297,3 +297,57 @@ mode the shipped fix already targets — not a property specific to all 157 name
    DIFFERENT question (data trustworthiness/completeness of the re-materialized content, not why the migration's read
    stalled) — worth sequencing the retry above and that RCA together since both touch the identical 9-day
    `orca_SOLANA_<day>.parquet` batch, but they are not the same finding and this addendum does not resolve that RCA.
+
+## Addendum 2026-07-22 (tick 2) — retry executed: 148/157 recovered; the remaining 9 have a DIFFERENT, now-understood cause
+
+Ran the recommended retry (`canonical-migration-defi-pi-range-20260722-190642`,
+`--start-date 2025-12-23 --end-date 2025-12-31 --apply`, using the newly-shipped `defi-pi-range` launcher mode —
+`deployment-service@065cf70`). **Result:
+`DONE cells=148 files_scanned=176 files_split=176 instruments_written=14413 rows=204090 needs_attribution=2342 errors=9 wall=1033.6s`**
+— 148 of the previously-abandoned 157 cells now wrote real data (14,413 instruments / 204,090 rows), confirming the
+"queue-starvation collateral" theory for MOST of them (the PANCAKESWAP_V3 cells and the majority of ORCA/SOLANA days
+cleared cleanly on retry with no code change).
+
+**But exactly 9 cells stalled again — the SAME 9 every time**: `ORCA/SOLANA/solana_amm_pool/dex_pool_state`, one per
+day, for every one of the 9 target days (`2025-12-23` through `2025-12-31`). This is the second independent confirmation
+of the identical failure set (the original run + this retry), which rules out pure randomness/collateral for THESE 9
+specifically — something is different about them.
+
+**Found it — directory-size, not a hang.** Direct `gcsfs.ls()` on the live per-day output directories (read-only, no
+write) measured the actual per-day file count for this exact
+`(venue=ORCA, chain=SOLANA, instrument_type=solana_amm_pool, data_type=dex_pool_state)` cell:
+
+| Day        | Files in directory |
+| ---------- | ------------------ |
+| 2025-12-23 | 8,072              |
+| 2025-12-24 | 6,080              |
+| 2025-12-27 | 5,525              |
+| 2025-12-30 | 4,688              |
+| 2025-12-31 | 5,265              |
+
+This is **4.7×–8×** the ~1,000-file "normal baseline" the prior addendum measured on control days (2025-06-01,
+2025-10-01). The earlier read-only smoke test (Finding 2) only timed reading the pre-split BUNDLE (1.9 MiB, 14,093 rows)
+— fast, because it's one read. It never timed the actual downstream work `_process_cell` does per cell: splitting that
+bundle into one small parquet PUT **per distinct pool instrument** — thousands of individual small GCS writes, not one.
+At even a modest ~75-100ms per small-file PUT (typical for `gcsfs`), 5,000-8,000 sequential writes land right at or past
+the 600s stall-timeout boundary. **This reframes these 9 cells from "mysteriously hung" to "genuinely large fan-out work
+that needs either more time or parallel writes within a cell"** — not a bug in the shipped stall-timeout fix (which is
+doing exactly its job: bounding a slow cell's blast radius), but a capacity mismatch between a fixed global timeout and
+a small number of unusually large cells.
+
+**Not yet resolved / not re-attempted this session** — flagging rather than guessing:
+
+- Not confirmed WHY these specific 9 December days have 5-8x the normal pool count (worth checking whether this is the
+  2026-07-13 re-materialization's OWN output shape, tying back to the open "Divergence RCA" todo above, or a genuine
+  seasonal/on-chain spike in distinct ORCA pool activity).
+- The source bundles for these 9 cells were **left intact** (per the run's own
+  `MIGRATION had 9 error(s) — affected source bundles were left intact` line) — no data was lost, they simply remain in
+  pre-migration bundled form pending a future retry.
+- Two viable fixes, neither implemented yet: (a) a one-off higher timeout for a scoped re-run of just these 9 cells
+  (`_CELL_STALL_TIMEOUT_SECONDS` is currently a module constant, not a CLI/env override — would need a small code change
+  to expose one), or (b) parallelize the per-instrument write fan-out **within** `_process_cell` itself (ties directly
+  into the already-scoped "perf bundle: async fan-out" workstream in
+  `plans/active/defi_consolidated_closeout_2026_07_18.md`, which flagged the identical per-instrument sequential-write
+  pattern in the DeFi collect-* handlers as needing the same treatment).
+- These 9 residual cells do **not** block the manifest rebuild — errored cells simply aren't in the fresh manifest yet;
+  their untouched source bundles make a future retry idempotent and safe whenever the timeout/parallelism fix lands.
