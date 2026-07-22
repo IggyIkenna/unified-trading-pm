@@ -347,32 +347,64 @@ the same fixes.
 - [x] N. ✅ **DUPLICATE of the todo above — SHIPPED, see that entry** (`deployment-api@724910e`). Stale copy of the same
       "wire UAC `is_mvp` into MTDS coverage" ask, left unchecked in an earlier plan revision; consolidating here rather
       than leaving a done item showing as open next to its own completed twin.
-- [ ] [DATA] P2. **Precompute `mvp: bool` for sports/prediction — investigated, deliberately NOT implemented this tick,
-      re-scoped from the original ask.** Traced `deployment-api/deployment_api/routes/data_status/_catalogue.py` in full
-      before touching anything (grep-then-READ): the original framing ("mirror `_add_mvp_column`") is the WRONG fix and
-      has already been tried. `_add_mvp_column` already runs unconditionally for every asset_group in
-      `build_instrument_catalogue.py` including sports/prediction — `prod/catalog.parquet` DOES carry a precomputed
-      `mvp` column for sports/prediction rows too. The catalogue explorer's live `df.apply(is_mvp_for_manifest_row)`
-      path is NOT because that column is missing — it's because sports/prediction's _manifest_
-      (`_index/     availability_index.parquet`, read via `_read_availability_index`) is a DIFFERENT file from
-      `prod/catalog.parquet`, chosen deliberately because sports/prediction's manifest has genuine per-row
-      `instrument_id`/`league_id` granularity that cefi/defi/tradfi's VENUE-level manifest lacks. Redirecting
-      sports/prediction to `prod/catalog.parquet` instead (the naive "just precompute it" fix) has an explicit,
-      code-commented, regression-tested revert history (`_catalogue.py:75-87`,
-      `test_sports_not_in_identity_catalogue_asset_groups`): measured against the live sports `prod/catalog.parquet`
-      (27,250 rows, 2026-07-17), `venue` is 100% blank (silently breaks every venue filter), there's no `capture_status`
-      column (defaults to fabricating "captured" for 27k rows with zero capture evidence — an honest-absence violation),
-      and `instrument_type` is lowercase legacy vocabulary vs. this endpoint's uppercase canonical match. Also confirmed
-      the live-recompute cost is bounded (narrowed to the request's `venue`/ `instrument_type`/`data_type` mask BEFORE
-      `_is_mvp_series` runs, not a full-27k-row scan per request) and is explicitly commented as "the same cost those
-      asset groups already paid, so no regression" (`_catalogue.py:262-263`) — i.e. this is a pre-existing, accepted
-      characteristic, not a fresh bug introduced by this session's work. **Correct fix direction for whoever picks this
-      up**: precompute the `mvp` column onto `_index/availability_index.parquet` ITSELF at sports/prediction
-      manifest-WRITE time (not read time) — requires tracing which service/job actually writes that manifest (likely
-      market-tick-data-service's sports/prediction ingestion or a manifest-consolidator step, NOT yet traced) and
-      stamping `mvp` there, so `_row_is_mvp`/ `_is_mvp_series` can add an `"mvp" in df.columns` fast path for
-      manifest-backed rows too, mirroring the identity-catalogue branch exactly. Left at P2 (was P1) given the bounded,
-      non-regressed cost and the real risk of rushing a fix in a spot with documented prior near-misses.
+- [ ] [DATA] P2. **Precompute `mvp: bool` for sports/prediction — TRACED + DESIGNED this tick, deliberately NOT
+      implemented (scope-risk STOP, not a skipped task).** Picks up exactly where the prior tick left off (that tick had
+      already ruled out the naive "mirror `_add_mvp_column`/redirect to `prod/catalog.parquet`" fix — see
+      `_catalogue.py:75-87` + `test_sports_not_in_identity_catalogue_asset_groups`, unchanged, still correct).
+
+      **Trace (done this tick)**: sports/prediction have NO separate manifest-writer pipeline — they flow through the
+          exact same universal orchestrator as every other asset_group.
+          `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
+          `_finalize_prediction_bundles`/`_finalize_sports_...` closures (+ the shared `_write_bundle_shard_row` helper)
+          call `unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py`'s
+          `ManifestWriter.record_captured`/`record_captured_from_counts` (captured rows) and `_writer_record.py`'s
+          `_record_status` (empty/failed/expected_unattempted rows), which both build ONE shared dataclass —
+          `_rows.py::AvailabilityRecord` — the UNIVERSAL manifest-row schema written into `_index/availability_index.parquet`
+          by EVERY asset_group and EVERY producer service (cefi/defi/tradfi/sports/prediction, plus features-service /
+          ml-service / strategy-service / execution-service, which is why `AvailabilityRecord` already carries
+          `feature_group`/`model_family`/`strategy_id`/`client_id`/`instruction_type` columns). There is no
+          sports/prediction-scoped writer to touch in isolation — any new column lands on this ONE shared schema.
+
+          **Key finding (changes the framing of "correct fix")**: `is_mvp_for_manifest_row`'s two extra axes beyond
+          `(venue, instrument_type, data_type)` — `base_ccy` (read from a `base_asset` column) and `market_group` — are
+          confirmed ABSENT not just from the read-time manifest DataFrame (already documented at `_coverage_scope.py:96-104`)
+          but from the WRITE-time schema too: neither `base_asset` nor `market_group` appears in UTL's `_ROW_KEY_COLUMNS`
+          or `AvailabilityRecord` fields (`_rows.py`). So a write-time `is_mvp(...)` call would resolve those two kwargs to
+          `None` — IDENTICAL to what the read-time call resolves today. **Write-time precompute is a pure caching/perf
+          optimization, not a correctness fix** — it would not change a single row's `is_mvp` verdict vs. today.
+
+          **Design (for whoever implements)**:
+          1. UTL `manifest_writer/_rows.py`: add `mvp: bool | None = None` (trailing field, back-compat default) to
+             `AvailabilityRecord`; bump `MANIFEST_SCHEMA_VERSION` 9→10 in `_schema.py`.
+          2. UTL `_writer_captured.py::record_captured`/`record_captured_from_counts`: when the resolved `asset_group` is
+             `"sports"`/`"prediction"`, lazy-import UAC `is_mvp` and stamp
+             `is_mvp(asset_group, venue, instrument_type, data_type, league=league_id or None, market_group=None,
+             base_ccy=None, source=resolved_source)` onto the `AvailabilityRecord(...)` call; leave `None` for every other
+             asset_group (no behavior change elsewhere).
+          3. UTL `_writer_record.py::_record_status`: same conditional stamp (sports/prediction also write
+             empty/failed/expected_unattempted rows through this path).
+          4. `deployment-api/_catalogue.py::_row_is_mvp`/`_is_mvp_series`: add a THIRD branch — when `"mvp" in df.columns`
+             for a manifest-backed (non-identity-catalogue) frame, use the precomputed value for rows where it's non-null
+             (`_truthy_mvp` fast path, mirroring the identity-catalogue branch byte-for-byte) and fall back to
+             `is_mvp_for_manifest_row` only for legacy rows where the column is null/absent — old rows keep today's exact
+             behavior.
+          5. Historical rows do NOT retroactively gain `mvp` from steps 1-4 alone — closing the live-compute gap for
+             EXISTING data needs a companion backfill/rebuild pass (the repo already has the pattern:
+             `rebuild_sports_manifest_v9.py` / `rebuild_prediction_manifest.py`), scoped separately.
+
+          **Why this STOPS here instead of shipping (explicit scope-risk call, not an oversight)**: step 1 is not a
+          sports/prediction-scoped change — it is a schema addition on the ONE shared `AvailabilityRecord` used by every
+          asset_group and every producer service, so it needs a FULL FLEET redeploy (every live/backfill/cron VM, both
+          clouds, all asset_groups) to take effect, not a bounded single-service change. The manifest-consolidator
+          (Cloud Run/Batch-Fargate) merging old-schema and new-schema per-VM shards together is unverified here and codex
+          documents it as "loud-fails on stale index" — exactly the risk class behind this SAME session's separate CeFi
+          manifest re-stamp (see the "2026-07-21 (tick 2)" progress-log entry above and the deferred-work table below),
+          which needed a snapshot + guarded rollout + an operator-gated Cloud Scheduler pause and is still not fully landed.
+          Given the P2 (not P1) priority, the already-documented "bounded, non-regressed" live-compute cost (no active
+          incident forcing urgency), and the Key Finding above (this is a perf win, not a correctness fix), rushing steps
+          1-4 here would repeat the exact near-miss pattern this plan has already flagged twice. Left at P2 with the design
+          above ready to hand off; NOT force-shipped.
+
 - [x] N. ✅ [BACKEND] P1. **MDPS parity — traced + backend honest-coverage SHIPPED** (`unified-api-contracts@a7798b93` +
       `deployment-api@60a23ae`, both verified landed on origin by SHA). **Traced first** (Explore agent, before writing
       any code): MDPS was hard-excluded from the entire honest-coverage path (`is_mtds_honest_coverage_target`:
@@ -751,17 +783,17 @@ earlier revision).
 **What's still genuinely open** — every item below already has its own `- [ ]` todo above; this table exists per the
 session-end hygiene rule to separate the three kinds of "not done," not to duplicate them:
 
-| Item                                                                                                      | State              | Blocked on                                                                                                                                                                                                     |
-| --------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Manifest re-stamp final write (CeFi venue-as-chain historical fix)                                        | Cannot be done yet | **Operator**: authorize a ~3-5min pause of the `manifest-consolidator-market-data-cefi` Cloud Scheduler cron (root cause pinpointed precisely; see `distinct_values_noncanonical_audit_2026_07_20.md`)         |
-| Bug C live-data verification against the operator's original screenshot                                   | Not done           | Nobody — genuine engineering work (reproduce against real GCS/manifest data for the specific venue/instrument), just not attempted this session; moderate effort, no blocker                                   |
-| `/turbo` endpoint MVP-scope gap (only `/manifest` got `scope=mvp`)                                        | Not done           | Nobody — scoped, small, follow-up engineering                                                                                                                                                                  |
-| Sports/prediction MVP-column real fix (precompute onto the manifest writer)                               | Not done           | Nobody — needs tracing the sports/prediction manifest-writer pipeline first (not yet done); correct fix direction is documented, wrong fix (redirect to identity-catalogue) is explicitly ruled out            |
-| MDPS Tier-2 (venue-level) timeframe-awareness + `PROCESSING_DATA_TYPES` single-sourcing                   | Not done           | Nobody — deliberately out of the reviewed scope for the shipped Tier-3 work; narrow, well-defined follow-up                                                                                                    |
-| MDPS `historical_coverage_gap` real fix (backfill/relabel vs. compat shim)                                | Cannot be done yet | **Operator decision**: which of the two real fixes to pursue (flagged via a response field in the meantime, not silently wrong)                                                                                |
-| MDPS per-timeframe start-date divergence question                                                         | Cannot be done yet | **Operator/data**: needs a factual answer about real deployed venue cadence config; API surface already supports the answer either way without a signature change                                              |
-| `data_status_cell_grid_rearchitecture_2026_07_18.md` OOM vs. "MTDS needs to be faster" — same root cause? | Done (2026-07-22)  | N/A — two root causes found: coverage/drilldown grid = SAME as the OOM plan (annotated there); symbol search = a different, already-partially-fixed I/O-latency issue (pre-session `8e1221b`). See todo above. |
-| Final MTDS/MDPS-parity confirmation pass (`[UI]` + `pw:L2`)                                               | Not done           | Nobody — the shipped UI work each carries its OWN regression spec already, but the plan's broader "confirm full parity" todo as originally scoped hasn't had its own dedicated pass                            |
+| Item                                                                                                      | State                              | Blocked on                                                                                                                                                                                                                                                                                                                |
+| --------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Manifest re-stamp final write (CeFi venue-as-chain historical fix)                                        | Cannot be done yet                 | **Operator**: authorize a ~3-5min pause of the `manifest-consolidator-market-data-cefi` Cloud Scheduler cron (root cause pinpointed precisely; see `distinct_values_noncanonical_audit_2026_07_20.md`)                                                                                                                    |
+| Bug C live-data verification against the operator's original screenshot                                   | Not done                           | Nobody — genuine engineering work (reproduce against real GCS/manifest data for the specific venue/instrument), just not attempted this session; moderate effort, no blocker                                                                                                                                              |
+| `/turbo` endpoint MVP-scope gap (only `/manifest` got `scope=mvp`)                                        | Not done                           | Nobody — scoped, small, follow-up engineering                                                                                                                                                                                                                                                                             |
+| Sports/prediction MVP-column real fix (precompute onto the manifest writer)                               | Traced + designed, not implemented | Nobody — deliberate scope-risk STOP: write path traced to UTL's universal `AvailabilityRecord` schema (shared by every asset_group + service), full design handed off in the todo above; implementing needs a full-fleet redeploy + consolidator schema-evolution verification, disproportionate to a bounded P2 perf gap |
+| MDPS Tier-2 (venue-level) timeframe-awareness + `PROCESSING_DATA_TYPES` single-sourcing                   | Not done                           | Nobody — deliberately out of the reviewed scope for the shipped Tier-3 work; narrow, well-defined follow-up                                                                                                                                                                                                               |
+| MDPS `historical_coverage_gap` real fix (backfill/relabel vs. compat shim)                                | Cannot be done yet                 | **Operator decision**: which of the two real fixes to pursue (flagged via a response field in the meantime, not silently wrong)                                                                                                                                                                                           |
+| MDPS per-timeframe start-date divergence question                                                         | Cannot be done yet                 | **Operator/data**: needs a factual answer about real deployed venue cadence config; API surface already supports the answer either way without a signature change                                                                                                                                                         |
+| `data_status_cell_grid_rearchitecture_2026_07_18.md` OOM vs. "MTDS needs to be faster" — same root cause? | Done (2026-07-22)                  | N/A — two root causes found: coverage/drilldown grid = SAME as the OOM plan (annotated there); symbol search = a different, already-partially-fixed I/O-latency issue (pre-session `8e1221b`). See todo above.                                                                                                            |
+| Final MTDS/MDPS-parity confirmation pass (`[UI]` + `pw:L2`)                                               | Not done                           | Nobody — the shipped UI work each carries its OWN regression spec already, but the plan's broader "confirm full parity" todo as originally scoped hasn't had its own dedicated pass                                                                                                                                       |
 
 **Recommended next item**: the manifest re-stamp cron-pause authorization — it's the only item blocking on a single,
 fast operator decision (a ~5-minute production action) rather than more engineering time, and closing it out finishes a
@@ -796,3 +828,37 @@ The two items the prior entry flagged as needing an operator call are now closed
 the Todos section above (the `/turbo` MVP-scope gap, MDPS Tier-2 timeframe-awareness, sports/prediction MVP precompute,
 the cell-grid OOM investigation, the final parity confirmation pass) are genuine, non-blocking engineering follow-ups
 with no operator dependency — pick up whichever is highest-value next, or leave them for a future session.
+
+### 2026-07-22 (follow-up tick) — Sports/prediction MVP-column P2: traced + designed, deliberately not implemented
+
+Picked up the sports/prediction MVP-column todo per its own "correct fix direction for whoever picks this up" note.
+**Traced** (grep-then-READ, no code written before the trace was complete): sports/prediction have no dedicated
+manifest-writer job — `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
+prediction/sports bundle-finalize closures call UTL `ManifestWriter.record_captured`/`record_captured_from_counts`
+(`_writer_captured.py`) and `_record_status` (`_writer_record.py`), which both build ONE shared dataclass —
+`manifest_writer/_rows.py::AvailabilityRecord` — the universal manifest-row schema every asset_group and every producer
+service (cefi/defi/tradfi/sports/prediction/features/ml/strategy/execution) writes into
+`_index/availability_index.parquet`. No sports/prediction-scoped writer exists to touch in isolation.
+
+**Key finding**: `is_mvp_for_manifest_row`'s two extra axes (`base_ccy`/`market_group`) are absent from the WRITE-time
+schema exactly as they're already documented absent from the READ-time one — a write-time `is_mvp(...)` call would
+resolve identically to today's read-time call. **This is a pure caching/perf optimization, not a correctness fix.**
+
+**Designed** the full write-time-stamp fix (5 concrete steps: `AvailabilityRecord` field + schema-version bump,
+conditional stamp in `record_captured`/`record_captured_from_counts`, conditional stamp in `_record_status`, a third
+`"mvp" in df.columns` fast-path branch in deployment-api's `_row_is_mvp`/`_is_mvp_series`, a companion historical
+backfill/rebuild) — written into the todo above verbatim for whoever implements it.
+
+**Deliberately stopped before implementing** (explicit scope-risk call, per this task's own instruction to stop rather
+than force-ship something risky): step 1 is a schema addition on the ONE shared `AvailabilityRecord`, so it needs a
+full-fleet redeploy (every live/backfill/cron VM, both clouds, every asset_group) to take effect, plus unverified
+manifest-consolidator schema-evolution behavior on a system codex documents as "loud-fails on stale index" — the same
+risk class behind this plan's own separate CeFi manifest re-stamp (see the 2026-07-21 tick-2 and 2026-07-22
+post-close-out entries above), which needed a snapshot + guarded rollout + an operator-gated cron pause and took most of
+a session to land safely. Given the already-documented bounded/non-regressed live-compute cost (P2, not P1, no active
+incident) and the Key Finding above (perf-only, not correctness), rushing this in one pass would repeat that exact
+near-miss pattern rather than learn from it.
+
+**Shipped this tick**: nothing code-wise — the todo above and the deferred-work table row were updated
+(`unified-trading-pm` — this commit) with the trace + design + explicit stop rationale so the next picker-upper starts
+from a design, not from scratch. No other repo was touched; no quality gates were run (no code changed).
