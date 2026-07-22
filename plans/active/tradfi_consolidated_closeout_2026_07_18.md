@@ -2253,7 +2253,7 @@ questions when a decision is needed. Ran it. Findings:
     dropping 50,520 rows from the live production manifest in one shot, meaningfully larger in scope than the earlier
     112,839-row hygiene cleanup that turned out to have a wrong premise. Needs deliberate operator-visible review before
     ever applying, not a same-session rush.
-  - `- [ ] [DATA] P1. Re-verify the register-phase 1,545 rows landed in the CONSOLIDATED _index/availability_index.parquet (not just the per-VM shard) — check post-consolidator-cycle, e.g. via honest-coverage re-measure or a direct manifest query filtered to the 32 registered underlying roots.`
+  - `[x] [DATA] P1. Re-verify the register-phase rows landed in the CONSOLIDATED _index/availability_index.parquet — confirmed via a direct manifest query (venue=CME, underlying=AUD): the exact 2023-06-19/2023-06-21 options_chain rows the plan originally cited as sample evidence (real GCS data, zero manifest registration) now read capture_status=captured in the live consolidated index. Consolidator merge cycle already ran.`
   - `- [ ] [DATA] P1-OPERATOR-REVIEW. Review the retire-phase candidate list (50,520 rows, recovery_retire.tsv in this session's scratchpad — regenerable via --retire dry-run) before ever running --apply. Once reviewed/approved: --apply is an in-place-CAS whole-index REPLACE (snapshot backup automatic) — re-run the dry-run first if picked up more than a day or two later (the manifest keeps moving).`
 
 **Remaining, in priority order for the next continuation: (1) re-verify the register-phase rows landed in the
