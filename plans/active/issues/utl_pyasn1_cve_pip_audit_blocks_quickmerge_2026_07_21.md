@@ -14,7 +14,7 @@ summary: >-
   transitive-dependency change with workspace-wide blast radius (re-locking `uv.lock`, verifying every consumer of
   `pyasn1`/`pyasn1-modules`/anything depending on them still resolves), out of scope for an inline fix alongside an
   unrelated ship per the dirty-deps/dependency-bump caution in CLAUDE.md.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -38,7 +38,7 @@ source:
     "hit while shipping an unrelated lst_rate_honest_coverage_2026_07_21.md Phase 2 fix (AAVE pipeline_mode venue
     override) 2026-07-21",
   ]
-resolved_by:
+resolved_by: unified-trading-library@d0d39788
 locked_by:
 ---
 
@@ -80,11 +80,20 @@ inline.
 
 ## Todos
 
-- [ ] 1. [BACKEND] P1. Check whether a `pyasn1` patch release (still within or bumping past `<0.7.0`) fixes both CVEs;
+- [x] 1. [BACKEND] P1. Check whether a `pyasn1` patch release (still within or bumping past `<0.7.0`) fixes both CVEs;
       if so, bump the pin and re-lock `uv.lock` (`uv lock --upgrade-package pyasn1`), then run the full
-      `unified-trading-library` test suite to confirm no regression. (repo: unified-trading-library)
-- [ ] 2. [REVIEW] P2. Once green, sweep for any quickmerge attempts in this repo that were silently blocked by this same
-      pip-audit failure and ship them. (repo: unified-trading-library)
+      `unified-trading-library` test suite to confirm no regression. (repo: unified-trading-library) — DONE,
+      `unified-trading-library@d0d39788` bumped 0.6.3->0.6.4, full suite green.
+- [x] 2. [REVIEW] P2. Once green, sweep for any quickmerge attempts in this repo that were silently blocked by this same
+      pip-audit failure and ship them. (repo: unified-trading-library) — the 3 ships blocked by this in
+      `lst_rate_honest_coverage_2026_07_21.md` (unified-trading-library@1fda0e87d, instruments-service@2c55d413,
+      market-tick-data-service@672f82f5) all landed cleanly once this cleared; no other blocked attempt found.
+
+## Resolution (2026-07-22)
+
+`unified-trading-library@d0d39788` bumped `pyasn1` 0.6.3->0.6.4, resolving both CVE-2026-59885/59886. Verified via a
+full `quality-gates.sh` run post-bump (green) and by successfully shipping 3 previously-blocked commits across 3 repos
+(see `lst_rate_honest_coverage_2026_07_21.md`'s final Progress Log entry for the full unblock sequence).
 
 ## Independent re-confirmation (2026-07-21, separate session)
 
