@@ -952,7 +952,7 @@
         "warn_file_count": 5,
         "large_file_count": 0
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1262,7 +1262,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": "ruff",
         "coverage_pct": 88.45,
