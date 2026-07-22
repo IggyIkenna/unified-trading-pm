@@ -80,29 +80,42 @@ log went completely silent — same symptom as Attempt 1 (no more RESOURCE_SAMPL
 - **Cost impact**: two SPOT-VM launches burned real (if modest — minutes each) compute time on hangs rather than
   progress, on top of the earlier misdirected-launch mistake documented in the LST plan's Progress Log.
 
-## What I did NOT do
+## CONFIRMED root cause hypothesis (2026-07-22, same session, follow-up test)
 
-- Did not dig into `market_tick_data_service`'s download/streaming code to find the exact root cause (could be an
-  unbounded in-memory accumulation across all (venue, symbol) combinations before writing, a `pandas.concat` growing
-  unbounded, a retry loop holding references, or something in the `ResourceProfiler`/watchdog itself deadlocking rather
-  than the actual downloader) — that's real debugging work for whoever picks this up, not something I could responsibly
-  rush given how much else was in flight this session.
-- Did not test whether a MUCH smaller `--chunk-days` (e.g. 1 or 7) avoids the hang entirely by keeping each chunk's
-  memory footprint small AND letting each chunk be a fresh process (memory resets between bash-loop iterations) — this
-  is my planned workaround for my own backfill (tracked in the LST plan), but I have not yet confirmed it avoids the
-  hang; if it does, that's a strong hint the bug is in per-chunk memory accumulation specifically, not a leak that
-  persists cross-process.
+Relaunched the identical (venue, symbol) scope with `--start 2022-08-25 --end 2022-08-27 --chunk-size 1` (forces the
+bash-level `mtds_chunk_loop.sh` to spawn one FRESH python process per single day, instead of one process holding an
+entire multi-day/multi-month range). Result: **no hang.** Chunk 1 (`2022-08-25`) completed cleanly — real Coinbase rows
+written (`CBETH-USD` 18,959 rows, `CBETH-ETH` 1,676 rows), OKX correctly honest-absent (predates its `availableSince`),
+peak memory only **45.4% (6032MiB)** — well under the 85% `mem_crit` threshold that the 250-day chunk blew past within
+30 seconds. The loop then moved cleanly into chunk 2 (`2022-08-26`) with memory reset back to baseline (fresh process).
+
+This **isolates the bug**: memory usage scales with the SPAN of the `--start-date`/`--end-date` range passed to a SINGLE
+`market_tick_data_service --operation download` invocation, not with the number of (venue, symbol) pairs or any
+per-process leak that persists across chunk-loop iterations. A single day for these 9 symbols only needs ~6GB; a 250-day
+chunk for the SAME 9 symbols needs enough to blow past 12.7GB within seconds of starting — consistent with an unbounded
+in-memory accumulation (e.g. holding every day's rows in memory before any per-day write, rather than writing and
+releasing incrementally) that scales with `(end_date - start_date)`, not with the actual row count written per day
+(which the log shows happening per-day just fine — the WRITE path is already streaming; the accumulation must be
+happening upstream of it, e.g. in whatever builds the list/schedule of per-day fetch tasks before they're executed, or
+in how results are buffered across days before the final manifest write).
+
+**Practical workaround (validated, in use for the LST plan's actual backfill): always pass `--chunk-days 1` for CEFI
+Tardis backfills** until the real fix lands — this is a mitigation, not a fix; it multiplies per-day process bootstrap
+overhead (~15-20s per day for `DomainValidationService`/`ResourceProfiler`/`ApiKeyReloader` init) across the whole
+backfill window, which is real but bounded cost, versus the alternative of a backfill that silently hangs forever.
 
 ## Suggested next steps (not done here)
 
-1. Reproduce with `--chunk-days 1` for the same instrument/venue/date scope and confirm whether the hang recurs. If it
-   doesn't, that isolates the bug to "too much data in one chunk" rather than a cross-process leak.
-2. If it does recur even at `--chunk-days 1`, the bug is likely in a single day's worth of data for these specific
-   symbols (worth checking if any of the 9 symbols/venues have unusually high trade volume that could blow up a single
-   day's in-memory frame).
-3. Either way: the "Memory watchdog" apparently doesn't actually recover/fail-loud when `mem_crit` triggers — that
+1. Root-cause the actual in-memory accumulation in `market_tick_data_service`'s CEFI download path — given the confirmed
+   correlation with `(end_date - start_date)` span rather than symbol/venue count or per-day row volume, look for
+   whatever builds the per-day task list/schedule for the WHOLE requested range up front (rather than generating and
+   immediately executing one day at a time), or any accumulator that holds cross-day results before the final per-VM
+   manifest write.
+2. Either way: the "Memory watchdog" apparently doesn't actually recover/fail-loud when `mem_crit` triggers — that
    silent-hang behavior is worth fixing on its own regardless of the download-side root cause, since it turns an
    otherwise-recoverable OOM condition into a fully-silent, unmonitorable-except-by-external-log-staleness hang.
+3. Once fixed, `--chunk-days 1` should no longer be necessary for CEFI Tardis backfills — worth a regression test with
+   the original 250-day default to confirm the fix actually resolves it before reverting the workaround guidance.
 
 ## Evidence
 
