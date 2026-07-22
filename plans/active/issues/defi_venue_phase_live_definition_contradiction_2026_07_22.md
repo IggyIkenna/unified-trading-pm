@@ -241,3 +241,70 @@ a production metric operators see:
    number.
 
 Either path needs an operator decision — this doc does not pick one.
+
+## BLOCKED 2026-07-22 — implementation attempted, shipped NOT-SAFE by adversarial verify; NOT shipped
+
+Operator ruling received: **"make it both Definition #2 and Definition #1 to be live for safety" (OR-semantics)** — i.e.
+count a venue as honest-coverage-live if it satisfies Definition #1 (real MTDS captured data) OR Definition #2
+(IS-producible / `phase=="live"`), and never demote a venue that already satisfies #2.
+
+A design → implementation → measurement → adversarial-verify pipeline ran against this ruling. Verdict: **NOT-SAFE**.
+Nothing shipped. Recorded here so the blocker isn't lost, not as a resolution.
+
+**What was designed and built (uncommitted, still sitting in `unified-api-contracts` working tree as of this writing):**
+rather than literally flipping `DEFI_VENUE_PHASE` for the 11 venues to `"live"` (which the investigation showed would
+break `instruments-service/tests/unit/test_orchestrator_helpers.py:: test_defi_set_equals_uac_denominator_drift_guard`
+in a different repo, silently, since that repo's tests are not run by this repo's `quality-gates.sh`), the
+implementation added two new, additive, unwired constants in `unified_api_contracts/registry/defi_venues.py`:
+`DEFI_VENUE_MTDS_CAPTURED` (the 11 venues, Definition #1) and `DEFI_HONEST_COVERAGE_VENUES` (OR-union of phase=="live"
+venues with `DEFI_VENUE_MTDS_CAPTURED`), plus tests in `tests/test_venue_key_parity.py` pinning the union semantics and
+a no-demotion safety property. `DEFI_VENUE_PHASE` dict values were **not** touched (confirmed byte-identical dict body
+before/after by the adversarial verifier).
+
+**Why it's blocked — the adversarial verifier's finding, not a process nitpick:** the new `DEFI_VENUE_MTDS_CAPTURED`
+constant's doc-comment claims these 11 venues have _"REAL, verified, months-long captured data"_ (language sourced from
+this doc's own line 110-111 above, citing `defi_venue_capabilities.py`'s 2026-07-10 comment: STADER 1,078 rows, SWELL
+1,162, STAKEWISE 937, MANTLE 990, ANKR 2,000 rows through 2026-06-21). The verifier pulled the **live production
+manifest** (`gs://market-data-tick-defi-prd-central-element-323112/_index/ availability_index.parquet`) and raw GCS
+objects directly and found that claim is false today:
+
+- 5 of the 11 (FRAX, ALCHEMY, FLASHBOTS, ACROSS, STARGATE) have **zero** captured rows anywhere in GCS — no data at all,
+  not "months-long."
+- 5 of the 11 (ANKR, STADER, STAKEWISE, SWELL, MANTLE) have exactly **one** manifest shard each, dated 2026-07-20,
+  `row_count=1` — a single on-chain read, all four sharing the same `block_number=25573787`, fetched hours before the
+  2026-07-10-cited row counts (1,078/1,162/937/990/2,000) — those historical rows are **not present in the live manifest
+  today** (lost/orphaned in the June/July canonical-migration churn, or never actually verified when the 2026-07-10
+  comment was written — undetermined which).
+- 1 (MAKER) has real captured data in GCS for 2026-07-20 but is **not registered in the manifest at all** — an orphan
+  capture, a separate bug from this one.
+
+So the constant being shipped would permanently enshrine a checkably-false data claim into UAC's SSOT registry, and the
+regression test added alongside it (`test_defi_mtds_captured_contains_the_2026_07_22_eleven_venues`) only checks
+frozenset membership — it can never catch that the claim is false, so the falsehood would be locked in forever.
+`DEFI_HONEST_COVERAGE_VENUES` has zero consumers today (confirmed by grep — nothing reads it), so nothing breaks in
+production _right now_, but whoever wires it into a real `completeness_pct` consumer later (this doc's own §"Recommended
+next step" option 1, and the design's own explicitly-deferred step 4(d)) would inherit a false "already verified"
+premise and mint exactly the phantom expected-but-never-captured cells the honest-coverage architecture was built to
+prevent.
+
+**What would need to change before this can ship** (either one, operator's call):
+
+1. Correct `DEFI_VENUE_MTDS_CAPTURED`'s membership and doc-comment to only what's actually verifiable in the live
+   GCS/manifest today — at most 6 venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER, each currently a single synthetic
+   2026-07-20 sample point, not "months-long" data; MAKER additionally needs its manifest-registration orphan bug fixed
+   first), and drop FRAX/ALCHEMY/FLASHBOTS/ACROSS/STARGATE entirely (zero data) unless/until they have real captured
+   rows; or
+2. Get an explicit operator re-confirmation of the OR-ruling now that they've been shown the 1,078/1,162/937/990/
+   2,000-row figures they were originally given do not exist in production today.
+
+**Measured `completeness_pct` before/after** (for the record — this number did NOT change, because nothing shipped and
+the implementation never touched `DEFI_VENUE_PHASE`/`VENUES_BY_ASSET_GROUP["defi"]`, the only inputs
+`check_enumeration_completeness.py` actually reads): Layer-1 `defi` — `n_expected=109`, `n_present=3`,
+`completeness_pct=2.75`, `denominator_status=INCOMPLETE`, both before (original `defi_venues.py`) and after (working
+tree with the two new unwired constants), measured via
+`instruments-service/scripts/measure_honest_coverage.py --asset-group defi --diagnose-layer1` against the live prod
+manifest. Delta = 0, as expected given nothing wired.
+
+**Working-tree state**: `unified-api-contracts/unified_api_contracts/registry/defi_venues.py` and
+`unified-api-contracts/tests/test_venue_key_parity.py` remain uncommitted, unshipped, in the working tree pending the
+operator decision above. **Status stays `open`** — this section documents the blocker, not a resolution.
