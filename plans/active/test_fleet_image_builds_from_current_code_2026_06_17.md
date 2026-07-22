@@ -28,8 +28,8 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-07-07
-locked_by: live-defi-rollout
+last_updated: 2026-07-22
+locked_by:
 locked_since:
 supersedes:
 superseded_by:
@@ -49,6 +49,20 @@ drift_direction: advance-code
 
 # Test fleet image builds from current code (2026-06-17)
 
+> **🟢 COMPLETE 2026-07-22 — ARCHIVED.** All 4 phases done: base libs + all 14 GCP service images build clean against a
+> fresh UTL base digest; AWS CodeBuild parity established 2026-06-19; Phase 4 expanded (operator direction,
+> pre-production system) from a 1-2 image trial to a full fleet pipes-and-wires check — 9 Cloud Run Services exercised
+> (5 succeeded, 3 + deployment-service failed for a genuine architectural reason: batch/worker code with no HTTP server,
+> not a bug) and all 70 live Cloud Run Jobs referencing these images had their pin refreshed. Along the way: fixed a
+> real bug in `deployment-service/scripts/cloud-run/canary-deploy.sh` (`--no-traffic` rejected on first-time service
+> creation) and severity-corrected an open P1 issue that overstated its own impact (GCP Cloud Build was never actually
+> affected by the stale-digest-pin bug it describes — only local/AWS builds were). Two loose ends migrated out rather
+> than left as prose: the fan-out-automation-is-broken root cause was already tracked
+> (`digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`,
+> `base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md`); the AWS `terraform import` follow-up got its own doc
+> (`plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md`) since it needs a new S3 state backend
+> stood up first — genuinely separate work.
+>
 > **Goal:** prove that **every deployable repo's container image builds successfully from current code**, surface and
 > fix whatever breaks (stale base-digest pins, missing deps, broken Dockerfiles, in-image AR auth, test-in-image
 > failures), so that when we ARE ready to ship prod code we are not doing trial-and-error under pressure. **This is a
