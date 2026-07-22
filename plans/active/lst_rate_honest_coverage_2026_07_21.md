@@ -350,12 +350,17 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `lst_rates_handler.py`'s actual post-fetch filter that this value gates ANY row regardless of source tier, so the
       earlier caution about a "possibly-different Tier-1-specific semantic" didn't hold up — see the T+10min bug finding
       above.
-- [ ] [UAC][IS] P3. **Remaining Sanctum reconciliation (follow-up, not done this session)** — `chain_env.py`'s
-      `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]` (currently "2023-06-01") and IS's `sanctum.py`'s
-      `_SANCTUM_DEPLOY_DATE`/`available_from_datetime` still carry the old/approximate dates; also verify
-      `SANCTUM_INF_POOL_ACCOUNT` (an unverified placeholder in `market-tick-data-service/_solana_lst_archival_tier1.py`)
-      on-chain — that's Tier-1's OWN account, a genuinely separate fact from the mint's DefiLlama history now fixed
-      above.
+- [x] ✅ [UAC][IS] P3. **Remaining Sanctum reconciliation** — `SANCTUM_INF_POOL_ACCOUNT` on-chain verification done
+      (found FABRICATED — the old value `o1Mw5Y3n68o8TakZFuGKLZMGjm72qv4JeoZvGiCnGy7` doesn't exist on-chain — replaced
+      with the mint's own `mintAuthority`); IS `sanctum.py`'s `available_from_datetime` now sources INF's floor from UAC
+      `LST_TOKEN_GENESIS["sanctumSOL"]` directly. `chain_env.py`'s `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]`
+      ("2023-06-01") deliberately left UNCHANGED (still correct for jupSOL/laineSOL, the marketplace-native tokens it
+      actually governs). **SHIPPED both repos, both quality-gates.sh green (sentinel matched HEAD in each)**:
+      `market-tick-data-service@52c5ff02` and `instruments-service@4b82310a`, both verified ancestors of
+      `origin/live-defi-rollout` (`git merge-base --is-ancestor`). Only remaining follow-up (genuinely separate, not
+      blocking): `SANCTUM_INF_POOL_ACCOUNT`'s exact multi-year creation date via `getSignaturesForAddress` pagination
+      needs paid archive-RPC access, not attempted this session — documented as a known limitation in the code comment,
+      not silently dropped.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
@@ -626,6 +631,52 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   giving up honestly) — this is a genuine efficiency cost, not a stall or OOM risk: heartbeats fresh, RSS stable
   ~800-900MiB (nowhere near the CEFI Tardis OOM's territory), real rows continuing to land for working shards. Will keep
   checking manifest/log evidence periodically rather than treating log activity alone as proof.
+- **2026-07-22 18:54 UTC (fresh-session VM re-check — both still healthily RUNNING, nothing actionable; picking up
+  Sanctum reconciliation)** — `gcloud compute instances list` confirms BOTH VMs still `RUNNING` in `asia-northeast1-c`.
+  `mtds-lst-rates-20260722-181845`: `run.log` tail shows real day-by-day progress now at `2022-04-13` (climbing from
+  `2021-08-17`), real EVM rows (stETH/wstETH/rETH/ankrETH/idle) AND real Solana rows (`mSOL = 1.03750142 SOL`,
+  `sanctumSOL = 1.03027891 SOL`, tier=`defillama_historical_ratio`) landing every day, per-VM manifest shard at 1109
+  entries and climbing; manifest parquet `Update-time` 18:54:37Z (fresher than the `date -u` check at 18:54:41Z — i.e.
+  actively being written this second). At ~239 days processed in ~34min, full `2021-08-17→2026-07-22` (~1801 days) is a
+  multi-hour run — still has a long way to go, not stalled. `mtds-dex-swaps-backfill`: `run.log` shows real swap rows
+  landing (61,204+ swap rows across working shards this pass), honest cascade-fallback exhaustion on dead subgraphs
+  (`uniswap_v3/OPTIMISM`, `camelot_v3/ARBITRUM`, `curve/ETHEREUM` each cycling schemas and failing cleanly, not
+  crashing), RSS ~1000MiB / mem ~13% (nowhere near OOM territory), manifest shard climbing (666+ entries,
+  `process_final=False` — still mid-backfill), parquet `Update-time` 18:53:52Z. **Both VMs: nothing actionable,
+  correctly left running.** Per the RESUME POINT's own recommendation, moving to the one genuinely-unblocked
+  non-infra-gated Phase 5 todo: the Sanctum reconciliation follow-up (`SANCTUM_INF_POOL_ACCOUNT` on-chain verification +
+  `chain_env.py`/`sanctum.py` date reconciliation).
+- **2026-07-22 (Sanctum reconciliation — on-chain verification done, code changes staged, NOT YET SHIPPED — session
+  interrupted before quality-gates.sh confirmed green)** — verified `SANCTUM_INF_POOL_ACCOUNT`
+  (`market-tick-data-service/_solana_lst_archival_tier1.py`) via direct `getAccountInfo` against
+  `api.mainnet-beta.solana.com`: the previous value (`o1Mw5Y3n68o8TakZFuGKLZMGjm72qv4JeoZvGiCnGy7`) does **NOT EXIST
+  on-chain** (`value: null`) — a fabricated placeholder, not merely unverified. Replaced with the INF mint's own
+  on-chain `mintAuthority` field (`AYhux5gJzCoeoc1PoJ1VxwPDe22RwcvpHviLDD1oCGvW`), confirmed to be a real, actively-
+  written 240-byte program-owned account; independently corroborated by raw byte-decoding — the account's own data
+  embeds the INF mint's exact 32-byte pubkey at internal offset 144 (strong but not 100%-certain structural evidence, no
+  Sanctum/Socean program IDL available to confirm definitively). **Known limitation left in code comments**: this
+  account is only 240 bytes, shorter than the >=274 bytes `decode_jito_stake_pool_rate()` expects (modern SPL Stake-Pool
+  layout; Socean's own struct predates it) — Tier 1 will still return `None` for Sanctum via a logged "too short"
+  warning rather than a silent not-found; NOT blocking real data (Tier 4's DefiLlama fallback, shipped earlier, already
+  provides verified sanctumSOL/SOL data end-to-end). `getSignaturesForAddress` pagination toward the account's true
+  creation date hit public-RPC rate limits after ~10 pages (~15 days of history) — reaching the exact multi-year genesis
+  this way needs paid archive-RPC access, not available this session; documented as a genuine, correctly-scoped
+  remaining gap rather than guessed at. **`chain_env.py`'s `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")] = "2023-06-01"`
+  was investigated and deliberately left UNCHANGED** — it's still the correct floor for jupSOL/laineSOL (genuine
+  Sanctum-marketplace-native tokens launched with the brand); only INF needed an earlier date, since INF's own mint
+  predates the Sanctum brand by ~2.3 years (the pre-existing Socean pool, per the earlier same-day finding). Instead of
+  touching the shared brand-floor key, fixed IS's `sanctum.py` adapter directly: added `_INF_AVAILABLE_FROM_DATETIME`
+  sourced from UAC's `get_lst_token_genesis("sanctumSOL")` (the same key already corrected to `"2021-10-15"` earlier
+  this session), applied ONLY to the `INF` symbol — jupSOL/laineSOL keep using the shared `_SANCTUM_DEPLOY_DATE` floor
+  unchanged. **Current state (interrupted mid-ship, being checkpointed here rather than left silent)**: both files'
+  changes are staged (`git add`) but NOT committed in their respective repos (`market-tick-data-service`,
+  `instruments-service` — plus `instruments-service`'s companion test file
+  `tests/unit/reference_data/adapters/defi/test_sanctum_metadata.py`, also staged). Neither repo's `quality-gates.sh`
+  sentinel matches the current working tree yet (a background gate run was started but its completion was never
+  confirmed this session — do NOT assume it passed). **Next session MUST**: re-run `quality-gates.sh` fresh in both
+  repos (do not trust a stale background run), fix anything red, then `quickmerge --agent --files` each repo's changed
+  files, then flip the Sanctum-reconciliation todo above with the shipped shas. Do not re-do the on-chain verification —
+  it's captured here with full evidence.
 
 ## RESUME POINT (pre-compact 2026-07-22) — a fresh session starts HERE
 
@@ -694,3 +745,12 @@ tarball once; always check the launcher's own freshness warning output, and if s
 `create-code-tarballs.sh --include <repo>...` and verify the GCS manifest SHA matches your fix commit before trusting a
 "launched successfully" message.
 </content>
+
+- **2026-07-22 19:35 UTC (Sanctum reconciliation ship — partially unblocked, one leg deferred)** — resumed shipping the
+  staged-uncommitted Sanctum work from the earlier checkpoint. `instruments-service` quality-gates.sh ran GREEN
+  (sentinel `09806f26c6fb17f62cf770d4f770bad72836129d` == HEAD). Attempted quickmerge — **blocked by the dirty-deps
+  pre-flight audit on `unified-trading-library`** (`cloud_interface/abstractions.py` + 3 provider files, all with mtime
+  ~12 SECONDS old at check time — genuinely LIVE foreign WIP, not stale/inheritable per the liveness-gating rule;
+  correctly left untouched). **NOT forcing this ship** — will retry once that WIP clears (check again next tick; do not
+  isolate/stash someone else's active edit). MTDS's own quality-gates.sh + deployment-api's (for the distinct-values
+  `futures_chain` fix) started running in parallel while waiting.
