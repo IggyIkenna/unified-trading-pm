@@ -302,6 +302,45 @@ skip-on-dirty then produce fabricated fleet-dirty **and** a real, self-reinforci
       blank/whitespace (vs a real disposable file the FF-cron carve-out at lines 226-285 doesn't cover). That
       distinguishes "blank-line miscount" (fix above) from "a real shared disposable file needs a carve-out."
 
+### Refinement 2026-07-22 (review msg 1673, 13:01Z) — phantom is NOT reproducible from bare git; the "blank porcelain line" mechanism does not hold
+
+review ran the proof artifact **while the reporter still showed its slot dirty(22)**: `git status --porcelain | cat -A`
+on 3 sampled repos (agent-orchestrator, alerting-service, unified-trading-library) returned **completely empty — zero
+bytes, `wc -l = 0`, confirmed by hexdump** — i.e. plain git says genuinely clean at the same instant the reporter posts
+`dirty_files=1`. This **retracts the specific "a blank porcelain line slips past the `[[ -n ]]` gate and `wc -l` counts
+it as 1" mechanism** in the CORRECTION above: a lone trailing newline cannot survive `$(...)` command-substitution
+stripping, and a truly zero-length kept line cannot be simultaneously `[[ -n ]]`-true (to pass line 198) and
+`[[ -z ]]`-skipped (to yield an empty sample) — the two conditions are contradictory, so that exact code path can't
+produce the observed `df=1 + empty-sample` from a clean tree. Also ruled out by inspection (`classify_repo`, lines
+176-199): the reporter `pushd`es into the repo dir and runs the **same** `git status --porcelain 2>/dev/null` in the
+**same** cwd review ran manually, so it is not a cwd/stderr difference either.
+
+**What survives as solid:** (a) the reporter posts `dirty_files=1` with an **empty** `dirty_files_sample` (DB fact); (b)
+the same tree reads truly clean from bare git (review); (c) the server is faithful; (d) the FF-pull skip is ongoing. So
+the phantom `dirty_files=1` is a **reporter-runtime capture/count artifact one level removed from raw git output** —
+reproducible only inside `slot-git-status-report.sh`'s own execution context, not a plain interactive git call.
+Candidate mechanisms (unproven, need reporter-env repro): a transient non-zero `git status` exit under concurrent
+FF-cron index-lock contention interacting with the `|| echo ""` capture; a subshell/`printf`/here-string counting
+artifact in the wrapper; or a stray byte merged into the `wc -l` pipeline. The uniform `df=1` across all 22 repos at
+once still points at a **shared per-sweep trigger**, not independent per-repo noise.
+
+**Fix reframed to CAUSE-AGNOSTIC (supersedes the "count only non-blank lines / `grep -c .`" framing above):** derive
+`dirty_files` from the **exact same non-blank lines the 208-225 sample loop keeps** (e.g.
+`dirty_files=${#sample_all[@]}` built from that loop) rather than an independent `wc -l` on the raw capture. Then
+`dirty_files` can **never exceed the captured sample count**, so `df=1 + empty-sample` becomes structurally impossible
+regardless of what upstream artifact injects a stray count — a single-source-of-truth count that closes the phantom
+without needing to first identify the exact wrapper trigger. Pair with **reporter-side instrumentation**: when
+`dirty_files > 0` but the sample is empty, log the raw captured `porcelain` bytes (`| cat -A`) to the reporter's own log
+so the next occurrence pins the trigger. Apply the same single-source count to the FF-cron dirty gate
+(`slot-cron-ff-pull.sh:234`).
+
+- [ ] [INFRA] P1. Re-derive `dirty_files` in `slot-git-status-report.sh` from the sample-loop's kept non-blank lines
+      (single source of truth; `df` cannot exceed captured sample), + add the "`df>0` & empty-sample → log raw
+      `porcelain | cat -A`" instrumentation to catch the wrapper trigger; mirror the count-integrity fix onto
+      `slot-cron-ff-pull.sh:234`. Supersedes the blank-line/`grep -c .` framing — this is cause-agnostic and closes the
+      phantom structurally. Test: a clean tree can never yield `dirty_files=1`, and `df` always equals the sample
+      length.
+
 ## Triage
 
 Non-blocking, digest-class, no page. Outside every active plan → parked here per findings-triage. Filed by the main
