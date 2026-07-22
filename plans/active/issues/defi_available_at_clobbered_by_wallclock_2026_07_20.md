@@ -14,7 +14,7 @@ summary: >-
   `codex/09-strategy/operational/paper-batch-live-reconciliation.md` — and any point-in-time / lookahead filter keyed on
   `available_at` silently uses a fabricated time. Found while designing the DeFi backfill optimization (the streaming
   write-path port would have propagated the pattern); NOT introduced by that work.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -56,9 +56,41 @@ source:
     gate for every agent",
   ]
 resolved_by:
-  "mtds@f7af6ece — 3 on-chain clobbers removed (evm_defi_collectors._write_and_upload,
-  solana_defi_handler._upload_parquet, gas_fee_handler Solana slot path)"
+  "mtds@f7af6ece (3 on-chain clobbers) + mtds@51ec9af2 (broader 17-handler follow-up, 2026-07-22 — see RESOLVED section
+  below)"
 ---
+
+## RESOLVED (broader follow-up, 17 handlers) 2026-07-22 — mtds@51ec9af2
+
+Applied the same "keep the on-chain tick" policy to the ~26 remaining handlers flagged in the section below. Per-handler
+investigation (parallel workflow, adversarially verified, then independently re-verified via full quality-gates.sh +
+real test-suite runs) determined which handlers' fetched row data genuinely carries a deterministic on-chain/event
+timestamp:
+
+- **17 handlers fixed**: `_dex_pools_subgraph.py` (EVM subgraph site only — the Solana REST-snapshot site has no real
+  timestamp, correctly left alone), `_perp_funding_gmx.py`, `_perp_funding_kalshi_polymarket.py`,
+  `bridge_events_handler.py`, `dex_swaps_handler.py`, `flash_loan_events_handler.py`, `gas_fee_handler.py` (2 of its 4
+  sites — the other 2 trace back to process-start wall-clock even via `stamp_available_at_explicit`, correctly left
+  alone), `governance_events_handler.py`, `governance_proposals_handler.py` (`created_at` from the subgraph/Snapshot
+  response), `lending_indices_handler.py` (both Solana + EVM sites), `liquidation_events_handler.py` (`ts_event`),
+  `liquidations_handler.py`, `mev_events_handler.py`, `oracle_prices_handler.py`, `orca_whirlpool_state_handler.py`,
+  `protocol_outage_detector_handler.py`, `raydium_classic_amm_handler.py`.
+- **9 handlers investigated, left untouched** (genuinely no historical/event timestamp in the fetched payload —
+  wall-clock is the honest fallback, per this doc's own carve-out): `data_manifest_handler.py`,
+  `eigenlayer_rewards_handler.py`, `jupiter_quote_handler.py`, `lst_rates_handler.py` (its
+  `stamp_available_at_explicit(when=attempted_at)` traces to `datetime.now(UTC)` computed at process-start, not a real
+  on-chain time — same "disguised wall-clock" class as gas_fee's 2 untouched sites), `native_staking_handler.py`,
+  `position_data_handler.py`, `risk_params_handler.py`, `staking_yields_handler.py`, `token_transfers_handler.py`,
+  `vault_share_price_handler.py`.
+
+Caught and fixed 3 real test-fixture bugs during verification (mock DataFrames missing the
+`created_at`/`ts_event`/`timestamp` column the fix now requires — the underlying fetch functions genuinely return that
+column, only the hand-built test mocks omitted it). Split `liquidations_handler.py`'s GraphQL query constants into a new
+`_liquidations_queries.py` sibling module to stay under the 900-line file cap after the fix's net line addition (mirrors
+the pre-existing `_dex_swaps_queries.py` pattern).
+
+No corrective backfill of already-written parquets was scoped or run this session — this resolves the write-path only,
+per Option A from "Options for the operator" below.
 
 ## RESOLVED (3 on-chain clobbers) 2026-07-21 — mtds@f7af6ece
 
