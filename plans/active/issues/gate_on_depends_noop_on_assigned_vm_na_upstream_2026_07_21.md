@@ -12,7 +12,7 @@ summary: >-
   slot-7 hit this, added `gate_on_depends: true` believing it would fix the mis-dispatch, then slot-2 (this doc's
   author) was dispatched the SAME still-blocked todo again — proving the frontmatter fix alone is insufficient because
   the machinery cannot gate on a non-ingested upstream.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -32,6 +32,7 @@ execution_scope: local-only
 drift_direction: advance-code
 source: [manifest_v6_batch3_residual_orphaned_work-003]
 resolved_by:
+  agent-orchestrator@7b3f909 (duplicate filing — see gate_on_depends_noop_on_local_only_upstream_2026_07_21.md)
 locked_by:
 depends_on: []
 ---
@@ -98,11 +99,13 @@ Whichever direction, the fix should be validated against BOTH confirmed instance
 
 ## Todos
 
-- [ ] [INFRA] P2. Fix `regen_backlog_from_plan.py::_wire_gate_on_depends_prereqs` so `gate_on_depends: true` holds
-      correctly when the `depends_on` upstream is `assigned_vm: NA` / never ingested into the backlog — implement one of
-      the two candidate fixes above (or a better one), reviewed carefully given dispatch-logic blast radius. Validate
-      against the 2 confirmed instances on `manifest_v6_batch3_residual_orphaned_work_2026_07_21.md`. (repo:
-      agent-orchestrator)
+- [x] [INFRA] P2. ✅ **Duplicate filing, fixed as part of the same bug.** This doc and
+      `gate_on_depends_noop_on_local_only_upstream_2026_07_21.md` describe the identical root cause (same file, same
+      function `_wire_gate_on_depends_prereqs` ~line 1522, same `if not upstream_ids: continue` no-op) filed
+      independently within a day of each other. The sibling doc's fix — `agent-orchestrator@7b3f909` (derived named
+      prerequisite `gate-upstream-open:<stem>` read from the upstream plan's live open-todo count, synced every regen
+      tick) — resolves this doc's finding too. See that doc for the full fix design, regression tests, and verification
+      evidence.
 
 ## Codex SSOTs
 

@@ -16,8 +16,8 @@ summary: >-
   when it is needed most — during the hot periods when a broken doc blocks every slot's `quality-gates.sh` fleet-wide.
   This is how a broken-frontmatter doc can sit undetected on LDR: layer-1 (pre-commit hook) is fail-open on an unhooked
   clone, and layer-2 (this gate) never completes. Both layers of the defense-in-depth are simultaneously defeated.
-status: open
-resolved_by:
+status: resolved
+resolved_by: unified-trading-pm@078c85dc3 (+ 0349d1d15, 51ce7c394)
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -135,3 +135,21 @@ After the template change + rollout, confirm the gate actually completes:
 `gh run list --workflow ldr-docs-gate.yml --branch live-defi-rollout --limit 30 --json conclusion` should show
 `success`/`failure` verdicts, not all `cancelled`. Then stage a known-broken frontmatter doc, push, and confirm the gate
 (push or cron) goes RED and alerts.
+
+## Resolution (2026-07-22, via `github_actions_ci_cost_reduction_2026_07_15.md`)
+
+Two fix attempts were needed. First, `cancel-in-progress: false` (queue instead of cancel) — necessary but not
+sufficient. The actual root cause: `runs-on: [self-hosted, Linux, X64, glue]` requires 4 labels, but
+`glue-runner-run.sh` only ever registers JIT-ephemeral runners with `["self-hosted","glue"]` (2 labels) — the job could
+structurally never match any runner in the pool. Fixed via `unified-trading-pm@078c85dc3`
+(`runs-on: [self-hosted, glue]`, matching the other 35 workflows on this pool). **LIVE PROOF**: the next `plans/**` push
+triggered run `29910893758`, which completed with a real verdict — the gate produced its first-ever result. Additionally
+shipped 2026-07-22 (`unified-trading-pm@0349d1d15` + `51ce7c394`): trigger switched `push` → `schedule: "0 * * * *"` +
+`workflow_dispatch` (cuts this workflow's contribution to shared glue-runner load from ~240/day to 24/day); full-corpus
+scan kept deliberately (measured 2.04s for the whole corpus).
+
+**One residual, NOT yet verified**: `schedule:` resolves against the DEFAULT branch's workflow file, which didn't carry
+this fix as of 2026-07-22 session end — the hourly cron won't actually run the fixed version until the LDR→main
+auto-promote cycle (`*/15`, v2-gated) lands `unified-trading-pm@51ce7c394` onto `main`. Check
+`gh run list -R IggyIkenna/unified-trading-pm --workflow=ldr-docs-gate.yml` for a `schedule`-triggered run once
+promotion lands; if none appears within a few hours, investigate rather than assume "still waiting."
