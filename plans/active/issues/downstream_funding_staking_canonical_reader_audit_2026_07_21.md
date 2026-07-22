@@ -9,8 +9,9 @@ summary:
   live old-form readers on the engine data path. The known PATH_REGISTRY/build_bucket 404 defect is a LATENT trap
   (reached only by UTL's own thin domain clients, which have zero non-test runtime callers), not a live bug. Remaining
   cleanup of 4 non-runtime diagnostic/campaign scripts (worst = trace_carry_staked_basis.py, silent-empty staking) + 1
-  CLI env-fallback still reference deleted buckets, and the UTL PATH_REGISTRY market-data-tick rows are still un-tiered.
-status: open
+  CLI env-fallback referenced deleted buckets, and the UTL PATH_REGISTRY market-data-tick rows were un-tiered. All 5
+  fixed — see Todos.
+status: resolved
 nature: issue
 asset_group: [defi, cefi]
 stage: [data]
@@ -38,7 +39,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "2026-07-22 — todo 4 shipped unified-trading-library@09435866, closing the last of 5 cleanup todos"
 source:
   operator question 2026-07-21 — "all downstream code using canonical buckets? funding + staking from canonical data?"
 depends_on: []
@@ -106,7 +107,7 @@ depends_on: []
       its own audit given the wider blast radius (touches the CLI's whole cross-venue-funding read path, not just one
       bucket-name literal). execution-service@25739c4af6324278448f60dfe2f224ec90111e67 (QG: 7876 passed, 0 failed, full
       gate green).
-- [ ] 4. [CODE] P1. **UTL `PATH_REGISTRY` market-data-tick rows are still un-tiered (the latent 404 trap).**
+- [x] 4. [CODE] P1. **UTL `PATH_REGISTRY` market-data-tick rows are still un-tiered (the latent 404 trap).**
       `unified-trading-library/.../config_interface/paths/registry.py` rows for `raw_tick_data` / `processed_candles` /
       `l2_book_checkpoints` / `liquidation_clusters` / `liquidity_features_1m` resolve to un-tiered
       `market-data-tick-{category}-{pid}` (no `-prd-`, the deleted form). ONLY runtime callers are UTL's own
@@ -114,20 +115,22 @@ depends_on: []
       (`domain_client/clients/market_data.py:56`, `build_bucket("raw_tick_data", …)`) — verified ZERO non-test
       downstream callers. Repoint these rows to the env-tiered yaml name (as the Group-B rows already were), or delete
       the thin clients, so a future consumer wiring them cannot silently 404. See the bucket-name resolution authority
-      section of `codex/05-infrastructure/bucket-isolation-model.md`. **NOT SHIPPED — code written + verified, blocked
-      from committing by 2 independent external conditions (both confirmed 2026-07-21, neither caused by this fix):**
-      (a) Also found + fixed a 3rd caller beyond the two named above:
-      `unified_trading_library/domain_client/clients/liquidity.py`'s `LiquidityDomainClient` hits
-      `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m` via `build_bucket(...)` — also zero non-test
-      callers workspace-wide, same latent-trap class. (b) Chose REPOINT over delete. For 4 of 5 rows (`raw_tick_data`,
-      `processed_candles`, `l2_book_checkpoints`, `liquidation_clusters`) added the `-prd-` tier:
-      `bucket_template="market-data-tick-{category}-prd-{project_id}"`. Verified via `gcloud storage buckets describe`
-      that `market-data-tick-{cefi,defi}-prd-{pid}` return 403 (permission-denied — bucket EXISTS) not 404, confirming
-      `-prd-` is correct. For `liquidity_features_1m`, `gcloud storage buckets describe` on
-      `market-data-features-{cefi}-{prd-,}{pid}` returned a clean 404 in BOTH forms — that bucket-KIND never existed at
-      all (not just missing a tier); repointed instead to the REAL, already-tiered shared features bucket
-      `features-{category}-prd-{project_id}` (same literal the Group-B rows already use), since a same-family tier-only
-      fix would still 404. **Exact fix (apply verbatim once unblocked — 5 one-line `bucket_template=` replacements in
+      section of `codex/05-infrastructure/bucket-isolation-model.md`. **SHIPPED 2026-07-22:
+      `unified-trading-library@09435866`** — both blockers below cleared (pip-audit CVE resolved; the concurrent
+      registry.py session's WIP landed as `unified-trading-library@43fa6f3f`, non-overlapping as predicted). Applied the
+      exact 5-line fix verbatim, full `quality-gates.sh` green, shipped via normal quickmerge. (a) Also found + fixed a
+      3rd caller beyond the two named above: `unified_trading_library/domain_client/clients/liquidity.py`'s
+      `LiquidityDomainClient` hits `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m` via
+      `build_bucket(...)` — also zero non-test callers workspace-wide, same latent-trap class. (b) Chose REPOINT over
+      delete. For 4 of 5 rows (`raw_tick_data`, `processed_candles`, `l2_book_checkpoints`, `liquidation_clusters`)
+      added the `-prd-` tier: `bucket_template="market-data-tick-{category}-prd-{project_id}"`. Verified via
+      `gcloud storage buckets describe` that `market-data-tick-{cefi,defi}-prd-{pid}` return 403 (permission-denied —
+      bucket EXISTS) not 404, confirming `-prd-` is correct. For `liquidity_features_1m`,
+      `gcloud storage buckets describe` on `market-data-features-{cefi}-{prd-,}{pid}` returned a clean 404 in BOTH forms
+      — that bucket-KIND never existed at all (not just missing a tier); repointed instead to the REAL, already-tiered
+      shared features bucket `features-{category}-prd-{project_id}` (same literal the Group-B rows already use), since a
+      same-family tier-only fix would still 404. **Exact fix (apply verbatim once unblocked — 5 one-line
+      `bucket_template=` replacements in
       `unified_trading_library/unified_trading_library/config_interface/paths/registry.py`):** `raw_tick_data` +
       `processed_candles` + `l2_book_checkpoints` + `liquidation_clusters`: `"market-data-tick-{category}-{project_id}"`
       → `"market-data-tick-{category}-prd-{project_id}"`. `liquidity_features_1m`:

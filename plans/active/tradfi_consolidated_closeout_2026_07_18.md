@@ -2026,7 +2026,23 @@ to finish — that was the whole point of moving them here.**
   out to be. Next session: do the enumeration FROM an in-region VM (or via the manifest/a narrower known-day prefix
   list) rather than a laptop wildcard listing, then design the id-derivation before writing any code.
 
-**Session ending here on operator time/credit constraint — 3 of 4 parallel VM jobs confirmed complete with real results
-(manifest CAS succeeded, content-rewrite confirmed clean, rebundle confirmed genuinely done + a stale-row cleanup
-follow-up filed), catalogue-promote launched but unconfirmed, CME monolith correctly deferred rather than rushed. Next
-session's first move: check catalogue-promote's log, then decide on the CME monolith design.**
+**Catalogue-promote — ✅ CONFIRMED COMPLETE.** `canonical-migration-tradfi-catalogue-promote-20260722-093107`,
+exit_code=0 in <2 min. `MVP-tagged catalogue: 71,795 / 837,467 rows` (up from the stale 70,930), monotonic guard
+`ACCEPT`, promoted to `gs://instruments-store-tradfi-prd-central-element-323112/prod/catalog.parquet`. Incremental mode
+correctly picked up the trailing 3 weeks (112 by_date files, 153,545 rows updated in-window, 0 new listings — the new
+MVP instruments' reference rows already existed from earlier IS capture, just weren't flagged mvp=True until this
+rebuild). **All 4 of the parallel-launched VM jobs are now confirmed complete.**
+
+**Backfill gap check** — re-queried the live fleet (`gcloud compute instances list --filter='name~"^tradfi-bf-"'`): only
+the terminated PA-2021 VM remained, nothing else running or stuck. **Relaunched**
+`tradfi-bf-cme-ohlcv-1m-pa-2021-20260722-160825` (`--only-root PA --year 2021`, skip-if-fresh will resume from the 9,680
+rows already captured before the earlier hang), now using the tarball with the manifest-writer fix baked in. Not yet
+confirmed complete as of this checkpoint. This was a lightweight check (fleet listing + the one known gap), not a full
+per-root/per-venue completeness audit — if a genuinely thorough backfill-completeness pass is wanted later, that is
+separate, larger work (would need an honest-coverage-style captured-vs-expected comparison across every MVP cell, not
+just "is a VM still running").
+
+**Session ending here on operator time/credit constraint. Remaining: PA-2021 relaunch to confirm complete; CME monolith
+migration still needs real design work before building (see above — not a quick-launch item like the other three turned
+out to be); the 112,839-stale-row manifest cleanup (low priority); Phase D gate (blocked on CME monolith + a fresh
+honest-coverage read). Next session: check the PA-2021 VM's log first.**

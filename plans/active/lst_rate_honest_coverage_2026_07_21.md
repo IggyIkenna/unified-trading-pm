@@ -209,10 +209,19 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       (`getAssetPrice=1741.704169`), with weETH/rETH/cbETH/rsETH/ezETH each genuinely reverting
       (`execution reverted, no data`, silently skipped per-reserve) since none of them were listed yet on that date —
       independent production confirmation of the listing-date verification. ~35-40s/day observed → full 2023-01-27 to
-      2026-07-22 window (~1275 days) is a multi-hour run; SPOT-preemption-resilient via the existing PROGRESS-checkpoint
-      contract. Monitor:
-      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-045059/run.log` +
-      manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity.
+      2026-07-22 window (~1275 days) is a multi-hour run. **PREEMPTED after ~10hrs (2026-07-22, discovered on session
+      resume)**: VM ran cleanly through `2026-04-17` (6399 manifest entries, `process_final=True` for that day) then
+      went TERMINATED — `launch-mtds-pyth-lst-backfill-vm.sh` does NOT write a `PROGRESS.json` checkpoint (unlike the
+      newer PROGRESS-checkpoint contract referenced in CLAUDE.md — that's a DIFFERENT, newer launcher family; this
+      correction supersedes my earlier "SPOT-preemption-resilient via the existing PROGRESS-checkpoint contract" claim,
+      which was wrong for this specific script). Resumed correctly from the last CONFIRMED-complete day rather than
+      replaying `START_DATE` (per the hard rule): `--force 2026-04-18 2026-07-22`, new VM
+      `pyth-lst-backfill-20260722-151120`, confirmed RUNNING. Remaining window is ~3 months, much shorter than the
+      original run. Monitor:
+      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-151120/run.log` +
+      manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity. **If this VM ALSO
+      preempts, check `gcloud compute instances list --filter=status=RUNNING` and resume again from the last
+      confirmed-complete day in the manifest — do not replay from 2023-01-27.**
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
       `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key.
       **Per-venue listing sub-check CLOSED (2026-07-22)**: live exchange API sweep (all 8 Tardis-covered CEX venues × 6
@@ -245,8 +254,39 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       more blind VM relaunches from me. The AAVE oracle backfill (Phase 5's other in-flight VM,
       `pyth-lst-backfill-20260722-045059`) uses a completely different operation (`collect-oracle-prices`, RPC-based,
       not Tardis-download) and is confirmed unaffected — still healthy and progressing normally as of this entry.
-- [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source
-      history + fix the today-vs-prior inner-join/vocab that drops Solana + LRTs (ezETH/rsETH) from the feature output.
+- [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source history.
+      **Original diagnosis WAS WRONG (2026-07-22, Explore agent investigation)**: there is no today-vs-prior inner-join
+      or vocab bug to fix — `compute_lst_features_for_day()`
+      (`features-service/features_service/onchain/engine/lst_features.py:199-203`) is a plain, correct, honest
+      string-key inner join on `token`, and `LST_TOKEN_TO_PROTOCOL_ASSET` already carries ezETH/rsETH/jitoSOL/mSOL/
+      bSOL. The real gaps are two SEPARATE upstream data/architecture issues, not a features-service code fix: -
+      **ezETH/rsETH**: MTDS's collector for these (`_lst_extended_rates.py`'s `_collect_evm_extended_rows`) was only
+      implemented **2026-07-19** (3 days before this entry) — any historical `lst_rates` shard before that date
+      genuinely has zero rows for these tokens, so the join correctly/honestly drops them. Fix = a historical
+      **backfill** of the MTDS `lst_rates` collector using the now-current config (real-infra VM launch — **holding for
+      now given today's 2 real-infra incidents** in this same session; see #1's OOM issue doc for why extra caution is
+      warranted before any more CEFI/DeFi VM launches). - **Solana LSTs (jitoSOL/mSOL/bSOL/Sanctum INF)**: **CONFIRMED
+      (2026-07-22) no subgraph exists for ANY of the 4 protocols** — checked `messari/solana-subgraphs` (only Orca
+      Whirlpool present) and The Graph's Solana support is architecturally different (Substreams-based) from the EVM
+      hosted-service model this codebase's `SUBGRAPH_IDS` registry assumes; live-curled each protocol's own API (Jito
+      `kobe.mainnet.jito.network` = ~8-day rolling window only, confirms the code's own docstring; Marinade
+      `api.marinade.finance` = today's trailing APY only, no historical endpoint; BlazeStake `/api/v1/stats` =
+      current-snapshot only; Sanctum's own API 401'd unauthenticated). **The real fix is NOT a subgraph registration —
+      it's extending an ALREADY-PROVEN pattern already live in this exact codebase**: `lst_solblaze_adapter.py` already
+      uses DefiLlama's `coins.llama.fi/prices/historical/{ts}/solana:{mint}` for bSOL's `oracle_prices` (USD price) —
+      live-verified working back to at least Nov-2023. The SAME API, live-verified this session for jitoSOL (real prices
+      $22.56 May-2023 → $59.72 Nov-2023) and Sanctum's INF ($61.66 Nov-2023), can derive a historical SOL-denominated
+      `lst_rates` value by dividing LST-USD by SOL-USD at the same timestamp (SOL/USD is the same API,
+      `solana:So111...112`) — this pattern is currently used for `oracle_prices` only, never extended to `lst_rates`.
+      Marinade's DefiLlama coverage doesn't reach its Aug-2021 launch (empty at Sept-2021) but does cover 2022 onward.
+      **Concrete next step**: extend `solana_lst_archival.py` with a new tier (or extend the existing DefiLlama
+      oracle_prices call site) that ALSO computes and writes the `lst_rates` ratio for jitoSOL/mSOL/bSOL/INF from the
+      same already-fetched DefiLlama response — no new external dependency, no VM risk, matches an established in-repo
+      pattern exactly. - **Secondary finding**: the existing LST feature tests (`test_lst_yields_compute_runner.py`,
+      `test_lst_native_rates.py`, `test_lst_yields_path_resolution.py`, `test_lst_features_unit.py`) only ever construct
+      SYMMETRIC today/prior token sets and never test ezETH/rsETH at all — they give false confidence and would not
+      catch this exact drop scenario. Worth a real asymmetric-token-set test case once the underlying data gaps are
+      closed.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
