@@ -26,6 +26,9 @@ assigned_vm: planning
 source: [data_engineering slot-8, dispatched to sports_p2_history_apifootball_2015_to_present-001, 2026-07-22T03:45Z]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
