@@ -192,6 +192,57 @@ real fleet operation (FF-pull currency) on live slots.
       must not skip an FF-pull. Add a test that a single-tick all-repos-dirty observation neither clears/sets
       `not_clean_since` nor causes an FF-pull skip.
 
+### Sharper root cause 2026-07-22 (review msg 1666, 12:49Z + main code trace) — endpoint disagreement pins it to the fleet PROXY-MERGE layer, not a live reporter race
+
+review(slot1, hk) captured the most diagnostic artifact yet: at nearly the same instant on its own slot (hk slot 1),
+**three sources disagree**:
+
+| Source                                                                          | reported_at | Verdict for hk slot 1                                              |
+| ------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------ |
+| `GET /api/fleet/git-health`                                                     | 12:47:04Z   | all 24 repos `dirty(1)`, `not_clean_since` **pinned at 12:22:04Z** |
+| `GET /api/state`                                                                | 12:47:03Z   | same slot, dirty count **0**, fully clean                          |
+| direct `git status` (agent-orchestrator/alerting-service/unified-api-contracts) | now         | genuinely CLEAN, matches `/api/state`                              |
+
+`not_clean_since` on the fleet endpoint never advanced off the original **12:22:04Z** incident stamp — i.e. the fleet
+view is serving a **stale row from that incident that was never invalidated/refreshed**, even though it re-stamps a
+fresh `reported_at` on every poll. review reads this (correctly, in direction) as a **cache-invalidation defect in the
+git-health aggregation layer, not a live-scan reporter race**.
+
+**Main's code trace refines the mechanism** (read-only, `agent-orchestrator/server/routes/`):
+
+- `/api/state` builds `git_status` by reading the `SlotGitStatusRow` **directly** (`state.py` ~249-262:
+  `s.git_status_json` / `s.git_status_reported_at`) — a single fresh row from the backend the reporter posts to.
+- `/api/fleet/git-health` **defaults to `scope=fleet`** (`git_health.py:409-490`), which does **not** just read local
+  rows — it fans out over HTTP and **merges `scope=local` views fetched from every _other_ registered backend**
+  (`ThreadPoolExecutor` → `httpx.get(f"{url}/api/fleet/git-health", params={"scope":"local"})`, then
+  `hosts.append(vm_host…)`). So a `SlotGitStatusRow` for `(host=hk, slot=1)` that is **stale/frozen in a secondary
+  backend's DB** — one the live hk reporter is _not_ posting to (it posts to its single `ORCH_URL`) — surfaces in the
+  merged fleet view while `/api/state` (reading the fresh row on the backend the reporter DOES post to) shows clean.
+  There is no per-`(host,slot)` dedup-by-freshest-`reported_at` in the merge (`summarise_git_health` counts every
+  appended host's repos), so a duplicate stale row is double-counted rather than superseded.
+
+This is the more precise root cause: **multi-backend proxy-merge staleness** (a stale duplicate `(host,slot)` row from a
+secondary backend that the reporter isn't refreshing), which review's "cache-invalidation" label names from the outside.
+It is a **distinct layer** from both earlier hypotheses in this doc (the FF-cron mtime-churn flicker and the reporter
+script itself) — the reporter and `/api/state` are correct; the fleet aggregation is the defect.
+
+**Severity reconciliation (updates the P1 escalation note above):** because `ff_pull_last_result` is a **persisted field
+on the same stale row**, the `skip:dirty` seen earlier is best read as the persisted result of the **single transient
+FF-pull run during the 12:22 window**, not ongoing starvation — consistent with `/api/state` self-clearing. So the
+confirmed operational blast stays **bounded to that one FF-pull tick**; the durable defect is the fleet view serving
+fabricated stale-dirty (and, per the `.tabs/0` follow-up above, that stale row flipping into a false `drift_violation`).
+P1 retained: a fleet-health surface that fabricates all-repos-dirty + false drift signals is a real monitoring-integrity
+defect even with the operational impact bounded.
+
+- [ ] [INFRA] P1. Fix the fleet git-health **proxy-merge staleness**: `/api/fleet/git-health` scope=fleet must dedup
+      merged `(host, slot)` rows by freshest `reported_at` (drop/supersede a stale duplicate from a secondary backend
+      rather than appending + double-counting it), and/or a `SlotGitStatusRow` older than `_REPORTER_STALE_SECONDS` must
+      not contribute live `dirty`/`drift_violation` to the summary. **Discriminating check for whoever fixes it**:
+      confirm whether a duplicate `SlotGitStatusRow` for `(host=hk, slot=1)` exists across backends, and whether the hk
+      reporter's `ORCH_URL` differs from the backend serving the stale `scope=local` view (main traced the merge path
+      but did not enumerate live rows across backends). Add a test that a stale duplicate row does not surface
+      `dirty`/`drift_violation` in the merged fleet summary when a fresher clean row for the same `(host,slot)` exists.
+
 ## Triage
 
 Non-blocking, digest-class, no page. Outside every active plan → parked here per findings-triage. Filed by the main
