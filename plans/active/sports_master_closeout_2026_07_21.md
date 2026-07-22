@@ -132,23 +132,23 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
       — ALL 24 SHARDS, 100% CLEAN:**
 
       | metric | value |
-              | --- | --- |
-              | target objects written | **275,136** |
-              | verify=PASS | **275,136 (100%)** |
-              | verify=FAIL | **0** |
-              | quarantined (unmapped sport_key) | **0** |
-              | no_clobber violations | **0** |
+                  | --- | --- |
+                  | target objects written | **275,136** |
+                  | verify=PASS | **275,136 (100%)** |
+                  | verify=FAIL | **0** |
+                  | quarantined (unmapped sport_key) | **0** |
+                  | no_clobber violations | **0** |
 
-              Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
-              **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
-              `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
-              Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
-              `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
-              **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
-              scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
-              separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
-              not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
-              own manifest-swap/delete (see next item).
+                  Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
+                  **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
+                  `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
+                  Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
+                  `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
+                  **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
+                  scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
+                  separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
+                  not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
+                  own manifest-swap/delete (see next item).
 
 - [ ] [DATA] P0. **league_id relocation — MANIFEST-SWAP + DELETE. ⚠️ NOT STARTED — genuinely needs new tooling, do NOT
       rush this at session depth.** Investigated 2026-07-21: **no existing script fits.**
@@ -183,6 +183,31 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
 - [ ] [DATA] P2. **Peripheral-bucket vocabulary contamination** (`ENGLAND_PREMIER_LEAGUE`/`LA_LIGA_2`/`UNKNOWN` from an
       untraced live writer) — trace the writer + fix at source, then migrate.
       `issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`.
+- [ ] [CODE] P2. **Ship the 2 parked, verified-correct changes sitting unshipped in worktrees** (2026-07-21 session —
+      see the second-wave Progress Log for the full QG-contention story). Both are correct (re-verified via targeted
+      checks, not just claimed) — only blocked by the structural QG path-resolution issue below, not by their own
+      content: (1) `deployment-service` — 3 launcher `START_DATE`-clamp hardening edits
+      (`launch-sports-entity-sweep-vm.sh`, `launch-sports-instruments-reference-vm.sh`, `launch-mdps-backfill-vm.sh`) +
+      the new `scripts/vm/launch-sports-league-id-relocation-vm.sh` launcher (superseded in practice by the
+      direct-gcloud fan-out used for the actual relocation run, but still a reasonable committed home for the pattern) —
+      sitting in worktree `deployment-service-sports-wt` (`git diff` there to recover). (2) `market-tick-data-service` —
+      a `--shard-of`/`--shard-index` filter added to the relocation executor — verified exhaustive+disjoint via a smoke
+      test, but turned out UNNEEDED (data-partitioning achieved the same result) — low priority, ship only if a future
+      sharded run via `--index` + in-process sharding is preferred over pre-splitting the index file — sitting in
+      worktree `market-tick-data-service-sports-wt`. **Ship via the normal path once the shared MAIN clones quiet down**
+      (check `git status` in each MAIN clone first — heavy concurrent multi-agent activity was the blocker, not a code
+      problem).
+- [ ] [DATA] P3. **File an issue doc for the QG structural finding**: at least two `quality-gates.sh` steps
+      (`check_backfill_vm_disk_provisioning.py` in deployment-service, and the ruff LINT step) resolve their target
+      paths via something that reaches back to the canonical `unified-trading-system-repos/<repo>` MAIN clone rather
+      than respecting `cwd`/a git-worktree's own isolated tree — proven directly by moving a file out of MAIN and
+      watching `check_backfill_vm_disk_provisioning.py` flip clean, and by observing a lint failure reference a file
+      that does not exist anywhere in an isolated worktree (only as another agent's untracked WIP in MAIN). Practical
+      effect: no worktree-based isolation strategy can reliably get a green QG sentinel while ANY other agent has
+      dirty/untracked files with lint or disk-provisioning issues in the shared MAIN clone — this blocked 2 of my own
+      changes and was independently hit by 4 dispatched sub-agents this session. Not filed as its own doc this session
+      (time-constrained); the two reproduction proof-points above are sufficient — file under `plans/active/issues/`
+      with `asset_group: [meta]` (it's a workspace-infra bug, not sports-specific).
 
 ## 2. LIVE-POST-FLOOR issues — survive the wipe, carry as todos (grouped by theme)
 

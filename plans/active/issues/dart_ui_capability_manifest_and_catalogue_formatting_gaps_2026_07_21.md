@@ -143,25 +143,54 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
       and per `codex/06-coding-standards/ui-testing-layers.md` any UI tick needs a `pw:L2` regression spec a
       backend_engineer worker isn't positioned to author. Split the remaining scope into the todo below (assigned_role:
       ui_developer) rather than silently claiming it done.
-- [ ] [UI] P3. Wire `AdminStrategyAssignment` (unified-api-contracts@08cc94fa,
-      `internal.architecture_v2.     admin_assignment`) as the real backing store for
-      `lib/entitlements/strategy-route.ts`'s `resolveSlotAccess`/ `resolveArchetypeAccess` resolvers (currently pure
-      UI-side approximations — `AuthUser.assigned_strategies` already exists as a field but has no production data
-      source; see its doc comment + the parallel `AuthPersona.assigned_strategies` comment in
-      `lib/config/auth.ts:143-161`, both already pointing at this model). Established pattern for admin-mutable data in
-      this repo is **not** the static-manifest mirror used for `archetype_capability_manifest.json` — it's the live
-      `/api/v1/*` Next.js route + Firestore pattern used by `app/api/v1/users/route.ts` +
-      `lib/admin/server/users-list.ts` + `hooks/api/use-user-management.ts`. Scope: (1) a Firestore-backed
-      `app/api/v1/admin-strategy-assignments/route.ts` + `lib/admin/server/     strategy-assignments.ts` mirroring the
-      `AdminStrategyAssignment` shape, enforcing the same `ORG_CONFLICT_ON_STRATEGY` exclusivity rule on write; (2) a
-      `lib/admin/api/strategy-assignments.ts` client wrapper + `hooks/api/use-strategy-assignments.ts` query hook
-      (TanStack Query, per pattern B); (3) `AdminStrategyAssignmentTable.tsx` +
-      `app/(ops)/admin/strategy-assignments/page.tsx` (shadcn `Table` style, per `app/(ops)/admin/groups/page.tsx`); (4)
-      wire `assigned_strategies` population into `personaToAuthUser()` (`lib/auth/demo-provider.ts`) and
-      `lib/auth/firebase-provider.ts` from the new store instead of the persona stub; (5) wire `canEnterTerminal()`
-      (`lib/entitlements/strategy-route.ts`, currently dead code — never called) into the actual terminal order-entry
-      action-button gate. Needs a `pw:L2` regression spec per the UI testing-layer gate before ticking. (repo:
-      unified-trading-system-ui; assigned_role: ui_developer)
+- [x] [UI] P3. ✅ Wire `AdminStrategyAssignment` as the real backing store for `lib/entitlements/strategy-route.ts`'s
+      resolvers. — `unified-trading-system-ui@bf38c435`. All 5 scoped deliverables shipped: (1) Firestore-backed
+      `app/api/v1/admin-strategy-assignments/{route,[id]/route,resolved/route}.ts` +
+      `lib/admin/server/strategy-assignments.ts`, porting `AdminStrategyAssignmentWriter.validate()`'s
+      `ORG_CONFLICT_ON_STRATEGY` rule verbatim (same-scope_id + either-side-LOCKED = reject); new
+      `admin_strategy_assignments` Firestore collection registered in `lib/admin/server/collections.ts`, following the
+      `groupsCollection()` pattern exactly. (2) `lib/admin/api/strategy-assignments.ts` (`apiClient` wrapper, mirrors
+      `groups.ts`) + `hooks/api/use-strategy-assignments.ts` (TanStack Query, mirrors pattern B). (3)
+      `AdminStrategyAssignmentTable.tsx` (a genuine flat `Table`, not the groups page's inline-Card pattern — the todo
+      named a dedicated Table component) + `app/(ops)/admin/strategy-assignments/page.tsx` with create/edit/delete
+      dialogs; wired into `ADMIN_TABS` in `components/shell/service-tabs.tsx` (required — the orphan-route audit
+      correctly caught the page as unreachable before this). (4) `resolveAssignedSlotsForOrg()` expands instance-scope
+      assignments directly (scope_id IS the slot key per the UAC model's docstring) and archetype/family-scope
+      assignments via `strategy_instruments.json` (fetched through the new `/api/v1/admin-strategy-assignments/resolved`
+      endpoint using `req.nextUrl.origin`, since `envelope-loader.ts`'s loader is browser-relative-fetch-only and
+      unusable from a Route Handler); both `lib/auth/demo-provider.ts::personaToAuthUser()` and
+      `lib/auth/firebase-provider.ts::enrichUserFromBackend()` now prefer the store's result over the persona-stub
+      `assigned_strategies`, falling back to the stub on any fetch failure (network/non-200/parse error) so login never
+      regresses on this lookup. (5) Wired the terminal order-entry submit gate — **deviated from a literal
+      `canEnterTerminal(user, linkedStrategyId)` call**: confirmed via read that `linkedStrategyId` (from
+      `lib/mocks/fixtures/strategy-instances.ts`, format `{archetype}@venue-asset-instrument-period-quote-env`) does not
+      match the `strategy_instruments.json` slot-key format `assigned_strategies` is populated with
+      (`{archetype}@{category}-{instrument}-{venue}`) — calling `canEnterTerminal` with the mismatched format would have
+      exact-matched nothing and silently locked EVERY org with real `assigned_strategies` out of the terminal entirely,
+      a functional regression this todo would have introduced rather than fixed. Used
+      `resolveArchetypeAccess(user, linkedStrategyId.split("@")[0])` instead — format-agnostic (every known slotKey
+      format agrees on "archetype before the first `@`") — with the disabled-state reason surfaced via `ACCESS_LABELS`.
+      Documented inline in `order-entry-widget.tsx`.
+
+  **QG**: full `quality-gates.sh` green (typecheck/lint/286 vitest+50.92% coverage/build/orphan-audit — required a
+  second pass: the orphan-audit correctly flagged `/admin/strategy-assignments` + the 2 new API routes as new orphans;
+  fixed by wiring the nav tab (real fix) + whitelisting the 2 machine-only API-HANDLER routes per the documented triage
+  rule). `tests/widgets/terminal/order-entry.test.tsx` (13/13, pre-existing, unmodified) still green — the new `user`
+  field on `TerminalData` is additive and the mock helper's own doc comment says exactly this class of addition
+  shouldn't break it. Full vitest suite: 3286 passed, 2 pre-existing skips (unchanged baseline).
+
+  **`pw:L2` — NOT obtained, and I'm flagging why rather than silently claiming it.** Wrote
+  `tests/e2e/admin-strategy-assignments.spec.ts` (Tier 1 page-render, Tier 2-5 create→edit→delete lifecycle +
+  `ORG_CONFLICT_ON_STRATEGY` UI rejection, modeled on `user-management.spec.ts`), but it times out at login in this
+  environment. Verified this is NOT a regression from my change: the **untouched** `tests/e2e/user-management.spec.ts`
+  fails identically (21/21, same `waitForURL("**/dashboard**")` timeout). Root-caused: `app/(public)/login/page.tsx` has
+  no `?persona=` handling at all (only an `?email=`+`#pwd=` fragment handoff) — the shared `loginAsAdmin` E2E helper
+  convention is stale repo-wide. Probing the real handoff format directly also failed (redirects externally to
+  `uat.odum-research.com` even under `pnpm dev:mock`) — a second, deeper pre-existing issue. Filed
+  `plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md` (P2, 3 todos: diagnose the UAT-redirect
+  branch, repair the shared login helper, then retroactively re-run this spec) rather than block this ticket on an
+  unrelated, pre-existing E2E-infra break outside its scope. `pw:L2` evidence is deferred to that issue doc's item 3.
+
 - [ ] BLOCKED-SUPERSEDED [CODE] P3. ~~Execute the `AssetClass` → `AssetGroup` rename repo-wide~~ — SUPERSEDED
       2026-07-21: the real blast radius is 9+ repos (not 2), touches a persisted-schema-adjacent field, and risks
       conflating two distinct `AssetClass` enums (domain vs. `LedgerAssetClass`). See

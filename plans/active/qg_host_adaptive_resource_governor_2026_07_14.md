@@ -299,13 +299,17 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 5 — Rollout + retire fixed K
 
-- [ ] [INFRA] P1. READY, DEFERRED (blocked on the AO gate) — the K=1 pin is already gone (bootstrap sets K=6); the
-      remaining change is a 2-line, grep-guarded `echo "QG_GOVERNOR_MODE=reservation" >> ENV_LOCAL` added after the K
-      block (so future VMs come up on the governor). Validated (`bash -n` + `shellcheck -S error` clean) but NOT
-      shipped: slot-16's `agent-orchestrator/.venv` is missing (fleet provisioning gap — also absent on slots 1/7 — not
-      the change), so its quality-gates can't run and quickmerge is blocked. Ship once the AO gate is runnable. — Remove
-      the `QG_HOST_CONCURRENCY=1` pin from `bootstrap_vm.sh` (keep the env as an optional override); retire the Phase-1
-      interim bump onto the governor.
+- [x] ✅ [INFRA] P1. **SHIPPED 2026-07-20 — `agent-orchestrator@91808dfeb5f9f7f747044796150ad8e2e67dca21`**
+      ("fix(bootstrap): flip planning host to the reservation-ledger QG governor", self-describes as "Phase 5 rollout of
+      `qg_host_adaptive_resource_governor_2026_07_14.md`"). Confirmed 2026-07-22, plan-reconcile follow-up, by live SSM
+      query of the real central orchestrator VM (`i-0c9b283b31d6b5ca7`): `bootstrap_vm.sh:1223-1236` now writes BOTH
+      `QG_HOST_CONCURRENCY=6` and `QG_GOVERNOR_MODE=reservation` (grep-guarded); the VM's live `.env.local` carries
+      both; `tmux show-environment -g` shows both; a **freshly-created tmux session** (spawned live for this check)
+      correctly inherits both; and a live `qg-host-governor.sh --status` run shows `MODE=reservation`,
+      `K runaway-backstop=6`, `RAM budget (70%): 22087MB`, `CPU slots (80% x 4): 3` — matching this host's actual 30
+      GB/4-core spec. This also resolves the § "Measured runtime drift" `MODE=token K=2` finding below — that 2026-07-16
+      measurement is now stale; this shipping commit landed 2026-07-20, four days after it. Remove the
+      `QG_HOST_CONCURRENCY=1` pin from `bootstrap_vm.sh` (kept as an optional override) — DONE in the same commit.
 - [x] [INFRA] P1. ✅ PM@6402f6cd8 (🟢 LIVE+VALIDATED note: dual-gate, capacity auto-adaptation via the resize,
       K-demoted, cgroup cap, trap-release lifecycle, small-host learning; heavy-tier already corrected) — Update
       `codex/06-coding-standards/quality-gates.md` — the dual-gate model + the corrected heavy-tier order (UTL →
@@ -541,7 +545,15 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 - Canonical-cost source (Phase 0): `max(local,vm)` vs a fresh single canonical measurement — decide at Phase 0.
 - `cpu_weight` per-repo refinement (Phase 3 CPU gate) deferred to v2 unless the count-based slot proves too coarse.
 
-## Measured runtime drift — annotated 2026-07-16 (from the AO issue-doc sweep; NOT this plan's work to re-derive)
+## Measured runtime drift — RESOLVED 2026-07-22 (plan-reconcile follow-up)
+
+> **🟢 RESOLVED.** Live SSM re-check of the same VM (`i-0c9b283b31d6b5ca7`) today: `qg-host-governor.sh --status` now
+> reports `MODE=reservation`, `K runaway-backstop=6` (matches this host's 30 GB/4-core spec: RAM budget 22087MB, CPU
+> slots 3). A freshly-spawned tmux session correctly inherits `QG_HOST_CONCURRENCY=6` + `QG_GOVERNOR_MODE=reservation`
+> from the tmux global env, and `.env.local` carries both durably. Root cause of the 2026-07-16 reading: the Phase-5
+> bootstrap flip (below) hadn't shipped yet — it landed 4 days later,
+> `agent-orchestrator@91808dfeb5f9f7f747044796150ad8e2e67dca21` (2026-07-20). The `MODE=token K=2` snapshot below was
+> real for its moment, not a measurement error, and is superseded — kept for the record, not as a live TODO.
 
 Live read-only AWS SSM query of the **real central orchestrator VM** (`agent-orchestrator-vm-1` /
 `i-0c9b283b31d6b5ca7`), 2026-07-16:
