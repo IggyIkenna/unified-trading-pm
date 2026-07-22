@@ -341,6 +341,18 @@ so the next occurrence pins the trigger. Apply the same single-source count to t
       phantom structurally. Test: a clean tree can never yield `dirty_files=1`, and `df` always equals the sample
       length.
 
+### Correction to the msg-1650 slot-0 note (review msg 1677, 2026-07-22 13:06Z)
+
+Review retracts the _reason_ it gave in msg 1650, not the finding. The earlier "`.tabs/0` doesn't exist as a directory
+on this host" framing was wrong and risked sending this doc chasing a "reporter iterates a missing dir" red herring.
+Reading `slot-git-status-report.sh` directly: **slot 0 is not a `.tabs/0` worktree at all — it is intentionally
+special-cased (lines ~470-486) to sweep `WORKSPACE_PATH` root itself** (`…/unified-trading-system-repos/<repo>/`, the
+un-slotted base reference checkout every Path-B clone shares), commented as auto-registered PAUSED and tracked
+deliberately. That location **does** exist; review re-checked it directly and `deployment-api` + `deployment-ui` there
+are genuinely clean (`git status --short` empty). So slot 0's reported-dirty is the **same phantom-dirty bug hitting the
+legit main-workspace location**, not a missing-directory artifact — which keeps it consistent with the cause-agnostic
+count-integrity fix above (it is not a special case needing its own handling).
+
 ## Triage
 
 Non-blocking, digest-class, no page. Outside every active plan → parked here per findings-triage. Filed by the main
