@@ -59,6 +59,21 @@ depends_on: []
 > build. ml-service was unblocked in-session (manual pin bump `b7e391f8`→`76a15429`, ml-service@5d05c4c); this doc
 > tracks the root cause + the 10 other affected repos so the operator can decide on the fleet fix.
 
+> **🟡 SEVERITY CORRECTION 2026-07-22**: this doc's title/summary ("EVERY service Cloud Build is RED") describes the
+> **local-build / AWS-CodeBuild** exposure, not GCP. A fleet-wide GCP Cloud Build sweep run today (14/14 service
+> triggers, `test_fleet_image_builds_from_current_code_2026_06_17.md` Phase 2) built every repo in this doc's blast
+> radius GREEN — `alerting-service`, `client-reporting-api`, `deployment-service`, `execution-service`,
+> `fund-administration-service`, `greeks-service`, `market-data-processing-service`, `strategy-service`,
+> `trading-agent-service` all SUCCEEDED. Per `unified-trading-library/cloudbuild.yaml` + this workspace's canonical
+> build docs, GCP Cloud Build triggers pass `--build-arg BASE_IMAGE_DIGEST=<current>` explicitly at build time — the
+> Dockerfile's hardcoded `ARG` default (this doc's actual concern) is only consulted by **local `docker build`** and
+> **AWS CodeBuild** (which, per `deployment-api/Dockerfile`'s own comment, does NOT pass that build-arg). The sweep
+> itself is still broken (root cause below unchanged) and the pins are still stale — this note only narrows _which build
+> paths_ are actually blocked today. **Also**: `deployment-api`'s pin had drifted AGAIN past this doc's
+> `e5de3b29`/"likely unaffected" note — found re-stale at `2854ae3d…` vs current `:latest` `4edb1d8c…`, manually bumped
+> `deployment-api@2531d925` (same pattern as the ml-service fix, not a fix to the sweep). Cross-ref:
+> `digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md` (same root cause, filed 2 days earlier).
+
 ## Root cause (evidence)
 
 1. **The QG base scripts are baked into the UTL base Docker image**, not vendored per-repo. UTL `cloudbuild.yaml`
