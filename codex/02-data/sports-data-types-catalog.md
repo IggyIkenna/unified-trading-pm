@@ -2,8 +2,10 @@
 doc_type: codex-ssot
 title: Sports Data Types Catalog
 summary:
-  Catalog of the 8 MTDS/MDPS sports data types (odds, odds_snapshot, odds_movement, arbitrage_opportunity,
+  Catalog of the 9 MTDS/MDPS sports data types (trades, odds, odds_snapshot, odds_movement, arbitrage_opportunity,
   odds_horizon_bucket, markets, outcomes, settlements) — sources, shard keys, NEEDS_CANDLE, and bookmaker coverage.
+  lower-case `data_type` is canonical (2026-07-22 reversal of the 2026-07-19 K0-DECISION(b)); instrument_type=`odds` is
+  canonical (not `sports_market`).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,31 +25,69 @@ authoritative_for: [MTDS/MDPS sports data_type catalog (odds and derived types),
 referenced_by:
   [codex/01-domain/sports-instruments.md, codex/02-data/README.md, codex/02-data/sports-fixtures-lifecycle.md]
 owner:
-last_reviewed: 2026-05-24
+last_reviewed: 2026-07-22
 code_refs:
 ---
 
 # Sports Data Types Catalog
 
-> **⚠️ CANONICAL CORRECTION (2026-07-19) — data_type is UPPER-CASE for sports.** Per operator **K0-DECISION (b)**
-> (2026-07-18): sports `data_type` is **UPPER-case everywhere** — sports is the only asset_group that is UPPER (tradfi/
-> cefi/defi are lower-case). The canonical forms are **`ODDS`, `ODDS_SNAPSHOT`, `ODDS_MOVEMENT`,
-> `ARBITRAGE_OPPORTUNITY`, `ODDS_HORIZON_BUCKET`, `MARKETS`, `OUTCOMES`, `SETTLEMENTS`** (+ the reference types
-> `FIXTURES_SCHEDULE`/ `FIXTURES_OUTCOMES`/`TEAMS`/… already UPPER). The lower-case forms shown in the body below are
-> the pre-decision spelling and are being migrated (`market-data-tick-sports-prd` is the only mixed bucket; live
-> writer + historical rows pending — see `plans/active/sports_consolidated_closeout_2026_07_19.md` Track C / K1-K2).
-> **`timeframe` is its own column, never baked into `data_type`** — the suffixed `odds_horizon_bucket_{15m,1h,4h,1d}`
-> cohort is DEAD (F3). CF-7's UPPER→lower normalise map is SUPERSEDED for sports. SSOT for the decision:
+> **⚠️ CANONICAL CORRECTION (2026-07-22) — data_type is LOWER-CASE for sports; this REVERSES the 2026-07-19
+> K0-DECISION(b) below.** Operator ruling 2026-07-22 (interactive session), on physical-estate evidence from the 7-agent
+> audit in `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 4.3 / § 2.1: GCS holds
+> **only** lowercase `data_type=odds` directories on every sampled day — day=2020-07-21 (5 objects), day=2023-05-10 (5
+> objects), day=2026-04-14 (2 objects) — and **zero** `data_type=ODDS` objects on any of them, while the manifest
+> carries BOTH spellings for those same days (e.g. 2020-07-21: 6 uppercase + 5 lowercase). Uppercase `ODDS` is therefore
+> a **manifest-only phantom** (22,145 rows, no backing GCS objects); the 20,331 lowercase `odds` rows match disk. **The
+> canonical forms are now LOWER-case: `odds`, `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`,
+> `odds_horizon_bucket`, `markets`, `outcomes`, `settlements`** — sports is no longer the UPPER-case exception; it now
+> matches the tradfi/cefi/defi lower-case convention. **`timeframe` is its own column, never baked into `data_type`** —
+> the suffixed `odds_horizon_bucket_{15m,1h,4h,1d}` cohort is still DEAD (F3), unaffected by this reversal. The two
+> shipped normalizers that point UPPER→lower (`migrate_sports_canonical_v9.py:122-133`,
+> `normalize_sports_mtds_data_type_case_2026_06_25.py:44-51`, neither of which ever completed) are now pointed in the
+> CORRECT direction — re-point/complete them; do **not** build a lower→UPPER migration. The phantom uppercase `ODDS`
+> manifest rows are tracked for physical purge in the same issue doc § 3.4, gated on this reversal (§ 4.3, now DECIDED)
+> and § 4.4 (Phase 6d, still open). SSOT for the reversal:
+> `plans/active/issues/ sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 4.3 + Part 4 + Progress Log
+> (2026-07-22 entry).
+>
+> <details><summary>Superseded 2026-07-19 K0-DECISION(b) text (retained for history — do NOT act on this)</summary>
+>
+> CANONICAL CORRECTION (2026-07-19) — data_type is UPPER-CASE for sports. Per operator K0-DECISION (b) (2026-07-18):
+> sports `data_type` is UPPER-case everywhere — sports is the only asset_group that is UPPER (tradfi/cefi/defi are
+> lower-case). The canonical forms were declared `ODDS`, `ODDS_SNAPSHOT`, `ODDS_MOVEMENT`, `ARBITRAGE_OPPORTUNITY`,
+> `ODDS_HORIZON_BUCKET`, `MARKETS`, `OUTCOMES`, `SETTLEMENTS` (+ the reference types `FIXTURES_SCHEDULE`/
+> `FIXTURES_OUTCOMES`/`TEAMS`/… already UPPER). SSOT for the original decision:
 > `plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md` § K0-DECISION.
+>
+> </details>
 
 > SSOT for all MTDS/MDPS Sports data type definitions, sources, shard keys, and implementation status. Last updated:
-> 2026-05-24.
+> 2026-07-22.
 
 ## Overview
 
-MTDS collects and MDPS processes Sports market data across 8 distinct data types in two categories:
+> **Doc↔prod correction (2026-07-22)**: this catalog previously said "8 distinct data types" and every worked example
+> below prescribed `instrument_type=sports_market`. Measurement (7-agent audit, 2026-07-20) found `sports_market` has
+> **zero rows** in prod against `instrument_type=odds` on 91.5% of the manifest, and this catalog never documented the
+> production-dominant raw-ingest `trades` data_type (1,806,527 rows) at all. Corrected below — see
+> `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 2.4. `sports_market` remains a real
+> `unified_api_contracts.registry.taxonomy` enum member but is **not** registered against any sports
+> `(asset_group, instrument_type, data_type)` contract — do not use it in new sports code.
 
-- **MTDS-raw**: `odds` — tick-level odds captured directly from bookmakers via The Odds API and direct venue APIs.
+MTDS collects and MDPS processes Sports market data across 9 distinct data types in three categories. **All are
+registered under `instrument_type=odds`** (see § "Instrument Type Mapping" below) — `sports_market` is not the
+production instrument_type for any of them.
+
+- **MTDS-raw, production-dominant**: `trades` — the actual live-writer raw-odds ingest data_type
+  (`CONTRACT_REGISTRY[("sports", "odds", "trades")]` = `SPORTS_ODDS_TRADES`,
+  `unified_api_contracts/internal/schemas/_sports_prediction_contracts.py:51-95`; columns include `data_source` ∈
+  {`ODDS_API`, `SFI`, `FOOTYSTATS`}, `league_id`, `fixture_id`, `market_type`, `outcome`, `odds_decimal`). Whether
+  `trades` and the catalogued `odds` data_type below are one logical stream under two names, or two genuinely distinct
+  writers, is open vocabulary-canonicalisation work — see
+  `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` Part 2. Do not assume they merge without
+  reading that section first.
+- **MTDS-raw, catalogued**: `odds` — tick-level odds captured directly from bookmakers via The Odds API and direct venue
+  APIs.
 - **MDPS-processed** (NEEDS_CANDLE=True): `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`,
   `odds_horizon_bucket` — derived from raw `odds` ticks by the market data processing service.
 - **Reference** (NEEDS_CANDLE=False): `markets`, `outcomes`, `settlements` — structural and result data per event;
@@ -96,9 +136,12 @@ Path resolver: `unified_api_contracts.sports.candidate_parquet_paths()` in
 
 ### Instrument Type Mapping
 
-| instrument_type | Data types                                                                                                     |
-| --------------- | -------------------------------------------------------------------------------------------------------------- |
-| `sports_market` | odds, odds_snapshot, odds_movement, arbitrage_opportunity, odds_horizon_bucket, markets, outcomes, settlements |
+> **Corrected 2026-07-22** — was `sports_market` (zero rows in prod); see
+> `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 2.4.
+
+| instrument_type | Data types                                                                                                             |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `odds`          | trades, odds, odds_snapshot, odds_movement, arbitrage_opportunity, odds_horizon_bucket, markets, outcomes, settlements |
 
 ---
 
@@ -111,7 +154,7 @@ Path resolver: `unified_api_contracts.sports.candidate_parquet_paths()` in
 | **CLI operation**   | `collect-odds` (sports_odds_handler)                                                      |
 | **Sources**         | The Odds API (`api.the-odds-api.com/v4/`), Pinnacle REST API, Betfair Exchange API        |
 | **Shard key**       | source (bookmaker) × league_id × fixture-date                                             |
-| **Instrument type** | `sports_market`                                                                           |
+| **Instrument type** | `odds`                                                                                    |
 | **Status**          | Production                                                                                |
 | **Schema fields**   | fixture_id, league_id, bookmaker, market_type, outcome, price, last_update, ts_event      |
 | **Requires**        | `odds-api-key` (The Odds API, Secret Manager); Pinnacle/Betfair credentials per-bookmaker |
@@ -141,7 +184,7 @@ Match-state-driven polling cadence (per `codex/02-data/sports-scheduling-and-sha
 | **CLI operation**   | MDPS processed (`odds_snapshot_adapter`)                                                     |
 | **Sources**         | Derived from `odds` raw tick data via MDPS aggregation                                       |
 | **Shard key**       | source (bookmaker) × league_id × fixture-date                                                |
-| **Instrument type** | `sports_market`                                                                              |
+| **Instrument type** | `odds`                                                                                       |
 | **Status**          | Production                                                                                   |
 | **NEEDS_CANDLE**    | True (MDPS candle adapter — input: `odds`)                                                   |
 | **Schema fields**   | fixture_id, league_id, bookmaker, market_type, outcome, price, ts_snapshot, interval_minutes |
@@ -162,7 +205,7 @@ books, corrupting downstream cross-bookmaker comparisons.
 | **CLI operation**   | MDPS processed (`odds_movement_adapter`)                                                                      |
 | **Sources**         | Derived from `odds_snapshot` via MDPS delta computation                                                       |
 | **Shard key**       | source (bookmaker) × league_id × fixture-date                                                                 |
-| **Instrument type** | `sports_market`                                                                                               |
+| **Instrument type** | `odds`                                                                                                        |
 | **Status**          | Production                                                                                                    |
 | **NEEDS_CANDLE**    | True (MDPS candle adapter — input: `odds`)                                                                    |
 | **Schema fields**   | fixture_id, league_id, bookmaker, market_type, outcome, price_prev, price_curr, delta, delta_pct, ts_snapshot |
@@ -184,7 +227,7 @@ computed.
 | **CLI operation**   | MDPS processed (`arbitrage_scanner_adapter`)                                                                               |
 | **Sources**         | Derived from `odds` across multiple bookmakers via MDPS cross-bookmaker scan                                               |
 | **Shard key**       | league_id × fixture-date (cross-bookmaker — source dimension dropped for the output shard)                                 |
-| **Instrument type** | `sports_market`                                                                                                            |
+| **Instrument type** | `odds`                                                                                                                     |
 | **Status**          | Production                                                                                                                 |
 | **NEEDS_CANDLE**    | True (MDPS computed type — input: `odds` from all bookmakers)                                                              |
 | **Schema fields**   | fixture_id, league_id, market_type, outcome_A, bookmaker_A, price_A, outcome_B, bookmaker_B, price_B, arb_pct, detected_at |
@@ -211,7 +254,7 @@ closes the loop) or false negatives (missing the book that creates the opportuni
 | **CLI operation**   | MDPS processed (`odds_horizon_adapter`)                                                   |
 | **Sources**         | Derived from `odds_snapshot` bucketed by time-to-kickoff                                  |
 | **Shard key**       | source (bookmaker) × league_id × fixture-date                                             |
-| **Instrument type** | `sports_market`                                                                           |
+| **Instrument type** | `odds`                                                                                    |
 | **Status**          | Production                                                                                |
 | **NEEDS_CANDLE**    | True (MDPS candle adapter — input: `odds`)                                                |
 | **Schema fields**   | fixture_id, league_id, bookmaker, market_type, outcome, price, horizon_label, ts_snapshot |
@@ -238,7 +281,7 @@ requiring the raw tick granularity.
 | **CLI operation**   | `collect-markets` (sports_markets_handler)                                                                |
 | **Sources**         | The Odds API (`/sports/{sport}/events` + `/events/{eventId}/odds`), instruments-service fixture catalogue |
 | **Shard key**       | league_id × fixture-date                                                                                  |
-| **Instrument type** | `sports_market`                                                                                           |
+| **Instrument type** | `odds`                                                                                                    |
 | **Status**          | Production                                                                                                |
 | **NEEDS_CANDLE**    | False (structural reference data — pass-through)                                                          |
 | **Schema fields**   | fixture_id, league_id, sport, home_team, away_team, commence_time, market_type, status                    |
@@ -262,7 +305,7 @@ bookmaker has offered prices. The `status` column tracks lifecycle from `pre-gam
 | **CLI operation**   | `collect-outcomes` (sports_outcomes_handler)                                       |
 | **Sources**         | The Odds API (`/events/{eventId}/odds?markets={market_type}`), instruments-service |
 | **Shard key**       | league_id × fixture-date                                                           |
-| **Instrument type** | `sports_market`                                                                    |
+| **Instrument type** | `odds`                                                                             |
 | **Status**          | Production                                                                         |
 | **NEEDS_CANDLE**    | False (structural reference data — pass-through)                                   |
 | **Schema fields**   | fixture_id, league_id, market_type, outcome_name, outcome_key, sort_order          |
@@ -284,7 +327,7 @@ canonical display ordering for UI rendering (e.g. `home, draw, away` for h2h; `o
 | **CLI operation**   | `collect-settlements` (sports_settlement_handler)                                             |
 | **Sources**         | The Odds API scores endpoint (`/sports/{sport}/scores`), official league APIs where available |
 | **Shard key**       | league_id × fixture-date                                                                      |
-| **Instrument type** | `sports_market`                                                                               |
+| **Instrument type** | `odds`                                                                                        |
 | **Status**          | Production                                                                                    |
 | **NEEDS_CANDLE**    | False (reference data — pass-through)                                                         |
 | **Schema fields**   | fixture_id, league_id, home_score, away_score, winner, market_outcomes, settled_at, status    |
@@ -436,3 +479,5 @@ All sports MTDS handlers emit honest-coverage entries per the manifest v5 contra
 - `codex/02-data/availability-manifest-and-data-status.md` — manifest v5 honest-coverage schema
 - `codex/04-architecture/shard-level-failure-isolation.md` — per-shard error handling invariant
 - Plans epic: `plans/epics/sports_master.md` — sports asset_group umbrella epic
+- `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` — 7-agent audit that reversed
+  K0-DECISION(b) case direction and corrected the `instrument_type`/`trades` doc↔prod gap (2026-07-22, Part 4)
