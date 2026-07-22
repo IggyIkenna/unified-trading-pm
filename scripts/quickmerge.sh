@@ -517,7 +517,18 @@ fi
 # pull the latest FIRST: fast-forward when possible, otherwise rebase your local
 # commits on top of the latest. Block only if that rebase genuinely conflicts.
 # Emergency override only: QUICKMERGE_ALLOW_BEHIND=1
+#
+# Extracted into a function (2026-07-22): STAGE 3's AGENT_MODE sentinel-invalid
+# retry loop below re-invokes this SAME reconciliation before each regate retry,
+# so a lost race against a concurrent peer push is retried automatically instead
+# of forcing the calling agent to notice the failure and manually re-run
+# quality-gates.sh + quickmerge.sh (quickmerge_sentinel_race_retry_storm_under_
+# pm_doc_push_contention_2026_07_21: up to 27 consecutive full-QG losses
+# observed in one session under heavy PM doc-push contention). Body unchanged
+# from the original inline block — this is a pure extraction, not a behavior
+# change, for the first (and only, on the common path) invocation.
 # ============================================================================
+_qm_stage_0_4_not_behind_gate() {
 echo "=========================================="
 echo "STAGE 0.4: Not-Behind Gate (pull latest first)"
 echo "=========================================="
@@ -578,6 +589,8 @@ else
     fi
   fi
 fi
+}
+_qm_stage_0_4_not_behind_gate
 
 # ============================================================================
 # --- Stage 0.3: Major bump advisory (informational only — no blocking) ---
@@ -1259,37 +1272,83 @@ if [ -f "scripts/quality-gates.sh" ]; then
     # no-op merge/backmerge, a revert-and-reapply) — but any real content movement, by me or a
     # peer, now correctly forces a Pass-2 QG re-run. On a busy shared branch that means more
     # re-runs; that is the honest cost of "what you push is what QG validated".
-    _SENTINEL=".qg_last_passed_sha"
-    _CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
-    _SENTINEL_SHA=""
-    [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(cat "$_SENTINEL" | tr -d '[:space:]')
-    if [ -z "$_SENTINEL_SHA" ]; then
-      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel missing — run: bash scripts/quality-gates.sh"
-      exit 1
-    fi
-    if [ "$_SENTINEL_SHA" = "$_CURRENT_SHA" ]; then
-      echo "[$REPO_NAME] ✅ SHA sentinel verified — skipping Pass 2 QG re-runs (already verified in Pass 1)"
-    elif git cat-file -e "${_SENTINEL_SHA}^{commit}" 2>/dev/null \
-         && git merge-base --is-ancestor "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null \
-         && git diff --quiet "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null; then
-      echo "[$REPO_NAME] ✅ CONTENT sentinel verified — HEAD fast-forwarded ${_SENTINEL_SHA:0:9}→${_CURRENT_SHA:0:9} but the TREE is byte-identical between them (empty/no-op commit), so Pass-1 QG covers exactly what is being pushed. Skipping Pass 2 QG re-runs."
-    else
-      echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel invalid for current state."
-      echo "  Sentinel: ${_SENTINEL_SHA:-<missing>}  HEAD: ${_CURRENT_SHA}"
-      echo "  (The TREE changed since the sentinel — or the sentinel is not an ancestor of HEAD.)"
-      # Name what moved. A whole-program gate (tsc/pytest) can break on a file you never touched,
-      # so "but I didn't edit that" is not a reason to skip — show the evidence.
-      _QM_TREE_DELTA=$(git diff --name-only "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null | head -8)
-      if [ -n "$_QM_TREE_DELTA" ]; then
-        _QM_DELTA_N=$(git diff --name-only "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null | wc -l | tr -d ' ')
-        echo "  Changed since the sentinel (${_QM_DELTA_N} file(s), first 8):"
-        printf '    %s\n' $_QM_TREE_DELTA
-        echo "  NOTE: typecheck/tests are WHOLE-PROGRAM — a peer's edit can break a file you never"
-        echo "        touched, so these must be re-validated together even if none are yours."
+    # Sentinel check factored into a function returning 0 (valid — proceed) or 1
+    # (invalid) WITHOUT exiting, so the bounded retry loop below can act on a lost
+    # race instead of the script dying on the first attempt (2026-07-22:
+    # quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16 /
+    # quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18 /
+    # quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21
+    # — all three converge on "the sentinel logic is CORRECT (tree-strict, kept
+    # exactly as-is — do NOT weaken ancestry/scope), the defect is throughput: a
+    # lost race just hard-fails instead of automatically re-gating the now-current
+    # tree and retrying", up to 27 consecutive full-QG losses observed on one
+    # session under heavy PM doc-push contention). Sets _SENTINEL_SHA/_CURRENT_SHA
+    # as a side effect for the caller's error message on final failure.
+    _qm_check_agent_sentinel() {
+      _SENTINEL=".qg_last_passed_sha"
+      _CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
+      _SENTINEL_SHA=""
+      [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(cat "$_SENTINEL" | tr -d '[:space:]')
+      if [ -z "$_SENTINEL_SHA" ]; then
+        echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel missing — run: bash scripts/quality-gates.sh"
+        return 1
       fi
-      echo "  Run: bash scripts/quality-gates.sh"
-      exit 1
-    fi
+      if [ "$_SENTINEL_SHA" = "$_CURRENT_SHA" ]; then
+        echo "[$REPO_NAME] ✅ SHA sentinel verified — skipping Pass 2 QG re-runs (already verified in Pass 1)"
+        return 0
+      elif git cat-file -e "${_SENTINEL_SHA}^{commit}" 2>/dev/null \
+           && git merge-base --is-ancestor "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null \
+           && git diff --quiet "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null; then
+        echo "[$REPO_NAME] ✅ CONTENT sentinel verified — HEAD fast-forwarded ${_SENTINEL_SHA:0:9}→${_CURRENT_SHA:0:9} but the TREE is byte-identical between them (empty/no-op commit), so Pass-1 QG covers exactly what is being pushed. Skipping Pass 2 QG re-runs."
+        return 0
+      fi
+      return 1
+    }
+
+    # Bounded retry with backoff+jitter (Option 2, decided 2026-07-19 in
+    # quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18; refined by
+    # quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21's
+    # fix-2). On a lost race (sentinel invalid because a peer pushed between your
+    # gate run and this check), automatically re-pull + re-gate + re-check instead
+    # of dumping the retry onto the calling agent. The sentinel/ancestry logic
+    # itself is UNCHANGED — this only automates the exact manual recipe an agent
+    # would otherwise run by hand (do NOT relax tree-strictness; that was
+    # explicitly rejected by the operator: typecheck/pytest are whole-program, a
+    # peer's edit to an unrelated file can break one you never touched).
+    _QM_SENTINEL_RETRY_MAX=3
+    _QM_SENTINEL_ATTEMPT=0
+    until _qm_check_agent_sentinel; do
+      _QM_SENTINEL_ATTEMPT=$((_QM_SENTINEL_ATTEMPT + 1))
+      if [ "$_QM_SENTINEL_ATTEMPT" -gt "$_QM_SENTINEL_RETRY_MAX" ]; then
+        echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel invalid for current state."
+        echo "  Sentinel: ${_SENTINEL_SHA:-<missing>}  HEAD: ${_CURRENT_SHA}"
+        echo "  (The TREE changed since the sentinel — or the sentinel is not an ancestor of HEAD.)"
+        echo "  Retried regate ${_QM_SENTINEL_RETRY_MAX}x against a moving HEAD and still lost the race —"
+        echo "  this is sustained contention, not a one-off (see"
+        echo "  quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21)."
+        # Name what moved. A whole-program gate (tsc/pytest) can break on a file you never touched,
+        # so "but I didn't edit that" is not a reason to skip — show the evidence.
+        _QM_TREE_DELTA=$(git diff --name-only "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null | head -8)
+        if [ -n "$_QM_TREE_DELTA" ]; then
+          _QM_DELTA_N=$(git diff --name-only "$_SENTINEL_SHA" "$_CURRENT_SHA" 2>/dev/null | wc -l | tr -d ' ')
+          echo "  Changed since the sentinel (${_QM_DELTA_N} file(s), first 8):"
+          printf '    %s\n' $_QM_TREE_DELTA
+          echo "  NOTE: typecheck/tests are WHOLE-PROGRAM — a peer's edit can break a file you never"
+          echo "        touched, so these must be re-validated together even if none are yours."
+        fi
+        echo "  Run: bash scripts/quality-gates.sh"
+        exit 1
+      fi
+      _QM_BACKOFF=$((2 + RANDOM % 4 + _QM_SENTINEL_ATTEMPT * 3))
+      echo "[$REPO_NAME] ⏳ sentinel invalid (HEAD moved — a peer likely pushed) — retry ${_QM_SENTINEL_ATTEMPT}/${_QM_SENTINEL_RETRY_MAX} in ${_QM_BACKOFF}s"
+      sleep "$_QM_BACKOFF"
+      _qm_stage_0_4_not_behind_gate
+      echo "[$REPO_NAME] re-gating (regenerating the Pass-1 sentinel for the current tree)..."
+      if ! bash scripts/quality-gates.sh --no-fix $SKIP_CODEX; then
+        echo "[$REPO_NAME] ❌ Re-gate FAILED against the current tree — this is a REAL failure, not a lost race."
+        exit 1
+      fi
+    done
   else
     # Phase 1: lint auto-fix only (fast — ruff/eslint --fix, no tests/typecheck/build)
     echo "[$REPO_NAME] Phase 1: lint auto-fix..."
