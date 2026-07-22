@@ -267,3 +267,21 @@ crash-on-launch bug really was fixed — but a healthy-looking climbing counter 
 the SAME counter would still be climbing at a useful rate an hour later. Measure against a known per-asset_group
 historical baseline (tradfi's own first successful run, or sports's) before calling a long-running tool healthy, not
 just "still running, still climbing."
+
+**Verify a commit actually landed before moving on — a failed pre-commit hook can look like a completed commit in
+scrollback.** A `git commit` whose pre-commit hook chain fails partway (here: the `check-branch-drift` hook, "4 commits
+behind") aborts WITHOUT creating a commit object — but the tool output ends with `git status --porcelain`-style file
+listing that, read quickly, looks similar to a successful commit's file-list echo. This session lost a real, drafted
+CI-alerting addition (a Slack "QG green after red" recovery-bookend job) this way — the working-tree edit was later
+overwritten by an unrelated `git pull --ff-only` before anyone re-attempted the commit. Always confirm with
+`git log -1 --oneline` (or check the hook's own final exit line) immediately after committing, especially through a hook
+chain — never infer success from adjacent output.
+
+**An unexplained dirty/uncommitted file in this workspace is not necessarily a past agent session's forgotten work.**
+The operator works directly on this same shared machine in parallel with agent sessions (git identity `[main·laptop]`),
+and other agent-orchestrator slot workers commit to the same branch continuously. Found this session: a dirty
+`sanctum.py` + companion mtds file, assumed to be "my own earlier-session work," shipped via quickmerge — `git blame`
+afterward showed the actual author was the operator, mid-investigation, blocked on an unrelated dirty-deps issue. The
+shipment was still the right call (the operator's own follow-up commit acknowledged it favorably), but the ATTRIBUTION
+was wrong. Before self-attributing an unexplained dirty file, `git blame` a changed line or check `git log --author` in
+the same timeframe — protect it (stash-by-name) either way, but report what it actually is.
