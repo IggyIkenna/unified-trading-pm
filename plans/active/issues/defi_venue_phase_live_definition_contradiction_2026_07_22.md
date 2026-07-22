@@ -1,0 +1,243 @@
+---
+doc_type: issue
+title: >-
+  DEFI_VENUE_PHASE excludes 11 venues with real, months-long MTDS capture from the DeFi honest-coverage completeness_pct
+  denominator
+summary: >-
+  CONFIRMED (2026-07-22, code-traced + evidence below) -- unified-api-contracts' VENUES_BY_ASSET_GROUP["defi"]
+  (market_data_categories.py line 395) filters to DEFI_VENUE_PHASE=="live" only. 11 venues with real, verified,
+  months-long capture (ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/MANTLE/ACROSS/STARGATE/FLASHBOTS/ALCHEMY) are labeled
+  "pipeline" and are therefore structurally excluded from both sides of the DeFi completeness_pct ratio
+  (instruments-service/scripts/check_enumeration_completeness.py line 512) -- not a UI-cosmetic issue, a real
+  honest-coverage undercount. This is a DATA-CORRECTNESS bug, not just a documentation/SSOT-contradiction question.
+status: open
+nature: issue
+asset_group: [defi]
+stage: [data]
+repos: [unified-api-contracts, instruments-service, deployment-api, deployment-ui, market-tick-data-service]
+scope: [engineer]
+tags: [defi, ssot-contradiction, phase, coverage, honest-coverage, data-correctness]
+related: [distinct_values_noncanonical_audit_2026_07_20.md, honest_coverage_v2_instrument_denominator_2026_06_28.md]
+created: "2026-07-22"
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+estimate_class: design
+estimate_baseline_ai_days: 1
+estimate_calibrated_ai_days: 0.6
+assigned_role: data
+drift_direction: advance-code
+depends_on: []
+resolved_by:
+locked_by:
+source:
+  sub-agent, distinct_values_noncanonical_audit_2026_07_20.md DeFi-venue-adapter-test-and-add workflow (wxmjyre65);
+  root-caused by a dedicated verify+adversarial-verify workflow (wf_7a8796e2-7a6) 2026-07-22 after the operator asked
+  "did we update the honest coverage manifest denominator?"
+---
+
+## Upgrade note (2026-07-22, same day)
+
+This doc originally filed the two-definitions contradiction as an open design question ("needs a decision, didn't
+guess"). The operator then asked directly whether the honest-coverage denominator was actually updated. A follow-up
+investigation (Research phase CONFIRMED by direct code read; an independent AdversarialVerify pass was dispatched in
+parallel — check `wf_7a8796e2-7a6`'s journal for its verdict if this doc doesn't yet show it folded in) traced the full
+consumer chain and found this is **not just a documentation contradiction** — it is a live, structural exclusion of real
+captured data from the DeFi honest-coverage `completeness_pct` metric. Upgraded P2→P1 and `nature: finding`→`issue`
+accordingly.
+
+## The two definitions — exact quotes, `unified-api-contracts/unified_api_contracts/registry/defi_venues.py`
+
+**Definition #1 — block comment, dated 2026-05-07, lines 403-420:**
+
+```
+403 # ---------------------------------------------------------------------------
+404 # DeFi venue phase — distinguishes actively-backfilled venues ("live") from
+405 # UAC-declared roadmap entries ("pipeline"). The deployment-ui DEFI panel
+406 # uses this to render only "live" venues in the live-coverage section AND
+407 # surface "pipeline" venues in a separate roadmap section so operators see
+408 # what's queued without polluting the active honest-coverage view. Added
+409 # 2026-05-07 per DEFI panel audit.
+410 #
+411 # - "live": MTDS backfill is shipping data; manifest has rows; UI shows
+412 #   in the main DEFI panel with chevron + dates.
+413 # - "pipeline": UAC declares the venue (chain expansion roadmap, not yet
+414 #   plumbed in MTDS); manifest has zero rows; UI shows in a "roadmap"
+415 #   section so the operator can see what's coming.
+416 #
+417 # Every entry in ``ALL_DEFI_VENUES`` must appear here. The
+418 # ``DEFI_VENUE_PHASE`` test (test_defi_venue_phase_coverage) asserts the
+419 # 1:1 invariant.
+420 # ---------------------------------------------------------------------------
+```
+
+A **data-availability** definition: "live" = MTDS is actually shipping data for this venue, manifest has rows.
+
+**Definition #2 — invariant comment, dated 2026-06-29, lines 423-424:**
+
+```
+423 # INVARIANT: phase=="live" ⟺ venue is IS-producible (in _build_defi_venues()).
+424 # See instrument_universe_registry_consolidation_2026_06_29.md.
+```
+
+An **instruments-service-adapter-existence** definition: "live" = an `instruments-service` reference-data adapter exists
+for this venue, independent of whether MTDS is actually capturing data.
+
+These directly conflict. A venue can satisfy #1 (real data, months of manifest rows) while failing #2 (no IS adapter —
+e.g. a bare on-chain `eth_call` handler living entirely in `market-tick-data-service`). Note: the test name
+`test_defi_venue_phase_coverage` cited by comment #1 could not be found verbatim anywhere in
+`unified-api-contracts/tests/` (grepped `DEFI_VENUE_PHASE`/`defi_venue_phase`; only hits were `test_venue_key_parity.py`
+and `test_mvp_scope.py`) — the reference may be stale, or the actual enforcement lives in one of those two files under a
+different name. Not independently confirmed which.
+
+## Confirmed: 11 venues, real capture, `phase=="pipeline"` today
+
+| Venue              | `ALL_DEFI_VENUES` line | `DEFI_VENUE_PHASE` line | Value      |
+| ------------------ | ---------------------- | ----------------------- | ---------- |
+| FRAX-ETHEREUM      | 51                     | 441                     | `pipeline` |
+| MAKER-ETHEREUM     | 52                     | 442                     | `pipeline` |
+| ANKR-ETHEREUM      | 58                     | 468                     | `pipeline` |
+| STADER-ETHEREUM    | 60                     | 469                     | `pipeline` |
+| STAKEWISE-ETHEREUM | 61                     | 470                     | `pipeline` |
+| SWELL-ETHEREUM     | 62                     | 471                     | `pipeline` |
+| MANTLE-ETHEREUM    | 64                     | 472                     | `pipeline` |
+| ALCHEMY-ETHEREUM   | 68                     | 474                     | `pipeline` |
+| FLASHBOTS-ETHEREUM | 89                     | 572                     | `pipeline` |
+| ACROSS-ETHEREUM    | 91                     | 573                     | `pipeline` |
+| STARGATE-ETHEREUM  | 92                     | 574                     | `pipeline` |
+
+Each confirmed via a real 2026-07-22 sample-day backfill against live on-chain/API data (row counts through 2026-06-21
+already cited in `defi_venue_capabilities.py` comments, e.g. STADER 1,078 rows, SWELL 1,162 rows, STAKEWISE 937 rows).
+None has a dedicated `instruments-service` reference-data adapter — all capture through `market-tick-data-service`
+handlers (`lst_rates_handler.py`, `vault_share_price_handler.py`, `bridge_events_handler.py`, `mev_events_handler.py`,
+`gas_fee_handler.py`) calling on-chain RPCs/REST APIs directly, never routing through IS.
+
+(BLAZESTAKE, KAMINO_LENDING, MORPHOVAULTS were already correctly `"live"` or fixed 2026-07-22. JUPITER is a separate
+build-vs-drop judgment call, unrelated to this phase question.)
+
+## THE traced chain — definitive, code-cited answer
+
+**Yes, `completeness_pct` for `defi` excludes these 11 venues' real data. Not cosmetic — a real honest-coverage
+undercount.**
+
+**Step A** — `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:395`:
+
+```python
+"defi": list(dict.fromkeys(v for v in _ALL_DEFI_VENUES if _DEFI_VENUE_PHASE.get(v) == "live")),
+```
+
+This IS `VENUES_BY_ASSET_GROUP["defi"]` — self-documented immediately above (lines 388-394):
+
+```
+# Honest-coverage denominator: only IS-producible venues (phase=="live").
+# _ALL_DEFI_VENUES is the full registry (unchanged); _DEFI_VENUE_PHASE gates
+# which venues count as "could-exist" for honest-coverage purposes.
+...
+# Denominator semantics owned by plans/active/honest_coverage_v2_instrument_denominator_2026_06_28.md
+```
+
+Confirms definition #2 (IS-producibility) is what's actually WIRED today, not definition #1 — despite comment #1 living
+in the same file and describing a different intended behavior. Cross-confirmed by comments elsewhere:
+`defi_venue_capabilities.py:146-147`, `_mvp_scope_rules.py:286-288`, `mvp_scope.py:168/243`.
+
+**Step B** — `instruments-service/scripts/expected_universe.py:287` (`_expected_generic`, dispatched for `"defi"` at
+line 384):
+
+```python
+venues = VENUES_BY_ASSET_GROUP.get(ag, [])
+```
+
+The EXPECTED (denominator) universe for DeFi iterates exactly the phase-filtered list from Step A. A venue absent from
+it contributes zero `(venue, instrument_type, data_type)` tuples to EXPECTED.
+
+**Step C** — `instruments-service/scripts/check_enumeration_completeness.py:469-512`, the actual formula:
+
+```python
+expected = _build_expected_tuples(ag)          # -> build_expected(ag)
+enumerated = _build_enumerated_tuples(ag, df)   # manifest-written tuples
+...
+present_keys = exp_keys & enum_keys             # matched
+...
+completeness_pct = round(n_present / n_expected * 100, 2)   # line 512
+```
+
+Because `n_present = |EXPECTED ∩ ENUMERATED|` and `n_expected = |EXPECTED|`, and the 11 venues contribute nothing to
+EXPECTED, their real manifest rows can never land in `present_keys` — they land only in
+`stray_keys = enum_keys - exp_keys` (line 484), logged as a warning ("stray tuples ... writer emits something UAC does
+not sanction", lines 526-532), **not** part of the `completeness_pct` ratio.
+
+**Qualifier — not everything is affected.** `deployment-api`'s `_filter_to_canonical_defi_venues`
+(`deployment_api/services/data_status/defi.py:405-436`, calling the helper `_allowed_defi_venue_chain_pairs` at
+`:369-403` — corrected 2026-07-22 by adversarial re-verification, the original citation attributed this to the helper's
+line range) whitelists off `ALL_DEFI_VENUES` + `LEGACY_DEFI_VENUE_ALIASES` — phase-agnostic, confirmed by reading the
+function body; it never imports or checks `DEFI_VENUE_PHASE`. So the 11 venues' raw captured rows DO survive into the
+merged manifest index and any raw-row-count / drilldown surfaces deployment-api exposes. The exclusion is specific to
+the honest-coverage `completeness_pct` **ratio** computed by `instruments-service`'s `check_enumeration_completeness.py`
+/ `measure_honest_coverage.py` — a distinct Layer-1 metric, not everything DeFi-coverage-shaped in the system.
+
+**Important nuance found by adversarial re-verification (2026-07-22): a SEPARATE deployment-api surface already treats
+these exact venues as intentional, not accidental.**
+`deployment-api/deployment_api/routes/data_status/ _distinct_values.py:306-320` (the canonical-drift/SSOT-alignment
+panel — from THIS SAME `distinct_values_noncanonical_audit_2026_07_20.md` audit, its own "D1b" result) has a dedicated
+branch:
+
+```python
+if axis == "venues" and asset_group == "defi":
+    # D1b (audit 2026-07-20 RESULT...): compare against ALL_DEFI_VENUES
+    # (the full registered VOCABULARY, live + pipeline phase), NOT
+    # VENUES_BY_ASSET_GROUP['defi'] (the phase == "live" CAPABILITY subset)...
+    # A `pipeline`-phase venue (ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/
+    # ACROSS/STARGATE/FLASHBOTS/MANTLE — registered, genesis-dated, but IS
+    # has no adapter yet) is legitimate vocabulary...
+    return _defi_bare_venue_bases(frozenset(ALL_DEFI_VENUES)), False
+```
+
+with a dedicated passing test (`test_defi_bare_pipeline_phase_venue_is_canonical_not_drift`,
+`deployment-api/tests/unit/test_route_data_status_distinct_values.py:227-246`) that names most of these same 11 venues
+explicitly and asserts they are NOT flagged as naming drift. This is real, deliberate prior engineering that already
+encodes "these venues are registered + genesis-dated but IS has no adapter yet" as an accepted, intentional state —
+which is evidence (not proof) toward option 2 below: that `phase=="pipeline"` / IS-producibility may be the
+actually-intended semantic, and the exclusion from `completeness_pct` may be correct-as-designed rather than a bug —
+with the real gap being that these venues' genuine capture progress has no metric of its own to show it, not that
+they're wrongly phase-tagged. Does not overturn the completeness_pct finding above (still confirmed exclusion) — narrows
+the design-decision question.
+
+**The "separate roadmap UI section" from comment #1 — not found as an implemented feature.**
+`grep -rn "DEFI_VENUE_PHASE"` across `deployment-ui/` and `deployment-api/` returns **zero hits** — neither reads the
+flag directly (the `_distinct_values.py` mechanism above encodes the same distinction indirectly via `ALL_DEFI_VENUES`
+vs `VENUES_BY_ASSET_GROUP['defi']`, not by importing the phase dict). `grep -rln "roadmap"` across both repos' source
+returns one unrelated hit (`deployment-ui/src/components/NavMenu.tsx:87`, an "Epics & Plans" nav item, confirmed
+unrelated to DeFi venues). Comment #1's described UI behavior (chevron rendering, dedicated roadmap section) does not
+appear to be wired in the current codebase.
+
+## What was deliberately NOT done
+
+Not flipping these 11 venues to `"live"` — doing so live-edits the production honest-coverage denominator (real
+`completeness_pct` numbers operators see would jump) without an explicit operator go-ahead, and without first confirming
+the invariant test (whatever currently enforces `test_defi_venue_phase_coverage`'s described 1:1
+`ALL_DEFI_VENUES`⟺`DEFI_VENUE_PHASE` invariant) won't be broken by the flip in an unexpected way.
+
+## Recommended next step
+
+Given the trace above, definition #2 (IS-producibility) is what's ACTUALLY implemented and driving real production
+numbers — definition #1's comment describes intended behavior that was apparently superseded by the 2026-06-29
+consolidation but never removed/reconciled. Two real options, both requiring an operator call because either one changes
+a production metric operators see:
+
+1. **If "live" should mean data-availability** (matches the original 2026-05-07 intent, and arguably matches what
+   "honest coverage" should mean — a venue with real, verified data shouldn't be invisible to the metric regardless of
+   whether IS has a dedicated adapter): flip the 11 venues to `"live"` in `DEFI_VENUE_PHASE`, delete/rewrite the stale
+   2026-06-29 invariant comment and whatever enforces it, and expect `completeness_pct` for `defi` to jump (re-measure
+   before/after and report the delta, per the original DeFi-venue-addition todo's own instruction — this is exactly the
+   step that was skipped because "the add was a no-op" reasoning didn't account for the phase-filtered nature of
+   `VENUES_BY_ASSET_GROUP`).
+2. **If "live" should keep meaning IS-producibility** (e.g. some real downstream contract needs an actual instrument
+   universe from IS, not just a raw capture stream — not yet verified either way in this investigation): the 11 venues
+   correctly stay `"pipeline"`, and the fix is instead to (a) rewrite the misleading 2026-05-07 comment to describe
+   current behavior accurately, and (b) decide whether `completeness_pct` should have a SEPARATE,
+   data-availability-driven metric surfaced somewhere for venues in this state, since right now their real work (the
+   ACROSS/STARGATE/FLASHBOTS/MORPHOVAULTS/MAKER fixes shipped 2026-07-22) has zero visible effect on any honest-coverage
+   number.
+
+Either path needs an operator decision — this doc does not pick one.

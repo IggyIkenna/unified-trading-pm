@@ -28,8 +28,8 @@ priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-last_updated: 2026-07-07
-locked_by: live-defi-rollout
+last_updated: 2026-07-22
+locked_by:
 locked_since:
 supersedes:
 superseded_by:
@@ -49,6 +49,20 @@ drift_direction: advance-code
 
 # Test fleet image builds from current code (2026-06-17)
 
+> **🟢 COMPLETE 2026-07-22 — ARCHIVED.** All 4 phases done: base libs + all 14 GCP service images build clean against a
+> fresh UTL base digest; AWS CodeBuild parity established 2026-06-19; Phase 4 expanded (operator direction,
+> pre-production system) from a 1-2 image trial to a full fleet pipes-and-wires check — 9 Cloud Run Services exercised
+> (5 succeeded, 3 + deployment-service failed for a genuine architectural reason: batch/worker code with no HTTP server,
+> not a bug) and all 70 live Cloud Run Jobs referencing these images had their pin refreshed. Along the way: fixed a
+> real bug in `deployment-service/scripts/cloud-run/canary-deploy.sh` (`--no-traffic` rejected on first-time service
+> creation) and severity-corrected an open P1 issue that overstated its own impact (GCP Cloud Build was never actually
+> affected by the stale-digest-pin bug it describes — only local/AWS builds were). Two loose ends migrated out rather
+> than left as prose: the fan-out-automation-is-broken root cause was already tracked
+> (`digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`,
+> `base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md`); the AWS `terraform import` follow-up got its own doc
+> (`plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md`) since it needs a new S3 state backend
+> stood up first — genuinely separate work.
+>
 > **Goal:** prove that **every deployable repo's container image builds successfully from current code**, surface and
 > fix whatever breaks (stale base-digest pins, missing deps, broken Dockerfiles, in-image AR auth, test-in-image
 > failures), so that when we ARE ready to ship prod code we are not doing trial-and-error under pressure. **This is a
@@ -212,8 +226,15 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       `trading-agent-service` `3fcf5b5a-36e7-4479-98e1-592898a1d101`, `deployment-service`
       `e2c382c6-37e0-4266-ac41-28d54bfa2744`. Zero failures across the fleet — no systemic issue surfaced, so the
       one-at-a-time diagnose-first discipline never had to trigger.
-- [ ] [BUG] P2. For every stale base-digest pin found, file the fix (refresh `BASE_IMAGE_DIGEST` ARG) in the owning repo
-      — but only AFTER confirming the dependency-update fan-out isn't the intended owner; coordinate, don't fork it.
+- [x] [BUG] P2. DONE 2026-07-22 — the fan-out (`update-dependency-version.yml`/`digest-drift-sweep.yml`) IS the intended
+      owner but is dormant (root cause + fix options already tracked:
+      `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`,
+      `…/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md` — did not fork new automation-fixing work, per
+      this todo's own instruction). Found + manually bumped the one stale pin this plan's own fleet sweep surfaced:
+      `deployment-api` (`2854ae3d…`→`4edb1d8c…`, deployment-api@2531d925), cross-linked to both issues. **Severity
+      correction filed on the 07-18 issue**: this plan's 14/14 GCP Cloud Build SUCCESS proves GCP is NOT affected by the
+      stale pins (triggers pass `--build-arg BASE_IMAGE_DIGEST` explicitly) — only local `docker build` and AWS
+      CodeBuild consult the Dockerfile's hardcoded ARG default.
 
 ### Phase 3 — AWS CodeBuild path validation (after GCP green)
 
@@ -278,12 +299,9 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       deployment-service quickmerge is currently gated by an unrelated pre-existing UAC `0.21.0→0.22.0` dep-floor
       drift). **Validated**: deployment-ui build SUCCEEDED → dispatched a deployment-api build (initiator
       `unified-trading-codebuild-role/AWSCodeBuild-1b6408bf…`, sourceVersion main).
-- [ ] [INFRA] P3. **`terraform import` the imperatively-created AWS CodeBuild projects + webhooks** into the reconciled
-      `terraform/cloud-build/aws` module (requires standing up the commented-out S3 state backend first), so the TF SSOT
-      becomes apply-clean. **Bundle in the two live-only TF deltas**: (a) the `codebuild:StartBuild` grant on the
-      deployment-api project (live on `unified-trading-codebuild-role`'s `codebuild-permissions` inline policy — note
-      the live policy name differs from the TF's `unified-trading-codebuild-policy`), and (b) a comment marking
-      `deployment-ui` as a dispatch-only entry (no standalone image). Repo: deployment-service.
+- [x] [INFRA] P3. MIGRATED 2026-07-22 — genuinely unstarted (needs a new S3 state backend stood up first, out of scope
+      for this plan's build-validation work). Moved to its own tracked issue so this plan can archive clean:
+      `plans/active/issues/aws_codebuild_terraform_import_pending_2026_07_22.md`.
 - [x] ✅ [INFRA] P3. DONE 2026-06-19 — **deployment-service version-alignment drift RESOLVED.** Two layers: (1) the
       local `uv.lock` had stale internal path-dep versions (UAC `0.19.0`, UTL `0.13.0`) → `uv lock` regen picked up the
       clones' `0.22.0`/`0.14.0`; (2) the REAL blocker was a **systemic PM-LDR manifest lag** — the workspace-manifest

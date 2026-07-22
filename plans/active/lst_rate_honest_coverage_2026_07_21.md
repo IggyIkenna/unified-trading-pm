@@ -75,8 +75,8 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       not price) or wstETH (only a _Calculated_ USD feed exists — operator decision; wstETH is fully AAVE-covered).
 - [x] [MTDS] P0. ✅ **CEX listing reality** — confirmed **NO catalogue edit** (the LST bases are already in
       `CEFI_BASE_ASSET_UNIVERSE`+`STAKING_SPOT_EXCEPTION`; catalogue-add is the documented phantom-mint anti-pattern).
-      #1 is a Tardis backfill only. (The per-venue listing sub-check didn't fully complete — verify exact listed
-      (LST,venue) cells at backfill time, Phase 5.)
+      #1 is a Tardis backfill only. Per-venue listing sub-check CLOSED in Phase 5 (2026-07-22) — only 5 of 48 (token,
+      venue) cells are real listings; see Phase 5's #1 todo.
 - [x] [MTDS] P0. ✅ **DEX endpoint reality — WORKS TODAY, NOT blocked.** Live-probed 2026-07-21: Curve stETH/ETH pool
       `0xDC24316b9AE028F1497c275EB9192a3Ea0f67022` + Balancer via the EXISTING `thegraph-api-key` secret + shipped
       `dex_swaps_handler` cascade + UAC `SUBGRAPH_IDS` — HTTP 200, hasIndexingErrors:false, at-head, real swaps. The
@@ -190,17 +190,41 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       CLOSED (2026-07-22)**: per-reserve listing-date gate shipped `market-tick-data-service@27e077da` — all 6 reserves'
       `ReserveInitialized` events verified on-chain (earliest wstETH 2023-01-27; latest ezETH 2025-08-17), so a
       full-history backfill starting from any pre-2023 date now correctly renders `EXPECTED_INSTRUMENT_NOT_LISTED`
-      instead of a misleading `SOURCE_RETURNED_ZERO`. **LAUNCHED (2026-07-22)**: SPOT VM
-      `mtds-backfill-defi-aave-oracle-20260722` (zone `asia-northeast1-c`, project `central-element-323112`), command
-      `launch-mtds-backfill-vm.sh --asset-group DEFI --venues AAVE --data-types oracle_prices --start 2023-01-27 --end     2026-07-22`,
-      confirmed RUNNING at launch. Code tarball verified fresh for MTDS (`27e077daef4a`, includes the listing-date gate)
-      and UAC (packaged sha `6329fc04` is a descendant of the AAVE registration `6bdbc31d`). Monitor:
-      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-defi-aave-oracle-20260722/run.log` +
+      instead of a misleading `SOURCE_RETURNED_ZERO`. **First launch attempt MISDIRECTED (2026-07-22)**:
+      `launch-mtds-backfill-vm.sh --asset-group DEFI --venues AAVE --data-types oracle_prices` (VM
+      `mtds-backfill-defi-aave-oracle-20260722`) — the generic `mtds-backfill` VM_TASK's dispatch in
+      `setup-data-pipeline-vm.sh` only supports `--operation collect-evm-defi`/`collect-solana-defi` for
+      `VM_ASSET_GROUP=DEFI`; there is no branch for `collect-oracle-prices` (the actual operation the AAVE/Chainlink
+      code lives under), so the VM silently ran a full EVM lending_indices backfill (aave_v3/compound_v3/radiant/
+      euler_v2 across ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON) instead — caught at the T+10min check, stopped after
+      ~12min (no `--force`, so idempotent-skip limited the blast radius; no data corruption, just wasted VM-minutes on
+      the wrong task). **Corrected + LAUNCHED (2026-07-22, operator-acked)**:
+      `launch-mtds-pyth-lst-backfill-vm.sh     2023-01-27 2026-07-22` (VM `pyth-lst-backfill-20260722-045059`, zone
+      `asia-northeast1-c`) — this script already wires `VM_TASK=cefi-backfill` + `VM_OPERATION=collect-oracle-prices`,
+      the correct operation; no venue/data-type filtering needed since `oracle_prices_handler.process()` collects
+      Chainlink+Pyth+AAVE together unconditionally for the given date range. Confirmed RUNNING at launch. Code tarball
+      verified fresh for MTDS (`2f3fb7cc`, a descendant of the listing-date gate `27e077daef4a`) and UAC (packaged sha
+      is a descendant of the AAVE registration `6bdbc31d`). **T+10min VERIFIED (2026-07-22)**: run.log shows real
+      per-reserve behavior matching the on-chain listing dates exactly — `2023-01-27` correctly collects ONLY wstETH
+      (`getAssetPrice=1741.704169`), with weETH/rETH/cbETH/rsETH/ezETH each genuinely reverting
+      (`execution reverted, no data`, silently skipped per-reserve) since none of them were listed yet on that date —
+      independent production confirmation of the listing-date verification. ~35-40s/day observed → full 2023-01-27 to
+      2026-07-22 window (~1275 days) is a multi-hour run; SPOT-preemption-resilient via the existing PROGRESS-checkpoint
+      contract. Monitor:
+      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-045059/run.log` +
       manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity.
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
-      `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key. **Still
-      needs the per-venue listing-date sub-check from Phase 0** (which (LST, venue) pairs are actually real SPOT
-      listings, vs. never-existed) before launching, to avoid backfilling venues honestly with no coverage.
+      `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key.
+      **Per-venue listing sub-check CLOSED (2026-07-22)**: live exchange API sweep (all 8 Tardis-covered CEX venues × 6
+      LST tokens, 48 cells, all 8 API calls succeeded) found only **5 real cells** — `(stETH, BYBIT-SPOT)` `STETHUSDT`,
+      `(stETH, OKX-SPOT)` `STETH-USDT`, `(stETH, BITGET-SPOT)` `STETHUSDT`, `(weETH, BITGET-SPOT)` `WEETHUSDT`,
+      `(cbETH, COINBASE-SPOT)` `CBETH-USD`. Every other cell is honestly absent — **wstETH has ZERO real listings
+      anywhere** (every venue lists the rebasing stETH form, never wrapped wstETH, despite the catalogue treating them
+      as separate bases); rETH/rsETH/ezETH have zero real listings on any of the 8 venues checked. Caught 4
+      ticker-naming false-positive traps along the way (Bitget "rETHA" ≠ Rocket Pool rETH; Binance "EZETH" = base
+      EZ/quote ETH, not Renzo; Kraken "LSETH" = Kraken's own in-house product; Upbit lists governance tokens ETHFI/LDO,
+      not the LST tokens themselves). **Scope the launch to exactly these 5 cells** — never launch
+      wstETH/rETH/rsETH/ezETH on any venue, that would be honest-absence-by-construction.
 - [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source
       history + fix the today-vs-prior inner-join/vocab that drops Solana + LRTs (ezETH/rsETH) from the feature output.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
