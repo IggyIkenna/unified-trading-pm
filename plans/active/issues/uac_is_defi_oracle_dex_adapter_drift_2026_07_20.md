@@ -205,3 +205,13 @@ force-include/capability changes bundled into the same commit.
   adapter file. The harness pattern: instantiate the adapter class directly and `await get_instruments()`.
 - `KRX_EQUITY_NAMES`-stamping work (unrelated) is stranded behind this gate; it is verified-good and ships the moment
   the tree is green.
+- **2026-07-22 (slot-4)**: found a `stash@{0}` (labeled `autostash`) in this session's `instruments-service` clone
+  carrying an EARLIER, now-superseded attempt at the same wiring (`factory.py` adapter registration for
+  meteora/lifinity/phoenix/chainlink/pyth + `orchestrator/defi.py` + goldens + `is_defi_force_include_pool`) — auto-
+  created by a `quickmerge.sh` dependency-gate pull, popped, hit conflicts against the ALREADY-LANDED `793125ad`/
+  `6506b505` fix (this doc's STATUS UPDATE above), and was reset back out via `git reset --hard HEAD` to preserve it
+  intact rather than force-resolve someone else's unfamiliar WIP. Diffed clean: `factory.py`'s registration matches
+  what's already live, so the stash is very likely fully redundant now — but NOT confirmed byte-identical, and not mine
+  to drop. Whoever owns this issue: diff `git stash show -p stash@{0}` (in that clone) against current HEAD; if it's
+  confirmed superseded, `git stash drop stash@{0}`, else it may carry the `is_defi_force_include_pool` /
+  high-TVL-pool-allowlist piece that isn't obviously covered by `793125ad`/`6506b505` — check before dropping.
