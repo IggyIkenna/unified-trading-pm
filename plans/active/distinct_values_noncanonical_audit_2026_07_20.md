@@ -1189,3 +1189,77 @@ safety), `scripts/restamp_restaking_lrt_availability_index_2026_07_22.py` (NOT y
 
 **Verified landed by SHA**: `unified-api-contracts@b11c3ad6` — ancestor of `origin/live-defi-rollout` (confirmed via
 `git merge-base --is-ancestor`).
+
+### 2026-07-22 (tick 3) — `odds_horizon_bucket_{15m,1h,4h,1d}` re-stamp: script built + tested + dry-run verified;
+
+### CORRECTED a prior design error; **NOT applied to production** (confirmed CONTENDED); shipped via quickmerge
+
+**Ground truth re-verified live** (read-only,
+`market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`, `central-element-323112`) —
+matches the prior design report exactly: 1,337 rows total (`odds_horizon_bucket_15m`=357, `_1h`=336, `_4h`=328,
+`_1d`=316), 100% `empty_confirmed`, 100% `source=api_football`/ `venue=FOOTBALL`. Non-null-`timeframe` counts vs the
+suffix (243/230/226/211) and null counts (114/106/102/105) also match exactly — 0 contradictions between an existing
+`timeframe` and its suffix.
+
+**A load-bearing correction to the prior design pass (found by independently re-verifying, not by trusting it)**: the
+design report claimed "721 of 1,337 rows (54%) collide with each other" post-restamp and proposed a dedup pass, using a
+narrowed 7-column identity `(date, venue, data_type, service_name, timeframe, league_id, instrument_type)`. That
+identity **omits `instrument_id`** — but `instrument_id` IS a real member of the production dedup key
+(`unified_trading_library.manifest_consolidator._OPTIONAL_DEDUP_COLS`, confirmed against the module source, and
+independently cross-checked against `manifest_writer/_rows.py::_ROW_KEY_COLUMNS`). Re-running the collision check with
+the ACTUAL production dedup key against the live manifest finds **ZERO internal duplicates and ZERO external
+collisions** across all 1,337 rows — including the 427 `instrument_id`-null rows (`market-tick-data-service`-sourced),
+whose `(date, chain, instrument_type, new_timeframe, service_name)` combination was verified unique by direct groupby
+(max group size 1). The 721 "duplicates" the narrow key found were 721 DIFFERENT football fixtures/outcomes that
+legitimately share date/venue/timeframe/service_name/league_id/instrument_type but have distinct `instrument_id` — not
+duplicates. **No dedup pass is needed or implemented** — this is a pure 2-column (`data_type`, `timeframe`) metadata
+re-stamp, zero row drops.
+
+**Shipped — `market-tick-data-service@<see SHA below>`**:
+`market-tick-data-service/scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py` (dry-run by default; `--apply`
+performs the live CAS-guarded write) + `tests/unit/scripts/test_restamp_sports_odds_horizon_bucket.py` (17 unit tests:
+suffix-parsing correctness, the aggregate/seed-exclusion predicate — proves the 124,294-row `mdps_odds_horizon_bucket`
+aggregate and the seed population can never enter the affected set regardless of `source`, contradiction detection, the
+corrected collision-detection logic — including a synthetic genuine-collision case proving it still correctly ESCALATES
+rather than silently drops/merges, idempotency, and the pre-write gate). Mirrors
+`restamp_cefi_onchain_perp_venue_chain_2026_07_21.py`'s safety pattern: pre-apply GCS snapshot, CAS-guarded
+read-classify-write with `if_generation_match`, a pre-write invariant gate that ABORTS on any mismatch, and full
+post-write verification (row count, zero duplicate keys via the real production dedup key, the aggregate + seed
+populations' row counts unchanged, zero remaining suffixed rows outside the escalated set).
+
+**Live dry-run executed** (read-only, no write) — output matches the corrected analysis exactly:
+`SAFE to re-stamp: 1337`, `ESCALATE: 0`, pre-write gate would PASS.
+
+**A small adjacent fix was needed to ship** (found + immediately superseded):
+`tests/unit/test_pipeline_e2e_prediction_canonical.py`'s `_PER_AG_SHARD_COUNTS["SPORTS"]` pin was stale (308, assuming
+the now-reverted 20-bookmaker UAC addition) against the live-measured 88. Fixed it locally, then discovered — via
+`quickmerge`'s own auto-pull-rebase — that a DIFFERENT concurrent session had already shipped the identical fix
+(`mtds@6d367fa8`, "re-pin RULE-11 SPORTS shard count 308->88 for uac@9908520b's fan-out bookmaker purge") moments
+earlier; discarded the now-redundant local duplicate (`git restore`) rather than double-committing.
+
+**Quality gates**: `quality-gates.sh --no-fix` fully green (0 failures) once the tree included the above pin fix.
+
+**Contention verdict CONFIRMED**: `market-data-sports` shares the exact `*/1 * * * *` Cloud Scheduler cron as
+`market-data-cefi` (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf:328`, job
+`uts-prod-manifest-consolidator-market-data-sports-cron`, `ENABLED`). Per the mandatory sub-agent rules, did **NOT**
+pause this cron or attempt the live `--apply` write. **Nothing has been written to the production manifest by this
+work.**
+
+**Shipping this took ~7 quickmerge attempts over ~50 min** — every early attempt blocked at Pre-Flight Audit by
+DIFFERENT, unrelated, concurrently-dirty `unified-api-contracts` states (sports-bookmaker-purge WIP, then
+defi_venue_capabilities.py WIP) from other agents actively working this same plan's sibling todos + unrelated DeFi work;
+per "never touch files you don't own even if dirty," none of it was touched — only waited out. **Also discovered
+mid-session**: this repo's uncommitted-edit-then-long-poll pattern is unsafe — an earlier uncommitted edit to THIS plan
+file's Progress Log was silently lost (not in any of 14 orphaned `autostash` entries checked) during one of the many
+PM-manifest auto-sync pulls triggered by repeated `quickmerge` attempts in a dependent repo; had to reconstruct and
+re-apply it. **Lesson for future sessions on this plan**: commit plan-doc edits promptly rather than leaving them as
+long-lived uncommitted working-tree state during an extended multi-attempt quickmerge session elsewhere.
+
+**Once shipped, to apply during an operator-authorized paused-writer window** (mirror the venue-as-chain 2026-07-22
+pause/impersonation/resume recipe above — pause `uts-prod-manifest-consolidator-market-data-sports-cron`, run, verify,
+resume):
+
+```
+GCP_PROJECT_ID=central-element-323112 nohup .venv/bin/python \
+  scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py --apply > /path/to/logfile 2>&1 &
+```

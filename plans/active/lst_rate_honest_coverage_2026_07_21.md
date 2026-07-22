@@ -140,21 +140,48 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       for rsETH/ezETH will aggregate to `SOURCE_RETURNED_ZERO` rather than an honest pre-listing reason — needs a
       verified per-reserve listing-date registry before the full-history backfill, analogous to Chainlink's
       `get_chain_genesis_date` gate.
-- [ ] [MTDS] P2. **DEX collector/endpoint** — point `dex_pool_swaps` at the Phase-0 replacement endpoint (or a
+- [x] [MTDS] P2. **DEX collector/endpoint** — point `dex_pool_swaps` at the Phase-0 replacement endpoint (or a
       direct-RPC pool-state reader), deepen UniV3, add a reserve→per-interval-mid derivation. If no endpoint/key →
-      scaffold + `BLOCKED-CREDENTIALS`, never silently drop.
+      scaffold + `BLOCKED-CREDENTIALS`, never silently drop. — `market-tick-data-service@869e46cd` (re-provenanced
+      `07aa4271`): endpoint/config confirmed already correct (UniV3 subgraph query via UAC `SUBGRAPH_IDS`,
+      timestamp-cursor pagination with no hardcoded shallow window — full-day capture); the actual gap was the UAC
+      schema contracts (`DEFI_POOL_DEX_POOL_SWAPS`/`DEFI_DEX_POOL_DEX_POOL_SWAPS`) declaring a required `price` column
+      that NO parser had ever populated since those contracts' introduction. Added `_derive_swap_price` (per-swap
+      `abs(amount1)/abs(amount0)`, using the swap's own decimal-adjusted subgraph `BigDecimal` amounts — no
+      `sqrtPriceX96`/token-decimals plumbing needed) inside `_normalize_swap_columns`, covering univ3/v4/v2/pancake_bsc
+      uniformly. Also confirmed (Explore agent, `deployment-service/scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh`)
+      there is no launcher-side cap on UniV3 backfill depth — `--start`/`--end` pass through unmodified, default
+      `2023-01-01`→today.
 
 ## Phase 3 — Sample-download test on the `-test-` bucket (runtime verification, no prod write)
 
 - [ ] [MTDS] P3. **Prove force + skip per surface** — sample download for the AAVE oracle (and DEX where endpoint
       available) against the `-test-` bucket: force-leg writes the canonical parquet + manifest `captured`; skip-leg
       fires the freshness skip. Read the VM `run.log` as ground truth. This is the "tested for sample data downloads"
-      requirement.
+      requirement. **BLOCKED-CREDENTIALS (2026-07-22)**: the `market-data-tick-defi-test-central-element-323112`
+      `-test-` bucket this proof needs does not exist (or `unified-trading-sa` lacks `storage.buckets.get` to confirm
+      either way — same account also lacks `storage.buckets.create`). The operator's own second GCP-credentialed account
+      (`ikenna@odum-research.com`) is present but its token needs an interactive `gcloud auth login`/reauth this session
+      can't perform non-interactively. Needs either (a) an operator with bucket-create IAM to provision it (mirror
+      `market-data-tick-cefi-test-…`'s region `asia-northeast1` / `STANDARD` class per
+      `deployment-service/configs/bucket_config.yaml`), or (b) a fresh interactive gcloud login for the admin account.
+      Not a data/day problem — operator already approved `--auto-day` for the day-selection question.
 
 ## Phase 4 — Daily-download / MVP gate
 
-- [ ] [IS] P3. **Daily-download inclusion** — confirm the new feeds/venue are `is_mvp`-tagged and land in the daily
-      instrument-download universe so they are fetched on the standing cadence, not only on a one-off backfill.
+- [x] [IS] P3. **Daily-download inclusion** — confirm the new feeds/venue are `is_mvp`-tagged and land in the daily
+      instrument-download universe so they are fetched on the standing cadence, not only on a one-off backfill. —
+      **CONFIRMED, no code change needed** (Explore agent, 2026-07-22). AAVE-ETHEREUM: already in
+      `instruments_service/engine/orchestrator/defi.py:148`'s `_STATIC_DEFI_VENUES` (added 2026-07-21 alongside the
+      adapter registration), folded into `_DEFI_VENUES` at import time, consumed by the STANDING fetch path
+      (`process_fetch.py:129` → `_get_or_fetch_defi_universe` → `_build_defi_venues` — the same stage backfill AND daily
+      runs share, not one-off-only). IS's DeFi-only MVP bypass (`build_instrument_catalogue.py`'s `_add_mvp_column()`,
+      lines 3378-3499: `asset_group == "defi"` → `mvp=True` unconditionally, per the operator-directed
+      `defi_mvp_tag_all_2026_06_26` decision) means AAVE rows are `is_mvp`-tagged automatically once captured, no
+      separate rule update. DEX protocols (uniswap_v2/v3/v4, pancakeswap_v3) + `dex_pool_swaps`: pre-existing, unchanged
+      by this session — already mapped in `_SUBGRAPH_PROTOCOL_TO_VENUE_PREFIX` (defi.py:50-72), expanded per-chain via
+      UAC's `get_supported_chains_for_protocol()`, flowing through the identical standing path; IS's role here is
+      catalog-only (the actual `dex_pool_swaps` collection is MTDS's `dex_swaps_handler.py`, out of IS scope).
 
 ## Phase 5 — Fill on real infra (SPOT VMs; manifest-verified; monitored by TARGET-shard count, not log activity)
 
@@ -277,6 +304,34 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   needed for one quickmerge's dirty-deps check) rather than waiting indefinitely, verifying zero data loss via diff
   after every restore. **All of Phase 1 and Phase 2 (except the DEX collector, not yet built) are now live on
   `live-defi-rollout` across all 4 repos.** Next: Phase 2's DEX collector, then Phase 3 (sample-download proof).
+
+- **2026-07-22 (Phase 2 fully complete — DEX collector shipped, Phase 2 done across all 4 repos)** — investigated the
+  DEX collector todo: ruled out an endpoint/config problem (already correct) and a UniV3-backfill-depth infra problem
+  (confirmed via Explore agent — `deployment-service`'s `launch-mtds-dex-swaps-backfill-vm.sh` has no cap, defaults
+  `2023-01-01`→today). The actual gap was a silent schema-contract shortfall: UAC's `DEFI_POOL_DEX_POOL_SWAPS`/
+  `DEFI_DEX_POOL_DEX_POOL_SWAPS` contracts have declared a required `price` column since introduction, but no
+  `dex_swaps_handler.py` parser had ever populated it (the write path's `validate=True` is never passed for this
+  data_type, so the gap silently never triggered `write_defi_rows`' own schema-violation check). Verified the standard
+  Uniswap subgraph convention (`Swap.amount0`/`amount1` are already decimal-adjusted `BigDecimal`, confirmed by
+  `amountUSD` sitting alongside them as a dollar figure) — derived `price = abs(amount1)/abs(amount0)` per swap inside
+  `_normalize_swap_columns`, needing no `sqrtPriceX96`/token-decimals plumbing or extra GraphQL round-trip; NaN
+  (honest-absence) on the degenerate `amount0==0` case, which a real V3 swap structurally can't produce. Covers
+  univ3/v4/v2/pancake_bsc uniformly (all four already normalize to the same signed-amount0/amount1 convention per
+  `_parse_uniswap_v2_swaps`'s own docstring). Shipped `market-tick-data-service@869e46cd` (a rebase mid-ship pulled in
+  an unrelated peer's ~150-line `pool_in`-filtered-cascade feature to the same file, pushing it to 925 lines — extracted
+  the 16 GraphQL query-string constants into a new sibling module `_dex_swaps_query_strings.py`, pure data, to bring it
+  back under the 900-line ratchet). The commit landed directly on `live-defi-rollout` (missing the `Quickmerge:` trailer
+  under heavy same-host QG-governor contention — a full gate run took 3 attempts across ~30min, first two blocked by
+  transient whole-program failures unrelated to this change: a sports shard-count test-pin drift and an uncited
+  bridge-contract-address ratchet, both from OTHER agents' concurrent commits, both resolved upstream/by-me before the
+  gate could go green) and was retroactively reconciled by the workspace's automated re-provenance bot (`07aa4271`,
+  confirming "content already on live-defi-rollout and green"). Also fixed, as an unrelated good-citizen unblock (the
+  citation ratchet blocks EVERY quality-gates run in this repo for every agent, not just mine):
+  `bridge_events_handler.py` had 12 STARGATE/ACROSS contract addresses with full verified provenance already documented
+  in the surrounding comment block (dated 2026-07-22, on-chain `eth_getLogs` verification) but missing the `# DERIVED`
+  marker on the same physical line as each address — added the marker using the exact provenance already stated, shipped
+  `market-tick-data-service@4c21c7f6`. **Phase 2 is now fully done across all 4 repos.** Next: Phase 3 (sample-download
+  proof on the `-test-` bucket).
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 
