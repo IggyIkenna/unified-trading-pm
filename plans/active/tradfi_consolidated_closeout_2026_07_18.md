@@ -2125,3 +2125,19 @@ MVP fix + KRX launcher actually shipped (quality gates were mid-run at this chec
 recovery pass (real data-visibility gap, not hygiene), (3) finish the CME monolith investigation, (4) Phase D gate. Next
 session: check `git log` in unified-api-contracts + deployment-service for the two pending ships first — don't redo work
 that may have already landed.**
+
+**Lesson — QG sentinel friction under heavy shared-host contention (2026-07-22 late session):** `unified-api-contracts`
+was running under heavy multi-slot contention (12+ concurrent `quality-gates.sh` processes observed). Ran the FULL gate
+twice (`bash scripts/quality-gates.sh`, no `--no-fix`), both printed `✅ ALL QUALITY GATES PASSED` with real test output
+(194/194 and full-suite passes), but `.qg_last_passed_sha` never updated from its `Jul 21 04:42` value — grepped the
+full saved output for `Sentinel written` / `SENTINEL_HIT` and found NEITHER string anywhere, meaning the sentinel -write
+code path (`quality-gates-base/base-library.sh` ~line 1478, gated on `RUN_TESTS`/`RUN_LINT`/`!SKIP_TYPECHECK`/
+`!ACT_MODE`/no `QG_SLICE`/no `QG_FAST`/`!_QG_SENTINEL_HIT`) silently did not fire despite the gate itself passing — root
+cause not found before session-end (tried unsetting `QG_FAST`/`QG_SLICE`/etc in case of shell-state leakage, no change).
+This is NOT evidence the code is unsafe (2 independent full green runs with real test execution is strong evidence) — it
+blocked `quickmerge --agent`'s sentinel check specifically. **Do not assume a repo's QG tooling is reliable under heavy
+concurrent load without checking** — if the sentinel doesn't update after a genuinely-passing gate, don't loop retrying
+blindly; check the exact guard condition in `base-library.sh`/`base-service.sh` and/or wait for host contention to drop
+before concluding it's a real blocker.
+
+- `- [ ] [INFRA] P2. Diagnose why unified-api-contracts' full quality-gates.sh run (2026-07-22, under heavy host contention) printed ALL QUALITY GATES PASSED but never wrote .qg_last_passed_sha / .qg_content_sentinel — check the governor/contention-queue interaction with the sentinel-write guard in quality-gates-base/base-library.sh.`
