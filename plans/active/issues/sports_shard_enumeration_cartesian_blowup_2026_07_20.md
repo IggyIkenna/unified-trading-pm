@@ -766,21 +766,23 @@ alongside the Part 4.1 formula change — a `"bookmaker"` `venue_accessor` senti
 the found-vs-expected arithmetic, multi-league aggregation, case-insensitive bookmaker matching, the capture_status
 OK-mask, and the gate/expected-venues wiring; full `quality-gates.sh` green locally (4921 tests).
 
-**Ship/deploy status (re-verified via a dedicated scoping investigation, 2026-07-22 later same day)**: **NOT deployed —
-this is a factual state, not a probability.** The code is still plain uncommitted working-tree diff (no commit, no SHA,
-on a local branch that is itself 12 commits behind `origin/live-defi-rollout`) — `deployment-api`'s pre-flight audit
-blocks the push on its `unified-api-contracts` path dependency having uncommitted changes
-(`tests/test_venue_key_parity.py`, `unified_api_contracts/registry/defi_venues.py` — unrelated DEFI_VENUE_PHASE work,
-repeatedly reconfirmed LIVE via <120s mtime checks over several hours — do not touch or force past this). Even once that
-clears and the commit lands on LDR, **the full path to production is**: LDR→main promote PR (`quality-gates-v2` green +
-dep-order + provenance gate, empirically ~15 min effective cadence) → the native `deployment-api-main-deploy` Cloud
-Build trigger (`gcloud run deploy uts-shared-deployment-api`, ~5–10 min documented) → only then is the new code running
-in the one shared Cloud Run instance that serves the real data-status UI/decisions. Read-only verification once live:
-`gcloud run services describe uts-shared-deployment-api --region asia-northeast1 --project central-element-323112 --format='value(spec.template.spec.containers[0].image)'`,
-compared against `git log`. **Do not** treat `deployment-service/scripts/cloud-run/deploy-shared.sh` (a Tier-3 path that
-deploys straight from local disk, bypassing git/quickmerge/every quality gate) as a way to satisfy this prerequisite —
-it is a real technical capability on this box but violates the workspace's quickmerge-only rule and carries no commit/QG
-record/provenance; a human must explicitly rule it out, not use it as a shortcut.
+**Ship/deploy status — SHIPPED 2026-07-22 (after a session-boundary/compaction gap; the blocker below cleared on its
+own).** `deployment-api@6d20724` ("feat(data-status): SPORTS bookmaker x league x fixture-date honest-coverage axis
+(Phase 6d)"), landed on `live-defi-rollout`, pushed, content-verified `ahead=0` against `origin/live-defi-rollout`. The
+previously-cited blocker (`unified-api-contracts` foreign-live `DEFI_VENUE_PHASE` work) was the SAME session's own
+parallel DeFi-five-venues investigation, not truly foreign — it finished and committed
+(`unified-api-contracts@91b6f094`/`@0b0442a6`) sometime between the original NOT-deployed note and this pass, clearing
+`unified-api-contracts` to a clean tree. Full `quality-gates.sh` ran green locally before shipping (155s, sentinel
+matched HEAD).
+
+**✅ CONFIRMED LIVE IN PRODUCTION (2026-07-22, read-only verified)**: promote PR `promote/deployment-api/6d2072483b62`
+(`quality-gates-v2` + `image-build-gate` both green, 17:37:19Z) squash-merged to `origin/main` as `f8abbae`
+(18:42:38+01:00 / 17:42:38Z) — content-verified, not SHA-trusted (squash merges mint a new commit hash):
+`git show origin/main:deployment_api/services/data_status/mtds.py | grep -c mtds_honest_coverage_for_bookmaker`
+returns 3. `uts-shared-deployment-api`'s deployed image is `deployment-api:f8abbae` (exact squash SHA), redeployed
+2026-07-22T17:51:37Z — read-only verified via
+`gcloud run services describe uts-shared-deployment-api --region asia-northeast1 --project central-element-323112 --format='value(spec.template.spec.containers[0].image)'`.
+Phase 6d is genuinely running in the one shared Cloud Run instance that serves the real data-status UI/decisions.
 
 **Scope investigation (2026-07-22)** — Phase 6d is **not a boolean flip**; the injection mechanism the other 4
 categories share cannot be reused as-is for SPORTS without a real design change:
@@ -903,12 +905,12 @@ Do not spend engineering time on any of these.
 > above. The row-by-row corrections are below; do not trust the "Phase 3" / "Phase 4/4.4" rows' original wording, only
 > the states as now written.
 
-| Item                                                                                                                                                                                                       | State                                            | Blocked on                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Phase 3** — ✅ DONE, shipped `unified-api-contracts@7338fa65`                                                                                                                                            | Done                                             | Operator reviewed the exact measured table (CEFI -11.50pp, TRADFI -8.96pp, SPORTS -10.19pp, PREDICTION -5.19pp, DEFI -0.05pp) and explicitly authorized shipping it same-day; formula re-verified via a fresh same-day re-measurement immediately before the ship.                                                                                                                                                                                                                                                                                      |
-| **Phase 4 / 4.4** — code complete, NOT deployed (see §4.4)                                                                                                                                                 | Code complete, not deployed                      | Two external blockers, neither an implementation gap: (a) push blocked on `unified-api-contracts`'s foreign LIVE dependency (DEFI_VENUE_PHASE work, reconfirmed via mtime over several hours); (b) after push, the LDR→main-promote→Cloud-Build-deploy pipeline (~20-35 min documented) must complete and be read-only-verified before Phase 6d is genuinely live.                                                                                                                                                                                      |
-| **Phase 5 / Part 3** — execute manifest remediation (3.1/3.2/3.3/3.4) — **NO-GO, confirmed via a dedicated scoping workflow 2026-07-22**                                                                   | Cannot be done yet (+ operator decisions needed) | 3.0's prerequisite (Phase 6d must land) is unmet — see Phase 4/4.4 row above. **Separately, and not resolved by 4.4 landing**: 3 operator-owned decisions block drafting any write script at all — (1) who triggers the actual prod-bucket write, given the human-only delete hard-stop 4.2 never reconciled; (2) which of 3 unreconciled row-count figures (923,952 / 1,066,231 / 1,136,624) scopes 3.1/3.2; (3) 3.3's unspecified destination `capture_status`/`error_reason` value. Full runbook + every open question: see the `- [ ]` todos below. |
-| **4.5** — issue-doc corrections (strike the false "no per-(venue,league) coverage declaration" line; fix the reason-split figures to the measured `606,772 / 459,459 / 200,864 / 94,127 / 385,402` values) | Not done                                         | Nobody — small, safe doc fix, pick up any time.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Item                                                                                                                                                                                                       | State                                              | Blocked on                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 3** — ✅ DONE, shipped `unified-api-contracts@7338fa65`                                                                                                                                            | Done                                               | Operator reviewed the exact measured table (CEFI -11.50pp, TRADFI -8.96pp, SPORTS -10.19pp, PREDICTION -5.19pp, DEFI -0.05pp) and explicitly authorized shipping it same-day; formula re-verified via a fresh same-day re-measurement immediately before the ship.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Phase 4 / 4.4** — ✅ DONE, live in prod (see §4.4)                                                                                                                                                       | Done                                               | N/A — `deployment-api@6d20724` → squash-merged to main as `f8abbae` → deployed to `uts-shared-deployment-api` at 17:51:37Z, content-verified via `gcloud run services describe`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Phase 5 / Part 3** — execute manifest remediation (3.1/3.2/3.3/3.4) — **3.0 prereq now MET; all 3 operator decisions RULED 2026-07-22**                                                                  | Not done (one reconciliation gap, then executable) | 3.0's prerequisite (Phase 6d) is now satisfied — `deployment-api@6d20724` confirmed live via `gcloud run services describe` (image `deployment-api:7ab62ec`, revision `uts-shared-deployment-api-00251-f45`, content-verified). All 3 operator decisions RULED: (1) human-only triggers the write; (2) row-count scope = 1,136,624; (3) 3.3 destination = `empty_confirmed` + one of 3.1's new codes. **Remaining gap**: 1,136,624 doesn't match either already-computed figure (923,952 for 3.2's SQL predicate, 1,066,231 for 3.1's already-shipped effect) — no query producing it exists yet; must be derived/reconciled before any further 3.1/3.2 work. Note also 3.2 itself is independently marked NOT-TO-DO (§3.2, four grounds) regardless of scope. Full runbook + every open question: see the `- [ ]` todos below. |
+| **4.5** — issue-doc corrections (strike the false "no per-(venue,league) coverage declaration" line; fix the reason-split figures to the measured `606,772 / 459,459 / 200,864 / 94,127 / 385,402` values) | Not done                                           | Nobody — small, safe doc fix, pick up any time.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 **Recommended order**: (1) retry the `deployment-api` + `instruments-service` pushes opportunistically as the foreign
 UAC dependency clears (external contention, not a design/implementation gap); (2) once Phase 6d is pushed, watch the
@@ -917,19 +919,23 @@ LDR→main→Cloud-Build pipeline to a read-only-verified deploy
 (3) **separately and in parallel**, get the operator's answers to the 3 Phase 5 decisions below — Part 3 cannot start
 without them regardless of how fast (1)-(2) resolve.
 
-- [ ] [DECISION] P0. **Who triggers the actual sports-manifest prod-bucket write (3.2 purge, and possibly 3.4)?** —
-      `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` states prod-bucket deletes are a human-only hard stop;
-      4.2's "combined A+B" decision never addressed this. Resolve before drafting any write script, not just before
-      running one.
-- [ ] [DECISION] P0. **Which population scopes 3.1/3.2's predicate?** — three unreconciled figures: 923,952 (3.2's own
-      SQL-predicate-scoped dead-pair set, the only one with a concrete reproducible query), 1,066,231 (all rows anywhere
-      carrying either of 3.1's two new `error_reason` values, no other filter — the figure tied to the cited
-      94.31%→87.64% coverage-metric shift), and 1,136,624 (appears exactly once, in a section heading, never defined or
-      reconciled anywhere else in the doc — possibly a typo). Confirm which is intended before scoping any
-      implementation.
-- [ ] [DECISION] P0. **3.3's destination classification is unspecified** — "relabel to honest absence" is stated but the
-      literal `capture_status`/`error_reason` to write is not (e.g. `empty_confirmed` + one of 3.1's new codes, vs. a
-      distinct new code). Do not infer this.
+- [x] [DECISION] P0. ✅ **RULED 2026-07-22 (operator, chat, this session) — Human-only.** Who triggers the actual
+      sports-manifest prod-bucket write (3.2 purge, and possibly 3.4): the operator (or another human) runs the write
+      script by hand after review; no agent executes `--apply` autonomously. Confirms
+      `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s existing hard stop applies here with no
+      agent-with-signoff carve-out — 4.2's "combined A+B" decision is now reconciled against it.
+- [x] [DECISION] P0. ✅ **RULED 2026-07-22 (operator, chat, this session) — 1,136,624.** Which population scopes
+      3.1/3.2's predicate. **Open follow-up, do not skip**: 1,136,624 does not match either already-computed figure —
+      not 3.2's own SQL-predicate-scoped dead-pair set (923,952), nor 3.1's already-measured/shipped frozenset-addition
+      effect (1,066,231, see `unified-api-contracts@7338fa65`'s docstring). No query producing exactly 1,136,624 exists
+      anywhere in this doc. Before any further 3.1/3.2 work: derive and validate the concrete predicate that reproduces
+      1,136,624, and reconcile whether 3.1's already-shipped scope (1,066,231) needs widening to match, or whether
+      1,136,624 describes a different population than 3.1 targets. Do not silently reinterpret 3.1's shipped code to
+      this number without that reconciliation.
+- [x] [DECISION] P0. ✅ **RULED 2026-07-22 (operator, chat, this session) — `empty_confirmed` + new code.** 3.3's
+      destination classification: write `capture_status=empty_confirmed` paired with one of 3.1's two newly-introduced
+      `error_reason` codes (`EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` / `EXPECTED_PAUSED_LEAGUE`), not a distinct new
+      code. Which of the two codes applies per-row still needs the predicate work in the P1 item below.
 - [ ] [SCRIPT] P1. **Restate 3.3's target-row SQL predicate explicitly** — the doc cross-references 3.2's `LIVE_PAIRS`
       concept for the 37,426 never-captured `attempted_failed` rows but never repeats a concrete query; derive and
       validate it reproduces 37,426 before writing any relabel code.
@@ -1011,3 +1017,25 @@ in this session, blocked by the same foreign UAC dependency — queued for push 
 not newly discovered work. A fleet-wide `staging-backmerge-to-ldr.yml` template-drift (sibling bug to the
 `main-backmerge-to-ldr.yml` fix shipped earlier this session) was also found and fixed across 4 repos while chasing an
 unrelated PM post-gate failure.
+
+**2026-07-22 (continuation, post-compaction)** — Retried the queued ships now that the shared-workspace contention
+cleared: `deployment-api@6d20724` (Phase 6d) landed on `origin/live-defi-rollout` via quickmerge's documented
+clean-tree/unpushed-commit fallthrough (the commit already existed locally from a pre-compaction attempt);
+`instruments-service`'s CeFi-dedup commit was found already landed (`ahead=0`) and `system-integration-tests`'
+workflow-template fix was found already landed too — both must have gone through in an earlier retry this session that
+predates this compaction. **Verified Phase 6d is genuinely live in prod** — not just promoted — via
+`gcloud run services describe uts-shared-deployment-api`: deployed image `deployment-api:7ab62ec` (revision
+`uts-shared-deployment-api-00251-f45`, ready `2026-07-22T18:48:32Z`) contains `mtds_honest_coverage_for_bookmaker`
+(grepped the actual deployed commit's tree, not just git ancestry — a first ancestry-only check falsely suggested it
+wasn't deployed, because squash-merge-to-main promotes never preserve the feature commit as a git ancestor; content-grep
+is the correct check for this trunk model, git ancestry is not). **Operator RULED all 3 Phase 5 decisions** (via
+`AskUserQuestion`, this session): human-only triggers the prod-bucket write; row-count scope = 1,136,624; 3.3's
+destination = `empty_confirmed` + one of 3.1's two new codes. Recorded as `[x]` in the todos above. **New open gap
+surfaced applying the ruling**: 1,136,624 matches neither already-computed figure in this doc (923,952 for 3.2's coded
+SQL predicate, 1,066,231 for 3.1's already-shipped/measured effect) — no query producing it exists anywhere here;
+flagged as a P0 follow-up rather than silently picking one of the existing numbers to stand in for it. **Also fixed,
+opportunistically**: `distinct_values_noncanonical_audit_2026_07_20.md` was the sole remaining `plan-discipline` QG
+violation (a different file than the `lst_rate_honest_coverage_2026_07_21.md` one baselined earlier this session — that
+one had since been fixed by its owning session) — added the missing `## Deferred work — migrated to:` banner and
+re-baselined `plan_discipline_baseline.yaml` back down to 0 (rather than ship the earlier temporary tolerate-1 baseline,
+which was no longer accurate).

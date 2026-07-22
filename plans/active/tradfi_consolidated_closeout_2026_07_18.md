@@ -2120,8 +2120,108 @@ questions when a decision is needed. Ran it. Findings:
   `apt-get update` first or the `uv`-based install path the production launchers use) — not yet completed.
   - `- [ ] [DATA] P2. Finish the CME monolith investigation: fix the pip/venv bootstrap on the investigation VM (or relaunch through the proper setup-data-pipeline-vm.sh path instead of a raw metadata startup-script), reconcile the 30-vs-107 count discrepancy, inspect real content structure, THEN design the migration tool. Clean up the investigation VM when done (not part of the tracked fleet).`
 
+### 2026-07-22 continuation — CME monolith investigation: bootstrap fixed, count reconciled (unresolved), content inspected, VM cleaned up
+
+- **pip/venv bootstrap fix**: `apt-get update` first, THEN `apt-get install python3-pip python3-venv` — the earlier "no
+  installation candidate" error was a stale apt cache, not a missing package. Trivial once diagnosed.
+- **30-vs-107 discrepancy — investigated thoroughly, NOT fully explained, but ruled out the dangerous hypothesis.**
+  Checked, with direct evidence, in order:
+  1. **Deletion**: bucket has soft-delete enabled (7-day retention) — queried soft-deleted objects matching
+     `day=*/venue=CME/ticks.parquet`, found **zero**. No object matching this shape was deleted in the last 7 days.
+  2. **A second/duplicate bucket**: the KRX launcher's own post-launch help text cites
+     `gs://market-data-tick-tradfi-central-element-323112` (no `-prd-`) — that bucket **does not exist** (404). Only
+     `market-data-tick-tradfi-prd-central-element-323112` is real. Rules out a split-count-across-buckets explanation.
+     (Minor separate finding: the KRX launcher's echoed post-launch verification command has the wrong bucket name —
+     cosmetic, doesn't affect the actual backfill, low-priority fix for later.)
+  3. **Generations/versioning**: bucket versioning is off; the one sampled day (`2026-02-22`, the report's own cited
+     example) has exactly one generation. Rules out a versioning-inflated count.
+  4. **The report's source data**: found the reconciliation JSON's exact number
+     (`census_s1_gcs.bare_pocket_shapes["day/venue_monolith"] = {objects: 107, bytes_gb: 2.534}`) but no committed
+     script anywhere in the workspace produces that key — it was almost certainly computed by an ad-hoc inline script in
+     that prior session, never persisted. The workspace's own `_index/audit/orphan_sweep_tradfi.parquet` (the sanctioned
+     reusable single-walk snapshot) does **not** contain this monolith shape at all (only `E_orphan_real` 3,488 rows and
+     `B_legacy_duplicate` 900 rows — the 900 matches report row F4 exactly, confirming that part of the report DID come
+     from this sweep file, but the monolith count did not).
+  - **Verdict**: live, directly-reproduced count is **30** (two independent single-level-wildcard listings, both
+    matching the report's own cited example day `2026-02-22`), with no evidence of deletion, duplication, or
+    double-counting to explain the gap from 107. The 107 figure cannot be reproduced from any artifact left in the
+    workspace. Treat **30 as current ground truth** going forward; the 107 figure's origin is unresolved and, absent a
+    committed script to audit, likely unrecoverable — not worth further time at P2.
+  - **Process note (self-correction):** while chasing this, attempted a recursive `gsutil ls -r` / `**`-glob
+    whole-corpus walk of `raw_tick_data/by_date/` to rule out a nested-path hypothesis — this violates the workspace's
+    single-walk discipline hard rule (any new whole-corpus GCS walk is review-blocking). Caught it after launch (before
+    it produced a real cost/count problem), killed it by deleting the investigation VM outright (which also happened to
+    satisfy the "clean up the investigation VM when done" step). Correct approach used afterward: read the existing
+    sanctioned `_index/audit/orphan_sweep_tradfi.parquet` single-walk snapshot instead of re-walking — should have gone
+    there first.
+- **Content inspected** (downloaded the `day=2026-02-22` sample locally via `gcloud storage cp` + read with local
+  pandas/pyarrow — no VM needed for this part). Real structure: `data_type=trades` (Databento MBP-0/trades schema,
+  `rtype=0`, `action='T'`), columns
+  `ts_event, rtype, publisher_id, instrument_id (Databento's internal numeric id, uint32), action, side, depth, price, size, flags, ts_in_delta, sequence, symbol (human-readable, e.g. ESH6/NQH6), data_type`.
+  63,388 rows / 1,097 unique `(instrument_id, symbol)` pairs in this one file — a genuine per-day ALL-CME-SYMBOLS
+  fan-in, including calendar-spread combos (`NQH6-NQM6`). Confirms the report's characterization: no canonical Hive
+  partitioning, numeric Databento ids not yet translated to canonical form, would need per-symbol grouping +
+  `EXCHANGE_CODE_TO_NAME`-style translation (regular contracts) + COMBO handling (spread symbols) to migrate to
+  canonical paths.
+- **Migration tool NOT yet designed/built** — correctly scoped as separate follow-up work per the original todo's own
+  phrasing ("inspect content, THEN design the migration tool"). This is a real, moderately large piece of new code
+  (per-symbol grouping, contract-vs-combo classification, canonical path construction per `_canonical_chain_path`-style
+  logic but for FLAT per-contract futures/options, not chain bundles, manifest registration) — deferred as its own P2
+  todo below rather than rushed in this session alongside the higher-priority P1 manifest-recovery pass.
+  - `- [ ] [DATA] P2. Design + build the CME monolith migration tool: for each of the ~30 day=*/venue=CME/ticks.parquet objects, group rows by (instrument_id, symbol), classify combo (spread, e.g. NQH6-NQM6) vs single-contract symbols, translate to canonical futures/option instrument_ids + canonical Hive paths, write per-contract canonical objects, register manifest rows, THEN delete the monolith source (migrate-first, never blind-delete — this is an only-copy per the 2026-07-21 reconciliation report).`
+
 **Session ending here on operator time/credit constraint (again). Remaining, in priority order: (1) verify the ohlcv_1s
 MVP fix + KRX launcher actually shipped (quality gates were mid-run at this checkpoint), (2) the chain- manifest
 recovery pass (real data-visibility gap, not hygiene), (3) finish the CME monolith investigation, (4) Phase D gate. Next
 session: check `git log` in unified-api-contracts + deployment-service for the two pending ships first — don't redo work
 that may have already landed.**
+
+**Lesson — QG sentinel friction under heavy shared-host contention (2026-07-22 late session):** `unified-api-contracts`
+was running under heavy multi-slot contention (12+ concurrent `quality-gates.sh` processes observed). Ran the FULL gate
+twice (`bash scripts/quality-gates.sh`, no `--no-fix`), both printed `✅ ALL QUALITY GATES PASSED` with real test output
+(194/194 and full-suite passes), but `.qg_last_passed_sha` never updated from its `Jul 21 04:42` value — grepped the
+full saved output for `Sentinel written` / `SENTINEL_HIT` and found NEITHER string anywhere, meaning the sentinel -write
+code path (`quality-gates-base/base-library.sh` ~line 1478, gated on `RUN_TESTS`/`RUN_LINT`/`!SKIP_TYPECHECK`/
+`!ACT_MODE`/no `QG_SLICE`/no `QG_FAST`/`!_QG_SENTINEL_HIT`) silently did not fire despite the gate itself passing — root
+cause not found before session-end (tried unsetting `QG_FAST`/`QG_SLICE`/etc in case of shell-state leakage, no change).
+This is NOT evidence the code is unsafe (2 independent full green runs with real test execution is strong evidence) — it
+blocked `quickmerge --agent`'s sentinel check specifically. **Do not assume a repo's QG tooling is reliable under heavy
+concurrent load without checking** — if the sentinel doesn't update after a genuinely-passing gate, don't loop retrying
+blindly; check the exact guard condition in `base-library.sh`/`base-service.sh` and/or wait for host contention to drop
+before concluding it's a real blocker.
+
+- `- [ ] [INFRA] P2. Diagnose why unified-api-contracts' full quality-gates.sh run (2026-07-22, under heavy host contention) printed ALL QUALITY GATES PASSED but never wrote .qg_last_passed_sha / .qg_content_sentinel — check the governor/contention-queue interaction with the sentinel-write guard in quality-gates-base/base-library.sh.`
+
+### 2026-07-22 continuation — both pending ships landed, KRX backfill launched for real
+
+- **Root cause of the QG-sentinel friction above was NOT purely contention — found and fixed a second, real bug.**
+  Operator pushed back on the "not mine to fix" framing for the blocking `test_archetype_capability_manifest_parity.py`
+  failures and said to file + fix it directly. Root-caused: `_find_codex_markdown()` was resolving the PM codex doc via
+  `$UNIFIED_TRADING_WORKSPACE_ROOT` (the pre-per-slot-worktree machine-wide root checkout, stale at 16 days / missing 29
+  archetype sections + the whole `Portfolio` family) **before** falling back to an ancestor-directory walk from
+  `__file__` (which finds the caller's own live, current per-slot checkout). Fixed the resolution order — ancestor-walk
+  first, env var only as a last-resort fallback for a genuinely isolated container with no sibling PM checkout. All 17
+  tests in the file pass; zero doc content was actually missing (the live slot-1 checkout already had all 9 families /
+  53 archetypes — this was purely a resolution-order bug). A duplicate issue doc already existed from slot-3 hitting the
+  same root cause independently
+  (`unified-trading-pm/plans/active/issues/uac_archetype_codex_parity_test_reads_stale_root_checkout_2026_07_22.md`) —
+  updated it to `status: resolved` with a Resolution section rather than filing a new one. **This explains why the "pure
+  contention" framing in the Lesson above was incomplete**: some of the observed friction across ~6 gate attempts really
+  was host contention, but every one of those attempts was ALSO going to fail regardless of contention level, because of
+  this standing test bug — the two causes were confounded, not either/or.
+  - Shipped: `uac@68c4c371d` — `_find_codex_markdown()` fix + the `ohlcv_1s` MVP-scope change (both files were bundled
+    into one ship since both were quality-gates-verified together). `resolved_by:` stamped in the issue doc,
+    `pm@0f03dd91d`.
+- **KRX launcher shipped and launched for real.** `deployment-service` quickmerge raced another slot's concurrent push
+  once (sentinel invalidated between gate-pass and quickmerge, same high-shared-repo-velocity pattern as all session) —
+  re-ran the gate against the new HEAD (`9145ff89a`, fresh green, 66s) and quickmerged immediately on the retry, no
+  further races. Code tarball refreshed (`create-code-tarballs.sh`, all 4 repos re-pinned including
+  `unified-api-contracts@68c4c371dfea`). Ran `launch-tradfi-bf-krx-equities-ohlcv-24h.sh` for real (no `--dry-run`): all
+  8 year-shard VMs (2019–2026) launched and confirmed `RUNNING`/SPOT in `asia-northeast1-c`
+  (`tradfi-bf-krx-eq-ohlcv-24h-{2019..2026}-20260722-19*`). Not yet verified for actual row capture — check the manifest
+  query in the launcher's own post-launch instructions (`gsutil cp .../availability_index.parquet` + groupby
+  `venue==KRX, data_type==ohlcv_24h`) after the VMs have had time to run (Yahoo daily fetch across 3 tickers × up to 8
+  years, should be fast — check within an hour, not immediately).
+- **PA-2021 palladium backfill**: confirmed still `RUNNING` (`tradfi-bf-cme-ohlcv-1m-pa-2021-20260722-160825`, launched
+  08:08Z), serial console shows steady ~60s-cadence `gsutil` heartbeat activity — alive, not stalled. Not yet confirmed
+  complete.

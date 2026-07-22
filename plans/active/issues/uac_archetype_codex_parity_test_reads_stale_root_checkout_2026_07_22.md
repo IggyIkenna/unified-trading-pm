@@ -24,7 +24,7 @@ summary: >-
   `None` (skip) in an ephemeral CI container with no PM checkout, so this parity check is effectively
   local-workspace-only and has apparently never been exercised against a fresh checkout since the per-slot-worktree
   migration.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -43,7 +43,7 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: data-pipeline
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: uac@68c4c371dfeab875ee8d78b1b6882d631614c570
 locked_by:
 source:
   [
@@ -102,3 +102,24 @@ Two independent fixes, either sufficient alone:
    worktrees are the standing model — the env var made sense pre-migration when there was one shared checkout, not N.
 
 No manifest/GCS/prod data involved; this is a pure local dev-environment / test-harness fix.
+
+## Resolution (2026-07-22, independently hit by slot-1, same root cause)
+
+Implemented fix #2 (`_find_codex_markdown()`'s resolution order) rather than #1 — a stale-checkout `git pull` only fixes
+this machine's outer root copy once and drifts again, since nothing keeps it current; the resolution-order fix is
+permanent and applies to every slot/machine that ever has this env var pointed above the per-slot worktree root.
+
+**Change**:
+`unified-api-contracts/tests/internal/unit/test_archetype_capability_manifest_parity.py::_find_codex_markdown()` now
+tries the ancestor-directory walk from `__file__` FIRST (always resolves to the CALLER's own live, synced slot checkout
+under the per-slot-worktree model) and falls back to `$UNIFIED_TRADING_WORKSPACE_ROOT` only if that walk finds nothing
+(e.g. a genuinely isolated CI container with no sibling PM checkout at all — the one case the env var fallback still
+legitimately covers). Verified: all 17 tests in the file pass locally post-fix, including the 3 that were failing
+(`test_codex_markdown_has_section_for_every_registered_archetype`,
+`test_codex_markdown_family_groupings_match_uac_family_enum`,
+`test_codex_markdown_archetype_appears_under_correct_family_section`) — confirming the live slot-1 checkout already had
+all 9 families / 53 archetypes documented (matching this doc's own note that slot-3's checkout was already current), it
+was purely a resolution-order bug, zero doc content was ever missing or needed writing.
+
+Did NOT touch the stale outer-root `unified-trading-pm` checkout itself (left as-is — orphaned pre-Path-B debris, out of
+scope for this fix and not blocking anything now that the test no longer reads it first).

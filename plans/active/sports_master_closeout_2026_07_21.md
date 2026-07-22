@@ -133,42 +133,42 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
       — ALL 24 SHARDS, 100% CLEAN:**
 
       | metric | value |
-                                                          | --- | --- |
-                                                          | target objects written | **275,136** |
-                                                          | verify=PASS | **275,136 (100%)** |
-                                                          | verify=FAIL | **0** |
-                                                          | quarantined (unmapped sport_key) | **0** |
-                                                          | no_clobber violations | **0** |
+                                                              | --- | --- |
+                                                              | target objects written | **275,136** |
+                                                              | verify=PASS | **275,136 (100%)** |
+                                                              | verify=FAIL | **0** |
+                                                              | quarantined (unmapped sport_key) | **0** |
+                                                              | no_clobber violations | **0** |
 
-                                                          Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
-                                                          **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
-                                                          `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
-                                                          Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
-                                                          `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
-                                                          **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
-                                                          scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
-                                                          separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
-                                                          not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
-                                                          own manifest-swap/delete (see next item).
+                                                              Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
+                                                              **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
+                                                              `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
+                                                              Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
+                                                              `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
+                                                              **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
+                                                              scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
+                                                              separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
+                                                              not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
+                                                              own manifest-swap/delete (see next item).
 
 - [x] [SCRIPT] P0. ✅ **manifest-swap TOOL BUILT + dry-run-verified (2026-07-22)** — `market-tick-data-service@11e2052b`
       `scripts/sports/league_id_relocation/manifest_swap_2026_07_22.py`. Real dry-run against the actual 24 report JSONs
       (no GCS index read/write, always-safe mode):
 
       | metric | value | cross-check |
-                                      | --- | --- | --- |
-                                      | report target entries seen | **275,136** | = the relocation COPY's exact PASS count |
-                                      | skipped (verify != PASS) | **0** | = the relocation COPY's exact FAIL count |
-                                      | planned ADD canonical rows | **275,136** (sum target_rows=54,835,957) | 1:1 — no ADD-key collisions (the COPY step already grouped multiple raw sources under one canonical target, so every report entry is already a distinct (day,venue,canon) key) |
-                                      | planned REMOVE stale (day,venue,raw_league_id) tuples | **260,298** | = the original single-walk index's exact raw-object row count |
+                                          | --- | --- | --- |
+                                          | report target entries seen | **275,136** | = the relocation COPY's exact PASS count |
+                                          | skipped (verify != PASS) | **0** | = the relocation COPY's exact FAIL count |
+                                          | planned ADD canonical rows | **275,136** (sum target_rows=54,835,957) | 1:1 — no ADD-key collisions (the COPY step already grouped multiple raw sources under one canonical target, so every report entry is already a distinct (day,venue,canon) key) |
+                                          | planned REMOVE stale (day,venue,raw_league_id) tuples | **260,298** | = the original single-walk index's exact raw-object row count |
 
-                                      Both totals landing exactly on already-independently-verified numbers is strong evidence the ADD/REMOVE logic is
-                                      correct. **NOT YET APPLIED to prod** — `--apply-prod` (live-index read-only PLAN) and
-                                      `--apply-prod --confirm-prod-write` (the actual snapshot→REMOVE→ADD→verify write) are deliberately NOT run this
-                                      session; this is a correctness-critical, irreversible-adjacent step that needs its own unhurried, carefully-verified
-                                      pass — **this is the clear next action** for whichever session picks this plan back up. Also found + fixed 2 real
-                                      codex-compliance violations during build (6x banned `# type: ignore[attr-defined]` → sanctioned
-                                      `# pyright: ignore[reportAttributeAccessIssue]`; a hardcoded prod project ID in the test file).
+                                          Both totals landing exactly on already-independently-verified numbers is strong evidence the ADD/REMOVE logic is
+                                          correct. **NOT YET APPLIED to prod** — `--apply-prod` (live-index read-only PLAN) and
+                                          `--apply-prod --confirm-prod-write` (the actual snapshot→REMOVE→ADD→verify write) are deliberately NOT run this
+                                          session; this is a correctness-critical, irreversible-adjacent step that needs its own unhurried, carefully-verified
+                                          pass — **this is the clear next action** for whichever session picks this plan back up. Also found + fixed 2 real
+                                          codex-compliance violations during build (6x banned `# type: ignore[attr-defined]` → sanctioned
+                                          `# pyright: ignore[reportAttributeAccessIssue]`; a hardcoded prod project ID in the test file).
 
 - [ ] [DATA] P0. **league_id relocation — RUN THE MANIFEST-SWAP TOOL FOR REAL, then DELETE. Investigated 2026-07-21: no
       existing script fit before this session's new tool.**
@@ -193,45 +193,68 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
       6,110 objects, see the DATA-WIPE section above).
 
       **UPDATE 2026-07-22 (P0 chain resume):** manifest-swap `--apply-prod --confirm-prod-write` EXECUTED
-                                  (`mtds@250d377b` also ships a `verify_swap()` false-positive fix found during this run — see the third-wave
-                                  log below for the full evidence). MDPS reprocess + coverage-registry refresh (`uac@8e8d2e5b`) also landed this
-                                  session. **The delete sub-step is NOT executed** — it is a codex hard stop
-                                  (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3 #1: any prod-bucket delete is human-only, at
-                                  any confidence, under `/autonomous` or otherwise) — evidence is prepared for operator review, not auto-run.
-                                  **Also confirmed live: the delete would be a leaky bucket as of right now** — this is the
-                                  ALREADY-TRACKED **K1** todo in `sports_consolidated_closeout_2026_07_19.md` Track C (found via
-                                  `/data-pipeline-reconciliation sports` — not a new gap), supplemented with live evidence + a 3rd call
-                                  site in `issues/sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md`: the live daily
-                                  odds writer never had its `instrument_type=odds/data_type=trades` casing fixed (only `league_id` was,
-                                  2 days before this migration), so every new day's capture keeps landing at the non-canonical
-                                  path/manifest-value. Fix that FIRST (K1, with its own documented MDPS-scanner sequencing pre-step)
+                                      (`mtds@250d377b` also ships a `verify_swap()` false-positive fix found during this run — see the third-wave
+                                      log below for the full evidence). MDPS reprocess + coverage-registry refresh (`uac@8e8d2e5b`) also landed this
+                                      session. **The delete sub-step is NOT executed** — it is a codex hard stop
+                                      (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3 #1: any prod-bucket delete is human-only, at
+                                      any confidence, under `/autonomous` or otherwise) — evidence is prepared for operator review, not auto-run.
+                                      **Also confirmed live: the delete would be a leaky bucket as of right now** — this is the
+                                      ALREADY-TRACKED **K1** todo in `sports_consolidated_closeout_2026_07_19.md` Track C (found via
+                                      `/data-pipeline-reconciliation sports` — not a new gap), supplemented with live evidence + a 3rd call
+                                      site in `issues/sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md`: the live daily
+                                      odds writer never had its `instrument_type=odds/data_type=trades` casing fixed (only `league_id` was,
+                                      2 days before this migration), so every new day's capture keeps landing at the non-canonical
+                                      path/manifest-value. Fix that FIRST (K1, with its own documented MDPS-scanner sequencing pre-step)
 
-                                  **5-part-proof checklist for the delete** (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 1/6
-                                  format — prepared for operator review, per the hard-stop above this is evidence, not an execution):
+                                      **5-part-proof checklist for the delete** (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 1/6
+                                      format — prepared for operator review, per the hard-stop above this is evidence, not an execution):
 
-                                  ```
-                                  Location:            gs://market-data-tick-sports-prd-{pid}/raw_tick_data/.../league_id=<RAW>/instrument_type=odds/data_type=trades/...
-                                  Part 1 twin probe:   PASS — relocation executor verified 275,136/275,136 canonical targets written (mtds@b2a49317
-                                                        run, shard reports gs://deployment-scripts-.../canonical-migration-sports-reloc/reports/).
-                                  Part 2 content:      PASS — relocation's own row-count verify (target_rows, verify=PASS per object) +
-                                                        THIS SESSION's independent manifest-swap re-derivation landed on the exact same totals
-                                                        (275,136 ADD / 260,298 REMOVE) with zero collisions — two independent computations agree.
-                                  Part 3 writers:      FAIL — grep+READ confirms market-tick-data-service/.../venue_fetch.py:887,896 (+ the
-                                                        matching shard_counts key, manifest_finalize.py:347) STILL writes NEW objects to this
-                                                        exact non-canonical instrument_type=odds/data_type=trades shape every day (only league_id
-                                                        casing was fixed at the source, 2026-07-20, ad4f1872). Live writer confirmed active, not
-                                                        a docstring claim — see the issue doc above for the full call-path trace.
-                                  Part 4 readers:      NOT BLOCKING once Part 3 passes — MDPS's reprocess reader lists broadly (doesn't
-                                                        discriminate old/new shape) and its adapter dedups on content (fixture_id/bookmaker/
-                                                        market_type/horizon_idx), so it tolerates old+new coexisting; not itself a delete blocker.
-                                  Part 5 twin coverage: 100% for the RELOCATED historical cells (verified) — 0% for any cell written AFTER the
-                                                        relocation's index walk, since the live writer keeps adding new non-canonical cells daily.
-                                  Disposition:         no-migrate-first — Part 3 fails. NOT a partial/gray call: the candidate delete set is
-                                                        GROWING, not fixed, until the live-writer fix (issue doc todos 1-2) ships and is verified
-                                                        live. Re-evaluate only after that.
-                                  Hard stop:           prod-bucket (codex § 3 #1) — human-only regardless of proof outcome.
-                                  ```
-                                  (or accept the delete needs periodic re-running) — full 3-call-site spec is in the issue doc.
+                                      ```
+                                      Location:            gs://market-data-tick-sports-prd-{pid}/raw_tick_data/.../league_id=<RAW>/instrument_type=odds/data_type=trades/...
+                                      Part 1 twin probe:   PASS — relocation executor verified 275,136/275,136 canonical targets written (mtds@b2a49317
+                                                            run, shard reports gs://deployment-scripts-.../canonical-migration-sports-reloc/reports/).
+                                      Part 2 content:      PASS — relocation's own row-count verify (target_rows, verify=PASS per object) +
+                                                            THIS SESSION's independent manifest-swap re-derivation landed on the exact same totals
+                                                            (275,136 ADD / 260,298 REMOVE) with zero collisions — two independent computations agree.
+                                      Part 3 writers:      FAIL — grep+READ confirms market-tick-data-service/.../venue_fetch.py:887,896 (+ the
+                                                            matching shard_counts key, manifest_finalize.py:347) STILL writes NEW objects to this
+                                                            exact non-canonical instrument_type=odds/data_type=trades shape every day (only league_id
+                                                            casing was fixed at the source, 2026-07-20, ad4f1872). Live writer confirmed active, not
+                                                            a docstring claim — see the issue doc above for the full call-path trace.
+                                      Part 4 readers:      NOT BLOCKING once Part 3 passes — MDPS's reprocess reader lists broadly (doesn't
+                                                            discriminate old/new shape) and its adapter dedups on content (fixture_id/bookmaker/
+                                                            market_type/horizon_idx), so it tolerates old+new coexisting; not itself a delete blocker.
+                                      Part 5 twin coverage: 100% for the RELOCATED historical cells (verified) — 0% for any cell written AFTER the
+                                                            relocation's index walk, since the live writer keeps adding new non-canonical cells daily.
+                                      Disposition:         no-migrate-first — Part 3 fails. NOT a partial/gray call: the candidate delete set is
+                                                            GROWING, not fixed, until the live-writer fix (issue doc todos 1-2) ships and is verified
+                                                            live. Re-evaluate only after that.
+                                      Hard stop:           prod-bucket (codex § 3 #1) — human-only regardless of proof outcome.
+                                      ```
+                                      (or accept the delete needs periodic re-running) — full 3-call-site spec is in the issue doc.
+
+- [x] [CODE] P0. ✅ **K1 — live writer casing flip SHIPPED** — `market-data-processing-service@fa4281d2` (dual-accept
+      pre-step) + `market-tick-data-service@2536b91c` (the atomic 7-call-site writer flip). Full evidence + the
+      corrected call-site list (2 sites the original todo either mis-cited or missed entirely) in the "fourth wave"
+      Progress Log below.
+- [x] [DATA] P0. ✅ **K2 — historical casing migration, GCS copy phase COMPLETE** — 260,298/260,298 objects, 0 failures,
+      0 unresolved mismatches, 43.3min run (2026-07-22). Tool:
+      `market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_casing_2026_07_22.py`. Full evidence
+      in the "fourth wave" Progress Log below.
+- [ ] [DATA] P0. **K2 — manifest-swap (PLAN then EXECUTE).** Report generator
+      (`generate_k2_manifest_swap_report_2026_07_22.py`) built + verified against a 1-day sample; full-scope run was IN
+      PROGRESS when this checkbox was last updated. Once the report is written: run
+      `manifest_swap_2026_07_22.py --apply-prod` (PLAN, read-only) against the live index, review the delta, then
+      `--apply-prod --confirm-prod-write` (EXECUTE). NOT a new tool — reuses the existing, already-tested manifest-swap
+      executor with a K2-shaped report as input.
+- [ ] [CODE] P1. **Ship the 2 new K2 script files** (`migrate_sports_casing_2026_07_22.py`,
+      `generate_k2_manifest_swap_report_2026_07_22.py`) — both fully tested (the former via its own 100%-success prod
+      run; the latter via a verified sample) but were still UNCOMMITTED when `/pre-compact` fired mid-session. QG +
+      quickmerge, same pattern as every other tool shipped this session.
+- [ ] [DATA] P1. **Prune the 6,110 phantom `soccer_*` league_id manifest rows** — a SEPARATE, smaller population from K2
+      (the underlying GCS objects were already deleted back in the `mtds_t2_6_league_case_duplicate_population` pass;
+      these are manifest-only phantom rows). Route via the sanctioned GCS-walk manifest rebuild, never a session
+      hand-edit. Not started.
 
 - [x] [CODE] P0. ✅ **Cross-AG bleed WRITER FIXED** — `market-tick-data-service@07aa4271` (blessed via
       `reprovenance_bypass.sh`, content commit `299ef540`). Root cause: the multi-`--asset-group` orchestrator run
@@ -865,3 +888,93 @@ attention, snapshot-verified; (4) MDPS reprocess; (5) coverage-registry refresh;
 first, operator-pre-authorised delete of the old non-canonical objects; (7) `/data-pipeline-reconciliation` for sports;
 (8) sweep the remaining P1/P2 items (`is_bookmaker_league_covered` raw-name keying, peripheral-bucket vocabulary
 contamination). Hard-stops stay human-only throughout.
+
+---
+
+## Progress Log — 2026-07-22 fourth wave ("do all these" — K1 live-writer casing fix + K2 historical migration)
+
+**Context**: items 1-7 of the P0 chain above (bleed re-measure → manifest-swap EXECUTE → MDPS reprocess →
+coverage-registry refresh → delete-evidence prep → `/data-pipeline-reconciliation` sports) all landed earlier the same
+day (third-wave log + the reconciliation report shipped `pm@c2a4416b4`). The reconciliation surfaced K1 (the live odds
+writer never had its `instrument_type`/`data_type` casing fixed) as duplicating an already-tracked
+`sports_consolidated_closeout_2026_07_19.md` Track-C todo — corrected same-session (`pm@47f74fd0e`). The operator then
+asked to complete BOTH K1 and K2 plus the phantom-row prune. This wave is that work.
+
+**K1 — LIVE WRITER CASING FLIP: ✅ SHIPPED + VERIFIED.**
+
+- Investigated the true blast radius via two dedicated agent investigations before touching code — the ORIGINAL K1
+  todo's own threat model (MDPS's `orchestration_scanner.py` path-segment matcher) turned out to be a **non-issue**:
+  batch MDPS never requests `data_type="trades"` for sports through that scanner (it requests the adapters' own output
+  names — `odds_movement`/`arbitrage_opportunity`/`odds_snapshot`/`odds_horizon_bucket` — none of which are
+  partition-gated, so the scanner's fallback branch never inspects the `data_type=` segment for sports at all). The REAL
+  cross-repo risk, found by the second investigation, was a DIFFERENT axis entirely: MDPS's
+  `live_workers_streaming.py::_streaming_filter_slice` filters the IN-FILE parquet `data_type` COLUMN via each sports
+  adapter's `related_data_types` list (`["odds","trades"]`, lowercase) — reachable from BOTH batch and live paths.
+  **Step 0 (safe pre-step, additive-only)**: extended `related_data_types` to `["odds","trades","ODDS","TRADES"]` in all
+  4 sports MDPS adapters — shipped **`market-data-processing-service@fa4281d2`**, 62 tests + full QG green, CI confirmed
+  green.
+- **Step 1 (the atomic writer flip, MTDS)** — shipped **`market-tick-data-service@2536b91c`**, 6812 tests passed (1
+  unrelated pre-existing DEFI shard-count drift, confirmed via `git log` on `uac@9a047a31` — zero relation to sports). 7
+  call sites flipped together in one commit (traced via grep-then-READ, not assumed):
+  1. `venue_fetch.py::_build_sports_shard_path` — the 2 GCS path-segment literals.
+  2. `venue_fetch.py` — the `shard_counts` dict-key literals feeding the manifest row.
+  3. `manifest_finalize.py:347` — the branch gate for source/pipeline_mode resolution + `available_at` stamping
+     (confirmed: missing this one would have silently regressed `sports_mtds_available_at_manifest_gap`).
+  4. `odds_api_adapter.py:761` — the in-file parquet `"data_type"` column value (a THIRD, previously-undocumented axis —
+     neither the original K1 todo nor the first investigation agent had found this one).
+  5. `sentinels.py:126-127` — the captured-shard-set gate (the K1 todo's own citation for this line, "180-197", was
+     WRONG — corrected during investigation, the real site is 126-127).
+  6. `sentinels.py:305-312, 347-353, 417-423` — v1 + v2 sentinel row-key builds (3 distinct blocks, not the 1-2 the
+     original todo implied).
+  - `sentinels.py:228,391` deliberately left untouched — confirmed via investigation to be static UAC/UTL
+    reference-vocabulary lookups (`SOURCE_PRIORITY`, `is_expected_for_source`), orthogonal to physical storage casing.
+  - 8 existing unit tests updated to the new canonical expectations (they previously asserted the OLD lowercase
+    convention as "correct" — a latent test-quality gap; they now genuinely exercise the real casing, not vacuously).
+
+**K2 — HISTORICAL CASING MIGRATION: ✅ GCS COPY COMPLETE, manifest-swap IN PROGRESS.**
+
+- Built `market-tick-data-service/scripts/sports/league_id_relocation/migrate_sports_casing_2026_07_22.py` — simpler
+  than the league_id relocation (pure casing rename, no merge-on-write/row-splitting). Real, measured scope (GCS-listing
+  ground truth, NOT the manifest-row census, which turned out to measure something structurally different — manifest
+  ROWS are far more granular than physical objects, 1,337,763 vs the true **260,298** GCS objects — do not reuse that
+  1.34M figure for anything object-count-related): **260,298 lowercase objects total**, matching exactly the original
+  relocation's raw-object walk count.
+- **Real, load-bearing finding during dry-run validation**: an early sample showed 81/1,115 objects (7.3%) as "content
+  mismatch" against their existing canonical twin. Investigated before building any auto-resolve logic — confirmed on
+  4/4 sampled mismatches that the canonical twin (written by the 2026-07-21 league_id relocation's snapshot-in-time
+  copy) is ALWAYS a clean, strict SUBSET of the current lowercase source (zero conflicting rows, zero twin-only rows) —
+  the raw source has simply grown since the relocation's copy (an ongoing historical backfill/recapture process keeps
+  appending to already-existing day files). Added a 3-way content classifier (`equivalent` / `src_superset` — safe,
+  auto-resync after snapshotting the stale twin to `_index/snapshots/k2_stale_twin_presync/` / `mismatch` — never
+  auto-resolved, flagged for manual review) instead of the cruder binary equivalence check the first draft had.
+- **Full run result (2026-07-22, 2,236 days, workers=16, 2,598s / 43.3 min)**: **260,298/260,298 — 100% resolved, ZERO
+  failures, ZERO unresolved mismatches.** `copied=97,730` (no twin existed) · `already_present_verified=154,224` (twin
+  existed, content-identical) · `resynced_stale_twin=8,344` (twin existed but stale, safely resynced after snapshotting
+  the old version) · `content_mismatch=0` · `failed=0`. Evidence log: `scratchpad/k2_apply_full_2026_07_22.log`
+  [session-local — the numbers above are the durable record].
+- **K2 manifest-swap**: rather than hand-roll a new REMOVE/ADD tool, built
+  `generate_k2_manifest_swap_report_2026_07_22.py` — a read-only pass over the now-canonical objects collecting real row
+  counts, emitting a report in the EXACT schema `manifest_swap_2026_07_22.py::load_reports()` already consumes (K2 is
+  precisely the "casing-only" scenario that tool's own docstring anticipated — raw league_id text == canon league_id
+  text, only the path casing differs — the same shape the `verify_swap()` false-positive fix earlier this session was
+  built for). Verified the generated report loads correctly against the existing tool (`dry-run` on a 1-day sample
+  matched exactly: 34 targets, 34 remove tuples). **Full-scope report generation was RUNNING IN THE BACKGROUND at the
+  moment `/pre-compact` was invoked** — 373,297 canonical objects found (this count exceeds 260,298 because it includes
+  BOTH the K2-migrated objects AND the pre-existing 275,136 from the league_id relocation, with some overlap between the
+  two sets not yet reconciled here), row-count pass was ~50,000/373,297 through when last checked. **NOT YET RUN**: the
+  manifest-swap tool's own `--apply-prod` PLAN or `--confirm-prod-write` EXECUTE against this report — those are the
+  next steps once report generation finishes.
+
+**Rule-9 forced-tradeoff / honesty note**: the two new K2 scripts (`migrate_sports_casing_2026_07_22.py`,
+`generate_k2_manifest_swap_report_2026_07_22.py`) were sitting UNCOMMITTED in the MTDS working tree when `/pre-compact`
+fired mid-turn — both are fully tested (the migration tool via its own 100%-success prod run; the report generator via a
+verified 1-day sample) and QG was launched immediately as part of this pre-compact pass. If this session ends before
+that QG + ship completes, the tool CODE is regenerable from this log's description but the PROD STATE (260,298 objects
+already migrated) is NOT reflected in git until shipped — a future session should `git status` the MTDS clone before
+assuming these tools don't exist.
+
+**What's next** (in order): (1) let the in-flight report-generation background task finish; (2) `--apply-prod` PLAN
+(read-only) against the live index to sanity-check the delta; (3) `--apply-prod --confirm-prod-write` EXECUTE; (4)
+verify; (5) the 6,110-row phantom `soccer_*` manifest-row prune (separate, smaller, via the sanctioned GCS-walk rebuild
+route — NOT yet started, NOT the same population as K2); (6) ship the K2 tool code + flip K1/K2 todos in
+`sports_consolidated_closeout_2026_07_19.md` Track C with full evidence.

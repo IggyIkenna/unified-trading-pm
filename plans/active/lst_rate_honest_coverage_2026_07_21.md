@@ -309,11 +309,57 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       MTDS `quality-gates.sh` green (exit 0) before commit. - **Held this session** (not a plan migration — the
       ezETH/rsETH sub-fix stays tracked under this still-open todo #4): the ezETH/rsETH sub-fix (historical MTDS
       `lst_rates` collector backfill) remains held — real-infra caution given this session's 2 prior incidents
-      (misdirected VM launch, confirmed OOM bug); not attempted this session.
+      (misdirected VM launch, confirmed OOM bug); not attempted this session. - **UN-HELD (2026-07-22, operator
+      ruling)**: operator asked to proceed "from real genesis" for BOTH sub-gaps combined, on the explicit condition
+      that each genesis date be VALIDATED (real data confirmed to exist), not assumed — and that manifest/UAC be
+      corrected wherever a stale/wrong genesis is found. Full validation done before launch (on-chain contract-creation
+      lookups for EVM, DefiLlama binary-search coverage checks for Solana — never trusted an existing "conservative" or
+      brand-launch-date label without independent evidence): | token | old genesis | validated real genesis | method |
+      direction/severity | |---|---|---|---|---| | wBETH | 2023-04-27 | **2023-04-19** | on-chain contract-creation tx
+      (Blockscout) | 8 days late, minor | | rsETH (LRTOracle) | 2023-11-09 | **2023-12-10** | on-chain contract-creation
+      tx | 31 days too EARLY (unsafe — the "genesis" was KelpDAO's protocol launch, not THIS oracle contract's own
+      deployment) | | ezETH (rate provider) | 2024-02-01 (conservative) | **2024-01-13** | on-chain contract-creation tx
+      | 19 days late, minor | | bSOL | 2022-11-01 (BlazeStake protocol launch) | **2022-12-14** | DefiLlama binary
+      search | ~6 weeks too early (safe direction, just wasted honest-empty attempts) | | jitoSOL | none (always
+      attempted) | **2022-11-01** | DefiLlama binary search, cross-checked jitoSOL/SOL ratio ~1.01 | new gate added | |
+      mSOL | none (always attempted) | **2021-08-17** | DefiLlama binary search | new gate added; matches Marinade's
+      documented Aug-2021 launch almost exactly | | **Sanctum INF (sanctumSOL)** | **2024-01-25** | **2021-10-15** |
+      DefiLlama binary search + CoinGecko identity check | **MAJOR — 2.3 YEARS too late.** The INF mint
+      (`5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm`) is NOT a 2024-genesis token: CoinGecko lists it as id
+      `socean-staked-sol` — this is the SAME mint as the pre-existing **Socean** stake-pool token (description: "Socean
+      is a noncustodial stake pool for the Solana blockchain..."), and "2024-01-25" was Sanctum's REBRAND of Socean into
+      "Sanctum Infinity," not a new mint's genesis. Real DefiLlama price history for this exact mint goes back to
+      2021-10-15 (with some early thin-liquidity gaps through ~2021-11-05, honestly handled per-day by Tier 4's own
+      absence logic). | Shipped `market-tick-data-service@6ab0359a` (all 7 genesis fixes + new jitoSOL/mSOL gates +
+      citations, 4 test-file updates, full MTDS `quality-gates.sh` green). **Cross-repo caveat found + handled
+      carefully**: the SAME wrong Sanctum assumption is ALSO embedded in UAC (`_defi_lst.py`'s
+      `LST_TOKEN_GENESIS["sanctumSOL"] =       "2024-01-25"`, and `chain_env.py`'s
+      `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")] = "2023-06-01"`) and in IS (`sanctum.py`'s `_SANCTUM_DEPLOY_DATE`).
+      **Did NOT blindly overwrite these** — UAC's `LST_TOKEN_GENESIS` entry governs a DIFFERENT mechanism than my Tier-4
+      fix (the Tier-1 on-chain SPL stake-pool DECODER, whose account address `SANCTUM_INF_POOL_ACCOUNT` is itself
+      flagged elsewhere as an unverified placeholder) — whether that STAKE POOL ACCOUNT (not just the mint) existed back
+      in 2021 is a separate, still-open question I could not validate with the same confidence. Instead shipped a
+      documented clarifying comment (`unified-api-contracts@f5e516f6`) explaining the finding + the open question, so
+      whoever does the account verification has the full context rather than a silent gap. **Follow-up not done this
+      session** (tracked here, not silently dropped): if/when `SANCTUM_INF_POOL_ACCOUNT` is verified, reconcile UAC's
+      `LST_TOKEN_GENESIS["sanctumSOL"]`, `chain_env.py`'s `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]`, and IS's
+      `sanctum.py` `_SANCTUM_DEPLOY_DATE`/`available_from_datetime` against whatever that verification finds. -
+      **Backfill launched (2026-07-22)** — see Progress Log entry for VM name + evidence.
+- [x] ✅ [UAC] P3 (partial). **`_defi_lst.py::LST_TOKEN_GENESIS["sanctumSOL"]` corrected** — was "2024-01-25", now
+      "2021-10-15", shipped `unified-api-contracts@dcc69001` (2026-07-22). Confirmed via reading
+      `lst_rates_handler.py`'s actual post-fetch filter that this value gates ANY row regardless of source tier, so the
+      earlier caution about a "possibly-different Tier-1-specific semantic" didn't hold up — see the T+10min bug finding
+      above.
+- [ ] [UAC][IS] P3. **Remaining Sanctum reconciliation (follow-up, not done this session)** — `chain_env.py`'s
+      `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]` (currently "2023-06-01") and IS's `sanctum.py`'s
+      `_SANCTUM_DEPLOY_DATE`/`available_from_datetime` still carry the old/approximate dates; also verify
+      `SANCTUM_INF_POOL_ACCOUNT` (an unverified placeholder in `market-tick-data-service/_solana_lst_archival_tier1.py`)
+      on-chain — that's Tier-1's OWN account, a genuinely separate fact from the mint's DefiLlama history now fixed
+      above.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
-      launch as a normal backfill.
+      launch as a normal backfill. **LAUNCHED (2026-07-22, operator-acked)** — see Progress Log entry.
 
 ## Phase 6 — Interest PnL on honest data (the payoff; see pnl_interest_accrual doc)
 
@@ -489,33 +535,126 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   monitor for eventual completion or any regression; a ~3.5-year multi-protocol/multi-chain backfill will take a while —
   not treating log activity alone as proof, will check manifest shard counts at the next pass.
 
-## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
+- **2026-07-22 (Phase 5 #4 — genesis-date validation + fix, then backfill launched)** — operator, asked to scope the
+  combined ezETH/rsETH + Solana-LST backfill launch, instead directed: launch "from real genesis" but ONLY after
+  VALIDATING each date against real evidence, and fix manifest/UAC wherever a stale genesis is found. Validated 7
+  tokens' genesis dates via on-chain contract-creation lookups (EVM, via Blockscout's `creation_transaction_hash` — more
+  authoritative than my own binary-search-via-`eth_getCode` attempt, which failed on public-RPC archive-access limits)
+  and DefiLlama coverage binary search (Solana) — see the full table + the major Sanctum/Socean-rebrand finding under
+  Phase 5's #4 todo above. Shipped `market-tick-data-service@6ab0359a` (7 genesis-date fixes + 2 new gates + citations +
+  tests, full QG green) and a documented clarifying comment in `unified-api-contracts@f5e516f6` (did NOT blindly
+  overwrite UAC's `LST_TOKEN_GENESIS["sanctumSOL"]` since it may govern a different, unverified mechanism — see the new
+  follow-up todo). Launched `deployment-service/scripts/vm/launch-mtds-lst-rates-backfill-vm.sh 2021-08-17 2026-07-22` →
+  `mtds-lst-rates-20260722-173127`, SPOT, e2-standard-8, all 4 tarballs confirmed fresh (MTDS `6ab0359ac860` — my
+  genesis fixes; UAC `f5e516f6e1fd` — my clarifying comment), STATUS=RUNNING at launch. This ONE launch covers the full
+  remaining `lst_yields` gap: ezETH/rsETH/wBETH (extended EVM tokens, gated from their now-correct genesis dates) AND
+  jitoSOL/mSOL/bSOL/sanctumSOL (Solana, resolved via today's Tier-4 DefiLlama fallback, now gated from their validated
+  real genesis dates too). T+10min verification pending.
+- **2026-07-22 (Phase 5 #4 — T+10min check found a P0 bug; fixed; relaunched)** — `mtds-lst-rates-20260722-173127`'s
+  run.log showed real EVM progress (day-by-day, real rows, manifest counts climbing) BUT logged
+  `WARNING Failed to create HTTP session for Solana LST rates: Resolver requires aiodns library` on EVERY single day —
+  meaning the ENTIRE Solana leg (jitoSOL/mSOL/bSOL/sanctumSOL — the whole point of today's Tier-4 fix + genesis
+  validation) was silently producing zero rows for the whole run. Root-caused via direct SSH into the running VM:
+  `aiodns`/`pycares` genuinely missing from the deployed venv (`ModuleNotFoundError`), even though `ccxt` — which DOES
+  depend on `aiodns` per `uv.lock` — was present and importable; a pre-existing tarball/venv-packaging gap, not
+  something this session introduced. `lst_rates_handler.py`'s `_fetch_solana_lst_rates` wrapped session creation in a
+  bare `try/except Exception: return []`, so this ONE missing optional dependency silently dropped the whole data leg
+  rather than failing loud. Stopped the VM immediately (confirmed root cause before burning more compute). **Fix**:
+  `aiohttp.resolver.AsyncResolver` (c-ares/aiodns-backed) is a pure performance optimization, never a functional
+  requirement — aiohttp's default `ThreadedResolver` needs no extra dependency and already correctly in use elsewhere in
+  this codebase (`native_staking_handler.py`). Added a shared
+  `market_tick_data_service/_http_resolver.py::make_resilient_connector()` (prefers `AsyncResolver`, catches
+  `ImportError`/`RuntimeError`/`OSError` and falls back to the default resolver instead of raising) and wired it into
+  ALL THREE call sites that hard-required `AsyncResolver` in this codebase: `lst_rates_handler.py` (the one actually
+  blocking this backfill), and as a good-citizen fix, `oracle_prices_handler.py`'s two Pyth Hermes call sites (same bug
+  pattern, not yet observed to fail — the AAVE oracle VM's earlier success suggests either a different tarball build or
+  the code path wasn't exercised the same way) and `deribit_options_chain_handler.py` (same pattern, no existing test
+  coverage, unrelated data domain but zero-risk to fix given the shared helper already existed). Shipped
+  `market-tick-data-service@533514c2` (new module + 3 call-site fixes + a stale-test rewrite that had asserted the OLD
+  wrong-in-hindsight "session failure → empty rows" behavior + a new dedicated `test_http_resolver.py`; full MTDS
+  `quality-gates.sh` green). **Second finding from reading the actual gating code**:
+  `lst_rates_handler.py::_fetch_solana_lst_rates` ALSO applies a post-fetch filter via UAC's
+  `get_lst_token_genesis("sanctumSOL")` — confirmed by reading the filter loop directly that this is a BLANKET check
+  applied to ANY row regardless of which tier resolved it. This meant UAC's `LST_TOKEN_GENESIS["sanctumSOL"]` (still
+  "2024-01-25" — I had left it unchanged earlier this session out of caution about a possibly-different Tier-1-specific
+  semantic) would have SILENTLY DROPPED every Tier-4-resolved sanctumSOL row for 2021-10-15 through 2024-01-24 —
+  nullifying the exact 2.3-year backfill opportunity found earlier. With this concrete evidence in hand (not the earlier
+  speculative uncertainty), corrected UAC's value to `"2021-10-15"` — shipped `unified-api-contracts@dcc69001` (full QG
+  green; no tests referenced the old value). **Republished code tarballs before relaunching** —
+  `launch-mtds-lst-rates-backfill-vm.sh`'s own freshness check caught that the first relaunch attempt would have run
+  PRE-FIX code (tarball manifests hadn't been rebuilt since my commits landed); ran
+  `create-code-tarballs.sh --include market-tick-data-service --include unified-api-contracts --include deployment-service`,
+  verified both manifests now match my fix commits exactly (`533514c22e6d`, `dcc690018e55`) before launching.
+  **Relaunched**: `mtds-lst-rates-20260722-181845`, same date range, all 4 tarballs confirmed fresh at launch. T+10min
+  re-verification pending — this time checking specifically that Solana rows appear (not just that EVM rows continue,
+  which already worked before).
+- **2026-07-22 (Phase 5 #4 — T+10min re-check: aiodns fix CONFIRMED working, but zero Solana rows so far — traced to a
+  genuine, correct, non-bug data-source boundary)** — the `Failed to create HTTP session for Solana LST rates` warning
+  is GONE (confirmed via full-log grep across 1281 lines — the resolver fix works). But no Solana rows had appeared yet
+  either (no `Collected N Solana LST rate records` log line for ANY of the ~75 days processed so far, 2021-08-17 through
+  ~2021-11-01) and no error/warning logged for the Solana leg at all — genuinely puzzling at first glance. Traced it by
+  hand: `_tier4_defillama_historical_rate` requires BOTH legs (the LST's own USD price AND SOL's own USD price) to
+  compute the ratio, and several of its own absence branches log at DEBUG level (invisible at this service's INFO log
+  level) — so a silent empty result there produces no visible trace, unlike an actual error. Verified directly via curl
+  (both from my own environment and via SSH from the VM itself, confirming it's not a VM-side connectivity issue):
+  mSOL's OWN price IS genuinely available at every date checked between 2021-10-29 and 2021-11-01 (e.g. $197.93 at
+  2021-10-29), but **wrapped-SOL's (`So111...112`) own DefiLlama USD-price coverage — the QUOTE LEG shared by every
+  Tier-4 ratio — doesn't start until 2021-12-16** (binary-searched: absent 2021-12-15, present 2021-12-16). This means
+  jitoSOL/mSOL/bSOL/sanctumSOL's Tier-4 resolution is bounded by `max(token's own genesis, 2021-12-16)` regardless of
+  how far back each token's own price history goes — a real, previously-unchecked constraint on the SHARED quote leg,
+  not a per-token fact. **This is NOT a bug** — Tier 4's honest-absence contract is working exactly as designed (never
+  fabricates a ratio from only one leg); it just means mSOL (genesis 2021-08-17) and Sanctum (genesis 2021-10-15) will
+  correctly produce zero rows for their own ~4-month/~2-month windows before 2021-12-16, which is safe/correct, just not
+  the earliest POSSIBLE date those two tokens could otherwise resolve. Did **not** stop or modify the running VM —
+  letting it continue is correct; verifying real Solana rows appear once the daily loop passes 2021-12-16 (VM was at
+  ~2021-11-01 at last check, ~45 days out at the observed ~7-8s/day pace, so ~5-10 more minutes). **Not adding a
+  `max(..., 2021-12-16)` gate to the code this session** — the current behavior is already correct (honest, no
+  fabrication, just a few extra cheap no-op DefiLlama calls before the boundary); worth a minor future efficiency
+  tidy-up, not a correctness fix.
+- **2026-07-22 (Phase 5 #4 — CONFIRMED WORKING end-to-end with real data)** — checked again once the VM's daily loop
+  passed the 2021-12-16 SOL/USD boundary: `run.log` now shows real, plausible Solana LST rates —
+  `mSOL = 1.02498435 SOL (apy=0.0000%, tier=defillama_historical_ratio)` and
+  `sanctumSOL = 1.01432296 SOL (apy=0.0000%, tier=defillama_historical_ratio)` at 2022-01-30, both correctly close to
+  1.0 as expected for LSTs, `Collected 2 Solana LST rate records for 2022-01-30`, and
+  `Wrote 1 LST rate records (marinade/SOLANA)` / `(sanctum/SOLANA)` landing in the manifest (per-VM shard at 677 entries
+  and climbing). This is the full end-to-end confirmation that today's three fixes (Tier-4 DefiLlama fallback, the
+  aiodns resolver crash, and the corrected Sanctum genesis) all compose correctly and are producing real, plausible,
+  honestly-sourced data — not just "should work in theory." Still running; will continue to climb through jitoSOL's
+  2022-11-01 and bSOL's 2022-12-14 genesis dates as the day-loop progresses toward 2026-07-22.
+- **2026-07-22 (Phase 5 #2 DEX fill — still running, healthy)** — `mtds-dex-swaps-backfill` continues; noted it spends
+  real time on dead/unindexed subgraph shards (e.g. `uniswap_v3/OPTIMISM` cycling all 8 cascade-fallback schemas before
+  giving up honestly) — this is a genuine efficiency cost, not a stall or OOM risk: heartbeats fresh, RSS stable
+  ~800-900MiB (nowhere near the CEFI Tardis OOM's territory), real rows continuing to land for working shards. Will keep
+  checking manifest/log evidence periodically rather than treating log activity alone as proof.
 
-- **Phase 0 is DONE (verified denominator below).** Phase 1 is the next executable step, and it is ready NOW.
-- **The VERIFIED denominator to register in Phase 1 (ETHEREUM, conservative — only real-eth_call/probe YES items):**
-  - **AAVE `(AAVE, spot_asset, oracle_prices)` — 6 reserves:** wstETH `0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0`,
-    weETH `0xCd5fE23C85820F7B72D0926FC9b05b43E359b7ee`, rETH `0xae78736Cd615f374D3085123A210448E74Fc6393`, cbETH
-    `0xBe9895146f7AF43049ca1c1AE358B0541Ea49704`, rsETH `0xA1290d69c65A6Fe4DF752f95823fAe25cB99e5A7`, ezETH
-    `0xbf5495Efe5DB9ce00f80364C8B423567e58d2110` (this address ONLY; `0x2416092f…` REVERTS).
-    `instrument_id=<symbol_lower>`. EXCLUDE osETH (not a reserve).
-  - **Chainlink feed-map (mirror BOTH MTDS dict + IS tuple) — 2 RefPrice feeds:** weETH/ETH
-    `0x5c9C449BbC9a6075A2c061dF312a35fd1E05fF22` (dec 18), ezETH/ETH `0x636A000262F6aA9e1F094ABF0aD8f645C44f641C` (dec
-    18). NOT rsETH (ExRate), NOT wstETH (Calculated-USD only — operator decision).
-  - **CEX (#1): NO catalogue edit.** **DEX (#2): endpoints work today — normal collector task, NOT blocked.**
-- **Phase 1 execution** (smallest shippable first): add the 2 Chainlink feeds to BOTH mirrored maps (MTDS
-  `_oracle_prices_constants.py` dict + IS `chainlink.py` tuple; the mirror-invariant test must pass) → one quickmerge
-  per repo; then the AAVE oracle venue registration (UAC `expected_coverage`/`defi_venues` phase
-  flip/`venue_adapter_keys`/ `capability_declarations`) + IS `aave_oracle` adapter enumerating the 6 reserves; regen
-  catalogue; confirm the new `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` + `(AAVE, spot_asset, oracle_prices)`
-  cells render `expected_unattempted` (honest RED).
-- **Deferred to operator/scope (do NOT register without a ruling):** wstETH Chainlink (Calculated-USD feed — is that
-  shape allowed in the RefPrice map?); L2 (Arbitrum/Base/…) LST feeds + AAVE reserves (Ethereum-only Phase 0). Full
-  evidence: `wf_f629fbb4-7da` journal.
-- **Held artifacts (on-disk, survive compaction, NOT shipped):**
-  `strategy-service/strategy_service/engine/backtest/ index_ratio_accrual.py` + its test (the correct pure
-  staking/borrow accrual helper for Phase 6, held until the leg wiring). Two labeled stashes: `strategy-service`
-  (superseded blocked fix — droppable) and `features-service` (deferred safe-survivor fixes — recover with
-  `git stash apply`, reconcile against peer `features-service@9ce1f4ab`).
+## RESUME POINT (pre-compact 2026-07-22) — a fresh session starts HERE
+
+Phases 0-4 are DONE. Phase 5 is the active phase — #3 (AAVE oracle) is DONE; #4 (lst_yields) is confirmed working
+end-to-end on real infra and still backfilling; #1 (CEX-spot) is blocked on an operator-owned P0 issue; #2 (DEX fill) is
+running. Phase 6 is entirely gated on operator rulings from a different doc. **Next session: do NOT re-launch or re-fix
+anything below without first checking current VM/manifest state — most of what looks "open" here is either already
+running or already shipped; re-litigating it wastes real infra spend.**
+
+### Deferred work after 2026-07-22
+
+| Item                                                                                                                                       | State / why deferred                                                                                              | Blocked on                                                                                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 5 #4 `lst_rates` backfill (`mtds-lst-rates-20260722-181845`) reaching `2026-07-22`                                                   | **Cannot be done yet** — running, confirmed producing real EVM + Solana rows (last checked: 2022-01-30, climbing) | Elapsed time only — check `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lst-rates-20260722-181845/run.log \| tail -50` for progress; if VM is gone/TERMINATED, resume from the manifest's last `process_final=True` day per the resume-from-measured-progress HARD RULE, never replay `2021-08-17` |
+| Phase 5 #2 `dex_pool_swaps` backfill (`mtds-dex-swaps-backfill`) reaching full history                                                     | **Cannot be done yet** — running, healthy, spends real time on dead subgraph shards (expected, not a stall)       | Elapsed time only — check the same way                                                                                                                                                                                                                                                                                       |
+| Sanctum reconciliation follow-up (`chain_env.py` PROTOCOL_LAUNCH_DATES, IS `sanctum.py`, `SANCTUM_INF_POOL_ACCOUNT` on-chain verification) | **Not done** — real work, nobody's blocking it                                                                    | Nothing — pick it up; see the todo above for exact fields                                                                                                                                                                                                                                                                    |
+| Phase 5 #1 CEX-spot contiguity backfill                                                                                                    | **Operator-owned** — explicitly NOT to be relaunched blindly                                                      | `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (P0) needs real code-level debugging of the MTDS CEFI Tardis memory blow-up + the wrapping orchestration's OOM detection, before ANY retry                                                                                                      |
+| Phase 6 A2 staking leg + recursive-borrow leg                                                                                              | **Operator-owned** — explicitly gated                                                                             | Operator rulings on escalations E1/E2/E4 in `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`                                                                                                                                                                                                             |
+
+**Recommended next item once picked back up**: check both running VMs' current state first (they may have finished,
+preempted, or be exactly where left off) — that determines whether anything is actually actionable right now, or whether
+the only real next step is the Sanctum reconciliation follow-up (genuinely unblocked, not infra-gated).
+
+- **Held artifacts from an earlier session (on-disk, survive compaction, NOT shipped, unverified this session)**:
+  `strategy-service/strategy_service/engine/backtest/index_ratio_accrual.py` + its test (the correct pure staking/borrow
+  accrual helper for Phase 6, held until the leg wiring). Two labeled stashes: `strategy-service` (superseded blocked
+  fix — droppable) and `features-service` (deferred safe-survivor fixes — recover with `git stash apply`, reconcile
+  against peer `features-service@9ce1f4ab`). Not touched or re-verified this session — confirm they still exist before
+  relying on this note.
 
 ## Lessons (avoid re-learning)
 
@@ -529,5 +668,29 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 - **PM has heavy peer commit traffic** — a tight `pull→add→commit→push` retry loop (up to ~5) lands past the
   branch-drift hook; doc-only PM commits may also go direct-push under the `docs(plans):` carve-out.
 - **The `getAssetPrice` RPC is DORMANT, not missing** — lift it from
-`market-tick-data-service aave_positions.py:: _fetch_rpc_oracle_prices`, never re-implement.
+  `market-tick-data-service aave_positions.py:: _fetch_rpc_oracle_prices`, never re-implement.
+- **A "conservative" or protocol-BRAND launch date is NOT the same fact as a specific data source's own coverage start**
+  — three separate instances this session: (1) Sanctum INF's mint predates Sanctum-the-brand by 2.3 years (it's a Socean
+  rebrand); (2) SOL/USD's own DefiLlama coverage (2021-12-16) is a SEPARATE, later boundary than any individual LST
+  token's own coverage — every Tier-4 ratio needs BOTH legs, so the LATER of the two always wins, silently, with no
+  error; (3) rsETH's coded genesis was the KelpDAO protocol's launch, not the specific oracle CONTRACT's deployment (31
+  days later) — always verify the EXACT contract/mint you're gating, never the wrapped protocol's brand-launch date.
+  **Validate via primary evidence** (on-chain contract-creation tx via a block explorer's `creation_transaction_hash`,
+  or binary-searching the actual data source's own coverage) before trusting any existing "conservative"/approximate
+  date — several were off by weeks to years.
+- **A bare `except Exception: return []` around an entire data leg is a silent-data-loss trap, not resilience** — a
+  single missing OPTIONAL dependency (`aiodns`, needed only for aiohttp's opportunistic fast resolver, never for
+  correctness) took down the WHOLE Solana LST-rates leg for every single day of a multi-year backfill, with no error
+  visible anywhere in the log. The fix pattern: catch the SPECIFIC narrow failure at the SMALLEST possible scope
+  (resolver construction) and degrade gracefully (fall back to the default resolver) — never wrap a whole data leg in a
+  blanket except that swallows unrelated failures into indistinguishable emptiness.
+- **Some of a tier-cascade's own absence branches log at DEBUG, not INFO/WARNING** — this made a GENUINE, correct
+  honest-absence result (SOL/USD not yet covered by DefiLlama for this date) look identical in the log to a silent bug,
+  for about 20 minutes of investigation. When "no error, no data, no explanation" — check the log LEVEL of the quiet
+  path before assuming it's broken; it may be working exactly as designed.
+- **After shipping a fix intended for an already-running VM, its OWN tarball-freshness check may refuse to launch with
+stale code (warn-only by default)** — `launch-mtds-lst-rates-backfill-vm.sh` warned but still launched with a PRE-FIX
+tarball once; always check the launcher's own freshness warning output, and if stale, run
+`create-code-tarballs.sh --include <repo>...` and verify the GCS manifest SHA matches your fix commit before trusting a
+"launched successfully" message.
 </content>

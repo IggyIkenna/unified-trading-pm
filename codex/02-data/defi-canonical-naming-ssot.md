@@ -48,7 +48,7 @@ referenced_by:
     plans/audit/results/defi_c0_datastate_audit_2026_06_01.md,
   ]
 owner:
-last_reviewed: 2026-06-27
+last_reviewed: 2026-07-22
 code_refs:
 ---
 
@@ -213,3 +213,16 @@ touching defi MTDS capture / honest-cov.
    `_canonical_instrument_id()` in `_aggregate_key`: the venue-prefix portion (before the first `:`) is normalised via
    `canonicalize_defi_venue_combined` so ghost-keyed rows collapse onto the canonical aggregate key. Provenance:
    `instruments-service@50308e0`.
+8. **`canonical_path_violations` was ORDER-blind — a live-only second writer diverged from the batch shape for ~1 month,
+   undetected (2026-06-26 → 2026-07-22).** The oracle parsed partition segments into a `key→value` dict, so it validated
+   segment PRESENCE/VALUES but never their SEQUENCE.
+   `market_tick_data_service.live.websocket_runner. live_tick_blob_path` (the LIVE DeFi write-time path) spliced
+   `chain=` in front of `venue=` for every non-cefi asset_group, landing DeFi live writes at
+   `asset_group=defi/chain={C}/venue={V}/...` — the reverse of the canonical batch shape (`build_defi_partition_path`:
+   `venue={V}/chain={C}/...`) — for the SAME shard. A hand-built reversed-order path proved the oracle returned the
+   IDENTICAL violation list as the correct order. FIX: `live_tick_blob_path` reordered to venue-before-chain
+   (`mtds@0fcfa803`); `canonical_path_violations` gained a defi-scoped structural check for venue-before-chain order +
+   lowercase `instrument_type` + `pipeline_mode=` position immediately after `day=` (`unified-api-contracts`, blocked on
+   an unrelated pre-existing QG gate as of 2026-07-22 — see `plans/active/defi_consolidated_closeout_2026_07_18.md`
+   Track 2). DeFi live crons are currently PAUSED, so no bad data is known to have landed in prod from this — a pure
+   code-path divergence, not a manifested capture defect.

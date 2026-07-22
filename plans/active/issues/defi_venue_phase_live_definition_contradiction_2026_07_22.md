@@ -353,6 +353,29 @@ in progress as of this writing):
   `(defi, spot_asset, bridge_events)` have no registered `SchemaContract` — any real capture attempt would raise
   `SchemaContractNotFoundError` and land as `attempted_failed` regardless.
 
+## RESOLVED 2026-07-22, later same day — all 5 deferred venues now fixed and manually-verified live
+
+All 5 venues deferred above are now fixed. Full per-venue detail (SHAs, Terraform apply, manual-trigger verification
+against real production infra): `plans/active/issues/five_broken_defi_capture_paths_shipped_2026_07_22.md`. Summary:
+
+- **FRAX**: new `collect-vault-share-price` Cloud Run Job + cron created (`deployment-service@600d31c`, applied).
+  Manually triggered, SUCCEEDED, real `sFRAX.parquet` object written for `day=2026-07-21`. Also resumed capture for the
+  sibling MAKER/ETHENA/YEARN_V3/MORPHO_VAULTS vaults in the same handler (see
+  `vault_share_price_handler_capture_gap_since_2026_06_22.md`).
+- **ALCHEMY**: crash-loop fix + venue rename shipped (`market-tick-data-service@522185a6`), new container image
+  confirmed built from that commit, manually triggered against the new image — proceeding cleanly through all 12 chains
+  with real per-chain `Wrote N gas fee records` log lines (the exact signal absent in all 4 prior crash-loop attempts).
+- **FLASHBOTS**: new `collect-mev-events` Cloud Run Job + cron created and applied. Manually triggered, SUCCEEDED in
+  48.41s, real `FLASHBOTS.parquet` object written for `day=2026-07-21`, no `SchemaContractNotFoundError`.
+- **ACROSS, STARGATE**: new `collect-bridge-events` Cloud Run Job + cron created and applied (covers both protocols in
+  one handler run). Manually triggered, SUCCEEDED, real per-token GCS objects written for both venues for
+  `day=2026-07-21`.
+
+This section does NOT resolve the doc's own core question (whether `phase=="pipeline"` venues with real, now-fully-live
+capture should count toward the `defi` `completeness_pct` denominator) — that remains an open operator decision,
+unchanged by this ship. What changes is that the 5 venues' underlying capture defects, which were blocking them from
+EVER being real candidates for that decision, are now fixed.
+
 **Backfill for the 6 shipped venues**: not yet run as of this section — pending completion of the crash-loop fix for the
 shared LST-rates cron path (same underlying OOM/timeout class of bug affecting `uts-prod-mtds-collect-gas- fees`, being
 investigated as part of the 5-broken-venues follow-up). Recommended plan (not yet executed): a local, direct 90-day
