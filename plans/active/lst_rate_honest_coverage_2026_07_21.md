@@ -345,14 +345,17 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `LST_TOKEN_GENESIS["sanctumSOL"]`, `chain_env.py`'s `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]`, and IS's
       `sanctum.py` `_SANCTUM_DEPLOY_DATE`/`available_from_datetime` against whatever that verification finds. -
       **Backfill launched (2026-07-22)** — see Progress Log entry for VM name + evidence.
-- [ ] [UAC][IS] P3. **Sanctum INF stake-pool-account genesis reconciliation (follow-up, not done this session)** —
-      verify `SANCTUM_INF_POOL_ACCOUNT` (currently an unverified placeholder in
-      `market-tick-data-service/_solana_lst_archival_tier1.py`) on-chain, then reconcile UAC's
-      `_defi_lst.py::LST_TOKEN_GENESIS["sanctumSOL"]` (currently "2024-01-25"), UAC's
-      `chain_env.py::PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]` (currently "2023-06-01"), and IS's
-      `sanctum.py::_SANCTUM_DEPLOY_DATE`/`available_from_datetime` against the verified account creation date. Context:
-      the underlying INF MINT (a different, already-verified fact) has real DefiLlama price history back to 2021-10-15
-      as the pre-rebrand Socean token — see #4's Sanctum/Socean finding above.
+- [x] ✅ [UAC] P3 (partial). **`_defi_lst.py::LST_TOKEN_GENESIS["sanctumSOL"]` corrected** — was "2024-01-25", now
+      "2021-10-15", shipped `unified-api-contracts@dcc69001` (2026-07-22). Confirmed via reading
+      `lst_rates_handler.py`'s actual post-fetch filter that this value gates ANY row regardless of source tier, so the
+      earlier caution about a "possibly-different Tier-1-specific semantic" didn't hold up — see the T+10min bug finding
+      above.
+- [ ] [UAC][IS] P3. **Remaining Sanctum reconciliation (follow-up, not done this session)** — `chain_env.py`'s
+      `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]` (currently "2023-06-01") and IS's `sanctum.py`'s
+      `_SANCTUM_DEPLOY_DATE`/`available_from_datetime` still carry the old/approximate dates; also verify
+      `SANCTUM_INF_POOL_ACCOUNT` (an unverified placeholder in `market-tick-data-service/_solana_lst_archival_tier1.py`)
+      on-chain — that's Tier-1's OWN account, a genuinely separate fact from the mint's DefiLlama history now fixed
+      above.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
@@ -547,6 +550,44 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   remaining `lst_yields` gap: ezETH/rsETH/wBETH (extended EVM tokens, gated from their now-correct genesis dates) AND
   jitoSOL/mSOL/bSOL/sanctumSOL (Solana, resolved via today's Tier-4 DefiLlama fallback, now gated from their validated
   real genesis dates too). T+10min verification pending.
+- **2026-07-22 (Phase 5 #4 — T+10min check found a P0 bug; fixed; relaunched)** — `mtds-lst-rates-20260722-173127`'s
+  run.log showed real EVM progress (day-by-day, real rows, manifest counts climbing) BUT logged
+  `WARNING Failed to create HTTP session for Solana LST rates: Resolver requires aiodns library` on EVERY single day —
+  meaning the ENTIRE Solana leg (jitoSOL/mSOL/bSOL/sanctumSOL — the whole point of today's Tier-4 fix + genesis
+  validation) was silently producing zero rows for the whole run. Root-caused via direct SSH into the running VM:
+  `aiodns`/`pycares` genuinely missing from the deployed venv (`ModuleNotFoundError`), even though `ccxt` — which DOES
+  depend on `aiodns` per `uv.lock` — was present and importable; a pre-existing tarball/venv-packaging gap, not
+  something this session introduced. `lst_rates_handler.py`'s `_fetch_solana_lst_rates` wrapped session creation in a
+  bare `try/except Exception: return []`, so this ONE missing optional dependency silently dropped the whole data leg
+  rather than failing loud. Stopped the VM immediately (confirmed root cause before burning more compute). **Fix**:
+  `aiohttp.resolver.AsyncResolver` (c-ares/aiodns-backed) is a pure performance optimization, never a functional
+  requirement — aiohttp's default `ThreadedResolver` needs no extra dependency and already correctly in use elsewhere in
+  this codebase (`native_staking_handler.py`). Added a shared
+  `market_tick_data_service/_http_resolver.py::make_resilient_connector()` (prefers `AsyncResolver`, catches
+  `ImportError`/`RuntimeError`/`OSError` and falls back to the default resolver instead of raising) and wired it into
+  ALL THREE call sites that hard-required `AsyncResolver` in this codebase: `lst_rates_handler.py` (the one actually
+  blocking this backfill), and as a good-citizen fix, `oracle_prices_handler.py`'s two Pyth Hermes call sites (same bug
+  pattern, not yet observed to fail — the AAVE oracle VM's earlier success suggests either a different tarball build or
+  the code path wasn't exercised the same way) and `deribit_options_chain_handler.py` (same pattern, no existing test
+  coverage, unrelated data domain but zero-risk to fix given the shared helper already existed). Shipped
+  `market-tick-data-service@533514c2` (new module + 3 call-site fixes + a stale-test rewrite that had asserted the OLD
+  wrong-in-hindsight "session failure → empty rows" behavior + a new dedicated `test_http_resolver.py`; full MTDS
+  `quality-gates.sh` green). **Second finding from reading the actual gating code**:
+  `lst_rates_handler.py::_fetch_solana_lst_rates` ALSO applies a post-fetch filter via UAC's
+  `get_lst_token_genesis("sanctumSOL")` — confirmed by reading the filter loop directly that this is a BLANKET check
+  applied to ANY row regardless of which tier resolved it. This meant UAC's `LST_TOKEN_GENESIS["sanctumSOL"]` (still
+  "2024-01-25" — I had left it unchanged earlier this session out of caution about a possibly-different Tier-1-specific
+  semantic) would have SILENTLY DROPPED every Tier-4-resolved sanctumSOL row for 2021-10-15 through 2024-01-24 —
+  nullifying the exact 2.3-year backfill opportunity found earlier. With this concrete evidence in hand (not the earlier
+  speculative uncertainty), corrected UAC's value to `"2021-10-15"` — shipped `unified-api-contracts@dcc69001` (full QG
+  green; no tests referenced the old value). **Republished code tarballs before relaunching** —
+  `launch-mtds-lst-rates-backfill-vm.sh`'s own freshness check caught that the first relaunch attempt would have run
+  PRE-FIX code (tarball manifests hadn't been rebuilt since my commits landed); ran
+  `create-code-tarballs.sh --include market-tick-data-service --include unified-api-contracts --include deployment-service`,
+  verified both manifests now match my fix commits exactly (`533514c22e6d`, `dcc690018e55`) before launching.
+  **Relaunched**: `mtds-lst-rates-20260722-181845`, same date range, all 4 tarballs confirmed fresh at launch. T+10min
+  re-verification pending — this time checking specifically that Solana rows appear (not just that EVM rows continue,
+  which already worked before).
 - **2026-07-22 (Phase 5 #2 DEX fill — still running, healthy)** — `mtds-dex-swaps-backfill` continues; noted it spends
   real time on dead/unindexed subgraph shards (e.g. `uniswap_v3/OPTIMISM` cycling all 8 cascade-fallback schemas before
   giving up honestly) — this is a genuine efficiency cost, not a stall or OOM risk: heartbeats fresh, RSS stable
