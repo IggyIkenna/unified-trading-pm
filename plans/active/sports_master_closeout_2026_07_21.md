@@ -132,23 +132,23 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
       — ALL 24 SHARDS, 100% CLEAN:**
 
       | metric | value |
-          | --- | --- |
-          | target objects written | **275,136** |
-          | verify=PASS | **275,136 (100%)** |
-          | verify=FAIL | **0** |
-          | quarantined (unmapped sport_key) | **0** |
-          | no_clobber violations | **0** |
+              | --- | --- |
+              | target objects written | **275,136** |
+              | verify=PASS | **275,136 (100%)** |
+              | verify=FAIL | **0** |
+              | quarantined (unmapped sport_key) | **0** |
+              | no_clobber violations | **0** |
 
-          Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
-          **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
-          `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
-          Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
-          `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
-          **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
-          scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
-          separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
-          not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
-          own manifest-swap/delete (see next item).
+              Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
+              **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
+              `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
+              Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
+              `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
+              **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
+              scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
+              separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
+              not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
+              own manifest-swap/delete (see next item).
 
 - [ ] [DATA] P0. **league_id relocation — MANIFEST-SWAP + DELETE. ⚠️ NOT STARTED — genuinely needs new tooling, do NOT
       rush this at session depth.** Investigated 2026-07-21: **no existing script fits.**
@@ -275,6 +275,17 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
 
 **E. Service / infra (dead-code, config, perf — date-independent)**
 
+- **Re-pin `terraform/services/features-service-sports/gcp/terraform.tfvars`'s `docker_image` to the new verified digest
+  on the NEXT features-service image rollout** (folded in from
+  `features_sports_service_consolidation_deploy_2026_07_15.md`, folded + archived 2026-07-21, consolidation pass — its
+  sole open todo). It's now an explicit `@sha256:...` pin, not `:latest` — deliberately, so the job runs a KNOWN
+  verified image rather than silently inheriting whatever `:latest` resolved to at the last apply (how it ran the stale
+  broken `c204c49d`). Verify the new digest in-container
+  (`docker run ... import unified_trading_library.config_interface.auth.entitlements` + `assert_consolidator_healthy`
+  source) before re-pinning. Added 2026-07-15 VerifyImageDeploy phase (`deployment-service@6c47fa1d`). Alternative if
+  the operator prefers tag-tracking: keep `:latest` but add a post-build `gcloud run jobs update --image` (or
+  `terraform apply -replace`) step so the tag→digest re-pins every build — a bare `:latest` alone does NOT
+  auto-propagate to Cloud Run job executions.
 - `sports_manifest_read_staleness_budget_missing` (ae#2) — no sports entry in `AG_STALENESS_BUDGET_SEC`; add
   `sports:1800` in UTL + mirror deployment-api + grep fleet for hardcoded workarounds (P1, false-DOWN cockpit signal).
 - `sports_t0_t1_dependency_gate_never_wired` (af#4) — `check_api_football_dependency()` built but never invoked; wire

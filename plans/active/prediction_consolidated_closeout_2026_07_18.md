@@ -209,16 +209,27 @@ fixture-linked before MVP backfill.
 
 ### A2 — Instrument-id / underlying / CQG writers converge (fold: canonical-identity migration)
 
-- [ ] [BACKEND] P0. **Finish the prediction canonical-identity migration — now 5/8 done (slot-2 verified 2026-07-18).**
-      Shipped: todos 1/3/4/5 (`instruments-service@0d0c3742` — adapter `underlying` from
+- [ ] [BACKEND] P0. **Finish the prediction canonical-identity migration — now 7/8 done (confirmed 2026-07-19), only
+      todo 2 open.** Shipped: todos 1/3/4/5 (`instruments-service@0d0c3742` — adapter `underlying` from
       `classify_*_to_canonical_group`, cross-venue `canonical_instrument_id`, titles-map decision, Polymarket sports
       `build_fixture_id`) + todo 6 as VERIFY (`unified-trading-pm@16272205a` — downstream `instrument_id` uniqueness
-      SAFE, venue embedded by construction). **3 DEFERRED (not prediction-specific-file):** todo 2 = full
-      `prod/catalog.parquet` regen (prod-GCS operational run, gated on the in-flight shared canonical migration so it
-      doesn't bake transitional ids); todo 7 = `gcs_paths.py` bucket-abbreviation flip (SHARED UAC file + gated on MTDS
-      `migrate_prediction_to_pred_prd_v9.py`); todo 8 = MDPS UAC-pin verify (market-data-processing-service repo, its CI
-      catches the drift). Source: `prediction_canonical_identity_migration_2026_07_08.md`. **Phase-E Leg-1 seam** = todo
-      5 (done Polymarket; Kalshi extended in Phase E). (repos: instruments-service, unified-api-contracts)
+      SAFE, venue embedded by construction) + todo 7 (`unified-api-contracts@511a9c62` — `gcs_paths.py` bucket
+      abbreviation flip, migration gate re-confirmed live 2026-07-19: legacy `market-data-tick-prediction-prd-*` 404s,
+      `market-data-tick-pred-prd-*` is the sole live SSOT) + todo 8 (MDPS UAC-pin — assessed 2026-07-19, NO bump needed;
+      the MDPS→UAC dep is an in-workspace editable range-pin that absorbs the 0.x flip by design; MDPS assertions
+      already reconciled at `market-data-processing-service@27bce46`/`@5febb77`). **Only todo 2 remains open:** full
+      `prod/catalog.parquet` regen (`build_instrument_catalogue.py --asset-group prediction` against real GCS data,
+      manifest-verified row counts) to bake in the shipped `underlying` + cross-venue `canonical_instrument_id` fields.
+      Real scoping/smoke-test/ETA done 2026-07-09 (~21k blobs, ETA ~25-40 min for a full non-dry-run regen); the full
+      run is intentionally NOT executed yet (staged rollout, gated on the in-flight shared canonical-identity migration
+      so it doesn't bake transitional/half-migrated ids into the persisted catalogue — schedule after that migration
+      settles). **NOTE**: a daily/weekly cron (`lifecycle-catalogue-regen-prediction-daily`) already regenerates this
+      catalogue on schedule for OTHER fixes (base_asset whitespace @49ff29ea, `af_fixture_id` propagation) — verify
+      whether it has ALREADY carried the underlying/canonical_instrument_id fields through before treating this as a
+      fresh manual-run requirement. Source: `prediction_canonical_identity_migration_2026_07_08.md` (folded in +
+      archived 2026-07-21, consolidation pass — all other todos resolved, this was its sole remaining open item).
+      **Phase-E Leg-1 seam** = todo 5 (done Polymarket; Kalshi extended in Phase E). (repos: instruments-service,
+      unified-api-contracts)
 - [ ] [BACKEND] P1. **Route every prediction id/underlying/CQG writer through the shared canonical builder + a QG that
       fails a non-canonical prediction `instrument_id`/`canonical_question_group` on write** — re-drift prevention, so
       new writes can't reintroduce the dupes A0 enumerates. (repos: instruments-service, market-tick-data-service,
@@ -535,9 +546,10 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 - **E2 alias additions** (shared): add the missing Kalshi soccer team aliases (E2's worklist) to
   `unified_api_contracts.external.api_football.team_mappings`, plus the South-American club aliases for the odds-side
   ~66%→~100% — to reach the operator's ~0% gap.
-- **A2 residual** (shared / other repo): identity-migration todos 2 (`prod/catalog.parquet` regen — prod-GCS run, gated
-  on the shared canonical migration so it doesn't bake transitional ids), 7 (`gcs_paths.py` bucket-abbreviation flip), 8
-  (MDPS UAC-pin verify).
+- **A2 residual** (shared / other repo): identity-migration todo 2 only (`prod/catalog.parquet` regen — prod-GCS run,
+  gated on the shared canonical migration so it doesn't bake transitional ids) — corrected 2026-07-21, plan-reconcile:
+  todos 7 (`gcs_paths.py` bucket-abbreviation flip) and 8 (MDPS UAC-pin verify) were resolved 2026-07-19 (see the A2
+  todo above), this residual list was never trimmed to match.
 - **CQG residual §5** (shared + operator decision): add `pipeline_mode=live_*` prefix shapes to UAC `possible_manifest`
   — needs the BATCH-satisfied-by-LIVE-evidence semantics call (A: union batch+live [REC]; B: batch-only).
 - **Phase-B prod migration** (drain window): the enumeration-driven manifest canonicalisation (`prediction_trades`→
