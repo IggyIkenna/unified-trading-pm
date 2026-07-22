@@ -87,8 +87,15 @@ operator-notified 2026-07-21.
       **reference — 97,606 cells recorded, 0 errors** (103,426 of 103,430 legitimate rows still orphan at apply-time).
       Consolidation deferred to the sibling cron (fresh lock present on both buckets at apply-time) — the per-VM-shard
       write is durable and already correct; the canonical blob will reflect it on the cron's next cycle.
-- [ ] 2. [DATA] P1. **Triage the 34,385 sports LEGACY_DUPLICATE** (reference bucket) — content-verify each has a
-      manifested canonical twin (the 5-part proof), then the human-only delete disposition.
+- [x] 2. [DATA] P1. **Triage the 34,385 sports LEGACY_DUPLICATE** (reference bucket) — content-verify each has a
+      manifested canonical twin (the 5-part proof), then the human-only delete disposition. **DONE 2026-07-22** — full
+      5-part-proof triage at `sports_legacy_duplicate_triage_2026_07_22.md`. **0 of 34,385 rows pass** (no delete
+      executed, none warranted yet): 4,735 are stale audit entries for objects already deleted by the independent
+      2026-07-21 pre-floor wipe; 1,492 are real pre-floor objects that wipe missed (belongs in that scope, not here);
+      28,100 are blocked by 2 confirmed live readers (`sports_reference_fixtures.py:139`,
+      `data_status_sports.py:42,74`); 58 are blocked by content-incomplete twins (canonical holds ~2-10% of the legacy
+      row count). See that doc's own todos for the recommended follow-up (fold into the wipe / migrate-forward / repoint
+      readers) — none of which is a fresh delete decision.
 - [ ] 3. [INFRA] P1. **Run the orphan sweep for defi / cefi / tradfi / prediction on a VM** — deployment-service@f8e885f
       shipped `launch-orphan-sweep-vm.sh` (registered `orphan-sweep-{ag}-` prefixes, SPOT, singleton-locked,
       tarball-freshness-checked) reusing the Tier-2 launcher machinery. First launch attempt 2026-07-22 04:22-04:23 UTC
