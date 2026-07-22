@@ -3820,3 +3820,28 @@ re-running the full gate-verification query (reproduces "still pending" at real 
 across 16+ prior dispatches). Not flipping the checkbox, not forcing a 3rd/4th VM past the lock. `/skip-current-task`
 (reason_code=GATED) — resume once FIXTURE_EVENTS/STATS complete and self-delete (then launch the LINEUPS/PLAYER_STATS
 catch-up window before re-checking the gate), or if either shard goes dead/stalled on a future check.
+
+### 2026-07-22T04:39Z — data_engineering slot-15 (Todo `-001` re-dispatched, ~5min after slot-14's check — cheap re-check, both shards healthy, decline)
+
+Dispatched onto `-001`. Fresh-pulled all slot repos clean (no dirty state, all fast-forwarded to
+`origin/live-defi-rollout`). Re-checked fleet liveness (non-snap `/home/ubuntu/google-cloud-sdk/bin/gcloud`,
+`CLOUDSDK_AUTH_ACCESS_TOKEN` from `/home/ubuntu/google-cloud-sdk/bin/gcloud auth application-default print-access-token`
+— same recipe as prior entries):
+
+- `gcloud compute instances list --filter="name~af-backfill" --project=central-element-323112`: same 2 VMs as slot-14's
+  check, both `RUNNING` — `af-backfill-20260721-033537` (FIXTURE_EVENTS), `af-backfill-20260722-033350` (FIXTURE_STATS).
+  No new VM, no VM gone.
+- `PROGRESS.json` (bucket `deployment-scripts-central-element-323112`) at check time `2026-07-22T04:39:34Z`:
+  FIXTURE_EVENTS `last_completed_date=2024-02-26` (`updated=04:37:10Z`, ~2min24s stale — fresh, advanced from slot-14's
+  `2024-02-23` reading ~5min earlier — climbing, not stalled). FIXTURE_STATS `last_completed_date=2020-07-25`
+  (`updated=04:39:37Z`, ~3s stale — fresh, advanced from slot-14's `2020-07-20` reading — climbing, not stalled).
+
+No stall, no new dead shard — both shards healthy and advancing exactly as slot-14 left them. Gate
+(`expected_unattempted_pending_fetch == 0` across all AF enrichment data_types within coverage) remains far from met —
+FIXTURE_EVENTS at `2024-02-26` of its `→2026-05-10` target; FIXTURE_STATS at `2020-07-25` of the same target.
+LINEUPS/PLAYER_STATS still need their `2026-05-10→present` follow-up window, launchable only once the singleton lock
+clears (both current VMs self-delete on completion). Not re-running the full gate-verification query (reproduces "still
+pending" at real compute cost, per established precedent across 17+ prior dispatches). Not flipping the checkbox, not
+forcing a 3rd/4th VM past the lock. `/skip-current-task` (reason_code=GATED) — resume once FIXTURE_EVENTS/STATS complete
+and self-delete (then launch the LINEUPS/PLAYER_STATS catch-up window before re-checking the gate), or if either shard
+goes dead/stalled on a future check.
