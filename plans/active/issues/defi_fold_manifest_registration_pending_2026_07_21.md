@@ -7,7 +7,7 @@ summary:
   rows from raw GCS objects — so the folded twins do not yet appear as captured in the coverage manifest. A standalone
   register pass via DefiManifestRecorder did not flush cleanly in a script context (no partial write occurred). This is
   a coverage-reporting gap, not data loss — the objects exist and the depth-provider reads them directly.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     ../../codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: 2026-07-22
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -36,7 +36,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "2026-07-22 — todo 3 shipped market-tick-data-service@ae6fccef once the blocking QG regression cleared"
 source: found while executing the D3 fold + manifest step, 2026-07-21
 depends_on: []
 ---
@@ -121,12 +121,14 @@ forced.
       finish; see Progress Log for final status if still running at handoff).
 - [x] 3. [REVIEW] P1. Correct the fold script's MANIFEST docstring (it wrongly says the consolidator re-derives from
       objects) — or delete the one-off script once the legacy prefixes are deleted (human-only) and this is resolved. —
-      Code fix complete and verified locally (docstring + closing log line now correctly state the consolidator does NOT
-      re-derive rows from raw objects, and point at this issue doc's recipe); **not yet pushed** — every
-      `quickmerge --agent` in market-tick-data-service is currently blocked by an unrelated, pre-existing, deterministic
-      3-test regression on HEAD (canonical-stem / leaf-byte-match / catalog-decompose — nothing to do with this fold or
-      this docstring). Filed as `mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md`; the docstring
-      diff is safe to ship the moment that regression is fixed and the sentinel goes green.
+      **Shipped `market-tick-data-service@ae6fccef`** ("fold-script doc fix") once the blocking
+      `mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md` regression was resolved by slot-4
+      (`market-tick-data-service@7ce100f9` + concurrent `@08f15f26`); docstring + closing log line now correctly state
+      the consolidator does NOT re-derive rows from raw objects, pointing at this issue doc's recipe.
+
+**All 3 todos complete — this issue is fully resolved.** The legacy `dex_pools/`/`lending_indices/` prefixes were
+subsequently deleted by the operator 2026-07-21 (see the parent plan's Progress Log); this doc is retained for the
+manifest-registration recipe/mechanism finding.
 
 ## Progress Log (2026-07-21)
 

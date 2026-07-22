@@ -343,11 +343,12 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
       `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
       1), not an independent decision. **Pending P5 executor (dedup phase).**
-- [ ] 10. [SCRIPT] P1. **Extend the UAC canonical oracle to the `processed_candles/` (+ features) namespace** (addendum
-      iii-b): `canonical_path_violations()` today only knows `raw_tick_data/by_date/` and flags every candle path as a
-      structural violation, so it cannot govern candle shape. After the A/B/C ruling, teach the oracle the ratified
-      candle template (incl. the `pipeline_mode=` insert decision) and re-point the skill canonical legs at it (todo 6)
-      so candle canonicality becomes machine-checkable instead of bespoke.
+- [x] 10. ✅ [SCRIPT] P1. Oracle extended for the candle namespace (`processed_candles/` — the features namespace
+      remains out of scope, not attempted): `PROCESSED_CANDLES_PREFIX` + `_candle_path_violations()` +
+      `require_candle_migration_complete=` on `canonical_path_violations`/`is_canonical`, validating the CORRECTED
+      LOCKED shape (source `data_type`, `instrument_type=`/`pipeline_mode=` added, both suppressed by default during the
+      migration window per taxonomy AE-6). `/data-pipeline-reconciliation`'s candle leg (§3h) re-pointed at the oracle.
+      `unified-api-contracts@6329fc04`.
 
 ## Progress Log
 

@@ -526,6 +526,32 @@ Three standing qualifiers:
   `defi_lending_writer_retire_prerequisite_2026_07_20.md` (decision D2, see §5.2); post-retire, any surviving flat
   `LENDING` on a market/event data_type is a genuine finding.
 
+### AE-6 — MDPS candle-layer Option-A migration window
+
+- **What** — a `processed_candles/` object missing `instrument_type=` (all asset_groups) or missing `pipeline_mode=`
+  (venue-shaped candles only — cefi/tradfi/defi; prediction never carries it) is `migration_pending`, not a genuine
+  finding, until the candle-path migration (an 8-phase epic, ~10-20M objects, sequenced defi → prediction → cefi →
+  tradfi) actually lands. As of 2026-07-22 the migration has NOT started (no `canonical-migration-*` VM running for
+  candles — verified via `gcloud compute instances list`) — the WHOLE existing candle corpus is in-window.
+- **Why accepted** — the LOCKED shape (CORRECTED RULING 2026-07-21 evening,
+  `plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`) is a NEW canonical target agreed
+  2026-07-21; flagging the entire pre-existing corpus against it before the migration runs would manufacture millions of
+  false positives on data that was correctly written under the PRIOR (still-current-in-prod) contract.
+- **Ruled by / when** — operator Option-A ruling 2026-07-21 (declared registry template wins), corrected the same
+  evening (data_type stays SOURCE on the path; manifest re-aligns to source, not the reverse). Folded into
+  `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` as a new phase, NOT a standalone effort
+  — scheduled to start only once the (as of 2026-07-22, actively running) raw-tick cefi migration fleet drains
+  (manifest-shard contention + pre-migration-drain rule).
+- **Suppression rule** — the machine oracle implements this directly:
+  `canonical_path_violations(path, require_candle_migration_complete=False)` (the default) suppresses the two axes above
+  for `processed_candles/` paths; pass `require_candle_migration_complete=True` to enforce the fully-migrated LOCKED
+  shape instead. Genuine defects (empty instrument stem, malformed `pipeline_mode=` value, missing
+  `day=`/`timeframe=`/`data_type=`) are NEVER suppressed by either mode — see
+  `unified-api-contracts/unified_api_contracts/canonical/partition_paths.py::_candle_path_violations`.
+- **Stops being an exception when** — the per-asset-group candle migration lands (see
+  `codex/02-data/canonical-cutover-register.md` for per-AG effective-from dates once populated); post-migration, a
+  surviving flat candle object for that asset_group is a genuine finding.
+
 ---
 
 ## 5. Two axes RULED 2026-07-20 — now migration_pending (formerly REFUSED)

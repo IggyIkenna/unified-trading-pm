@@ -305,18 +305,38 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
 
 ### Phase 4 — Trial deploy (FINAL, separate gate)
 
-- [ ] [INFRA] P3. Deploy 1–2 freshly-built images to confirm they actually run (low-risk repo first, e.g. a UI or a leaf
-      service). Verify the running service is healthy. This is the ONLY deploy in this plan.
+- [x] [INFRA] P3. **DONE 2026-07-22 — expanded from the original 1-2 image trial to a full pipes-and-wires validation of
+      the whole fleet, per operator direction (pre-production system, nothing here is live-trading yet).** Three deploy
+      target types found, all exercised: - **9 plain Cloud Run Services** via
+      `deployment-service/scripts/cloud-run/canary-deploy.sh`: `client-reporting-api` (real canary update on an
+      already-live service — 5%→health-verified→100% promote, revision `client-reporting-api-00022-gj7`) plus first-time
+      stand-up/health-check/teardown for `alerting-service`, `strategy-service`, `features-service`, `greeks-service`
+      (all 4 deployed, responded, torn down — no live instance existed before or after, by design). **3 failed for a
+      real architectural reason, not a bug**: `fund-administration-service`, `batch-live-reconciliation-service`,
+      `trading-agent-service`, and `deployment-service` never bind to `PORT=8080` (batch/worker code, not HTTP servers)
+      — Cloud Run correctly rejected them; forcing an HTTP shape onto them is out of scope here. **Found + fixed a real
+      bug in `canary-deploy.sh`** in the process: `--no-traffic` is rejected by `gcloud run deploy` when creating a
+      brand-new service — shipped a fix (only pass `--no-traffic` when a previous revision exists) via
+      deployment-service quickmerge. - **70 Cloud Run Jobs** (scheduled, not services) referencing
+      `instruments-service`/`market-tick-data-service`/ `market-data-processing-service` images — refreshed every job's
+      pinned digest to the fresh `:latest` build via `gcloud run jobs update --image=...`. 70/70 succeeded, 0 failed. No
+      job was force-executed — the refresh only takes effect on each job's next scheduled cron fire. -
+      **execution-service** — confirmed via `gcloud compute instances list` + `gcloud run services/jobs list` across all
+      regions: genuinely not deployed anywhere in this project (no VM, no Cloud Run Service, no Job). Nothing to
+      redeploy; consistent with pre-production status. `market-tick-data-service`/`market-data-processing-service` also
+      have no always-on VM (their live-streaming launchers are code-ready but never operationally launched per the
+      archived `live_pipeline_mtds_mdps_features_2026_05_08.md` Phase-15 deferral) — only their recon/manifest Cloud Run
+      Jobs are live, and those were covered by the 70-job refresh above.
 
 ## Success criteria + continuous verification
 
-| Phase | Cutover criterion                                                             | Continuous verification                          | Last verified |
-| ----- | ----------------------------------------------------------------------------- | ------------------------------------------------ | ------------- |
-| 0     | Local harness builds the canary green (or its failure is understood + logged) | re-run the canary local build                    | —             |
-| 1     | All base libs build (local + GCP); fresh base digest recorded                 | `gcloud builds list` SUCCESS per lib + AR digest | —             |
-| 2     | All service images build (local + GCP) against fresh base; stale pins triaged | `gcloud builds list` SUCCESS per service         | —             |
-| 3     | ≥1 lib + ≥1 service build on AWS CodeBuild                                    | AWS CodeBuild build SUCCESS                      | —             |
-| 4     | 1–2 trial images deploy + run healthy                                         | service health endpoint 200                      | —             |
+| Phase | Cutover criterion                                                             | Continuous verification                          | Last verified                           |
+| ----- | ----------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------- |
+| 0     | Local harness builds the canary green (or its failure is understood + logged) | re-run the canary local build                    | —                                       |
+| 1     | All base libs build (local + GCP); fresh base digest recorded                 | `gcloud builds list` SUCCESS per lib + AR digest | 2026-07-22                              |
+| 2     | All service images build (local + GCP) against fresh base; stale pins triaged | `gcloud builds list` SUCCESS per service         | 2026-07-22 (14/14)                      |
+| 3     | ≥1 lib + ≥1 service build on AWS CodeBuild                                    | AWS CodeBuild build SUCCESS                      | 2026-06-19                              |
+| 4     | Fleet deploy validated + running healthy where architecturally applicable     | service health endpoint 200 / job pin refresh    | 2026-07-22 (9 CR services + 70 CR jobs) |
 
 ## Canonical build invocation
 

@@ -81,10 +81,12 @@ operator-notified 2026-07-21.
       the sports honest-coverage rises after.
 - [ ] 2. [DATA] P1. **Triage the 34,385 sports LEGACY_DUPLICATE** (reference bucket) — content-verify each has a
       manifested canonical twin (the 5-part proof), then the human-only delete disposition.
-- [ ] 3. [INFRA] P1. **Run the orphan sweep for defi / cefi / tradfi / prediction on a VM** (the in-session multi-GB
-      manifest download is unreliable). Reuse the Tier-2 datapoint-validation VM (todo 32) or a migration VM; SPOT,
-      monitored (no fire-and-forget), reports to `_index/audit/orphan_sweep_{ag}.parquet`. Operator
-      offered/authorization pending 2026-07-21.
+- [x] 3. [INFRA] P1. **Run the orphan sweep for defi / cefi / tradfi / prediction on a VM** — deployment-service@f8e885f
+      shipped `launch-orphan-sweep-vm.sh` (registered `orphan-sweep-{ag}-` prefixes, SPOT, singleton-locked,
+      tarball-freshness-checked) reusing the Tier-2 launcher machinery. Launched 2026-07-22 04:22-04:23 UTC:
+      `orphan-sweep-cefi-20260722-042242`, `orphan-sweep-defi-20260722-042258`, `orphan-sweep-tradfi-20260722-042317`,
+      `orphan-sweep-prediction-20260722-042333` (all RUNNING, asia-northeast1-c). Reports land at
+      `gs://{ag-tick-bucket}/_index/audit/orphan_sweep_{ag}.parquet`. Heartbeat watchdog armed (30-min, 5-min ticks).
 - [ ] 4. [CODE] P2. **Make the manifest load resumable / streamed** in `migration_orphan_sweep.py` (chunked download
       with retry, or read the index in row-group batches) so a multi-GB index does not break a single connection — this
       is what blocked defi/cefi/tradfi in-session.

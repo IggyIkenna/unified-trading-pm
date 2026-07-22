@@ -379,12 +379,18 @@ re-stamp/tombstone mechanism (bare `ODDS_HORIZON_BUCKET` + parsed `timeframe` co
 `_legacy_seed.parquet` re-supply risk, scope the predicate away from the deliberate 124,294-row
 `mdps_odds_horizon_bucket` aggregate) and run it, verifying before/after like the venue-as-chain re-stamp.
 
-- [ ] [DATA] P1. Implement + run the `odds_horizon_bucket_{15m,1h,4h,1d}` → `ODDS_HORIZON_BUCKET` + parsed `timeframe`
-      seed-aware re-stamp. Mirror the venue-as-chain re-stamp's safety pattern (pre-apply snapshot, CAS-guarded write,
-      post-write verification of row counts + no duplicate keys + no unintended rows touched) — check whether this
-      manifest/bucket has the same high-frequency-consolidator-cron contention the venue-as-chain fix hit, and if so use
-      the same pause-cron-for-one-clean-write approach (already proven this session) rather than re-discovering the
-      problem from scratch.
+- [x] [DATA] P1. Implement + run the `odds_horizon_bucket_{15m,1h,4h,1d}` → `odds_horizon_bucket` (bare canonical
+      lowercase — corrected from the ruling text's uppercase, see 2026-07-22 tick below) + parsed `timeframe` seed-aware
+      re-stamp — `market-tick-data-service/scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py@2f3fb7cc`.
+      Contention CONFIRMED (`uts-prod-manifest-consolidator-market-data-sports-cron`, same `*/1` class as
+      venue-as-chain) — paused via `unified-trading-sa` impersonation, ran `--apply`, verified, resumed. Result:
+      1,977,165 → 1,977,165 rows, 1,337 re-stamped (0 escalated), 0 post-write duplicate keys, 124,294-row aggregate +
+      2,486-row seed population untouched (verified by count). Pre-apply snapshot:
+      `gs://market-data-tick-sports-prd-central-element-323112/_index/backups/availability_index.pre_odds_horizon_bucket_restamp_apply_20260722T043109Z.parquet`.
+      Old generation 1784694651727289 → new generation 1784694702854020. Cron resumed + verified ENABLED; downstream
+      consolidator health independently verified (not just scheduler state) — one transient execution (`...-7bz4j`)
+      failed on an unrelated `:latest` image-tag miss (self-healed, next execution `...-kvm49` succeeded in 57s against
+      a pinned `@sha256` digest) — not a manifest-write or contention artifact.
 - [ ] [DATA] P2. Live-count `data_type=="futures_chain"` in the tradfi availability index to choose the remedy: zero-row
       non-issue / small legacy cohort (→ documented carve-out like `options_chain`'s T-OLD-2b) / active writer bug. Do
       NOT add it to `DATA_TYPES_BY_ASSET_GROUP['tradfi']` — `futures_chain` is an instrument_type; the data_type for
