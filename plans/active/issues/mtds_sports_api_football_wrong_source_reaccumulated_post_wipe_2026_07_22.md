@@ -55,6 +55,7 @@ execution_scope: local-only
 source: [sports_master_closeout_2026_07_21.md sixth wave, 2026-07-22]
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 ## Why this is NOT a K1/K2 scope item
