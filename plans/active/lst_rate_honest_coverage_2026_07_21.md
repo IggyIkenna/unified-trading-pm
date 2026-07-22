@@ -216,15 +216,21 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
       `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key.
       **Per-venue listing sub-check CLOSED (2026-07-22)**: live exchange API sweep (all 8 Tardis-covered CEX venues × 6
-      LST tokens, 48 cells, all 8 API calls succeeded) found only **5 real cells** — `(stETH, BYBIT-SPOT)` `STETHUSDT`,
-      `(stETH, OKX-SPOT)` `STETH-USDT`, `(stETH, BITGET-SPOT)` `STETHUSDT`, `(weETH, BITGET-SPOT)` `WEETHUSDT`,
-      `(cbETH, COINBASE-SPOT)` `CBETH-USD`. Every other cell is honestly absent — **wstETH has ZERO real listings
-      anywhere** (every venue lists the rebasing stETH form, never wrapped wstETH, despite the catalogue treating them
-      as separate bases); rETH/rsETH/ezETH have zero real listings on any of the 8 venues checked. Caught 4
-      ticker-naming false-positive traps along the way (Bitget "rETHA" ≠ Rocket Pool rETH; Binance "EZETH" = base
-      EZ/quote ETH, not Renzo; Kraken "LSETH" = Kraken's own in-house product; Upbit lists governance tokens ETHFI/LDO,
-      not the LST tokens themselves). **Scope the launch to exactly these 5 cells** — never launch
-      wstETH/rETH/rsETH/ezETH on any venue, that would be honest-absence-by-construction.
+      LST tokens, 48 cells, all 8 API calls succeeded) found 5 candidate cells. **Refined further via a 1-week smoke
+      test BEFORE the full-history launch** (learned this discipline the hard way earlier in this session): the
+      exchange's own live-listing API is not the same question as "does TARDIS have this dataset" — `BYBIT`
+      structurally-absent (`HTTP 400 code=300`) for ALL 4 candidate symbols despite Bybit's live API showing `STETHUSDT`
+      as real; confirmed via Tardis's own `api.tardis.dev/v1/exchanges/bybit` catalog — **zero stETH/ weETH/cbETH
+      symbols in Tardis's Bybit dataset at all.** The other 3 venues not only confirmed but each had MORE real symbols
+      than the exchange-API sweep found — Tardis's own catalog is the actual ground truth, with exact `availableSince`
+      per symbol: - `OKX-SPOT`: `STETH-USDT` (since 2023-07-18), `STETH-ETH` (2023-07-18), `STETH-USDC` (2024-10-17),
+      `STETH-USD` (2025-03-21) - `BITGET-SPOT`: `STETHUSDT` (2024-11-08), `WEETHUSDT` (2024-12-30), `WEETHETH`
+      (2024-11-08) - `COINBASE-SPOT`: `CBETH-USD` (2022-08-25), `CBETH-ETH` (2022-08-25) **9 real (venue, symbol) cells
+      across 3 venues — BYBIT excluded entirely.** wstETH/rETH/rsETH/ezETH remain zero-coverage everywhere (unchanged
+      from the exchange-API sweep — Tardis can't have MORE than the exchange itself ever listed). Smoke-tested via
+      `mtds-backfill-cefi-1` (1-week range 2026-07-15..21): OKX-SPOT/ BITGET-SPOT/COINBASE-SPOT all captured real rows
+      (999/265/69/856 rows respectively on day 1) confirming the dispatch is correct before committing to the ~4yr
+      full-history window.
 - [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source
       history + fix the today-vs-prior inner-join/vocab that drops Solana + LRTs (ezETH/rsETH) from the feature output.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
