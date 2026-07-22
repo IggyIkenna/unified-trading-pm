@@ -265,16 +265,24 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       genuinely has zero rows for these tokens, so the join correctly/honestly drops them. Fix = a historical
       **backfill** of the MTDS `lst_rates` collector using the now-current config (real-infra VM launch — **holding for
       now given today's 2 real-infra incidents** in this same session; see #1's OOM issue doc for why extra caution is
-      warranted before any more CEFI/DeFi VM launches). - **Solana LSTs (jitoSOL/mSOL/bSOL)**: genuinely architectural,
-      not a quick fix. `solana_lst_archival.py`'s Tier 1 (Alchemy `getAccountInfo`, the reliable path) is gated to
-      wall-clock "today" only; Tier 2 (subgraph, the only tier that CAN serve historical days) is a documented no-op —
-      "UAC has no marinade/jito Solana subgraph IDs" (as of 2026-05-05); Tier 3 REST is only an ~8-day rolling window.
-      Any historical-day reprocessing gets essentially zero Solana LST rows regardless of the feature join. **Real fix
-      needed**: register the missing UAC subgraph IDs for jito/marinade/blazestake/sanctum on SOLANA (`get_subgraph_id`
-      lookups) to unlock Tier 2 for historical days, or find another genuine historical Solana rate source — this is
-      buildable CODE work, not a backfill-only task, but needs real verification (do these subgraphs exist? are they
-      indexed?) before registering anything, mirroring this session's AAVE-listing-date and CEX-listing verification
-      discipline. - **Secondary finding**: the existing LST feature tests (`test_lst_yields_compute_runner.py`,
+      warranted before any more CEFI/DeFi VM launches). - **Solana LSTs (jitoSOL/mSOL/bSOL/Sanctum INF)**: **CONFIRMED
+      (2026-07-22) no subgraph exists for ANY of the 4 protocols** — checked `messari/solana-subgraphs` (only Orca
+      Whirlpool present) and The Graph's Solana support is architecturally different (Substreams-based) from the EVM
+      hosted-service model this codebase's `SUBGRAPH_IDS` registry assumes; live-curled each protocol's own API (Jito
+      `kobe.mainnet.jito.network` = ~8-day rolling window only, confirms the code's own docstring; Marinade
+      `api.marinade.finance` = today's trailing APY only, no historical endpoint; BlazeStake `/api/v1/stats` =
+      current-snapshot only; Sanctum's own API 401'd unauthenticated). **The real fix is NOT a subgraph registration —
+      it's extending an ALREADY-PROVEN pattern already live in this exact codebase**: `lst_solblaze_adapter.py` already
+      uses DefiLlama's `coins.llama.fi/prices/historical/{ts}/solana:{mint}` for bSOL's `oracle_prices` (USD price) —
+      live-verified working back to at least Nov-2023. The SAME API, live-verified this session for jitoSOL (real prices
+      $22.56 May-2023 → $59.72 Nov-2023) and Sanctum's INF ($61.66 Nov-2023), can derive a historical SOL-denominated
+      `lst_rates` value by dividing LST-USD by SOL-USD at the same timestamp (SOL/USD is the same API,
+      `solana:So111...112`) — this pattern is currently used for `oracle_prices` only, never extended to `lst_rates`.
+      Marinade's DefiLlama coverage doesn't reach its Aug-2021 launch (empty at Sept-2021) but does cover 2022 onward.
+      **Concrete next step**: extend `solana_lst_archival.py` with a new tier (or extend the existing DefiLlama
+      oracle_prices call site) that ALSO computes and writes the `lst_rates` ratio for jitoSOL/mSOL/bSOL/INF from the
+      same already-fetched DefiLlama response — no new external dependency, no VM risk, matches an established in-repo
+      pattern exactly. - **Secondary finding**: the existing LST feature tests (`test_lst_yields_compute_runner.py`,
       `test_lst_native_rates.py`, `test_lst_yields_path_resolution.py`, `test_lst_features_unit.py`) only ever construct
       SYMMETRIC today/prior token sets and never test ezETH/rsETH at all — they give false confidence and would not
       catch this exact drop scenario. Worth a real asymmetric-token-set test case once the underlying data gaps are
