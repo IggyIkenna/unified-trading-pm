@@ -85,10 +85,12 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 1 — Denominator registration (smallest first-shippable; makes gaps HONEST)
 
-- [ ] [UAC][IS] P1. **Chainlink LST feed-map add** (smallest increment) — add the Phase-0-verified feeds to BOTH the
+- [x] [UAC][IS] P1. **Chainlink LST feed-map add** (smallest increment) — add the Phase-0-verified feeds to BOTH the
       MTDS `_oracle_prices_constants.py` (dict shape) and IS `chainlink.py` (tuple shape); the mirror-invariant test
       must pass. Auto-mints `(CHAINLINK-ETHEREUM, SPOT_PAIR, oracle_prices)` catalogue rows on the next build. One
-      quickmerge per repo.
+      quickmerge per repo. — **SHIPPED both sides**: `market-tick-data-service@672f82f5`, `instruments-service@2c55d413`
+      (2026-07-22). Both landed after the full chain of upstream blockers cleared (rule11, canonical-stem regression,
+      pyasn1 CVE) — see the final Progress Log entry.
 - [x] [UAC] P1. **AAVE oracle venue registration** — `expected_coverage.py` `AAVE` += `oracle_prices` +
       `AAVE-ETHEREUM: [oracle_prices]`; `defi_venues.py` flip `AAVE-ETHEREUM` phase `pipeline`→`live`;
       `venue_adapter_keys.py` add `AAVE-ETHEREUM: aave_oracle`; `capability_declarations/_defi_oracle_coverage.py`
@@ -120,21 +122,17 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `_collect_aave_rows`/`_emit_aave_manifest` in `OraclePricesHandler` (lifts `AavePositionsMixin._ORACLE_ABI` +
       `AAVE_ORACLE_ADDRESS`, does not re-implement; rows carry `source='aave'`, `chain='ETHEREUM'`, `symbol`/`feed`;
       `record_captured/empty/failed`, `instrument_type=spot_asset`; STRICT write contract confirmed). BUILT + 15 new
-      unit tests green + adversarially reviewed 2026-07-21 — **committed `market-tick-data-service@1ac3350c`,
-      `quality-gates.sh` green twice (sentinel matching HEAD), quickmerge BLOCKED by the shared UTL pyasn1-CVE
-      dirty-deps chain** (see the Progress Log's final 2026-07-21 entry for the full sequence — the rule11 blocker and a
-      later canonical-stem regression were both resolved upstream first). Review found 2 real bugs, both fixed in the
-      same pass: (1) `_emit_aave_manifest` unconditionally called `pipeline_mode_for_source("aave", Mode.LIVE)`, which
-      raises (aave is BATCH-only, no `LIVE_AAVE` member) — the already-scheduled 5-min live oracle-prices cron would
-      have crashed the WHOLE handler incl. Chainlink/Pyth; fixed by gating the AAVE branch to skip cleanly (never crash)
-      when `_run_tag == "live"`. (2) `write_defi_rows` had no `"AAVE"` entry in `unified-trading-library`'s
+      unit tests green + adversarially reviewed 2026-07-21 — **SHIPPED `market-tick-data-service@672f82f5`**
+      (2026-07-22, after rule11 + canonical-stem regression + pyasn1-CVE dirty-deps chain all cleared upstream — see the
+      final Progress Log entry for the full sequence). Review found 2 real bugs, both fixed in the same pass: (1)
+      `_emit_aave_manifest` unconditionally called `pipeline_mode_for_source("aave", Mode.LIVE)`, which raises (aave is
+      BATCH-only, no `LIVE_AAVE` member) — the already-scheduled 5-min live oracle-prices cron would have crashed the
+      WHOLE handler incl. Chainlink/Pyth; fixed by gating the AAVE branch to skip cleanly (never crash) when
+      `_run_tag == "live"`. (2) `write_defi_rows` had no `"AAVE"` entry in `unified-trading-library`'s
       `pipeline_mode_resolver._VENUE_OVERRIDES`, so the actual parquet write path mislabeled every AAVE row as
       `pipeline_mode=batch_pyth_hermes` (SOURCE_PRIORITY's top pick) while the manifest correctly said `batch_aave` —
-      fixed by adding the override (mirrors CHAINLINK/PYTH); **this UTL fix is itself correct + tested (2 new tests,
-      full 55-test suite green) but ALSO held unshipped** — UTL's working tree has heavy unrelated foreign WIP right now
-      and this fix has zero current blast radius (the AAVE collector it protects hasn't shipped anywhere yet), so it
-      wasn't worth a risky whole-tree gate for a non-urgent fix; ship alongside the MTDS piece once MTDS unblocks.
-      **Deliberate simplification vs the original todo**: no IS-first filter
+      fixed by adding the override (mirrors CHAINLINK/PYTH) — **SHIPPED `unified-trading-library@1fda0e87d`**
+      (2026-07-22). **Deliberate simplification vs the original todo**: no IS-first filter
       (`load_oracle_feeds_for_date('AAVE','ETHEREUM',…)`) — `_AAVE_ORACLE_ASSETS` is a static 6-entry dict, verified
       byte-identical to IS's `aave_oracle.py` `_AAVE_ORACLE_RESERVES["ETHEREUM"]` today but with nothing enforcing that
       going forward; add the IS-first filter (mirroring `_resolve_chainlink_feeds`) if/when the two registries need to
@@ -264,6 +262,21 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   `unified-trading-library`'s pending fix) are now fully built, tested, and gated green — the SOLE remaining blocker for
   the last two is `utl_pyasn1_cve_pip_audit_blocks_quickmerge_2026_07_21.md`.** Nothing further to build until that
   clears; the next session should check that issue's status first before resuming any Phase 3+ work.
+- **2026-07-22 (Phase 1+2 fully shipped across all 4 repos — blocker chain resolved)** — the `pyasn1` CVE was fixed
+  upstream (`unified-trading-library@d0d39788`, 0.6.3→0.6.4). Pulled it in, re-verified my `pipeline_mode_resolver.py`
+  fix, gated green (a wall-clock perf-guard test failed once on a loaded host — confirmed flaky via isolated re-run, not
+  a real regression), and shipped `unified-trading-library@1fda0e87d`. That unblocked `instruments-service`, which hit a
+  genuine merge conflict on `_dex_factory_registry.py`/`aave_oracle.py`: another agent had independently shipped
+  `eeb0453b` fixing the exact same uncited-address lines this plan's earlier citation fix touched — both changes were
+  functionally equivalent (same purpose, different wording/dates), so resolved by keeping the already-landed upstream
+  version and dropping the redundant duplicate; only the `chainlink.py` weETH/ezETH mirror (not covered by their fix)
+  carried forward — shipped `instruments-service@2c55d413`. `market-tick-data-service` then shipped cleanly
+  (`@672f82f5`) after rebasing onto two harmless upstream dependency-bump commits. Throughout, `unified-trading-library`
+  had a DIFFERENT agent's ongoing, uncommitted WIP on 8 unrelated files sitting in the same shared clone the entire time
+  — repeatedly went live/stale/live again; used brief, scoped isolate-ship-restore windows (never more than the time
+  needed for one quickmerge's dirty-deps check) rather than waiting indefinitely, verifying zero data loss via diff
+  after every restore. **All of Phase 1 and Phase 2 (except the DEX collector, not yet built) are now live on
+  `live-defi-rollout` across all 4 repos.** Next: Phase 2's DEX collector, then Phase 3 (sample-download proof).
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 

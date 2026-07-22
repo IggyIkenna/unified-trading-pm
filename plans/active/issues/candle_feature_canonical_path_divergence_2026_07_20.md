@@ -303,9 +303,9 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
 - [x] 5. ✅ [SCRIPT] P2. Reconcile the **UTL paths-registry `delta_one` entry** with the real writer — readers now
       dual-read via `candle_read_prefixes` (canonical + legacy, both pre/post-migration) rather than relying on a single
       hand-rolled template. Shipped `unified-trading-library` (staging-first landing) + `features-service@99d5554e`.
-- [ ] 6. [SCRIPT] P2. Re-point `/data-pipeline-check-mdps` + `/data-pipeline-check-features` canonical legs at the
-      LOCKED template (was ratified 2026-07-21) so a clean canonical sweep is achievable post-migration. **Pending — do
-      after the P4 -test- verification confirms the writer emits the LOCKED shape.**
+- [x] 6. ✅ [SCRIPT] P2. Re-point `/data-pipeline-check-mdps` + `/data-pipeline-check-features` canonical legs at the
+      LOCKED template. Shipped `mdps@25ce29c37` + `features@d58b7760`, proven on real `-test-` infra — see Progress Log
+      2026-07-22 entry below.
 
 ## How the new skills currently handle this (no silent acceptance)
 
@@ -509,17 +509,98 @@ content-repair path (now explicitly narrowed, never assumed). basedpyright: 0 er
 enumeration + classification run must happen on sanctioned infra, never in-session) — **blocked on the raw-tick fleet
 finishing** (checked above, 11/18 still running).
 
+### 2026-07-22 — ✅ Todo 6 SHIPPED: the check scripts' OWN comparators were still asserting the pre-migration/superseded shape (2 real bugs beyond the known one, proven fixed on real `-test-` infra)
+
+Re-checked the raw-tick fleet before picking up todo 6: down to **1/8 CEFI VMs RUNNING** (`wp21`, actively writing —
+confirmed via serial-port gsutil activity every ~60s, not stalled); AWS side fully drained. Not yet fully drained, so P0
+census stays blocked; picked up todo 6 as the highest-value unblocked item per the prior session's own recommendation.
+
+**Traced the comparator code** (`market-data-processing-service/scripts/pipeline_e2e_check.py`) rather than assuming the
+fix was purely doc-cosmetic, and found it was NOT — offline-probed the exact ground-truthed `-test-` object path from
+the 2026-07-21 gate (`.../timeframe=15m/data_type=trades/instrument_type=PERPETUAL/venue=DERIBIT/…parquet`) directly
+against `_measured_violations`/`_declared_violations` and confirmed **two real, currently-live bugs**, not one:
+
+1. **Force leg (§3A MEASURED template) would have FALSE-FAILED every genuinely-migrated write.**
+   `_MEASURED_CANDLE_SEGMENT_ORDER` didn't include `instrument_type` at all, so `_measured_violations` reported
+   `unexpected_segments=instrument_type` on the exact object the writer now correctly produces — the object would land
+   in `off_template`, never `matched`, meaning `write_verified=False` and the force leg's own pass predicate would fail
+   on real, correct data. (§3A's docstring said "there is NO instrument_type= segment anywhere" — true on 2026-07-20
+   when it was measured, stale since `mdps@752eaff`/`2d720b4` landed the writer fix.)
+2. **Canonical leg (§3B DECLARED template) — the known one — plus its manifest lookups were ALSO broken.**
+   `_declared_violations` compared `data_type` against the AGGREGATED `mdps_data_type_key()` instead of the shard's
+   SOURCE data_type, so it reported `data_type=trades!=ohlcv_15m` on the exact LOCKED-shape object (a false
+   `non_canonical`). `_manifest_match` and `_canonical_leg_ids` had the SAME bug on the manifest-row filter — since the
+   manifest `data_type` column is now overridden to SOURCE right before `record_captured` (operator ruling 2026-07-21),
+   filtering on the aggregated key silently matched **zero rows**, making the id-canonicality check vacuous rather than
+   a real assertion.
+
+**Fixed both, offline-verified the fix** (same ground-truthed object + a synthetic legacy/pre-migration sibling without
+`instrument_type=`): the LOCKED object now passes `_measured_violations`/`_declared_violations` with zero violations;
+the legacy object still passes `_measured_violations` (force leg stays green on either shape, by design) but
+`_declared_violations` correctly reports exactly `missing_segment=instrument_type` — the P7 migration-worklist signal,
+and nothing else (no more false `data_type` mismatch riding along). Added 6 regression tests (MDPS) covering both the
+LOCKED-pass and legacy-still-flagged cases.
+
+**Found the same root-cause bug a third time, in a third file, while checking `/data-pipeline-check-features`** (todo 6
+named it too): `features-service/scripts/pipeline_e2e_check.py`'s `_is_canonical_input_row` required a candle INPUT
+row's `data_type` to start with an aggregated prefix (`ohlcv_`/`book5_`/`deriv_`) to count as canonical — same
+superseded assumption, would have flagged every genuinely-canonical candle input row (feeding
+delta_one/multi_timeframe/cross_instrument) non-canonical. Dropped the `data_type` axis from that check entirely (the
+manifest `data_type` is now SOURCE, permanently, not a migration-transient signal); `timeframe` presence + normalisation
+remains the real signal. 3 new regression tests.
+
+**Shipped**: `mdps@25ce29c37` via quickmerge (QG green, 67s, incl. a driver smoke re-import); `features@d58b7760` via
+the closed **dirty-deps carve-out** (`unified-api-contracts` had live peer WIP, mtime <120s — protected, not touched; QG
+green, 237s fresh sentinel immediately pre-commit). Also updated
+`cursor-configs/skills/data-pipeline-check-mdps/SKILL.md`'s documented canonical contract to match (still needs its own
+commit — see below).
+
+**Proven on real `-test-` infra, not just offline** — ran `/data-pipeline-check-mdps` force+canonical for
+`CEFI:DERIBIT:trades` day=2026-06-27 (same shard as the 2026-07-21 gate):
+`plans/audit/results/data_pipeline_e2e_check_mdps_2026_06_27.md`. The force leg's own VM run itself hit a **known,
+separately-tracked, unrelated** gap (`cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` —
+`cefi/trades/FUTURE: ALL FAILED (31/31)` in that shard's sub-dimension breakdown, dragging the overall VM exit code
+to 1) — but the VM's own `run.log` shows it genuinely wrote **29/60 succeeded, 217,679 candles** (matching the
+2026-07-21 gate's numbers exactly) before that unrelated failure. Critically, the **canonical leg does not depend on the
+VM's exit code** (only needs a VM name to scan real `-test-` objects + the per-VM manifest shard), so it directly
+exercised the fixed code on real data regardless:
+
+- **7/7 canonical-leg cells PASSED** (`content_check=canonical`), migration worklist **EMPTY** — before the fix, every
+  one of these would have shown `data_type=trades!=ohlcv_15m`.
+- **6/7 cells' internal `_scan_cell` classification showed `on_measured_template=29, off_template=0`** — i.e.
+  `_measured_violations` (the SAME function the force leg's pass predicate uses) found ZERO violations on 29 real,
+  `instrument_type`-bearing objects — direct real-infra proof the force-leg fix (item 1 above) is correct too, not just
+  offline-probed.
+- **29/29 instrument ids checked, 29/29 canonical**, read via `checked per_vm_shard` — direct proof
+  `_canonical_leg_ids`'s manifest-frame mask now correctly finds real rows filtered on SOURCE `data_type` (was silently
+  vacuous before the fix).
+
+**One minor observed nuance, NOT caused by this fix, not blocking, tracked as todo 16 below**: the `24h` timeframe cell
+alone showed `on_measured_template=0, off_template=29` (all 29 objects landed off-template in the MEASURED
+classification) while the canonical leg still correctly passed it. Not touched by today's data_type/instrument_type fix
+— orthogonal to it — plausibly the object path already normalises `24h`→`1d` (contradicting §3A's own "timeframe is the
+RAW token" documentation, which may itself now be stale the same way the data_type docs were). Didn't chase it further
+this session; doesn't affect correctness (canonical leg's own `tf_canon` comparison already absorbs it).
+
+- [ ] 16. [SCRIPT] P3. Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg MEASURED classification shows
+      `off_template=29` (timeframe mismatch against the raw `"24h"` token) while the canonical leg still passes it —
+      confirm whether the object path already writes `timeframe=1d` (making §3A's "RAW token" docstring stale the same
+      way the data_type one was) or whether this is a genuine separate defect. Non-blocking; found during the todo-6
+      real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`.
+
 ## Deferred work after 2026-07-21
 
-| #   | Item                                                                                                                                                                                                                              | State / why deferred                                                                                                                                               | Blocked-on                                                                                                                                                           |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | P0 census (Tier-2 spot VM) → P6 drain/snapshot → P7 SPOT apply → P8 verify                                                                                                                                                        | **Cannot be done yet** — must run on sanctioned infra, not in-session; also sequenced to avoid manifest-shard write contention                                     | Raw-tick `canonical-migration-cefi-wp*` fleet finishing (11/18 VMs RUNNING as of 2026-07-21 ~18:40 — **re-check before starting P6**, don't trust this number stale) |
-| 2   | Todo 6 (re-point `/data-pipeline-check-mdps`+`/data-pipeline-check-features` canonical legs at the LOCKED template)                                                                                                               | **Not done** — real work, now UNBLOCKED (the -test- gate that was blocking it passed 2026-07-21)                                                                   | nobody — pick up any time                                                                                                                                            |
-| 3   | Todos 11-15 on the P5 executor (launcher wiring for `migrate_candle_canonical_2026_07.py`, PROGRESS.json resume-checkpoint, target-index bucket-key precision, CeFi bare-wire-id scope confirmation, stale UTL docstring example) | **Not done** — P2/P3, non-blocking for a dry-run or small-scale apply, but todo 3 (launcher) + todo 12 (resume-checkpoint) should land BEFORE a real fleet-wide P7 | nobody — pick up any time, ideally before P7                                                                                                                         |
-| 4   | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (CEFI has no registered candle SchemaContract for standalone `instrument_type=FUTURE`)                                                                      | **Not done** — orthogonal finding, own issue doc, own todos                                                                                                        | nobody — pick up any time; not on the candle-canonical migration's critical path                                                                                     |
-| 5   | Confirming the P5 executor's TradFi content-resolution rate against real prod parquet content (open question #1 in the build agent's own report — the `E1AF0_*_migrated_*` objects' `instrument_id` COLUMN shape is unverified)   | **Cannot be fully resolved yet** — needs a real content read against prod TradFi objects, which is exactly what the P0 census does                                 | Same as item 1 (P0 census)                                                                                                                                           |
+| #   | Item                                                                                                                                                                                                                              | State / why deferred                                                                                                                                                | Blocked-on                                                                                                                                                                                                                         |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | P0 census (Tier-2 spot VM) → P6 drain/snapshot → P7 SPOT apply → P8 verify                                                                                                                                                        | **Cannot be done yet** — must run on sanctioned infra, not in-session; also sequenced to avoid manifest-shard write contention                                      | Raw-tick `canonical-migration-cefi-wp*` fleet finishing (**1/8 CEFI VMs RUNNING as of 2026-07-22 ~01:08 UTC** — `wp21`, actively writing; AWS side fully drained — **re-check before starting P6**, don't trust this number stale) |
+| 2   | ~~Todo 6~~ **DONE 2026-07-22** — `mdps@25ce29c37` + `features@d58b7760`, proven on real `-test-` infra (`data_pipeline_e2e_check_mdps_2026_06_27.md`)                                                                             | Shipped                                                                                                                                                             | —                                                                                                                                                                                                                                  |
+| 3   | Todos 11-15 on the P5 executor (launcher wiring for `migrate_candle_canonical_2026_07.py`, PROGRESS.json resume-checkpoint, target-index bucket-key precision, CeFi bare-wire-id scope confirmation, stale UTL docstring example) | **Not done** — P2/P3, non-blocking for a dry-run or small-scale apply, but todo 3 (launcher) + todo 12 (resume-checkpoint) should land BEFORE a real fleet-wide P7  | nobody — pick up any time, ideally before P7                                                                                                                                                                                       |
+| 4   | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (CEFI has no registered candle SchemaContract for standalone `instrument_type=FUTURE`)                                                                      | **Not done** — orthogonal finding, own issue doc, own todos. Re-confirmed live 2026-07-22: still `ALL FAILED (31/31)` on the same shard during todo-6 verification. | nobody — pick up any time; not on the candle-canonical migration's critical path                                                                                                                                                   |
+| 5   | Confirming the P5 executor's TradFi content-resolution rate against real prod parquet content (open question #1 in the build agent's own report — the `E1AF0_*_migrated_*` objects' `instrument_id` COLUMN shape is unverified)   | **Cannot be fully resolved yet** — needs a real content read against prod TradFi objects, which is exactly what the P0 census does                                  | Same as item 1 (P0 census)                                                                                                                                                                                                         |
+| 6   | Todo 16 (investigate `24h` force-leg `off_template=29` classification — possibly a stale §3A "RAW token" docstring, same class as the data_type staleness todo 6 just fixed)                                                      | **Not done** — P3, non-blocking, found during todo-6 real-infra verification 2026-07-22                                                                             | nobody — pick up any time                                                                                                                                                                                                          |
 
 **Recommended NEXT session action**: re-check the raw-tick fleet
-(`gcloud compute instances list --filter="name~'canonical-migration-cefi'"`) — if it has finished, proceed straight to
-P0 census (Tier-2 spot VM) using the shipped `migrate_candle_canonical_2026_07.py --dry-run`; if still running, item 2
-(re-point the skill's canonical leg) is the highest-value unblocked work available in the meantime.
+(`gcloud compute instances list --filter="name~'canonical-migration-cefi'"`) — only `wp21` was left running as of
+2026-07-22 ~01:08 UTC; if it has finished, proceed straight to P0 census (Tier-2 spot VM) using the shipped
+`migrate_candle_canonical_2026_07.py --dry-run`; if still running, item 3 (P5 executor follow-ups, todos 11-15) or item
+6 (todo 16, the `24h` nuance) are the highest-value unblocked work available in the meantime.
