@@ -1082,3 +1082,16 @@ figure is STALE: todos 14/18 (shipped, see the "Prep work COMPLETE" entry above)
 (`_renormalize_wire_cefi` wasn't wired for CEFI's classify branch, wrongly quarantining 128,218 of 130,906 objects) + a
 separate KRAKEN-SPOT `/`-in-symbol parsing bug, BEFORE this P7 sequence started — `--apply` re-derives classification
 fresh with the fixed classifier, so expect the real quarantine rate to land far below 13.9%).
+
+## Progress Log — 2026-07-22 (P7c-prep: CEFI JIT-redrain — nothing to stop; apply launched)
+
+**JIT-redrain**: only `datapoint-validation-cefi-20260722-151832` is CEFI-tagged among running VMs — the same
+`validate_datapoint_schema_id.py` script already analyzed for PREDICTION (reads the tick bucket, writes only to the
+disjoint `datapoint-validation` results bucket, never `processed_candles/`). Not a conflict, left running. No other
+CEFI-relevant VM found.
+
+**Action**: launched 10 shards (`SHARD_OF=10`, `SHARD_INDEX=0..9`, same proven SHA pins, `WORKERS=16`, `MODE=full`)
+against CEFI's 940,606-object corpus. **STATUS: IN FLIGHT, NOT YET VERIFIED** — check `EXIT_STATUS` for all 10 before
+assuming done. Given the todo 14/18 classifier fix landed before this run, CEFI's real disposition mix (MIGRATE vs
+QUARANTINE_CORRUPT vs the new `NEEDS_CONTENT_CEFI_WIRE_ID`) will differ from the stale census table — record the ACTUAL
+post-apply outcome counts when verifying, don't assume the census numbers still hold.
