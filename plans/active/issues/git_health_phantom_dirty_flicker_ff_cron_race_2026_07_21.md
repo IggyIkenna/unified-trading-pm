@@ -243,6 +243,65 @@ defect even with the operational impact bounded.
       but did not enumerate live rows across backends). Add a test that a stale duplicate row does not surface
       `dirty`/`drift_violation` in the merged fleet summary when a fresher clean row for the same `(host,slot)` exists.
 
+## CORRECTION 2026-07-22 (main, DB + code investigation) — SUPERSEDES the proxy-merge theory AND the "bounded to one tick" note above
+
+review(msg 1669) bounced the discriminator back to main (who has the DB + code access review lacked). Two direct tests
+on the central backend (`localhost:8765` on the `planning` VM = the backend that serves the dashboard) settle it, and
+both **retract conclusions I shipped earlier in this doc**:
+
+**1. The fleet PROXY-MERGE / second-backend theory is FALSIFIED.** `GET /api/fleet/git-health?scope=local` on central (a
+**single** backend, **no** HTTP fan-out) **already returns hk slot 1 with 22 repos `state=dirty`, `not_clean_since`
+pinned at 12:22:04Z**, at a fresh `reported_at=12:52:04Z`. The stale-dirty lives in central's **own** `SlotGitStatusRow`
+— not injected by merging a second backend's `scope=local` view. review's own check confirmed `backends.json` on hk
+lists exactly one backend (`ikenna-vm` = central). So the "Sharper root cause (proxy-merge staleness)" subsection above
+is **wrong** — there is no duplicate-row fan-out; disregard its fix todo.
+
+**2. The server does NOT fabricate `state` — the reporter is genuinely POSTing `dirty`.** The write path
+(`git_health.py:192-245` `post_slot_git_status` → `_propagate_not_clean_since` at 66-101) stores the reporter's posted
+`state`/`dirty_files` **verbatim**; it only manages `not_clean_since` (clear iff
+`state==clean AND behind==0 AND ahead==0 AND dirty_files==0`, else preserve/stamp). So a stored row with `state=dirty`
+means the reporter sent `dirty_files>0`. Confirmed the phantom fingerprint from the DB: all 22 repos carry
+**`dirty_files=1` with an EMPTY `dirty_files_sample`** (and `dirty_files_sample` IS a real server field,
+`models/git_health.py:29` — an empty sample is the reporter's own output, not a schema drop). **`dirty_files=1` with
+zero captured porcelain lines is a count-vs-sample inconsistency inside the reporter**: `slot-git-status-report.sh:199`
+sets `dirty_files=$(printf '%s\n' "$porcelain" | wc -l)` while the sample/mtime loop at 208-225 does
+`[[ -z "${line}" ]] && continue` — so a `porcelain` payload that is non-empty-but-blank (passes the `[[ -n ]]` gate at
+198, `wc -l` counts 1) yields **`dirty_files=1` but an empty `dirty_sample`**: a phantom dirty with no real path. This
+is the same "1 dirty file with no path" class the `dirty_sample` field was added to expose
+(`slot5_deployment_api_dirty_false_positive_2026_07_13.md`).
+
+**3. The operational impact is ONGOING, not bounded to one FF-pull tick (retracts the P1 escalation's severity
+reconciliation).** `ff_pull_last_run=2026-07-22T12:51:15Z` / `ff_pull_last_result=skip:dirty` — the FF-cron's **most
+recent** run still skipped — and `not_clean_since` never advanced off 12:22:04Z across ~30 min. The FF-cron
+(`slot-cron-ff-pull.sh:234`) computes dirty with the **same** `git status --porcelain` pattern as the reporter, so it
+hits the **same** phantom and `[skip:dirty]`s every tick. That is a **self-reinforcing starvation loop**, which the
+FF-cron's own header comment (lines 284-285) already names verbatim: a repo that reads dirty gets skipped → can't FF →
+"the file stays dirty **FOREVER** (self-inflicted starvation)." The self-reinforcement also explains why
+`not_clean_since` never clears even on ticks where `dirty_files` flickers to 0: because FF-pull kept skipping, the repos
+fall **behind** origin, so `is_clean_uptodate` stays false (behind>0) → `not_clean_since` is preserved. review's earlier
+`/api/state`-looked-clean observation (msg 1662) was a `dirty_files==0` instant on a still-`behind` repo, not a true
+clean-uptodate — no contradiction. So the confirmed operational blast is **ongoing FF-pull starvation of hk slot 1 (and
+any slot that hits the phantom)**, meaningfully worse than the transient single-window read above. P1 firmly retained.
+
+### Corrected root cause + fix lever
+
+The defect is **reporter/FF-cron `git status --porcelain` parsing**, shared by both scripts — NOT the server, NOT a
+proxy merge. A phantom `dirty_files=1` (blank porcelain line counted by `wc -l` but carrying no path) makes both the
+git-health reporter and the FF-pull cron read the slot dirty; the reporter's faithful persistence + the FF-cron's
+skip-on-dirty then produce fabricated fleet-dirty **and** a real, self-reinforcing FF-pull starvation loop.
+
+- [ ] [INFRA] P1. Make `dirty_files` count only **non-blank** porcelain lines in BOTH
+      `unified-trading-pm/scripts/dev/slot-git-status-report.sh` (line 199 — count what the 208-225 loop actually keeps,
+      i.e. derive `dirty_files` from a real non-blank line count / `grep -c .`, not raw `wc -l`) and the FF-cron dirty
+      gate `slot-cron-ff-pull.sh:234` (`[[ -n "$(git status --porcelain … | grep -c .)" ]]`-equivalent so a blank
+      payload never trips `[skip:dirty]`). Add a test that a `git status --porcelain` payload of a single
+      blank/whitespace line yields `dirty_files=0` and `ff_pull_last_result != skip:dirty`. This is the real fix; it
+      subsumes and replaces the (now-falsified) proxy-merge todo above.
+- [ ] [INFRA] P1. Final proof artifact (review, on hk): during a dirty tick, capture the RAW bytes of the phantom
+      payload — `git -C <repo> status --porcelain | cat -A | head` (or `| xxd | head`) — to confirm the counted line is
+      blank/whitespace (vs a real disposable file the FF-cron carve-out at lines 226-285 doesn't cover). That
+      distinguishes "blank-line miscount" (fix above) from "a real shared disposable file needs a carve-out."
+
 ## Triage
 
 Non-blocking, digest-class, no page. Outside every active plan → parked here per findings-triage. Filed by the main
