@@ -2170,11 +2170,64 @@ questions when a decision is needed. Ran it. Findings:
   todo below rather than rushed in this session alongside the higher-priority P1 manifest-recovery pass.
   - `- [ ] [DATA] P2. Design + build the CME monolith migration tool: for each of the ~30 day=*/venue=CME/ticks.parquet objects, group rows by (instrument_id, symbol), classify combo (spread, e.g. NQH6-NQM6) vs single-contract symbols, translate to canonical futures/option instrument_ids + canonical Hive paths, write per-contract canonical objects, register manifest rows, THEN delete the monolith source (migrate-first, never blind-delete — this is an only-copy per the 2026-07-21 reconciliation report).`
 
-**Session ending here on operator time/credit constraint (again). Remaining, in priority order: (1) verify the ohlcv_1s
-MVP fix + KRX launcher actually shipped (quality gates were mid-run at this checkpoint), (2) the chain- manifest
-recovery pass (real data-visibility gap, not hygiene), (3) finish the CME monolith investigation, (4) Phase D gate. Next
-session: check `git log` in unified-api-contracts + deployment-service for the two pending ships first — don't redo work
-that may have already landed.**
+### 2026-07-22 continuation — the chain-manifest recovery script (P1), PA-2021 progress check
+
+- **PA-2021 palladium backfill — genuinely progressing, NOT yet complete.** Checked via the VM's own live per-VM
+  manifest shard (`_index/per_vm/tradfi-bf-cme-ohlcv-1m-pa-2021-20260722-160825.parquet`, read directly rather than
+  trusting serial-console heartbeat activity alone, per the workspace's own progress-metric discipline — activity ≠
+  progress). Real numbers: 928 `captured` rows + 1,345 `empty_confirmed`, date coverage through `2021-12-04` (~92% of
+  the year by date). Alive, climbing, not stalled — but not finished (needs to reach 2021-12-31 + consolidate). Do not
+  re-launch; let it finish.
+- **Built `market_tick_data_service/scripts/recover_tradfi_chain_manifest_registration_2026_07_22.py`** — the P1
+  chain-manifest recovery pass. Two deliberately separate, separately-gated phases: **register** (default,
+  `--apply`-gated, additive `ManifestWriter.add()`, no CAS — for each raw-underlying `futures_chain`/`options_chain`
+  manifest row, derive the canonical target via the same `_canonical_chain_path`/`_exchange_to_product_root` builders
+  the rebundle script uses, check GCS existence via a targeted `gcs_describe_object` per candidate — never a corpus walk
+  — and if confirmed present with no existing canonical row, insert one) and **retire** (`--retire`, separate
+  invocation, whole-index in-place-CAS REPLACE mirroring `migrate_tradfi_manifest_usd_lin_2026_07_18.py`'s pattern —
+  drops the now-superseded raw rows, re-verified fresh at retire time, never from a stale register-phase ledger).
+  Research for the exact primitives (manifest read/write, CAS pattern, `gcs_describe_object`, `EXCHANGE_CODE_TO_NAME`
+  usage) was done via a dedicated Explore sub-agent reading `rebundle_tradfi_chains_2026_07.py`,
+  `recover_tradfi_garbage_underlying_2026_07.py`, `rebuild_tradfi_manifest.py`, and
+  `migrate_tradfi_manifest_usd_lin_2026_07_18.py` in full first, so the recovered target is byte-identical to what the
+  existing shipped tools already write/expect.
+  - **Real bug found and fixed during the first dry-run.** The first classification pass compared
+    `underlying.upper() == _exchange_to_product_root(underlying)` to detect "already canonical" — this returned 0
+    candidates against a corpus KNOWN (COCOA/AUD sample evidence) to contain real gaps. Root cause: the manifest's raw
+    `underlying` values for this corpus are not bare exchange codes — they are RAW PER-CONTRACT DATABENTO SYMBOLS stored
+    in the `underlying` field by an older writer convention (`6AZ3`, `ESM6`), and a few genuinely-unparseable legacy
+    forms (`CC__FMZ0023!`, an older continuous-contract naming scheme). `_exchange_to_product_root` silently no-ops on
+    an unrecognised code (returns it unchanged) rather than erroring, so the naive check could not distinguish
+    "genuinely already canonical" from "translation failed silently" — both looked identical. Fixed by adding
+    `_derive_canonical_root()`, which first checks `is_recognized_tradfi_underlying()` (genuinely canonical), then falls
+    back to `classify_databento_symbol()` (the UAC content-symbol parser the sibling
+    `recover_tradfi_garbage_underlying_2026_07.py` already uses) to extract the near-root from a per-contract symbol
+    BEFORE translating — e.g. `6AZ3` → `classify_databento_symbol` → `6A` → `_exchange_to_product_root` → `AUD`.
+    Genuinely unparseable values (`classify_databento_symbol` raises `ValueError`) are skipped, not guessed.
+  - **Register-phase dry-run (real, live manifest read — read-only, no writes) — results**: 493,389 tradfi
+    `futures_chain`/`options_chain` manifest rows loaded; 106,907 had a genuinely unparseable `underlying` (skipped,
+    correctly — legacy naming schemes `classify_databento_symbol` doesn't cover); 150,046 raw rows resolved to a real
+    product root; of those, 50,458 are already covered by an existing canonical manifest row (no action needed — these
+    become retire-phase input instead); the remaining 5,380 distinct `(date, venue, instrument_type, data_type, root)`
+    candidate keys were checked against GCS individually (targeted `gcs_describe_object`, ~40 min for 5,380 sequential
+    checks) — **1,545 of 5,380 CONFIRMED present on GCS** (real captured data with zero manifest registration — the
+    actual scope of the visibility gap this pass exists to close; the mapping is at `recovery_register.tsv` in this
+    session's scratchpad, regenerable by re-running the script). The other 3,835 candidates have no corresponding GCS
+    object — correctly left untouched (nothing to register).
+  - **NOT yet applied.** The register-phase `--apply` (additive insert of the 1,545 confirmed rows) has not been run yet
+    — low risk (no CAS, no race, per-VM-shard write the consolidator merges), but deliberately left as an explicit next
+    step rather than rushed at session-end. The retire phase has not been dry-run or applied at all.
+  - `- [ ] [DATA] P1. Run `recover_tradfi_chain_manifest_registration_2026_07_22.py
+    --apply` (register phase) against the live tradfi manifest — inserts the 1,545 GCS-confirmed canonical rows found by the 2026-07-22 dry-run. Additive/no-CAS, low risk. Re-run the dry-run first if this is picked up more than a day or two later (the confirmed set can drift as other migrations/rebundles land).`
+  - `- [ ] [DATA] P1. Dry-run `recover_tradfi_chain_manifest_registration_2026_07_22.py
+    --retire` (no --apply) AFTER the register apply above lands + is verified — review the retire candidate list carefully before ever passing --apply (in-place-CAS, destructive mutation of existing manifest rows) — per the plan's own "Do NOT delete-only" caution and this session's own near-miss with an unreviewed whole-corpus walk attempt on the CME monolith investigation.`
+  - `- [ ] [SCRIPT] P2. Ship recover_tradfi_chain_manifest_registration_2026_07_22.py via quickmerge (quality-gates.sh run + lint auto-fixed this session — verify it landed; check git log in market-tick-data-service for the commit before re-running quality gates).`
+
+**Remaining, in priority order for the next continuation: (1) ship the recovery script (quality gate was running at this
+checkpoint), (2) run the register-phase --apply, (3) dry-run then carefully review the retire phase, (4) finish the CME
+monolith migration-tool build (P2, deferred), (5) Phase D gate (`data-pipeline-check-is` + `data-pipeline-check-mtds`,
+tradfi, all shards — the terminal completion gate for this whole plan). Next session: check `git log` in
+market-tick-data-service for the recovery-script ship before redoing any of the above.**
 
 **Lesson — QG sentinel friction under heavy shared-host contention (2026-07-22 late session):** `unified-api-contracts`
 was running under heavy multi-slot contention (12+ concurrent `quality-gates.sh` processes observed). Ran the FULL gate
