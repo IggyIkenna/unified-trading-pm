@@ -165,7 +165,12 @@ Two things make this materially worse than every prior instance in this doc:
    now**. A slot that stops FF-pulling silently drifts behind `origin/live-defi-rollout`; that is the exact staleness
    the sync-nudge exists to catch, produced here by the reporter bug itself. The masking-risk hypothesized in the
    earlier sections is no longer hypothetical — a false-clean would clear the age, and a false-dirty is now demonstrably
-   starving FF-pull.
+   starving FF-pull. **Update (review msg 1662, 12:37Z): the event self-cleared within ~15 min** — review re-checked
+   `git_status.repos[].dirty_files_sample` and all repos were back to clean, so the FF-pull skip was **transient (one
+   cron window), not a stuck state**; this bounds the per-incident blast radius (a missed FF-pull tick, not indefinite
+   starvation) but does not lower P1 — a fleet-wide all-repos false-dirty that trips even a single FF-pull skip is still
+   a real reporter bug. review is now watching every tick to capture the `dirty_files_sample` on recurrence (churn-vs-
+   fabrication proof), since the flicker window closed before a sample could be grabbed this time.
 2. **Blast radius is fleet-wide and on LIVE slots, not a retired/absent worktree.** The `.tabs/0` addendum above was a
    phantom row for a worktree that doesn't exist on the host — annoying but inert. This is 24 present-and-clean repos on
    an active slot all flipped dirty at the **same instant**. The identical timestamp across all 24 strongly implicates a
