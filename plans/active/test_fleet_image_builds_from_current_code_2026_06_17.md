@@ -196,18 +196,22 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       GCP-authoritative; normalization filed in
       `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md`. See findings log for the full
       matrix.
-- [ ] [INFRA] P2. **🟢 UNBLOCKED 2026-07-22 — the 2026-06-18 credential blocker (`cloudbuild.builds.editor`) is
-      resolved** (grant confirmed live: manual `gcloud builds triggers run` now succeeds against
-      `central-element-323112`/`asia-northeast1`). Canary sequence run one repo at a time per this plan's own
-      discipline, checkbox flips once all 3 canaries + the rest of the fleet confirm SUCCESS. `instruments-service`
-      build `efdeb747-e6fe-46d2-b31c-c209ac37049b` — **SUCCESS**. `execution-service` build
-      `4e88862b-36bb-40f0-9daa-7fd39cde23b8` — triggered 2026-07-22, IN PROGRESS. `alerting-service` build
-      `584ee39b-b16b-4b92-96d8-3c9ef9942541` — triggered 2026-07-22, IN PROGRESS. All 3 canaries build against the fresh
-      UTL base digest `sha256:7f443e9ef81e2ce480935820838b57a345112342e9d1ea9b8d44e04d8bb5f18e` (shipped in Phase 1).
-      Remaining fleet (strategy-service, market-tick-data-service, market-data-processing-service, features-_, ml-_,
-      client-reporting-api, fund-administration-service, batch-live-reconciliation-service, greeks-service,
-      trading-agent-service, deployment-service) queued next, one at a time, STOP + diagnose on first systemic failure —
-      per this todo's original discipline.
+- [x] [INFRA] P2. **DONE 2026-07-22 — 14/14 GCP service builds SUCCESS** against the fresh UTL base digest
+      `sha256:7f443e9ef81e2ce480935820838b57a345112342e9d1ea9b8d44e04d8bb5f18e` (shipped in Phase 1). The 2026-06-18
+      credential blocker (`cloudbuild.builds.editor`) is resolved — manual `gcloud builds triggers run` succeeds against
+      `central-element-323112`/`asia-northeast1`. Canaries first (per this plan's discipline), then the rest of the
+      fleet once canaries proved clean: `instruments-service` `efdeb747-e6fe-46d2-b31c-c209ac37049b` SUCCESS,
+      `execution-service` `4e88862b-36bb-40f0-9daa-7fd39cde23b8` SUCCESS, `alerting-service`
+      `584ee39b-b16b-4b92-96d8-3c9ef9942541` SUCCESS. Remaining fleet, all SUCCESS: `strategy-service`
+      `5034eac0-4444-4516-b2d7-87617a11ecda`, `market-tick-data-service` `90c9d84b-3ec2-47e7-8536-76d177578059`,
+      `market-data-processing-service` `34b4955a-bde7-4228-80e6-4118b506ec1b`, `features-service`
+      `e9a3e4bc-b496-455f-a304-547a981886ce`, `ml-service` `6f6bfb55-64e4-4b38-9e7f-278323ef7335`,
+      `client-reporting-api` `45d77e0d-2026-46f0-a2e0-e9eabbb028ad`, `fund-administration-service`
+      `1cf0f5e7-ec67-4ad2-a0f6-d13894c0d384`, `batch-live-reconciliation-service`
+      `5f65772b-027a-49a3-86d8-0101d5466a00`, `greeks-service` `080cb6a9-72fb-4812-b5da-bdcb27be8334`,
+      `trading-agent-service` `3fcf5b5a-36e7-4479-98e1-592898a1d101`, `deployment-service`
+      `e2c382c6-37e0-4266-ac41-28d54bfa2744`. Zero failures across the fleet — no systemic issue surfaced, so the
+      one-at-a-time diagnose-first discipline never had to trigger.
 - [ ] [BUG] P2. For every stale base-digest pin found, file the fix (refresh `BASE_IMAGE_DIGEST` ARG) in the owning repo
       — but only AFTER confirming the dependency-update fan-out isn't the intended owner; coordinate, don't fork it.
 
