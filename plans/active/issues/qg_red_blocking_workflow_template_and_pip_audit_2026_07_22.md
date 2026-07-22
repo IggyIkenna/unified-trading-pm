@@ -82,9 +82,14 @@ and each needs real investigation/re-test, not a mechanical fix):
 - [ ] [BACKEND] P2. Determine whether instruments-service's sports odds-bookmaker golden fixture (47→27 combos) is a
       stale fixture needing regeneration (per the test's own docstring recipe) or a real registry regression — then fix
       accordingly. (repo: instruments-service)
-- [ ] [BACKEND] P2. Bump `pyasn1`→0.6.4, `pydantic-settings`→2.14.2, `setuptools`→83.0.0, `starlette`→1.3.1,
+- [x] ✅ [BACKEND] P2. Bump `pyasn1`→0.6.4, `pydantic-settings`→2.14.2, `setuptools`→83.0.0, `starlette`→1.3.1,
       `ujson`→5.13.0 in e2e-testing (re-test for breaking changes, esp. starlette 1.2→1.3), ship via normal QG+
-      quickmerge flow. (repo: e2e-testing)
+      quickmerge flow. (repo: e2e-testing) — e2e-testing@9bc6d6a. `starlette>=1.3.1` needed a `[tool.uv]
+      override-dependencies` entry (mirrors ml-service/unified-trading-api's already-verified fix) since UTL's own
+      `starlette<1.3.0` pin otherwise wins the resolve; the other 4 packages had no upper-bound constraint and bumped
+      via a plain `uv lock --upgrade-package`. `uv run pip-audit` → "No known vulnerabilities found". Full
+      `quality-gates.sh` (backgrounded per cicd.md's ldr_qg_failure heartbeat rule) → ALL QUALITY GATES PASSED (83s),
+      no regressions from the starlette 1.2→1.3 bump.
 - [ ] [BACKEND] P2. Same CVE bump as e2e-testing above — confirm same violation signature first (`uv run pip-audit`),
       then bump + re-test + ship. (repo: system-integration-tests)
 - [ ] [INFRA] P3. Once each of the 3 repos above is independently QG-green, roll out `main-backmerge-to-ldr.yml`
