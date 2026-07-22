@@ -230,17 +230,21 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       from the exchange-API sweep — Tardis can't have MORE than the exchange itself ever listed). Smoke-tested via
       `mtds-backfill-cefi-1` (1-week range 2026-07-15..21): OKX-SPOT/ BITGET-SPOT/COINBASE-SPOT all captured real rows
       (999/265/69/856 rows respectively on day 1) confirming the dispatch is correct before committing to the ~4yr
-      full-history window. **That same test VM STALLED after day 1** (confirmed via GCS log staleness, serial console
-      silence, and unreachable SSH — no host-error/preemption event logged; root cause undetermined, could be a
-      transient network blip or a real bug in the day-2 iteration path) — stopped + deleted rather than left hanging.
-      **LAUNCHED FULL HISTORY (2026-07-22, operator-acked)**: fresh VM `mtds-backfill-cefi-1`,
-      `--venues "OKX-SPOT BITGET-SPOT COINBASE-SPOT" --data-types trades --instrument-ids "STETH-USDT;STETH-ETH;     STETH-USDC;STETH-USD;STETHUSDT;WEETHUSDT;WEETHETH;CBETH-USD;CBETH-ETH" --start 2022-08-25 --end 2026-07-22`
-      (the earliest `availableSince` across all 9 symbols). All 4 tarballs verified fresh this time (no staleness
-      warnings). Confirmed RUNNING; watching closely for a repeat stall at the day-1→day-2 boundary given the earlier
-      test's failure point. If it recurs, this is a real bug (not one-off flakiness) — file an issue doc rather than
-      keep relaunching blind. Monitor:
-      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-cefi-1/run.log` + manifest shard
-      count (`time_created`), not log activity.
+      full-history window. **That same test VM STALLED after day 1** — root-caused on relaunch: a genuine kernel
+      OOM-kill, confirmed via `gcloud compute instances get-serial-port-output`
+      (`Out of memory: Killed process ...     anon-rss:12730MiB` on the 250-day-chunk relaunch attempt), with the
+      wrapping chunk-loop/heartbeat/uploader orchestration never detecting or recovering from the child's death — the
+      whole VM just goes silently, unrecoverably stuck. Tried the obvious mitigation (`--chunk-days 1`, forcing one
+      fresh process per day) and it is **NOT reliable**: two consecutive single-day chunks for the identical
+      9-symbol/3-venue scope used 6GB and 14.6GB respectively (the second OOM-killed), ruling out a simple "memory
+      scales with date-range span" theory — the real trigger is unpredictable (per-day data-volume variance, a
+      retry-storm, or a within-process leak). **BLOCKED-OPERATOR-DECISION (2026-07-22): NOT launching further attempts
+      myself.** Filed `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (P0) with full
+      evidence — this is a real, cross-cutting MTDS backfill reliability bug (affects the shared `--operation download`
+      / Tardis-adapter CEFI path generically, not specific to LST tokens) that needs actual code-level debugging, not
+      more blind VM relaunches from me. The AAVE oracle backfill (Phase 5's other in-flight VM,
+      `pyth-lst-backfill-20260722-045059`) uses a completely different operation (`collect-oracle-prices`, RPC-based,
+      not Tardis-download) and is confirmed unaffected — still healthy and progressing normally as of this entry.
 - [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source
       history + fix the today-vs-prior inner-join/vocab that drops Solana + LRTs (ezETH/rsETH) from the feature output.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
