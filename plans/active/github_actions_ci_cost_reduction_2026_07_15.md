@@ -1693,12 +1693,13 @@ prove on ONE caller → only then fan out._
 
 ### ⛔ OPERATOR DECISIONS — 4 open, nothing below them moves without these
 
-| ID     | Decision                                                                            | Recommendation + why                                                                                                                                                                                                            |
-| ------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **D1** | ✅ **DECIDED 2026-07-17** — operator delegated; checkout kept, `@main` pin rejected | Finding ② made pre-main testability non-negotiable; ~1s sparse checkout on our own runner = $0. Rollout executed same day (`a6057ea36`); STEP 2b's no-checkout clause amended to sparse-checkout.                               |
-| **D2** | **Event ledger loses rows** — fix vs accept                                         | **Find the consumer first**, then one-object-per-event. Raised twice in-session, unanswered. Full analysis filed; do NOT re-derive. SSOT: `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`. |
-| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)              | **HELD, nothing done**: delete `reconcile-release-tags`, fix `digest-drift-sweep`, and **STEP 2d is held too** (its design depends on what you decide about those three).                                                       |
-| **D4** | **Cassette follow-ups** — close 52 false issues? fix the UAC matching?              | **Ikenna owns the 179/28 count verification** (operator 2026-07-17) — do not duplicate. The workflow itself is already fixed + flipped.                                                                                         |
+| ID     | Decision                                                                                                                                                                                                                                                                                                                                  | Recommendation + why                                                                                                                                                                                                                                                                                 |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **D1** | ✅ **DECIDED 2026-07-17** — operator delegated; checkout kept, `@main` pin rejected                                                                                                                                                                                                                                                       | Finding ② made pre-main testability non-negotiable; ~1s sparse checkout on our own runner = $0. Rollout executed same day (`a6057ea36`); STEP 2b's no-checkout clause amended to sparse-checkout.                                                                                                    |
+| **D2** | **Event ledger loses rows** — fix vs accept                                                                                                                                                                                                                                                                                               | **Find the consumer first**, then one-object-per-event. Raised twice in-session, unanswered. Full analysis filed; do NOT re-derive. SSOT: `plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.                                                                      |
+| **D3** | **The 3 dead workflows** — operator wants to review first (2026-07-17)                                                                                                                                                                                                                                                                    | **HELD, nothing done**: delete `reconcile-release-tags`, fix `digest-drift-sweep`, and **STEP 2d is held too** (its design depends on what you decide about those three).                                                                                                                            |
+| **D4** | **Cassette follow-ups** — close 52 false issues? fix the UAC matching?                                                                                                                                                                                                                                                                    | **Ikenna owns the 179/28 count verification** (operator 2026-07-17) — do not duplicate. The workflow itself is already fixed + flipped.                                                                                                                                                              |
+| **D5** | **NEW 2026-07-22** — `unified-trading-library`'s `TestF1PerfGuard` (hardcoded 0.5s wall-clock budget) now flakes ~0.7s under shared self-hosted-runner CPU contention: 9/16 (56%) of UTL's 5-day QG failures, vs 1/50 (2%) in the pre-migration 2026-07-10..16 baseline. Loosen the budget / make it relative / isolate perf-guard tests? | Recommend making the budget relative to a measured local baseline (or widening it, e.g. to 1.0–1.2s) rather than isolating perf tests onto dedicated hardware — cheapest fix, keeps the shared-pool cost model this whole plan is built on. Needs an operator call on the number, not the mechanism. |
 
 ### Not done — blocked on nobody, real work
 
@@ -1785,3 +1786,43 @@ prove on ONE caller → only then fan out._
   fully pushed). If the scratchpad is gone, clean the stale registration with `git worktree prune` +
   `git branch -D tmp/step2c-rollout` — everything it held is on `origin/live-defi-rollout`. The worktree pattern itself
   is the documented way to work while the slot clone carries someone's live WIP.
+- **5-day post-migration system check (2026-07-22)** — operator asked "is everything working, did anything break due to
+  our migration?". Findings, evidence-first via `gh run list`/`gh api .../jobs`/`.../logs` (not Slack — this session's
+  gcloud ADC needed an interactive reauth this tool couldn't do, so live Slack alert-volume re-verification was skipped;
+  GH Actions run data is authoritative and sufficient on its own):
+  - **`ldr-docs-gate` (shipped 2026-07-17 as the frontmatter backstop) had NEVER completed a single run** — 39/40
+    sampled runs over 5 days show `cancelled`, 0 ever reached a verdict. Root cause:
+    `concurrency: cancel-in-progress: true` on a static group name, racing against LDR's real push cadence (a new
+    doc/plan push lands every few minutes fleet-wide, faster than this sub-minute check finishes) — every run got
+    pre-empted by the next push before it could report anything. The backstop has been silently inert this whole time.
+    **FIXED live this session**: `cancel-in-progress: false` (queue instead of cancel — self-hosted + sub-minute jobs
+    make queuing free) → `unified-trading-pm@efdeb6f41`.
+  - **Genuine regression, still open**: `unified-trading-library`'s `test_manifest_completeness.py::TestF1PerfGuard`
+    (hardcoded 0.5s wall-clock budget for a 1.2M-row F1 index build) now flakes at ~0.7–0.73s and accounts for 9/16
+    (56%) of UTL's 5-day QG failures. Baseline check (`gh run list --created "2026-07-10..2026-07-16"`): 49/50 success,
+    1 failure (~2%) — vs ~18% now. Most likely cause: shared-host CPU contention on the self-hosted runner pool (this
+    plan's own "≤2 full QGs at once" rule implies contention is expected; this one test's absolute wall-clock budget
+    isn't resilient to it). **NOT fixed** — needs an operator call: loosen the budget, make it relative/calibrated, or
+    isolate perf-guard tests from concurrent QG contention. New todo below.
+  - **Coincidental, NOT migration-caused, already fixed by others**: instruments-service's
+    `TestWriteVenueCanonicalPartition` tests hit `pytest_socket.SocketConnectBlockedError` on `169.254.169.254` for a
+    few hours today. Traced (via a dedicated sub-agent, `instruments-service` git history) to a same-day refactor
+    (`a9be6ce9`, 03:20 UTC) that changed `_write_venue` to build its own real `get_data_sink()` instead of using the
+    test's mocked sink, without updating the test's mocks — would have failed identically on a GitHub-hosted runner
+    (pytest-socket's `--allow-hosts` is the same either way). Two slots raced a fix within ~50 min
+    (`4ca56889`/`14a1548f`, reconciled `a74e0c46`); HEAD is clean.
+  - **Real, currently-live, fleet-wide, but NOT migration-caused**: a freshly-disclosed CVE pair in `pyasn1==0.6.3`
+    (CVE-2026-59885, CVE-2026-59886) is failing the pip-audit gate (part of the merged `checks` leg / Codex compliance)
+    on every repo that depends on it — confirmed red on unified-trading-library, features-service, and alerting-service
+    (instruments-service likely too). This predates and is unrelated to the CI-cost work; it needs a version bump/pin or
+    a documented waiver. Not actioned here (out of this plan's scope) — flagged to the operator.
+  - **Everything else sampled** (instruments-service hardcoded-test-project-ID / function-size / DeFi-citation-baseline
+    / UAC-adapter-registration-drift failures; the single `Escalate to Orchestrator` failure on a
+    `gh pr edit --add-label` call hitting GitHub's deprecated `projectCards` GraphQL field) is pre-existing/organic
+    fleet churn, unrelated to A1/A2/A5/STEP2b/notify-slack/prek/cron-cadence — each caught correctly by gates that were
+    unchanged by this plan's work.
+  - **Verdict for the operator**: the CI-cost-reduction changes themselves (A1/A2/A5/STEP2b/alert-dedup/cron-cadence)
+    are running clean — PM's own `quality-gates-v2` is 157 success / 12 failure / 31 cancelled (cancelled =
+    concurrency-superseded, benign) over 5 days, and none of the fleet failures trace back to those specific changes.
+    The one thing that WAS broken because of this plan's work (`ldr-docs-gate`) is fixed. The one open regression
+    plausibly tied to the broader self-hosted-runner migration (F1PerfGuard contention) needs a decision, tracked below.
