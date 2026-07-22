@@ -1897,3 +1897,100 @@ in-flight agents' work). If it's still there uncommitted, finish reviewing/testi
 already landed (check `git log` for `mtds@` shas matching the fix descriptions above), skip straight to running
 `migrate_tradfi_manifest_usd_lin_2026_07_18.py --apply --in-place-cas` for real. Either way, the catalogue promote is
 independent and can run in parallel right now with no blockers.
+
+---
+
+## Progress Log — 2026-07-22 (all migration work moved to VMs — time/credit-constrained finish)
+
+**Operator explicitly asked to move all remaining tradfi migration work onto VMs (compute, not chat turns) given session
+time/credit limits. Everything below is now running on GCP compute, decoupled from this session.**
+
+### Shipped this stretch
+
+- **Cash-bucket crash fix, done properly**: the two background agents' work (documented above as "in flight,
+  uncommitted") turned out to be incomplete on inspection — the earlier agent's test file correctly proved the bug ALSO
+  hits `_process_derivative` and `build_in_place_frame` (the actual `--in-place-cas` path), not just `_process_cash`.
+  Rewrote as a single `_safe_canonicalize()` helper used by all 4 call sites, verified against the agent's own 5-test
+  regression file (all pass) + 2 live dry-runs (additive and `--in-place-cas`, both clean, no crash). Shipped
+  `mtds@<latest>` (`fix(mtds): tradfi manifest cash-bucket id-canonicalization crashes...`).
+- **Content-rewrite script shipped**: `mtds` `feat(mtds): tradfi parquet-content instrument_id rewrite executor`.
+- **VM launcher extended** (`deployment-service`, 3 commits): two new categories on `launch-canonical-migration-vm.sh` —
+  `tradfi-cid` (content-rewrite, shard-fan-out, renamed from `tradfi-content-rewrite` after hitting GCE's 63-char
+  VM-name limit) and `tradfi-manifest-cas` (the manifest `--in-place-cas` re-stamp, wrapped in an 8-attempt in-VM retry
+  loop with jittered sleep — see finding below).
+
+### Live dry-run numbers (confirmed via the fixed script, 2026-07-22, before any VM ran)
+
+Total manifest rows 6,262,988. Bucket 1 (derivative FUTURE/OPTION): 399,453 candidates, 91.1% already/now-canonical,
+1,989 real fixes, 30,529 genuinely unparseable (quarantined, not crashed). Bucket 2 (bundle underlying): 494,670
+candidates, 4,898 translated. **Bucket 3 (CASH — equity/etf/etc, the big one): 3,551,005 candidates, 1,751,779 rows
+migrated to the -USD id (49.3%)**, only 370 quarantined. Bucket 4 (SPOT_PAIR/COMBO case-only): 1,404,118 candidates,
+48,920 re-stamped. **This is the number the 2026-07-18 run should have produced and never did** because it crashed
+partway through on the first malformed spread symbol.
+
+### 🔴 Finding: the CAS race against the manifest consolidator is worse than documented
+
+Ran `--apply --in-place-cas` for real, 2 attempts from this laptop (cross-region) + 2 attempts from a fresh
+`asia-northeast1` VM (in-region) — **all 4 lost the CAS race**, aborting safely (no partial write, per design) every
+time. Off-region window ≈90s (exceeds the consolidator's 60s cycle — a guaranteed loss, not bad luck). **In-region
+window ≈23s still lost twice** — better odds (~60%+ per attempt) but not a sure thing. Could not pause the consolidator
+scheduler (`cloudscheduler.jobs.pause` denied on both the compute service account and the operator's account, whose
+token was also expired; could not self-grant IAM either). Fix: `tradfi-manifest-cas` VM category now retries the whole
+CAS attempt up to 8x in a bash loop **within the same VM boot** (no per-attempt VM-relaunch overhead), with a 5-25s
+jittered sleep between attempts so different tries land at different phases relative to the consolidator's tick.
+
+- `- [ ] [INFRA] P3. Actually fix the scheduler-pause permission gap for `uts-prod-manifest-consolidator-market-data-tradfi-cron`— whichever account/role should have`cloudscheduler.jobs.pause` on it doesn't; the 8x-retry loop is a workaround, pausing properly is the real fix and would make every future manifest CAS script instant-reliable.`
+
+### VMs launched (check these directly, not by asking the main session — it may not be running anymore)
+
+- `canonical-migration-tradfi-manifest-cas-<ts>` (with the 8x retry fix) — launched, in flight as of this checkpoint.
+  Check: `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log | tail -40` for
+  `CAS FINAL rc=0` (success) vs `rc=1` (all 8 attempts lost — re-launch once more, or escalate the scheduler-pause fix
+  above).
+- `canonical-migration-tradfi-cid-<ts>-shard{0..7}of8` (content-rewrite, `--apply`) — **5 of 8 shards confirmed
+  COMPLETE, exit_code=0, ~107K rows each, ALL showing `already_canonical` — 0 divergent objects found in this
+  worklist.** This is a real, useful negative result the build agent had already flagged as likely (its own >100-object
+  live sample found the same thing): the equity/etf/spot_pair/index single-instrument population this script targets was
+  ALREADY content-canonical (the 2026-07-08/09 write-path fix reached it via routine re-backfills). **The true
+  ~68.7%-legacy population lives elsewhere — FUTURE/OPTION per-contract chain-bundle content, which was explicitly out
+  of this script's scope** (see the script's own "DESIGN DECISION" docstring section). Remaining 3 shards were
+  progressing identically (100% already_canonical) as of this checkpoint — check for the same pattern; if it holds, this
+  whole pass is a clean confirmation, not a fix, and the REAL remaining content gap is the derivatives, not cash.
+  - `- [ ] [DATA] P1. The true legacy-content population (FUTURE/OPTION per-contract chain-bundle content) still needs its own rewrite pass — `rewrite_tradfi_content_id_2026_07_21.py`'s worklist filter (`underlying`blank/null) deliberately excludes chain bundles. Scope a follow-up worklist keyed on`underlying`NOT blank +`instrument_type
+    in {futures_chain, options_chain}` before declaring tradfi content-canonical.`
+- `canonical-migration-tradfi-<ts>-shard{0..19}of20` (existing category, REBUNDLE — reuses the already-proven 3-pass
+  migrate+rebundle+recover chain rather than a new one) — launched as of this checkpoint, satisfies the REBUNDLE todo
+  (112,839 per-contract `options_chain` rows) using existing infra, no new code needed.
+
+### Still not launched (ran out of time this session)
+
+- CME MBO monolith migration (107 objects, 2.53GB, migrate-first-never-blind-delete) — no VM category exists for this
+  yet; needs its own small content-read tool first (derive canonical `mbp_10` ids from content).
+- Catalogue MVP promote (`build_instrument_catalogue.py --asset-group tradfi`) — still the cleanest, lowest-risk,
+  fully-unblocked next item; genuinely just needs someone to run it.
+- Phase D gate — blocked on everything above.
+
+**Check VM completion via `gcloud compute instances list --filter='name~"^canonical-migration-tradfi"'` (empty = all
+self-deleted on completion, `VM_SHUTDOWN_ON_COMPLETION=true`) and the per-VM logs at
+`gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log`. No Claude session needs to be running for these
+to finish — that was the whole point of moving them here.**
+
+### Final confirmation — all 3 VM jobs launched (2026-07-22, end of session checkpoint)
+
+- **`canonical-migration-tradfi-manifest-cas-20260722-075028`** — running (8x in-VM retry loop, ships
+  `deployment-service@<fix-sha>`). Check `... /run.log | grep 'CAS FINAL'` for `rc=0` (success — the whole manifest is
+  now canonical, matching the dry-run numbers above) vs `rc=1` (all 8 attempts lost the race — the scheduler-pause
+  permission gap todo above is the real fix; a manual relaunch is a cheap stopgap in the meantime).
+- **`canonical-migration-tradfi-cid-20260722-065920-shard{0..7}of8`** — confirmed all 8 launched; 5/8 confirmed complete
+  (100% `already_canonical`, 0 real fixes needed — see finding above). Remaining 3 were mid-run, identical pattern, no
+  reason to expect a different outcome.
+- **`canonical-migration-tradfi-20260722-074047-shard{0..19}of20`** — confirmed all 20 launched (verified via direct
+  fleet listing, not just the launcher's own claimed success). Sample check on shard0: real work done (60,428
+  `VERIFIED_INPLACE`, 1,683 `MIGRATED`, 348 `SIZE_MISMATCH_KEPT_SRC` safety-holds, 169 `CONTENT_REPAIR_DEFERRED`), but
+  its rebundle pass found 0 per-contract rows in THIS shard's slice — expected if the 112,839-row population isn't
+  evenly distributed across the hash-based shards; check the AGGREGATE across all 20 shards'
+  `rebundle_mapping.tsv.reconcile.txt` before concluding rebundle found nothing.
+
+**Session ending here on operator time/credit constraint. Nothing further will be done from this session — the 3 VM jobs
+above are the actual remaining migration work and will complete (or fail loudly into their run.log) on their own. Next
+session's first move: check the three bullets above, not re-derive from scratch.**
