@@ -2141,3 +2141,37 @@ blindly; check the exact guard condition in `base-library.sh`/`base-service.sh` 
 before concluding it's a real blocker.
 
 - `- [ ] [INFRA] P2. Diagnose why unified-api-contracts' full quality-gates.sh run (2026-07-22, under heavy host contention) printed ALL QUALITY GATES PASSED but never wrote .qg_last_passed_sha / .qg_content_sentinel — check the governor/contention-queue interaction with the sentinel-write guard in quality-gates-base/base-library.sh.`
+
+### 2026-07-22 continuation — both pending ships landed, KRX backfill launched for real
+
+- **Root cause of the QG-sentinel friction above was NOT purely contention — found and fixed a second, real bug.**
+  Operator pushed back on the "not mine to fix" framing for the blocking `test_archetype_capability_manifest_parity.py`
+  failures and said to file + fix it directly. Root-caused: `_find_codex_markdown()` was resolving the PM codex doc via
+  `$UNIFIED_TRADING_WORKSPACE_ROOT` (the pre-per-slot-worktree machine-wide root checkout, stale at 16 days / missing 29
+  archetype sections + the whole `Portfolio` family) **before** falling back to an ancestor-directory walk from
+  `__file__` (which finds the caller's own live, current per-slot checkout). Fixed the resolution order — ancestor-walk
+  first, env var only as a last-resort fallback for a genuinely isolated container with no sibling PM checkout. All 17
+  tests in the file pass; zero doc content was actually missing (the live slot-1 checkout already had all 9 families /
+  53 archetypes — this was purely a resolution-order bug). A duplicate issue doc already existed from slot-3 hitting the
+  same root cause independently
+  (`unified-trading-pm/plans/active/issues/uac_archetype_codex_parity_test_reads_stale_root_checkout_2026_07_22.md`) —
+  updated it to `status: resolved` with a Resolution section rather than filing a new one. **This explains why the "pure
+  contention" framing in the Lesson above was incomplete**: some of the observed friction across ~6 gate attempts really
+  was host contention, but every one of those attempts was ALSO going to fail regardless of contention level, because of
+  this standing test bug — the two causes were confounded, not either/or.
+  - Shipped: `uac@68c4c371d` — `_find_codex_markdown()` fix + the `ohlcv_1s` MVP-scope change (both files were bundled
+    into one ship since both were quality-gates-verified together). `resolved_by:` stamped in the issue doc,
+    `pm@0f03dd91d`.
+- **KRX launcher shipped and launched for real.** `deployment-service` quickmerge raced another slot's concurrent push
+  once (sentinel invalidated between gate-pass and quickmerge, same high-shared-repo-velocity pattern as all session) —
+  re-ran the gate against the new HEAD (`9145ff89a`, fresh green, 66s) and quickmerged immediately on the retry, no
+  further races. Code tarball refreshed (`create-code-tarballs.sh`, all 4 repos re-pinned including
+  `unified-api-contracts@68c4c371dfea`). Ran `launch-tradfi-bf-krx-equities-ohlcv-24h.sh` for real (no `--dry-run`): all
+  8 year-shard VMs (2019–2026) launched and confirmed `RUNNING`/SPOT in `asia-northeast1-c`
+  (`tradfi-bf-krx-eq-ohlcv-24h-{2019..2026}-20260722-19*`). Not yet verified for actual row capture — check the manifest
+  query in the launcher's own post-launch instructions (`gsutil cp .../availability_index.parquet` + groupby
+  `venue==KRX, data_type==ohlcv_24h`) after the VMs have had time to run (Yahoo daily fetch across 3 tickers × up to 8
+  years, should be fast — check within an hour, not immediately).
+- **PA-2021 palladium backfill**: confirmed still `RUNNING` (`tradfi-bf-cme-ohlcv-1m-pa-2021-20260722-160825`, launched
+  08:08Z), serial console shows steady ~60s-cadence `gsutil` heartbeat activity — alive, not stalled. Not yet confirmed
+  complete.
