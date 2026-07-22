@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                                                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                                                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -2344,3 +2344,169 @@ Discriminator = **does a manifest row exist**.
   that reports success can still silently regress unrelated already-shipped content when the stash's parent commit is
   stale relative to HEAD — always diff the popped result against HEAD (not just check for pop errors) before trusting
   "lossless."
+
+- **2026-07-21/22 (pre-compact durability checkpoint) — full-ownership DeFi closeout session, operator granted total
+  authority ("go do till full completion... whilst waiting for VMs do the other parts in parallel"). 6+ concurrent agent
+  streams run this session; this entry is the resumable index — everything below is either shipped+verified or has a
+  named agent still owning it.**
+
+  **Operator ruling this session (2026-07-21, documented Track 1 + "Operator decisions applied" section above, already
+  committed): `canonical_instrument_id` must always resolve to the human symbol form for POOL/LENDING, never an
+  address/UUID fallback.** Narrower than it first read — does NOT touch the ratified two-id model (`instrument_id`
+  machine key stays address-anchored). Root cause: no adapter did real token-symbol resolution; fixed by building a
+  shared UTL resolver (Alchemy EVM + Solana static token-list) and wiring it into the POOL adapters + Solana LENDING
+  handler. Also resolved 6 cross-cutting decision-blockers under `/autonomous` authority (Solana pool vocab Option A,
+  SOLANA_LENDING out-of-D2-retire-scope, non-POOL EU fold-in, SUSHISWAP/UNISWAP factory-derived version, defi ID_FORM
+  widening, UTL lending dispatch key) — all documented in the "Operator decisions applied (2026-07-21..." section,
+  `unified-trading-pm@9cfd66ebe`.
+
+  **SHIPPED + VERIFIED this session (SHAs, all confirmed `ancestor-or-equal of origin/live-defi-rollout`):**
+  1. Glued-id migration **100% COMPLETE, 1,755/1,755 files, 0 errors**
+     (`issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`). Root cause of the final 28 failures: a
+     Zalgo spam-token symbol (~1000 stacked Unicode combining marks) produced a 1,201-byte GCS leaf, over the 1024-byte
+     object-name cap — fixed `_sanitize_defi_symbol` to strip combining marks (`unicodedata.category` Mn/Mc/Me) + cap at
+     200 bytes, hardening the live forward-write path too, not just this migration. `market-tick-data-service@781204d8`
+     (fix) + verified in production (retired=22, err=0) + `market-tick-data-service@693ecb363` (doc). **RESUME per that
+     issue doc: rebuild the manifest VM-scale (reemit OFF), verify 0 glued ids, delete `_migrated_` markers** — blocked
+     purely on MTDS being clean enough for a fresh code tarball (see "still in-flight" below).
+  2. UTL token-metadata resolver — `unified_trading_library/defi/token_metadata_resolver.py` (new module, real Alchemy
+     `alchemy_getTokenMetadata` + Solana `solana-labs/token-list`, cached). Landed via the workspace's LIVENESS-gated
+     dead-claim auto-inherit (another agent committed it verbatim, verified byte-identical).
+  3. Wired into Solana LENDING handler — `market-tick-data-service@7ce100f9` + a **critical adjacent fix**
+     `unified-api-contracts@4c049355` (the DeFi Solana-lending SchemaContract's `symbol_column` was `"market_id"` not
+     `"symbol"` — without this the handler fix would have been a no-op on the actual written object). Real backfill
+     executed: 103 UUID-shaped rows scoped, 39 resolved to real symbols, 64 genuinely unresolvable (left honest, never
+     re-embedded), 23 objects migrated + 16 idempotent-skip, 0 errors.
+  4. IS POOL adapters (balancer/orca/raydium) wired to the resolver — **verified correct + zero-regression** (proven via
+     `git stash` A/B: identical 4 pre-existing failures with/without the diff) but **NOT YET SHIPPED** — blocked on an
+     external, correctly-not-duplicated dependency gap:
+     `issues/instruments_service_aave_oracle_adapter_registration_test_drift_2026_07_21.md` (UAC registered
+     `AAVE-ETHEREUM: aave_oracle` ahead of instruments-service's own factory entry; that adapter is explicit in-flight
+     work under the SEPARATE `lst_rate_honest_coverage_2026_07_21.md` plan, confirmed not present anywhere on this host
+     — do NOT rebuild it here, it would risk a second divergent implementation). Measured resolved-vs-fallback while
+     verifying: BALANCER-ETHEREUM 1/3 blank-symbol pools now resolve; ORCA-SOLANA 502→514 pools kept (+12 previously
+     silently-dropped). instruments-service HEAD `57530015`, 5 files uncommitted-but-ready.
+  5. Solana pool vocab desync (`pool` vs `solana_amm_pool`) — turned out **already shipped** by a concurrent agent
+     before dispatch (`instruments-service@c781eb0b` + `unified-api-contracts@5d83b729`); this session did the
+     verification + measurement (812,055 stale `expected_unattempted` rows still live in the manifest, 406,015 confirmed
+     permanently-unsatisfiable — re-seed correctly deferred to Track 3's purge-first ordering, NOT bundled in) + doc
+     close-out, `unified-trading-pm@940d290ab`.
+  6. SUSHISWAP/UNISWAP bare-version — `instruments-service@3ffd1adf`: a real, cited factory-address→version registry
+     shipped (`_dex_factory_registry.py`), but **measured resolved=0/residual=206,107 (100%) — the honest outcome**,
+     because no row captured today carries a factory address anywhere in the schema (verified across `InstrumentRecord`,
+     the v9 manifest schema, all 4 `uniswap_v3.py` subgraph cascades). Follow-up capture work (subgraph field vs
+     on-chain RPC lookup) filed as a new Track 1 todo +
+     `issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md`. This agent also found + fixed an unrelated
+     fresh (~2h old) instruments-service regression (`InstrumentsWriteGate` wrongly firing on `fetch_completed_at`) —
+     `instruments-service@2b6a27d0`+`1a6be004`.
+  7. GMX `pipeline_mode` mislabeled `batch_hyperliquid` (copy-paste bug, should be `batch_onchain_subgraph` — GMX is The
+     Graph subgraph-sourced, not Hyperliquid) — root-caused, fix + real GCS migration of every historical mislabeled
+     object. **Still finalizing its last quality-gate + ship** (see in-flight below) — this is the LAST thing keeping
+     MTDS dirty.
+  8. Fold-manifest registration (`issues/defi_fold_manifest_registration_pending_2026_07_21.md`) — root cause: a bare
+     `ValueError` from a missing `project_id` escaped `ManifestWriter._write_to_gcs`'s narrow except clause and got
+     silently swallowed. Fixed (`unified-trading-library@b9534230`), **748 rows registered and verified
+     `capture_status=captured` in production** (not just claimed).
+  9. Catalogue-miss fallback removal + DeFi ID_FORM widening
+     (`issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` §7 residual) —
+     `unified-api-contracts@502ef57e`: root-caused to a Bitfinex funding-pair wire-format bug (`ADAF0:USTF0` minting a
+     double-wrapped id), fixed with a hard `ValueError` on embedded `:` in `build_instrument_id` for every asset_group
+     except sports/prediction (which legitimately embed colons). Blast radius checked by hand this session: no other
+     live cefi connector (Bybit/Binance/Deribit/Kraken/OKX) uses colon-bearing symbols.
+  10. Checker collect-* route (`data_pipeline_check_mtds_cannot_fetch_defi_2026_07_20.md`) —
+      `deployment-service@56a451f8`.
+  11. Turbo-API DeFi data-hiding for HYPERLIQUID/ASTER — `deployment-api@427ede5` + `deployment-ui@83ec561`. Verified
+      NOT a regression against the Track-1 "chain-axis leakage = purge" ruling (different, smaller row set — a narrow
+      `chain=HYPERLIQUID` mis-tag class, vs this fix's legitimate `(HYPERLIQUID,HYPERLIQUID)`/`(ASTER,BSC)` real
+      chain-level settlement data, sourced from a distinct 2026-07-07 issue + architecture ruling).
+  12. Culled Solana-perp venue purge (Track 7) — mostly already done by prior sessions; this session corrected a
+      task-brief error (DRIFT/PACIFICA is a 2026-07-16 ruling, SOLAYER/PICASSO/CAMBRIAN is an unrelated 2026-06-02 one),
+      preserved 2 load-bearing registry entries instead of blindly deleting, deleted one genuinely-completed one-off
+      script — `market-tick-data-service@f6176e8b` + `unified-trading-pm@f72f32867`.
+  13. Stale codex path docs (Track 2) — investigation found both docs already correct (fixed same-day by an earlier
+      commit, checkbox never flipped) — `unified-trading-pm@9ce3bbf7b`.
+  14. deployment-service data-loss repair (documented in the Progress Log entry immediately above this one).
+
+  **STILL IN-FLIGHT at compaction time (named agents, resumable via SendMessage to the agentId):**
+  - **GMX pipeline_mode fix** (agentId `a32413ef5c3d61cab`) — migration + manifest re-registration verified complete;
+    was on its FINAL quality-gates.sh pass (re-triggered because another agent's commit landed on HEAD mid-run,
+    invalidating the QG sentinel) when this checkpoint was written. This is the **last file keeping MTDS dirty**
+    (`_perp_funding_gmx.py` + tests + schema-artifact churn) — nothing else can get a fresh MTDS code tarball (needed
+    for the glued-id manifest-rebuild VM) until this lands. Its own migration script + a 22KB issue doc
+    (`issues/defi_gmx_pipeline_mode_mislabeled_hyperliquid_2026_07_21.md`) are believed still uncommitted pending its
+    ship — verify both landed before assuming this is done.
+  - **Lending-writer-retire prerequisite gate** (agentId `a2386110e55fc02df`,
+    `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`, all 14 todos) — was on its 3rd quality-gate
+    pass (85% through, 13 MTDS files + 1 PM script, 139 tests passing) at checkpoint time. This plan's OWN scope is the
+    writer-fix only — it explicitly must NOT start the ~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN migration itself even once
+    green (that's this closeout plan's Track 1 job, gated on this one flipping its todo-14 banner from BLOCKED to
+    CLEARED).
+  - **Zero-capture protocols** (agentId `a18ff7170b7a0d5b7`, Track 4, scoped to uniswap_v2/v4 + trader_joe_v2 +
+    velodrome_v2 + Morpho lending indices ONLY — Solana ORCA/RAYDIUM swap indexer deliberately excluded, collides with
+    item 4 above) — had given two unverifiable "waiting" reports with zero corroborating evidence (no live process, no
+    dirty files matching its scope) before this checkpoint; was directly challenged and re-confirmed a real PID (2589)
+    mid-run at last check. **Verify its actual output before trusting any of its claims** — this stream's self-reports
+    were less reliable than the other two.
+
+  **Lessons this session (would otherwise be re-learned the hard way):**
+  - An agent's "lossless" stash-recovery claim is not evidence — always diff the result against HEAD yourself (see the
+    deployment-service entry above; caught a silent 5-commit reversion).
+  - A sub-agent reporting "watchdog armed, waiting for notification" two turns in a row with **no concrete evidence**
+    (no PID, no percentage, no file diff) is a real stall pattern worth directly challenging — every time this session
+    called it out with "I checked independently and see no live process," the agent either produced real evidence
+    immediately or was legitimately still investigating. Don't accept a second bare "I'll wait" without verifying
+    yourself first.
+  - A background diagnostic with no incremental progress output is indistinguishable from a hang — a purely sequential
+    per-file loop against GCS (no thread pool) took 38+ minutes with zero signal; killed and replaced with a
+    properly-instrumented, parallelized version that printed per-file progress, and it finished in minutes.
+  - The "28 persistent bad-leaf errors" from the pre-compaction summary were NOT transient/GCS-flakiness as first
+    hypothesized (two identical retries reproduced exactly 28 both times) — genuinely deterministic, root-caused via
+    exception logging (the original harness swallowed exceptions with zero detail; added logging, found the Zalgo symbol
+    immediately). **Lesson: "transient" and "deterministic-across-retries" are distinguishable with two data points —
+    don't stop at one retry before concluding either way.**
+  - This tab's working directory is genuinely shared by multiple concurrently-dispatched agents editing the SAME
+    repos/files in real time — `git status`/`ps aux` are more reliable ground truth than any single agent's self-report,
+    and multiple agents independently discovered + correctly handled the same class of collision (isolate-your-hunk via
+    `git apply --cached` / `git add -p`, verify the other party's WIP survives byte-identical).
+  - Dispatched sub-agents I spawn this session are **mine to reconcile, not foreign territory to wait on indefinitely**
+    (AUTONOMOUS_AGENT_RULES.md #4, "assume no one else is working... reconcile everything down here, now") — corrected
+    mid-session after treating one as untouchable; the right posture is active ownership (check real state, nudge, or
+    finish it myself), reserving genuine deference for work that's demonstrably owned by a SEPARATE plan/slot (like the
+    aave_oracle gap, which really is external).
+
+  **Scratchpad disposition** (`/private/tmp/claude-501/.../scratchpad/`, ~12GB, session-specific, will NOT survive):
+  deliberately dropping ~10GB of point-in-time GCS parquet snapshots (`defi_index*.parquet`, `idx.parquet`,
+  `live_availability_index_check.parquet`, `track4_venues_slice.parquet` — all regenerable, all already stale given how
+  much the manifest changed this session) and every QG/migration run log (transient, findings already captured in commit
+  messages + issue docs). Two scripts worth checking on: `scripts/one_offs/reshard_glued_defi_ids_2026_07_21.py` already
+  lives in the MTDS repo tree (not just scratchpad) but is **uncommitted** — its own `Delete-when` marker needs BOTH 0
+  glued ids (done) AND the forward write-path fix shipped (not done, see Deferred table) before it's safe to delete, so
+  it should be committed, not dropped, next time MTDS is touched. `gmx_pipeline_mode_migration.py` (the real migration
+  executor, scratchpad-only) should be promoted into MTDS's `scripts/one_offs/` by the GMX-fix agent when it ships, per
+  the same pattern — verify it did.
+
+## Deferred work after 2026-07-21
+
+| Item                                                                                                                                                          | State / why deferred                                                                                                                                                                 | Blocked on                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Glued-id manifest rebuild (VM-scale, reemit OFF) + verify 0 glued + delete `_migrated_` markers                                                               | Not done — real work, ready to launch                                                                                                                                                | MTDS clean enough for a fresh code tarball (GMX-fix landing)                                                                                                                             |
+| IS POOL-adapter resolver wiring ship (balancer/orca/raydium)                                                                                                  | Not done, but verified-correct + zero-regression, sitting ready                                                                                                                      | External `aave_oracle` registration from a DIFFERENT plan (`lst_rate_honest_coverage_2026_07_21.md`) — operator-owned in the sense that it's someone else's active track, not a decision |
+| GMX pipeline_mode fix final ship                                                                                                                              | Not done — real work, migration+manifest verified complete, awaiting final QG                                                                                                        | Its own quality-gates.sh pass (agentId `a32413ef5c3d61cab`)                                                                                                                              |
+| Lending-writer-retire prerequisite gate (14 todos)                                                                                                            | Not done — real work, ~85% through its ship sequence at checkpoint                                                                                                                   | Its own quality-gates.sh pass (agentId `a2386110e55fc02df`)                                                                                                                              |
+| Zero-capture protocols (uniswap_v2/v4, trader_joe_v2, velodrome_v2, Morpho)                                                                                   | Unclear — agent gave two unverified "waiting" claims before a real PID was confirmed; treat as genuinely in-progress but verify its actual diff before trusting any completion claim | Its own investigation/quality-gates.sh pass (agentId `a18ff7170b7a0d5b7`)                                                                                                                |
+| Forward write-path fix (shared stable-filename helper, ~15 handlers)                                                                                          | Not done                                                                                                                                                                             | File collision with the 3 in-flight streams above (touches `_perp_funding_gmx.py`, `lending_indices_handler.py`, and 6+ other handlers) — start once they land                           |
+| ~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN migration                                                                                                               | Cannot be done yet                                                                                                                                                                   | Gated on the lending-writer-retire plan flipping its todo-14 banner to CLEARED                                                                                                           |
+| Residual canon walk C2–C12 + instrument_type case/venue-spelling unify                                                                                        | Not done                                                                                                                                                                             | None structurally — next tractable P0 once the 3 in-flight streams free up MTDS/IS                                                                                                       |
+| Purge 1.79M dup + ~219.5K phantom + seed ~63.9M `expected_unattempted` (incl. 812,055 solana-pool-vocab rows measured this session, 215,864 non-POOL EU rows) | Not done — large data op                                                                                                                                                             | None structurally, but should sequence AFTER the manifest rebuild above (both touch the same consolidated index)                                                                         |
+| Path shape pin (code portion) + kill second dexpool writer                                                                                                    | Not done                                                                                                                                                                             | None — the docs half is done; scope the code half next                                                                                                                                   |
+| perf bundle (SPOT preemption contract + async fan-out) + 2-VM TheGraph canary                                                                                 | Not done                                                                                                                                                                             | Operator-owned per the original Q3 ruling ("ship code + I run the canary") — code can proceed, canary execution is the operator's                                                        |
+| `available_at` broader ~20-handler fix                                                                                                                        | Not done                                                                                                                                                                             | File collision with in-flight streams (same handlers) — start once they land                                                                                                             |
+| Resume paused DeFi crons (11 collect + 3 forward) + fix consolidator                                                                                          | Cannot be done yet                                                                                                                                                                   | Explicitly gated on Track 1/2 landing first (plan's own ordering)                                                                                                                        |
+| DeFi MVP backfill to 100%                                                                                                                                     | Cannot be done yet                                                                                                                                                                   | C-GREEN gated on Track 1–3                                                                                                                                                               |
+| Non-POOL EU terminal-state decision + oracle dead-venue (METEORA/LIFINITY/PHOENIX) honest-empty path                                                          | Not done                                                                                                                                                                             | None structurally                                                                                                                                                                        |
+| Checker collect-* fleet-wide real-VM-launch verification                                                                                                      | Not done                                                                                                                                                                             | Deliberately deferred by that agent (avoided forcing a dirty tarball) — needs a clean MTDS window                                                                                        |
+
+**Recommended next action**: verify the 3 in-flight agents' real final state first (don't trust unverified "done" claims
+— this session's own pattern), then launch the glued-id manifest-rebuild VM the moment MTDS is clean (highest- value,
+fully-scoped, zero remaining unknowns), then pick up the residual canon walk (C2–C12) as the next P0 with no structural
+blocker.
