@@ -11,7 +11,7 @@ summary:
   data_engineering craft scope — instruments-service has a sports odds-bookmaker golden-fixture drift (47→27), and
   e2e-testing + system-integration-tests both fail on pip-audit CVEs in shared deps
   (pyasn1/pydantic-settings/setuptools/starlette/ujson).
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting, sports]
 stage: [meta]
@@ -24,7 +24,7 @@ parent_epic: infrastructure_master
 priority: P2
 assigned_vm: planning
 source: [data_engineering slot-8, dispatched to sports_p2_history_apifootball_2015_to_present-001, 2026-07-22T03:45Z]
-resolved_by:
+resolved_by: instruments-service@09a29289, e2e-testing@80d969c, system-integration-tests@2331ca3
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
