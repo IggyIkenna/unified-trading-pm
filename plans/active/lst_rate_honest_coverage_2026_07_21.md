@@ -350,17 +350,17 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `lst_rates_handler.py`'s actual post-fetch filter that this value gates ANY row regardless of source tier, so the
       earlier caution about a "possibly-different Tier-1-specific semantic" didn't hold up — see the T+10min bug finding
       above.
-- [ ] [UAC][IS] P3 (IN PROGRESS, uncommitted — see Progress Log 2026-07-22 19:XX entry). **Remaining Sanctum
-      reconciliation** — `SANCTUM_INF_POOL_ACCOUNT` on-chain verification done (found FABRICATED, replaced) + IS
-      `sanctum.py`'s `available_from_datetime` fix done in-tree; **`chain_env.py`'s
-      `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]` ("2023-06-01") deliberately left UNCHANGED** (still correct for
-      jupSOL/laineSOL, the marketplace-native tokens it actually governs — only INF needed the earlier date, and IS's
-      adapter now sources INF's floor from UAC `LST_TOKEN_GENESIS["sanctumSOL"]` directly rather than this key). **NOT
-      YET SHIPPED**: MTDS + IS changes are staged/uncommitted, quality-gates.sh not yet confirmed green in either repo
-      (sentinel mismatch — a background QG run was started but never confirmed complete this session). Next session:
-      `cd market-tick-data-service && bash scripts/quality-gates.sh` and
-      `cd instruments-service && bash scripts/quality-gates.sh`, then quickmerge each with `--files`, then flip this
-      checkbox with the shipped shas.
+- [x] ✅ [UAC][IS] P3. **Remaining Sanctum reconciliation** — `SANCTUM_INF_POOL_ACCOUNT` on-chain verification done
+      (found FABRICATED — the old value `o1Mw5Y3n68o8TakZFuGKLZMGjm72qv4JeoZvGiCnGy7` doesn't exist on-chain — replaced
+      with the mint's own `mintAuthority`); IS `sanctum.py`'s `available_from_datetime` now sources INF's floor from UAC
+      `LST_TOKEN_GENESIS["sanctumSOL"]` directly. `chain_env.py`'s `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]`
+      ("2023-06-01") deliberately left UNCHANGED (still correct for jupSOL/laineSOL, the marketplace-native tokens it
+      actually governs). **SHIPPED both repos, both quality-gates.sh green (sentinel matched HEAD in each)**:
+      `market-tick-data-service@52c5ff02` and `instruments-service@4b82310a`, both verified ancestors of
+      `origin/live-defi-rollout` (`git merge-base --is-ancestor`). Only remaining follow-up (genuinely separate, not
+      blocking): `SANCTUM_INF_POOL_ACCOUNT`'s exact multi-year creation date via `getSignaturesForAddress` pagination
+      needs paid archive-RPC access, not attempted this session — documented as a known limitation in the code comment,
+      not silently dropped.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
