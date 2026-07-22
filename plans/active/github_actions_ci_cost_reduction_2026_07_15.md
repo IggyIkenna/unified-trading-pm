@@ -1813,11 +1813,21 @@ prove on ONE caller → only then fan out._
     all correctly use the 2-label form matching the actual registration. **FIXED**: `runs-on: [self-hosted, glue]` →
     `unified-trading-pm@078c85dc3`. This is the REAL fix; the earlier concurrency change was necessary (a run that DID
     match a runner would otherwise still get killed by the next push) but was not sufficient on its own, and my "fixed"
-    claim in the entry above was premature. Verification: see the next push touching `plans/`or `codex/` after
-    `078c85dc3` — should complete in seconds, not queue forever.
-  - **Operator's 4 follow-on improvements (2026-07-22, queued behind confirming the label fix actually works)**: (1)
-    switch trigger from per-push (~240/day measured) to an hourly cron — per-push was never the right model for a check
-    whose failure mode (a broken doc sitting undetected a bit longer) is low-consequence; (2) scope
+    claim in the entry above was premature.
+  - **LIVE PROOF (2026-07-22, same session)**: the very next `plans/**` push (this commit) triggered run `29910893758` —
+    but it stayed `pending` with no job created, because the DEAD run from 08:36 (`29904643698`, created under the
+    pre-fix 4-label config, which could never match a runner) was still sitting unresolved in the concurrency group and
+    — since it was never cancelled by any of the ~15 pushes since — was silently jamming the whole queue behind it.
+    Manually cancelled it (`gh api -X POST .../runs/29904643698/cancel`); the queue immediately unblocked and
+    `29910893758` ran and completed in **12 seconds** (10:11:57→10:12:09) on `glue-ip-172-31-5-118-5`, conclusion
+    `success`, `notify-broken-docs` correctly `skipped` (green verdict). First real completion in this workflow's 5-day
+    existence. Three bugs total, now all fixed: (1) `cancel-in-progress:true` killing in-flight runs (`efdeb6f41`), (2)
+    the labels mismatch preventing any match at all (`078c85dc3`), (3) an unresolvable zombie run parked in the
+    concurrency queue with nothing to clear it (manually cancelled, no code fix needed — a genuinely dead run just needs
+    cancelling once; it can't recur since (2) means no future run can get stuck the same way).
+  - **Operator's 4 follow-on improvements (2026-07-22, now unblocked — the gate is confirmed working)**: (1) switch
+    trigger from per-push (~240/day measured) to an hourly cron — per-push was never the right model for a check whose
+    failure mode (a broken doc sitting undetected a bit longer) is low-consequence; (2) scope
     `check_frontmatter_schema.py` to just the changed files (`git diff --name-only`) instead of the bare/full-corpus
     call — the script already supports `[file ...]` args, `ldr-docs-gate.yml` just never used them; (3) add an
     existence-only check for frontmatter-referenced doc paths (`related`/`supersedes`/`parent_epic`) — confirmed via
