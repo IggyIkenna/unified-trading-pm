@@ -23,11 +23,11 @@ summary: >-
   that found this) — needs someone to check whether `collect-vault-share-price` is still scheduled at all
   (cron/orchestrator config) and, if so, why it's failing/not writing (Alchemy client init, secret rotation, an
   unhandled exception upstream of the per-vault try/except, etc.).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
-repos: [market-tick-data-service]
+repos: [market-tick-data-service, deployment-service]
 scope: [engineer]
 tags:
   [
@@ -50,7 +50,7 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
 source: [sub-agent-observation]
-resolved_by:
+resolved_by: five_broken_defi_capture_paths_shipped_2026_07_22.md
 locked_by:
 depends_on: []
 ---
@@ -112,3 +112,33 @@ A dedicated fix-unit (not this single-protocol audit slot) should: (1) confirm w
 still scheduled anywhere (VM cron / orchestrator config), (2) run it manually for today with verbose logging to surface
 the actual exception, (3) fix and confirm a real day's capture resumes for all 5 vaults, (4) backfill the ~30-day gap
 once the root cause is fixed.
+
+# Resolution (2026-07-22, later same day)
+
+**Root cause confirmed: (1) above -- `collect-vault-share-price` was never scheduled anywhere.** No Cloud Run Job or
+Cloud Scheduler cron existed for this operation prior to today (confirmed via
+`deployment-service/terraform/gcp/ defi_collection_scheduler.tf`, which declared crons for 11 other DeFi `collect-*` ops
+but not this one). This explains the silent ~1-month gap without needing an exception trace: the handler was never
+invoked at all, by anything, since whatever one-off/manual process last ran it around `day=2026-06-21`. Not a crash, not
+a secret rotation, not an unhandled exception upstream of the per-vault `try/except` -- simply absent from any cron.
+
+**Shipped**: `deployment-service@600d31c` adds a new `vault-share-price` entry to `defi_collect_operations` (schedule
+`10 1 * * *` UTC), applied to prod via `ENV=prod ./tofu.sh apply -target=...` (targeted plan: exactly 6 adds / 0 change
+/ 0 destroy, confirmed clean). New Cloud Run Job `uts-prod-mtds-collect-vault-share-price` + Scheduler cron created and
+confirmed live.
+
+**(2) and (3) done**: manually triggered (`gcloud run jobs execute uts-prod-mtds-collect-vault-share-price`), execution
+`uts-prod-mtds-collect-vault-share-price-n4kzf` SUCCEEDED cleanly -- all 8 vaults across all 5 registered protocols
+(YEARN_V3 x3, ETHENA, MAKER, FRAX, MORPHO_VAULTS x2) queried at block 25580957 (noon UTC, 2026-07-21) and written,
+confirming the handler logic itself was never broken -- it just had nothing invoking it. Real GCS objects confirmed for
+FRAX (`sFRAX.parquet`) and the sibling vaults, `day=2026-07-21`. No partial failure, no exception, all 5 vaults captured
+in one clean run -- consistent with "never scheduled" rather than "scheduled but failing."
+
+**(4) NOT done -- deferred, non-urgent.** The ~30-day historical gap (2026-06-22 through 2026-07-20) is not backfilled
+by this fix; only forward capture (starting 2026-07-21) is restored. This is an honest absence, not a silent wrong-value
+bug, so it does not violate the data-pipeline-correctness hard rule the same way active corruption would -- backfilling
+it is a small, low-risk follow-up (single ERC-4626 `convertToAssets` read per vault per missing day, well within RPC
+rate limits) that can be scheduled separately.
+
+**Status: resolved** (capture resumed and verified live; historical backfill tracked as separate, deferred, non-blocking
+follow-up work). Full ship record: `plans/active/issues/five_broken_defi_capture_paths_shipped_2026_07_22.md`.
