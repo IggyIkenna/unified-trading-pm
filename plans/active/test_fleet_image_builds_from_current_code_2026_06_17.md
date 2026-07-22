@@ -196,19 +196,21 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       GCP-authoritative; normalization filed in
       `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md`. See findings log for the full
       matrix.
-- [ ] [INFRA] P2. **🔴 BLOCKED-CREDENTIALS (2026-06-18; ask filed in `harsh_orchestrator/_agent_pings.md` as a
-      CREDENTIAL APPROVAL REQUEST — awaiting Ikenna grant of `cloudbuild.builds.editor`) — GCP build via
-      `gcloud builds triggers run <repo>-build --branch main` / `<repo>-live-defi-rollout --branch live-defi-rollout`
-      (region asia-northeast1), watched to SUCCESS, one at a time, STOP + diagnose on first systemic failure.** **Manual
-      trigger-run is permission-blocked**: both `harshkantariya` and the `github-actions-deploy` SA hold only
-      `roles/cloudbuild.builds.viewer` (read — can WATCH builds, cannot RUN them), and the deploy SA isn't impersonable.
-      GSM reuse can't avoid it (the only stored SA key — `github-actions-sa-key`/`github-actions-deploy` — is
-      `cloudbuild.builds.viewer`, not editor). **➡️ Full cross-cloud permission audit + grant commands (operator
-      parity): `plans/active/issues/operator_iam_permission_parity_2026_06_18.md`** (GCP: `roles/editor` +
-      `projectIamAdmin` + `serviceAccountTokenCreator`; AWS: `PowerUserAccess`). Until granted, the only no-perm path is
-      the natural **main-push auto-fire** (services build on main push, base libs on LDR push) — but most service repos
-      are already `main==LDR` (0-file delta → no build), so it only fires for the ~4 with pending content;
-      `deployment-api`/`deployment-ui` GCP-build this way from the P1/P2 promotions.
+- [ ] [INFRA] P2. **🟢 UNBLOCKED 2026-07-22 — the 2026-06-18 credential blocker (`cloudbuild.builds.editor`) is
+      resolved** (grant confirmed live: manual `gcloud builds triggers run` now succeeds against
+      `central-element-323112`/`asia-northeast1`). Canary sequence run one repo at a time per this plan's own discipline
+      (checkbox flips once all 3 canaries + the rest of the fleet confirm SUCCESS): - `instruments-service` — build
+      `efdeb747-e6fe-46d2-b31c-c209ac37049b` — **SUCCESS** - `execution-service` — build
+      `4e88862b-36bb-40f0-9daa-7fd39cde23b8` — triggered 2026-07-22, IN PROGRESS - `alerting-service` — build
+      `584ee39b-b16b-4b92-96d8-3c9ef9942541` — triggered 2026-07-22, IN PROGRESS
+
+      All 3 canaries build against the fresh UTL base digest
+          `sha256:7f443e9ef81e2ce480935820838b57a345112342e9d1ea9b8d44e04d8bb5f18e` (shipped in Phase 1). Remaining fleet
+          (strategy-service, market-tick-data-service, market-data-processing-service, features-*, ml-*,
+          client-reporting-api, fund-administration-service, batch-live-reconciliation-service, greeks-service,
+          trading-agent-service, deployment-service) queued next, one at a time, STOP + diagnose on first systemic failure
+          — per this todo's original discipline.
+
 - [ ] [BUG] P2. For every stale base-digest pin found, file the fix (refresh `BASE_IMAGE_DIGEST` ARG) in the owning repo
       — but only AFTER confirming the dependency-update fan-out isn't the intended owner; coordinate, don't fork it.
 
