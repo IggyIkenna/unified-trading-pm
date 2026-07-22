@@ -1,33 +1,47 @@
 ---
 doc_type: issue
 title: >-
-  Sports live odds writer still emits non-canonical lowercase instrument_type=odds/data_type=trades — the league_id
-  relocation fixed history but not the source, so new daily captures keep landing non-canonical
+  [SUPPLEMENT to K1] Sports live odds writer still emits non-canonical lowercase instrument_type=odds/data_type=trades —
+  live-measured proof it blocks today's gated delete + a manifest_finalize.py:347 hazard K1's own text doesn't name
 summary: >-
-  While preparing the gated delete of the old non-canonical sports odds objects (post league_id-relocation
-  manifest-swap, 2026-07-22), found that the LIVE daily odds-api capture writer
-  (`market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py::_build_sports_shard_path`,
-  lines 887 + 896) still hardcodes lowercase `instrument_type=odds/data_type=trades` in both the GCS path AND the
-  matching `shard_counts` manifest-key tuple (line 795-796) — this was NEVER touched by the relocation work (which was a
-  one-time historical COPY only). `league_id` casing WAS already fixed at the write source two days earlier
-  (`mtds@ad4f1872`, 2026-07-20, `_canonical_league_id()` in `odds_api_adapter.py`), so this is the one remaining
-  non-canonical axis, and it is NOT historical debt — it is an ACTIVE, ONGOING leak: every single day's new odds capture
-  writes fresh objects + manifest rows at the non-canonical `instrument_type=odds/data_type=trades` path/value.
-  Consequence: any future "final" delete of the old non-canonical objects is a leaky bucket — tomorrow's capture just
-  recreates the same non-canonical shape at new dates — unless this write-source bug is fixed FIRST.
+  NOT a new finding — this axis is ALREADY TRACKED as K1 in sports_consolidated_closeout_2026_07_19.md (Track C) and
+  documented in codex/02-data/canonical-cutover-register.md § 6 ("K1 — LIVE writer emits UPPER: NOT SHIPPED"). Filed
+  initially as if new (process miss: should have grepped the plan corpus first); corrected same-session. What this doc
+  adds on top of K1: (1) live-measured proof, from the 2026-07-22 P0 chain session, that this gap makes the just-shipped
+  league_id-relocation's planned gated delete a leaky bucket (new non-canonical objects keep landing daily); (2) a THIRD
+  call site K1's own text does not name — `manifest_finalize.py:347` — where missing it would silently drop
+  sports-specific source/pipeline_mode resolution + available_at stamping, a regression worse than the current bug; (3)
+  confirmation that K1's documented sequencing hazard (flip the writer before MDPS's orchestration_scanner.py
+  dual-accepts both cases -> MDPS silently reads ZERO sports ticks) is real and current, verified by reading the live
+  DeFi-DEX precedent it's modeled on.
 status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
-repos: [market-tick-data-service]
+repos: [market-tick-data-service, market-data-processing-service]
 scope: [engineer]
 tags:
-  [sports, canonical, casing, instrument_type, data_type, live-writer, league-id, relocation, manifest, ongoing-leak]
+  [
+    sports,
+    canonical,
+    casing,
+    instrument_type,
+    data_type,
+    live-writer,
+    league-id,
+    relocation,
+    manifest,
+    ongoing-leak,
+    K1,
+    duplicate-supplement,
+  ]
 related:
   [
+    ../sports_consolidated_closeout_2026_07_19.md,
     sports_league_id_namespace_migration_2026_07_20.md,
     ../sports_master_closeout_2026_07_21.md,
-    ../../codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    ../../../codex/02-data/canonical-cutover-register.md,
+    ../../../codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-22
 last_updated: 2026-07-22
@@ -46,9 +60,10 @@ supersedes:
 superseded_by:
 resolved_by:
 source: >-
-  discovered 2026-07-22 while preparing the 5-part-proof delete evidence for the league_id relocation's old
-  non-canonical objects (sports_master_closeout_2026_07_21.md P0 chain), via a dedicated Explore-agent investigation
-  into whether the live capture pipeline was also fixed or only the historical corpus.
+  originally filed 2026-07-22 (mistakenly framed as new) while preparing the 5-part-proof delete evidence for the
+  league_id relocation's old non-canonical objects (sports_master_closeout_2026_07_21.md P0 chain); corrected
+  same-session after running /data-pipeline-reconciliation sports surfaced the pre-existing K1 tracked item in
+  sports_consolidated_closeout_2026_07_19.md + canonical-cutover-register.md § 6.
 depends_on: []
 ---
 
@@ -108,10 +123,34 @@ later, gated delete** of the old non-canonical objects (human-only per
   / manifest-swap machinery this session built and shipped will need to be re-run against a permanently-growing
   non-canonical tail.
 
-## What a fix needs (so a future session doesn't re-derive this)
+## ⚠️ CORRECTION 2026-07-22 (same session, found while running `/data-pipeline-reconciliation sports`) — this is NOT a new finding, it duplicates an already-tracked P0 todo, and this doc's ORIGINAL fix spec below was DANGEROUS as written
 
-Three call sites must change **together, atomically** (verified via grep — do not assume this list is exhaustive,
-re-grep before starting):
+This exact axis is **already tracked** as **K1** in `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C,
+line ~148), which `codex/02-data/canonical-cutover-register.md` § 6 also documents
+(`K1 — LIVE writer emits UPPER: NOT SHIPPED`). K1's own text names the same `venue_fetch.py:871-900` function. **This
+doc should have been found by grepping the plan corpus BEFORE filing** — the initial version below over-claimed
+"discovered 2026-07-22" when it was already known; treat this doc as a **supplement to K1** (the
+`manifest_finalize.py:347` hazard + the "blocks today's gated delete" evidence are genuinely new), not an independent
+finding.
+
+**More importantly, K1's own text documents a sequencing hazard this doc's original 3-step fix spec completely missed
+and would have shipped a real outage if followed as written**: MDPS's `orchestration_scanner.py:248`
+(`market-data-processing-service/market_data_processing_service/app/core/orchestration_scanner.py`) matches on-disk
+shards via an **exact, case-sensitive substring**: `return f"data_type={data_type}/" in blob_name`. Flipping the live
+writer to `data_type=TRADES/` while MDPS still requests `trades` (unchanged) means **every sports shard stops matching —
+MDPS silently reads ZERO sports ticks and reports success** (confirmed live: the file's own
+`_DEFI_DEX_DATA_TYPE_ONDISK_SEGMENTS` dict, lines ~101-105, already implements the identical dual-accept pattern for
+DeFi DEX `dex_pools`↔`dex_pool_state` / `dex_swaps`↔`dex_pool_swaps` — the precedent is real and currently shipping).
+
+## What a fix needs (so a future session doesn't re-derive this) — CORRECTED ORDER, per K1's own text
+
+**Step 0 (MUST ship first, standalone, before any writer change)**: extend `orchestration_scanner.py`'s dual-accept
+mapping to sports — add `{"trades": frozenset({"trades", "TRADES"}), "odds": frozenset({"odds", "ODDS"})}` (mirroring
+`_DEFI_DEX_DATA_TYPE_ONDISK_SEGMENTS`) so MDPS's shard matcher accepts BOTH cases before the writer ever emits the new
+one. Independently safe/reversible on its own.
+
+**Step 1-3 (only after step 0 is live), then the three call sites this doc originally identified** — still correct,
+still must change **together, atomically**:
 
 1. `venue_fetch.py:887` and `:896` — the two `f"instrument_type=odds/data_type=trades/"` path literals →
    `f"instrument_type=ODDS/data_type=TRADES/"`.
@@ -121,17 +160,27 @@ re-grep before starting):
    `if itype_key == "ODDS" and data_type_key == "TRADES":`. **Missing this one is the dangerous case**: the shard would
    still get its GCS path canonicalized, but the manifest branch would silently fall through to the generic ELSE branch
    (line 359-373), losing sports-specific `source`/`pipeline_mode` resolution AND the `available_at` stamping — a
-   regression of the `sports_mtds_available_at_manifest_gap` fix, worse than the current bug.
+   regression of the `sports_mtds_available_at_manifest_gap` fix, worse than the current bug. **This exact call site is
+   NOT named in K1's own text** — this is this doc's real incremental contribution.
+
+**Step 4 (only after K2 historical migration completes)**: retire the step-0 dual-accept.
 
 **`sentinels.py` has 9+ additional lowercase `"odds"`/`"trades"` literal usages** (grep confirmed: lines 126-127, 228,
 308-310, 350-352, 391, 420-422 — the sentinel/expectation-seeding subsystem that materializes `expected_unattempted`
-rows and drives `EXPECTED_NO_FIXTURE`/coverage-gate logic). **Not fully audited in this session** — a correct fix must
-grep-then-READ every one of these before touching `sentinels.py`, since this subsystem already has known fragility
+rows and drives `EXPECTED_NO_FIXTURE`/coverage-gate logic; K1's text separately names `sentinels.py` v1:420-426,
+v2:305-311, skip-fan:180-197 as in-scope). **Not fully audited in this session** — a correct fix must grep-then-READ
+every one of these before touching `sentinels.py`, since this subsystem already has known fragility
 (`sports_shard_enumeration_cartesian_blowup_2026_07_20.md`) and a careless casing flip risks silently breaking
 expectation-seeding or the coverage gate rather than just relocating a path segment. This is exactly why the fix was
-**not attempted inline** during the 2026-07-22 P0 chain session — the blast radius grew from "2 string literals" to "3
-confirmed call sites + 9 unaudited ones in a fragile subsystem" mid-investigation, and rushing it risked breaking the
-LIVE daily sports capture pipeline in the same session as a large prod manifest write.
+**not attempted inline** during the 2026-07-22 P0 chain session — the blast radius grew from "2 string literals" to a
+multi-repo, multi-step, sequencing-sensitive migration mid-investigation, and rushing it risked breaking the LIVE daily
+sports capture pipeline (and silently zeroing MDPS) in the same session as a large prod manifest write.
+
+**K2 (historical migration) is ALSO already scoped in `sports_consolidated_closeout_2026_07_19.md`** as ~1.8M `trades`
+rows (91.5% of the bucket) — far larger than the ~275K this session's league_id relocation touched — and that plan
+explicitly directs combining K2 with the league_id relocation (same object path, one copy instead of two). This
+session's relocation did NOT do that combination (it only fixed `league_id`, not casing) — so K2 remains fully open, not
+partially done.
 
 ## Todos
 
