@@ -169,8 +169,19 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 4 — Daily-download / MVP gate
 
-- [ ] [IS] P3. **Daily-download inclusion** — confirm the new feeds/venue are `is_mvp`-tagged and land in the daily
-      instrument-download universe so they are fetched on the standing cadence, not only on a one-off backfill.
+- [x] [IS] P3. **Daily-download inclusion** — confirm the new feeds/venue are `is_mvp`-tagged and land in the daily
+      instrument-download universe so they are fetched on the standing cadence, not only on a one-off backfill. —
+      **CONFIRMED, no code change needed** (Explore agent, 2026-07-22). AAVE-ETHEREUM: already in
+      `instruments_service/engine/orchestrator/defi.py:148`'s `_STATIC_DEFI_VENUES` (added 2026-07-21 alongside the
+      adapter registration), folded into `_DEFI_VENUES` at import time, consumed by the STANDING fetch path
+      (`process_fetch.py:129` → `_get_or_fetch_defi_universe` → `_build_defi_venues` — the same stage backfill AND daily
+      runs share, not one-off-only). IS's DeFi-only MVP bypass (`build_instrument_catalogue.py`'s `_add_mvp_column()`,
+      lines 3378-3499: `asset_group == "defi"` → `mvp=True` unconditionally, per the operator-directed
+      `defi_mvp_tag_all_2026_06_26` decision) means AAVE rows are `is_mvp`-tagged automatically once captured, no
+      separate rule update. DEX protocols (uniswap_v2/v3/v4, pancakeswap_v3) + `dex_pool_swaps`: pre-existing, unchanged
+      by this session — already mapped in `_SUBGRAPH_PROTOCOL_TO_VENUE_PREFIX` (defi.py:50-72), expanded per-chain via
+      UAC's `get_supported_chains_for_protocol()`, flowing through the identical standing path; IS's role here is
+      catalog-only (the actual `dex_pool_swaps` collection is MTDS's `dex_swaps_handler.py`, out of IS scope).
 
 ## Phase 5 — Fill on real infra (SPOT VMs; manifest-verified; monitored by TARGET-shard count, not log activity)
 
