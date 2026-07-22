@@ -722,6 +722,33 @@ hard prerequisite for 3.2, and desirable before 3.3.
 file. This remains a **hard prerequisite** for 3.2's purge (and the combined 4.2 purge mechanism) and must be sequenced
 **before** that purge executes — do not purge dead-pair/phantom rows ahead of Phase 6d landing.
 
+**Scope investigation (2026-07-22)** — Phase 6d is **not a boolean flip**; the injection mechanism the other 4
+categories share cannot be reused as-is for SPORTS without a real design change:
+
+- `mtds.py:344-359` (`mtds_expected_venues`) resolves each category's expected-venue list off `VenueMapping` via
+  `MTDS_CATEGORY_META[cat]["venue_accessor"]` (a flat venue-name list) — SPORTS's entry (`mtds.py:96-104`) has
+  `venue_accessor: ""` with the comment "Phase 6d adds `get_expected_bookmakers` to UAC"; that UAC accessor **does not
+  exist yet**. The 23-key real bookmaker list lives today as `REQUESTED_ODDS_API_BOOKMAKERS` in
+  `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` — MTDS, not
+  UAC. Per the tier/import rules (no service→service deps; UAC is the only SSOT deployment-api may import), it must be
+  **added to UAC first** (e.g. alongside `unified_api_contracts/registry/sports_bookmaker_league_coverage.py`) and MTDS
+  re-pointed to import it from there rather than deployment-api importing from MTDS.
+- The bigger blocker: `MTDS_CATEGORY_META["SPORTS"]["axis"]` is `"per_league_per_bookmaker_per_fixture_date"` — a 3-D
+  shape — but `axis` is **purely a descriptive label** today (only read at `breakdowns_domain.py:759`,
+  `manifest.py:1131`, `venue_resolution.py:330` to stamp an `honest_axis` string on the API response). The actual
+  injection loop, `_apply_mtds_honest_coverage` in `breakdowns_core.py`, has **no axis-dispatch** — it unconditionally
+  treats the top-level dimension as a flat "venue" and computes denominators via `mtds_expected_dates_for_venue_dt`'s
+  trading/calendar-day model. Naively pointing SPORTS at this path (accessor returning bookmaker names as "venues")
+  would inject a **calendar-day** denominator for what is really a **per-(bookmaker, league, fixture-date)** shard space
+  — wrong on two axes at once (missing the league dimension entirely, and fixture-dates ≠ calendar trading-days). That
+  would silently manufacture a new coverage-percentage defect of the same shape this plan exists to fix.
+- Net: Phase 6d needs **(a)** a new UAC bookmaker-list export, **(b)** either a genuine axis-aware branch inside
+  `_apply_mtds_honest_coverage` for the 3-D shape, or a SPORTS-specific sibling function that folds
+  bookmaker×league×fixture-date up to the same `venues_dict` output shape the caller expects — not a small patch. Treat
+  it as its own scoped implementation pass (candidate follow-up plan, not a same-session tack-on), reusing the
+  already-shipped `is_bookmaker_league_covered_exact` / `REQUESTED_ODDS_API_BOOKMAKERS` machinery from Part 1 as the
+  data source rather than re-deriving expected bookmakers from scratch.
+
 ### 4.5 Issue-doc corrections to file
 
 `unified-trading-pm/plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` needs a correction
@@ -803,6 +830,20 @@ Do not spend engineering time on any of these.
 `Codex SSOTs` this plan is written against: `codex/02-data/availability-manifest-and-data-status.md`,
 `…/honest-coverage-model.md`, `…/gcs-and-manifest-delete-safety-protocol.md`, `…/sports-data-types-catalog.md`,
 `…/sports-gcs-path-ssot.md`, `codex/04-architecture/shard-level-failure-isolation.md`.
+
+---
+
+## Deferred work after 2026-07-22
+
+| Item                                                                                                                                                                                                       | State              | Blocked on                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 3** — ship the 4.1 global `compute_honest_coverage()` formula change (`unified-api-contracts`)                                                                                                     | Operator-owned     | 4.1's own decision text requires **explicit re-authorization after reviewing the measured impact table** (CEFI -11.50pp, TRADFI -8.96pp, SPORTS -10.19pp, PREDICTION -5.19pp, DEFI -0.05pp) before `_honest_coverage_logic.py` is touched. The 2026-07-22 "yes, global" answer was given before this table existed — it confirmed direction/scope, not the now-quantified double-digit magnitude on 3 asset groups. Re-run `measure_honest_coverage_formula_delta.py` for a fresh number immediately before any re-ask (prod manifests move daily). |
+| **Phase 4 / 4.4** — implement Phase 6d in `deployment-api` (`data_status/mtds.py::is_mtds_honest_coverage_target` stop excluding SPORTS from venue-injection)                                              | Not done           | Nobody — real, unblocked implementation work. **Recommended next item**: it is the hard prerequisite for Phase 5 and touches no production data.                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Phase 5 / Part 3** — execute manifest remediation (3.1 reclassify + 3.2 purge combined per 4.2's decision, 3.3 relabel the 37,426 never-captured rows, 3.4 drop the phantom uppercase `ODDS` rows)       | Cannot be done yet | The doc's own 3.0 prerequisite: **nothing in Part 3 executes until Part 4 closes** — i.e. until both Phase 6d (above) lands AND Phase 3's formula ship is resolved one way or the other.                                                                                                                                                                                                                                                                                                                                                            |
+| **4.5** — issue-doc corrections (strike the false "no per-(venue,league) coverage declaration" line; fix the reason-split figures to the measured `606,772 / 459,459 / 200,864 / 94,127 / 385,402` values) | Not done           | Nobody — small, safe doc fix, pick up any time.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+
+Recommended order: **4.4 (Phase 6d) first** — it is the only fully-unblocked substantive item and directly clears Part
+3's prerequisite — then return to the operator for Phase 3's re-authorization before touching any production row.
 
 ---
 
