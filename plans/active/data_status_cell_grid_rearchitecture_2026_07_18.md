@@ -89,3 +89,28 @@ real fix is to never load the whole manifest per request.
 
 - **2026-07-18** — Authored after the operator moved the cell-grid re-architecture from deferred to scheduled. Human
   plan (operator-driven). The near-term OOM guard + 90-day default remain the live mitigation until this lands.
+
+- **2026-07-22 — Cross-plan pointer (research-only, no code changed here).**
+  `mtds_data_status_page_parity_2026_07_21.md` investigated whether the operator's separate "the whole mtds needs to be
+  much faster" complaint traces to THIS plan's documented OOM/whole-manifest-load architecture or a distinct issue.
+  Verdict: **confirmed the SAME root cause** for the MTDS "Data Coverage" panel specifically — traced the live code (not
+  just this plan's prose) and confirmed `read_availability_index(bucket)`
+  (`deployment-api/deployment_api/services/data_status_service.py::_read_index_cached:449`, called via
+  `defi.py::_read_defi_merged_index:274` from `manifest.py::_build_manifest_category:771`) still loads the ENTIRE
+  per-service manifest into memory unconditionally before applying any date/venue/scope mask (`manifest.py:798`) — this
+  plan's "read the ENTIRE per-service manifest into memory per request" description is still accurate today, unchanged
+  since authoring. `live_build_guard.py`'s module docstring/calibration anchors carry the IDENTICAL measured figures
+  this plan cites (18GB IS / 81GB MTDS / 56GB MDPS full-history) — confirms it's the same incident, not a
+  similar-sounding coincidence; that guard module + the 90-day UI default ARE this plan's "near-term OOM guard" stopgap
+  referenced above, already shipped, still the only live mitigation. `mtds_data_status_page_parity_2026_07_21.md`
+  shipped Bug C (per-instrument existence-window clipping), MVP-scope wiring, and an MDPS-timeframe extension THIS
+  SESSION — all of it runs as bounded, vectorized pandas/Python work strictly downstream of the `filtered` DataFrame
+  this plan's `_build_manifest_category` already loads (see `instrument_coverage.py::per_instrument_coverage`), plus one
+  small SEPARATE identity-only read (`prod/catalog.parquet` via `_read_cefi_catalogue_metadata`, explicitly not a second
+  whole-corpus walk). **None of that work introduces a new bottleneck or duplicates this plan's scope** — it's a
+  downstream consumer riding on the same not-yet-re-architected load path this plan exists to fix. No new todo needed
+  here; this plan's existing Bound/Stream/Precompute directions remain the correct fix for both the pre-existing
+  coverage grid and the MVP-scope/MDPS-timeframe additions on top of it. (Separately, the operator's complaint ALSO
+  covered symbol/ instrument search latency — that traced to a DIFFERENT, non-memory root cause — sequential per-venue
+  GCS reads, already partially fixed via threading in a pre-session commit — and does not belong to this plan; see
+  `mtds_data_status_page_parity_2026_07_21.md`'s research todo for the full writeup.)

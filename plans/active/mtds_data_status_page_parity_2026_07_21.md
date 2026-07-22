@@ -424,10 +424,45 @@ the same fixes.
       (`_classify_data_type_for_venue` in `breakdowns_core.py`, keyed on the old aggregated tokens) — filed as
       `plans/active/issues/mdps_datatype_axis_switch_breaks_generic_classifier_2026_07_21.md` and already landed on
       origin; not this plan's scope to fix.
-- [ ] [BACKEND] P2. Also investigate whether `data_status_cell_grid_rearchitecture_2026_07_18.md`'s known OOM/slowness
-      (81GB for full-history MTDS manifest loads) is the SAME root cause as the operator's "the whole mtds needs to be
-      much faster" complaint, or a distinct perf issue specific to this page's coverage/search paths — annotate that
-      plan rather than duplicating its scope if it's the same issue.
+- [x] N. ✅ [RESEARCH] P2. **Investigated — TWO root causes bundled under one operator complaint, code-confirmed
+      (2026-07-22, research-only unit, no fix attempted).** The operator's "the whole mtds needs to be much faster"
+      complaint traces to **two genuinely different mechanisms**, not one: 1. **Coverage/drilldown grid (the "Data
+      Coverage" TURBO panel, Bug C's surface) — SAME root cause as `data_status_cell_grid_rearchitecture_2026_07_18.md`,
+      confirmed by reading the live code path, not the two plans' prose.** `/manifest`'s on-demand fallback
+      (`deployment-api/deployment_api/services/data_status/        manifest.py::_get_manifest_status_sync` →
+      `_build_manifest_category:771` → `defi.py::_read_defi_merged_index:274` →
+      `data_status_service.py::_read_index_cached:449`) calls `read_availability_index(bucket)` **with no
+      date/venue/scope window at all** — it loads the ENTIRE per-service manifest into memory unconditionally, THEN
+      applies the date mask in-memory (`manifest.py:798`,
+      `mask = (index["date"] >= effective_start) & (index["date"] <= end_date)`) — exactly the "reads the ENTIRE
+      per-service availability manifest into memory per request" architecture the rearchitecture plan describes.
+      Confirmed same incident, not just a similar-sounding one:
+      `deployment_api/services/data_status/live_build_guard.py`'s module docstring + calibration anchors (lines 1-70)
+      cite the IDENTICAL measured figures the rearchitecture plan cites (18GB IS / 81GB MTDS / 56GB MDPS full-history) —
+      `live_build_guard.py` + the 90-day UI default are the "near-term OOM guard" stopgap that plan's own Context
+      section says remains live "until this lands." This session's Bug C (existence-window clipping), MVP-scope wiring,
+      and MDPS-timeframe extension (all shipped this session, see entries above) run entirely INSIDE
+      `_build_manifest_category`'s post-load `filtered` DataFrame (`instrument_coverage.py::per_instrument_coverage`) —
+      bounded, vectorized pandas ops on data already in memory, plus one SEPARATE small identity-only read
+      (`_read_cefi_catalogue_metadata`, `prod/catalog.parquet`, explicitly documented as "not a second whole-corpus
+      walk," `instrument_coverage.py:150-153`). None of this session's shipped work introduces a new full-corpus read or
+      a new architectural bottleneck — it all rides on top of the SAME not-yet-fixed whole-manifest-load path the
+      rearchitecture plan already scopes to fix. **Annotated `data_status_cell_grid_rearchitecture_2026_07_18.md` with a
+      pointer to this session's work (see that plan's Progress Log) rather than duplicating its scope here.** 2.
+      **Symbol/instrument search latency (Bug A/B's surface) — a DIFFERENT root cause, NOT memory/OOM, already measured
+      and partially fixed BEFORE this session** (so nothing new to do here either).
+      `deployment-api/deployment_api/services/data_query_service.py::_load_corpus_from_per_venue_parquets:463` reads
+      only the LATEST day's small per-venue `instruments.parquet` files (bounded to one day, not full history) — the
+      slowness was never a memory problem, it was N sequential transpacific GCS round-trips (one per venue; DeFi alone
+      has 63). `_read_all_venue_parquets:499-513`'s own code comment cites the measured cost directly: "~44s cold
+      cache-miss latency (measured operator-side, 2026-07-16)" — fixed via `ThreadPoolExecutor`-based parallelization,
+      commit `8e1221b` ("perf(data-status): parallelise symbol-search per-venue parquet reads (~44s -> seconds)",
+      2026-07-17, predates this plan). This session's Bug B (`deployment-ui@c11d370`) and `get_instruments_list` fix
+      (`deployment-api@b8a1426`) both REUSE this already-threaded corpus loader rather than needing to fix its latency
+      again. "Partially" fixed (44s→seconds, not instant) — a further latency-reduction pass is a legitimate follow-up
+      but is NOT the OOM plan's scope and does not belong there. **Verdict for the plan-annotation instruction**: item 1
+      is the same issue (annotated, not duplicated); item 2 is unrelated to the cell-grid plan and needed no new
+      annotation there.
 - [ ] [UI] P2. Once Bugs A/B/C are fixed and MVP-scope + universal search are wired: confirm the MTDS (and MDPS) view is
       genuinely at parity with the instruments-service view. `[UI]` + `pw:L2 ✓` + a regression spec per the playwright
       gate (per this workspace's UI-testing convention) — no tick without it.
@@ -716,17 +751,17 @@ earlier revision).
 **What's still genuinely open** — every item below already has its own `- [ ]` todo above; this table exists per the
 session-end hygiene rule to separate the three kinds of "not done," not to duplicate them:
 
-| Item                                                                                                      | State              | Blocked on                                                                                                                                                                                             |
-| --------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Manifest re-stamp final write (CeFi venue-as-chain historical fix)                                        | Cannot be done yet | **Operator**: authorize a ~3-5min pause of the `manifest-consolidator-market-data-cefi` Cloud Scheduler cron (root cause pinpointed precisely; see `distinct_values_noncanonical_audit_2026_07_20.md`) |
-| Bug C live-data verification against the operator's original screenshot                                   | Not done           | Nobody — genuine engineering work (reproduce against real GCS/manifest data for the specific venue/instrument), just not attempted this session; moderate effort, no blocker                           |
-| `/turbo` endpoint MVP-scope gap (only `/manifest` got `scope=mvp`)                                        | Not done           | Nobody — scoped, small, follow-up engineering                                                                                                                                                          |
-| Sports/prediction MVP-column real fix (precompute onto the manifest writer)                               | Not done           | Nobody — needs tracing the sports/prediction manifest-writer pipeline first (not yet done); correct fix direction is documented, wrong fix (redirect to identity-catalogue) is explicitly ruled out    |
-| MDPS Tier-2 (venue-level) timeframe-awareness + `PROCESSING_DATA_TYPES` single-sourcing                   | Not done           | Nobody — deliberately out of the reviewed scope for the shipped Tier-3 work; narrow, well-defined follow-up                                                                                            |
-| MDPS `historical_coverage_gap` real fix (backfill/relabel vs. compat shim)                                | Cannot be done yet | **Operator decision**: which of the two real fixes to pursue (flagged via a response field in the meantime, not silently wrong)                                                                        |
-| MDPS per-timeframe start-date divergence question                                                         | Cannot be done yet | **Operator/data**: needs a factual answer about real deployed venue cadence config; API surface already supports the answer either way without a signature change                                      |
-| `data_status_cell_grid_rearchitecture_2026_07_18.md` OOM vs. "MTDS needs to be faster" — same root cause? | Not done           | Nobody — a distinct investigation, not started this session                                                                                                                                            |
-| Final MTDS/MDPS-parity confirmation pass (`[UI]` + `pw:L2`)                                               | Not done           | Nobody — the shipped UI work each carries its OWN regression spec already, but the plan's broader "confirm full parity" todo as originally scoped hasn't had its own dedicated pass                    |
+| Item                                                                                                      | State              | Blocked on                                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Manifest re-stamp final write (CeFi venue-as-chain historical fix)                                        | Cannot be done yet | **Operator**: authorize a ~3-5min pause of the `manifest-consolidator-market-data-cefi` Cloud Scheduler cron (root cause pinpointed precisely; see `distinct_values_noncanonical_audit_2026_07_20.md`)         |
+| Bug C live-data verification against the operator's original screenshot                                   | Not done           | Nobody — genuine engineering work (reproduce against real GCS/manifest data for the specific venue/instrument), just not attempted this session; moderate effort, no blocker                                   |
+| `/turbo` endpoint MVP-scope gap (only `/manifest` got `scope=mvp`)                                        | Not done           | Nobody — scoped, small, follow-up engineering                                                                                                                                                                  |
+| Sports/prediction MVP-column real fix (precompute onto the manifest writer)                               | Not done           | Nobody — needs tracing the sports/prediction manifest-writer pipeline first (not yet done); correct fix direction is documented, wrong fix (redirect to identity-catalogue) is explicitly ruled out            |
+| MDPS Tier-2 (venue-level) timeframe-awareness + `PROCESSING_DATA_TYPES` single-sourcing                   | Not done           | Nobody — deliberately out of the reviewed scope for the shipped Tier-3 work; narrow, well-defined follow-up                                                                                                    |
+| MDPS `historical_coverage_gap` real fix (backfill/relabel vs. compat shim)                                | Cannot be done yet | **Operator decision**: which of the two real fixes to pursue (flagged via a response field in the meantime, not silently wrong)                                                                                |
+| MDPS per-timeframe start-date divergence question                                                         | Cannot be done yet | **Operator/data**: needs a factual answer about real deployed venue cadence config; API surface already supports the answer either way without a signature change                                              |
+| `data_status_cell_grid_rearchitecture_2026_07_18.md` OOM vs. "MTDS needs to be faster" — same root cause? | Done (2026-07-22)  | N/A — two root causes found: coverage/drilldown grid = SAME as the OOM plan (annotated there); symbol search = a different, already-partially-fixed I/O-latency issue (pre-session `8e1221b`). See todo above. |
+| Final MTDS/MDPS-parity confirmation pass (`[UI]` + `pw:L2`)                                               | Not done           | Nobody — the shipped UI work each carries its OWN regression spec already, but the plan's broader "confirm full parity" todo as originally scoped hasn't had its own dedicated pass                            |
 
 **Recommended next item**: the manifest re-stamp cron-pause authorization — it's the only item blocking on a single,
 fast operator decision (a ~5-minute production action) rather than more engineering time, and closing it out finishes a
