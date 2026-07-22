@@ -675,6 +675,43 @@ double-digit points), which will read as a coverage regression fleet-wide unless
 probably dashboarded) as a formula change, not a data-quality change, at ship time. Re-run the script above for a fresh
 number immediately before actually shipping — prod manifests move daily and this table has a date on it.
 
+**✅ SHIPPED 2026-07-22 — `unified-api-contracts@7338fa65`.** Operator gave an explicit, fresh go-ahead with this exact
+measured table in hand (not a rubber-stamp of the earlier abstract "yes, global" answer). Re-measured immediately before
+shipping, same day, same script:
+
+| Asset group | Total rows (re-measure) | Current % | Proposed % | Δ pp       | Note                                                                        |
+| ----------- | ----------------------- | --------- | ---------- | ---------- | --------------------------------------------------------------------------- |
+| CEFI        | 8,980,229               | 60.88%    | 49.38%     | **-11.50** | matches the original run almost exactly                                     |
+| DEFI        | 9,133                   | 99.48%    | 99.47%     | -0.01      | ⚠️ see anomaly note below — not a real signal                               |
+| TRADFI      | 6,262,988               | 80.75%    | 71.79%     | **-8.96**  | EXACT row-count match to the original run                                   |
+| SPORTS      | 1,783,541               | 96.73%    | 88.69%     | **-8.04**  | ~10% fewer rows than original (normal day-to-day churn); still a large drop |
+| PREDICTION  | 745,358                 | 99.55%    | 94.36%     | **-5.19**  | EXACT row-count match to the original run                                   |
+
+**DEFI anomaly (investigated, does not change the ship decision)**: this re-measurement's DEFI read found only 9,133
+rows via the pinned-primary bucket (`market-data-tick-defi-prd-central-element-323112`), vs ~52.29M in the original
+same-day measurement. That bucket's `blob.updated` timestamp landed literally seconds before this run's read — strong
+evidence an unrelated concurrent process was actively rewriting/consolidating the DEFI manifest index at that exact
+moment, not a real 99.98% data loss. The "legacy" fallback bucket this script also checks
+(`market-data-tick-defi-central-element-323112`) is a confirmed-404, already-migrated-away bucket per
+`codex/05-infrastructure/bucket-isolation-model.md` §11.3 — unrelated, pre-existing, and expected. Both readings give
+the SAME ship conclusion (DEFI's delta is negligible either way), so this doesn't change the decision; the true current
+DEFI row count should be re-checked independently of this ship if anyone needs a live number.
+
+**Formula implementation note**: the shipped formula also REVERSES `expected_unattempted_known_empty`'s prior numerator
+credit (it now lands in the denominator only, alongside `pending_fetch`) — matching
+`instruments-service::_count_statuses` exactly, which never split `expected_unattempted` by reason at all. This is a
+slightly bigger behavioral change than the original "just stop crediting `empty_confirmed`" framing implied; it was
+caught by UAC's own test suite (a test asserting the old known-empty-credit behavior failed against the new formula) and
+fixed in the same commit, not shipped as a partial formula.
+
+**Cross-repo fallout audited**: `deployment-api` (3 test files: `test_data_status_capture_status.py`,
+`test_data_status_union.py`, `data_status/test_oow_denominator.py`) and `unified-trading-library`
+(`test_manifest_writer_coverage_counts.py`) were checked line-by-line against the new formula. Only
+`test_oow_denominator.py` had tests whose PREMISE (not just asserted values) no longer held — rewritten separately
+(deployment-api ship tracked next); every other file needs zero test-expectation changes, either because they test
+count-bucketing rather than the ratio, or because their fixture shapes happen to give the same output under both
+formulas (all-empty-is-out-of-window shapes, or zero-empty shapes).
+
 ### 4.2 Which coverage semantics does sports want? — ✅ DECIDED 2026-07-22
 
 Three measured options, pick one:
@@ -707,20 +744,33 @@ are now `odds`, `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`, `odds
 CORRECT direction (UPPER→lower) — re-point/complete them rather than reversing them. 3.4's phantom-uppercase-`ODDS`
 purge remains gated on **4.4 (Phase 6d)**.
 
-### 4.4 Phase 6d — the sports venue-injection gap must land BEFORE any purge — still OPEN
+### 4.4 Phase 6d — the sports venue-injection gap must land BEFORE any purge — ✅ IMPLEMENTED 2026-07-22, ship pending
 
-`deployment-api/deployment_api/services/data_status/mtds.py::is_mtds_honest_coverage_target` **explicitly excludes
-SPORTS** ("bookmaker axis is Phase 6d"). CeFi/TradFi/DeFi/PREDICTION get UAC-declared venues injected with zero manifest
-rows so a fully-absent venue still renders at 0%. Sports does not — its denominator is manifest-derived from observed
-venues only. **Purge the zero-capture venues and they vanish from the data-status UI instead of rendering an honest
-0%**, reintroducing exactly the invisibility bug `manifest.py:856-861` documents having fixed elsewhere. Phase 6d is a
-hard prerequisite for 3.2, and desirable before 3.3.
+`deployment-api/deployment_api/services/data_status/mtds.py::is_mtds_honest_coverage_target` **used to explicitly
+exclude SPORTS** ("bookmaker axis is Phase 6d"). CeFi/TradFi/DeFi/PREDICTION get UAC-declared venues injected with zero
+manifest rows so a fully-absent venue still renders at 0%. Sports did not — its denominator was manifest-derived from
+observed venues only. **Purging the zero-capture venues would have made them vanish from the data-status UI instead of
+rendering an honest 0%**, reintroducing exactly the invisibility bug `manifest.py:856-861` documents having fixed
+elsewhere. Phase 6d was a hard prerequisite for 3.2, and desirable before 3.3.
 
-**Status (re-verified 2026-07-22)**: Phase 6d has **NOT** landed — `is_mtds_honest_coverage_target` in
-`deployment-api/deployment_api/services/data_status/mtds.py:230-236` still explicitly returns `False` for
-`cat_key == "SPORTS"` (docstring: "Excludes SPORTS (bookmaker axis is Phase 6d)"), directly re-confirmed by reading the
-file. This remains a **hard prerequisite** for 3.2's purge (and the combined 4.2 purge mechanism) and must be sequenced
-**before** that purge executes — do not purge dead-pair/phantom rows ahead of Phase 6d landing.
+**✅ IMPLEMENTED 2026-07-22 (code complete, QG-green locally; ship queued — see below)**:
+`is_mtds_honest_coverage_target` now includes SPORTS. A new sibling function, `mtds_honest_coverage_for_bookmaker`
+(mtds.py), handles the axis the generic per-(venue, data_type, calendar-date) path can't: for each league UAC's
+`BOOKMAKER_LEAGUE_COVERAGE` says a bookmaker has ever priced, it pulls real fixture dates via
+`sports_expected_dates_for_league` (floor-clipped to the `odds_api` UAC coverage start — the 2020-06 sports data floor,
+not a raw calendar range) and counts captured/ empty_confirmed manifest rows per `(bookmaker, league_id, date)` —
+columns the writer already emits (`venue_fetch.py::_build_sports_shard_path`). `mtds_expected_venues` resolves the full
+23-bookmaker request scope via UAC's new `expected_odds_api_bookmaker_keys()` (shipped `unified-api-contracts@7338fa65`
+alongside the Part 4.1 formula change — a `"bookmaker"` `venue_accessor` sentinel, since bookmakers aren't a
+`VenueMapping` property). 11 new unit tests (`tests/unit/data_status/test_mtds_honest_coverage_for_bookmaker.py`) pin
+the found-vs-expected arithmetic, multi-league aggregation, case-insensitive bookmaker matching, the capture_status
+OK-mask, and the gate/expected-venues wiring; full `quality-gates.sh` green locally (4921 tests).
+
+**Ship status**: not yet pushed — `deployment-api`'s pre-flight audit blocks on its `unified-api-contracts` path
+dependency having uncommitted changes (`tests/test_venue_key_parity.py`, `unified_api_contracts/registry/defi_venues.py`
+— unrelated DEFI_VENUE_PHASE work, confirmed LIVE via a <60s mtime check, not stale/abandoned — do not touch or force
+past this). Retry once that clears; the code itself is complete and verified, this is purely a shared-workspace
+contention delay, not open work.
 
 **Scope investigation (2026-07-22)** — Phase 6d is **not a boolean flip**; the injection mechanism the other 4
 categories share cannot be reused as-is for SPORTS without a real design change:
