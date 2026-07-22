@@ -254,8 +254,31 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       more blind VM relaunches from me. The AAVE oracle backfill (Phase 5's other in-flight VM,
       `pyth-lst-backfill-20260722-045059`) uses a completely different operation (`collect-oracle-prices`, RPC-based,
       not Tardis-download) and is confirmed unaffected — still healthy and progressing normally as of this entry.
-- [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source
-      history + fix the today-vs-prior inner-join/vocab that drops Solana + LRTs (ezETH/rsETH) from the feature output.
+- [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source history.
+      **Original diagnosis WAS WRONG (2026-07-22, Explore agent investigation)**: there is no today-vs-prior inner-join
+      or vocab bug to fix — `compute_lst_features_for_day()`
+      (`features-service/features_service/onchain/engine/lst_features.py:199-203`) is a plain, correct, honest
+      string-key inner join on `token`, and `LST_TOKEN_TO_PROTOCOL_ASSET` already carries ezETH/rsETH/jitoSOL/mSOL/
+      bSOL. The real gaps are two SEPARATE upstream data/architecture issues, not a features-service code fix: -
+      **ezETH/rsETH**: MTDS's collector for these (`_lst_extended_rates.py`'s `_collect_evm_extended_rows`) was only
+      implemented **2026-07-19** (3 days before this entry) — any historical `lst_rates` shard before that date
+      genuinely has zero rows for these tokens, so the join correctly/honestly drops them. Fix = a historical
+      **backfill** of the MTDS `lst_rates` collector using the now-current config (real-infra VM launch — **holding for
+      now given today's 2 real-infra incidents** in this same session; see #1's OOM issue doc for why extra caution is
+      warranted before any more CEFI/DeFi VM launches). - **Solana LSTs (jitoSOL/mSOL/bSOL)**: genuinely architectural,
+      not a quick fix. `solana_lst_archival.py`'s Tier 1 (Alchemy `getAccountInfo`, the reliable path) is gated to
+      wall-clock "today" only; Tier 2 (subgraph, the only tier that CAN serve historical days) is a documented no-op —
+      "UAC has no marinade/jito Solana subgraph IDs" (as of 2026-05-05); Tier 3 REST is only an ~8-day rolling window.
+      Any historical-day reprocessing gets essentially zero Solana LST rows regardless of the feature join. **Real fix
+      needed**: register the missing UAC subgraph IDs for jito/marinade/blazestake/sanctum on SOLANA (`get_subgraph_id`
+      lookups) to unlock Tier 2 for historical days, or find another genuine historical Solana rate source — this is
+      buildable CODE work, not a backfill-only task, but needs real verification (do these subgraphs exist? are they
+      indexed?) before registering anything, mirroring this session's AAVE-listing-date and CEX-listing verification
+      discipline. - **Secondary finding**: the existing LST feature tests (`test_lst_yields_compute_runner.py`,
+      `test_lst_native_rates.py`, `test_lst_yields_path_resolution.py`, `test_lst_features_unit.py`) only ever construct
+      SYMMETRIC today/prior token sets and never test ezETH/rsETH at all — they give false confidence and would not
+      catch this exact drop scenario. Worth a real asymmetric-token-set test case once the underlying data gaps are
+      closed.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
