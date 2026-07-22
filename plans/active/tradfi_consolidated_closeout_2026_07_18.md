@@ -1974,3 +1974,23 @@ jittered sleep between attempts so different tries land at different phases rela
 self-deleted on completion, `VM_SHUTDOWN_ON_COMPLETION=true`) and the per-VM logs at
 `gs://deployment-scripts-central-element-323112/vm-logs/<name>/run.log`. No Claude session needs to be running for these
 to finish — that was the whole point of moving them here.**
+
+### Final confirmation — all 3 VM jobs launched (2026-07-22, end of session checkpoint)
+
+- **`canonical-migration-tradfi-manifest-cas-20260722-075028`** — running (8x in-VM retry loop, ships
+  `deployment-service@<fix-sha>`). Check `... /run.log | grep 'CAS FINAL'` for `rc=0` (success — the whole manifest is
+  now canonical, matching the dry-run numbers above) vs `rc=1` (all 8 attempts lost the race — the scheduler-pause
+  permission gap todo above is the real fix; a manual relaunch is a cheap stopgap in the meantime).
+- **`canonical-migration-tradfi-cid-20260722-065920-shard{0..7}of8`** — confirmed all 8 launched; 5/8 confirmed complete
+  (100% `already_canonical`, 0 real fixes needed — see finding above). Remaining 3 were mid-run, identical pattern, no
+  reason to expect a different outcome.
+- **`canonical-migration-tradfi-20260722-074047-shard{0..19}of20`** — confirmed all 20 launched (verified via direct
+  fleet listing, not just the launcher's own claimed success). Sample check on shard0: real work done (60,428
+  `VERIFIED_INPLACE`, 1,683 `MIGRATED`, 348 `SIZE_MISMATCH_KEPT_SRC` safety-holds, 169 `CONTENT_REPAIR_DEFERRED`), but
+  its rebundle pass found 0 per-contract rows in THIS shard's slice — expected if the 112,839-row population isn't
+  evenly distributed across the hash-based shards; check the AGGREGATE across all 20 shards'
+  `rebundle_mapping.tsv.reconcile.txt` before concluding rebundle found nothing.
+
+**Session ending here on operator time/credit constraint. Nothing further will be done from this session — the 3 VM jobs
+above are the actual remaining migration work and will complete (or fail loudly into their run.log) on their own. Next
+session's first move: check the three bullets above, not re-derive from scratch.**
