@@ -2221,13 +2221,15 @@ questions when a decision is needed. Ran it. Findings:
     --apply` (register phase) against the live tradfi manifest — inserts the 1,545 GCS-confirmed canonical rows found by the 2026-07-22 dry-run. Additive/no-CAS, low risk. Re-run the dry-run first if this is picked up more than a day or two later (the confirmed set can drift as other migrations/rebundles land).`
   - `- [ ] [DATA] P1. Dry-run `recover_tradfi_chain_manifest_registration_2026_07_22.py
     --retire` (no --apply) AFTER the register apply above lands + is verified — review the retire candidate list carefully before ever passing --apply (in-place-CAS, destructive mutation of existing manifest rows) — per the plan's own "Do NOT delete-only" caution and this session's own near-miss with an unreviewed whole-corpus walk attempt on the CME monolith investigation.`
-  - `- [ ] [SCRIPT] P2. Ship recover_tradfi_chain_manifest_registration_2026_07_22.py via quickmerge (quality-gates.sh run + lint auto-fixed this session — verify it landed; check git log in market-tick-data-service for the commit before re-running quality gates).`
+  - `[x] [SCRIPT] P2. Ship recover_tradfi_chain_manifest_registration_2026_07_22.py via quickmerge — mtds@c4cc819b1845f0c1a7f4546612f80229242fe265. Hit quickmerge's own documented untracked-file gotcha (`git
+    diff
+    origin/main`is blind to untracked files, silently early-exits "nothing to merge" without committing anything) — fixed by`git
+    add`ing the file before invoking quickmerge, per the script's own inline comment.`
 
-**Remaining, in priority order for the next continuation: (1) ship the recovery script (quality gate was running at this
-checkpoint), (2) run the register-phase --apply, (3) dry-run then carefully review the retire phase, (4) finish the CME
-monolith migration-tool build (P2, deferred), (5) Phase D gate (`data-pipeline-check-is` + `data-pipeline-check-mtds`,
-tradfi, all shards — the terminal completion gate for this whole plan). Next session: check `git log` in
-market-tick-data-service for the recovery-script ship before redoing any of the above.**
+**Remaining, in priority order for the next continuation: (1) run the register-phase --apply (script is shipped, ready
+to run for real now), (2) dry-run then carefully review the retire phase, (3) finish the CME monolith migration-tool
+build (P2, deferred), (4) Phase D gate (`data-pipeline-check-is` + `data-pipeline-check-mtds`, tradfi, all shards — the
+terminal completion gate for this whole plan).
 
 **Lesson — QG sentinel friction under heavy shared-host contention (2026-07-22 late session):** `unified-api-contracts`
 was running under heavy multi-slot contention (12+ concurrent `quality-gates.sh` processes observed). Ran the FULL gate
