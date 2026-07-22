@@ -936,3 +936,31 @@ session (or the next `/autonomous` tick) should check
 anything else with DEFI candle data; if all 10 show `EXIT_STATUS=0`, hard-verify via a real `gsutil stat` sample (old
 non-canonical path gone, new canonical path exists — same method as the canary) before marking this item done, updating
 the Deferred table, and moving to PREDICTION.
+
+## Progress Log addendum — 2026-07-22 (mid-flight watch: JIT-redrain rule needs a second tightening)
+
+While polling the 10 shards' progress (all healthy — real `apply:` counters climbing, tens of thousands of objects each,
+no shard preempted), `gcloud compute instances list` showed a VM I hadn't seen before:
+`canonical-migration-defi-rebuild-20260722-194751`, `RUNNING`, created ~3min after I stopped
+`canonical-migration-defi-rebuild-20260722-193748` (the earlier same-bucket stop from the JIT-redrain item above) and
+~3min before my shard fan-out began — i.e. it looks like an automated relaunch of the exact class of VM I'd just
+stopped, on the exact bucket (`market-data-tick-defi-prd-central-element-323112`) my 10 apply shards are concurrently
+mutating. Investigated before touching it (never stop-first-ask-later on a live migration):
+
+- `run.log` shows it runs
+  `market_tick_data_service.scripts.rebuild_defi_manifest --bucket market-data-tick-defi-prd-central-element-323112 --start-date 2022-04-29 --end-date 2026-12-31`
+  — scans `raw_tick_data/by_date/day={...}/(category|asset_group)=defi/` and writes ONLY to
+  `_index/per_vm/canonical-migration-defi-rebuild-20260722-194751.parquet`.
+- `migrate_candle_canonical_2026_07.py` operates exclusively under `CANDLE_ROOT = "processed_candles/by_date/"`
+  (confirmed via grep — the script's own docstring calls out `raw_tick_data/` as the disjoint sibling migrator's
+  territory, not this one's).
+- **No object-level overlap**: disjoint read/write prefixes (`raw_tick_data/` vs `processed_candles/`), and the rebuild
+  job's only write target (`_index/per_vm/<its-own-name>.parquet`) is never read or written by the candle apply.
+
+**Verdict: false alarm, left running.** But this is the SECOND real near-miss this session on the JIT-redrain heuristic
+(first was `instr-backfill-defi-targeted`, same-bucket-but-different-bucket that time; this time
+same-bucket-same-service-family but disjoint prefix). **Tightening the rule accordingly: "same bucket" is necessary but
+not sufficient — before stopping any VM found running during a JIT redrain, confirm it actually reads/writes the SAME
+OBJECT PREFIX the migration's `--apply` touches** (grep the target script's root-prefix constant, as done here), not
+just the bucket name or an asset_group tag. Apply this tightened check for the PREDICTION/CEFI/TRADFI JIT redrains next
+— a same-bucket VM on a disjoint prefix is not a conflict and should be left alone.
