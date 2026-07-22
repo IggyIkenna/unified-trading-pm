@@ -306,7 +306,8 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       this tier, so no new gating was needed. 20 new/updated unit tests (6 existing tests patched to mock the new tier
       so they don't make live network calls; 14 new tests covering the price-fetch helper, the ratio tier itself —
       unknown protocol/missing price/zero price/implausible ratio — and one positive end-to-end fallthrough case); full
-      MTDS `quality-gates.sh` green (exit 0) before commit. - **DEFERRED**: the ezETH/rsETH sub-fix (historical MTDS
+      MTDS `quality-gates.sh` green (exit 0) before commit. - **Held this session** (not a plan migration — the
+      ezETH/rsETH sub-fix stays tracked under this still-open todo #4): the ezETH/rsETH sub-fix (historical MTDS
       `lst_rates` collector backfill) remains held — real-infra caution given this session's 2 prior incidents
       (misdirected VM launch, confirmed OOM bug); not attempted this session.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
