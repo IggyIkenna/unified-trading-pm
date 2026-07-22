@@ -407,57 +407,57 @@ the same fixes.
       `_catalogue.py:75-87` + `test_sports_not_in_identity_catalogue_asset_groups`, unchanged, still correct).
 
       **Trace (done this tick)**: sports/prediction have NO separate manifest-writer pipeline — they flow through the
-                      exact same universal orchestrator as every other asset_group.
-                      `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
-                      `_finalize_prediction_bundles`/`_finalize_sports_...` closures (+ the shared `_write_bundle_shard_row` helper)
-                      call `unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py`'s
-                      `ManifestWriter.record_captured`/`record_captured_from_counts` (captured rows) and `_writer_record.py`'s
-                      `_record_status` (empty/failed/expected_unattempted rows), which both build ONE shared dataclass —
-                      `_rows.py::AvailabilityRecord` — the UNIVERSAL manifest-row schema written into `_index/availability_index.parquet`
-                      by EVERY asset_group and EVERY producer service (cefi/defi/tradfi/sports/prediction, plus features-service /
-                      ml-service / strategy-service / execution-service, which is why `AvailabilityRecord` already carries
-                      `feature_group`/`model_family`/`strategy_id`/`client_id`/`instruction_type` columns). There is no
-                      sports/prediction-scoped writer to touch in isolation — any new column lands on this ONE shared schema.
+                          exact same universal orchestrator as every other asset_group.
+                          `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
+                          `_finalize_prediction_bundles`/`_finalize_sports_...` closures (+ the shared `_write_bundle_shard_row` helper)
+                          call `unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py`'s
+                          `ManifestWriter.record_captured`/`record_captured_from_counts` (captured rows) and `_writer_record.py`'s
+                          `_record_status` (empty/failed/expected_unattempted rows), which both build ONE shared dataclass —
+                          `_rows.py::AvailabilityRecord` — the UNIVERSAL manifest-row schema written into `_index/availability_index.parquet`
+                          by EVERY asset_group and EVERY producer service (cefi/defi/tradfi/sports/prediction, plus features-service /
+                          ml-service / strategy-service / execution-service, which is why `AvailabilityRecord` already carries
+                          `feature_group`/`model_family`/`strategy_id`/`client_id`/`instruction_type` columns). There is no
+                          sports/prediction-scoped writer to touch in isolation — any new column lands on this ONE shared schema.
 
-                      **Key finding (changes the framing of "correct fix")**: `is_mvp_for_manifest_row`'s two extra axes beyond
-                      `(venue, instrument_type, data_type)` — `base_ccy` (read from a `base_asset` column) and `market_group` — are
-                      confirmed ABSENT not just from the read-time manifest DataFrame (already documented at `_coverage_scope.py:96-104`)
-                      but from the WRITE-time schema too: neither `base_asset` nor `market_group` appears in UTL's `_ROW_KEY_COLUMNS`
-                      or `AvailabilityRecord` fields (`_rows.py`). So a write-time `is_mvp(...)` call would resolve those two kwargs to
-                      `None` — IDENTICAL to what the read-time call resolves today. **Write-time precompute is a pure caching/perf
-                      optimization, not a correctness fix** — it would not change a single row's `is_mvp` verdict vs. today.
+                          **Key finding (changes the framing of "correct fix")**: `is_mvp_for_manifest_row`'s two extra axes beyond
+                          `(venue, instrument_type, data_type)` — `base_ccy` (read from a `base_asset` column) and `market_group` — are
+                          confirmed ABSENT not just from the read-time manifest DataFrame (already documented at `_coverage_scope.py:96-104`)
+                          but from the WRITE-time schema too: neither `base_asset` nor `market_group` appears in UTL's `_ROW_KEY_COLUMNS`
+                          or `AvailabilityRecord` fields (`_rows.py`). So a write-time `is_mvp(...)` call would resolve those two kwargs to
+                          `None` — IDENTICAL to what the read-time call resolves today. **Write-time precompute is a pure caching/perf
+                          optimization, not a correctness fix** — it would not change a single row's `is_mvp` verdict vs. today.
 
-                      **Design (for whoever implements)**:
-                      1. UTL `manifest_writer/_rows.py`: add `mvp: bool | None = None` (trailing field, back-compat default) to
-                         `AvailabilityRecord`; bump `MANIFEST_SCHEMA_VERSION` 9→10 in `_schema.py`.
-                      2. UTL `_writer_captured.py::record_captured`/`record_captured_from_counts`: when the resolved `asset_group` is
-                         `"sports"`/`"prediction"`, lazy-import UAC `is_mvp` and stamp
-                         `is_mvp(asset_group, venue, instrument_type, data_type, league=league_id or None, market_group=None,
-                         base_ccy=None, source=resolved_source)` onto the `AvailabilityRecord(...)` call; leave `None` for every other
-                         asset_group (no behavior change elsewhere).
-                      3. UTL `_writer_record.py::_record_status`: same conditional stamp (sports/prediction also write
-                         empty/failed/expected_unattempted rows through this path).
-                      4. `deployment-api/_catalogue.py::_row_is_mvp`/`_is_mvp_series`: add a THIRD branch — when `"mvp" in df.columns`
-                         for a manifest-backed (non-identity-catalogue) frame, use the precomputed value for rows where it's non-null
-                         (`_truthy_mvp` fast path, mirroring the identity-catalogue branch byte-for-byte) and fall back to
-                         `is_mvp_for_manifest_row` only for legacy rows where the column is null/absent — old rows keep today's exact
-                         behavior.
-                      5. Historical rows do NOT retroactively gain `mvp` from steps 1-4 alone — closing the live-compute gap for
-                         EXISTING data needs a companion backfill/rebuild pass (the repo already has the pattern:
-                         `rebuild_sports_manifest_v9.py` / `rebuild_prediction_manifest.py`), scoped separately.
+                          **Design (for whoever implements)**:
+                          1. UTL `manifest_writer/_rows.py`: add `mvp: bool | None = None` (trailing field, back-compat default) to
+                             `AvailabilityRecord`; bump `MANIFEST_SCHEMA_VERSION` 9→10 in `_schema.py`.
+                          2. UTL `_writer_captured.py::record_captured`/`record_captured_from_counts`: when the resolved `asset_group` is
+                             `"sports"`/`"prediction"`, lazy-import UAC `is_mvp` and stamp
+                             `is_mvp(asset_group, venue, instrument_type, data_type, league=league_id or None, market_group=None,
+                             base_ccy=None, source=resolved_source)` onto the `AvailabilityRecord(...)` call; leave `None` for every other
+                             asset_group (no behavior change elsewhere).
+                          3. UTL `_writer_record.py::_record_status`: same conditional stamp (sports/prediction also write
+                             empty/failed/expected_unattempted rows through this path).
+                          4. `deployment-api/_catalogue.py::_row_is_mvp`/`_is_mvp_series`: add a THIRD branch — when `"mvp" in df.columns`
+                             for a manifest-backed (non-identity-catalogue) frame, use the precomputed value for rows where it's non-null
+                             (`_truthy_mvp` fast path, mirroring the identity-catalogue branch byte-for-byte) and fall back to
+                             `is_mvp_for_manifest_row` only for legacy rows where the column is null/absent — old rows keep today's exact
+                             behavior.
+                          5. Historical rows do NOT retroactively gain `mvp` from steps 1-4 alone — closing the live-compute gap for
+                             EXISTING data needs a companion backfill/rebuild pass (the repo already has the pattern:
+                             `rebuild_sports_manifest_v9.py` / `rebuild_prediction_manifest.py`), scoped separately.
 
-                      **Why this STOPS here instead of shipping (explicit scope-risk call, not an oversight)**: step 1 is not a
-                      sports/prediction-scoped change — it is a schema addition on the ONE shared `AvailabilityRecord` used by every
-                      asset_group and every producer service, so it needs a FULL FLEET redeploy (every live/backfill/cron VM, both
-                      clouds, all asset_groups) to take effect, not a bounded single-service change. The manifest-consolidator
-                      (Cloud Run/Batch-Fargate) merging old-schema and new-schema per-VM shards together is unverified here and codex
-                      documents it as "loud-fails on stale index" — exactly the risk class behind this SAME session's separate CeFi
-                      manifest re-stamp (see the "2026-07-21 (tick 2)" progress-log entry above and the deferred-work table below),
-                      which needed a snapshot + guarded rollout + an operator-gated Cloud Scheduler pause and is still not fully landed.
-                      Given the P2 (not P1) priority, the already-documented "bounded, non-regressed" live-compute cost (no active
-                      incident forcing urgency), and the Key Finding above (this is a perf win, not a correctness fix), rushing steps
-                      1-4 here would repeat the exact near-miss pattern this plan has already flagged twice. Left at P2 with the design
-                      above ready to hand off; NOT force-shipped.
+                          **Why this STOPS here instead of shipping (explicit scope-risk call, not an oversight)**: step 1 is not a
+                          sports/prediction-scoped change — it is a schema addition on the ONE shared `AvailabilityRecord` used by every
+                          asset_group and every producer service, so it needs a FULL FLEET redeploy (every live/backfill/cron VM, both
+                          clouds, all asset_groups) to take effect, not a bounded single-service change. The manifest-consolidator
+                          (Cloud Run/Batch-Fargate) merging old-schema and new-schema per-VM shards together is unverified here and codex
+                          documents it as "loud-fails on stale index" — exactly the risk class behind this SAME session's separate CeFi
+                          manifest re-stamp (see the "2026-07-21 (tick 2)" progress-log entry above and the deferred-work table below),
+                          which needed a snapshot + guarded rollout + an operator-gated Cloud Scheduler pause and is still not fully landed.
+                          Given the P2 (not P1) priority, the already-documented "bounded, non-regressed" live-compute cost (no active
+                          incident forcing urgency), and the Key Finding above (this is a perf win, not a correctness fix), rushing steps
+                          1-4 here would repeat the exact near-miss pattern this plan has already flagged twice. Left at P2 with the design
+                          above ready to hand off; NOT force-shipped.
 
 - [x] N. ✅ [BACKEND] P1. **MDPS parity — traced + backend honest-coverage SHIPPED** (`unified-api-contracts@a7798b93` +
       `deployment-api@60a23ae`, both verified landed on origin by SHA). **Traced first** (Explore agent, before writing
@@ -549,9 +549,55 @@ the same fixes.
       but is NOT the OOM plan's scope and does not belong there. **Verdict for the plan-annotation instruction**: item 1
       is the same issue (annotated, not duplicated); item 2 is unrelated to the cell-grid plan and needed no new
       annotation there.
-- [ ] [UI] P2. Once Bugs A/B/C are fixed and MVP-scope + universal search are wired: confirm the MTDS (and MDPS) view is
-      genuinely at parity with the instruments-service view. `[UI]` + `pw:L2 ✓` + a regression spec per the playwright
-      gate (per this workspace's UI-testing convention) — no tick without it.
+- [x] N. ✅ [UI] P2. **Confirmation pass DONE — `deployment-ui@c4105fb` (verified on origin via
+      `merge-base     --is-ancestor`), PARTIAL parity, one confirmed real gap, not fixed in this pass (its own new todo
+      below).** Live-verified (dev server `VITE_MOCK_API=true` + Playwright MCP, this repo's dedicated :5199 webServer
+      config) across all three services sharing `DataStatusTab.tsx`
+      (instruments-service/market-tick-data-service/market-data-processing-service). Concrete PASS/FAIL per surface: -
+      **Symbol search box + click-through — PASS, genuine parity.** Renders on all three services; clicking a CEFI
+      result resolves an "Overall Availability" panel with real found/missing/expected numbers on all three (previously
+      only regression-tested for MTDS via `symbol_search_clickthrough.spec.ts`; extended to instruments-service + MDPS
+      in the new spec below). - **Coverage grid (Honest Coverage / Instrument Coverage Summary / "Data Coverage" TURBO
+      panel / asset-group breakdown / Needs Attention) — PASS, structurally consistent.** Same shared render tree, same
+      shape, on all three services. - **MVP toggle — FAIL, confirmed real gap, NOT genuinely at parity.** Traced
+      (`grep`-then-READ, not grep-then-conclude) every MVP-related UI element across `DataStatusTab.tsx`,
+      `VenueCoverageTable.tsx`, `CatalogueExplorer.tsx`, `DataStatusDrilldown.tsx`, and `api/client.ts`. Finding: this
+      session's earlier "Wire UAC `is_mvp` into MTDS coverage" (`deployment-api@724910e`) and "`/turbo` scope gap"
+      (`deployment-api@511084b`) todos shipped a `scope` query param on the BACKEND `/manifest` and `/turbo` routes, but
+      **neither `deployment-ui` frontend caller ever sends it** — confirmed by reading `getDataStatusManifest` and
+      `getDataStatusTurbo` in `src/api/client.ts` in full: neither the params interface nor the `URLSearchParams`
+      construction mentions `scope` anywhere. The shipped backend wiring has ZERO UI-reachable consumer on the shared
+      coverage grid, for any of the three services — those two "SHIPPED" todos were backend-complete but UI-orphaned.
+      The only MVP-scope-aware UI that exists today is three narrower, pre-existing, non-interchangeable affordances,
+      each hitting its OWN endpoint (not `/manifest`/`/turbo`) and each gated to a different service subset: (1)
+      `VenueCoverageTable`'s MVP/Could-exist/All pill (`/venue-year-coverage`) — on a SEPARATE "Venue Coverage" tab
+      `App.tsx` gates to `market-tick-data-service` ONLY; (2) `CatalogueExplorer`'s "MVP only" checkbox (`/catalogue`) —
+      rendered only when `serviceName === "instruments-service"`; (3) the per-shard drill-down modal's "MVP only"
+      checkbox (`fetchInstrumentsForShard` `mvp_only` param) — genuinely shared via `HierarchicalShardDrilldown`, but a
+      per-shard-cell modal, not a page-level toggle, and doesn't scope the headline "Data Coverage" numbers. **Net:
+      market-data-processing-service has ZERO MVP-scope UI affordance of any kind** (confirmed live: zero "MVP" text
+      occurrences anywhere on its `/data-status` page); instruments-service and market-tick-data-service each have
+      exactly ONE, but two DIFFERENT, non-interchangeable ones, neither of which scopes the shared coverage grid the
+      operator's original ask was about. **Deliberately NOT fixed in this pass** (wiring `scope` through 2 API
+      functions + a page-level toggle + an MDPS-reachable equivalent of Venue Coverage is real design/implementation
+      work, not a same-pass regression-spec fix) — filed as its own P1 todo below rather than silently left implicit or
+      force-shipped without design. New regression spec
+      `deployment-ui/tests/smoke/mtds_mdps_data_status_parity_2026_07_22.spec.ts` (9 tests, all passing against the live
+      mock dev server before commit — `pw:L2 ✓`) locks in both the confirmed-working parity (symbol search + coverage
+      grid, all 3 services) AND the confirmed gap (MVP toggle absence/inconsistency, all 3 services) so neither silently
+      regresses further or silently disappears from view. Full `tests/smoke/` suite run: 399 passed, 7 pre-existing
+      failures confirmed unrelated (Daily Costs page + mobile nav, already filed as
+      `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, not touched here).
+- [ ] [BACKEND] [UI] P1. **MVP-scope coverage-grid UI wiring — the real gap found by the parity-confirmation todo above,
+      not yet fixed.** The backend `scope` param on `/manifest`/`/turbo` (`deployment-api@724910e`/`@511084b`) has no UI
+      consumer. Needs: (1) thread an optional `scope: CoverageScope` param through
+      `getDataStatusManifest`/`getDataStatusTurbo` in `deployment-ui/src/api/client.ts` (mirroring
+      `getVenueYearCoverage`'s existing pattern); (2) a page-level MVP/Could-exist/All toggle on `DataStatusTab.tsx`'s
+      main coverage grid, wired to that param, rendered consistently for ALL THREE services (not gated to one); (3)
+      decide whether `VenueCoverageTable`'s separate "Venue Coverage" tab becomes redundant once this lands, or stays as
+      a complementary venue×year view — don't silently duplicate two competing MVP toggles on MTDS once this ships.
+      `[UI]` + `pw:L2 ✓` + update `mtds_mdps_data_status_parity_2026_07_22.spec.ts`'s MVP-toggle block once fixed (it
+      currently asserts the CURRENT gap-state and must be updated, not just left passing-by-accident, when this lands).
 - [ ] [REVIEW] P2. Post-phase codex/plan audit: confirm this plan's "already shipped" section still matches
       `mvp_scope_catalogue_tagging_2026_06_08.md` (which has its own open Phase-2+ features/strategy/model items,
       unrelated to this plan — don't pull those in) and annotate that plan's "Composes with" section with a pointer back
@@ -878,7 +924,7 @@ session-end hygiene rule to separate the three kinds of "not done," not to dupli
 | MDPS `historical_coverage_gap` real fix (backfill/relabel vs. compat shim)                                | Cannot be done yet                 | **Operator decision**: which of the two real fixes to pursue (flagged via a response field in the meantime, not silently wrong)                                                                                                                                                                                           |
 | MDPS per-timeframe start-date divergence question                                                         | Cannot be done yet                 | **Operator/data**: needs a factual answer about real deployed venue cadence config; API surface already supports the answer either way without a signature change                                                                                                                                                         |
 | `data_status_cell_grid_rearchitecture_2026_07_18.md` OOM vs. "MTDS needs to be faster" — same root cause? | Done (2026-07-22)                  | N/A — two root causes found: coverage/drilldown grid = SAME as the OOM plan (annotated there); symbol search = a different, already-partially-fixed I/O-latency issue (pre-session `8e1221b`). See todo above.                                                                                                            |
-| Final MTDS/MDPS-parity confirmation pass (`[UI]` + `pw:L2`)                                               | Not done                           | Nobody — the shipped UI work each carries its OWN regression spec already, but the plan's broader "confirm full parity" todo as originally scoped hasn't had its own dedicated pass                                                                                                                                       |
+| Final MTDS/MDPS-parity confirmation pass (`[UI]` + `pw:L2`)                                               | Done (2026-07-22)                  | N/A — see todo above (`deployment-ui@c4105fb`, verified on origin). PARTIAL parity found: symbol search + coverage grid PASS, MVP toggle FAIL (backend `scope` wiring has no UI consumer) — new P1 follow-up todo added, not silently closed as full parity.                                                              |
 
 **Recommended next item**: the manifest re-stamp cron-pause authorization — it's the only item blocking on a single,
 fast operator decision (a ~5-minute production action) rather than more engineering time, and closing it out finishes a
@@ -947,3 +993,37 @@ near-miss pattern rather than learn from it.
 **Shipped this tick**: nothing code-wise — the todo above and the deferred-work table row were updated
 (`unified-trading-pm` — this commit) with the trace + design + explicit stop rationale so the next picker-upper starts
 from a design, not from scratch. No other repo was touched; no quality gates were run (no code changed).
+
+### 2026-07-22 (final MTDS/MDPS UI parity confirmation pass) — PARTIAL parity confirmed; MVP-toggle gap found + filed
+
+Picked up the plan's final `[UI]` P2 todo (also asked to cross-check the concurrent `/turbo`-scope unit's shipped work,
+`deployment-api@511084b`, for a UI-visible effect). Live-verified via dev server (`VITE_MOCK_API=true`, this repo's
+dedicated `:5199` webServer) + Playwright MCP across all three services sharing `DataStatusTab.tsx`.
+
+**Verdict: PARTIAL, not full, parity.** Symbol search box + click-through and the coverage grid are genuinely consistent
+across instruments-service/MTDS/MDPS (PASS). The MVP toggle is NOT — traced every MVP-related UI element in the codebase
+(`DataStatusTab.tsx`, `VenueCoverageTable.tsx`, `CatalogueExplorer.tsx`, `DataStatusDrilldown.tsx`, `api/client.ts`) and
+confirmed the backend `scope` param this session's earlier "Wire UAC `is_mvp` into MTDS coverage" and "`/turbo` scope
+gap" todos shipped (`deployment-api@724910e`/`@511084b`) has **zero UI-reachable consumer**: neither
+`getDataStatusManifest` nor `getDataStatusTurbo` in `deployment-ui/src/api/client.ts` ever sends a `scope` param —
+confirmed by reading both function bodies in full. This directly answers the turbo-scope unit's own question ("if
+`/turbo` mode's coverage panel has an MVP toggle that reads this new param") — **no, it does not; the panel has no MVP
+toggle at all, and even if it did, the frontend client function never threads `scope` through.** The only MVP-scope UI
+that exists is three narrower, pre-existing, non-interchangeable affordances gated to different service subsets (see the
+todo above for the full breakdown) — net result, market-data-processing-service has ZERO MVP-scope UI affordance of any
+kind today.
+
+This is not a fabricated finding — it's a real gap between what two earlier todos marked "SHIPPED" (true for the
+backend) and what the operator's original ask was about (a UI-visible MVP toggle on the coverage grid, consistent across
+services) — those todos were backend-complete but UI-orphaned. Filed as its own P1 follow-up todo (not silently folded
+into "parity confirmed") rather than either force-shipping a UI-wiring fix under this confirmation-pass's scope (genuine
+design/implementation work: 2 API functions + a page-level toggle + an MDPS-reachable equivalent) or silently closing
+the parity todo as fully done when it isn't.
+
+**Shipped**: `deployment-ui/tests/smoke/mtds_mdps_data_status_parity_2026_07_22.spec.ts` (9 tests, all passing against
+the live mock dev server before commit) — locks in both the confirmed-working parity (symbol search + coverage grid,
+extended beyond the existing MTDS-only `symbol_search_clickthrough.spec.ts` coverage to instruments-service + MDPS too)
+and the confirmed MVP-toggle gap (per-service assertions of exactly which affordance exists/doesn't, so a future fix has
+to deliberately update this spec rather than accidentally regress it further). Full `tests/smoke/` suite: 399 passed, 7
+pre-existing failures confirmed unrelated (Daily Costs + mobile nav, already filed
+`deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`, not touched here).
