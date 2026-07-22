@@ -123,24 +123,56 @@ operator-notified 2026-07-21.
       defi/cefi/prediction remain genuinely unmeasured for orphan objects.
 
       **Update 2026-07-22 (later same day) — real fixes shipped, cefi now MEASURED.** Two fixes shipped
-              (`instruments-service@d271dc3b` wires the sweep's dead `workers` concurrency param; `deployment-service@181daed1`
-              bumps cefi to `e2-highmem-8`) — full detail + honest before/after in
-              `migration_orphan_sweep_performance_decay_2026_07_22.md`. Relaunched all 3: **cefi (`orphan-sweep-cefi-20260722-161432`)
-              COMPLETED** — full 8,501,253-object walk in ~40 min (previously hung indefinitely, twice), self-terminated clean.
-              Real measured cefi orphan state: `A_canonical_manifested=3,575,143`, `B_legacy_duplicate=6`,
-              `C_manifest_infra=66`, `C2_non_data=3,988,460`, `D_junk=1,864`, **`E_orphan_real=935,714`** (needs a
-              `record_captured` backfill — same class as the sports 214K finding, not yet scoped/executed), `170` unknown
-              prefixes (needs investigation). Report: `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/orphan_sweep_cefi.parquet`.
-              defi (relaunched as `orphan-sweep-defi-20260722-165131` after an unrelated SPOT preemption at 1.25M objects) and
-              prediction (`orphan-sweep-prediction-20260722-161520`) were both still running, healthy, past their old
-              ~1.2M-object failure point at last check — **not yet complete; re-check before flipping this todo fully done.**
-          **Later check (17:34 UTC, ~80 min after relaunch)**: both STILL running, STILL genuinely progressing — defi at
-          1.95M objects (instantaneous rate settled ~280-370/s), prediction at 2.85M objects (instantaneous rate ~450/s,
-          possibly stabilizing rather than still falling). Neither crashed, hung, or stalled across ~80 min of continuous
-          observation. **At this rate each will likely take several more hours to finish** — this is CANNOT-BE-DONE-YET
-          (needs elapsed real time), not blocked work. Stopped actively re-polling per the workspace's "don't over-watch"
-          guidance now that the trend (real, if slow, forward progress) is well-established; check again later rather
-          than arming another short watchdog.
+                  (`instruments-service@d271dc3b` wires the sweep's dead `workers` concurrency param; `deployment-service@181daed1`
+                  bumps cefi to `e2-highmem-8`) — full detail + honest before/after in
+                  `migration_orphan_sweep_performance_decay_2026_07_22.md`. Relaunched all 3: **cefi (`orphan-sweep-cefi-20260722-161432`)
+                  COMPLETED** — full 8,501,253-object walk in ~40 min (previously hung indefinitely, twice), self-terminated clean.
+                  Real measured cefi orphan state: `A_canonical_manifested=3,575,143`, `B_legacy_duplicate=6`,
+                  `C_manifest_infra=66`, `C2_non_data=3,988,460`, `D_junk=1,864`, **`E_orphan_real=935,714`** (needs a
+                  `record_captured` backfill — same class as the sports 214K finding, not yet scoped/executed), `170` unknown
+                  prefixes (needs investigation). Report: `gs://market-data-tick-cefi-prd-central-element-323112/_index/audit/orphan_sweep_cefi.parquet`.
+                  defi (relaunched as `orphan-sweep-defi-20260722-165131` after an unrelated SPOT preemption at 1.25M objects) and
+                  prediction (`orphan-sweep-prediction-20260722-161520`) were both still running, healthy, past their old
+                  ~1.2M-object failure point at last check — **not yet complete; re-check before flipping this todo fully done.**
+              **Later check (17:34 UTC, ~80 min after relaunch)**: both STILL running, STILL genuinely progressing — defi at
+              1.95M objects (instantaneous rate settled ~280-370/s), prediction at 2.85M objects (instantaneous rate ~450/s,
+              possibly stabilizing rather than still falling). Neither crashed, hung, or stalled across ~80 min of continuous
+              observation. **At this rate each will likely take several more hours to finish** — this is CANNOT-BE-DONE-YET
+              (needs elapsed real time), not blocked work. Stopped actively re-polling per the workspace's "don't over-watch"
+              guidance now that the trend (real, if slow, forward progress) is well-established; check again later rather
+              than arming another short watchdog.
+
+              **Update 2026-07-22 (~20:00 UTC) — prediction COMPLETE; defi hit a 2nd preemption, checkpoint/resume
+              shipped, 3rd relaunch running.** **prediction (`orphan-sweep-prediction-20260722-161520`) COMPLETED**: full
+              6.6M-object walk on `e2-standard-4` (the SAME machine type defi is on — this is the key evidence for todo 6
+              in the performance-decay doc), `orphan_class_E=3,137,183`, `unknown_prefixes=0`, report at
+              `gs://market-data-tick-pred-prd-central-element-323112/_index/audit/orphan_sweep_prediction.parquet`.
+              **defi was preempted a SECOND time** at 3.4M objects (confirmed `stop` op via `gcloud compute operations
+              list`, not a code bug) — full detail in `migration_orphan_sweep_performance_decay_2026_07_22.md` todo 4,
+              which is now **SHIPPED**: `run_sweep()` checkpoints every ~200K objects and resumes via a new
+              `list_blobs(start_offset=)` capability added to UTL's `StorageClient` abstraction
+              (`unified-trading-library@3c4a5109`, `instruments-service@78dccd8c`). **defi relaunched a 3rd time**
+              (`orphan-sweep-defi-20260722-195917`) on the resume-capable tool — confirmed via its own log that the
+              checkpoint write path works in production (`_orphan_sweep_ckpt_defi_state.json` created after the first
+              ~50K-object interval). Still running at write time — **cefi=DONE, prediction=DONE, defi=IN PROGRESS
+              (3rd attempt, now with resume so a 3rd preemption won't cost the whole walk again)**.
+
+- [x] 3b. [DATA] P2. **Scope the cefi/prediction real-orphan `record_captured` backfill** (cefi's 935,714 + prediction's
+      3,137,183 — the same class as the sports 214K backfill, now ~19x larger). `backfill_orphan_class_e.py` already
+      supports `--asset-group {cefi,prediction}` (no new code needed) and its `convert_object()` is mostly `RECORD_ONLY`
+      (a footer-read of the object itself, no data movement — only genuinely legacy-shaped orphans hit the `CONVERT`
+      download→canonicalise→upload path) so this is fundamentally a metadata operation, not a multi-million-object copy.
+      **Blocked from running HERE (this interactive dev box) — found the hard way**: a `--dry-run` for cefi alone drove
+      this shared machine (15GB RAM total, shared with the operator's own session + other agent-orchestrator slot
+      workers) to 12.4GB RSS / 165MB free / 5.7GB swap-in-use within ~2 minutes, via the SAME `reverify_against_index()`
+      → `_load_manifested_cells()` unchunked-parquet-download path that caused cefi's orphan-sweep to hang before the
+      `e2-highmem-8` fix (`migration_orphan_sweep_performance_decay_2026_07_22.md` Resolution Fix 2) — **killed
+      immediately (PID 7878) to protect the shared box**, do NOT re-attempt locally. **Next step**: this needs its OWN
+      VM launcher (no `launch-*-backfill*.sh` currently targets `backfill_orphan_class_e.py` — grepped
+      `deployment-service/scripts/vm/`, zero hits) mirroring `launch-orphan-sweep-vm.sh`'s `e2-highmem-8` + SPOT +
+      singleton-lock pattern, for BOTH cefi and prediction. Not built this session (scope creep beyond the
+      checkpoint/resume fix) — filed here as the concrete, well-evidenced next unit of work rather than left as a vague
+      "not yet scoped."
 
 - [ ] 4. [CODE] P2. **Make the manifest load resumable / streamed** in `migration_orphan_sweep.py` (chunked download
       with retry, or read the index in row-group batches) so a multi-GB index does not break a single connection — this
