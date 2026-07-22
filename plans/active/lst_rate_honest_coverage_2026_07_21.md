@@ -75,8 +75,8 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       not price) or wstETH (only a _Calculated_ USD feed exists — operator decision; wstETH is fully AAVE-covered).
 - [x] [MTDS] P0. ✅ **CEX listing reality** — confirmed **NO catalogue edit** (the LST bases are already in
       `CEFI_BASE_ASSET_UNIVERSE`+`STAKING_SPOT_EXCEPTION`; catalogue-add is the documented phantom-mint anti-pattern).
-      #1 is a Tardis backfill only. (The per-venue listing sub-check didn't fully complete — verify exact listed
-      (LST,venue) cells at backfill time, Phase 5.)
+      #1 is a Tardis backfill only. Per-venue listing sub-check CLOSED in Phase 5 (2026-07-22) — only 5 of 48 (token,
+      venue) cells are real listings; see Phase 5's #1 todo.
 - [x] [MTDS] P0. ✅ **DEX endpoint reality — WORKS TODAY, NOT blocked.** Live-probed 2026-07-21: Curve stETH/ETH pool
       `0xDC24316b9AE028F1497c275EB9192a3Ea0f67022` + Balancer via the EXISTING `thegraph-api-key` secret + shipped
       `dex_swaps_handler` cascade + UAC `SUBGRAPH_IDS` — HTTP 200, hasIndexingErrors:false, at-head, real swaps. The
@@ -214,9 +214,17 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-045059/run.log` +
       manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity.
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
-      `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key. **Still
-      needs the per-venue listing-date sub-check from Phase 0** (which (LST, venue) pairs are actually real SPOT
-      listings, vs. never-existed) before launching, to avoid backfilling venues honestly with no coverage.
+      `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key.
+      **Per-venue listing sub-check CLOSED (2026-07-22)**: live exchange API sweep (all 8 Tardis-covered CEX venues × 6
+      LST tokens, 48 cells, all 8 API calls succeeded) found only **5 real cells** — `(stETH, BYBIT-SPOT)` `STETHUSDT`,
+      `(stETH, OKX-SPOT)` `STETH-USDT`, `(stETH, BITGET-SPOT)` `STETHUSDT`, `(weETH, BITGET-SPOT)` `WEETHUSDT`,
+      `(cbETH, COINBASE-SPOT)` `CBETH-USD`. Every other cell is honestly absent — **wstETH has ZERO real listings
+      anywhere** (every venue lists the rebasing stETH form, never wrapped wstETH, despite the catalogue treating them
+      as separate bases); rETH/rsETH/ezETH have zero real listings on any of the 8 venues checked. Caught 4
+      ticker-naming false-positive traps along the way (Bitget "rETHA" ≠ Rocket Pool rETH; Binance "EZETH" = base
+      EZ/quote ETH, not Renzo; Kraken "LSETH" = Kraken's own in-house product; Upbit lists governance tokens ETHFI/LDO,
+      not the LST tokens themselves). **Scope the launch to exactly these 5 cells** — never launch
+      wstETH/rETH/rsETH/ezETH on any venue, that would be honest-absence-by-construction.
 - [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source
       history + fix the today-vs-prior inner-join/vocab that drops Solana + LRTs (ezETH/rsETH) from the feature output.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
