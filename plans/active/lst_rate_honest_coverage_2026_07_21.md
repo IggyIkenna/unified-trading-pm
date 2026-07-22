@@ -445,6 +445,23 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   marker on the same physical line as each address — added the marker using the exact provenance already stated, shipped
   `market-tick-data-service@4c21c7f6`. **Phase 2 is now fully done across all 4 repos.** Next: Phase 3 (sample-download
   proof on the `-test-` bucket).
+- **2026-07-22 (Phase 5 #2 — DEX fill launched)** — operator approved a direct full-history launch (asked given today's
+  2 prior real-infra incidents; operator noted this collector is a different code path — GraphQL/TheGraph via aiohttp,
+  not the Tardis REST download path that OOM'd — and approved "Yes, launch it now"). Launched via the pre-existing,
+  purpose-built `deployment-service/scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh` (found via
+  `grep -rln collect-dex-swaps scripts/vm/` rather than hand-rolling a VM name) — confirmed correct CLI operation
+  `collect-dex-swaps` (registered in `market_tick_data_service/cli/main.py`; NOT `collect-evm-defi`, learned from
+  today's earlier misdirected-VM mistake) before launching. VM `mtds-dex-swaps-backfill`, all 4 tarballs confirmed
+  fresh, launched SPOT, range `2023-01-01→2026-07-22` (launcher's own default), all default protocols (uniswap_v3,
+  pancakeswap_v3, aerodrome_v3, camelot_v3, balancer, curve, sushiswap_v3, sushiswap, …) — no narrowing to LST-only
+  pools, since this data_type is collected broadly, not LST-scoped. Created successfully, STATUS=RUNNING at launch.
+  T+10min verification pending — will confirm real manifest/log progress (not just STARTED) before calling this done.
+- **2026-07-22 (Phase 5 — AAVE oracle backfill, resumed run, healthy)** — checked on `pyth-lst-backfill-20260722-151120`
+  (resumed earlier this session from `2026-04-18` after the first attempt preempted at `2026-04-17`): confirmed via
+  `run.log` real climbing progress, `ManifestWriter process_final=True` markers landing day-by-day, now past
+  `2026-06-17`/`06-18` — roughly 61 days processed in ~38 minutes since the resume launch, on pace to reach today
+  (`2026-07-22`) within another ~20-30 minutes. No intervention needed; will re-check for completion or a fresh
+  preemption on the next pass (resume-from-measured-progress discipline applies again if it preempts).
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 
