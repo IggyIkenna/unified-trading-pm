@@ -252,6 +252,22 @@ rather than a single CSS var.
       high-churn repo (all clean fast-forwards or a single-key `codex_ui_violation_baseline.json` conflict, resolved by
       re-measuring the true combined state on each merged tree rather than guessing — final combined colour count
       171→96). `tsc --noEmit`/`eslint` clean across all 26 files, `quality-gates.sh` green end-to-end.
+- [ ] [UI] P2. Retroactive Playwright evidence for Batch 5 — the Batch-5 flip (`unified-trading-system-ui@816a0c53`)
+      cited full `quality-gates.sh` green + `tsc`/`eslint` clean but carries NO `pw:L2` citation and NO honest "no
+      fabricated pw:L2" note, unlike Batches 1/3/4. Per the UI HARD RULE
+      (`codex/06-coding-standards/ui-testing-layers.md`): no UI tick lands without `[UI]` + `pw:L2 ✓` + a cited
+      regression spec, and a silent omission is not a documented exemption. Batch 5 touched genuinely visual-risk
+      surfaces — `components/marketing/galaxy-canvas.tsx` + `components/marketing/arbitrage-galaxy.tsx` (raw Canvas 2D
+      resolving tokens via `getComputedStyle`-at-mount), `app/(public)/_home-client.tsx` (theme-invariant "Odum palette"
+      approximations already flagged for design review), and
+      `app/(platform)/services/research/strategy/heatmap/page.tsx` (`color-mix()` RGB-interpolation rewrite) — exactly
+      the class Playwright exists to catch. Close the gap EITHER by adding a named `pw:L2` regression spec covering
+      those surfaces under both themes (assert clean render / no error boundary, and for the two canvases read back real
+      pixel data à la Batch 1's lightweight-charts verification), OR — if the host-contention `page.goto` blocker that
+      hit Batches 1/4 still applies — by recording an honest documented "no fabricated pw:L2" note with the measured
+      reason (matching the sibling-batch pattern). Do NOT retroactively un-tick the completed colour migration (that
+      work is real and green); this todo tracks only the missing test evidence. (repo: unified-trading-system-ui) —
+      flagged by review-role spot-check 2026-07-22 (msg 1683).
 
 ## Codex SSOTs
 
