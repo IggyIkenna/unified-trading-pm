@@ -17,7 +17,7 @@ summary: >
   ... shipping the committed work", quickmerge.sh:1494-1511). Cost ~5 failed ship attempts during the CI-cost B1 deploy
   on 2026-07-16. Affects EVERY agent shipping to a busy branch, not just that plan. Workaround (used, imperfect): chain
   `quality-gates.sh --no-fix && quickmerge.sh ...` in ONE shell so no upstream push can land between them.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -43,7 +43,7 @@ assigned_role: devops
 drift_direction: advance-code
 last_updated: 2026-07-16
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@e264b3c9 (bounded retry — NOT this doc's own recommended fix B; see resolution note)
 depends_on: []
 ---
 
@@ -262,3 +262,29 @@ question the gate is asking.
 4. Negative test — the anti-rewind guard must SURVIVE: point the sentinel at a commit on a genuinely **divergent**
    branch (not merely rebased) and assert it is still **rejected**. A fix that green-lights that has broken the
    protection it was meant to keep.
+
+## Resolution (2026-07-22) — the operator-decided alternative, NOT this doc's fix B
+
+**`unified-trading-pm@e264b3c9`** did **not** implement this doc's own recommended fix B (relax ancestry via
+`ORIG_HEAD`-scoped content-diff). Between this doc (07-16) and the fix landing, a sibling doc
+(`quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18.md`) recorded an operator decision (2026-07-19) that
+explicitly **rejects weakening the sentinel/ancestry check** — the STAGE-3 content fallback was independently hardened
+the SAME window (2026-07-18, `TREE-scoped, NOT --files-scoped`) to compare the WHOLE tree rather than just `$FILES_ARG`,
+precisely because typecheck/pytest are whole-program and a peer's edit to an unrelated file can break one you never
+touched. That hardening is the opposite direction from this doc's fix B and stands.
+
+The actual fix ships **Option 2** from the sibling doc (bounded retry with backoff+jitter): `quickmerge.sh`'s STAGE 0.4
+pull was extracted into a reusable function (`_qm_stage_0_4_not_behind_gate`), and STAGE 3's AGENT_MODE sentinel check
+was split into a checking function (`_qm_check_agent_sentinel`, returns 0/1, never exits) driven by an `until` loop that
+on a lost race automatically re-pulls, re-runs `quality-gates.sh --no-fix`, and re-checks — up to 3 attempts with
+`sleep $((2 + RANDOM % 4 + attempt * 3))` backoff — instead of hard-failing on the first loss and dumping the retry onto
+the calling agent (which is what produced this doc's own "~5 failed ship attempts" and the sibling retry-storm doc's "27
+consecutive full-QG losses"). The sentinel/ancestry logic itself is byte-for-byte unchanged. Verified: `bash -n` syntax
+check, the existing `test-quickmerge-blocked-contract.sh` STAGE-0.4 extraction test (5/5 pass — confirms the
+function-wrap didn't disturb the block the test slices out), `test_check_strict_quickmerge.py` (13/13 pass), and an
+isolated control-flow harness exercising the retry loop's three cases (immediate success, success-on-retry, exhaustion)
+against a faked sentinel-check/pull/gate. Full PM `quality-gates.sh` green. **Not yet covered**: doc1's "Bonus" residual
+(STAGE 5's own commit can still lose to a peer push landing between STAGE 0.4 and STAGE 5) and the retry-storm doc's
+Option 1 (a content-hash fast-path to skip a full re-gate when the tree delta is carve-out-only) remain open — the
+latter needs care since `scripts/` isn't uniformly safe to fast-path across every repo (unlike PM, other repos'
+`scripts/` can hold real tested Python).

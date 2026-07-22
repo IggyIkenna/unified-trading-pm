@@ -15,8 +15,8 @@ summary:
   (19606d5ed, same day). It is a THROUGHPUT problem - the ship path has no way to converge under a push rate faster than
   its own gate, and the current failure mode dumps that on the agent as a bare "re-run quality-gates.sh" that will fail
   again for the same reason.
-status: open
-resolved_by:
+status: resolved
+resolved_by: unified-trading-pm@e264b3c9
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -115,3 +115,18 @@ retry the sentinel.
 
 **Implementation status: DECIDED, not yet implemented** — recorded for operator greenlight rather than hot-patched into
 `quickmerge.sh` (fleet-critical) at session end, consistent with the original report's stance.
+
+## Implemented (2026-07-22) — Option 2
+
+`unified-trading-pm@e264b3c9` (hit this exact race live while shipping an unrelated AO plan-checkbox flip on a hot PM
+`live-defi-rollout` tonight — direct reproduction, not synthetic). STAGE 0.4's pull logic extracted into
+`_qm_stage_0_4_not_behind_gate()`; STAGE 3's AGENT_MODE sentinel check split into `_qm_check_agent_sentinel()` (0/1,
+never exits) driven by a bounded `until` retry loop — on a lost race, re-pull + `quality-gates.sh --no-fix` + re-check,
+up to 3 attempts with backoff+jitter, before falling back to today's hard-fail message. Sentinel/ancestry stays exactly
+tree-strict per this decision — nothing here weakens it. Option 3 (carve-out short-circuit) was NOT implemented —
+deferred, since `scripts/**` isn't uniformly safe to fast-path across every repo (PM's own `scripts/` is docs-adjacent,
+but other repos' `scripts/` can hold real tested Python) and needs a per-repo-aware design, not a blanket prefix list
+reused from `check_strict_quickmerge.py`'s `CARVE_PREFIX`. Verification: `bash -n`, the existing
+`test-quickmerge-blocked-contract.sh` (5/5, confirms the STAGE 0.4 extraction test still slices the right block),
+`test_check_strict_quickmerge.py` (13/13), an isolated control-flow harness for the retry loop's 3 cases, full PM
+`quality-gates.sh` green, and a live re-ship afterward on the same busy branch.

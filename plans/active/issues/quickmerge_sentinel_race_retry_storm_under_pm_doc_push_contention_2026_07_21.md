@@ -89,3 +89,21 @@ persists.
 
 - `codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / STAGE 0.4 behind-remote auto-reconcile /
   sentinel-race handling).
+
+# Partial progress (2026-07-22)
+
+Fix **2 (backoff + jitter)** shipped as part of `unified-trading-pm@e264b3c9`, landed via the sibling doc
+`quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18.md` (which already had an operator-decided Option 2 this
+doc's fix-2 refines). STAGE 3's AGENT_MODE sentinel-invalid path now auto-retries (re-pull + regate + recheck) up to 3x
+with `sleep $((2 + RANDOM % 4 + attempt * 3))` between attempts instead of hard-failing on the first loss — directly
+reduces the shape of retry-storm this doc reports (a lost race now self-heals within the SAME quickmerge invocation
+instead of needing a fresh agent-initiated regate-and-retry cycle each time). **Not yet measured against THIS doc's
+specific 27-consecutive-loss scenario** — that was under sustained heavy multi-slot contention, which 3 bounded retries
+may not fully absorb if the push rate stays faster than one regate cycle; re-observe under similarly heavy contention
+before closing this doc.
+
+**Fix 1 (content-hash QG cache / green-tree fast-path — "the biggest win", still open)** and **fix 3 (serialized
+PM-doc-push queue, still open, only if 1+2 don't suffice)** remain unimplemented. Fix 1 is the harder, real throughput
+fix (skip the full multi-minute regate entirely when the only tree delta since the last green gate is remote doc/plan
+commits that don't touch this slot's own staged files) — deliberately deferred rather than rushed, per this doc's own
+instruction not to dispatch a change to `quickmerge.sh` blind.
