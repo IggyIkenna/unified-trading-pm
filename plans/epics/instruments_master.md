@@ -46,7 +46,6 @@ related_plans:
   - ../active/instruments_foundation_completeness_2026_06_24.md
   - ../active/instruments_mtds_subset_consistency_remediation_2026_06_17.md
   - ../active/mvp_scope_catalogue_tagging_2026_06_08.md
-  - ../active/prediction_canonical_identity_migration_2026_07_08.md
   - ../active/prediction_capture_incident_remediation_2026_07_06.md
   - ../active/tradfi_v9_stage1_finish_2026_07_06.md
 last_updated: 2026-07-14 # bumped 2026-07-14 (was: 2026-07-08, unchanged despite the 2026-07-12 body edits below; finding 125 verify-rerun-2, doc-reconciliation sync)
@@ -433,7 +432,7 @@ Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 
 ## Assigned active plans
 
-_11 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
+_10 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -482,10 +481,6 @@ remediation
 ### [`canonical_id_builder_retrofit_checklist_2026_07_08`](../active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
 
 **status**: active · **estimate**: 2 cal AI-days (class: refactor)
-
-### [`prediction_canonical_identity_migration_2026_07_08`](../active/prediction_canonical_identity_migration_2026_07_08.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
 
 ## P3 — backlog; revisit quarterly
 

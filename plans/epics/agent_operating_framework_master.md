@@ -27,6 +27,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
 codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
+  - ../active/asset_class_to_asset_group_rename_2026_07_21.md
   - ../active/l0_doc_index_generator_2026_06_24.md
   - ../active/task_template.md
 last_updated: 2026-06-25
@@ -371,7 +372,7 @@ Everything else (W3–W8) depends on this shape.
 
 ## Assigned active plans
 
-_2 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
+_3 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -386,6 +387,11 @@ _(no plans currently assigned at this priority)_
 FF-cron auto-regen
 
 ## P2 — useful; opportunistic
+
+### [`asset_class_to_asset_group_rename_2026_07_21`](../active/asset_class_to_asset_group_rename_2026_07_21.md)
+
+**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: AssetClass → AssetGroup rename — domain
+enum only, cross-repo coordinated landing
 
 ### [`task_template`](../active/task_template.md)
 

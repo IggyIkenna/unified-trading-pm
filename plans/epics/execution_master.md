@@ -25,8 +25,7 @@ assigned_vm: vm-trading-core
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
-related_plans:
-  - ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md
+related_plans: []
 last_updated: 2026-07-12 # was 2026-05-21 (stale vs 2026-07-12 body edits, line 57) — see body "Assigned active plans" note
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -74,24 +73,5 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_1 active plans declare `parent_epic: execution_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
-
-## P0 — must complete before next foundation gate
-
-_(no plans currently assigned at this priority)_
-
-## P1 — important; post-current-gate
-
-_(no plans currently assigned at this priority)_
-
-## P2 — useful; opportunistic
-
-### [`execution_fidelity_tiers_uac_governed_2026_06_28`](../active/execution_fidelity_tiers_uac_governed_2026_06_28.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: design) **title**: Execution fidelity tiers — UAC governs
-high/low-fidelity matching by available data
-
-## P3 — backlog; revisit quarterly
-
-_(no plans currently assigned at this priority)_
+_(no active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land here as
+they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_

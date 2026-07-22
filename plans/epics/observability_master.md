@@ -45,7 +45,6 @@ related_plans:
   - ../active/data_pipeline_alerts_batch_remediation_2026_07_15.md
   - ../active/data_pipeline_hardening_self_monitoring_2026_06_22.md
   - ../active/deployment_alerts_ingestion_completeness_2026_07_20.md
-  - ../active/deployment_observability_expansion_2026_07_08.md
   - ../active/deployment_registry_firestore_migration_2026_07_14.md
   - ../active/deployment_registry_firestore_p0_unblock_2026_07_14.md
   - ../active/deployment_registry_firestore_p3_cutover_2026_07_14.md
@@ -93,7 +92,7 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_14 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
+_13 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -124,11 +123,6 @@ Phase 0 — unblock prod (schedule reaper + graceful complete)
 
 **status**: active · **estimate**: 3.0 cal AI-days (class: design) **title**: Data-feed SLA registry (single SSOT) +
 active feed self-healing
-
-### [`deployment_observability_expansion_2026_07_08`](../active/deployment_observability_expansion_2026_07_08.md)
-
-**status**: active · **estimate**: 11 cal AI-days (class: infra) **title**: Deployment observability — full-estate
-kinds + rich per-target data + VM work-health
 
 ### [`deployment_registry_firestore_p3_cutover_2026_07_14`](../active/deployment_registry_firestore_p3_cutover_2026_07_14.md)
 
