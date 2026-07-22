@@ -771,3 +771,7 @@ tarball once; always check the launcher's own freshness warning output, and if s
   13,829 entries, now at `2024-09-26` (from `2021-08-17` at launch ~18:18 — roughly 1136 days processed in ~4h10m, ~665
   days remaining to `2026-07-22`, est. ~2.5h more at this pace). `mtds-dex-swaps-backfill`: manifest at 34,698 entries,
   212,180+ swap records collected this pass, RSS 1113-1557MiB (healthy). Both correctly left running.
+
+- **2026-07-22 23:00 UTC (VM re-check — both still healthy)** — `mtds-lst-rates-20260722-181845`: now at `2025-01-02`
+  (from `2024-09-26`, ~98 days in 30min), est. ~3h more to reach `2026-07-22`. `mtds-dex-swaps-backfill`: RSS stable
+  ~1326-1579MiB, heartbeats fresh, real rows still landing. Both correctly left running.

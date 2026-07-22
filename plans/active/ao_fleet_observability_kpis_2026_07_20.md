@@ -91,14 +91,29 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       IggyIkenna/unified-trading-pm#1247 (auto-merge to main). **Follow-up filed, not blocking**: worth re-measuring the
       unresolved rate ~1 week post-fix to confirm the hypothesis (a KPI AF-5 will make this an ongoing measurement, not
       a one-off).
-- [ ] [BACKEND] P2. **(AF-1b) Cap escalation redispatch — on the shared cooldown store, not a new one.** Per
-      `escalation_id` backoff so one wall cannot consume 3.8 sessions. **Unblocked 2026-07-20 — the store shipped**
-      (`agent-orchestrator@cfb211c`, `server/state_store/cooldown.py`; contract in
-      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle"). A same-day check
-      moments earlier had this correctly marked still-blocked (the store's own todo was unchecked at that point) —
-      superseded by the shipment. Namespace keys `f"escalation:{escalation_id}"` and call `register_cooldown` directly.
-      **Gate**: a test showing repeat dispatches for the same escalation_id back off; no second cooldown engine exists
-      in the tree.
+- [x] [BACKEND] P2. ✅ **(AF-1b) Cap escalation redispatch — on the shared cooldown store, not a new one.** —
+      `agent-orchestrator@5dd9bbc8` (2026-07-22). Built on the shared `state_store.cooldown` store per spec —
+      **correction to this todo's own key design**: namespaced by the WALL's identity
+      (`f"escalation:{repo}:{pr_number}:{wall_type}"`), NOT `f"escalation:{escalation_id}"` as originally written here —
+      a fresh `escalation_id` is minted every time CI re-fires an already-terminal wall (`_find_open_escalation` only
+      dedups while queued/dispatched), so an escalation_id-keyed cooldown could never throttle the actual churn this
+      todo exists to stop; the wall-identity key is what `_find_open_escalation` itself already dedups on, extended to
+      the terminal case. Wired at 3 points in `server/escalation.py`: (1) `enqueue()` checks `get_cooldown` before
+      minting a new escalation — an armed cooldown with an UNCHANGED `context` snapshot returns `status="cooling_down"`
+      instead of queuing a fresh worker; a changed context (genuine new incident) is always immediately eligible, per
+      the store's own snapshot-mismatch rule; (2) `_mark_unresolved_and_maybe_reescalate` arms the cooldown only on the
+      terminal cap-hit branch (NOT on the in-progress re-escalation branch, which must stay unthrottled — that's the
+      watchdog's own sanctioned single retry of the SAME escalation_id); (3) `retry_queued_escalations`' hard-TTL
+      abandon path arms it too. `_mark_resolved` clears it — a wall that resolves and breaks again later is a genuinely
+      new incident (matches `test_open_escalation_statuses_exclude_terminal`'s existing contract) and must not inherit a
+      stale suppression window. 7 new regression tests (key format, throttled when context unchanged, NOT throttled when
+      context differs or no cooldown armed, cap-hit arms it, in-progress re-escalation does NOT arm it, resolution
+      clears it) + fixed 3 pre-existing tests whose session mock aliased `EscalationQueueRow` and `CooldownRow` lookups
+      onto the same return value (only surfaced once a second row-model was queried in the same code path). Full
+      `agent-orchestrator` `quality-gates.sh` green (1578 passed, 1 skipped). **Gate met**:
+      `test_enqueue_throttled_by_cooldown_when_context_unchanged` / `test_enqueue_not_throttled_when_context_changed`
+      show a repeat dispatch backs off while a genuine new incident never is; no second cooldown engine exists in the
+      tree (reuses `state_store.cooldown` throughout).
 - [x] [BACKEND] P1. ✅ **(AF-2 + Phase-6) Throttle plan_health — server-side min-interval gate + at-most-one-live
       coalesce.** — `agent-orchestrator@d098970` (2026-07-20). Implemented exactly as specified: (a)
       `TuningDefaults.plan_health_min_interval_seconds` (default 7200s/2h) + `plan_health_dispatch_timeout_seconds`
@@ -221,6 +236,9 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
 
 ## Progress Log
 
+- **2026-07-22 — AF-1b done** (`agent-orchestrator@5dd9bbc8`). Every todo in this plan is now shipped except the
+  time-gated AF-1a-followup (re-measurement not due until ~2026-07-27). See the AF-1b todo above for the full design +
+  the key-shape correction (wall identity, not `escalation_id`) vs. this plan's original phrasing.
 - **2026-07-20 — plan created** from Phase 7 + the Phase-6 plan_health item, merged because AF-2 was already recorded as
   "folded into the Phase-6 plan_health item's acceptance" — keeping them apart would have split one fix across two
   agents.

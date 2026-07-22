@@ -152,16 +152,70 @@ section) in case the two efforts have since merged or one has superseded the oth
 
 # Deferred work after 2026-07-22 (corrected)
 
-| Item                                                              | State                                     | Blocked on                                                                           |
-| ----------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------ |
-| STADER/STAKEWISE/SWELL/MANTLE handler registry entries            | Done (2026-04-10, pre-dates this session) | Nobody -- no action needed                                                           |
-| `uts-prod-mtds-collect-lst-rates` wrong-date-targeting            | Not a bug                                 | Nobody -- fallback-to-yesterday is correct T+1 behavior, explicit dates already work |
-| Single-day backfill, `day=2026-07-17`, all LST venues             | Not done                                  | Nobody -- small, well-scoped, real work                                              |
-| Root-cause the rare late-stage OOM/timeout (Solana fetch suspect) | Not done                                  | Nobody -- real but non-urgent (doesn't lose EVM LST data)                            |
-| MAKER duplicate-axis keep-both-vs-consolidate decision            | Not done                                  | Operator-owned judgment call, not unilateral                                         |
-| 39-day execution gap `2026-06-08`..`2026-07-17` root cause        | Not done                                  | Nobody -- unexplained, low urgency                                                   |
-| Full since-real-launch (2023->2026-04-10) historical backfill     | Not scoped                                | Operator decision -- much bigger ask, do not assume in/out of scope                  |
+| Item                                                                      | State                                                | Blocked on                                                                                        |
+| ------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| STADER/STAKEWISE/SWELL/MANTLE handler registry entries                    | Done (2026-04-10, pre-dates this session)            | Nobody -- no action needed                                                                        |
+| `uts-prod-mtds-collect-lst-rates` wrong-date-targeting                    | Not a bug                                            | Nobody -- fallback-to-yesterday is correct T+1 behavior, explicit dates already work              |
+| Single-day backfill, `day=2026-07-17`, all LST venues                     | Done 2026-07-23, content-verified                    | Nobody                                                                                            |
+| MAKER sDAI duplicate consolidation                                        | Done 2026-07-23 -- market-tick-data-service@28972ccc | Nobody                                                                                            |
+| Root-cause the rare late-stage OOM/timeout (Solana fetch suspect)         | Investigated, not conclusively pinned                | Nobody -- plausible lead (per-VM-shard-fallback bloat) documented, not fixed; real but non-urgent |
+| sUSDe/ETHENA duplicate (same shape as MAKER, both handlers, same address) | Not done                                             | Operator-owned judgment call -- out of this pass's approved scope                                 |
+| 39-day execution gap `2026-06-08`..`2026-07-17` root cause                | Not done                                             | Nobody -- unexplained, low urgency                                                                |
+| Full since-real-launch (2023->2026-04-10) historical backfill             | Not scoped                                           | Operator decision -- much bigger ask, do not assume in/out of scope                               |
 
 **Recommended next item**: the `day=2026-07-17` single-day re-run (cheapest, closes the one real gap), then the MAKER
 decision (needs operator input), then the OOM/timeout root-cause if the operator wants Solana coverage hardened. The
 original "4 new venue implementations" item is gone -- there was never a real gap there.
+
+# Resolution (2026-07-23, same session, later pass)
+
+Operator picked (via chat): do the single-day backfill + root-cause the rare crash, and consolidate the MAKER duplicate
+(rather than keep both).
+
+**Single-day backfill -- DONE, content-verified.** Ran
+`market-tick-data-service --operation collect-lst-rates --mode batch --start-date 2026-07-17 --end-date 2026-07-17 --force`
+against real prod GCP. Completed clean, all 24 venue/chain groups written (lido, rocketpool, coinbase, ethena, maker,
+mantle, swell, stader, stakewise, ankr, etherfi, puffer, binance x2 chains, kelpdao, renzo, yearn_v3 x4, beefy x3, idle
+x3, pendle x5, jito, marinade, blazestake, sanctum -- 4 Solana rows too, so this was not an aiodns-resolver-drop run).
+Content-verified by reading the objects back directly:
+`gs://market-data-tick-defi-prd-central-element-323112/.../day=2026-07-17/.../venue={STADER,STAKEWISE,SWELL,MANTLE,LIDO,ANKR}/.../{ETHx,osETH,swETH,mETH,stETH,ankrETH}.parquet`
+all present with sane rates at block 25552267. The 103-day window (`2026-04-10`..`2026-07-21`) is now 103/103 complete
+for these venues.
+
+**OOM/timeout root-cause -- investigated, NOT conclusively pinned; documenting rather than overclaiming a fix.** Read
+`_lst_extended_rates.py` (19 configs, sequential single eth_calls, bounded retry/backoff) and `solana_lst_archival.py`
+(4-tier fetch, all single bounded HTTP calls with 15s timeouts) end to end -- neither shows an unbounded loop or a large
+in-memory payload that would explain a ~1GB RSS spike in a single 30s window. Found one related-but-different bug that
+was ALREADY fixed same-day, before I started this investigation: `market-tick-data-service@533514c2` (2026-07-22 18:12
+UTC) fixed an `aiodns`-missing resolver crash that was SILENTLY dropping the whole Solana LST leg (bare
+`try/except -> return []`) -- not a memory/timeout issue, but real data loss disguised as a clean run. Separately found
+a plausible-but-UNCONFIRMED mechanism: the DeFi manifest bucket's `_index/per_vm/` fallback path (triggered whenever the
+consolidated index blob is >120s stale --
+`unified_trading_library/manifest_writer/_read_index.py:_read_and_merge_per_vm_shards`) reads + pandas-merges EVERY
+per-VM shard in that shared directory; as of this check it holds a 113.6MB shard from an unrelated
+`canonical-migration-defi-rebuild-20260722-194751` VM. Loading + merging a shard that size at process bootstrap (before
+any LST-specific code even runs) would plausibly explain a rapid multi-hundred-MB memory spike -- BUT that specific
+113.6MB shard did not exist yet at the time of the `xrhf8`/`4f99t` failures I was investigating (it's timestamped hours
+after both), so I cannot claim it explains those SPECIFIC historical crashes, only that the mechanism is real and
+current-day risky. This is a SHARED framework path used by every DeFi handler, not something specific to
+`lst_rates_handler.py` -- fixing it (bounding the per-VM merge, or making the consolidator run more reliably) is a
+bigger, cross-cutting change affecting many handlers and deserves its own properly-scoped investigation with an actual
+memory profile attached to a live run, not a guess-and-patch inside this narrow LST task. Left as an open, documented,
+non-urgent follow-up (see table below) rather than shipping a speculative fix.
+
+**MAKER duplicate consolidated -- shipped.** Removed the `sDAI` entry from `lst_rates_handler.py`'s
+`_EVM_LST_ABI_METADATA` + its `_token_to_protocol` mapping (same contract `0x83F20F44975D03b1b09e64809B757c47f942BEeA`,
+same `convertToAssets(1e18)` call as `vault_share_price_handler.py`'s own sDAI entry -- byte-for-byte duplicate RPC
+read + storage). Updated `tests/unit/test_lst_rates_handler_coverage.py` (the old `test_sdai_maps_to_maker` ->
+`test_sdai_no_longer_mapped_here`, plus a new `test_sdai_removed_duplicate_of_vault_share_price` mirroring the existing
+`ezETH`-migrated-out test pattern) and the `--lst-tokens` CLI help text. `vault_share_price_handler.py` is now sDAI's
+sole capture path (`data_type=vault_share_price`, the semantically correct home -- sDAI is an ERC-4626 vault, not a
+staking token). QG-green, shipped `market-tick-data-service@28972ccc`.
+
+**Related, NOT acted on (out of the approved scope)**: `sUSDe`/ETHENA has the exact same duplicate shape -- present in
+BOTH `lst_rates_handler.py`'s `_EVM_LST_ABI_METADATA` AND `vault_share_price_handler.py`'s `_VAULTS`, same address
+`0x9D39A5DE30e57443BfF2A8307A4256c8797A3497`. Only MAKER was in scope for this pass's operator decision; flagging sUSDe
+here rather than silently also touching it.
+
+**Still undecided, unchanged from the original correction**: whether the operator wants the full since-real-launch (2023
+-> 2026-04-10) historical backfill scoped as its own effort. Not asked again this pass -- still open.
