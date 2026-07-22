@@ -91,9 +91,15 @@ and each needs real investigation/re-test, not a mechanical fix):
       `test_expected_matches_golden[sports]` and `test_golden_tuple_count_matches_metadata[sports]` — golden now reads
       27 tuples, byte-identical to `build_expected("sports")`. No fix commit needed from this task —
       instruments-service@9553faca.
-- [ ] [BACKEND] P2. Bump `pyasn1`→0.6.4, `pydantic-settings`→2.14.2, `setuptools`→83.0.0, `starlette`→1.3.1,
+- [x] ✅ [BACKEND] P2. Bump `pyasn1`→0.6.4, `pydantic-settings`→2.14.2, `setuptools`→83.0.0, `starlette`→1.3.1,
       `ujson`→5.13.0 in e2e-testing (re-test for breaking changes, esp. starlette 1.2→1.3), ship via normal QG+
-      quickmerge flow. (repo: e2e-testing)
+      quickmerge flow. (repo: e2e-testing) — SHIPPED by another slot before this dispatch picked it up:
+      `e2e-testing@9bc6d6a2`
+      (`fix(deps): bump pyasn1/pydantic-settings/setuptools/starlette/ujson for pip-audit     CVEs`, quickmerge:agent).
+      Verified independently on a fresh-pulled tree: `uv.lock` shows all 5 packages at the target fixed versions (pyasn1
+      0.6.4, pydantic-settings 2.14.2, setuptools 83.0.0, starlette 1.3.1, ujson 5.13.0), the `starlette>=1.3.1`
+      transitive override pin is in `pyproject.toml`, and `uv run pip-audit` reports "No known vulnerabilities found".
+      No new code needed from this task.
 - [ ] [BACKEND] P2. Same CVE bump as e2e-testing above — confirm same violation signature first (`uv run pip-audit`),
       then bump + re-test + ship. (repo: system-integration-tests)
 - [ ] [INFRA] P3. Once each of the 3 repos above is independently QG-green, roll out `main-backmerge-to-ldr.yml`
