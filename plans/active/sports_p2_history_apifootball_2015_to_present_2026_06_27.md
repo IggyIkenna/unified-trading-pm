@@ -3661,3 +3661,61 @@ Not re-running the full gate-verification query, per established precedent acros
 checkbox. INJURIES/STANDINGS remain unlaunchable while the singleton lock holds against the running fleet.
 `/skip-current-task` — resume once the fleet completes, a shard goes dead/stalled, or INJURIES/STANDINGS become
 launchable once the lock clears.
+
+### 2026-07-22T03:32-03:38Z — data_engineering slot-4 (Todo `-001` re-dispatched, ~20h after slot-12's check — real state change: 2 shards completed, 1 shard found dead + relaunched)
+
+Dispatched onto `-001`. Fresh-pulled all 25 slot repos clean (no dirty state, all fast-forwarded to
+`origin/live-defi-rollout`). ~20h had elapsed since the last check-in (slot-12, 2026-07-21T07:28Z) — long enough for
+material state change, so did a fresh full inventory rather than a cheap re-check (non-snap
+`/home/ubuntu/google-cloud-sdk/bin/gcloud`; `CLOUDSDK_AUTH_ACCESS_TOKEN` from
+`gcloud auth application-default print-access-token` in the same shell invocation):
+
+- **VM list** (`gcloud compute instances list --filter="name~af-backfill"`): only 1 of the prior 4 VMs still present —
+  `af-backfill-20260721-033537` (FIXTURE_EVENTS), still `RUNNING`.
+- **`af-backfill-20260719-180545` (LINEUPS)** and **`af-backfill-20260719-180620` (PLAYER_STATS)**: both GONE from the
+  instance list, both carry an `EXIT_STATUS=0` file and a clean `run.log` tail (`DEPLOYMENT_COMPLETED exit_code=0` →
+  `VM_SHUTDOWN_ON_COMPLETION=true` self-delete). **Correction to every prior entry's framing**: these VMs were launched
+  with an EXPLICIT `VM_START_DATE`/`VM_END_DATE` pair, not a rolling "to present" window — both run.logs show their
+  FINAL processed date as `2026-05-10` (not `~2026-07-21`/today), matching the fixed `VM_END_DATE=2026-05-10` the P0
+  relaunch todo's evidence block already established for the FIXTURE_EVENTS/STATS pair. So "LINEUPS/PLAYER_STATS still
+  need to reach present" in every prior entry above was imprecise — the VMs completed everything they were actually
+  launched to do (2020-06-06→2026-05-10) cleanly; the todo's own "present" gate requires a NEW follow-up window
+  (2026-05-10→present, ~73 days as of today) that has not been launched for these 2 entities yet. Flagging this as a
+  real, newly-surfaced gap, not closing it this dispatch (see decision below).
+- **`af-backfill-20260721-033605` (FIXTURE_STATS)**: GONE from the instance list, NO `EXIT_STATUS` file, `run.log` ends
+  mid-retry-loop at `2026-07-21T16:06:10Z` (~11.5h stale at check time) inside a burst of
+  `'requests': 'You have reached the request limit for the day...'` `ADAPTER_FETCH_FAILED` errors — i.e. died while
+  stuck on the shared key's daily-quota exhaustion, not a clean shutdown. `PROGRESS.json` frozen at
+  `last_completed_date=2021-05-03`, `updated=2026-07-21T14:30:26Z`. Confirmed via GCP audit log
+  (`gcloud logging read 'resource.type="gce_instance" AND protoPayload.resourceName:"af-backfill-20260721-033605"'`)
+  this was a **genuine SPOT preemption**: `compute.instances.preempted` at `2026-07-21T16:07:38-49Z`, ~1-2 min after the
+  last log line — the exact same undetected-dead-shard class as the prior `-004`/`-005` todos (preemption marker never
+  written despite the `deployment-service@c79f984` fix predating this VM's launch; not re-investigating root cause here,
+  that class is already tracked in
+  `plans/active/issues/exit_code_fleet_monitor_clean_misclassifies_premature_kill_2026_07_21.md`).
+
+**Action taken (per the same recovery precedent as `-004`)**: relaunched FIXTURE_STATS from its durable checkpoint —
+`bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --skip-lock --entity FIXTURE_STATS 2020-06-06 2026-05-10`
+(SAME original window; `--skip-lock` only, no `--force`/`redo_all`, since FIXTURE_EVENTS is the sibling still
+legitimately running and the singleton lock would otherwise refuse). New VM `af-backfill-20260722-033350` launched,
+verified RUNNING, verified genuinely resuming (not replaying) from its checkpoint: `run.log` shows
+`"Per-fixture pre-fetch skip: 35 (entity, fixture_id) pairs already in existing per-league parquets — skipping api_football calls"`
+for date=2020-06-06, matching the pre-preemption progress. (Aside: the launcher's pre-launch
+`lc_verify_tarball_freshness` check false-flagged all 4 code tarballs as "MISSING" — this host's `gsutil` resolves to
+the broken snap binary (`cap_dac_override`, same class as the documented snap-`gcloud` issue) even with
+`CLOUDSDK_AUTH_ACCESS_TOKEN` exported and the SDK bin prepended to `PATH`; independently verified via
+`gcloud storage cat` that all 4 manifests exist and their `commit_sha` exactly match each repo's local
+`origin/live-defi-rollout` HEAD, so the tarballs were genuinely fresh and the VM boot proceeded correctly — a
+local-tooling false positive, not a real staleness gap. Not filing a fresh issue doc for this since it's the same
+documented snap-binary class as the existing `gcloud` entries above, just a second binary (`gsutil`) hitting it.)
+
+**Not flipping the checkbox** — the gate remains far from met on two fronts: (1) FIXTURE_EVENTS (033537, live) and the
+newly-relaunched FIXTURE_STATS (033350) both still need to walk from ~2020-06 to `2026-05-10`; (2) LINEUPS/PLAYER_STATS
+need a NEW follow-up window (`2026-05-10`→present) not yet launched. **Deliberately NOT launching that follow-up window
+this dispatch** — the singleton lock is currently held by 2 legitimately-running VMs (FIXTURE_EVENTS, FIXTURE_STATS),
+and forcing a 3rd/4th concurrent VM past it via `--skip-lock` would split the shared `api_football` daily/per-minute
+quota 4 ways against the exact thundering-herd protection this lock exists for (the same reasoning every prior dispatch
+already applied to declining to force INJURIES/STANDINGS past the lock). INJURIES/STANDINGS remain unlaunchable for the
+same reason. `/skip-current-task` — resume once FIXTURE_EVENTS/STATS complete and self-delete (clearing the lock, at
+which point launch the LINEUPS/PLAYER_STATS `2026-05-10`→present catch-up window before re-checking the gate), or if
+FIXTURE_EVENTS goes dead/stalled on a future check.
