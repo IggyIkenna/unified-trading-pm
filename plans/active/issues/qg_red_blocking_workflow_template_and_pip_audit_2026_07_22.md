@@ -79,9 +79,18 @@ data-correctness) but worth closing once each repo's QG is independently green a
 Fix each independently, gated on repo-appropriate ownership (not this dispatch — out of `data_engineering` craft scope
 and each needs real investigation/re-test, not a mechanical fix):
 
-- [ ] [BACKEND] P2. Determine whether instruments-service's sports odds-bookmaker golden fixture (47→27 combos) is a
+- [x] ✅ [BACKEND] P2. Determine whether instruments-service's sports odds-bookmaker golden fixture (47→27 combos) is a
       stale fixture needing regeneration (per the test's own docstring recipe) or a real registry regression — then fix
-      accordingly. (repo: instruments-service)
+      accordingly. (repo: instruments-service) — RESOLVED, no new code needed. Root cause: the 47→27 shrink is a real,
+      intentional registry change — `unified-api-contracts@9908520b` "purge 19/20 ODDS_API fan-out bookmakers from
+      canonical sports venues (operator ruling 2026-07-22)". The instruments-service golden fixture
+      (`tests/unit/scripts/goldens/expected_universe/sports.json`) was stale against that UAC change at the time slot-8
+      found it, but has since been regenerated (incidentally, as part of an unrelated defi/LRT commit that reran the
+      regen script across all asset groups) at `instruments-service@9553faca`. Verified on a fresh-pulled tree
+      (`uv run pytest tests/unit/scripts/test_expected_universe_golden.py -v`): all 14 tests pass, including
+      `test_expected_matches_golden[sports]` and `test_golden_tuple_count_matches_metadata[sports]` — golden now reads
+      27 tuples, byte-identical to `build_expected("sports")`. No fix commit needed from this task —
+      instruments-service@9553faca.
 - [ ] [BACKEND] P2. Bump `pyasn1`→0.6.4, `pydantic-settings`→2.14.2, `setuptools`→83.0.0, `starlette`→1.3.1,
       `ujson`→5.13.0 in e2e-testing (re-test for breaking changes, esp. starlette 1.2→1.3), ship via normal QG+
       quickmerge flow. (repo: e2e-testing)
