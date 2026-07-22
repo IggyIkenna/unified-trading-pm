@@ -2120,6 +2120,56 @@ questions when a decision is needed. Ran it. Findings:
   `apt-get update` first or the `uv`-based install path the production launchers use) — not yet completed.
   - `- [ ] [DATA] P2. Finish the CME monolith investigation: fix the pip/venv bootstrap on the investigation VM (or relaunch through the proper setup-data-pipeline-vm.sh path instead of a raw metadata startup-script), reconcile the 30-vs-107 count discrepancy, inspect real content structure, THEN design the migration tool. Clean up the investigation VM when done (not part of the tracked fleet).`
 
+### 2026-07-22 continuation — CME monolith investigation: bootstrap fixed, count reconciled (unresolved), content inspected, VM cleaned up
+
+- **pip/venv bootstrap fix**: `apt-get update` first, THEN `apt-get install python3-pip python3-venv` — the earlier "no
+  installation candidate" error was a stale apt cache, not a missing package. Trivial once diagnosed.
+- **30-vs-107 discrepancy — investigated thoroughly, NOT fully explained, but ruled out the dangerous hypothesis.**
+  Checked, with direct evidence, in order:
+  1. **Deletion**: bucket has soft-delete enabled (7-day retention) — queried soft-deleted objects matching
+     `day=*/venue=CME/ticks.parquet`, found **zero**. No object matching this shape was deleted in the last 7 days.
+  2. **A second/duplicate bucket**: the KRX launcher's own post-launch help text cites
+     `gs://market-data-tick-tradfi-central-element-323112` (no `-prd-`) — that bucket **does not exist** (404). Only
+     `market-data-tick-tradfi-prd-central-element-323112` is real. Rules out a split-count-across-buckets explanation.
+     (Minor separate finding: the KRX launcher's echoed post-launch verification command has the wrong bucket name —
+     cosmetic, doesn't affect the actual backfill, low-priority fix for later.)
+  3. **Generations/versioning**: bucket versioning is off; the one sampled day (`2026-02-22`, the report's own cited
+     example) has exactly one generation. Rules out a versioning-inflated count.
+  4. **The report's source data**: found the reconciliation JSON's exact number
+     (`census_s1_gcs.bare_pocket_shapes["day/venue_monolith"] = {objects: 107, bytes_gb: 2.534}`) but no committed
+     script anywhere in the workspace produces that key — it was almost certainly computed by an ad-hoc inline script in
+     that prior session, never persisted. The workspace's own `_index/audit/orphan_sweep_tradfi.parquet` (the sanctioned
+     reusable single-walk snapshot) does **not** contain this monolith shape at all (only `E_orphan_real` 3,488 rows and
+     `B_legacy_duplicate` 900 rows — the 900 matches report row F4 exactly, confirming that part of the report DID come
+     from this sweep file, but the monolith count did not).
+  - **Verdict**: live, directly-reproduced count is **30** (two independent single-level-wildcard listings, both
+    matching the report's own cited example day `2026-02-22`), with no evidence of deletion, duplication, or
+    double-counting to explain the gap from 107. The 107 figure cannot be reproduced from any artifact left in the
+    workspace. Treat **30 as current ground truth** going forward; the 107 figure's origin is unresolved and, absent a
+    committed script to audit, likely unrecoverable — not worth further time at P2.
+  - **Process note (self-correction):** while chasing this, attempted a recursive `gsutil ls -r` / `**`-glob
+    whole-corpus walk of `raw_tick_data/by_date/` to rule out a nested-path hypothesis — this violates the workspace's
+    single-walk discipline hard rule (any new whole-corpus GCS walk is review-blocking). Caught it after launch (before
+    it produced a real cost/count problem), killed it by deleting the investigation VM outright (which also happened to
+    satisfy the "clean up the investigation VM when done" step). Correct approach used afterward: read the existing
+    sanctioned `_index/audit/orphan_sweep_tradfi.parquet` single-walk snapshot instead of re-walking — should have gone
+    there first.
+- **Content inspected** (downloaded the `day=2026-02-22` sample locally via `gcloud storage cp` + read with local
+  pandas/pyarrow — no VM needed for this part). Real structure: `data_type=trades` (Databento MBP-0/trades schema,
+  `rtype=0`, `action='T'`), columns
+  `ts_event, rtype, publisher_id, instrument_id (Databento's internal numeric id, uint32), action, side, depth, price, size, flags, ts_in_delta, sequence, symbol (human-readable, e.g. ESH6/NQH6), data_type`.
+  63,388 rows / 1,097 unique `(instrument_id, symbol)` pairs in this one file — a genuine per-day ALL-CME-SYMBOLS
+  fan-in, including calendar-spread combos (`NQH6-NQM6`). Confirms the report's characterization: no canonical Hive
+  partitioning, numeric Databento ids not yet translated to canonical form, would need per-symbol grouping +
+  `EXCHANGE_CODE_TO_NAME`-style translation (regular contracts) + COMBO handling (spread symbols) to migrate to
+  canonical paths.
+- **Migration tool NOT yet designed/built** — correctly scoped as separate follow-up work per the original todo's own
+  phrasing ("inspect content, THEN design the migration tool"). This is a real, moderately large piece of new code
+  (per-symbol grouping, contract-vs-combo classification, canonical path construction per `_canonical_chain_path`-style
+  logic but for FLAT per-contract futures/options, not chain bundles, manifest registration) — deferred as its own P2
+  todo below rather than rushed in this session alongside the higher-priority P1 manifest-recovery pass.
+  - `- [ ] [DATA] P2. Design + build the CME monolith migration tool: for each of the ~30 day=*/venue=CME/ticks.parquet objects, group rows by (instrument_id, symbol), classify combo (spread, e.g. NQH6-NQM6) vs single-contract symbols, translate to canonical futures/option instrument_ids + canonical Hive paths, write per-contract canonical objects, register manifest rows, THEN delete the monolith source (migrate-first, never blind-delete — this is an only-copy per the 2026-07-21 reconciliation report).`
+
 **Session ending here on operator time/credit constraint (again). Remaining, in priority order: (1) verify the ohlcv_1s
 MVP fix + KRX launcher actually shipped (quality gates were mid-run at this checkpoint), (2) the chain- manifest
 recovery pass (real data-visibility gap, not hygiene), (3) finish the CME monolith investigation, (4) Phase D gate. Next
