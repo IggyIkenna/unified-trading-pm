@@ -190,7 +190,13 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       CLOSED (2026-07-22)**: per-reserve listing-date gate shipped `market-tick-data-service@27e077da` — all 6 reserves'
       `ReserveInitialized` events verified on-chain (earliest wstETH 2023-01-27; latest ezETH 2025-08-17), so a
       full-history backfill starting from any pre-2023 date now correctly renders `EXPECTED_INSTRUMENT_NOT_LISTED`
-      instead of a misleading `SOURCE_RETURNED_ZERO`. Ready to launch — no further code pre-reqs.
+      instead of a misleading `SOURCE_RETURNED_ZERO`. **LAUNCHED (2026-07-22)**: SPOT VM
+      `mtds-backfill-defi-aave-oracle-20260722` (zone `asia-northeast1-c`, project `central-element-323112`), command
+      `launch-mtds-backfill-vm.sh --asset-group DEFI --venues AAVE --data-types oracle_prices --start 2023-01-27 --end     2026-07-22`,
+      confirmed RUNNING at launch. Code tarball verified fresh for MTDS (`27e077daef4a`, includes the listing-date gate)
+      and UAC (packaged sha `6329fc04` is a descendant of the AAVE registration `6bdbc31d`). Monitor:
+      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-defi-aave-oracle-20260722/run.log` +
+      manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity.
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
       `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key. **Still
       needs the per-venue listing-date sub-check from Phase 0** (which (LST, venue) pairs are actually real SPOT
