@@ -1034,3 +1034,33 @@ matching the retry's run window (19:48/19:59 UTC), correct `Content-Length`/hash
 (retry) = 0 outstanding legacy-path candle objects in `market-data-tick-defi-prd-central-element-323112`. Moving to
 PREDICTION next, applying the tightened prefix-aware JIT-redrain rule (bucket match alone is not sufficient — confirm
 object-prefix overlap before stopping any VM found running).
+
+## Progress Log — 2026-07-22 (P7b-prep: PREDICTION JIT-redrain — nothing to stop; sizing from existing census, no new walk)
+
+**JIT-redrain**: surveyed `gcloud compute instances list` (all RUNNING VMs, both clouds relevant here is GCP-only per
+current state) — only one PREDICTION-tagged VM: `datapoint-validation-prediction-20260722-151911`
+(`validate_datapoint_schema_id.py`). Applied the tightened prefix-aware rule from the DEFI mid-flight finding: read the
+script (`instruments-service/scripts/validate_datapoint_schema_id.py`) — it reads `market-data-tick-prediction`
+(`data_bucket`, via `resolve_bucket_name`) for validation but its ONLY write (`_flush_shard` →
+`client.upload_from_file_obj`) targets `results_bucket = resolve_bucket_name(kind="datapoint-validation")`, a completely
+disjoint bucket. It is a reader of the migration's target bucket, never a writer of `processed_candles/**` — not a
+JIT-redrain conflict (the rule protects against concurrent WRITERS, not readers; a validator racing an in-flight delete
+of a legacy-path object would at worst hit one transient read miss, not corrupt anything). **Verdict: nothing to stop.**
+No other PREDICTION-relevant VM found running.
+
+**Shard sizing**: per the workspace's single-walk-discipline rule, did NOT run a fresh census/enumeration — the P0
+census (this doc, `## Full results` table) already measured PREDICTION's real corpus: **1,165,459 total objects**
+(1,165,458 `SPLIT_BRAIN_DUPLICATE`, 1 `MIGRATE`) — within 4% of DEFI's 1,124,849, and that classification was already
+exercised + safety-verified (`ORPHAN=0`) on this exact data via the census dry-run (same script, same code path, just
+without `--apply`/`--quarantine`/`--content-repair`). Proceeding with `SHARD_OF=10` (justified by corpus-size parity
+with DEFI, not blindly copied), `WORKERS=16`, same proven tarball SHA pins. PREDICTION being ~100% split-brain-dedup
+rather than DEFI's ~100% plain-MIGRATE is a different disposition mix — if per-shard throughput differs materially from
+DEFI's measured ~61 obj/s/VM, that's new information to carry into CEFI/TRADFI sizing, not a blocker here.
+
+**Action**: launched 10 shards (`SHARD_OF=10`, `SHARD_INDEX=0..9` explicit pin, single backgrounded loop, same SHA pins
+as DEFI: `MDPS=c64a7dfa9d9f0689e13c92839e386cd45978a718`, `UAC=c4e1acee147a53aaf0df4e0d8dad1289e2210f79`,
+`UTL=b0ec1da02c5fe7dfd94550a9354542fc2a00fc0b`). **STATUS: IN FLIGHT, NOT YET VERIFIED** — a fresh session should check
+`EXIT_STATUS` for all 10 before assuming done; **expect the same run-1-stragglers-then-clean-retry pattern as DEFI** — a
+first-pass `exit=5` with a small transient-503 straggler count is the expected/normal outcome, not a failure, and the
+recovery is the same idempotent full-shard re-run (checkpoint state does not survive a non-zero exit, same caveat as
+DEFI).
