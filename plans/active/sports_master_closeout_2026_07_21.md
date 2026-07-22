@@ -132,23 +132,23 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
       — ALL 24 SHARDS, 100% CLEAN:**
 
       | metric | value |
-                  | --- | --- |
-                  | target objects written | **275,136** |
-                  | verify=PASS | **275,136 (100%)** |
-                  | verify=FAIL | **0** |
-                  | quarantined (unmapped sport_key) | **0** |
-                  | no_clobber violations | **0** |
+                          | --- | --- |
+                          | target objects written | **275,136** |
+                          | verify=PASS | **275,136 (100%)** |
+                          | verify=FAIL | **0** |
+                          | quarantined (unmapped sport_key) | **0** |
+                          | no_clobber violations | **0** |
 
-                  Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
-                  **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
-                  `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
-                  Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
-                  `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
-                  **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
-                  scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
-                  separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
-                  not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
-                  own manifest-swap/delete (see next item).
+                          Full per-shard report JSONs (exact `(day, venue, canon, target_path, source_raws, target_rows)` for every write —
+                          **this is the exhaustive input a future manifest-swap needs, no new GCS walk required**):
+                          `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/shard_{0..23}_of_24.json`.
+                          Index artifacts: `.../canonical-migration-sports-reloc/index.tsv` (full) +
+                          `.../reloc_shards/index_shard_{0..23}.tsv` (the 24 partitions).
+                          **Scope note**: this pass covers the `batch_odds_api`/`league_id=` raw shape only (the executor's designed
+                          scope). The **127K DEFERRED shapes** (`odds_horizon_bucket` 109,312 — regenerated via MDPS reprocess below, NOT a
+                          separate copy pass — and `batch_footystats` 16,970, a structurally different `league=` shape the executor does
+                          not parse) remain **NOT YET STARTED** — tracked as a separate "extend" migration, not a blocker for this pass's
+                          own manifest-swap/delete (see next item).
 
 - [ ] [DATA] P0. **league_id relocation — MANIFEST-SWAP + DELETE. ⚠️ NOT STARTED — genuinely needs new tooling, do NOT
       rush this at session depth.** Investigated 2026-07-21: **no existing script fits.**
@@ -171,10 +171,20 @@ SSOT-contradiction big finding — surfaced to the operator 2026-07-21.
       pre-authorised; snapshot first; final at-scale content re-verify before deleting). **FOLD IN**
       `mtds_t2_6_league_case_duplicate_population` phantom-row prune into this SAME manifest-swap pass (already-deleted
       6,110 objects, see the DATA-WIPE section above).
-- [ ] [DATA] P0. **Clean the ACTIVELY-GROWING cross-AG prediction bleed BEFORE reconciliation** —
+- [x] [CODE] P0. ✅ **Cross-AG bleed WRITER FIXED** — `market-tick-data-service@07aa4271` (blessed via
+      `reprovenance_bypass.sh`, content commit `299ef540`). Root cause: the multi-`--asset-group` orchestrator run
+      resolved ONE manifest bucket from the run's first `--asset-group` instead of per-venue (`__init__.py` old
+      `_write_date_manifest`), so prediction-AG (KALSHI/POLYMARKET) rows physically leaked into the sports manifest
+      index on any multi-AG run. Fix: `_ManifestWriterPool` lazily constructs one `ManifestWriter` per distinct
+      `asset_group` actually touched in the run and flushes all of them — every row now lands in its own AG's manifest.
+      Inherited from a dead sub-agent's WIP (~7h stale, liveness-verified per per-tab-worktrees.md, byte-identical
+      across two independent worktree copies), reviewed in full, 40/1xfail tests green, full QG green. Stops the LEAK
+      going forward — does NOT retroactively clean the ≥6,597 already-bled rows (next item).
+- [ ] [DATA] P0. **Clean the ALREADY-ACCUMULATED cross-AG prediction bleed rows BEFORE reconciliation** —
       `cross_ag_prediction_rows_bleed_into_sports_instruments_index`: ≥6,597 `asset_group=prediction`
-      (KALSHI/POLYMARKET) rows physically in the sports availability index, growing (4,097→6,597 in days), writer
-      unlocated. Reconciliation (below) reads this exact denominator — clean it FIRST or the read is false.
+      (KALSHI/POLYMARKET) rows physically in the sports availability index (measured pre-fix; growth should now be
+      HALTED by the writer fix above — re-measure to confirm before starting this cleanup). Reconciliation (below) reads
+      this exact denominator — clean it FIRST or the read is false.
 - [ ] [REVIEW] P0. **/data-pipeline-reconciliation for sports.** Run the skill (PROD-only, read-only) to prove every
       file is canonical + in the right place across the four surfaces (path ↔ content ↔ manifest ↔ catalogue). Fix any
       residual non-canonical; delete suggestions are proof-gated + human-only.
