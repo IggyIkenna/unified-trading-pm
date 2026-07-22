@@ -112,7 +112,15 @@ and each needs real investigation/re-test, not a mechanical fix):
       starlette/TestClient (`test_auth_penetration.py`, `test_sports_arb_pipeline.py`) — no breaking-change fallout;
       full `bash scripts/quality-gates.sh` → ALL QUALITY GATES PASSED (103 passed, 1 xfailed, 1 xpassed, pre-existing
       and unrelated to this bump). Shipped via quickmerge --agent.
-- [ ] [INFRA] P3. Once each of the 3 repos above is independently QG-green, roll out `main-backmerge-to-ldr.yml`
+- [x] ✅ [INFRA] P3. Once each of the 3 repos above is independently QG-green, roll out `main-backmerge-to-ldr.yml`
       (`bash unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh     --template main-backmerge-to-ldr.yml --repo <repo>`)
       to fix the same escalation-dispatch-target bug fixed in deployment-api@4dafc9c3, then QG+quickmerge ship. (repos:
-      instruments-service, e2e-testing, system-integration-tests)
+      instruments-service, e2e-testing, system-integration-tests) — SHIPPED all 3: `instruments-service@09a29289`,
+      `e2e-testing@80d969c`, `system-integration-tests@2331ca3`. All 3 repos were confirmed independently QG-green
+      before rollout (items above); `rollout-workflow-templates.sh --dry-run` confirmed all 3 needed the update, then
+      the real run applied the identical
+      `GH_TOKEN="${GH_PAT:-}" gh api "repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches"` fix (was
+      `repos/${GITHUB_REPOSITORY}/dispatches`, a silent no-op everywhere except PM itself). Each repo:
+      `bash scripts/quality-gates.sh` → ALL QUALITY GATES PASSED, then
+      `quickmerge --agent --files     '.github/workflows/main-backmerge-to-ldr.yml'`.
+      `detect_template_drift.py --workflows` now reads 0 NEW drift across the fleet.
