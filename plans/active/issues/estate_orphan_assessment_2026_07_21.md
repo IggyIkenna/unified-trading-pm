@@ -78,7 +78,13 @@ operator-notified 2026-07-21.
 
 - [ ] 1. [DATA] P1. **Back-fill the 214,319 sports ORPHAN_REAL rows** via `record_captured` (read the durable
       `orphan_sweep_sports.parquet` audit reports; NEVER delete — this is real data honest-coverage is missing). Verify
-      the sports honest-coverage rises after.
+      the sports honest-coverage rises after. **CAUTION (found 2026-07-22, see
+      `sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md`)**: 83,541 of the 186,971 reference-bucket rows
+      are `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` dated before the 2020-06-06 sports floor — a UAC registry gap (now
+      fixed, `unified-api-contracts@46d865df`) let them misclassify as `E_orphan_real` instead of
+      `C3_pre_launch_window`. **Exclude these from the backfill** (they are fabrication-by-construction per
+      `sports-2020-06-data-floor.md`, pending an operator-gated WIPE, not a manifest write) — the legitimate backfill
+      scope is 27,348 (odds) + 103,430 (reference) = 130,778 rows.
 - [ ] 2. [DATA] P1. **Triage the 34,385 sports LEGACY_DUPLICATE** (reference bucket) — content-verify each has a
       manifested canonical twin (the 5-part proof), then the human-only delete disposition.
 - [x] 3. [INFRA] P1. **Run the orphan sweep for defi / cefi / tradfi / prediction on a VM** — deployment-service@f8e885f
