@@ -267,8 +267,8 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
 
       `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                                                                          these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                                                                          un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+                                                                                                                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
+                                                                                                                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -2585,16 +2585,44 @@ Discriminator = **does a manifest row exist**.
      VM-liveness check (re-verifies `gcloud ... describe` after ~20 min of zero new log lines, not just log staleness)
      so a repeat hang is caught faster. **Not yet complete at this checkpoint** — resume by checking that VM's
      `run.log`/`EXIT_STATUS`, do not re-launch without first checking liveness the same way.
+  4. **That same VM (`...-053820`) was then genuinely SPOT-preempted, not hung — recovered again.** The watchdog fired a
+     stall-check (~20min silence) that resolved to `status=TERMINATED`. Confirmed via
+     `gcloud compute operations list --filter="targetLink:instances/<vm>"`: a
+     `systemevent...compute.instances.preempted` operation at `2026-07-21T22:00:57-07:00`
+     (`statusMessage: "Instance was preempted."`) — a real GCP reclaim, distinct in kind from the earlier hang (that one
+     stayed `RUNNING` with all signals dark; this one is `TERMINATED` with an explicit preemption operation — the two
+     failure modes are diagnosed differently and must not be conflated). `run.log` showed genuine progress right up to
+     the reclaim: it had reached `day=2025-12-31` (essentially finished the 2025 chunk) with two more
+     `PIPELINE_HEARTBEAT` lines 60s apart before going silent — the preemption timestamp lines up to within ~1 minute of
+     the last heartbeat. No `PROGRESS.json`/`RelaunchPreemptedVm` auto-resume exists for this launcher category (it is a
+     self-contained per-year-chunk loop, not wired into the checkpoint contract), so recovery was a manual relaunch:
+     `bash launch-canonical-migration-vm.sh defi-per-instrument 2020-01-01 2026-12-31 full`, safe because the migration
+     is idempotent (skip-enabled) — replaying the original start/end params does NOT restart at day one, it fast-skips
+     every already-migrated cell. Pre-launch a tarball-freshness warning fired
+     (`unified-api-contracts-code manifest=40114864 but repo=356dfbd5fd36`, another slot's concurrent push) — checked
+     the diff before ignoring it: a single new, unrelated investigation script
+     (`scripts/measure_honest_coverage_formula_delta.py`, zero overlap with anything this migration imports), so let the
+     launch proceed on the existing published tarball rather than spend another preemption-exposure window
+     republishing + relaunching. New VM: `canonical-migration-defi-per-instrument-20260722-062439`, watchdog `b9e1n4pc5`
+     re-armed with a fast per-iteration `TERMINATED` check (not just the 20-min stale-log gate) so a repeat preemption
+     is caught within ~2 minutes instead of ~20.
 
-  **Lesson this session**: heartbeat-only liveness checks are insufficient for detecting a genuine VM-level hang — a
-  heartbeat loop can freeze along with everything else. The reliable check is triangulating THREE independent signals
-  (app-level progress log, heartbeat, and OS-level serial console activity) rather than trusting any one.
+  **Lessons this session**: (1) heartbeat-only liveness checks are insufficient for detecting a genuine VM-level hang —
+  a heartbeat loop can freeze along with everything else. The reliable check is triangulating THREE independent signals
+  (app-level progress log, heartbeat, and OS-level serial console activity) rather than trusting any one. (2) a
+  watchdog's stall-check is ambiguous between "hung" and "preempted" until you read `gcloud instances describe` status
+  AND `gcloud compute operations list` — `TERMINATED` + a `compute.instances.preempted` operation is a clean, expected
+  SPOT lifecycle event (recover by idempotent relaunch, no deep diagnosis needed), whereas `RUNNING` + all-signals-dark
+  is the genuine hang requiring the full triangulation from lesson (1). Don't apply the heavier diagnostic to the
+  cheaper case. (3) a stale-tarball warning at launch time is not automatically a blocker — read the actual diff before
+  deciding whether to republish; an unrelated one-file addition from a concurrent slot costs nothing to ignore, while
+  blindly republishing on every warning would add avoidable relaunch latency to every SPOT-preemption recovery.
 
 ## Deferred work after 2026-07-22
 
 | Item                                                                                                                                                     | State / why deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Blocked on                                                                                                                                                               |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Glued-id manifest rebuild verify + delete `_migrated_` markers                                                                                           | Cannot be done yet — first VM (`...-033122`) stalled mid-2025-chunk and was deleted+relaunched (idempotent, no progress lost); CURRENT VM is `canonical-migration-defi-per-instrument-20260722-053820`, running                                                                                                                                                                                                                                                                                                                                           | The VM reaching a terminal `EXIT_STATUS` (watchdog re-armed with a VM-liveness check, polls `run.log`/`EXIT_STATUS` every 2 min)                                         |
+| Glued-id manifest rebuild verify + delete `_migrated_` markers                                                                                           | Cannot be done yet — first VM (`...-033122`) stalled mid-2025-chunk (genuine hang, deleted+relaunched); second VM (`...-053820`) then genuinely SPOT-preempted mid-2025-chunk (`TERMINATED` + confirmed `compute.instances.preempted` operation, not a hang — deleted+relaunched); both recoveries idempotent, zero progress lost. CURRENT VM is `canonical-migration-defi-per-instrument-20260722-062439`, watchdog `b9e1n4pc5`, running                                                                                                                 | The VM reaching a terminal `EXIT_STATUS` (watchdog polls `run.log`/`EXIT_STATUS` every 2 min, fast per-iteration `TERMINATED` check for a 3rd preemption)                |
 | Forward write-path fix (shared stable-filename helper, ~15 handlers)                                                                                     | **ALREADY SHIPPED** — re-investigated 2026-07-22, `write_defi_rows()` (`mtds@4ca2640d`, landed 2026-07-18, BEFORE this issue was even filed) already shards every non-empty row by real `instrument_id`; the `_{ts_label}`-glued `file_name` handlers pass is empty-marker-only. Verified empirically: 0 new glued objects across 8 consecutive live-GCS days. See `issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md` "Update 2026-07-22". Residual: cosmetic empty-marker filename staleness (P3, ~11 handlers, no correctness impact) | None — was never actually blocked, the "SYSTEMIC ~15 handler" framing predates the fix that already landed                                                               |
 | ~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN migration                                                                                                          | Cannot be done yet                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Gated on lending-writer-retire todos 7/8/10/11 (per-data_type target mapping + atomic 3-repo wave + runtime proof) — none started this session, all correctly still open |
 | Residual canon walk C2–C12 + instrument_type case/venue-spelling unify                                                                                   | Not done — real work, no structural blocker                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | None                                                                                                                                                                     |

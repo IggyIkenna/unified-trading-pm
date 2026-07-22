@@ -367,50 +367,50 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       (repos: deployment-api, deployment-ui) — investigate the removal commit first.
 
       **INVESTIGATED 2026-07-18 (slot-3) — no single removal commit exists; the capability eroded across several
-                                                                                                                                                                                                                  legitimate "fix" commits, not one deletion.** `git log -S"distinct"/-S"enumerate"` + `--grep` across the full
-                                                                                                                                                                                                                  deployment-api/deployment-ui history found no commit that deletes a raw-enumeration feature. What actually
-                                                                                                                                                                                                                  happened: (1) `BreakdownsAccordion`/`coverage.py:_build_breakdowns` (the "Instrument Coverage Summary") still
-                                                                                                                                                                                                                  groups by the RAW manifest string per axis (venue/chain/instrument_type/data_type via
-                                                                                                                                                                                                                  `SHARD_AXIS_MATRIX`-derived `BREAKDOWN_AXES`) and never canonicalises the query key — only its P4-A DISPLAY
-                                                                                                                                                                                                                  label went canonical-friendly (`deployment-ui@7853409`, raw value still on hover) — so this surface never
-                                                                                                                                                                                                                  literally lost the raw-value signal. (2) The NEWER hierarchical drilldown (`data_status_hierarchical.py`)
-                                                                                                                                                                                                                  picked up a same-day (2026-07-18 08:14, `deployment-api@512180b`) DISPLAY canonicalisation that MERGES
-                                                                                                                                                                                                                  instrument_type/venue duplicate rows into one tree node for correct completion-percentage rollups — this is
-                                                                                                                                                                                                                  the closest thing to an actual regression of the "spot the dupe" signal, and its own commit message documents
-                                                                                                                                                                                                                  the exact kind of raw diversity the operator described (`COINBASE-SPOT instrument_types = ['', 'SPOT_PAIR',
-                                                                                                                                                                                                                  'spot', 'spot_pair']`). (3) A DIFFERENT, adjacent feature — the Catalogue Explorer's
-                                                                                                                                                                                                                  `/catalogue-filter-options` (`deployment-api@2fc46eb`, shipped 2026-07-17) — already returns raw distinct
-                                                                                                                                                                                                                  venue/instrument_type/data_type values, but reads the per-instrument IDENTITY catalogue
-                                                                                                                                                                                                                  (`prod/catalog.parquet`) for cefi/defi/tradfi, NOT the raw manifest, and has NO `chain` axis at all — so it
-                                                                                                                                                                                                                  only partially covers the ask. **Restoration shipped as a NEW, dedicated, read-only endpoint** (the operator's
-                                                                                                                                                                                                                  own suggested shape) rather than un-doing 512180b's legitimate math fix or bolting onto the filter-dropdown
-                                                                                                                                                                                                                  endpoint: `GET /api/data-status/axis-value-census` (`deployment_api/routes/data_status/_axis_census.py`) reads
-                                                                                                                                                                                                                  `read_availability_index(bucket, columns=[venue, chain, instrument_type, data_type])` directly (single bounded
-                                                                                                                                                                                                                  slim read) and returns every distinct RAW value + row count per axis, honest-absence per axis (chain omitted
-                                                                                                                                                                                                                  entirely outside DeFi rather than a fabricated `[]`). UI: `AxisValueCensus.tsx` (new panel, IS-only phase-1 —
-                                                                                                                                                                                                                  mirrors `CatalogueExplorer`'s scope decision) flags raw `instrument_type` values that fold to the same
-                                                                                                                                                                                                                  canonical label via the existing `canonicalInstrumentTypeLabel` alias map (reuses P4-A's table; other axes
-                                                                                                                                                                                                                  list raw values unflagged — no registry exists to safely fold venue/chain without false-positiving two
-                                                                                                                                                                                                                  genuinely different venues together).
+                                                                                                                                                                                                                          legitimate "fix" commits, not one deletion.** `git log -S"distinct"/-S"enumerate"` + `--grep` across the full
+                                                                                                                                                                                                                          deployment-api/deployment-ui history found no commit that deletes a raw-enumeration feature. What actually
+                                                                                                                                                                                                                          happened: (1) `BreakdownsAccordion`/`coverage.py:_build_breakdowns` (the "Instrument Coverage Summary") still
+                                                                                                                                                                                                                          groups by the RAW manifest string per axis (venue/chain/instrument_type/data_type via
+                                                                                                                                                                                                                          `SHARD_AXIS_MATRIX`-derived `BREAKDOWN_AXES`) and never canonicalises the query key — only its P4-A DISPLAY
+                                                                                                                                                                                                                          label went canonical-friendly (`deployment-ui@7853409`, raw value still on hover) — so this surface never
+                                                                                                                                                                                                                          literally lost the raw-value signal. (2) The NEWER hierarchical drilldown (`data_status_hierarchical.py`)
+                                                                                                                                                                                                                          picked up a same-day (2026-07-18 08:14, `deployment-api@512180b`) DISPLAY canonicalisation that MERGES
+                                                                                                                                                                                                                          instrument_type/venue duplicate rows into one tree node for correct completion-percentage rollups — this is
+                                                                                                                                                                                                                          the closest thing to an actual regression of the "spot the dupe" signal, and its own commit message documents
+                                                                                                                                                                                                                          the exact kind of raw diversity the operator described (`COINBASE-SPOT instrument_types = ['', 'SPOT_PAIR',
+                                                                                                                                                                                                                          'spot', 'spot_pair']`). (3) A DIFFERENT, adjacent feature — the Catalogue Explorer's
+                                                                                                                                                                                                                          `/catalogue-filter-options` (`deployment-api@2fc46eb`, shipped 2026-07-17) — already returns raw distinct
+                                                                                                                                                                                                                          venue/instrument_type/data_type values, but reads the per-instrument IDENTITY catalogue
+                                                                                                                                                                                                                          (`prod/catalog.parquet`) for cefi/defi/tradfi, NOT the raw manifest, and has NO `chain` axis at all — so it
+                                                                                                                                                                                                                          only partially covers the ask. **Restoration shipped as a NEW, dedicated, read-only endpoint** (the operator's
+                                                                                                                                                                                                                          own suggested shape) rather than un-doing 512180b's legitimate math fix or bolting onto the filter-dropdown
+                                                                                                                                                                                                                          endpoint: `GET /api/data-status/axis-value-census` (`deployment_api/routes/data_status/_axis_census.py`) reads
+                                                                                                                                                                                                                          `read_availability_index(bucket, columns=[venue, chain, instrument_type, data_type])` directly (single bounded
+                                                                                                                                                                                                                          slim read) and returns every distinct RAW value + row count per axis, honest-absence per axis (chain omitted
+                                                                                                                                                                                                                          entirely outside DeFi rather than a fabricated `[]`). UI: `AxisValueCensus.tsx` (new panel, IS-only phase-1 —
+                                                                                                                                                                                                                          mirrors `CatalogueExplorer`'s scope decision) flags raw `instrument_type` values that fold to the same
+                                                                                                                                                                                                                          canonical label via the existing `canonicalInstrumentTypeLabel` alias map (reuses P4-A's table; other axes
+                                                                                                                                                                                                                          list raw values unflagged — no registry exists to safely fold venue/chain without false-positiving two
+                                                                                                                                                                                                                          genuinely different venues together).
 
-                                                                                                                                                                                                                  **Shipped: deployment-ui@3fb6779** (full `[UI]` gate green — tsc/eslint/vitest 1007 passed/build; `pw:L2 ✓`
-                                                                                                                                                                                                                  `tests/e2e/data-status-axis-value-census.spec.ts`). **deployment-api: code complete, tests green, full
-                                                                                                                                                                                                                  `quality-gates.sh` PASSED** (`.qg_last_passed_sha` written at HEAD `e765660`) — includes a real, unrelated
-                                                                                                                                                                                                                  pre-existing-bug fix found+fixed while chasing a false-positive test failure:
-                                                                                                                                                                                                                  `_has_active_migration_vm` (`services/data_status/manifest.py`) leaked a raw `ValueError` from
-                                                                                                                                                                                                                  `get_compute_engine_client` on any non-GCP `CLOUD_PROVIDER` (the unit-test-default `local` —
-                                                                                                                                                                                                                  `tests/unit/conftest.py:429`) straight through a helper whose own docstring promises "failures return False,
-                                                                                                                                                                                                                  never a gate" — `ValueError` was simply missing from its except tuple; proven pre-existing + zero-overlap via
-                                                                                                                                                                                                                  a stash/baseline re-run on the clean tree before diagnosing it. **NOT YET QUICKMERGED** — blocked at STAGE 2
-                                                                                                                                                                                                                  Pre-Flight by 3 DIRTY sibling deps (`unified-trading-library`, `unified-api-contracts`, `deployment-service`,
-                                                                                                                                                                                                                  all carrying an unrelated in-flight "features FOLD A" / `fold_a_cutover_spec` cross-repo bucket-naming
-                                                                                                                                                                                                                  migration, stale mtime but substantial/multi-file — not a small drive-by dep edit safe to inherit-commit under
-                                                                                                                                                                                                                  the dirty-deps carve-out without its author's context). **Next step once those clear (no code change
-                                                                                                                                                                                                                  needed):** `cd deployment-api && bash scripts/quickmerge.sh "feat(data-status): restore raw manifest
-                                                                                                                                                                                                                  axis-value census — non-canonical-naming / duplication detector (Track-6)" --agent --files
-                                                                                                                                                                                                                  'deployment_api/routes/data_status/__init__.py deployment_api/routes/data_status/_axis_census.py
-                                                                                                                                                                                                                  tests/unit/test_route_data_status_axis_census.py deployment_api/services/data_status/manifest.py'` (working
-                                                                                                                                                                                                                  tree already has all 4 files + the green sentinel; re-verify sentinel still matches HEAD before re-running).
+                                                                                                                                                                                                                          **Shipped: deployment-ui@3fb6779** (full `[UI]` gate green — tsc/eslint/vitest 1007 passed/build; `pw:L2 ✓`
+                                                                                                                                                                                                                          `tests/e2e/data-status-axis-value-census.spec.ts`). **deployment-api: code complete, tests green, full
+                                                                                                                                                                                                                          `quality-gates.sh` PASSED** (`.qg_last_passed_sha` written at HEAD `e765660`) — includes a real, unrelated
+                                                                                                                                                                                                                          pre-existing-bug fix found+fixed while chasing a false-positive test failure:
+                                                                                                                                                                                                                          `_has_active_migration_vm` (`services/data_status/manifest.py`) leaked a raw `ValueError` from
+                                                                                                                                                                                                                          `get_compute_engine_client` on any non-GCP `CLOUD_PROVIDER` (the unit-test-default `local` —
+                                                                                                                                                                                                                          `tests/unit/conftest.py:429`) straight through a helper whose own docstring promises "failures return False,
+                                                                                                                                                                                                                          never a gate" — `ValueError` was simply missing from its except tuple; proven pre-existing + zero-overlap via
+                                                                                                                                                                                                                          a stash/baseline re-run on the clean tree before diagnosing it. **NOT YET QUICKMERGED** — blocked at STAGE 2
+                                                                                                                                                                                                                          Pre-Flight by 3 DIRTY sibling deps (`unified-trading-library`, `unified-api-contracts`, `deployment-service`,
+                                                                                                                                                                                                                          all carrying an unrelated in-flight "features FOLD A" / `fold_a_cutover_spec` cross-repo bucket-naming
+                                                                                                                                                                                                                          migration, stale mtime but substantial/multi-file — not a small drive-by dep edit safe to inherit-commit under
+                                                                                                                                                                                                                          the dirty-deps carve-out without its author's context). **Next step once those clear (no code change
+                                                                                                                                                                                                                          needed):** `cd deployment-api && bash scripts/quickmerge.sh "feat(data-status): restore raw manifest
+                                                                                                                                                                                                                          axis-value census — non-canonical-naming / duplication detector (Track-6)" --agent --files
+                                                                                                                                                                                                                          'deployment_api/routes/data_status/__init__.py deployment_api/routes/data_status/_axis_census.py
+                                                                                                                                                                                                                          tests/unit/test_route_data_status_axis_census.py deployment_api/services/data_status/manifest.py'` (working
+                                                                                                                                                                                                                          tree already has all 4 files + the green sentinel; re-verify sentinel still matches HEAD before re-running).
 
 ## Pass-through from the 2026-07-18 consolidated canonicalisation audit (slot-4) — decisions + measured worklist
 
@@ -1681,3 +1681,91 @@ waiting on the fleet agent's self-drive chain — do not poke it, it owns its ow
    retry attempts (observed: one commit needed 55 attempts, another 41, another gave up at 320+ across 4 batches before
    finally landing) — this is NORMAL under load, not a sign of a broken retry loop; use patient background retries
    (10-20s spacing, 60-120 attempts) rather than escalating or trying to bypass the branch-drift hook.
+
+### DELTA — 2026-07-22 ~06:20Z (4-surface verifier MEASURED FAIL — corrects the "near done" read; KRAKEN-SPOT collision root-caused)
+
+**CORRECTION to the 3rd checkpoint's framing above**: "would_patch fleet ALL_DONE" was Surface B (parquet
+`instrument_id` column) only. It does NOT mean the migration is close to done overall. The fleet agent's 3 background
+jobs (KRAKEN-SPOT full-corpus dry-run, live-lane apply, 4-surface verifier) all finished mid-turn-gap — its own task
+returned `status: completed` with only a "waiting on these 3" note, no synthesis, because these are plain OS-level
+background processes (not harness-tracked), so its foreground turn ended before they exited. Main loop watched all 3 to
+completion directly (`kill -0` poll loop, 90s cadence) — nothing was lost, but the fleet agent couldn't self-report, so
+recording the measured results here directly:
+
+**live_lane_apply (86 objects, 2026-06-23..29): CLEAN SUCCESS.**
+`already_canonical=10355 plan=86 unresolved_wire=1138 renamed=86`, 0 unhandled collisions. Manifest rewrite applied (444
+relabeled, 2995 honest_unresolved, 89 collapsed_in_dedup); index backed up to
+`gs://.../_index/backups/availability_index.pre_cefi_filename_canonical_livelane07220611.parquet` before write.
+
+**verify_cefi_canonical_4surface_2026_07_20.py: RAN TO COMPLETION. `OVERALL: FAIL [A=FAIL B=FAIL C=FAIL D=PASS]`** (7
+sampled days: 2025-06-15, 08-15, 10-15, 11-20, 12-15, 2026-02-01, 05-01):
+
+- **Surface A (filename)**: 44.65% canonical (10278/23019) corpus-wide across the sample — and it gets WORSE toward the
+  present (92.81% on 2025-06-15 → 23.13% on 2026-05-01). This is the real remaining backlog; the SCRIPT-2
+  filename-rename fleet is the mechanism closing it, and it is nowhere near finished.
+- **Surface B (column)**: 95.00% (38/40 sampled objects) — consistent with would_patch's own ALL_DONE + its 2 documented
+  benign error classes. No new work here.
+- **Surface C (manifest dedup)**: 98.24% of non-chain rows canonical, but BOTH verifier probe instruments
+  (`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`, `DERIBIT:PERPETUAL:AVAX-USDC@LIN`) still carry real duplicate manifest
+  rows (old wire-form key rows alongside the canonical row) — the v2 manifest dedup apply has not landed for these.
+- **Surface D (reader)**: PASS — `resolve_cefi_instrument_id()` and `read_shard()` both correctly resolve wire-form
+  queries to the canonical id regardless of on-disk state. No work needed; confirms the resolver design was already
+  correct.
+
+**KRAKEN-SPOT full-corpus dry-run: BLOCKED, `STOP-ON-SURPRISE`, 1157 unhandled collisions.** Planned 155,878 renames —
+by far the single largest remaining venue in the whole migration (10,599 already_canonical). Refused to proceed past
+dry-run: 1157 targets already exist as a "distinct" object per `_resolve_group_collisions()`'s existing-stem check
+(`scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py` ~line 382).
+
+**Root-caused before escalating** (sampled 4 colliding pairs — 2020-01-01 ATOM-USD/ETH-USD/XRP-USD + 2026-02-03 AAVE-USD
+— downloaded both objects per pair, compared with pandas): identical row count/shape, ALL non-`instrument_id` columns
+byte-identical (`.equals()` True) in every sample; object sizes matched exactly (checked via
+`gcloud storage objects describe --format='value(md5Hash,size)'` as a cheap pre-filter before downloading). The ONLY
+difference is the `instrument_id` column value — the canonical-named file already carries the fully-correct id; the
+still-present wire-form file carries an older/half-fixed one. **Conclusion: these are not genuinely distinct instruments
+colliding — they are the would_patch fleet's own output.** would_patch writes its column-patched result to a NEW
+canonical-filename object rather than patching in place, and never deletes the wire-form original. Every one of the 1157
+collisions is (very likely) exactly this: a stale wire-form duplicate whose data is now fully redundant with an
+already-correct canonical copy sitting next to it — same failure shape as the fail-hard doc's precedent at
+`_resolve_group_collisions()`'s mislabel-exclusion branch (line ~358), just a different resolvable class.
+
+**Action taken**: did NOT touch `migrate_cefi_tardis_filename_canonical_2026_07_17.py` myself — it already carries the
+fleet agent's own uncommitted, well-documented WIP (the Kraken slash-tolerance regex fix for ~25,131 `ATOM/USD`-style
+GCS-pseudo-dir paths the old regex silently failed to parse, aka "MID window", + a `--manifest-only` Phase-B mode for
+the paired manifest rewrite after a wide-parallel `--skip-manifest` rename fleet) — neither overlaps
+`_resolve_group_collisions()`. Resumed the fleet agent via `SendMessage` (task had returned `completed`, not paused)
+with the full verifier/dry-run results + the confirmed root cause + the ask: extend `_resolve_group_collisions` so a
+`target collides with existing distinct object` case is content-compared (all columns except `instrument_id`) before
+halting — match → delete the stale wire-form source (matching the existing `deleted_dup_source` outcome path, line
+~330); no match → keep the existing STOP-ON-SURPRISE halt (never observed a mismatch in the 4 samples, but must not
+assume it can't happen at 1157-collision scale). Then re-run the KRAKEN-SPOT dry-run clean before applying the 155,878
+planned renames.
+
+**Also in flight**: kicked off `bash scripts/quality-gates.sh --no-fix` on mtds (read-only check, not a commit) to see
+whether the A-iso agent's `QUALITY_GATE_BYPASS_AUDIT.md` entry (the `_write_one_cefi_shard` writer-close-on-failure
+cleanup justification) is now complete — the diff read as a finished, properly-justified entry, not a stub, but no QG
+process for mtds was actually running at the time of the check (only an unrelated tab-1 deployment-service QG was), so
+this needs the read-only run's result to confirm before the write-guard + A-iso commit batch can ship.
+
+### REVISED REMAINING QUEUE (supersedes the "REMAINING QUEUE" list above — the corpus-fraction numbers are now measured, not assumed near-complete)
+
+1. Fleet agent (resumed): implement the KRAKEN-SPOT collision content-compare fix, re-run dry-run to zero surprises,
+   apply the 155,878 planned renames — the dominant remaining Surface-A item by a wide margin.
+2. Ship the mtds write-guard + A-iso per-shard-isolation commit batch once the read-only QG check confirms green.
+3. Surface C: land the v2 manifest dedup apply for the still-duplicate rows (confirmed present on both verifier probe
+   instruments) — this is the consolidator-drain-gated apply already planned; the verifier now gives concrete
+   before-numbers to diff against after.
+4. Re-run `verify_cefi_canonical_4surface_2026_07_20.py` after (1)-(3) land — expect Surface A to jump substantially
+   once KRAKEN-SPOT's 155,878 renames apply (it is likely the single largest venue in the corpus), but do NOT assume
+   ALL_DONE without re-measuring; the 44.65%→FAIL number was a real corpus-wide measurement, not an estimate.
+5. Fresh status check on the fenced catalogue-gap agent (658 keys + ~422 objects) — still genuinely unknown this
+   session.
+6. DERIBIT combo write-path leak fix — still open, still safe to ship alone.
+
+### NEW LESSON
+
+7. A sub-agent whose background `Bash` calls (`run_in_background`) are still running when its own foreground turn ends
+   shows as harness `status: completed`, not `paused` — but the underlying OS processes are NOT killed; they are plain
+   child processes of the shell, independent of the agent's LLM loop. Don't read "completed" as "these background jobs
+   died with it" — `ps`/`kill -0` the actual PIDs before assuming lost work, and prefer `SendMessage` to resume the
+   agent with the real results over re-doing its investigation solo.
