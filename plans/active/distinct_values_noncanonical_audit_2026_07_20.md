@@ -138,11 +138,16 @@ market-type suffixes (the composite IS the venue) and cefi matched 22/24.
       registry add (already present in `ALL_DEFI_VENUES` phase-gated `pipeline`, correctly left there — see "UAC
       additions SHIPPED, and RC-4's premise was WRONG" below — addressed instead via detector D1b + the additive
       `DEFI_VENUE_MTDS_ADAPTER_VERIFIED_NOT_YET_SCHEDULED` marker for 6 of them, `uac@91b6f094`); the 20 sports ODDS_API
-      bookmakers resolved to an explicit NON-addition/revert per operator ruling (`uac@9908520b`). **Still open** — two
-      category-2 detector/SSOT gaps from the "Refined worklist → Executable safe-code" section remain unshipped: D2
-      (cefi venue fold `OKX-SWAP`/`OKX-FUTURES`→`OKX`, BLOCKED-ON-DESIGN pending a UAC registry export) and D5/D6
-      (bundle-grain `futures_chain`/`options_chain`/`combo` recognition + scoping the `data_types` axis away from MDPS
-      `processed_candles`). Keep open until those two ship.
+      bookmakers resolved to an explicit NON-addition/revert per operator ruling (`uac@9908520b`). **RESOLVED
+      2026-07-22** — the two remaining category-2 detector/SSOT gaps from the "Refined worklist → Executable safe-code"
+      section have both now shipped: D2 (cefi venue fold `OKX-SWAP`/`OKX-FUTURES`→`OKX` dialect spellings, 3-repo ship,
+      see the "D2 shipped" Progress Log entry) and D5 (bundle-grain `futures_chain`/`options_chain` recognition on the
+      tradfi+cefi `instrument_types` axis, `unified-api-contracts@030d64d8` + `deployment-api@7f0fc1cd`, see the D5/D6
+      Refined-worklist item below). D6 (scoping `data_types` away from MDPS `swaps_ohlcv_*`) was investigated and
+      correctly stopped short of a UAC canonical-set addition whose denominator blast radius needs measuring first —
+      filed as `plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md` (mirrors the sibling
+      `perp_daily_ctx` stop-short precedent on this same plan). No category-2 items remain open in this todo's own
+      scope; D6's remainder is tracked on its issue doc, not here.
 - [ ] [DATA] P1. Wrong-axis writer root-cause (category 3): for each mis-stamp cluster, locate the writer/consolidator
       that populates the wrong column; fix the clearly-ours bugs; annotate the rest to their owning plan/issue.
       **PARTIALLY RESOLVED 2026-07-22** — every identified cluster has been either fixed or correctly annotated
@@ -325,8 +330,41 @@ handler. → tracked as a P1 writer fix mirroring the IS pattern.
       COINBASE-INTERNATIONAL, OKEX, OKEX-SWAP, OKEX-FUTURES, CRYPTOFACILITIES, BITFINEX-DERIVATIVES) are the
       genuinely-still-non-canonical dialect spellings this fix actually targets. All 3 repos' quality-gates.sh green,
       `test_cefi_venue_axis_keeps_exact_compare` (which asserts OKX-FUTURES badges canonical) still passes.
-- [ ] [DATA] P2. D5/D6 — bundle-grain (`futures_chain`/`options_chain`/`combo`) recognition + scoping the `data_types`
-      axis away from MDPS `processed_candles` (`swaps_ohlcv_*`). Needs the live-count evidence below first.
+- [x] ⚠️ [DATA] P2. **D5/D6 — INVESTIGATED + D5 SHIPPED, D6 stopped short 2026-07-22 (dispatched sub-agent).** D5
+      (bundle-grain `futures_chain`/`options_chain` recognition on the tradfi+cefi `instrument_types` axis — `combo`
+      deliberately excluded, its leg-aware id format is unsettled, mirroring this registry's own
+      `TRADFI_CHAIN_INSTRUMENT_TYPES` exclusion) **SHIPPED**: `unified-api-contracts@030d64d8` (new
+      `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` export, mirrors
+      `TRADFI_CHAIN_SNAPSHOT_ACCEPTED_NONCANONICAL_DATA_TYPES`'s exact mechanism) + `deployment-api@7f0fc1cd` (wires it
+      into `_ACCEPTED_EXCEPTIONS[("instrument_types","tradfi")]`/`[("instrument_types","cefi")]`), both verified
+      ancestors of `origin/live-defi-rollout`. Measured on the 2026-07-21 live rollup: tradfi.instrument_types
+      non-canonical 9→7 (options_chain/futures_chain cleared; `combo`/`equity`/`etf`/`future`/`index` lowercase
+      case-drift correctly still flagged, untouched — owned by the in-flight tradfi uppercase migration, not this fix),
+      cefi.instrument_types 4→2 (options_chain/futures_chain cleared; `perpetual`/`spot` lowercase still flagged). Real
+      captured rows this recognises: tradfi `futures_chain` 154,147 + `options_chain` 121,031 at this axis (cefi's are 0
+      captured, 100% empty_confirmed/expected_unattempted — real registered adapters, just no captured data yet). D6
+      (scoping `data_types` away from MDPS `swaps_ohlcv_*`) **investigated but NOT shipped** — confirmed these are real,
+      correctly-produced MDPS Phase-5b.1 processed-candle output (not a "wrong coverage.json section" bug:
+      `_AXIS_SOURCES` correctly reads the same section for every asset_group; the gap is that
+      `DATA_TYPES_BY_ASSET_GROUP['defi']` never got these 7 keys added, while cefi's `ohlcv_1m` / tradfi's
+      `ohlcv_{1s,1m,15m,24h}` / sports' `odds_horizon_bucket` — the analogous MDPS candle keys for THEIR asset_groups —
+      already are present). The conceptually-correct fix genuinely is a `DATA_TYPES_BY_ASSET_GROUP` addition, but traced
+      the exact denominator mechanism (`enumerate_expected_universe.py::enumerate_v2`'s generic branch cross-joins
+      `DATA_TYPES_BY_ASSET_GROUP[ag]` against the full catalog × date_axis) and found a directly analogous precedent
+      already patched for tradfi (`_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`, guarding against exactly this "real
+      producer is a DIFFERENT service/bucket" shape) with no defi-scoped equivalent existing today — adding the 7 keys
+      without one would very likely repeat that permanently-unsatisfiable-cell failure mode fleet-wide for defi.
+      Declined per this plan's own RESULT 4 caution + the AUTONOMOUS_AGENT_RULES stop-short precedent (mirrors the
+      sibling `perp_daily_ctx` outcome on this same plan). Full evidence + two remediation paths (build the exclusion
+      guard first vs. an accepted-exception stopgap) + live row-count table filed as
+      `plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`. Also checked: `dex_pools`
+      (454,077 captured) / `dex_swaps` (3,458,668 captured) / `rate_indices` (49,096 captured) — the other 3 of the
+      original 10 `defi.data_types` non-canonical values — are STILL live today, but confirmed cat-1
+      (kebab/snake/legacy-name naming drift already extensively tracked by
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s own dedicated migration scripts); the "FOLDED +
+      DELETED 2026-07-21" Progress Log note refers to a DIFFERENT thing (legacy GCS object-path PREFIXES, not this
+      manifest COLUMN VALUE) — not touched here, not this plan's scope. No code changed in
+      market-data-processing-service or instruments-service for D6.
 - [x] ⚠️ [DATA] P1. **`perp_daily_ctx` / `perp_funding` manifest-invisibility — INVESTIGATED 2026-07-22,
       `derivative_ticker` migration DECLINED (live-reader risk), safe alternative proposed instead.** Original framing
       (below, kept for record) was only half right: `perp_funding` is ALREADY a registered canonical data_type with a
@@ -353,19 +391,19 @@ handler. → tracked as a P1 writer fix mirroring the IS pattern.
       <details><summary>Original framing (2026-07-22 side investigation, superseded by the above)</summary>
 
       structurally invisible to this audit's detector, found by a 2026-07-22 side investigation, not by the panel.
-              Neither is a canonical `data_type` (no member in `DATA_TYPES_BY_ASSET_GROUP['defi']`), and neither shows up in
-              this doc's non-canonical inventory at all — both are written via raw `gcsfs` calls with **zero manifest writes**
-              (`market-tick-data-service/scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py:15,44`,
-              `features-service/features_service/cefi/calculators/perp_funding_corpus.py:304,314`; corroborated by
-              `plans/active/issues/mtds_plan_reconciliation_2026_06_29.md:384` "MD5 `perp_daily_ctx` manifest-invisible —
-              CONFIRMED"). Per operator ruling 2026-07-15, UAC already defines the target shape —
-              `unified_api_contracts/internal/schemas/contracts.py:766-782` `DEFI_PERPETUAL_DERIVATIVE_TICKER`
-              (`asset_group=defi, instrument_type=perpetual, data_type=derivative_ticker`) carries `funding_rate`/`mark_price`/
-              `open_interest`/`index_price` as EMBEDDED FIELDS, mirroring `CEFI_PERPETUAL_DERIVATIVE_TICKER` exactly. Todo:
-              migrate both writers onto `derivative_ticker` (real manifest rows, real schema) and retire the raw-gcsfs path —
-              until then this cluster will keep costing real coverage/completeness accuracy without ever tripping the
-              distinct-values panel, since the panel only ever sees what's in the manifest.
-              </details>
+                      Neither is a canonical `data_type` (no member in `DATA_TYPES_BY_ASSET_GROUP['defi']`), and neither shows up in
+                      this doc's non-canonical inventory at all — both are written via raw `gcsfs` calls with **zero manifest writes**
+                      (`market-tick-data-service/scripts/backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py:15,44`,
+                      `features-service/features_service/cefi/calculators/perp_funding_corpus.py:304,314`; corroborated by
+                      `plans/active/issues/mtds_plan_reconciliation_2026_06_29.md:384` "MD5 `perp_daily_ctx` manifest-invisible —
+                      CONFIRMED"). Per operator ruling 2026-07-15, UAC already defines the target shape —
+                      `unified_api_contracts/internal/schemas/contracts.py:766-782` `DEFI_PERPETUAL_DERIVATIVE_TICKER`
+                      (`asset_group=defi, instrument_type=perpetual, data_type=derivative_ticker`) carries `funding_rate`/`mark_price`/
+                      `open_interest`/`index_price` as EMBEDDED FIELDS, mirroring `CEFI_PERPETUAL_DERIVATIVE_TICKER` exactly. Todo:
+                      migrate both writers onto `derivative_ticker` (real manifest rows, real schema) and retire the raw-gcsfs path —
+                      until then this cluster will keep costing real coverage/completeness accuracy without ever tripping the
+                      distinct-values panel, since the panel only ever sees what's in the manifest.
+                      </details>
 
 ### D4 — DELIBERATELY REJECTED (do not implement)
 
@@ -428,42 +466,42 @@ blind UAC addition; each of the 15 gets a real capture attempt first, and only p
       we can actually now capture.
 
       **DONE 2026-07-22.** Real sample-day backfill against all 15: 14/15 already had working, production-proven
-                                                                                                                      capture (verified with real on-chain/API calls, no code changes needed for 12 of them); ACROSS + STARGATE
-                                                                                                                      needed and got real fixes (`market-tick-data-service@a32dd58c`/`@4c21c7f6` — dead subgraph replaced with real
-                                                                                                                      on-chain Swap-log queries); FLASHBOTS' pipeline_mode was wrong (subgraph→onchain_rpc, `mtds@6bf6012a`);
-                                                                                                                      MORPHOVAULTS had a wrong on-chain vault address resolving to a different vault entirely (`mtds@6bf6012a`,
-                                                                                                                      verified correct via `convertToAssets` at block 25573787); MAKER's capture moved handlers (vault_share_price→
-                                                                                                                      lst_rates) without the capability registry following (`uac@328a5cea`). All 15 were **already** in
-                                                                                                                      `ALL_DEFI_VENUES` (the full registry) — the literal "add" instruction against that registry was a no-op.
+                                                                                                                              capture (verified with real on-chain/API calls, no code changes needed for 12 of them); ACROSS + STARGATE
+                                                                                                                              needed and got real fixes (`market-tick-data-service@a32dd58c`/`@4c21c7f6` — dead subgraph replaced with real
+                                                                                                                              on-chain Swap-log queries); FLASHBOTS' pipeline_mode was wrong (subgraph→onchain_rpc, `mtds@6bf6012a`);
+                                                                                                                              MORPHOVAULTS had a wrong on-chain vault address resolving to a different vault entirely (`mtds@6bf6012a`,
+                                                                                                                              verified correct via `convertToAssets` at block 25573787); MAKER's capture moved handlers (vault_share_price→
+                                                                                                                              lst_rates) without the capability registry following (`uac@328a5cea`). All 15 were **already** in
+                                                                                                                              `ALL_DEFI_VENUES` (the full registry) — the literal "add" instruction against that registry was a no-op.
 
-                                                                                                                      **CORRECTION (same day, follow-up investigation) — this was NOT the whole picture.** `ALL_DEFI_VENUES`
-                                                                                                                      membership is NOT what the honest-coverage denominator actually reads.
-                                                                                                                      `VENUES_BY_ASSET_GROUP['defi']` (the list `expected_universe.py`/`check_enumeration_completeness.py` actually
-                                                                                                                      iterate to build the `completeness_pct` denominator) is a PHASE-FILTERED subset —
-                                                                                                                      `unified-api-contracts/.../market_data_categories.py:395` keeps only `DEFI_VENUE_PHASE=="live"` entries. 11 of
-                                                                                                                      these 15 venues (ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/MANTLE/ACROSS/STARGATE/FLASHBOTS/ALCHEMY) are
-                                                                                                                      `phase=="pipeline"`, so despite being real, working, verified captures shipped today, they are STILL
-                                                                                                                      structurally excluded from `completeness_pct` for `defi` — confirmed via a full code trace (Step
-                                                                                                                      A→B→C: `market_data_categories.py:395` → `expected_universe.py:287` →
-                                                                                                                      `check_enumeration_completeness.py:512`), not a guess. The "measure the before/after `completeness_pct` delta"
-                                                                                                                      instruction in this todo's own text was therefore never actually actionable — there IS no delta yet, because
-                                                                                                                      the venues never entered the denominator in the first place. See
-                                                                                                                      `plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md` (upgraded P2→P1,
-                                                                                                                      `nature: issue`, 2026-07-22) for the full trace + the operator decision needed before this can actually be
-                                                                                                                      fixed. **This todo stays flipped `[x]` because the CAPTURE work (the actual ask) is done and verified — the
-                                                                                                                      denominator-visibility gap is real but is now separately tracked, not silently rolled into "done" here.**
+                                                                                                                              **CORRECTION (same day, follow-up investigation) — this was NOT the whole picture.** `ALL_DEFI_VENUES`
+                                                                                                                              membership is NOT what the honest-coverage denominator actually reads.
+                                                                                                                              `VENUES_BY_ASSET_GROUP['defi']` (the list `expected_universe.py`/`check_enumeration_completeness.py` actually
+                                                                                                                              iterate to build the `completeness_pct` denominator) is a PHASE-FILTERED subset —
+                                                                                                                              `unified-api-contracts/.../market_data_categories.py:395` keeps only `DEFI_VENUE_PHASE=="live"` entries. 11 of
+                                                                                                                              these 15 venues (ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/MANTLE/ACROSS/STARGATE/FLASHBOTS/ALCHEMY) are
+                                                                                                                              `phase=="pipeline"`, so despite being real, working, verified captures shipped today, they are STILL
+                                                                                                                              structurally excluded from `completeness_pct` for `defi` — confirmed via a full code trace (Step
+                                                                                                                              A→B→C: `market_data_categories.py:395` → `expected_universe.py:287` →
+                                                                                                                              `check_enumeration_completeness.py:512`), not a guess. The "measure the before/after `completeness_pct` delta"
+                                                                                                                              instruction in this todo's own text was therefore never actually actionable — there IS no delta yet, because
+                                                                                                                              the venues never entered the denominator in the first place. See
+                                                                                                                              `plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md` (upgraded P2→P1,
+                                                                                                                              `nature: issue`, 2026-07-22) for the full trace + the operator decision needed before this can actually be
+                                                                                                                              fixed. **This todo stays flipped `[x]` because the CAPTURE work (the actual ask) is done and verified — the
+                                                                                                                              denominator-visibility gap is real but is now separately tracked, not silently rolled into "done" here.**
 
-                                                                                                                      JUPITER: router-only, swap volume already flows through directly-captured pools (Raydium/Orca/Meteora/Phoenix)
-                                                                                                                      — kept as-is per the survey's "may be architecturally redundant" read, not force-built.
+                                                                                                                              JUPITER: router-only, swap volume already flows through directly-captured pools (Raydium/Orca/Meteora/Phoenix)
+                                                                                                                              — kept as-is per the survey's "may be architecturally redundant" read, not force-built.
 
-                                                                                                                      ~~**One real finding NOT resolved, filed separately**: `DEFI_VENUE_PHASE` still labels 11 of these
-                                                                                                                      (ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/MANTLE/ACROSS/STARGATE/FLASHBOTS/ALCHEMY) `"pipeline"` despite verified
-                                                                                                                      real MTDS capture, because the registry carries two contradictory definitions of `"live"` (2026-05-07
-                                                                                                                      data-availability vs 2026-06-29 IS-producibility invariant) — a genuine SSOT contradiction, not something to
-                                                                                                                      silently resolve by picking one side.~~ (superseded by the CORRECTION paragraph above — this is confirmed a
-                                                                                                                      real coverage-math exclusion, not just a documentation contradiction.) See
-                                                                                                                      `plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md` for the full finding + the
-                                                                                                                      design decision needed before either flipping the phase or correcting the misleading comment.
+                                                                                                                              ~~**One real finding NOT resolved, filed separately**: `DEFI_VENUE_PHASE` still labels 11 of these
+                                                                                                                              (ANKR/FRAX/MAKER/STADER/STAKEWISE/SWELL/MANTLE/ACROSS/STARGATE/FLASHBOTS/ALCHEMY) `"pipeline"` despite verified
+                                                                                                                              real MTDS capture, because the registry carries two contradictory definitions of `"live"` (2026-05-07
+                                                                                                                              data-availability vs 2026-06-29 IS-producibility invariant) — a genuine SSOT contradiction, not something to
+                                                                                                                              silently resolve by picking one side.~~ (superseded by the CORRECTION paragraph above — this is confirmed a
+                                                                                                                              real coverage-math exclusion, not just a documentation contradiction.) See
+                                                                                                                              `plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md` for the full finding + the
+                                                                                                                              design decision needed before either flipping the phase or correcting the misleading comment.
 
 **Sports ODDS_API bookmakers (19) — operator ruling**: "do NOT add them, in fact remove them everywhere so they don't
 come up in audit" — stronger than the original ask (not just "hold," but actively purge references so this class of
@@ -1526,3 +1564,58 @@ needs a quick verify before autonomous execution, since this exact plan's own RE
 canonical-set additions are not automatically safe-code (denominator/completeness_pct blast radius). **No code was
 changed** in market-tick-data-service, features-service, strategy-service, or unified-api-contracts this session — this
 is a stop-and-document outcome, not a completed migration.
+
+### 2026-07-22 (dispatched sub-agent) — D5 SHIPPED, D6 stopped short with a filed issue doc; both re-verified against the CURRENT live rollup, not the stale 2026-07-20 snapshot
+
+Dispatched to execute the last genuinely-open Refined-worklist item, D5/D6. Re-ran the audit's own live-evidence method
+first rather than trusting the 2026-07-20 ground truth: pulled the newest honest-coverage rollup
+(`gs://central-element-323112-honest-coverage/2026-07-22/coverage.json`) and found it a **partial, tradfi-only run**
+(`asset_groups_measured: ["tradfi"]`, generated mid-day 15:39 UTC — not the nightly cron, likely an ad-hoc verification
+re-run from earlier this session that overwrote today's slot without the other 4 asset_groups). Used the last FULL
+rollup instead (2026-07-21, `asset_groups_measured` = all 5) as current ground truth, replaying the real
+`enumerate_distinct_values`/`_comparison_set` code from
+`deployment-api/deployment_api/routes/data_status/ _distinct_values.py` directly (not a reimplementation) against it.
+
+**D5 (bundle-grain instrument_types) — SHIPPED.** Confirmed `futures_chain`/`options_chain` are the real, deliberate
+MTDS Tardis-writer bundle-grain `instrument_type` stamp (`tardis_bulk_download.py::shard_it_str`), already recognised
+elsewhere in UAC's own registry (`canonical/partition_paths.py::TRADFI_CHAIN_INSTRUMENT_TYPES`/
+`CEFI_CHAIN_INSTRUMENT_TYPES`) but not by the distinct-values detector's `instrument_types` axis. `combo` is
+deliberately NOT part of the fix — UAC's own `TRADFI_CHAIN_INSTRUMENT_TYPES` comment excludes it too ("leg-aware id
+format unsettled"), and separately its lowercase spelling is real case-drift already owned by the in-flight tradfi
+uppercase migration (same class as `equity`/`etf`/`future`/`index`), not a bundle-grain question — left untouched.
+Shipped `unified-api-contracts@030d64d8` (new `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` export, mirrors
+`TRADFI_CHAIN_SNAPSHOT_ACCEPTED_NONCANONICAL_DATA_TYPES` exactly) + `deployment-api@7f0fc1cd` (wires it into
+`_ACCEPTED_EXCEPTIONS`), both `quality-gates.sh` green, both verified `git merge-base --is-ancestor` on
+`origin/live-defi-rollout`. Measured: tradfi.instrument_types non-canonical 9→7, cefi.instrument_types 4→2 — full
+detail + row counts in the Refined-worklist item above (line ~328).
+
+**D6 (data_types axis scoping) — investigated, stopped short, issue doc filed.** Confirmed `swaps_ohlcv_*` are real MDPS
+Phase-5b.1 processed-candle output (`unified-api-contracts/.../internal/schemas/_candle_contracts.py`'s own module
+docstring; `market-data-processing-service/.../adapters/defi/swap_adapter.py::DefiSwapAdapter` is the real producer
+code) — NOT a "wrong coverage.json section" bug as the source todo's framing hypothesised (`_AXIS_SOURCES` reads the
+same section uniformly for every asset_group; other asset_groups' analogous MDPS candle keys — cefi `ohlcv_1m`, tradfi
+`ohlcv_{1s,1m,15m,24h}`, sports `odds_horizon_bucket` — are simply, inconsistently, already present in their
+`DATA_TYPES_BY_ASSET_GROUP` entries while defi's family never was). Traced the exact mechanism this addition would feed
+(`instruments-service/scripts/enumerate_expected_universe.py::enumerate_v2`'s generic per-AG branch cross-joins
+`DATA_TYPES_BY_ASSET_GROUP[ag]` against the full catalog × date_axis) and found a directly analogous, already-patched
+precedent for tradfi (`_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`, guarding against exactly the "real producer is a
+different service/bucket" shape `swaps_ohlcv_*` also has) with no defi-scoped equivalent existing today. Adding the 7
+keys without building that guard first would very likely reproduce the same permanently-unsatisfiable-cell failure mode
+fleet-wide for defi. This is precisely the "UAC canonical-set addition whose denominator blast radius can't be fully
+measured this session" case the dispatch's own AUTONOMOUS_AGENT_RULES flagged as a legitimate stop-short (mirroring the
+sibling `perp_daily_ctx` todo's own outcome on this same plan, filed just above). Documented the full evidence chain,
+live row-count table (~364K real captured candle rows across the 7 timeframes — substantial, not a fluke), and two
+concrete remediation paths (build the defi-scoped exclusion guard first, then add the registry keys — vs. a lower-risk
+accepted-exception stopgap mirroring the tradfi `options_chain`/`futures_chain` data_types fix) in
+`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`. Also confirmed `dex_pools` (454,077
+captured) / `dex_swaps` (3,458,668 captured) / `rate_indices` (49,096 captured) — the other 3 of the original 10
+non-canonical `defi.data_types` — are STILL live raw manifest values today, but are cat-1 naming drift already
+extensively tracked by `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s own dedicated migration
+scripts (`canonicalize_defi_manifest_data_types_option_g_2026_05_16.py`,
+`fold_legacy_solana_defi_to_consolidated_canonical_2026_07_21.py`) — the "FOLDED + DELETED 2026-07-21" note elsewhere in
+this doc's Progress Log refers to a different thing (legacy GCS object-path prefixes, not this manifest column value);
+correctly NOT touched here.
+
+**No plan items remain open in the "Refined worklist → Executable safe-code" section** — D1/D1b/D2/D3/D5 all shipped
+
+- verified this plan's lifetime; D6's remainder lives on its own issue doc, not as an open item here.
