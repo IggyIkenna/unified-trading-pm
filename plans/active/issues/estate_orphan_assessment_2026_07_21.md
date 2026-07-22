@@ -102,17 +102,24 @@ operator-notified 2026-07-21.
       datapoint-validation branch, consumes `VM_BACKFILL_CMD` as-is) — `deployment-service@74eca154`. Tarball +
       setup-script republished, relaunched 2026-07-22 05:04-05:05 UTC: `orphan-sweep-cefi-20260722-050405`,
       `-defi-20260722-050426`, `-tradfi-20260722-050445`, `-prediction-20260722-050511` (all RUNNING,
-      asia-northeast1-c). **Dispatch fix CONFIRMED HOLDING**: defi/tradfi/prediction ran the full 30-min watchdog window
-      with genuine climbing progress (tradfi swept 8.4M+ objects at ~10-11k/s; defi/prediction showed periodic
-      heartbeats + growing sweep counts) — no crash. **cefi stalled silently** — `orphan-sweep-cefi-20260722-050405`
-      stayed RUNNING but wrote ZERO bytes to `run.log` AND its independent GCS-blob heartbeat sidecar
-      (`vm-heartbeat/{vm}.txt`) never updated past its initial "starting" write at launch+2min — serial console
-      confirmed silent for 34+ minutes (no kernel/systemd/process output at all), a real stall by the measured-progress
-      rule, not just a slow cefi index load. Killed + relaunched (`orphan-sweep-cefi-20260722-055006`, 2026-07-22 05:50
-      UTC); a focused 3rd watchdog (18-min/3-min ticks) is confirming it makes real progress this time.
+      asia-northeast1-c). The dispatch fix itself held (no crash) — but a follow-up check after a ~10hr real-world gap
+      revealed the deeper truth the 30-min watchdog window couldn't see: **only tradfi actually completed** (fresh
+      report written 2026-07-22, exit clean). **defi and prediction both hit a severe, reproducible throughput cliff at
+      ~1.15-1.2M objects** (11,000/s → 582/s in one step, decaying continuously to ~51/s ten hours later, never
+      recovering) and were still crawling-but-alive when SPOT-preempted, with no final report written. **cefi failed a
+      SECOND time** — the relaunch (`orphan-sweep-cefi-20260722-055006`) reproduced the identical zero-output stall as
+      the first attempt (confirmed via a focused 3rd watchdog), killed again. **This is a genuine, reproducible
+      performance bug in `migration_orphan_sweep.py` itself**, filed in full with measured evidence at
+      `migration_orphan_sweep_performance_decay_2026_07_22.md` — NOT relaunching defi/cefi/prediction again until that
+      doc's todos 1-4 land a real fix (todo 4 below folds into that doc's scope). **Net measured state**: sports
+      (2026-07-21) and tradfi (2026-07-22) are the only two asset_groups with a completed orphan-sweep report;
+      defi/cefi/prediction remain genuinely unmeasured for orphan objects.
 - [ ] 4. [CODE] P2. **Make the manifest load resumable / streamed** in `migration_orphan_sweep.py` (chunked download
       with retry, or read the index in row-group batches) so a multi-GB index does not break a single connection — this
-      is what blocked defi/cefi/tradfi in-session.
+      is what blocked defi/cefi/tradfi in-session originally, and is now folded into
+      `migration_orphan_sweep_performance_decay_2026_07_22.md` todo 2 (likely cefi's exact 2026-07-22 hang) alongside
+      the separately-found defi/prediction throughput-decay bug (that doc's todos 1/3) — see that doc for the full,
+      current scope; don't duplicate investigation here.
 
 ## Lesson (do not re-learn)
 
