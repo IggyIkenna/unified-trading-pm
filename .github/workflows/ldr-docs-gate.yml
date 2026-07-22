@@ -6,26 +6,45 @@ name: ldr-docs-gate
 # local prek hook, which was bypassed on TWO different hosts on 2026-07-17 (3 broken docs →
 # the lint-codex slice went RED on EVERY PR into PM main for ~1h, plus a false MAIN-RED on
 # UTL, ~12 CRITICAL alerts). This backstop closes the detection gap: it validates the doc
-# corpus ON the integration branch minutes after any doc-touching push and pages ONCE with
-# the offending commit — instead of the breakage surfacing as fleet-wide red gates.
-# Runs on the self-hosted glue pool: $0, warm checkout, sub-minute.
+# corpus on `live-defi-rollout` and pages once with the offending doc(s) — instead of the
+# breakage surfacing as fleet-wide red gates.
 # SSOT: plans/active/issues/prek_plan_hygiene_hook_fail_open_unhooked_clone_2026_07_17.md
 # (fix direction 2) + codex/11-project-management/doc-frontmatter-schema.md.
+#
+# ── WHY HOURLY, NOT PER-PUSH (operator-suggested 2026-07-22) ─────────────────
+# Per-push firing measured 2026-07-22 (5 days live): ~1200 triggers, ~240/day, ~10/hour — far
+# more than a health check whose only failure consequence (a broken doc sitting undetected a
+# bit longer) needs. Per-push was never the right model here; hourly cuts this workflow's own
+# contribution to shared self-hosted-runner load ~10x for a check whose latency doesn't matter
+# at that granularity. Full-corpus scan (not diff-since-last-push) is KEPT deliberately — it
+# runs in ~2s for the whole 1670-doc live corpus (measured), so scoping it further buys
+# negligible performance and a periodic health check should audit CURRENT total state, not one
+# push's diff. What per-push attribution DID give — naming who broke it — is recovered instead
+# via a per-violating-file `git log` lookup (below), which is actually MORE precise than the
+# old `head_commit` attribution: with hourly batching, several commits can land between checks,
+# and `head_commit` would often name the WRONG (merely most-recent) one.
+#
+# ── THREE BUGS FOUND AND FIXED 2026-07-22, in order ───────────────────────────
+# (1) `cancel-in-progress: true` killed every ACTIVELY RUNNING job the instant a newer push
+#     landed — 39/40 sampled runs cancelled, 0 ever completed. Fixed: cancel-in-progress: false.
+# (2) Even after (1), still 0 completions (1198/1200 total population cancelled). Root cause:
+#     `runs-on: [self-hosted, Linux, X64, glue]` required 4 labels, but the JIT-ephemeral glue
+#     pool (scripts/self-hosted-runners/glue-runner-run.sh) registers each runner with ONLY
+#     ["self-hosted","glue"] — Linux/X64 are never advertised, so this job could never match ANY
+#     runner, full stop (confirmed via journalctl: the same 5 runners completed sibling jobs in
+#     seconds throughout the exact window this one sat queued). Every other of the 36 workflows
+#     on this pool already used the correct 2-label form. Fixed: runs-on: [self-hosted, glue].
+# (3) A dead run created under the pre-fix (2) config was parked in the concurrency queue with
+#     nothing able to clear it, silently blocking every run behind it across ~15 pushes.
+#     Cancelled manually (one-time; can't recur once (2) means no future run gets stuck the
+#     same way). First real completion: 12s, glue-ip-172-31-5-118-5, run 29910893758.
 
 on:
-  push:
-    branches: [live-defi-rollout]
-    paths:
-      - "plans/**"
-      - "codex/**"
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: # manual re-run / testing
 
 concurrency:
-  # QUEUE, don't cancel: measured 2026-07-22 (5 days live) — LDR doc pushes land every
-  # few minutes fleet-wide, faster than this sub-minute check completes, so
-  # cancel-in-progress:true meant EVERY run got pre-empted by the next push before
-  # finishing (39/40 sampled runs = cancelled, 0 ever reached a verdict — the backstop
-  # never once fired). Queuing costs nothing extra (self-hosted, sub-minute jobs) and
-  # guarantees every push's corpus state actually gets checked, just with a short lag.
   group: ldr-docs-gate
   cancel-in-progress: false
 
@@ -35,22 +54,27 @@ permissions:
 jobs:
   frontmatter-gate:
     name: Doc frontmatter gate (LDR)
-    # MUST match exactly what glue-runner-run.sh registers (LABELS_JSON='["self-hosted","glue"]') — this
-    # was the actual root cause of zero completions in 5 days, not resource contention (2026-07-22): the
-    # JIT-ephemeral pool never advertises Linux/X64, only self-hosted+glue, so a job requiring all 4 can
-    # never match any runner. Every other glue-pool workflow already uses the 2-label form; this one didn't.
+    # MUST match exactly what glue-runner-run.sh registers (LABELS_JSON='["self-hosted","glue"]').
     runs-on: [self-hosted, glue]
     timeout-minutes: 5
     outputs:
       verdict: ${{ steps.gate.outputs.verdict }}
       excerpt: ${{ steps.gate.outputs.excerpt }}
+      attribution: ${{ steps.gate.outputs.attribution }}
     steps:
-      - name: Checkout
+      - name: Checkout live-defi-rollout
         uses: actions/checkout@v5
         with:
-          fetch-depth: 1
+          # Explicit ref: schedule/workflow_dispatch have no natural "the branch that pushed"
+          # like a push event does — they'd otherwise resolve to the repo's default branch
+          # (main), not the branch this gate actually needs to validate (LDR).
+          ref: live-defi-rollout
+          # Deep enough for `git log -1 -- <file>` attribution below to find the real last-touch
+          # commit even a day or two back (measured ~280 commits/day touching plans/+codex/ ⇒
+          # 500 comfortably covers 40+ hours), while staying far short of full history.
+          fetch-depth: 500
 
-      - name: Corpus frontmatter check
+      - name: Corpus frontmatter check + per-file attribution
         id: gate
         shell: bash
         run: |
@@ -59,13 +83,29 @@ jobs:
           OUT="$(python3 scripts/plan-hygiene/check_frontmatter_schema.py --quiet 2>&1)"
           RC=$?
           echo "$OUT"
+
+          ATTR=""
+          if [ "$RC" -ne 0 ]; then
+            # No single head_commit to blame (schedule/dispatch, not push) — and even for a push
+            # event, hourly batching means head_commit is often the WRONG commit anyway. Instead,
+            # blame each VIOLATING doc individually via its own last-touch commit.
+            while IFS= read -r f; do
+              [ -n "$f" ] && [ -f "$f" ] || continue
+              LAST="$(git log -1 --format='%an <%h> %cs: %s' -- "$f" 2>/dev/null || echo 'unknown (no history in fetch-depth)')"
+              ATTR="${ATTR}${f}\n  last touched by ${LAST}\n"
+            done < <(printf '%s\n' "$OUT" | grep -E '^  [^ ].*:$' | sed 's/^  //;s/:$//')
+          fi
+
           {
-            echo "verdict=$([ $RC -eq 0 ] && echo green || echo red)"
+            echo "verdict=$([ "$RC" -eq 0 ] && echo green || echo red)"
             echo "excerpt<<__EOX__"
-            echo "$OUT" | head -12
+            printf '%s\n' "$OUT" | head -20
             echo "__EOX__"
+            echo "attribution<<__ATTR_EOF__"
+            printf '%b' "$ATTR"
+            echo "__ATTR_EOF__"
           } >> "$GITHUB_OUTPUT"
-          exit $RC
+          exit "$RC"
 
   notify-broken-docs:
     needs: frontmatter-gate
@@ -73,16 +113,37 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        ":page_facing_up: *BROKEN DOC FRONTMATTER ON live-defi-rollout* — pushed by `${{
-        github.event.head_commit.author.name }}` in `${{ github.event.head_commit.id }}` (`${{
-        github.event.head_commit.message }}`). Every PM-corpus lint-codex slice fleet-wide goes RED until this is
-        repaired — fix the frontmatter NOW (remedy: `python3 scripts/docs/seed_frontmatter.py --apply <path>`, schema:
-        codex/11-project-management/doc-frontmatter-schema.md). Violations:\n${{ needs.frontmatter-gate.outputs.excerpt
-        }}"
+        ":page_facing_up: *BROKEN DOC FRONTMATTER ON live-defi-rollout* (hourly check). Every PM-corpus lint-codex slice
+        fleet-wide goes RED until this is repaired — fix the frontmatter NOW (remedy: `python3
+        scripts/docs/seed_frontmatter.py --apply <path>`, schema:
+        codex/11-project-management/doc-frontmatter-schema.md).\nAttribution:\n${{
+        needs.frontmatter-gate.outputs.attribution }}\nViolations:\n${{ needs.frontmatter-gate.outputs.excerpt }}"
       severity: "CRITICAL"
       workflow_name: "ldr-docs-gate"
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      # One page per breakage episode, not per subsequent doc push while red.
+      # One page per breakage episode, not per subsequent hourly recheck while red.
       dedup_key: "ldr-docs-gate-red"
       cooldown_min: 60
+    secrets: inherit
+
+  escalate-plan-health:
+    # Hands the wall to the SAME already-built resolver plan-health-agent.yml's PR-gate uses
+    # (server/plan_health.py + agents/plan-health.md — cleans plan-hygiene issues, including
+    # frontmatter, on live-defi-rollout) instead of only paging a human. Not PR-scoped (pr_number:
+    # 0, sanctioned by escalate-to-orchestrator.yml's own contract). Kept deliberately simple — no
+    # extra dedup layer of our own: escalate-to-orchestrator.yml's own concurrency group
+    # (escalate-unified-trading-pm-0) already serializes repeat dispatches for the same non-PR
+    # wall, so a redundant hourly re-dispatch while a worker is still resolving just queues
+    # behind it rather than piling up.
+    needs: frontmatter-gate
+    if: always() && needs.frontmatter-gate.outputs.verdict == 'red'
+    uses: ./.github/workflows/escalate-to-orchestrator.yml
+    with:
+      repo: unified-trading-pm
+      pr_number: 0
+      wall_type: plan_health
+      context:
+        "ldr-docs-gate hourly check found broken frontmatter on live-defi-rollout:\n${{
+        needs.frontmatter-gate.outputs.attribution }}\n${{ needs.frontmatter-gate.outputs.excerpt }}"
+      authoring_slot: "ldr-docs-gate"
     secrets: inherit
