@@ -204,7 +204,13 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       the correct operation; no venue/data-type filtering needed since `oracle_prices_handler.process()` collects
       Chainlink+Pyth+AAVE together unconditionally for the given date range. Confirmed RUNNING at launch. Code tarball
       verified fresh for MTDS (`2f3fb7cc`, a descendant of the listing-date gate `27e077daef4a`) and UAC (packaged sha
-      is a descendant of the AAVE registration `6bdbc31d`). Monitor:
+      is a descendant of the AAVE registration `6bdbc31d`). **T+10min VERIFIED (2026-07-22)**: run.log shows real
+      per-reserve behavior matching the on-chain listing dates exactly — `2023-01-27` correctly collects ONLY wstETH
+      (`getAssetPrice=1741.704169`), with weETH/rETH/cbETH/rsETH/ezETH each genuinely reverting
+      (`execution reverted, no data`, silently skipped per-reserve) since none of them were listed yet on that date —
+      independent production confirmation of the listing-date verification. ~35-40s/day observed → full 2023-01-27 to
+      2026-07-22 window (~1275 days) is a multi-hour run; SPOT-preemption-resilient via the existing PROGRESS-checkpoint
+      contract. Monitor:
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-045059/run.log` +
       manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity.
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
