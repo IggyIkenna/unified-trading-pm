@@ -115,19 +115,26 @@ Per shard the driver sequences, via the shared `unified_trading_library.pipeline
    freshness read and the write both target the `-test-` bucket, this skip proof is **genuine and self-contained** — no
    PROD pre-check needed.
 
-**Canonical output contract the verify asserts** (per `canonical_writer.py` / `output_path_helpers.py`):
+**Canonical output contract the verify asserts** (LOCKED shape, operator-corrected ruling 2026-07-21; per
+`canonical_writer.py` / `output_path_helpers.py`):
 
 ```
-processed_candles/by_date/day={DAY}/[pipeline_mode={pm}/]timeframe={TF}/data_type={mdps_dt}/instrument_type={IT}/venue={V}/[underlying={U}/]{instrument_id}.parquet
+processed_candles/by_date/day={DAY}/pipeline_mode={pm}/timeframe={TF}/data_type={SOURCE_dt}/instrument_type={IT}/venue={V}/[underlying={U}/]{instrument_id}.parquet
 ```
 
-- `data_type={mdps_dt}` is the **aggregated MDPS key**, not the raw source data_type: `mdps_data_type_key(src, tf)` →
-  `trades`+`1m`→`ohlcv_1m`, `book_snapshot_5`+`5m`→`book5_ohlcv_5m`, `derivative_ticker`+`1h`→`deriv_ohlcv_1h`;
-  already-`ohlcv_*` pass through. The manifest `timeframe` is normalised `24h`→`1d`.
+- `data_type={SOURCE_dt}` is the **shard's raw SOURCE data_type** (`trades`, `book_snapshot_5`, `derivative_ticker`, …)
+  — **NOT** `mdps_data_type_key(src, tf)` (the aggregated key, e.g. `ohlcv_1m`/`book5_ohlcv_5m`/`deriv_ohlcv_1h`).
+  Keeping SOURCE on the path was the CORRECTED 2026-07-21 ruling (supersedes the original Option-A framing, which wanted
+  the aggregated key); the manifest row is likewise overridden to the SOURCE value right before `record_captured`, so
+  path==manifest holds on the SOURCE axis. The `timeframe` is normalised `24h`→`1d`. `instrument_type=` is **required**
+  on this declared/canonical template but only **tolerated** (not required) by the force/skip legs' measured template —
+  a not-yet-migrated legacy object still on disk during the P7 migration window lacks it and correctly fails the
+  canonical leg (`missing_segment=instrument_type`) while still passing force/skip.
 - **SPORTS writes under `processed/`**, not `processed_candles/`.
 - Manifest verify matches
-  `{service_name: "market-data-processing-service", venue, data_type: mdps_dt, timeframe: normalized}` + `date` on the
-  **test** bucket (never PROD).
+  `{service_name: "market-data-processing-service", venue, data_type: <shard SOURCE data_type>, timeframe: normalized}`
+  - `date` on the **test** bucket (never PROD) — matching the aggregated key here silently finds zero rows for any shard
+    where `mdps_data_type_key(source, tf) != source`.
 
 ### 3a. Canonical-paths principle — non-canonical data is SKIPPED, never legacy-passed (HARD)
 
