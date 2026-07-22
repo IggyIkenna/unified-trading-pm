@@ -515,10 +515,15 @@ content-repair path (now explicitly narrowed, never assumed). basedpyright: 0 er
 
 **Remaining findings NOT fixed (medium/low, tracked as follow-up, not blocking)**:
 
-- [ ] 11. [SCRIPT] P2. `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` has no branch for this script,
-      and copy-pasting the existing tradfi pattern (`python -m ${base}.migrate_tradfi_canonical_2026_07`) would break
-      (`ModuleNotFoundError`) since this script lives at `scripts/`, not inside the package — needs an explicit
-      `python scripts/migrate_candle_canonical_2026_07.py` invocation branch before P7 can launch VMs.
+- [x] 11. ✅ [SCRIPT] P2. **`<ag>-candle-apply` category added** to `launch-canonical-migration-vm.sh` — shipped
+      `deployment-service@3af1a67`. The real `--apply --quarantine --content-repair` (full mode) / `--dry-run` (dry
+      mode) pass, distinct from the `-candle-census` category (always dry-run, no reachable apply). Adversarial
+      self-testing (no subagent available — weekly agent-dispatch limit hit) caught 3 real bugs before any VM touched
+      production: `DRY_RUN=true` never actually gated `gcloud compute instances create` for ANY category (fixed at the
+      shared level — a real VM was silently created during a "preview", harmless only because that specific preview also
+      happened to pass dry mode); the shard-suffixed vm_name overflowed GCE's 63-char limit for the longer category
+      names; fixing that introduced an unbound-variable crash under `set -u` for non-sharded launches. 9 new regression
+      tests. Details in the Progress Log below.
 - [x] 12. ✅ [SCRIPT] P2. **SPOT-preemption resume checkpoint for `--apply`** — shipped `mdps@efa559a`. Per-shard
       checkpoint (`vm-logs/{vm}/MIGRATION_PROGRESS-shard{N}.json`, distinct from the day-frontier `PROGRESS.json`
       contract this migration has no date axis for): frontier advances ONLY over a contiguous prefix of checkpoint-SAFE
@@ -756,19 +761,102 @@ census re-run would confirm it quantitatively, but P7's own `--apply` re-derives
 than trusting a stale plan, so this doesn't gate starting P7 — just don't assume the residual count is exactly
 `130,906 - 128,218 - 2,688`).
 
+### 2026-07-22 — ✅ P6 DONE, P7 STARTED: operator authorized full P6→P7→P8, `/autonomous` invoked, DEFI real `--apply` canary SUCCEEDED (200/200 MIGRATED, hard-verified on real GCS)
+
+**Governing authorization** (do not re-ask, per `/autonomous`'s rule 2 — decide and document): operator's exact
+instruction this session — _"do this stop all VMs both clouds → snapshot → sequenced SPOT --apply migration+purge across
+~10.9M objects, defi→prediction→cefi→tradfi → verify/reconcile"_ — followed immediately by `/autonomous` (apply
+`cursor-configs/AUTONOMOUS_AGENT_RULES.md` + drive to completion on a loop, full authority for the infra ops this plan
+labels operator, never stop at the first natural break). This is the standing authorization for everything below and
+everything still to come (P7 for prediction/cefi/tradfi, P8) — a fresh session should NOT re-request confirmation for
+continuing this exact sequence.
+
+**P6 drain — scope decision (documented per rule 2, not asked)**: "stop ALL VMs both clouds" was interpreted as scoped
+to VMs that write to/read the 4 target asset_groups' data (defi/prediction/cefi/tradfi), not the entire compute fleet —
+stopping e.g. `footystats-fwd-*` (sports, disjoint `processed/` root) or `vm-zombie-watchdog-*` (fleet health
+monitoring) would be over-broad and outside this migration's actual write-contention concern. AWS side: confirmed via
+`aws ec2 describe-instances` — only `agent-orchestrator-vm-1` and `agent-orch-human-planning-vm` running, both
+orchestrator infra, zero data-pipeline VMs — AWS was already clear. GCP side, stopped (via
+`gcloud compute instances stop`, confirmed TERMINATED before proceeding): `canonical-migration-defi-per-instrument-*`
+(DEFI raw-tick migration, writes DEFI manifest), `pyth-lst-backfill-*` (CEFI raw-tick backfill),
+`datapoint-validation-tradfi-*`, `orphan-sweep-{cefi,defi,prediction}-*` (read-only reconciliation sweeps, stopped
+anyway for a clean baseline).
+
+**LESSON — the drain is NOT durable across a multi-hour operation**: re-checked GCP ~1h after the initial drain and
+found several of the same VMs had respawned — `canonical-migration-defi-per-instrument-20260722-164109`,
+`orphan-sweep-defi-20260722-161453`, `datapoint-validation-{cefi,defi,prediction}-20260722-15xxxx`,
+`pyth-lst-backfill-20260722-151120`. Investigated: these are on independent scheduled crons (~7-11h cadence based on the
+gap between the stopped instance and its respawn), NOT a watchdog "undoing" the manual stop (a plain
+`gcloud compute instances stop` is not a SPOT-preemption event, so `RelaunchPreemptedVm`'s auto-recover path does not
+fire on it). **Adopted a just-in-time re-drain pattern**: re-check + re-stop the in-scope VMs immediately before each
+AG's real launch, rather than assuming one upfront drain holds for the whole multi-AG sequence. Residual risk is
+accepted as low (disjoint object prefixes vs `processed_candles/`, per-VM manifest shards, and the candle migration's
+own copy-verify-delete is idempotent/crc32c-verified regardless) but NOT zero — flagging explicitly rather than silently
+assuming perfect isolation. Re-drained DEFI-specifically before the P7a launch below.
+
+**P6 manifest consolidation**: triggered the 4 relevant Cloud Run jobs directly
+(`gcloud run jobs execute uts-prod-manifest-consolidator-market-data-{defi,prediction,cefi,tradfi} --region=asia-northeast1`),
+polled each to a terminal state (not fire-and-forget) — all 4 `Completed/True`, tradfi (largest) took ~5m40s, the other
+3 finished within ~2min. "Snapshot" in the pre-migration-drain sense (per
+`codex/02-data/gcs-and-manifest-delete-safety- protocol.md` §"Pre-delete drain") is satisfied by drain+consolidate; the
+migration executor's OWN safety model (dry-run classify + 0-orphan reconcile before any write, copy→verify→delete never
+deleting without a proven distinct verified copy) is the actual delete-safety mechanism, not a separate storage-level
+snapshot action.
+
+**P7 launcher: new `<ag>-candle-apply` category, 3 real bugs found + fixed via adversarial self-testing** (no subagent
+available this segment — the workflow tool's weekly agent-dispatch limit was hit earlier this session, resets 2026-07-24
+20:00 London; did this directly instead of waiting). Full details + exact bug mechanics are in the commit message
+(`deployment-service@3af1a67`) and the 9 new `TestCandleApplyCategory` regression tests
+(`deployment-service/tests/unit/test_vm_launcher_scripts.py`). Summary: (1) `DRY_RUN=true` never actually gated the real
+`gcloud compute instances create` call for ANY category in this launcher, ever — a defi-candle-apply DRY_RUN=true
+"preview" during testing silently created and ran a real VM (harmless only because that specific preview also happened
+to pass `dry` mode internally); (2) the shard-suffixed vm_name for the longer `<ag>-candle-apply` names overflowed GCE's
+63-char limit (measured worst case: `prediction-candle-apply` + 2-digit shard → 71 chars, GCE rejected the create call);
+(3) fixing (2) introduced a `set -u` unbound-variable crash on the non-sharded single-VM launch path. All caught + fixed
+BEFORE any real production object was touched.
+
+**DEFI real `--apply` canary — ✅ SUCCEEDED, hard-verified on real GCS.** VM
+`canonical-migration-defi-cdlap-20260722-175209` (zone `asia-northeast1-c`, self-deleted on completion per
+`VM_SHUTDOWN_ON_COMPLETION=true` — will not appear in `gcloud compute instances list`), launched with
+`LIMIT=200 SHARD_OF=1` + explicit SHA pins for reproducibility (`MDPS_TARBALL_SHA=c64a7dfa9d9f0689e...`,
+`UAC_TARBALL_SHA=c4e1acee147a53aaf...`, `UTL_TARBALL_SHA=b0ec1da02c5fe7dfd...` — full SHAs in the commit that launched
+it). Terminal `EXIT_STATUS=0`; `run.log` shows `apply COMPLETE — outcomes: {'MIGRATED': 200}` /
+`shard 0/1 fully migrated cleanly (0 non-success outcomes)` — every one of the 200 sampled objects was MIGRATE
+disposition (matches DEFI's census profile: overwhelmingly MIGRATE, near-zero quarantine/content-repair) and succeeded.
+**Independently hard-verified** (not just trusting the script's own log) by reading the staged mapping TSV
+(`gs://deployment-scripts-central-element-323112/canonical-migration-candle-apply/20260722-175209/.../ candle_apply_mapping.tsv`)
+and directly `gsutil stat`-ing one real object pair on production GCS: the NEW canonical path
+(`.../data_type=dex_pool_swaps/instrument_type=POOL/venue=BALANCER-ARBITRUM/BALANCER-ARBITRUM:POOL:0xd897... .parquet`)
+exists (created 2026-07-22T16:59:36Z); the OLD non-canonical path (same but missing `instrument_type=`) returns "No URLs
+matched" — genuinely copy→verify→delete happened, not just log claims. **DEFI's full corpus `--apply` (no LIMIT,
+sharded) has NOT been launched yet** — that is the next concrete action, not yet started.
+
+**Prior real-infra proof for DEFI** (already established earlier this session, not re-litigated): the same launcher
+category in `dry` mode (accidentally launched during earlier bug-hunting, VM
+`canonical-migration-defi-cdlap-20260722-162220`) ran a full real dry-run classify pass over the ENTIRE DEFI corpus and
+reproduced the P0 census numbers EXACTLY (1,124,849 total, 1,123,407 MIGRATE, 1,442 QUARANTINE_CORRUPT, 0
+CANONICAL_NOOP, ORPHAN=0) — confirms the classify logic is stable/reproducible and DEFI's corpus is clean (no
+content-repair needed, minimal quarantine), independent of the LIMIT=200 apply canary's own result.
+
 ## Deferred work after 2026-07-22
 
 | #   | Item                                                                                                                                                                                                                                              | State / why deferred                                                                                                                                                                                                                                      | Blocked-on                                                                       |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | 1   | ~~P0 census~~ **DONE 2026-07-22** — all 4 AGs, ~10.9M objects, ORPHAN=0 everywhere (see Progress Log entry above for the full disposition table)                                                                                                  | Shipped (`deployment-service@865d0f9` launcher + 4 real SPOT VM runs; results in GCS, not in git — see Progress Log for exact paths)                                                                                                                      | —                                                                                |
 | 2   | ~~Todos 12/14/17/18 (prep risk items)~~ **DONE 2026-07-22** — resume checkpoint (adversarially reviewed, 4 findings fixed) + CEFI wire-symbol/KRAKEN-SPOT classifier fixes (see Progress Log entry above)                                         | Shipped `mdps@efa559a`/`deployment-service@0ed7cf5`/`mdps@6b9ee49`, all QG-green                                                                                                                                                                          | —                                                                                |
-| 3   | **P6 drain/snapshot → P7 SPOT apply → P8 verify** — the actual destructive backward migration+purge                                                                                                                                               | **Operator explicitly authorized this session**, conditioned on the prep items above landing first — they have. Next action per this doc is to actually START P6.                                                                                         | Nothing — proceed                                                                |
-| 4   | Todo 13 (`ProvisionalTargetIndex` bucket-key precision — cosmetic split-brain COUNT inflation) + Todo 15 (stale UTL docstring example)                                                                                                            | **Not done** — P3, cosmetic, doesn't affect migration safety                                                                                                                                                                                              | nobody — pick up any time, not on the critical path                              |
-| 5   | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (CEFI has no registered candle SchemaContract for standalone `instrument_type=FUTURE`)                                                                                      | **Not done** — orthogonal finding, own issue doc, own todos.                                                                                                                                                                                              | nobody — pick up any time; not on the candle-canonical migration's critical path |
-| 6   | Confirming the P5 executor's TradFi content-resolution rate against real prod parquet content (the `E1AF0_*_migrated_*` objects' `instrument_id` COLUMN shape is unverified)                                                                      | **Not done** — the P0 census COUNTED the class exactly (6,487,045 `NEEDS_CONTENT_TRADFI_ID`) but did not sample/verify actual column shapes (dry-run never reads content); still needs a targeted content-read sample before trusting the resolution rate | nobody — pick up any time; a small sampled read, doesn't need a full VM          |
-| 7   | Todo 16 (investigate `24h` force-leg `off_template=29` classification — possibly a stale §3A "RAW token" docstring, same class as the data_type staleness todo 6 fixed)                                                                           | **Not done** — P3, non-blocking                                                                                                                                                                                                                           | nobody — pick up any time                                                        |
-| 8   | Fresh CEFI census re-run to measure the ACTUAL post-fix QUARANTINE_CORRUPT residual (todos 14/18's fix is proven correct via regression tests on the exact real shapes, but the aggregate corpus-wide count after the fix is not yet re-measured) | **Not done** — nice-to-have confidence check, not blocking (P7 `--apply` re-derives classification fresh regardless)                                                                                                                                      | nobody — pick up any time, or just let P7's own run be the measurement           |
+| 3   | ~~P6 drain/snapshot~~ **DONE 2026-07-22** — see Progress Log entry above (AWS pre-clear, 6 GCP VMs stopped, 4 manifest consolidators run to terminal)                                                                                             | Done, but NOT durable across the whole multi-AG operation (recurring crons respawn) — re-drain per-AG just before each real launch                                                                                                                        | —                                                                                |
+| 4   | ~~DEFI `--apply` canary (LIMIT=200)~~ **DONE 2026-07-22** — 200/200 MIGRATED cleanly, hard-verified on real GCS (see Progress Log entry above)                                                                                                    | Shipped, proven — the P7 mechanism works end-to-end on real production data                                                                                                                                                                               | —                                                                                |
+| 5   | **DEFI full `--apply` (no LIMIT, sharded) → PREDICTION → CEFI → TRADFI `--apply`, then P8 verify/reconcile**                                                                                                                                      | **Not done — not yet started.** The canary proved the mechanism; the full DEFI corpus run has not been launched. Proceeds under the SAME standing `/autonomous` authorization (no new operator ask needed)                                                | Nothing — proceed (re-drain DEFI-relevant VMs just-in-time first, per item 3)    |
+| 6   | Todo 13 (`ProvisionalTargetIndex` bucket-key precision — cosmetic split-brain COUNT inflation) + Todo 15 (stale UTL docstring example)                                                                                                            | **Not done** — P3, cosmetic, doesn't affect migration safety                                                                                                                                                                                              | nobody — pick up any time, not on the critical path                              |
+| 7   | `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (CEFI has no registered candle SchemaContract for standalone `instrument_type=FUTURE`)                                                                                      | **Not done** — orthogonal finding, own issue doc, own todos.                                                                                                                                                                                              | nobody — pick up any time; not on the candle-canonical migration's critical path |
+| 8   | Confirming the P5 executor's TradFi content-resolution rate against real prod parquet content (the `E1AF0_*_migrated_*` objects' `instrument_id` COLUMN shape is unverified)                                                                      | **Not done** — the P0 census COUNTED the class exactly (6,487,045 `NEEDS_CONTENT_TRADFI_ID`) but did not sample/verify actual column shapes (dry-run never reads content); still needs a targeted content-read sample before trusting the resolution rate | nobody — pick up any time; a small sampled read, doesn't need a full VM          |
+| 9   | Todo 16 (investigate `24h` force-leg `off_template=29` classification — possibly a stale §3A "RAW token" docstring, same class as the data_type staleness todo 6 fixed)                                                                           | **Not done** — P3, non-blocking                                                                                                                                                                                                                           | nobody — pick up any time                                                        |
+| 10  | Fresh CEFI census re-run to measure the ACTUAL post-fix QUARANTINE_CORRUPT residual (todos 14/18's fix is proven correct via regression tests on the exact real shapes, but the aggregate corpus-wide count after the fix is not yet re-measured) | **Not done** — nice-to-have confidence check, not blocking (P7 `--apply` re-derives classification fresh regardless)                                                                                                                                      | nobody — pick up any time, or just let P7's own run be the measurement           |
 
-**Recommended NEXT session action**: start P6 (drain/snapshot) — the operator's explicit go-ahead ("resolve prep risks
-first, then P6→P7→P8") is now unblocked on every condition it named. Sequence P7 defi→prediction→cefi→tradfi per the
-already-ruled ordering (tradfi last, ~99% id-canonicalisation).
+**Recommended NEXT session action**: the DEFI canary already SUCCEEDED (item 4, verified above) — launch the FULL DEFI
+`--apply` next (no LIMIT, appropriately sharded for ~1.12M objects; re-drain the DEFI-relevant VMs just-in-time first,
+per item 3's lesson — check `canonical-migration-defi-per-instrument-*` / `orphan-sweep-defi-*` /
+`datapoint-validation-defi-*` aren't running again before launching). Then PREDICTION, then CEFI, then TRADFI in that
+order (already-ruled sequencing, tradfi last, ~99% id-canonicalisation), then P8 verify/reconcile. This entire sequence
+is already operator-authorized (`/autonomous`) — no new confirmation needed unless something contradicts the documented
+intent above.

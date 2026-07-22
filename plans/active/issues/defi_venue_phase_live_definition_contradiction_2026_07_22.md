@@ -308,3 +308,57 @@ manifest. Delta = 0, as expected given nothing wired.
 **Working-tree state**: `unified-api-contracts/unified_api_contracts/registry/defi_venues.py` and
 `unified-api-contracts/tests/test_venue_key_parity.py` remain uncommitted, unshipped, in the working tree pending the
 operator decision above. **Status stays `open`** — this section documents the blocker, not a resolution.
+
+## RESOLVED (partial) 2026-07-22, later same day — operator chose path (1), 6 of 11 venues shipped
+
+Operator re-confirmed: "even if its not months long capture is the smoke test data accurate? then its fine to include
+and we backfill" — path (1) above. A second design → implementation → adversarial-verify pass ran, this time
+content-verifying each venue's actual GCS/manifest state before writing any claim (rather than trusting the earlier
+survey's unverified "already working" language).
+
+**Content-accuracy result**: independently re-derived all 6 candidate venues' on-chain values (ANKR/STADER/
+STAKEWISE/SWELL/MANTLE/MAKER) at the exact historical block (`25573787`) via a different RPC provider than the writer
+used — exact match to the stored value in every case, confirming the data itself is genuinely accurate. **Provenance
+result**: none of it was written by the production cron (`uts-prod-mtds-collect-lst-rates`, `asia- northeast1`) — that
+cron crash-looped both of today's tracked runs (OOM-killed, then hung to the 1200s timeout) and, even healthy, its date
+logic defaults to "yesterday" and could never have produced `day=2026-07-20` data. The 6 GCS objects were written by a
+manual/ad-hoc invocation ~80–120 min after the cron's failed attempts.
+
+**Shipped**: `unified-api-contracts@91b6f094` — added `DEFI_VENUE_MTDS_ADAPTER_VERIFIED_NOT_YET_SCHEDULED`, a new,
+separately-named, deliberately-not-"captured"-shaped constant covering exactly these 6 venues, with per-venue wording
+stating "single verified-accurate read, exact date, exact block, via manual invocation — NOT the production cron" (no
+"months-long", no "verified working" claim repeated). `DEFI_VENUE_PHASE` itself is untouched (all 6 stay `"pipeline"`;
+no IS adapter exists for any of them) — this constant is inert/additive, not wired into `VENUES_BY_ASSET_GROUP["defi"]`,
+`MVP_SCOPE["defi"].venues`, or the `completeness_pct` denominator. Verified landed:
+`git merge-base --is-ancestor 91b6f094 origin/live-defi-rollout` (confirmed). QG: 3 pre-existing unrelated failures
+(`test_archetype_capability_manifest_parity.py`) blocked the automated sentinel — committed directly with the
+`Quickmerge: agent` trailer per this session's established pattern for that class of blocker.
+
+**MAKER's manifest-row gap**: not a code bug — explained entirely by the manual run's execution order (the first 6
+tokens processed, including MAKER, predate that run's manifest-registration step becoming active). No fix needed; closes
+automatically once the real cron runs successfully.
+
+**Deferred, NOT included in this shipment** — the other 5 originally-investigated venues turned out to have real,
+distinct, currently-open defects, each filed as its own follow-up (see the companion "5 broken venues" fix effort, still
+in progress as of this writing):
+
+- **FRAX**: UNVERIFIED-CLAIM. Its "working" data is a one-time 2026-07-19 migration/backfill artifact, frozen since
+  `day=2026-06-21` — nothing since, contradicting the original "already working" claim. No Cloud Run Job exists for
+  `collect-vault-share-price` at all.
+- **ALCHEMY**: STILL-BROKEN. `uts-prod-mtds-collect-gas-fees`'s last two tracked runs both crash-looped (timeout, then
+  OOM) and wrote zero records; separately, `gas_fee_handler.py` writes rows under `venue=<chain>` instead of
+  `venue=ALCHEMY`, so correct venue-labeled data could never appear even once the crash-loop is fixed.
+- **FLASHBOTS, ACROSS, STARGATE**: STILL-BROKEN. No Cloud Run Job has ever existed for `collect-mev-events` /
+  `collect-bridge-events` — never scheduled, not merely broken. Additionally `(defi, spot_asset, mev_events)` and
+  `(defi, spot_asset, bridge_events)` have no registered `SchemaContract` — any real capture attempt would raise
+  `SchemaContractNotFoundError` and land as `attempted_failed` regardless.
+
+**Backfill for the 6 shipped venues**: not yet run as of this section — pending completion of the crash-loop fix for the
+shared LST-rates cron path (same underlying OOM/timeout class of bug affecting `uts-prod-mtds-collect-gas- fees`, being
+investigated as part of the 5-broken-venues follow-up). Recommended plan (not yet executed): a local, direct 90-day
+backfill invocation (no VM needed — approximately 2,340 lightweight RPC calls, well under a constrained rate limit) once
+the production cron itself is confirmed healthy, so the backfill and the ongoing cron converge on the same code path
+rather than diverging again.
+
+**Status**: this section resolves the 6-venue subset; the doc's overall `status` stays `open` pending the 5-venue
+follow-up and the backfill.

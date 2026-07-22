@@ -233,3 +233,9 @@ proof deferred per an explicit CAUTION about an active cefi migration VM fleet).
     no longer shows these changes, then re-run `bash scripts/quality-gates.sh --no-fix` and
     `bash scripts/quickmerge.sh "fix(cefi): derive+enforce v6 quote/margin chain-tail for cefi chains in W1 PartitionedTickWriter (cefi_chain_tail_v6_canonicalisation_2026_07_21)" --agent --files 'market_tick_data_service/engine/orchestrator/partitioned_writer.py tests/unit/test_partitioned_writer_partition_validation.py tests/unit/test_partitioned_writer_tradfi_filename_canonical.py tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py'`
     once both blockers above are resolved by others (or fix them first per their own issue docs).
+
+**SUPERSEDED 2026-07-22 — this scratchpad-backup instruction is now stale, do not follow it.** Both blockers cleared
+(the MTDS QG regression resolved by slot-4/`@7ce100f9`+`@08f15f26`; the shard-count pin fixed to 208) and the backed-up
+diff was applied, re-verified, and shipped directly as `market-tick-data-service@04222eb0` — see the Todos section above
+(todos 2/3 now marked shipped). The scratchpad `.patch`/`.py.backup` files this paragraph points at are no longer needed
+(the real content lives in the shipped commit) and may already be gone.

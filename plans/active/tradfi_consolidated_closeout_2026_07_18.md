@@ -2042,7 +2042,86 @@ per-root/per-venue completeness audit — if a genuinely thorough backfill-compl
 separate, larger work (would need an honest-coverage-style captured-vs-expected comparison across every MVP cell, not
 just "is a VM still running").
 
-**Session ending here on operator time/credit constraint. Remaining: PA-2021 relaunch to confirm complete; CME monolith
-migration still needs real design work before building (see above — not a quick-launch item like the other three turned
-out to be); the 112,839-stale-row manifest cleanup (low priority); Phase D gate (blocked on CME monolith + a fresh
-honest-coverage read). Next session: check the PA-2021 VM's log first.**
+### 2026-07-22 continuation — the honest-coverage audit + IAM fix + KRX gap + stale-row correction
+
+**Operator asked for the real captured-vs-expected audit** (not just "is anything stuck") and to proactively ask
+questions when a decision is needed. Ran it. Findings:
+
+- **`roles/cloudscheduler.admin` GRANTED to the compute service account** — operator authorized "grant it yourself if
+  your ADC login has the capability." It did: `gcloud auth application-default print-access-token` carries a VALID,
+  unexpired token for `ikenna@odum-research.com` (separate credential store from `gcloud config`'s stale one). Used it
+  directly against the Cloud Resource Manager API (`getIamPolicy`/`setIamPolicy`) to add the binding. Confirmed working:
+  paused + resumed `uts-prod-manifest-consolidator-market-data-tradfi-cron` successfully (took ~1 IAM-propagation cycle
+  before the first pause attempt succeeded). **This closes the scheduler-pause permission gap from the earlier
+  checkpoint** — future manifest CAS writes can pause the consolidator properly instead of relying on the 8x-retry-loop
+  workaround (the retry loop is still there as defense-in-depth, no need to remove it).
+- **`ohlcv_1s` added to the tradfi MVP rule's `data_types`** (`unified-api-contracts`, `_mvp_scope_rules.py` + 2 test
+  updates — one flipped from `_excluded` to `_included`, one exact-set guard updated). Operator-approved. Ship pending
+  (quality-gates was mid-run at this checkpoint — verify it landed, `git log` for the commit message
+  `"feat(mvp): add ohlcv_1s to tradfi MVP scope..."`).
+- **Honest-coverage audit run for real** (`measure_honest_coverage.py --asset-group tradfi` via the existing
+  `launch-measure-honest-coverage-vm.sh` launcher — the workspace's own nightly tool, not a new script). Real numbers
+  (`gs://central-element-323112-honest-coverage/2026-07-22/coverage.json`, `denominator_status: INCOMPLETE` so treat as
+  informative not final):
+
+  | Venue    | Coverage | Captured | Attempted-failed | Still-unattempted |
+  | -------- | -------- | -------- | ---------------- | ----------------- |
+  | KRX      | 0.07%    | 6        | 2                | 8,621             |
+  | NASDAQ   | 28.72%   | 96,143   | 67,316           | 171,308           |
+  | NYSE     | 81.45%   | 809,006  | 37,192           | 147,007           |
+  | CME      | 68.21%   | 504,873  | 198,447          | 36,802            |
+  | CBOE     | 29.99%   | 2,619    | 3,731            | 2,382             |
+  | FX       | 95.29%   | 4,288    | 59               | 153               |
+  | BARCHART | 100%*    | 0        | 0                | 0                 |
+  | ICE      | 75%      | 6        | 0                | 0                 |
+
+  *Barchart is correctly 100% — retired source, everything is legitimately expected-empty, not a real gap.
+
+- **The large CME/NASDAQ `attempted_failed` counts are NOT a systemic bug** — checked the manifest's own `error_reason`
+  column: 198,432/198,447 CME and all 67,316 NASDAQ failures are `WithinBoundsTradfiSourceZero`, a DELIBERATE,
+  DOCUMENTED reclassification (`rebuild_tradfi_manifest.py`'s own docstring: "SOURCE_RETURNED_ZERO within-bounds... on a
+  real trading day for a covered venue/data_type → reclassify to attempted_failed(WithinBoundsTradfiSourceZero)"). This
+  means Databento legitimately returned zero rows for that specific symbol/day (e.g. an option strike that wasn't quoted
+  that day) on an otherwise-valid trading day — normal and expected for a wide, sparse universe (every CME
+  strike/expiry, every NASDAQ symbol, every day), not a crawler or API failure. **Correcting my own earlier "concerning"
+  framing** — don't re-investigate this as a bug without new evidence; it's accounted-for by design.
+- **KRX gap explained + closed.** Operator clarified: KRX = the 3 Korean single-stock equity-basis underliers
+  (HYUNDAI/SAMSUNG/SKHYNIX, the Binance tradfi-perp basis legs) — NOT the KRW/USD currency pair (that's the separate
+  `FX` venue row, already healthy at 95.29%). Confirmed via `source_priority.py`: KRX is Yahoo-ONLY (`ohlcv_24h` daily,
+  no Databento/Massive coverage ever). No launcher had ever targeted this venue — the NASDAQ/NYSE equity launchers
+  hard-assume Databento and never emit a `VM_VENUE=KRX` shard. **New launcher shipped**
+  (`deployment-service/scripts/vm/launch-tradfi-bf-krx-equities-ohlcv-24h.sh`, mirrors the proven CBOE-indices
+  Yahoo-daily template) and **launched** for real (check `tradfi-bf-krx-eq-ohlcv-24h-*` VMs).
+- **🔴 CORRECTION to the earlier "112,839 stale rows, low-priority hygiene cleanup" claim — it was WRONG, do not naively
+  delete.** Operator approved cleanup, scheduler was paused for the safe window, and while verifying the worklist
+  precisely (a hard requirement before any manifest deletion) found: only 291 of the 112,839 rows are TRULY blank on all
+  fields. The other 112,548 carry REAL old per-contract underlying values (`6AZ3`, `CC__FMZ0023!`, etc.) — and **direct
+  GCS verification found the canonical bundle for at least 2 of these (COCOA, AUD) has REAL data on disk (confirmed
+  2026-07-20-dated `ticks.parquet` files) but ZERO corresponding manifest row** — the rebundle that ran 2026-07-20
+  updated GCS but never registered the new canonical bundle rows in the manifest, AND never retired the old per-contract
+  rows. A broader distinct-underlying scan (`futures_chain`+`options_chain`, 493,293 rows) shows a genuine MIX: some
+  product roots properly translated with healthy counts (GOLD/SP500/currencies — real, fine), others still
+  raw/untranslated (`ESM6`/`XAP`/etc. — unclear without more work whether these are the SAME kind of
+  manifest-registration gap or something else). **Stopped before writing anything** — this needs a proper
+  manifest-recovery pass (register the missing canonical rows, THEN retire the confirmed-superseded old ones), not a
+  delete-only cleanup, which would have made data LESS visible (real captured data with zero manifest representation),
+  not more hygienic. Resumed the scheduler since no write happened.
+  - `- [ ] [DATA] P1. Design + build a tradfi chain-manifest recovery pass: for each futures_chain/options_chain manifest row with a raw/untranslated underlying value, check whether a canonical-bundle GCS object exists (translate via the same EXCHANGE_CODE_TO_NAME logic the writers use); if yes and no manifest row exists for that canonical form, INSERT the correct row (register the real captured data); only THEN retire the old raw row. Do NOT delete-only. Sample evidence: COCOA/AUD on 2023-06-08 confirmed real GCS data, zero manifest registration.`
+- **CME monolith investigation — in progress, not complete.** Launched a throwaway investigation VM
+  (`cme-monolith-investigate-20260722`, e2-small, SPOT, NOT part of the tracked fleet registry — self-cleanup needed,
+  `gcloud compute instances delete cme-monolith-investigate-20260722 --zone=asia-northeast1-c --quiet`) after the
+  laptop's cross-region `gsutil`/`gcloud storage` wildcard listing repeatedly hung/timed out (same latency class as the
+  earlier CAS-race problem). Findings so far: **only 30 objects currently match the `day=*/venue=CME/ticks.parquet`
+  shape** (list captured, see `/tmp/monolith_list.txt` on that VM before deleting it) — NOT the 107 the 2026-07-21
+  reconciliation audit found. Unexplained discrepancy — worth checking whether some were already swept up by an
+  unrelated pass, or the reconciliation's count used a different exact pattern, before assuming either number is right.
+  Content inspection (reading one sample file's actual MBO/depth column structure) was blocked by the raw Ubuntu image
+  lacking `pip`/`venv` packages (`apt-get install python3-pip` reported "no installation candidate" — needs
+  `apt-get update` first or the `uv`-based install path the production launchers use) — not yet completed.
+  - `- [ ] [DATA] P2. Finish the CME monolith investigation: fix the pip/venv bootstrap on the investigation VM (or relaunch through the proper setup-data-pipeline-vm.sh path instead of a raw metadata startup-script), reconcile the 30-vs-107 count discrepancy, inspect real content structure, THEN design the migration tool. Clean up the investigation VM when done (not part of the tracked fleet).`
+
+**Session ending here on operator time/credit constraint (again). Remaining, in priority order: (1) verify the ohlcv_1s
+MVP fix + KRX launcher actually shipped (quality gates were mid-run at this checkpoint), (2) the chain- manifest
+recovery pass (real data-visibility gap, not hygiene), (3) finish the CME monolith investigation, (4) Phase D gate. Next
+session: check `git log` in unified-api-contracts + deployment-service for the two pending ships first — don't redo work
+that may have already landed.**

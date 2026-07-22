@@ -744,7 +744,7 @@ are now `odds`, `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`, `odds
 CORRECT direction (UPPER→lower) — re-point/complete them rather than reversing them. 3.4's phantom-uppercase-`ODDS`
 purge remains gated on **4.4 (Phase 6d)**.
 
-### 4.4 Phase 6d — the sports venue-injection gap must land BEFORE any purge — ✅ IMPLEMENTED 2026-07-22, ship pending
+### 4.4 Phase 6d — the sports venue-injection gap must land BEFORE any purge — code complete, NOT deployed (2026-07-22)
 
 `deployment-api/deployment_api/services/data_status/mtds.py::is_mtds_honest_coverage_target` **used to explicitly
 exclude SPORTS** ("bookmaker axis is Phase 6d"). CeFi/TradFi/DeFi/PREDICTION get UAC-declared venues injected with zero
@@ -766,11 +766,21 @@ alongside the Part 4.1 formula change — a `"bookmaker"` `venue_accessor` senti
 the found-vs-expected arithmetic, multi-league aggregation, case-insensitive bookmaker matching, the capture_status
 OK-mask, and the gate/expected-venues wiring; full `quality-gates.sh` green locally (4921 tests).
 
-**Ship status**: not yet pushed — `deployment-api`'s pre-flight audit blocks on its `unified-api-contracts` path
-dependency having uncommitted changes (`tests/test_venue_key_parity.py`, `unified_api_contracts/registry/defi_venues.py`
-— unrelated DEFI_VENUE_PHASE work, confirmed LIVE via a <60s mtime check, not stale/abandoned — do not touch or force
-past this). Retry once that clears; the code itself is complete and verified, this is purely a shared-workspace
-contention delay, not open work.
+**Ship/deploy status (re-verified via a dedicated scoping investigation, 2026-07-22 later same day)**: **NOT deployed —
+this is a factual state, not a probability.** The code is still plain uncommitted working-tree diff (no commit, no SHA,
+on a local branch that is itself 12 commits behind `origin/live-defi-rollout`) — `deployment-api`'s pre-flight audit
+blocks the push on its `unified-api-contracts` path dependency having uncommitted changes
+(`tests/test_venue_key_parity.py`, `unified_api_contracts/registry/defi_venues.py` — unrelated DEFI_VENUE_PHASE work,
+repeatedly reconfirmed LIVE via <120s mtime checks over several hours — do not touch or force past this). Even once that
+clears and the commit lands on LDR, **the full path to production is**: LDR→main promote PR (`quality-gates-v2` green +
+dep-order + provenance gate, empirically ~15 min effective cadence) → the native `deployment-api-main-deploy` Cloud
+Build trigger (`gcloud run deploy uts-shared-deployment-api`, ~5–10 min documented) → only then is the new code running
+in the one shared Cloud Run instance that serves the real data-status UI/decisions. Read-only verification once live:
+`gcloud run services describe uts-shared-deployment-api --region asia-northeast1 --project central-element-323112 --format='value(spec.template.spec.containers[0].image)'`,
+compared against `git log`. **Do not** treat `deployment-service/scripts/cloud-run/deploy-shared.sh` (a Tier-3 path that
+deploys straight from local disk, bypassing git/quickmerge/every quality gate) as a way to satisfy this prerequisite —
+it is a real technical capability on this box but violates the workspace's quickmerge-only rule and carries no commit/QG
+record/provenance; a human must explicitly rule it out, not use it as a shortcut.
 
 **Scope investigation (2026-07-22)** — Phase 6d is **not a boolean flip**; the injection mechanism the other 4
 categories share cannot be reused as-is for SPORTS without a real design change:
@@ -883,17 +893,71 @@ Do not spend engineering time on any of these.
 
 ---
 
-## Deferred work after 2026-07-22
+## Deferred work after 2026-07-22 (superseded table below — see the 2026-07-22-later-same-day correction banner)
 
-| Item                                                                                                                                                                                                       | State              | Blocked on                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Phase 3** — ship the 4.1 global `compute_honest_coverage()` formula change (`unified-api-contracts`)                                                                                                     | Operator-owned     | 4.1's own decision text requires **explicit re-authorization after reviewing the measured impact table** (CEFI -11.50pp, TRADFI -8.96pp, SPORTS -10.19pp, PREDICTION -5.19pp, DEFI -0.05pp) before `_honest_coverage_logic.py` is touched. The 2026-07-22 "yes, global" answer was given before this table existed — it confirmed direction/scope, not the now-quantified double-digit magnitude on 3 asset groups. Re-run `measure_honest_coverage_formula_delta.py` for a fresh number immediately before any re-ask (prod manifests move daily). |
-| **Phase 4 / 4.4** — implement Phase 6d in `deployment-api` (`data_status/mtds.py::is_mtds_honest_coverage_target` stop excluding SPORTS from venue-injection)                                              | Not done           | Nobody — real, unblocked implementation work. **Recommended next item**: it is the hard prerequisite for Phase 5 and touches no production data.                                                                                                                                                                                                                                                                                                                                                                                                    |
-| **Phase 5 / Part 3** — execute manifest remediation (3.1 reclassify + 3.2 purge combined per 4.2's decision, 3.3 relabel the 37,426 never-captured rows, 3.4 drop the phantom uppercase `ODDS` rows)       | Cannot be done yet | The doc's own 3.0 prerequisite: **nothing in Part 3 executes until Part 4 closes** — i.e. until both Phase 6d (above) lands AND Phase 3's formula ship is resolved one way or the other.                                                                                                                                                                                                                                                                                                                                                            |
-| **4.5** — issue-doc corrections (strike the false "no per-(venue,league) coverage declaration" line; fix the reason-split figures to the measured `606,772 / 459,459 / 200,864 / 94,127 / 385,402` values) | Not done           | Nobody — small, safe doc fix, pick up any time.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+> **⚠️ Correction (2026-07-22, later same day)**: the table below said Phase 3 was "Operator-owned, pending
+> re-authorization" — **stale**. Phase 3 shipped the same day (`unified-api-contracts@7338fa65`) after the operator
+> reviewed the exact measured table and said to continue. A dedicated Phase 5 scoping workflow (spec-extraction +
+> CAS-mechanism + Phase 6d deploy-status investigation) also found this doc's own §4.4 header claimed "IMPLEMENTED, ship
+> pending" while this table (and the Progress Log) said the opposite — a real self-contradiction, now corrected in §4.4
+> above. The row-by-row corrections are below; do not trust the "Phase 3" / "Phase 4/4.4" rows' original wording, only
+> the states as now written.
 
-Recommended order: **4.4 (Phase 6d) first** — it is the only fully-unblocked substantive item and directly clears Part
-3's prerequisite — then return to the operator for Phase 3's re-authorization before touching any production row.
+| Item                                                                                                                                                                                                       | State                                            | Blocked on                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Phase 3** — ✅ DONE, shipped `unified-api-contracts@7338fa65`                                                                                                                                            | Done                                             | Operator reviewed the exact measured table (CEFI -11.50pp, TRADFI -8.96pp, SPORTS -10.19pp, PREDICTION -5.19pp, DEFI -0.05pp) and explicitly authorized shipping it same-day; formula re-verified via a fresh same-day re-measurement immediately before the ship.                                                                                                                                                                                                                                                                                      |
+| **Phase 4 / 4.4** — code complete, NOT deployed (see §4.4)                                                                                                                                                 | Code complete, not deployed                      | Two external blockers, neither an implementation gap: (a) push blocked on `unified-api-contracts`'s foreign LIVE dependency (DEFI_VENUE_PHASE work, reconfirmed via mtime over several hours); (b) after push, the LDR→main-promote→Cloud-Build-deploy pipeline (~20-35 min documented) must complete and be read-only-verified before Phase 6d is genuinely live.                                                                                                                                                                                      |
+| **Phase 5 / Part 3** — execute manifest remediation (3.1/3.2/3.3/3.4) — **NO-GO, confirmed via a dedicated scoping workflow 2026-07-22**                                                                   | Cannot be done yet (+ operator decisions needed) | 3.0's prerequisite (Phase 6d must land) is unmet — see Phase 4/4.4 row above. **Separately, and not resolved by 4.4 landing**: 3 operator-owned decisions block drafting any write script at all — (1) who triggers the actual prod-bucket write, given the human-only delete hard-stop 4.2 never reconciled; (2) which of 3 unreconciled row-count figures (923,952 / 1,066,231 / 1,136,624) scopes 3.1/3.2; (3) 3.3's unspecified destination `capture_status`/`error_reason` value. Full runbook + every open question: see the `- [ ]` todos below. |
+| **4.5** — issue-doc corrections (strike the false "no per-(venue,league) coverage declaration" line; fix the reason-split figures to the measured `606,772 / 459,459 / 200,864 / 94,127 / 385,402` values) | Not done                                         | Nobody — small, safe doc fix, pick up any time.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+
+**Recommended order**: (1) retry the `deployment-api` + `instruments-service` pushes opportunistically as the foreign
+UAC dependency clears (external contention, not a design/implementation gap); (2) once Phase 6d is pushed, watch the
+LDR→main→Cloud-Build pipeline to a read-only-verified deploy
+(`gcloud run services describe uts-shared-deployment-api --region asia-northeast1 --project central-element-323112 --format='value(spec.template.spec.containers[0].image)'`);
+(3) **separately and in parallel**, get the operator's answers to the 3 Phase 5 decisions below — Part 3 cannot start
+without them regardless of how fast (1)-(2) resolve.
+
+- [ ] [DECISION] P0. **Who triggers the actual sports-manifest prod-bucket write (3.2 purge, and possibly 3.4)?** —
+      `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` states prod-bucket deletes are a human-only hard stop;
+      4.2's "combined A+B" decision never addressed this. Resolve before drafting any write script, not just before
+      running one.
+- [ ] [DECISION] P0. **Which population scopes 3.1/3.2's predicate?** — three unreconciled figures: 923,952 (3.2's own
+      SQL-predicate-scoped dead-pair set, the only one with a concrete reproducible query), 1,066,231 (all rows anywhere
+      carrying either of 3.1's two new `error_reason` values, no other filter — the figure tied to the cited
+      94.31%→87.64% coverage-metric shift), and 1,136,624 (appears exactly once, in a section heading, never defined or
+      reconciled anywhere else in the doc — possibly a typo). Confirm which is intended before scoping any
+      implementation.
+- [ ] [DECISION] P0. **3.3's destination classification is unspecified** — "relabel to honest absence" is stated but the
+      literal `capture_status`/`error_reason` to write is not (e.g. `empty_confirmed` + one of 3.1's new codes, vs. a
+      distinct new code). Do not infer this.
+- [ ] [SCRIPT] P1. **Restate 3.3's target-row SQL predicate explicitly** — the doc cross-references 3.2's `LIVE_PAIRS`
+      concept for the 37,426 never-captured `attempted_failed` rows but never repeats a concrete query; derive and
+      validate it reproduces 37,426 before writing any relabel code.
+- [ ] [DECISION] P2. **Confirm 3.1→3.2→3.3→3.4 execution order** — 4.2's decision explicitly sequences 3.1 before 3.2;
+      3.3/3.4 have no stated relative order to each other or to 3.1/3.2 beyond "all gated on 3.0."
+- [ ] [DECISION] P2. **Confirm whether 3.4 needs 3.2's full 5-step procedure** (pause consolidator, snapshot every
+      per-VM shard, CAS write, pre-notify `coverage_drift.py`, verify across T+1-cycle/T+24h) — 3.3 explicitly inherits
+      it (doc line 606), 3.4 does not carry the same explicit statement, and 3.4's rows are confirmed-phantom (no
+      backing GCS object) rather than a live-data relabel/purge, so a lighter procedure may be legitimate — but that is
+      a human judgment call, not an inference to bake into a script.
+- [ ] [SCRIPT] P1. **"Apply to both the canonical index and every per-VM shard in the same transaction" is likely not
+      literally achievable** — GCS objects are independently generation-versioned with no native cross-object atomic
+      commit. An architect must confirm the intended real mechanism (proposed: sequential per-object CAS with a
+      partial-apply alarm, not a silent blind retry) before any purge/relabel script is built.
+- [ ] [SCRIPT] P1. **Build the missing safety tooling before any write**: default-on dry-run mode (predicate-matching
+      row count vs. expected figures, refuse `--apply` on mismatch beyond an explicit tolerance); row-IDENTITY
+      assertions for the untouched populations (3.3's 67,206 genuine failures; 3.4's 20,331 lowercase twins), not just
+      counts; a tested, dry-run-exercised backup/restore path to `_index/purge_backups/<date>/` (no evidence this
+      restore path has ever actually been rehearsed for this dataset); per-object CAS with a fail-loud PARTIAL-APPLY
+      alarm on a mid-sequence conflict; an automated pre-flight consolidator-paused check (fail closed if unverifiable);
+      a concrete mechanism for the `coverage_drift.py` pre-notify step (not specified anywhere).
+- [ ] [SCRIPT] P3. Best-fit existing template for the bulk delete/reclassify shape:
+      `instruments-service/scripts/purge_pre_launch_manifest_rows.py` (true generation-match CAS, fails loud,
+      live-verified 2026-07-15 against 612 real sports rows) — build from this, not from scratch. Explicitly do NOT use
+      `unified_trading_library/manifest_migrations/purger.py::LegacyRowPurger.apply` or the deprecated
+      `reconcile_phantom_manifest_rows.py` as templates — the latter caused the real 2026-07-12 production incident
+      (`plans/active/issues/reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md`), silently reverting
+      ~2.5 hours of completed backfill by re-uploading a stale 4.9M-row dataframe.
 
 ---
 
@@ -916,3 +980,34 @@ re-verified 2026-07-22 by direct code read that Phase 6d has NOT landed
 excludes SPORTS); it remains a hard prerequisite for 3.2/4.2's purge and must be sequenced before that purge executes.
 Parallel note: Part 1 items 1.3/1.5/1.6 and Part 2 items 2.2/2.3 are being implemented **in the same run** by sibling
 workflow agents — this entry does not claim that work; see their own commits/banners in Part 1/Part 2 above for status.
+
+**2026-07-22 (later same day)** — Operator gave explicit fresh authorization to continue Phase 3 → 4 → 5 with the
+measured magnitude in hand. **Phase 3 shipped**: `compute_honest_coverage()` rewritten to match
+`instruments-service::_count_statuses` exactly (`unified-api-contracts@7338fa65`) — caught and fixed a real bug in the
+first draft (`expected_unattempted_known_empty` had incorrectly kept its pre-4.1 numerator credit; UAC's own test suite
+caught it before ship). Cross-repo fallout audited empirically (not just by inspection) via each dependent repo's own
+`quality-gates.sh` against the new formula through its editable local UAC install: `deployment-api` needed 2 real test
+rewrites (`test_oow_denominator.py`, premise no longer held) + doc fixes; `unified-trading-library` needed zero changes.
+**Phase 4 implemented**: `mtds_honest_coverage_for_bookmaker()` (new sibling to `mtds_honest_coverage_for_venue`, since
+SPORTS' bookmaker×league×fixture-date axis has no calendar-date/league dimension the generic path handles) + UAC's
+`expected_odds_api_bookmaker_keys()` accessor + `is_mtds_honest_coverage_target` now includes SPORTS. 11 new tests,
+`quality-gates.sh` green locally. **Not yet deployed** — confirmed factually (not speculatively) via a dedicated 4-agent
+scoping workflow: the code is uncommitted working-tree diff, 12 commits behind trunk, blocked from even committing by
+`unified-api-contracts`'s foreign LIVE dependency (another concurrent session's DEFI_VENUE_PHASE work, reconfirmed LIVE
+via <120s mtime checks repeated over several hours — correctly left untouched). **Phase 5: NO-GO.** The same scoping
+workflow read Part 3/Part 4 in full and confirmed 3.0's prerequisite is unsatisfiable today, and surfaced 3 genuine
+operator-owned decisions (the human-only prod-bucket-delete hard stop 4.2 never reconciled; 3 unreconciled row-count
+figures for 3.1/3.2's scope; 3.3's unspecified destination value) plus several real implementation gaps (no atomic
+cross-object "same transaction" primitive on GCS; no safety tooling built yet) that block drafting any write script,
+independent of the Phase 6d deploy timeline. Converted to `- [ ]` todos in the Deferred-work table above rather than
+left as prose. **Lesson (data-loss near-miss, caught by /pre-compact)**: this exact write-up was LOST twice during
+shipping — the repeated quickmerge retry cycles against this same file (racing an extremely active sibling session
+landing dozens of commits/hour to adjacent plan docs) silently dropped the uncommitted edit at least once via an
+autostash-pop that produced no conflict markers and no error, just silent reversion to the prior commit. Caught only
+because `/pre-compact`'s Step 1 (`git status`, re-grep the doc for expected content) is mandatory-first, not because
+anything alerted on the loss. **Also discovered mid-audit**: a pre-existing, unrelated `instruments-service` commit
+(CeFi off-by-one-day expiry dedup, `.qg_last_passed_sha`-verified passing) sitting committed-but-unpushed from earlier
+in this session, blocked by the same foreign UAC dependency — queued for push alongside Phase 4's deployment-api ship,
+not newly discovered work. A fleet-wide `staging-backmerge-to-ldr.yml` template-drift (sibling bug to the
+`main-backmerge-to-ldr.yml` fix shipped earlier this session) was also found and fixed across 4 repos while chasing an
+unrelated PM post-gate failure.

@@ -185,7 +185,7 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 5 — Fill on real infra (SPOT VMs; manifest-verified; monitored by TARGET-shard count, not log activity)
 
-- [ ] [MTDS] P2. **#3 oracle backfill** — SPOT-VM RPC backfill (getAssetPrice + Chainlink) over history; monitor by
+- [x] ✅ [MTDS] P2. **#3 oracle backfill** — SPOT-VM RPC backfill (getAssetPrice + Chainlink) over history; monitor by
       manifest count of `(AAVE, spot_asset, oracle_prices)` shards created (`time_created`), not log lines. **Pre-req
       CLOSED (2026-07-22)**: per-reserve listing-date gate shipped `market-tick-data-service@27e077da` — all 6 reserves'
       `ReserveInitialized` events verified on-chain (earliest wstETH 2023-01-27; latest ezETH 2025-08-17), so a
@@ -221,7 +221,14 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-151120/run.log` +
       manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity. **If this VM ALSO
       preempts, check `gcloud compute instances list --filter=status=RUNNING` and resume again from the last
-      confirmed-complete day in the manifest — do not replay from 2023-01-27.**
+      confirmed-complete day in the manifest — do not replay from 2023-01-27.** **✅ COMPLETED (2026-07-22)** —
+      `pyth-lst-backfill-20260722-151120` reached `day=2026-07-22` (the target end date) cleanly: `run.log` shows
+      `Batch complete: 96 results collected`, `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`,
+      and a clean self-delete (`VM_SHUTDOWN_ON_COMPLETION=true`) — no crash, no silent stall. Manifest evidence (not log
+      activity): this resumed VM's per-VM shard closed at 1134 total entries (`ManifestWriter ... process_final=True`
+      for `2026-07-22`); combined with the first segment's 6399 entries (confirmed complete through `2026-04-17` before
+      that VM preempted), the full `2023-01-27→2026-07-22` AAVE oracle + Chainlink LST-feed backfill is genuinely done
+      end-to-end across both resumed segments. **Phase 5 #3 is DONE.**
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
       `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key.
       **Per-venue listing sub-check CLOSED (2026-07-22)**: live exchange API sweep (all 8 Tardis-covered CEX venues × 6
@@ -286,7 +293,23 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       `test_lst_native_rates.py`, `test_lst_yields_path_resolution.py`, `test_lst_features_unit.py`) only ever construct
       SYMMETRIC today/prior token sets and never test ezETH/rsETH at all — they give false confidence and would not
       catch this exact drop scenario. Worth a real asymmetric-token-set test case once the underlying data gaps are
-      closed.
+      closed. - ✅ **Solana-LST sub-fix SHIPPED (2026-07-22)** — `market-tick-data-service@3dd16849` ("DefiLlama
+      historical ratio fallback for Solana LST rates"). Added a new Tier 4 to `solana_lst_archival.py`
+      (`_tier4_defillama_historical_rate` + `_defillama_historical_usd_price`), wired as the final fallback in
+      `_fetch_jito_rate`/`_fetch_marinade_rate`/ `_fetch_bsol_rate`/`_fetch_sanctum_rate` after Tiers 1-3 all miss:
+      fetches LST-USD and SOL-USD from `coins.llama.fi/prices/historical/{ts}/{mint}` at the same timestamp and divides,
+      honest-absence on any missing/zero/implausible price (never fabricates). Mint addresses live-verified via direct
+      `curl` against the real DefiLlama API before coding (jitoSOL `J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn`, mSOL
+      `mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So`, bSOL `bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1`, Sanctum INF
+      `5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm`, quote leg wrapped-SOL `So111...112`). Existing launch-date gates
+      in `fetch_solana_lst_rates()` (bSOL 2022-11-01, Sanctum 2024-01-25) already prevent pre-launch dates from reaching
+      this tier, so no new gating was needed. 20 new/updated unit tests (6 existing tests patched to mock the new tier
+      so they don't make live network calls; 14 new tests covering the price-fetch helper, the ratio tier itself —
+      unknown protocol/missing price/zero price/implausible ratio — and one positive end-to-end fallthrough case); full
+      MTDS `quality-gates.sh` green (exit 0) before commit. - **Held this session** (not a plan migration — the
+      ezETH/rsETH sub-fix stays tracked under this still-open todo #4): the ezETH/rsETH sub-fix (historical MTDS
+      `lst_rates` collector backfill) remains held — real-infra caution given this session's 2 prior incidents
+      (misdirected VM launch, confirmed OOM bug); not attempted this session.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
@@ -430,6 +453,41 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   marker on the same physical line as each address — added the marker using the exact provenance already stated, shipped
   `market-tick-data-service@4c21c7f6`. **Phase 2 is now fully done across all 4 repos.** Next: Phase 3 (sample-download
   proof on the `-test-` bucket).
+- **2026-07-22 (Phase 5 #2 — DEX fill launched)** — operator approved a direct full-history launch (asked given today's
+  2 prior real-infra incidents; operator noted this collector is a different code path — GraphQL/TheGraph via aiohttp,
+  not the Tardis REST download path that OOM'd — and approved "Yes, launch it now"). Launched via the pre-existing,
+  purpose-built `deployment-service/scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh` (found via
+  `grep -rln collect-dex-swaps scripts/vm/` rather than hand-rolling a VM name) — confirmed correct CLI operation
+  `collect-dex-swaps` (registered in `market_tick_data_service/cli/main.py`; NOT `collect-evm-defi`, learned from
+  today's earlier misdirected-VM mistake) before launching. VM `mtds-dex-swaps-backfill`, all 4 tarballs confirmed
+  fresh, launched SPOT, range `2023-01-01→2026-07-22` (launcher's own default), all default protocols (uniswap_v3,
+  pancakeswap_v3, aerodrome_v3, camelot_v3, balancer, curve, sushiswap_v3, sushiswap, …) — no narrowing to LST-only
+  pools, since this data_type is collected broadly, not LST-scoped. Created successfully, STATUS=RUNNING at launch.
+  T+10min verification pending — will confirm real manifest/log progress (not just STARTED) before calling this done.
+- **2026-07-22 (Phase 5 — AAVE oracle backfill, resumed run, healthy)** — checked on `pyth-lst-backfill-20260722-151120`
+  (resumed earlier this session from `2026-04-18` after the first attempt preempted at `2026-04-17`): confirmed via
+  `run.log` real climbing progress, `ManifestWriter process_final=True` markers landing day-by-day, now past
+  `2026-06-17`/`06-18` — roughly 61 days processed in ~38 minutes since the resume launch, on pace to reach today
+  (`2026-07-22`) within another ~20-30 minutes. No intervention needed; will re-check for completion or a fresh
+  preemption on the next pass (resume-from-measured-progress discipline applies again if it preempts).
+- **2026-07-22 (Phase 5 #3 AAVE oracle backfill — COMPLETED)** — `pyth-lst-backfill-20260722-151120` finished cleanly:
+  reached `day=2026-07-22`, `exit_code=0`, self-deleted. Combined with the first segment (complete through `2026-04-17`
+  before its preemption), the full `2023-01-27→2026-07-22` window is done. Todo flipped with manifest-count evidence
+  (see Phase 5's #3 todo). **Phase 5 #3 is now DONE — the only Phase 5 items remaining are #1 (BLOCKED on the filed P0
+  OOM issue) and #4's ezETH/rsETH sub-fix (deferred).**
+- **2026-07-22 (Phase 5 #2 DEX fill — T+10min VERIFIED healthy)** — `mtds-dex-swaps-backfill` (launched this session
+  with operator approval) confirmed healthy at T+10min via BOTH log freshness (`gsutil stat` Update-time within the last
+  minute) AND real manifest/row evidence, not just log activity: first processing pass wrote 63,448 real swap records
+  across the configured protocol/chain shards (`uniswap_v3_ETHEREUM`=12,540, `uniswap_v3_ARBITRUM`=14,125,
+  `uniswap_v3_POLYGON`=23,344, `curve_ETHEREUM`=504, `curve_AVALANCHE`=112, `sushiswap_ARBITRUM`=8,927,
+  `uniswap_v2_ETHEREUM`=3,896; most other configured shards 0 rows — dead/unindexed subgraphs, handled as an honest
+  cascade-fallback failure, not a crash:
+  `uniswap_v3/OPTIMISM: All 8 cascade schemas drifted ... check for 2024+ pool-entity renames`). RSS held steady at
+  ~700-750MiB (mem ~10.5%) across multiple `RESOURCE_SAMPLE` readings — nowhere near the 85%+ `mem_crit` threshold that
+  OOM-killed the unrelated CEFI Tardis VM earlier today; this collector's per-request GraphQL/aiohttp memory profile is
+  genuinely different from that Tardis download path, as expected. `PIPELINE_HEARTBEAT` firing every ~60s. Continuing to
+  monitor for eventual completion or any regression; a ~3.5-year multi-protocol/multi-chain backfill will take a while —
+  not treating log activity alone as proof, will check manifest shard counts at the next pass.
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 
