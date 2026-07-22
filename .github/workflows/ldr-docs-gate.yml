@@ -35,7 +35,11 @@ permissions:
 jobs:
   frontmatter-gate:
     name: Doc frontmatter gate (LDR)
-    runs-on: [self-hosted, Linux, X64, glue]
+    # MUST match exactly what glue-runner-run.sh registers (LABELS_JSON='["self-hosted","glue"]') — this
+    # was the actual root cause of zero completions in 5 days, not resource contention (2026-07-22): the
+    # JIT-ephemeral pool never advertises Linux/X64, only self-hosted+glue, so a job requiring all 4 can
+    # never match any runner. Every other glue-pool workflow already uses the 2-label form; this one didn't.
+    runs-on: [self-hosted, glue]
     timeout-minutes: 5
     outputs:
       verdict: ${{ steps.gate.outputs.verdict }}
