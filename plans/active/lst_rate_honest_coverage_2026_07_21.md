@@ -309,11 +309,54 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       MTDS `quality-gates.sh` green (exit 0) before commit. - **Held this session** (not a plan migration — the
       ezETH/rsETH sub-fix stays tracked under this still-open todo #4): the ezETH/rsETH sub-fix (historical MTDS
       `lst_rates` collector backfill) remains held — real-infra caution given this session's 2 prior incidents
-      (misdirected VM launch, confirmed OOM bug); not attempted this session.
+      (misdirected VM launch, confirmed OOM bug); not attempted this session. - **UN-HELD (2026-07-22, operator
+      ruling)**: operator asked to proceed "from real genesis" for BOTH sub-gaps combined, on the explicit condition
+      that each genesis date be VALIDATED (real data confirmed to exist), not assumed — and that manifest/UAC be
+      corrected wherever a stale/wrong genesis is found. Full validation done before launch (on-chain contract-creation
+      lookups for EVM, DefiLlama binary-search coverage checks for Solana — never trusted an existing "conservative" or
+      brand-launch-date label without independent evidence): | token | old genesis | validated real genesis | method |
+      direction/severity | |---|---|---|---|---| | wBETH | 2023-04-27 | **2023-04-19** | on-chain contract-creation tx
+      (Blockscout) | 8 days late, minor | | rsETH (LRTOracle) | 2023-11-09 | **2023-12-10** | on-chain contract-creation
+      tx | 31 days too EARLY (unsafe — the "genesis" was KelpDAO's protocol launch, not THIS oracle contract's own
+      deployment) | | ezETH (rate provider) | 2024-02-01 (conservative) | **2024-01-13** | on-chain contract-creation tx
+      | 19 days late, minor | | bSOL | 2022-11-01 (BlazeStake protocol launch) | **2022-12-14** | DefiLlama binary
+      search | ~6 weeks too early (safe direction, just wasted honest-empty attempts) | | jitoSOL | none (always
+      attempted) | **2022-11-01** | DefiLlama binary search, cross-checked jitoSOL/SOL ratio ~1.01 | new gate added | |
+      mSOL | none (always attempted) | **2021-08-17** | DefiLlama binary search | new gate added; matches Marinade's
+      documented Aug-2021 launch almost exactly | | **Sanctum INF (sanctumSOL)** | **2024-01-25** | **2021-10-15** |
+      DefiLlama binary search + CoinGecko identity check | **MAJOR — 2.3 YEARS too late.** The INF mint
+      (`5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm`) is NOT a 2024-genesis token: CoinGecko lists it as id
+      `socean-staked-sol` — this is the SAME mint as the pre-existing **Socean** stake-pool token (description: "Socean
+      is a noncustodial stake pool for the Solana blockchain..."), and "2024-01-25" was Sanctum's REBRAND of Socean into
+      "Sanctum Infinity," not a new mint's genesis. Real DefiLlama price history for this exact mint goes back to
+      2021-10-15 (with some early thin-liquidity gaps through ~2021-11-05, honestly handled per-day by Tier 4's own
+      absence logic). | Shipped `market-tick-data-service@6ab0359a` (all 7 genesis fixes + new jitoSOL/mSOL gates +
+      citations, 4 test-file updates, full MTDS `quality-gates.sh` green). **Cross-repo caveat found + handled
+      carefully**: the SAME wrong Sanctum assumption is ALSO embedded in UAC (`_defi_lst.py`'s
+      `LST_TOKEN_GENESIS["sanctumSOL"] =       "2024-01-25"`, and `chain_env.py`'s
+      `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")] = "2023-06-01"`) and in IS (`sanctum.py`'s `_SANCTUM_DEPLOY_DATE`).
+      **Did NOT blindly overwrite these** — UAC's `LST_TOKEN_GENESIS` entry governs a DIFFERENT mechanism than my Tier-4
+      fix (the Tier-1 on-chain SPL stake-pool DECODER, whose account address `SANCTUM_INF_POOL_ACCOUNT` is itself
+      flagged elsewhere as an unverified placeholder) — whether that STAKE POOL ACCOUNT (not just the mint) existed back
+      in 2021 is a separate, still-open question I could not validate with the same confidence. Instead shipped a
+      documented clarifying comment (`unified-api-contracts@f5e516f6`) explaining the finding + the open question, so
+      whoever does the account verification has the full context rather than a silent gap. **Follow-up not done this
+      session** (tracked here, not silently dropped): if/when `SANCTUM_INF_POOL_ACCOUNT` is verified, reconcile UAC's
+      `LST_TOKEN_GENESIS["sanctumSOL"]`, `chain_env.py`'s `PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]`, and IS's
+      `sanctum.py` `_SANCTUM_DEPLOY_DATE`/`available_from_datetime` against whatever that verification finds. -
+      **Backfill launched (2026-07-22)** — see Progress Log entry for VM name + evidence.
+- [ ] [UAC][IS] P3. **Sanctum INF stake-pool-account genesis reconciliation (follow-up, not done this session)** —
+      verify `SANCTUM_INF_POOL_ACCOUNT` (currently an unverified placeholder in
+      `market-tick-data-service/_solana_lst_archival_tier1.py`) on-chain, then reconcile UAC's
+      `_defi_lst.py::LST_TOKEN_GENESIS["sanctumSOL"]` (currently "2024-01-25"), UAC's
+      `chain_env.py::PROTOCOL_LAUNCH_DATES[("SOLANA","SANCTUM")]` (currently "2023-06-01"), and IS's
+      `sanctum.py::_SANCTUM_DEPLOY_DATE`/`available_from_datetime` against the verified account creation date. Context:
+      the underlying INF MINT (a different, already-verified fact) has real DefiLlama price history back to 2021-10-15
+      as the pre-rebrand Socean token — see #4's Sanctum/Socean finding above.
 - [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
       `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
       session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
-      launch as a normal backfill.
+      launch as a normal backfill. **LAUNCHED (2026-07-22, operator-acked)** — see Progress Log entry.
 
 ## Phase 6 — Interest PnL on honest data (the payoff; see pnl_interest_accrual doc)
 
@@ -488,6 +531,27 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
   genuinely different from that Tardis download path, as expected. `PIPELINE_HEARTBEAT` firing every ~60s. Continuing to
   monitor for eventual completion or any regression; a ~3.5-year multi-protocol/multi-chain backfill will take a while —
   not treating log activity alone as proof, will check manifest shard counts at the next pass.
+
+- **2026-07-22 (Phase 5 #4 — genesis-date validation + fix, then backfill launched)** — operator, asked to scope the
+  combined ezETH/rsETH + Solana-LST backfill launch, instead directed: launch "from real genesis" but ONLY after
+  VALIDATING each date against real evidence, and fix manifest/UAC wherever a stale genesis is found. Validated 7
+  tokens' genesis dates via on-chain contract-creation lookups (EVM, via Blockscout's `creation_transaction_hash` — more
+  authoritative than my own binary-search-via-`eth_getCode` attempt, which failed on public-RPC archive-access limits)
+  and DefiLlama coverage binary search (Solana) — see the full table + the major Sanctum/Socean-rebrand finding under
+  Phase 5's #4 todo above. Shipped `market-tick-data-service@6ab0359a` (7 genesis-date fixes + 2 new gates + citations +
+  tests, full QG green) and a documented clarifying comment in `unified-api-contracts@f5e516f6` (did NOT blindly
+  overwrite UAC's `LST_TOKEN_GENESIS["sanctumSOL"]` since it may govern a different, unverified mechanism — see the new
+  follow-up todo). Launched `deployment-service/scripts/vm/launch-mtds-lst-rates-backfill-vm.sh 2021-08-17 2026-07-22` →
+  `mtds-lst-rates-20260722-173127`, SPOT, e2-standard-8, all 4 tarballs confirmed fresh (MTDS `6ab0359ac860` — my
+  genesis fixes; UAC `f5e516f6e1fd` — my clarifying comment), STATUS=RUNNING at launch. This ONE launch covers the full
+  remaining `lst_yields` gap: ezETH/rsETH/wBETH (extended EVM tokens, gated from their now-correct genesis dates) AND
+  jitoSOL/mSOL/bSOL/sanctumSOL (Solana, resolved via today's Tier-4 DefiLlama fallback, now gated from their validated
+  real genesis dates too). T+10min verification pending.
+- **2026-07-22 (Phase 5 #2 DEX fill — still running, healthy)** — `mtds-dex-swaps-backfill` continues; noted it spends
+  real time on dead/unindexed subgraph shards (e.g. `uniswap_v3/OPTIMISM` cycling all 8 cascade-fallback schemas before
+  giving up honestly) — this is a genuine efficiency cost, not a stall or OOM risk: heartbeats fresh, RSS stable
+  ~800-900MiB (nowhere near the CEFI Tardis OOM's territory), real rows continuing to land for working shards. Will keep
+  checking manifest/log evidence periodically rather than treating log activity alone as proof.
 
 ## RESUME POINT (pre-compact 2026-07-21) — a fresh session starts HERE
 
