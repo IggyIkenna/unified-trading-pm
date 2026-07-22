@@ -245,11 +245,47 @@ the same fixes.
       shellcheck + full QG green), and shipped it as `deployment-service@ee67255` to clear the gate. Bug C then needed
       one `git pull --rebase --autostash` (deployment-api had drifted 3 commits behind on unrelated promote/backmerge
       chores — clean rebase, no conflicts) before quickmerge landed it.
-- [ ] [DATA] P1. **Verify Bug C's fix against live data**: once shipped, reproduce the operator's screenshot scenario
-      (0.0% captured, 1 missing shard, contradicting "Needs Attention: clean") against the real MTDS manifest + IS
-      catalogue and confirm the existence-window clipping closes the gap. If a residual discrepancy remains, trace it
-      separately (e.g. "Needs Attention" and "Data Coverage" reading from different/inconsistent sources) rather than
-      assuming this one fix explains 100% of the screenshot.
+- [x] N. ✅ [DATA] P1. **Verify Bug C's fix against live data — MECHANISM CONFIRMED WORKING, but a SEPARATE, real, live
+      collision bug found + filed (not fixed here — out of this read-only unit's scope).** Called the real
+      `deployment-api` `per_instrument_coverage()` (`deployment_api/services/data_status/instrument_coverage.py`)
+      directly against real prod data (read-only, no mutation, ADC via `get_storage_client()`): the real IS catalogue
+      (`instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`, 429,129 rows), the real MTDS manifest
+      (`market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 10.5M rows), and the real
+      `mtds_expected_dates_for_venue_dt()`/`_read_cefi_catalogue_metadata()` (the actual Bug-C-fix functions, not
+      re-implemented). **Clean, collision-free repro found**: `COINBASE-FUTURES:PERPETUAL:DRAM-USD@LIN` (real
+      instrument, catalogue `available_from=2026-07-16` `available_to=None`, `book_snapshot_5` dt — confirmed NOT
+      F4-seeded for this venue, i.e. genuinely exercises the fixed code path in production, not the seeded-4-state
+      bypass). Real manifest: exactly 5 `captured` shards, 2026-07-16..2026-07-20 (zero rows before listing). **BEFORE
+      (`instrument_windows=None`, pre-fix behavior)**: `expected_shards=630` (full 2024-10-31..2026-07-22 calendar),
+      `found_shards=5`, **`completion_pct=0.79%`** — reproduces the operator's exact symptom class (near-zero completion
+      from phantom pre-listing "missing" days). **AFTER (Bug C fix, real catalogue windows)**: `expected_shards=7`
+      (clipped to the instrument's real 2026-07-16..2026-07-22 existence window), `found_shards=5`,
+      **`completion_pct=71.43%`** — a realistic number reflecting the 2 days not yet captured, not hundreds of
+      structurally-impossible pre-listing days. Also ran the full real venue aggregate (all 277 COINBASE-FUTURES
+      PERPETUAL+SPOT_PAIR instruments, confirmed collision-free — see below): `expected_shards` 174,510 → 104,326,
+      `completion_pct` 18.08% → 30.25%. **Verdict: the existence-window-clipping mechanism itself works exactly as
+      designed and materially changes real numbers in the correct direction** — confirms Bug C's fix. **A second,
+      different, real bug found while cross-checking a second (DERIBIT `options_chain`) candidate — filed separately,
+      NOT fixed here per this task's explicit read-only scope + the >30min findings-triage bar**:
+      `_normalize_instrument_id_for_match`'s `@`-suffix-stripping (designed for the `@LIN`/`@INV`/`@ETHEREUM`
+      settlement-tag divergence case) catastrophically collides for OPTIONS/dated-FUTURES, whose `@`-suffix encodes real
+      distinguishing identity (expiry/strike/side), not a formatting tag — measured live: DERIBIT OPTION 264,550 raw
+      instrument_ids → 4 normalized keys (66,137x collision), DERIBIT FUTURE 1,631 → 12 (135.9x), vs. PERPETUAL/
+      SPOT_PAIR/COMBO measured collision-free (ratio 1.00) across every venue checked. This corrupts Bug C's new
+      `per_instrument_expected` dict (keyed by normalized id) for these instrument_types — live-measured consequence:
+      `per_instrument_coverage(DERIBIT, options_chain)` today reports a false **`completion_pct=100.0%`**
+      (`expected_shards=210` vs. the real ~264,550-option universe, `found_shards=10,172`) — masking real gaps, the
+      mirror-image failure of the operator's original "0% shown when fine" symptom. Confirmed `options_chain`/
+      `futures_chain` are NOT F4-seeded for DERIBIT (live manifest check), so this is an ACTIVE production code path
+      today, not dormant. Filed as `plans/active/issues/bug_c_normalize_id_collision_options_futures_2026_07_22.md`
+      (full repro data, root cause, recommended fix directions, own todos) — this is a genuine, additional, real bug the
+      fix's own new unit tests didn't catch (none of the 8 use an OPTION/dated-FUTURE id), not something Bug C's
+      original scope was expected to cover, and not the kind of fix a read-only verification pass should make silently.
+      **Does this fully explain the operator's original screenshot?** Not independently confirmable without the
+      operator's exact venue/ instrument — no screenshot metadata survives to identify which specific instrument
+      triggered it — but the mechanism is now proven, on real data, to produce exactly the class of symptom described
+      (near-zero completion from an unclipped pre-listing/pre-existence denominator), which is the strongest
+      verification available short of the original literal repro.
 - [x] N. ✅ [BACKEND] P0. **Fix Bug B** — `deployment-ui@c11d370`, verified on origin, full QG green. Fixed the
       `getInstrumentAvailability` request/response contract mismatch + added a monotonic-sequence stale-response guard
       to both debounced search flows (`runSymbolSearch`, `fetchInstruments`). See the Progress Log entry above for the
@@ -353,57 +389,57 @@ the same fixes.
       `_catalogue.py:75-87` + `test_sports_not_in_identity_catalogue_asset_groups`, unchanged, still correct).
 
       **Trace (done this tick)**: sports/prediction have NO separate manifest-writer pipeline — they flow through the
-              exact same universal orchestrator as every other asset_group.
-              `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
-              `_finalize_prediction_bundles`/`_finalize_sports_...` closures (+ the shared `_write_bundle_shard_row` helper)
-              call `unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py`'s
-              `ManifestWriter.record_captured`/`record_captured_from_counts` (captured rows) and `_writer_record.py`'s
-              `_record_status` (empty/failed/expected_unattempted rows), which both build ONE shared dataclass —
-              `_rows.py::AvailabilityRecord` — the UNIVERSAL manifest-row schema written into `_index/availability_index.parquet`
-              by EVERY asset_group and EVERY producer service (cefi/defi/tradfi/sports/prediction, plus features-service /
-              ml-service / strategy-service / execution-service, which is why `AvailabilityRecord` already carries
-              `feature_group`/`model_family`/`strategy_id`/`client_id`/`instruction_type` columns). There is no
-              sports/prediction-scoped writer to touch in isolation — any new column lands on this ONE shared schema.
+                  exact same universal orchestrator as every other asset_group.
+                  `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
+                  `_finalize_prediction_bundles`/`_finalize_sports_...` closures (+ the shared `_write_bundle_shard_row` helper)
+                  call `unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py`'s
+                  `ManifestWriter.record_captured`/`record_captured_from_counts` (captured rows) and `_writer_record.py`'s
+                  `_record_status` (empty/failed/expected_unattempted rows), which both build ONE shared dataclass —
+                  `_rows.py::AvailabilityRecord` — the UNIVERSAL manifest-row schema written into `_index/availability_index.parquet`
+                  by EVERY asset_group and EVERY producer service (cefi/defi/tradfi/sports/prediction, plus features-service /
+                  ml-service / strategy-service / execution-service, which is why `AvailabilityRecord` already carries
+                  `feature_group`/`model_family`/`strategy_id`/`client_id`/`instruction_type` columns). There is no
+                  sports/prediction-scoped writer to touch in isolation — any new column lands on this ONE shared schema.
 
-              **Key finding (changes the framing of "correct fix")**: `is_mvp_for_manifest_row`'s two extra axes beyond
-              `(venue, instrument_type, data_type)` — `base_ccy` (read from a `base_asset` column) and `market_group` — are
-              confirmed ABSENT not just from the read-time manifest DataFrame (already documented at `_coverage_scope.py:96-104`)
-              but from the WRITE-time schema too: neither `base_asset` nor `market_group` appears in UTL's `_ROW_KEY_COLUMNS`
-              or `AvailabilityRecord` fields (`_rows.py`). So a write-time `is_mvp(...)` call would resolve those two kwargs to
-              `None` — IDENTICAL to what the read-time call resolves today. **Write-time precompute is a pure caching/perf
-              optimization, not a correctness fix** — it would not change a single row's `is_mvp` verdict vs. today.
+                  **Key finding (changes the framing of "correct fix")**: `is_mvp_for_manifest_row`'s two extra axes beyond
+                  `(venue, instrument_type, data_type)` — `base_ccy` (read from a `base_asset` column) and `market_group` — are
+                  confirmed ABSENT not just from the read-time manifest DataFrame (already documented at `_coverage_scope.py:96-104`)
+                  but from the WRITE-time schema too: neither `base_asset` nor `market_group` appears in UTL's `_ROW_KEY_COLUMNS`
+                  or `AvailabilityRecord` fields (`_rows.py`). So a write-time `is_mvp(...)` call would resolve those two kwargs to
+                  `None` — IDENTICAL to what the read-time call resolves today. **Write-time precompute is a pure caching/perf
+                  optimization, not a correctness fix** — it would not change a single row's `is_mvp` verdict vs. today.
 
-              **Design (for whoever implements)**:
-              1. UTL `manifest_writer/_rows.py`: add `mvp: bool | None = None` (trailing field, back-compat default) to
-                 `AvailabilityRecord`; bump `MANIFEST_SCHEMA_VERSION` 9→10 in `_schema.py`.
-              2. UTL `_writer_captured.py::record_captured`/`record_captured_from_counts`: when the resolved `asset_group` is
-                 `"sports"`/`"prediction"`, lazy-import UAC `is_mvp` and stamp
-                 `is_mvp(asset_group, venue, instrument_type, data_type, league=league_id or None, market_group=None,
-                 base_ccy=None, source=resolved_source)` onto the `AvailabilityRecord(...)` call; leave `None` for every other
-                 asset_group (no behavior change elsewhere).
-              3. UTL `_writer_record.py::_record_status`: same conditional stamp (sports/prediction also write
-                 empty/failed/expected_unattempted rows through this path).
-              4. `deployment-api/_catalogue.py::_row_is_mvp`/`_is_mvp_series`: add a THIRD branch — when `"mvp" in df.columns`
-                 for a manifest-backed (non-identity-catalogue) frame, use the precomputed value for rows where it's non-null
-                 (`_truthy_mvp` fast path, mirroring the identity-catalogue branch byte-for-byte) and fall back to
-                 `is_mvp_for_manifest_row` only for legacy rows where the column is null/absent — old rows keep today's exact
-                 behavior.
-              5. Historical rows do NOT retroactively gain `mvp` from steps 1-4 alone — closing the live-compute gap for
-                 EXISTING data needs a companion backfill/rebuild pass (the repo already has the pattern:
-                 `rebuild_sports_manifest_v9.py` / `rebuild_prediction_manifest.py`), scoped separately.
+                  **Design (for whoever implements)**:
+                  1. UTL `manifest_writer/_rows.py`: add `mvp: bool | None = None` (trailing field, back-compat default) to
+                     `AvailabilityRecord`; bump `MANIFEST_SCHEMA_VERSION` 9→10 in `_schema.py`.
+                  2. UTL `_writer_captured.py::record_captured`/`record_captured_from_counts`: when the resolved `asset_group` is
+                     `"sports"`/`"prediction"`, lazy-import UAC `is_mvp` and stamp
+                     `is_mvp(asset_group, venue, instrument_type, data_type, league=league_id or None, market_group=None,
+                     base_ccy=None, source=resolved_source)` onto the `AvailabilityRecord(...)` call; leave `None` for every other
+                     asset_group (no behavior change elsewhere).
+                  3. UTL `_writer_record.py::_record_status`: same conditional stamp (sports/prediction also write
+                     empty/failed/expected_unattempted rows through this path).
+                  4. `deployment-api/_catalogue.py::_row_is_mvp`/`_is_mvp_series`: add a THIRD branch — when `"mvp" in df.columns`
+                     for a manifest-backed (non-identity-catalogue) frame, use the precomputed value for rows where it's non-null
+                     (`_truthy_mvp` fast path, mirroring the identity-catalogue branch byte-for-byte) and fall back to
+                     `is_mvp_for_manifest_row` only for legacy rows where the column is null/absent — old rows keep today's exact
+                     behavior.
+                  5. Historical rows do NOT retroactively gain `mvp` from steps 1-4 alone — closing the live-compute gap for
+                     EXISTING data needs a companion backfill/rebuild pass (the repo already has the pattern:
+                     `rebuild_sports_manifest_v9.py` / `rebuild_prediction_manifest.py`), scoped separately.
 
-              **Why this STOPS here instead of shipping (explicit scope-risk call, not an oversight)**: step 1 is not a
-              sports/prediction-scoped change — it is a schema addition on the ONE shared `AvailabilityRecord` used by every
-              asset_group and every producer service, so it needs a FULL FLEET redeploy (every live/backfill/cron VM, both
-              clouds, all asset_groups) to take effect, not a bounded single-service change. The manifest-consolidator
-              (Cloud Run/Batch-Fargate) merging old-schema and new-schema per-VM shards together is unverified here and codex
-              documents it as "loud-fails on stale index" — exactly the risk class behind this SAME session's separate CeFi
-              manifest re-stamp (see the "2026-07-21 (tick 2)" progress-log entry above and the deferred-work table below),
-              which needed a snapshot + guarded rollout + an operator-gated Cloud Scheduler pause and is still not fully landed.
-              Given the P2 (not P1) priority, the already-documented "bounded, non-regressed" live-compute cost (no active
-              incident forcing urgency), and the Key Finding above (this is a perf win, not a correctness fix), rushing steps
-              1-4 here would repeat the exact near-miss pattern this plan has already flagged twice. Left at P2 with the design
-              above ready to hand off; NOT force-shipped.
+                  **Why this STOPS here instead of shipping (explicit scope-risk call, not an oversight)**: step 1 is not a
+                  sports/prediction-scoped change — it is a schema addition on the ONE shared `AvailabilityRecord` used by every
+                  asset_group and every producer service, so it needs a FULL FLEET redeploy (every live/backfill/cron VM, both
+                  clouds, all asset_groups) to take effect, not a bounded single-service change. The manifest-consolidator
+                  (Cloud Run/Batch-Fargate) merging old-schema and new-schema per-VM shards together is unverified here and codex
+                  documents it as "loud-fails on stale index" — exactly the risk class behind this SAME session's separate CeFi
+                  manifest re-stamp (see the "2026-07-21 (tick 2)" progress-log entry above and the deferred-work table below),
+                  which needed a snapshot + guarded rollout + an operator-gated Cloud Scheduler pause and is still not fully landed.
+                  Given the P2 (not P1) priority, the already-documented "bounded, non-regressed" live-compute cost (no active
+                  incident forcing urgency), and the Key Finding above (this is a perf win, not a correctness fix), rushing steps
+                  1-4 here would repeat the exact near-miss pattern this plan has already flagged twice. Left at P2 with the design
+                  above ready to hand off; NOT force-shipped.
 
 - [x] N. ✅ [BACKEND] P1. **MDPS parity — traced + backend honest-coverage SHIPPED** (`unified-api-contracts@a7798b93` +
       `deployment-api@60a23ae`, both verified landed on origin by SHA). **Traced first** (Explore agent, before writing
