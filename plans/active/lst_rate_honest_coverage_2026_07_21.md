@@ -209,10 +209,19 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       (`getAssetPrice=1741.704169`), with weETH/rETH/cbETH/rsETH/ezETH each genuinely reverting
       (`execution reverted, no data`, silently skipped per-reserve) since none of them were listed yet on that date —
       independent production confirmation of the listing-date verification. ~35-40s/day observed → full 2023-01-27 to
-      2026-07-22 window (~1275 days) is a multi-hour run; SPOT-preemption-resilient via the existing PROGRESS-checkpoint
-      contract. Monitor:
-      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-045059/run.log` +
-      manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity.
+      2026-07-22 window (~1275 days) is a multi-hour run. **PREEMPTED after ~10hrs (2026-07-22, discovered on session
+      resume)**: VM ran cleanly through `2026-04-17` (6399 manifest entries, `process_final=True` for that day) then
+      went TERMINATED — `launch-mtds-pyth-lst-backfill-vm.sh` does NOT write a `PROGRESS.json` checkpoint (unlike the
+      newer PROGRESS-checkpoint contract referenced in CLAUDE.md — that's a DIFFERENT, newer launcher family; this
+      correction supersedes my earlier "SPOT-preemption-resilient via the existing PROGRESS-checkpoint contract" claim,
+      which was wrong for this specific script). Resumed correctly from the last CONFIRMED-complete day rather than
+      replaying `START_DATE` (per the hard rule): `--force 2026-04-18 2026-07-22`, new VM
+      `pyth-lst-backfill-20260722-151120`, confirmed RUNNING. Remaining window is ~3 months, much shorter than the
+      original run. Monitor:
+      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-151120/run.log` +
+      manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity. **If this VM ALSO
+      preempts, check `gcloud compute instances list --filter=status=RUNNING` and resume again from the last
+      confirmed-complete day in the manifest — do not replay from 2023-01-27.**
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
       `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key.
       **Per-venue listing sub-check CLOSED (2026-07-22)**: live exchange API sweep (all 8 Tardis-covered CEX venues × 6
