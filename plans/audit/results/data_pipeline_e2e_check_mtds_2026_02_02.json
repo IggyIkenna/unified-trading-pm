@@ -1,0 +1,35 @@
+{
+  "service": "data_pipeline_e2e_check_mtds",
+  "run_date": "2026-02-02",
+  "legs": ["force"],
+  "started_at": "2026-07-18T14:16:25.859749+00:00",
+  "finished_at": "2026-07-18T14:20:08.516539+00:00",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "CEFI:OKX:trades",
+      "leg": "force",
+      "status": "failed",
+      "reason": "no_parquet_under:gs://market-data-tick-cefi-test-central-element-323112/raw_tick_data/by_date/day=2026-01-01/pipeline_mode=batch_tardis/asset_group=cefi/venue=OKX/",
+      "vm_name": "mtds-backfill-cefi-pipelinecheck-20260718-141627-b785bc",
+      "exit_status": 0,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-07-18T14:16:27.923080+00:00",
+      "duration_sec": 220.421409,
+      "parquet_bucket": "market-data-tick-cefi-test-central-element-323112",
+      "manifest_bucket": "market-data-tick-cefi-test-central-element-323112",
+      "parquet_uri": ""
+    }
+  ]
+}
