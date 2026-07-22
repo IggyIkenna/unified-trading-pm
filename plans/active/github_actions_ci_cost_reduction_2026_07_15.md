@@ -1796,6 +1796,34 @@ prove on ONE caller → only then fan out._
     pre-empted by the next push before it could report anything. The backstop has been silently inert this whole time.
     **FIXED live this session**: `cancel-in-progress: false` (queue instead of cancel — self-hosted + sub-minute jobs
     make queuing free) → `unified-trading-pm@efdeb6f41`.
+  - **CORRECTION #2 (real root cause, found only after the operator pushed back on my "resource limitation" theory
+    2026-07-22 — that theory was WRONG, and the pushback was right)**: after the concurrency fix, runs were STILL 100%
+    cancelled/stuck-queued (total population re-checked via `gh api .../runs?per_page=1` → `total_count: 1200`, not the
+    40 I'd sampled earlier via a capped `--limit`; 1198 cancelled, 0 succeeded, 0 failed, ever — cross-checked against
+    1402 real commits touching `plans/`/`codex/` in the same window, so the trigger itself was firing correctly). I
+    first blamed shared self-hosted runner-pool CPU contention. Measured locally: the check itself runs in **2.04s** for
+    the full 1670-doc corpus — nowhere near slow enough to explain a 90+-minute queue wait, and other `glue`-pool
+    workflows (`cloud-build-router`, `change-freeze-check`, etc.) were completing in seconds in the EXACT same window a
+    `ldr-docs-gate` job sat queued with `runner_name:""` — ruling out pool saturation outright (a saturated pool would
+    starve everything, not one specific workflow). The actual cause: `runs-on: [self-hosted, Linux, X64, glue]` requires
+    4 labels, but `scripts/self-hosted-runners/glue-runner-run.sh:190` registers every JIT-ephemeral runner in this pool
+    with only `["self-hosted","glue"]` — no `Linux`/`X64` ever advertised. Label matching is a strict subset test, so a
+    job needing all 4 can **never** match any runner in the pool — not eventually, structurally never.
+    `ldr-docs-gate.yml` was the ONLY one of 36 workflows using this pool that specified the 4-label form; the other 35
+    all correctly use the 2-label form matching the actual registration. **FIXED**: `runs-on: [self-hosted, glue]` →
+    `unified-trading-pm@078c85dc3`. This is the REAL fix; the earlier concurrency change was necessary (a run that DID
+    match a runner would otherwise still get killed by the next push) but was not sufficient on its own, and my "fixed"
+    claim in the entry above was premature. Verification: see the next push touching `plans/`or `codex/` after
+    `078c85dc3` — should complete in seconds, not queue forever.
+  - **Operator's 4 follow-on improvements (2026-07-22, queued behind confirming the label fix actually works)**: (1)
+    switch trigger from per-push (~240/day measured) to an hourly cron — per-push was never the right model for a check
+    whose failure mode (a broken doc sitting undetected a bit longer) is low-consequence; (2) scope
+    `check_frontmatter_schema.py` to just the changed files (`git diff --name-only`) instead of the bare/full-corpus
+    call — the script already supports `[file ...]` args, `ldr-docs-gate.yml` just never used them; (3) add an
+    existence-only check for frontmatter-referenced doc paths (`related`/`supersedes`/`parent_epic`) — confirmed via
+    reading `docspec.py` that NO such check exists today (`related`-type fields are untyped `"free_list"`, never
+    resolved against the filesystem); (4) Slack alert + optional AO-escalator dispatch on red, same as today just on the
+    new cadence. None of these implemented yet — correctly gated on proving the actual fix works first.
   - **CORRECTION (caught when the operator asked "what is this test and should we bump it to 2s?")**: I initially
     reported UTL's `test_manifest_completeness.py::TestF1PerfGuard` (a perf-guard on `compute_completeness_fraction()`,
     added alongside the 16.7x `80d2497e` filter-then-build/memoize optimization, asserting a 1.2M-row completeness
@@ -1829,5 +1857,7 @@ prove on ONE caller → only then fan out._
   - **Verdict for the operator**: the CI-cost-reduction changes themselves (A1/A2/A5/STEP2b/alert-dedup/cron-cadence)
     are running clean — PM's own `quality-gates-v2` is 157 success / 12 failure / 31 cancelled (cancelled =
     concurrency-superseded, benign) over 5 days, and none of the fleet failures trace back to those specific changes.
-    The one thing that WAS broken because of this plan's work (`ldr-docs-gate`) is fixed. The one open regression
-    plausibly tied to the broader self-hosted-runner migration (F1PerfGuard contention) needs a decision, tracked below.
+    The one thing that WAS broken because of this plan's work (`ldr-docs-gate`) took two fix attempts — see the two
+    CORRECTION entries above — and is now fixed pending live confirmation on the next real doc push. The F1PerfGuard
+    finding above was itself later corrected too: it turned out to already be fixed by another agent before this check
+    started, not an open regression.
