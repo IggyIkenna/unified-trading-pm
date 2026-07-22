@@ -341,3 +341,115 @@ proof is the precise failure mode this plan documents as the cause of the first 
 follow-up with the design above as its starting point. Todo 14 (flip the gate to CLEARED) correspondingly does NOT apply
 yet (acceptance criteria 1-8 are not all green — 8 is the gating one). The migration plan's banner (todo 1, applied
 above) remains BLOCKED, correctly.
+
+### 2026-07-21 (session 2, /autonomous) — prior session's uncommitted work was LOST; re-executing + a decisive todo-8 scope determination
+
+**State on entry (measured, not assumed):** the 2026-07-21 session-1 entry above says todos 2-5/9/13 were "code-complete
+but NOT committed." Verified by `git status` in `market-tick-data-service`: **none of the 8 lending handler files are
+dirty** — all sit at HEAD `7ce100f9` in their pre-fix state. That uncommitted work was never shipped and is GONE (the
+exact false-progress anti-pattern the ship rules warn about). Re-executing todos 2-5/9/12/13 from scratch, using
+session-1's design notes above as the starting point. The only MTDS dirty files are a peer's GMX work
+(`_perp_funding_gmx.py`, `test_perp_funding_handler*.py`), schema-artifact JSON, and fold/reshard scripts — none are my
+8 handlers, so no collision.
+
+**Todo 6 CORRECTION — SOLANA_LENDING is OUT of scope (session-1's ruling above is SUPERSEDED).** Session-1's entry ruled
+"SOLANA_LENDING IS IN SCOPE of the eventual full retire." That is now overridden by the **later, authoritative operator
+decision** in `defi_consolidated_closeout_2026_07_18.md:628-632` ("Operator decisions applied 2026-07-21"):
+_"SOLANA_LENDING is OUT of the D2 LENDING→A_TOKEN/DEBT_TOKEN retire scope. … The retire applies to the legacy flat EVM
+`lending` rows only; Solana rows keep `SOLANA_LENDING`."_ Kamino/Solend/MarginFi markets don't share Aave's
+dual-token-per-reserve shape (`SOLANA_LENDING` is its own canonical Solana grain in the grammar table). So `LENDING`
+(EVM) is in scope; `SOLANA_LENDING` (Solana) stays. `solana_defi_handler.py` is NOT flipped, and the Solana branches of
+`lending_indices_handler` / `risk_params_handler` keep resolving `SOLANA_LENDING`. **Todo 6 = RULED (OUT).**
+
+**Todo 8 / 10 / 11 / 14 — decisive scope determination (genuine cross-plan architectural impossibility for a
+writer-fix-only plan; least-bad path taken per AUTONOMOUS_AGENT_RULES rule 1).** After reading the live code, the actual
+value-flip cannot be shipped as a writer-fix-only change without reproducing the exact over-reach that was reversed
+twice. Three independent, measured confirmations:
+
+1. **The EU-reconciling shard atom is the market ADDRESS, matched to the IS-seeded `expected_unattempted`.**
+   `position_data_handler.py:212-217` (verbatim) records `record_captured` at `market_address`, "The IS catalogue seeds
+   position_data EU on the per-pool/per-reserve market ADDRESS." Flipping `instrument_type` LENDING→A_TOKEN/DEBT_TOKEN
+   changes the holdings atom to the per-token id — but IS still seeds the EU at the market address for the interim
+   model. Until IS re-seeds A_TOKEN/DEBT_TOKEN EU atoms (R2/R3/migration, NOT this plan), the flip **regresses
+   acceptance criterion 6** (EU→captured conversion, the ~1.04M rows). AC 6 itself ties the flip to the migration.
+2. **The A_TOKEN/DEBT_TOKEN canonical symbol synthesis lives in instruments-service** (`instruments-service@1af1be34`
+   bakes the split into `build_instrument_catalogue`; isolated-market Morpho/Euler synthesize
+   `A{coll}-{loan}[-marketId8]` per the naming SSOT). MTDS writers cannot reach IS (no service→service dep), and the
+   subgraph rows carry only `aToken { id }` (an address), not the canonical A_TOKEN symbol form. Producing correct,
+   oracle-passing A_TOKEN ids at the write site requires that synthesis exposed via UAC — the per-instrument
+   re-architecture's job, not built.
+3. **The codex + the code both state market/event lending is INTERIM LENDING.** `defi-canonical-naming-ssot.md:82,117`
+   ("the uniform-`LENDING` interim holds until [the migration is done]"; retire is `migration_pending`);
+   `evm_defi_handler.py:110-117` (docstring) — market/event lending stays LENDING "for ALL protocols … so writer +
+   manifest agree on ONE shard atom (no `a_token` GCS-path vs `lending` manifest desync)."
+
+Adding `LENDING` to UAC `UNSUPPORTED_BY_DESIGN` (todo 8's UAC leg) makes `build_instrument_id:822` raise on LENDING —
+**that is literally step 1 of this plan's own "What actually broke" mechanism** and the reversal cause (`uac@e319864f`,
+reverted `ad4886ae`). It is only safe once nothing produces or re-derives a LENDING id — i.e. after the writers flip AND
+the 16.7M historical rows migrate AND the shard atom re-syncs (steps 2+3, the OTHER plan). The UTL dispatch retarget
+(closeout `:663-666`) is explicitly gated "once the EVM retire lands," so it also cannot precede the migration. The
+three repos of todo 8 are a single coupled unit that must land WITH the migration; none is safely separable.
+
+**Decision:** ship the genuine "writer fix" — the structural readiness that eliminates BOTH documented reversal root
+causes (dual-expression shard-atom desync + silent contract-error swallow) — as todos 2-5, 9, 12, 13, plus the rulings
+(6) and design (7), plus the doc alignment (13). Do **NOT** ship a value-flip that would fail this plan's own AC 5/6 and
+be the third reversal. Todos 8/10/11 stay `- [ ]` with the complete design below handed to the migration plan; **todo 14
+does not flip — the gate stays BLOCKED, correctly** (AC 3/4/5/6 require the flip + real forward-run, which are
+inseparable from the migration + IS re-seed + capture resume). This is exactly what the plan's own GATE banner says:
+_"This plan owns step 1 only. It does not own the migration, the atom re-sync, or any GCS rewrite."_ The "writer fix"
+(step 1) = make every writer a single-resolver-line from the flip with LOUD failure on any contract violation, so the
+migration wave (step 2) is the safe one-line change per handler it was always meant to be.
+
+**Todo 7 — per-data_type A_TOKEN/DEBT_TOKEN target mapping (REFINED, SOLANA out; this is the design the migration wave
+executes — NOT shipped here).** For the EVM market/event lending data_types the eventual split is (relabel = one output
+row; fan-out = one input row → two output rows):
+
+| data_type            | A_TOKEN / DEBT_TOKEN            | shape   | per-row source (the writer already fetches this)                                                                                                                                                           |
+| -------------------- | ------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lending_indices`    | **BOTH** (A_TOKEN + DEBT_TOKEN) | FAN-OUT | one reserve row carries supply idx (`liquidityIndex`/`liquidityRate`) + borrow idx (`variableBorrowIndex`/`…Rate`) + `aToken.id` + `variableDebtToken.id` → A_TOKEN row (supply) + DEBT_TOKEN row (borrow) |
+| `position_data`      | **BOTH** (A_TOKEN + DEBT_TOKEN) | FAN-OUT | positions carry a supplied/collateral leg + a borrowed leg → A_TOKEN (supply) + DEBT_TOKEN (borrow) keyed to the reserve                                                                                   |
+| `liquidation_events` | **A_TOKEN** only                | relabel | primary identity = seized collateral reserve; the repaid debt is an informational column                                                                                                                   |
+| `flash_loan_events`  | **A_TOKEN** only                | relabel | supply-side against the reserve; no persistent debt leg                                                                                                                                                    |
+| `risk_params`        | **A_TOKEN** only                | relabel | risk config is a collateral-side reserve property                                                                                                                                                          |
+| `liquidations`       | **A_TOKEN** only                | relabel | seized collateral (NB: `gmx` here is a DeFi perp arguably `perpetual` — separate flagged discovery, not re-ruled)                                                                                          |
+
+A blanket `→ A_TOKEN` is the failure mode the reversal warned about — two of the six are genuinely two-sided and need a
+real per-row FAN-OUT, not a relabel. `SOLANA_LENDING` data_types are OUT of scope (todo 6) and keep `SOLANA_LENDING`.
+
+**Todo 8 handoff — what the migration wave (`defi_consolidated_closeout_2026_07_18.md`, step 2) must land ATOMICALLY,
+and why none of it is safely separable into this writer-fix plan.** Three tightly-coupled legs plus a re-seed:
+
+1. **MTDS writers**: apply the mapping above at each handler's SINGLE resolver (now a one-line-per-handler change thanks
+   to this plan) — BUT the A_TOKEN/DEBT_TOKEN canonical **symbol** must be the form instruments-service mints (`aUSDC` /
+   isolated-market synthesized `A{coll}-{loan}[-marketId8]`), which the writer does not have and cannot reach (no
+   service→service dep; the Aave subgraph returns `aToken { id }` = an address, not the canonical symbol). This requires
+   that symbol-synthesis exposed via UAC — the per-instrument re-architecture's job. The two-sided handlers additionally
+   need the FAN-OUT (`write_defi_rows` takes ONE `instrument_type` per call, so fan-out = two calls or a per-row-typed
+   write).
+2. **UAC**: `canonical_id_builder.py:186` `UNSUPPORTED_BY_DESIGN` gains `LENDING` (removing it from
+   `SUPPORTED_INSTRUMENT_TYPES` — a disjointness coverage test enforces the partition). This makes `build_instrument_id`
+   RAISE on `LENDING` — which is STEP 1 of this plan's own "What actually broke" mechanism, safe **only** once nothing
+   produces or re-derives a `LENDING` id, i.e. after the writers flip AND the 16.7M historical rows migrate.
+3. **UTL**: `_derive_instrument_id.py` `_DISPATCH[('defi','lending')]` / `[('defi','lending_position')]` retarget/split
+   so the EVM `lending` dispatch is removed and Solana's `SOLANA_LENDING` keeps a live entry (closeout `:663-666`,
+   explicitly "once the EVM retire lands").
+4. **IS `expected_unattempted` RE-SEED (acceptance criterion 6)**: the EU atom today is the market ADDRESS
+   (`position_data_handler.py:212-217`, seeded by IS for the interim LENDING model). Flipping the writers' atom to the
+   per-token A_TOKEN/DEBT_TOKEN id WITHOUT IS re-seeding the EU at that new atom leaves the ~1.04M EU rows
+   `expected_unattempted` forever → AC 6 regresses. The re-seed is R2/R3 (migration) territory.
+
+**Todo 12 (grain regression) — structurally verified GREEN for the shipped writer fix.** The collapse is
+**value-preserving**: every new resolver returns the exact same `LENDING`/`SOLANA_LENDING` the prior literals did
+(pinned by `test_lending_writers_emit_only_interim_types` +
+`test_write_enum_and_manifest_string_are_one_resolution_point`), and `_lending_grain.py`'s grain functions
+(`market_count_map` / `record_market_captures`) are UNCHANGED (only the new
+`record_contract_violation`/`is_instrument_id_contract_violation` helpers were added). So the per-market
+`record_captured` atom and the EU→captured conversion are unchanged by construction. The runtime EU-conversion
+before/after MEASUREMENT the todo describes belongs to the value-flip's real run (todo 10), which is part of the gated
+migration wave, not this value-preserving collapse.
+
+**Todo 14 — gate STAYS BLOCKED (correct).** Acceptance criteria 1/2/7/8 hold for the shipped writer fix (single
+resolution point, liquidations desync closed, MTDS QG green, contract errors loud). Criteria 3/4/5/6 REQUIRE the actual
+value-flip + a real forward-write run + 3-surface agreement on flipped shards + non-regressed EU conversion — all
+inseparable from the migration + IS re-seed + capture resume (above). So `todo 14` does NOT flip; the migration-plan
+banner (closeout `:429`) stays BLOCKED, refreshed to this precise state. The ~16.7M-row migration remains gated.

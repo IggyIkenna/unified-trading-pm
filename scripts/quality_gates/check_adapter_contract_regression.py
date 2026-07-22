@@ -66,6 +66,12 @@ import yaml
 #: behind), so DeFi handlers route the ``assert_defi_catalog_fresh``→False branch through it instead
 #: of a bare ``record_failed(UPSTREAM_INSTRUMENTS_CATALOG_STALE)``; counting it keeps the
 #: contract-call total stable across that swap.
+#: ``record_shard_failure`` (added 2026-07-21, defi_lending_writer_retire_prerequisite_2026_07_20) is the
+#: sanctioned per-shard failure DISPATCHER for the DeFi lending writers — it routes a
+#: ``build_instrument_id`` CONTRACT violation to a LOUD ``record_contract_violation`` (distinct ERROR
+#: event) and everything else to ``record_failed``; the lending handlers call it in their per-shard
+#: ``except`` instead of a bare ``recorder.record_failed(...)``, so counting it keeps the contract-call
+#: total stable across that swap (same rationale as ``record_zero_rows`` / ``record_catalog_unavailable``).
 CONTRACT_PATTERNS: Final[tuple[str, ...]] = (
     "classify_venue_error",
     "ADAPTER_FETCH_FAILED",
@@ -74,6 +80,7 @@ CONTRACT_PATTERNS: Final[tuple[str, ...]] = (
     "record_zero_rows",
     "record_failed",
     "record_catalog_unavailable",
+    "record_shard_failure",
 )
 
 _CONTRACT_RE: Final[re.Pattern[str]] = re.compile("|".join(CONTRACT_PATTERNS))

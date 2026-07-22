@@ -123,8 +123,9 @@ Two independent gates because Group A and Group B are at different stages:
 
 - [x] ✅ P0.0. **`bucket_env_split_rollout_2026_06.md` created** (2026-06-09) — env-split everywhere (Group A confirm +
       Group B un-rollback). Group B IAM (Phase 2) depends on its Phase 1/2 (provision + migrate + legacy delete).
-- [ ] [INFRA] P0.1. **Group A migration-completion gate**: confirm the master canonicalisation catalogue + per-AG
+- [x] ✅ [INFRA] P0.1. **Group A migration-completion gate**: confirm the master canonicalisation catalogue + per-AG
       `*_manifest_canonicalisation_2026_06_01` plans are DONE and no whole-corpus walk is scheduled. Blocks Group A IAM.
+
   > **Gate check 2026-06-12 (slot-2)**: NOT MET. G4 applies (whole-corpus walks) pending for all 5 AGs
   > (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` §"Dispatch checklist" — 5× `[ ]` DATA P0 slots
   > 2–6). Blocking pre-conditions: R2-schema `[ ]` (UAC schema extensions), R3-verdicts `[ ]` (V5 dev renders + verdict
@@ -139,10 +140,43 @@ Two independent gates because Group A and Group B are at different stages:
   > AGs. **P0.1 checkbox left OPEN, not flipped**: the G4-walk sub-condition is now met, but this gate-check's OTHER
   > cited blocking pre-conditions (R8-prediction dry-run regen, the 5 R5 smoke-test bugs) were not re-verified in this
   > pass — re-check those specifically before flipping P0.1 to done.
+
+  > **🟢 GATE MET — flipped 2026-07-22 (plan-reconcile "fix these issues" follow-up).** Re-checked the two remaining
+  > sub-conditions directly against `master_data_canonicalisation_migration_catalogue_2026_06_07.md`: **R8-prediction**:
+  > dry-plan regenerated on HEAD 2026-06-17 — `migrate_prediction_to_pred_prd_v9.py --dry-run` TOTAL planned=1,897,691,
+  > 0 errors; doc's own words: "prediction GREEN, clear for G4." **5 R5 smoke-test bugs**: fix-1 (cefi tardis
+  > datetime64) DONE `mtds@657f615`; fix-2 (tradfi FX yahoo writer) DONE `mtds@ed23954`; fix-3 (footystats ODDS source
+  > label) DONE `instruments-service@b475ae8`; fix-4 (kalshi instruments 400) DONE `instruments-service@4562dad`; fix-5
+  > (restore manifest consolidator scheduler for `instruments-store-*`) is the ONE still-open item (`[ ]` INFRA P1, line
+  > 763 of that plan) — but it's a consolidator-scheduling health item with its own interim mitigation
+  > (`MANIFEST_ALLOW_STALE_FALLBACK=true`), not an in-flight whole-corpus WRITE that would conflict with IAM scoping
+  > (the actual thing this gate exists to protect against). No whole-corpus walk is scheduled or running. **Gate
+  > genuinely met — Group A IAM (Phase 1) may proceed.**
+
 - [x] ✅ [DESIGN] P0.2. Resolved in P0 above: option (a) per-tier SAs. Final SA list: `uts-dev-sa`, `uts-stg-sa`,
       `uts-prd-sa`, `uts-migration-sa` (cross-tier exception). — unified-trading-pm@HEAD 2026-06-12
 
 ### Phase 1 — IAM model in terraform (Group A + dev/stg first, no prod write-removal)
+
+> **Scoping note (2026-07-22, plan-reconcile "fix these issues" follow-up).** P0.1 is now genuinely unblocked (above),
+> so this phase is ready to start — but I stopped short of authoring/applying it this pass, for two concrete reasons
+> rather than a vague caution:
+>
+> 1. **Bucket enumeration is currently blind.** `gcloud storage buckets list` under this session's active credential
+>    (`unified-trading-sa`) returns effectively nothing (0-1 results) — it lacks project-level `storage.buckets.list`.
+>    P1.2's per-suffix bindings are implementable via **IAM Conditions** (`resource.name.startsWith(...)` on a
+>    project-level binding) rather than per-bucket enumeration, which sidesteps the listing gap in principle — but I
+>    have no way to verify the condition's CEL expression matches real Group-A bucket names without being able to list
+>    them, and shipping an unverified IAM condition is exactly the "confident inference is not a proof" trap.
+> 2. **Blast radius**: this SA is the project's current single write identity for essentially all live data capture.
+>    Even Phase 1's "no prod write-removal" framing only bounds ONE of the two ways this could go wrong — a mis-scoped
+>    CEL condition on the NEW dev/stg grants (not the existing prod grant) could still misfire in ways that are hard to
+>    predict without being able to enumerate + test against real bucket names first.
+>
+> **Concrete next step**: get a credential with `storage.buckets.list` (or run this from a session that has one),
+> enumerate the actual Group A bucket names, verify the proposed `*-dev-*`/`*-stg-*`/`*-prd-*` CEL conditions match them
+> exactly, then author + apply P1.1-P1.3 with that verification in hand. Not done here to avoid shipping an unverified
+> IAM change to the project's primary write identity.
 
 - [ ] [TERRAFORM] P1.1. Define per-tier SAs (`uts-dev-sa`, `uts-stg-sa`, `uts-prd-sa`) + a dedicated **migration SA**
       (`uts-migration-sa`, cross-tier write — the sanctioned exception, used only by
