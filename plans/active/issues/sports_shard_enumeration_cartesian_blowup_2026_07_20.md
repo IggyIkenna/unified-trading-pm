@@ -288,6 +288,20 @@ Verified anchors used below (re-read at execution time):
 
 Do these first and in order. Steps 1.1–1.2 alone eliminate every structurally-impossible row going forward.
 
+> **✅ STEP 1.1 + 1.2 + 1.4 SHIPPED — mtds@accd8aa4 (2026-07-20).** `REQUESTED_ODDS_API_BOOKMAKERS` exported +
+> `expected_odds_api_venue_keys()`; `_expected_sports_bookmakers()` now derives purely from the request list (bare
+> BETFAIR/ODDS_API/ONEXBET removed from scope, 21 real books now expectable); the v1 `SOURCE_RETURNED_ZERO` branch
+> replaced its fabricated `record_empty(fetch_evidence=...)` with `record_zero_rows(was_expected=True)` (mirrors v2).
+> Regression lock: `tests/unit/test_sports_sentinel_scope.py` (7 tests) + updated
+> `tests/unit/engine/test_sentinels_coverage.py` + `tests/unit/test_orchestrator_per_data_type_sentinel.py`. Verified:
+> wire string byte-identical, all 3 phantom venues excluded, all 21 real books included, 71+ tests green, gate green.
+> **NOT done: 1.3** (grain-normalization / `is_bookmaker_league_covered_exact`) — largely moot now that bare BETFAIR
+> can't be emitted, so deferred; **1.5** (fan-out invariant guard) — the derivation is now single-sourced so the
+> tautological runtime assert was skipped in favor of the regression-locking tests; **1.6** (the 4
+> captured-but-never-requested venues: BETMGM/BETWAY/BOVADA/UNIBET_EU) — not yet investigated. Part 2 (vocabulary) and
+> Part 3 (manifest remediation, incl. the operator-facing UAC reason reclassification) remain OPEN, gated per their own
+> sections below.
+
 ### 1.1 Make the requested-bookmaker list a first-class exported contract (MTDS)
 
 **File:** `market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:114-150` **Change:** keep the
@@ -560,7 +574,7 @@ Fold into 3.3's relabel pass or leave with a documented exclusion. Do **not** sp
 
 Present these together; they are coupled.
 
-### 4.1 🔴 BIG FINDING — two contradictory honest-coverage formulas are live over the same rows
+### 4.1 🔴 BIG FINDING — two contradictory honest-coverage formulas are live over the same rows — ✅ DECIDED 2026-07-22
 
 - `unified-api-contracts/.../_honest_coverage_logic.py:88-96` (what `deployment-api` runs, what the operator sees):
   numerator = `captured + (empty_confirmed − out_of_window) + expected_unattempted_known_empty` → **credits**
@@ -575,7 +589,16 @@ cross-repo SSOT contradiction and a data-correctness finding independent of ever
 CLAUDE.md triage rule it needs `plans/active/issues/` + operator notification **now**, and it must be settled before any
 row is touched.
 
-### 4.2 Which coverage semantics does sports want?
+**✅ DECIDED (2026-07-22, interactive session)**: adopt the **EXCLUDE-`empty_confirmed`** formula — the
+`instruments-service/scripts/measure_honest_coverage.py` logic, which already matches
+`codex/02-data/honest-coverage-model.md:219-226` — as the **ONE global formula** for `compute_honest_coverage()`. This
+is **NOT sports-scoped**: it changes UAC's `compute_honest_coverage()` for **every asset group**, not just sports, and
+it moves every asset group's dashboard coverage percentage. **This is a SEPARATE, bigger piece of work, out of scope for
+this workflow phase** — it needs its own careful cross-asset-group impact-measurement pass before it ships. Do **not**
+touch `_honest_coverage_logic.py` in this phase; that file is unchanged by this run's shipped items. Track the global
+rollout as its own follow-up plan before implementation starts.
+
+### 4.2 Which coverage semantics does sports want? — ✅ DECIDED 2026-07-22
 
 Three measured options, pick one:
 
@@ -585,19 +608,29 @@ Three measured options, pick one:
 | **B** — purge dead-pair rows (3.2)                                  | 94.31% → 91.07% | 923,952 del  | No                 |
 | **C** — reclassify to `expected_unattempted`                        | 94.31% → 85.44% | ~1.1M mod    | Yes, from snapshot |
 
-**Recommendation: A.** It is semantically defensible ("this bookmaker never lists this league" is exactly an out-of-life
-cell, same class as the already-clipped `EXPECTED_INSTRUMENT_NOT_LISTED`), costs zero prod writes, and preserves every
-row for audit. Note on C: sports currently has **zero** `expected_unattempted` rows (`capture_status.unique()` = 3
-states only), so C activates downstream branches never exercised on this asset group.
+**✅ DECIDED (2026-07-22, interactive session)**: **BOTH A and B, combined — not either/or.** Apply A's mechanism
+(reclassify the dead-pair rows with the new `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE` / `EXPECTED_PAUSED_LEAGUE`
+`OUT_OF_COVERAGE_WINDOW_REASONS` codes) to the specific dead-pair row set that 3.2 targets, **and then also physically
+purge that same reclassified set** (3.2's mechanism) — reason-code first, then delete, rather than picking one mechanism
+over the other. This purge execution is gated on **4.4 (Phase 6d)** landing first — see 4.4 below.
 
-### 4.3 Sports `data_type` case direction — codex vs the physical estate
+### 4.3 Sports `data_type` case direction — codex vs the physical estate — ✅ DECIDED 2026-07-22, REVERSES K0-DECISION(b)
 
 K0-DECISION(b) (2026-07-18) says UPPER is canonical; GCS holds only lowercase directories with zero uppercase ones on
 every sampled day. **Re-confirm or reverse K0(b) before any normalizer is re-pointed.** Both shipped normalizers
 (`migrate_sports_canonical_v9.py:122-133`, `normalize_sports_mtds_data_type_case_2026_06_25.py:44-51`) point UPPER→lower
 and neither ever completed.
 
-### 4.4 Phase 6d — the sports venue-injection gap must land BEFORE any purge
+**✅ DECIDED (2026-07-22, interactive session)**: **REVERSE K0-DECISION(b).** Lowercase `odds` is canonical, not
+uppercase `ODDS` — GCS physically holds only lowercase `odds` directories on every sampled day (2020-07-21, 2023-05-10,
+2026-04-14; zero uppercase `ODDS` objects on any of them), so the uppercase manifest rows are a phantom, not the
+lowercase ones. `codex/02-data/sports-data-types-catalog.md` is updated accordingly (2026-07-22): the canonical forms
+are now `odds`, `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`, `odds_horizon_bucket`, `markets`, `outcomes`,
+`settlements` (lower-case), reversing the 2026-07-19 K0-DECISION(b) banner. The two shipped normalizers now point in the
+CORRECT direction (UPPER→lower) — re-point/complete them rather than reversing them. 3.4's phantom-uppercase-`ODDS`
+purge remains gated on **4.4 (Phase 6d)**.
+
+### 4.4 Phase 6d — the sports venue-injection gap must land BEFORE any purge — still OPEN
 
 `deployment-api/deployment_api/services/data_status/mtds.py::is_mtds_honest_coverage_target` **explicitly excludes
 SPORTS** ("bookmaker axis is Phase 6d"). CeFi/TradFi/DeFi/PREDICTION get UAC-declared venues injected with zero manifest
@@ -605,6 +638,12 @@ rows so a fully-absent venue still renders at 0%. Sports does not — its denomi
 venues only. **Purge the zero-capture venues and they vanish from the data-status UI instead of rendering an honest
 0%**, reintroducing exactly the invisibility bug `manifest.py:856-861` documents having fixed elsewhere. Phase 6d is a
 hard prerequisite for 3.2, and desirable before 3.3.
+
+**Status (re-verified 2026-07-22)**: Phase 6d has **NOT** landed — `is_mtds_honest_coverage_target` in
+`deployment-api/deployment_api/services/data_status/mtds.py:230-236` still explicitly returns `False` for
+`cat_key == "SPORTS"` (docstring: "Excludes SPORTS (bookmaker axis is Phase 6d)"), directly re-confirmed by reading the
+file. This remains a **hard prerequisite** for 3.2's purge (and the combined 4.2 purge mechanism) and must be sequenced
+**before** that purge executes — do not purge dead-pair/phantom rows ahead of Phase 6d landing.
 
 ### 4.5 Issue-doc corrections to file
 
@@ -687,3 +726,25 @@ Do not spend engineering time on any of these.
 `Codex SSOTs` this plan is written against: `codex/02-data/availability-manifest-and-data-status.md`,
 `…/honest-coverage-model.md`, `…/gcs-and-manifest-delete-safety-protocol.md`, `…/sports-data-types-catalog.md`,
 `…/sports-gcs-path-ssot.md`, `codex/04-architecture/shard-level-failure-isolation.md`.
+
+---
+
+## Progress Log
+
+**2026-07-22** — Operator made 3 scope decisions on Part 4 in a live interactive chat session (recorded here, not
+previously written to any doc): **4.1** — adopt the EXCLUDE-`empty_confirmed` formula (instruments-service's
+`measure_honest_coverage.py`, matching `codex/02-data/honest-coverage-model.md`) as the ONE global
+`compute_honest_coverage()` formula for **every** asset group; this is a SEPARATE, larger piece of work **out of scope
+for this workflow phase**, needing its own cross-asset-group impact-measurement pass before it ships —
+` _honest_coverage_logic.py` is untouched by this run. **4.2** — BOTH option A (reclassification via the new
+`OUT_OF_COVERAGE_WINDOW_REASONS` codes) AND option B (physical purge) combined: reclassify the dead-pair rows with the
+new reason codes, then also physically purge that same set, rather than either/or. **4.3** — REVERSE K0-DECISION(b):
+lowercase `odds` is canonical, not uppercase `ODDS`, per the physical-estate evidence (zero uppercase `ODDS` objects on
+any of the 3 sampled days). `codex/02-data/sports-data-types-catalog.md` updated same-day to record the reversal
+(banner + Instrument Type Mapping + all 8 worked examples' `instrument_type` corrected from the non-existent-in-prod
+`sports_market` to `odds`, + the `trades` data_type documented for the first time). **4.4** remains OPEN and unstarted —
+re-verified 2026-07-22 by direct code read that Phase 6d has NOT landed
+(`deployment-api/deployment_api/services/data_status/mtds.py:230-236` `is_mtds_honest_coverage_target` still explicitly
+excludes SPORTS); it remains a hard prerequisite for 3.2/4.2's purge and must be sequenced before that purge executes.
+Parallel note: Part 1 items 1.3/1.5/1.6 and Part 2 items 2.2/2.3 are being implemented **in the same run** by sibling
+workflow agents — this entry does not claim that work; see their own commits/banners in Part 1/Part 2 above for status.
