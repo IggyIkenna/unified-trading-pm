@@ -198,19 +198,16 @@ Candidate canaries first (the cloudbuild template names them): `execution-servic
       matrix.
 - [ ] [INFRA] P2. **🟢 UNBLOCKED 2026-07-22 — the 2026-06-18 credential blocker (`cloudbuild.builds.editor`) is
       resolved** (grant confirmed live: manual `gcloud builds triggers run` now succeeds against
-      `central-element-323112`/`asia-northeast1`). Canary sequence run one repo at a time per this plan's own discipline
-      (checkbox flips once all 3 canaries + the rest of the fleet confirm SUCCESS): - `instruments-service` — build
-      `efdeb747-e6fe-46d2-b31c-c209ac37049b` — **SUCCESS** - `execution-service` — build
-      `4e88862b-36bb-40f0-9daa-7fd39cde23b8` — triggered 2026-07-22, IN PROGRESS - `alerting-service` — build
-      `584ee39b-b16b-4b92-96d8-3c9ef9942541` — triggered 2026-07-22, IN PROGRESS
-
-      All 3 canaries build against the fresh UTL base digest
-          `sha256:7f443e9ef81e2ce480935820838b57a345112342e9d1ea9b8d44e04d8bb5f18e` (shipped in Phase 1). Remaining fleet
-          (strategy-service, market-tick-data-service, market-data-processing-service, features-*, ml-*,
-          client-reporting-api, fund-administration-service, batch-live-reconciliation-service, greeks-service,
-          trading-agent-service, deployment-service) queued next, one at a time, STOP + diagnose on first systemic failure
-          — per this todo's original discipline.
-
+      `central-element-323112`/`asia-northeast1`). Canary sequence run one repo at a time per this plan's own
+      discipline, checkbox flips once all 3 canaries + the rest of the fleet confirm SUCCESS. `instruments-service`
+      build `efdeb747-e6fe-46d2-b31c-c209ac37049b` — **SUCCESS**. `execution-service` build
+      `4e88862b-36bb-40f0-9daa-7fd39cde23b8` — triggered 2026-07-22, IN PROGRESS. `alerting-service` build
+      `584ee39b-b16b-4b92-96d8-3c9ef9942541` — triggered 2026-07-22, IN PROGRESS. All 3 canaries build against the fresh
+      UTL base digest `sha256:7f443e9ef81e2ce480935820838b57a345112342e9d1ea9b8d44e04d8bb5f18e` (shipped in Phase 1).
+      Remaining fleet (strategy-service, market-tick-data-service, market-data-processing-service, features-_, ml-_,
+      client-reporting-api, fund-administration-service, batch-live-reconciliation-service, greeks-service,
+      trading-agent-service, deployment-service) queued next, one at a time, STOP + diagnose on first systemic failure —
+      per this todo's original discipline.
 - [ ] [BUG] P2. For every stale base-digest pin found, file the fix (refresh `BASE_IMAGE_DIGEST` ARG) in the owning repo
       — but only AFTER confirming the dependency-update fan-out isn't the intended owner; coordinate, don't fork it.
 
