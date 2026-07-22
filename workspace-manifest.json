@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 83.43,
         "large_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": null,
-        "warn_file_count": 38
+        "warn_file_count": 38,
+        "qg_red_reason": null
       }
     },
     "ml-service": {
