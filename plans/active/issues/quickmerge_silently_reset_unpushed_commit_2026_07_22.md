@@ -27,7 +27,7 @@ summary: >-
   trace actually printed. No confirmed root cause. On retry (same commit, re-run minutes later with a fresh QG sentinel)
   quickmerge shipped cleanly with no recurrence — so this may be a rare race (e.g. the `git fetch origin main --quiet`
   at quickmerge.sh:506 racing against something), not a deterministic bug.
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -49,7 +49,7 @@ execution_scope: local-only
 drift_direction: neutral
 depends_on: []
 assigned_vm: NA
-resolved_by:
+resolved_by: unified-trading-pm@06dc7632
 locked_by:
 last_updated: 2026-07-22
 ---
@@ -109,3 +109,48 @@ Verify `git log --oneline -1` + `git status --porcelain` immediately after every
 treating a `--files`-scoped ship as done. This is already this session's standing practice (per the workspace's
 commit-push-flip-rule + async-wait-discipline rules); this incident is the concrete case that validated why the
 verification step matters even for a "boring" single-file ship.
+
+## Root cause CONFIRMED (2026-07-22) — `cascade_dep_branch`'s unconditional `checkout -B`
+
+Found while investigating the sibling doc `utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` and re-reading
+`cascade_dep_branch()` (`scripts/quickmerge.sh:362-470`) line by line rather than trusting the earlier "only touched
+unified-api-contracts, ruled out" conclusion — that conclusion checked THIS session's own cascade trace, but never
+considered a **different, concurrent** slot's quickmerge invocation.
+
+`cascade_dep_branch(branch_name)` walks every transitive internal-dependency ancestor of the repo being shipped (via
+`workspace-manifest.json`) and, for each ancestor, `cd`s into `$WORKSPACE_ROOT/$ancestor` — a **single shared directory
+on the host, not a private per-slot worktree** — and runs, unconditionally:
+
+```bash
+git checkout -B "$branch_name" "origin/$branch_name" --quiet
+```
+
+`checkout -B` **resets** `refs/heads/$branch_name` to `origin/$branch_name` regardless of whether the local branch
+already has commits ahead of origin. Dirty (uncommitted) changes are protected via `git stash push -u` immediately
+before this — but a **committed, unpushed** commit is not stashed and is silently discarded. The git reflog message this
+produces is literally `branch: Reset to origin/<branch>` — an EXACT match for both this doc's and the sibling doc's
+observed reflog signature — and since `checkout -B` never deletes the commit object (only moves the ref), it remains
+recoverable via reflog until the next gc, matching both docs' "recovered, nothing permanently lost" finding.
+
+`branch_name` is routinely the fleet's own integration branch (`live-defi-rollout`), which is also normally what's
+checked out in every ancestor clone — so **any** concurrent agent's `quickmerge.sh --dep-branch <name>` invocation
+(cascading to that branch) that walks through a widely-depended-upon ancestor like `unified-trading-library` or
+`unified-api-contracts` can silently wipe out a **different agent's** committed-but-unpushed work sitting in that shared
+clone, with zero warning. This is the confirmed mechanism for both this doc AND
+`utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (same repos affected, same reflog signature, same
+recoverable-via-reflog profile).
+
+**Fixed**: `unified-trading-pm@06dc7632`. Before the `checkout -B`, if `refs/heads/$branch_name` already exists with
+commits ahead of `origin/$branch_name`, its tip is preserved to a named, content-addressed local ref
+(`refs/wip-preserve/cascade-<ancestor>-<sha12>`) via `git update-ref` — durable (survives independently of reflog
+expiry), loudly logged with the exact recovery command, and a no-op for the common case (no local-ahead commits).
+Verified against a real git fixture reproducing the exact incident (ahead-by-1 commit → checkout -B discards it from the
+branch → but it's fully recoverable via the preserve ref → `git checkout -B <branch> <preserve-ref>` restores it). STAGE
+5's own two `checkout -B` call sites (lines ~1475/1496) were checked and are **not** affected — both already gate on
+`refs/heads/$BRANCH` existing first and only fall through to `checkout -B` when there is no pre-existing local branch to
+lose, unlike the ancestor-cascade call site which reset unconditionally.
+
+**Not addressed**: pushing the preserve ref for durability beyond the local clone (deliberately out of scope — adds
+network dependency to a step every concurrent agent's cascade calls). Also not addressed: this doc's own earlier "the
+ONLY remaining unexplored path is a race in `git fetch origin main --quiet`" hypothesis is now superseded — the actual
+mechanism was a **different session's** cascade, not a race inside this session's own run.
