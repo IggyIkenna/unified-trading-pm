@@ -190,12 +190,22 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       CLOSED (2026-07-22)**: per-reserve listing-date gate shipped `market-tick-data-service@27e077da` — all 6 reserves'
       `ReserveInitialized` events verified on-chain (earliest wstETH 2023-01-27; latest ezETH 2025-08-17), so a
       full-history backfill starting from any pre-2023 date now correctly renders `EXPECTED_INSTRUMENT_NOT_LISTED`
-      instead of a misleading `SOURCE_RETURNED_ZERO`. **LAUNCHED (2026-07-22)**: SPOT VM
-      `mtds-backfill-defi-aave-oracle-20260722` (zone `asia-northeast1-c`, project `central-element-323112`), command
-      `launch-mtds-backfill-vm.sh --asset-group DEFI --venues AAVE --data-types oracle_prices --start 2023-01-27 --end     2026-07-22`,
-      confirmed RUNNING at launch. Code tarball verified fresh for MTDS (`27e077daef4a`, includes the listing-date gate)
-      and UAC (packaged sha `6329fc04` is a descendant of the AAVE registration `6bdbc31d`). Monitor:
-      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-backfill-defi-aave-oracle-20260722/run.log` +
+      instead of a misleading `SOURCE_RETURNED_ZERO`. **First launch attempt MISDIRECTED (2026-07-22)**:
+      `launch-mtds-backfill-vm.sh --asset-group DEFI --venues AAVE --data-types oracle_prices` (VM
+      `mtds-backfill-defi-aave-oracle-20260722`) — the generic `mtds-backfill` VM_TASK's dispatch in
+      `setup-data-pipeline-vm.sh` only supports `--operation collect-evm-defi`/`collect-solana-defi` for
+      `VM_ASSET_GROUP=DEFI`; there is no branch for `collect-oracle-prices` (the actual operation the AAVE/Chainlink
+      code lives under), so the VM silently ran a full EVM lending_indices backfill (aave_v3/compound_v3/radiant/
+      euler_v2 across ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON) instead — caught at the T+10min check, stopped after
+      ~12min (no `--force`, so idempotent-skip limited the blast radius; no data corruption, just wasted VM-minutes on
+      the wrong task). **Corrected + LAUNCHED (2026-07-22, operator-acked)**:
+      `launch-mtds-pyth-lst-backfill-vm.sh     2023-01-27 2026-07-22` (VM `pyth-lst-backfill-20260722-045059`, zone
+      `asia-northeast1-c`) — this script already wires `VM_TASK=cefi-backfill` + `VM_OPERATION=collect-oracle-prices`,
+      the correct operation; no venue/data-type filtering needed since `oracle_prices_handler.process()` collects
+      Chainlink+Pyth+AAVE together unconditionally for the given date range. Confirmed RUNNING at launch. Code tarball
+      verified fresh for MTDS (`2f3fb7cc`, a descendant of the listing-date gate `27e077daef4a`) and UAC (packaged sha
+      is a descendant of the AAVE registration `6bdbc31d`). Monitor:
+      `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/pyth-lst-backfill-20260722-045059/run.log` +
       manifest `(AAVE, spot_asset, oracle_prices)` shard count (`time_created`), not log activity.
 - [ ] [MTDS] P2. **#1 CEX-spot contiguity backfill** — full-history Tardis backfill over `*-SPOT` LST venues; SPOT VM,
       `tardis-concurrency-guard` cap-1 (dominant constraint), non-1st-of-month dates use the paid academic key. **Still
