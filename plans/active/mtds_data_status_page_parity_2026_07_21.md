@@ -353,57 +353,57 @@ the same fixes.
       `_catalogue.py:75-87` + `test_sports_not_in_identity_catalogue_asset_groups`, unchanged, still correct).
 
       **Trace (done this tick)**: sports/prediction have NO separate manifest-writer pipeline — they flow through the
-          exact same universal orchestrator as every other asset_group.
-          `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
-          `_finalize_prediction_bundles`/`_finalize_sports_...` closures (+ the shared `_write_bundle_shard_row` helper)
-          call `unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py`'s
-          `ManifestWriter.record_captured`/`record_captured_from_counts` (captured rows) and `_writer_record.py`'s
-          `_record_status` (empty/failed/expected_unattempted rows), which both build ONE shared dataclass —
-          `_rows.py::AvailabilityRecord` — the UNIVERSAL manifest-row schema written into `_index/availability_index.parquet`
-          by EVERY asset_group and EVERY producer service (cefi/defi/tradfi/sports/prediction, plus features-service /
-          ml-service / strategy-service / execution-service, which is why `AvailabilityRecord` already carries
-          `feature_group`/`model_family`/`strategy_id`/`client_id`/`instruction_type` columns). There is no
-          sports/prediction-scoped writer to touch in isolation — any new column lands on this ONE shared schema.
+              exact same universal orchestrator as every other asset_group.
+              `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py`'s
+              `_finalize_prediction_bundles`/`_finalize_sports_...` closures (+ the shared `_write_bundle_shard_row` helper)
+              call `unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py`'s
+              `ManifestWriter.record_captured`/`record_captured_from_counts` (captured rows) and `_writer_record.py`'s
+              `_record_status` (empty/failed/expected_unattempted rows), which both build ONE shared dataclass —
+              `_rows.py::AvailabilityRecord` — the UNIVERSAL manifest-row schema written into `_index/availability_index.parquet`
+              by EVERY asset_group and EVERY producer service (cefi/defi/tradfi/sports/prediction, plus features-service /
+              ml-service / strategy-service / execution-service, which is why `AvailabilityRecord` already carries
+              `feature_group`/`model_family`/`strategy_id`/`client_id`/`instruction_type` columns). There is no
+              sports/prediction-scoped writer to touch in isolation — any new column lands on this ONE shared schema.
 
-          **Key finding (changes the framing of "correct fix")**: `is_mvp_for_manifest_row`'s two extra axes beyond
-          `(venue, instrument_type, data_type)` — `base_ccy` (read from a `base_asset` column) and `market_group` — are
-          confirmed ABSENT not just from the read-time manifest DataFrame (already documented at `_coverage_scope.py:96-104`)
-          but from the WRITE-time schema too: neither `base_asset` nor `market_group` appears in UTL's `_ROW_KEY_COLUMNS`
-          or `AvailabilityRecord` fields (`_rows.py`). So a write-time `is_mvp(...)` call would resolve those two kwargs to
-          `None` — IDENTICAL to what the read-time call resolves today. **Write-time precompute is a pure caching/perf
-          optimization, not a correctness fix** — it would not change a single row's `is_mvp` verdict vs. today.
+              **Key finding (changes the framing of "correct fix")**: `is_mvp_for_manifest_row`'s two extra axes beyond
+              `(venue, instrument_type, data_type)` — `base_ccy` (read from a `base_asset` column) and `market_group` — are
+              confirmed ABSENT not just from the read-time manifest DataFrame (already documented at `_coverage_scope.py:96-104`)
+              but from the WRITE-time schema too: neither `base_asset` nor `market_group` appears in UTL's `_ROW_KEY_COLUMNS`
+              or `AvailabilityRecord` fields (`_rows.py`). So a write-time `is_mvp(...)` call would resolve those two kwargs to
+              `None` — IDENTICAL to what the read-time call resolves today. **Write-time precompute is a pure caching/perf
+              optimization, not a correctness fix** — it would not change a single row's `is_mvp` verdict vs. today.
 
-          **Design (for whoever implements)**:
-          1. UTL `manifest_writer/_rows.py`: add `mvp: bool | None = None` (trailing field, back-compat default) to
-             `AvailabilityRecord`; bump `MANIFEST_SCHEMA_VERSION` 9→10 in `_schema.py`.
-          2. UTL `_writer_captured.py::record_captured`/`record_captured_from_counts`: when the resolved `asset_group` is
-             `"sports"`/`"prediction"`, lazy-import UAC `is_mvp` and stamp
-             `is_mvp(asset_group, venue, instrument_type, data_type, league=league_id or None, market_group=None,
-             base_ccy=None, source=resolved_source)` onto the `AvailabilityRecord(...)` call; leave `None` for every other
-             asset_group (no behavior change elsewhere).
-          3. UTL `_writer_record.py::_record_status`: same conditional stamp (sports/prediction also write
-             empty/failed/expected_unattempted rows through this path).
-          4. `deployment-api/_catalogue.py::_row_is_mvp`/`_is_mvp_series`: add a THIRD branch — when `"mvp" in df.columns`
-             for a manifest-backed (non-identity-catalogue) frame, use the precomputed value for rows where it's non-null
-             (`_truthy_mvp` fast path, mirroring the identity-catalogue branch byte-for-byte) and fall back to
-             `is_mvp_for_manifest_row` only for legacy rows where the column is null/absent — old rows keep today's exact
-             behavior.
-          5. Historical rows do NOT retroactively gain `mvp` from steps 1-4 alone — closing the live-compute gap for
-             EXISTING data needs a companion backfill/rebuild pass (the repo already has the pattern:
-             `rebuild_sports_manifest_v9.py` / `rebuild_prediction_manifest.py`), scoped separately.
+              **Design (for whoever implements)**:
+              1. UTL `manifest_writer/_rows.py`: add `mvp: bool | None = None` (trailing field, back-compat default) to
+                 `AvailabilityRecord`; bump `MANIFEST_SCHEMA_VERSION` 9→10 in `_schema.py`.
+              2. UTL `_writer_captured.py::record_captured`/`record_captured_from_counts`: when the resolved `asset_group` is
+                 `"sports"`/`"prediction"`, lazy-import UAC `is_mvp` and stamp
+                 `is_mvp(asset_group, venue, instrument_type, data_type, league=league_id or None, market_group=None,
+                 base_ccy=None, source=resolved_source)` onto the `AvailabilityRecord(...)` call; leave `None` for every other
+                 asset_group (no behavior change elsewhere).
+              3. UTL `_writer_record.py::_record_status`: same conditional stamp (sports/prediction also write
+                 empty/failed/expected_unattempted rows through this path).
+              4. `deployment-api/_catalogue.py::_row_is_mvp`/`_is_mvp_series`: add a THIRD branch — when `"mvp" in df.columns`
+                 for a manifest-backed (non-identity-catalogue) frame, use the precomputed value for rows where it's non-null
+                 (`_truthy_mvp` fast path, mirroring the identity-catalogue branch byte-for-byte) and fall back to
+                 `is_mvp_for_manifest_row` only for legacy rows where the column is null/absent — old rows keep today's exact
+                 behavior.
+              5. Historical rows do NOT retroactively gain `mvp` from steps 1-4 alone — closing the live-compute gap for
+                 EXISTING data needs a companion backfill/rebuild pass (the repo already has the pattern:
+                 `rebuild_sports_manifest_v9.py` / `rebuild_prediction_manifest.py`), scoped separately.
 
-          **Why this STOPS here instead of shipping (explicit scope-risk call, not an oversight)**: step 1 is not a
-          sports/prediction-scoped change — it is a schema addition on the ONE shared `AvailabilityRecord` used by every
-          asset_group and every producer service, so it needs a FULL FLEET redeploy (every live/backfill/cron VM, both
-          clouds, all asset_groups) to take effect, not a bounded single-service change. The manifest-consolidator
-          (Cloud Run/Batch-Fargate) merging old-schema and new-schema per-VM shards together is unverified here and codex
-          documents it as "loud-fails on stale index" — exactly the risk class behind this SAME session's separate CeFi
-          manifest re-stamp (see the "2026-07-21 (tick 2)" progress-log entry above and the deferred-work table below),
-          which needed a snapshot + guarded rollout + an operator-gated Cloud Scheduler pause and is still not fully landed.
-          Given the P2 (not P1) priority, the already-documented "bounded, non-regressed" live-compute cost (no active
-          incident forcing urgency), and the Key Finding above (this is a perf win, not a correctness fix), rushing steps
-          1-4 here would repeat the exact near-miss pattern this plan has already flagged twice. Left at P2 with the design
-          above ready to hand off; NOT force-shipped.
+              **Why this STOPS here instead of shipping (explicit scope-risk call, not an oversight)**: step 1 is not a
+              sports/prediction-scoped change — it is a schema addition on the ONE shared `AvailabilityRecord` used by every
+              asset_group and every producer service, so it needs a FULL FLEET redeploy (every live/backfill/cron VM, both
+              clouds, all asset_groups) to take effect, not a bounded single-service change. The manifest-consolidator
+              (Cloud Run/Batch-Fargate) merging old-schema and new-schema per-VM shards together is unverified here and codex
+              documents it as "loud-fails on stale index" — exactly the risk class behind this SAME session's separate CeFi
+              manifest re-stamp (see the "2026-07-21 (tick 2)" progress-log entry above and the deferred-work table below),
+              which needed a snapshot + guarded rollout + an operator-gated Cloud Scheduler pause and is still not fully landed.
+              Given the P2 (not P1) priority, the already-documented "bounded, non-regressed" live-compute cost (no active
+              incident forcing urgency), and the Key Finding above (this is a perf win, not a correctness fix), rushing steps
+              1-4 here would repeat the exact near-miss pattern this plan has already flagged twice. Left at P2 with the design
+              above ready to hand off; NOT force-shipped.
 
 - [x] N. ✅ [BACKEND] P1. **MDPS parity — traced + backend honest-coverage SHIPPED** (`unified-api-contracts@a7798b93` +
       `deployment-api@60a23ae`, both verified landed on origin by SHA). **Traced first** (Explore agent, before writing
@@ -502,15 +502,46 @@ the same fixes.
       `mvp_scope_catalogue_tagging_2026_06_08.md` (which has its own open Phase-2+ features/strategy/model items,
       unrelated to this plan — don't pull those in) and annotate that plan's "Composes with" section with a pointer back
       here so a future reader doesn't re-discover the MTDS gap from scratch.
-- [ ] [BACKEND] P2. MDPS honest-coverage follow-up: make the Tier-2 (venue-level, non-per-instrument) branch in
-      `mtds_honest_coverage_for_venue` timeframe-aware too — deliberately deferred from the shipped
-      `unified-api-contracts@a7798b93`/`deployment-api@60a23ae` work since the reviewed scope was Tier-3-only.
-      Concretely affects MDPS's `liquidations` data_type (the one current `MDPS_DERIVABLE_DATA_TYPES` member that
-      dispatches to the venue-level branch, not Tier-3) — its denominator currently under-multiplies by
-      `len(timeframes)` for MDPS. Also single-source `path_combinatorics.py`'s `PROCESSING_DATA_TYPES` from the new UAC
-      `MDPS_DERIVABLE_DATA_TYPES` registry (the design's item 14, not done in the shipped commit — currently a duplicate
-      hardcoded list with the same 2 values, so no live bug today, but will silently drift the next time either list
-      changes).
+- [x] N. ✅ [BACKEND] P2. **MDPS honest-coverage follow-up — SHIPPED** (`deployment-api@43f067e`, content-verified on
+      origin via `merge-base --is-ancestor` against the exact SHA). Made the Tier-2 (venue-level, non-per-instrument)
+      branch in `mtds_honest_coverage_for_venue` timeframe-aware, mirroring the Tier-3 `per_instrument_coverage` pattern
+      exactly: extracted the branch into a new `_tier2_dt_entry()` helper — `expected_shards` multiplies by
+      `len(timeframes)` and the found-set becomes `(date, timeframe)` pairs read from the manifest's `timeframe` column
+      (restricted to `expected_dates` AND the canonical timeframe list) when `timeframes` is supplied; a manifest slice
+      with no `timeframe` column degrades to zero found pairs — honestly 0%, never a `KeyError` — matching the Tier-3
+      contract; `timeframes=None` (every existing MTDS caller) reproduces the prior per-(venue, dt, date) denominator
+      byte-for-byte. Concretely fixes MDPS's `liquidations` data_type (confirmed NOT in UAC's
+      `_PER_INSTRUMENT_SHARD_DATA_TYPES`, so it always dispatches to Tier-2), which previously under-multiplied its
+      denominator by `len(timeframes)`. **Also single-sourced `path_combinatorics.py`'s `PROCESSING_DATA_TYPES` from UAC
+      `MDPS_DERIVABLE_DATA_TYPES`** (design item 14). **Correction to this todo's own prior assumption**: this is NOT a
+      no-op/cosmetic rename — direct inspection of `unified_api_contracts/registry/processed_data_dependencies.py`
+      (git-blamed to `a7798b93`, the SAME commit this todo cites as already-shipped) showed `MDPS_DERIVABLE_DATA_TYPES`
+      was `frozenset(_RAW_TO_PROCESSED_PREFIX)     | frozenset(_PASSTHROUGH_RAW_FOR_OHLCV)` = **~12 values** (`trades`,
+      `book_snapshot_5`, `derivative_ticker`, `liquidations`, the DEFI per-pool/index types, `ohlcv_1m`, `odds`,
+      `prediction_market`) even at that commit — never "the same 2 values" as the local hardcoded
+      `["trades", "derivative_ticker"]` this todo described. Widening `PROCESSING_DATA_TYPES` to the real UAC set is the
+      correct fix for parity with what `mtds.py`'s own `get_expected_data_types_for_venue(service=...)` already treats
+      as MDPS-derivable, but it IS a genuine behavior change to the `/turbo` GCS-prefix combinatorics path
+      (`_get_processing_combinatorics` in `path_combinatorics.py`, consumed by `get_data_status_turbo_impl` →
+      `_check_asset_group` → `query_specific_prefixes_for_asset_group`): MDPS combinatorics now additionally cover
+      `book_snapshot_5`/`liquidations`/DEFI pool-index types/`ohlcv_1m` wherever a venue declares them, not just
+      `trades`/`derivative_ticker`. Updated the one existing test
+      (`test_processing_service_filters_to_valid_data_types`) that asserted the stale exclusion of `book_snapshot_5`,
+      and strengthened it with a real negative case (`options_chain`, which has no UAC candle form and correctly stays
+      excluded). New unit tests in `test_mdps_timeframe_aware_honest_coverage.py::TestTier2VenueLevelTimeframeAwareness`
+      (5 tests: expected/found-shard math, garbage-timeframe rejection, no-timeframe-column zero-found degrade, and two
+      byte-for-byte-unchanged-when-`timeframes=None` variants). Verified via `QG_SLICE=lint-codex` (full pass) +
+      `QG_SLICE=typecheck` (0 basedpyright errors on the 4 touched files) + full `quality-gates.sh --no-fix` (4891
+      passed; the only 4 failures were a concurrent agent's unrelated, uncommitted `/turbo`-scope WIP in
+      `_deploy_turbo.py`/`test_route_data_status_live.py` — confirmed via `git diff` showing a `# DEBUG-TEMP` marker and
+      a brand-new test class absent from `HEAD`, not touched). Shipped with `--skip-preflight` (documented
+      multi-agent-use flag) because deployment-api's pinned `unified-api-contracts` dependency directory was
+      concurrently dirty (another live agent's WIP, confirmed via <120s file mtimes — LIVENESS-gated PROTECT, not
+      touched); safe because deployment-api has no editable/path dep on UAC
+      (`dep-content gate: no editable deps — PASS`) — the shipped code was tested against the pinned, installed UAC
+      package version, not the dirty local checkout, and the UAC symbols this ship depends on
+      (`MDPS_DERIVABLE_DATA_TYPES`, `get_expected_timeframes_for_venue_dt`, `is_per_instrument_shard_data_type`) were
+      already stable/shipped well before the concurrent session started.
 - [x] N. ✅ [DATA] P3. **Resolved by direct production-data investigation, 2026-07-22 — no migration needed.** Read the
       live manifest (`market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, 10,490,576
       rows) and found **exactly 6 total `market-data-processing-service` rows in the ENTIRE manifest**, ALL
