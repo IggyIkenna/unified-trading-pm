@@ -687,3 +687,40 @@ running" — process (PID 9641) confirmed alive via `kill -0`, log progressing n
 its bounded retry budget (~4 attempts / ~11min remaining before the 25-attempt cap). Next tick resumes on whichever
 fires first: the watchdog reporting a terminal state, or picking up the next open todo (`get_instruments_list`
 search+shape bug, or MVP-scope wiring into MTDS coverage) while it finishes.
+
+### 2026-07-22 (final tick) — session close-out: all P0/P1 backend+UI engineering items shipped; audit + deferred-work table
+
+Every P0 and P1 todo with a clear, executable scope is now shipped and verified on origin by SHA (see the checklist
+above for each commit). Two multi-phase Workflow runs (research → design → 3-way adversarial review → implement →
+independent verify) were used for the MDPS timeframe-coverage extension and the universal search-bar click-through,
+given both touch data-correctness-sensitive or contract-sensitive surfaces — each caught real, concrete bugs the
+single-pass design/implementation missed (documented inline at each todo above), which a lighter-weight process would
+likely have shipped uncaught. Ran a post-phase codex audit (`codex/02-data/honest-coverage-model.md` now documents the
+MDPS timeframe axis) and a plan-hygiene pass (deduped a stale, already-shipped todo that was left unchecked from an
+earlier revision).
+
+**What's still genuinely open** — every item below already has its own `- [ ]` todo above; this table exists per the
+session-end hygiene rule to separate the three kinds of "not done," not to duplicate them:
+
+| Item                                                                                                      | State              | Blocked on                                                                                                                                                                                             |
+| --------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Manifest re-stamp final write (CeFi venue-as-chain historical fix)                                        | Cannot be done yet | **Operator**: authorize a ~3-5min pause of the `manifest-consolidator-market-data-cefi` Cloud Scheduler cron (root cause pinpointed precisely; see `distinct_values_noncanonical_audit_2026_07_20.md`) |
+| Bug C live-data verification against the operator's original screenshot                                   | Not done           | Nobody — genuine engineering work (reproduce against real GCS/manifest data for the specific venue/instrument), just not attempted this session; moderate effort, no blocker                           |
+| `/turbo` endpoint MVP-scope gap (only `/manifest` got `scope=mvp`)                                        | Not done           | Nobody — scoped, small, follow-up engineering                                                                                                                                                          |
+| Sports/prediction MVP-column real fix (precompute onto the manifest writer)                               | Not done           | Nobody — needs tracing the sports/prediction manifest-writer pipeline first (not yet done); correct fix direction is documented, wrong fix (redirect to identity-catalogue) is explicitly ruled out    |
+| MDPS Tier-2 (venue-level) timeframe-awareness + `PROCESSING_DATA_TYPES` single-sourcing                   | Not done           | Nobody — deliberately out of the reviewed scope for the shipped Tier-3 work; narrow, well-defined follow-up                                                                                            |
+| MDPS `historical_coverage_gap` real fix (backfill/relabel vs. compat shim)                                | Cannot be done yet | **Operator decision**: which of the two real fixes to pursue (flagged via a response field in the meantime, not silently wrong)                                                                        |
+| MDPS per-timeframe start-date divergence question                                                         | Cannot be done yet | **Operator/data**: needs a factual answer about real deployed venue cadence config; API surface already supports the answer either way without a signature change                                      |
+| `data_status_cell_grid_rearchitecture_2026_07_18.md` OOM vs. "MTDS needs to be faster" — same root cause? | Not done           | Nobody — a distinct investigation, not started this session                                                                                                                                            |
+| Final MTDS/MDPS-parity confirmation pass (`[UI]` + `pw:L2`)                                               | Not done           | Nobody — the shipped UI work each carries its OWN regression spec already, but the plan's broader "confirm full parity" todo as originally scoped hasn't had its own dedicated pass                    |
+
+**Recommended next item**: the manifest re-stamp cron-pause authorization — it's the only item blocking on a single,
+fast operator decision (a ~5-minute production action) rather than more engineering time, and closing it out finishes a
+genuinely separate, real data-correctness fix (`mtds@accd8aa4`) that's been ready and waiting since earlier in this
+session.
+
+**Safe to compact**: yes — every shipped item is committed, pushed, and SHA-verified on `origin/live-defi-rollout`
+across `deployment-api`, `deployment-ui`, `unified-api-contracts`, `deployment-service`, and `unified-trading-library`;
+`git status` in each touched repo is clean; nothing depends on a scratchpad path. Two operator-decision points and a
+handful of well-scoped, non-blocking engineering follow-ups remain, all tracked as `- [ ]` todos above — none of them
+represent lost or hidden work.
