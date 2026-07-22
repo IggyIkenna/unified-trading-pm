@@ -419,6 +419,52 @@ def validate_frontmatter(doc_type: str | None, fm: dict, reg: Registries) -> lis
     return out
 
 
+def validate_doc_references(path: Path, fm: dict, doc_type: str) -> list[Violation]:
+    """Existence-only check for frontmatter fields that reference OTHER docs by relative path
+    (`related`, `codex_ssots`, `supersedes`, `superseded_by`, `depends_on`, `related_plans`,
+    `referenced_by`, `doc_versions_checked`, ...) — any `free_list` field, scanned generically.
+
+    Deliberately scoped to PATH-SHAPED entries only (contains '/' and ends `.md`/`.mdc`), e.g.
+    `related: [../../codex/foo.md]`. A bare slug (`depends_on: [some_plan_2026_07_01]`) or a
+    topic string (`authoritative_for: [quickmerge]`) is NOT resolved — that needs a directory
+    search across active/archive/epics with real ambiguity, a different (bigger) problem than
+    "does the stated path exist". `code_refs` naturally falls outside this (points at `.py`
+    modules, often in a sibling repo not checked out here — the `.md`/`.mdc` filter excludes it
+    without needing to special-case the field name).
+
+    Tries three resolutions before flagging: relative to the referencing doc's own directory (how
+    `related`'s corpus values are actually written, e.g. `../../codex/...`), relative to the PM
+    root (how `codex_ssots`'s values are written, e.g. `codex/...`), then — MEASURED 2026-07-22
+    against the live corpus: 244 of an initial 336 "broken" hits were references to a plan that
+    had since been completed and moved to `plans/archive/**` (a normal lifecycle event, not
+    breakage) — a basename search under `plans/archive/**`. Only a reference that resolves under
+    NONE of the three is flagged; this keeps the check pointed at genuine dead links, not routine
+    archival.
+    """
+    out: list[Violation] = []
+    specs = UNIVERSAL_CORE + PER_TYPE.get(doc_type, [])
+    pm_root = _pm_root()
+    doc_dir = path.resolve().parent
+    for spec in specs:
+        if spec.kind != "free_list":
+            continue
+        v = fm.get(spec.name)
+        if not isinstance(v, list):
+            continue
+        for entry in v:
+            # Whitespace rules out a path — a free-text sentence that happens to MENTION a path
+            # (measured: `authoritative_for` occasionally reads as prose, e.g. "redirect stub —
+            # CI/CD flow SSOT is codex/08-workflows/ci-cd-flow.md") is not a reference to resolve.
+            if not isinstance(entry, str) or " " in entry or "/" not in entry or not entry.endswith((".md", ".mdc")):
+                continue
+            if (doc_dir / entry).is_file() or (pm_root / entry).is_file():
+                continue
+            if any((pm_root / "plans" / "archive").glob(f"**/{Path(entry).name}")):
+                continue
+            out.append(Violation(spec.name, Sev.HARD, f"referenced doc '{entry}' does not exist"))
+    return out
+
+
 # ----------------------------------------------------------------------------- CLI
 def _pm_root() -> Path:
     return Path(__file__).resolve().parents[2]

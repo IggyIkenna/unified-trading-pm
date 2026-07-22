@@ -17,18 +17,30 @@ frontmatter gate.
 Supplementary check preserved from the retired narrow gate (not in the docspec field specs):
 an audit-result must carry a non-empty `instructions_ref`.
 
+Also runs docspec.validate_doc_references() (existence-only check for frontmatter fields that
+reference OTHER docs by relative path — `related`, `codex_ssots`, `supersedes`, etc.), ratcheted
+against doc_reference_baseline.yaml so PRE-EXISTING dead links (91 seeded 2026-07-22) don't fail
+every run — only a reference NOT in the baseline (genuinely NEW breakage) fails the gate.
+
 Usage: check_frontmatter_schema.py [file ...]   # no args -> full live corpus
-  --quiet      suppress the success line
+  --quiet                    suppress the success line
+  --update-doc-ref-baseline  regenerate doc_reference_baseline.yaml from the CURRENT full-corpus
+                              scan (run after a cleanup pass; NEVER to launder a check you just
+                              introduced — see the baseline file's own header)
 Exit 0 = zero violations. Exit 1 = violations (each printed with its remedy).
 """
 
 from __future__ import annotations
 
 import importlib.util
+import re
 import sys
 from pathlib import Path
 
+import yaml
+
 PM = Path(__file__).resolve().parents[2]
+DOC_REF_BASELINE = Path(__file__).resolve().parent / "doc_reference_baseline.yaml"
 
 # Live doc trees (glob patterns relative to the PM root). plans/archive is EXCLUDED by design.
 DOC_TREES: tuple[str, ...] = (
@@ -66,17 +78,35 @@ def _iter_docs() -> list[Path]:
     return sorted(out)
 
 
+def _load_doc_ref_baseline() -> set[str]:
+    if not DOC_REF_BASELINE.is_file():
+        return set()
+    data = yaml.safe_load(DOC_REF_BASELINE.read_text()) or {}
+    return set(data.get("known_broken") or [])
+
+
+def _doc_ref_key(rel_path: str, field: str, message: str) -> str:
+    m = re.search(r"referenced doc '([^']+)' does not exist", message)
+    entry = m.group(1) if m else message
+    return f"{rel_path}::{field}::{entry}"
+
+
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     quiet = "--quiet" in args
+    update_baseline = "--update-doc-ref-baseline" in args
     files = [Path(a) for a in args if not a.startswith("--")]
 
     ds = _load_docspec()
     reg = ds.load_registries(PM)
-    paths = files if files else _iter_docs()
+    # --update-doc-ref-baseline always scans the FULL corpus — the baseline represents total
+    # corpus state, not whatever subset happened to be passed as file args.
+    paths = _iter_docs() if update_baseline else (files if files else _iter_docs())
+    baseline = _load_doc_ref_baseline()
 
     checked = 0
     bad: list[tuple[Path, list[str]]] = []
+    new_doc_ref_keys: set[str] = set()
     for path in paths:
         if ds.is_exempt(str(path)):
             continue
@@ -98,8 +128,29 @@ def main(argv: list[str] | None = None) -> int:
         # (path-keying would newly fail ~15 pre-existing verdict-pack docs — widen only via worklist)
         if fm.get("type") == "audit-result" and not fm.get("instructions_ref"):
             problems.append("instructions_ref: required non-empty on audit-results")
+
+        # Doc-reference existence — ratcheted against the baseline (see doc_reference_baseline.yaml
+        # header): a key already in the baseline is pre-existing debt, tolerated; anything else is a
+        # NEW broken reference and fails the gate same as any other HARD violation.
+        rel = path.resolve().relative_to(PM).as_posix()
+        for v in ds.validate_doc_references(path, fm, dt):
+            key = _doc_ref_key(rel, v.field, v.message)
+            if update_baseline:
+                new_doc_ref_keys.add(key)
+            elif key not in baseline:
+                problems.append(f"{v.field}: {v.message} (NEW — not in doc_reference_baseline.yaml)")
+
         if problems:
             bad.append((path, problems))
+
+    if update_baseline:
+        DOC_REF_BASELINE.write_text(
+            DOC_REF_BASELINE.read_text().split("known_broken:")[0]
+            + "known_broken:\n"
+            + "".join(f"  - {yaml.safe_dump(k, default_style=chr(34)).strip()}\n" for k in sorted(new_doc_ref_keys))
+        )
+        print(f"doc_reference_baseline.yaml regenerated: {len(new_doc_ref_keys)} known_broken entries.")
+        return 0
 
     if bad:
         print(f"❌ check_frontmatter_schema: {len(bad)} doc(s) with frontmatter violations:", file=sys.stderr)
