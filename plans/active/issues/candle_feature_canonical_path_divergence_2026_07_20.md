@@ -964,3 +964,55 @@ not sufficient — before stopping any VM found running during a JIT redrain, co
 OBJECT PREFIX the migration's `--apply` touches** (grep the target script's root-prefix constant, as done here), not
 just the bucket name or an asset_group tag. Apply this tightened check for the PREDICTION/CEFI/TRADFI JIT redrains next
 — a same-bucket VM on a disjoint prefix is not a conflict and should be left alone.
+
+## Progress Log — 2026-07-22 (P7a-full: DEFI full apply RUN 1 COMPLETE — all 10 shards exit=5, 211 stragglers, retry launched)
+
+All 10 shards reached `EXIT_STATUS` between 19:30-19:36 UTC. **All 10 exited `rc=5`, not `0`** — this is the migration
+script's own convention for "COMPLETE WITH STRAGGLER(S)", not a crash: each shard fully walked its enumeration
+(`apply: N processed` reached the shard total for all 10), and the non-success outcomes are 100% transient GCS errors
+during `copyTo` (`ServiceUnavailable`/`GatewayTimeout`, "We encountered an internal error. Please try again."),
+consistent with backend write-QPS throttling from 10 concurrent VMs bulk-copying against one bucket simultaneously.
+
+**Aggregate**: 1,131,814 objects processed across the 10 shards; 211 total stragglers (17-29 per shard); every straggler
+breakdown is `ERROR:ServiceUnavailable`/`ERROR:GatewayTimeout` only — no `ERROR:` category indicating a real data/logic
+bug. **211/1,131,814 ~= 0.019% failure rate.** Per the script's own log line: "these objects were attempted but did NOT
+complete and remain at their legacy path. A re-run with the SAME --enumeration/--out/--shard-of/
+--shard-index/--limit/gates is safe (idempotent) and will retry them" — data is NOT lost or corrupted, the straggler
+objects simply weren't moved this run.
+
+**Per-shard result** (VM name -> processed / stragglers):
+
+| Shard | VM name     | processed | stragglers |
+| ----- | ----------- | --------: | ---------: |
+| 0     | `...s0of10` |   112,380 |         17 |
+| 1     | `...s1of10` |   112,469 |         27 |
+| 2     | `...s2of10` |   112,347 |         20 |
+| 3     | `...195327` |   112,292 |         20 |
+| 4     | `...195406` |   112,793 |         19 |
+| 5     | `...195449` |   112,381 |         17 |
+| 6     | `...195524` |   112,823 |         24 |
+| 7     | `...195603` |   113,436 |         17 |
+| 8     | `...195642` |   115,301 |         29 |
+| 9     | `...195733` |   115,592 |         21 |
+
+**Caveat found while planning the retry**: `_candle_apply_cmd`'s compound shell command only uploads `mappings/` to GCS
+on the `&&`-gated SUCCESS path (`... && gcloud storage cp -r mappings/ ${stage}`) — since the python step exited
+non-zero (rc=5), that upload never ran, AND `VM_SHUTDOWN_ON_COMPLETION=true` already self-deleted all 10 VMs. So the
+per-run checkpoint/mapping state is NOT recoverable from GCS for a targeted "resume from exact checkpoint" retry — the
+only available retry path is a fresh full-shard re-run (same as the original invocation). This is fine: `_stable_shard`
+hashes by object path (not enumeration line position), so a fresh `gcloud storage ls -r` enumeration this run still
+partitions objects identically, and the script's own `VERIFIED_INPLACE` classification means the ~99.98% already-
+migrated objects will short-circuit as cheap existence-checks rather than being re-copied — so the retry's actual GCS
+write-QPS (the likely 503 root cause) should be far lower than run 1's, since run 1 was doing ~1.13M real `copyTo` calls
+and this retry only needs ~211.
+
+**Action taken**: launched 10 retry shards (`SHARD_OF=10`, `SHARD_INDEX=0..9` explicitly pinned per invocation — same
+recovery pattern as the original run's shards 3-9, run via a single backgrounded loop to avoid the foreground 2-min
+timeout from the start this time), same proven tarball SHA pins (`MDPS=c64a7dfa9d9f0689e13c92839e386cd45978a718`,
+`UAC=c4e1acee147a53aaf0df4e0d8dad1289e2210f79`, `UTL=b0ec1da02c5fe7dfd94550a9354542fc2a00fc0b`), `WORKERS=16`,
+`MODE=full`. **STATUS: retry IN FLIGHT, not yet verified.** A fresh session should check the retry VMs' `EXIT_STATUS`
+(names differ from run 1 — new timestamps, no `-sNof10` suffix on any of the 10 this time since all were launched via
+explicit `SHARD_INDEX` pinning) before assuming DEFI is done. If the retry still leaves a handful of stragglers, iterate
+once more (same idempotent re-run) — do not treat a small residual straggler count after 1-2 retries as blocking; if it
+doesn't converge to 0 after ~3 attempts, that would indicate a REAL (non-transient) failure mode and warrants inspecting
+the specific objects rather than blindly retrying again.
