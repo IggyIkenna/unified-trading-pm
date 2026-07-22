@@ -127,8 +127,8 @@ papering over them.
       in this session, see Progress Log).
 - [x] 2. [DATA] P1. Fix W1 `partitioned_writer.py:291-292` to derive `quote`/`margin` for **cefi** chains as well as
       tradfi (mirror the tradfi branch; use the cefi quote/margin derivation, not `_tradfi_chain_partition_dims`), so W1
-      emits the v6 tail. Keep combo EXCLUDED. — **CODE DONE + TESTED, NOT YET SHIPPED** (see Progress Log — blocked on
-      two unrelated pre-existing/concurrent MTDS repo-wide QG failures, not a defect in this fix). Added
+      emits the v6 tail. Keep combo EXCLUDED. — **SHIPPED 2026-07-22: `market-tick-data-service@04222eb0`** (the 2
+      blocking MTDS QG regressions this doc originally cited are both resolved — see Progress Log). Added
       `_cefi_chain_partition_dims` (derives via the SAME `derive_settlement_dimensions` W2 already uses per-symbol) +
       wired it into `write_chunk`'s branch alongside the tradfi one. **Also fixed a corollary bug found while
       implementing this**: the writer-object CACHE key in `_get_writer` (and `close()`'s log-line unpacking) was a fixed
@@ -146,9 +146,9 @@ papering over them.
       UAC previously had NO structural chain-tail enforcement for cefi, only for tradfi; updated the stale
       `test_cefi_chain_ticks_parquet_is_never_flagged` test that had asserted a bare v5 cefi chain path was canonical —
       split into a v6-passes + v5-now-flagged pair). **MTDS portion (the widened call site + rename to
-      `_assert_canonical_chain_path`) CODE DONE + TESTED, NOT YET SHIPPED** — same block as todo 2, see Progress Log.
-      Scoped to cefi's two real chain types ONLY (`options_chain`/`futures_chain`, not blanket `asset_group == "cefi"`)
-      — a blanket cefi guard would break ~10 EXISTING passing cefi single-instrument tests that intentionally exercise
+      `_assert_canonical_chain_path`) SHIPPED** — same commit as todo 2 (`market-tick-data-service@04222eb0`). Scoped to
+      cefi's two real chain types ONLY (`options_chain`/`futures_chain`, not blanket `asset_group == "cefi"`) — a
+      blanket cefi guard would break ~10 EXISTING passing cefi single-instrument tests that intentionally exercise
       non-canonical fallback id shapes (verified before scoping this way). Prediction chains NOT widened — no
       concretely-defined "prediction chain" analog exists in this codebase (prediction's bundling is
       `canonical_question_group`/event_contract, not the `options_chain`/`futures_chain` writer-key mechanism) and
@@ -168,12 +168,12 @@ papering over them.
       directly maps to `_row_counts`/`underlying_counts`, already fixed) — flagging as a residual, smaller finding for a
       follow-up rather than expanding scope further.
 - [ ] 5. [DATA] P1. PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the
-      v6-first probe at `reader.py:402`), with the guard raising on a synthetic v5 path. — **NOT ATTEMPTED**: per the
-      task's explicit CAUTION, an active `canonical-migration-cefi-*` VM fleet is running a separate migration against
-      the SAME `market-data-tick-cefi-prd` bucket right now, and the code fix itself could not be shipped this session
-      (see Progress Log) — proving a real-day run against unshipped code would not be meaningful evidence. Unit-level
-      proof (mocked writer, no real GCS) is in `tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py`; the real-day
-      round-trip proof is deferred to Round 2 alongside shipping.
+      v6-first probe at `reader.py:402`), with the guard raising on a synthetic v5 path. — **Code now SHIPPED
+      (`market-tick-data-service@04222eb0`) and the `canonical-migration-cefi-*` VM fleet that originally blocked this
+      (interference risk on the same bucket) has since TERMINATED (verified 2026-07-22) — the blocker is cleared.**
+      Unit-level proof (mocked writer, no real GCS) is in `tests/unit/test_partitioned_writer_cefi_chain_tail_v6.py` (6
+      tests, all passing); the real-day GCS round-trip proof is still **NOT ATTEMPTED** and remains Round 2 work —
+      genuinely separate operational verification, not a doc update.
 - [ ] 6. [DATA] P1. Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5),
       recording any v5 collisions where two logical chains overwrote one object as unrecoverable rather than silently
       merging. — **DEFERRED to Round 2** (out of scope for this session per task instructions; todo 1's finding that W1
