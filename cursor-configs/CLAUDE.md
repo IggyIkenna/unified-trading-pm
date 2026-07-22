@@ -37,10 +37,13 @@
 
 ## Model tier
 
-Default **Sonnet 4.6 / thinking: medium**; `model_tier: opus-required` only for main orchestrator / cross-repo arch
-/ >200k ctx; `thinking: max` requires Opus (`medium` on Opus is always wrong); sub-agent `Agent` calls MUST set `model=`
-explicitly. Self-check every task start: Sonnet on opus-required → STOP; thinking mismatch → HARD STOP. SSOT:
-`codex/06-coding-standards/model-tier-selection.md`.
+Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes — no
+effort level requires or implies a model tier (ground truth: `agent-orchestrator/server/model_tier.py`, 2026-07).
+`model_tier: opus-required` only for main orchestrator / cross-repo arch / >200k ctx (unchanged). **Effort default
+(operator ruling 2026-07-22)**: a plan/task declaring no tier gets a todo-count-derived default, not a silent "medium" —
+`xhigh` baseline, `max` past `LARGE_PLAN_TODO_THRESHOLD` (10) open todos; declare `effort:` explicitly to override.
+Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP;
+effort mismatch → HARD STOP. SSOT: `codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
 

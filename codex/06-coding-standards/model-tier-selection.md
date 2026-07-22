@@ -1,11 +1,15 @@
 ---
 doc_type: codex-ssot
 title: Model Tier Selection — Sonnet 4.6 vs Opus 4.8
-summary:
-  Model-tier + thinking-effort selection SSOT — default Sonnet 4.6/medium; Opus 4.8 only for the main orchestrator /
-  cross-repo architecture / provably >200k context; thinking:max requires Opus (medium on Opus is always wrong). Covers
-  the mandatory task-start self-check (model + thinking mismatch → STOP/FLAG), always-set sub-agent model=, and the
-  orchestrator's frontmatter-driven autospawn tier enforcement.
+summary: >-
+  Model-tier + effort selection SSOT — model tier (sonnet/opus/fable) and effort (low<medium<high<xhigh<max) are
+  INDEPENDENT axes (ground truth: agent-orchestrator/server/model_tier.py, 2026-07) — effort is the primary reasoning
+  control on every adaptive-reasoning model (sonnet/opus/fable alike, Haiku excluded), NOT opus-gated. Model tier:
+  default Sonnet, Opus only for the main orchestrator / cross-repo architecture / provably >200k context. Effort: a plan
+  declaring no tier gets a todo-count-derived default (xhigh baseline, max past model_tier.LARGE_PLAN_TODO_THRESHOLD
+  open todos — operator ruling 2026-07-22), not a silent "medium". Covers the mandatory task-start self-check (model +
+  effort mismatch → STOP/FLAG), always-set sub-agent model=, and the orchestrator's frontmatter-driven autospawn tier
+  enforcement.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -132,19 +136,25 @@ unit as the substantive change — do NOT mass-sweep, per Findings Triage).
 The orchestrator now **reads both tier fields from plan frontmatter and spawns the worker accordingly** — declaring a
 tier is no longer advisory-only:
 
-- `model_tier: opus-required` → the regen-derived backlog task gets `model: opus`; else `sonnet`.
-- `thinking_tier: max | high | medium` → task `effort`/`thinking`: `max`→`effort=max`+extended-thinking on (pairs with
-  opus); `high`→`effort=high`; `medium`/absent → spawn default.
-- `AutoSpawnLoop` spawns an idle slot's worker at the **top queued task's** model+effort+thinking (the worker's model is
-  fixed at spawn, before dispatch picks its task — so it's chosen from the highest-priority pending task).
+- `model_tier: opus-required` → the regen-derived backlog task gets `model: opus`; else `sonnet`. Effort is a SEPARATE
+  decision (below) — it does not follow from model tier in either direction.
+- `thinking_tier: max | high | medium` → task `effort`: `max`→`effort=max`; `high`→`effort=high`; `medium`/absent (and
+  no `effort:` frontmatter, no `assigned_role`) → **todo-count-derived default** (operator ruling 2026-07-22): `max` if
+  the plan has more than `model_tier.LARGE_PLAN_TODO_THRESHOLD` (10) open todos, else `xhigh` — replacing what used to
+  be a silent, bare "medium" spawn default. None of this implies or requires `model: opus`.
+- `AutoSpawnLoop` spawns an idle slot's worker at the **top queued task's** model+effort (the worker's model is fixed at
+  spawn, before dispatch picks its task — so it's chosen from the highest-priority pending task).
 
 Code: `agent-orchestrator/server/regen_backlog_from_plan.py` (`_parse_frontmatter_model_tier` +
-`_parse_frontmatter_thinking_tier`) → `server/backlog.py::BacklogTask` (`model`/`effort`/`thinking`) →
-`server/autospawn.py::_top_queued_task_params`. Coverage audit: `unified-trading-pm/scripts/plans/audit_model_tier.py`.
-Until a plan declares `model_tier`, it silently defaults to Sonnet. Backfilled opus set (2026-06-01):
-`master_to_live_defi`, `mdps_long_running_multi_shard_architecture_audit`, `mdps_pure_polars_migration`,
-`global_ledger_pnl_attribution_migration`, `regime_clustering_structure_allocator`, `solana_basis_trading_mvp`,
-`pipeline_mode_audit`.
+`_parse_frontmatter_thinking_tier` + the todo-count-derived default added right after the explicit-`effort:` override) →
+`server/backlog.py::BacklogTask` (`model`/`effort`/`thinking`) → `server/autospawn.py::_top_queued_task_params`. Shared
+threshold constant: `server/model_tier.py::LARGE_PLAN_TODO_THRESHOLD` (also used by `context_lifecycle.py`'s
+large-plan-worker carve-out from the worker exclusion, so the two never drift apart). Coverage audit:
+`unified-trading-pm/scripts/plans/audit_model_tier.py`. Until a plan declares `model_tier`, it silently defaults to
+Sonnet (model tier's silent default is UNCHANGED by the 2026-07-22 ruling — only effort's silent default changed).
+Backfilled opus set (2026-06-01): `master_to_live_defi`, `mdps_long_running_multi_shard_architecture_audit`,
+`mdps_pure_polars_migration`, `global_ledger_pnl_attribution_migration`, `regime_clustering_structure_allocator`,
+`solana_basis_trading_mvp`, `pipeline_mode_audit`.
 
 ---
 
@@ -251,24 +261,48 @@ Sonnet-suitable work if the parent happens to be Opus.
 - Pre-escalating to Opus "just in case" without a provable context-size argument
 - Omitting `model_tier` from work-split slot rows
 - Using Opus for plan checkbox flips or codex doc edits
-- Enabling max thinking for mechanical sweeps (wastes budget with zero quality gain)
-- Enabling max thinking without declaring `thinking: max` in the spawn prompt (silent budget bleed)
+- Enabling max effort for mechanical sweeps (wastes budget with zero quality gain)
+- Enabling max effort without declaring `effort: max` in the spawn prompt (silent budget bleed)
 
 ---
 
-## Thinking effort tiers
+## Effort ladder (SUPERSEDES the old 3-tier "thinking" framing below the 2026-07-22 line)
 
-Three levels. Declared alongside `model_tier` in every work-split slot row and spawn prompt.
+**Ground truth (agent-orchestrator/server/model_tier.py, 2026-07)**: `--effort` is a FIVE-level ladder —
+`low < medium < high < xhigh < max` — and it is an axis INDEPENDENT of model tier. Effort is the PRIMARY reasoning
+control on every adaptive-reasoning model (Sonnet / Opus / Fable alike); only Haiku has no effort control at all.
+**Nothing gates `xhigh` or `max` to Opus.** The "extended thinking isn't available on Sonnet" / "max requires Opus, no
+exceptions" claims that used to live in this doc were WRONG relative to the current code and are removed.
 
-| Level              | Declaration                          | When                                                         | Typical cost vs medium |
-| ------------------ | ------------------------------------ | ------------------------------------------------------------ | ---------------------- |
-| `thinking: medium` | Default — omit or state explicitly   | Mechanical, impl-from-spec, script runs                      | 1×                     |
-| `thinking: high`   | State explicitly                     | Design, architecture within a single repo, plan writing      | ~2-3×                  |
-| `thinking: max`    | State explicitly + requires Opus 4.8 | Novel cross-repo design, complex debugging, trading judgment | ~8-15×                 |
+**Default (operator ruling 2026-07-22)**: a plan/task declaring no tier at all (no `effort:`, no `thinking_tier:`, no
+`assigned_role`) no longer falls through to the ladder's bare `medium` — it gets a todo-count-derived default instead:
+
+```
+IF plan declares NO tier (effort: / thinking_tier: / assigned_role all absent):
+  IF plan's open-todo count > model_tier.LARGE_PLAN_TODO_THRESHOLD (10)  → effort = "max"
+  ELSE                                                                    → effort = "xhigh"
+IF plan declares a tier explicitly (effort: / thinking_tier: / assigned_role) → that declaration wins, unchanged
+```
+
+Wired in `agent-orchestrator/server/regen_backlog_from_plan.py` (the fallback added right after the explicit-`effort:`
+override) and mirrored in `context_lifecycle.py`'s worker carve-out (same threshold — a large-plan worker gets pulled
+into proactive compact/checkpoint management, not just a higher effort default). Model tier is UNTOUCHED by this — still
+governed only by the existing three criteria below (main orchestrator / cross-repo arch / >200k context).
+
+Still declare `effort:` (or `thinking_tier:`) explicitly on a work-split slot row when you know better than the default
+— the auto-default exists to raise the floor for plans that forgot to declare, not to discourage declaring.
+
+| Level    | When it's the right choice (declare explicitly to confirm)                                                                                                 | Typical cost vs medium |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `low`    | Trivial, high-volume mechanical work where even medium is overkill                                                                                         | ~0.5×                  |
+| `medium` | Mechanical, impl-from-spec, script runs — the ladder's own floor                                                                                           | 1×                     |
+| `high`   | Design, architecture within a single repo, plan writing                                                                                                    | ~2-3×                  |
+| `xhigh`  | **New default** for any plan declaring no tier — works on Sonnet, no Opus needed                                                                           | ~4-6×                  |
+| `max`    | **New default for large (>10-todo) undeclared plans**; also novel cross-repo design, complex debugging, trading judgment — works on Sonnet, no Opus needed | ~8-15×                 |
 
 ### What goes in each tier
 
-**`thinking: medium`** — standard reasoning, no extended thinking budget needed:
+**`medium`** — standard reasoning, no extended thinking budget needed:
 
 - Ruff cleanup, callsite migration, import rename
 - Implementing from a clear spec (plan body + file = full context)
@@ -278,7 +312,7 @@ Three levels. Declared alongside `model_tier` in every work-split slot row and s
 - Sub-agent fan-out workers (each worker is bounded)
 - QG runs and lint fixes
 
-**`thinking: high`** — needs careful reasoning but not extended thinking:
+**`high`** — needs careful reasoning but not extended thinking:
 
 - Single-repo feature design where trade-offs exist
 - Codex doc authoring for a new pattern (must cover edge cases)
@@ -287,7 +321,10 @@ Three levels. Declared alongside `model_tier` in every work-split slot row and s
 - Cross-service wiring where the interaction is non-trivial but bounded
 - Debugging a single service's failing test with non-obvious root cause
 
-**`thinking: max`** — requires extended thinking; always paired with Opus 4.8:
+**`xhigh`** — new default for any plan/task declaring no tier at all (2026-07-22); also the right explicit choice for
+work that's clearly more-than-mechanical but doesn't need the full `max` treatment below. Works on Sonnet.
+
+**`max`** — new default for large (>10-todo) undeclared plans; also the right explicit choice for:
 
 - Novel trading archetype topology (carry_staked_basis, leveraged_funding_arb family decisions)
 - Cross-repo migration pre-audit (all consumers must be in context, breakage is non-obvious)
@@ -299,48 +336,52 @@ Three levels. Declared alongside `model_tier` in every work-split slot row and s
 
 ### Pairing rules
 
-`thinking: max` requires `model_tier: opus-required` — no exceptions. Extended thinking on Sonnet is not available in
-this workspace's Claude Code configuration.
+Effort and model tier are INDEPENDENT (model_tier.py ground truth) — **no effort level requires or implies a particular
+model tier.** `max` on Sonnet is normal, not an error; it does not imply `model_tier: opus-required`, and model tier
+keeps being decided purely by the three criteria in "Opus 4.8 — only for these" above.
 
-`thinking: high` works on either model tier. Sonnet 4.6 at high thinking is preferred over Opus at medium.
-
-`thinking: medium` on Opus is always wrong (use Sonnet instead).
+`high` (and `xhigh`) work identically well on either model tier. Sonnet at high/xhigh is generally preferred over Opus
+at a lower effort — effort is the cheap lever; model tier is the expensive one, reach for it only on its own criteria.
 
 ### Work-split slot declaration
 
 ```markdown
-| Slot | Theme                     | Plan                   | model_tier    | thinking | Cal AI-days |
-| ---- | ------------------------- | ---------------------- | ------------- | -------- | ----------- |
-| 1    | Main orchestrator         | LEDGER                 | opus-required | max      | continuous  |
-| 2    | defi_catalogue impl       | defi_catalogue         | sonnet-doable | high     | ~16         |
-| 3    | ruff cleanup              | ruff_workspace_cleanup | sonnet-doable | medium   | ~0.4        |
-| 5    | archetype topology design | defi_recursive_borrow  | opus-required | max      | ~14         |
+| Slot | Theme                     | Plan                   | model_tier    | effort | Cal AI-days |
+| ---- | ------------------------- | ---------------------- | ------------- | ------ | ----------- |
+| 1    | Main orchestrator         | LEDGER                 | opus-required | max    | continuous  |
+| 2    | defi_catalogue impl       | defi_catalogue         | sonnet-doable | high   | ~16         |
+| 3    | ruff cleanup              | ruff_workspace_cleanup | sonnet-doable | medium | ~0.4        |
+| 5    | archetype topology design | defi_recursive_borrow  | opus-required | max    | ~14         |
 ```
 
 ### Spawn prompt header (required fields)
 
 ```
-MODEL TIER: Sonnet 4.6 | Opus 4.8
-THINKING: medium | high | max
-[If max]: OPUS-REQUIRED — REASON: <one-line reason>
+MODEL TIER: Sonnet | Opus | Fable
+EFFORT: low | medium | high | xhigh | max
+[If opus-required]: OPUS-REQUIRED — REASON: <one-line reason>
 ```
 
 ---
 
-## Self-check — thinking effort (extend the Step 3 model check)
+## Self-check — effort (extend the Step 3 model check)
 
-After checking model tier, check thinking effort:
+After checking model tier, check effort (the five-level ladder: `low < medium < high < xhigh < max`):
 
-**How the agent knows its thinking level**: The spawn prompt declares it. If not declared, the agent infers from the
-task description using the tier definitions above, then flags if it cannot confirm the setting matches.
+**How the agent knows its effort level**: The spawn prompt declares it (`EFFORT: <level>`). Since 2026-07-22 a plan
+declaring no tier at all is NOT "undeclared" in practice — regen already computed `xhigh` or `max` for it from todo
+count and put that in the spawn prompt, so the agent should almost always find an explicit value there. Only fall back
+to inferring from the task description (using the tier definitions above) if the spawn prompt is genuinely silent on it,
+then flag if the inferred tier can't be confirmed against the description.
 
-| Declared thinking                                         | Task actually needs | Action                                        |
-| --------------------------------------------------------- | ------------------- | --------------------------------------------- |
-| medium                                                    | medium              | ✅ Proceed                                    |
-| high                                                      | high                | ✅ Proceed                                    |
-| max (+ Opus)                                              | max                 | ✅ Proceed                                    |
-| **under-provisioned** (medium→high, medium→max, high→max) | higher              | 🔴 **HARD STOP — wait for operator override** |
-| **over-provisioned** (max→high, max→medium, high→medium)  | lower               | 🔴 **HARD STOP — wait for operator override** |
+| Declared effort vs. what the task actually needs                                | Action                                        |
+| ------------------------------------------------------------------------------- | --------------------------------------------- |
+| Same ladder position                                                            | ✅ Proceed                                    |
+| **Under-provisioned** (declared is a lower ladder position than the task needs) | 🔴 **HARD STOP — wait for operator override** |
+| **Over-provisioned** (declared is a higher ladder position than the task needs) | 🔴 **HARD STOP — wait for operator override** |
+
+No level "requires" or "implies" a model tier (see Pairing rules above) — a mismatch here is purely about whether the
+_effort_ fits the _task_, independent of which model is running it.
 
 **Both directions are hard stops.** The operator gets to see the mismatch and decide — either confirm the deviation is
 intentional ("proceed anyway") or fix the spawn tier. This avoids silent quality degradation (under) and silent money
@@ -349,31 +390,31 @@ burn (over).
 **Under-provisioned stop block:**
 
 ```
-🔴 HARD STOP — THINKING UNDER-PROVISIONED
-Declared: thinking: <declared>
-Task requires: thinking: <required>
+🔴 HARD STOP — EFFORT UNDER-PROVISIONED
+Declared: effort: <declared>
+Task requires: effort: <required>
 Reason: <one-line — e.g. "cross-repo migration pre-audit requires holding all consumer files simultaneously">
 
-I cannot start this task at the declared thinking tier without risking silent quality degradation.
+I cannot start this task at the declared effort level without risking silent quality degradation.
 
 To proceed:
-  Option A — fix the tier: re-spawn with THINKING: <required> (and MODEL: Opus 4.8 if max)
-  Option B — override: reply "proceed anyway" and I will start at the declared tier with a quality caveat
+  Option A — fix the tier: re-spawn with EFFORT: <required> (model tier is a separate decision — see Pairing rules)
+  Option B — override: reply "proceed anyway" and I will start at the declared level with a quality caveat
 ```
 
 **Over-provisioned stop block:**
 
 ```
-🔴 HARD STOP — THINKING OVER-PROVISIONED (COST WASTE)
-Declared: thinking: <declared>
-Task needs: thinking: <required>
-Reason: <one-line — e.g. "ruff cleanup is mechanical; max thinking adds no quality, only cost">
+🔴 HARD STOP — EFFORT OVER-PROVISIONED (COST WASTE)
+Declared: effort: <declared>
+Task needs: effort: <required>
+Reason: <one-line — e.g. "ruff cleanup is mechanical; max effort adds no quality, only cost">
 
-Estimated unnecessary spend: ~<N>× vs correct tier.
+Estimated unnecessary spend: ~<N>× vs correct level.
 
 To proceed:
-  Option A — fix the tier: re-spawn with THINKING: <required> (saves ~<N>× cost)
-  Option B — override: reply "proceed anyway" and I will start at the declared tier
+  Option A — fix the tier: re-spawn with EFFORT: <required> (saves ~<N>× cost)
+  Option B — override: reply "proceed anyway" and I will start at the declared level
 ```
 
 **Override handling**: if the operator replies "proceed anyway" (or equivalent), the agent starts immediately with a
