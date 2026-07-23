@@ -262,3 +262,19 @@ of check, not just a nice-to-have): **34/34 processed, 242 new per-instrument tw
 skipped, 0 unattributable, 0 missing, 0 errors, 34 originals retired to `_migrated_`.** A follow-up full-corpus manifest
 rebuild (6-way parallel, full 2020-01-01..2026-07-22, gap-checked) is running to reflect this in the index; once it
 completes, re-verify 0 glued ids (expect 0 now) before deleting `_migrated_` markers.
+
+**Cross-session note (2026-07-23, from a different concurrent slot)**: 2 of the original 6 rebuild VMs
+(`canonical-migration-defi-rebuild-20260723-140715` covering 2024-04-29..2024-12-31, and `-140853` covering
+2025-07-01..2025-12-31) were SPOT-preempted (confirmed genuine via `gcloud compute operations list` —
+`compute.instances.preempted`, not a crash) and had not yet been relaunched ~10 minutes later while the other 4 chunks
+progressed. Since this directly gates the closeout plan's own "verify 0 glued ids + delete `_migrated_` markers" todo,
+relaunched both missing ranges fresh (`canonical-migration-defi-rebuild-20260723-142940` and `-143019`) — the rebuild is
+idempotent/safe-to-rerun by design (its own docstring: "Safe to re-run"), so no coordination conflict. Current live
+roster covers the full 2020-01-01..2026-07-22 range with no gaps across 6 VMs: `-141001` (2026), `-141515` (2025 H1),
+`-141922` (2020..2022-04-29), `-142022` (2022-04-29..2024-04-29), `-142940` (2024-04-29..2024-12-31, gap-fill),
+`-143019` (2025 H2, gap-fill). Also confirmed directly (per `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+§3): the `_migrated_` marker delete remains a human-only hard stop regardless of chat authorization — a sanctioned
+dry-run-by-default script already exists
+(`market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py`); once this rebuild sweep
+confirms 0 glued ids, the plan is to run that script's dry-run and hand the verified `--apply` command to the operator
+rather than execute it from any agent context.
