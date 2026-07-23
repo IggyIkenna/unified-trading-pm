@@ -12,9 +12,18 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, features-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [monitoring, live-trading, observability, heartbeat, deployment, self-healing]
-related: [codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/launcher-script-ssot.md, codex/04-architecture/service-infrastructure-requirements.md, codex/02-data/honest-absence-downstream-handling.md]
+related:
+  [
+    codex/05-infrastructure/vm-tarball-deployment.md,
+    codex/05-infrastructure/launcher-script-ssot.md,
+    codex/04-architecture/service-infrastructure-requirements.md,
+    codex/02-data/honest-absence-downstream-handling.md,
+  ]
 created: 2026-05-07
-authoritative_for: Per-archetype event cadence + heartbeat thresholds + cross-cloud event-stream parity expectations for live (non-batch) trading deployments. Defines the contract between a running VM/Cloud Run service and the unified-events-interface so silent stalls are visible within minutes.
+authoritative_for:
+  Per-archetype event cadence + heartbeat thresholds + cross-cloud event-stream parity expectations for live (non-batch)
+  trading deployments. Defines the contract between a running VM/Cloud Run service and the unified-events-interface so
+  silent stalls are visible within minutes.
 referenced_by: [plans/active/master_to_live_defi_2026_05_23.md]
 owner:
 last_reviewed: 2026-05-12
@@ -177,7 +186,7 @@ launches and codified-discipline (alerting rules + correlated-validation) for li
 - **Related codex SSOTs**: [`vm-tarball-deployment`](./vm-tarball-deployment.md) — VM tarball mechanics + three
   guarantees + exit codes. [`launcher-script-ssot`](./launcher-script-ssot.md) — launcher SSOT + watchdog dict
   registration + QG check policy.
-  [`../04-architecture/service-infrastructure-requirements`](../04-architecture/service-infrastructure-requirements.md)
+  [`../04-architecture/service-infrastructure-requirements`](/codex/04-architecture/service-infrastructure-requirements.md)
   — `ServiceBootstrap` (STARTED/STOPPED/FAILED) + `make_health_router` requirements every service inherits.
   [`../02-data/honest-absence-downstream-handling`](../02-data/honest-absence-downstream-handling.md) — 1440-NaN
   reference framing + reason taxonomy for `record_empty`.

@@ -1,17 +1,23 @@
 ---
 doc_type: audit-result
 title: Harsh-side Day-4 (2026-05-15) completion audit — slot-by-slot, SHA-verified
-summary: Harsh-side Day-4 completion audit — ~146 items across 8 slots SHA-verified on origin/live-defi-rollout (100% resolve, no phantom claims); real gaps are 1 unassigned features-service volatility 48-failure issue + 3 operator decisions (B-015 re-launch, Cloud Scheduler IAM, volatility routing).
+summary:
+  Harsh-side Day-4 completion audit — ~146 items across 8 slots SHA-verified on origin/live-defi-rollout (100% resolve,
+  no phantom claims); real gaps are 1 unassigned features-service volatility 48-failure issue + 3 operator decisions
+  (B-015 re-launch, Cloud Scheduler IAM, volatility routing).
 status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+repos:
+  [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
 tags: [audit, verification, orchestrator, quickmerge, plan-hygiene, escalation]
 related: []
 created: 2026-05-15
-audited_scope: 8 harsh-side slots (2-9) Day-4 close — every claimed <repo>@<sha> for ✅ DONE pings across 17 repos, plus 20 issue docs filed that day; SHA-verified against origin/live-defi-rollout
+audited_scope:
+  8 harsh-side slots (2-9) Day-4 close — every claimed <repo>@<sha> for ✅ DONE pings across 17 repos, plus 20 issue
+  docs filed that day; SHA-verified against origin/live-defi-rollout
 date: 2026-05-15
 auditor: harsh-claude
 parent_epic: infrastructure_master
@@ -23,7 +29,14 @@ type: audit
 author: harsh-claude (audit pass — separate from concurrent ikenna-side audit agent)
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
-sources: [harsh_orchestrator/LEDGER.md (current shift table + Day-4 close), 'harsh_orchestrator/pings/slot_{2..9}.md (per-slot dispatch + DONE pings)', plans/active/continuation_prompts_harsh_2026_05_15.md (Day-1 dispatch SSOT), plans/active/issues/*_2026_05_15.md (20 issue docs filed today), 'origin/live-defi-rollout per affected repo (SHA verification, all repos fetched at 2026-05-15 22:30 UTC)']
+sources:
+  [
+    harsh_orchestrator/LEDGER.md (current shift table + Day-4 close),
+    "harsh_orchestrator/pings/slot_{2..9}.md (per-slot dispatch + DONE pings)",
+    plans/active/continuation_prompts_harsh_2026_05_15.md (Day-1 dispatch SSOT),
+    plans/active/issues/*_2026_05_15.md (20 issue docs filed today),
+    "origin/live-defi-rollout per affected repo (SHA verification, all repos fetched at 2026-05-15 22:30 UTC)",
+  ]
 ---
 
 # Harsh-side Day-4 (2026-05-15) completion audit
@@ -437,7 +450,7 @@ These are not gaps — they reflect the natural dispatch-cycle cadence. Auto-pol
 
 ### F. Master-plan readiness column refresh
 
-[`codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`](../../codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md)
+[`codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`](/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md)
 was refreshed by slot 6 today ([@1051d3b6](../../unified-trading-pm)) with `last_refreshed: 2026-05-15` and the
 custody-providers correction (May-23 = CLOUD_KMS_ENCRYPTED, not Copper/CEFFU). All 23 A-G items verified accurate.
 

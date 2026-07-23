@@ -2,10 +2,10 @@
 doc_type: audit-instruction
 title: orchestrator_master_audit_instructions
 summary:
-  Weekly L5-epic audit of the agent-orchestrator stack (FastAPI + Vite/React dashboard), the AWS fleet + central-API-proxy
-  connectivity, the long-lived setup-token auth model, plan-driven backlog regeneration, safety/auto-respawn machinery,
-  per-VM state persistence, Slack/Telegram surfaces, and operator-laptop slot-host symmetry crons — drift here ripples to
-  every other epic.
+  Weekly L5-epic audit of the agent-orchestrator stack (FastAPI + Vite/React dashboard), the AWS fleet +
+  central-API-proxy connectivity, the long-lived setup-token auth model, plan-driven backlog regeneration,
+  safety/auto-respawn machinery, per-VM state persistence, Slack/Telegram surfaces, and operator-laptop slot-host
+  symmetry crons — drift here ripples to every other epic.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -43,15 +43,15 @@ cadence + completeness matters more than any single subsystem.
 
 - [`codex/04-architecture/agent-orchestrator-overview.md`](../../../codex/04-architecture/agent-orchestrator-overview.md)
   — overall architecture
-- [`codex/05-infrastructure/agent-orchestrator-worker-topology.md`](../../../codex/05-infrastructure/agent-orchestrator-worker-topology.md)
+- [`codex/05-infrastructure/agent-orchestrator-worker-topology.md`](/codex/05-infrastructure/agent-orchestrator-worker-topology.md)
   — current fleet IPs + bootstrap
 - [`codex/05-infrastructure/agent-orchestrator-deploy.md`](../../../codex/05-infrastructure/agent-orchestrator-deploy.md)
   — central API VM nginx/systemd
-- [`codex/05-infrastructure/agent-orchestrator-dns-cutover.md`](../../../codex/05-infrastructure/agent-orchestrator-dns-cutover.md)
+- [`codex/05-infrastructure/agent-orchestrator-dns-cutover.md`](/codex/05-infrastructure/agent-orchestrator-dns-cutover.md)
   — EIP + DNS recipe (Phase 11)
 - [`codex/05-infrastructure/agent-orchestrator-slack-notifications.md`](../../../codex/05-infrastructure/agent-orchestrator-slack-notifications.md)
   — notification inventory
-- [`codex/12-agent-workflow/orchestrator-multi-vm-topology.md`](../../../codex/12-agent-workflow/orchestrator-multi-vm-topology.md)
+- [`codex/12-agent-workflow/orchestrator-multi-vm-topology.md`](/codex/12-agent-workflow/orchestrator-multi-vm-topology.md)
   — multi-VM design
 - [`codex/12-agent-workflow/orchestrator-safety-mechanisms.md`](../../../codex/12-agent-workflow/orchestrator-safety-mechanisms.md)
   — stuck-detect + failover + git staleness
@@ -257,7 +257,7 @@ cadence + completeness matters more than any single subsystem.
 
 - [ ] **(h4) Packer README + codex DNS-cutover SSOT both link to current code paths.** Read
       [`deployment-service/packer/agent-orchestrator/README.md`](../../../../deployment-service/packer/agent-orchestrator/README.md)
-  - [`codex/05-infrastructure/agent-orchestrator-dns-cutover.md`](../../../codex/05-infrastructure/agent-orchestrator-dns-cutover.md)
+  - [`codex/05-infrastructure/agent-orchestrator-dns-cutover.md`](/codex/05-infrastructure/agent-orchestrator-dns-cutover.md)
     — no dead pointers (every file path resolves).
 
 ### I. EIP + DNS rollout state (Phase 11)
@@ -272,8 +272,8 @@ cadence + completeness matters more than any single subsystem.
 
 - [ ] **(i3) DNS records exist OR the recipe is operator-deferred.** For each fleet VM, run
       `dig +short api-<vm>.agent-orchestrator.odum-research.com`. If no record exists, verify the
-      [DNS-cutover doc](../../../codex/05-infrastructure/agent-orchestrator-dns-cutover.md) still marks it
-      operator-deferred ("DNS zone access — operator-only credentials").
+      [DNS-cutover doc](/codex/05-infrastructure/agent-orchestrator-dns-cutover.md) still marks it operator-deferred
+      ("DNS zone access — operator-only credentials").
 
 ### J. Codex doc alignment
 
@@ -293,7 +293,7 @@ cadence + completeness matters more than any single subsystem.
       2026-06-01) AND each function's S/T column must match which module actually exports it.
 
 - [ ] **(j4) Fleet topology table in worker-topology doc matches `backends.json`.** Read
-      [`codex/05-infrastructure/agent-orchestrator-worker-topology.md`](../../../codex/05-infrastructure/agent-orchestrator-worker-topology.md)
+      [`codex/05-infrastructure/agent-orchestrator-worker-topology.md`](/codex/05-infrastructure/agent-orchestrator-worker-topology.md)
       § "Current fleet" — each VM's IP/instance ID matches `backends.json` (or backends.json says EIP — see check i2).
 
 ### K. Operational hygiene (operator-laptop slot hosts + crons)
