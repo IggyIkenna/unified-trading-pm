@@ -856,3 +856,7 @@ tarball once; always check the launcher's own freshness warning output, and if s
   (1,688) as expected — that's this instance's own contribution tally, not a cumulative total across restarts; the
   underlying already-captured swap parquet files + the real coverage manifest persist independent of VM restarts, so
   this is not data loss. No further action needed.
+
+- **2026-07-23 03:30 UTC (dex-swaps re-check — still healthy)** — `mtds-dex-swaps-backfill` RUNNING since the second
+  resume, RSS stable ~832-1285MiB, heartbeats fresh, completed another full shard-list pass (75,274 records this pass).
+  No further preemptions since 02:38 UTC. Continuing to monitor.
