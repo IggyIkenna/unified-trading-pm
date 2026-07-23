@@ -265,10 +265,27 @@ run SEQUENTIALLY, not in parallel:
       execution-service-side. Worth a scoping pass to confirm whether execution-service's orchestrator is real/complete
       enough that ONLY the strategy-side `on_tick` stub needs finishing (a smaller task than assumed) — flagging, not
       re-scoping unilaterally.
-- [ ] [BACKEND] P2. **Phase 3 — CARRY_BASIS_DATED + CARRY_BASIS_DATED_INV**. New data source: the
-      `paired_price_dispersion` calculator (features-cross-instrument-service) for dated-futures-vs-cash/ETF basis. Note
-      `catalog_carry.py`'s own comment flags some rows as `status=databento_pending` placeholders — confirm real data
-      exists per-cell before wiring each; some cells may have to stay honestly unwired pending Databento integration.
+- [ ] [BACKEND] P1. **Phase 3 — BLOCKED before dispatch, 2026-07-23 — SAME class of bug as Phase 1, silent this time.**
+      Pre-checked `CARRY_BASIS_DATED` + `CARRY_BASIS_DATED_INV` (mirroring the Phase-1 lesson) before spawning a build
+      agent, and caught a real, previously-undiscovered production bug: `CarryBasisDatedEngine.on_tick()`
+      (`carry_and_yield/basis_dated.py`) requires `spot_venue` + `future_venue` + `spot_instrument` +
+      `future_instrument` (`if not (spot_venue and future_venue and spot_instr and future_instr): return []`), but
+      **every single row in both archetypes' catalogs** (`catalog_carry.py`'s `build_carry_basis_dated()` +
+      `build_carry_basis_dated_inv()`, 11 rows total: 3 commodity + 2 equity-index + 2 crypto + 2 ETF-vs-CME-micro for
+      DATED; 2 crypto + 1 commodity for DATED_INV) emits DIFFERENT keys instead — `cash_venue` (not `spot_venue`),
+      `dated_venue` (not `future_venue`), a single `instrument`/`cash_instrument` (not the split
+      `spot_instrument`/`future_instrument`). Unlike Phase 1 (a `ValueError` at `register_instance()`), this does NOT
+      crash — the engine just silently `return []`s forever, for every row, in every environment (paper/batch/live).
+      This is a SILENT no-op, arguably worse than Phase 1's loud crash: nothing signals anything is wrong; it just looks
+      like "the strategy never finds an opportunity." **NOT dispatched to a build agent — do not wire a tick-loader for
+      an engine guaranteed to no-op** (same reasoning as the 2 stub archetypes above). Needs the SAME kind of
+      operator/design decision as Phase 1: is the fix a catalog key-rename (cheap, if the engine's key names are the
+      intended contract) or does the engine need to read the catalog's actual key names (a live-code change, needs
+      care)? **Strategic note**: this is the 3rd of 4 archetypes checked so far with a real catalog/engine contract
+      break (only `CARRY_RECURSIVE_STAKED` was clean) — before continuing Phase 4/5 one-by-one, consider a cheap,
+      mechanical pre-flight sweep across ALL remaining archetypes (grep each engine's actual `params.get(...)`/
+      `str_param(...)` calls vs its catalog's emitted config dict keys) to find every landmine BEFORE building any more
+      tick loaders, rather than discovering them one expensive agent-dispatch at a time.
 - [ ] [BACKEND] P2. **Phase 4 — YIELD_ROTATION_LENDING + YIELD_STAKING_SIMPLE**. Pure yield archetypes (no hedge leg) —
       reuse `lending_rates`/`lst_yields` readers already established.
 - [ ] [BACKEND] P2. **Phase 5 — LIQUIDATION_CAPTURE**. New data source: on-chain liquidation-cascade feed +
