@@ -1027,7 +1027,10 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
 > `ldr-to-main-promote-fleet.yml`), so stopping this sets **no silent trap**. Full evidence + per-workflow verdicts in
 > the Progress Log entry below.
 
-- [ ] [INFRA] P2. **Stop the two fleet templates' dead-branch triggers (~6,384 runs/wk ≈ 85% of the waste).**
+- [x] ✅ [INFRA] P2. **Stop the two fleet templates' dead-branch triggers (~6,384 runs/wk ≈ 85% of the waste).** — DONE
+      `unified-trading-pm@a7b5cc27c` + 24-repo rollout, all verified by reading CONTENT from `origin/live-defi-rollout`.
+      `pull_request:` confirmed still present in all 24 `staging-lock-check` copies, so the required check is intact.
+      Full SHA list + measured effect in `plans/active/issues/staging_workflow_shutdown_2026_07_23.md` (RESOLVED).
       `staging-backmerge-to-ldr.yml` — comment out the hourly `schedule: "10 * * * *"` (keep `push:[staging]` +
       `workflow_dispatch` so it self-resumes when staging is re-entered), exactly as `ldr-to-staging-promote.yml`
       already did for its own cron 2026-06-28. `staging-lock-check.yml` — **keep the `pull_request` job**
@@ -1035,14 +1038,22 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       deleting it would hang any future staging PR forever) and instead kill the `repository_dispatch` fan-out at
       SOURCE: remove the `staging-locked`/`staging-unlocked` dispatch steps in PM's `sit-gate.yml`, `sit-unlock.yml`,
       `staging-to-main.yml`. Edit the TEMPLATES + `rollout-workflow-templates.sh`, never a per-repo copy.
-- [ ] [INFRA] P2. **Stop the three PM-side hourly no-op crons (~520 runs/wk).** `staging-to-main.yml` (241/wk),
-      `staging-conflict-ldr-main-fallback.yml` (142/wk), `reconcile-staging-versions.yml` (137/wk) — all measured 100%
-      `schedule`/`success` no-ops. Comment out the `schedule:` blocks ONLY (keep `workflow_dispatch` +
-      `repository_dispatch` so the reversibility path is one uncomment away), matching the `ldr-to-staging-promote.yml`
-      precedent.
-- [ ] [DOC] P2. **Add "re-enable the staging workflows" to the staging re-entry runbook.** Disabled crons do NOT come
-      back on their own — whoever flips `promotion_model` off `ldr_main` must also uncomment the schedules. Without this
-      step the reversibility guarantee is only half-true. SSOT: `codex/08-workflows/ci-cd-flow.md`.
+- [x] ✅ [INFRA] P2. **Stop the three PM-side hourly no-op crons (~520 runs/wk).** — DONE `unified-trading-pm@a7b5cc27c`
+      (plus `ldr-to-staging-promote`'s `tier-ab-green` listener, per the operator ruling that "$0 doesn't mean we want
+      it to run"). **Effect MEASURED 2026-07-23T09:04Z after the promote reached `main`**: `staging-backmerge-to-ldr`
+      fleet-wide went 47 scheduled runs (06:00-08:00Z) → **0** (>1h post), zero repos still firing; PM's three crons
+      likewise 0. Original text: `staging-to-main.yml` (241/wk), `staging-conflict-ldr-main-fallback.yml` (142/wk),
+      `reconcile-staging-versions.yml` (137/wk) — all measured 100% `schedule`/`success` no-ops. Comment out the
+      `schedule:` blocks ONLY (keep `workflow_dispatch` + `repository_dispatch` so the reversibility path is one
+      uncomment away), matching the `ldr-to-staging-promote.yml` precedent.
+- [x] ⚠️ [DOC] P2. **Add "re-enable the staging workflows" to the staging re-entry runbook.** — PARTIALLY DONE, and the
+      remaining half is now tracked elsewhere. Every disabled trigger carries an inline dated note naming exactly what
+      to uncomment, and the procedure is written up in `plans/active/issues/staging_workflow_shutdown_2026_07_23.md`.
+      **But it is NOT in codex**, and a plan archives — verified 2026-07-23: `grep -rn -i "uncomment" codex/` returns
+      one unrelated hit. Per CLAUDE.md's SSOT-direction rule this belongs in `codex/08-workflows/ci-cd-flow.md`. Carried
+      as an open todo in `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` (which also found that
+      doc's branch-model section stale at L75-109 / L763 / L777-786 / L1183) so the codex fix lands once, together.
+      **Not ticked as fully done — the reversibility guarantee is still half-true until codex carries it.**
 
 ---
 
@@ -2092,3 +2103,57 @@ prove on ONE caller → only then fan out._
     estimate ($400–500/mo) depending which baseline you trust — genuine progress, not yet provable as the full plan
     target, and invisible in a naive fleet-total check because of unrelated fleet growth. Don't re-derive this by hand
     next time — the pull command + math above is reusable verbatim for the scheduled 2-week comparison.
+
+- **2026-07-23 (session end) — LESSONS worth more than the state.** Recorded because each cost real time today and none
+  of it is inferable from the diffs:
+  1. **I stated two things before verifying them, and both were materially wrong.** (a) Published
+     "~$180–195/mo of
+     staging waste, all GitHub-hosted" — PM's four drivers were ALREADY self-hosted since STEP 2 (in this plan's own
+     MOVE list, which I failed to re-read); real figure ~$166/mo,
+     ~97% of it in the two templates that CANNOT be self-hosted. (b) Repeated a sub-agent's "transient xdist flake"
+     diagnosis — it was deterministic and concealed a P1 gate-bypass. **Rule: a sub-agent's DIAGNOSIS is a hypothesis,
+     not a finding. Re-run the check yourself before it reaches a doc or the operator.**
+  2. **`billable={}` (absence of the `UBUNTU` key) is the honest self-hosted check on this account.** `/timing`'s
+     `total_ms` reads 0 for HOSTED jobs too — it proves nothing on its own. This is what made the wrong cost figure look
+     plausible.
+  3. **PM's LDR is too busy for the documented sentinel-race workaround alone.** The known P0 workaround (chain
+     `quality-gates.sh --no-fix && quickmerge.sh` in one shell) was NOT sufficient — PM takes a push roughly every ~2
+     min while its gate takes ~4, so the commit always arrived stale (failed 3×, drift of 3 → 1 → 1 commits). What
+     worked: a bounded `for i in 1..5; pull --rebase --autostash; quickmerge; break-if-clean` loop — landed on
+     attempt 2. Use the loop on PM; a single retry is not enough. NEVER `SKIP_BRANCH_DRIFT` (human-only).
+  4. **Derive fleet-rollout order topologically from `workspace-manifest.json`, don't discover it by failure.**
+     Yesterday's rollout blocked repo-by-repo on quickmerge's dep-audit. Today, computing dependency layers up front
+     (Layer 1 `deployment-ui`/`unified-api-contracts`/`unified-trading-system-ui` → L2 `unified-trading-library` → L3 17
+     repos → L4 `deployment-api`/`e2e-testing` → L5 `system-integration-tests`) let batches of 5-6 run cleanly in
+     parallel. The one-liner that produces it is in the session transcript's audit step; re-derive with a topological
+     sort over `repositories.<repo>.dependencies`.
+  5. **gitleaks false-positives on ordinary prose — and the trap is RECURSIVE.** The `generic-api-key` rule blocked a
+     `docs(plans):` commit twice today. Trigger shape (described, deliberately NOT reproduced here, see why below): a
+     frontmatter line where the word "key" is followed by a comma and then a slash-joined token pair — gitleaks reads
+     that token as a secret assigned to the "key". The recursion: my FIRST fix reworded the frontmatter, but then
+     writing THIS lesson quoted the original string verbatim, which re-triggered the identical block on the very commit
+     carrying the lesson. **So: describe such a trigger, never quote it.** Also: do NOT add a gitleaks suppression for a
+     doc, and do not assume a gitleaks failure means you leaked something — read the `Finding:` line first, it prints
+     the matched context.
+  6. **Rejected approach, so it isn't re-walked:** self-hosting the two staging fleet templates to make them free. Not
+     possible — all 8 runners are registered to `unified-trading-pm` ONLY (fleet repos measure 0;
+     `orgs/IggyIkenna/ actions/runners` → 404, personal account, no org pool). Flipping their `runs-on` would hang all
+     24 rendered copies. This is the plan's existing **KEEP-T** class, re-confirmed by measurement.
+
+---
+
+## Deferred work after 2026-07-23
+
+| #   | Item                                                                   | State / why deferred                                                                                                                                                                                                            | Blocked on               |
+| --- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| 1   | **Trading kill-switch is a no-op** (`halt-order-flow` has no listener) | **OPERATOR-OWNED.** Verified first-hand: execution-service has only a `dependency-update` listener; 204 reads as success; the code's own comment predicts a 404 that never comes. Touches live trading behaviour — not started. | Operator ruling          |
+| 2   | **Fleet release tagging dead since 2026-06-27**                        | **NOT DONE — real work, highest technical priority.** `reconcile_release_tags.py:51` expects a static `version =`; fleet moved to `dynamic` + hatch-vcs. 0 tags in ~4 weeks; `publish-package` run 0×/7d.                       | Nobody                   |
+| 3   | **QG sentinel is environment-blind**                                   | **NOT DONE.** Gate-bypass: a standalone (prod-default) gate pass writes a sentinel that quickmerge (dev-mode) then honours, skipping the failing suite.                                                                         | Operator picks fix split |
+| 4   | `staging_versions` dep-gate fix                                        | **BLOCKED — do not action independently.** Its premise was inverted by finding F2; `staging_versions` tracks the real git tag, `versions` does not.                                                                             | Item 2                   |
+| 5   | Codex staging re-entry procedure + stale branch-model sections         | **NOT DONE.** `ci-cd-flow.md` L75-109/L763/L777-786/L1183 still describe staging as canonical; nothing in codex says the disabled triggers must be uncommented on re-entry.                                                     | Nobody                   |
+| 6   | 4 orphan dispatches · 4 dead listeners · ~873 vacuous cron runs/wk     | **NOT DONE, P2.** All catalogued with file:line in the sweep issue. `digest-drift-sweep` is the only one costing real money (never converges, fans out to `ubuntu-latest`).                                                     | Nobody                   |
+| 7   | Two-week billing re-pull vs the Phase-0 baseline                       | **CANNOT BE DONE YET** — needs elapsed time. Earliest ~2026-07-31. Method + exact commands are in the 2026-07-23 billing entry above; re-run verbatim.                                                                          | The calendar             |
+
+**Recommended NEXT item: #2 (release tagging).** It is unblocked, it silently froze every package version in the fleet
+~4 weeks ago, it gates #4, and unlike #1 it needs no operator ruling. #1 is more severe but is explicitly the operator's
+call. SSOT for 1/2/5/6: `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`.

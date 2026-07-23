@@ -234,3 +234,47 @@ apply) is a genuine but low-value cleanup — safe to defer indefinitely, no urg
 write-path forward-fix has shipped") is now satisfied on BOTH conditions once the manifest rebuild (RESUME step 2, in
 flight) confirms 0 glued ids — the forward-fix half is DONE (shipped `4ca2640d`, verified above), it was never actually
 blocked on this session's work.
+
+## Update 2026-07-23 — 34 MORE glued rows surfaced by the fresh full-corpus rebuild; resharded; NOT a forward-path regression
+
+The DeFi-catalogue-closeout plan's own full 2020-2026 manifest rebuild (5-VM parallel,
+`defi_consolidated_closeout_2026_07_18.md`, completed 2026-07-23) gave a fresh recount reason to re-verify this issue's
+"0 glued ids" claim. A direct read of the now-larger consolidated index (23,472,205 rows) found **34 captured rows**
+still matching the glued regex (`(_\d{8}_\d{6}|_\d{10})$`) — all `lending_indices`/`liquidations`, e.g.
+`kamino_lending_SOLANA_20260528_134927` (22 KAMINO/SOLANA `lending_indices` rows, 12 single-row `liquidations` across
+AAVE_V3/COMPOUND_V3/FLUID/GMX/SPARK on various chains).
+
+**This is NOT a regression of the forward-write-path fix** (`4ca2640d`, verified clean above). The sample ids are dated
+2026-05-28 — well before both the fix and the 2026-07-21 sweep. Root cause: `reshard_glued_defi_ids_2026_07_21.py` is
+**index-driven** (groups by the manifest's own `instrument_id` column), so it can only reshard what the manifest already
+knows about. These 34 objects existed on GCS the whole time but were **not yet reflected in the manifest** when the
+2026-07-21 sweep ran (the 1,755-file count was accurate for the index AS IT STOOD then) — the same "previously-unindexed
+objects surfacing" mechanism the closeout plan separately logged for legacy `dex_pools`/`perp_mark_price` as a "bonus
+finding" of this session's rebuild. The scan tool is only as complete as the index it reads.
+
+**Fix applied 2026-07-23**: added a proper `defi-glued-reshard` category to
+`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (previously this tool was local-only, ad hoc — now it's
+a first-class, fleet-registered, re-runnable VM launcher, so any future resurfacing doesn't need bespoke tooling) —
+`deployment-service@3345bf9`. Ran on a fresh in-region VM with pinned, rebuilt tarballs (the local laptop's network path
+to GCS was independently confirmed too degraded this session for a reliable ~900MB-class direct read/ download — even a
+47.8MB single-shard download timed out at 60s — so an in-region VM read/write is now the standing recipe for this class
+of check, not just a nice-to-have): **34/34 processed, 242 new per-instrument twins written, 968 already-present twins
+skipped, 0 unattributable, 0 missing, 0 errors, 34 originals retired to `_migrated_`.** A follow-up full-corpus manifest
+rebuild (6-way parallel, full 2020-01-01..2026-07-22, gap-checked) is running to reflect this in the index; once it
+completes, re-verify 0 glued ids (expect 0 now) before deleting `_migrated_` markers.
+
+**Cross-session note (2026-07-23, from a different concurrent slot)**: 2 of the original 6 rebuild VMs
+(`canonical-migration-defi-rebuild-20260723-140715` covering 2024-04-29..2024-12-31, and `-140853` covering
+2025-07-01..2025-12-31) were SPOT-preempted (confirmed genuine via `gcloud compute operations list` —
+`compute.instances.preempted`, not a crash) and had not yet been relaunched ~10 minutes later while the other 4 chunks
+progressed. Since this directly gates the closeout plan's own "verify 0 glued ids + delete `_migrated_` markers" todo,
+relaunched both missing ranges fresh (`canonical-migration-defi-rebuild-20260723-142940` and `-143019`) — the rebuild is
+idempotent/safe-to-rerun by design (its own docstring: "Safe to re-run"), so no coordination conflict. Current live
+roster covers the full 2020-01-01..2026-07-22 range with no gaps across 6 VMs: `-141001` (2026), `-141515` (2025 H1),
+`-141922` (2020..2022-04-29), `-142022` (2022-04-29..2024-04-29), `-142940` (2024-04-29..2024-12-31, gap-fill),
+`-143019` (2025 H2, gap-fill). Also confirmed directly (per `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+§3): the `_migrated_` marker delete remains a human-only hard stop regardless of chat authorization — a sanctioned
+dry-run-by-default script already exists
+(`market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py`); once this rebuild sweep
+confirms 0 glued ids, the plan is to run that script's dry-run and hand the verified `--apply` command to the operator
+rather than execute it from any agent context.

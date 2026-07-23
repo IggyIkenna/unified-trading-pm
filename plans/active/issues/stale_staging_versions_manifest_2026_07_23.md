@@ -44,6 +44,29 @@ source:
 
 # `staging_versions` is a frozen mirror that still outranks `versions` in the quickmerge dep gate
 
+> ## ⚠️ PREMISE CORRECTED 2026-07-23 — DO NOT IMPLEMENT THE FIX BELOW YET
+>
+> The post-cutover sweep (`post_cutover_silent_assumption_sweep_2026_07_23.md`, finding **F2**) found that this issue's
+> framing is **inverted**. Every repo uses `dynamic = ["version"]` + `[tool.hatch.version] source = "vcs"`, so **the git
+> tag IS the package version** — and in all four "stale-AHEAD" repos, `staging_versions` **equals the last real tag**
+> while `versions` does not:
+>
+> | repo                     | last git tag    | `versions` | `staging_versions` |
+> | ------------------------ | --------------- | ---------- | ------------------ |
+> | unified-api-contracts    | v0.72.0 (06-27) | 0.71.0     | **0.72.0** ✔       |
+> | instruments-service      | v0.90.0 (06-27) | 0.88.0     | **0.90.0** ✔       |
+> | market-tick-data-service | v0.92.0 (06-27) | 0.91.0     | **0.92.0** ✔       |
+> | unified-trading-library  | v0.43.0 (06-28) | 0.55.0     | **0.43.0** ✔       |
+>
+> The two keys did **not** drift "because staging froze". They diverged because **release tagging broke fleet-wide on
+> 2026-06-27** (`reconcile_release_tags.py:51`'s regex cannot match a `dynamic` version), so each key now tracks a
+> different thing — and `staging_versions` is the one still tracking reality.
+>
+> **Consequence for the recommendation below:** option 1 ("make the gate ignore `staging_versions` under dormancy")
+> would make the dep gate trust the key that matches the real installed version **less**. Resolve F2 first, then
+> re-derive the right fix. The measured drift and the WARN-vs-`--hotfix`-BLOCK impact analysis below remain accurate —
+> only the causal story and the recommended fix are superseded.
+
 ## What's wrong
 
 `scripts/quickmerge.sh:998` (STAGE 1.6 dependency version gate):

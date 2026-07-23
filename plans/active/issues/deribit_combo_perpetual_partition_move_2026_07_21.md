@@ -40,6 +40,16 @@ resolved_by:
 > Investigation + design only. No code was changed, no GCS object was written/moved/deleted, no manifest row was
 > written, and no `--apply` flag was run on any existing script. All GCS/manifest access below was read-only.
 
+## OPERATOR RULING — 2026-07-23 ~08:15Z
+
+**Ruled: proceed with §9's P1 prep work now — the actual data move stays gated.** Operator decision: "Proceed with P1
+prep now" in response to an explicit split between (a) the two `[P1]` code-only todos in §9 — cross-check against the
+concurrent DERIBIT-COMBO venue-deregistration effort, and widen/port the combo-shape guard into `tardis_cefi_shards.py`
+— versus (b) the actual `[DATA] P2.` partition-MOVE `--apply` on the 15,119 live production rows, which §7 already
+recommends stays operator-gated and this ruling does NOT touch. **No production data is moved by this ruling** — code
+fix + cross-check only. The `--apply` step (§9's second `[DATA] P2.` todo) still requires a SEPARATE, later operator
+review of this full doc before it is scheduled — do not infer blanket approval for the move from this ruling.
+
 ## 1. What the plan originally found
 
 `plans/active/cefi_consolidated_closeout_2026_07_18.md` (closure-plan table, line ~1098/1118):

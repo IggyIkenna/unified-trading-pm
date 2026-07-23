@@ -58,11 +58,26 @@ def main() -> int:
             # all archive subdirs (e.g. archive/2026_05/), then workspace-root.
             # For ``.md`` links also try ``.plan.md`` per workspace plan-
             # filename convention (active=``.md``, archive=``.plan.md``).
+            #
+            # A leading "/" (e.g. "/codex/04-architecture/x.md") is this repo's PM-repo-root-
+            # relative convention, NOT a filesystem-absolute path -- but Path's own `/` operator
+            # silently DISCARDS the left operand when the right one is absolute
+            # (Path("a") / "/b" == Path("/b")), so every base in the loop below previously
+            # collapsed to the same nonexistent OS-root path for any "/"-prefixed link,
+            # regardless of `base`. Resolve it explicitly against the PM repo root
+            # (plans_dir.parent.parent -- plans/active -> plans -> repo root) first.
+            pm_repo_root = plans_dir.parent.parent
+            candidates: list[Path] = []
+            if link_path.startswith("/") and pm_repo_root.is_dir():
+                root_relative = link_path.lstrip("/")
+                candidates.append((pm_repo_root / root_relative).resolve())
+                if root_relative.endswith(".md") and not root_relative.endswith(".plan.md"):
+                    plan_md_path = root_relative[: -len(".md")] + ".plan.md"
+                    candidates.append((pm_repo_root / plan_md_path).resolve())
             archive_dir = plans_dir.parent / "archive"
             archive_bases = (
                 [archive_dir, *sorted(d for d in archive_dir.iterdir() if d.is_dir())] if archive_dir.is_dir() else []
             )
-            candidates: list[Path] = []
             for base in (plans_dir, *archive_bases, ws_root):
                 if not base.is_dir():
                     continue

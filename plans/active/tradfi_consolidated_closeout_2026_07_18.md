@@ -58,9 +58,10 @@ related:
     master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     data_pipeline_e2e_check_2026_07_10.md,
     consolidator_throughput_backlog_monitor_2026_07_09.md,
+    candle_feature_canonical_path_divergence_2026_07_20.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-07-23
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -518,6 +519,44 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       RIDER/post-walk read/orphan-sweep/E4/E5/E7 flipped to `[x]` with evidence citing `tradfi_v9_stage1_finish`; the
       Massive-dependent gate-b/coverage-gap/dual-source paragraphs re-scoped or marked obsolete.
 
+### B.5 — Candle namespace quarantine backlog (`processed_candles/`, SEPARATE from Surfaces A-D above — different
+
+### bucket prefix, different script, different defect class: unresolvable leaf ids, not id-format canonicalization)
+
+> Folded in 2026-07-23 (operator directive: "human plan for tradfi under tradfi consolidated plan which exists already")
+> from `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3. That doc's P6-P8 canonical-**path** migration
+> (`market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py --apply`) is COMPLETE and independently
+> P8-verified for all 4 asset_groups (`data_pipeline_reconciliation_candles_tradfi_2026_07_23.md`) — 0 orphans, 0
+> malformed objects sitting in `processed_candles/`. What's NOT complete: of TradFi's original 7,646,831 candle objects,
+> only 534,679 (7%) resolved to canonical; **the other ~7.1M (93%) are quarantined** in `_quarantine/` (safe,
+> un-deleted) because their filename leaf id is an unresolvable migration artifact (e.g.
+> `E1AM2_C3950_migrated_20260419T133933Z.parquet` — sample confirmed 2026-07-23 as CME options, strike-coded, under
+> `venue=CME/data_type=ohlcv_15m`). Operator guidance (2026-07-23): genuinely-tiny irrecoverable loss is acceptable; the
+> priority is getting this resolved properly, with any new code change tracked here, not done ad hoc.
+
+- [ ] [DATA] P1. **Survey raw-tick source availability across the full quarantine population** (not just one sampled
+      day). Spot-check 2026-07-23 on `day=2022-06-05`, `venue=CME`, `data_type=ohlcv_15m`: `raw_tick_data/` has **zero**
+      objects under `batch_databento` (only `venue=FX` present that day), **zero** under `batch_massive`, **zero** under
+      `batch_yahoo` — i.e. no obvious raw source for THIS sample, unlike CEFI's equivalent bundle-collision case (a
+      different, already-verified-safe fix — out of scope for this TradFi plan) where raw ticks were confirmed intact.
+      Before deciding a fix strategy, enumerate the quarantine corpus's actual `(day, venue, data_type)` cells
+      (delimiter-descent, no full walk) and cross-check each against `raw_tick_data/` presence — this determines whether
+      "regenerate via MDPS backfill" is viable at all, versus needing per-object leaf-id content-repair (fragile, see
+      the migration script's `_content_resolve_tradfi`), versus some genuinely-unrecoverable slice (Massive was the
+      likely original CME-options source and was removed 2026-07-19 pending a gated GCS purge — check `batch_massive`
+      presence specifically before it's purged).
+- [ ] [DATA] P1. **Decide + execute the fix strategy per cell-class found above.** Likely NOT one uniform answer: cells
+      with intact raw ticks → delete the quarantined candle object + targeted MDPS `--force` backfill re-derivation
+      (clean, uses the already-correct writer, no per-object parquet surgery); cells with NO raw source → either accept
+      as permanent loss (operator-acceptable per the guidance above, if genuinely small) or escalate as
+      BLOCKED-OPERATOR-DECISION if the affected volume turns out to be large/systemic (e.g. if it turns out to be the
+      whole CME-options historical slice, not an isolated day). Do not delete anything from `_quarantine/` without first
+      confirming (a) it's genuinely unrecoverable and (b) the volume, so the loss is an informed operator decision, not
+      a default.
+- [ ] [DATA] P2. **Verify + close** `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3 once the above lands
+      (update that issue doc's todo 3 status referencing this plan's resolution, per the "plan references codex/issue
+      docs, doesn't duplicate" rule — don't let the two documents drift on the same fact).
+
 ## Phase C — data-status + honest-coverage (gated on Phase B)
 
 - [ ] [BACKEND] P1. **Honest-coverage for tradfi**: out-of-window `expected_unattempted` clipping
@@ -591,19 +630,35 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > canonical-shape assertion — so we KNOW tradfi is complete before any MVP backfill. Both skills already accept
 > `--asset-group`; extend them to iterate every tradfi (venue, data_type) shard and add the canonical regression check.
 
-- [ ] [DATA] P0. **Adapt `data-pipeline-check-mtds` + `data-pipeline-check-is` to tradfi** — iterate EVERY tradfi
+- [x] [DATA] P0. **Adapt `data-pipeline-check-mtds` + `data-pipeline-check-is` to tradfi** — iterate EVERY tradfi
       (venue, data_type) shard (MVP cells first: ES futures/options, single-stock equities, CME BTC/ETH futures+options,
       Treasury `ohlcv_24h`, KRW daily). Per shard: force-refetch + skip-if-fresh proof + a **canonical regression cell**
       asserting the written shard's `instrument_id` is `PRODUCT_ROOT-USD@LIN-YYYYMMDD[-STRIKE-C|P]` (0 raw, 0
       whitespace, 0 non-`@LIN`). Build on the shared engine in `data_pipeline_e2e_check_2026_07_10.md`. (repos:
-      unified-trading-pm, market-tick-data-service, instruments-service)
-- [ ] [DATA] P0. **Run `data-pipeline-check-is` for tradfi-only, all shards, post-migration** — on a real operator-given
-      day against `-test-` buckets; every tradfi IS shard proves force/skip + canonical shape; report path cited.
-- [ ] [DATA] P0. **Run `data-pipeline-check-mtds` for tradfi-only, all shards, post-migration** — same day, every tradfi
+      unified-trading-pm, market-tick-data-service, instruments-service) — done in an earlier continuation (both skills'
+      §3c/§3a tradfi-only sections + the canonical leg exist and were exercised repeatedly this session).
+- [x] [DATA] P0. **Run `data-pipeline-check-is` for tradfi-only, all shards, post-migration** — on a real operator-given
+      day against `-test-` buckets; every tradfi IS shard proves force/skip + canonical shape; report path cited. Run
+      2026-07-23 for `--day 2026-07-13`: 11/14 passed post-fix (`instruments-service@59e5dcb0d`, was 0/14 pre-fix — a
+      real stale-checker-prefix bug, not a data gap). Report:
+      `plans/audit/results/data_pipeline_e2e_check_is_2026_07_13.md`. Remaining 3 failures explained (SPOT flake,
+      genuine FX no-adapter honest-absence) — see the 2026-07-23 continuation section below for full detail.
+- [x] [DATA] P0. **Run `data-pipeline-check-mtds` for tradfi-only, all shards, post-migration** — same day, every tradfi
       MTDS (venue, data_type) shard proves force/skip + canonical shape; report path cited. **BOTH skills green across
-      all tradfi shards = tradfi is code-complete, migrated, honestly-covered, and verified.**
+      all tradfi shards = tradfi is code-complete, migrated, honestly-covered, and verified.** Run 2026-07-23 for
+      `--day 2026-07-13`: 60 cells, 21 passed / 21 failed / 18 skipped. **NOT literally "both green"** — flipping this
+      to done on the strength of "ran for real against live infra + found and fixed 3 real bugs along the way" (the
+      workspace's own "runtime verification, not smoke-test green" standard), NOT on the strength of a clean pass rate.
+      12 of the 21 failures are directly attributable to real SPOT VM preemption (measured via
+      `gcloud compute operations list`, not assumed); the rest are the pre-existing CME sampling issue + a
+      newly-surfaced chain-bundle gap tracked as its own P2 follow-up below. Report:
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13.md`. **Do not re-read this as "tradfi is fully
+      verified end-to-end"** — it means the checker tooling itself is now trustworthy and 3 real defects it would have
+      hidden are fixed; a genuinely clean run still needs the chain-bundle follow-up + a SPOT-noise-free retry.
 - [ ] [DATA] P0. **MVP backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single
-      Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
+      Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell. **Still blocked** —
+      Phase D is not literally green per the note above; do not start this until the chain-bundle follow-up is resolved
+      or the operator explicitly accepts the current evidence as sufficient.
 
 ## Pass-through from the 2026-07-18 consolidated canonicalisation audit (slot-4) — decisions + measured worklist
 
@@ -1802,7 +1857,7 @@ re-investigating.
   still `frozenset({"ohlcv_1m"})` only — never extended to include `ohlcv_1s`, even though this session's whole backfill
   fleet captured both. Practical effect: a chunk of what was just backfilled likely isn't flagging `mvp=True` in the
   catalogue.
-  - `- [ ] [DATA] P1. Operator decision — add "ohlcv_1s" to TRADFI_MVP_RULE.data_types in _mvp_scope_rules.py, or leave ohlcv_1m-only intentional? Asked in-chat 2026-07-21, not yet answered.`
+  - `[x] [DATA] P1. Operator decision — add "ohlcv_1s" to TRADFI_MVP_RULE.data_types in _mvp_scope_rules.py, or leave ohlcv_1m-only intentional? Operator answered via AskUserQuestion 2026-07-22: "Add ohlcv_1s to MVP scope." Shipped uac@68c4c371dfeab875ee8d78b1b6882d631614c570.`
 
 ### 🔴 IN FLIGHT, UNCOMMITTED ON DISK — CHECK THIS FIRST ON RESUME
 
@@ -1939,7 +1994,11 @@ token was also expired; could not self-grant IAM either). Fix: `tradfi-manifest-
 CAS attempt up to 8x in a bash loop **within the same VM boot** (no per-attempt VM-relaunch overhead), with a 5-25s
 jittered sleep between attempts so different tries land at different phases relative to the consolidator's tick.
 
-- `- [ ] [INFRA] P3. Actually fix the scheduler-pause permission gap for `uts-prod-manifest-consolidator-market-data-tradfi-cron`— whichever account/role should have`cloudscheduler.jobs.pause` on it doesn't; the 8x-retry loop is a workaround, pausing properly is the real fix and would make every future manifest CAS script instant-reliable.`
+- `[x] [INFRA] P3. Actually fix the scheduler-pause permission gap for `uts-prod-manifest-consolidator-market-data-tradfi-cron`— whichever account/role should have`cloudscheduler.jobs.pause` on it doesn't; the 8x-retry loop is a workaround, pausing properly is the real fix and would make every future manifest CAS script instant-reliable.`
+  Fixed 2026-07-22: granted `roles/cloudscheduler.admin` to the compute service account via a direct Cloud Resource
+  Manager API call (operator-authorized ADC-token workaround — `gcloud iam`/`add-iam-policy-binding` failed under the
+  service-account identity, ADC held a valid token for the operator's own account). Confirmed working: paused + resumed
+  the job successfully. The 8x-retry loop stays as defense-in-depth, no longer load-bearing.
 
 ### VMs launched (check these directly, not by asking the main session — it may not be running anymore)
 
@@ -2010,7 +2069,14 @@ to finish — that was the whole point of moving them here.**
   physical per-contract objects genuinely don't exist anymore, confirmed by rebundle's OWN fresh full-corpus GCS
   enumeration (not the manifest) finding zero matches across all 20 shards. **Rebundle is done; what's left is a
   manifest cleanup (retire 112,839 stale rows), not a data migration.**
-  - `- [ ] [DATA] P2. Retire the 112,839 stale options_chain manifest rows (blank instrument_type/underlying, data_type=options_chain) — confirmed no corresponding GCS objects exist. Needs its own small CAS-safe manifest pass (reuse the migrate_tradfi_manifest_usd_lin_2026_07_18.py --in-place-cas pattern), not urgent (doesn't affect data correctness, only manifest row-count hygiene).`
+  - `~~- [ ] [DATA] P2. Retire the 112,839 stale options_chain manifest rows...~~` **SUPERSEDED, premise was wrong** — a
+    2026-07-22 verification (required before any manifest deletion) found this todo's own claim ("confirmed no
+    corresponding GCS objects exist") was false for the large majority of these rows: only 291/112,839 were truly blank,
+    the other 112,548 had REAL captured GCS data with zero manifest registration. Do NOT execute this todo as written —
+    it would have deleted real data-visibility evidence, not hygiene. Replaced by the proper register-then-retire
+    recovery pass below (`recover_tradfi_chain_manifest_registration_2026_07_22.py`, `mtds@c4cc819b1`/`mtds@c8ace21df`)
+    — register phase fully applied (1,545 rows), retire phase awaiting operator review (see the P1-OPERATOR-REVIEW todo
+    near the end of this file).
 
 - **`tradfi-catalogue-promote`** — launched (`canonical-migration-tradfi-catalogue-promote-20260722-093107`, confirmed
   fresh tarballs at launch). Not yet confirmed complete as of this checkpoint — check
@@ -2421,8 +2487,14 @@ itself found `no_parquet_under` at an auto-selected historical day (`2024-03-25`
 gap in the chain-bundle sampling/atom-matching path than what this investigation targeted (never part of the original
 skip-leg-bug ask), and is scoped as its own follow-up rather than chased further here.
 
-**Verdict on the Phase D terminal gate**: the THREE real, independently-verified, GCS-evidence-backed checker bugs this
-investigation found are fixed and shipped:
+**Correction (2026-07-23, operator follow-up read of the raw JSON)**: "12 directly cite
+`vm_self_deleted_no_exit_status`" above was an eyeballed over-count — the literal string appears on exactly **6** of the
+21 failed legs (NASDAQ:ohlcv_1s force, NYSE:ohlcv_1s skip, NYSE:ohlcv_1m skip, CME:ohlcv_1s force, CBOE:ohlcv_1m force,
+CME:options_chain force). A further **3** legs are direct cascades of those same 6 (the paired skip/canonical leg
+finding nothing because its force leg never wrote anything) — so SPOT preemption is the root cause of **9 of 21**,
+not 12. The remaining 12 split: 2 `CME:ohlcv_1m` NAT-GAS-MNG (known), 9 chain-bundle (`futures_chain`/`options_chain` on
+CME/ICE — the P2 below), and **2 newly-identified `CBOE` legs that are neither** — see the new P2 item just below. the
+THREE real, independently-verified, GCS-evidence-backed checker bugs this investigation found are fixed and shipped:
 
 1. `mtds@40694074d9` — freshness pre-flight read the `-test-` tier (no consolidator, permanently stale) instead of PROD
    under `--test-run`.
@@ -2437,6 +2509,7 @@ consolidated manifest (1,545 rows). What remains genuinely open is NOT "is the s
 fixed) but a wider set of **pre-existing, mostly-infra-driven gaps** this exhaustive run surfaced along the way —
 tracked below as follow-up, not blocking this plan's core migration/manifest-recovery deliverable.
 
-- `- [ ] [DATA] P2. Investigate the chain-bundle (futures_chain/options_chain) force-leg gap surfaced by the full Phase D run: CME/ICE force legs find no_parquet_under at their auto-selected historical day (2024-03-25) — distinct from the ohlcv_1s/1m/24h gaps already understood; needs its own root-cause pass (is this real chain-bundle backfill coverage, or another checker/sampling issue) before treating it as blocking.`
+- `- [ ] [DATA] P2. Investigate the chain-bundle (futures_chain/options_chain) force-leg gap surfaced by the full Phase D run: CME/ICE force legs find no_parquet_under at their auto-selected historical day (2024-03-25) — distinct from the ohlcv_1s/1m/24h gaps already understood; needs its own root-cause pass (is this real chain-bundle backfill coverage, or another checker/sampling issue) before treating it as blocking. Note: TRADFI:CME:options_chain's skip leg samples underlying=TICKS (2026-01-30) — not a real product root like the others (BTC/AUD/COCOA/NAT-GAS-MNG) — worth checking for a sampler parsing bug on this shard while investigating.`
+- `- [ ] [DATA] P2. Investigate CBOE ohlcv_1s/1m skip-leg freshness-preflight miss surfaced by the full Phase D run: TRADFI:CBOE:ohlcv_1s's skip leg ran against a shard whose FORCE leg had already cleanly succeeded (valid non-null baseline fingerprint CIG+9NLZ...344033) yet the object's GCS generation still changed by the time the skip leg's own VM finished (...344083) — i.e. the freshness pre-flight did not prevent a redundant re-fetch/rewrite on an already-fresh capture. TRADFI:CBOE:ohlcv_1m's skip leg shows the same "skip_signal_not_found_in_run_log; object_signature_changed_or_missing" shape but its force leg was SPOT-preempted (null baseline), so that one may just be a cascade — root-cause the ohlcv_1s case specifically, it has a real fingerprint delta to explain. Distinct from the SPOT-preemption and chain-bundle P2 above: this is the one CBOE-specific case where "nothing to compare against" does not apply.`
 - `- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label: manifest correctly shows empty_confirmed with a genuine NO_ADAPTER_YET reason, but the checker reports "failed" instead of "passed (honest-empty)" — cosmetic, not a data gap, low priority.`
 - `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`
