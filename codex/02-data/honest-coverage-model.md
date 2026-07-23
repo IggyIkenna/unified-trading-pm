@@ -575,10 +575,22 @@ coverage.
 timeframes from the same raw source data_types MTDS captures, over the SAME manifest (service-partitioned by
 `service_name`) — a finer shard grain than MTDS's per-(instrument, date) atom. Extended, not replaced: the Tier-3
 per-instrument denominator/found-set becomes per-(instrument, date, timeframe) ONLY when a `timeframes` list is supplied
-(MDPS callers only); every MTDS call path is byte-for-byte unchanged. The Tier-2 (venue-level) branch is NOT yet
-timeframe-aware — a known, tracked gap (see the plan's follow-up todos), not a silent omission. Two open design
-questions (pre-cutover historical-row visibility; whether any venue has per-timeframe start-date divergence) are
-deliberately unresolved pending operator input — see the plan's Progress Log for the full reasoning.
+(MDPS callers only); every MTDS call path is byte-for-byte unchanged. **The Tier-2 (venue-level) branch is ALSO now
+timeframe-aware** (`deployment-api@43f067e`, 2026-07-22 follow-up) — mirrors the Tier-3 pattern via a
+`_tier2_dt_entry()` helper; `timeframes=None` (every existing MTDS caller) reproduces the prior denominator
+byte-for-byte. Both open design questions (pre-cutover historical-row visibility; per-timeframe start-date divergence)
+were investigated directly against production data rather than left open indefinitely: MDPS has written only 6 total
+rows to the shared manifest to date (a single 2026-04-16 smoke-test write), so both questions are currently
+MOOT/undeterminable from real volume — the shipped defaults (`historical_coverage_gap` flag; flat
+`MDPS_CANONICAL_TIMEFRAMES`) stand unconfirmed-but- unfalsified, with an explicit re-open trigger (real MDPS production
+volume appearing in the manifest), not a permanently-settled answer. See the plan's Progress Log for the full
+investigation.
+
+**MVP/could-exist/all `scope` UI wiring (added 2026-07-23)**: the backend `scope` param this section's `is_mvp` plumbing
+relies on (`/manifest`/`/turbo` routes) now has a UI-reachable consumer — `deployment-ui`'s
+`getDataStatusManifest`/`getDataStatusTurbo` thread an optional `scope` param, and `DataStatusTab.tsx` renders a
+page-level "Coverage Scope" toggle consistently across instruments-service/MTDS/MDPS (`deployment-ui@f9396e1`). Prior to
+this, the backend wiring had zero UI consumer on the shared coverage grid.
 
 ---
 
