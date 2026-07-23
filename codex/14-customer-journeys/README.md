@@ -194,7 +194,8 @@ When a playbook doc changes, the matching Playwright spec MUST be updated in the
 
 - Codex top-level: [../README.md](../README.md)
 - Master index: [../00-SSOT-INDEX.md](../00-SSOT-INDEX.md)
-- Local dev (transcluded): [../08-workflows/local-dev.md](../08-workflows/local-dev.md)
+- Local dev (transcluded): [/codex/08-workflows/local-dev.md](/codex/08-workflows/local-dev.md)
 - Strategy architecture (referenced by DART playbook):
-  [../09-strategy/architecture-v2/README.md](../09-strategy/architecture-v2/README.md)
-- Compliance (referenced by Regulatory Umbrella playbook): [../07-security/compliance.md](../07-security/compliance.md)
+  [/codex/09-strategy/architecture-v2/README.md](/codex/09-strategy/architecture-v2/README.md)
+- Compliance (referenced by Regulatory Umbrella playbook):
+  [/codex/07-security/compliance.md](/codex/07-security/compliance.md)

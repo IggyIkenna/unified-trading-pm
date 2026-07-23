@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Firebase staging
 summary:
-  Staging Firebase auth (separate GCP project odum-staging, uat.odum-research.com) isolated from prod —
-  demo-user provisioning per prospect, 23 demo personas, 30-day demo lifecycle, sandbox-resettable;
-  compute stays in central-element-323112 to share the build pipeline.
+  Staging Firebase auth (separate GCP project odum-staging, uat.odum-research.com) isolated from prod — demo-user
+  provisioning per prospect, 23 demo personas, 30-day demo lifecycle, sandbox-resettable; compute stays in
+  central-element-323112 to share the build pipeline.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [firebase, auth, ui, staging, onboarding, demo]
-related: [firebase-production.md, firebase-local.md, light-auth-briefings.md]
+related:
+  [
+    /codex/14-customer-journeys/authentication/firebase-production.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/14-customer-journeys/authentication/light-auth-briefings.md,
+  ]
 created: 2026-04-19
 authoritative_for: [Firebase staging auth environment (odum-staging)]
-referenced_by: [codex/08-workflows/signup-signin-workflow.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/environments/staging-odum-research-co-uk.md, codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md]
+referenced_by:
+  [
+    /codex/08-workflows/signup-signin-workflow.md,
+    /codex/14-customer-journeys/authentication/README.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/14-customer-journeys/authentication/firebase-production.md,
+    /codex/14-customer-journeys/authentication/light-auth-briefings.md,
+    /codex/14-customer-journeys/environments/staging-odum-research-co-uk.md,
+    /codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md,
+    /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

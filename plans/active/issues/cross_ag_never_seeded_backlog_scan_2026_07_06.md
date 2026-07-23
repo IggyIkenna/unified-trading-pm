@@ -21,14 +21,14 @@ scope: [engineer]
 tags: [never-seeded, expected-universe, enumerator, honest-coverage, layer-1, cross-ag, 2e-follow-on, capture-to-100]
 related:
   [
-    foundation_gates_and_capture_to_100_2026_07_06.md,
-    data_completion_to_100_all_ag_2026_06_21.md,
-    prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
-    prediction_capture_incident_remediation_2026_07_06.md,
-    mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    instruments_foundation_completeness_2026_06_24.md,
-    ../../codex/02-data/honest-coverage-model.md,
-    ../../codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
+    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
 last_updated:
@@ -168,7 +168,7 @@ resolved_by:
 
 ## Why it matters
 
-- **Layer-1 denominator honesty is the heartbeat** (per plan-5 § one-law + `codex/02-data/honest-coverage-model.md`). A
+- **Layer-1 denominator honesty is the heartbeat** (per plan-5 § one-law + `/codex/02-data/honest-coverage-model.md`). A
   never-seeded backlog reads as "we have 100% of what we chose to enumerate" while the actual could-exist universe is
   larger — every downstream capture-%, gate flip, and Foundation sign-off then over-reports. The DeFi 2e re-seed already
   demonstrated this at ~+1.38M cells (defi honest-cov 6.2% → 10.1%). Not filing the equivalent per-AG residual now means

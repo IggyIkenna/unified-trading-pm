@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Family: Vol Trading'
+title: "Family: Vol Trading"
 summary:
   The Vol Trading strategy family — 19 archetypes trading a view on vol itself (IV/RV, skew, term structure, surface
-  residuals, dispersion, variance) via delta-hedged options; edge is statistical vol-metric dislocation, distinct
-  from mechanical cross-venue/no-arb vol dispersion which belongs in ARBITRAGE_PRICE_DISPERSION.
+  residuals, dispersion, variance) via delta-hedged options; edge is statistical vol-metric dislocation, distinct from
+  mechanical cross-venue/no-arb vol dispersion which belongs in ARBITRAGE_PRICE_DISPERSION.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,14 +15,24 @@ tags: [strategy, vol-trading, options, deribit, defi, execution]
 related:
   [
     market-making.md,
-    stat-arb-pairs.md,
-    arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/families/stat-arb-pairs.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
     ../archetypes/vol-trading-options.md,
     ../cross-cutting/risk-gates.md,
   ]
 created: 2026-04-17
 authoritative_for: [Vol Trading strategy family spec (alpha thesis + 19 archetypes)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md, codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md, codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md, codex/09-strategy/architecture-v2/archetypes/vol-carry.md, codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md, codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md, codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

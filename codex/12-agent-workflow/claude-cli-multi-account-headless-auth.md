@@ -15,18 +15,18 @@ scope: [engineer, admin]
 tags: [orchestrator, authentication, self-healing, monitoring, slack]
 related:
   [
-    codex/04-architecture/agent-orchestrator-overview.md,
-    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
-    codex/12-agent-workflow/canonical-plan-flow.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    /codex/12-agent-workflow/canonical-plan-flow.md,
   ]
 created: 2026-05-21
 authoritative_for: [claude CLI multi-account headless setup-token authentication]
 referenced_by:
   [
-    codex/04-architecture/agent-orchestrator-overview.md,
-    codex/12-agent-workflow/canonical-plan-flow.md,
-    codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md,
-    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/12-agent-workflow/canonical-plan-flow.md,
+    /codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md,
+    /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
     plans/epics/orchestrator_master.md,
   ]
@@ -266,7 +266,7 @@ trigger + the MainAgentKeeper (`orchestrator_account_failover_resume_respawn_202
 
 This is consistent with "live workers are not swapped mid-session" — the resume path kills the wedged process first,
 then relaunches it; the new token is read fresh at launch. Full headroom-gating (decision B: leave frozen when no
-headroom) is in `codex/04-architecture/agent-orchestrator-overview.md` § "Trigger 1.4 — usage-cap account failover".
+headroom) is in `/codex/04-architecture/agent-orchestrator-overview.md` § "Trigger 1.4 — usage-cap account failover".
 
 ### Spawn-heartbeat watchdog (180s threshold)
 
@@ -456,6 +456,7 @@ plan.
 | Symptom | Likely cause | Fix | | --------------------------------------------------------- |
 ------------------------------------------------------------------- |
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 | ----------------------------------------- | | `401 authentication_error` immediately | Token invalid or revoked |
 Regenerate with `claude setup-token` | | Billing shows API usage instead of Max | `ANTHROPIC_API_KEY` set |
 `unset ANTHROPIC_API_KEY`, verify with `claude /status` | | `OAuth authentication is currently not supported` | Known

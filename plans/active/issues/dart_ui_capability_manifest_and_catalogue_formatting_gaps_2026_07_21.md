@@ -140,7 +140,7 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
       `quality-gates.sh` green. This checkbox originally bundled a UAC Python model with 3 UI/TypeScript deliverables
       (Table, page, resolver wiring) under one `[BACKEND]`-tagged item + `assigned_role: backend_engineer` dispatch — a
       craft-scope mismatch per `unified-trading-pm/agents/backend_engineer.md`'s `does_not: UI /     TypeScript work`,
-      and per `codex/06-coding-standards/ui-testing-layers.md` any UI tick needs a `pw:L2` regression spec a
+      and per `/codex/06-coding-standards/ui-testing-layers.md` any UI tick needs a `pw:L2` regression spec a
       backend_engineer worker isn't positioned to author. Split the remaining scope into the todo below (assigned_role:
       ui_developer) rather than silently claiming it done.
 - [x] [UI] P3. ✅ Wire `AdminStrategyAssignment` as the real backing store for `lib/entitlements/strategy-route.ts`'s
@@ -249,5 +249,5 @@ has bandwidth; items D-F are small enough to fold into whichever plan next touch
 
 ## Codex SSOTs
 
-`codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`,
+`/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`,
 `codex/06-coding-standards/ strategy-display-conventions.md`.

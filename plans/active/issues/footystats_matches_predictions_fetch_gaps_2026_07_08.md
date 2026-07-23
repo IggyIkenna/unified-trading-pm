@@ -26,10 +26,10 @@ scope: [engineer]
 tags: [footystats, honest-coverage, fetch-gap, fixture-calendar, sports-p2, deferred]
 related:
   [
-    sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md,
-    sports_reference_backfill_oom_2026_06_22.md,
-    ../../codex/02-data/honest-coverage-model.md,
-    ../../codex/02-data/honest-absence-downstream-handling.md,
+    /plans/archive/2026_07/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md,
+    /plans/archive/2026_07/sports_reference_backfill_oom_2026_06_22.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-08

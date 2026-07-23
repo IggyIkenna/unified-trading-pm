@@ -19,8 +19,8 @@ related:
     ../instrument_universe_registry_consolidation_2026_06_29.md,
     ../honest_coverage_v2_instrument_denominator_2026_06_28.md,
     ../honest_coverage_v2_opus_checkpoints_2026_06_28.md,
-    ../../../codex/02-data/honest-coverage-model.md,
-    ../../../codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
   ]
 created: 2026-06-29
 parent_epic: instruments_master
@@ -166,7 +166,7 @@ Citations are file:line or plan/commit.
 
 ### Domain 4 — Stale-source flags
 
-- **A20** — `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` is **git-dated 2026-06-16** → **STALE** on
+- **A20** — `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` is **git-dated 2026-06-16** → **STALE** on
   venue-registry/MVP (predates registry consolidation + MVP v12; the registry plan's Phase-2 "codex flip" to fix it is
   still OPEN). Any plan leaning on this doc for venue/MVP truth is citing a stale source.
 

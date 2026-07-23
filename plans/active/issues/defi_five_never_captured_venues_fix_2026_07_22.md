@@ -19,7 +19,10 @@ repos: [market-tick-data-service, unified-api-contracts, deployment-service]
 scope: [engineer]
 tags: [defi, scheduling, crash-loop, venue-mislabel, terraform, in-flight]
 related:
-  [defi_venue_phase_live_definition_contradiction_2026_07_22.md, distinct_values_noncanonical_audit_2026_07_20.md]
+  [
+    /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
+    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+  ]
 created: "2026-07-22"
 parent_epic: infrastructure_master
 assigned_vm: NA

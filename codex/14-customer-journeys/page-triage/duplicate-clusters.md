@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Duplicate clusters
 summary:
   Ten overlap clusters where multiple unified-trading-system-ui routes serve one concept (strategy-catalogue legacy,
-  data gaps/completeness/missing, reports-vs-observe reconciliation, IR site-navigation, ...) each with a
-  merge-into / keep-separate / defer decision.
+  data gaps/completeness/missing, reports-vs-observe reconciliation, IR site-navigation, ...) each with a merge-into /
+  keep-separate / defer decision.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,20 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [ui, duplicate, page-triage, refactor, consolidation, navigation]
-related: [triage-matrix.md, partial-archive.md]
+related:
+  [/codex/14-customer-journeys/page-triage/triage-matrix.md, /codex/14-customer-journeys/page-triage/partial-archive.md]
 created: 2026-04-19
 authoritative_for: [UI duplicate-route cluster merge decisions]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/page-triage/README.md, codex/14-customer-journeys/page-triage/triage-matrix.md, codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md, codex/14-customer-journeys/roadmap/plan-references.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/page-triage/README.md,
+    /codex/14-customer-journeys/page-triage/triage-matrix.md,
+    /codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

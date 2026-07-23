@@ -13,13 +13,31 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [admin, sales, engineer]
 tags: [demo-ops, sales, staging, personas, tier-override, onboarding, ui]
-related: [demo-restriction-profiles.md, dart-demo-modes.md, ../dart/dart-terminal-vs-research.md, ../../08-workflows/client-onboarding.md]
+related:
+  [
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/dart-demo-modes.md,
+    ../dart/dart-terminal-vs-research.md,
+    ../../08-workflows/client-onboarding.md,
+  ]
 created: 2026-04-24
 authoritative_for: [staging demo persona onboarding checklist]
-referenced_by: [codex/02-data/questionnaire-axes.md, codex/04-architecture/commercial-service-families.md, codex/08-workflows/client-onboarding.md, codex/14-customer-journeys/dart/dart-terminal-vs-research.md]
+referenced_by:
+  [
+    /codex/02-data/questionnaire-axes.md,
+    /codex/04-architecture/commercial-service-families.md,
+    /codex/08-workflows/client-onboarding.md,
+    /codex/14-customer-journeys/dart/dart-terminal-vs-research.md,
+  ]
 owner:
 last_reviewed:
-code_refs: [unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/lib/auth/demo-provider.ts, unified-trading-system-ui/lib/auth/tier-override.ts, unified-trading-system-ui/components/demo/DemoPlanToggle.tsx]
+code_refs:
+  [
+    unified-trading-system-ui/lib/auth/personas.ts,
+    unified-trading-system-ui/lib/auth/demo-provider.ts,
+    unified-trading-system-ui/lib/auth/tier-override.ts,
+    unified-trading-system-ui/components/demo/DemoPlanToggle.tsx,
+  ]
 ---
 
 # Staging Demo Setup — Operator Checklist

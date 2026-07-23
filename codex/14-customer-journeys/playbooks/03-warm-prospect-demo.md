@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Playbook 3 — Warm-prospect demo on staging
 summary:
-  'pb3 implementation — dedicated staging demo account in three flavours (pb3a Reg Umbrella + pb3b IM share
-  one reports-only walkthrough; pb3c DART exposes the full 4-catalogue + research/trading/observe surface);
-  visibility-slicing table + 8-step admin provisioning flow.'
+  "pb3 implementation — dedicated staging demo account in three flavours (pb3a Reg Umbrella + pb3b IM share one
+  reports-only walkthrough; pb3c DART exposes the full 4-catalogue + research/trading/observe surface);
+  visibility-slicing table + 8-step admin provisioning flow."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,16 +14,26 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, playbook, demo, visibility-slicing, entitlements, staging, personas]
 related:
   [
-    01-marketing-pre-first-call.md,
-    02-research-and-documentation.md,
-    03a-demo-reg-umbrella.md,
-    03b-demo-im.md,
-    03c-demo-dart.md,
+    /codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md,
+    /codex/14-customer-journeys/playbooks/02-research-and-documentation.md,
+    /codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md,
+    /codex/14-customer-journeys/playbooks/03b-demo-im.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
     ../playbook-concepts/visibility-slicing.md,
   ]
 created: 2026-04-19
 authoritative_for: [pb3 warm-prospect staging demo playbook implementation (flavour split + slicing table)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/environments/staging-odum-research-co-uk.md, codex/14-customer-journeys/experience/staging-demo-journey.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md, codex/14-customer-journeys/playbooks/03b-demo-im.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/authentication/README.md,
+    /codex/14-customer-journeys/authentication/firebase-staging.md,
+    /codex/14-customer-journeys/environments/staging-odum-research-co-uk.md,
+    /codex/14-customer-journeys/experience/staging-demo-journey.md,
+    /codex/14-customer-journeys/playbooks/02-research-and-documentation.md,
+    /codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md,
+    /codex/14-customer-journeys/playbooks/03b-demo-im.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -135,7 +145,7 @@ See [../authentication/firebase-staging.md](../authentication/firebase-staging.m
 > **[DELTA 2026-05-22]** **Current state:** `prospect-reg` and `prospect-dart` personas do not yet exist in
 > `lib/auth/personas.ts`. Entitlement-based slicing hides non-entitled services rather than showing them as
 > LOCKED-WITH-MESSAGE. The pooled-or-SMA picker routing is not yet implemented. **Planned delta:** Persona stubs +
-> LOCKED-WITH-MESSAGE UI tracked in `codex/14-customer-journeys/roadmap/next-waves.md`. **Target:** post-cutover UI
+> LOCKED-WITH-MESSAGE UI tracked in `/codex/14-customer-journeys/roadmap/next-waves.md`. **Target:** post-cutover UI
 > unification phase.
 
 - No `prospect-reg` or `prospect-dart` persona exists yet in

@@ -22,7 +22,7 @@ stage: [data]
 repos: [market-tick-data-service, unified-trading-library, e2e-testing]
 scope: [engineer, admin]
 tags: [gcs, manifest, data-status, gas-fees, lst-rates, data-pipeline-correctness, bucket-mismatch]
-related: [gcs_bucket_estate_cleanup_2026_07_10.md]
+related: [/plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md]
 created: "2026-07-10"
 parent_epic: infrastructure_master
 priority: P1
@@ -97,7 +97,7 @@ architecture (not established during the bucket-cleanup pass):
    `gas-fees`/`lst-rates` bucket kind is the INTENDED manifest-tracked unit, and the writer's current behavior (writing
    into the shared market-data bucket) is itself the bug.
 
-Choosing between these requires reading `codex/05-infrastructure/manifest-consolidator-ssot.md` and understanding
+Choosing between these requires reading `/codex/05-infrastructure/manifest-consolidator-ssot.md` and understanding
 whether DeFi reference-data types are meant to have their own per-kind manifest, or whether they're deliberately folded
 into the `market-data` asset_group=defi manifest (in which case `gas-fees`/`lst-rates`/the other 7 dead kinds'
 `cloud-providers.yaml` declarations should probably be removed entirely, not just have their empty buckets deleted).

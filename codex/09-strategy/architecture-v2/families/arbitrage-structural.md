@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Family: Arbitrage / Structural Edge'
+title: "Family: Arbitrage / Structural Edge"
 summary:
-  The Arbitrage / Structural Edge strategy family — 7 archetypes (price-dispersion, liquidation-capture, 4 MEV
-  variants, cross-domain-event) capturing near-risk-free spread or protocol-paid structural bonus; edge is
-  spread/bonus > cost, executed ATOMIC or leg-and-hedge, NOT directional.
+  The Arbitrage / Structural Edge strategy family — 7 archetypes (price-dispersion, liquidation-capture, 4 MEV variants,
+  cross-domain-event) capturing near-risk-free spread or protocol-paid structural bonus; edge is spread/bonus > cost,
+  executed ATOMIC or leg-and-hedge, NOT directional.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [engineer, admin]
 tags: [strategy, arbitrage, mev, liquidation, defi, execution, funding]
 related:
   [
-    carry-and-yield.md,
-    stat-arb-pairs.md,
+    /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    /codex/09-strategy/architecture-v2/families/stat-arb-pairs.md,
     market-making.md,
     ../archetypes/arbitrage-price-dispersion.md,
     ../cross-cutting/mev-protection.md,
   ]
 created: 2026-04-17
 authoritative_for: [Arbitrage / Structural Edge strategy family spec (alpha thesis + 7 archetypes)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/liquidation-capture.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-backrun.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/liquidation-capture.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -76,7 +86,7 @@ you actually lock in the spread?), not directional risk.
 | [`ARBITRAGE_MEV_SANDWICH`](../archetypes/arbitrage-mev-sandwich.md)                     | Bracket a victim's large swap with front-run + back-run; capture adverse price movement                        | ATOMIC 3-tx bundle               | **Theoretical only — no live engine.** Regulatory risk; retained for completeness.                             |
 | [`ARBITRAGE_MEV_JIT_LIQUIDITY`](../archetypes/arbitrage-mev-jit-liquidity.md)           | Mint concentrated-LP position before imminent large swap; collect fees; burn next block                        | ATOMIC 2-block                   | Uniswap V3 / Algebra concentrated-liquidity pools; low-capital, near-zero inventory                            |
 | [`ARBITRAGE_MEV_LIQUIDATION_BUNDLE`](../archetypes/arbitrage-mev-liquidation-bundle.md) | Flash-loan funded liquidation in a single atomic bundle; zero capital required                                 | ATOMIC single tx                 | Aave / Compound / Euler on 6 EVM chains + Kamino on Solana; extends LIQUIDATION_CAPTURE                        |
-| [`ARBITRAGE_CROSS_DOMAIN_EVENT`](../archetypes/arbitrage-cross-domain-event.md)         | Same real-world event priced in ≥2 venue domains (sports book / prediction CLOB / CME binary); arb across them | Leg-and-hedge                    | Sports book ↔ Polymarket ↔ Kalshi; CME binary options; added 2026-05-18 per taxonomy V-1                     |
+| [`ARBITRAGE_CROSS_DOMAIN_EVENT`](../archetypes/arbitrage-cross-domain-event.md)         | Same real-world event priced in ≥2 venue domains (sports book / prediction CLOB / CME binary); arb across them | Leg-and-hedge                    | Sports book ↔ Polymarket ↔ Kalshi; CME binary options; added 2026-05-18 per taxonomy V-1                       |
 
 ## Shared primitives (all archetypes)
 
@@ -98,15 +108,15 @@ you actually lock in the spread?), not directional risk.
 
 ### Atomic vs leg-and-hedge — when each applies
 
-| Scenario                                       | Execution mode                              | Example                                                                             |
-| ---------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Scenario                                       | Execution mode                              | Example                                                                            |
+| ---------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Flash-loan DEX arb on single chain             | ATOMIC (multicall + flash loan)             | Uniswap ↔ Balancer on Ethereum                                                     |
 | Cross-CEX arb (fungible same instrument)       | Leg-and-hedge                               | Binance spot ↔ Bybit spot BTC-USDT — no venue supports simultaneous cross-CEX fill |
 | Cross-DEX arb on same chain without flash loan | ATOMIC (multicall)                          | Uniswap ↔ Balancer ETH-USDC on Ethereum                                            |
 | Cross-chain arb                                | Leg-and-hedge (bridge time kills atomicity) | Uniswap Ethereum ↔ Uniswap Arbitrum (same asset, different chain)                  |
-| Sports cross-book via Unity                    | ATOMIC within Unity API                     | Back on Smarkets-via-Unity + lay on Betfair-via-Unity, submitted near-atomic        |
-| Sports cross-book direct (different accounts)  | Leg-and-hedge                               | Back on Smarkets direct + lay on Betfair direct                                     |
-| Cross-venue vol arb (Deribit ↔ OKX options)   | Leg-and-hedge                               | Two options venues, separate wallets                                                |
+| Sports cross-book via Unity                    | ATOMIC within Unity API                     | Back on Smarkets-via-Unity + lay on Betfair-via-Unity, submitted near-atomic       |
+| Sports cross-book direct (different accounts)  | Leg-and-hedge                               | Back on Smarkets direct + lay on Betfair direct                                    |
+| Cross-venue vol arb (Deribit ↔ OKX options)    | Leg-and-hedge                               | Two options venues, separate wallets                                               |
 
 ### Leader-hedge strategy choice
 

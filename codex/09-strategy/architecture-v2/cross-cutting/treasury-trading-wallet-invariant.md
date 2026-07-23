@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Treasury × Trading Wallet Invariant
 summary:
-  'HARD invariant: treasury/reserve-custody wallets never source or destination a `StrategyInstruction` nor enter the
+  "HARD invariant: treasury/reserve-custody wallets never source or destination a `StrategyInstruction` nor enter the
   allocator pool; trading wallets never serve as long-term custody reserve or operator-withdrawal destination. Enforced
-  via `isolation_policy.py`; violation raises `TreasuryWalletMisuseError`. Cross-purpose peer to client-funds isolation.'
+  via `isolation_policy.py`; violation raises `TreasuryWalletMisuseError`. Cross-purpose peer to client-funds isolation."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,11 +13,15 @@ repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, risk, self-healing]
 related:
-  [../../../04-architecture/client-funds-isolation.md, ../../../04-architecture/custody-providers.md,
-  universe-enumeration-contract.md, capital-client-isolation.md]
+  [
+    ../../../04-architecture/client-funds-isolation.md,
+    ../../../04-architecture/custody-providers.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md,
+  ]
 created: 2026-05-22
 authoritative_for: [treasury-vs-trading wallet purpose-separation invariant]
-referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md]
+referenced_by: [/codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md]
 owner:
 last_reviewed: 2026-05-22
 code_refs:
@@ -60,13 +64,13 @@ Violation raises `TreasuryWalletMisuseError` (UTL, to be added per `strategy_mas
 ## Composes with
 
 This invariant is the per-wallet expression of the client funds isolation HARD RULE:
-`codex/04-architecture/client-funds-isolation.md`. Client isolation governs cross-client movement; this invariant
+`/codex/04-architecture/client-funds-isolation.md`. Client isolation governs cross-client movement; this invariant
 governs cross-purpose movement within a single client's wallet set.
 
 ## See also
 
 - `plans/epics/strategy_master.md`
 - `plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`
-- `codex/04-architecture/client-funds-isolation.md`
-- `codex/04-architecture/custody-providers.md`
-- `codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md`
+- `/codex/04-architecture/client-funds-isolation.md`
+- `/codex/04-architecture/custody-providers.md`
+- `/codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md`

@@ -2,7 +2,7 @@
 
 Expansion of [`SKILL.md`](SKILL.md) § 3h (the candle LAYER, not a single AG). Pointers + hazards only — the durable
 rules live in
-[`codex/02-data/mdps-candle-canonical-reconciliation.md`](../../../codex/02-data/mdps-candle-canonical-reconciliation.md).
+[`/codex/02-data/mdps-candle-canonical-reconciliation.md`](/codex/02-data/mdps-candle-canonical-reconciliation.md).
 
 > ⚠️ **Candles are a DIFFERENT LAYER, not a sixth asset_group.** They span all five AGs, live under a different path
 > tree in the SAME bucket, add a `timeframe` axis, and are NOT covered by the UAC machine oracle. Read this before
@@ -48,7 +48,7 @@ carry the aggregated key; going-forward writes carry SOURCE) — never a path fi
 `resolve_bucket_name(cloud, "market-data", asset_group=<ag>, deployment_env="prd")` → `market-data-tick-{ag}-prd-{pid}`.
 Candles are the `processed_candles/` object prefix INSIDE it (sports: `processed/`). No candle-specific bucket exists —
 Phase-0 bucket resolution is UNCHANGED (`kind="market-data"`, alias `tick-data`); only the object prefix distinguishes
-the layer ([`per-asset-group-bucket-layouts.md`](../../../codex/02-data/per-asset-group-bucket-layouts.md);
+the layer ([`per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md);
 [`data-pipeline-check-mdps/SKILL.md`](../data-pipeline-check-mdps/SKILL.md)).
 
 ## Shard atom + (KEY)
@@ -72,9 +72,9 @@ the layer ([`per-asset-group-bucket-layouts.md`](../../../codex/02-data/per-asse
 - **S2** MDPS candle contract via `lookup_mdps_contract(mdps_data_type_key)` — OHLC/`open` nullability is PER-TYPE
   (deriv + empty-window nullable, resolved P0 —
   [`mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
-  Columns per [`chart-candle-delivery-flow.md`](../../../codex/02-data/chart-candle-delivery-flow.md) §6; the candle is
+  Columns per [`chart-candle-delivery-flow.md`](/codex/02-data/chart-candle-delivery-flow.md) §6; the candle is
   timestamped on its RIGHT edge (`t_close`, half-open `[t_open, t_close)`) per
-  [`bar-boundary-candle-edge-convention.md`](../../../codex/02-data/bar-boundary-candle-edge-convention.md).
+  [`bar-boundary-candle-edge-convention.md`](/codex/02-data/bar-boundary-candle-edge-convention.md).
 - **S3** `_index` rows filtered `service_name=="market-data-processing-service"` — **near-empty today** (H3).
 - **S4** NONE — no candle catalogue. `UNAVAILABLE` for the whole layer, reported ONCE as a declared coverage gap.
 
@@ -84,9 +84,9 @@ the layer ([`per-asset-group-bucket-layouts.md`](../../../codex/02-data/per-asse
 
 `processed/by_date/day={D}/data_type=odds_horizon_bucket/league_id=…/timeframe=T-10m/bucketed.parquet` — single file per
 date, bookmaker-time bucketed odds; no per-venue candles. Deleting `processed/` breaks the live sports lane
-([`non-canonical-path-inventory.md`](../../../codex/02-data/non-canonical-path-inventory.md);
-[`per-asset-group-bucket-layouts.md`](../../../codex/02-data/per-asset-group-bucket-layouts.md)). A generic candle pass
-flags the whole sports estate — dispatch to the sports tree, don't probe `processed_candles/` for sports.
+([`non-canonical-path-inventory.md`](/codex/02-data/non-canonical-path-inventory.md);
+[`per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md)). A generic candle pass flags
+the whole sports estate — dispatch to the sports tree, don't probe `processed_candles/` for sports.
 
 ### H2 — the UAC machine oracle does NOT govern candle paths
 
@@ -153,7 +153,7 @@ manifest rows** the aggregated `mdps_data_type_key` still applies until the back
 ## Census / vocabulary nuance (candle layer)
 
 Added 2026-07-21 — the in-session distinct-value census
-([`reconciliation-census-and-compute-tiers.md`](../../../codex/02-data/reconciliation-census-and-compute-tiers.md)).
+([`reconciliation-census-and-compute-tiers.md`](/codex/02-data/reconciliation-census-and-compute-tiers.md)).
 
 - The census axis set ADDS `timeframe`; going-forward (corrected 2026-07-21 evening) object-path `data_type` is badged
   against the SOURCE `DATA_TYPES_BY_ASSET_GROUP` vocabulary — the path was NEVER rewritten to the aggregated key, so
@@ -170,12 +170,12 @@ Added 2026-07-21 — the in-session distinct-value census
 ## Cross-links
 
 [`SKILL.md`](SKILL.md) ·
-[`codex/02-data/mdps-candle-canonical-reconciliation.md`](../../../codex/02-data/mdps-candle-canonical-reconciliation.md)
-· [`codex/02-data/per-asset-group-bucket-layouts.md`](../../../codex/02-data/per-asset-group-bucket-layouts.md) ·
-[`codex/02-data/chart-candle-delivery-flow.md`](../../../codex/02-data/chart-candle-delivery-flow.md) ·
-[`codex/02-data/bar-boundary-candle-edge-convention.md`](../../../codex/02-data/bar-boundary-candle-edge-convention.md)
-· [`codex/02-data/reconciliation-finding-taxonomy.md`](../../../codex/02-data/reconciliation-finding-taxonomy.md) (AE-6)
-· [`codex/02-data/canonical-cutover-register.md`](../../../codex/02-data/canonical-cutover-register.md) (candle rows) ·
+[`/codex/02-data/mdps-candle-canonical-reconciliation.md`](/codex/02-data/mdps-candle-canonical-reconciliation.md) ·
+[`/codex/02-data/per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md) ·
+[`/codex/02-data/chart-candle-delivery-flow.md`](/codex/02-data/chart-candle-delivery-flow.md) ·
+[`/codex/02-data/bar-boundary-candle-edge-convention.md`](/codex/02-data/bar-boundary-candle-edge-convention.md) ·
+[`/codex/02-data/reconciliation-finding-taxonomy.md`](/codex/02-data/reconciliation-finding-taxonomy.md) (AE-6) ·
+[`/codex/02-data/canonical-cutover-register.md`](/codex/02-data/canonical-cutover-register.md) (candle rows) ·
 [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](../../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
 ·
 [`plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)

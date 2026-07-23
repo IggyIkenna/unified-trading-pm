@@ -12,10 +12,20 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [citadel, planning-standards, plan-review, foundation-gate, pre-audit, anti-patterns]
-related: [foundation-completion-gate-discipline.md, issue-doc-lifecycle.md, active-plan-inventory-tracker.md, ../../plans/PLAN_FORMAT.md]
+related:
+  [
+    /codex/11-project-management/foundation-completion-gate-discipline.md,
+    /codex/11-project-management/issue-doc-lifecycle.md,
+    /codex/11-project-management/active-plan-inventory-tracker.md,
+    ../../plans/PLAN_FORMAT.md,
+  ]
 created: 2026-05-23
 authoritative_for: [citadel-grade planning standards, the nine plan requirements, plan review checklist]
-referenced_by: [codex/11-project-management/foundation-completion-gate-discipline.md, codex/11-project-management/issue-doc-lifecycle.md]
+referenced_by:
+  [
+    /codex/11-project-management/foundation-completion-gate-discipline.md,
+    /codex/11-project-management/issue-doc-lifecycle.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -67,7 +77,7 @@ No plan ships items in layer N+1 before layer N is GREEN-audited + manifest-dive
 Parallel-up across asset_groups within a layer is encouraged; parallel-up across layers is review-blocking.
 
 Full layer table + application rules + anti-patterns:
-`codex/11-project-management/foundation-completion-gate-discipline.md`.
+`/codex/11-project-management/foundation-completion-gate-discipline.md`.
 
 Master tracker: `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md`.
 
@@ -79,7 +89,7 @@ out-of-scope with named successor), they archive immediately.
 Banner-marked-in-`active/issues/` is a transitional convenience, NOT a permanent state. "Stays until parent closes"
 lifecycles are dual-tracking and review-blocking.
 
-State machine + audit recipe + anti-patterns: `codex/11-project-management/issue-doc-lifecycle.md`.
+State machine + audit recipe + anti-patterns: `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 ## Plan Review Checklist
 
@@ -108,6 +118,6 @@ Before approving any plan, verify:
 ## Composes With
 
 - `plans/PLAN_FORMAT.md` — checkbox syntax and frontmatter requirements
-- `codex/11-project-management/foundation-completion-gate-discipline.md` — layer ordering rules
-- `codex/11-project-management/issue-doc-lifecycle.md` — issue doc state machine
-- `codex/11-project-management/active-plan-inventory-tracker.md` — plan dashboard and orphan detection
+- `/codex/11-project-management/foundation-completion-gate-discipline.md` — layer ordering rules
+- `/codex/11-project-management/issue-doc-lifecycle.md` — issue doc state machine
+- `/codex/11-project-management/active-plan-inventory-tracker.md` — plan dashboard and orphan detection

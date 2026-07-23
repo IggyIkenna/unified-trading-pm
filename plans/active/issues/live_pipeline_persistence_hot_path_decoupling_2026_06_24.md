@@ -111,7 +111,7 @@ carries the bar payload**, with the UTC-aligned bar as the shared Live=Batch ato
 Governing SSOT this refines: **Live = Batch** (CLAUDE.md §"Live = batch" +
 `writegate_honest_coverage_endtoend_2026_05_06.md`
 
-- `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`) and the determinism spine
+- `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`) and the determinism spine
   `citadel_paper_batch_live_reconciliation_2026_06_19.md`. This issue does NOT contradict Live=Batch — it makes the live
   leg actually honor it (immutable per-bar persistence + a hot path that doesn't silently drop bars).
 

@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Strategy Availability and Locking (Cross-Cutting)
 summary:
-  'One combinatoric strategy universe powers both the SaaS (DIY client) and Investment-Management (fund) businesses via a
-  per-slot `availability_state` (PUBLIC / INVESTMENT_MANAGEMENT_RESERVED / CLIENT_EXCLUSIVE / RETIRED) — the split is
-  visibility + RBAC + lock state, not code-path duplication; allocation is authorised at `AllocationDirective` reception.'
+  "One combinatoric strategy universe powers both the SaaS (DIY client) and Investment-Management (fund) businesses via
+  a per-slot `availability_state` (PUBLIC / INVESTMENT_MANAGEMENT_RESERVED / CLIENT_EXCLUSIVE / RETIRED) — the split is
+  visibility + RBAC + lock state, not code-path duplication; allocation is authorised at `AllocationDirective`
+  reception."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,13 +14,30 @@ repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [strategy, availability, registry, uac, ui, rbac]
 related:
-  [../category-instrument-coverage.md, ../uac-registry-gaps.md, capital-client-isolation.md, portfolio-allocator.md,
-  ../../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md]
+  [
+    ../category-instrument-coverage.md,
+    ../uac-registry-gaps.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md,
+    portfolio-allocator.md,
+    ../../../14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md,
+  ]
 created: 2026-04-20
 authoritative_for:
-  [strategy availability lock-state model (4-state PUBLIC/IM_RESERVED/CLIENT_EXCLUSIVE/RETIRED + RBAC allocation
-  authorisation across one SaaS/IM universe)]
-referenced_by: [codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/uac-registry-gaps.md, codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md, codex/14-customer-journeys/shared-core/same-system-principle.md]
+  [
+    strategy availability lock-state model (4-state PUBLIC/IM_RESERVED/CLIENT_EXCLUSIVE/RETIRED + RBAC allocation
+    authorisation across one SaaS/IM universe),
+  ]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/uac-registry-gaps.md,
+    /codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+    /codex/14-customer-journeys/glossary.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md,
+    /codex/14-customer-journeys/shared-core/same-system-principle.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

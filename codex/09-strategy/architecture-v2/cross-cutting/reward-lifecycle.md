@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Staking Reward Lifecycle -- Cross-Cutting Concern
 summary:
-  'Staking reward-token lifecycle — accrue → claim (`CLAIM_REWARD`) → sell (`SELL_REWARD`) → attribute — for EigenLayer
+  "Staking reward-token lifecycle — accrue → claim (`CLAIM_REWARD`) → sell (`SELL_REWARD`) → attribute — for EigenLayer
   (EIGEN, weekly) and EtherFi (ETHFI, quarterly); Lido has no reward token (yield via wstETH rate only). Thresholds $50
-  claim / $100 sell, 24h claim cooldown; `CLAIM_REWARD`/`SELL_REWARD` distinct from `COLLECT_FEES`/`SWAP`.'
+  claim / $100 sell, 24h claim cooldown; `CLAIM_REWARD`/`SELL_REWARD` distinct from `COLLECT_FEES`/`SWAP`."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,19 @@ stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, features, pnl-attribution]
-related: [restaking-reward-economics.md, pnl-attribution.md]
+related: [/codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md, pnl-attribution.md]
 created: 2026-04-03
 authoritative_for: [staking-reward lifecycle (accrue/claim/sell/attribute) + CLAIM_REWARD/SELL_REWARD operation types]
-referenced_by: [codex/02-data/instrument-pipeline-defi.md, codex/04-architecture/client-config-and-risk-dimensions.md, codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/defi/staked-basis.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md]
+referenced_by:
+  [
+    /codex/02-data/instrument-pipeline-defi.md,
+    /codex/04-architecture/client-config-and-risk-dimensions.md,
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
+    /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

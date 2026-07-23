@@ -2,8 +2,8 @@
 doc_type: codex-runbook
 title: RB-CONN-003 — Internal Messaging Lag
 summary:
-  Operator runbook for internal messaging lag (Pub/Sub / Kafka / Redis) exceeding the dependency_health_policy
-  threshold — scale consumers / replay DLQ / fail over; live-trading topics blocked escalates SEV1 → SEV0.
+  Operator runbook for internal messaging lag (Pub/Sub / Kafka / Redis) exceeding the dependency_health_policy threshold
+  — scale consumers / replay DLQ / fail over; live-trading topics blocked escalates SEV1 → SEV0.
 status: current
 nature: process
 asset_group: [meta]
@@ -11,7 +11,7 @@ stage: [meta]
 repos: []
 scope: [admin, engineer]
 tags: [runbook, incident, connectivity, messaging, pub-sub, escalation]
-related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+related: [/codex/15-runbooks/incidents/README.md, /codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
@@ -19,7 +19,12 @@ verifier: Pub/Sub lag synthetic smoke
 last_executed: never
 code_refs:
 authoritative_for: [RB-CONN-003 operator runbook]
-referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/incident_runbooks_and_evidence_store_2026_05_23.md]
+referenced_by:
+  [
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
 ---
 
 # RB-CONN-003 — Internal Messaging Lag
@@ -69,7 +74,7 @@ Capacity-plan if recurring.
 
 ## Related
 
-- `codex/15-runbooks/incidents/README.md` — runbook index
-- `codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
-- `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder
+- `/codex/15-runbooks/incidents/README.md` — runbook index
+- `/codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
+- `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder

@@ -5,11 +5,11 @@ status: active
 created: 2026-05-08
 scope: [engineer]
 related:
-  - codex/14-customer-journeys/README.md
-  - codex/15-runbooks/README.md
-  - codex/09-strategy/README.md
-  - codex/04-architecture/README.md
-  - codex/05-infrastructure/README.md
+  - /codex/14-customer-journeys/README.md
+  - /codex/15-runbooks/README.md
+  - /codex/09-strategy/README.md
+  - /codex/04-architecture/README.md
+  - /codex/05-infrastructure/README.md
 ---
 
 # 16-strategy-playbooks
@@ -24,8 +24,8 @@ playbooks the implementer reads BEFORE building, and the operator reads to under
 - **`defi/`** — DeFi-specific runbooks. Currently includes the venue-collateral playbook for Aave + Uniswap +
   Hyperliquid hedge-leg orchestration. Future additions: per-protocol operational notes, custody-flow playbooks,
   cross-chain bridging procedures.
-- **`strategy/`** — Per-archetype strategy playbooks. Currently includes the CME ↔ Polymarket arbitrage archetype
-  design doc. Future additions: per-archetype playbooks for each strategy in `09-strategy/architecture-v2/archetypes/`.
+- **`strategy/`** — Per-archetype strategy playbooks. Currently includes the CME ↔ Polymarket arbitrage archetype design
+  doc. Future additions: per-archetype playbooks for each strategy in `09-strategy/architecture-v2/archetypes/`.
 - **`ml/`** — ML lifecycle playbooks. Currently includes the CeFi ML live-serving playbook. Future additions: feature-
   engineering playbooks per asset_group, model-promotion procedures, drift-detection runbooks.
 - **`infra-spec/`** — Multi-stage infrastructure refactor specs (the Stage 3a-3e series). Captures the canonical infra
@@ -34,14 +34,14 @@ playbooks the implementer reads BEFORE building, and the operator reads to under
 
 ## What does NOT live here
 
-- **Customer-facing flows + onboarding** → [`codex/14-customer-journeys/`](../14-customer-journeys/README.md).
+- **Customer-facing flows + onboarding** → [`codex/14-customer-journeys/`](/codex/14-customer-journeys/README.md).
   Investment-management demo, fund-org hierarchy, page-triage, role-based audiences.
-- **Live-trading on-call runbooks** → [`codex/15-runbooks/`](../15-runbooks/README.md). Per-alert procedures, T+1 audit
-  runbook, smoke testing, backfill completion.
-- **Strategy architecture + capability declarations** → [`codex/09-strategy/`](../09-strategy/README.md). Archetype
+- **Live-trading on-call runbooks** → [`codex/15-runbooks/`](/codex/15-runbooks/README.md). Per-alert procedures, T+1
+  audit runbook, smoke testing, backfill completion.
+- **Strategy architecture + capability declarations** → [`codex/09-strategy/`](/codex/09-strategy/README.md). Archetype
   definitions, strategy-catalogue 3-tier model, cross-cutting strategy mechanics. The `strategy/` sub-dir here is for
   per-archetype operational playbooks, not the canonical architecture surface.
-- **Cross-cutting infrastructure topology** → [`codex/05-infrastructure/`](../05-infrastructure/README.md). Live-
+- **Cross-cutting infrastructure topology** → [`codex/05-infrastructure/`](/codex/05-infrastructure/README.md). Live-
   deployment monitoring, runtime tiers, AWS/GCP cloud-parity model. The `infra-spec/` sub-dir here is for the multi-
   stage refactor specs, not the steady-state topology.
 
@@ -53,9 +53,9 @@ Every playbook in this section MUST:
    `04-architecture/` (for cross-cutting architectural concerns), or `05-infrastructure/` (for infra-stage docs) as the
    upstream SSOT. The playbook here is the operational walkthrough; the architecture doc is the contract.
 2. If a playbook references an alert code or runbook trigger, link to the corresponding runbook in
-   [`codex/15-runbooks/`](../15-runbooks/README.md).
+   [`codex/15-runbooks/`](/codex/15-runbooks/README.md).
 3. If a playbook describes a customer-visible flow (onboarding, demo, restriction-profile), link to the corresponding
-   flow in [`codex/14-customer-journeys/`](../14-customer-journeys/README.md).
+   flow in [`codex/14-customer-journeys/`](/codex/14-customer-journeys/README.md).
 4. For DeFi playbooks, cross-link to the master plan readiness items in
    [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) so the
    playbook ties to the May-23 cutover criterion.

@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: DART Exclusive Subscription + Research Fork + Version Lineage
-summary: Design SSOT for DART exclusive subscriptions + client research fork — the exclusive-lock invariant (one active dart_exclusive per instance_id), the 5-state fork version lifecycle (draft→pending_approval→approved→rolled_out), the joint Odum-client approval gate enforced at backtest_1yr, and the approval SLA.
+summary:
+  Design SSOT for DART exclusive subscriptions + client research fork — the exclusive-lock invariant (one active
+  dart_exclusive per instance_id), the 5-state fork version lifecycle (draft→pending_approval→approved→rolled_out), the
+  joint Odum-client approval gate enforced at backtest_1yr, and the approval SLA.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,22 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, dart, escalation, uac, reconciliation, verification]
-related: [strategy-lifecycle-maturity.md, strategy-catalogue-3tier.md, performance-overlay.md, dart-tab-structure.md, dashboard-services-grid.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/performance-overlay.md,
+    /codex/09-strategy/architecture-v2/dart-tab-structure.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+  ]
 created: 2026-04-21
 authoritative_for: [DART exclusive subscription + client research-fork version governance]
-referenced_by: [codex/09-strategy/architecture-v2/dart-tab-structure.md, codex/09-strategy/architecture-v2/dashboard-services-grid.md, codex/14-customer-journeys/shared-core/strategy-version-governance.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/dart-tab-structure.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+    /codex/14-customer-journeys/shared-core/strategy-version-governance.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -207,7 +222,7 @@ out → VersionGovernanceReloader hot-reloads within 5min. Green on `central-ele
 
 **B3 (first-client loop).** Captures the first non-odum DART Full client completing the full loop end-to-end, with
 screenshots + event-log excerpts appended to
-[`codex/14-customer-journeys/shared-core/strategy-version-governance.md`](../../14-customer-journeys/shared-core/strategy-version-governance.md)
+[`/codex/14-customer-journeys/shared-core/strategy-version-governance.md`](../../14-customer-journeys/shared-core/strategy-version-governance.md)
 as an appendix. B3 is the commercial sign-off that the feature is usable as sold, not merely functional.
 
 **Rollback posture.** Prior rolled_out versions remain in Firestore after supersession (status `retired`). Admin can

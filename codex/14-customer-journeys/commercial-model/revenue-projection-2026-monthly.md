@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Revenue Projection 2026 — Monthly Build
 summary:
-  Codex-private month-by-month 2026 revenue build (~£636k total) across baseline, Elysium, BTC ML,
-  sports ML, CME, India Options, Desmond, and signal leasing — with the ~£34k/mo cost decomposition,
-  full P&L (+£92k net), and cumulative cash from £240k opening to £413k year-end above the £150k floor.
+  Codex-private month-by-month 2026 revenue build (~£636k total) across baseline, Elysium, BTC ML, sports ML, CME, India
+  Options, Desmond, and signal leasing — with the ~£34k/mo cost decomposition, full P&L (+£92k net), and cumulative cash
+  from £240k opening to £413k year-end above the £150k floor.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,19 @@ scope: [admin]
 tags: [commercial-model, revenue, cash-flow, finance, cost, forecast]
 related:
   [
-    cash-deployment-plan.md,
-    pricing-building-blocks.md,
-    im-profit-share-structures.md,
-    signal-leasing.md,
+    /codex/14-customer-journeys/commercial-model/cash-deployment-plan.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/signal-leasing.md,
   ]
 created: 2026-04-20
 authoritative_for: [2026 monthly revenue projection and cashflow model]
-referenced_by: [codex/14-customer-journeys/commercial-model/cash-deployment-plan.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/commercial-model/signal-leasing.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/cash-deployment-plan.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/signal-leasing.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -45,8 +50,10 @@ code_refs:
 - **Recurring revenue baseline**: £8k/month from existing engagements (Seed Reg Umbrella $2k/mo, mean-rev IM $5k/mo, BTC
   FoF wrapper £2.3k/mo).
 - **Deals in pipeline**: Elysium (remaining $35k + $75-100k upsell through Dec), Desmond (£25-50k upfront + £22k/mo from
-  May), CME (Sept go-live), India Options ($100k onboarding Oct), signal leasing (2 counterparties Q3-Q4), BTC ML (10 ×
-  $500k from June), sports ML (2 clients June).
+  May), CME (Sept go-live), India Options
+  ($100k onboarding Oct), signal leasing (2 counterparties Q3-Q4), BTC ML (10 ×
+  $500k from June), sports ML (2 clients
+  June).
 
 ## Monthly revenue stream decomposition
 

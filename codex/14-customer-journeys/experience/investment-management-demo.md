@@ -14,15 +14,25 @@ scope: [sales, prospect]
 tags: [investment-management, demo, prospect, sales, reporting, warm-prospect, ui]
 related:
   [
-    im-decision-journey.md,
-    staging-demo-journey.md,
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/experience/staging-demo-journey.md,
     ../shared-core/client-reporting-demo-walkthrough.md,
     ../shared-core/org-fund-client-entity-model.md,
     ../commercial-model/im-vs-reg-reporting-logic.md,
   ]
 created: 2026-04-20
 authoritative_for: [pb3b IM warm-prospect demo experience]
-referenced_by: [codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/demo-ops/dart-demo-modes.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/experience/staging-demo-journey.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/demo-ops/dart-demo-modes.md,
+    /codex/14-customer-journeys/experience/README.md,
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/experience/staging-demo-journey.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    /codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md,
+    /codex/14-customer-journeys/implementation-mapping/route-mapping.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]

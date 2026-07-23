@@ -3,9 +3,9 @@ doc_type: codex-runbook
 title: VM log + lifecycle observability — verify durable shipping to GCS/S3 (no SSH, no lost logs)
 summary:
   T+10min per-VM check that a launch is durably shipping its run log + heartbeat + terminal EXIT_STATUS to
-  deployment-scripts-<pid> (GCP) / unified-trading-deployment-scripts-<account> (AWS) — the canonical prefixes,
-  the two observability tiers (canonical tarball vs inline-bespoke), the done-definition, and failure-mode fixes so a
-  dead VM's full log survives without SSH. Enforces the No fire-and-forget HARD RULE.
+  deployment-scripts-<pid> (GCP) / unified-trading-deployment-scripts-<account> (AWS) — the canonical prefixes, the two
+  observability tiers (canonical tarball vs inline-bespoke), the done-definition, and failure-mode fixes so a dead VM's
+  full log survives without SSH. Enforces the No fire-and-forget HARD RULE.
 status: current
 nature: process
 asset_group: [meta]
@@ -13,17 +13,33 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [runbook, observability, vm-tarball, infrastructure, monitoring, verification]
-related: [codex/05-infrastructure/vm-tarball-deployment.md, deployment-service/scripts/vm/lib/launcher_common.sh, deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh, deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh]
+related:
+  [
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh,
+    deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
+  ]
 created: 2026-06-19
 owner: operator (or the agent that launched the VM, at T+10min post-launch)
 cadence: per-VM-launch (event-driven — verify each launched VM is shipping logs+events; plus a weekly fleet spot-check)
 verifier: >-
-  `gsutil ls gs://deployment-scripts-<pid>/vm-logs/<vm>/run.log` returns a growing object within ~2 min of boot AND a `vm-heartbeat/<vm>.txt` blob exists; on exit a `vm-logs/<vm>/EXIT_STATUS` marker is present
+  `gsutil ls gs://deployment-scripts-<pid>/vm-logs/<vm>/run.log` returns a growing object within ~2 min of boot AND a
+  `vm-heartbeat/<vm>.txt` blob exists; on exit a `vm-logs/<vm>/EXIT_STATUS` marker is present
 last_executed:
 code_refs:
 audience: dev / operator
 last_updated: 2026-06-19
-execution: {owner: 'operator (or the agent that launched the VM, at T+10min post-launch)', cadence: per-VM-launch (event-driven — verify each launched VM is shipping logs+events; plus a weekly fleet spot-check), verifier: '`gsutil ls gs://deployment-scripts-<pid>/vm-logs/<vm>/run.log` returns a growing object within ~2 min of boot AND a `vm-heartbeat/<vm>.txt` blob exists; on exit a `vm-logs/<vm>/EXIT_STATUS` marker is present', last_executed: 2026-06-19}
+execution:
+  {
+    owner: "operator (or the agent that launched the VM, at T+10min post-launch)",
+    cadence:
+      per-VM-launch (event-driven — verify each launched VM is shipping logs+events; plus a weekly fleet spot-check),
+    verifier:
+      "`gsutil ls gs://deployment-scripts-<pid>/vm-logs/<vm>/run.log` returns a growing object within ~2 min of boot AND
+      a `vm-heartbeat/<vm>.txt` blob exists; on exit a `vm-logs/<vm>/EXIT_STATUS` marker is present",
+    last_executed: 2026-06-19,
+  }
 ---
 
 # VM log + lifecycle observability — verify durable shipping to GCS/S3

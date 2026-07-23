@@ -16,8 +16,8 @@ scope: [engineer]
 tags: [data-status, deployment-api, cell-grid, oom, performance, precompute]
 related:
   [
-    deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
-    data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-18
@@ -60,11 +60,11 @@ real fix is to never load the whole manifest per request.
 
 ## Codex SSOTs (read before designing)
 
-- `codex/05-infrastructure/deployment-observability.md` — deployment-api cache/observability architecture.
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest atom + single-walk discipline (no new whole-corpus
-  walk is review-blocking — the precompute job must respect this).
-- `codex/02-data/honest-coverage-model.md` — the two-layer / two-view coverage model the grid renders.
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — the consolidator (candidate host for a precompute step).
+- `/codex/05-infrastructure/deployment-observability.md` — deployment-api cache/observability architecture.
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest atom + single-walk discipline (no new
+  whole-corpus walk is review-blocking — the precompute job must respect this).
+- `/codex/02-data/honest-coverage-model.md` — the two-layer / two-view coverage model the grid renders.
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — the consolidator (candidate host for a precompute step).
 
 ## Todos
 

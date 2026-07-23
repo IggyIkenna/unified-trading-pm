@@ -2,12 +2,12 @@
 doc_type: codex-ssot
 title: MVP universe per asset_group — May-23 cutover SSOT
 summary: >-
-  May-23 cutover SSOT for the narrow per-asset_group MVP universe that feeds backtest / features / ML /
-  config-grid — a two-layer model (broad "capture all markets" data layer vs narrow backtest scope). Sets
-  backtest windows (DeFi + Prediction 2yr, CeFi + TradFi 5yr, Sports 5yr+), config-grid worker sizing
-  (~2.6M Tier A worker-runs; funding-rate arb is the heaviest), ~11.7M ML training rows, and Tier A
-  (backtest-by-May-23) vs Tier B (code-ready only) archetype scope. References the cell-level canonical
-  SSOTs (UAC enums, category-instrument-coverage, per-asset master plans) rather than duplicating them.
+  May-23 cutover SSOT for the narrow per-asset_group MVP universe that feeds backtest / features / ML / config-grid — a
+  two-layer model (broad "capture all markets" data layer vs narrow backtest scope). Sets backtest windows (DeFi +
+  Prediction 2yr, CeFi + TradFi 5yr, Sports 5yr+), config-grid worker sizing (~2.6M Tier A worker-runs; funding-rate arb
+  is the heaviest), ~11.7M ML training rows, and Tier A (backtest-by-May-23) vs Tier B (code-ready only) archetype
+  scope. References the cell-level canonical SSOTs (UAC enums, category-instrument-coverage, per-asset master plans)
+  rather than duplicating them.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,10 +15,26 @@ stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
 tags: [mvp, backtest, features, ml, strategy, cutover]
-related: [architecture-v2/category-instrument-coverage.md, ../02-data/mvp-scope-canonical.md, ../../plans/active/compute_optimization_mock_data_2026_05_13.md]
+related:
+  [
+    architecture-v2/category-instrument-coverage.md,
+    /codex/02-data/mvp-scope-canonical.md,
+    ../../plans/active/compute_optimization_mock_data_2026_05_13.md,
+  ]
 created: 2026-05-13
-authoritative_for: [may-23 cutover backtest-universe sizing per asset_group (backtest-window + config-grid worker-count math)]
-referenced_by: [codex/01-domain/market-making-strategy.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/08-workflows/cutover-window-dependency-order.md, plans/active/_agent_pings.md, plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md, plans/active/master_to_live_defi_2026_05_23.md, plans/epics/cefi_master.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
+authoritative_for:
+  [may-23 cutover backtest-universe sizing per asset_group (backtest-window + config-grid worker-count math)]
+referenced_by:
+  [
+    /codex/01-domain/market-making-strategy.md,
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+    /codex/08-workflows/cutover-window-dependency-order.md,
+    plans/active/_agent_pings.md,
+    plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/epics/cefi_master.md,
+    plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py]
@@ -39,7 +55,7 @@ link to the cell-level SSOT instead:
 | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | `StrategyArchetype` enum (57 archetypes as of 2026-05-18 V-1; was 53 pre-Phase 9, 55 pre-V-1) | UAC `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype`                                                | Tier A (May-23) vs Tier B (code-ready only) classification            |
 | Per-archetype design (what it does, structure, risk)                                          | `codex/09-strategy/architecture-v2/archetypes/<archetype>.md` (35 files as of 2026-05-19; 22 VOL variants pending Slot 6/8) | n/a — full archetype semantics live there                             |
-| `(archetype × category × instrument_type)` coverage matrix                                    | `codex/09-strategy/architecture-v2/category-instrument-coverage.md` (SUPPORTED / PARTIAL / BLOCKED / N/A per cell)          | Cutover-window backtest scope is a SUBSET of "SUPPORTED" cells        |
+| `(archetype × category × instrument_type)` coverage matrix                                    | `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` (SUPPORTED / PARTIAL / BLOCKED / N/A per cell)         | Cutover-window backtest scope is a SUBSET of "SUPPORTED" cells        |
 | Per-archetype rollout instances (slot_label + capital_budget + initial_config)                | `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py`                                         | n/a — that catalog is the live SSOT                                   |
 | Funding-rate-arb venue pair declarations                                                      | UAC `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`                                              | Subset of CeFi MVP coins × MVP venues participates in May-23 backtest |
 | Per-venue collateral acceptance (LST_AS_MARGIN gating)                                        | UAC `unified_api_contracts.registry.venue_collateral.venue_accepts_collateral`                                              | DeFi LST-family archetypes inherit eligibility from this              |
@@ -297,7 +313,7 @@ For Tier A archetypes (May-23 backtest scope), per `compute_optimization_mock_da
 | -------------------------------- | -----------------------------------------: | -------------------------: | -----------------------------: |
 | ml-continuous (CeFi + ES)        |                        30 CeFi + 1 ES = 31 |                        ~15 |              ~340K worker-runs |
 | ml-settled (Sports)              |                 ~5000 fixtures × 4 markets |                        ~10 |              ~200K worker-runs |
-| arbitrage-funding-rate           | 30 coins × 6 perp venues = 180 venue-pairs |                        ~10 |           ~1.3M worker-runs ⚠ |
+| arbitrage-funding-rate           | 30 coins × 6 perp venues = 180 venue-pairs |                        ~10 |            ~1.3M worker-runs ⚠ |
 | arbitrage-sports-book            |      Top-5 EU × ~1000 fixtures × 4 markets |                        ~10 |              ~200K worker-runs |
 | arbitrage-event-markets          |           ~20 simultaneous Poly+CME events |                        ~10 |              ~150K worker-runs |
 | defi-carry-family (5 archetypes) |                  12 LST × 4 AMM × 730 days | ~15 per archetype × 5 = 75 |              ~440K worker-runs |

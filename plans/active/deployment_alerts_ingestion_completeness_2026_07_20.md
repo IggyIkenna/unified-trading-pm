@@ -20,8 +20,8 @@ repos: [alerting-service, deployment-api, deployment-service, unified-trading-pm
 scope: [engineer]
 tags: [alerts, observability, ingestion, deployment-ui]
 related:
-  - deployment_ui_observability_ux_tracker_2026_07_17.md
-  - deployment_ui_alerts_page_rebuild_2026_07_20.md
+  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/active/deployment_ui_alerts_page_rebuild_2026_07_20.md
   - issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md
 created: "2026-07-20"
 last_updated: "2026-07-20"
@@ -95,7 +95,7 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
 - **alerting-service stores delivery status only** — its history rows are
   `alert_id, channel, status, response_detail, event_name, timestamp`, with **no severity, message body, or target**.
   Mirroring them usefully requires persisting the full payload at the source (decision 2).
-- **Policy check (resolved)** — `codex/04-architecture/agent-orchestrator-alerting.md:31-32,47-48`: the actionable-only
+- **Policy check (resolved)** — `/codex/04-architecture/agent-orchestrator-alerting.md:31-32,47-48`: the actionable-only
   rule constrains **Slack only**; the page is the designated _fuller_ diagnostic surface. Showing more on the page than
   pages Slack is the intent, not a violation.
 - **Correction to the tracker**: cost-anomaly alerts **do not exist** — no emitter anywhere. They are a build, not an
@@ -176,7 +176,7 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       `cloud-build-router-aws.yml` (3 call sites) — all from data already computed in that workflow
       (`client_payload.repo` / `source_repo` / `needs.route-build.outputs.repo`), no new derivation. `quality-gates.sh`
       green in both repos (a pre-existing, unrelated repo-wide QG red — `plan-discipline` regression + a missing
-      `referenced_by` frontmatter key on `codex/02-data/sports-2020-06-data-floor.md` — was fixed by another agent / a
+      `referenced_by` frontmatter key on `/codex/02-data/sports-2020-06-data-floor.md` — was fixed by another agent / a
       small triage fix before this shipped; see Progress Log).
 - [x] ✅ [BACKEND] P1. **Fix the hardcoded bucket** (QG 5.69) — `_repo_ci_alerts.py:27` and
       `deployments_inventory.py:342` → `resolve_bucket_name()`. Update
@@ -313,7 +313,7 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
       across alerting-service, deployment-api, deployment-service, unified-trading-pm).
 - [x] ✅ [REVIEW] P2. Post-phase codex audit — document the normalised alert schema, the per-source coverage matrix, the
       "diagnostic surface / mirror-cheap-Slack-sources" principle, the persist-vs-page distinction, and the retention
-      policy in `codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act. —
+      policy in `/codex/04-architecture/ci-alerting.md`. Flip Plan B `draft` → `active` as the final act. —
       `unified-trading-pm@15158123c`: added § "The unified alerts ledger (`/alerts` page) — a diagnostic surface, not a
       paging surface" to `ci-alerting.md`, covering the persist-vs-page distinction, the normalised-schema coverage
       table (re-derived from live shipped state, not copy-pasted from todo 1's original — several `p`→`P` upgrades as
@@ -450,7 +450,7 @@ Notes worth surfacing beyond the matrix:
   `cloud-build-router-aws.yml` ×3) — 18 call sites total, all threading data already computed in that workflow, no new
   derivation. Hit a pre-existing, unrelated repo-wide `unified-trading-pm` QG red on the way (a `plan-discipline`
   ratchet regression — resolved by another agent's concurrent push before I re-ran QG — plus a missing `referenced_by`
-  frontmatter key on `codex/02-data/sports-2020-06-data-floor.md`, which I fixed as a small unrelated triage item since
+  frontmatter key on `/codex/02-data/sports-2020-06-data-floor.md`, which I fixed as a small unrelated triage item since
   it was blocking every commit to this shared repo). Not in scope: the `dex_pools`-style semver-agent.yml ALERT-LEDGER
   PERSIST step (writes `repo:"__REPO_NAME__"` — always self, no defect) and any caller whose alert has no single
   attributable subject repo (`ldr-ci-monitor.yml`'s fleet-wide digest, `build-smoke-all-repos.yml`'s aggregate "one or
@@ -564,10 +564,10 @@ Notes worth surfacing beyond the matrix:
 
 ## Codex SSOTs
 
-- `codex/04-architecture/ci-alerting.md` — the `notify-slack.yml` carrier, dedup keys/cooldowns, fail-open reads; (to
+- `/codex/04-architecture/ci-alerting.md` — the `notify-slack.yml` carrier, dedup keys/cooldowns, fail-open reads; (to
   add) the normalised alert schema, the diagnostic-surface principle, and the retention policy.
-- `codex/04-architecture/agent-orchestrator-alerting.md` — actionable-only policy (Slack-scoped), the ledger as the
+- `/codex/04-architecture/agent-orchestrator-alerting.md` — actionable-only policy (Slack-scoped), the ledger as the
   fuller surface.
-- `codex/05-infrastructure/bucket-isolation-model.md` + `codex/05-infrastructure/gcs-object-operations.md` —
+- `/codex/05-infrastructure/bucket-isolation-model.md` + `/codex/05-infrastructure/gcs-object-operations.md` —
   `resolve_bucket_name()` and UTL GCS wrappers (QG 5.69).
-- `codex/02-data/availability-manifest-and-data-status.md` — single-walk discipline (bounded day-partitioned reads).
+- `/codex/02-data/availability-manifest-and-data-status.md` — single-walk discipline (bounded day-partitioned reads).

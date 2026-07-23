@@ -16,18 +16,18 @@ scope: [engineer, admin]
 tags: [strategy, archetypes, defi, verification, features]
 related:
   [
-    archetype-strategy-params.md,
-    archetype-paper-readiness.md,
-    allocator-pipeline-contract.md,
-    instrument-type-leverage-matrix.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-strategy-params.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md,
   ]
 created: 2026-06-17
 authoritative_for: [v2 archetype-engine production param schema inventory (per-param defaults + source lines)]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
-    codex/09-strategy/architecture-v2/cross-cutting/archetype-strategy-params.md,
-    codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-strategy-params.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md,
   ]
 owner:
 last_reviewed:
@@ -70,8 +70,8 @@ legacy GCS config path is `strategy_config_loader.load_strategy_config()` (`engi
 it returns the raw dict; the typed defaults live in the engines, not the loader.
 
 Catalog/slot defaults (the firm's standing instances) live in `archetype_slots_defi.py` (DEFI*SLOTS, 27 factory
-strings), `target_universe/catalog_staked_basis.py`, and the per-domain
-`archetype_slots*{cefi,tradfi,sports}.py`. Kelly fractions per archetype are in `engine/strategies/v2/archetype_defaults.py:40` (`KELLY_FRACTION_BY_ARCHETYPE`).
+strings), `target_universe/catalog_staked_basis.py`, and the per-domain `archetype_slots*{cefi,tradfi,sports}.py`. Kelly
+fractions per archetype are in `engine/strategies/v2/archetype_defaults.py:40` (`KELLY_FRACTION_BY_ARCHETYPE`).
 
 All paths below are relative to `strategy-service/strategy_service/`.
 

@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Family: Market Making'
+title: "Family: Market Making"
 summary:
   The Market Making strategy family — 10 archetypes (CeFi continuous/passive/inventory-skew/ML-lean/queue-micro,
-  event-settled sports, prediction CLOB, + 3 DeFi LP variants); edge is bid-ask spread capture net of adverse
-  selection, inventory risk, and fees. All LP (V3 concentrated, pool, ERC-4626 vault) lives here.
+  event-settled sports, prediction CLOB, + 3 DeFi LP variants); edge is bid-ask spread capture net of adverse selection,
+  inventory risk, and fees. All LP (V3 concentrated, pool, ERC-4626 vault) lives here.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,24 @@ scope: [engineer, admin]
 tags: [strategy, market-making, defi, cefi, options, prediction, execution]
 related:
   [
-    arbitrage-structural.md,
-    vol-trading.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
     ../archetypes/market-making-continuous.md,
     ../archetypes/defi-lp-concentrated.md,
   ]
 created: 2026-04-17
 authoritative_for: [Market Making strategy family spec (alpha thesis + 10 archetypes incl. DeFi LP)]
-referenced_by: [codex/09-strategy/_archived_pre_v2/defi/active-defi-mm.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md, codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md, codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md, codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md, codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/active-defi-mm.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -14,7 +14,11 @@ stage: [meta]
 repos: [deployment-service, instruments-service]
 scope: [engineer, admin]
 tags: [honest-coverage, data-status, cron, vm-launcher, ssot-drift, oom, false-progress]
-related: [data_status_page_ux_and_canonicalisation_2026_07_16.md, honest_coverage_cron_vm_scheduling_2026_05_14.md]
+related:
+  [
+    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/archive/issues/honest_coverage_cron_vm_scheduling_2026_05_14.md,
+  ]
 created: 2026-07-16
 last_updated: 2026-07-16
 parent_epic: deployment_and_user_management_master

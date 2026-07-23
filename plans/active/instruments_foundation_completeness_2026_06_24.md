@@ -36,7 +36,7 @@ tags:
   ]
 related:
   [
-    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
     plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md,
     plans/active/sports_fixture_completeness_oracle_2026_06_24.md,
     plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
@@ -67,7 +67,7 @@ drift_direction: advance-code
 
 # Instruments Foundation & Catalogue Completeness — gated rebuild
 
-**Codex SSOT (the standard this plan executes):** `codex/02-data/instruments-foundation-and-catalogue-completeness.md`.
+**Codex SSOT (the standard this plan executes):** `/codex/02-data/instruments-foundation-and-catalogue-completeness.md`.
 
 **Operator directive 2026-06-24 (the reset):** reference data is the foundation MTDS filters against. We were chasing
 MTDS coverage while the instruments foundation had day-gaps, a paused daily capture, and late MVP tags — backwards.
@@ -273,10 +273,10 @@ Coverage is the verification lens — every number flows through `compute_honest
       `ServiceBootstrap` + `log_event` + 60s `PIPELINE_HEARTBEAT` + ≥1 progress/hr, error→`#data-pipeline-alerts`,
       terminal `exit_code` + log-mtime persisted, **appears in `/deployments` BATCH tab with click-through to logs**.
       DoD: a launched job is click-through-able in the cockpit; SSH not required. SSOT:
-      `codex/05-infrastructure/deployment-observability.md`.
+      `/codex/05-infrastructure/deployment-observability.md`.
 - [ ] [SCRIPT] P0. **Layered coverage via the SSOT (Honest-Coverage v2 — two-layer, NOT a v1 single-layer script)** —
       **[v2 ALIGN 2026-06-30, A12/A13/C12]** this MUST be the Honest-Coverage **v2** model per
-      `codex/02-data/honest-coverage-model.md` (the SSOT, written `@unified-trading-pm@842ddb93e`), produced by
+      `/codex/02-data/honest-coverage-model.md` (the SSOT, written `@unified-trading-pm@842ddb93e`), produced by
       `instruments-service/scripts/measure_honest_coverage.py` emitting **`coverage.json` `schema_version == 2`** — do
       NOT build a fresh single-layer day/depth script. v2 contract: **Layer-1 (instrument-denominator completeness)
       GATES Layer-2 (download coverage)** — a Layer-2 % is trustworthy ONLY at Layer-1 == 100%
@@ -642,12 +642,12 @@ across gates within an AG.
 
 ## Codex SSOT updates
 
-- `codex/02-data/instruments-foundation-and-catalogue-completeness.md` (the standard) — this plan executes it; now spans
-  §0 gates · §0.5 observability-precondition · §1 completeness (incl. §1.2 cumulative-drawdown) · §2 layered coverage +
-  §2.1 oracle (cefi/tradfi expiry-rules + DeFi TVL) + §2.2 reconcile + §2.3 drilldown-correctness · §6 DeFi/TradFi
-  cross-AG borrows · §7 tradfi/cefi-dated nuances (billable-venue, calendars, available_to, Tier-B, depth-aware
-  re-fetch) · §8 retirement-completeness · §9 tradfi baseline. Keep this plan's todos in lockstep as the standard
-  evolves.
+- `/codex/02-data/instruments-foundation-and-catalogue-completeness.md` (the standard) — this plan executes it; now
+  spans §0 gates · §0.5 observability-precondition · §1 completeness (incl. §1.2 cumulative-drawdown) · §2 layered
+  coverage + §2.1 oracle (cefi/tradfi expiry-rules + DeFi TVL) + §2.2 reconcile + §2.3 drilldown-correctness · §6
+  DeFi/TradFi cross-AG borrows · §7 tradfi/cefi-dated nuances (billable-venue, calendars, available_to, Tier-B,
+  depth-aware re-fetch) · §8 retirement-completeness · §9 tradfi baseline. Keep this plan's todos in lockstep as the
+  standard evolves.
 - CLAUDE.md: add a one-line pointer to the standard.
 - Compose: `availability-manifest-and-data-status.md` (expected-universe materialisation) ·
   `deployment-observability.md` (§0.5) · `honest_coverage_formula_consolidation_2026_05_19.md` (SSOT) ·

@@ -12,10 +12,19 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [ui, broken-links, page-triage, refactor, audit, navigation]
-related: [triage-matrix.md, ../information-architecture.md]
+related: [/codex/14-customer-journeys/page-triage/triage-matrix.md, ../information-architecture.md]
 created: 2026-04-19
 authoritative_for: [UI broken outbound-href inventory]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/page-triage/README.md, codex/14-customer-journeys/page-triage/triage-matrix.md, codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md, codex/14-customer-journeys/roadmap/next-waves.md, codex/14-customer-journeys/roadmap/plan-references.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/page-triage/README.md,
+    /codex/14-customer-journeys/page-triage/triage-matrix.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md,
+    /codex/14-customer-journeys/roadmap/next-waves.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

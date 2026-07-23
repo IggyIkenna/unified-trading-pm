@@ -16,9 +16,9 @@ repos: [deployment-ui]
 scope: [engineer]
 tags: [deployment-ui, alerts, filters, sort, observability]
 related:
-  - deployment_ui_observability_ux_tracker_2026_07_17.md
-  - deployment_alerts_ingestion_completeness_2026_07_20.md
-  - deployment_ui_date_range_filter_and_search_2026_07_20.md
+  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md
+  - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
 created: "2026-07-20"
 last_updated: "2026-07-20"
 parent_epic: observability_master
@@ -196,7 +196,7 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
       to ship at this checkpoint.
 - [x] ✅ [REVIEW] P2. Post-phase codex audit — document the rebuilt alerts-page contract (diagnostic surface, the
       filter/sort/date-range dimensions, the shared-primitive reuse, the drill-down link map) in
-      `codex/06-coding-standards/ui-testing-layers.md` cross-ref + `codex/04-architecture/ci-alerting.md`. —
+      `/codex/06-coding-standards/ui-testing-layers.md` cross-ref + `/codex/04-architecture/ci-alerting.md`. —
       unified-trading-pm@c23a8c204. `ci-alerting.md` gained a new "The `/alerts` page UI contract" subsection (filter
       dimensions, sort, date-range + the `data.days`-derived honesty-banner pattern, the drill-down link map incl. the
       no-runbook-field gap, shared-primitive reuse vs the local `AlertDateRangeFilter`/sort-key-union plug-ins, and the
@@ -226,5 +226,5 @@ source: split from deployment_ui_observability_ux_tracker_2026_07_17.md WS-5, UX
 
 ## Codex SSOTs
 
-- `codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited regression spec), every `[UI]` todo.
-- `codex/04-architecture/ci-alerting.md` — the alert data contract Plan A defines; this plan renders it.
+- `/codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited regression spec), every `[UI]` todo.
+- `/codex/04-architecture/ci-alerting.md` — the alert data contract Plan A defines; this plan renders it.

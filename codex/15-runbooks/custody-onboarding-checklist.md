@@ -14,24 +14,24 @@ scope: [admin, engineer]
 tags: [custody, defi, credentials, runbook]
 related:
   [
-    codex/04-architecture/custody-providers.md,
-    codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
-    codex/05-infrastructure/credentials-matrix.md,
-    codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
   ]
 created: 2026-05-11
 authoritative_for:
   [custody onboarding operator-action checklist (Copper/CEFFU/Fireblocks KYB + Cloud-KMS CMK provisioning steps)]
 referenced_by:
   [
-    codex/04-architecture/custody-providers.md,
-    codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
-    codex/05-infrastructure/credentials-matrix.md,
-    codex/05-infrastructure/fireblocks-integration-spec.md,
-    codex/05-infrastructure/hsm-wallet-signing.md,
-    codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
-    codex/15-runbooks/credential-rotation-runbook.md,
-    codex/05-infrastructure/secret-manager-naming.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/05-infrastructure/fireblocks-integration-spec.md,
+    /codex/05-infrastructure/hsm-wallet-signing.md,
+    /codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
   ]
 owner: operator (custody portal logins, KYC + approval flows are human-attended)
 last_reviewed: 2026-05-17
@@ -57,8 +57,8 @@ last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)
 > **Created 2026-05-12** by slot 4 (`ikenna-keys-wallets-tab`) per
 > [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 1 — operator-action checklist for the May-23 cutover + June-1 client-credential integration. Pairs with
-> [`codex/04-architecture/custody-providers.md`](../04-architecture/custody-providers.md) (architectural SSOT) +
-> [`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](../04-architecture/wallet-hierarchy-and-capital-flow.md)
+> [`/codex/04-architecture/custody-providers.md`](/codex/04-architecture/custody-providers.md) (architectural SSOT) +
+> [`/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md)
 > (capital-flow model).
 
 This is the **operator-runnable** checklist for every custody-onboarding human action that cannot be automated by an
@@ -107,7 +107,7 @@ with them — we need best equivalent to test earlier or use our trust wallet bu
 **Per-wallet flippability**: each
 [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
 row carries its own `signing_surface` — flips are **config-only, no recompile, no service restart** (factory routing per
-[`custody-providers.md`](../04-architecture/custody-providers.md) § 1).
+[`custody-providers.md`](/codex/04-architecture/custody-providers.md) § 1).
 
 ---
 
@@ -229,23 +229,23 @@ execution:
 - [ ] **B.2.5** Envelope-encrypt the wallet PK + store wrapped ciphertext in AWS Secrets Manager (AWS equivalent of GCP
       B.3.2): ```bash # Step 1: encrypt PK with AWS KMS (offline cold laptop with AWS CLI configured) echo -n "$RAW_PK"
       | \
-       aws kms encrypt \
-       --key-id arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id> \
-       --plaintext fileb:///dev/stdin \
-       --query CiphertextBlob \
-       --output text \
-       --region ap-northeast-1 > /tmp/wrapped.b64
+      aws kms encrypt \
+      --key-id arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id> \
+      --plaintext fileb:///dev/stdin \
+      --query CiphertextBlob \
+      --output text \
+      --region ap-northeast-1 > /tmp/wrapped.b64
 
       # Step 2: store wrapped ciphertext as-is in Secrets Manager (SecretString = base64-encoded ciphertext blob)
-      aws secretsmanager create-secret \
-        --name "defi-eth-hot-aave-v1-wrapped" \
-        --secret-string "$(cat /tmp/wrapped.b64)" \
-        --region ap-northeast-1
+                                                                      aws secretsmanager create-secret \
+                                                                        --name "defi-eth-hot-aave-v1-wrapped" \
+                                                                        --secret-string "$(cat /tmp/wrapped.b64)" \
+                                                                        --region ap-northeast-1
 
-      # Step 3: wipe temp file immediately
-      shred -u /tmp/wrapped.b64
-      ```
-      Secret name must match byte-for-byte with `WalletProvisioningConfig.private_key_secret_ref`.
+                                                                      # Step 3: wipe temp file immediately
+                                                                      shred -u /tmp/wrapped.b64
+                                                                      ```
+                                                                      Secret name must match byte-for-byte with `WalletProvisioningConfig.private_key_secret_ref`.
 
 - [ ] **B.2.6** Populate `WalletProvisioningConfig` row with AWS ARN form for `kms_key_uri`:
       `python     WalletProvisioningConfig(         wallet_id="defi-eth-hot-aave-v1",         chain="ETHEREUM",         kind=WalletKind.HOT_TRADING,         signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED,         kms_key_uri="arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id>",         private_key_secret_ref="defi-eth-hot-aave-v1-wrapped",         archetype_id="carry_staked_basis",     )     `
@@ -326,7 +326,7 @@ execution:
 
 **Status**: 🟡 KYB ONGOING — longest single lead time per Plan Phase 3.B (2-4 weeks operator-side). Adapter
 **stub-shipped** at `execution-service/execution_service/custody/ceffu.py` per
-[`custody-providers.md`](../04-architecture/custody-providers.md) § 2.4. Async methods raise
+[`custody-providers.md`](/codex/04-architecture/custody-providers.md) § 2.4. Async methods raise
 `NotImplementedError("CEFFU API spec pending")` — flip to real implementation gated on operator-provided API spec.
 
 ```yaml
@@ -390,9 +390,8 @@ controls + post-trade kill-switch triggers — wallet-tier is the FINEST-grain s
 
 - [ ] **E.1.1** For every HOT*TRADING wallet, pick a kill_switch_id from the closed set in
       [`kill_switch.py`](../../unified-api-contracts/unified_api_contracts/canonical/crosscutting/kill_switch.py)
-      `KillSwitchId` enum. Typical:
-      `KILL_PER_ARCHETYPE*<ARCHETYPE>`(freezes all wallets for one archetype).     Per-wallet finer freezes are POST-cutover (no`KILL*PER_WALLET*\*`
-      exists yet — open follow-up).
+      `KillSwitchId` enum. Typical: `KILL_PER_ARCHETYPE*<ARCHETYPE>`(freezes all wallets for one archetype). Per-wallet
+      finer freezes are POST-cutover (no`KILL*PER_WALLET*\*` exists yet — open follow-up).
 - [ ] **E.1.2** Wire wallet-tier button into deployment-UI Live-Cluster button per slot 8 cross_cutting #4 (in progress
       2026-05-12).
 - [ ] **E.1.3** Operator smoke-tests:
@@ -441,13 +440,13 @@ Per Plan Phase 8.D.
 
 ## § H — References
 
-- [`codex/04-architecture/custody-providers.md`](../04-architecture/custody-providers.md) — architectural SSOT for
+- [`/codex/04-architecture/custody-providers.md`](/codex/04-architecture/custody-providers.md) — architectural SSOT for
   Copper / CEFFU / Fireblocks / LocalKey / Mock providers.
-- [`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](../04-architecture/wallet-hierarchy-and-capital-flow.md)
+- [`/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md)
   — treasury / hot wallet capital model.
-- [`codex/04-architecture/interface-credential-convention.md`](../04-architecture/interface-credential-convention.md) —
-  service-side credential injection convention.
-- [`codex/04-architecture/kill-switch-circuit-breaker.md`](../04-architecture/kill-switch-circuit-breaker.md) —
+- [`/codex/04-architecture/interface-credential-convention.md`](/codex/04-architecture/interface-credential-convention.md)
+  — service-side credential injection convention.
+- [`/codex/04-architecture/kill-switch-circuit-breaker.md`](/codex/04-architecture/kill-switch-circuit-breaker.md) —
   kill-switch arm/disarm lifecycle.
 - [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
   — parent plan; this doc operationalizes Phases 3.A + 3.B + 3.C + 4.A.

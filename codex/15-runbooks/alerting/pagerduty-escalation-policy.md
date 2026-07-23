@@ -14,10 +14,10 @@ scope: [engineer]
 tags: [runbook, escalation, live-trading, slack, monitoring, observability]
 related:
   [
-    codex/15-runbooks/alerting/README.md,
-    codex/15-runbooks/alerting/alert-code-taxonomy.md,
-    codex/15-runbooks/alerting/threshold-tuning.md,
-    codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/README.md,
+    /codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    /codex/15-runbooks/alerting/threshold-tuning.md,
+    /codex/15-runbooks/alerting/operator-playbook.md,
   ]
 created: 2026-05-08
 owner: ikenna

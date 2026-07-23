@@ -2,8 +2,8 @@
 doc_type: codex-runbook
 title: Game-Day Protocol — 3+ Scratch Scenarios End-to-End Acceptance
 summary:
-  Operator-driven pre-cutover gate — runs ≥3 of the 17 scratch scenarios against staging with all Layer-0..5
-  recovery components live; 3 scenarios × 7 asserts = 21/21 GREEN required before any strategy promotes to live_full.
+  Operator-driven pre-cutover gate — runs ≥3 of the 17 scratch scenarios against staging with all Layer-0..5 recovery
+  components live; 3 scenarios × 7 asserts = 21/21 GREEN required before any strategy promotes to live_full.
 status: current
 nature: process
 asset_group: [meta]
@@ -11,7 +11,7 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, e2e-testing, execution-service, strategy-service, unified-trading-pm]
 scope: [admin, engineer]
 tags: [runbook, game-day, incident, escalation, verification, smoke-test, live-trading]
-related: [codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/scratch_scenarios_day1/]
+related: [/codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/scratch_scenarios_day1/]
 created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Pre-cutover (single run) + quarterly post-cutover
@@ -19,7 +19,11 @@ verifier: Operator + secondary on-call observe full Layer-0..5 stack fire
 last_executed: never
 code_refs:
 authoritative_for: [game-day-acceptance-protocol]
-referenced_by: [plans/active/incident_gateway_and_state_machine_2026_05_23.md, plans/audit/instructions/observability_master_audit_instructions.md]
+referenced_by:
+  [
+    plans/active/incident_gateway_and_state_machine_2026_05_23.md,
+    plans/audit/instructions/observability_master_audit_instructions.md,
+  ]
 ---
 
 # Game-Day Protocol — 3+ Scenarios End-to-End Acceptance
@@ -143,9 +147,9 @@ If any assert fails:
 
 ## Composes with
 
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` — the 5+1 layer model
-- `codex/04-architecture/incident-gateway-state-machine.md` — 14-state lifecycle
-- `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — SLA matrix
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` — the 5+1 layer model
+- `/codex/04-architecture/incident-gateway-state-machine.md` — 14-state lifecycle
+- `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — SLA matrix
 - `plans/audit/instructions/observability_master_audit_instructions.md` Section O — E2E flow checks
 
 ## Last executed

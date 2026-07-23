@@ -28,8 +28,8 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci-cd, github-actions, cost, self-hosted-runner, workflows, spend-reduction]
 related:
-  - github_billing_dashboard_access_2026_07_09.md
-  - cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - /plans/archive/issues/github_billing_dashboard_access_2026_07_09.md
+  - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 created: 2026-07-15
 last_updated: 2026-07-17
 parent_epic: deployment_and_user_management_master
@@ -614,7 +614,7 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       `reconcile-release-tags` alone burns ~48 no-op runs/day, so deleting dead glue beats moving it. Deliverable: a
       cheap recurring check that a mover's "did work" counter is not 0 on EVERY run for N days (and that "I did nothing"
       and "I could not look" are DIFFERENT exit states — the one-line assertion that would have caught all three on day
-      one). Generalises `codex/02-data/honest-absence-downstream-handling.md` from data to automation.
+      one). Generalises `/codex/02-data/honest-absence-downstream-handling.md` from data to automation.
 - [ ] [INFRA] P2. **DELETE `reconcile-release-tags` (verdict reached 2026-07-17; saves ~48 no-op runs/day).** NOT a fix
       — a deletion. It is impossible as written (reads the static pyproject version D13 deleted), redundant with
       `assert_version_coherence.py` (which WAS migrated and already emits the `tag-ok`/`tag-MISS` check), and its remedy
@@ -860,7 +860,7 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       (ledger); confirm the moved workflows bill ~$0 and the VM absorbed the load without contention (slice
       `MemoryCurrent` < 8G, orchestrator load unaffected).
 - [x] ✅ [DOCS] P2. **DONE (2026-07-17, `unified-trading-pm@1bb13bfb2`):
-      `codex/07-security/self-hosted-runner-security-posture.md`** — ambient-identity posture, BOTH measured
+      `/codex/07-security/self-hosted-runner-security-posture.md`** — ambient-identity posture, BOTH measured
       JIT/credential facts (recorded verbatim as corrections to the design comments), the mitigation ladder, and the
       hosted↔self-hosted auth-model rules (incl. the STEP 2b probe requirement). The `glue-runner-run.sh` comment
       correction is DEFERRED deliberately — that file carries the operator's live token-refresh WIP (slot 1); editing it
@@ -1050,10 +1050,10 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       remaining half is now tracked elsewhere. Every disabled trigger carries an inline dated note naming exactly what
       to uncomment, and the procedure is written up in `plans/active/issues/staging_workflow_shutdown_2026_07_23.md`.
       **But it is NOT in codex**, and a plan archives — verified 2026-07-23: `grep -rn -i "uncomment" codex/` returns
-      one unrelated hit. Per CLAUDE.md's SSOT-direction rule this belongs in `codex/08-workflows/ci-cd-flow.md`. Carried
-      as an open todo in `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` (which also found that
-      doc's branch-model section stale at L75-109 / L763 / L777-786 / L1183) so the codex fix lands once, together.
-      **Not ticked as fully done — the reversibility guarantee is still half-true until codex carries it.**
+      one unrelated hit. Per CLAUDE.md's SSOT-direction rule this belongs in `/codex/08-workflows/ci-cd-flow.md`.
+      Carried as an open todo in `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` (which also
+      found that doc's branch-model section stale at L75-109 / L763 / L777-786 / L1183) so the codex fix lands once,
+      together. **Not ticked as fully done — the reversibility guarantee is still half-true until codex carries it.**
 
 ---
 
@@ -1081,9 +1081,9 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
 
 ## Codex SSOTs (read before executing any item)
 
-- `codex/08-workflows/ci-cd-flow.md` — quickmerge / LDR-is-SSOT / promotion flow / branch protection
+- `/codex/08-workflows/ci-cd-flow.md` — quickmerge / LDR-is-SSOT / promotion flow / branch protection
 - `codex/05-infrastructure/` — runner + VM infra conventions; workflow-template rollout
-- `codex/04-architecture/ci-alerting.md` — notify-slack carrier (touched if cron cadence changes)
+- `/codex/04-architecture/ci-alerting.md` — notify-slack carrier (touched if cron cadence changes)
 - Related: `plans/active/issues/github_billing_dashboard_access_2026_07_09.md` (the billing-token that made this
   measurable), `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` (the LDR→main promotion refactor this
   overlaps)
@@ -1520,7 +1520,7 @@ disable dead staging crons, **leave promotion crons at `*/15`** (they're $0 self
   the first time anyone READ their logs. The shared shape: **a safety net's healthy output and its dead output are the
   same string** (`Dispatched: 0` / `created 0 tag(s)`), so nothing but a human going looking will ever notice. Both want
   the same remedy: assert that "I did nothing" and "I could not look" are DIFFERENT states (if every repo lands in the
-  fallback bucket, exit non-zero). This generalises `codex/02-data/honest-absence-downstream-handling.md` from data to
+  fallback bucket, exit non-zero). This generalises `/codex/02-data/honest-absence-downstream-handling.md` from data to
   automation and is worth a codex note. **Cost angle for this plan: the cheapest workflow is one that does not run** —
   `reconcile-release-tags` alone burns ~48 no-op runs/day; auditing WHAT the glue workflows do (not just where they run)
   is a second, larger saving than moving them.
@@ -1750,7 +1750,7 @@ prove on ONE caller → only then fan out._
 | 1   | ~~A2 — content-gate dedup~~                                                         | ✅ **SHIPPED + PROVEN 2026-07-17** — see the A2 todo's evidence block (c535ec087; alerting-service runs 29584946980 MISS+save / 29585163847 22s HIT+skip).                                                                                                                                                                                                                                                                         |
 | 2   | ~~A1 — docs-only fast-path~~                                                        | ✅ **SHIPPED 2026-07-17** — see the A1 todo's evidence block (e5b22fddc, PR #1124; fleet template rollout deferred to batch with A5).                                                                                                                                                                                                                                                                                              |
 | 3   | ~~A5 — collapse the QG fan-out~~                                                    | ✅ **DONE 2026-07-17** — measured 23 repos then collapsed to `[tests, checks]` (1bb13bfb2, PR #1126; live proof in its own run).                                                                                                                                                                                                                                                                                                   |
-| 4   | ~~Security-posture codex doc~~                                                      | ✅ **DONE 2026-07-17** — `codex/07-security/self-hosted-runner-security-posture.md`.                                                                                                                                                                                                                                                                                                                                               |
+| 4   | ~~Security-posture codex doc~~                                                      | ✅ **DONE 2026-07-17** — `/codex/07-security/self-hosted-runner-security-posture.md`.                                                                                                                                                                                                                                                                                                                                              |
 | 5   | ~~Cron cadence · debounce~~                                                         | ✅ **DONE 2026-07-17** — 5 health/backstop crons hourly (3 are HOSTED watchers = real $); debounce CLOSED not-worth-it (warm slot ~2-5s @ $0; CAS risk).                                                                                                                                                                                                                                                                           |
 | 13  | Clean up the 91 pre-existing broken doc references in `doc_reference_baseline.yaml` | **NEW 2026-07-22, P3, nobody's blocking it, just not prioritized.** Real dead links (mostly `related:`/`referenced_by:` pointing at docs that were renamed or never existed at the stated path), NOT the routine archived-plan noise (that's already discounted). Fix a batch, re-run `python3 scripts/plan-hygiene/check_frontmatter_schema.py --update-doc-ref-baseline`, commit the shrunk baseline — never hand-edit the YAML. |
 
@@ -2049,7 +2049,7 @@ prove on ONE caller → only then fan out._
   - **Will stopping it break anything? NO — re-entry is MANUAL.** The toggle is a git-tracked JSON field
     (`workspace-manifest.json` `promotion_model` / `staging_dormant_mode`), **nothing writes it programmatically** —
     every hit in `scripts/**` is a read. A breaking/major bump does **not** auto-route through staging: per
-    `codex/08-workflows/ci-cd-flow.md:451` the cross-repo breaking gate MOVED to `ldr-to-main-promote-fleet.yml` (AST
+    `/codex/08-workflows/ci-cd-flow.md:451` the cross-repo breaking gate MOVED to `ldr-to-main-promote-fleet.yml` (AST
     differ + `sit_validated_tree`), and `staging_status.breaking_pending` is `[]`. So re-enabling the workflows is part
     of the operator's manual flip, not something an automated path can silently trip over.
   - **The ONE real footgun, and the mitigation**: `staging-lock-check.yml`'s `check-staging-lock` job posts a **REQUIRED

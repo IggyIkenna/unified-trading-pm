@@ -2,23 +2,31 @@
 doc_type: codex-runbook
 title: Smoke Testing Playbook
 summary:
-  Operational SSOT distinguishing the two smoke tools — the authoritative SIT gate (system-integration-tests/tests/smoke,
-  HTTP-only, blocks staging->main via sit-lock) vs the dev-local per-service scripts/smoke_matrix.py (not a gate). Both
-  enforce the same 3-step assertion (trigger clean, GCS parquet written, manifest row capture_status in
-  captured/empty_confirmed); there is deliberately NO nightly cron.
+  Operational SSOT distinguishing the two smoke tools — the authoritative SIT gate
+  (system-integration-tests/tests/smoke, HTTP-only, blocks staging->main via sit-lock) vs the dev-local per-service
+  scripts/smoke_matrix.py (not a gate). Both enforce the same 3-step assertion (trigger clean, GCS parquet written,
+  manifest row capture_status in captured/empty_confirmed); there is deliberately NO nightly cron.
 status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, system-integration-tests]
+repos:
+  [
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    system-integration-tests,
+  ]
 scope: [engineer, admin]
 tags: [runbook, smoke-test, integration-testing, manifest, quality-gates, data-status]
 related:
   [
-    ../06-coding-standards/integration-testing-layers.md,
-    ../02-data/per-asset-group-bucket-layouts.md,
-    ../02-data/availability-manifest-and-data-status.md,
-    ../02-data/sports-adapter-dependency-order.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/sports-adapter-dependency-order.md,
   ]
 created: 2026-04-20
 owner: on-call engineer (slot-1 main)
@@ -27,7 +35,13 @@ verifier: slot-1 orchestrator reviews SIT smoke results in CI
 last_executed:
 code_refs:
 type: runbook
-execution: {owner: on-call engineer (slot-1 main), cadence: on-demand (triggered by staging→main promotion gate), verifier: slot-1 orchestrator reviews SIT smoke results in CI, last_executed: 2026-05-19}
+execution:
+  {
+    owner: on-call engineer (slot-1 main),
+    cadence: on-demand (triggered by staging→main promotion gate),
+    verifier: slot-1 orchestrator reviews SIT smoke results in CI,
+    last_executed: 2026-05-19,
+  }
 ---
 
 # Smoke Testing Playbook
@@ -46,7 +60,7 @@ authoritative promotion gate vs. developer-local debugging helper. Do not confla
 
 **Key rule:** there is **no nightly cron**. Smokes run when staging→main fires, not on a schedule. Daily cron was the
 wrong trigger model — "nobody owns nightly failures" and cost without benefit. SSOT for SIT cadence:
-`system-integration-tests/README.md` + `codex/06-coding-standards/integration-testing-layers.md`.
+`system-integration-tests/README.md` + `/codex/06-coding-standards/integration-testing-layers.md`.
 
 ---
 
@@ -100,9 +114,9 @@ partition shape keeps this smoke <5 min even when fully wired. Add more cells by
 
 Reuses the canonical SSOTs:
 
-- `codex/02-data/per-category-bucket-layouts.md` for prefix derivation (SPORTS `sports_reference/.../entity=` vs
+- `/codex/02-data/per-category-bucket-layouts.md` for prefix derivation (SPORTS `sports_reference/.../entity=` vs
   CEFI/TRADFI/DEFI/PREDICTION `instrument_availability/.../venue=`).
-- `codex/02-data/availability-manifest-and-data-status.md` for the `capture_status` semantics (`empty_confirmed` is
+- `/codex/02-data/availability-manifest-and-data-status.md` for the `capture_status` semantics (`empty_confirmed` is
   PASS, `attempted_failed` is FAIL).
 
 ### 2.5 Adding a new smoke case
@@ -167,7 +181,7 @@ service-specific shape.
 
 Routes every GCS write to a `<name>-test-<project>` bucket (7-day lifecycle, auto-delete) instead of production.
 Manifest writes go to the test bucket's `_index/availability_index.parquet`. SSOT for bucket naming and lifecycle:
-`deployment-service/configs/test-bucket-lifecycle.json` + `codex/02-data/per-category-bucket-layouts.md`.
+`deployment-service/configs/test-bucket-lifecycle.json` + `/codex/02-data/per-category-bucket-layouts.md`.
 
 ### 3.4 Services with matrix runners
 
@@ -188,13 +202,13 @@ Every smoke cell, whether in SIT or per-service, asserts the same three things:
 
 1. **Trigger ran clean** — CLI rc=0 (per-service) or HTTP 2xx (SIT).
 2. **GCS parquet written** — at least one `.parquet` exists under the category's expected prefix (see
-   `codex/02-data/per-category-bucket-layouts.md` — SPORTS uses `sports_reference/.../entity=`, others use
+   `/codex/02-data/per-category-bucket-layouts.md` — SPORTS uses `sports_reference/.../entity=`, others use
    `instrument_availability/.../venue=`, MTDS-SPORTS adds `league=` partition).
 3. **Manifest row captured** — the test bucket's `_index/availability_index.parquet` has a row for the (date, category,
    venue, data_type) tuple with `capture_status in {captured, empty_confirmed}`. `empty_confirmed` is a **PASS**, not a
    skip — "we tried, venue legitimately returned zero rows" is valuable signal. `attempted_failed` is FAIL.
 
-Manifest v5 schema SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
+Manifest v5 schema SSOT: `/codex/02-data/availability-manifest-and-data-status.md`.
 
 ---
 
@@ -210,9 +224,9 @@ Per-service scripts do not send Telegram — they are interactive developer tool
 ## 6. Related documents
 
 - `system-integration-tests/README.md` — SIT scope + layer model
-- `codex/06-coding-standards/integration-testing-layers.md` — canonical test layering
-- `codex/02-data/per-category-bucket-layouts.md` — bucket layout per category
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest v5 schema
-- `codex/02-data/sports-adapter-dependency-order.md` — T0/T1 sports ordering
+- `/codex/06-coding-standards/integration-testing-layers.md` — canonical test layering
+- `/codex/02-data/per-category-bucket-layouts.md` — bucket layout per category
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest v5 schema
+- `/codex/02-data/sports-adapter-dependency-order.md` — T0/T1 sports ordering
 - `deployment-service/configs/test-bucket-lifecycle.json` — TEST bucket lifecycle rules
 - `deployment-service/scripts/provision-test-buckets.sh` — provisioning helper

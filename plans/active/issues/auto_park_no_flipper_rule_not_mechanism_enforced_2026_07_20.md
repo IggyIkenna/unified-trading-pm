@@ -23,7 +23,7 @@ tags: [agent-orchestrator, auto-park, dispatch, cooldown, follow-up]
 related:
   - plans/active/ao_dispatch_cooldown_and_park_2026_07_20.md
   - plans/active/defi_consolidated_closeout_2026_07_18.md
-  - codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md
+  - /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md
 created: 2026-07-20
 parent_epic: orchestrator_master
 assigned_vm: NA

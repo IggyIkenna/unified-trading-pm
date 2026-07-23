@@ -17,15 +17,15 @@ scope: [engineer, admin]
 tags: [infra, capture, live-connector, vm-launch, credentials-gated, instruments-completion]
 related:
   [
-    instruments_completion_tracker_2026_07_06.md,
-    data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    ../../codex/05-infrastructure/spot-vms-for-backfill.md,
-    ../../codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated: 2026-06-27
-  2026-06-27 2026-06-27 2026-07-12 # was: 2026-07-07 — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 143: body
+last_updated:
+  2026-06-27 2026-06-27 2026-06-27 2026-07-12 # was: 2026-07-07 — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 143: body
   # carries a dated 2026-07-12 correction (finding id 114, §A2 B-queue ruling) on the ASTER-connector task that was
   # never reflected in this frontmatter timestamp
 parent_epic: instruments_master
@@ -64,9 +64,9 @@ source:
 
 ## Codex SSOTs (read before touching)
 
-- `codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT default for backfill; live/forward stay on-demand.
-- `codex/05-infrastructure/deployment-observability.md` — no fire-and-forget; STARTED/progress/STOPPED verification.
-- `codex/02-data/external-data-always-available-rule.md` — exhausting the free path = a credential ask, NOT a descope.
+- `/codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT default for backfill; live/forward stay on-demand.
+- `/codex/05-infrastructure/deployment-observability.md` — no fire-and-forget; STARTED/progress/STOPPED verification.
+- `/codex/02-data/external-data-always-available-rule.md` — exhausting the free path = a credential ask, NOT a descope.
 
 ## Capture wiring (dispatchable)
 
@@ -264,7 +264,7 @@ source:
   Data path (post-cron-host-reboot):
   `gs://market-data-tick-cefi-{env}-{project}/pipeline_mode=live_deribit/ asset_group=cefi/venue=deribit/instrument_type=option/data_type=options_chain/day={D}/underlying={BTC|ETH}/ expiry={E}/*.parquet`.
   Handler emits `pipeline_mode=LIVE_DERIBIT` per-shard + `source=deribit` on every captured row (per source-aware
-  `{mode}_{source}` convention, codex/02-data/pipeline-mode-partition.md). BATCH == LIVE contract:
+  `{mode}_{source}` convention, /codex/02-data/pipeline-mode-partition.md). BATCH == LIVE contract:
   `CanonicalOptionsChainEntry` shape identical across live Deribit + Tardis batch + Massive TradFi — an engine reading
   the feed MUST NOT be able to tell the source apart (handler docstring lines 13-15). No fire-and-forget — the launcher
   docs the T+5-10min verify snippet (`gcloud compute instances describe ... --format='value(status)'` + `gsutil ls` of

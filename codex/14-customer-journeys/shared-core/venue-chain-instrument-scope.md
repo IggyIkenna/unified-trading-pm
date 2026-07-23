@@ -4,7 +4,8 @@ title: Venue × Chain × Instrument-Type Scope
 summary:
   Commercial-scope view of the three sub-scoping axes on rule-05 blocks 8/9/10 (venue / chain / instrument-type packs) —
   the 2026 live venue set (Binance/Coinbase/Bybit/Hyperliquid + CME/NSE go-live, Ethereum/Arbitrum/Base/Solana chains,
-  Betfair/Polymarket), how they compose into demo restriction profiles, per-unit pricing, and catalogue-filter visibility.
+  Betfair/Polymarket), how they compose into demo restriction profiles, per-unit pricing, and catalogue-filter
+  visibility.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -17,12 +18,19 @@ related:
     ../_ssot-rules/05-building-block-dimensions.md,
     ../../02-venues/venue-registry-reference.md,
     ../../09-strategy/architecture-v2/category-instrument-coverage.md,
-    strategy-origin-vs-stack-depth.md,
-    strategy-allocation-lock-matrix.md,
+    /codex/14-customer-journeys/shared-core/strategy-origin-vs-stack-depth.md,
+    /codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md,
   ]
 created: 2026-04-20
 authoritative_for: [venue/chain/instrument-type block sub-scoping axes (blocks 8/9/10)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/shared-core/README.md, codex/14-customer-journeys/shared-core/data-licensing-boundaries.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/shared-core/README.md,
+    /codex/14-customer-journeys/shared-core/data-licensing-boundaries.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

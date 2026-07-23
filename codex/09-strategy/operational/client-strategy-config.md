@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Per-Client Strategy Config Overrides
 summary:
   The ClientStrategyOverride UAC schema + ClientConfigRegistry that customise per-client strategy execution (venue
-  whitelists, multi-coin-rotation/dynamic-weighting gating, fixed_basis_coin, max_leverage/max_position) without
-  forking strategy code; applied once at init via _apply_client_venue_filter, with the Patrick DeFi-tier reference.
+  whitelists, multi-coin-rotation/dynamic-weighting gating, fixed_basis_coin, max_leverage/max_position) without forking
+  strategy code; applied once at init via _apply_client_venue_filter, with the Patrick DeFi-tier reference.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,12 +15,18 @@ tags: [client-config, strategy, uac, defi, onboarding]
 related:
   [
     client-onboarding.md,
-    onboarding-checklist.md,
+    /codex/09-strategy/operational/onboarding-checklist.md,
     ../../04-architecture/per-client-isolation-architecture.md,
   ]
 created: 2026-04-03
 authoritative_for: [ClientStrategyOverride per-client config-override schema + venue-restriction mechanism]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/operational/client-onboarding.md, codex/09-strategy/operational/instrument-filtering.md, codex/09-strategy/operational/onboarding-checklist.md]
+referenced_by:
+  [
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/operational/client-onboarding.md,
+    /codex/09-strategy/operational/instrument-filtering.md,
+    /codex/09-strategy/operational/onboarding-checklist.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

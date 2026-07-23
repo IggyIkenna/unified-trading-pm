@@ -16,12 +16,22 @@ related:
   [
     ../playbook-concepts/fund-org-hierarchy.md,
     ../playbook-concepts/sma-vs-pooled.md,
-    strategy-allocation-lock-matrix.md,
-    shared-reporting-core.md,
+    /codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md,
+    /codex/14-customer-journeys/shared-core/shared-reporting-core.md,
   ]
 created: 2026-04-20
 authoritative_for: [org/fund/client/api-key-set entity model for experience surfaces]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/playbook-concepts/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

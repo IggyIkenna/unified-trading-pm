@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: IM vs Reg Umbrella Reporting — Same UI, Two Commercial Framings
 summary:
-  SSOT for the IM-allocator vs Reg-Umbrella distinction — same /services/reports UI surface (rule-03
-  same-system), differing by which panels mount per entitlement and how data is scoped; maps the
-  divergent block composition (block 3 IM-only vs block 2 Reg-only) and per-audience Tier A/B pricing.
+  SSOT for the IM-allocator vs Reg-Umbrella distinction — same /services/reports UI surface (rule-03 same-system),
+  differing by which panels mount per entitlement and how data is scoped; maps the divergent block composition (block 3
+  IM-only vs block 2 Reg-only) and per-audience Tier A/B pricing.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,24 @@ scope: [sales, admin]
 tags: [commercial-model, im, reg-umbrella, reporting, pricing, ui]
 related:
   [
-    im-profit-share-structures.md,
-    building-block-packaging.md,
-    pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
     ../shared-core/shared-reporting-core.md,
   ]
 created: 2026-04-20
 authoritative_for: [IM vs Reg Umbrella reporting commercial-framing distinction]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/experience/regulatory-demo.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/commercial-model/README.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/experience/regulatory-demo.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

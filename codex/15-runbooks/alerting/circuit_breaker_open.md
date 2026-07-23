@@ -2,10 +2,10 @@
 doc_type: codex-runbook
 title: CIRCUIT_BREAKER_OPEN Runbook
 summary: >-
-  Operator response to CIRCUIT_BREAKER_OPEN (CRITICAL, PagerDuty+Telegram) — a per-(service, venue) breaker tripped after
-  N failures in the window; it is operating as designed and auto-recovers on half-open retry. Operator acts only if it
-  stays OPEN >5min (KILL_SWITCH_VENUE_DISCONNECT cascades) or flaps: diagnose last_error_message, fix key/cert/DNS, or
-  manual reset as last resort.
+  Operator response to CIRCUIT_BREAKER_OPEN (CRITICAL, PagerDuty+Telegram) — a per-(service, venue) breaker tripped
+  after N failures in the window; it is operating as designed and auto-recovers on half-open retry. Operator acts only
+  if it stays OPEN >5min (KILL_SWITCH_VENUE_DISCONNECT cascades) or flaps: diagnose last_error_message, fix
+  key/cert/DNS, or manual reset as last resort.
 status: current
 nature: process
 asset_group: [meta]
@@ -13,16 +13,30 @@ stage: [meta]
 repos: [alerting-service, execution-service, features-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [alerting, runbook, execution, escalation, kill-switch, live-trading]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/kill_switch_venue_disconnect.md, codex/15-runbooks/alerting/order_rejection_spike.md]
+related:
+  [
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/kill_switch_venue_disconnect.md,
+    /codex/15-runbooks/alerting/order_rejection_spike.md,
+  ]
 created: 2026-05-08
 owner: on-call operator (Ikenna / Harsh by rotation)
 cadence: on-demand (incident response only; fires when CIRCUIT_BREAKER_OPEN alert pages)
 verifier: circuit breaker transitions CLOSED within SLO window; orders resume on affected venue
 last_executed:
 code_refs:
-authoritative_for: Operator response when an execution-service per-(service, venue) circuit breaker transitions to OPEN. Service degrades; new orders blocked on that venue + service path. Auto-recovers via half-open retry; manual override only when auto-recovery flaps.
+authoritative_for:
+  Operator response when an execution-service per-(service, venue) circuit breaker transitions to OPEN. Service
+  degrades; new orders blocked on that venue + service path. Auto-recovers via half-open retry; manual override only
+  when auto-recovery flaps.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
-execution: {owner: on-call operator (Ikenna / Harsh by rotation), cadence: on-demand (incident response only; fires when CIRCUIT_BREAKER_OPEN alert pages), verifier: circuit breaker transitions CLOSED within SLO window; orders resume on affected venue, last_executed: never}
+execution:
+  {
+    owner: on-call operator (Ikenna / Harsh by rotation),
+    cadence: on-demand (incident response only; fires when CIRCUIT_BREAKER_OPEN alert pages),
+    verifier: circuit breaker transitions CLOSED within SLO window; orders resume on affected venue,
+    last_executed: never,
+  }
 ---
 
 # `CIRCUIT_BREAKER_OPEN` Runbook

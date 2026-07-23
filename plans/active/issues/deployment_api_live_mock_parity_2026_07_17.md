@@ -20,7 +20,11 @@ stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]
 tags: [mock-parity, deployment-api, validation, ui, dx]
-related: [deployment_ui_l2_smoke_gate_red_2026_07_17.md, ../../../codex/05-infrastructure/deployment-observability.md]
+related:
+  [
+    /plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
+    /codex/05-infrastructure/deployment-observability.md,
+  ]
 created: 2026-07-17
 last_updated: 2026-07-17
 parent_epic: observability_master

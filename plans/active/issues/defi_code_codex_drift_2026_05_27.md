@@ -14,9 +14,9 @@ tags: [defi, data-correctness, ssot-audit, mdps, mtds, uac, canonicalisation, ca
 related:
   [
     plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md,
-    codex/02-data/defi-data-pipeline.md,
-    codex/02-data/defi-data-types-catalog.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
     plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
   ]
 created: 2026-05-27
@@ -24,9 +24,9 @@ parent_epic: defi_master
 priority: P2
 source:
   [
-    codex/02-data/defi-data-pipeline.md,
-    codex/02-data/data-lineage-MTDS-features-ml.md,
-    codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/02-data/defi-data-types-catalog.md,
   ]
 assigned_vm:
 resolved_by:
@@ -49,10 +49,9 @@ last_updated:
 Re-read the actual Python (MTDS / MDPS / UAC / features-service) on 2026-05-27 and cross-checked GCS, comparing against
 the codex SSOTs. **Comprehensive audit record (13 findings D1–D13, audit-result format):**
 [`plans/audit/results/defi_pipeline_code_codex_drift_2026_05_27.md`](../../audit/results/defi_pipeline_code_codex_drift_2026_05_27.md).
-In-codex summary: [`codex/02-data/defi-data-pipeline.md`](../../../codex/02-data/defi-data-pipeline.md) §1. This issue
-doc is the **actionable tracker** — todos below. The first pass surfaced 5 architectural drifts (D1–D5); a broadening
-pass added D6–D13 (catalog completeness, venue drift, banned `bloxroute` relay, RADIANT unbacked, infura, governance
-dup).
+In-codex summary: [`/codex/02-data/defi-data-pipeline.md`](/codex/02-data/defi-data-pipeline.md) §1. This issue doc is
+the **actionable tracker** — todos below. The first pass surfaced 5 architectural drifts (D1–D5); a broadening pass
+added D6–D13 (catalog completeness, venue drift, banned `bloxroute` relay, RADIANT unbacked, infura, governance dup).
 
 | #   | Drift                                                                                                                                                                                                                                                     | Side         | Status                           |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------- |
@@ -77,8 +76,8 @@ dup).
 
 ## Recommended decision
 
-- **Now (codex-doc, safe):** update [`defi-data-types-catalog.md`](../../../codex/02-data/defi-data-types-catalog.md)
-  headings + instrument-type map to canonical `data_type=` names (D1). (D5 rewrite stays under the existing ML-14 item.)
+- **Now (codex-doc, safe):** update [`defi-data-types-catalog.md`](/codex/02-data/defi-data-types-catalog.md) headings +
+  instrument-type map to canonical `data_type=` names (D1). (D5 rewrite stays under the existing ML-14 item.)
 - **After the running backfill completes (code):** for D3, set `needs_candle_processing("lending_indices") = False` in
   UAC `registry/market_data_categories.py`, delete the dead `DefiLendingIndicesAdapter`
   (`market-data-processing-service/.../app/adapters/defi/lending_indices_adapter.py`), and fix the misleading comment in

@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Building-Block Packaging — Which Blocks Cluster into Which Packages
 summary:
-  Block × package matrix — how the thirteen rule-05 building blocks compose into six standard commercial
-  packages (IM reporting-only, Reg Umbrella starter, Signals-only DART, Full DART, Full+Odum strategy,
-  Combined), with sub-scoping (venue/chain/instrument/analytics packs) priced per unit.
+  Block × package matrix — how the thirteen rule-05 building blocks compose into six standard commercial packages (IM
+  reporting-only, Reg Umbrella starter, Signals-only DART, Full DART, Full+Odum strategy, Combined), with sub-scoping
+  (venue/chain/instrument/analytics packs) priced per unit.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,23 @@ scope: [sales, admin]
 tags: [commercial-model, pricing, dart, building-blocks, packaging, im, reg-umbrella]
 related:
   [
-    pricing-building-blocks.md,
-    dart-entry-points.md,
-    fixed-vs-variable-commercials.md,
-    exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
   ]
 created: 2026-04-20
 authoritative_for: [building-block to commercial-package composition matrix]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/commercial-model/README.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md,
+    /codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

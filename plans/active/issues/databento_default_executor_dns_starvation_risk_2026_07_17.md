@@ -19,7 +19,7 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [tradfi, databento, asyncio, executor, dns, latent-risk, follow-up]
-related: [cefi_tardis_throughput_collapse_350x_2026_07_17.md]
+related: [/plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md]
 created: 2026-07-17
 source:
   - Found while root-causing the CeFi Tardis throughput collapse 2026-07-17 (adjacent-code finding; triaged to its own

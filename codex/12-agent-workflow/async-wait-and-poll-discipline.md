@@ -15,14 +15,14 @@ scope: [engineer, admin]
 tags: [orchestrator, monitoring, self-healing, observability, runbook, verification]
 related:
   [
-    codex/05-infrastructure/vm-tarball-deployment.md,
-    codex/12-agent-workflow/canonical-plan-flow.md,
-    codex/08-workflows/ci-cd-flow.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/12-agent-workflow/canonical-plan-flow.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-06-03
 authoritative_for: [agent async-wait and poll cadence discipline, background-task watcher coverage]
 referenced_by:
-  [codex/04-architecture/cross-venue-prediction-arb-detection.md, codex/06-coding-standards/sub-agent-workflow.md]
+  [/codex/04-architecture/cross-venue-prediction-arb-detection.md, /codex/06-coding-standards/sub-agent-workflow.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -145,7 +145,7 @@ redundant wakeup; let the task's completion drive you (or restructure as a singl
 ## Composes with
 
 - **Background-task honesty** (`CLAUDE.md` § Agent behavior) — the truthfulness half; this doc is the cadence half.
-- **No fire-and-forget VM launches** (`codex/05-infrastructure/vm-tarball-deployment.md`) — T+10min verify is a poll.
+- **No fire-and-forget VM launches** (`/codex/05-infrastructure/vm-tarball-deployment.md`) — T+10min verify is a poll.
 - **CI verification after every push** (`CLAUDE.md`) — `gh run list` + `gh run view --log-failed` are the poll tools.
 - **Plans run to actual completion** — "operationally shipped" is verified by polling the real signal to completion, not
   assumed from a green smoke test.

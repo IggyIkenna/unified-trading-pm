@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Family: Stat Arb / Pairs'
+title: "Family: Stat Arb / Pairs"
 summary:
   The Stat Arb / Pairs strategy family — 2 archetypes (fixed cointegration-tested basket vs dynamic cross-sectional
-  ranking) trading a mean-reverting statistical spread; edge is spread z-score reversion with cointegration-p-value
-  kill switches. Has spread risk (unlike risk-free price-dispersion arb).
+  ranking) trading a mean-reverting statistical spread; edge is spread z-score reversion with cointegration-p-value kill
+  switches. Has spread risk (unlike risk-free price-dispersion arb).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,23 @@ scope: [engineer, admin]
 tags: [strategy, stat-arb, pairs, ml, execution, tradfi]
 related:
   [
-    arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
     ml-directional.md,
-    vol-trading.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
     ../archetypes/stat-arb-pairs-fixed.md,
   ]
 created: 2026-04-17
 authoritative_for: [Stat Arb / Pairs strategy family spec (alpha thesis + 2 archetypes)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md, codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md, codex/09-strategy/architecture-v2/families/ml-directional.md, codex/09-strategy/architecture-v2/families/vol-trading.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/stat-arb-cross-sectional.md,
+    /codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/families/ml-directional.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

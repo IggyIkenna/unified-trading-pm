@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Client Onboarding — Cross-Cutting Concern
 summary:
   The one-strategy-instance-per-client rule and onboarding flow — every client gets a unique (client_id, strategy_id)
-  with separate positions/config/PnL/margin across all asset classes; covers venue+credential setup, GCS config
-  overlay + hot-reload, verification, expected position divergence, and client removal.
+  with separate positions/config/PnL/margin across all asset classes; covers venue+credential setup, GCS config overlay
+  + hot-reload, verification, expected position divergence, and client removal.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,13 +14,18 @@ scope: [engineer, admin]
 tags: [onboarding, client-config, strategy, defi, cefi, execution]
 related:
   [
-    onboarding-checklist.md,
-    client-strategy-config.md,
+    /codex/09-strategy/operational/onboarding-checklist.md,
+    /codex/09-strategy/operational/client-strategy-config.md,
     ../../04-architecture/interface-credential-convention.md,
   ]
 created: 2026-03-27
 authoritative_for: [one-strategy-instance-per-client onboarding rule + per-client position-divergence model]
-referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/operational/client-strategy-config.md, codex/09-strategy/operational/onboarding-checklist.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/operational/client-strategy-config.md,
+    /codex/09-strategy/operational/onboarding-checklist.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

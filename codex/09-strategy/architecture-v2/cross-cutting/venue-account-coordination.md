@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Venue-Account Coordination'
+title: "Cross-Cutting: Venue-Account Coordination"
 summary:
-  'Primitives for multiple strategies sharing one (client, venue, account): PBMS venue-account aggregation
-  (sum-of-strategy-views invariant), aggregated venue-account pre-flight (L3 margin sim), atomic cross-strategy rebalance,
-  and account locking — unlocks cross-margin / portfolio-margin capital efficiency without one-strategy-per-account.'
+  "Primitives for multiple strategies sharing one (client, venue, account): PBMS venue-account aggregation
+  (sum-of-strategy-views invariant), aggregated venue-account pre-flight (L3 margin sim), atomic cross-strategy
+  rebalance, and account locking — unlocks cross-margin / portfolio-margin capital efficiency without
+  one-strategy-per-account."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,11 +14,29 @@ repos: [execution-service]
 scope: [engineer, admin]
 tags: [execution, strategy, risk, cefi, defi]
 related:
-  [risk-gates.md, ../../../04-architecture/capital-efficiency-patterns.md, capital-client-isolation.md,
-  ../../../02-venues/unity-integration.md]
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md,
+    ../../../04-architecture/capital-efficiency-patterns.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md,
+    ../../../02-venues/unity-integration.md,
+  ]
 created: 2026-04-17
-authoritative_for: [shared-venue-account coordination primitives (aggregation / venue-account preflight / atomic cross-strategy rebalance)]
-referenced_by: [codex/02-venues/prime-brokers.md, codex/02-venues/unity-integration.md, codex/04-architecture/account-instructions.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/shadow-deployment-pattern.md, codex/04-architecture/slow-fast-routing-split.md, codex/04-architecture/strategy-execution-protocol.md]
+authoritative_for:
+  [
+    shared-venue-account coordination primitives (aggregation / venue-account preflight / atomic cross-strategy
+    rebalance),
+  ]
+referenced_by:
+  [
+    /codex/02-venues/prime-brokers.md,
+    /codex/02-venues/unity-integration.md,
+    /codex/04-architecture/account-instructions.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/04-architecture/shadow-deployment-pattern.md,
+    /codex/04-architecture/slow-fast-routing-split.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

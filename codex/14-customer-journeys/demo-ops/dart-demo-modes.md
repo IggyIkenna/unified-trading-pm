@@ -12,10 +12,26 @@ stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
 tags: [demo-ops, sales, dart, demo-modes, staging, curation]
-related: [demo-restriction-profiles.md, pre-demo-curation-rules.md, pre-demo-discovery-framework.md, upsell-overlays.md]
+related:
+  [
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+    /codex/14-customer-journeys/demo-ops/upsell-overlays.md,
+  ]
 created: 2026-04-20
 authoritative_for: [DART demo modes (broader-platform / turbo / deep-dive)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/demo-decision-matrix.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md, codex/14-customer-journeys/demo-ops/upsell-overlays.md, codex/14-customer-journeys/experience/dart-demo.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/demo-ops/README.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md,
+    /codex/14-customer-journeys/demo-ops/staging-demo-setup.md,
+    /codex/14-customer-journeys/demo-ops/upsell-overlays.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

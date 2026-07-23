@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Information Architecture
 summary:
-  "Top-down canonical IA tree for the Odum platform (PUBLIC / DEEP DIVE / PLATFORM / OPS route groups) — every
-  page must fit — naming the nav SSOTs (spaces-nav-sections.tsx, site-header.tsx, service-tabs.tsx) and the four
-  parallel catalogue surfaces."
+  "Top-down canonical IA tree for the Odum platform (PUBLIC / DEEP DIVE / PLATFORM / OPS route groups) — every page must
+  fit — naming the nav SSOTs (spaces-nav-sections.tsx, site-header.tsx, service-tabs.tsx) and the four parallel
+  catalogue surfaces."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,20 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
 tags: [ui, customer-journey, information-architecture, catalogue, navigation]
-related: [audiences-and-journeys.md, glossary.md]
+related: [/codex/14-customer-journeys/audiences-and-journeys.md, /codex/14-customer-journeys/glossary.md]
 created: 2026-04-19
 authoritative_for: [platform information architecture (route-group tree + nav SSOTs)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/audiences-and-journeys.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/page-triage/README.md, codex/14-customer-journeys/page-triage/broken-links.md, codex/14-customer-journeys/playbook-concepts/bloomberg-style-aesthetic.md, codex/14-customer-journeys/playbooks/README.md, codex/14-customer-journeys/roadmap/plan-references.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/audiences-and-journeys.md,
+    /codex/14-customer-journeys/glossary.md,
+    /codex/14-customer-journeys/page-triage/README.md,
+    /codex/14-customer-journeys/page-triage/broken-links.md,
+    /codex/14-customer-journeys/playbook-concepts/bloomberg-style-aesthetic.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

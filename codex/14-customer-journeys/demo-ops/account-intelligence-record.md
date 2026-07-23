@@ -12,10 +12,27 @@ stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
 tags: [demo-ops, sales, crm, prospect, account-record, curation, follow-up]
-related: [pre-demo-curation-rules.md, post-demo-followup-orchestration.md, meeting-history-and-interest-tracking.md, pre-demo-discovery-framework.md, demo-decision-matrix.md]
+related:
+  [
+    /codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/demo-ops/meeting-history-and-interest-tracking.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
+  ]
 created: 2026-04-20
 authoritative_for: [account-intelligence record schema]
-referenced_by: [codex/08-workflows/client-onboarding.md, codex/14-customer-journeys/README.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/demo-decision-matrix.md, codex/14-customer-journeys/demo-ops/meeting-history-and-interest-tracking.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md, codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md]
+referenced_by:
+  [
+    /codex/08-workflows/client-onboarding.md,
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/demo-ops/README.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
+    /codex/14-customer-journeys/demo-ops/meeting-history-and-interest-tracking.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

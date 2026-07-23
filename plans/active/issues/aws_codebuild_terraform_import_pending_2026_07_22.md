@@ -60,5 +60,5 @@ Found while closing out `test_fleet_image_builds_from_current_code_2026_06_17.md
 otherwise — AWS↔GCP trigger parity, zombie cleanup, buildspec rollout, webhook alignment all shipped 2026-06-19). This
 one item requires standing up a new S3 state backend before any `terraform import` is safe to run — genuinely new infra
 scoping, not a continuation of that plan's build-validation work. Migrated here so the parent plan could archive with
-zero open todos per `codex/11-project-management/plan-hygiene.md`'s archive discipline, rather than being silently
+zero open todos per `/codex/11-project-management/plan-hygiene.md`'s archive discipline, rather than being silently
 dropped.

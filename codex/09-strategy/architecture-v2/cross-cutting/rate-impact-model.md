@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Lending/Borrowing Rate Impact Model
 summary:
-  'Lending/borrowing rate-impact model: simulates how our position shifts the Aave V3 two-slope kinked utilization curve
+  "Lending/borrowing rate-impact model: simulates how our position shifts the Aave V3 two-slope kinked utilization curve
   before execution (`compute_borrow_rate` / `simulate_rate_impact`); features-onchain writes `projected_supply_apy` /
-  `rate_impact_*_bps`; alerting fires >50 bps (P1) / >200 bps (P0) actual-vs-projected deviation.'
+  `rate_impact_*_bps`; alerting fires >50 bps (P1) / >200 bps (P0) actual-vs-projected deviation."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,10 @@ stage: [meta]
 repos: [alerting-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, features, strategy, execution, risk, monitoring]
-related: [pnl-attribution.md, restaking-reward-economics.md]
+related: [pnl-attribution.md, /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md]
 created: 2026-03-30
 authoritative_for: [lending/borrowing rate-impact model (Aave V3 kinked-curve pre-trade rate-impact simulation)]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/families/carry-and-yield.md]
+referenced_by: [/codex/09-strategy/README.md, /codex/09-strategy/architecture-v2/families/carry-and-yield.md]
 owner:
 last_reviewed:
 code_refs:

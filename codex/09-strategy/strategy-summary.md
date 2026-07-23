@@ -2,12 +2,12 @@
 doc_type: codex-ssot
 title: Strategy Architecture v2 — Summary
 summary: >-
-  Human-readable summary of Strategy Architecture v2 (2026-04-17 clean-start) — 9 families, 57 archetypes
-  (the UAC `StrategyArchetype` enum is the canonical SSOT; this doc reflects it), 7 axes of composition,
-  10 cross-cutting concerns, and a 5-layer strategy identity (family → archetype → instance → config →
-  derived categories). Execution talks via a polymorphic `StrategyInstruction` with 14 action types;
-  batch=live is guaranteed by the benchmark-fills contract; target ceiling ~240-300 instances without
-  code explosion. Supersedes the per-category (cefi/defi/sports/tradfi/prediction) structure.
+  Human-readable summary of Strategy Architecture v2 (2026-04-17 clean-start) — 9 families, 57 archetypes (the UAC
+  `StrategyArchetype` enum is the canonical SSOT; this doc reflects it), 7 axes of composition, 10 cross-cutting
+  concerns, and a 5-layer strategy identity (family → archetype → instance → config → derived categories). Execution
+  talks via a polymorphic `StrategyInstruction` with 14 action types; batch=live is guaranteed by the benchmark-fills
+  contract; target ceiling ~240-300 instances without code explosion. Supersedes the per-category
+  (cefi/defi/sports/tradfi/prediction) structure.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -17,8 +17,18 @@ scope: [engineer]
 tags: [strategy, archetype, strategy-family, execution, uac, ml]
 related: [architecture-v2/README.md, architecture-v2/cross-cutting/pnl-attribution.md, architecture-v2/MIGRATION.md]
 created: 2026-04-24
-authoritative_for: [strategy architecture v2 narrative summary (9 families / 57 archetypes / 7 axes / 10 cross-cutting overview)]
-referenced_by: [codex/01-domain/market-making-strategy.md, codex/04-architecture/live-strategy-config-hot-reload.md, codex/04-architecture/ml-experiment-lifecycle.md, codex/04-architecture/research-service-and-dart-integration.md, codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
+authoritative_for:
+  [strategy architecture v2 narrative summary (9 families / 57 archetypes / 7 axes / 10 cross-cutting overview)]
+referenced_by:
+  [
+    /codex/01-domain/market-making-strategy.md,
+    /codex/04-architecture/live-strategy-config-hot-reload.md,
+    /codex/04-architecture/ml-experiment-lifecycle.md,
+    /codex/04-architecture/research-service-and-dart-integration.md,
+    /codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py]
@@ -70,7 +80,7 @@ the Phase 9 DeFi LP archetypes (LP_MINT + LP_BURN are 2 distinct enum members, n
 >   coverage; if it doesn't statically check engine→adapter, add a `grep`-on-engine-imports or AST-walk to
 >   `strategy-service/scripts/quality-gates.sh`).
 > - `strategy_service/signal_broadcast/` (12 modules) MUST satisfy the 5 service-infrastructure invariants enumerated in
->   [`codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md`](../14-customer-journeys/shared-core/signal-broadcast-architecture.md):
+>   [`/codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md`](/codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md):
 >   `ServiceBootstrap` wired · `make_health_router` with nested `signal_broadcast` `data_freshness` callback · typed
 >   `SignalBroadcastConfig` reloaders · zero local schema definitions (UAC `signal_broadcast` facade) · `ApiKeyReloader`
 >   for HMAC creds (NOT one-shot `validate_api_keys_for_venues()`). Statically asserted via `failure_isolation.py` using
@@ -690,9 +700,10 @@ execution picks), `STRATEGY_PICKED` (non-fungible perps/options/sports lines —
 [cross-cutting/execution-policies.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md)
 A versioned, artifact-registered **rule table** mapping `(venue × action × condition) → (algorithm + parameters)`.
 Strategies emit intent; policy picks the algo at order time. Lets strategy code stay stable while policy evolves
-independently. Example policy has rules like "notional < $50k → MARKET_SWEEP with 10 bps slippage cap", "$50k-$500k →
-TWAP(10 slices, 300s, 20% participation)", "≥$500k → TWAP(30 slices, 1800s, 10%)". References a separate
-`cost_model_ref` and `benchmark_mode_ref`.
+independently. Example policy has rules like "notional <
+$50k → MARKET_SWEEP with 10 bps slippage cap", "$50k-$500k →
+TWAP(10 slices, 300s, 20% participation)", "≥$500k → TWAP(30
+slices, 1800s, 10%)". References a separate `cost_model_ref` and `benchmark_mode_ref`.
 
 **4. Transfer / Rebalance** —
 [cross-cutting/transfer-rebalance.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)

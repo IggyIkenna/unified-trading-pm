@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Commit + Push + Flip Plan Checkboxes As You Ship Each Item — HARD RULE
 summary:
-  SSOT for the Commit + Push + Flip HARD RULE — every shippable unit is committed + pushed (pre-commit
-  git diff --cached --stat with no path arg, stage by name) AND its plan checkbox flipped in the SAME
-  agent turn via a docs(plans) commit; an unflipped item is invisible to the orchestrator and gets
-  re-dispatched. Covers the 3-halves model, the violations list, and the backfill recovery protocol.
+  SSOT for the Commit + Push + Flip HARD RULE — every shippable unit is committed + pushed (pre-commit git diff --cached
+  --stat with no path arg, stage by name) AND its plan checkbox flipped in the SAME agent turn via a docs(plans) commit;
+  an unflipped item is invisible to the orchestrator and gets re-dispatched. Covers the 3-halves model, the violations
+  list, and the backfill recovery protocol.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,15 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, quickmerge, orchestrator, verification, scripts]
-related: [codex/12-agent-workflow/canonical-plan-flow.md, codex/11-project-management/active-plan-inventory-tracker.md, plans/PLAN_FORMAT.md]
+related:
+  [
+    /codex/12-agent-workflow/canonical-plan-flow.md,
+    /codex/11-project-management/active-plan-inventory-tracker.md,
+    plans/PLAN_FORMAT.md,
+  ]
 created: 2026-05-23
 authoritative_for: [commit-push-flip plan-checkbox same-turn discipline]
-referenced_by: [codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md]
+referenced_by: [/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 owner:
 last_reviewed:
 code_refs:
@@ -122,6 +127,6 @@ operation required to repair.
 
 ## Composes With
 
-- `codex/12-agent-workflow/daily-work-split-process.md` — orchestrator dispatch mechanics
-- `codex/11-project-management/active-plan-inventory-tracker.md` — dashboard reporting based on checkbox state
+- `/codex/12-agent-workflow/daily-work-split-process.md` — orchestrator dispatch mechanics
+- `/codex/11-project-management/active-plan-inventory-tracker.md` — dashboard reporting based on checkbox state
 - `plans/PLAN_FORMAT.md` — checkbox syntax requirements

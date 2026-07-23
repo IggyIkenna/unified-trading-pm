@@ -53,12 +53,12 @@ thinking: high
 > Every repo `docs/` folder is audited against it; duplicated content is removed and replaced with a link to the codex
 > SSOT; genuinely repo-specific essentials stay (kept light); any unique info found only in a repo doc is migrated INTO
 > codex first (never lost). End state: **zero documentation duplication between codex and repo docs.** Contract:
-> `codex/06-coding-standards/documentation-standards.md` **§ S5.11** (codified 2026-06-01).
+> `/codex/06-coding-standards/documentation-standards.md` **§ S5.11** (codified 2026-06-01).
 
 ## Execution model — **opus-1m** (suggested)
 
 **Run this plan on `claude-opus` with the 1M-token context window (`opus-1m`), `thinking: high`.** Rationale (per
-`codex/06-coding-standards/model-tier-selection.md`, this is `opus-required`, not `sonnet-doable`):
+`/codex/06-coding-standards/model-tier-selection.md`, this is `opus-required`, not `sonnet-doable`):
 
 - **Large working set**: each repo's consolidation requires holding the relevant slice of the **800-doc codex corpus** +
   the repo's **full `docs/` tree** in context simultaneously to decide, per doc, "is this canonical content that already
@@ -112,7 +112,7 @@ For each repo, run the loop:
 `pm/codex/` = SSOT for canonical/cross-cutting content. Repo `docs/` = repo-specific essentials + codex links; never
 duplicate. Required docs (S5.1/2/3) whose content is entirely canonical collapse to the redirect template; non-required
 pure-dups are deleted (after migrating unique deltas). Full per-doc-type split + redirect template:
-`codex/06-coding-standards/documentation-standards.md` § S5.11.
+`/codex/06-coding-standards/documentation-standards.md` § S5.11.
 
 ## Scope — all active repos with docs (20)
 
@@ -171,8 +171,8 @@ from scope).
 > Folded here so PM stays SSOT after `issues/repo_docs_codex_ssot_consolidation_2026_06_01.md` was archived. The Phase
 > 1–5 todos above are the live work breakdown; the per-repo rollout list below is the per-repo target inventory that
 > feeds them. **Caveat**: audit agents proposed codex SSOT targets by grep — **verify each target exists before
-> redirecting** (some proposed paths e.g. `codex/05-infrastructure/gcs-lifecycle-policies.md`,
-> `codex/04-architecture/concurrency.md`, `codex/02-data/bucket-naming-and-config.md` may need creating/remapping).
+> redirecting** (some proposed paths e.g. `/codex/05-infrastructure/gcs-lifecycle-policies.md`,
+> `/codex/04-architecture/concurrency.md`, `/codex/02-data/bucket-naming-and-config.md` may need creating/remapping).
 
 ### Per-repo rollout (20 repos with docs/, ~520 docs) — ordered by codex-duplication likelihood
 
@@ -223,8 +223,8 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
 - [ ] [DOCS] P2. **AUDIT-03 F-45 codex update** (from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`):
       code wins — events GCS path keys on `instance_id`; `correlation_id` is a column, NOT a path key. Update the codex
       doc(s) that say correlation_id is a path key to match the implemented `instance_id` path semantics.
-- [ ] [DOCS] P2. **AUDIT-03 F-06 codex FIX-STALE** (from same): declare `codex/04-architecture/custody-providers.md` the
-      **entity-governance SSOT**; entities = **Odum Research UK** + **Odum Group Cayman**; **scrub all stale Elysium
+- [ ] [DOCS] P2. **AUDIT-03 F-06 codex FIX-STALE** (from same): declare `/codex/04-architecture/custody-providers.md`
+      the **entity-governance SSOT**; entities = **Odum Research UK** + **Odum Group Cayman**; **scrub all stale Elysium
       references** (Elysium is a removed provider per CLAUDE.md).
 - [ ] [DOCS] P2. **gcs_hive partition-path doc FIX-STALE** (from
       `archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` — operator: doc-fix only; the GCS

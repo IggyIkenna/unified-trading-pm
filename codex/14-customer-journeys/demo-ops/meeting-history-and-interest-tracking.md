@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Meeting History and Interest Tracking
 summary:
-  Per-session log-back to the account-intelligence record (7 fields — session_id/type, flavour, mode,
-  surfaces_covered with per-surface time, interest_signals, reservations_raised verbatim, next_commitment_named) so each
-  call is cumulative; interest-signal taxonomy, verbatim-reservation discipline, and 30-min post-session capture window.
+  Per-session log-back to the account-intelligence record (7 fields — session_id/type, flavour, mode, surfaces_covered
+  with per-surface time, interest_signals, reservations_raised verbatim, next_commitment_named) so each call is
+  cumulative; interest-signal taxonomy, verbatim-reservation discipline, and 30-min post-session capture window.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,24 @@ stage: [meta]
 repos: [strategy-service]
 scope: [sales, engineer, admin]
 tags: [demo-ops, sales, crm, session-tracking, interest-signals, follow-up]
-related: [account-intelligence-record.md, pre-demo-discovery-framework.md, post-demo-followup-orchestration.md, demo-decision-matrix.md]
+related:
+  [
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
+  ]
 created: 2026-04-20
 authoritative_for: [demo meeting history and interest tracking]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/experience/staging-demo-journey.md, codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/demo-ops/README.md,
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/experience/staging-demo-journey.md,
+    /codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

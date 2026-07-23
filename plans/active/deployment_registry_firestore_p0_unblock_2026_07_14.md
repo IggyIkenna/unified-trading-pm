@@ -15,8 +15,8 @@ repos: [deployment-api, unified-trading-library]
 scope: [engineer]
 tags: [firestore, deployment-registry, observability, reaper, hotfix]
 related:
-  - deployment_registry_firestore_migration_2026_07_14.md
-  - codex/05-infrastructure/deployment-observability.md
+  - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
+  - /codex/05-infrastructure/deployment-observability.md
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
@@ -309,7 +309,7 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
     **shared-pipeline blocker** — it blocks EVERY pending promote for this repo, not just this plan.
   - **Recommendation** (chatted to main): file/assign a fix for the codex-compliance regression (identify which of the
     98 commits added the 6th long-function violation, then either shorten that function or bump the accepted baseline
-    per `codex/06-coding-standards/quality-gates.md` if warranted) so PR #279 goes green and `deployment-api@8660e9e`
+    per `/codex/06-coding-standards/quality-gates.md` if warranted) so PR #279 goes green and `deployment-api@8660e9e`
     actually deploys. Once deployed, re-run this same before/after check (before-count already captured above) to close
     this todo.
 
@@ -354,5 +354,5 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/deployment-observability.md` — registry-classification SSOT (context; no update this phase).
-- `codex/05-infrastructure/spot-vms-for-backfill.md` — why backfill VMs are SPOT (the orphaning source).
+- `/codex/05-infrastructure/deployment-observability.md` — registry-classification SSOT (context; no update this phase).
+- `/codex/05-infrastructure/spot-vms-for-backfill.md` — why backfill VMs are SPOT (the orphaning source).

@@ -2,10 +2,10 @@
 doc_type: codex-runbook
 title: DEFI_AAVE_UTILIZATION_SPIKE Runbook
 summary:
-  Operator response to DEFI_AAVE_UTILIZATION_SPIKE (WARN, Telegram) — an Aave reserve crossed the ~95% InterestRateStrategy
-  kink (defi_aave_utilization_spike_bps=9500) where borrow APR scales steeply and carry edge erodes. Verify utilization
-  on-chain, estimate the borrow-rate trajectory, then wait/monitor, tighten archetype exposure, or pause the archetype if
-  net carry flips negative.
+  Operator response to DEFI_AAVE_UTILIZATION_SPIKE (WARN, Telegram) — an Aave reserve crossed the ~95%
+  InterestRateStrategy kink (defi_aave_utilization_spike_bps=9500) where borrow APR scales steeply and carry edge
+  erodes. Verify utilization on-chain, estimate the borrow-rate trajectory, then wait/monitor, tighten archetype
+  exposure, or pause the archetype if net carry flips negative.
 status: current
 nature: process
 asset_group: [meta]
@@ -13,14 +13,21 @@ stage: [meta]
 repos: [alerting-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: [alerting, runbook, defi, features, strategy, escalation, live-trading]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/defi_health_factor_critical.md, codex/15-runbooks/alerting/defi_funding_rate_flip.md]
+related:
+  [
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/defi_health_factor_critical.md,
+    /codex/15-runbooks/alerting/defi_funding_rate_flip.md,
+  ]
 created: 2026-05-08
 owner: ikenna
 cadence: on-demand
 verifier: operator
 last_executed:
 code_refs:
-authoritative_for: Operator response when an Aave pool utilization crosses the kink point. Above the kink, borrow APR rises sharply + carry-strategy assumptions break.
+authoritative_for:
+  Operator response when an Aave pool utilization crosses the kink point. Above the kink, borrow APR rises sharply +
+  carry-strategy assumptions break.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 

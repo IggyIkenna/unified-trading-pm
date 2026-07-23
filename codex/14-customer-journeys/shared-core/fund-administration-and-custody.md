@@ -15,14 +15,18 @@ scope: [admin, sales]
 tags: [custody, cefi, tradfi, defi, sales, execution]
 related:
   [
-    treasury-and-subaccount-model.md,
-    org-fund-client-entity-model.md,
+    /codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md,
+    /codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md,
     ../experience/im-decision-journey.md,
     ../../06-coding-standards/config-reloader-pattern.md,
   ]
 created: 2026-04-20
 authoritative_for: [Odum-never-custodies invariant + per-commercial-path fund-admin/custody model]
-referenced_by: [codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

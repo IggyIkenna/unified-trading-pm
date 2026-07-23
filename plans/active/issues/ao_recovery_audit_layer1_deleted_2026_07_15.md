@@ -5,11 +5,11 @@ title:
   DISPUTE→SAFE_MODE + DART feed) still live but mock-fed; re-home a standalone producer (operator ruling B, DEFERRED)
 summary: |
   Surfaced 2026-07-15 during the AO documentation reconciliation (ao_docs_reconciliation_2026_07_15, finding X2).
-  `codex/04-architecture/recovery-defence-in-depth-layers.md` documents Layer-1 of the incident-recovery ladder as a
+  `/codex/04-architecture/recovery-defence-in-depth-layers.md` documents Layer-1 of the incident-recovery ladder as a
   live "LLM Recovery-Audit-Signoff agent" — an agent-orchestrator `role: custom, label: recovery-audit-signoff` backed by
   the boot template `agent-orchestrator/agents/recovery-audit.md`. That backing file was **deleted end-to-end**:
   `agents/recovery-audit.md` does not exist, `server/prompts.py`'s `NEVER_LAUNCH` is now `frozenset()` (its only member's
-  file is gone), and the sibling SSOT `codex/04-architecture/agent-orchestrator-overview.md` explicitly documents the
+  file is gone), and the sibling SSOT `/codex/04-architecture/agent-orchestrator-overview.md` explicitly documents the
   removal ("the `recovery_audit` kind was removed end-to-end … `agents/recovery-audit.md` deleted"). So two codex SSOTs
   directly contradict each other on a load-bearing recovery/kill-switch component, and the code sides with "removed."
   This is a governance/safety-domain SSOT contradiction, not a cosmetic drift — flagged to the operator per the
@@ -23,9 +23,9 @@ scope: [engineer, admin]
 tags: [recovery, kill-switch, defence-in-depth, codex-drift, agent-role, ssot-contradiction, operator-decision]
 related:
   [
-    ao_docs_reconciliation_2026_07_15.md,
-    ../../codex/04-architecture/recovery-defence-in-depth-layers.md,
-    ../../codex/04-architecture/autonomous-recovery-matrix.md,
+    /plans/active/issues/ao_docs_reconciliation_2026_07_15.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-07-15
 last_updated: 2026-07-16
@@ -33,7 +33,7 @@ parent_epic: agent_operating_framework_master
 priority: P1
 source:
   - ao_docs_reconciliation_2026_07_15 Wave-2 (codex/04) agent, code-verified
-  - codex/04-architecture/recovery-defence-in-depth-layers.md (Layer 1)
+  - /codex/04-architecture/recovery-defence-in-depth-layers.md (Layer 1)
   - agent-orchestrator/server/prompts.py (NEVER_LAUNCH), agent-orchestrator/agents/ (recovery-audit.md absent)
 assigned_vm: NA
 execution_scope: local-only
@@ -67,7 +67,7 @@ drift_direction: advance-code
 
 ## What the docs say vs what the code says
 
-- **`codex/04-architecture/recovery-defence-in-depth-layers.md` (Layer 1)** — documents a live "LLM
+- **`/codex/04-architecture/recovery-defence-in-depth-layers.md` (Layer 1)** — documents a live "LLM
   Recovery-Audit-Signoff agent (agent-orchestrator `role=custom`, `label: recovery-audit-signoff`)", "Agent template:
   `agent-orchestrator/agents/recovery-audit.md`. Registered as `role: custom, label: recovery-audit-signoff`."
 - **Code (agent-orchestrator)** — `agents/recovery-audit.md` **does not exist** (directory listing of all 14
@@ -75,7 +75,7 @@ drift_direction: advance-code
   `NEVER_LAUNCH: frozenset[str] = frozenset()` (now empty since its only member's backing file is gone);
   `server/routes/agents.py` still name-drops "recovery-audit" in a stale code comment (consistent with a deletion that
   never got a full doc/comment sweep).
-- **`codex/04-architecture/agent-orchestrator-overview.md`** — independently documents the removal: "the
+- **`/codex/04-architecture/agent-orchestrator-overview.md`** — independently documents the removal: "the
   `recovery_audit` kind was **removed end-to-end** (`agents/recovery-audit.md` deleted, `NEVER_LAUNCH=frozenset()`, no
   `agent_kind` refs)."
 
@@ -152,6 +152,6 @@ function.
   ~90% of the layer (contract + ingest + actuation + UI) is already built — so re-homing a standalone producer is the
   cheap path back to a whole Layer-1. Sequenced AFTER the AO dispatch-correctness work (operator: current scope is "make
   the AO work properly"). Docs updated to reflect true runtime: accurate CODE-DRIFT banner on
-  `codex/04-architecture/recovery-defence-in-depth-layers.md` § Layer 1 (replacing the 2026-07-15 banner that never
-  landed) + scope-clarifier on `codex/04-architecture/agent-orchestrator-overview.md`'s "removed end-to-end" line. This
+  `/codex/04-architecture/recovery-defence-in-depth-layers.md` § Layer 1 (replacing the 2026-07-15 banner that never
+  landed) + scope-clarifier on `/codex/04-architecture/agent-orchestrator-overview.md`'s "removed end-to-end" line. This
   doc stays `open` as the rewire's tracking item. No code/contract changed.

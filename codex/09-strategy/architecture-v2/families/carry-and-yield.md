@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Family: Carry & Yield'
+title: "Family: Carry & Yield"
 summary:
-  The Carry & Yield strategy family — 10 archetypes capturing a paid rate/yield differential (perp funding, dated
-  basis, staked basis, recursive borrow, lending-APY rotation, simple staking); edge is rate-differential sustained
-  above a cost threshold, rebalanced periodically.
+  The Carry & Yield strategy family — 10 archetypes capturing a paid rate/yield differential (perp funding, dated basis,
+  staked basis, recursive borrow, lending-APY rotation, simple staking); edge is rate-differential sustained above a
+  cost threshold, rebalanced periodically.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,24 @@ scope: [engineer, admin]
 tags: [strategy, carry, basis, staking, yield, funding, defi]
 related:
   [
-    arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
     market-making.md,
     ../archetypes/carry-basis-perp.md,
     ../archetypes/yield-rotation-lending.md,
   ]
 created: 2026-04-17
 authoritative_for: [Carry & Yield strategy family spec (alpha thesis + 10 archetypes)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

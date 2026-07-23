@@ -127,8 +127,8 @@ shape alone" rule applies equally to a scope-safety claim).
 
 ## Codex SSOTs
 
-`codex/04-architecture/tier-and-import-architecture.md` (no service↔service deps; UAC as the shared dependency every
+`/codex/04-architecture/tier-and-import-architecture.md` (no service↔service deps; UAC as the shared dependency every
 repo above imports from — this is exactly the shape that makes a UAC rename a coordinated-landing problem, not an
-independent-PR problem), `codex/02-data/availability-manifest-and-data-status.md` (persisted-schema-change caution —
+independent-PR problem), `/codex/02-data/availability-manifest-and-data-status.md` (persisted-schema-change caution —
 cited by the originating issue doc; this plan's Todo 1 finding is that it does NOT apply here, but re-verify before
 trusting that).

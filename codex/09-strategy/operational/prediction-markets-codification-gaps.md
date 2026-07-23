@@ -13,10 +13,11 @@ stage: [meta]
 repos: [features-service]
 scope: [engineer, admin]
 tags: [prediction, features, uac, registry, catalogue, migration, data-pipeline]
-related: [../architecture-v2/cross-cutting/prediction-markets.md, instrument-filtering.md]
+related:
+  [../architecture-v2/cross-cutting/prediction-markets.md, /codex/09-strategy/operational/instrument-filtering.md]
 created: 2026-04-20
 authoritative_for: [prediction-market codification gaps register (G1..GN)]
-referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md]
+referenced_by: [/codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md]
 owner:
 last_reviewed:
 code_refs:

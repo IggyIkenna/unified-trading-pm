@@ -36,7 +36,7 @@ superseded_by:
 depends_on:
 source:
 Codex SSOTs:
-  [codex/05-infrastructure/bucket-isolation-model.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+  [/codex/05-infrastructure/bucket-isolation-model.md, /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
 drift_direction: advance-code
 ---
 
@@ -46,7 +46,7 @@ drift_direction: advance-code
 
 The bucket isolation model is **designed but only half-implemented**.
 
-- **Designed** ([bucket-isolation-model.md §8](../../codex/05-infrastructure/bucket-isolation-model.md)): batch/live SAs
+- **Designed** ([bucket-isolation-model.md §8](/codex/05-infrastructure/bucket-isolation-model.md)): batch/live SAs
   read+write **scoped to their domain**; CI/CD + developer SAs **read-only on prod, read+write on mock/dev**; env tier
   lives in the bucket name (Group B: `…-{mock|dev|prod}-{project}`).
 - **Implemented**: bucket **naming/tier** (`unified-cloud-interface` `get_bucket_name`/`get_bucket_environment`) + the
@@ -76,9 +76,9 @@ The IAM model keys off the **actual** bucket env suffix produced by the mandated
 - **4 effective name tiers (`dev`/`stg`/`prd` + ephemeral `test`); staging is DISTINCT (`-stg-`), not folded into dev.**
 - **`mock` is NOT a name suffix** — it is `CLOUD_MOCK_MODE` + scenario prefixes _inside_ buckets.
 - **Two drift facts blocking clean sync:**
-  - **Codex stale**: [bucket-isolation-model.md](../../codex/05-infrastructure/bucket-isolation-model.md) §4 claims
-    "staging shares the dev tier" (3-tier via `get_bucket_environment`) — **contradicts** `resolve_bucket_name`.
-    Resolver is the mandated SSOT → doc must be corrected (P3 below).
+  - **Codex stale**: [bucket-isolation-model.md](/codex/05-infrastructure/bucket-isolation-model.md) §4 claims "staging
+    shares the dev tier" (3-tier via `get_bucket_environment`) — **contradicts** `resolve_bucket_name`. Resolver is the
+    mandated SSOT → doc must be corrected (P3 below).
   - **Group A vs B differ TODAY**: Group A (raw — `market-data-tick`, `instruments-store`) is **env-tiered live**
     (canonicalisation migrations already run on `…-prd-central-element-323112`); Group B (derived — `features-*`,
     `strategy-store`, `execution-store`, `ml-*`) is **env-split ROLLED BACK** (non-env-split today), and its named
@@ -201,7 +201,7 @@ Two independent gates because Group A and Group B are at different stages:
 
 ### Phase 3 — Codex alignment
 
-- [ ] [DOCS] P3.1. Update [bucket-isolation-model.md §8](../../codex/05-infrastructure/bucket-isolation-model.md) from
+- [ ] [DOCS] P3.1. Update [bucket-isolation-model.md §8](/codex/05-infrastructure/bucket-isolation-model.md) from
       "designed" to "enforced", documenting the SA names + the migration-SA exception. Update CLAUDE.md one-liner.
 
 ## Success criteria

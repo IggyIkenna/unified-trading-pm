@@ -14,19 +14,19 @@ scope: [admin, engineer]
 tags: [defi, cefi, onboarding, custody, wallets, credentials, client]
 related:
   [
-    ../04-architecture/custody-providers.md,
-    ../15-runbooks/custody-onboarding-checklist.md,
-    ../15-runbooks/pre-cutover-test-wallets-runbook.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/15-runbooks/custody-onboarding-checklist.md,
+    /codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
   ]
 created: 2026-05-12
 authoritative_for: [POD/Elysium DeFi-allocator client onboarding model]
 referenced_by:
   [
-    codex/04-architecture/custody-providers.md,
-    codex/05-infrastructure/credentials-matrix.md,
-    codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
-    codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md,
-    codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
+    /codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
   ]
 owner:
 last_reviewed:
@@ -97,13 +97,13 @@ delegated to us by POD.
 **Canonical wallet = Trust Wallet** (per operator 2026-05-12 _"yeah seems trust wallet is the direction we're going"_).
 Single BIP-39 seed → EVM PK + Solana keypair (different Ed25519 key under same mnemonic).
 
-| Chain                                                                        | Wallet                                                                    | Secret Manager refs                                                                                                                                                                                                                   | `SigningSurface`                                                                         |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| ETHEREUM mainnet + Sepolia + 5 EVM testnets (Arb / Base / Polygon / Holesky) | **Trust Wallet** EVM PK                                                   | `defi-wallet-trust` (addr) + `defi-wallet-private-key` (PK) + `defi-wallet-private-key-wrapped` (CMK-encrypted)                                                                                                                       | `CLOUD_KMS_ENCRYPTED` via `wallets-staging/trading-defi-master-v1` (verified 2026-05-12) |
-| Solana mainnet + devnet                                                      | **Trust Wallet Solana wallet** (separate Ed25519 keypair under same seed) | `defi-wallet-solana` + `defi-wallet-solana-private-key` + `defi-wallet-solana-private-key-wrapped` (🟡 PENDING operator export — see [`pre-cutover-test-wallets-runbook.md`](../15-runbooks/pre-cutover-test-wallets-runbook.md) § 3) | `CLOUD_KMS_ENCRYPTED` via same staging CMK                                               |
-| Tenderly fork + chain RPCs (EVM all)                                         | n/a (RPC creds)                                                           | `tenderly-api-key` + `tenderly-fork-rpc-url` + `alchemy-api-key`                                                                                                                                                                      | n/a (RPC auth, not signing)                                                              |
-| CeFi (BYBIT / BINANCE / etc.)                                                | Per-venue institutional sandbox                                           | Per-venue secrets `<venue>-{read,trade,withdraw}-*` (sandbox suffixed)                                                                                                                                                                | n/a (venue-managed)                                                                      |
-| MetaMask (secondary, NOT canonical)                                          | Address-only — no PK in Secret Manager                                    | `defi-wallet-metamask`                                                                                                                                                                                                                | n/a unless operator provisions per-runbook § 4.A                                         |
+| Chain                                                                        | Wallet                                                                    | Secret Manager refs                                                                                                                                                                                                                       | `SigningSurface`                                                                         |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| ETHEREUM mainnet + Sepolia + 5 EVM testnets (Arb / Base / Polygon / Holesky) | **Trust Wallet** EVM PK                                                   | `defi-wallet-trust` (addr) + `defi-wallet-private-key` (PK) + `defi-wallet-private-key-wrapped` (CMK-encrypted)                                                                                                                           | `CLOUD_KMS_ENCRYPTED` via `wallets-staging/trading-defi-master-v1` (verified 2026-05-12) |
+| Solana mainnet + devnet                                                      | **Trust Wallet Solana wallet** (separate Ed25519 keypair under same seed) | `defi-wallet-solana` + `defi-wallet-solana-private-key` + `defi-wallet-solana-private-key-wrapped` (🟡 PENDING operator export — see [`pre-cutover-test-wallets-runbook.md`](/codex/15-runbooks/pre-cutover-test-wallets-runbook.md) § 3) | `CLOUD_KMS_ENCRYPTED` via same staging CMK                                               |
+| Tenderly fork + chain RPCs (EVM all)                                         | n/a (RPC creds)                                                           | `tenderly-api-key` + `tenderly-fork-rpc-url` + `alchemy-api-key`                                                                                                                                                                          | n/a (RPC auth, not signing)                                                              |
+| CeFi (BYBIT / BINANCE / etc.)                                                | Per-venue institutional sandbox                                           | Per-venue secrets `<venue>-{read,trade,withdraw}-*` (sandbox suffixed)                                                                                                                                                                    | n/a (venue-managed)                                                                      |
+| MetaMask (secondary, NOT canonical)                                          | Address-only — no PK in Secret Manager                                    | `defi-wallet-metamask`                                                                                                                                                                                                                    | n/a unless operator provisions per-runbook § 4.A                                         |
 
 **Tenderly fork + Sepolia + EVM testnets: ✅ FULLY SORTED** — Tenderly access
 
@@ -111,7 +111,7 @@ Single BIP-39 seed → EVM PK + Solana keypair (different Ed25519 key under same
 
 **Solana: 🟡 PARTIAL** — Trust Wallet's Solana wallet (same seed, different keypair) is the chosen route, but the Solana
 PK has NOT YET been exported from Trust Wallet to Secret Manager. Operator runbook in
-[`pre-cutover-test-wallets-runbook.md`](../15-runbooks/pre-cutover-test-wallets-runbook.md) § 3.1.
+[`pre-cutover-test-wallets-runbook.md`](/codex/15-runbooks/pre-cutover-test-wallets-runbook.md) § 3.1.
 
 CeFi test wallets (BYBIT / BINANCE / etc.) on **Ethereum already set up** by operator pre-2026-05-12; awaiting
 confirmation of per-venue institutional sandbox availability (out of slot 4 scope; per-venue operator onboarding).
@@ -178,11 +178,11 @@ Sui / Aptos / TON — not in May-23 cutover scope. When in scope: same pattern a
 ## § 5 — Codex updates required by POD scope shift
 
 - [x] [`pod-elysium-client-onboarding.md`](pod-elysium-client-onboarding.md) — THIS doc (created 2026-05-12).
-- [ ] [`codex/04-architecture/custody-providers.md`](../04-architecture/custody-providers.md) § R9 RESOLVED banner — add
-      POD entity reference; clarify Fireblocks is OUT OF SCOPE per POD's stack choice (Copper + CEFFU only).
-- [ ] [`codex/15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) § C —
+- [ ] [`/codex/04-architecture/custody-providers.md`](/codex/04-architecture/custody-providers.md) § R9 RESOLVED banner
+      — add POD entity reference; clarify Fireblocks is OUT OF SCOPE per POD's stack choice (Copper + CEFFU only).
+- [ ] [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md) § C —
       reframe: Fireblocks section is _future-spec_; not a May-23/June-1 actionable item for POD.
-- [ ] [`codex/05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) — confirm
+- [ ] [`/codex/05-infrastructure/credentials-matrix.md`](/codex/05-infrastructure/credentials-matrix.md) — confirm
       `fireblocks-*` Secret Manager paths stay declared but tagged `pod_out_of_scope: true`.
 - [x] CLAUDE.md disambiguation — NOT in this commit (would touch shared config); deferred to operator decision on
       whether the deprecated "Elysium" MEV-route entry needs replacement or stays as-is.
@@ -191,10 +191,11 @@ Sui / Aptos / TON — not in May-23 cutover scope. When in scope: same pattern a
 
 ## § 6 — Cross-references
 
-- [`custody-providers.md`](../04-architecture/custody-providers.md) — architectural SSOT.
-- [`custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) — operator runbook.
-- [`fireblocks-integration-spec.md`](../05-infrastructure/fireblocks-integration-spec.md) — future-spec only per POD
+- [`custody-providers.md`](/codex/04-architecture/custody-providers.md) — architectural SSOT.
+- [`custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md) — operator runbook.
+- [`fireblocks-integration-spec.md`](/codex/05-infrastructure/fireblocks-integration-spec.md) — future-spec only per POD
   scope.
-- [`per-archetype-wallet-isolation.md`](../05-infrastructure/per-archetype-wallet-isolation.md) — multi-wallet model.
+- [`per-archetype-wallet-isolation.md`](/codex/05-infrastructure/per-archetype-wallet-isolation.md) — multi-wallet
+  model.
 - [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
   — parent plan; POD scope clarification 2026-05-12 captured in plan body.

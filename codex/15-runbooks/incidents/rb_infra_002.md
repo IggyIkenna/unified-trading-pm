@@ -11,7 +11,7 @@ stage: [meta]
 repos: []
 scope: [admin, engineer]
 tags: [runbook, incident, infrastructure, vm, node-failure, escalation]
-related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+related: [/codex/15-runbooks/incidents/README.md, /codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
@@ -19,7 +19,12 @@ verifier: Manual cordon+drain test
 last_executed: never
 code_refs:
 authoritative_for: [RB-INFRA-002 operator runbook]
-referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/incident_runbooks_and_evidence_store_2026_05_23.md]
+referenced_by:
+  [
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
 ---
 
 # RB-INFRA-002 — Machine/Node Failure
@@ -68,7 +73,7 @@ Update VM zombie watchdog if VM was zombie.
 
 ## Related
 
-- `codex/15-runbooks/incidents/README.md` — runbook index
-- `codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
-- `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder
+- `/codex/15-runbooks/incidents/README.md` — runbook index
+- `/codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
+- `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder

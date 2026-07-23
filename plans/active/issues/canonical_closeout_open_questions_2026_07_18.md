@@ -17,11 +17,11 @@ scope: [engineer, admin]
 tags: [canonicalisation, open-questions, migration, operator-decision, close-out, spot-taxonomy, lending, pool-id]
 related:
   [
-    defi_consolidated_closeout_2026_07_18.md,
-    cefi_consolidated_closeout_2026_07_18.md,
-    tradfi_consolidated_closeout_2026_07_18.md,
-    prediction_consolidated_closeout_2026_07_18.md,
-    ../../codex/02-data/cross-asset-canonical-target-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-18
@@ -43,7 +43,7 @@ source:
 
 > **What shipped already (no decision needed — done):** the 4 consolidated close-out plans, the 75-finding contradiction
 > audit, the **58 doc-contradiction fixes** across UAC/IS/MTDS/PM, and the **cross-asset canonical target SSOT**
-> (`codex/02-data/cross-asset-canonical-target-ssot.md`). The operator's 4 live Q&A this session were ruled (purge
+> (`/codex/02-data/cross-asset-canonical-target-ssot.md`). The operator's 4 live Q&A this session were ruled (purge
 > dead-only+keep LIGHTER/EXTENDED · POOL 3-seg · combos leg-aware · ASTER per-symbol · BINANCE-DELIVERY keep-non-MVP).
 > Everything below is the NEXT phase.
 
@@ -139,7 +139,7 @@ moved to KEPT.
   grain) + derives 62.06% coverage; the v2 SSOT (locked issue) says the real backlog is 63.9M, never applied →
   denominator understated. Edits a DONE-claim + live coverage on an operator-owned tracker + a locked issue. REC: add a
   correction note (1.38M = retired v1; v2 = 63.9M open → Track-3).
-- **C2d [P2] GCS lifecycle codex** — `codex/05-infrastructure/gcs-lifecycle-policies.md` says "*-store NOT lifecycle'd"
+- **C2d [P2] GCS lifecycle codex** — `/codex/05-infrastructure/gcs-lifecycle-policies.md` says "*-store NOT lifecycle'd"
   vs the operator 2026-07-13 STANDARD→COLDLINE@60d ruling (already provisioned on ml-store). Codex edit + confirm the
   exact ladder.
 - **C2e [P2] sports_odds_bookmaker locked** — `status:active` + `locked_by: live-defi-rollout`, genuine open work (28

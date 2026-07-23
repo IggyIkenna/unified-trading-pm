@@ -14,14 +14,25 @@ scope: [engineer, admin]
 tags: [uac, strategy, execution, registry, docspec, defi]
 related:
   [
-    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
-    codex/09-strategy/architecture-v2/uac-registry-gaps.md,
-    codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+    /codex/09-strategy/architecture-v2/uac-registry-gaps.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
   ]
 created: 2026-04-20
-authoritative_for: [Stage 3B combo-registry dimension model + BL-1..BL-22 blocker predicates + valid-combo resolution formula]
-referenced_by: [codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/presentations/target-experience-post-refactor.md, codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md, codex/14-customer-journeys/shared-core/venue-chain-instrument-scope.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md, codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md]
+authoritative_for:
+  [Stage 3B combo-registry dimension model + BL-1..BL-22 blocker predicates + valid-combo resolution formula]
+referenced_by:
+  [
+    /codex/14-customer-journeys/demo-ops/README.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/presentations/target-experience-post-refactor.md,
+    /codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md,
+    /codex/14-customer-journeys/shared-core/venue-chain-instrument-scope.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

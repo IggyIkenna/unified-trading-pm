@@ -14,15 +14,25 @@ scope: [sales, prospect]
 tags: [dart, briefing, prospect, sales, instruction-schema, signals-only, ui]
 related:
   [
-    dart-demo.md,
-    briefings-hub.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
+    /codex/14-customer-journeys/experience/briefings-hub.md,
     ../commercial-model/dart-entry-points.md,
     ../_ssot-rules/04-dart-commercial-axes.md,
     ../shared-core/strategy-origin-vs-stack-depth.md,
   ]
 created: 2026-04-20
 authoritative_for: [pb2b DART post-first-call briefing experience]
-referenced_by: [codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/demo-ops/upsell-overlays.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/briefings-hub.md, codex/14-customer-journeys/experience/dart-demo.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/upsell-overlays.md,
+    /codex/14-customer-journeys/experience/README.md,
+    /codex/14-customer-journeys/experience/briefings-hub.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    /codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]

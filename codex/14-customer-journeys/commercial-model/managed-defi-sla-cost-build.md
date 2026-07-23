@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Managed DeFi-allocator SLA — reusable cost-build template
 summary:
-  Reusable codex-private cost-build template for any DeFi-allocator managed-SLA — the per-tenant cost
-  atoms, the retainer landing formula (max of 0.85× sole-client cost and 1.2×1.4× steady-state marginal),
-  IP-power performance-share tiering (A 10% → C 25%/10% tranche), and one-time expansion charges.
+  Reusable codex-private cost-build template for any DeFi-allocator managed-SLA — the per-tenant cost atoms, the
+  retainer landing formula (max of 0.85× sole-client cost and 1.2×1.4× steady-state marginal), IP-power
+  performance-share tiering (A 10% → C 25%/10% tranche), and one-time expansion charges.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,18 @@ scope: [admin, sales]
 tags: [commercial-model, sla, defi, cost, pricing, profit-share]
 related:
   [
-    elysium-managed-sla-2026-05-14.md,
-    elysium-account-trajectory-2026-05-14.md,
-    pricing-building-blocks.md,
-    im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
   ]
 created: 2026-05-20
 authoritative_for: [managed DeFi-allocator SLA reusable cost-build template]
-referenced_by: [codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

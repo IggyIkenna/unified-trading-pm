@@ -25,7 +25,7 @@ stage: [meta]
 repos: [deployment-ui]
 scope: [engineer, admin]
 tags: [quickmerge, prettier, husky, pre-commit, ci-cd, tooling-defect, lint-staged]
-related: [prettier_emphasis_mangling_corpus_corruption_2026_07_14.md]
+related: [/plans/archive/issues/prettier_emphasis_mangling_corpus_corruption_2026_07_14.md]
 created: 2026-07-21
 parent_epic: agent_operating_framework_master
 assigned_vm: NA

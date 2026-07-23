@@ -3,9 +3,9 @@ doc_type: codex-runbook
 title: Phase 8 Live Rehearsal Sign-off — 2026-05-23
 summary:
   Phase 8 pre-cutover live-rehearsal sign-off sheet (PENDING OPERATOR EXECUTION) — operator runs
-  inject_synthetic_alert.py for 15 alert codes + --verify-kill-switch, ticking the 6 per-code checks (channel, DART panel,
-  ack, escalate, runbook deep-link, auto-resolve) and the end-to-end KillSwitchEvent emission, then fills the sign-off
-  table with Outcome PASS/FAIL.
+  inject_synthetic_alert.py for 15 alert codes + --verify-kill-switch, ticking the 6 per-code checks (channel, DART
+  panel, ack, escalate, runbook deep-link, auto-resolve) and the end-to-end KillSwitchEvent emission, then fills the
+  sign-off table with Outcome PASS/FAIL.
 status: current
 nature: process
 asset_group: [meta]
@@ -13,7 +13,7 @@ stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [runbook, alerting, rehearsal, kill-switch, defi, verification, live-trading]
-related: [codex/15-runbooks/alerting/rehearsal-procedure.md, codex/15-runbooks/alerting/alert-code-taxonomy.md]
+related: [/codex/15-runbooks/alerting/rehearsal-procedure.md, /codex/15-runbooks/alerting/alert-code-taxonomy.md]
 created: 2026-05-23
 owner: ikenna
 cadence: on-demand

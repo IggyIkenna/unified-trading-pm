@@ -14,15 +14,25 @@ scope: [sales, prospect]
 tags: [regulatory, demo, prospect, sales, compliance, reporting, ui]
 related:
   [
-    regulatory-umbrella-briefing.md,
-    staging-demo-journey.md,
+    /codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md,
+    /codex/14-customer-journeys/experience/staging-demo-journey.md,
     ../shared-core/client-reporting-demo-walkthrough.md,
     ../demo-ops/demo-restriction-profiles.md,
     ../commercial-model/im-vs-reg-reporting-logic.md,
   ]
 created: 2026-04-20
 authoritative_for: [pb3a Regulatory Umbrella warm-prospect demo experience]
-referenced_by: [codex/14-customer-journeys/demo-ops/dart-demo-modes.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md, codex/14-customer-journeys/experience/staging-demo-journey.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/demo-ops/dart-demo-modes.md,
+    /codex/14-customer-journeys/experience/README.md,
+    /codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md,
+    /codex/14-customer-journeys/experience/staging-demo-journey.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    /codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md,
+    /codex/14-customer-journeys/implementation-mapping/route-mapping.md,
+    /codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]

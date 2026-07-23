@@ -2,9 +2,9 @@
 doc_type: codex-runbook
 title: RB-CONN-005 — Alert Provider Failure
 summary:
-  Operator runbook for ALERTING_PROVIDER_DEGRADED (PagerDuty / Telegram probe failed) — confirm router fallback_mode
-  and Twilio voice reachability; fallback auto-resets after 3 consecutive successful probes, billing issues page
-  operator immediately.
+  Operator runbook for ALERTING_PROVIDER_DEGRADED (PagerDuty / Telegram probe failed) — confirm router fallback_mode and
+  Twilio voice reachability; fallback auto-resets after 3 consecutive successful probes, billing issues page operator
+  immediately.
 status: current
 nature: process
 asset_group: [meta]
@@ -12,15 +12,20 @@ stage: [meta]
 repos: []
 scope: [admin, engineer]
 tags: [runbook, incident, connectivity, alerting, fallback, escalation]
-related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
-created: '2026-05-23'
+related: [/codex/15-runbooks/incidents/README.md, /codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+created: "2026-05-23"
 owner: ikenna@odum-research.com
 cadence: Monthly
 verifier: Provider health probe smoke
 last_executed: never
 code_refs:
 authoritative_for: [RB-CONN-005 operator runbook]
-referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/incident_runbooks_and_evidence_store_2026_05_23.md]
+referenced_by:
+  [
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
 ---
 
 # RB-CONN-005 — Alert Provider Failure
@@ -71,7 +76,7 @@ Document provider-outage duration in alerting health log.
 
 ## Related
 
-- `codex/15-runbooks/incidents/README.md` — runbook index
-- `codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
-- `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder
+- `/codex/15-runbooks/incidents/README.md` — runbook index
+- `/codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
+- `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder

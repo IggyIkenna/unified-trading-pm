@@ -2,9 +2,9 @@
 doc_type: codex-runbook
 title: RB-RECON-003 — Balance/Collateral Mismatch
 summary: >-
-  Operator runbook for VENUE_INTERNAL_BALANCE_MISMATCH / MATERIAL_BALANCE_MOVEMENT_UNEXPLAINED (immediate SEV0):
-  compute venue-minus-internal delta, attribute each movement, kill-switch the scope if unexplained >$1k; success =
-  abs(venue - internal) < $100 per (account, asset).
+  Operator runbook for VENUE_INTERNAL_BALANCE_MISMATCH / MATERIAL_BALANCE_MOVEMENT_UNEXPLAINED (immediate SEV0): compute
+  venue-minus-internal delta, attribute each movement, kill-switch the scope if unexplained >$1k; success = abs(venue -
+  internal) < $100 per (account, asset).
 status: current
 nature: process
 asset_group: [meta]
@@ -12,7 +12,7 @@ stage: [meta]
 repos: []
 scope: [admin, engineer]
 tags: [runbook, reconciliation, escalation, defi, kill-switch, data-correctness]
-related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+related: [/codex/15-runbooks/incidents/README.md, /codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Quarterly game-day
@@ -20,7 +20,12 @@ verifier: Scenario 14_borrow_rate_spike
 last_executed: never
 code_refs:
 authoritative_for: [RB-RECON-003 operator runbook]
-referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/incident_runbooks_and_evidence_store_2026_05_23.md]
+referenced_by:
+  [
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
 ---
 
 # RB-RECON-003 — Balance/Collateral Mismatch
@@ -71,7 +76,7 @@ If repeated mismatches on one venue: add per-venue threshold override + escalate
 
 ## Related
 
-- `codex/15-runbooks/incidents/README.md` — runbook index
-- `codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
-- `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder
+- `/codex/15-runbooks/incidents/README.md` — runbook index
+- `/codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
+- `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder

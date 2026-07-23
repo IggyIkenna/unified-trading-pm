@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Promote Pipeline Backend — `/promote` API SSOT
 summary:
-  "SSOT for the May-23 promote backend API — the POST /api/promote/{strategy_id}/{candidate_manifest_id}
-  contract (request/response/error codes), the 5 minimal pre-flight gates, event emission
-  (STRATEGY_PROMOTED_TO_PAPER/LIVE), source locations, and Phase-9 post-cutover extensions."
+  "SSOT for the May-23 promote backend API — the POST /api/promote/{strategy_id}/{candidate_manifest_id} contract
+  (request/response/error codes), the 5 minimal pre-flight gates, event emission (STRATEGY_PROMOTED_TO_PAPER/LIVE),
+  source locations, and Phase-9 post-cutover extensions."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +12,7 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [promote, execution, live-trading, mvp, verification]
-related: [../04-architecture/promote-workflow-architecture.md]
+related: [/codex/04-architecture/promote-workflow-architecture.md]
 created: 2026-05-15
 authoritative_for: [promote backend API (/api/promote endpoint + May-23 pre-flight gates)]
 referenced_by:
@@ -27,7 +27,7 @@ code_refs:
 > gates. Post-cutover Phase 9 extends to the full pre-flight pipeline.
 >
 > SSOT plan: `plans/active/promote_workflow_may23_cli_path_2026_05_10.md` § Phase U3 Architecture overview:
-> `codex/04-architecture/promote-workflow-architecture.md`
+> `/codex/04-architecture/promote-workflow-architecture.md`
 
 ---
 

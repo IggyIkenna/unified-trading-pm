@@ -22,8 +22,8 @@ scope: [engineer, admin]
 tags: [ci-cd, cloud-build, fleet-rollout, template-drift, blast-radius]
 related:
   [
-    cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md,
-    uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
+    /plans/archive/issues/cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md,
+    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master

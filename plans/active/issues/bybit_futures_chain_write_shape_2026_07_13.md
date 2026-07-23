@@ -18,7 +18,7 @@ stage: [data]
 repos: [market-tick-data-service, market-data-processing-service]
 scope: [engineer]
 tags: [futures_chain, bybit, write-shape, hive-partition, data-correctness, backfill]
-related: [aster_cefi_data_defi_bucket_migration_2026_07_13.md]
+related: [/plans/archive/2026_07/aster_cefi_data_defi_bucket_migration_2026_07_13.md]
 created: 2026-07-13
 parent_epic: mtds_mdps_master
 priority: P2

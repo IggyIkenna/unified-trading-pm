@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Rule 04 — DART commercial axes
 summary:
-  "DART commercial resolution — two axes (strategy origin: Odum/client × stack depth:
-  reporting-only/downstream/full) collapse to three practical paths, plus the fourth outbound Odum-Signals path;
-  the resolved cell drives pricing, demo scope, and prod restrictions."
+  "DART commercial resolution — two axes (strategy origin: Odum/client × stack depth: reporting-only/downstream/full)
+  collapse to three practical paths, plus the fourth outbound Odum-Signals path; the resolved cell drives pricing, demo
+  scope, and prod restrictions."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,24 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, sales, dart, cost, strategy]
 related:
   [
-    05-building-block-dimensions.md,
-    08-pricing-principles.md,
-    10-strategy-instruction-schema-principles.md,
-    12-service-family-scope-rules.md,
+    /codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md,
+    /codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md,
+    /codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md,
+    /codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md,
   ]
 created: 2026-04-19
 authoritative_for: [DART commercial axes (strategy-origin × stack-depth resolution)]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md, codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md, codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/_ssot-rules/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md,
+    /codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md,
+    /codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md,
+    /codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md,
+    /codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md,
+    /codex/14-customer-journeys/_ssot-rules/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -2,20 +2,45 @@
 doc_type: codex-ssot
 title: The four catalogues — umbrella doc
 summary:
-  Umbrella doc for Odum's four catalogues (Data, Strategy, ML Model, Execution Algo) — each an SSOT across service
-  code, UAC registry, and /services/<catalogue>/* UI, sharing lock-state, maturity ladder, and visibility slicing, and
-  forming a Data -> ML -> Strategy <- Execution DAG.
+  Umbrella doc for Odum's four catalogues (Data, Strategy, ML Model, Execution Algo) — each an SSOT across service code,
+  UAC registry, and /services/<catalogue>/* UI, sharing lock-state, maturity ladder, and visibility slicing, and forming
+  a Data -> ML -> Strategy <- Execution DAG.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    execution-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer, admin, sales]
 tags: [catalogue, ssot, uac, ui, strategy, visibility]
-related: [catalogue-data.md, catalogue-strategy.md, catalogue-ml-model.md, catalogue-execution-algo.md, visibility-slicing.md]
+related:
+  [
+    /codex/14-customer-journeys/playbook-concepts/catalogue-data.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md,
+    /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md,
+  ]
 created: 2026-04-19
 authoritative_for: [four-catalogue umbrella pattern (service/UAC/UI three-layer model)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogue-data.md, codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md, codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md, codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/glossary.md,
+    /codex/14-customer-journeys/information-architecture.md,
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-data.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

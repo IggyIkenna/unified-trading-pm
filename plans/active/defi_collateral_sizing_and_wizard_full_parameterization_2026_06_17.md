@@ -72,7 +72,7 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       live DeFi + the new VOL**/MM). Confirm the e2e/catalog params functionally match the engine defaults (the
       prod-vs-testing alignment ask). OUTPUT: a structured per-archetype param schema (the input Phase C emits into the
       manifest). Repo: strategy-service (read) → schema artifact. — ✅ PM@0c6f5f0ab:
-      `codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md` — 29 archetypes catalogued
+      `/codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md` — 29 archetypes catalogued
       (10 live DeFi + 19 new VOL**/MM), ~170 params, each name/type/default/range/units/required cited to engine
       `file:line`. Prod-vs-testing: CSB + basis-perp **defaults align**; APD has ONE functional divergence —
       engine+catalog default `dispersion_bps`/`cost_bps` = 30/10 but e2e smoke uses 20/5 → wizard pre-fill must source

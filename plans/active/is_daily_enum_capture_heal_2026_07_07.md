@@ -55,11 +55,11 @@ source:
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` §"Recovery when a deployed consolidator is on a bad image" —
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` §"Recovery when a deployed consolidator is on a bad image" —
   the SAME class of problem (fix lands in UTL, but a service image's `BASE_IMAGE_DIGEST` pin must be bumped + rebuilt
   before the fix reaches production) as instruments-service@1098731c4 fixed for the perp-guard image yesterday. Use that
   exact recipe if this turns out to be a pin issue again.
-- `codex/02-data/availability-manifest-and-data-status.md` — ManifestRow schema + write-side contract.
+- `/codex/02-data/availability-manifest-and-data-status.md` — ManifestRow schema + write-side contract.
 
 ## Todos — SEQUENTIAL (one continuous thread: unblock → diagnose → fix → backfill)
 

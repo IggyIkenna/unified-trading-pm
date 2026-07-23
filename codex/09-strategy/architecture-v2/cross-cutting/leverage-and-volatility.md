@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-cutting: Volatility-derived leverage caps'
+title: "Cross-cutting: Volatility-derived leverage caps"
 summary:
-  'Instrument-side leverage cap: `max_safe_leverage = (1 - safety_buffer) / max_move_pct` via
+  "Instrument-side leverage cap: `max_safe_leverage = (1 - safety_buffer) / max_move_pct` via
   `derive_max_safe_leverage()` + `INSTRUMENT_VOLATILITY_REGISTRY`; the LeveragedLegController clamps
-  `min(venue.max_leverage, instrument.max_safe_leverage)` and emits `LEVERAGE_CAP_TRIPPED`.'
+  `min(venue.max_leverage, instrument.max_safe_leverage)` and emits `LEVERAGE_CAP_TRIPPED`."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,20 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [leverage, defi, execution, risk, strategy, uac]
-related: [risk-gates.md, restaking-reward-economics.md, instrument-type-leverage-matrix.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md,
+  ]
 created: 2026-05-01
-authoritative_for: [instrument-side volatility-derived leverage cap (derive_max_safe_leverage + INSTRUMENT_VOLATILITY_REGISTRY)]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/margin-health.md, codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md]
+authoritative_for:
+  [instrument-side volatility-derived leverage cap (derive_max_safe_leverage + INSTRUMENT_VOLATILITY_REGISTRY)]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/margin-health.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

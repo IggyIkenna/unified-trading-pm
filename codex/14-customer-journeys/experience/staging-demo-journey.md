@@ -14,15 +14,25 @@ scope: [sales, prospect]
 tags: [demo, staging, prospect, sales, warm-prospect, ui, restriction-profiles]
 related:
   [
-    regulatory-demo.md,
-    investment-management-demo.md,
-    dart-demo.md,
+    /codex/14-customer-journeys/experience/regulatory-demo.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
     ../demo-ops/demo-restriction-profiles.md,
     ../environments/staging-odum-research-co-uk.md,
   ]
 created: 2026-04-20
 authoritative_for: [pb3 warm-prospect demo hub experience]
-referenced_by: [codex/14-customer-journeys/demo-ops/dart-demo-modes.md, codex/14-customer-journeys/demo-ops/demo-decision-matrix.md, codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/dart-demo.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/experience/regulatory-demo.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/demo-ops/dart-demo-modes.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md,
+    /codex/14-customer-journeys/demo-ops/staging-demo-setup.md,
+    /codex/14-customer-journeys/experience/README.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/experience/regulatory-demo.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

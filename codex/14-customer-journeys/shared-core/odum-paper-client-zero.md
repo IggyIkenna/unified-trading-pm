@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: '`odum-paper` Client Zero — Representative Paper Account'
+title: "`odum-paper` Client Zero — Representative Paper Account"
 summary:
   The odum-paper/odum-live representative-account model — every strategy instance is auto-subscribed by internal client
-  odum-paper (fills at requested price = pure strategy alpha), giving every instance a continuous backtest→paper→live P&L
-  series. Non-special-casing rule (no `client_id == "odum-paper"` branch anywhere), $100-$1000 seed, unbounded retention.
+  odum-paper (fills at requested price = pure strategy alpha), giving every instance a continuous backtest→paper→live
+  P&L series. Non-special-casing rule (no `client_id == "odum-paper"` branch anywhere), $100-$1000 seed, unbounded
+  retention.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -17,11 +18,17 @@ related:
     ../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
     ../../09-strategy/architecture-v2/performance-overlay.md,
     ../../04-architecture/shard-level-failure-isolation.md,
-    strategy-version-governance.md,
+    /codex/14-customer-journeys/shared-core/strategy-version-governance.md,
   ]
 created: 2026-04-21
 authoritative_for: [odum-paper/odum-live representative paper-account model]
-referenced_by: [codex/09-strategy/architecture-v2/performance-overlay.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/14-customer-journeys/shared-core/strategy-version-governance.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/performance-overlay.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/14-customer-journeys/shared-core/strategy-version-governance.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -191,9 +198,10 @@ instance; "reality" is the live run (`odum-live` OR any real client on that inst
 
 ### Alpha decay on scale
 
-Because `odum-paper` runs at the **fixed seed** ($1,000) and real clients run at their allocation size, divergence
-between the two series measures **alpha decay on capital scaling**. A strategy that matches paper at $1K but
-underperforms at $1M has market-impact / capacity issues.
+Because `odum-paper` runs at the **fixed seed**
+($1,000) and real clients run at their allocation size, divergence
+between the two series measures **alpha decay on capital scaling**. A strategy that matches paper at $1K
+but underperforms at $1M has market-impact / capacity issues.
 
 This is the allocator signal surfaced in Reports → Allocator View → 3-way overlay (Plan C Phase 3).
 

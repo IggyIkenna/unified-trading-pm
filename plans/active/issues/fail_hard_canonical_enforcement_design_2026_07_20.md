@@ -94,8 +94,8 @@ Evidence, strongest first:
 its only `except` (`:241-244`) is `logger.warning(...); writer.close(); raise` — a cleanup handler that **re-raises out
 of the whole function**. So today **a raise anywhere in that loop aborts the entire (venue, data_type, day) fetch —
 every remaining symbol.** This is already a latent violation of
-`codex/04-architecture/shard-level-failure-isolation.md`, and it is the same class as the measured 2026-07-17 loss of 27
-DERIBIT shards (`tardis_cefi_shards.py:296-305`).
+`/codex/04-architecture/shard-level-failure-isolation.md`, and it is the same class as the measured 2026-07-17 loss of
+27 DERIBIT shards (`tardis_cefi_shards.py:296-305`).
 
 **Rebuild that loop as genuinely per-shard isolated** (wrap each iteration; on exception classify via UAC
 `classify_venue_error()` → append to `failed_shards` → `continue`; return `(written_paths, failed_shards)`; orchestrator

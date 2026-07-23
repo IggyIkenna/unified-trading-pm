@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Firebase production
 summary:
-  Production Firebase auth (project central-element-323112, odum-research.com) — real-client onboarding
-  flow, custom-claims→entitlements mapping set server-side only, and production-only safeguards
-  (no auth bypass, deprovision cascade within 1h).
+  Production Firebase auth (project central-element-323112, odum-research.com) — real-client onboarding flow,
+  custom-claims→entitlements mapping set server-side only, and production-only safeguards (no auth bypass, deprovision
+  cascade within 1h).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,26 @@ stage: [meta]
 repos: [deployment-api, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [firebase, auth, ui, production, onboarding, entitlements]
-related: [firebase-staging.md, firebase-local.md, light-auth-briefings.md, ../playbook-concepts/fund-org-hierarchy.md]
+related:
+  [
+    /codex/14-customer-journeys/authentication/firebase-staging.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/14-customer-journeys/authentication/light-auth-briefings.md,
+    ../playbook-concepts/fund-org-hierarchy.md,
+  ]
 created: 2026-04-19
 authoritative_for: [Firebase production auth environment (central-element-323112)]
-referenced_by: [codex/08-workflows/signup-signin-workflow.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-local.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/environments/production-odum-research-com.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md, codex/14-customer-journeys/roadmap/plan-references.md]
+referenced_by:
+  [
+    /codex/08-workflows/signup-signin-workflow.md,
+    /codex/14-customer-journeys/authentication/README.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/14-customer-journeys/authentication/firebase-staging.md,
+    /codex/14-customer-journeys/authentication/light-auth-briefings.md,
+    /codex/14-customer-journeys/environments/production-odum-research-com.md,
+    /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

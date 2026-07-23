@@ -13,8 +13,8 @@ scope: [engineer, admin]
 tags: [mtds, manifest, canonicalisation, tradfi, cefi, data-correctness, single-walk]
 related:
   [
-    codex/02-data/pipeline-mode-partition.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
     plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
   ]
 created: 2026-06-01
@@ -169,7 +169,7 @@ So the existing rewriter is insufficient for both patterns as-is.
 - [x] ✅ [DOCS] P0. **Fix stale bucket naming (env-tier drift).** The docs hardcoded the legacy un-tiered
       `market-data-tick-{ag}-{project_id}` form; canonical (bucket_name_ssot Phase 0e) is env-tiered
       `market-data-tick-{ag}-{env}-{project_id}` (prod→`prd`; PREDICTION→`pred`), resolved via `resolve_bucket_name()`.
-      Fixed the codex SSOT `codex/02-data/per-asset-group-bucket-layouts.md` (matrix + resolver-authority note),
+      Fixed the codex SSOT `/codex/02-data/per-asset-group-bucket-layouts.md` (matrix + resolver-authority note),
       `GCS_PATHS.md` (env-tiered table + codex pointer), + env-tiered every bucket ref across 8 MTDS docs + 11 codex
       docs (`prediction-schema-paths`, `availability-manifest-and-data-status`, `chart-candle-delivery-flow`,
       `partitioning`, `subscription-model`, `expected-absence-backfill-runbook`, `quality-gates`, 3× sports docs,

@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Cash Deployment Plan — April 2026 Starting £240k
 summary:
-  Codex-private cash-deployment plan from April 2026's ~£240k ($305k) opening cash — ~£34k/mo burn,
-  committed deployments (backtest £25-50k, CME $50k skin Sept, ~10%-of-revenue eng profit-share),
-  a ~£150k minimum reserve floor, and upside/downside deployment triggers.
+  Codex-private cash-deployment plan from April 2026's ~£240k ($305k) opening cash — ~£34k/mo burn, committed
+  deployments (backtest £25-50k, CME $50k skin Sept, ~10%-of-revenue eng profit-share), a ~£150k minimum reserve floor,
+  and upside/downside deployment triggers.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,19 @@ stage: [meta]
 repos: []
 scope: [admin]
 tags: [commercial-model, cash-flow, finance, cost, reserve-policy, cme]
-related: [revenue-projection-2026-monthly.md, im-profit-share-structures.md, pricing-building-blocks.md]
+related:
+  [
+    /codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+  ]
 created: 2026-04-20
 authoritative_for: [2026 cash-deployment and reserve-buffer plan]
-referenced_by: [codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

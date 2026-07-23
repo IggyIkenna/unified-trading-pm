@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Rule 11 — Codex scope registry (per-audience documentation surface)
 summary:
-  "Rule 11 — the machine-readable per-audience scope frontmatter tag (scope ∈ {sales, engineer, admin,
-  prospect, investor}) on every codex doc; default [engineer, admin], a per-directory default mapping, and
-  build-manifest + CI-gate consumption. One source, filtered views at read time."
+  "Rule 11 — the machine-readable per-audience scope frontmatter tag (scope ∈ {sales, engineer, admin, prospect,
+  investor}) on every codex doc; default [engineer, admin], a per-directory default mapping, and build-manifest +
+  CI-gate consumption. One source, filtered views at read time."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,28 +14,29 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, codex, governance, docspec, sales]
 related:
   [
-    03-same-system-principle.md,
-    06-show-dont-show-discipline.md,
-    07-data-licensing-boundaries.md,
-    09-internal-commercial-oneliners.md,
+    /codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md,
+    /codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md,
   ]
 created: 2026-04-20
 authoritative_for: [codex per-audience scope registry (scope frontmatter tag + per-directory defaults)]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
-  [
-    codex/14-customer-journeys/_tools/build-scope-manifest.sh,
-    codex/14-customer-journeys/_tools/check-scope-coverage.sh,
-  ]
+  [codex/14-customer-journeys/_tools/build-scope-manifest.sh, codex/14-customer-journeys/_tools/check-scope-coverage.sh]
 ---
 
 # Rule 11 — Codex scope registry (per-audience documentation surface)
 
 > **Status:** active — Stage 3E G1.9 landing commit. **Parent plan:**
 > `plans/archive/refactor_g1_9_codex_scope_registry_2026_04_20.plan.md`. **Spec reference:**
-> `codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.9.
+> `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.9.
 
 ## Why this rule exists
 
@@ -251,11 +252,11 @@ Data, Analytics, Research & Trading — Odum's DIY platform track ...
    frontmatter, and emits `codex/14-customer-journeys/_generated/scope-manifest.json`. Shape:
    ```json
    {
-     "sales":     ["codex/14-customer-journeys/experience/im-decision-journey.md", ...],
+     "sales":     ["/codex/14-customer-journeys/experience/im-decision-journey.md", ...],
      "engineer":  ["codex/00-SSOT-INDEX.md", ...],
-     "admin":     ["codex/07-security/secrets-management.md", ...],
-     "prospect":  ["codex/14-customer-journeys/glossary.md", ...],
-     "investor":  ["codex/14-customer-journeys/presentations/target-experience.md", ...]
+     "admin":     ["/codex/07-security/secrets-management.md", ...],
+     "prospect":  ["/codex/14-customer-journeys/glossary.md", ...],
+     "investor":  ["/codex/14-customer-journeys/presentations/target-experience.md", ...]
    }
    ```
 2. **Downstream consumers.** Sales-collateral generators, help-drawer surfaces in `unified-trading-system-ui`, and

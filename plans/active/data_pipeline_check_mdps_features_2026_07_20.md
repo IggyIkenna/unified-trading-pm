@@ -47,8 +47,8 @@ tags:
   ]
 related:
   [
-    data_pipeline_e2e_check_2026_07_10.md,
-    features_service_e2e_pipeline_test_2026_05_26.md,
+    /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
+    /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     ../epics/infrastructure_master.md,
     ../../cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     ../../cursor-configs/skills/data-pipeline-check-is/SKILL.md,
@@ -111,11 +111,11 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
 
 ## Codex SSOTs (read + keep the plan aligned)
 
-- `codex/02-data/availability-manifest-and-data-status.md`, `…/honest-coverage-model.md` (4-state capture_status, shard
+- `/codex/02-data/availability-manifest-and-data-status.md`, `…/honest-coverage-model.md` (4-state capture_status, shard
   atom, coverage formula)
-- `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap — MDPS/features are EXEMPT: they read GCS, don't
+- `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap — MDPS/features are EXEMPT: they read GCS, don't
   fetch), `…/spot-vms-for-backfill.md`, `…/bucket-isolation-model.md`
-- `codex/06-coding-standards/` (QG bans), `codex/12-agent-workflow/async-wait-and-poll-discipline.md`
+- `codex/06-coding-standards/` (QG bans), `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`
 - Engine + reference drivers: `unified-trading-library/unified_trading_library/pipeline_e2e_check/`,
   `market-tick-data-service/scripts/pipeline_e2e_check.py`
 
@@ -459,7 +459,7 @@ Operator, verbatim: _"the key is knowing what is empty data because theres nothi
 fetched yet that's where the manifest needs to help and different consumers live and batch will have different ways of
 handling depending on their needs"_
 
-**The contract (durable — belongs in `codex/02-data/honest-absence-downstream-handling.md` at the post-phase codex
+**The contract (durable — belongs in `/codex/02-data/honest-absence-downstream-handling.md` at the post-phase codex
 audit; journaled here so it is not lost first):**
 
 | Question a consumer asks                   | Which surface answers it        | Representation                                                                                    |
@@ -494,7 +494,7 @@ contract in-code so nobody "helpfully" re-adds carry-forward.
 - [ ] NEW todo. [SCRIPT] P1. Add the all-NaN-parquet-vs-`captured` assertion to `/data-pipeline-check-mdps` (and the
       features twin where a family can emit an all-null feature frame) as a distinct `content_check=` verdict, so the
       inverse-phantom is caught the same way the phantom is.
-- [ ] NEW todo. [DOC] P2. Promote the two-signal table above into `codex/02-data/honest-absence-downstream-handling.md`
+- [ ] NEW todo. [DOC] P2. Promote the two-signal table above into `/codex/02-data/honest-absence-downstream-handling.md`
       at the post-phase codex audit (SSOT direction: codex, not this plan).
 
 ### 2026-07-20 — MEASURED throughput overturns the codex's compute-bound assumption (ETA input)
@@ -511,7 +511,7 @@ is only **~1.5s** (measured: the `POLARS AGGREGATED: 1440 1m … 1 24h` cascade 
 other ~94% is GCS write + manifest. Per instrument-day the writer emits **7 separate small parquet objects** (one per
 timeframe) — small-object overhead dominates.
 
-**This CONTRADICTS `codex/06-coding-standards/performance-targets.md`**, which classifies `mdps_compute` as
+**This CONTRADICTS `/codex/06-coding-standards/performance-targets.md`**, which classifies `mdps_compute` as
 "compute-bound, sublinear-70%" and recommends `c2-standard-16` for the <6h target. On this measurement a bigger CPU SKU
 buys almost nothing. **Correct optimization levers, re-ranked by the measurement:**
 
@@ -539,7 +539,7 @@ per-instrument-day unit cost above (25.9s serial, write-bound) is the measured i
 - [ ] NEW todo. [DATA] P0. Verify whether MDPS `max_workers` (8 on e2-standard-8) actually OVERLAPS the GCS writes.
       Measured `25,948ms/instrument x 2 == 51.9s total` implies SERIAL. If writes are not overlapped, fixing that is the
       single largest backfill speedup available and it changes the ETA by up to ~8x.
-- [ ] NEW todo. [DOC] P2. Correct `codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
+- [ ] NEW todo. [DOC] P2. Correct `/codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
       (measured ~94% write, ~6% polars), not compute-bound; the c2-standard-16 recommendation does not follow.
 
 ### 2026-07-20 — CORRECTION: the candle write bottleneck is NOT the MTDS 50GB-disk issue (operator question)
@@ -634,7 +634,7 @@ vms already so propagate if not there."_ **They were right to doubt it — and t
 only ~10 emitted the `vm-logs/{vm}/PREEMPTED` blob. ~48 SPOT launchers were preemption-BLIND.** The
 `RelaunchPreemptedVm` machinery is well-built and correct — but its **trigger** was missing, so a preempted VM
 classified as `EXIT_NONZERO`/`GONE_NO_CAPTURE` and **PAGED a human** instead of auto-recovering.
-`codex/05-infrastructure/spot-vms-for-backfill.md` asserts the signal is "wired fleet-wide via `launcher_common.sh`" —
+`/codex/05-infrastructure/spot-vms-for-backfill.md` asserts the signal is "wired fleet-wide via `launcher_common.sh`" —
 **that claim is false and the codex is now stale** (todo below).
 
 **The mechanism (verified end-to-end):** VM shutdown checks `instance/preempted` → writes `PREEMPTED` blob →
@@ -679,7 +679,7 @@ commit.
 5. `launch-prediction-features-vm.sh` (broken: packages a deleted repo, no SPOT, 50GB disk) deliberately NOT touched —
    it is operator-gated A/B/C in `issues/mdps_features_deadcode_consolidation_2026_07_20.md`.
 
-- [ ] NEW todo. [DOC] P1. Correct `codex/05-infrastructure/spot-vms-for-backfill.md`: the preemption signal was NOT
+- [ ] NEW todo. [DOC] P1. Correct `/codex/05-infrastructure/spot-vms-for-backfill.md`: the preemption signal was NOT
       wired fleet-wide via `launcher_common.sh`; it is now installed by `setup-data-pipeline-vm.sh` as a systemd unit.
 - [ ] NEW todo. [SCRIPT] P1. Close residual risk 1 — make arg-required launchers relaunchable (features especially).
 

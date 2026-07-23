@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [production, deployment, ui, environments, compliance, cloud-run]
 related:
   [
-    staging-odum-research-co-uk.md,
+    /codex/14-customer-journeys/environments/staging-odum-research-co-uk.md,
     ../authentication/firebase-production.md,
     ../../04-architecture/client-isolation-sla-and-runtime-profiles.md,
     ../../07-security/compliance.md,
@@ -22,7 +22,12 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [odum-research.com production web environment]
-referenced_by: [codex/14-customer-journeys/environments/README.md, codex/14-customer-journeys/environments/staging-odum-research-co-uk.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/environments/README.md,
+    /codex/14-customer-journeys/environments/staging-odum-research-co-uk.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

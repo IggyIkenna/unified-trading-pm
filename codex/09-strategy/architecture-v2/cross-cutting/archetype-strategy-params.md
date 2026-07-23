@@ -13,10 +13,14 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, archetypes, params, defi]
-related: [archetype-param-schema-inventory.md, allocator-pipeline-contract.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+  ]
 created: 2026-05-21
 authoritative_for: []
-referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md]
+referenced_by: [/codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md]
 owner:
 last_reviewed:
 code_refs:

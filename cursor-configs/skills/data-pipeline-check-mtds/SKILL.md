@@ -133,7 +133,7 @@ gcloud storage buckets create "gs://market-data-tick-${mtds_ag}-test-${PROJECT_I
 >   UNAFFECTED — they use different keys/paths, do not count against the cap, and may still run in parallel.
 > - If a run trips the guard, that is the guard WORKING. Serialise; do not override.
 >
-> SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap ·
+> SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap ·
 > `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` (the measured N=3-vs-N=1 evidence).
 
 For each MVP `(asset_group, venue, data_type)` cell for `--day` (MVP scope from

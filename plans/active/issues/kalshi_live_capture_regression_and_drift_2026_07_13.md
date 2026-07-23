@@ -27,8 +27,8 @@ tags: [kalshi, prediction, regression, live-capture, schema-drift, data-correctn
 related:
   [
     ../../epics/predictions_master.md,
-    prediction_capture_incident_remediation_2026_07_06.md,
-    predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
+    /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     ../../archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
     ../../archive/2026_07/work_split_2026_05_22_ikenna.md,
   ]

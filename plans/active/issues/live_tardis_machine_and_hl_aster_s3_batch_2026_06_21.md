@@ -1,7 +1,10 @@
 ---
 doc_type: issue
-title: Live tardis-machine stream-normalized option + HL/ASTER batch via S3 archive (operator-directed, batch-live symmetry)
-summary: Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_...
+title:
+  Live tardis-machine stream-normalized option + HL/ASTER batch via S3 archive (operator-directed, batch-live symmetry)
+summary:
+  Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are
+  **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_...
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -14,12 +17,17 @@ related:
     plans/active/issues/fleet_data_acquisition_health_2026_06_21.md,
     plans/active/issues/hyperliquid_rest_pipeline_mode_missed_by_v9_migration_2026_06_17.md,
     plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
-    codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 created: 2026-06-21
 parent_epic: mtds_mdps_master
 priority: P2
-source: [operator messages 2026-06-21 (tardis normalised / live free / batch-live symmetry / avoid conversion), market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py, market-tick-data-service/market_tick_data_service/live/connectors/ (18 per-venue WS connectors)]
+source:
+  [
+    operator messages 2026-06-21 (tardis normalised / live free / batch-live symmetry / avoid conversion),
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py,
+    market-tick-data-service/market_tick_data_service/live/connectors/ (18 per-venue WS connectors),
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -132,8 +140,8 @@ cefi-lane / cefi-live task; the cefi LIVE path is fully fixed (bugs #6/#7/#8, ca
   `--live-source` CLI arg + 24-test `test_tardis_machine_ws_connector.py`, QG-green) + deployment-service@`b5246a6`
   (launcher + VM setup, QG-green). Both on `origin/live-defi-rollout`.
 - **#2 (HL/ASTER batch) — ✅ HANDLER + LAUNCHER SHIPPED + PROVEN + QG-GREEN 2026-06-21**: instead of patching the
-  orchestrator-routed `HyperliquidAdapter`/`AsterAdapter` (whose `fetch_trades` S3-dated branch returns `[]`
-  "delegated to MTDS" → the unclassified-error gap), built a **dedicated batch CLI handler** `OnchainPerpBatchHandler`
+  orchestrator-routed `HyperliquidAdapter`/`AsterAdapter` (whose `fetch_trades` S3-dated branch returns `[]` "delegated
+  to MTDS" → the unclassified-error gap), built a **dedicated batch CLI handler** `OnchainPerpBatchHandler`
   (`market_tick_data_service/cli/handlers/onchain_perp_batch_handler.py`, op `collect-onchain-perp-batch`) that drives
   `HyperliquidS3Downloader` (requester-pays S3, `aws-hyperliquid-s3` secret) + `AsterAdapter` REST **directly**,
   bypassing the orchestrator DeFi-strip. Writes cefi canonical parquet via the orchestrator `PartitionedTickWriter`
@@ -141,16 +149,17 @@ cefi-lane / cefi-live task; the cefi LIVE path is fully fixed (bugs #6/#7/#8, ca
   `asset_group=cefi`, `source=hyperliquid/aster`, `pipeline_mode=batch_hyperliquid/batch_aster` — matching the failed
   cells' provenance so they resolve `attempted_failed → captured`. data_types: `trades` / `book_snapshot_5` /
   `derivative_ticker` (funding inline); ASTER `book_snapshot_5` = honest absence (no historical depth endpoint); HL
-  liquidations out of scope. Shard-level isolation + UAC `classify_venue_error` + `ADAPTER_FETCH_FAILED`.
-  **PROVEN on a real S3 fetch**: HL `derivative_ticker` BTC 2023-05-21 → **1440 rows captured**, canonical parquet at
+  liquidations out of scope. Shard-level isolation + UAC `classify_venue_error` + `ADAPTER_FETCH_FAILED`. **PROVEN on a
+  real S3 fetch**: HL `derivative_ticker` BTC 2023-05-21 → **1440 rows captured**, canonical parquet at
   `gs://market-data-tick-cefi-prd-…/raw_tick_data/by_date/day=2023-05-21/pipeline_mode=batch_hyperliquid/asset_group=cefi/venue=HYPERLIQUID/instrument_type=perpetual/data_type=derivative_ticker/BTC-PERP.parquet`
-  + a **captured manifest row** in `_index/availability_index.parquet`
-  (`HYPERLIQUID | derivative_ticker | BTC-PERP | captured | source=hyperliquid | batch_hyperliquid | asset_group=cefi`).
-  14 unit tests; ruff/basedpyright/pytest green on touched files. Shipped: mtds@`1e4dfb2` (handler + cli/main.py op-map
-  + `--onchain-perp-symbols`/`--onchain-perp-data-types` args + tests) + deployment-service@`b04cfcc` (launcher
-  `VM_OPERATION=download`→`collect-onchain-perp-batch` + `cefi-hl-aster-backfill` VM_TASK routing in
-  `setup-data-pipeline-vm.sh`). Both on `origin/live-defi-rollout`. **REMAINING (operator/infra)**: run the launcher
-  over the HL 2023→26 / ASTER 2024→26 ranges to backfill all 48.5k cells to completion (fire-and-verify VMs).
+  - a **captured manifest row** in `_index/availability_index.parquet`
+    (`HYPERLIQUID | derivative_ticker | BTC-PERP | captured | source=hyperliquid | batch_hyperliquid | asset_group=cefi`).
+    14 unit tests; ruff/basedpyright/pytest green on touched files. Shipped: mtds@`1e4dfb2` (handler + cli/main.py
+    op-map
+  - `--onchain-perp-symbols`/`--onchain-perp-data-types` args + tests) + deployment-service@`b04cfcc` (launcher
+    `VM_OPERATION=download`→`collect-onchain-perp-batch` + `cefi-hl-aster-backfill` VM_TASK routing in
+    `setup-data-pipeline-vm.sh`). Both on `origin/live-defi-rollout`. **REMAINING (operator/infra)**: run the launcher
+    over the HL 2023→26 / ASTER 2024→26 ranges to backfill all 48.5k cells to completion (fire-and-verify VMs).
 
 ## §3 — funding_rate is a FIELD in derivative_ticker (data-model note, operator 2026-06-21)
 
@@ -172,31 +181,32 @@ unilaterally).
 
 Launching the tardis-machine smoke on `cefi:BINANCE-FUTURES:trades --live-source tardis-machine` FAILED at startup:
 `ValueError: No PipelineMode for source 'tardis' in mode 'live'`. **Root cause (NOT tardis-specific — affects native CEX
-live too):** the live writer resolves pipeline_mode via `live_pipeline_mode_for_venue` → `live_source_for_venue(asset_group,
-venue, data_type)` (mode-agnostic) → for a CEX venue with no venue→vendor entry it defaults to `SOURCE_PRIORITY[(cefi,
-trades)][0] = "tardis"` → `pipeline_mode_for_source("tardis", LIVE)` raises because **tardis is batch-only** (academic
-licence blocks CeFi live/replay; `SOURCE_MODE_CAPABILITY[tardis]={batch}`). So **any CEX venue (binance/okx/bybit/kraken/
-deribit) live capture — native connector OR tardis-machine — currently dies at preflight**; CEX native live was simply
-never run before so it never surfaced. (HYPERLIQUID/ASTER work because `live_source_for_venue` returns their own vendor,
-which has LIVE_<vendor> + is a registered cefi source.)
+live too):** the live writer resolves pipeline_mode via `live_pipeline_mode_for_venue` →
+`live_source_for_venue(asset_group, venue, data_type)` (mode-agnostic) → for a CEX venue with no venue→vendor entry it
+defaults to `SOURCE_PRIORITY[(cefi, trades)][0] = "tardis"` → `pipeline_mode_for_source("tardis", LIVE)` raises because
+**tardis is batch-only** (academic licence blocks CeFi live/replay; `SOURCE_MODE_CAPABILITY[tardis]={batch}`). So **any
+CEX venue (binance/okx/bybit/kraken/ deribit) live capture — native connector OR tardis-machine — currently dies at
+preflight**; CEX native live was simply never run before so it never surfaced. (HYPERLIQUID/ASTER work because
+`live_source_for_venue` returns their own vendor, which has LIVE_<vendor> + is a registered cefi source.)
 
 **The architecture tension:** a CEX venue's BATCH source is `tardis` (archive) but its LIVE source must be the EXCHANGE
 itself (`binance` live WS → `live_binance`). `live_source_for_venue` returns ONE source per venue (mode-agnostic), so it
 cannot today say "tardis for batch, binance for live." The fix (P1, careful — provenance layer; the code SSOT warns
 SOURCE_PRIORITY[0] mis-stamping caused the VX/CFE incident):
+
 1. Add `LIVE_<vendor>` PipelineMode members for the CEX vendors that lack them (`LIVE_BINANCE` exists; check OKX/BYBIT/
    KRAKEN/DERIBIT) + `SOURCE_MODE_CAPABILITY[<vendor>] ⊇ {live}`.
-2. Register the CEX vendors as cefi LIVE sources for trades/book_snapshot_5/derivative_ticker (additive to SOURCE_PRIORITY;
-   tardis stays index-0 BATCH primary).
-3. Make `live_source_for_venue` mode-aware (or add a venue→live-vendor map) so a CEX venue resolves to its exchange vendor
-   in LIVE mode while staying `tardis` in BATCH — so `batch_tardis` (archive) and `live_binance` (exchange) coexist on the
-   same shard, source column distinguishing them (Live=batch schema, different provenance — which is correct: the live
-   data genuinely comes from the exchange, the historical from the Tardis archive).
+2. Register the CEX vendors as cefi LIVE sources for trades/book_snapshot_5/derivative_ticker (additive to
+   SOURCE_PRIORITY; tardis stays index-0 BATCH primary).
+3. Make `live_source_for_venue` mode-aware (or add a venue→live-vendor map) so a CEX venue resolves to its exchange
+   vendor in LIVE mode while staying `tardis` in BATCH — so `batch_tardis` (archive) and `live_binance` (exchange)
+   coexist on the same shard, source column distinguishing them (Live=batch schema, different provenance — which is
+   correct: the live data genuinely comes from the exchange, the historical from the Tardis archive).
 
 **Tardis-machine smoke PROVEN instead on `cefi:HYPERLIQUID:derivative_ticker --live-source tardis-machine`** (VM
-`mtds-live-cefi-hyperliquid-derivative-ticker-20260621-225252`) — HL resolves cleanly (`hyperliquid` vendor, LIVE_HYPERLIQUID,
-registered source), so it validates the tardis-machine connector + Node sidecar + dispatch + capture end-to-end. The CEX
-flagship case is gated on the §4 fix above (not on the tardis-machine code, which is correct).
+`mtds-live-cefi-hyperliquid-derivative-ticker-20260621-225252`) — HL resolves cleanly (`hyperliquid` vendor,
+LIVE_HYPERLIQUID, registered source), so it validates the tardis-machine connector + Node sidecar + dispatch + capture
+end-to-end. The CEX flagship case is gated on the §4 fix above (not on the tardis-machine code, which is correct).
 
 ## §5 — tardis-machine smoke RESULT + bug#10/#12 + bug#9 full diagnosis (2026-06-21, monitored run)
 
@@ -208,11 +218,11 @@ stream-normalized probe on the VM returned 596 binance-futures `trade` messages 
 normalised schema (`{type:trade, symbol:BTCUSDT, exchange:binance-futures, price, amount, side, timestamp}`). The
 connector + Node sidecar + 8002 WS + normalised-→-canonical mapping all work end-to-end.
 
-**bug#12 — HYPERLIQUID is NOT a tardis-machine *stream-normalized* venue.** The HL smoke (trades + derivative_ticker)
-connected (no 404) but recorded empty windows — a VM-side probe confirmed tardis-machine emits **0** hyperliquid messages
-(binance-futures gave 596 in the same probe). Tardis covers HL for HISTORICAL replay, but its real-time stream proxies
-**CeFi exchange WSs**; HL is a DEX → use the **native HL connector** for HL live (which works — bugs #6/#7/#8). So the
-tardis-machine OPTION's value is the big CeFi CEX venues (binance/okx/bybit/kraken/deribit), NOT HL/ASTER.
+**bug#12 — HYPERLIQUID is NOT a tardis-machine _stream-normalized_ venue.** The HL smoke (trades + derivative_ticker)
+connected (no 404) but recorded empty windows — a VM-side probe confirmed tardis-machine emits **0** hyperliquid
+messages (binance-futures gave 596 in the same probe). Tardis covers HL for HISTORICAL replay, but its real-time stream
+proxies **CeFi exchange WSs**; HL is a DEX → use the **native HL connector** for HL live (which works — bugs #6/#7/#8).
+So the tardis-machine OPTION's value is the big CeFi CEX venues (binance/okx/bybit/kraken/deribit), NOT HL/ASTER.
 
 **bug#9 (FULL diagnosis) — CEX live capture-to-manifest is the remaining gate for the tardis-machine CEX value.** A
 binance-futures tardis VM streams fine (596 msgs) but cannot WRITE the manifest: `live_pipeline_mode_for_venue` →
@@ -238,32 +248,32 @@ resolves the exchange vendor (BINANCE-FUTURES→binance→`live_binance`, bug#9 
 unified-api-contracts@`e67a7ef`) AND passes the manifest source-gate (bug#14: a write-validation predicate
 `is_valid_manifest_source` = SOURCE_PRIORITY ∪ the asset_group's live/replay vendors; UAC@`50df949e` + UTL gate
 @`e5128e22`; SOURCE_PRIORITY stays the batch read-priority, untouched — adding live-only vendors to it broke the batch
-read-path closed-set, the wrong fix). **PROOF** (VM `mtds-live-cefi-binance-futures-trades-20260622-134033`, tardis-machine
-source): `BINANCE-FUTURES:PERP:BTCUSDT` + `ETHUSDT` → **capture_status=captured, source=binance, pipeline_mode=live_binance,
-row_count 4465+9872**, MissingSourceError=0, NoPipelineMode=0. CEX live capture (native connectors AND tardis-machine) is
-unblocked.
+read-path closed-set, the wrong fix). **PROOF** (VM `mtds-live-cefi-binance-futures-trades-20260622-134033`,
+tardis-machine source): `BINANCE-FUTURES:PERP:BTCUSDT` + `ETHUSDT` → **capture_status=captured, source=binance,
+pipeline_mode=live_binance, row_count 4465+9872**, MissingSourceError=0, NoPipelineMode=0. CEX live capture (native
+connectors AND tardis-machine) is unblocked.
 
 **tardis-machine stream-normalized capture matrix** (live sidecar probe, msgs in ~6-8s):
 
-| venue (tardis exch)            | trade | book_snapshot_5 (`book_snapshot_5_0ms`) | derivative_ticker |
-| ------------------------------ | ----- | --------------------------------------- | ----------------- |
-| binance-futures                | ✅     | ✅ bids=5 asks=5                          | ✅                 |
-| binance (spot)                 | ✅     | ✅ 5×5                                    | n/a               |
-| bybit (futures)                | ✅     | ✅ 5×5                                    | ✅                 |
-| bybit-spot                     | ✅     | ✅ 5×5                                    | n/a               |
-| okex-swap                      | ✅     | ✅ 5×5                                    | ✅                 |
-| okex (spot)                    | ✅     | ✅ 5×5                                    | n/a               |
-| deribit                        | ✅     | ✅ 5×5                                    | ✅                 |
-| cryptofacilities (kraken-fut)  | ⚠️ 0* | ✅ 5×5                                    | ✅                 |
-| coinbase                       | ✅     | ✅ 5×5                                    | n/a               |
-| hyperliquid                    | ✅     | ✅ 5×5                                    | ✅                 |
+| venue (tardis exch)           | trade | book_snapshot_5 (`book_snapshot_5_0ms`) | derivative_ticker |
+| ----------------------------- | ----- | --------------------------------------- | ----------------- |
+| binance-futures               | ✅    | ✅ bids=5 asks=5                        | ✅                |
+| binance (spot)                | ✅    | ✅ 5×5                                  | n/a               |
+| bybit (futures)               | ✅    | ✅ 5×5                                  | ✅                |
+| bybit-spot                    | ✅    | ✅ 5×5                                  | n/a               |
+| okex-swap                     | ✅    | ✅ 5×5                                  | ✅                |
+| okex (spot)                   | ✅    | ✅ 5×5                                  | n/a               |
+| deribit                       | ✅    | ✅ 5×5                                  | ✅                |
+| cryptofacilities (kraken-fut) | ⚠️ 0* | ✅ 5×5                                  | ✅                |
+| coinbase                      | ✅    | ✅ 5×5                                  | n/a               |
+| hyperliquid                   | ✅    | ✅ 5×5                                  | ✅                |
 
 \*kraken-futures `trade`=0 = probe symbol `PI_XBTUSD` likely wrong, not a tardis gap (book+ticker stream fine).
 **Connector learnings (market-tick-data-service@`5fde6d1`):** (1) book uses the parameterized request dataType
-`book_snapshot_5_0ms` (bare `book_snapshot_5` matched nothing) — tardis-machine IS the order-book builder (maintains the L2
-book per-venue, emits top-5 continuously); the connector converts it to canonical `book_snapshot_5` (same schema). (2)
-**5-levels-each-side readiness gate** (operator): emit a book tick only once bids≥5 AND asks≥5 (skip partial book-building
-snapshots). (3) HL needs UPPERCASE symbol (tardis hyperliquid is case-sensitive); CeFi CEX use lowercase.
+`book_snapshot_5_0ms` (bare `book_snapshot_5` matched nothing) — tardis-machine IS the order-book builder (maintains the
+L2 book per-venue, emits top-5 continuously); the connector converts it to canonical `book_snapshot_5` (same schema).
+(2) **5-levels-each-side readiness gate** (operator): emit a book tick only once bids≥5 AND asks≥5 (skip partial
+book-building snapshots). (3) HL needs UPPERCASE symbol (tardis hyperliquid is case-sensitive); CeFi CEX use lowercase.
 
 **Status: tardis-machine live OPTION fully delivered + CEX live provenance resolved.** Remaining cefi gap is only the
 ~753k Tardis HISTORICAL (batch) cells = BLOCKED-CREDENTIALS (operator billing).
@@ -273,8 +283,10 @@ snapshots). (3) HL needs UPPERCASE symbol (tardis hyperliquid is case-sensitive)
 **Verified: live feeds write real tick parquet to canonical GCS, identical schema to batch** (Live=batch). Path:
 `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=<d>/pipeline_mode=live_<source>/`
 `asset_group=cefi/venue=<VENUE>/instrument_type=perpetual/data_type=<dt>/<INSTRUMENT_ID>.parquet`
+
 - e.g. `…/pipeline_mode=live_binance/…/venue=BINANCE-FUTURES/…/data_type=trades/BINANCE-FUTURES:PERP:BTCUSDT.parquet`
-  (3,404 tick rows: `symbol,price,size,side,ts_ms,trade_id`); `…/pipeline_mode=live_hyperliquid/…/HYPERLIQUID:PERP:BTC.parquet`.
+  (3,404 tick rows: `symbol,price,size,side,ts_ms,trade_id`);
+  `…/pipeline_mode=live_hyperliquid/…/HYPERLIQUID:PERP:BTC.parquet`.
 - Manifest rows: `capture_status=captured, source=<vendor>, pipeline_mode=live_<vendor>` in the cefi `_index`.
 
 **Reuse**: the read path prefix-matches `batch**`/`live**`/`replay**` (pipeline-mode-partition SSOT), so live data is

@@ -15,9 +15,9 @@ scope: [engineer]
 tags: [agent-orchestrator, observability, kpi, escalation, plan-health, usage, snapshots]
 related:
   [
-    ao_open_issues_consolidated_close_out_2026_07_17.md,
-    ao_dispatch_cooldown_and_park_2026_07_20.md,
-    ao_fleet_infra_hardening_2026_07_20.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_07/ao_dispatch_cooldown_and_park_2026_07_20.md,
+    /plans/archive/2026_07/ao_fleet_infra_hardening_2026_07_20.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-20
@@ -79,7 +79,7 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       **2% (1/46) hit a `/blocked` question**. **Root cause (bucket i, boot-prompt-too-shallow — NOT ii or iii,
       diagnosis quality was fine)**: `cicd.md`'s `ldr_qg_failure` handler instructs a BLOCKING foreground
       `bash scripts/quality-gates.sh`, whose documented runtime is 8-15+ min
-      (`codex/06-coding-standards/quality-gates.md` — one measured CI run: 715s/778s) — at/over the
+      (`/codex/06-coding-standards/quality-gates.md` — one measured CI run: 715s/778s) — at/over the
       WorkerLivenessWatchdog's 15-min heartbeat-silence kill (`server/worker_liveness_watchdog.py`), with zero
       instruction to background it or heartbeat during the run. One worker's own note confirms it directly: "running
       full quality-gates.sh in background (took >10min on first attempt)". This also explains the SAME bug re-escalating
@@ -229,10 +229,10 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
 
 ## Codex SSOTs
 
-- `codex/04-architecture/agent-orchestrator-alerting.md` — actionable-only alerting; state-transition dedup for any
+- `/codex/04-architecture/agent-orchestrator-alerting.md` — actionable-only alerting; state-transition dedup for any
   alarm added here.
-- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured terminal verdicts, not activity signals.
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch/spawn model behind the KPIs.
+- `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured terminal verdicts, not activity signals.
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch/spawn model behind the KPIs.
 
 ## Progress Log
 
@@ -287,7 +287,7 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   dispatches as `f"escalation:{escalation_id}"` (today's two consumers use `f"task:{task_id}"`) and call the same
   `register_cooldown`/`get_cooldown`/`clear_cooldown` primitives. Full contract — key namespacing, window semantics
   (base/extended/ETA-override), change-triggered re-eligibility, and the durable-auto-park pattern built on top of it —
-  documented in `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip /
+  documented in `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip /
   cooldown / park"), which is now the SSOT for this mechanism. **AF-1b is unblocked** — build the escalation backoff
   directly on `register_cooldown`, do not write a second cooldown/backoff engine.
 

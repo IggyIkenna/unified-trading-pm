@@ -14,7 +14,7 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [backfill, manifest, honest-coverage, data-completion, tradfi, data-correctness]
-related: [data_completion_to_100_all_ag_2026_06_21.md]
+related: [/plans/active/data_completion_to_100_all_ag_2026_06_21.md]
 created: 2026-07-15
 parent_epic: manifest_master
 assigned_vm: NA
@@ -86,7 +86,7 @@ drift_direction: advance-code
 > `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
 > moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
 > (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
-> `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract". **(MIGRATED FROM:
+> `/codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract". **(MIGRATED FROM:
 > `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. C0 ONE bundled walk on the tradfi `_index` + objects: (a) `pipeline_mode=` hive partition added to
@@ -101,7 +101,7 @@ drift_direction: advance-code
       (verified 2026-07-16, `market-tick-data-service@38cf5dfa`+`@ba866544`, `total=5,553,198 rows`). NOTE: this is the
       manifest schema-version/partition/relabel migration only — it does NOT by itself canonicalize the
       raw-tick-parquet/manifest `instrument_id` COLUMN content (a separate, still-in-progress surface — see
-      `codex/02-data/canonical-cutover-register.md`). **(MIGRATED FROM:
+      `/codex/02-data/canonical-cutover-register.md`). **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. C-source RIDER: re-consolidate the already-stamped parquet `source` into the `_index` — every tradfi

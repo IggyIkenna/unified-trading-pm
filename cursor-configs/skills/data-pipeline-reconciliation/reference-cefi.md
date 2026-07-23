@@ -96,7 +96,7 @@ path found as un-gated drift, not a one-off.
 
 Unlike the defi/tradfi builders, callers bolt the segment on via `.replace()`. A missed replace is a silent
 non-canonical write. When you find a cefi object missing `pipeline_mode=`, classify it as this defect class, not as
-pre-cutover history — check the cutover date in `codex/02-data/canonical-cutover-register.md` first.
+pre-cutover history — check the cutover date in `/codex/02-data/canonical-cutover-register.md` first.
 
 ### H4 — migration is IN FLIGHT and `--apply` has NOT run
 
@@ -140,7 +140,7 @@ evidence once you have confirmed you probed the vocabulary the writer actually e
 
 ## Census / vocabulary nuance
 
-Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+Added 2026-07-20 — the in-session distinct-value census (`/codex/02-data/reconciliation-census-and-compute-tiers.md` §
 1).
 
 - **`instrument_type` is compared EXACT case-sensitive** (cefi/tradfi grain rule) — but a case-ONLY difference is the
@@ -154,7 +154,7 @@ Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconc
 
 ## Cross-links
 
-`SKILL.md` · `codex/02-data/four-surface-reconciliation-procedure.md` ·
-`codex/02-data/reconciliation-finding-taxonomy.md` · `codex/02-data/canonical-cutover-register.md` ·
-`codex/02-data/non-canonical-path-inventory.md` · `codex/02-data/cefi-capture-universe.md` ·
-`codex/05-infrastructure/bucket-isolation-model.md`
+`SKILL.md` · `/codex/02-data/four-surface-reconciliation-procedure.md` ·
+`/codex/02-data/reconciliation-finding-taxonomy.md` · `/codex/02-data/canonical-cutover-register.md` ·
+`/codex/02-data/non-canonical-path-inventory.md` · `/codex/02-data/cefi-capture-universe.md` ·
+`/codex/05-infrastructure/bucket-isolation-model.md`

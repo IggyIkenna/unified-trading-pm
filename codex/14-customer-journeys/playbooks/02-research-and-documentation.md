@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Playbook 2 — Deep Dive (formerly "Research & Documentation")
 summary:
-  'pb2 Deep Dive implementation — questionnaire-as-access-path light-auth gate to the /briefings hub (six
-  pillar tiles) + sibling /docs //our-story //faq under one session; section renamed "Deep Dive"
-  2026-04-25; Strategy Evaluation DDQ gates the Tier-2 Sandbox demo.'
+  'pb2 Deep Dive implementation — questionnaire-as-access-path light-auth gate to the /briefings hub (six pillar tiles)
+  + sibling /docs //our-story //faq under one session; section renamed "Deep Dive" 2026-04-25; Strategy Evaluation DDQ
+  gates the Tier-2 Sandbox demo.'
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, playbook, briefings, light-auth, ui, onboarding, prospect]
 related:
   [
-    01-marketing-pre-first-call.md,
-    03-warm-prospect-demo.md,
-    02a-research-im.md,
+    /codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md,
+    /codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md,
+    /codex/14-customer-journeys/playbooks/02a-research-im.md,
     ../authentication/light-auth-briefings.md,
     ../experience/briefings-hub.md,
   ]
 created: 2026-04-19
 authoritative_for: [pb2 Deep Dive briefings playbook implementation (access gate + hub click path)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/experience/briefings-hub.md, codex/14-customer-journeys/page-triage/partial-archive.md, codex/14-customer-journeys/playbook-concepts/investor-relations.md, codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/playbooks/02b-research-dart.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/authentication/light-auth-briefings.md,
+    /codex/14-customer-journeys/experience/briefings-hub.md,
+    /codex/14-customer-journeys/page-triage/partial-archive.md,
+    /codex/14-customer-journeys/playbook-concepts/investor-relations.md,
+    /codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md,
+    /codex/14-customer-journeys/playbooks/02a-research-im.md,
+    /codex/14-customer-journeys/playbooks/02b-research-dart.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

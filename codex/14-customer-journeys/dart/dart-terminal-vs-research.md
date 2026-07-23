@@ -12,13 +12,26 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
 tags: [dart, ui, entitlements, personas, instrument-type-gating, view-gating, research]
-related: [mode-toggle.md, ../demo-ops/staging-demo-setup.md, ../demo-ops/demo-restriction-profiles.md]
+related:
+  [
+    /codex/14-customer-journeys/dart/mode-toggle.md,
+    ../demo-ops/staging-demo-setup.md,
+    ../demo-ops/demo-restriction-profiles.md,
+  ]
 created: 2026-04-28
 authoritative_for: [DART Terminal vs DART Research tile split, DART instrument-type view gating]
-referenced_by: [codex/14-customer-journeys/dart/mode-toggle.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
+referenced_by:
+  [/codex/14-customer-journeys/dart/mode-toggle.md, /codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
 owner:
 last_reviewed:
-code_refs: [unified-trading-system-ui/lib/config/services.ts, unified-trading-system-ui/lib/auth/personas.ts, unified-trading-system-ui/lib/architecture-v2/user-instrument-types.ts, unified-trading-system-ui/components/shell/service-tabs.tsx, unified-trading-system-ui/components/platform/page-entitlement-gate.tsx]
+code_refs:
+  [
+    unified-trading-system-ui/lib/config/services.ts,
+    unified-trading-system-ui/lib/auth/personas.ts,
+    unified-trading-system-ui/lib/architecture-v2/user-instrument-types.ts,
+    unified-trading-system-ui/components/shell/service-tabs.tsx,
+    unified-trading-system-ui/components/platform/page-entitlement-gate.tsx,
+  ]
 ---
 
 # DART Terminal vs. DART Research — Tile Split + Instrument-Type View Gating (SSOT)
@@ -189,7 +202,7 @@ bypass.
 
 - Catalogue UX SSOT (asset_group → family → archetype): see `MEMORY.md` index entry
   `feedback_primary_category_first_class_axis.md`
-- Tier-override design: `codex/14-customer-journeys/demo-ops/staging-demo-setup.md`
+- Tier-override design: `/codex/14-customer-journeys/demo-ops/staging-demo-setup.md`
 - Catalogue artefacts SSOT: `feedback_catalogue_gcs_artefacts.md`
 - Allocator G2.10 split: commit `dfc8c5ba` (operational allocator moved to `/services/investment-management/`);
   research-side allocator is a separate workbench restored under `/services/research/allocate`

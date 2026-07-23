@@ -100,4 +100,4 @@ repo/commit that legitimately uses the dirty-deps carve-out, not about unblockin
 
 ## Codex SSOTs
 
-`codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / carve-out list).
+`/codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / carve-out list).

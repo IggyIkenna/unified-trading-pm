@@ -12,10 +12,26 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
 tags: [fund, org, provisioning, entitlements, sma, client-isolation]
-related: [sma-vs-pooled.md, ../../04-architecture/share-class-architecture.md, ../../04-architecture/client-isolation-sla-and-runtime-profiles.md, ../../07-security/secrets-management.md]
+related:
+  [
+    /codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md,
+    ../../04-architecture/share-class-architecture.md,
+    ../../04-architecture/client-isolation-sla-and-runtime-profiles.md,
+    ../../07-security/secrets-management.md,
+  ]
 created: 2026-04-19
 authoritative_for: [org/fund/client provisioning hierarchy (UI + entitlements view)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/admin-permissions.md, codex/14-customer-journeys/playbook-concepts/client-reporting.md, codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/authentication/README.md,
+    /codex/14-customer-journeys/authentication/firebase-production.md,
+    /codex/14-customer-journeys/authentication/firebase-staging.md,
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+    /codex/14-customer-journeys/playbook-concepts/admin-permissions.md,
+    /codex/14-customer-journeys/playbook-concepts/client-reporting.md,
+    /codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

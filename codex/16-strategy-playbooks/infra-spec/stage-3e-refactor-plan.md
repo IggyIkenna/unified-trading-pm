@@ -15,22 +15,22 @@ scope: [engineer, admin]
 tags: [refactor, ui, uac, strategy, migration, docspec]
 related:
   [
-    codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
-    codex/09-strategy/architecture-v2/uac-registry-gaps.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/09-strategy/architecture-v2/uac-registry-gaps.md,
   ]
 created: 2026-04-20
 authoritative_for:
   [Stage 3E post-Stage-3 refactor backlog (G1/G2/G3 items + dependency graph, supersedes roadmap/next-waves.md)]
 referenced_by:
   [
-    codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md,
-    codex/14-customer-journeys/presentations/target-experience-post-refactor.md,
-    codex/14-customer-journeys/roadmap/next-waves.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
+    /codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md,
+    /codex/14-customer-journeys/presentations/target-experience-post-refactor.md,
+    /codex/14-customer-journeys/roadmap/next-waves.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
   ]
 owner:
 last_reviewed:
@@ -363,7 +363,7 @@ Each item below has:
 
 ### 1.14 Presentation deck refresh + HTML stretch (2026-04-20 amendment)
 
-- **Current state.** `codex/14-customer-journeys/presentations/target-experience-post-refactor.md` drafted against the
+- **Current state.** `/codex/14-customer-journeys/presentations/target-experience-post-refactor.md` drafted against the
   9-item G1 enumeration; missing slides for items 1.10-1.14 and the 2026-04-20 amendment's cross-cutting lessons (MCP
   Playwright discipline, dev/staging parity). No HTML reveal.js wrapper.
 - **Target state.** Markdown deck refreshed for the 14-item G1 surface + 7 new slides (G1.10 questionnaire, G1.11 scope
@@ -426,7 +426,7 @@ Each item below has:
   codex deep-link.
 - **Target state.** `/services/data-catalogue/*` matching the Strategy Catalogue pattern — master matrix, filter facets,
   per-instrument detail, admin availability axis, codex GitHub deep-link to
-  [`codex/02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md).
+  [`/codex/02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md).
   Three concept-duplicates consolidated into `/services/data-catalogue/coverage/gaps` with tabs.
 - **Blast radius.** 13 → 7 UI routes, 1 new lib module mirroring coverage; strategy-service/availability data
   sub-surface.
@@ -603,7 +603,7 @@ Each item below has:
   the numbers land via finance workflow.
 - **Target state.** Finance populates numbers via a non-codex workflow (finance Google Sheet → export → commit). Update
   frequency: quarterly. Internal-column leakage guard per rule 08 ensures only finance-authorised commits land on
-  `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md`.
+  `/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md`.
 - **Blast radius.** 1 doc populated; no code.
 - **Blockers.** None — organisational.
 - **Group.** G3 (non-codex, depends on finance)

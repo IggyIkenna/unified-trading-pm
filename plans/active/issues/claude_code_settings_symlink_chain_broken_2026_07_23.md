@@ -24,8 +24,8 @@ scope: [engineer, admin]
 tags: [claude-code, settings, symlink, onboarding, permissions, infra, safety-hook]
 related:
   [
-    codex/05-infrastructure/claude-code-settings-symlink.md,
-    codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/05-infrastructure/claude-code-settings-symlink.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
     scripts/dev/setup-tab-worktrees.sh,
     scripts/workspace/link-claude-skills.sh,
   ]
@@ -58,7 +58,7 @@ last_updated: 2026-07-23
    policy should be, team policy entirely absent). Last known-good team content is recoverable from commit `47cf48f8f`
    (permissions.allow list, `defaultMode: bypassPermissions`, `enabledPlugins`, `mcpServers.playwright`).
 2. **`~/.claude/settings.json` was a symlink** to the same decayed file —
-   `codex/05-infrastructure/claude-code-settings-symlink.md` explicitly says "Do NOT symlink `~/.claude/settings.json`
+   `/codex/05-infrastructure/claude-code-settings-symlink.md` explicitly says "Do NOT symlink `~/.claude/settings.json`
    to the tracked file... Keep it a real, personal file," because picking a model via `/model` would otherwise write
    back into the (once-)tracked file.
 3. **The per-slot `.claude/settings.json → ../unified-trading-pm/cursor-configs/settings.json` symlink documented in the

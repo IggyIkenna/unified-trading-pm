@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Strategy Catalogue — 3-Tier Surface
-summary: SSOT for the single <StrategyCatalogueSurface> primitive rendered in four view modes across three tiers — admin-universe (read-only), admin-editor (lifecycle mutation), and client reality/FOMO tabs; covers the human-gated allocation-request flow, per-persona viewMode matrix, and questionnaire filter seeding.
+summary:
+  SSOT for the single <StrategyCatalogueSurface> primitive rendered in four view modes across three tiers —
+  admin-universe (read-only), admin-editor (lifecycle mutation), and client reality/FOMO tabs; covers the human-gated
+  allocation-request flow, per-persona viewMode matrix, and questionnaire filter seeding.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,26 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [strategy, catalogue, ui, uac, dart]
-related: [strategy-lifecycle-maturity.md, performance-overlay.md, dashboard-services-grid.md, strategy-questionnaire-mapping.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/09-strategy/architecture-v2/performance-overlay.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+    /codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md,
+  ]
 created: 2026-04-21
 authoritative_for: [strategy catalogue 3-tier surface (admin-universe / editor / client reality-FOMO)]
-referenced_by: [codex/04-architecture/commercial-service-families.md, codex/04-architecture/orphan-audit.md, codex/08-workflows/client-onboarding.md, codex/09-strategy/architecture-v2/admin-registry-api.md, codex/09-strategy/architecture-v2/capability-wizard.md, codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/dashboard-services-grid.md, codex/09-strategy/architecture-v2/instruments-resolver-architecture.md]
+referenced_by:
+  [
+    /codex/04-architecture/commercial-service-families.md,
+    /codex/04-architecture/orphan-audit.md,
+    /codex/08-workflows/client-onboarding.md,
+    /codex/09-strategy/architecture-v2/admin-registry-api.md,
+    /codex/09-strategy/architecture-v2/capability-wizard.md,
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+    /codex/09-strategy/architecture-v2/instruments-resolver-architecture.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

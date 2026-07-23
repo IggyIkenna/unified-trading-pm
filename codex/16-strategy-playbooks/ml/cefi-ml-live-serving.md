@@ -22,7 +22,7 @@ related:
   ]
 created: 2026-05-08
 authoritative_for: []
-referenced_by: [codex/15-runbooks/alerting/ml-alerting-rules.md]
+referenced_by: [/codex/15-runbooks/alerting/ml-alerting-rules.md]
 owner:
 last_reviewed:
 code_refs:

@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: Backfill-VM Slack-alert e2e verification — three gaps found 2026-06-23
-summary: '**Root cause (codified 2026-06-23):** `_gcs.pipeline_heartbeat_age_minutes()` and `_gcs.run_log_age_minutes()` each independently download the full `run.log` blob per VM. With ~50 running VMs, that...'
+summary:
+  "**Root cause (codified 2026-06-23):** `_gcs.pipeline_heartbeat_age_minutes()` and `_gcs.run_log_age_minutes()` each
+  independently download the full `run.log` blob per VM. With ~50 running VMs, that..."
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -13,12 +15,17 @@ related:
   [
     ../data_completion_to_100_all_ag_2026_06_21.md,
     ../epics/infrastructure_master.md,
-    deadman_monitor_log_event_crash_2026_06_23.md,
+    /plans/archive/issues/deadman_monitor_log_event_crash_2026_06_23.md,
   ]
-created: '2026-06-23'
+created: "2026-06-23"
 parent_epic: infrastructure_master
 priority: P2
-source: ['data_completion_to_100_all_ag_2026_06_21.md task [VERIFY] P0 line 2438', deployment-service fleet monitor code audit, GCS sentinel reads + Pub/Sub subscription metrics]
+source:
+  [
+    "data_completion_to_100_all_ag_2026_06_21.md task [VERIFY] P0 line 2438",
+    deployment-service fleet monitor code audit,
+    GCS sentinel reads + Pub/Sub subscription metrics,
+  ]
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout

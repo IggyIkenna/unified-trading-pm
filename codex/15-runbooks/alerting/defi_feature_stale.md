@@ -2,10 +2,10 @@
 doc_type: codex-runbook
 title: DEFI_FEATURE_STALE Runbook
 summary:
-  Operator response to DEFI_FEATURE_STALE (WARN, Telegram) — a DeFi feature (LST yield, gas read, on-chain rate) exceeded
-  its freshness SLA (defi_feature_stale_minutes, default 15) so strategy decisions risk running on stale data. Verify the
-  upstream source is reachable + features-onchain health, then auto-recover on next compute cycle, restart the service if
-  compute is hung, or pause the downstream archetype.
+  Operator response to DEFI_FEATURE_STALE (WARN, Telegram) — a DeFi feature (LST yield, gas read, on-chain rate)
+  exceeded its freshness SLA (defi_feature_stale_minutes, default 15) so strategy decisions risk running on stale data.
+  Verify the upstream source is reachable + features-onchain health, then auto-recover on next compute cycle, restart
+  the service if compute is hung, or pause the downstream archetype.
 status: current
 nature: process
 asset_group: [meta]
@@ -13,14 +13,16 @@ stage: [meta]
 repos: [alerting-service, features-service]
 scope: [engineer, admin]
 tags: [alerting, runbook, defi, features, data-quality, live-trading]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md]
+related: [/codex/15-runbooks/alerting/operator-playbook.md, /codex/15-runbooks/alerting/circuit_breaker_open.md]
 created: 2026-05-08
 owner: ikenna
 cadence: on-demand
 verifier: operator
 last_executed:
 code_refs:
-authoritative_for: Operator response when a DeFi feature (LST yield, gas-fee read, on-chain rate) hasn't refreshed within the SLA window. Stale features compound lookahead-bias risk + may drive bad signals.
+authoritative_for:
+  Operator response when a DeFi feature (LST yield, gas-fee read, on-chain rate) hasn't refreshed within the SLA window.
+  Stale features compound lookahead-bias risk + may drive bad signals.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 

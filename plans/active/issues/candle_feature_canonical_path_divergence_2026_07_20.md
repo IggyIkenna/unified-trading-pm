@@ -26,8 +26,7 @@ stage: [data]
 repos: [market-data-processing-service, features-service, unified-trading-library, unified-api-contracts]
 scope: [engineer, admin]
 tags: [data-correctness, canonical, gcs-paths, manifest, candles, features, migration, mdps, volatility]
-related:
-  [../data_pipeline_check_mdps_features_2026_07_20.md, ../../codex/02-data/availability-manifest-and-data-status.md]
+related: [../data_pipeline_check_mdps_features_2026_07_20.md, /codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: infrastructure_master
@@ -156,7 +155,7 @@ exist side by side:
 ```
 
 This is a DISTINCT orphan class from Finding 1 (missing `instrument_type=`): here the `pipeline_mode=` partition segment
-— required by `codex/02-data/pipeline-mode-partition.md` and inserted by the driver's canonical model — is present on
+— required by `/codex/02-data/pipeline-mode-partition.md` and inserted by the driver's canonical model — is present on
 some candle objects and absent on others **in the same bucket, for the same day**. A `pipeline_mode`-blind reader (glob
 `day=*/timeframe=*/…`) and a `pipeline_mode`-aware reader (glob `day=*/pipeline_mode=*/timeframe=*/…`) therefore see
 DIFFERENT, non-overlapping subsets of the same candle corpus — a silent split-brain over the candle estate. The leaf id
@@ -183,7 +182,7 @@ machine-checkable and the skill can call the oracle instead of a bespoke rule.
 
 **Critical correction (workflow wq44d6bto, ground-truthed):** my original A/B/C framing treated the UTL registry
 template (`registry.py:28`, which carries `instrument_type=`) as the SSOT. But the AUTHORITATIVE codex layout
-`codex/02-data/per-asset-group-bucket-layouts.md:166` defines cefi/tradfi/defi candles as
+`/codex/02-data/per-asset-group-bucket-layouts.md:166` defines cefi/tradfi/defi candles as
 `processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/venue={v}/{id}.parquet` — **NO `instrument_type=`
 segment** (only PREDICTION shards by instrument_type). The current objects ALREADY match the codex. So the original
 "Option A = fulfill the declared template" was WRONG — adding `instrument_type=` CONTRADICTS the codex + is a NEW
@@ -321,7 +320,7 @@ Findings 3 and 4 are **defects under every option** and should be fixed regardle
       2026-07-22 entry below.
 - [x] 17. ✅ [DATA] P2. **`pipeline_mode=batch_hyperliquid_rest`** — investigated + fixed. Confirmed a
       **duplicate/legacy alias, NOT a genuine new mode**: `batch_hyperliquid_rest` is the pre-R4 (2026-06-07,
-      `codex/02-data/pipeline-mode-partition.md`) glued-transport antipattern; a prior migration
+      `/codex/02-data/pipeline-mode-partition.md`) glued-transport antipattern; a prior migration
       (`migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py`) already renamed 19,361 `raw_tick_data/` objects to
       `batch_hyperliquid` but was scoped to `raw_tick_data/by_date` only, never `processed_candles/`, stranding 31,640
       real CEFI HYPERLIQUID candle objects (day=2023-11-01..2026-04-14) with the stale literal.

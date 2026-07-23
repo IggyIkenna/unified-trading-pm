@@ -43,12 +43,12 @@ tags:
   ]
 related:
   [
-    instruments_docs_audit_outstanding_items_2026_07_08.md,
-    instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
+    /plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     ../instruments_completion_tracker_2026_07_06.md,
     ../instrument_id_format_canonicalization_2026_07_08.md,
     ../layer1_remeasure_and_certify_2026_07_06.md,
-    mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
   ]
 created: 2026-07-10
 parent_epic: instruments_master
@@ -226,7 +226,7 @@ real venue, already shipped in both directions), then the #4/#5 sequencing risk.
 ### P0
 
 **1. CeFi monotonicity guard alerting** — conflicts: none. Design: strongly aligned — extends the existing
-`DP-<CATEGORY>-<NNN>` alert registry (`codex/05-infrastructure/data-pipeline-alerts.md`), not a new mechanism. Proceed
+`DP-<CATEGORY>-<NNN>` alert registry (`/codex/05-infrastructure/data-pipeline-alerts.md`), not a new mechanism. Proceed
 as proposed.
 
 **2. is-daily-enum-{prediction,sports} exit(1)** — conflicts: none. Design: aligned (`exc_info=True` is additive
@@ -305,7 +305,7 @@ defi/prediction lowercase, no stated reason) rather than canonicalizing the casi
 session's established canonical-instrument-id casing — not a runtime fallback. Not yet implemented.
 
 **11. `--run-tag` CLI flag doesn't do what its help text says** — conflicts: none. Design: **the issue doc frames this
-as a wide-open operator decision — it isn't.** `codex/08-workflows/t1-batch-dag.md` already documents the target
+as a wide-open operator decision — it isn't.** `/codex/08-workflows/t1-batch-dag.md` already documents the target
 `--run-tag` behavior verbatim, and instruments-service's own code already special-cases the exact `"t1-recon"` sentinel
 from that SSOT, just never implements the GCS-prefix redirection. **RESOLVED 2026-07-10 (operator: "agree").** Source
 doc updated (`instruments_service_run_tag_flag_not_applied_2026_07_08.md`) — option (a), wire it through. Not yet

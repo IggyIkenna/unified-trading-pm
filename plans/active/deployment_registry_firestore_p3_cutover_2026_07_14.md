@@ -14,8 +14,8 @@ repos: [unified-trading-library, deployment-api, unified-trading-pm]
 scope: [engineer]
 tags: [firestore, deployment-registry, cutover, decommission, migration]
 related:
-  - deployment_registry_firestore_migration_2026_07_14.md
-  - deployment_registry_firestore_p2_readers_2026_07_14.md
+  - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p2_readers_2026_07_14.md
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
@@ -157,5 +157,5 @@ QG-green per repo.
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/gcs-object-operations.md` — GCS object ops via UTL wrappers (the delete rule).
-- `codex/05-infrastructure/deployment-observability.md` — registry SSOT (lineage note added Phase 5).
+- `/codex/05-infrastructure/gcs-object-operations.md` — GCS object ops via UTL wrappers (the delete rule).
+- `/codex/05-infrastructure/deployment-observability.md` — registry SSOT (lineage note added Phase 5).

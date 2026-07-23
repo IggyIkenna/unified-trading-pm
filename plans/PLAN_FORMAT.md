@@ -73,7 +73,7 @@ of todos are done — every repo must reach the required level.
 ## YAML Frontmatter Schema (Canonical SSOT)
 
 **SSOT reference**:
-[`codex/11-project-management/doc-frontmatter-schema.md`](../codex/11-project-management/doc-frontmatter-schema.md)
+[`/codex/11-project-management/doc-frontmatter-schema.md`](/codex/11-project-management/doc-frontmatter-schema.md)
 
 ### Active plan / wrapper plan (in `plans/active/`)
 
@@ -102,7 +102,7 @@ estimate_class: refactor | design | infra | brand-new | research
 estimate_baseline_ai_days: <N> # raw estimate
 estimate_calibrated_ai_days: <N> # baseline × class multiplier
 
-# Plan-specific — work-philosophy (codex/12-agent-workflow/work-philosophy.md)
+# Plan-specific — work-philosophy (/codex/12-agent-workflow/work-philosophy.md)
 assigned_role: backend-engineer | data-pipeline-engineer | ui-developer | infra-engineer | monitor | review
 drift_direction: advance-code | correct-codex # which way this plan closes the codex↔codebase gap
 
@@ -149,7 +149,7 @@ is the green-light. Enforced in `regen_backlog_from_plan.py` (`_parse_frontmatte
 `_prune_stale` via `_plan_contributes_briefs` so a flip-to-draft GCs its queued tasks too).
 
 **`assigned_role`, `drift_direction`, plan sizing, and the per-task `Gate:`** (codified 2026-06-26; SSOT
-[`codex/12-agent-workflow/work-philosophy.md`](../codex/12-agent-workflow/work-philosophy.md)):
+[`/codex/12-agent-workflow/work-philosophy.md`](/codex/12-agent-workflow/work-philosophy.md)):
 
 - **`assigned_role`** — the durable craft role that executes the plan. **Plans are role-homogeneous** (one role per
   plan); AO dispatch loads that role's boot prompt + model. Cross-role work is split into _dependent_ single-role plans
@@ -205,7 +205,7 @@ every current epic; a legacy `vm-<id>` still validates against `orchestrator_vm_
 ids) but is OPTIONAL-HISTORICAL only — archaeology, never dispatch-resolved. SSOT: operator-locked decision **D2**
 (`plans/epics/agent_operating_framework_master.md:129`, 2026-06-24 — "`assigned_vm` is a mandatory **per-plan** field;
 epic-to-VM delegation is DROPPED for matching"), the `epics/README.md` supersession banner (lines 23-30), and
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (single-VM, role-based dispatch, 2026-06-27).
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (single-VM, role-based dispatch, 2026-06-27).
 
 ### Legacy schema (active plans pre-2026-05-21 epic-foundation update)
 
@@ -300,7 +300,7 @@ priority `None` → dispatcher de-prioritizes → task rots in the queue. Non-ca
   place.
 
 **Full hygiene stack doc** (4 silent-failure modes, severity ladder, cron schedules):
-`codex/12-agent-workflow/plan-hygiene.md`
+`/codex/12-agent-workflow/plan-hygiene.md`
 
 **Closed set of canonical tags** (case-sensitive uppercase; PR to PLAN_FORMAT.md to add a new tag):
 
@@ -311,7 +311,7 @@ BLOCKED-CREDENTIALS | BLOCKED-OPERATOR-DECISION | BLOCKED-UPSTREAM-OUTAGE
 BLOCKED-PLAYWRIGHT | BLOCKED-OPERATOR | BLOCKED-INFRA
 ```
 
-**Full hygiene reference**: `codex/12-agent-workflow/plan-hygiene.md` — covers all 4 silent-failure modes, check-vs-fix
+**Full hygiene reference**: `/codex/12-agent-workflow/plan-hygiene.md` — covers all 4 silent-failure modes, check-vs-fix
 script pairing, cron schedules (plan-hygiene 05:00 UTC, blocker-reaper 04:00 UTC, orphan-ping every 4h), and the HARD vs
 SOFT severity ladder. When in doubt about a format question, read that doc first.
 
@@ -352,7 +352,7 @@ Before writing any code, audit the blast radius:
 
 ### 2. Plans, not phases — the DAG lives BETWEEN plans (updated 2026-06-26)
 
-> **Supersedes the old "phases within a plan" model** per `codex/12-agent-workflow/work-philosophy.md` L3/L4/L8. A
+> **Supersedes the old "phases within a plan" model** per `/codex/12-agent-workflow/work-philosophy.md` L3/L4/L8. A
 > **dispatched plan is small + role-homogeneous + one-agent-sized** (one `quality-gates.sh`-green quickmerge unit). The
 > place to capture a multi-role / multi-concern effort is **separate small plans gated by dependencies**, NOT big phases
 > inside one plan. Authoring flow: write the lengthy multi-phase doc (a *tracker* — L8) to dump everything, then **split
@@ -544,7 +544,7 @@ Minimal fields: `repo@sha` + `pw:L2 ✓` + `regression: <path>`. Any UI tick mis
 **Scope.** This gate applies regardless of whether the change is a new feature, a bug fix, a refactor, or a copy
 change. If the file touched is in a UI repo: the gate applies.
 
-**Relation to ui-testing-layers.md.** The 8 layers in `codex/06-coding-standards/ui-testing-layers.md` define WHAT
+**Relation to ui-testing-layers.md.** The 8 layers in `/codex/06-coding-standards/ui-testing-layers.md` define WHAT
 each layer tests and WHEN it runs. This section defines the plan-level enforcement: a todo cannot be declared done
 until the appropriate layer passes and a regression guard exists. The two documents compose — do not weaken either.
 
@@ -739,11 +739,11 @@ worktree path: `Your slot is <N>. Your worktree is at ${WORKSPACE_ROOT}/.tabs/<N
 
 SSOTs:
 
-- Codex doc: [`codex/05-infrastructure/per-tab-worktrees.md`](../codex/05-infrastructure/per-tab-worktrees.md) — the
+- Codex doc: [`/codex/05-infrastructure/per-tab-worktrees.md`](/codex/05-infrastructure/per-tab-worktrees.md) — the
   3-tier hierarchy + fixed-slot model + slot-reset discipline.
 - Reconciliation:
-  [`codex/05-infrastructure/plan-aware-merge-resolution.md`](../codex/05-infrastructure/plan-aware-merge-resolution.md)
-  — slot-master merge resolution protocol.
+  [`/codex/05-infrastructure/plan-aware-merge-resolution.md`](/codex/05-infrastructure/plan-aware-merge-resolution.md) —
+  slot-master merge resolution protocol.
 - Plan that codified it: [`plans/active/per_agent_worktrees_2026_05_10.md`](active/per_agent_worktrees_2026_05_10.md).
 
 Reviewers reject daily work-split plans without the slot↔theme table.

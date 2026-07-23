@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: IM Profit-Share Structures
 summary:
-  All Investment-Management commercial mechanics — no management fee, 30-35% performance-share band with
-  platform-fee client-choice (Option A +5% perf / Option B $500/mo), CME asymmetric 70/10 co-invest with
-  $50k skin, India Options $100k onboarding, mean-rev migration path, and the BTC FoF external wrapper.
+  All Investment-Management commercial mechanics — no management fee, 30-35% performance-share band with platform-fee
+  client-choice (Option A +5% perf / Option B $500/mo), CME asymmetric 70/10 co-invest with $50k skin, India Options
+  $100k onboarding, mean-rev migration path, and the BTC FoF external wrapper.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [admin, sales]
 tags: [commercial-model, im, profit-share, pricing, cme, india-options]
 related:
   [
-    im-vs-reg-reporting-logic.md,
-    pricing-building-blocks.md,
-    signal-leasing.md,
-    cash-deployment-plan.md,
+    /codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/signal-leasing.md,
+    /codex/14-customer-journeys/commercial-model/cash-deployment-plan.md,
   ]
 created: 2026-04-20
 authoritative_for:
   [IM profit-share commercial structures (perf-share / platform-fee-choice / CME co-invest / India Options)]
-referenced_by: [codex/14-customer-journeys/commercial-model/cash-deployment-plan.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/commercial-model/managed-defi-sla-cost-build.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/cash-deployment-plan.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md,
+    /codex/14-customer-journeys/commercial-model/managed-defi-sla-cost-build.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -91,7 +101,8 @@ Good year (20%): ~£25k/mo. Flat year (5%): ~£4k/mo + £2k/mo Option B floor = 
 
 ## CME co-investment structure (asymmetric)
 
-**Unique mechanic**: Odum co-invests $50k skin-in-the-game alongside the client's $500k allocation. Working pool = $550k
+**Unique mechanic**: Odum co-invests $50k skin-in-the-game alongside the client's $500k allocation. Working pool =
+$550k
 (ramping to $5.05M over year-1). Odum brings the S&P ML signal + CME trade execution.
 
 ### Profit / loss split

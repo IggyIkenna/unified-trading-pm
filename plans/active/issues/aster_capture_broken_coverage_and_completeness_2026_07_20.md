@@ -30,9 +30,9 @@ tags:
   [aster, hyperliquid, capture-universe, data-completeness, provenance, binance-proxy, mvp-universe, cefi-onchain-perp]
 related:
   [
-    hl_multiplier_kcoins_excluded_from_mvp_universe_2026_07_20.md,
-    cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    cefi_backfill_per_day_catalogue_reload_2026_07_20.md,
+    /plans/archive/issues/hl_multiplier_kcoins_excluded_from_mvp_universe_2026_07_20.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    /plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master

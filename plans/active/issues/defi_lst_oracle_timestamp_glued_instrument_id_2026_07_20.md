@@ -272,7 +272,7 @@ relaunched both missing ranges fresh (`canonical-migration-defi-rebuild-20260723
 idempotent/safe-to-rerun by design (its own docstring: "Safe to re-run"), so no coordination conflict. Current live
 roster covers the full 2020-01-01..2026-07-22 range with no gaps across 6 VMs: `-141001` (2026), `-141515` (2025 H1),
 `-141922` (2020..2022-04-29), `-142022` (2022-04-29..2024-04-29), `-142940` (2024-04-29..2024-12-31, gap-fill),
-`-143019` (2025 H2, gap-fill). Also confirmed directly (per `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+`-143019` (2025 H2, gap-fill). Also confirmed directly (per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
 §3): the `_migrated_` marker delete remains a human-only hard stop regardless of chat authorization — a sanctioned
 dry-run-by-default script already exists
 (`market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py`); once this rebuild sweep

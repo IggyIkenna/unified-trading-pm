@@ -33,10 +33,10 @@ related:
   [
     plans/audit/results/instruments_mtds_subset_and_consistency_audit_2026_06_17.md,
     plans/active/instruments_foundation_completeness_2026_06_24.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/pipeline-mode-partition.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-06-17
 parent_epic: instruments_master
@@ -719,10 +719,10 @@ AG now has blank_status=0 AND dup_cells=0.** prediction was already clean (500 r
       −861 legitimate spelling-dedup).
 
       **tradfi v9-column apply DEFERRED until the running DBEQ/CBOE per-date backfills
-                      finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
-                      `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
-                      UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
-                      (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
+                                                                                      finish** (avoid clobbering their in-flight per-VM-shard writes; the consolidator merges them). Snapshots →
+                                                                                      `_index/snapshots/pre_is_v9_{ag}_2026_06_19`. WRITER ROOT-FIX so new captures don't regress source-blank:
+                                                                                      UTL@f8ec9096 `_stamp_producer_source` stamps `source_string_for(pipeline_mode)` on blank batch producer rows
+                                                                                      (C-#6-identity-safe; +3 regression tests). — instruments-service@7a63be9 + unified-trading-library@f8ec9096
 
 - [ ] [SCRIPT] P3. **`canonicalize_instruments_store_index.py` can't resolve the prediction bucket** — `_bucket_for`
       calls `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` which raises `BucketNamingError`
@@ -875,7 +875,7 @@ credits. Tracked todos below.
       (`gcs_copy_object`), or run the consolidator `--force` once over the `-prd-` bucket after the per-VM shards land
       there; (4) verify `_index/availability_index.parquet` freshness on each `-prd-` bucket (consolidator heartbeat <
       `MANIFEST_CONSOLIDATED_STALENESS_SEC`); (5) ONLY THEN are the legacy research buckets delete-safe (operator-gated,
-      tracked with the other legacy deletes). SSOT: `codex/05-infrastructure/manifest-consolidator-ssot.md` +
+      tracked with the other legacy deletes). SSOT: `/codex/05-infrastructure/manifest-consolidator-ssot.md` +
       `e2e-testing/docs/defi/research_data_canonical_sources_2026_06_18.md`. — deployment-service/e2e-testing
 
 - [x] ✅ [CODE] P3. **e2e `verify_unmappable_legacy_content_aware.py` non-ruff `# noqa: qg-cloud-sdk`** — FIXED by the
@@ -1213,13 +1213,13 @@ TWIN-VERIFIED-SAFE.** Authoritative per-object reclassification writing to
       2.17M cefi / 1.58M defi / 144k tradfi / 804k sports).
 
       CONSEQUENCE: the data-status `_apply_pipeline_mode_filter`
-                      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
-                      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
-                      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
-                      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
-                      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
-                      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
-                      AG. — market-tick-data-service
+                                                                                      chip (`coverage.py`) narrows to ZERO on any `batch_*` filter — the manifest rows have no `pipeline_mode` to match —
+                                                                                      even though the GCS objects ARE canonically `pipeline_mode={mode}_{source}/`-keyed. Coverage % + the drilldown are
+                                                                                      UNAFFECTED (they read `capture_status`/ derive canonical segments from UAC, not the manifest pipeline_mode
+                                                                                      column). FIX = the wholesale v9 `_index` rebuild-and-replace (already tracked per-AG: N5r/N6r for defi, the
+                                                                                      migrate-first + rebuild for tradfi/sports/pred) must POPULATE `pipeline_mode`+`source`+`asset_group` from the
+                                                                                      canonical object paths, not just classify capture_status. Re-verify `pipeline_mode` non-blank > 0 post-rebuild per
+                                                                                      AG. — market-tick-data-service
 
 - [x] ✅ [DATA] P3. **N3b — SPORTS: captured cells still NULL source** — DONE 2026-06-19. Live-index audit shows
       captured NULL-source = **0** (already resolved on the live `_index`; the v9 source-stamp populated every captured
@@ -1374,7 +1374,7 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
     > **[v10 RECONCILED 2026-06-27]** The "4 leagues EPL/LA_LIGA/NFL/NBA" count above reflects the PRE-v10
     > `SportsMvpRule`. The canonical v10 MVP scope for sports is **94 FOOTBALL leagues** via
     > `_mvp_football_league_ids()` (`mvp_scope.py` v10). Do NOT act on the 4-league count as a current scope definition.
-    > SSOT: `codex/02-data/mvp-scope-canonical.md`.
+    > SSOT: `/codex/02-data/mvp-scope-canonical.md`.
   - **A3 paths PASS** — all 6 representative data_types (FIXTURES/STANDINGS/ODDS/PLAYER_VALUES/SFI_PROGRESSIVE_STATS/
     WEATHER) resolve to actual GCS objects via `candidate_parquet_paths()`. No reader-shape drift.
   - **D shard-atom PASS** — `(data_type, league_id, date)` atom IDENTICAL across IS SSOT
@@ -1390,7 +1390,7 @@ catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENT
       (build_instrument_catalogue.py) > **[v10 RECONCILED 2026-06-27]** The `SportsMvpRule` keys
       (`EPL`/`LA_LIGA`/`NFL`/`NBA`) described above reflect > the PRE-v10 definition. The canonical v10 sports MVP scope
       is **94 FOOTBALL leagues** (NOT 4 leagues) via > `_mvp_football_league_ids()`. The catalogue `mvp` column fix (if
-      pursued) must check against the v10 94-league > set. SSOT: `codex/02-data/mvp-scope-canonical.md`.
+      pursued) must check against the v10 94-league > set. SSOT: `/codex/02-data/mvp-scope-canonical.md`.
 
 ### Sports MD (market-data-tick-sports) twin-coverage — verify + fan-out (2026-06-19, autonomous tick 5)
 
@@ -2017,7 +2017,7 @@ unblocks) to flow the actual data into those canonical buckets.
 > `day={D}/data_type={DT}/{class}/{VENUE}/{file}`) `futures_chain`/`options_chain` objects the generic
 > `audit_legacy_gcs_dup_delete_list.py` classifies `MIGRATE-FIRST` (`reason=no_venue_or_data_type_in_path`) include ICE
 > softs/Brent data captured BEFORE the 2026-06-18 3-dataset Databento subscription lockdown dropped ICE
-> (`codex/02-data/tradfi-databento-sourcing-ssot.md`) — non-refetchable. Ruling: PRESERVE AND RESHAPE, never delete.
+> (`/codex/02-data/tradfi-databento-sourcing-ssot.md`) — non-refetchable. Ruling: PRESERVE AND RESHAPE, never delete.
 
 **Live-verified count (two independent full-corpus rescans agree, 2026-07-02 and 2026-07-13 — bucket confirmed stable):
 55 objects, not the ballpark "~64" first quoted** — `futures_chain` MIGRATE-FIRST = 49 (9 ICE: BRENT, COCOA, COFFEE,
@@ -2063,7 +2063,7 @@ needed) = 55/55 accounted for; manifest captured-count unaffected (no new writes
 > Operator ruling 2026-07-13: the legacy shape
 > `day=.../venue=EIGENLAYER-ETHEREUM/instrument_type=restaking/ data_type=rewards/ticks.parquet` (~597 objects) AND its
 > computed "canonical" twin (same combined venue under `pipeline_mode=batch_onchain_subgraph` in the prd bucket) BOTH
-> violate `codex/02-data/defi-canonical-naming-ssot.md` (NEVER the combined PROTOCOL-CHAIN venue overload —
+> violate `/codex/02-data/defi-canonical-naming-ssot.md` (NEVER the combined PROTOCOL-CHAIN venue overload —
 > `venue=EIGENLAYER` + `chain=ETHEREUM` as separate hive keys). Mid-session scope update from the coordinator (fresh
 > legacy-dup audit, PM@194b7d542): the generic defi legacy bulk (5,332 MIGRATE-FIRST objects) was already
 > migrated+deleted by a separate process — this EIGENLAYER population is its own, separately-tracked residue,
@@ -2141,7 +2141,7 @@ findings-triage — not fixed this session):
       (`market-data-tick-defi-central-element-323112`, `batch_onchain_rpc`) + 597 mis-shaped "canonical" twin
       (`market-data-tick-defi-prd-central-element-323112`, `batch_onchain_subgraph`) — both
       `venue=EIGENLAYER-ETHEREUM/instrument_type=restaking/data_type=rewards`, violating
-      `codex/02-data/defi-canonical-naming-ssot.md`. A correctly-split twin
+      `/codex/02-data/defi-canonical-naming-ssot.md`. A correctly-split twin
       (`venue=EIGENLAYER/chain=ETHEREUM/instrument_type=staking/data_type=eigenlayer_rewards`) already existed for
       597/597 days (596 exact row-count parity + 1 strict superset); manifest carried ZERO rows for the combined venue
       (orphan objects, no manifest correction needed). Snapshotted both bucket manifests first, deleted all 1,194

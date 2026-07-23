@@ -11,7 +11,13 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [audit-lifecycle, audit, epic-execution, plan-hygiene, archival]
-related: [../../plans/audit/README.md, epic-execution-with-sub-agents.md, ../../plans/epics/README.md, issue-doc-lifecycle.md]
+related:
+  [
+    ../../plans/audit/README.md,
+    /codex/11-project-management/epic-execution-with-sub-agents.md,
+    ../../plans/epics/README.md,
+    /codex/11-project-management/issue-doc-lifecycle.md,
+  ]
 created: 2026-05-23
 authoritative_for: [codex audit-lifecycle quick-reference]
 referenced_by:

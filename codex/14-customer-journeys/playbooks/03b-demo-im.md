@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Playbook 3b — Demo: Investment Management flavour'
+title: "Playbook 3b — Demo: Investment Management flavour"
 summary:
-  'pb3b implementation — IM demo; UI-identical to pb3a (same reporting entitlements + click path), differs
-  only in sales narrative framing (allocator lens vs regulatory lens); includes the per-topic narrative
-  difference table and shares the pb3a Playwright helper.'
+  "pb3b implementation — IM demo; UI-identical to pb3a (same reporting entitlements + click path), differs only in sales
+  narrative framing (allocator lens vs regulatory lens); includes the per-topic narrative difference table and shares
+  the pb3a Playwright helper."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, playbook, demo, investment-management, reporting, entitlements]
 related:
   [
-    03-warm-prospect-demo.md,
-    03a-demo-reg-umbrella.md,
-    03c-demo-dart.md,
-    02a-research-im.md,
+    /codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md,
+    /codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
+    /codex/14-customer-journeys/playbooks/02a-research-im.md,
     ../playbook-concepts/client-reporting.md,
   ]
 created: 2026-04-19
 authoritative_for: [pb3b IM demo playbook implementation]
-referenced_by: [codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/playbook-concepts/client-reporting.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md, codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/playbooks/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/playbook-concepts/client-reporting.md,
+    /codex/14-customer-journeys/playbooks/02a-research-im.md,
+    /codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md,
+    /codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Rule 01 — Experience playbook grammar
 summary:
-  "The fixed nine-section grammar (Audience → Moment in journey → What Odum must prove → Experience goal →
-  Walkthrough → Key messages → What not to show → Desired next step → Internal handoff) every experience
-  playbook under experience/ must carry, in order, with no omissions."
+  "The fixed nine-section grammar (Audience → Moment in journey → What Odum must prove → Experience goal → Walkthrough →
+  Key messages → What not to show → Desired next step → Internal handoff) every experience playbook under experience/
+  must carry, in order, with no omissions."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,24 @@ stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
 tags: [customer-journey, playbooks, sales, grammar, docspec]
-related: [02-tone-and-posture.md, 06-show-dont-show-discipline.md]
+related:
+  [
+    /codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+  ]
 created: 2026-04-20
 authoritative_for: [experience playbook grammar (nine mandatory sections)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/TEMPLATE.md, codex/14-customer-journeys/experience/briefings-hub.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/_ssot-rules/README.md,
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/experience/README.md,
+    /codex/14-customer-journeys/experience/TEMPLATE.md,
+    /codex/14-customer-journeys/experience/briefings-hub.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

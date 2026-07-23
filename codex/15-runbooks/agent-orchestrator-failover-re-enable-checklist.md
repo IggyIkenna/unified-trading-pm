@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [runbook, agent-orchestrator, failover, resilience, multi-vm, dormant-infra]
 related:
   [
-    ../04-architecture/recovery-defence-in-depth-layers.md,
-    ../04-architecture/autonomous-recovery-matrix.md,
-    ../12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     ../../plans/active/ao_failover_multi_vm_readiness_2026_07_20.md,
   ]
 created: 2026-07-20
@@ -141,9 +141,9 @@ Do not assume it works because the loop is "running". Verify an actual cycle:
 
 - [`agent-orchestrator/server/failover.py`](../../../agent-orchestrator/server/failover.py) — the loop itself; module
   docstring has the full trigger contract.
-- [Recovery defence-in-depth layers](../04-architecture/recovery-defence-in-depth-layers.md) — where (and where not)
+- [Recovery defence-in-depth layers](/codex/04-architecture/recovery-defence-in-depth-layers.md) — where (and where not)
   failover sits among the workspace's recovery mechanisms.
-- [Autonomous recovery matrix](../04-architecture/autonomous-recovery-matrix.md) — kill-switch / auto-recovery scope
+- [Autonomous recovery matrix](/codex/04-architecture/autonomous-recovery-matrix.md) — kill-switch / auto-recovery scope
   this loop does NOT participate in.
 - [`ao_failover_multi_vm_readiness_2026_07_20.md`](../../plans/active/ao_failover_multi_vm_readiness_2026_07_20.md) —
   the plan that produced this checklist + the paused-slot fix + the gate tests.

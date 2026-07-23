@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Capability Wizard — walkthrough question bank
-summary: The capability-wizard question bank — every wizard question (Stages A–J plus isolation-mode starter set) pinned to the registry/enum code anchor that powers its answer set, tagged registry/partial/gap; a question with no anchor and no gap entry is itself a finding.
+summary:
+  The capability-wizard question bank — every wizard question (Stages A–J plus isolation-mode starter set) pinned to the
+  registry/enum code anchor that powers its answer set, tagged registry/partial/gap; a question with no anchor and no
+  gap entry is itself a finding.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,15 @@ stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, greeks-service]
 scope: [engineer, admin]
 tags: [strategy, capability-wizard, registry, uac, escalation, docspec]
-related: [capability-wizard.md]
+related: [/codex/09-strategy/architecture-v2/capability-wizard.md]
 created: 2026-06-11
 authoritative_for: [capability-wizard question bank (per-question code anchors)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/capability-wizard.md, plans/active/capability_wizard_and_manifest_2026_06_11.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/capability-wizard.md,
+    plans/active/capability_wizard_and_manifest_2026_06_11.md,
+  ]
 owner:
 last_reviewed: 2026-06-11
 code_refs:
@@ -35,7 +43,7 @@ configured strategies). Same manifest, four query styles.
 | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------- |
 | Who is configuring? (internal allocation / operator / client / agent)                                                   | wizard session metadata; persona resolution pattern from `lib/questionnaire/resolve-persona.ts` | registry              |
 | Fund structure: pooled / SMA / prop? How many investors/pools now; planned migration (e.g. 2 pooled → 1 SMA next year)? | fund-administration subscription/redemption state machines; **offerable-structure manifest**    | gap (fund structures) |
-| Share class / treasury denomination?                                                                                    | USDC/ETH/SOL/BTC per `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`               | registry              |
+| Share class / treasury denomination?                                                                                    | USDC/ETH/SOL/BTC per `/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`              | registry              |
 | Base-currency neutrality: USD-only / BTC-neutral / ETH-neutral?                                                         | questionnaire enum + share-class-aware PnL views (global ledger)                                | registry              |
 | Investor jurisdiction & entity type? (filters venues/instruments)                                                       | client_isolation_and_governance jurisdiction restrictions                                       | partial               |
 | Reporting cadence + attribution granularity?                                                                            | client-reporting-api; global ledger PnL attribution views                                       | registry              |

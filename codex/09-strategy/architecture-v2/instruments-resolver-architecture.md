@@ -13,7 +13,11 @@ repos: [instruments-service, unified-api-contracts, unified-trading-pm, unified-
 scope: [engineer]
 tags: [strategy, instruments, catalogue, uac, ui, single-walk]
 related:
-  [strategy-catalogue-3tier.md, ../../02-data/questionnaire-axes.md, ../../05-infrastructure/bucket-isolation-model.md]
+  [
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    ../../02-data/questionnaire-axes.md,
+    ../../05-infrastructure/bucket-isolation-model.md,
+  ]
 created: 2026-04-25
 authoritative_for: [strategy-catalogue to instruments-service resolver join]
 referenced_by:

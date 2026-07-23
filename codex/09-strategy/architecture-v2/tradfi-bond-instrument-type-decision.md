@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: TradFi Bond Instrument-Type Decision (2026-04-21)
-summary: Decision record — no bond instrument-type is added; treasury ETFs (TLT/IEF) on IBKR are spot equities covered by the existing STAT_ARB_PAIRS_FIXED×TRADFI×spot cell, resolving the Wave-5 audit TradFi·bond GAP without an enum change (actual Treasury futures stay dated_future).
+summary:
+  Decision record — no bond instrument-type is added; treasury ETFs (TLT/IEF) on IBKR are spot equities covered by the
+  existing STAT_ARB_PAIRS_FIXED×TRADFI×spot cell, resolving the Wave-5 audit TradFi·bond GAP without an enum change
+  (actual Treasury futures stay dated_future).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,15 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [strategy, tradfi, catalogue, ssot-audit, instruments]
-related: [strategy-registry-v2.md, category-instrument-coverage.md, legacy-family-migration.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/legacy-family-migration.md,
+  ]
 created: 2026-04-21
 authoritative_for: [TradFi treasury-ETF bond instrument-type decision]
-referenced_by: [codex/09-strategy/architecture-v2/legacy-family-migration.md]
+referenced_by: [/codex/09-strategy/architecture-v2/legacy-family-migration.md]
 owner:
 last_reviewed:
 code_refs:
@@ -99,7 +107,7 @@ These are NOT addressed by this decision — if any become real, they get a foll
 
 ## 6. Cross-references
 
-- `codex/09-strategy/architecture-v2/strategy-registry-v2.md` — v2 registry overview.
-- `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — per-archetype cell matrix narrative.
-- `codex/09-strategy/architecture-v2/legacy-family-migration.md` § 2.2 — v1→v2 equivalency audit (post-Wave-6 zero-gap
+- `/codex/09-strategy/architecture-v2/strategy-registry-v2.md` — v2 registry overview.
+- `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` — per-archetype cell matrix narrative.
+- `/codex/09-strategy/architecture-v2/legacy-family-migration.md` § 2.2 — v1→v2 equivalency audit (post-Wave-6 zero-gap
   state).

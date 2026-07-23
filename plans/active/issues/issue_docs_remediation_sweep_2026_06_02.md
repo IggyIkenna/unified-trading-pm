@@ -1,12 +1,22 @@
 ---
 doc_type: issue
 title: Issue-docs remediation sweep — code-fixable items across the 2026-05/06 issue-doc backlog
-summary: 'A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current code (with git-log dates, since docs predate today). Outcome: a large fraction of "...'
+summary:
+  'A 2026-06-02 (slot 7) code-audit of every `plans/active/issues/*.md` doc verified each open claim against current
+  code (with git-log dates, since docs predate today). Outcome: a large fraction of "...'
 status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [plan-hygiene, audit, refactor, data-correctness, defi, observability, reconciliation]
 related:
@@ -19,7 +29,21 @@ related:
 created: 2026-06-02
 parent_epic: plan_hygiene_master
 priority: P1
-source: [plans/active/issues/alerting_fp_rate_analysis_2026_05_23.md, plans/active/issues/api_host_chronic_impairment_2026_05_29.md, plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md, plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md, plans/active/issues/defi_code_codex_drift_2026_05_27.md, plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md, plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md, plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md, plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md, plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md, plans/active/issues/running_vm_fleet_status_2026_05_27.md, plans/active/issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md]
+source:
+  [
+    plans/active/issues/alerting_fp_rate_analysis_2026_05_23.md,
+    plans/active/issues/api_host_chronic_impairment_2026_05_29.md,
+    plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md,
+    plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+    plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md,
+    plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+    plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
+    plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
+    plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md,
+    plans/active/issues/running_vm_fleet_status_2026_05_27.md,
+    plans/active/issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -340,12 +364,12 @@ verified complete**.
   `defi-data-types-catalog.md` are in that worker's active codex territory (coordination boundary: do not touch
   semver-rollout/DeFi-venue files). De-dup to `defi_manifest_canonicalisation_2026_06_01.md` §C0-RD. Source:
   defi_code_codex_drift D14.
-- [x] ✅ [DOC] P2. PM: fix stale repo names in `codex/04-architecture/data-flow-map.md`
+- [x] ✅ [DOC] P2. PM: fix stale repo names in `/codex/04-architecture/data-flow-map.md`
       (`trading-analytics-api`→`unified-trading-api`, `trading-analytics-ui`→`unified-trading-system-ui`). —
       unified-trading-pm@(this commit) (8 occurrences renamed; `{TRADING_ANALYTICS_GCS_BUCKET}` env var left intact).
       Source: batch_live_reconciliation_service_audit §7.
 - [x] ✅ [DOC] P3. PM: add a "NOT YET DEPLOYED — tofu apply pending" warning to
-      `codex/05-infrastructure/vm-log-archival.md` (cron authored but not applied). — unified-trading-pm@(this commit)
+      `/codex/05-infrastructure/vm-log-archival.md` (cron authored but not applied). — unified-trading-pm@(this commit)
       (banner under the title: rolling log-archive + serial-capture schedulers TF-authored, not applied; snapshot +
       vm-logs stream are live). Source: fleet_audit_triad.
 - [x] ✅ [DOC] P3. PM: B2 codex marker reconciliation — replace `zero_activity=True` / `ZERO_ACTIVITY_BAR` with
@@ -358,7 +382,7 @@ verified complete**.
       `_finalize_session_grid`; legacy `ZERO_ACTIVITY_BAR` label retained for continuity. **Residual:** 3 sibling docs
       still carry the legacy token (`00-SSOT-INDEX.md`, `batch-live-architecture.md`, `alerting-batch-live.md`) — minor
       doc-drift follow-up outside this item's named 2-file scope.) Source: fleet_audit_triad.
-- [x] ✅ [DOC] P1. PM: write `codex/06-coding-standards/adapter-finalization-contract.md` + a per-adapter density
+- [x] ✅ [DOC] P1. PM: write `/codex/06-coding-standards/adapter-finalization-contract.md` + a per-adapter density
       section in `honest-absence-downstream-handling.md` (after the MDPS workstream lands). —
       unified-trading-pm@`5c7aedc23` (already landed by the MDPS leading-NaN workstream: full finalization contract doc
       (84L, close-driven vs state_col modes + per-adapter table) + "Per-adapter density contract" section
@@ -373,7 +397,7 @@ verified complete**.
 > `downstream_services_manifest_canonicalisation_2026_06_01.md` (deployment-api/UI preflight "agent B" + slot-2 DeFi).
 
 - [x] ✅ [DOC] P1. Write the E2E manifest-wiring codex doc mapping all 7 services + the 3 layers + named gaps. —
-      unified-trading-pm@`a28e2b1b4` (`codex/04-architecture/e2e-pipeline-manifest-wiring.md`).
+      unified-trading-pm@`a28e2b1b4` (`/codex/04-architecture/e2e-pipeline-manifest-wiring.md`).
 - [x] ✅ [TEST] P1. Add a SIT introspection test asserting the IS→MTDS→MDPS→features→strategy readiness chain is
       connected + manifest schema carries every stage-key column + surfaces the missing execution hop as an `xfail`. —
       system-integration-tests@`29e0a75` (`tests/unit/test_pipeline_manifest_wiring.py`; 6 passed + 1 xfail[G-EXEC]).

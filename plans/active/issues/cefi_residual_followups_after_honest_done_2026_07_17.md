@@ -41,10 +41,10 @@ tags:
   ]
 related:
   [
-    cefi_completion_program_2026_07_15.md,
-    cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
-    phantom_captures_cefi_2026_06_28.md,
+    /plans/archive/2026_07/cefi_completion_program_2026_07_15.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    /plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
+    /plans/archive/issues/phantom_captures_cefi_2026_06_28.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17
@@ -191,9 +191,10 @@ pairs stay honest-unresolved (reported, never guessed).
 - [x] ✅ [SCRIPT] P1. **Sample OPTION / dated-FUTURE `raw_symbol` coverage on the REBUILT catalogue** — DONE via the
       Phase-−1 gate (`instruments-service@scripts/gate_cefi_catalogue_canonical_phase_minus1_2026_07_18.py`, ran GREEN
       2026-07-18 on the rebuilt 425,573-row `prod/catalog.parquet`). Open-q #14 ("decompose ALL types") PROVEN: OPTION
-      **264,122** rows decompose per-strike/per-expiry (`BTC-5APR19-3250-C` → `DERIBIT:OPTION:BTC-USD@INV-20190405-3250-C`),
-      dated-FUTURE **9,091** decompose per-expiry (`adausd_200925` → `BINANCE-DELIVERY:FUTURE:ADA-USD@INV-20200926`);
-      PERPETUAL 5,411 / SPOT_PAIR 8,405. All quote-bearing (gate's 0-missing-quote assertion). (repo: instruments-service)
+      **264,122** rows decompose per-strike/per-expiry (`BTC-5APR19-3250-C` →
+      `DERIBIT:OPTION:BTC-USD@INV-20190405-3250-C`), dated-FUTURE **9,091** decompose per-expiry (`adausd_200925` →
+      `BINANCE-DELIVERY:FUTURE:ADA-USD@INV-20200926`); PERPETUAL 5,411 / SPOT_PAIR 8,405. All quote-bearing (gate's
+      0-missing-quote assertion). (repo: instruments-service)
 - [ ] [SCRIPT] P2. **586 marker-less `VENUE:PERPETUAL:BASE-QUOTE` catalogue rows** (blueprint open-q #19, measured
       2026-07-17: BITGET-FUTURES 275 / BINANCE-FUTURES 153 / COINBASE-FUTURES 107 / BINANCE-DELIVERY 27 /
       BITFINEX-FUTURES 16 / OKX-SWAP 5 / BYBIT 3 — NOT just the 16 BITFINEX rows the blueprint recorded). Deliberately
@@ -372,7 +373,7 @@ pairs stay honest-unresolved (reported, never guessed).
       existing test passes on mocks. `efd3e038` closes the join-key half (`instrument_key` now exists + is canonical);
       the shaping half needs a real decision, so it is NOT silently invented here: derive `mid_price` from
       `(bid_px_00+ask_px_00)/2`? nest the L5 columns into `bids`/`asks` list-of-[px,sz]? `quote_volume = price*amount`?
-      Each is a feature-definition change (formula-hash / `codex/02-data/feature-formula-versioning.md`), not a loader
+      Each is a feature-definition change (formula-hash / `/codex/02-data/feature-formula-versioning.md`), not a loader
       tweak. **Blast radius**: these 5 groups produce nothing today regardless of this program. (repo: features-service)
 - [ ] [BACKEND] P2. **features raw cefi day-scan is unbounded (found 2026-07-17, `features-service@efd3e038`).** With
       the prefix fixed the loader now downloads EVERY matching parquet for a day and concatenates in memory; one
@@ -465,15 +466,15 @@ pairs stay honest-unresolved (reported, never guessed).
 
 ## Codex SSOTs (read before touching a phase)
 
-`codex/02-data/defi-canonical-naming-ssot.md`, `…/availability-manifest-and-data-status.md`,
-`…/chart-candle-delivery-flow.md`, `codex/06-coding-standards/read-time-filter-pushdown.md`,
-`codex/05-infrastructure/vm-launcher-runbook.md` (drain), `codex/05-infrastructure/gcs-object-operations.md`.
+`/codex/02-data/defi-canonical-naming-ssot.md`, `…/availability-manifest-and-data-status.md`,
+`…/chart-candle-delivery-flow.md`, `/codex/06-coding-standards/read-time-filter-pushdown.md`,
+`/codex/05-infrastructure/vm-launcher-runbook.md` (drain), `/codex/05-infrastructure/gcs-object-operations.md`.
 
 ## Progress Log
 
-- **2026-07-18 (slot-3, /autonomous) — CUTOVER STAGED; drain+`--apply`+content GATED on a QUIET cefi fleet (a
-  concurrent pipeline-check sweep is active).** Everything reversible is done + verified; only the irreversible core
-  remains, and it needs a writer-free window.
+- **2026-07-18 (slot-3, /autonomous) — CUTOVER STAGED; drain+`--apply`+content GATED on a QUIET cefi fleet (a concurrent
+  pipeline-check sweep is active).** Everything reversible is done + verified; only the irreversible core remains, and
+  it needs a writer-free window.
   - **Reader-bridge (377) VERIFIED READY**: the D3 `CeFiWireCanonicalMap` bridge is on current `origin/main` for BOTH
     MTDS (`engine/cefi_wire_bridge.py`, `cefi_catalog_reader.py`, `partitioned_writer.py`,
     `market_interface/adapters/cefi/catalog_id_resolver.py`) and MDPS (`app/utils/cefi_wire_bridge.py`,
@@ -481,15 +482,15 @@ pairs stay honest-unresolved (reported, never guessed).
     invocation, which is post-re-enable); features' read is filename-agnostic (rename can't break it); execution-service
     needs only a redeploy (non-trading → low risk). So readers survive the rename/rewrite.
   - **DRAIN BLOCKER (measured)**: `gcloud compute instances list … name~cefi status=RUNNING` = **2 VMs**, both from a
-    concurrent PIPELINE-CHECK sweep — `instr-backfill-cefi-pchk-0718120011-f-<venue>` + `mtds-backfill-cefi-pipelinecheck-
-    <ts>` (a fresh mtds-backfill launched every ~4 min; venue cycles okx-spot→deribit→…). AWS cefi = 0. The STANDING
-    capture writers (Tardis `cefi-queue-*` / on-chain `cefi-*`) are already quiet — it is ONLY this concurrent sweep
-    (another session running the `data-pipeline-check-mtds` skill) that is live. Draining it would be (a) interfering
-    (not my operation) and (b) INEFFECTIVE — the controller relaunches per-venue writers that would then RACE my
-    rename/content `--apply` (the exact hazard the drain exists to prevent). Per the drain HARD RULE ("no GCS cutover
-    with writers live") the cutover WAITS for the sweep to finish (a fleet-quiet watcher is armed), then executes
-    drain→snapshot→Scripts 2/3/4 `--apply`→re-enable→Script-1 content on a VM. **This is a fleet-coordination gate, not a
-    code/data problem** — surfaced to the operator.
+    concurrent PIPELINE-CHECK sweep — `instr-backfill-cefi-pchk-0718120011-f-<venue>` +
+    `mtds-backfill-cefi-pipelinecheck- <ts>` (a fresh mtds-backfill launched every ~4 min; venue cycles
+    okx-spot→deribit→…). AWS cefi = 0. The STANDING capture writers (Tardis `cefi-queue-*` / on-chain `cefi-*`) are
+    already quiet — it is ONLY this concurrent sweep (another session running the `data-pipeline-check-mtds` skill) that
+    is live. Draining it would be (a) interfering (not my operation) and (b) INEFFECTIVE — the controller relaunches
+    per-venue writers that would then RACE my rename/content `--apply` (the exact hazard the drain exists to prevent).
+    Per the drain HARD RULE ("no GCS cutover with writers live") the cutover WAITS for the sweep to finish (a
+    fleet-quiet watcher is armed), then executes drain→snapshot→Scripts 2/3/4 `--apply`→re-enable→Script-1 content on a
+    VM. **This is a fleet-coordination gate, not a code/data problem** — surfaced to the operator.
 
 - **2026-07-18 (slot-3, /autonomous) — CUTOVER STEP 1+2 DONE: catalogue rebuilt + Phase-−1 gate GREEN (surface D is
   canonical-clean).** Rebuilt `prod/catalog.parquet` with the DERIBIT-quote fix (`instruments-service@d72edcf7`) +

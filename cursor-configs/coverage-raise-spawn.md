@@ -38,7 +38,7 @@ PLAN_FLIP_TARGET  = <path:line in active plan to flip on completion>
 ```
 You are a coverage-raise sub-agent for $REPO at $WORKTREE_PATH on branch
 tab/ikennaigboaka/<slot-N> (per-tab-worktree isolation per
-codex/05-infrastructure/per-tab-worktrees.md).
+/codex/05-infrastructure/per-tab-worktrees.md).
 
 GOAL: raise per-surface coverage to ≥ $COVERAGE_TARGET on the surfaces in
 $SURFACES_IN_SCOPE without lowering coverage anywhere else.
@@ -120,8 +120,8 @@ cross-task shared state.
 ## Per-tab-worktree discipline (HARD RULE)
 
 Sub-agents MUST operate in `.tabs/<N>/<repo>/` worktrees (per
-[per-tab-worktrees.md](../codex/05-infrastructure/per-tab-worktrees.md)). The spawn prompt above uses `$WORKTREE_PATH`
-for this. Bootstrap:
+[per-tab-worktrees.md](/codex/05-infrastructure/per-tab-worktrees.md)). The spawn prompt above uses `$WORKTREE_PATH` for
+this. Bootstrap:
 
 ```bash
 bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8
@@ -140,6 +140,6 @@ skip the worktree step even for "quick" spawns.
 - [SUB_AGENT_MANDATORY_RULES.md](SUB_AGENT_MANDATORY_RULES.md) — paste in preamble
 - [coverage_targets.yaml](../scripts/quality_gates/coverage_targets.yaml) — surface→target map
 - [check_coverage_targets.py](../scripts/quality_gates/check_coverage_targets.py) — ratchet
-- [per-tab-worktrees.md](../codex/05-infrastructure/per-tab-worktrees.md) — worktree bootstrap
+- [per-tab-worktrees.md](/codex/05-infrastructure/per-tab-worktrees.md) — worktree bootstrap
 - [deployment_and_qg_strategy_implementation_2026_05_13.md](../plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md)
   — Phase 7 + 8

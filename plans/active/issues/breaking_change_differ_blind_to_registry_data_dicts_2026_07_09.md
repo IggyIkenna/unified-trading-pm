@@ -35,8 +35,8 @@ tags:
 related:
   [
     plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
-    codex/08-workflows/ci-cd-flow.md,
-    codex/06-coding-standards/integration-testing-layers.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
   ]
 created: 2026-07-09
 parent_epic: infrastructure_master
@@ -112,7 +112,7 @@ data still folds onto → the data becomes invisible to Layer-1/Layer-2 coverage
 cross-repo gate exists to stop, and it is invisible to an export-only differ.
 
 The CI/CD flow doc already acknowledges an **adjacent** escaped class — manifest `schema_version` is "a real contract
-change but does NOT trip the breaking differ" (`codex/08-workflows/ci-cd-flow.md`, breaking-differ section). Registry
+change but does NOT trip the breaking differ" (`/codex/08-workflows/ci-cd-flow.md`, breaking-differ section). Registry
 data-dicts are the same category: data-carrying contracts the AST differ cannot see. The principle generalises to **any
 data registry — Python dict/set/list constants OR YAML/JSON registry files** — whose contents are a cross-repo contract.
 
@@ -135,7 +135,7 @@ There is **no 25-repo-wide QG on CI and no consumer-fanout on a provider promote
 breaking-gated, so a provider (UAC) can promote a consumer-breaking registry edit to `main` with only its own per-repo
 QG having looked at it. The break is then invisible until the consumer independently ships and re-runs its own QG
 against the new provider — hours/days later, or (as here) not at all until a human intervenes. This is exactly the
-cross-repo data-correctness class that `codex/02-data/data-pipeline-correctness-hard-rule.md` says must freeze shipping
+cross-repo data-correctness class that `/codex/02-data/data-pipeline-correctness-hard-rule.md` says must freeze shipping
 — but the gate that should enforce it never ran.
 
 ## Recommended fix
@@ -174,7 +174,7 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
       `test_venue_to_tardis_matches_inverted_venue_mapping`. (repo: system-integration-tests)
 - [ ] [DESIGN] P2. Decide whether provider (UAC) registry-change promotes should fan out consumer QG (≥ IS) as a gate;
       spec it or explicitly defer with rationale. (repo: unified-trading-pm)
-- [ ] [DOCS] P2. Once landed, update the breaking-differ section of `codex/08-workflows/ci-cd-flow.md` to document
+- [ ] [DOCS] P2. Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md` to document
       registry-data-constant tracking (remove the implicit "only exports/enums/routes/annotations" mental model). (repo:
       unified-trading-pm)
 - [ ] [VERIFY] P1. Reproduce end-to-end: differ on `23fa3a99` returns `is_breaking: true` post-fix; the new SIT

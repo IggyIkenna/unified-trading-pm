@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [pnl-attribution, strategy, defi, features, reconciliation, uac, execution]
 related:
   [
-    restaking-reward-economics.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
     reward-lifecycle.md,
     ../../../04-architecture/global-ledger-architecture.md,
     ../../../04-architecture/batch-live-architecture.md,
@@ -28,14 +28,14 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/ledger-event-taxonomy.md,
-    codex/04-architecture/backtest-groups.md,
-    codex/04-architecture/client-reporting-architecture.md,
-    codex/09-strategy/README.md,
-    codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md,
-    codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md,
-    codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/02-data/ledger-event-taxonomy.md,
+    /codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/client-reporting-architecture.md,
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
   ]
 owner:
 last_reviewed: 2026-05-18
@@ -129,7 +129,7 @@ table lists the canonical chain-native sources per protocol. The oracle / exchan
 direct chain-native capture is unavailable.
 
 **Centralized-exchange collateral form** (per
-[`codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](../archetypes/carry-staked-basis.md) § "Venue ×
+[`/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](../archetypes/carry-staked-basis.md) § "Venue ×
 LST collateral matrix"):
 
 | CEX                             | Accepted LST collateral                                              | Form                                                               | Attribution factor when posted as cross-margin                                                  |
@@ -768,7 +768,7 @@ When drift exceeds threshold, strategy emits a SWAP instruction to buy ETH back 
 Share-class specification: the legacy `_archived_pre_v2/cross-cutting/share-classes.md` reference was superseded
 2026-05-12 per slot 8 strategy audit ST-13 — the canonical share-class definitions are now expected to live in the
 strategy catalogue 3-tier doc + UAC `ConfigRegistry`. Cross-link: live operator-facing thresholds are in
-[`codex/04-architecture/defi-risk-monitoring.md`](../../../04-architecture/defi-risk-monitoring.md). If a downstream
+[`/codex/04-architecture/defi-risk-monitoring.md`](../../../04-architecture/defi-risk-monitoring.md). If a downstream
 consumer needs the full share-class spec before that section is written into a live SSOT, file a ping in
 `_agent_pings.md` so the migration sub-plan picks it up.
 
@@ -815,7 +815,7 @@ only `PNL_FACTOR_STAKING_YIELD` (→ `CARRY_BASE` or `CARRY_BASE_REBASING`) appl
 | Fill schema            | CanonicalFill (UIC)                 | `unified-api-contracts (internal/)/`                      |
 | Funding rate features  | features-service (delta-one family) | `features-service (delta-one family)/`                    |
 | Options greeks         | features-options-service            | `features-options-service/`                               |
-| Cost factors           | See execution-policy                | `codex/04-architecture/execution-policy.md`               |
+| Cost factors           | See execution-policy                | `/codex/04-architecture/execution-policy.md`              |
 | PnL storage            | GCS archives                        | `gs://pnl/{strategy_id}/{client_id}/{date}/`              |
 | Reporting UI           | trading-analytics-ui                | `trading-analytics-ui/`                                   |
 | BigQuery reporting     | UCI DataSink                        | `unified-cloud-interface/`                                |
@@ -827,7 +827,7 @@ only `PNL_FACTOR_STAKING_YIELD` (→ `CARRY_BASE` or `CARRY_BASE_REBASING`) appl
 
 > **[DELTA 2026-05-23]** UAC Phase 2 — `LedgerRow` shipped at `unified-api-contracts@008e59ce`. This section maps the
 > canonical attribution factors above to their SSOT ledger rows. Full architecture:
-> `codex/04-architecture/global-ledger-architecture.md`.
+> `/codex/04-architecture/global-ledger-architecture.md`.
 
 ### Carry-as-Theta-Family Attribution Framing
 

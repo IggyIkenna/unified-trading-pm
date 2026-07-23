@@ -455,7 +455,7 @@ unchanged:
 - [ ] [TEST] P2. **MTDS `tests/market_interface/` (70 test files) is NOT collected by the QG** (2026-06-11 finding,
       eb33603 unit) — the gate runs the default `PYTEST_UNIT_DIR` (`tests/unit/` [+integration]), so the adapter
       canonical-output suites never run in QG/CI. Fix: set `PYTEST_UNIT_DIR="tests/"` before the base-service source
-      line per the documented per-family override (codex/06-coding-standards/quality-gates.md), absorb any newly
+      line per the documented per-family override (/codex/06-coding-standards/quality-gates.md), absorb any newly
       collected failures in the same unit. Repo: market-tick-data-service.
 - [x] ✅ [CODE] P2c. **none-budget repos pinned at 0 (census-honest) 2026-06-11** — alerting-service@c41baf1,
       client-reporting-api@c8a32ff, fund-administration-service@3d32a3e, greeks-service@9efb1e7,
@@ -502,9 +502,9 @@ unchanged:
 
 ## Codex SSOT updates
 
-- `codex/06-coding-standards/quality-gates.md` § "CODEX_MAX_VIOLATIONS is a ratchet-down, ≤5 ceiling" + the file-size /
+- `/codex/06-coding-standards/quality-gates.md` § "CODEX_MAX_VIOLATIONS is a ratchet-down, ≤5 ceiling" + the file-size /
   function-size limits as first-class (not glob-exempt-forever).
-- `codex/06-coding-standards/README.md` § file-size discipline (900 max / 700 warn) — cross-link the worst-offender
+- `/codex/06-coding-standards/README.md` § file-size discipline (900 max / 700 warn) — cross-link the worst-offender
   split plan.
 
 ## Out of scope (named)

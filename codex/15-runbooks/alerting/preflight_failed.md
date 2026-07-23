@@ -12,14 +12,16 @@ stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [runbook, escalation, live-trading, execution, strategy, monitoring]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/order_rejection_spike.md]
+related: [/codex/15-runbooks/alerting/operator-playbook.md, /codex/15-runbooks/alerting/order_rejection_spike.md]
 created: 2026-05-08
 owner: ikenna
 cadence: on-demand
 verifier: operator
 last_executed:
 code_refs:
-authoritative_for: Operator response when execution-service preflight check rejects an order before submission. Indicates a risk / position / margin / instrument-state guard caught a malformed or unsafe order.
+authoritative_for:
+  Operator response when execution-service preflight check rejects an order before submission. Indicates a risk /
+  position / margin / instrument-state guard caught a malformed or unsafe order.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 

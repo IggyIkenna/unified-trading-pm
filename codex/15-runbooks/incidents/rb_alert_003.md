@@ -11,7 +11,7 @@ stage: [meta]
 repos: [alerting-service]
 scope: [admin, engineer]
 tags: [runbook, alerting, incident, on-call, escalation, satellite]
-related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+related: [/codex/15-runbooks/incidents/README.md, /codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Pre-travel
@@ -19,7 +19,12 @@ verifier: Pre-travel test call
 last_executed: never
 code_refs:
 authoritative_for: [RB-ALERT-003 operator runbook]
-referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/incident_runbooks_and_evidence_store_2026_05_23.md]
+referenced_by:
+  [
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
 ---
 
 # RB-ALERT-003 — Satellite / No-Signal Fallback
@@ -69,7 +74,7 @@ Log travel dates + device usage in alerting health log.
 
 ## Related
 
-- `codex/15-runbooks/incidents/README.md` — runbook index
-- `codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
-- `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder
+- `/codex/15-runbooks/incidents/README.md` — runbook index
+- `/codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
+- `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder

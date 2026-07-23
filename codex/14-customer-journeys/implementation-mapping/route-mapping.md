@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Route Mapping — Experience Section → UI Route
 summary:
   Index binding each experience-playbook walkthrough section to concrete unified-trading-system-ui routes (pb1 public
-  5-path, pb2 briefings, pb3 demo) plus cross-playbook shared routes and the rule-03 audience/phase-prefixed routes
-  that must NOT exist.
+  5-path, pb2 briefings, pb3 demo) plus cross-playbook shared routes and the rule-03 audience/phase-prefixed routes that
+  must NOT exist.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,26 @@ stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer, admin, sales]
 tags: [route, ui, playbook, navigation, refactor, testing]
-related: [playbook-to-qa-coverage.md, persona-and-user-prototype-mapping.md, ../shared-core/same-system-principle.md, ../shared-core/shared-reporting-core.md]
+related:
+  [
+    /codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    ../shared-core/same-system-principle.md,
+    ../shared-core/shared-reporting-core.md,
+  ]
 created: 2026-04-20
 authoritative_for: [experience-section -> UI-route mapping]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/light-auth-briefings.md, codex/14-customer-journeys/demo-ops/upsell-overlays.md, codex/14-customer-journeys/experience/marketing-journey.md, codex/14-customer-journeys/implementation-mapping/README.md, codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/authentication/light-auth-briefings.md,
+    /codex/14-customer-journeys/demo-ops/upsell-overlays.md,
+    /codex/14-customer-journeys/experience/marketing-journey.md,
+    /codex/14-customer-journeys/implementation-mapping/README.md,
+    /codex/14-customer-journeys/implementation-mapping/demo-email-and-provisioning-flow.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    /codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

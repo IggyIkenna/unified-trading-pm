@@ -12,10 +12,25 @@ stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
 tags: [demo-ops, sales, follow-up, orchestration, qualification, crm]
-related: [account-intelligence-record.md, meeting-history-and-interest-tracking.md, demo-decision-matrix.md]
+related:
+  [
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/meeting-history-and-interest-tracking.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
+  ]
 created: 2026-04-20
 authoritative_for: [post-demo follow-up orchestration]
-referenced_by: [codex/08-workflows/client-onboarding.md, codex/14-customer-journeys/README.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md, codex/14-customer-journeys/demo-ops/meeting-history-and-interest-tracking.md, codex/14-customer-journeys/experience/briefings-hub.md, codex/14-customer-journeys/experience/dart-demo.md, codex/14-customer-journeys/experience/marketing-journey.md]
+referenced_by:
+  [
+    /codex/08-workflows/client-onboarding.md,
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/demo-ops/README.md,
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/meeting-history-and-interest-tracking.md,
+    /codex/14-customer-journeys/experience/briefings-hub.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
+    /codex/14-customer-journeys/experience/marketing-journey.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -12,10 +12,25 @@ stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
 tags: [demo, provisioning, sales, persona, onboarding, staging, automation]
-related: [../demo-ops/account-intelligence-record.md, ../demo-ops/demo-decision-matrix.md, persona-and-user-prototype-mapping.md, route-mapping.md, ../demo-ops/demo-restriction-profiles.md]
+related:
+  [
+    ../demo-ops/account-intelligence-record.md,
+    ../demo-ops/demo-decision-matrix.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    /codex/14-customer-journeys/implementation-mapping/route-mapping.md,
+    ../demo-ops/demo-restriction-profiles.md,
+  ]
 created: 2026-04-20
 authoritative_for: [demo booking-to-provisioning flow (sales -> demo user -> welcome email)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/implementation-mapping/README.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md, codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/implementation-mapping/README.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    /codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md,
+    /codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

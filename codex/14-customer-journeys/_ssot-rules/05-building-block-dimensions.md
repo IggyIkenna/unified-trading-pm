@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Rule 05 — Building-block dimensions
 summary:
-  "The thirteen pricing/entitlement building blocks (11 standalone: reporting core, reg + IM reporting,
-  strategy-service entry, instructions integration, research/promote, execution, venue/chain/instrument-type/
-  analytics packs + 2 Tier-B premium modifiers) — the atomic unit all pricing, demos, and entitlements compose
-  from."
+  "The thirteen pricing/entitlement building blocks (11 standalone: reporting core, reg + IM reporting, strategy-service
+  entry, instructions integration, research/promote, execution, venue/chain/instrument-type/ analytics packs + 2 Tier-B
+  premium modifiers) — the atomic unit all pricing, demos, and entitlements compose from."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,25 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin, sales]
 tags: [customer-journey, sales, cost, dart, registry]
-related: [04-dart-commercial-axes.md, 08-pricing-principles.md, 10-strategy-instruction-schema-principles.md]
+related:
+  [
+    /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,
+    /codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md,
+    /codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md,
+  ]
 created: 2026-04-20
 authoritative_for: [thirteen commercial building-block dimensions]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md, codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md, codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md, codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,
+    /codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md,
+    /codex/14-customer-journeys/_ssot-rules/08-pricing-principles.md,
+    /codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md,
+    /codex/14-customer-journeys/_ssot-rules/README.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

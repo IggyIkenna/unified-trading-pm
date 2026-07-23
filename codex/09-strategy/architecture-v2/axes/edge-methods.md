@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'Axis: Edge Methods'
+title: "Axis: Edge Methods"
 summary:
   Edge-method axis catalog — the rule that turns a raw signal into a bet decision ("when should this fire?"). Enumerates
   value (model>implied), threshold-crossed, rate-differential-sustained, spread-capture, arbitrage (dispersion>cost),
@@ -13,10 +13,23 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, edge-methods, signal-sources, arbitrage, market-making, stat-arb]
-related: [signal-sources.md, staking-methods.md, expression.md, hold-policy.md, ../cross-cutting/benchmark-fills.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/axes/signal-sources.md,
+    staking-methods.md,
+    /codex/09-strategy/architecture-v2/axes/expression.md,
+    /codex/09-strategy/architecture-v2/axes/hold-policy.md,
+    ../cross-cutting/benchmark-fills.md,
+  ]
 created: 2026-04-17
 authoritative_for: [edge-method axis (signal-to-bet-decision rule catalog)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/signal-sources.md, codex/09-strategy/architecture-v2/axes/staking-methods.md, codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/axes/signal-sources.md,
+    /codex/09-strategy/architecture-v2/axes/staking-methods.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

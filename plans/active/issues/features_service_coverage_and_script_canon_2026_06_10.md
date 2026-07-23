@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: features-service coverage push + script-homes canon — findings & follow-ups
-summary: Session 2026-06-10 (1) deleted dead one-off scripts + fixed a cloud-SDK-direct violation in features-service per the new **script-homes canon** (`codex/06-coding-standards/script-homes.md`), and (2...
+summary:
+  Session 2026-06-10 (1) deleted dead one-off scripts + fixed a cloud-SDK-direct violation in features-service per the
+  new **script-homes canon** (`/codex/06-coding-standards/script-homes.md`), and (2...
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -9,11 +11,11 @@ stage: [meta]
 repos: [deployment-service, e2e-testing, features-service]
 scope: [engineer, admin]
 tags: [features, scripts, quality-gates, refactor, data-quality, testing]
-related: [codex/06-coding-standards/script-homes.md]
+related: [/codex/06-coding-standards/script-homes.md]
 created: 2026-06-10
 parent_epic: infrastructure_master
 priority: P2
-source: [features-service test-coverage session 2026-06-10, codex/06-coding-standards/script-homes.md]
+source: [features-service test-coverage session 2026-06-10, /codex/06-coding-standards/script-homes.md]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -26,7 +28,7 @@ last_updated: 2026-06-27
 ## What I found
 
 Session 2026-06-10 (1) deleted dead one-off scripts + fixed a cloud-SDK-direct violation in features-service per the new
-**script-homes canon** (`codex/06-coding-standards/script-homes.md`), and (2) raised features-service unit coverage
+**script-homes canon** (`/codex/06-coding-standards/script-homes.md`), and (2) raised features-service unit coverage
 **81.28% → 86.18%** (~955 new tests, 11 modules; 17,204 pass / 0 fail; zero hacks/suppressions/source-changes). Writing
 the tests surfaced real source-level findings (reported, NOT fixed — kept out of the coverage change to avoid bundling
 unreviewed production behaviour changes):

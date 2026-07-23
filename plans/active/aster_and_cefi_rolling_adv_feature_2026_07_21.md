@@ -32,9 +32,9 @@ tags:
   ]
 related:
   [
-    aster_capture_broken_coverage_and_completeness_2026_07_20.md,
-    ../../codex/02-data/data-lineage-MTDS-features-ml.md,
-    ../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21
@@ -80,8 +80,8 @@ ASTER-specific — every CeFi venue has a long illiquid tail.
 ## Design decision (2026-07-21)
 
 **MDPS's `processed_candles` is the right source** — `venue={V}/{instrument_id}.parquet` keyed, `timeframe=24h` candles
-carry `quote_volume` directly (see `codex/02-data/data-lineage-MTDS-features-ml.md` § Layer 2, corrected 2026-07-21 with
-the real verified path). It is NOT currently populated for the 4 on-chain-perp CeFi venues
+carry `quote_volume` directly (see `/codex/02-data/data-lineage-MTDS-features-ml.md` § Layer 2, corrected 2026-07-21
+with the real verified path). It is NOT currently populated for the 4 on-chain-perp CeFi venues
 (ASTER/HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET) — confirmed via a direct GCS listing on a recent day, zero
 `pipeline_mode=batch_aster`/`batch_hyperliquid`/etc. objects under `processed_candles/`, even for HYPERLIQUID which has
 2+ years of raw trade history.
@@ -93,7 +93,7 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
 
 ## Codex SSOTs
 
-- `codex/02-data/data-lineage-MTDS-features-ml.md` § Layer 2 — MDPS canonical path (corrected 2026-07-21) + the
+- `/codex/02-data/data-lineage-MTDS-features-ml.md` § Layer 2 — MDPS canonical path (corrected 2026-07-21) + the
   on-chain-perp coverage gap note.
 - `plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md` — the ASTER data-completeness work
   this originated from, including the funding-rate realism finding.
@@ -156,8 +156,8 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
       `RollingAdvReader._storage_client`). All 19 passing as part of the shipped commit's 17,776-test green run.
 - [x] [REVIEW] P1. Confirmed the shipped module against this plan + the data-lineage codex doc — this checklist item's
       values above ARE the real shipped path/signature/resolution-approach (no placeholder text). Codex doc
-      (`codex/02-data/data-lineage-MTDS-features-ml.md`) cross-referenced with the actual module path in the same commit
-      as this plan update.
+      (`/codex/02-data/data-lineage-MTDS-features-ml.md`) cross-referenced with the actual module path in the same
+      commit as this plan update.
 
 ## Phase 2 — extend MDPS candle coverage to on-chain-perp CeFi venues (NOT STARTED — separate future work)
 

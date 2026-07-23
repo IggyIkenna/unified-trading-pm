@@ -10,19 +10,33 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
+repos:
+  [
+    deployment-api,
+    execution-service,
+    features-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: [audit, ui, uac, ssot-audit, docspec, refactor]
 related:
   [
-    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
-    codex/09-strategy/architecture-v2/uac-registry-gaps.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+    /codex/09-strategy/architecture-v2/uac-registry-gaps.md,
   ]
 created: 2026-04-20
-authoritative_for: [Stage 3A current-infra audit snapshot (2026-04-20 UI + UAC-gap + entitlement + demo-provisioning baseline)]
-referenced_by: [codex/14-customer-journeys/presentations/target-experience-post-refactor.md, codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md, codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md]
+authoritative_for:
+  [Stage 3A current-infra audit snapshot (2026-04-20 UI + UAC-gap + entitlement + demo-provisioning baseline)]
+referenced_by:
+  [
+    /codex/14-customer-journeys/presentations/target-experience-post-refactor.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -40,7 +54,7 @@ code_refs:
 > building-block list), [`page-triage/triage-matrix.md`](../../14-customer-journeys/page-triage/triage-matrix.md)
 > (177-page classification), [`page-triage/broken-links.md`](../../14-customer-journeys/page-triage/broken-links.md),
 > [`page-triage/duplicate-clusters.md`](../../14-customer-journeys/page-triage/duplicate-clusters.md),
-> [`codex/09-strategy/architecture-v2/uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md).
+> [`/codex/09-strategy/architecture-v2/uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md).
 > Cross-read against
 > [`_ssot-rules/03-same-system-principle.md`](../../14-customer-journeys/_ssot-rules/03-same-system-principle.md),
 > [`04-dart-commercial-axes.md`](../../14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md),
@@ -276,7 +290,7 @@ Pattern mismatch vs Strategy Catalogue:
   `ManifestWriter` uses, but no UI surface shows the `(venue, chain, data_type)` shards.
 - No chip primitives reused from Strategy Catalogue's `components/architecture-v2/`.
 - No codex deep-link back to the SSOT (which would be
-  [`codex/02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md)).
+  [`/codex/02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md)).
 
 Data Catalogue refactor is tracked in [`roadmap/next-waves.md`](../../14-customer-journeys/roadmap/next-waves.md) Wave 5
 per the Stage 3 plan carry-over.
@@ -506,11 +520,11 @@ missing piece from landing.
 - [`page-triage/broken-links.md`](../../14-customer-journeys/page-triage/broken-links.md) — broken-href tracker
 - [`page-triage/duplicate-clusters.md`](../../14-customer-journeys/page-triage/duplicate-clusters.md) — 10 merge
   decisions
-- [`codex/09-strategy/architecture-v2/uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md) —
+- [`/codex/09-strategy/architecture-v2/uac-registry-gaps.md`](../../09-strategy/architecture-v2/uac-registry-gaps.md) —
   the 12 UAC gaps
-- [`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
+- [`/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
   — lock state + maturity principle
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md) —
+- [`/codex/02-data/availability-manifest-and-data-status.md`](../../02-data/availability-manifest-and-data-status.md) —
   Data Catalogue SSOT target
 - [`unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_availability.py`](../../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_availability.py)
   — only UAC gap shipped

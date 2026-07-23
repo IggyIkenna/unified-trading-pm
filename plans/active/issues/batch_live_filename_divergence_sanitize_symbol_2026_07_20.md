@@ -53,7 +53,7 @@ resolved_by:
 # Batch=live filename divergence + the verbatim-write / no-guard family
 
 > **🔴 OPERATOR-NOTIFY — batch=live determinism.** The workspace holds `paper(W) == batch-rerun(W)` trade-for-trade at
-> ε=0 (`codex/09-strategy/operational/paper-batch-live-reconciliation.md`). A live run and a batch rerun of the same
+> ε=0 (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`). A live run and a batch rerun of the same
 > instrument were writing to **different GCS object names**, so any consumer keyed on the object path saw two different
 > shards for one instrument. The naming divergence is fixed forward; the consequences of the historical split, and the
 > sibling verbatim-write defects, are the open work here.
@@ -150,7 +150,7 @@ edited.)
 
 ## 6. Codex SSOTs
 
-- `codex/09-strategy/operational/paper-batch-live-reconciliation.md` — the ε=0 batch=live determinism requirement this
+- `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` — the ε=0 batch=live determinism requirement this
   divergence violated.
-- `codex/02-data/four-surface-reconciliation-procedure.md` § 4.3 — the path-structure vs id-form orthogonality (updated
+- `/codex/02-data/four-surface-reconciliation-procedure.md` § 4.3 — the path-structure vs id-form orthogonality (updated
   2026-07-20 by the sibling oracle issue).

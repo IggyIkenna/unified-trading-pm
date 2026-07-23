@@ -19,9 +19,9 @@ tags:
   [deployment-api, deployment-ui, caching, oom, cloud-run, memory, latency, cockpit, data-status, gunicorn, scalability]
 related:
   [
-    data_status_tab_and_downloads_remediation_2026_06_16.md,
-    ../../codex/04-architecture/runtime-deployment-topology.md,
-    ../../codex/05-infrastructure/deployment-observability.md,
+    /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-13
 last_updated: 2026-07-14
@@ -56,9 +56,9 @@ drift_direction: advance-code
 > impossible.** Decisions on per-page caching, worker count, UI-UX, scalability, and GCS/BigQuery read-write cost are
 > made JOINTLY in the § 4 walkthrough before implementation.
 
-**Codex SSOTs**: `codex/04-architecture/runtime-deployment-topology.md` (deployment-api = single deploy/launch +
-subscriptions backend for both UIs), `codex/05-infrastructure/deployment-observability.md`,
-`codex/06-coding-standards/quality-gates.md` (shipping discipline). This plan references them; it does not duplicate.
+**Codex SSOTs**: `/codex/04-architecture/runtime-deployment-topology.md` (deployment-api = single deploy/launch +
+subscriptions backend for both UIs), `/codex/05-infrastructure/deployment-observability.md`,
+`/codex/06-coding-standards/quality-gates.md` (shipping discipline). This plan references them; it does not duplicate.
 
 ---
 
@@ -447,7 +447,7 @@ Build notes (not decisions — the implementation shape + risks):
   changed — so billing is designed to fit comfortably regardless, and D1/D2 (workers/RAM) stay open for the fleet-wide
   right-sizing. **Redis parked** (§ D3) — GCS-snapshot already gives cross-instance sharing for the big datasets.
 
-**Codex SSOT to update on landing:** `codex/05-infrastructure/billing-cost-observability.md`.
+**Codex SSOT to update on landing:** `/codex/05-infrastructure/billing-cost-observability.md`.
 
 ## 5. Todos
 
@@ -522,7 +522,7 @@ Phase B — implementation (gated on Phase A decisions; each lands via quickmerg
       `deployment-api@d82405c` + `6ca64d8` + `7b60273` — landed on the shared branch mid-session; this session's own
       costs agent detected the overlap and did not duplicate it. **GCP slice ships; AWS slice** — see the AWS-gap todo
       directly below (this session's addition, not pre-existing). Codex:
-      `codex/05-infrastructure/billing-cost-observability.md` (audit still pending — see Phase C).
+      `/codex/05-infrastructure/billing-cost-observability.md` (audit still pending — see Phase C).
 - [x] ✅ [BACKEND] P2. **Costs safety valve (only if /ops/costs hurts before DuckDB ships)** — superseded: DuckDB
       shipped directly (see above), so the safety-valve refactor was never needed and was NOT built, matching the plan's
       own phasing note that it would be "thrown away under Option B."
@@ -569,8 +569,8 @@ Phase C — verification + guardrails:
       `google_monitoring_alert_policy.deployment_api_memory_high` (`>85%` sustained 300s,
       `run.googleapis.com/container/memory/utilizations`), reusing the existing `monitoring_deadman_email` channel
       already wired to this service's uptime alert (not a new channel) `deployment-service@c6c6c8f`.
-- [ ] [BACKEND] P2. Post-phase codex audit — update `codex/05-infrastructure/deployment-observability.md` (cache
-      architecture + stats endpoint + alert) and `codex/04-architecture/runtime-deployment-topology.md` if worker
+- [ ] [BACKEND] P2. Post-phase codex audit — update `/codex/05-infrastructure/deployment-observability.md` (cache
+      architecture + stats endpoint + alert) and `/codex/04-architecture/runtime-deployment-topology.md` if worker
       topology changed; SUPERSEDED-banner any invalidated statements.
 
 ## 6. Progress log
@@ -744,8 +744,8 @@ Phase C — verification + guardrails:
   `tofu apply`-ed live** (targeted apply, plan showed exactly 1-to-add/0-to-change/0-to-destroy) — this repo's
   `terraform/gcp/` has no auto-apply pipeline, so shipping the `.tf` alone would NOT have made the alert live; confirmed
   via `tofu state show` post-apply (`projects/central-element-323112/alertPolicies/10817162460883602732`, enabled).
-  Codex updated: `codex/05-infrastructure/deployment-observability.md` (new alert + pointer to this plan);
-  `codex/04-architecture/runtime-deployment-topology.md` checked — no stale worker-count statement found, no edit
+  Codex updated: `/codex/05-infrastructure/deployment-observability.md` (new alert + pointer to this plan);
+  `/codex/04-architecture/runtime-deployment-topology.md` checked — no stale worker-count statement found, no edit
   needed. **Explicitly NOT done, by operator instruction**: the Phase C 24h soak — Phase B has landed on
   `live-defi-rollout` but has not yet promoted to `main`/redeployed, so there is no live window to soak yet regardless;
   left open for whoever next has 24h of live Phase-B runtime to point monitoring queries at. **Not independently

@@ -108,5 +108,5 @@ Do NOT execute the rename under the original P3 todo. Instead:
 
 ## Codex SSOTs
 
-`codex/04-architecture/tier-and-import-architecture.md` (no service↔service deps; UAC as shared dependency),
-`codex/02-data/availability-manifest-and-data-status.md` (persisted-schema-change caution).
+`/codex/04-architecture/tier-and-import-architecture.md` (no service↔service deps; UAC as shared dependency),
+`/codex/02-data/availability-manifest-and-data-status.md` (persisted-schema-change caution).

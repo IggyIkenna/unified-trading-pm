@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Quality Gates & Coverage Audit Report
 summary:
-  Historical 2026-03-04 coverage + quality-gate snapshot across 43 Python repos — audit score 21/100,
-  13/43 repos ≥70% coverage, 0/41 quality gates passing; common failures were G201 logging, ruff-version
-  mismatch, and import errors. Point-in-time state, long superseded by later QG hardening.
+  Historical 2026-03-04 coverage + quality-gate snapshot across 43 Python repos — audit score 21/100, 13/43 repos ≥70%
+  coverage, 0/41 quality gates passing; common failures were G201 logging, ruff-version mismatch, and import errors.
+  Point-in-time state, long superseded by later QG hardening.
 status: stale
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,10 @@ stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, coverage, audit, ssot-audit]
-related: [codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
+related: [/codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, /codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
 created: 2026-03-27
 authoritative_for: [2026-03-04 workspace coverage and quality-gate snapshot]
-referenced_by: [codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
+referenced_by: [/codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, /codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
 owner:
 last_reviewed:
 code_refs:

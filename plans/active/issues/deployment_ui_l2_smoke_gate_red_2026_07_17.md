@@ -21,9 +21,9 @@ scope: [engineer]
 tags: [ui, playwright, quality-gates, l2-smoke, a11y, mock-parity, validation]
 related:
   [
-    ../../../codex/06-coding-standards/ui-testing-layers.md,
-    ../../../codex/04-architecture/orphan-audit.md,
-    deployment_api_live_mock_parity_2026_07_17.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /codex/04-architecture/orphan-audit.md,
+    /plans/active/issues/deployment_api_live_mock_parity_2026_07_17.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17
@@ -53,7 +53,7 @@ depends_on: []
 
 ## Why this matters
 
-`codex/06-coding-standards/ui-testing-layers.md` §"tick evidence" makes **`pw:L2 ✓`** mandatory on every UI plan tick,
+`/codex/06-coding-standards/ui-testing-layers.md` §"tick evidence" makes **`pw:L2 ✓`** mandatory on every UI plan tick,
 and defines it as "`npx playwright test --project=chromium tests/smoke/` exited 0 in the agent's local environment".
 That command **exits 1 today, and did before any of this session's work** — so either UI todos are being ticked without
 the evidence (review-blocking per the rule), or they are all silently `[BLOCKED-PLAYWRIGHT]`. A permanently-red gate is

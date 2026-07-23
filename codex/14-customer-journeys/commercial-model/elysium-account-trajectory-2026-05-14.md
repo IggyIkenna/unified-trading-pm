@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Elysium / POD — Account trajectory + upsell roadmap
 summary:
-  Internal 24-month Elysium/POD ARR trajectory and upsell roadmap — phased retainer ($3k→$9k+/mo),
-  Carry & Yield archetype subscription waterfall, venue-expansion menu ($2.5k/venue, CME $15-25k),
-  cross-sell of non-C&Y families, AUM capital-scaling tiers, and the sales-conversation calendar.
+  Internal 24-month Elysium/POD ARR trajectory and upsell roadmap — phased retainer ($3k→$9k+/mo), Carry & Yield
+  archetype subscription waterfall, venue-expansion menu ($2.5k/venue, CME $15-25k), cross-sell of non-C&Y families, AUM
+  capital-scaling tiers, and the sales-conversation calendar.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,19 @@ scope: [admin, sales]
 tags: [commercial-model, elysium, defi, upsell, exclusivity, revenue, sla]
 related:
   [
-    elysium-managed-sla-2026-05-14.md,
-    managed-defi-sla-cost-build.md,
-    exclusivity-and-noncompete.md,
-    signal-leasing.md,
-    pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/managed-defi-sla-cost-build.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/signal-leasing.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
   ]
 created: 2026-05-20
 authoritative_for: [Elysium/POD account trajectory and upsell roadmap]
-referenced_by: [codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md, codex/14-customer-journeys/commercial-model/managed-defi-sla-cost-build.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/managed-defi-sla-cost-build.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [unified-api-contracts/unified_api_contracts/registry/venue_collateral.py]
@@ -103,8 +107,10 @@ lock than a contractual one — we control timing and economics rather than bein
 | 5   | `CARRY_RECURSIVE_BORROW_LENDING_ONLY`                                                       | $12,000              | +$750/mo           | +$750/mo if exclusive                               | Month 9-12 — only if Elysium hasn't taken `YIELD_ROTATION_LENDING` — adjacent variant                             |
 | 6   | `CARRY_RECURSIVE_BORROW_PERP_HEDGED`                                                        | $18,000              | +$1,250/mo         | +$1,250/mo if exclusive                             | Month 9-12 — only if `CARRY_RECURSIVE_STAKED` has been adopted                                                    |
 
-**Total upsell potential within Carry & Yield family**: ~$83k one-time + ~$5.25k/mo additional retainer ($63k/y) +
-~$5.5k/mo exclusivity premia ($66k/y) = **~$83k upfront + ~$129k/y ongoing**, on top of the base $36k/y retainer.
+**Total upsell potential within Carry & Yield family**: ~$83k one-time + ~$5.25k/mo additional retainer
+($63k/y) +
+~$5.5k/mo exclusivity premia ($66k/y) = **~$83k upfront + ~$129k/y ongoing**, on top of the base $36k/y
+retainer.
 
 ### 2.3 Exclusivity pricing rationale
 

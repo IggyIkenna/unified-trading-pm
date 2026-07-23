@@ -11,7 +11,7 @@ summary:
   have not verified whether these same findings are consistently visible at the other two layers a real user/operator
   actually looks at — (1) the raw GCS parquet files themselves (column names, instrument_id values physically written to
   disk), (2) the manifest (`availability_index.parquet` / `expected_universe_ranges.parquet` — what
-  `codex/02-data/honest-coverage-model.md`'s Layer-1/Layer-2 model actually audits), and (3)
+  `/codex/02-data/honest-coverage-model.md`'s Layer-1/Layer-2 model actually audits), and (3)
   deployment-ui/deployment-api (the actual UI surface this whole multi-week effort exists to fix). A bug could be fixed
   at the adapter level and still show wrong in the UI if the manifest or deployment-api has its own independent bug
   (stale cache, hardcoded instrument_type allowlist that does not know about A_TOKEN/DEBT_TOKEN yet, wrong query, etc) —
@@ -37,11 +37,11 @@ tags:
 related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
-    mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
-    defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    instrument_id_format_canonicalization_2026_07_08.md,
-    ../../codex/02-data/honest-coverage-model.md,
+    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
+    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-08
 parent_epic: instruments_master
@@ -81,14 +81,14 @@ locked_since:
    physically contain. This IS what the smoke test and lending investigation read directly (via `get_storage_client()` +
    `download_bytes` + `pandas.read_parquet`) — this layer is well-covered by this session's work.
 2. **Manifest level** — `availability_index.parquet` / `expected_universe_ranges.parquet`, the Honest-Coverage-v2
-   tracking layer (`codex/02-data/honest-coverage-model.md`) that derives `capture_status` (captured / empty_confirmed /
-   expected_unattempted / attempted_failed) per `(venue, instrument_type, data_type, day)`. This layer is built FROM the
-   GCS writes but is a separate artifact that can drift from what's actually on disk (already confirmed possible this
-   session — the HYPERLIQUID phantom-audit false-negative found earlier flags exactly this kind of manifest/reality
+   tracking layer (`/codex/02-data/honest-coverage-model.md`) that derives `capture_status` (captured / empty_confirmed
+   / expected_unattempted / attempted_failed) per `(venue, instrument_type, data_type, day)`. This layer is built FROM
+   the GCS writes but is a separate artifact that can drift from what's actually on disk (already confirmed possible
+   this session — the HYPERLIQUID phantom-audit false-negative found earlier flags exactly this kind of manifest/reality
    mismatch, just in the opposite direction: manifest said phantom, GCS had the real file). **Not checked this session**
    for any of the 59 adapter-layer findings.
 3. **deployment-ui / deployment-api level** — the actual coverage.json v2 response
-   (`codex/06-coding-standards/data-status-endpoint-contract.md`) and what deployment-ui renders from it. This is what
+   (`/codex/06-coding-standards/data-status-endpoint-contract.md`) and what deployment-ui renders from it. This is what
    an operator actually looks at day to day, and it's the layer this whole multi-week instrument-completion effort
    exists to make trustworthy. **Not checked this session at all** — no deployment-api endpoint was hit, no
    deployment-ui page was loaded, for any of the 59 findings.

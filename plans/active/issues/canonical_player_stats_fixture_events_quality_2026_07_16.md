@@ -24,7 +24,7 @@ tags: [sports, data-correctness, player-stats, fixture-events, duplicates, schem
 related:
   [
     ../sports_legacy_bucket_cutover_2026_07_16.md,
-    sports_legacy_canonical_row_gap_2026_07_16.md,
+    /plans/active/issues/sports_legacy_canonical_row_gap_2026_07_16.md,
     ../../epics/sports_master.md,
   ]
 created: 2026-07-16

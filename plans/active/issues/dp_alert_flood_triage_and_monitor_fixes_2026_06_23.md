@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: DP
-summary: '`alerts.log` is **5 alert classes** (de-duping grep artifacts). Live GCS/Cloud-Run direct-checks (ADC, 2026-06-23 ~20:50Z) classify each as a **monitor-signal false-positive** vs a **REAL outage th...'
+summary:
+  "`alerts.log` is **5 alert classes** (de-duping grep artifacts). Live GCS/Cloud-Run direct-checks (ADC, 2026-06-23
+  ~20:50Z) classify each as a **monitor-signal false-positive** vs a **REAL outage th..."
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -11,15 +13,19 @@ scope: [engineer, admin]
 tags: [monitoring, alerting, data-pipeline, observability, self-healing, tradfi, spot-vm]
 related:
   [
-    codex/05-infrastructure/deployment-observability.md,
-    codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
     plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
     plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
   ]
 created: 2026-06-23
 parent_epic: mtds_mdps_master
 priority: P1
-source: ['alerts.log (830 lines, 2026-06-23', aggregated AG-agent prompts (deadman crash / tradfi fleet-monitor false-positives / alert-lifecycle gaps)]
+source:
+  [
+    "alerts.log (830 lines, 2026-06-23",
+    aggregated AG-agent prompts (deadman crash / tradfi fleet-monitor false-positives / alert-lifecycle gaps),
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -126,7 +132,7 @@ heartbeat — real issues get fixed, not hushed.
       dropped (API rejects it for metric-threshold policies). `/health` endpoints: deployment-ui nginx `/health` added;
       unified-trading-system-ui `app/health` already 200; alerting-service auth-gated 403-accept. NOTE: there is **no
       terraform-apply pipeline** for `terraform/gcp/` — future infra in that dir needs a deliberate `tofu apply` (remote
-      GCS state, targeted apply is safe). Codex SSOT update `codex/05-infrastructure/deployment-observability.md`
+      GCS state, targeted apply is safe). Codex SSOT update `/codex/05-infrastructure/deployment-observability.md`
       pending (P1 below).
 - [x] ✅ [MONITOR] P0. **FIX 1/1b/2 DEPLOYED + VERIFIED LIVE 2026-06-24 ~05:15Z** (deployment-service@`7b070fb`, image
       `deployment-api@56f2060e`, dp-heartbeat + dp-meta jobs re-pinned). Live fleet probe with the deployed classify:
@@ -143,7 +149,7 @@ heartbeat — real issues get fixed, not hushed.
       `deployment-service:latest` carries the sentinel writer, then the terraform default is correct and the runtime pin
       can revert harmlessly.
 - [x] ✅ [DOCS] P1. **Codex SSOT update — DONE 2026-06-24.** Added the "Out-of-band liveness + data-pipeline
-      self-monitoring (2026-06-24)" section to `codex/05-infrastructure/deployment-observability.md`: the 3 independent
+      self-monitoring (2026-06-24)" section to `/codex/05-infrastructure/deployment-observability.md`: the 3 independent
       layers (Layer-1 dp-\* fleet monitors incl. the sidecar-authoritative heartbeat + sidecar-gated auto-kill +
       host-cron sentinel + the per-mode RESOLVED bookend; Layer-2 out-of-band deadman with the content-`ts` freshness
       contract for the bare-`last_modified` quirk; Layer-3 the 5 critical-service GCP uptime checks → the email channel
@@ -204,7 +210,7 @@ heartbeat — real issues get fixed, not hushed.
       `raise` escapes the per-shard boundary). +6 focused unit tests (`tests/unit/test_databento_outbound_timeouts.py`,
       mocked SDK / no live creds — each simulates a `threading.Event`-blocked stall and asserts the wrapper
       RETURNS/raises within a generous outer `wait_for` instead of hanging). SSOT:
-      `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md`.
 - [ ] [TRADFI] P1. **Root-cause + close the 06:00-UTC tradfi-bf OHLCV hang loop** (target repo:
       `market-tick-data-service`; `parent_epic: tradfi_master`). **🔴 ROOT CAUSE CORRECTED 2026-06-24 (tradfi-agent) —
       it is an OOM crash-loop, NOT a hang, NOT a stale tarball, NOT a databento call** (so afd5296/2410e712 are

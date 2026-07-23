@@ -139,7 +139,7 @@ evidence once you have confirmed you probed the vocabulary the writer actually e
 
 ## Census / vocabulary nuance
 
-Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+Added 2026-07-20 — the in-session distinct-value census (`/codex/02-data/reconciliation-census-and-compute-tiers.md` §
 1).
 
 - **No `chain=` axis** — `chain` is defi-only; the census skips it for prediction.
@@ -151,7 +151,7 @@ Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconc
 
 ## Cross-links
 
-`SKILL.md` · [`reference-sports.md`](reference-sports.md) (H5 bleed) · `codex/02-data/prediction-data-types-catalog.md`
-· `codex/02-data/prediction-schema-paths.md` · `codex/02-data/four-surface-reconciliation-procedure.md` ·
-`codex/02-data/reconciliation-finding-taxonomy.md` · `codex/02-data/canonical-cutover-register.md` ·
-`codex/02-data/orphan-object-detection.md` · `codex/05-infrastructure/bucket-isolation-model.md`
+`SKILL.md` · [`reference-sports.md`](reference-sports.md) (H5 bleed) · `/codex/02-data/prediction-data-types-catalog.md`
+· `/codex/02-data/prediction-schema-paths.md` · `/codex/02-data/four-surface-reconciliation-procedure.md` ·
+`/codex/02-data/reconciliation-finding-taxonomy.md` · `/codex/02-data/canonical-cutover-register.md` ·
+`/codex/02-data/orphan-object-detection.md` · `/codex/05-infrastructure/bucket-isolation-model.md`

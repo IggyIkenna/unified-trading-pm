@@ -13,15 +13,28 @@ stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer]
 tags: [defi, cefi, execution, uac, deribit, bybit, strategy, verification]
-related: [plans/active/defi_master.md (Fork 1 carry_staked_basis), plans/active/master_to_live_defi_2026_05_23.md Group F]
+related:
+  [plans/active/defi_master.md (Fork 1 carry_staked_basis), plans/active/master_to_live_defi_2026_05_23.md Group F]
 created: 2026-05-08
 authoritative_for: [2026-05-07 CEX perp-venue LST + stablecoin-LST collateral-acceptance reverification evidence]
-referenced_by: [codex/04-architecture/cefi-perp-leg-bybit.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md, codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md]
+referenced_by:
+  [
+    /codex/04-architecture/cefi-perp-leg-bybit.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md,
+    /codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
 author: defi-fork1-completion-tab
-source: [unified-api-contracts/unified_api_contracts/registry/venue_collateral.py, plans/active/work_split_2026_05_08_ikenna.md Tab 1 (Stream A), plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md Stream A]
+source:
+  [
+    unified-api-contracts/unified_api_contracts/registry/venue_collateral.py,
+    plans/active/work_split_2026_05_08_ikenna.md Tab 1 (Stream A),
+    plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md Stream A,
+  ]
 ---
 
 # ETH-LST + stablecoin-LST collateral acceptance (2026-05-07 reverification)

@@ -44,7 +44,7 @@ default (an SSOT change first, per "Extending to a new LAYER" below).
   decided by the UAC machine oracle (§ 3), manifest-driven.
 - **`candles`** — MDPS-derived candles under `processed_candles/by_date/` (sports: `processed/`), **co-located in the
   SAME `market-data-tick-{ag}` bucket** (no new bucket to resolve — Phase-0 resolution is unchanged). Governed by § 3h,
-  `reference-mdps.md`, and SSOT `codex/02-data/mdps-candle-canonical-reconciliation.md`. Three things are DIFFERENT and
+  `reference-mdps.md`, and SSOT `/codex/02-data/mdps-candle-canonical-reconciliation.md`. Three things are DIFFERENT and
   non-negotiable: (1) the candle shard atom adds a **`timeframe`** axis and keys `data_type` on the **SOURCE** type
   (corrected 2026-07-21 evening — the path was never rewritten to the aggregated key; `mdps_data_type_key` survives only
   as the schema-contract lookup key), with S3 rows filtered `service_name == "market-data-processing-service"`; (2) the
@@ -80,20 +80,20 @@ three of four is the interesting case — that is where silent data loss lives.
 **Durable rules live in codex, not here.** This file is a runbook that _references_ its SSOTs; when they change, it
 inherits the change. Read these before trusting any verdict:
 
-| Concern                                | SSOT                                                                                   |
-| -------------------------------------- | -------------------------------------------------------------------------------------- |
-| What canonical IS (tie-breaker)        | `codex/02-data/cross-asset-canonical-target-ssot.md`                                   |
-| The comparison procedure               | `codex/02-data/four-surface-reconciliation-procedure.md`                               |
-| Census + per-datapoint + compute tiers | codex/02-data/reconciliation-census-and-compute-tiers.md                               |
-| Finding names + exception list         | `codex/02-data/reconciliation-finding-taxonomy.md`                                     |
-| Delete safety (5-part proof)           | `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`                             |
-| Known non-canonical locations          | `codex/02-data/non-canonical-path-inventory.md`                                        |
-| Per-AG effective-from dates            | `codex/02-data/canonical-cutover-register.md`                                          |
-| Orphan oracle                          | `codex/02-data/orphan-object-detection.md`                                             |
-| Manifest schema + coverage             | `codex/02-data/availability-manifest-and-data-status.md`, `…/honest-coverage-model.md` |
-| Bucket naming + resolution             | `codex/05-infrastructure/bucket-isolation-model.md`                                    |
-| GCS object ops                         | `codex/05-infrastructure/gcs-object-operations.md`                                     |
-| MDPS candle layer                      | `codex/02-data/mdps-candle-canonical-reconciliation.md`                                |
+| Concern                                | SSOT                                                                                    |
+| -------------------------------------- | --------------------------------------------------------------------------------------- |
+| What canonical IS (tie-breaker)        | `/codex/02-data/cross-asset-canonical-target-ssot.md`                                   |
+| The comparison procedure               | `/codex/02-data/four-surface-reconciliation-procedure.md`                               |
+| Census + per-datapoint + compute tiers | /codex/02-data/reconciliation-census-and-compute-tiers.md                               |
+| Finding names + exception list         | `/codex/02-data/reconciliation-finding-taxonomy.md`                                     |
+| Delete safety (5-part proof)           | `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`                             |
+| Known non-canonical locations          | `/codex/02-data/non-canonical-path-inventory.md`                                        |
+| Per-AG effective-from dates            | `/codex/02-data/canonical-cutover-register.md`                                          |
+| Orphan oracle                          | `/codex/02-data/orphan-object-detection.md`                                             |
+| Manifest schema + coverage             | `/codex/02-data/availability-manifest-and-data-status.md`, `…/honest-coverage-model.md` |
+| Bucket naming + resolution             | `/codex/05-infrastructure/bucket-isolation-model.md`                                    |
+| GCS object ops                         | `/codex/05-infrastructure/gcs-object-operations.md`                                     |
+| MDPS candle layer                      | `/codex/02-data/mdps-candle-canonical-reconciliation.md`                                |
 
 ## 0. `--asset-group` is REQUIRED — never synthesize one
 
@@ -162,16 +162,16 @@ are orthogonal. Set `GCP_PROJECT_ID=central-element-323112` in env; still pass t
 
 > ⚠️ **Do not use UTL `PATH_REGISTRY` / `build_bucket` for Group-A datasets.** Its rows are un-tiered and resolve to 15
 > flat-named buckets that are **already deleted (404 on live probe)**. `cloud-providers.yaml` + `resolve_bucket_name` is
-> the SSOT — see the bucket-name resolution authority section of `codex/05-infrastructure/bucket-isolation-model.md`.
+> the SSOT — see the bucket-name resolution authority section of `/codex/05-infrastructure/bucket-isolation-model.md`.
 
 **(b) Prove reachability, and record what you could not reach.** The service account may lack project-wide
 `storage.buckets.list` — that is expected and is _not_ a finding. Probe each resolved bucket directly with a
 **non-recursive** top-level listing. A bucket you could not reach becomes a declared **coverage gap** in the report, not
 a silent omission. A report that omits an unreachable bucket without saying so is worse than no report.
 
-**(c) Load the suppression inputs.** Read `codex/02-data/canonical-cutover-register.md` (to key `require_pipeline_mode`
+**(c) Load the suppression inputs.** Read `/codex/02-data/canonical-cutover-register.md` (to key `require_pipeline_mode`
 and the other axes per-AG — pre-cutover data is _legitimately historical_, not non-canonical) and the accepted-exception
-list in `codex/02-data/reconciliation-finding-taxonomy.md`. **Suppression is required, not optional** — re-reporting an
+list in `/codex/02-data/reconciliation-finding-taxonomy.md`. **Suppression is required, not optional** — re-reporting an
 operator-accepted exception as a fresh finding destroys the report's signal and trains the reader to skim.
 
 **(d) Read the cheap manifest status files — they are decisive, and 4/5 first-run AGs only found them by accident.**
@@ -187,7 +187,7 @@ is a resolution bug — stop and report it rather than auditing the wrong estate
 
 ## 3. Phase 1 — the four-surface comparison
 
-Follow `codex/02-data/four-surface-reconciliation-procedure.md`. It is the SSOT for the per-shard comparison; this
+Follow `/codex/02-data/four-surface-reconciliation-procedure.md`. It is the SSOT for the per-shard comparison; this
 section covers only how to _drive_ it and the per-AG hazards.
 
 **Manifest-driven by default. Do not open a new whole-corpus GCS walk — that is review-blocking.** Where object
@@ -204,7 +204,7 @@ inspection is unavoidable, use only the three sanctioned no-walk routes:
 
 The reconciled rule is **one walk per corpus per campaign**, with all passes bundled onto that snapshot — see the shared
 single-walk discipline statement in `availability-manifest-and-data-status.md` § 9 and
-`codex/05-infrastructure/gcs-object-operations.md`.
+`/codex/05-infrastructure/gcs-object-operations.md`.
 
 **Canonical vs non-canonical is decided by the machine oracle**, UAC `canonical_path_violations()` — the inverse of the
 path builders. Never re-implement path judgement in the skill; a second implementation drifts from the builders the day
@@ -218,7 +218,7 @@ segment before validating; only `asset_group=tradfi` single-instrument shards ha
 **orthogonal — neither alone proves "canonical."** For surface-A id-form, run the canonical-id check
 (`VENUE:ITYPE:BASE-QUOTE[@LIN|@INV][-YYYYMMDD][-STRIKE-C|P]` + `COMBO`) against the stem, never count chain
 `underlying=…/ticks.parquet` fan-ins as violations, and **state in the report which of the two questions was actually
-machine-checked.** SSOT: `codex/02-data/four-surface-reconciliation-procedure.md` § 4.3 +
+machine-checked.** SSOT: `/codex/02-data/four-surface-reconciliation-procedure.md` § 4.3 +
 `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`.
 
 ### 3a. Surface 1+2 — path and content
@@ -265,9 +265,9 @@ for the **entire AG by construction**. Report it **once** as a declared coverage
 do not synthesize a surface-4 verdict that has no mechanism behind it. The "four surfaces = four bits, never collapse"
 rule still holds per shard; a whole-AG missing surface is a single declared gap, not a collapse.
 
-> ⚠️ `codex/02-data/data-catalogue-schema.md` is SUPERSEDED — it documents an artifact, writer, reader, updater and
+> ⚠️ `/codex/02-data/data-catalogue-schema.md` is SUPERSEDED — it documents an artifact, writer, reader, updater and
 > validating plan that do not exist. The shape deployment-api actually consumes is `shard_status[AG][VENUE].start_date`
-> — see `codex/02-data/service-shard-status-catalogue.md`. Treat the live `data-catalogue.*.yaml` staleness
+> — see `/codex/02-data/service-shard-status-catalogue.md`. Treat the live `data-catalogue.*.yaml` staleness
 > (`last_updated` 2026-02-06, `auto_refreshed: null`) as a standing known condition, and report it as a
 > **catalogue-freshness** finding once per run, not once per shard.
 
@@ -298,7 +298,7 @@ rule still holds per shard; a whole-AG missing surface is a single declared gap,
   — flagging lowercase-today would false-flag every un-migrated row; **(3)** POST-migration the column is enforced
   UPPERCASE. The **path** segment stays **lowercase** and the **id** middle segment stays **UPPER** — both ALWAYS
   enforced, never in question. **Do not propose or execute any casing migration.** SSOT:
-  `codex/02-data/reconciliation-finding-taxonomy.md` § 5.1.
+  `/codex/02-data/reconciliation-finding-taxonomy.md` § 5.1.
   > **Gate:** the honest-coverage harness must be made case-robust **BEFORE** the migration flips the writers to
   > UPPERCASE — flipping first breaks the harness on un-migrated data. See
   > `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
@@ -307,7 +307,7 @@ rule still holds per shard; a whole-AG missing surface is a single declared gap,
   `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`). The skill does **NOT REFUSE** it and does **NOT
   flag** it — it is `migration_pending`, **NOT an open question**. Do not flag `lending` on market/event data_types
   (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) as non-canonical; only `holdings` uses
-  the `A_TOKEN`/`DEBT_TOKEN` split. SSOT: `codex/02-data/reconciliation-finding-taxonomy.md` § 5.2.
+  the `A_TOKEN`/`DEBT_TOKEN` split. SSOT: `/codex/02-data/reconciliation-finding-taxonomy.md` § 5.2.
 
 <details>
 <summary>Superseded pre-ruling text (2026-07-20 — kept as history)</summary>
@@ -326,7 +326,7 @@ framed as **PARKED for the operator**. That contradiction is resolved: **`migrat
 The per-shard oracle validates path STRUCTURE only; it never checks the VALUES of the `instrument_type=` / `data_type=`
 / `venue=` / `chain=` segments against their enums (§ 3, and the false "twin absent" slip in § 4b). The **distinct-value
 census** closes that vocabulary blind spot, cheaply and **in-session** (no VM, no corpus walk). SSOT:
-`codex/02-data/reconciliation-census-and-compute-tiers.md` § 1.
+`/codex/02-data/reconciliation-census-and-compute-tiers.md` § 1.
 
 - **Manifest side — reuse the endpoint, do not re-read.** The manifest distinct-value census already exists as
   `get_axis_value_census(service, asset_group)` (deployment-api `routes/data_status/_axis_census.py` — **reuse, no
@@ -361,7 +361,7 @@ becomes structurally impossible.
 
 Two per-ROW / per-PARQUET checks that lift the sampled filename-stem and content spot-checks to 100%. Both run per the
 compute tiers (§ 7): **sampled in-session**, **100% only on the VM tier**. SSOT:
-`codex/02-data/reconciliation-census-and-compute-tiers.md` § 2.
+`/codex/02-data/reconciliation-census-and-compute-tiers.md` § 2.
 
 - **id-canonical (G2)** — for every row, rebuild the id from the row's own structured columns through the UAC SSOT
   builder `build_canonical_instrument_id` (`canonical_id_builder.py`) and assert byte-equality with the stored
@@ -382,7 +382,7 @@ compute tiers (§ 7): **sampled in-session**, **100% only on the VM tier**. SSOT
 ### 3h. MDPS candle-layer reconciliation (`--layer candles`)
 
 Runs only under `--layer candles`. Full grammar, per-AG candle hazards, and the shard atom live in `reference-mdps.md`;
-the SSOT is `codex/02-data/mdps-candle-canonical-reconciliation.md`. The four surfaces still hold, but the shard atom,
+the SSOT is `/codex/02-data/mdps-candle-canonical-reconciliation.md`. The four surfaces still hold, but the shard atom,
 the canonical authority, the drive direction, and S4 all differ from raw tick — drive it like this:
 
 - **Resolve the SAME bucket** (`kind="market-data"`, per AG) — candles are the `processed_candles/` prefix inside it
@@ -437,7 +437,7 @@ the canonical authority, the drive direction, and S4 all differ from raw tick �
 
 ### 4a. Sweep
 
-Reconcile the live estate against `codex/02-data/non-canonical-path-inventory.md`. Two directions, both required:
+Reconcile the live estate against `/codex/02-data/non-canonical-path-inventory.md`. Two directions, both required:
 
 - **Register → reality**: for each inventory entry scoped to this AG, re-verify its disposition still holds.
 - **Reality → register**: any non-canonical location found that is _not_ in the register is a **new finding** for the
@@ -447,13 +447,13 @@ Reconcile the live estate against `codex/02-data/non-canonical-path-inventory.md
   the report** (the exact row to append, with its disposition) for the orchestrator to apply serially. A single
   interactive run may edit the register directly.
 
-Detect orphans per `codex/02-data/orphan-object-detection.md` — an object with no manifest row **and** outside the
+Detect orphans per `/codex/02-data/orphan-object-detection.md` — an object with no manifest row **and** outside the
 oracle's expected set is invisible to every manifest-driven tool, which is exactly why it needs its own oracle.
 
 ### 4b. Delete suggestions — suggestions only, and they carry their proof
 
 Deletes are **never executed by this skill**. It emits a suggestion with a disposition and the evidence behind it. Per
-`codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, a suggestion may rise above `unknown` only with a
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, a suggestion may rise above `unknown` only with a
 **five-part proof**: (1) the twin **resolves** via `gcs_describe_object`, not by path construction; (2) a **content**
 verify, not existence; (3) grep-then-READ proof nothing still **writes** it; (4) grep-then-READ proof nothing still
 **reads** it; (5) the **legacy-COPIED-not-MOVED** invariant is honoured. Any part failing → `no-migrate-first`.
@@ -509,7 +509,7 @@ open the file.** The report must carry:
 - a **per-surface verdict per shard** — four surfaces means four bits, never collapsed into one pass/fail (three
   different failure modes on one cell must not become one); for a manifest-only-key AG (prediction, sports) whose per
   shard rows don't materialise, report at shard-**class** grain `(venue, data_type, pipeline_mode)` and say so;
-- **typed findings** using the names in `codex/02-data/reconciliation-finding-taxonomy.md`, so consecutive runs diff
+- **typed findings** using the names in `/codex/02-data/reconciliation-finding-taxonomy.md`, so consecutive runs diff
   cleanly;
 - **suppressed** accepted-exception counts, shown as a count with a pointer — proving suppression happened without
   re-listing them;
@@ -539,7 +539,7 @@ additionally **notifies the operator** in chat.
 
 The census (§ 3f) is cheap and always runs in-session; the per-datapoint checks (§ 3g) read millions of parquets and
 MUST NOT run as in-session compute (done naively they also violate single-walk). Two tiers. SSOT:
-`codex/02-data/reconciliation-census-and-compute-tiers.md` § 3.
+`/codex/02-data/reconciliation-census-and-compute-tiers.md` § 3.
 
 - **Tier 1 — in-session, bounded, always runs (no VM, no corpus walk).** The census (one slim manifest read + delimiter
   descent), the per-shard path oracle (unchanged from Phase 1), and a **sampled** id/schema smoke: at most 1 object per
@@ -570,17 +570,18 @@ MUST NOT run as in-session compute (done naively they also violate single-walk).
 
 ## Extending to a new asset_group
 
-Add its row to § 3d (the hazards table), its axes to `codex/02-data/canonical-cutover-register.md`, and its known
-locations to `codex/02-data/non-canonical-path-inventory.md`. The four-surface procedure and the shard atom never change
-— that is the point of them. If a new AG appears to need a fifth surface or a different atom, that is an SSOT change in
-`codex/02-data/cross-asset-canonical-target-ssot.md` first, and this skill inherits it; do not special-case it here.
+Add its row to § 3d (the hazards table), its axes to `/codex/02-data/canonical-cutover-register.md`, and its known
+locations to `/codex/02-data/non-canonical-path-inventory.md`. The four-surface procedure and the shard atom never
+change — that is the point of them. If a new AG appears to need a fifth surface or a different atom, that is an SSOT
+change in `/codex/02-data/cross-asset-canonical-target-ssot.md` first, and this skill inherits it; do not special-case
+it here.
 
 **Extending to a new LAYER** (candles was the first): add its row to the SSOT table (§ intro) and a
 `reference-<layer>.md`, and add a codex SSOT that names the layer's four surfaces + shard atom + its canonical authority
 (for candles the ratified LOCKED template, because the raw-tick oracle does not cover the namespace). A layer with a
 different atom (candles add `timeframe`) is an **SSOT change FIRST** —
-`codex/02-data/cross-asset-canonical-target-ssot.md` is raw-tick-only; the candle atom's SSOT is
-`codex/02-data/mdps-candle-canonical-reconciliation.md`. Do not special-case a layer inside the raw-tick loop.
+`/codex/02-data/cross-asset-canonical-target-ssot.md` is raw-tick-only; the candle atom's SSOT is
+`/codex/02-data/mdps-candle-canonical-reconciliation.md`. Do not special-case a layer inside the raw-tick loop.
 
 ## Not wired into `quality-gates.sh`
 

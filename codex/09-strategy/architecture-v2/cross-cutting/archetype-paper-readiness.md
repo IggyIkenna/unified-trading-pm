@@ -26,13 +26,13 @@ created: 2026-05-09
 authoritative_for: [per-archetype paper-mode readiness taxonomy + paper-runnable gate set]
 referenced_by:
   [
-    codex/04-architecture/operational-modes.md,
-    codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
-    codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md,
-    codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md,
-    codex/09-strategy/architecture-v2/promote-workflow.md,
-    codex/14-customer-journeys/dart/mode-toggle.md,
-    codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md,
+    /codex/04-architecture/operational-modes.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md,
+    /codex/09-strategy/architecture-v2/promote-workflow.md,
+    /codex/14-customer-journeys/dart/mode-toggle.md,
+    /codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md,
   ]
 owner:
 last_reviewed:
@@ -40,7 +40,7 @@ code_refs:
 overview:
   Per-archetype 4-state taxonomy (paper-runnable / paper-shippable / backtest-only / stub) for every entry in the
   canonical strategy archetype catalogue (UAC `StrategyArchetype` enum = 57 archetypes; full coverage matrix at
-  `codex/09-strategy/architecture-v2/category-instrument-coverage.md`). Pins the closed-set gate set every strategy
+  `/codex/09-strategy/architecture-v2/category-instrument-coverage.md`). Pins the closed-set gate set every strategy
   archetype must clear before being eligible for `OperationalMode.PAPER`.
 type: codex-ssot
 last_verified: 2026-06-15
@@ -54,8 +54,8 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md
 
 > **Source file note (corrected 2026-05-12 per `codex_audit_strategy_2026_05_12.md` ST-4)**: the 4-state taxonomy is for
 > **strategy archetypes** per UAC `StrategyArchetype` (57 members) — the same set documented in
-> `codex/09-strategy/architecture-v2/README.md` "57 Archetypes" + the matrix in `category-instrument-coverage.md`. It is
-> NOT a taxonomy of `strategy_service/portfolio_allocator/archetypes.py`, which holds the 8 **PortfolioAllocator
+> `/codex/09-strategy/architecture-v2/README.md` "57 Archetypes" + the matrix in `category-instrument-coverage.md`. It
+> is NOT a taxonomy of `strategy_service/portfolio_allocator/archetypes.py`, which holds the 8 **PortfolioAllocator
 > archetype engines** (risk-parity / factor / tactical-overlay / multi-strategy / etc.) — those are allocator engines, a
 > different concept. An earlier version of this doc pointed at the allocator file by mistake.
 

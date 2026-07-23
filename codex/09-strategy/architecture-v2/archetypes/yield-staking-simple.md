@@ -17,19 +17,19 @@ tags: [defi, strategy, staking, lst, yield, carry-yield]
 related:
   [
     ../families/carry-and-yield.md,
-    carry-staked-basis.md,
-    carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
     ../cross-cutting/restaking-reward-economics.md,
   ]
 created: 2026-04-17
 authoritative_for: ["YIELD_STAKING_SIMPLE archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
-    codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md,
-    codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md,
-    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
   ]
 owner:
 last_reviewed:

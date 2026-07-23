@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Value-Betting Archetype Decision (2026-04-21)
 summary: >-
-  Decision (2026-04-21): value-betting is NOT a separate archetype — it is the
-  EdgeMethod.VALUE_PROB_VS_IMPLIED axis value on ML_DIRECTIONAL_EVENT_SETTLED when that archetype runs
-  on sports / prediction event markets. Resolves the Wave-5 GAP for the v1 UI rows
-  SPORTS_NFL_VALUE_BET_EVT_GAME + SPORTS_MLB_VALUE_BET_EVT_GAME with no new archetype and no code change.
+  Decision (2026-04-21): value-betting is NOT a separate archetype — it is the EdgeMethod.VALUE_PROB_VS_IMPLIED axis
+  value on ML_DIRECTIONAL_EVENT_SETTLED when that archetype runs on sports / prediction event markets. Resolves the
+  Wave-5 GAP for the v1 UI rows SPORTS_NFL_VALUE_BET_EVT_GAME + SPORTS_MLB_VALUE_BET_EVT_GAME with no new archetype and
+  no code change.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [strategy, sports, prediction, ml, odds, archetype, ssot-audit]
 related:
   [
-    strategy-registry-v2.md,
-    naming-convention.md,
-    legacy-family-migration.md,
+    /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
+    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/09-strategy/architecture-v2/legacy-family-migration.md,
     archetypes/ml-directional-event-settled.md,
   ]
 created: 2026-04-21
@@ -109,7 +109,7 @@ Slot labels (v2 canonical):
 
 ## 5. Cross-references
 
-- `codex/09-strategy/architecture-v2/strategy-registry-v2.md` — v2 registry overview.
-- `codex/09-strategy/architecture-v2/naming-convention.md` — slot label grammar.
-- `codex/09-strategy/architecture-v2/legacy-family-migration.md` § 2.2 — v1→v2 equivalency audit (post-Wave-6 zero-gap
+- `/codex/09-strategy/architecture-v2/strategy-registry-v2.md` — v2 registry overview.
+- `/codex/09-strategy/architecture-v2/naming-convention.md` — slot label grammar.
+- `/codex/09-strategy/architecture-v2/legacy-family-migration.md` § 2.2 — v1→v2 equivalency audit (post-Wave-6 zero-gap
   state).

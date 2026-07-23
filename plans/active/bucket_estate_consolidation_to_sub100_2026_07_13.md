@@ -79,9 +79,9 @@ fan-out over codex/plans/configs/code; 7-agent adversarial verification of the l
 carry the per-finding evidence (file:line). Numbers: 241 live · 132 empty · canonical floor 60 (prd) / 87 (prd+test) ·
 after W1 ≈ 160 · after W2 ≈ 139 · after W3 ≈ ~100 total (~80 excluding GCP-system).
 
-Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infrastructure/gcs-lifecycle-policies.md`,
-`codex/05-infrastructure/gcs-object-operations.md`, `codex/02-data/pipeline-mode-partition.md`,
-`codex/05-infrastructure/manifest-consolidator-ssot.md`.
+Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-infrastructure/gcs-lifecycle-policies.md`,
+`/codex/05-infrastructure/gcs-object-operations.md`, `/codex/02-data/pipeline-mode-partition.md`,
+`/codex/05-infrastructure/manifest-consolidator-ssot.md`.
 
 ## Wave 0 — stop the bleeding (nothing else sticks until this lands)
 
@@ -102,7 +102,7 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
 - [x] ✅ [INFRA] P0. **RULED 2026-07-13 — terraform derived-from-yaml**: implement one `for_each`
       `google_storage_bucket` block generated from cloud-providers.yaml's canonical (prd+test) names, import the
       existing canonical buckets into it, keep hand-written blocks only for genuine infra buckets (deployment-scripts,
-      state, events, …). Document the model in `codex/05-infrastructure/bucket-isolation-model.md`. — DONE (code):
+      state, events, …). Document the model in `/codex/05-infrastructure/bucket-isolation-model.md`. — DONE (code):
       canonical_buckets.tf shipped + applied; 79 canonical buckets under for_each (81 minus manual-audit pair, excluded
       with audit-records for locked retention); recon-prd/test created by the apply. Codex doc update rides the Deferred
       table (docs-only).
@@ -116,7 +116,7 @@ Codex SSOTs: `codex/05-infrastructure/bucket-isolation-model.md`, `codex/05-infr
       recon); PM mirror synced in this commit (37 kinds verified).
 - [x] ✅ [INFRA] P0. **RULED 2026-07-13 — cold-tier move at 60d**: replace the untracked STANDARD→COLDLINE@14d rules
       with STANDARD→COLDLINE@60d on the data buckets, encoded in the derived-from-yaml terraform (the ONE tracked place
-      per the ruling above) + update `codex/05-infrastructure/gcs-lifecycle-policies.md` (its "intentionally NOT
+      per the ruling above) + update `/codex/05-infrastructure/gcs-lifecycle-policies.md` (its "intentionally NOT
       lifecycle'd" claim for tick buckets is superseded). Operator verbatim "nearlcoldline nmove after 60d" — if a
       NEARLINE@60→COLDLINE-later ladder was intended instead of straight COLDLINE@60d, correct here before executing. —
       DONE: encoded in canonical_buckets.tf (STANDARD→COLDLINE@60) and APPLIED via the targeted terraform apply;
@@ -465,18 +465,19 @@ a partition-SHAPE-BLIND diff-tool artifact, not a real data gap.** Read real obj
 the SAME `day=D/` prefix plus two REQUIRED hive segments the 2026-05-19 bundled `pipeline_mode` migration added
 system-wide — `pipeline_mode=batch_instruments_service/asset_group=cefi/` — before `venue=V/...` (47-col schema; this is
 the exact, already-documented "legacy bare shape vs canonical `pipeline_mode=` shape" class in
-`codex/02-data/pipeline-mode-partition.md`'s GCS-DELETE-SAFETY HARD RULE, not a novel problem). Re-ran the legacy-vs-prd
-diff SHAPE-AWARE (keyed on (day,venue), both shapes, full corpus: 28,228 legacy objects vs 51,637 prd objects) instead
-of the earlier naive relative-path-string diff that produced the false 27,225/27,725 alarm: **true legacy-only = 4
-keys** (bare `venue=COINBASE`/`venue=OKX` on 2026-03-01 and 2026-03-02 only — a venue-naming-scheme transition artifact,
-already superseded the same days by the now-standard split sub-venue captures `COINBASE-SPOT`/`COINBASE-FUTURES` and
-`OKX-SPOT`/`OKX-FUTURES`/`OKX-SWAP`, both present canonical-side). Content-verified (not just path-matched) across 7
-day/venue samples spanning 2019→2026: canonical prd ALWAYS has equal-or-more rows than legacy for the same (day,venue) —
-e.g. 2019-03-30/DERIBIT legacy=6 rows/39 cols vs prd=295 rows/47 cols; 2026-05-22/ASTER legacy=19 vs prd=419 — prd is a
-genuinely richer re-capture, not merely a repartitioned copy. Confirmed via SSM the detached `cefi_rsync.log` rsync (VM
-`i-0c9b283b31d6b5ca7`) is NOT running (completed rc=0 in 8s on 2026-07-14T01:08Z) — that fast completion is now
-explained: it was a raw relative-path `gcloud storage rsync -r legacy→prd`, and since almost all of legacy's content
-already existed prd-side (independently, under the correct shape, produced by the live dual-write orchestrator — see
+`/codex/02-data/pipeline-mode-partition.md`'s GCS-DELETE-SAFETY HARD RULE, not a novel problem). Re-ran the
+legacy-vs-prd diff SHAPE-AWARE (keyed on (day,venue), both shapes, full corpus: 28,228 legacy objects vs 51,637 prd
+objects) instead of the earlier naive relative-path-string diff that produced the false 27,225/27,725 alarm: **true
+legacy-only = 4 keys** (bare `venue=COINBASE`/`venue=OKX` on 2026-03-01 and 2026-03-02 only — a venue-naming-scheme
+transition artifact, already superseded the same days by the now-standard split sub-venue captures
+`COINBASE-SPOT`/`COINBASE-FUTURES` and `OKX-SPOT`/`OKX-FUTURES`/`OKX-SWAP`, both present canonical-side).
+Content-verified (not just path-matched) across 7 day/venue samples spanning 2019→2026: canonical prd ALWAYS has
+equal-or-more rows than legacy for the same (day,venue) — e.g. 2019-03-30/DERIBIT legacy=6 rows/39 cols vs prd=295
+rows/47 cols; 2026-05-22/ASTER legacy=19 vs prd=419 — prd is a genuinely richer re-capture, not merely a repartitioned
+copy. Confirmed via SSM the detached `cefi_rsync.log` rsync (VM `i-0c9b283b31d6b5ca7`) is NOT running (completed rc=0 in
+8s on 2026-07-14T01:08Z) — that fast completion is now explained: it was a raw relative-path
+`gcloud storage rsync -r legacy→prd`, and since almost all of legacy's content already existed prd-side (independently,
+under the correct shape, produced by the live dual-write orchestrator — see
 `instruments_service/engine/orchestrator/writers.py:150-158` unconditional bare-shape write + the separate
 manifest-tracked `pipeline_mode=` write when a manifest is supplied), the sync found almost nothing new to copy. **A
 SEPARATE, EARLIER blind-copy attempt (before this session, creation_time 2026-07-13T23:45Z) DID land ~6,286
@@ -492,7 +493,7 @@ stale, consistent with the 2026-05-12 prd-bucket cutover + a short dual-write ta
 SESSION** — applied the same age=0(isLive)+daysSinceNoncurrentTime=0(non-live) purge-lifecycle used for the 6 siblings,
 verified it took effect, then DELIBERATELY REVERTED it (~1 min later, well inside GCS's ~24h lifecycle-eval cadence —
 verified a sample object still intact after revert, zero data lost) upon finding
-`codex/02-data/pipeline-mode-partition.md`'s 2026-06-18 HARD RULE verbatim for this exact class of decision: _"Require
+`/codex/02-data/pipeline-mode-partition.md`'s 2026-06-18 HARD RULE verbatim for this exact class of decision: _"Require
 100% canonical-twin coverage per AG before executing that AG's delete-list; deletion is OPERATOR-GATED."_ This session's
 shape-aware diff reaches 28,224/28,228 = 99.986% literal per-key twin coverage, not literal 100% (the 4-key residual is
 confidently explained above as superseded-by-rename, not missing data, but that is an interpretive judgment, not a
@@ -925,7 +926,7 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
      just fingerprints)**: direct GCS inspection (shallow, targeted listings — not a whole-corpus walk) found FOUR
      distinct trees in the flat bucket, THREE of them real data:
      - `raw_tick_data/by_date/day=D/asset_group=defi/venue={AAVE_V3,COMPOUND_V3,SPARK}/...` (bare pre-`pipeline_mode=`
-       shape, exactly the class documented in `codex/02-data/pipeline-mode-partition.md`'s GCS-DELETE-SAFETY HARD RULE)
+       shape, exactly the class documented in `/codex/02-data/pipeline-mode-partition.md`'s GCS-DELETE-SAFETY HARD RULE)
        — day-key diff (`comm -23` on shallow day-folder listings, both buckets) against the canonical shared bucket
        found **78 gap-days**: the 2022-01-01→2022-03-11 head-of-history (70 days) plus, after a contention-free re-check
        caught 12 false-negatives from the first (heavily-loaded) pass and confirmed 8 true ones, 8 more scattered days
@@ -1045,7 +1046,7 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   7. **Bucket shell NOT yet deleted — this is an in-flight async operation, not a completed one.** GCS's lifecycle
      evaluator runs on a roughly-24h cadence and must drain an order of magnitude more objects than the near-empty 6
      siblings did, so full drain plausibly takes materially longer than their ~24-48h window. Per this task's own
-     framing and the async-wait-discipline rule (`codex/12-agent-workflow/async-wait-and-poll-discipline.md`), this is
+     framing and the async-wait-discipline rule (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`), this is
      not something to force or block on synchronously — the correct completion path is a follow-up session re-running
      the same `buckets describe`/`buckets delete --quiet` check (exactly the 6-sibling "Async purge in flight" → "Async
      purge follow-up sub-task COMPLETE" two-step pattern already used earlier today), NOT a forced
@@ -1138,7 +1139,7 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
      `by_date/day=D/venue=V/{instruments,futures_contracts}.parquet`. Canonical prd shape = the SAME prefix but with two
      extra required hive segments inserted before `venue=`: `pipeline_mode=batch_instruments_service/asset_group=cefi/`.
      This is the documented 2026-05-19 "bundled GCS migration" pipeline_mode rollout
-     (`codex/02-data/pipeline-mode-partition.md`) — a known, already-solved migration class, not a novel shape problem.
+     (`/codex/02-data/pipeline-mode-partition.md`) — a known, already-solved migration class, not a novel shape problem.
      Parquet schema diff (pyarrow, `instruments-service/.venv`): legacy = 39 cols; prd-canonical = 47 cols (superset:
      adds `canonical_instrument_id`, `product_root`, `exercise_style`, `source_archive_url_template`,
      `source_record_types`, `source_coverage_start/end`, `listed_at`, `delisted_at`, `available_at`).
@@ -1175,7 +1176,7 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
      verified it took (`gcloud storage buckets describe` showed the new rule live), then **reverted it ~1 minute later**
      back to the bucket's original lifecycle (`NEARLINE@90` + `Delete daysSinceNoncurrentTime=30,numNewerVersions=3`) —
      well inside GCS's ~24h lifecycle-evaluation cadence (spot-checked a sample object post-revert: still present,
-     23,959 bytes, unchanged). Reason for the revert: `codex/02-data/pipeline-mode-partition.md`'s 2026-06-18-codified
+     23,959 bytes, unchanged). Reason for the revert: `/codex/02-data/pipeline-mode-partition.md`'s 2026-06-18-codified
      **GCS DELETE-SAFETY HARD RULE**, found mid-session and directly on point for this exact
      legacy-bare-shape-vs-canonical- pipeline_mode-shape class of decision — verbatim _"Require 100% canonical-twin
      coverage per AG before executing that AG's delete-list; deletion is OPERATOR-GATED."_ This session's shape-aware
@@ -1248,7 +1249,7 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
   quickmerge's pre-flight dep-audit; this change only imports UTL's long-stable
   `resolve_bucket_name`/`AssetGroup`/`BucketNamingError`, unrelated to manifest_writer, so a direct `git push` of the 3
   changed scripts/configs files (both outside the strict-quickmerge CODE-trailer requirement's scope) was the correct
-  carve-out per `codex/08-workflows/ci-cd-flow.md`. **Two new findings captured as Deferred #11/#12** (same
+  carve-out per `/codex/08-workflows/ci-cd-flow.md`. **Two new findings captured as Deferred #11/#12** (same
   `{category_lower}`-vs-`asset_group_lower` root cause as the bug this tick fixed in setup-buckets.py, but in two
   different, still-live consumers this tick's repo scope didn't cover): `deployment_service/dependencies.py`'s
   `DependencyLoader` dependency-check machinery, and `system-integration-tests/tests/conftest.py`'s own separate
@@ -1524,7 +1525,7 @@ of a LIVE canonical kind (the smoke-check tier), and everything on the estate-cl
      `Missing upstream data for 2026-07-13: execution config snapshot: gs://execution-store-cefi-.../configs/snapshots/2026-07-13/config.json; ML t1-recon outputs: gs://recon-prd-.../t1-recon/ml/2026-07-13/_SUCCESS; strategy t1-recon outputs: gs://recon-prd-.../t1-recon/strategy/2026-07-13/_SUCCESS`.
      This is real, current, live proof that (a) is closed — the job now genuinely reaches Stage 0's real gate instead of
      crashing before it.
-  6. **(b) Traced the t1-recon producer chain concretely**, per `codex/08-workflows/t1-batch-dag.md` (the SSOT for this
+  6. **(b) Traced the t1-recon producer chain concretely**, per `/codex/08-workflows/t1-batch-dag.md` (the SSOT for this
      DAG) cross-referenced against LIVE Cloud Scheduler + Cloud Run Job state (not code-only inference):
      - **execution-service config-snapshot** (00:30 UTC, feeds Stage 0's `configs/snapshots/{date}/config.json` check):
        `gcloud scheduler jobs describe uts-prod-execution-config-snapshot-t1-schedule` — `ENABLED`, fires daily;

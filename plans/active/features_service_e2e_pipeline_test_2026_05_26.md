@@ -390,7 +390,7 @@ resolves the minimum window each family/feature needs and backfills exactly that
 - [x] ✅ [SCRIPT] P1. Wire the e2e driver into features-service `quality-gates.sh` as a smoke step (mock/`-test` bucket,
       one family one date) so the chain can't silently regress. Per the "peripheral scripts under primary-consumer QG"
       HARD RULE. — features-service@8fa8ebbc. Step [5.E2E/6] in QG; dry-run passes (exit 0 confirmed).
-- [x] ✅ [DOC] P1. Update `codex/02-data/data-lineage-MTDS-features-ml.md` (+ availability-manifest doc if touched) to
+- [x] ✅ [DOC] P1. Update `/codex/02-data/data-lineage-MTDS-features-ml.md` (+ availability-manifest doc if touched) to
       record the features WRITE-side manifest-emission contract proven in Phase 2. — PM@688b01683. Layer 3 table
       corrected (multi_timeframe reads delta_one bucket; cross_instrument instrument_id from filename); manifest
       emission contract added (v8 row co-emitted to same bucket as parquet; single .bucket property).

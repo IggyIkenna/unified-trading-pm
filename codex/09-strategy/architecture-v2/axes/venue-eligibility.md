@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'Axis: Venue Eligibility'
+title: "Axis: Venue Eligibility"
 summary:
   Venue-eligibility axis — the slow-moving set of venues a strategy MAY execute on plus per-venue constraints (max
   notional, min liquidity, fee tier, Unity child-book preferences, chain eligibility), vs the fast-moving execution-time
@@ -14,10 +14,25 @@ repos: [execution-service]
 scope: [engineer, admin]
 tags: [strategy, venue-eligibility, execution, defi, cefi, sports]
 related:
-  [../../../04-architecture/slow-fast-routing-split.md, ../../../02-venues/venue-registry-reference.md, ../cross-cutting/transfer-rebalance.md, ../cross-cutting/mev-protection.md]
+  [
+    ../../../04-architecture/slow-fast-routing-split.md,
+    ../../../02-venues/venue-registry-reference.md,
+    ../cross-cutting/transfer-rebalance.md,
+    ../cross-cutting/mev-protection.md,
+  ]
 created: 2026-04-17
 authoritative_for: [venue-eligibility axis (strategy-config venue set + per-venue constraints)]
-referenced_by: [codex/04-architecture/slow-fast-routing-split.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/edge-methods.md, codex/09-strategy/architecture-v2/axes/expression.md, codex/09-strategy/architecture-v2/axes/signal-sources.md, codex/09-strategy/architecture-v2/axes/staking-methods.md, codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md, codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md]
+referenced_by:
+  [
+    /codex/04-architecture/slow-fast-routing-split.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/axes/edge-methods.md,
+    /codex/09-strategy/architecture-v2/axes/expression.md,
+    /codex/09-strategy/architecture-v2/axes/signal-sources.md,
+    /codex/09-strategy/architecture-v2/axes/staking-methods.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -150,11 +165,11 @@ lines):
 ## Declaring the mode
 
 ```yaml
-venue_routing_mode: SOR_AT_EXECUTION    # execution picks per tick among eligible
+venue_routing_mode: SOR_AT_EXECUTION # execution picks per tick among eligible
 # or
-venue_routing_mode: STRATEGY_PICKED      # strategy names the specific venue per instruction
+venue_routing_mode: STRATEGY_PICKED # strategy names the specific venue per instruction
 # or
-venue_routing_mode: META_BROKER          # venue is meta-broker (Unity), which itself routes
+venue_routing_mode: META_BROKER # venue is meta-broker (Unity), which itself routes
 ```
 
 ## Venue categories and strategy universe

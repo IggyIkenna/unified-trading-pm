@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Portfolio Allocator'
+title: "Cross-Cutting: Portfolio Allocator"
 summary:
-  'Strategy-scope capital allocator (dedicated service): 8 archetypes (FIXED / PNL_WEIGHTED / SHARPE_WEIGHTED /
+  "Strategy-scope capital allocator (dedicated service): 8 archetypes (FIXED / PNL_WEIGHTED / SHARPE_WEIGHTED /
   RISK_PARITY / KELLY / MIN_CVAR / REGIME_AWARE / MANUAL) emit `AllocationDirective` per cadence; strategies rescale via
-  `react_to_equity_change`. Owns strategies-within-one-client scope only — not venue or client scope.'
+  `react_to_equity_change`. Owns strategies-within-one-client scope only — not venue or client scope."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,11 +13,26 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: [portfolio-allocator, strategy, allocation, reconciliation, risk, kelly]
 related:
-  [../../../03-services/portfolio-allocator.md, transfer-rebalance.md, risk-gates.md,
-  ../../../04-architecture/capital-flow-model.md]
+  [
+    ../../../03-services/portfolio-allocator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md,
+    ../../../04-architecture/capital-flow-model.md,
+  ]
 created: 2026-04-17
-authoritative_for: [strategy-scope capital-allocation primitive (AllocationDirective reconciliation across strategies-within-one-client)]
-referenced_by: [codex/03-services/portfolio-allocator.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/shadow-deployment-pattern.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md, codex/09-strategy/architecture-v2/archetypes/portfolio-multi-strategy.md, codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md]
+authoritative_for:
+  [strategy-scope capital-allocation primitive (AllocationDirective reconciliation across strategies-within-one-client)]
+referenced_by:
+  [
+    /codex/03-services/portfolio-allocator.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/04-architecture/shadow-deployment-pattern.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-multi-strategy.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

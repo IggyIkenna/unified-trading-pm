@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Strategy Catalogue
 summary:
-  Strategy Catalogue — the canonical 4-catalogue-pattern implementation (shipped Phase 10, 2026-04-19) — 18 archetypes
-  x 5 categories, 4 lock states (PUBLIC/IM_RESERVED/CLIENT_EXCLUSIVE/RETIRED), an 8-stage maturity ladder, and
-  role x lock x maturity visibility slicing via UAC slots_visible_to().
+  Strategy Catalogue — the canonical 4-catalogue-pattern implementation (shipped Phase 10, 2026-04-19) — 18 archetypes x
+  5 categories, 4 lock states (PUBLIC/IM_RESERVED/CLIENT_EXCLUSIVE/RETIRED), an 8-stage maturity ladder, and role x lock
+  x maturity visibility slicing via UAC slots_visible_to().
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin, sales]
 tags: [catalogue, strategy, ui, uac, maturity, visibility]
-related: [catalogues.md, visibility-slicing.md, ../../09-strategy/architecture-v2/README.md, ../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md]
+related:
+  [
+    /codex/14-customer-journeys/playbook-concepts/catalogues.md,
+    /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md,
+    ../../09-strategy/architecture-v2/README.md,
+    ../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
+  ]
 created: 2026-04-19
 authoritative_for: [strategy catalogue as canonical 4-catalogue-pattern reference]
-referenced_by: [codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md, codex/14-customer-journeys/playbook-concepts/catalogues.md, codex/14-customer-journeys/playbook-concepts/visibility-slicing.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/roadmap/plan-references.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogues.md,
+    /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md,
+    /codex/14-customer-journeys/playbooks/02b-research-dart.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -15,17 +15,17 @@ related:
   [
     ../../plans/epics/README.md,
     ../../plans/epics/orchestrator_master.md,
-    active-plan-inventory-tracker.md,
-    issue-doc-lifecycle.md,
-    ../08-workflows/estimation-calibration.md,
+    /codex/11-project-management/active-plan-inventory-tracker.md,
+    /codex/11-project-management/issue-doc-lifecycle.md,
+    /codex/08-workflows/estimation-calibration.md,
     ../../plans/audit/README.md,
   ]
 created: 2026-03-27
 authoritative_for: [epic-execution codex quick-reference]
 referenced_by:
   [
-    codex/11-project-management/README.md,
-    codex/11-project-management/audit-lifecycle.md,
+    /codex/11-project-management/README.md,
+    /codex/11-project-management/audit-lifecycle.md,
     plans/epics/README.md,
     plans/epics/client_isolation_and_governance_master.md,
     plans/epics/strategy_master.md,
@@ -83,6 +83,7 @@ monthly: review instruction files for epic scope drift; (c) `diff` epics vs inst
 - [`README.md`](README.md) — codex section 11 index with epic registry
 - [`active-plan-inventory-tracker.md`](active-plan-inventory-tracker.md) — orphan detection logic
 - [`issue-doc-lifecycle.md`](issue-doc-lifecycle.md) — how pre-audit diagnostics in issues/ get archived once acked
-- [`../08-workflows/estimation-calibration.md`](../08-workflows/estimation-calibration.md) — epic-exempt estimation
+- [`/codex/08-workflows/estimation-calibration.md`](/codex/08-workflows/estimation-calibration.md) — epic-exempt
+  estimation
 - [`../12-agent-workflow/`](../12-agent-workflow/) — agent workflow + sub-agent mandatory rules
 - [`../../plans/audit/README.md`](../../plans/audit/README.md) — audit lifecycle SSOT

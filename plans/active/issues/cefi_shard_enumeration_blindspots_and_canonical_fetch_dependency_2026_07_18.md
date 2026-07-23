@@ -22,8 +22,8 @@ scope: [engineer, admin]
 tags: [cefi, tardis, smoke-test, enumeration, canonical-id, migration, coverage, big-finding]
 related:
   [
-    tardis_silent_shard_upload_drop_on_429_burst_2026_07_17.md,
-    tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
+    /plans/archive/issues/tardis_silent_shard_upload_drop_on_429_burst_2026_07_17.md,
+    /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
   ]
 created: 2026-07-18
 source:

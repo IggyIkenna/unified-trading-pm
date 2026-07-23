@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: DART Tab Structure — Per-Persona SSOT
-summary: Per-persona SSOT for the DART UI shape — the 8→4 lifecycle-stage collapse, the DART sub-tab catalogue under /services/trading/*, the per-persona visible/locked/hidden lifecycle + sub-tab matrices, and the strategy-param-edit version-bump modal enforcing batch=live parity.
+summary:
+  Per-persona SSOT for the DART UI shape — the 8→4 lifecycle-stage collapse, the DART sub-tab catalogue under
+  /services/trading/*, the per-persona visible/locked/hidden lifecycle + sub-tab matrices, and the strategy-param-edit
+  version-bump modal enforcing batch=live parity.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,21 @@ stage: [meta]
 repos: [deployment-ui, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [strategy, dart, ui, catalogue]
-related: [dashboard-services-grid.md, restriction-policy.md, dart-exclusive-research-fork.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+    /codex/09-strategy/architecture-v2/restriction-policy.md,
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+  ]
 created: 2026-04-21
 authoritative_for: [DART per-persona tab structure and sub-tab visibility]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/admin-registry-api.md, codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/dashboard-services-grid.md]
+referenced_by:
+  [
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/architecture-v2/admin-registry-api.md,
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -28,8 +42,8 @@ Parent plan: `plans/archive/ui_unification_v2_sanitisation_2026_04_20.plan.md` (
 Cross-refs:
 
 - `codex/14-customer-journeys/` — per-audience playbooks. Each playbook declares which DART tabs its persona sees.
-- `codex/09-strategy/architecture-v2/restriction-policy.md` — default visibility for strategy cells per persona.
-- `codex/09-strategy/architecture-v2/dashboard-services-grid.md` — **sibling** 5-tile product-axis model for
+- `/codex/09-strategy/architecture-v2/restriction-policy.md` — default visibility for strategy cells per persona.
+- `/codex/09-strategy/architecture-v2/dashboard-services-grid.md` — **sibling** 5-tile product-axis model for
   `/dashboard`. Dashboard tile sub-route chips are the dashboard-side projection of the DART sub-tab catalog below;
   persona-id × DART sub-tab visibility is the union of the DART dropdown in lifecycle-nav AND the DART tile chip row on
   `/dashboard`.

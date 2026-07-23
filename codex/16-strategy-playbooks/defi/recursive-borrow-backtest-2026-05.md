@@ -13,12 +13,12 @@ scope: [engineer, admin]
 tags: [defi, backtest, strategy, recursive-borrow, playbook]
 related:
   [
-    codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md,
-    codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md,
+    /codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md,
+    /codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md,
   ]
 created: 2026-05-21
 authoritative_for: []
-referenced_by: [codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md]
+referenced_by: [/codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md]
 owner:
 last_reviewed:
 code_refs:

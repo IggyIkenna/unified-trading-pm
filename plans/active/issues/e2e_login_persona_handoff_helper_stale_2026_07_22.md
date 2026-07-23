@@ -67,7 +67,7 @@ locally — a second, deeper layer of drift beyond just the `?persona=` conventi
 
 This is the shared login helper pattern used across the E2E suite for admin/persona-gated specs
 (`tests/e2e/user-management.spec.ts` and every spec built the same way) — the `pw:L2`/regression-spec evidence contract
-(`codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement") requires
+(`/codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement") requires
 `npx playwright test --project=chromium tests/smoke/` (or the relevant spec) to exit 0 before a UI todo can be ticked
 `[x]`. If this helper is broken repo-wide, **no admin-gated E2E spec can currently produce that evidence** — every
 worker hitting this either (a) silently claims pw:L2 ✓ without it actually passing, or (b) gets stuck
@@ -105,4 +105,4 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 
 ## Codex SSOTs
 
-`codex/06-coding-standards/ui-testing-layers.md`.
+`/codex/06-coding-standards/ui-testing-layers.md`.

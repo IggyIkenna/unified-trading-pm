@@ -23,9 +23,9 @@ scope: [engineer, admin]
 tags: [silent-failure, data-correctness, feature-groups, manifest-honesty, ssot-contradiction, defi]
 related:
   [
-    silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
-    defi_consolidated_closeout_2026_07_18.md,
-    defi_dex_pools_delete_order_stale_2026_07_20.md,
+    /plans/active/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master

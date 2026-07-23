@@ -34,7 +34,7 @@ related:
   - plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md
   - plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md
   - plans/active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md
-  - codex/05-infrastructure/data-pipeline-alerts.md
+  - /codex/05-infrastructure/data-pipeline-alerts.md
 created: 2026-07-23
 parent_epic: infrastructure_master
 assigned_vm: NA

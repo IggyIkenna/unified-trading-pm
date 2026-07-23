@@ -18,7 +18,7 @@ stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
 tags: [cicd, mvp, ldr-main, single-path, staging-dormant, SIT, quickmerge, simplification]
-related: [plans/active/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md, codex/08-workflows/ci-cd-flow.md]
+related: [plans/active/issues/ldr_main_promotion_findings_consolidated_2026_06_29.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-30
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -256,7 +256,7 @@ Phase 1:
 - [x] [DOCS] P2. ✅ Archived 12 superseded plans → `plans/archive/2026_06/` + 9 resolved issue docs →
       `plans/archive/issues/` (incl. the consolidated findings doc). Only `cicd_mvp_ldr_to_main_pipeline` remains
       active.
-- [x] [DOCS] P2. ✅ `codex/08-workflows/ci-cd-flow.md` MVP banner added (gate set + retired-gates note + pointer here);
+- [x] [DOCS] P2. ✅ `/codex/08-workflows/ci-cd-flow.md` MVP banner added (gate set + retired-gates note + pointer here);
       full rewrite of the 1208-line body deferred (Phase-3 follow-up below).
 - [ ] [DOCS] P3. Full rewrite of `ci-cd-flow.md` body + the CLAUDE.md "Git discipline + shipping pipeline" section to
       the MVP (remove the complex-gate prose) — bigger contract edit, for operator review when Ikenna is back.
@@ -281,14 +281,14 @@ Phase 1:
 - **Archival caveat (2026-06-30).** `cicd_consolidated_remaining` (archived) was a MULTI-workstream SSOT with ~51 open
   todos beyond the promote pipeline (WS-I service-to-service-auth migration, D13 version-out-of-source, misc P2/P3
   hygiene). Per the operator "everything else out of scope for now" directive these are DEFERRED, living in the archived
-  plan as their record; a few codex docs (`codex/07-security/service-to-service-auth.md`, `ci-cd-flow.md` body) still
+  plan as their record; a few codex docs (`/codex/07-security/service-to-service-auth.md`, `ci-cd-flow.md` body) still
   cite it. If any non-pipeline workstream (esp. WS-I service-auth) is still wanted, it needs re-homing into an active
   plan; otherwise the archived plan is the deferred spec.
 
 ## Codex SSOTs
 
-- `codex/08-workflows/ci-cd-flow.md` (the pipeline SSOT — update to the MVP at Phase 3).
-- `codex/06-coding-standards/integration-testing-layers.md` (SIT's role).
+- `/codex/08-workflows/ci-cd-flow.md` (the pipeline SSOT — update to the MVP at Phase 3).
+- `/codex/06-coding-standards/integration-testing-layers.md` (SIT's role).
 
 ## Progress Log
 

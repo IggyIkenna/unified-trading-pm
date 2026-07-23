@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Glossary
 summary:
-  "Single-definition-per-term glossary for the customer-journeys domain — Odum services (DART, IM, Reg
-  Umbrella), client structure (org/fund/client, Pooled vs SMA), the four catalogues, visibility/access tiers,
-  playbook families (pb1/pb2/pb3), and environments."
+  "Single-definition-per-term glossary for the customer-journeys domain — Odum services (DART, IM, Reg Umbrella), client
+  structure (org/fund/client, Pooled vs SMA), the four catalogues, visibility/access tiers, playbook families
+  (pb1/pb2/pb3), and environments."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,20 @@ stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]
 scope: [sales, prospect, investor]
 tags: [glossary, customer-journey, dart, sales, prospect, catalogue]
-related: [audiences-and-journeys.md, information-architecture.md]
+related:
+  [/codex/14-customer-journeys/audiences-and-journeys.md, /codex/14-customer-journeys/information-architecture.md]
 created: 2026-04-19
 authoritative_for: [customer-journeys glossary terms (org/fund/client, four catalogues, playbook families)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md, codex/14-customer-journeys/audiences-and-journeys.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/playbooks/README.md, codex/14-customer-journeys/roadmap/plan-references.md, codex/GLOSSARY.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md,
+    /codex/14-customer-journeys/audiences-and-journeys.md,
+    /codex/14-customer-journeys/information-architecture.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+    codex/GLOSSARY.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -116,6 +126,6 @@ regulatory / disaster recovery) intended for investors and advisors in Odum itse
 
 - Glossary for strategy concepts: [../GLOSSARY.md](../GLOSSARY.md)
 - Strategy maturity and lock state:
-  [../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md](../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md](/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
 - Share class architecture:
-  [../04-architecture/share-class-architecture.md](../04-architecture/share-class-architecture.md)
+  [/codex/04-architecture/share-class-architecture.md](/codex/04-architecture/share-class-architecture.md)

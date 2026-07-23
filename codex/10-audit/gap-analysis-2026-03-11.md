@@ -1,22 +1,30 @@
 ---
 doc_type: codex-ssot
-title: 'Gap Analysis: Checklist Consolidation — 2026-03-11'
+title: "Gap Analysis: Checklist Consolidation — 2026-03-11"
 summary:
-  2026-03-11 formalised gap list for repo_readiness_semver_hardening — deployment-service checklist items
-  absorbed into CR1/DR1/DR6, all v2.0 validator IDs preserved in code_audit_items, batch-vs-live divergent
-  items split per mode; concludes zero v2.0 items are uncovered by the v3.0 CR/DR/BR model. Companion to
-  consolidation-gap-analysis.md; pre-v3.0 record.
+  2026-03-11 formalised gap list for repo_readiness_semver_hardening — deployment-service checklist items absorbed into
+  CR1/DR1/DR6, all v2.0 validator IDs preserved in code_audit_items, batch-vs-live divergent items split per mode;
+  concludes zero v2.0 items are uncovered by the v3.0 CR/DR/BR model. Companion to consolidation-gap-analysis.md;
+  pre-v3.0 record.
 status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [audit, readiness, consolidation, ssot-audit]
-related: [codex/10-audit/consolidation-gap-analysis.md, codex/10-audit/ssot-reference-mapping.md]
+related: [/codex/10-audit/consolidation-gap-analysis.md, /codex/10-audit/ssot-reference-mapping.md]
 created: 2026-03-27
 authoritative_for: [2026-03-11 checklist-consolidation gap formalisation]
-referenced_by: [codex/10-audit/consolidation-gap-analysis.md]
+referenced_by: [/codex/10-audit/consolidation-gap-analysis.md]
 owner:
 last_reviewed:
 code_refs:

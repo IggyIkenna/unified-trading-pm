@@ -13,8 +13,8 @@ description:
 
 Answers "has the orchestrator ingested my plan, and has a slot actually claimed a task from it yet" without needing the
 dashboard's JWT or a route to the VM's public `:8765` (neither is available from a normal dev checkout — see
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Checking live backlog/dispatch status" for the
-full SSOT this skill wraps).
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Checking live backlog/dispatch status" for
+the full SSOT this skill wraps).
 
 ## Why SSM instead of hitting the API directly
 

@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Playbook 3c — Demo: DART flavour'
+title: "Playbook 3c — Demo: DART flavour"
 summary:
-  'pb3c implementation — DART demo with most services unlocked; sequential walkthrough of all four
-  catalogues + research → promote → trading → observe; data-pro/strategy/ml/execution entitlements;
-  structurally unlike pb3a/pb3b (no reports-only lock, no Pooled/SMA picker).'
+  "pb3c implementation — DART demo with most services unlocked; sequential walkthrough of all four catalogues + research
+  → promote → trading → observe; data-pro/strategy/ml/execution entitlements; structurally unlike pb3a/pb3b (no
+  reports-only lock, no Pooled/SMA picker)."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,23 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, playbook, demo, dart, catalogues, entitlements]
 related:
   [
-    03-warm-prospect-demo.md,
-    03a-demo-reg-umbrella.md,
-    03b-demo-im.md,
-    02b-research-dart.md,
+    /codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md,
+    /codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md,
+    /codex/14-customer-journeys/playbooks/03b-demo-im.md,
+    /codex/14-customer-journeys/playbooks/02b-research-dart.md,
     ../playbook-concepts/catalogues.md,
   ]
 created: 2026-04-19
 authoritative_for: [pb3c DART demo playbook implementation]
-referenced_by: [codex/14-customer-journeys/experience/dart-demo.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md, codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md, codex/14-customer-journeys/playbooks/03b-demo-im.md, codex/14-customer-journeys/playbooks/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/experience/dart-demo.md,
+    /codex/14-customer-journeys/playbooks/02b-research-dart.md,
+    /codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md,
+    /codex/14-customer-journeys/playbooks/03a-demo-reg-umbrella.md,
+    /codex/14-customer-journeys/playbooks/03b-demo-im.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -123,7 +131,7 @@ The demo walks each catalogue in sequence:
 > **[DELTA 2026-05-22]** **Current state:** ML Model Catalogue and Execution Algo Catalogue surface under
 > `/services/research/ml` and `/services/execution/overview` respectively — separate routes, not a unified catalogue
 > surface. TCA on the Execution Algo Catalogue is currently broken (triage-listed). **Planned delta:** Consolidation
-> into a unified catalogue surface tracked in `codex/14-customer-journeys/roadmap/next-waves.md`. **Target:**
+> into a unified catalogue surface tracked in `/codex/14-customer-journeys/roadmap/next-waves.md`. **Target:**
 > post-cutover UI unification phase.
 
 ## What the prospect experiences

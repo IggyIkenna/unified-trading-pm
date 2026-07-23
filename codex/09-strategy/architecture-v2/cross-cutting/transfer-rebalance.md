@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Transfer / Rebalance'
+title: "Cross-Cutting: Transfer / Rebalance"
 summary:
-  'Venue-scope capital-movement primitive: moves capital between venues within one strategy via 7 transfer types
+  "Venue-scope capital-movement primitive: moves capital between venues within one strategy via 7 transfer types
   (INTERNAL_SUBACCOUNT / CEX_WITHDRAWAL_DEPOSIT / ON_CHAIN_TRANSFER / BRIDGE / WRAP_UNWRAP / UNITY_WALLET_OP /
-  IBKR_FUND_MOVE); target-state, idempotent by `instruction_id`, cost-budgeted; bridge paths from `CHAIN_BRIDGE_GRAPH`.'
+  IBKR_FUND_MOVE); target-state, idempotent by `instruction_id`, cost-budgeted; bridge paths from `CHAIN_BRIDGE_GRAPH`."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,11 +13,26 @@ repos: []
 scope: [engineer, admin]
 tags: [defi, cefi, execution, strategy, reconciliation, uac]
 related:
-  [portfolio-allocator.md, venue-account-coordination.md, ../../../04-architecture/capital-flow-model.md,
-  ../../../04-architecture/transfer-architecture.md]
+  [
+    portfolio-allocator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+    ../../../04-architecture/capital-flow-model.md,
+    ../../../04-architecture/transfer-architecture.md,
+  ]
 created: 2026-04-17
-authoritative_for: [venue-scope capital-movement primitive (target-state TRANSFER/BRIDGE reconciliation + bridge-selection graph)]
-referenced_by: [codex/02-venues/venue-registry-reference.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/share-class.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md]
+authoritative_for:
+  [venue-scope capital-movement primitive (target-state TRANSFER/BRIDGE reconciliation + bridge-selection graph)]
+referenced_by:
+  [
+    /codex/02-venues/venue-registry-reference.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/axes/share-class.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -57,7 +72,7 @@ A rebalance cycle fires when:
 | `CEX_WITHDRAWAL_DEPOSIT` | Binance → OKX (same chain)             | withdraw on-chain; deposit on-chain |
 | `ON_CHAIN_TRANSFER`      | DeFi wallet → DeFi wallet (same chain) | EVM/Solana transaction              |
 | `BRIDGE`                 | ETH on Arbitrum → ETH on Optimism      | Across/Stargate/LayerZero/etc.      |
-| `WRAP_UNWRAP`            | ETH ↔ wstETH, USDC ↔ aUSDC           | Token wrapping                      |
+| `WRAP_UNWRAP`            | ETH ↔ wstETH, USDC ↔ aUSDC             | Token wrapping                      |
 | `UNITY_WALLET_OP`        | Unity deposit / withdrawal             | Unity API                           |
 | `IBKR_FUND_MOVE`         | IBKR cash allocation                   | IBKR internal                       |
 
@@ -122,14 +137,14 @@ rather than hardcoding chain pairs here. Multi-hop paths (e.g. Starknet → Ethe
 
 | Bridge             | Chains                   | Speed               | Cost            |
 | ------------------ | ------------------------ | ------------------- | --------------- |
-| Across             | ETH↔ARB/OP/BASE         | Fast (sec–min)      | Low             |
+| Across             | ETH↔ARB/OP/BASE          | Fast (sec–min)      | Low             |
 | Stargate           | Most EVM                 | Medium              | Medium          |
 | LayerZero native   | Most EVM                 | Medium              | Medium          |
-| Wormhole           | EVM↔Solana              | Medium              | Medium          |
-| CCTP (USDC native) | ETH↔ARB/OP/BASE/AVAX    | Fast                | Low (mint/burn) |
+| Wormhole           | EVM↔Solana               | Medium              | Medium          |
+| CCTP (USDC native) | ETH↔ARB/OP/BASE/AVAX     | Fast                | Low (mint/burn) |
 | Native bridges     | Optimism/Arbitrum native | Slow (hours–7d)     | Lowest          |
-| Hyperliquid native | HYPERLIQUID_L1↔ARBITRUM | Fast (~minutes)     | Low (USDC-only) |
-| StarkGate          | STARKNET↔ETHEREUM       | Very slow (~8h out) | Low             |
+| Hyperliquid native | HYPERLIQUID_L1↔ARBITRUM  | Fast (~minutes)     | Low (USDC-only) |
+| StarkGate          | STARKNET↔ETHEREUM        | Very slow (~8h out) | Low             |
 
 Bridge selection policy is an artifact-versioned rule table similar to execution policies.
 

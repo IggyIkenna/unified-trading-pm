@@ -13,7 +13,7 @@ repos: [agent-orchestrator, unified-trading-pm]
 tags: [runbook, devops, cicd, escalation, walls, quality-gates-v2, promotion]
 related:
   [
-    codex/08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/ci-cd-flow.md,
     unified-trading-pm/agents/cicd.md,
     agent-orchestrator/server/ci_status.py,
     agent-orchestrator/server/escalation.py,
@@ -73,8 +73,8 @@ reconcile loop's own read path, so its verdict matches the dashboard by construc
 > already-fixed repos, spawning cicd workers that resolved `qg_v2_green` — wasted credits.)
 
 > **This runbook cross-links, it does not duplicate.** The mechanics SSOT is
-> [`codex/08-workflows/ci-cd-flow.md`](../08-workflows/ci-cd-flow.md); each recipe cites its section. If a recipe here
-> ever disagrees with ci-cd-flow.md, ci-cd-flow.md wins — fix this doc.
+> [`/codex/08-workflows/ci-cd-flow.md`](/codex/08-workflows/ci-cd-flow.md); each recipe cites its section. If a recipe
+> here ever disagrees with ci-cd-flow.md, ci-cd-flow.md wins — fix this doc.
 
 ## Recipe 1 — `quality-gates-v2` never-reported deadlock (MISSING required check)
 

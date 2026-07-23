@@ -12,10 +12,22 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin, sales]
 tags: [catalogue, data, manifest, instruments, ui, uac]
-related: [catalogues.md, ../../02-data/availability-manifest-and-data-status.md, ../../02-data/contracts-scope-and-layout.md, visibility-slicing.md]
+related:
+  [
+    /codex/14-customer-journeys/playbook-concepts/catalogues.md,
+    ../../02-data/availability-manifest-and-data-status.md,
+    ../../02-data/contracts-scope-and-layout.md,
+    /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md,
+  ]
 created: 2026-04-19
 authoritative_for: [data catalogue UI-surface parity gap]
-referenced_by: [codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogues.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogues.md,
+    /codex/14-customer-journeys/playbooks/02b-research-dart.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -58,14 +70,14 @@ inside.
 
 Comparing to the 4-catalogue parity goal:
 
-| Parity feature        |           Strategy Catalogue            |                Data Catalogue                 |
-| --------------------- | :-------------------------------------: | :-------------------------------------------: |
-| Overview page         |    ✅ `/services/strategy-catalogue`    |         ✅ `/services/data/overview`          |
+| Parity feature        |           Strategy Catalogue            |                Data Catalogue                |
+| --------------------- | :-------------------------------------: | :------------------------------------------: |
+| Overview page         |    ✅ `/services/strategy-catalogue`    |         ✅ `/services/data/overview`         |
 | Coverage matrix       | ✅ `/coverage` (archetype × cat × inst) |  ⚠ `/coverage` exists but flat, not matrix   |
-| By-combination filter |                   ✅                    |                       —                       |
+| By-combination filter |                   ✅                    |                      —                       |
 | Per-entry detail      |   ✅ `/strategies/[archetype]/[slot]`   | ⚠ `/instruments` has list but no detail page |
-| Admin lock-state      |         ✅ `/admin/lock-state`          |                       —                       |
-| Blocked               |         ✅ `/coverage/blocked`          |                       —                       |
+| Admin lock-state      |         ✅ `/admin/lock-state`          |                      —                       |
+| Blocked               |         ✅ `/coverage/blocked`          |                      —                       |
 
 ## What to build for parity
 

@@ -9,13 +9,33 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, deployment-service, execution-service, features-service, instruments-service, market-tick-data-service]
+repos:
+  [
+    agent-orchestrator,
+    deployment-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: [foundation-gate, layering, plan-review, audit, sequencing]
-related: [../../plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md, ../../plans/epics/mtds_mdps_master.md, citadel-grade-planning-standards.md, issue-doc-lifecycle.md]
+related:
+  [
+    ../../plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md,
+    ../../plans/epics/mtds_mdps_master.md,
+    /codex/11-project-management/citadel-grade-planning-standards.md,
+    /codex/11-project-management/issue-doc-lifecycle.md,
+  ]
 created: 2026-05-20
 authoritative_for: [foundation-completion-gate rule, layer sequencing table]
-referenced_by: [codex/02-data/data-pipeline-correctness-hard-rule.md, codex/11-project-management/citadel-grade-planning-standards.md, codex/11-project-management/issue-doc-lifecycle.md, plans/epics/mtds_mdps_master.md]
+referenced_by:
+  [
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/11-project-management/citadel-grade-planning-standards.md,
+    /codex/11-project-management/issue-doc-lifecycle.md,
+    plans/epics/mtds_mdps_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

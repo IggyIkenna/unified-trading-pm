@@ -27,8 +27,8 @@ repos: [deployment-api, deployment-ui, alerting-service]
 scope: [engineer]
 tags: [alerts, observability, performance, gcs, n-plus-one]
 related:
-  - deployment_alerts_ingestion_completeness_2026_07_20.md
-  - deployment_ui_alerts_page_rebuild_2026_07_20.md
+  - /plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md
+  - /plans/active/deployment_ui_alerts_page_rebuild_2026_07_20.md
 created: 2026-07-23
 parent_epic: observability_master
 assigned_vm: NA
@@ -132,7 +132,7 @@ become its own plan — this issue doc is the durable record of the finding and 
 
 ## Codex SSOTs
 
-- `codex/04-architecture/ci-alerting.md` — the unified alerts ledger contract, diagnostic-surface principle, per-source
+- `/codex/04-architecture/ci-alerting.md` — the unified alerts ledger contract, diagnostic-surface principle, per-source
   coverage table (predates this issue; does not yet document the performance characteristics found here).
 - `deployment_alerts_ingestion_completeness_2026_07_20.md` — the plan that added `_read_alerting_service_sync` and
   measured the 277,684-object scale (2026-07-21) without flagging the per-object read cost at that scale as a risk.

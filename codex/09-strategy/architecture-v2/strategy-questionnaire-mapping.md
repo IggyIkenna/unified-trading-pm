@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Strategy Questionnaire — Catalogue Filter Derivation
-summary: SSOT for deriving a StrategyCatalogueFilter from the 11-axis prospect questionnaire — the categories→venueCategories and strategy_style→families 1-to-1 maps, the market_neutral rules-based family expansion (carry+neutral also surfaces structural arb), risk_profile→coverageStatuses, and leverage_preference option exclusion.
+summary:
+  SSOT for deriving a StrategyCatalogueFilter from the 11-axis prospect questionnaire — the categories→venueCategories
+  and strategy_style→families 1-to-1 maps, the market_neutral rules-based family expansion (carry+neutral also surfaces
+  structural arb), risk_profile→coverageStatuses, and leverage_preference option exclusion.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,20 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, sales, admin]
 tags: [strategy, catalogue, questionnaire, uac, ui, mvp]
-related: [strategy-catalogue-3tier.md, ../../02-data/questionnaire-axes.md, restriction-policy.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    ../../02-data/questionnaire-axes.md,
+    /codex/09-strategy/architecture-v2/restriction-policy.md,
+  ]
 created: 2026-04-24
 authoritative_for: [questionnaire-to-catalogue-filter derivation (11-axis mapping)]
-referenced_by: [codex/02-data/questionnaire-axes.md, codex/08-workflows/client-onboarding.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md]
+referenced_by:
+  [
+    /codex/02-data/questionnaire-axes.md,
+    /codex/08-workflows/client-onboarding.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

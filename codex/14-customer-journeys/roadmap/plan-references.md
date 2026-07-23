@@ -11,10 +11,15 @@ stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin, sales]
 tags: [roadmap, plan-hygiene, catalogue, dart, ui, registry]
-related: [next-waves.md, ../../../plans/PLAN_FORMAT.md]
+related: [/codex/14-customer-journeys/roadmap/next-waves.md, ../../../plans/PLAN_FORMAT.md]
 created: 2026-04-19
 authoritative_for: [customer-journey follow-up wave reference map]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/roadmap/README.md, codex/14-customer-journeys/roadmap/next-waves.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/roadmap/README.md,
+    /codex/14-customer-journeys/roadmap/next-waves.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -2,8 +2,9 @@
 doc_type: codex-ssot
 title: Next waves
 summary:
-  Superseded follow-up-wave backlog (8 waves, ~6-7 new plans) for pb3 demo enablement — catalogue parity, fund/org/client
-  scaffolding, DART rebrand, nav cleanup. Superseded 2026-04-20 by stage-3e-refactor-plan.md; kept for history only.
+  Superseded follow-up-wave backlog (8 waves, ~6-7 new plans) for pb3 demo enablement — catalogue parity,
+  fund/org/client scaffolding, DART rebrand, nav cleanup. Superseded 2026-04-20 by stage-3e-refactor-plan.md; kept for
+  history only.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,12 +14,22 @@ scope: [engineer, admin, sales]
 tags: [roadmap, catalogue, dart, ui, playbooks, plan-hygiene]
 related:
   [
-    plan-references.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
     ../../16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
   ]
 created: 2026-04-19
 authoritative_for:
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md, codex/14-customer-journeys/page-triage/broken-links.md, codex/14-customer-journeys/page-triage/triage-matrix.md, codex/14-customer-journeys/playbook-concepts/catalogue-data.md, codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/authentication/firebase-production.md,
+    /codex/14-customer-journeys/authentication/firebase-staging.md,
+    /codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md,
+    /codex/14-customer-journeys/page-triage/broken-links.md,
+    /codex/14-customer-journeys/page-triage/triage-matrix.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-data.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

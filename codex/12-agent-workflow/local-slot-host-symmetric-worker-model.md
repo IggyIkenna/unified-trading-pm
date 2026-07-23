@@ -15,19 +15,19 @@ scope: [engineer, admin]
 tags: [orchestrator, plan-hygiene, self-healing, slack, infrastructure]
 related:
   [
-    codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md,
-    codex/12-agent-workflow/commit-push-flip-rule.md,
-    codex/05-infrastructure/per-tab-worktrees.md,
-    codex/12-agent-workflow/canonical-plan-flow.md,
+    /codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/12-agent-workflow/canonical-plan-flow.md,
   ]
 created: 2026-05-23
 authoritative_for: [symmetric slot-host worker model (interactive session is slot N)]
 referenced_by:
   [
-    codex/06-coding-standards/model-tier-selection.md,
-    codex/12-agent-workflow/canonical-plan-flow.md,
-    codex/12-agent-workflow/plan-hygiene.md,
-    codex/12-agent-workflow/stale-blocker-reaper.md,
+    /codex/06-coding-standards/model-tier-selection.md,
+    /codex/12-agent-workflow/canonical-plan-flow.md,
+    /codex/12-agent-workflow/plan-hygiene.md,
+    /codex/12-agent-workflow/stale-blocker-reaper.md,
   ]
 owner:
 last_reviewed:
@@ -110,7 +110,7 @@ dirty/ahead/behind detection, it **also detects unpushed plan files**:
 
 **Rule**: a dirty plan file is always operator-actionable. The 15-minute staleness grace that applies to code repos does
 not apply to plan files — a plan edit left unpushed is invisible to every other VM and breaks the regen loop (see
-`codex/12-agent-workflow/canonical-plan-flow.md`).
+`/codex/12-agent-workflow/canonical-plan-flow.md`).
 
 ### Verification
 
@@ -118,11 +118,11 @@ not apply to plan files — a plan edit left unpushed is invisible to every othe
 
 ## SSOTs
 
-- `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` — Harsh's host onboarding recipe
+- `/codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` — Harsh's host onboarding recipe
 - `unified-trading-pm/agents/worker.md` — the slot-as-worker contract (applies to interactive sessions too)
 
 ## Composes With
 
-- `codex/12-agent-workflow/commit-push-flip-rule.md` — the rule that applies to ALL slots
-- `codex/05-infrastructure/per-tab-worktrees.md` — the worktree model this builds on
-- `codex/12-agent-workflow/daily-work-split-process.md` — orchestrator mechanics
+- `/codex/12-agent-workflow/commit-push-flip-rule.md` — the rule that applies to ALL slots
+- `/codex/05-infrastructure/per-tab-worktrees.md` — the worktree model this builds on
+- `/codex/12-agent-workflow/daily-work-split-process.md` — orchestrator mechanics

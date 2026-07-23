@@ -11,7 +11,11 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [dual-cloud, cost-ops, rollback, aws, dr, cost]
-related: [secrets-migration-tracking.md, defi-bucket-sizes-2026-05-07.md]
+related:
+  [
+    /codex/11-project-management/secrets-migration-tracking.md,
+    /codex/11-project-management/defi-bucket-sizes-2026-05-07.md,
+  ]
 created: 2026-03-27
 authoritative_for: [dual-cloud readiness gates, rollback and version-tagging requirements]
 referenced_by:

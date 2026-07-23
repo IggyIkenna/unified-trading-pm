@@ -24,7 +24,10 @@ repos: [unified-trading-library, market-data-processing-service]
 scope: [engineer, admin]
 tags: [data-correctness, p0, performance, manifest, mdps, backfill-blocker, oom-risk]
 related:
-  [../data_pipeline_check_mdps_features_2026_07_20.md, mdps_derivative_ticker_candle_schema_violation_2026_07_20.md]
+  [
+    ../data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
+  ]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: infrastructure_master

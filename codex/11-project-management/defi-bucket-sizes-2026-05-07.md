@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: DeFi Bucket Sizes (point-in-time 2026-05-07)
 summary:
   Stub for a point-in-time (2026-05-07) DeFi GCS bucket size/object-count snapshot (instruments, MTDS, MDPS, manifests)
-  feeding the AWS S3 cost projection + storage-transfer time estimate for the DeFi-first AWS migration; body pending
-  the `gcloud storage du` audit run.
+  feeding the AWS S3 cost projection + storage-transfer time estimate for the DeFi-first AWS migration; body pending the
+  `gcloud storage du` audit run.
 status: draft
 nature: ssot
 asset_group: [meta]
@@ -12,9 +12,12 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [aws-migration, bucket-size, cost, defi, storage-audit, cloud-migration, dual-cloud]
-related: [codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/02-data/availability-manifest-and-data-status.md]
+related:
+  [/codex/05-infrastructure/cloud-agnostic-build-lineage.md, /codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-05-07
-authoritative_for: Per-bucket size estimate (DeFi instruments, MTDS, MDPS, manifests) at a snapshot point 2026-05-07. Feeds the AWS S3 cost projection + the cross-cloud migration time estimate (storage transfer hours).
+authoritative_for:
+  Per-bucket size estimate (DeFi instruments, MTDS, MDPS, manifests) at a snapshot point 2026-05-07. Feeds the AWS S3
+  cost projection + the cross-cloud migration time estimate (storage transfer hours).
 referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
 owner:
 last_reviewed: 2026-05-17
@@ -57,8 +60,8 @@ cutover plan.
 
 - **Plan(s) implementing this:**
   [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
-- **Related codex SSOTs:** [`cloud-agnostic-build-lineage`](../05-infrastructure/cloud-agnostic-build-lineage.md),
-  [`availability-manifest-and-data-status`](../02-data/availability-manifest-and-data-status.md).
+- **Related codex SSOTs:** [`cloud-agnostic-build-lineage`](/codex/05-infrastructure/cloud-agnostic-build-lineage.md),
+  [`availability-manifest-and-data-status`](/codex/02-data/availability-manifest-and-data-status.md).
 - **Code:** TBD audit helper — likely a `gcloud storage du` wrapper script that materialises the table.
 
 ## Open questions

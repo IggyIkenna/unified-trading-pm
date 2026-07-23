@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
-title: '`<PerformanceOverlay>` — Continuous Backtest / Paper / Live Timeline'
-summary: SSOT for the <PerformanceOverlay> component + GET /api/v1/strategy-instances/{id}/performance — continuous backtest/paper/live P&L timeline in overlay/stitched/split modes, four allocator query patterns, the canonical three-colour palette, and the guarantee that the live series is always odum-live (never a real client run).
+title: "`<PerformanceOverlay>` — Continuous Backtest / Paper / Live Timeline"
+summary:
+  SSOT for the <PerformanceOverlay> component + GET /api/v1/strategy-instances/{id}/performance — continuous
+  backtest/paper/live P&L timeline in overlay/stitched/split modes, four allocator query patterns, the canonical
+  three-colour palette, and the guarantee that the live series is always odum-live (never a real client run).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,22 @@ stage: [meta]
 repos: [execution-service, unified-trading-api, unified-trading-system-ui]
 scope: [engineer]
 tags: [strategy, ui, performance, reconciliation, monitoring]
-related: [strategy-lifecycle-maturity.md, strategy-catalogue-3tier.md, dashboard-services-grid.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+  ]
 created: 2026-04-21
 authoritative_for: [PerformanceOverlay backtest/paper/live timeline component + performance API]
-referenced_by: [codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/14-customer-journeys/shared-core/odum-paper-client-zero.md, codex/14-customer-journeys/shared-core/strategy-version-governance.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/14-customer-journeys/shared-core/odum-paper-client-zero.md,
+    /codex/14-customer-journeys/shared-core/strategy-version-governance.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

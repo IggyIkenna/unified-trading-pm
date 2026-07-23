@@ -16,7 +16,7 @@ repos: [deployment-ui]
 scope: [engineer]
 tags: [deployment-ui, routing, url-scheme, refactor, cockpit, deep-link]
 related:
-  - deployment_observability_expansion_2026_07_08.md
+  - /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md
 created: "2026-07-17"
 last_updated: "2026-07-17"
 parent_epic: observability_master
@@ -87,7 +87,7 @@ in tests · top bar = 10 `cockpit-tab-*` + 5 `cockpit-navlink-*` (converting mak
 one real cost of naive deletion. `scripts/orphan-audit.ts` fails any declared route with no inbound `<Link>`, and its
 whitelist has NO "compat redirect" category — so nav entries + routes must move together. UI gates only (tsc / ESLint /
 Vitest / Playwright — no Python). Playwright **L2** evidence + a cited regression spec is required per tick
-(`codex/06-coding-standards/ui-testing-layers.md`).
+(`/codex/06-coding-standards/ui-testing-layers.md`).
 
 ## Todos
 
@@ -177,4 +177,4 @@ Vitest / Playwright — no Python). Playwright **L2** evidence + a cited regress
 
 ## Codex SSOTs
 
-- `codex/06-coding-standards/ui-testing-layers.md` — the UI gate (tsc/ESLint/Vitest/Playwright; pw:L2 + cited spec).
+- `/codex/06-coding-standards/ui-testing-layers.md` — the UI gate (tsc/ESLint/Vitest/Playwright; pw:L2 + cited spec).

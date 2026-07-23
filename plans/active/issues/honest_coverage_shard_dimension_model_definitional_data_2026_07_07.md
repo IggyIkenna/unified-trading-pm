@@ -23,8 +23,8 @@ tags: [honest-coverage, shard-dimension, instrument-type, deribit, prediction, d
 related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
-    ../../../codex/02-data/honest-coverage-model.md,
-    ../../../codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
   ]
 created: 2026-07-07
 parent_epic: instruments_master
@@ -218,7 +218,7 @@ manifest) for CeFi, so unaffected; the manifest consolidator's dedup key and dep
 the write-path change is aligning the data with a model the rest of the stack already assumed. The one genuine hazard
 found — a dead, already-broken one-off script (`fix_manifest_venue_casing.py`, `AttributeError` on a typo, groupby that
 omits `instrument_type` and would re-introduce the collapse if ever run) — was deleted as a companion cleanup
-(`codex/02-data/availability-manifest-and-data-status.md` script inventory updated).
+(`/codex/02-data/availability-manifest-and-data-status.md` script inventory updated).
 
 **Verified against real production data (read-only, no writes)**: downloaded today's real DERIBIT day-snapshot
 (`instrument_availability/by_date/day=2026-07-07/venue=DERIBIT/instruments.parquet`, 2,965 real instrument rows — the

@@ -17,7 +17,7 @@ repos:
   ]
 scope: [engineer, admin]
 tags: [cefi, backfill, manifest, data-correctness, mtds, honest-coverage, data-status, catalogue]
-related: [mvp_backfill_cefi_tick_v10_2026_06_27, cefi_universe_capture_rule_2026_06_23.md]
+related: [mvp_backfill_cefi_tick_v10_2026_06_27, /plans/active/issues/cefi_universe_capture_rule_2026_06_23.md]
 created: 2026-06-22
 parent_epic: mtds_mdps_master
 priority: P2
@@ -505,14 +505,16 @@ to today (a hardcoded date goes stale tomorrow).
   would apply to if a per-unit price existed.
 
   **Cost-model status: NO committed Tardis per-exchange-day/month pricing found.** Grepped
-  `codex/02-data/tradfi-databento-sourcing-ssot.md` (TradFi/Databento-focused, no Tardis unit pricing) and the whole
-  `codex/` + `plans/` corpus for a Tardis $/exchange-day or $/venue-month figure — none exists. The one Tardis $ figure
-  in the corpus, `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md:101` ("Tardis £0.67[k/mo]"), is
+  `/codex/02-data/tradfi-databento-sourcing-ssot.md` (TradFi/Databento-focused, no Tardis unit pricing) and the whole
+  `codex/` + `plans/` corpus for a Tardis $/exchange-day or $/venue-month figure — none exists. The one Tardis
+  $ figure
+  in the corpus, `/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md:101` ("Tardis £0.67[k/mo]"), is
   an internal blended COGS allocation for the commercial pricing model, **not** a per-exchange-day historical-replay
   unit price — not usable for sizing this launch. The operator's 2026-07-12 ruling ("paid, unlimited access
   confirmed") + the 2026-06-23 Progress Log entry above ("academic/unlimited plan... FLAT plan = no per-request
-  billing") both point to **no incremental Tardis $ per exchange-day for this launch** — the marginal cost driver is GCP
-  VM compute (VM-hours), not a Tardis vendor fee. State this explicitly rather than inventing a $/day number.
+  billing") both point to **no incremental Tardis $
+  per exchange-day for this launch** — the marginal cost driver is GCP VM compute (VM-hours), not a Tardis vendor fee.
+  State this explicitly rather than inventing a $/day number.
 
   **⚠️ CRITICAL PRE-LAUNCH BLOCKER (found same-day, 2026-07-12): the 74.9% HTTP-403 share above is NOT genuine data
   unavailability.** `plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md` (P0, still OPEN) diagnosed —
@@ -709,7 +711,7 @@ Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the 
 
 ### Codex SSOT to update (follow-up)
 
-- [ ] [DOCS] P2. **unified-trading-pm** — update `codex/05-infrastructure/deployment-observability.md` § "Slack parity"
+- [ ] [DOCS] P2. **unified-trading-pm** — update `/codex/05-infrastructure/deployment-observability.md` § "Slack parity"
       to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the emitter
       umbrella-stamping contract (was: "DEPLOYMENT\_\* → #data-pipeline-alerts" only). Provenance: alerting routing
       split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
@@ -1002,9 +1004,9 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
 - [x] ✅ [DOCS] P2. **unified-trading-pm** — codex doc the cefi data-pipeline contracts that shipped this cycle: (1) the
       two-layer IS-full-enumeration vs MTDS-MVP-filter + perp-gate (from `cefi_universe_capture_rule_2026_06_23.md`)
       into `codex/02-data/`, and (2) the dated-instrument NOT_LISTED clip + consolidator
-      bloat/OOM-at-Cloud-Run-ceiling + purge lesson into `codex/05-infrastructure/manifest-consolidator-ssot.md` (so the
-      next bloat is diagnosed fast). — unified-trading-pm@b889f6392 | codex/02-data/cefi-capture-universe.md +
-      codex/05-infrastructure/manifest-consolidator-ssot.md
+      bloat/OOM-at-Cloud-Run-ceiling + purge lesson into `/codex/05-infrastructure/manifest-consolidator-ssot.md` (so
+      the next bloat is diagnosed fast). — unified-trading-pm@b889f6392 | /codex/02-data/cefi-capture-universe.md +
+      /codex/05-infrastructure/manifest-consolidator-ssot.md
 
 ## DP_VM_GONE_NO_CAPTURE false-positive triage (operator 2026-06-24)
 

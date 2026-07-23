@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Venue Selection (Slow-Path Eligibility + Fast-Path SOR)'
+title: "Cross-Cutting: Venue Selection (Slow-Path Eligibility + Fast-Path SOR)"
 summary:
-  'Venue routing split: slow-moving eligibility (strategy config `eligible_venues` + constraints) vs fast-moving per-order
-  SOR in execution-service; three routing modes SOR_AT_EXECUTION / STRATEGY_PICKED / META_BROKER; SOR algos
-  (BEST_QUOTE_NET, BEST_FUNDING_NET, MEV_PROTECTED_ROUTE, …) are artifact-versioned.'
+  "Venue routing split: slow-moving eligibility (strategy config `eligible_venues` + constraints) vs fast-moving
+  per-order SOR in execution-service; three routing modes SOR_AT_EXECUTION / STRATEGY_PICKED / META_BROKER; SOR algos
+  (BEST_QUOTE_NET, BEST_FUNDING_NET, MEV_PROTECTED_ROUTE, …) are artifact-versioned."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,11 +13,25 @@ repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [execution, strategy, venue-selection, cefi, defi, mev]
 related:
-  [../axes/venue-eligibility.md, execution-policies.md, ../../../04-architecture/slow-fast-routing-split.md,
-  venue-account-coordination.md, mev-protection.md]
+  [
+    ../axes/venue-eligibility.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+    ../../../04-architecture/slow-fast-routing-split.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+    mev-protection.md,
+  ]
 created: 2026-04-17
-authoritative_for: [venue-selection routing-mode catalog (SOR_AT_EXECUTION / STRATEGY_PICKED / META_BROKER + per-order SOR algo table)]
-referenced_by: [codex/02-venues/prime-brokers.md, codex/04-architecture/slow-fast-routing-split.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md, codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md]
+authoritative_for:
+  [venue-selection routing-mode catalog (SOR_AT_EXECUTION / STRATEGY_PICKED / META_BROKER + per-order SOR algo table)]
+referenced_by:
+  [
+    /codex/02-venues/prime-brokers.md,
+    /codex/04-architecture/slow-fast-routing-split.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

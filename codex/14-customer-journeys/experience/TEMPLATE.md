@@ -16,7 +16,7 @@ related:
   [../_ssot-rules/01-grammar.md, ../_ssot-rules/02-tone-and-posture.md, ../_ssot-rules/06-show-dont-show-discipline.md]
 created: 2026-04-20
 authoritative_for: [experience playbook skeleton template file]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/01-grammar.md, codex/14-customer-journeys/experience/README.md]
+referenced_by: [/codex/14-customer-journeys/_ssot-rules/01-grammar.md, /codex/14-customer-journeys/experience/README.md]
 owner:
 last_reviewed:
 code_refs:

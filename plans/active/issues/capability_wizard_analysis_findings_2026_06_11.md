@@ -11,7 +11,8 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service, deployment-ui, e2e-testing, execution-service, features-service]
 scope: [engineer, admin]
 tags: [strategy, ssot-audit, registry, execution, ui, uac, data-correctness]
-related: [capability_wizard_gap_discovery_2026_06_11.md, ../capability_wizard_and_manifest_2026_06_11.md]
+related:
+  [/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md, ../capability_wizard_and_manifest_2026_06_11.md]
 created: 2026-06-11
 parent_epic: strategy_master
 priority: P2
@@ -551,15 +552,15 @@ successor alignment plan alongside F47.
 
 **Status**: OPEN (big — missing config dimension + categorization bug). UAC `SigningSurface` enum is REAL and
 config-relevant (`registry/withdrawal_approval_rules.py` etc.: `CLOUD_KMS_ENCRYPTED` May-23, `COPPER_MPC`+`CEFFU`
-June-1, `FIREBLOCKS_MPC` out-of-scope; per-wallet `signing_surface` per codex/04-architecture/custody-providers.md). But
-the capability manifest has **0 nodes representing custody/signing surfaces**, and the wizard has **no custody stage**.
-Worse, the `custody_provider` NODE KIND is used by `scripts/openapi/_capability_gaps.py` (lines 194/250/254/355) as a
-FALLBACK kind for risk-gate-layers, kill-switches, gap-registries, and collateral venues — so its 28 nodes contain ZERO
-actual custody providers and the kind is semantically meaningless. **Fix**: (a) introduce a SigningSurface/custody
-registry + emit real `custody_provider` nodes from the UAC enum; (b) give risk_layer / kill_switch / gap_registry their
-OWN node kinds (or a generic `meta` kind) instead of overloading `custody_provider`; (c) add a custody/signing-surface
-wizard stage (it constrains which wallets/venues a config can use). Owners: UAC (registry) + PM exporter (node kinds) +
-uts-ui (stage).
+June-1, `FIREBLOCKS_MPC` out-of-scope; per-wallet `signing_surface` per /codex/04-architecture/custody-providers.md).
+But the capability manifest has **0 nodes representing custody/signing surfaces**, and the wizard has **no custody
+stage**. Worse, the `custody_provider` NODE KIND is used by `scripts/openapi/_capability_gaps.py` (lines
+194/250/254/355) as a FALLBACK kind for risk-gate-layers, kill-switches, gap-registries, and collateral venues — so its
+28 nodes contain ZERO actual custody providers and the kind is semantically meaningless. **Fix**: (a) introduce a
+SigningSurface/custody registry + emit real `custody_provider` nodes from the UAC enum; (b) give risk_layer /
+kill_switch / gap_registry their OWN node kinds (or a generic `meta` kind) instead of overloading `custody_provider`;
+(c) add a custody/signing-surface wizard stage (it constrains which wallets/venues a config can use). Owners: UAC
+(registry) + PM exporter (node kinds) + uts-ui (stage).
 
 ### F50 — `fund_structure` registry backfilled but exporter emits 0 fund_structure-kind nodes
 

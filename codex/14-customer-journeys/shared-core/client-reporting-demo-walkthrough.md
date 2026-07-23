@@ -13,14 +13,24 @@ scope: [engineer, admin, sales]
 tags: [playbooks, ui, reconciliation, reporting, same-system, demo]
 related:
   [
-    shared-reporting-core.md,
-    same-system-principle.md,
+    /codex/14-customer-journeys/shared-core/shared-reporting-core.md,
+    /codex/14-customer-journeys/shared-core/same-system-principle.md,
     ../experience/regulatory-demo.md,
     ../experience/investment-management-demo.md,
   ]
 created: 2026-04-20
 authoritative_for: [shared client-reporting demo click-path (pb3a/pb3b)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/experience/regulatory-demo.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/shared-core/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md,
+    /codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md,
+    /codex/14-customer-journeys/experience/README.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/experience/regulatory-demo.md,
+    /codex/14-customer-journeys/implementation-mapping/route-mapping.md,
+    /codex/14-customer-journeys/shared-core/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

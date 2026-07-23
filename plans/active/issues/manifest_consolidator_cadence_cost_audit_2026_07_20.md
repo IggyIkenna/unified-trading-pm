@@ -80,8 +80,8 @@ Direct BigQuery query against
 
 ### 2a. Codex SSOT vs actual code — the "every non-live consolidator gets 86400s" claim is wrong
 
-`codex/05-infrastructure/manifest-consolidator-ssot.md` states: _"live market-data ticks (defi/tradfi/sports/prediction)
-= 120s; every other consolidator = 86400s."_ The actual enforcement
+`/codex/05-infrastructure/manifest-consolidator-ssot.md` states: _"live market-data ticks
+(defi/tradfi/sports/prediction) = 120s; every other consolidator = 86400s."_ The actual enforcement
 (`unified_trading_library/manifest_writer/_staleness_budget.py` → `_state.py::_resolve_consolidated_staleness_sec`) does
 not match this:
 
@@ -152,7 +152,7 @@ roughly 5 minutes into every gap, regardless of whether anything is actually wro
    effective 24h(-ish) tolerance for `cefi`, and simply safe for the currently-idle buckets since no other-VM shards
    exist to race) **together with** a matching liveness-watchdog `--cycle-sec`/`--cycles-grace` update (likely requires
    splitting the watchdog invocation into a fast-tier and slow-tier group).
-3. Re-verify via the existing verification recipe in `codex/05-infrastructure/manifest-consolidator-ssot.md` + a
+3. Re-verify via the existing verification recipe in `/codex/05-infrastructure/manifest-consolidator-ssot.md` + a
    follow-up cost check after one full billing cycle.
 4. Separately: correct the codex SSOT doc's "every other consolidator = 86400s" claim to reflect the actual `cefi`-only
    code-level override (Finding 2a) — a docs-only fix, independent of whether the cadence change ships.
