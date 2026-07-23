@@ -808,3 +808,9 @@ tarball once; always check the launcher's own freshness warning output, and if s
   name), SPOT, confirmed RUNNING at launch. T+few-min verification pending — will confirm the freshness-skip is
   genuinely firing (log line "Pre-flight: ... fully covered" or the freshness-cache skip path) rather than blindly
   re-fetching everything.
+
+- **2026-07-23 01:43 UTC (both healthy — dex-swaps resume CONFIRMED working, LST-rates very close)** —
+  `mtds-dex-swaps-backfill` (relaunched): manifest at 69,205 entries, up from the pre-preemption 63,850 — confirms the
+  freshness-skip logic is genuinely working (picked up past where it left off, not re-fetching from scratch), RSS
+  healthy ~1123-1309MiB. `mtds-lst-rates-20260722-181845`: now at `2026-06-07`, ~45 days from the `2026-07-22` target —
+  expect completion within ~15-20 min at current pace.
