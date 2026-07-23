@@ -942,3 +942,6 @@ tarball once; always check the launcher's own freshness warning output, and if s
     VM creation entirely. Filed as a quick, low-risk follow-up (fix: either `--metadata-from-file` for this one field or
     gcloud's alternate-delimiter escape syntax) — not blocking, just means all 3 VMs still carry the ~15 known-dead
     shards' retry overhead per day. T+10min verification pending.
+
+- **2026-07-23 07:20 UTC (dex-swaps 3-VM fleet — T+10min confirmed healthy)** — all 3 VMs (`-1`/`-2`/`-3`) RUNNING, RSS
+  1200-1270MiB each (healthy), fresh heartbeats and resource samples across all 3. No preemptions.
