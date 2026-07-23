@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "coverage_pct": 74.71,
         "warn_file_count": 4,
-        "qg_red_reason": null,
         "large_file_count": 0,
-        "coverage_pct": null
+        "qg_red_reason": null
       }
     },
     "deployment-api": {
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 84.42,
         "warn_file_count": 19,
-        "qg_red_reason": null,
         "large_file_count": 0,
-        "coverage_pct": null
+        "qg_red_reason": null
       }
     },
     "features-service": {
@@ -1212,10 +1212,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": 96.33,
+        "warn_file_count": 30,
         "large_file_count": 27,
-        "qg_red_reason": null,
-        "coverage_pct": null,
-        "warn_file_count": 30
+        "qg_red_reason": null
       }
     },
     "unified-trading-library": {
@@ -1264,7 +1264,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 88.38,
         "warn_file_count": 21,
         "large_file_count": 6,
         "qg_red_reason": null
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
+        "coverage_pct": null,
         "warn_file_count": 0,
         "large_file_count": 0,
-        "coverage_pct": 73.01
+        "qg_red_reason": null
       }
     },
     "unified-trading-api": {
@@ -1366,7 +1366,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1401,7 +1401,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
