@@ -2,24 +2,31 @@
 doc_type: audit-instruction
 title: tradfi_master_audit_instructions
 summary:
-  Weekly audit checklist for TradFi adapters (Databento + MASSIVE dual-source;
-  Polygon.io removed) — scaffold checks (a-g), row-level `source`-column
-  provenance (h-o + CF-26 fetching-adapter stamps, not SOURCE_PRIORITY[0]),
-  SOURCE_PRIORITY read-time reconciliation, Era-B chains, VIX 15m Barchart+Yahoo,
-  and CF-1…CF-14 canonical-form on the market-data-tick-tradfi-prd _index.
+  Weekly audit checklist for TradFi adapters (Databento + MASSIVE dual-source; Polygon.io removed) — scaffold checks
+  (a-g), row-level `source`-column provenance (h-o + CF-26 fetching-adapter stamps, not SOURCE_PRIORITY[0]),
+  SOURCE_PRIORITY read-time reconciliation, Era-B chains, VIX 15m Barchart+Yahoo, and CF-1…CF-14 canonical-form on the
+  market-data-tick-tradfi-prd _index.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-api-contracts]
+repos:
+  [
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [audit, tradfi, databento, pipeline-mode, data-correctness, data-provenance, manifest, canonicalisation]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
     ../results/tradfi_massive_migration_audit_2026_06_08.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    ../../../codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: 2026-05-22
 tier: L0
@@ -89,7 +96,7 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
 
 > Codified 2026-06-01. TradFi cells may be populated by more than one vendor over time (`databento` + `massive`, plus
 > `yahoo` / `barchart` for VIX 15m). The design (SSOT: `tradfi_massive_dual_source_2026_05_28.md` Phase 3 +
-> `codex/02-data/contracts-scope-and-layout.md` § "TradFi canonical schema — dual-source `source` column"): **same hive
+> `/codex/02-data/contracts-scope-and-layout.md` § "TradFi canonical schema — dual-source `source` column"): **same hive
 > drop, vendors disambiguated by a row-level `source` column + per-source manifest row — NOT by a `source=` path key.**
 > Every item below is **data-state verifiable, NOT constant-verifiable** — read actual rows, never trust
 > `MANIFEST_SCHEMA_VERSION`. (Reference incident: manifest-v8, where the constant said 8 while 0% of 7.4M prod rows were
@@ -150,7 +157,7 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
       then read each callsite; data-state: sample VX 15m rows and assert `source` ∈ {yahoo, barchart}, never massive.
       **Trap: item (h)/(i)/CF-4 pass on `source` present + in-closed-set while it is the WRONG vendor.** Green: 0
       writers index `SOURCE_PRIORITY` to STAMP; VX 15m + any cross-vendor cell carries its true fetcher. SSOT:
-      `codex/02-data/tradfi-databento-sourcing-ssot.md` + `canonical_form_cross_service_audit_checklist.md` CF-26.
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md` + `canonical_form_cross_service_audit_checklist.md` CF-26.
 
 ### E2E Batch, Paper, and Live Verification
 

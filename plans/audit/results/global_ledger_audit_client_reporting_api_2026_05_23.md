@@ -2,14 +2,11 @@
 doc_type: audit-result
 title: Global Ledger Audit — client-reporting-api
 summary:
-  Read-only consumer-side audit of client-reporting-api (86 source files) against
-  the 5-ledger target model (Instruction/Passive/Pricing/Position/PnL) — overall
-  readiness is LOW, with only the attribution + HWM paths as GCS-parquet joins while
-  fills/transfers/marks/positions/NAV all flow through CCXT-live or pre-loaded
-  disk JSON with no manifest tracking. 10 gaps (G1-G10) incl. G4 realised vs
-  unrealised split broken (attribution hardcodes realized_pnl 0.00), G6 hardcoded
-  client list, G7 equity_curve.json disk NAV, and zero coupling to strategy/
-  execution-service.
+  Read-only consumer-side audit of client-reporting-api (86 source files) against the 5-ledger target model
+  (Instruction/Passive/Pricing/Position/PnL) — overall readiness is LOW, with only the attribution + HWM paths as
+  GCS-parquet joins while fills/transfers/marks/positions/NAV all flow through CCXT-live or pre-loaded disk JSON with no
+  manifest tracking. 10 gaps (G1-G10) incl. G4 realised vs unrealised split broken (attribution hardcodes realized_pnl
+  0.00), G6 hardcoded client list, G7 equity_curve.json disk NAV, and zero coupling to strategy/ execution-service.
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -19,17 +16,15 @@ scope: [engineer, admin]
 tags: [audit, strategy, pnl-attribution, reconciliation, data-correctness, ssot-audit]
 related:
   [
-    ../../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
-    ../../../codex/04-architecture/client-funds-isolation.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/04-architecture/client-funds-isolation.md,
   ]
 created: 2026-05-23
 audited_scope:
-  client-reporting-api consumer-side audit — all Python source under
-  client_reporting_api/ (86 files) mapping today's NAV/PnL/attribution
-  computation + data sources against the 5-ledger target model. Read-only; NOT
-  covered — the SSOT-writer side (strategy/execution ledger emission) and
-  pnl_attribution parquet lineage tracing (G10 follow-up).
-date: '2026-05-23'
+  client-reporting-api consumer-side audit — all Python source under client_reporting_api/ (86 files) mapping today's
+  NAV/PnL/attribution computation + data sources against the 5-ledger target model. Read-only; NOT covered — the
+  SSOT-writer side (strategy/execution ledger emission) and pnl_attribution parquet lineage tracing (G10 follow-up).
+date: "2026-05-23"
 auditor: slot-7
 parent_epic: strategy_master
 severity: P1

@@ -79,8 +79,8 @@ If any check fails: STOP. Complete Sports Phase 1 first.
 | Existing feature logic   | `SPORTS_REPO/footballbets/features/` — 14 calculators to port                   |
 | Existing odds downloader | `SPORTS_REPO/footballbets/arbitrage/odds.py` — OddsApiAdapter source of truth   |
 | Existing client impls    | `SPORTS_REPO/footballbets/clients/` — adapter implementations to port           |
-| Tier architecture        | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`                    |
-| Batch/live symmetry      | `unified-trading-codex/04-architecture/batch-live-symmetry.md`                  |
+| Tier architecture        | `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md`                   |
+| Batch/live symmetry      | `unified-trading-/codex/04-architecture/batch-live-symmetry.md`                 |
 
 ---
 
@@ -800,5 +800,5 @@ Run `features-sports-service` D5.
 - `SPORTS_REPO/footballbets/features/` — source implementations to port (read-only reference)
 - `SPORTS_REPO/footballbets/clients/` — client implementations to reference for adapter logic
 - `SPORTS_REPO/footballbets/arbitrage/odds.py` — OddsApiAdapter source to port
-- `unified-trading-codex/04-architecture/batch-live-symmetry.md` — batch/live seam pattern
+- `unified-trading-/codex/04-architecture/batch-live-symmetry.md` — batch/live seam pattern
 - `.cursor/rules/delete-deprecated.mdc` — no backward compat

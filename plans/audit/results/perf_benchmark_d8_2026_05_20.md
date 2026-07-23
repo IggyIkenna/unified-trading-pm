@@ -2,10 +2,10 @@
 doc_type: audit-result
 title: D8 performance benchmark results
 summary:
-  D8 perf-upgrade impact analysis (Phase 4) — Phase-1 GCS-REST speedup hit only 3 migration-script call sites (not
-  MTDS handlers, already REST-based) + Phase-2 caching already in place → 0% throughput gain on a clean backfill;
-  the real win is Phase-3 classify_venue_error killing retry stalls (+15-33% only on FAIL-heavy paths). ≥20% target
-  met only in error-heavy scenarios; live workers=32 perp_funding VM measurement NOT launched (P2, non-blocking).
+  D8 perf-upgrade impact analysis (Phase 4) — Phase-1 GCS-REST speedup hit only 3 migration-script call sites (not MTDS
+  handlers, already REST-based) + Phase-2 caching already in place → 0% throughput gain on a clean backfill; the real
+  win is Phase-3 classify_venue_error killing retry stalls (+15-33% only on FAIL-heavy paths). ≥20% target met only in
+  error-heavy scenarios; live workers=32 perp_funding VM measurement NOT launched (P2, non-blocking).
 status: pass
 nature: record
 asset_group: [cross-cutting]
@@ -13,10 +13,12 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [performance, benchmark, mtds, defi, backfill, quality-gates]
-related: [codex/05-infrastructure/gcs-object-operations.md, plans/audit/results/qg_step_profile_2026_06_09.md]
+related: [/codex/05-infrastructure/gcs-object-operations.md, plans/audit/results/qg_step_profile_2026_06_09.md]
 created: 2026-05-20
-audited_scope: D8 Phase 1-3 throughput impact (GCS object ops, resolve_bucket_name caching, classify_venue_error retry reduction) + DeFi perp_funding handler throughput estimate
-date: '2026-05-22'
+audited_scope:
+  D8 Phase 1-3 throughput impact (GCS object ops, resolve_bucket_name caching, classify_venue_error retry reduction) +
+  DeFi perp_funding handler throughput estimate
+date: "2026-05-22"
 auditor: slot-2
 parent_epic: infrastructure_master
 severity: P3
@@ -25,7 +27,8 @@ lib_version:
 doc_versions_checked:
 type: benchmark
 epic: infrastructure_master
-source: [plans/active/d8_perf_upgrade_2026_05_20.md Phase 4, codified_shape_compliance_2026_05_20.csv (A1 hot-path data)]
+source:
+  [plans/active/d8_perf_upgrade_2026_05_20.md Phase 4, codified_shape_compliance_2026_05_20.csv (A1 hot-path data)]
 ---
 
 # D8 — Performance benchmark results

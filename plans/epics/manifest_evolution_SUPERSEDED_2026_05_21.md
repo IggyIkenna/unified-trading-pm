@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [manifest, honest-coverage, data-correctness, consolidation, pipeline-mode, migration]
 related:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/honest-absence-downstream-handling.md,
-    codex/02-data/manifest-migration-coordination.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/manifest-migration-coordination.md,
   ]
 created: 2026-05-08
 name:
@@ -342,12 +342,12 @@ If you're touching one umbrella's schema, check the other before shipping.
 - [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
 - [`available_at_lookahead_bias_completion_2026_05_08`](../active/available_at_lookahead_bias_completion_2026_05_08.md)
   — sister umbrella for stamping
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest schema SSOT
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  manifest schema SSOT
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
   4-category gap rule + reason taxonomy
-- [`codex/02-data/manifest-migration-coordination.md`](../../codex/02-data/manifest-migration-coordination.md) —
-  migration coordination playbook
+- [`/codex/02-data/manifest-migration-coordination.md`](/codex/02-data/manifest-migration-coordination.md) — migration
+  coordination playbook
 
 ## Audit-2026-05-10 finding — post-cutover Wave: lift cross-cutting per-data_type view to typed registry
 
@@ -358,8 +358,8 @@ Block B2.
 **Finding**: UAC `external/` has 73 source sub-directories (per-source flat layout: `__init__.py` + `examples/` +
 `mocks/` + `normalize.py` + `schemas.py`). The cross-cutting "per-data_type → which sources cover which (venue, day)"
 view today comes from prose matrix docs
-([`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) +
-[`sports-data-source-coverage-matrix.md`](../../codex/02-data/sports-data-source-coverage-matrix.md), each ~500 lines)
+([`/codex/02-data/mtds-data-source-coverage-matrix.md`](/codex/02-data/mtds-data-source-coverage-matrix.md) +
+[`sports-data-source-coverage-matrix.md`](/codex/02-data/sports-data-source-coverage-matrix.md), each ~500 lines)
 hand-typed + cross-linked to UAC registry helpers. **Drift risk**: 2026-04-20 phantom-audit incident (false 26% sports
 ODDS phantom) was matrix-doc / registry-code drift. ~5 documented incidents involved cross-cutting drift not catchable
 from any single source's view.

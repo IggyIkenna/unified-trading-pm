@@ -2,12 +2,10 @@
 doc_type: audit-result
 title: DeFi strategy data-coverage — honest breakdown per data_type × venue/chain
 summary:
-  Data dump of strategy-relevant coverage (2,870,693 rows) read from the prd
-  _index — per data_type × venue and × chain captured/empty_confirmed/
-  attempted_failed splits, schema_version distribution (cefi/tradfi 100% v8, defi
-  perp_funding only 407 v9 rows — effectively 0% v9), and empty_confirmed reason
-  histogram (EXPECTED_PRE_GENESIS_CHAIN / EXPECTED_INSTRUMENT_NOT_LISTED dominate;
-  large attempted_failed on OKX-FUTURES/ASTER cefi cells).
+  Data dump of strategy-relevant coverage (2,870,693 rows) read from the prd _index — per data_type × venue and × chain
+  captured/empty_confirmed/ attempted_failed splits, schema_version distribution (cefi/tradfi 100% v8, defi perp_funding
+  only 407 v9 rows — effectively 0% v9), and empty_confirmed reason histogram (EXPECTED_PRE_GENESIS_CHAIN /
+  EXPECTED_INSTRUMENT_NOT_LISTED dominate; large attempted_failed on OKX-FUTURES/ASTER cefi cells).
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -16,18 +14,13 @@ repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [audit, defi, cefi, honest-coverage, manifest, data-status, data-quality, data-correctness]
 related:
-  [
-    defi_master_audit_2026_06_01.md,
-    defi_c0_datastate_audit_2026_06_01.md,
-  ]
+  [/plans/audit/results/defi_master_audit_2026_06_01.md, /plans/audit/results/defi_c0_datastate_audit_2026_06_01.md]
 created: 2026-06-01
 audited_scope:
-  strategy-relevant coverage across the prd _index (cefi/defi/tradfi) — per
-  data_type × venue and × chain capture-status splits + schema_version
-  distribution + empty_confirmed reason histogram. A raw data-state dump; NOT
-  covered — remediation or IS∩UAC true-coverage denominator (sibling
-  defi_master audit owns that).
-date: '2026-06-01'
+  strategy-relevant coverage across the prd _index (cefi/defi/tradfi) — per data_type × venue and × chain capture-status
+  splits + schema_version distribution + empty_confirmed reason histogram. A raw data-state dump; NOT covered —
+  remediation or IS∩UAC true-coverage denominator (sibling defi_master audit owns that).
+date: "2026-06-01"
 auditor: claude + operator
 parent_epic: defi_master
 severity: P0

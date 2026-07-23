@@ -3,9 +3,9 @@ doc_type: audit-result
 title: orchestrator_master audit — 2026-05-28
 summary:
   agent-orchestrator fleet audit (Sections A-L) against refreshed instructions — most checks GREEN (setup-tokens-only
-  auth, plan-driven backlog regen, safety daemons, notifications, dashboard) but 2 P0 incidents surfaced — central
-  API VM i-0c9b283b31d6b5ca7 impaired/unreachable + fleet VMs unreachable on the public path with no operator
-  backdoor; P1s — missing uts-prod-orphan-ping-audit cron, undispatched audit pool, slot-host symmetry fail.
+  auth, plan-driven backlog regen, safety daemons, notifications, dashboard) but 2 P0 incidents surfaced — central API
+  VM i-0c9b283b31d6b5ca7 impaired/unreachable + fleet VMs unreachable on the public path with no operator backdoor; P1s
+  — missing uts-prod-orphan-ping-audit cron, undispatched audit pool, slot-host symmetry fail.
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -13,10 +13,18 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service, deployment-ui]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, infrastructure, monitoring, role-registry, audit]
-related: [plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/audit/results/orchestrator_master_audit_2026_06_01.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/runtime-deployment-topology.md]
+related:
+  [
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+    plans/audit/results/orchestrator_master_audit_2026_06_01.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+  ]
 created: 2026-05-28
-audited_scope: agent-orchestrator fleet — topology/connectivity, auth model, backlog regen, safety mechanisms, notifications, state persistence, dashboard, VM provisioning, EIP/DNS, codex alignment, operational hygiene, plan workflow/audit pool
-date: '2026-05-28'
+audited_scope:
+  agent-orchestrator fleet — topology/connectivity, auth model, backlog regen, safety mechanisms, notifications, state
+  persistence, dashboard, VM provisioning, EIP/DNS, codex alignment, operational hygiene, plan workflow/audit pool
+date: "2026-05-28"
 auditor: harsh-claude-opus
 parent_epic: orchestrator_master
 severity: P0
@@ -99,11 +107,11 @@ reboot via API.
 
 ## Section F — State persistence (Phase 8)
 
-| ID  | Check                                            | Result  | Notes                                                                                                                                                                                                                                                       |
-| --- | ------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| f1  | SQLite state.db exists on central                | ⚪ N/A  | Central VM unreachable.                                                                                                                                                                                                                                     |
-| f2  | Periodic snapshots fire (last_snapshot_iso < 1h) | ⚪ N/A  | Central VM unreachable; can't read `/health` payload.                                                                                                                                                                                                       |
-| f3  | State-snapshot AWS↔S3 gap honestly documented   | 🟢 PASS | Verified in `codex/04-architecture/agent-orchestrator-overview.md` § "Secrets + buckets" — the **Known gap** callout is present and accurate. `server/gcs_sync.py` is GCS-only; AWS fleet without `ORCHESTRATOR_GCS_BUCKET` keeps state on local disk only. |
+| ID  | Check                                            | Result  | Notes                                                                                                                                                                                                                                                        |
+| --- | ------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| f1  | SQLite state.db exists on central                | ⚪ N/A  | Central VM unreachable.                                                                                                                                                                                                                                      |
+| f2  | Periodic snapshots fire (last_snapshot_iso < 1h) | ⚪ N/A  | Central VM unreachable; can't read `/health` payload.                                                                                                                                                                                                        |
+| f3  | State-snapshot AWS↔S3 gap honestly documented    | 🟢 PASS | Verified in `/codex/04-architecture/agent-orchestrator-overview.md` § "Secrets + buckets" — the **Known gap** callout is present and accurate. `server/gcs_sync.py` is GCS-only; AWS fleet without `ORCHESTRATOR_GCS_BUCKET` keeps state on local disk only. |
 
 ## Section G — Dashboard
 
@@ -193,7 +201,7 @@ reboot via API.
 
 - **F-5 — `verify-slot-host-symmetry.sh` fails on the audit host (Harsh laptop).** 5 of 6 checks fail. Same machine
   drives slot 2 interactive sessions. Per the local-slot=VM-slot HARD RULE, this is a violation. **Action**: install the
-  FF-pull cron + git-status reporter per `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` Step 5.
+  FF-pull cron + git-status reporter per `/codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` Step 5.
 
 ### 🟡 P2 — Doc drift / minor cleanup
 

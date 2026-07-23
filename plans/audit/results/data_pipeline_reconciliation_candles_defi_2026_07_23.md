@@ -153,7 +153,7 @@ objects, taken today, 2026-07-23 — one full day after the migration's retry pa
 `CANONICAL_NOOP`** under the tool's own ground-truth classifier. Zero objects require migration, content-repair, or
 quarantine; zero orphans. This independently confirms the P7a-full DEFI migration's own completion claim ("0 outstanding
 legacy-path candle objects") — no new findings, no register-patch needed for
-`codex/02-data/non-canonical-path-inventory.md`.
+`/codex/02-data/non-canonical-path-inventory.md`.
 
 ## Reproducibility — exact commands
 

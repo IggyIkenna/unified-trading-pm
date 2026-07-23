@@ -14,13 +14,18 @@ stage: [meta]
 repos: [batch-live-reconciliation-service]
 scope: [engineer, admin]
 tags: [pipeline-mode, data-pipeline, reconciliation, tradfi, cefi, defi, ssot-audit, audit]
-related: [plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md, plans/active/data_source_provenance_all_asset_groups_2026_06_01.md, codex/02-data/pipeline-mode-partition.md]
+related:
+  [
+    plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md,
+    plans/active/data_source_provenance_all_asset_groups_2026_06_01.md,
+    /codex/02-data/pipeline-mode-partition.md,
+  ]
 created: 2026-06-07
 audited_scope: >-
-  {batch/live/replay × transport} capability per data_source (28 canonical sources across all asset groups) from
-  vendor docs + code — the M2 ratification input for the pipeline_mode standardisation plan; replay-capability fact
-  table + operator-ratified residuals R1-R3
-date: '2026-06-07'
+  {batch/live/replay × transport} capability per data_source (28 canonical sources across all asset groups) from vendor
+  docs + code — the M2 ratification input for the pipeline_mode standardisation plan; replay-capability fact table +
+  operator-ratified residuals R1-R3
+date: "2026-06-07"
 auditor: ikenna (slot-2, research)
 parent_epic: infrastructure_master
 severity: P3
@@ -30,9 +35,11 @@ doc_versions_checked:
 type: analysis
 epic: mtds_mdps_master
 source:
-- pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (M1/M2 — this is the M2-ratify input)
-- {master_data_canonicalisation_migration_catalogue_2026_06_07.md (G0 root: this matrix unblocks the M1 enum)}
-- {vendor docs (web-verified 2026-06-07): 'Pyth/Hyperliquid/Tardis; code (`pipeline_mode.py`, `source_priority.py`)'}
+  - pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (M1/M2 — this is the M2-ratify input)
+  - { master_data_canonicalisation_migration_catalogue_2026_06_07.md (G0 root: this matrix unblocks the M1 enum) }
+  - {
+      vendor docs (web-verified 2026-06-07): "Pyth/Hyperliquid/Tardis; code (`pipeline_mode.py`, `source_priority.py`)",
+    }
 ---
 
 # Source-mode capability matrix — the M2 ratification input (built, not punted)

@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, frontmatter, scripts, quality-gates, ssot-audit, runbook]
-related: [agent_operating_framework_master.md, README.md]
+related: [/plans/epics/agent_operating_framework_master.md, README.md]
 created: 2026-05-21
 name: plan_hygiene_master
 tier: L5
@@ -45,13 +45,13 @@ removes the manual cost and catches regressions before they compound.
 > **[DONE 2026-05-22]** Group D audit: all referenced docs verified; `assigned_vm` + `tier` added to required epic
 > frontmatter in `plan-hygiene.md` (was missing vs CLAUDE.md).
 
-| Doc                                                            | Owns                                                                                                                                                                                                            |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/11-project-management/plan-hygiene.md`                  | Scripts, runbook, cron — canonical SSOT for hygiene tooling; required frontmatter field lists                                                                                                                   |
-| `codex/11-project-management/active-plan-inventory-tracker.md` | Active plan inventory regenerator (`regenerate_active_plan_inventory.py`); orphan check                                                                                                                         |
-| `codex/11-project-management/issue-doc-lifecycle.md`           | Issue doc state machine; archive trigger conditions                                                                                                                                                             |
-| `plans/epics/README.md`                                        | Epic-flow SSOT — 23 epics × 6 tiers (registry regenerated 2026-07-12; was: "19 epics × 5 tiers × 10-VM topology" — the 10-VM model is SUPERSEDED by single-VM role dispatch; finding 10004, §A2 B-queue ruling) |
-| `plans/PLAN_FORMAT.md`                                         | Plan format; Cursor checkboxes; required todo syntax                                                                                                                                                            |
+| Doc                                                             | Owns                                                                                                                                                                                                            |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/codex/11-project-management/plan-hygiene.md`                  | Scripts, runbook, cron — canonical SSOT for hygiene tooling; required frontmatter field lists                                                                                                                   |
+| `/codex/11-project-management/active-plan-inventory-tracker.md` | Active plan inventory regenerator (`regenerate_active_plan_inventory.py`); orphan check                                                                                                                         |
+| `/codex/11-project-management/issue-doc-lifecycle.md`           | Issue doc state machine; archive trigger conditions                                                                                                                                                             |
+| `plans/epics/README.md`                                         | Epic-flow SSOT — 23 epics × 6 tiers (registry regenerated 2026-07-12; was: "19 epics × 5 tiers × 10-VM topology" — the 10-VM model is SUPERSEDED by single-VM role dispatch; finding 10004, §A2 B-queue ruling) |
+| `plans/PLAN_FORMAT.md`                                          | Plan format; Cursor checkboxes; required todo syntax                                                                                                                                                            |
 
 ---
 
@@ -127,7 +127,7 @@ removes the manual cost and catches regressions before they compound.
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/install_hooks.sh` — installs `check_todo_regression.sh` +
       `check_frontmatter.sh` as `.git/hooks/pre-push` in the `unified-trading-pm` repo. Agents call this once after
       workspace setup. (PM@a85f151e9)
-- [x] ✅ [SCRIPT] P2. Document in `codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene
+- [x] ✅ [SCRIPT] P2. Document in `/codex/11-project-management/active-plan-inventory-tracker.md` § "Pre-push hygiene
       hooks" — how to install, what they check, how to bypass for emergency pushes (`SKIP_HYGIENE=1 git push`). —
       unified-trading-pm@HEAD (this session)
 
@@ -190,7 +190,7 @@ single-walk discipline) consistently aligned. Residual items:
 - Phase 1-3 + 5 (P1+P2): shipped. No temporary states.
 - Phase 4 (codex alignment agent work): open P1/P2 items remain — low-priority ongoing; no blocking successor plan
   needed.
-- Phase 5 P2 (hook documentation in codex): shipped — `codex/11-project-management/active-plan-inventory-tracker.md` §
+- Phase 5 P2 (hook documentation in codex): shipped — `/codex/11-project-management/active-plan-inventory-tracker.md` §
   "Pre-push hygiene hooks" (corrected 2026-07-15, plan-reconcile: this summary was stale against the Phase 5 P2 todo
   already checked off above).
 

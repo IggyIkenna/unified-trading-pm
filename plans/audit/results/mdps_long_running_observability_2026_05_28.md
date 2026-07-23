@@ -19,8 +19,10 @@ related:
   - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
   - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope: MDPS long-running observability — existing memory/backpressure telemetry vs what was needed to predict the Phase-3.2 OOM; 6 structured-event + SLO + dashboard + QG-regression proposals
-date: '2026-05-28'
+audited_scope:
+  MDPS long-running observability — existing memory/backpressure telemetry vs what was needed to predict the Phase-3.2
+  OOM; 6 structured-event + SLO + dashboard + QG-regression proposals
+date: "2026-05-28"
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
 severity: P1
@@ -48,10 +50,10 @@ parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 - `unified-trading-library/unified_trading_library/events/__init__.py:337-366` — `log_event` signature + sink
   integration
 - Codex:
-  - `codex/03-observability/lifecycle-events.md` — mandatory 11-event batch sequence (STARTED → VALIDATION_COMPLETED →
+  - `/codex/03-observability/lifecycle-events.md` — mandatory 11-event batch sequence (STARTED → VALIDATION_COMPLETED →
     DATA_INGESTION_COMPLETED → PROCESSING_COMPLETED → PERSISTENCE_COMPLETED → STOPPED or FAILED)
-  - `codex/03-observability/coordination-events.md` — service-to-service events (out of scope for batch MDPS)
-  - `codex/03-observability/slos.md` — dashboard + alerting patterns
+  - `/codex/03-observability/coordination-events.md` — service-to-service events (out of scope for batch MDPS)
+  - `/codex/03-observability/slos.md` — dashboard + alerting patterns
 
 ## What exists today
 
@@ -261,7 +263,7 @@ against a snapshot of prod GCS data.
 - Grep MDPS source for `.to_pandas()` + `.from_pandas()` callsites that occur in the same file or adjacent modules
 - Fail if: any module imports both polars AND pandas and calls both `.to_pandas()` and read-after-convert operations
   (per codex data-engine-selection rule)
-- Reference: `codex/06-coding-standards/data-engine-selection.md`
+- Reference: `/codex/06-coding-standards/data-engine-selection.md`
 
 ## Recommended next step
 

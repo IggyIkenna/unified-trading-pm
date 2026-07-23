@@ -1,17 +1,30 @@
 ---
 doc_type: audit-result
 title: A5 — Dependency-fail propagation summary
-summary: A5 automated dependency-fail propagation scan (4757 files, 40 EmptyConfirmedReason members) — 5 review-blocking warn-but-proceed files across ml-inference/ml/strategy/features batch handlers; 0 silent catches / blank reasons / freeform reasons detected; recommends a new check_dependency_fail_propagation.py QG ratchet.
+summary:
+  A5 automated dependency-fail propagation scan (4757 files, 40 EmptyConfirmedReason members) — 5 review-blocking
+  warn-but-proceed files across ml-inference/ml/strategy/features batch handlers; 0 silent catches / blank reasons /
+  freeform reasons detected; recommends a new check_dependency_fail_propagation.py QG ratchet.
 status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, ml-service]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    ml-service,
+  ]
 scope: [engineer, admin]
 tags: [audit, data-correctness, quality-gates, data-pipeline, ml, features]
-related: [dependency_propagation_2026_05_20.md]
+related: [/plans/audit/results/archive/dependency_propagation_2026_05_20.md]
 created: 2026-05-20
-audited_scope: 4757 files across 9 consumer services scanned per service×mode for DependencyError/StaleUpstreamError raises, silent catches, blank/freeform reason literals, warn-but-proceed patterns
+audited_scope:
+  4757 files across 9 consumer services scanned per service×mode for DependencyError/StaleUpstreamError raises, silent
+  catches, blank/freeform reason literals, warn-but-proceed patterns
 date: 2026-05-20
 auditor: semver
 parent_epic: infrastructure_master

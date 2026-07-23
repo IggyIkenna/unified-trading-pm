@@ -14,7 +14,8 @@ push. basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel 
 before implementing anything new.
 
 WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos All Python/pytest/ruff/basedpyright/QG
-commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+commands: cd $WORKSPACE_ROOT
+&& source .venv-workspace/bin/activate first.
 
 ---
 
@@ -70,10 +71,10 @@ If any check fails: STOP. Complete Phase 1/2 first.
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 63 repos, 13 levels (L0-L12, AUTHORITATIVE). L0=PM, L1=codex, L2+=code repos |
 | Runtime topology       | `deployment-service/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`                                                               |
-| Service pair flows     | `unified-trading-codex/08-workflows/service-pair-flows.md`                                                                     |
-| Tier architecture      | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`                                                                   |
-| Batch/live symmetry    | `unified-trading-codex/04-architecture/batch-live-symmetry.md`                                                                 |
-| Integration layers     | `unified-trading-codex/06-coding-standards/integration-testing-layers.md`                                                      |
+| Service pair flows     | `unified-trading-/codex/08-workflows/service-pair-flows.md`                                                                    |
+| Tier architecture      | `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md`                                                                  |
+| Batch/live symmetry    | `unified-trading-/codex/04-architecture/batch-live-symmetry.md`                                                                |
+| Integration layers     | `unified-trading-/codex/06-coding-standards/integration-testing-layers.md`                                                     |
 
 ---
 
@@ -362,10 +363,10 @@ If any step fails: fix and re-run **that step**. Never skip forward. L3b passing
 - `unified-trading-pm/plans/active/phase3_service_hardening_integration.md` — full task list
 - `unified-trading-pm/workspace-manifest.json` — repo registry
 - `deployment-service/configs/runtime-topology.yaml` — runtime topology
-- `unified-trading-codex/08-workflows/service-pair-flows.md` — service-to-service data flows
-- `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` — tier rules
-- `unified-trading-codex/06-coding-standards/integration-testing-layers.md` — 4-layer strategy
-- `unified-trading-codex/04-architecture/batch-live-symmetry.md` — batch/live seam pattern
+- `unified-trading-/codex/08-workflows/service-pair-flows.md` — service-to-service data flows
+- `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md` — tier rules
+- `unified-trading-/codex/06-coding-standards/integration-testing-layers.md` — 4-layer strategy
+- `unified-trading-/codex/04-architecture/batch-live-symmetry.md` — batch/live seam pattern
 - `unified-trading-pm/scripts/workspace-bootstrap.sh` — full workspace bootstrap for fresh VMs
 - `unified-trading-pm/templates/AGENTS.md` — per-repo caveats template (populate during hardening)
 - `.cursor/rules/delete-deprecated.mdc` — no backward compat

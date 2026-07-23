@@ -70,10 +70,10 @@ Strategy archetype + portfolio_allocator + risk/position/pnl scope went to [`str
 
 All active plans under this epic that touch any UI repo (`unified-trading-system-ui`, `deployment-ui` — was: also
 `user-management-ui`; ARCHIVED 2026-05, folded into `unified-trading-system-ui` per
-`codex/04-architecture/runtime-deployment-topology.md` + CLAUDE.md's system map; corrected 2026-07-12, findings 310/386,
-`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling) MUST pass the playwright
-verification gate before any todo is ticked ✅ done. Per `plans/PLAN_FORMAT.md` § 9 and
-`codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement":
+`/codex/04-architecture/runtime-deployment-topology.md` + CLAUDE.md's system map; corrected 2026-07-12, findings
+310/386, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling) MUST pass the
+playwright verification gate before any todo is ticked ✅ done. Per `plans/PLAN_FORMAT.md` § 9 and
+`/codex/06-coding-standards/ui-testing-layers.md` § "Plan-Level Enforcement":
 
 - **`[UI]` tag**: every UI-touching todo MUST use `[AGENT][UI]` or `[HUMAN][UI]` (not bare `[AGENT]`).
 - **pw:L2 ✓**: `npx playwright test --project=chromium tests/smoke/` exits 0 before tick.
@@ -93,9 +93,9 @@ Key DART/promote surfaces and their required layers:
 
 ## Codex SSOTs
 
-- [`codex/04-architecture/promote-workflow-architecture.md`](../../codex/04-architecture/promote-workflow-architecture.md)
-  — CLI + UI promote tracks + state machine + candidate manifest
-- [`codex/09-strategy/operational/cli-promote-paths.md`](../../codex/09-strategy/operational/cli-promote-paths.md) — CLI
+- [`/codex/04-architecture/promote-workflow-architecture.md`](/codex/04-architecture/promote-workflow-architecture.md) —
+  CLI + UI promote tracks + state machine + candidate manifest
+- [`/codex/09-strategy/operational/cli-promote-paths.md`](/codex/09-strategy/operational/cli-promote-paths.md) — CLI
   dispatch pattern
 - [`codex/14-customer-journeys/dart/`](../../codex/14-customer-journeys/dart/) — DART terminal vs research playbook
 

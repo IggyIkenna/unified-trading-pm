@@ -16,9 +16,9 @@ scope: [engineer, admin]
 tags: [audit, cefi, tardis, batch-live, features, source-provenance, data-correctness, acquisition]
 related:
   [
-    defi_master_audit_2026_06_03.md,
+    /plans/audit/results/defi_master_audit_2026_06_03.md,
     ../instructions/cefi_master_audit_instructions.md,
-    data_source_provenance_audit_2026_06_01.md,
+    /plans/audit/results/data_source_provenance_audit_2026_06_01.md,
   ]
 created: 2026-06-03
 audited_scope:

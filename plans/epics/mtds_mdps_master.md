@@ -30,23 +30,23 @@ related:
     ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md,
     ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md,
     ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
-    strategy_repo_consolidation_2026_05_19.md,
-    ml_repo_consolidation_2026_05_19.md,
+    /plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+    /plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md,
     features_repo_consolidation_2026_05_08.md,
-    strategy_execution_contract_remediation_2026_05_20.md,
-    bucket_name_ssot_canonicalisation_2026_05_10.md,
-    code_freeze_migrate_backfill_sequencing_2026_05_10.md,
-    aws_migration_defi_first_2026_05_07.md,
-    gcs_migration_bundle_pipeline_mode_2026_05_08.md,
-    writegate_honest_coverage_endtoend_2026_05_06.md,
-    d3_manifest_v8_finish_2026_05_20.md,
-    manifest_cross_asset_rescan_design_2026_05_08.md,
-    manifest_schema_final_gate_2026_05_09.md,
-    hard_schema_phase1_field_flip_migration_2026_05_19.md,
-    honest_coverage_formula_consolidation_2026_05_19.md,
-    data_status_drilldown_shard_atom_alignment_2026_05_07.md,
+    /plans/archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
+    /plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
+    /plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md,
+    /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
+    /plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    /plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
+    /plans/archive/2026_05/d3_manifest_v8_finish_2026_05_20.md,
+    /plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md,
+    /plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md,
+    /plans/archive/2026_05/hard_schema_phase1_field_flip_migration_2026_05_19.md,
+    /plans/archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md,
+    /plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md,
     archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md,
-    deployment_ui_lifecycle_tabs_2026_05_08.md,
+    /plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md,
     issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md,
     audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md,
     audit/results/manifest_v8_compliance_2026_05_20_summary.md,
@@ -59,9 +59,9 @@ related:
     audit/strategy_execution_contract_audit_2026_05_20.md,
     audit/utl_consumer_contract_audit_2026_05_20.md,
     audit/uac_consumer_contract_audit_2026_05_20.md,
-    ../../codex/02-data/data-pipeline-correctness-hard-rule.md,
-    ../../codex/05-infrastructure/manifest-consolidator-ssot.md,
-    ../../codex/11-project-management/foundation-completion-gate-discipline.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/11-project-management/foundation-completion-gate-discipline.md,
     ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
 created: 2026-05-20
@@ -201,7 +201,7 @@ Symptoms the audit surfaced (linking to evidence):
    rollback) + 2 with non-manifest data (execution-store-cefi, ml-training-artifacts).
 5. **Hybrid consolidator runtime** (legacy GCE VM + 10 Cloud Run jobs) — resolved 2026-05-20: legacy VM deleted
    (deployment-service@73183b7), Cloud Run is canonical per
-   [codex/05-infrastructure/manifest-consolidator-ssot.md](../../codex/05-infrastructure/manifest-consolidator-ssot.md).
+   [/codex/05-infrastructure/manifest-consolidator-ssot.md](/codex/05-infrastructure/manifest-consolidator-ssot.md).
 6. **Denominator/numerator confusion in deployment-UI** — currently shows captured/in_scope ratio, but in_scope
    underreports what we COULD capture. See
    [honest_coverage_formula_consolidation_2026_05_19.md](honest_coverage_formula_consolidation_2026_05_19.md) for the
@@ -686,8 +686,8 @@ RUNNING (slot-1 monitors). **Resume signal**: 🟢 UNFREEZE ping in this same fi
 - CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — this is the operationalisation of that rule.
 - CLAUDE.md § "Pre-migration drain (GCS migration gate — HARD RULE)" — Phase 3 follows that recipe exactly.
 - CLAUDE.md § "Plans Run To Actual Completion" — Phase 7 v8 backfill must run to 100%, not "most rows".
-- `codex/02-data/data-pipeline-correctness-hard-rule.md` — slot-freeze protocol § Invariant 4.
-- `codex/11-project-management/foundation-completion-gate-discipline.md` — Phase ordering follows layer-N+1 gate; data
+- `/codex/02-data/data-pipeline-correctness-hard-rule.md` — slot-freeze protocol § Invariant 4.
+- `/codex/11-project-management/foundation-completion-gate-discipline.md` — Phase ordering follows layer-N+1 gate; data
   layer (3) gates everything above.
 
 ## Why this is the operator-handoff entry point
@@ -706,9 +706,9 @@ layer**, not a re-statement of the work.
 
 ## Codex SSOT updates (per CLAUDE.md Post-Plan-Phase Audit)
 
-- [x] ✅ `codex/02-data/data-pipeline-correctness-hard-rule.md` — add pointer to this coordinator plan as the canonical
+- [x] ✅ `/codex/02-data/data-pipeline-correctness-hard-rule.md` — add pointer to this coordinator plan as the canonical
       execution-ordering reference. — pm@HEAD
-- [x] ✅ `codex/11-project-management/foundation-completion-gate-discipline.md` — cite this plan as the example of how
+- [x] ✅ `/codex/11-project-management/foundation-completion-gate-discipline.md` — cite this plan as the example of how
       layers 1-3 are sequenced together for a major migration. — pm@HEAD
 - [x] ✅ CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — path corrected `plans/active/` → `plans/epics/`
       (pointer already existed, wrong path). — pm@HEAD

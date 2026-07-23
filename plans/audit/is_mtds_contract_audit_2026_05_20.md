@@ -95,14 +95,14 @@ Banned in MTDS handlers:
 | `token_transfers_handler.py`     | ✅ Reads IS                                                | lines 100-125                |
 | `vault_share_price_handler.py`   | ✅ Reads IS                                                | lines 80-105                 |
 | **`solana_defi_handler.py`**     | **❌ Hardcodes Drift S3 + Phoenix + Solana protocol URLs** | **lines 164-203, 1101-1199** |
-| **`perp_funding_handler.py`**    | **⚠ Hardcodes Drift market list**                         | **line 145**                 |
-| **`lst_rates_handler.py`**       | **⚠ Hardcodes Solana LST URLs**                           | **lines 135-160**            |
-| **`native_staking_handler.py`**  | **⚠ Hardcodes Solana staking endpoint**                   | **line 85**                  |
-| **`staking_yields_handler.py`**  | **⚠ Hardcodes Lido/Marinade URLs**                        | **lines 110-135**            |
-| **`solana_lst_archival.py`**     | **⚠ Hardcodes Marinade/Jito endpoints**                   | **lines 75-95**              |
-| `position_data_handler.py`       | ⚠ Partial — fallback hardcodes some exchanges             | lines 200-215                |
-| `tick_data_handler.py`           | ⚠ Partial — fallback hardcodes exchange list              | line 200                     |
-| `websocket_streaming_handler.py` | ⚠ Partial — hardcodes Solana RPC                          | line 220                     |
+| **`perp_funding_handler.py`**    | **⚠ Hardcodes Drift market list**                          | **line 145**                 |
+| **`lst_rates_handler.py`**       | **⚠ Hardcodes Solana LST URLs**                            | **lines 135-160**            |
+| **`native_staking_handler.py`**  | **⚠ Hardcodes Solana staking endpoint**                    | **line 85**                  |
+| **`staking_yields_handler.py`**  | **⚠ Hardcodes Lido/Marinade URLs**                         | **lines 110-135**            |
+| **`solana_lst_archival.py`**     | **⚠ Hardcodes Marinade/Jito endpoints**                    | **lines 75-95**              |
+| `position_data_handler.py`       | ⚠ Partial — fallback hardcodes some exchanges              | lines 200-215                |
+| `tick_data_handler.py`           | ⚠ Partial — fallback hardcodes exchange list               | line 200                     |
+| `websocket_streaming_handler.py` | ⚠ Partial — hardcodes Solana RPC                           | line 220                     |
 | `data_manifest_handler.py`       | (legacy generator, separate scope)                         | —                            |
 | `replay_handler.py`              | (legacy replay, separate scope)                            | —                            |
 
@@ -305,9 +305,9 @@ Each ❌/⚠ handler from Dim 2 + Dim 3 must:
 
 ### Phase 8 — Codex SSOT updates
 
-- [x] ✅ **P0. New** `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — codifies the contract diagram at
+- [x] ✅ **P0. New** `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — codifies the contract diagram at
       top of this plan. — PM@404dba52
-- [x] ✅ **P0. Update** `codex/02-data/availability-manifest-and-data-status.md` § "Reason taxonomy" to include
+- [x] ✅ **P0. Update** `/codex/02-data/availability-manifest-and-data-status.md` § "Reason taxonomy" to include
       `EXPECTED_PAST_SOURCE_COVERAGE_END`. Added row to honest-absence-downstream-handling.md table + updated
       availability-manifest-and-data-status.md line 1133 example list. — PM@404dba52
 - [x] ✅ **P0. SUPERSEDED banner** on `cross_asset_instruments_service_scope_2026_05_14.md`'s

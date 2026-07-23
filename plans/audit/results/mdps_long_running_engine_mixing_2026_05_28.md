@@ -11,7 +11,8 @@ status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [batch-live-reconciliation-service, features-service, instruments-service, market-data-processing-service, ml-service]
+repos:
+  [batch-live-reconciliation-service, features-service, instruments-service, market-data-processing-service, ml-service]
 scope: [engineer, admin]
 tags: [audit, mdps, polars, performance, backfill, data-engine]
 related:
@@ -19,8 +20,10 @@ related:
   - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
   - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope: MDPS engine-mixing — every parquet read/write + engine-conversion callsite (core + adapters + IO) vs codex data-engine-selection; per-engine arena-retention behaviour + pure-Polars remediation prototype
-date: '2026-05-28'
+audited_scope:
+  MDPS engine-mixing — every parquet read/write + engine-conversion callsite (core + adapters + IO) vs codex
+  data-engine-selection; per-engine arena-retention behaviour + pure-Polars remediation prototype
+date: "2026-05-28"
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
 severity: P1
@@ -43,8 +46,8 @@ IO).
 
 **Codex contracts** (NEW, codified 2026-05-28):
 
-- `codex/06-coding-standards/data-engine-selection.md` — pick one engine end-to-end; Polars→Pandas→Polars is banned
-- `codex/06-coding-standards/service-orchestration-patterns.md` § 15 — per-shard cleanup discipline (necessary but not
+- `/codex/06-coding-standards/data-engine-selection.md` — pick one engine end-to-end; Polars→Pandas→Polars is banned
+- `/codex/06-coding-standards/service-orchestration-patterns.md` § 15 — per-shard cleanup discipline (necessary but not
   sufficient)
 
 **Files read**:

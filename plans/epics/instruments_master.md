@@ -95,7 +95,7 @@ locked_since: 2026-05-08
 > `InstrumentCacheDeltaReloader` helper (cache-delta hot-reload pattern). **This plan owns the publish-side** (verify or
 > add the event publication in instruments-service); **the live-pipeline plan owns the consume-side** (UTL helper +
 > per-service wiring in MTDS/MDPS/features-service). Codex pattern doc:
-> [`codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md).
+> [`/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md).
 
 ## Why this plan exists
 
@@ -112,14 +112,14 @@ the active issues for data-correctness sub-deltas.
 
 1. **Live writes to the SAME GCS path as batch.** No `live=` partition, no `live_` prefix, no parallel hierarchy.
    Downstream consumers (MTDS catalog load, features-\* preflight, strategy preflight) read one path regardless of how
-   the row got there. SSOT: `codex/04-architecture/batch-live-architecture.md`.
+   the row got there. SSOT: `/codex/04-architecture/batch-live-architecture.md`.
 
 2. **T+1 is an audit/comparison job, NOT a backfill.** Live writes are authoritative; batch is the truth-checker.
    Discrepancies are alerted; they do NOT trigger automatic re-write of live rows. SSOT: same doc § T+1 Scheduling.
 
 3. **Live-mode CLI = batch CLI + a `--mode live --trigger <name>` flag.** Same code path, same orchestrator, same
    `record_captured/record_empty/record_failed` semantics. The seam is the source-adapter pick. SSOT:
-   `codex/06-coding-standards/cli-convention.md`.
+   `/codex/06-coding-standards/cli-convention.md`.
 
 4. **`available_at` is per-row write-time, equal to live-pipeline-arrival.** Already enforced workspace-wide (CLAUDE.md
    `available_at` rule); live-mode writes inherit this without new code.
@@ -143,7 +143,7 @@ the active issues for data-correctness sub-deltas.
 ## Asset-group routing matrix (cadence + trigger + source per entity-type)
 
 This is a SUMMARY for plan-anchored navigation. The authoritative version is the new
-`codex/04-architecture/instruments-live-architecture.md` (Phase A.1).
+`/codex/04-architecture/instruments-live-architecture.md` (Phase A.1).
 
 | Asset group | Entity type        | Cadence / trigger                | Live source           | Batch source      | Phase |
 | ----------- | ------------------ | -------------------------------- | --------------------- | ----------------- | ----- |
@@ -283,19 +283,19 @@ Phase G (deployment-UI tab)  ║  Phase H (alerting + circuit breakers, parallel
 
 ## SSOT references
 
-- `codex/04-architecture/batch-live-architecture.md` — live=batch, same path, T+1 is audit (single SSOT — replaces
+- `/codex/04-architecture/batch-live-architecture.md` — live=batch, same path, T+1 is audit (single SSOT — replaces
   former batch-live-pipeline.md + batch-live-symmetry.md)
-- `codex/04-architecture/backfill-and-live-startup.md` — live startup pattern
-- `codex/04-architecture/alerting-batch-live.md` — alerting rules
-- `codex/04-architecture/sports-live-odds-connectivity.md` — sports live ingest reference
-- `codex/04-architecture/runtime-deployment-topology.md` — operational modes
-- `codex/05-infrastructure/runtime-tiers-and-deployment.md` — deployment tiers
-- `codex/05-infrastructure/live-deployment-monitoring.md` — monitoring pattern
-- `codex/05-infrastructure/deployment-clusters-live-vs-batch.md` — cluster topology
-- `codex/05-infrastructure/launcher-script-ssot.md` — VM launcher SSOT (referenced by Cloud Scheduler config)
-- `codex/06-coding-standards/cli-convention.md` — CLI axis SSOT
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest schema, available_at
-- `codex/02-data/pipeline-coverage-matrix.md` — per-source coverage matrix
+- `/codex/04-architecture/backfill-and-live-startup.md` — live startup pattern
+- `/codex/04-architecture/alerting-batch-live.md` — alerting rules
+- `/codex/04-architecture/sports-live-odds-connectivity.md` — sports live ingest reference
+- `/codex/04-architecture/runtime-deployment-topology.md` — operational modes
+- `/codex/05-infrastructure/runtime-tiers-and-deployment.md` — deployment tiers
+- `/codex/05-infrastructure/live-deployment-monitoring.md` — monitoring pattern
+- `/codex/05-infrastructure/deployment-clusters-live-vs-batch.md` — cluster topology
+- `/codex/05-infrastructure/launcher-script-ssot.md` — VM launcher SSOT (referenced by Cloud Scheduler config)
+- `/codex/06-coding-standards/cli-convention.md` — CLI axis SSOT
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest schema, available_at
+- `/codex/02-data/pipeline-coverage-matrix.md` — per-source coverage matrix
 - `instruments-service/docs/ADAPTER_ARCHITECTURE.md` + per-asset-group docs — service-internal entry-points
 
 ## Plan-format compliance
@@ -369,9 +369,9 @@ Plan flips:
 
 Codex doc:
 
-- `codex/04-architecture/instruments-preflight-chain.md` — shipped by parallel agent (~same scope, different narrative).
-  Left intact per "Two teammates × multiple parallel agents — don't edit unfamiliar files" rule. My drafted version was
-  discarded once parallel agent's file detected.
+- `/codex/04-architecture/instruments-preflight-chain.md` — shipped by parallel agent (~same scope, different
+  narrative). Left intact per "Two teammates × multiple parallel agents — don't edit unfamiliar files" rule. My drafted
+  version was discarded once parallel agent's file detected.
 
 Full-execution criterion (per CLAUDE.md "Plans Run To Actual Completion" HARD RULE):
 
@@ -508,8 +508,8 @@ DEFERRED-OPERATOR-DECISION. · **estimate**: 1.6 cal AI-days (class: infra)
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [BACKEND] P3. Post-phase codex audit — check whether `codex/02-data/defi-canonical-naming-ssot.md` or
-      `codex/04-architecture/instrument-universe-registry-consolidation.md` document the (now-corrected) glued_pair_id
+- [ ] [BACKEND] P3. Post-phase codex audit — check whether `/codex/02-data/defi-canonical-naming-ssot.md` or
+      `/codex/04-architecture/instrument-universe-registry-consolidation.md` document the (now-corrected) glued_pair_id
       polarity or canonical_instrument_id's CeFi/DeFi scope; update/SUPERSEDED-banner if they assert the old (wrong)
       state. (FOLDED IN from canonical_instrument_id_cefi_defi_backfill_2026_07_14, 2026-07-15, plan-reconcile §6
       operator ruling)

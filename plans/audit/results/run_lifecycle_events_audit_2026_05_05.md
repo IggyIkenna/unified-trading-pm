@@ -20,7 +20,7 @@ repos:
   ]
 scope: [engineer]
 tags: [audit, run-lifecycle, observability, mtds, mdps, scripts]
-related: [vm_event_emission_audit_2026_05_15.md, ../../../codex/04-architecture/service-emission-policy.md]
+related: [/plans/audit/results/vm_event_emission_audit_2026_05_15.md, /codex/04-architecture/service-emission-policy.md]
 created: 2026-05-05
 authoritative_for: [run_lifecycle entry-point rollout classification (2026-05-05 audit)]
 referenced_by: [plans/audit/results/vm_event_emission_audit_2026_05_15.md]

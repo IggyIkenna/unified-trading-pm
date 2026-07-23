@@ -13,8 +13,8 @@ repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [mdps, performance, polars, benchmark, data-pipeline, cefi, binance, verification]
 related:
-  - results.md
-  - results_synthetic_stage1_2026_05_28.md
+  - /plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results.md
+  - /plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results_synthetic_stage1_2026_05_28.md
   - ../mdps_plan7_benchmark_report_2026_06_29.md
 created: 2026-06-29
 audited_scope:

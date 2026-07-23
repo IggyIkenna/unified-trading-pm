@@ -539,7 +539,7 @@ If validation causes issues:
 ## 📚 Related Documentation
 
 - ChatGPT conversation: Lines 126-141 (schema validation discussion)
-- Schema governance: `unified-trading-codex/02-data/schema-governance.md`
+- Schema governance: `unified-trading-/codex/02-data/schema-governance.md`
 - GCS validation: Google Cloud docs
 
 ---

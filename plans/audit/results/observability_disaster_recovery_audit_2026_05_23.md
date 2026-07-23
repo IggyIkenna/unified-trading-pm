@@ -2,22 +2,38 @@
 doc_type: audit-result
 title: Observability — Disaster-Recovery Target-Model Gap Audit (2026-05-23)
 summary:
-  Gap audit of current observability/DR surface vs the disaster_recovery.md target model (§1-22) for the May-23
-  cutover — Layer-0 deterministic safety (kill-switch, circuit breakers, 76 AlertCodes, 56 LIVE_ALERT_RULES) is
-  strong but the layer above is missing — verdict RED, 11 P0 gaps (Incident Gateway, Agent Recovery Controller,
-  LLM recovery-audit agent, recon age tracking, drawdown/liquidation policy, Twilio+physical fallback, 22 runbooks,
-  Safety Ops tab) → 11 P0 plans spawned totalling ~86 calibrated AI-days.
+  Gap audit of current observability/DR surface vs the disaster_recovery.md target model (§1-22) for the May-23 cutover
+  — Layer-0 deterministic safety (kill-switch, circuit breakers, 76 AlertCodes, 56 LIVE_ALERT_RULES) is strong but the
+  layer above is missing — verdict RED, 11 P0 gaps (Incident Gateway, Agent Recovery Controller, LLM recovery-audit
+  agent, recon age tracking, drawdown/liquidation policy, Twilio+physical fallback, 22 runbooks, Safety Ops tab) → 11 P0
+  plans spawned totalling ~86 calibrated AI-days.
 status: fail
 nature: record
 asset_group: [defi]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, features-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-service,
+    execution-service,
+    features-service,
+  ]
 scope: [engineer, admin]
 tags: [observability, escalation, monitoring, execution, defi, runbook, slack, audit]
-related: [plans/audit/instructions/observability_master_audit_instructions.md, plans/epics/escalation_and_disaster_recovery_master.md, codex/04-architecture/recovery-defence-in-depth-layers.md, codex/04-architecture/autonomous-recovery-matrix.md]
+related:
+  [
+    plans/audit/instructions/observability_master_audit_instructions.md,
+    plans/epics/escalation_and_disaster_recovery_master.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+  ]
 created: 2026-05-23
-audited_scope: observability + disaster-recovery surface (alerting/execution/strategy/batch-live-reconciliation services + codex + 17 day-1 scratch scenarios) vs disaster_recovery.md target model §1-22
-date: '2026-05-23'
+audited_scope:
+  observability + disaster-recovery surface (alerting/execution/strategy/batch-live-reconciliation services + codex + 17
+  day-1 scratch scenarios) vs disaster_recovery.md target model §1-22
+date: "2026-05-23"
 auditor: claude + operator
 parent_epic: observability_master
 severity: P0
@@ -97,7 +113,7 @@ already + flipped them ✓).
 | 5. Connectivity Health Monitor    | per-venue circuit breakers exist; no dependency_health_policy YAML                                                         | **GAP** — 5-class taxonomy + expected_time+buffer policy                                   | `connectivity_dependency_buffer_policy_2026_05_23`                                                   |
 | 6. Audit Event Store              | AlertDeliveryRecord persisted; no incident-keyed audit store                                                               | **GAP** — incident-keyed, queryable, durable evidence store                                | `incident_runbooks_and_evidence_store_2026_05_23`                                                    |
 | 7. Primary Incident Provider      | PagerDuty wired (Phase 4 of `alerting_service_live_rules_2026_05_07.md`)                                                   | OK — Telegram + PagerDuty live; provider-health probe needed                               | `alerting_service_live_rules_2026_05_07` (existing) + `independent_fallback_twilio_voice_2026_05_23` |
-| 8. Slack Notification Layer       | **Deprecated** per `codex/03-observability/alerting.md` line 14-15                                                         | OK — Slack is deprecated; references being swept                                           | n/a                                                                                                  |
+| 8. Slack Notification Layer       | **Deprecated** per `/codex/03-observability/alerting.md` line 14-15                                                        | OK — Slack is deprecated; references being swept                                           | n/a                                                                                                  |
 | 9. Independent Emergency Fallback | None — PagerDuty + Telegram only                                                                                           | **GAP** — Twilio direct voice/SMS (separate billing, separate API)                         | `independent_fallback_twilio_voice_2026_05_23`                                                       |
 | 10. Physical Alert Layer          | None                                                                                                                       | **GAP** — operator purchase + webhook prototype + Twilio voice bridge                      | `physical_pager_research_and_webhook_prototype_2026_05_23`                                           |
 
@@ -214,10 +230,10 @@ Cross-referenced against current codex SSOTs:
 
 | #   | Target decision                                                               | Current state | Where codified                                                                                 |
 | --- | ----------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------- |
-| 1   | One primary incident provider                                                 | ✓ OK          | `codex/03-observability/alerting.md`                                                           |
+| 1   | One primary incident provider                                                 | ✓ OK          | `/codex/03-observability/alerting.md`                                                          |
 | 2   | Slack for low/medium visibility                                               | ✗ Slack DEP   | Slack deprecated; new line on Twilio voice instead                                             |
-| 3   | Independent fallback only for primary-down or SEV0 no-ack                     | **GAP**       | New plan + `codex/04-architecture/recovery-defence-in-depth-layers.md`                         |
-| 4   | Agents can act immediately where delay increases risk                         | ✓ OK          | `codex/04-architecture/autonomous-recovery-matrix.md`                                          |
+| 3   | Independent fallback only for primary-down or SEV0 no-ack                     | **GAP**       | New plan + `/codex/04-architecture/recovery-defence-in-depth-layers.md`                        |
+| 4   | Agents can act immediately where delay increases risk                         | ✓ OK          | `/codex/04-architecture/autonomous-recovery-matrix.md`                                         |
 | 5   | Human approval NOT required before ordinary approved recovery actions         | ✓ OK          | Layer-0 deterministic scripts                                                                  |
 | 6   | Human ack required AFTER material production actions                          | **GAP**       | New plan: `audit_acknowledgement_sla_and_state_2026_05_23`                                     |
 | 7   | Audit ack SLA defaults to 6h                                                  | **GAP**       | Same plan                                                                                      |
@@ -231,13 +247,13 @@ Cross-referenced against current codex SSOTs:
 
 ### Operator-added decisions (beyond target model)
 
-| #   | Operator decision (2026-05-23)                                                                                                                                           | Codified in                                                                 |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
-| 15  | LLM agent audits every recovery + signs off; can ESCALATE if it thinks automation was wrong; acts as Layer-1.5 backup actuator when Layer-0 fails                        | New plan: `ai_recovery_audit_signoff_agent_2026_05_23`                      |
-| 16  | Even when LLM signs off as APPROVED, human audit ack required within 6h (or stricter per severity)                                                                       | `audit_acknowledgement_sla_and_state_2026_05_23` + the LLM agent plan       |
-| 17  | Deployment-UI gets a Safety Ops tab that exposes every Layer-0 + Layer-1 action as a manual button (typed-confirm pattern)                                               | New plan: `deployment_ui_safety_ops_tab_2026_05_23`                         |
-| 18  | Twilio voice bridge as PERMANENT fallback (not just bridge until physical pager ships)                                                                                   | `independent_fallback_twilio_voice_2026_05_23`                              |
-| 19  | Layered defence: deterministic Layer-0 → LLM-audit Layer-1 → PagerDuty Layer-2 → Twilio Layer-3 → physical pager Layer-4 → human audit ack Layer-5 (cascading on no-ack) | New codex SSOT: `codex/04-architecture/recovery-defence-in-depth-layers.md` |
+| #   | Operator decision (2026-05-23)                                                                                                                                           | Codified in                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| 15  | LLM agent audits every recovery + signs off; can ESCALATE if it thinks automation was wrong; acts as Layer-1.5 backup actuator when Layer-0 fails                        | New plan: `ai_recovery_audit_signoff_agent_2026_05_23`                       |
+| 16  | Even when LLM signs off as APPROVED, human audit ack required within 6h (or stricter per severity)                                                                       | `audit_acknowledgement_sla_and_state_2026_05_23` + the LLM agent plan        |
+| 17  | Deployment-UI gets a Safety Ops tab that exposes every Layer-0 + Layer-1 action as a manual button (typed-confirm pattern)                                               | New plan: `deployment_ui_safety_ops_tab_2026_05_23`                          |
+| 18  | Twilio voice bridge as PERMANENT fallback (not just bridge until physical pager ships)                                                                                   | `independent_fallback_twilio_voice_2026_05_23`                               |
+| 19  | Layered defence: deterministic Layer-0 → LLM-audit Layer-1 → PagerDuty Layer-2 → Twilio Layer-3 → physical pager Layer-4 → human audit ack Layer-5 (cascading on no-ack) | New codex SSOT: `/codex/04-architecture/recovery-defence-in-depth-layers.md` |
 
 ## Gap list — prioritised (11 P0 active plans)
 

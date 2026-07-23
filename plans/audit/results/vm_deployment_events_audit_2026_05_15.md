@@ -15,12 +15,12 @@ tags: [audit, pubsub, observability, deployment, infrastructure]
 related:
   [
     ../../../plans/audit/results/vm_event_emission_audit_2026_05_15.md,
-    ../../../codex/05-infrastructure/pubsub-topic-inventory.md,
-    ../../../codex/02-data/live-data-persistence-and-event-log.md,
+    /codex/05-infrastructure/pubsub-topic-inventory.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 created: 2026-05-15
 authoritative_for: [VM deployment-event GCS/PubSub forwarding gap audit]
-referenced_by: [codex/05-infrastructure/event-sink-chain.md, plans/audit/results/vm_event_emission_audit_2026_05_15.md]
+referenced_by: [/codex/05-infrastructure/event-sink-chain.md, plans/audit/results/vm_event_emission_audit_2026_05_15.md]
 owner: deployment-platform
 last_reviewed: 2026-05-17
 code_refs:

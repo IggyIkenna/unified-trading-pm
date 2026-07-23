@@ -20,8 +20,10 @@ related:
   - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
   - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope: MDPS CLI granularity (Concern B) — --instrument-ids canonical-form parser vs codex cli-convention contract; scanner match logic, derivability, atomic shard semantics, cross-service surface
-date: '2026-05-28'
+audited_scope:
+  MDPS CLI granularity (Concern B) — --instrument-ids canonical-form parser vs codex cli-convention contract; scanner
+  match logic, derivability, atomic shard semantics, cross-service surface
+date: "2026-05-28"
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
 severity: P1
@@ -39,7 +41,7 @@ parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 ## What I read
 
 The audit scope is **Concern B** from `plans/audit/instructions/mdps_long_running_efficiency_audit_instructions.md` §
-66-88. The codex contract is `codex/06-coding-standards/cli-convention.md` § "Instrument Identity and CLI Granularity"
+66-88. The codex contract is `/codex/06-coding-standards/cli-convention.md` § "Instrument Identity and CLI Granularity"
 (lines 108-219).
 
 **MDPS source files read:**
@@ -229,7 +231,7 @@ a silent failure with no blobs processed and no error.
 
 ## Canonical parser specification
 
-Per `codex/06-coding-standards/cli-convention.md` § "Parsing rule" (lines 161-184), the implementation contract is:
+Per `/codex/06-coding-standards/cli-convention.md` § "Parsing rule" (lines 161-184), the implementation contract is:
 
 ```python
 def _parse_canonical_instrument_id(iid: str) -> tuple[str, str, str] | None:

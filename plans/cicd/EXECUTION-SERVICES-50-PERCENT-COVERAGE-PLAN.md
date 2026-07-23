@@ -764,7 +764,7 @@ def generate_test_template(module_path, output_path):
 
 ## 📚 References
 
-- Quality Gates Guide: `/unified-trading-codex/06-coding-standards/quality-gates.md`
+- Quality Gates Guide: `/unified-trading-/codex/06-coding-standards/quality-gates.md`
 - CI/CD Alignment: `03-cicd-alignment.md`
 - Performance Optimization: `07-quality-gates-performance.md`
 - Master Plan: `00-MASTER-CICD-PLAN.md`

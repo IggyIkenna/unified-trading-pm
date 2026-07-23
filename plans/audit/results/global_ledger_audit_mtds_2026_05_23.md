@@ -19,8 +19,10 @@ related:
   - plans/audit/results/global_ledger_audit_instruments_service_2026_05_23.md
   - plans/audit/results/global_ledger_audit_execution_service_2026_05_23.md
 created: 2026-05-23
-audited_scope: market-tick-data-service pricing data_types + carry-family rates + greeks + emission semantics vs PricingLedger target fields (schema-level, no GCS parquet sampling)
-date: '2026-05-23'
+audited_scope:
+  market-tick-data-service pricing data_types + carry-family rates + greeks + emission semantics vs PricingLedger target
+  fields (schema-level, no GCS parquet sampling)
+date: "2026-05-23"
 auditor: slot-7-agent
 parent_epic: strategy_master
 severity: P1
@@ -29,7 +31,21 @@ lib_version:
 doc_versions_checked:
 type: analysis
 epic: global_ledger_pnl_attribution_master
-source: [market-tick-data-service/market_tick_data_service/engine/orchestrator.py, market-tick-data-service/market_tick_data_service/market_interface/schemas.py, market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_positions.py, unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/__init__.py, unified-api-contracts/unified_api_contracts/canonical/domain/market/__init__.py, unified-api-contracts/unified_api_contracts/registry/schema_spec.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py]
+source:
+  [
+    market-tick-data-service/market_tick_data_service/engine/orchestrator.py,
+    market-tick-data-service/market_tick_data_service/market_interface/schemas.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/hyperliquid_adapter.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_positions.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/__init__.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/market/__init__.py,
+    unified-api-contracts/unified_api_contracts/registry/schema_spec.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+  ]
 parent_plan: plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
 ---
 
@@ -148,7 +164,7 @@ MTDS. MTDS is a raw data capture layer.
 
 The `# QG-allow: emission-policy-not-applicable` annotation appears across 8+ DeFi handlers. This bypasses the
 `_resolve_policy_output_data_type` + `_publish_emission_check` gate described in
-`codex/02-data/service-output-emission-semantics.md`. This is a pre-existing exemption — these handlers write directly
+`/codex/02-data/service-output-emission-semantics.md`. This is a pre-existing exemption — these handlers write directly
 via `write_defi_rows()` rather than through the canonical emission-policy wrapper. Whether this exemption is correct or
 represents a gap requires operator-level confirmation.
 

@@ -1,7 +1,11 @@
 ---
 doc_type: audit-result
 title: A4 v2 — Per-VM shard schema_version compliance
-summary: A4 v2 per-VM shard schema_version scan — 3895 shards inspected across 10 MTDS+IS buckets, 3894 problematic (v<8 or NULL), 0% v8; largest offenders are legacy sports instrument seeds/backfills (v2-v7) and defi expected-universe-enum shards with empty schema_version, confirming the consolidator correctly preserves source v<8 (no silent re-versioning).
+summary:
+  A4 v2 per-VM shard schema_version scan — 3895 shards inspected across 10 MTDS+IS buckets, 3894 problematic (v<8 or
+  NULL), 0% v8; largest offenders are legacy sports instrument seeds/backfills (v2-v7) and defi expected-universe-enum
+  shards with empty schema_version, confirming the consolidator correctly preserves source v<8 (no silent
+  re-versioning).
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -9,9 +13,15 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [audit, manifest, single-walk, data-correctness, migration, spot-vm]
-related: [manifest_v8_compliance_2026_05_20.md, manifest_v8_compliance_2026_05_20_summary.md]
-created: '2026-05-20'
-audited_scope: 3895 per-VM _index/per_vm/*.parquet shards across 10 MTDS+IS buckets — per-shard schema_version distribution (v8/v<8/NULL), compared against A4 v1 master-index aggregates
+related:
+  [
+    /plans/audit/results/archive/manifest_v8_compliance_2026_05_20.md,
+    /plans/audit/results/archive/manifest_v8_compliance_2026_05_20_summary.md,
+  ]
+created: "2026-05-20"
+audited_scope:
+  3895 per-VM _index/per_vm/*.parquet shards across 10 MTDS+IS buckets — per-shard schema_version distribution
+  (v8/v<8/NULL), compared against A4 v1 master-index aggregates
 date: 2026-05-20
 auditor: semver
 parent_epic: manifest_master

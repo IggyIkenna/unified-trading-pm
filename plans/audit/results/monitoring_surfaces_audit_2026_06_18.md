@@ -2,11 +2,11 @@
 doc_type: audit-result
 title: Monitoring Surfaces Audit — agent-orchestrator dashboard + deployment-ui monitoring pane
 summary: >-
-  Class-2 audit of the two monitoring surfaces under the standing division-of-surfaces contract (AO dashboard = agents
-  + orchestrator; deployment-ui pane = CI/CD + repos + fleet + images). AO findings: P0 stop hard-deleting finished
-  agents (past escalate/plan-health runs have no durable record), new AgentTypesPanel, activity-feed denoise rollup +
-  cursor pagination. deployment-ui: CI/CD+images ≈90% built; REAL gaps are fleet-RUNTIME state + alert-ledger
-  unification; cheapest high-value unblock = mint ORCHESTRATOR_API_TOKEN to light up the built Fleet-Git page.
+  Class-2 audit of the two monitoring surfaces under the standing division-of-surfaces contract (AO dashboard = agents +
+  orchestrator; deployment-ui pane = CI/CD + repos + fleet + images). AO findings: P0 stop hard-deleting finished agents
+  (past escalate/plan-health runs have no durable record), new AgentTypesPanel, activity-feed denoise rollup + cursor
+  pagination. deployment-ui: CI/CD+images ≈90% built; REAL gaps are fleet-RUNTIME state + alert-ledger unification;
+  cheapest high-value unblock = mint ORCHESTRATOR_API_TOKEN to light up the built Fleet-Git page.
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -19,7 +19,9 @@ related:
   - plans/active/monitoring_surfaces_overhaul_2026_06_18.md
   - plans/audit/instructions/infrastructure_master_audit_instructions.md
 created: 2026-06-18
-audited_scope: agent-orchestrator dashboard + deployment-ui monitoring pane (agents/activity-feed/conditions/messaging + CI-CD/repo-health/fleet/images surfaces, read-only)
+audited_scope:
+  agent-orchestrator dashboard + deployment-ui monitoring pane (agents/activity-feed/conditions/messaging +
+  CI-CD/repo-health/fleet/images surfaces, read-only)
 date: 2026-06-18
 auditor: ikennaigboaka
 parent_epic: infrastructure_master
@@ -33,7 +35,14 @@ instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructi
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
 author: ikenna [autonomous audit — Opus background agents]
 assigned_vm: planning
-source: ['agent-orchestrator/dashboard/src/{App,layout,api,types}.tsx', agent-orchestrator/server/routes/*.py, 'deployment-ui/src/{pages,components,api,hooks}/', codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/runtime-deployment-topology.md]
+source:
+  [
+    "agent-orchestrator/dashboard/src/{App,layout,api,types}.tsx",
+    agent-orchestrator/server/routes/*.py,
+    "deployment-ui/src/{pages,components,api,hooks}/",
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+  ]
 ---
 
 # Monitoring Surfaces Audit (Class 2 of 2)
@@ -61,8 +70,8 @@ source: ['agent-orchestrator/dashboard/src/{App,layout,api,types}.tsx', agent-or
 2. **Activity feed — denoise + see history + filter.** ~90% of what shows is repeating alerts (useless); there is NO way
    to see activities older than the last ~50. → add **filtering** + **pagination** + reduce the repeat noise.
 3. **Conditions tab — collapsible.** Show top ~5 (or next 5), collapse/expand the rest.
-4. **Human↔agent messaging layer.** The ~1-min poll cadence is a concern; the operator wants a better way to
-   communicate with agents. Mechanism is OPEN — audit current path + propose options.
+4. **Human↔agent messaging layer.** The ~1-min poll cadence is a concern; the operator wants a better way to communicate
+   with agents. Mechanism is OPEN — audit current path + propose options.
 
 ### B. deployment-ui monitoring pane (operator: "most of the work is on the deployment-ui side")
 

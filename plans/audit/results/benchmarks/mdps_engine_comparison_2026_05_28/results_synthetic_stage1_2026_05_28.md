@@ -13,8 +13,8 @@ repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [mdps, performance, polars, benchmark, data-pipeline, cefi, smoke-test]
 related:
-  - results.md
-  - results_full_month_binance_2026_04.md
+  - /plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results.md
+  - /plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results_full_month_binance_2026_04.md
 created: 2026-05-28
 audited_scope:
   3 synthetic BINANCE-FUTURES perp trades parquets (0.3–1.4 MB), 4 read paths post Stage-1 _read_tick_data change;

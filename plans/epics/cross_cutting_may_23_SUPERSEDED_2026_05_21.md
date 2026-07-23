@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [migration, governance, strategy, ui, infrastructure, consolidation]
 related:
   [
-    client_isolation_and_governance_master.md,
-    infrastructure_master.md,
-    observability_master.md,
+    /plans/epics/client_isolation_and_governance_master.md,
+    /plans/epics/infrastructure_master.md,
+    /plans/epics/observability_master.md,
     ../active/master_to_live_defi_2026_05_23.md,
   ]
 created: 2026-05-08
@@ -66,10 +66,9 @@ non-negotiable for cutover. Per operator direction 2026-05-08:
 ## The 5 cross-cutting deliverables
 
 **MVP universe SSOT** (codified 2026-05-13):
-[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md). Defines
-the 2-tier scope model — data capture (broad) vs backtest scope (narrow per asset_group) — and Tier A vs Tier B
-archetype classification. Binding constraint for backtest config-grid sizing in
-`compute_optimization_mock_data_2026_05_13.md`.
+[`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md). Defines the
+2-tier scope model — data capture (broad) vs backtest scope (narrow per asset_group) — and Tier A vs Tier B archetype
+classification. Binding constraint for backtest config-grid sizing in `compute_optimization_mock_data_2026_05_13.md`.
 
 ### 1. Strategy catalogue (HARD requirement)
 
@@ -205,10 +204,10 @@ trading goal directly.
 ## See also
 
 - [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
-- [`codex/04-architecture/cloud-agnostic-migration.md`](../../codex/04-architecture/cloud-agnostic-migration.md)
-- [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md)
-- [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — 9-family / 53-archetype
-  catalogue (per 2026-05-08 codex drift-correction; pre-2026-05-08 doc said 8/18 — that was the 2026-04-17 baseline
-  before the Phase 9 expansion). UAC `internal/architecture_v2/enums.StrategyArchetype` is the SSOT.
-- [`codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
-- [`codex/09-strategy/operational/onboarding-checklist.md`](../../codex/09-strategy/operational/onboarding-checklist.md)
+- [`/codex/04-architecture/cloud-agnostic-migration.md`](/codex/04-architecture/cloud-agnostic-migration.md)
+- [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md)
+- [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md) — 9-family / 53-archetype catalogue
+  (per 2026-05-08 codex drift-correction; pre-2026-05-08 doc said 8/18 — that was the 2026-04-17 baseline before the
+  Phase 9 expansion). UAC `internal/architecture_v2/enums.StrategyArchetype` is the SSOT.
+- [`/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
+- [`/codex/09-strategy/operational/onboarding-checklist.md`](/codex/09-strategy/operational/onboarding-checklist.md)

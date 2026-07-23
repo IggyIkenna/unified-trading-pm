@@ -1,7 +1,7 @@
 # Task: Add Prettier to All Pre-Commit Hooks
 
 **Plan location:** `unified-trading-pm/plans/ai/` **Codex reference:**
-`unified-trading-codex/06-coding-standards/formatting-standards.md`
+`unified-trading-/codex/06-coding-standards/formatting-standards.md`
 
 ---
 

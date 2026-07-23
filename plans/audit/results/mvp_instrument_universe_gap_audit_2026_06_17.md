@@ -13,9 +13,17 @@ stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [mvp, instruments, catalogue, manifest, honest-coverage, cefi, defi, tradfi, audit]
-related: [unified-api-contracts, codex/04-architecture/instruments-service-as-ssot-for-mtds.md, codex/04-architecture/instrument-universe-registry-consolidation.md, plans/audit/results/prediction_cqg_unknowns_corpus_2026_06_16.md]
+related:
+  [
+    unified-api-contracts,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    plans/audit/results/prediction_cqg_unknowns_corpus_2026_06_16.md,
+  ]
 created: 2026-06-17
-audited_scope: MVP instrument universe — CeFi/DeFi/TradFi/Prediction/Sports EXPECTED (UAC SSOTs) vs ACTUAL (instruments-store catalogue day=2026-06-11 + market-data-tick _index)
+audited_scope:
+  MVP instrument universe — CeFi/DeFi/TradFi/Prediction/Sports EXPECTED (UAC SSOTs) vs ACTUAL (instruments-store
+  catalogue day=2026-06-11 + market-data-tick _index)
 date: 2026-06-17
 auditor: audit-agent (deployment-api slot)
 parent_epic: instruments_master
@@ -26,7 +34,15 @@ doc_versions_checked:
 type: analysis
 epic: instruments_master
 author: audit-agent (deployment-api slot, read-only)
-source: [unified_api_contracts/registry/cefi_instrument_universe.py (CEFI_BASE_ASSET_UNIVERSE), unified_api_contracts/canonical/crosscutting/mvp_scope.py (MVP_SCOPE / is_mvp), unified_api_contracts/registry/expected_coverage.py (EXPECTED_COVERAGE_BY_ASSET_GROUP), tests/test_cefi_universe_coverage.py (_REQUESTED_BASES_2026_06_16 shrink-guard), 'gs://instruments-store-{cefi,tradfi,defi,pred}-prd-…/prod/catalog.parquet + instrument_availability/by_date/', 'gs://market-data-tick-cefi-prd-…/_index/availability_index.parquet']
+source:
+  [
+    unified_api_contracts/registry/cefi_instrument_universe.py (CEFI_BASE_ASSET_UNIVERSE),
+    unified_api_contracts/canonical/crosscutting/mvp_scope.py (MVP_SCOPE / is_mvp),
+    unified_api_contracts/registry/expected_coverage.py (EXPECTED_COVERAGE_BY_ASSET_GROUP),
+    tests/test_cefi_universe_coverage.py (_REQUESTED_BASES_2026_06_16 shrink-guard),
+    "gs://instruments-store-{cefi,tradfi,defi,pred}-prd-…/prod/catalog.parquet + instrument_availability/by_date/",
+    "gs://market-data-tick-cefi-prd-…/_index/availability_index.parquet",
+  ]
 locked_by: live-defi-rollout
 ---
 
@@ -195,30 +211,31 @@ ROCKETPOOL** so the catalogue matches the already-expanded universe constant.
 
 ### Residual / follow-up (NOT in this fix — captured as todos)
 
-- [x] ✅ **[CODE] P2.** **`unified-api-contracts`**: the cefi `MVP_SCOPE` venue set uses bare `OKX`, but the IS catalogue
-      (and the rest of the pipeline) uses `OKX-SPOT`/`OKX-SWAP`/`OKX-FUTURES`. `is_mvp("cefi", venue="OKX-SPOT", …)`
-      returns False → OKX-SPOT/SWAP/FUTURES catalogue instruments are tagged non-MVP despite being in-scope. Reconcile
-      the `CeFiMvpRule.venues` OKX naming to the canonical sub-venues (or add an OKX→sub-venue expansion in `is_mvp`).
-      Discovered 2026-06-17 during the MVP-tag fix (instruments-service slot). Provenance: this audit.
-      **RESOLVED unified-api-contracts@d7a27de** — added `_CEFI_SUB_VENUE_BASES = frozenset({"OKX"})` + OKX-aware venue
-      match in `mvp_scope.py`: `OKX-SPOT`/`-SWAP`/`-FUTURES` now match directly, and bare `OKX` still matches when the
-      rule declares any sub-venue base. OKX sub-venues tag MVP.
+- [x] ✅ **[CODE] P2.** **`unified-api-contracts`**: the cefi `MVP_SCOPE` venue set uses bare `OKX`, but the IS
+      catalogue (and the rest of the pipeline) uses `OKX-SPOT`/`OKX-SWAP`/`OKX-FUTURES`.
+      `is_mvp("cefi", venue="OKX-SPOT", …)` returns False → OKX-SPOT/SWAP/FUTURES catalogue instruments are tagged
+      non-MVP despite being in-scope. Reconcile the `CeFiMvpRule.venues` OKX naming to the canonical sub-venues (or add
+      an OKX→sub-venue expansion in `is_mvp`). Discovered 2026-06-17 during the MVP-tag fix (instruments-service slot).
+      Provenance: this audit. **RESOLVED unified-api-contracts@d7a27de** — added
+      `_CEFI_SUB_VENUE_BASES = frozenset({"OKX"})` + OKX-aware venue match in `mvp_scope.py`:
+      `OKX-SPOT`/`-SWAP`/`-FUTURES` now match directly, and bare `OKX` still matches when the rule declares any
+      sub-venue base. OKX sub-venues tag MVP.
 - [x] ✅ **[CODE] P2.** **`unified-api-contracts`**: `is_mvp` Axis-3 hard-requires `data_type in rule.data_types`, which
       makes the predicate unusable for an instrument-grain caller (no data_type axis) without the caller supplying a
       representative data_type (the IS catalogue tagger now does this locally). Consider an UAC-side convention where
       `data_type=""`/`None` means "any MVP data_type" so every single-grain consumer (not just IS) tags correctly. The
       other AG catalogues (defi/tradfi/prediction) don't yet carry an `mvp` column at all — when the mvp tagging rolls
-      out to them, this same gap applies. Provenance: this audit, 2026-06-17.
-      **RESOLVED unified-api-contracts@d7a27de + instruments-service@4b2c360** — `is_mvp` now treats `data_type=""`/`None`
-      as "any MVP data_type" (UAC-side convention), and the IS tagger dropped its `_representative_mvp_data_type`
-      workaround → calls clean `is_mvp(...)`. mvp column rolled out beyond cefi: **defi** promoted 6,853 rows (800
-      MVP-tagged), **tradfi** promoted 686,348 rows (76 MVP-tagged — small footprint expected; TradFi is optional in the
-      MVP archetype matrix). **prediction** has no `prod/catalog.parquet` (its IS reference rows are cqg-group-shaped,
-      not catalogue-rolled) → no mvp column applies; noted, not a gap.
-- [x] ✅ **[OPS] P2.** Re-run the cefi catalogue enumeration + roll-up on the recurring IS scheduler cadence (this fix ran
-      it once for 2026-06-17); confirm the scheduled job picks up `KRAKEN-SPOT` + the expanded universe automatically on
-      its next tick. Provenance: this audit, 2026-06-17.
-      **RESOLVED (verified already-correct)** — `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf` is
-      AG-parametric (`for_each` over cefi/defi/tradfi/sports/prediction; Cloud Run Job + daily Scheduler) with **no
-      hardcoded venue list** — it re-enumerates from the live IS universe each tick, so `KRAKEN-SPOT` + the expanded
-      44-base universe + the mvp tagging are picked up automatically on the next scheduled run. No change needed.
+      out to them, this same gap applies. Provenance: this audit, 2026-06-17. **RESOLVED unified-api-contracts@d7a27de +
+      instruments-service@4b2c360** — `is_mvp` now treats `data_type=""`/`None` as "any MVP data_type" (UAC-side
+      convention), and the IS tagger dropped its `_representative_mvp_data_type` workaround → calls clean `is_mvp(...)`.
+      mvp column rolled out beyond cefi: **defi** promoted 6,853 rows (800 MVP-tagged), **tradfi** promoted 686,348 rows
+      (76 MVP-tagged — small footprint expected; TradFi is optional in the MVP archetype matrix). **prediction** has no
+      `prod/catalog.parquet` (its IS reference rows are cqg-group-shaped, not catalogue-rolled) → no mvp column applies;
+      noted, not a gap.
+- [x] ✅ **[OPS] P2.** Re-run the cefi catalogue enumeration + roll-up on the recurring IS scheduler cadence (this fix
+      ran it once for 2026-06-17); confirm the scheduled job picks up `KRAKEN-SPOT` + the expanded universe
+      automatically on its next tick. Provenance: this audit, 2026-06-17. **RESOLVED (verified already-correct)** —
+      `deployment-service/terraform/gcp/lifecycle_catalogue_scheduler.tf` is AG-parametric (`for_each` over
+      cefi/defi/tradfi/sports/prediction; Cloud Run Job + daily Scheduler) with **no hardcoded venue list** — it
+      re-enumerates from the live IS universe each tick, so `KRAKEN-SPOT` + the expanded 44-base universe + the mvp
+      tagging are picked up automatically on the next scheduled run. No change needed.

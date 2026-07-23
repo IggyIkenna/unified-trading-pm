@@ -4,8 +4,8 @@ title: Orchestrator Master Audit — 2026-06-01
 summary:
   agent-orchestrator audit — first run after the § M closed-loop-autonomy extension; static/plan-state checks GREEN
   (central /health 200 v0.6.0, autospawn/watchdog/failover loops wired) but no P0 fleet break; open — P1 deploy-currency
-  unverified (running binary may lack autonomy commits), P1 S3-side state-snapshot gap (AWS fleet state lost on restart),
-  P1 watchdog fleet rollout UNRECORDED (self-heal half dormant), P2 notify-inventory doc drift (13/9 vs 10/8).
+  unverified (running binary may lack autonomy commits), P1 S3-side state-snapshot gap (AWS fleet state lost on
+  restart), P1 watchdog fleet rollout UNRECORDED (self-heal half dormant), P2 notify-inventory doc drift (13/9 vs 10/8).
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -13,10 +13,19 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, infrastructure, monitoring, role-registry, audit]
-related: [plans/audit/instructions/orchestrator_master_audit_instructions.md, plans/audit/results/orchestrator_master_audit_2026_05_28.md, codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/runtime-deployment-topology.md]
+related:
+  [
+    plans/audit/instructions/orchestrator_master_audit_instructions.md,
+    plans/audit/results/orchestrator_master_audit_2026_05_28.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+  ]
 created: 2026-06-01
-audited_scope: agent-orchestrator (static/plan-state) — fleet topology, setup-token auth, backlog regen, safety mechanisms, notifications, state persistence, dashboard, provisioning, codex alignment, hygiene, plan workflow, § M closed-loop autonomy (autospawn/watchdog/failover/backlog-honesty); live-fleet checks LIVE-DEFERRED
-date: '2026-06-01'
+audited_scope:
+  agent-orchestrator (static/plan-state) — fleet topology, setup-token auth, backlog regen, safety mechanisms,
+  notifications, state persistence, dashboard, provisioning, codex alignment, hygiene, plan workflow, § M closed-loop
+  autonomy (autospawn/watchdog/failover/backlog-honesty); live-fleet checks LIVE-DEFERRED
+date: "2026-06-01"
 auditor: claude + operator
 parent_epic: orchestrator_master
 severity: P1
@@ -31,7 +40,9 @@ tier: L5
 audited_by: slot-1-ikenna
 audit_date: 2026-06-01
 instructions: ../instructions/orchestrator_master_audit_instructions.md
-scope_note: First run after § M (closed-loop autonomy) extension. Code/static + plan-state checks run from a worktree host; live-fleet checks (SSH/AWS/authed-fan-out) are operator-side and marked LIVE-DEFERRED.
+scope_note:
+  First run after § M (closed-loop autonomy) extension. Code/static + plan-state checks run from a worktree host;
+  live-fleet checks (SSH/AWS/authed-fan-out) are operator-side and marked LIVE-DEFERRED.
 ---
 
 # Orchestrator Master Audit — 2026-06-01
@@ -110,8 +121,8 @@ scope_note: First run after § M (closed-loop autonomy) extension. Code/static +
 
 ## H–I. Provisioning + EIP/DNS
 
-- ⏸ LIVE-DEFERRED / operator-cost. EIP + DNS remain operator-deferred per epic Phase 11 (not blocking; central API
-  proxy serves dynamic IPs). Packer `validate` not run this pass.
+- ⏸ LIVE-DEFERRED / operator-cost. EIP + DNS remain operator-deferred per epic Phase 11 (not blocking; central API proxy
+  serves dynamic IPs). Packer `validate` not run this pass.
 
 ## J. Codex doc alignment
 
@@ -179,8 +190,7 @@ scope_note: First run after § M (closed-loop autonomy) extension. Code/static +
 
 ### M.5 End-to-end PM-plan → completed-work trace
 
-- (m5) — ⏸ LIVE-DEFERRED (needs a mock instance). The `e2e_test_plan_regen_pipeline_2026_05_29.md` plan owns this
-  trace.
+- (m5) — ⏸ LIVE-DEFERRED (needs a mock instance). The `e2e_test_plan_regen_pipeline_2026_05_29.md` plan owns this trace.
 
 ### M.6 Soak windows
 

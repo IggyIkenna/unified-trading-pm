@@ -119,9 +119,9 @@ owned `LookaheadBiasError` strict-mode wiring, the `ManifestFreshnessCache` adop
 the umbrella collapses that ambiguity by sequencing the work as a single critical path.
 
 **MVP backtest scope** (per
-[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)): ML
-training data volume bounded by Tier A archetype universe: ~6M training rows total across all archetypes (TradFi S&P
-~365K, DeFi carry ~1.3M, CeFi perp arb ~2.6M, Sports ~800K, Prediction ~900K). ml-continuous (CeFi + ES)
+[`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md)): ML training
+data volume bounded by Tier A archetype universe: ~6M training rows total across all archetypes (TradFi S&P ~365K, DeFi
+carry ~1.3M, CeFi perp arb ~2.6M, Sports ~800K, Prediction ~900K). ml-continuous (CeFi + ES)
 
 - ml-settled (Sports) are the two ML archetype families May-23 must complete; broader ML framework supports the rest
   code-ready.
@@ -131,24 +131,23 @@ training data volume bounded by Tier A archetype universe: ~6M training rows tot
 Read these BEFORE making code changes; drift between code and these docs is a review-blocking failure per
 `doc → plan → code`:
 
-- [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
+- [`/codex/02-data/data-lineage-MTDS-features-ml.md`](/codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
   features-\* → ml-training/ml-inference lineage; calibration / Bayesian tuning / hierarchical inference / consolidation
   sidecar all sit on this chain.
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
-  NaN handling per consumer class (rolling-window denominator adjustment, propagated NaN through cross-instrument
-  calcs); the consolidation join boundary + DuckDB lazy-join must preserve these semantics.
-- [`codex/02-data/data-status-drilldown-hierarchy.md`](../../codex/02-data/data-status-drilldown-hierarchy.md) —
-  drill-down hierarchy SSOT for the deployment-ui feature-group route + per-feature-group parquet download endpoint.
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
-  batch=live symmetry; ml-training (batch) + ml-inference (live) MUST share the same feature-read path + same
-  calibration.
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
-  code-path symmetry contract; strategy signal consumption + decision policy engine cannot diverge between modes.
-- [`codex/06-coding-standards/feature-service-pattern.md`](../../codex/06-coding-standards/feature-service-pattern.md) —
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) — NaN
+  handling per consumer class (rolling-window denominator adjustment, propagated NaN through cross-instrument calcs);
+  the consolidation join boundary + DuckDB lazy-join must preserve these semantics.
+- [`/codex/02-data/data-status-drilldown-hierarchy.md`](/codex/02-data/data-status-drilldown-hierarchy.md) — drill-down
+  hierarchy SSOT for the deployment-ui feature-group route + per-feature-group parquet download endpoint.
+- [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) — batch=live
+  symmetry; ml-training (batch) + ml-inference (live) MUST share the same feature-read path + same calibration.
+- [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) — code-path
+  symmetry contract; strategy signal consumption + decision policy engine cannot diverge between modes.
+- [`/codex/06-coding-standards/feature-service-pattern.md`](/codex/06-coding-standards/feature-service-pattern.md) —
   features-\* service pattern; the UTL `FeatureBatchHandler` base lifts the boilerplate the doc describes.
-- [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) — QG discipline for
-  the perf changes (basedpyright, ruff, coverage floor on the rewritten reader path).
-- [`codex/06-coding-standards/performance-targets.md`](../../codex/06-coding-standards/performance-targets.md) —
+- [`/codex/06-coding-standards/quality-gates.md`](/codex/06-coding-standards/quality-gates.md) — QG discipline for the
+  perf changes (basedpyright, ruff, coverage floor on the rewritten reader path).
+- [`/codex/06-coding-standards/performance-targets.md`](/codex/06-coding-standards/performance-targets.md) —
   service-level perf targets (the 2-4× / 5-10× targets live here).
 
 ## Phased execution DAG

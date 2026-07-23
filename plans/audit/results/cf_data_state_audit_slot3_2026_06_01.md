@@ -151,11 +151,11 @@ date+venue — verify intent). cefi/defi/tradfi/pred/sports each have an AG-part
 
 Local gcsfs/aiodns DNS is flaky on this host (the audit tool works around it with `gcloud cp` for the single index
 parquet + a time-boxed shallow object probe). A whole-corpus content rewrite (millions of objects per AG) **must run on
-a VM in asia-northeast1** per `codex/05-infrastructure/gcs-object-operations.md` § Migration-script performance contract
-(ThreadPoolExecutor parallel walk, wired `--workers`/`--start`/`--end` date-sharding, `gcs_copy_object` for path-only
-moves, unbuffered progress, per-object isolation, idempotent). The `--apply` cutover is additionally gated on the
-**fleet-wide pre-migration drain** (stop GCP+AWS writers → consolidate → snapshot each `_index`), which is shared with
-slot-2's defi walk and coordinated at epic `mtds_mdps_master`. **Dry-run is read-only and needs no drain.**
+a VM in asia-northeast1** per `/codex/05-infrastructure/gcs-object-operations.md` § Migration-script performance
+contract (ThreadPoolExecutor parallel walk, wired `--workers`/`--start`/`--end` date-sharding, `gcs_copy_object` for
+path-only moves, unbuffered progress, per-object isolation, idempotent). The `--apply` cutover is additionally gated on
+the **fleet-wide pre-migration drain** (stop GCP+AWS writers → consolidate → snapshot each `_index`), which is shared
+with slot-2's defi walk and coordinated at epic `mtds_mdps_master`. **Dry-run is read-only and needs no drain.**
 
 ## MECHANISM FINDING (system-first, 2026-06-01) — the `_index` columns come from the WRITER, not the data parquets
 
@@ -414,12 +414,12 @@ no agent "hacks fake buckets/paths/columns to fit stale docs and regresses."
 - [ ] [CODE] P0. `pipeline_mode` reader/writer alignment (cross-AG, coordinate w/ slot-2).
 
       Make the `pipeline_mode`-aware path the PRIMARY in `build_*_partition_path` consumers (not just a
-      `candidate_parquet_paths` fallback) so live reads find migrated data.
+                                                              `candidate_parquet_paths` fallback) so live reads find migrated data.
 
-      Targets: MTDS reader, MDPS cloud_data_provider, features-onchain data_loader, any direct
-      `build_*_partition_path` caller. (`manifest_reader_fallback` Level-0 already probes `pipeline_mode=` → readers
-      using it are safe; this closes
-      base-builder callers.)
+                                                              Targets: MTDS reader, MDPS cloud_data_provider, features-onchain data_loader, any direct
+                                                              `build_*_partition_path` caller. (`manifest_reader_fallback` Level-0 already probes `pipeline_mode=` → readers
+                                                              using it are safe; this closes
+                                                              base-builder callers.)
 
 ## 🎬 NEXT-AGENT EXECUTION HANDOFF — non-DeFi migration + deletion (slot-3 → next, 2026-06-02)
 

@@ -2,12 +2,10 @@
 doc_type: audit-result
 title: CI/CD Pipeline ↔ Plans Drift Audit
 summary:
-  Triage audit of the live CI/CD pipeline (quickmerge + quality-gates +
-  scripts/cicd/*.py + ~51 PM GitHub-Actions workflows) against documented intent
-  (ci-cd-flow.md, CLAUDE.md, ~27 active CI/CD plans) — 25 drift findings, 0 live
-  pipeline regressions; the drift is almost entirely docs/plan-layer lagging a
-  fast-moving pipeline. Top items D1/D10 (uv --frozen model self-contradictory,
-  DECIDED 2026-06-17) and D5 (ci-cd-flow.md still teaches the retired per-unit
+  Triage audit of the live CI/CD pipeline (quickmerge + quality-gates + scripts/cicd/*.py + ~51 PM GitHub-Actions
+  workflows) against documented intent (ci-cd-flow.md, CLAUDE.md, ~27 active CI/CD plans) — 25 drift findings, 0 live
+  pipeline regressions; the drift is almost entirely docs/plan-layer lagging a fast-moving pipeline. Top items D1/D10
+  (uv --frozen model self-contradictory, DECIDED 2026-06-17) and D5 (ci-cd-flow.md still teaches the retired per-unit
   staging-PR model); 21/25 resolved as of 2026-06-18.
 status: partial
 nature: record
@@ -16,18 +14,12 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [audit, ci-cd, quickmerge, quality-gates, plan-hygiene, ssot-audit, verification, refactor]
-related:
-  [
-    ../instructions/infrastructure_master_audit_instructions.md,
-    ../../../codex/08-workflows/ci-cd-flow.md,
-  ]
+related: [../instructions/infrastructure_master_audit_instructions.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-17
 audited_scope:
-  live CI/CD pipeline — quickmerge.sh (1617 lines) + base-service.sh + 16
-  scripts/cicd/*.py + 51 PM workflows (all triggers/concurrency read) vs
-  ci-cd-flow.md (1020 lines) + CLAUDE.md + 14 active plans + 12 issue docs. NOT
-  fully walked — the image-build path (cloudbuild.yaml/buildspec) was only
-  spot-checked.
+  live CI/CD pipeline — quickmerge.sh (1617 lines) + base-service.sh + 16 scripts/cicd/*.py + 51 PM workflows (all
+  triggers/concurrency read) vs ci-cd-flow.md (1020 lines) + CLAUDE.md + 14 active plans + 12 issue docs. NOT fully
+  walked — the image-build path (cloudbuild.yaml/buildspec) was only spot-checked.
 date: 2026-06-17
 auditor: ikennaigboaka
 parent_epic: infrastructure_master
@@ -41,14 +33,24 @@ parent_audit: infrastructure_master_audit_instructions
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 author: ikenna [autonomous audit]
 assigned_vm: vm-cross-cutting
-source: [codex/08-workflows/ci-cd-flow.md, cursor-configs/CLAUDE.md, scripts/quickmerge.sh, scripts/quality-gates-base/base-service.sh, scripts/cicd/*.py, .github/workflows/*.yml, 'plans/active/*cicd*, *ldr*, *qg*, *quality*, *dependency*, *staging*, *ci_*', 'plans/active/issues/*ci*, *cicd*, *provenance*, *promotion*, *uv_lock*, *semver*']
+source:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    cursor-configs/CLAUDE.md,
+    scripts/quickmerge.sh,
+    scripts/quality-gates-base/base-service.sh,
+    scripts/cicd/*.py,
+    .github/workflows/*.yml,
+    "plans/active/*cicd*, *ldr*, *qg*, *quality*, *dependency*, *staging*, *ci_*",
+    "plans/active/issues/*ci*, *cicd*, *provenance*, *promotion*, *uv_lock*, *semver*",
+  ]
 ---
 
 # CI/CD Pipeline ↔ Plans Drift Audit — 2026-06-17
 
 > **Scope.** Audit the LIVE CI/CD pipeline (quickmerge + quality-gates machinery, the `scripts/cicd/*.py` gate scripts,
 > the ~51 PM GitHub-Actions workflows) against the documented INTENT (the engineer SSOT
-> `codex/08-workflows/ci-cd-flow.md`, `CLAUDE.md`, and the ~27 active CI/CD plans + issue docs). Find three drift
+> `/codex/08-workflows/ci-cd-flow.md`, `CLAUDE.md`, and the ~27 active CI/CD plans + issue docs). Find three drift
 > classes: **(1) pipeline-vs-doc** (a doc/SSOT claims something the live pipeline no longer does), **(2) plan-vs-plan**
 > (two plans/issues assert contradictory contracts), **(3) stale/obsolete plan items** (flipped-but-torn-out, dead
 > machinery, archivable). **This is a triage artifact — it documents drifts and recommends a disposition per finding; it
@@ -136,7 +138,7 @@ to the codex SSOT — which is what removes the 4,000-line cross-check tax.
 **Phase 1 — document current shape** (sourced from the 51 live workflows + quickmerge + gates = ground truth; rationale
 harvested from the to-be-archived plans):
 
-- Refresh `codex/08-workflows/ci-cd-flow.md` to the as-built final shape (completion pass — D5–D9 already partial).
+- Refresh `/codex/08-workflows/ci-cd-flow.md` to the as-built final shape (completion pass — D5–D9 already partial).
 - **Top-level mermaid flow**: commit → LDR → staging-drain → SIT → main → image-build, each node tagged with its
   workflow(s). Update the existing `cicd-pipeline-definition.yaml` → `CI-CD-PIPELINE.svg` generator (deterministic),
   don't hand-draw.

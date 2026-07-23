@@ -159,7 +159,7 @@ the P7d progress log's "0 outstanding legacy-path objects" claim with an indepen
 re-enumeration rather than trusting the migration's own self-report.
 
 No new non-canonical location was found, so there is no register-patch stanza to propose for
-`codex/02-data/non-canonical-path-inventory.md`.
+`/codex/02-data/non-canonical-path-inventory.md`.
 
 ## Reproducibility
 

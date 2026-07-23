@@ -5,9 +5,9 @@ instruments-service and market-tick-data-handler → **12 services**.
 
 **Codex refs**:
 
-- `unified-trading-codex/06-coding-standards/cli-standards.md` — CLI pattern (--operation, --mode)
-- `unified-trading-codex/06-coding-standards/service-structure-standards.md` — engine/, adapters/, cli/
-- `unified-trading-codex/06-coding-standards/thin-adapters-pattern.md` — Adapters <100 lines, delegate to
+- `unified-trading-/codex/06-coding-standards/cli-standards.md` — CLI pattern (--operation, --mode)
+- `unified-trading-/codex/06-coding-standards/service-structure-standards.md` — engine/, adapters/, cli/
+- `unified-trading-/codex/06-coding-standards/thin-adapters-pattern.md` — Adapters <100 lines, delegate to
   UTL/UMI/UCI/UEI
 
 ---

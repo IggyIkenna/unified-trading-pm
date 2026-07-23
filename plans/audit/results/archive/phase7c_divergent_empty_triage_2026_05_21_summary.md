@@ -1,7 +1,10 @@
 ---
 doc_type: audit-result
 title: Phase 7C — DIVERGENT_EMPTY Triage Summary
-summary: Phase 7C triage of all 765 DIVERGENT_EMPTY cells from the A3 manifest divergence parquet — every cell (AAVE_V3-OPTIMISM 5 data_types + COMPOUND_V3-BASE 4) routed to phase_11_rebackfill (adapter wrote a single empty_confirmed row where SHOULD_HAVE_DATA); 0 label-flips (no captured parquet exists, a flip would be dishonest).
+summary:
+  Phase 7C triage of all 765 DIVERGENT_EMPTY cells from the A3 manifest divergence parquet — every cell
+  (AAVE_V3-OPTIMISM 5 data_types + COMPOUND_V3-BASE 4) routed to phase_11_rebackfill (adapter wrote a single
+  empty_confirmed row where SHOULD_HAVE_DATA); 0 label-flips (no captured parquet exists, a flip would be dishonest).
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -9,9 +12,12 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [audit, manifest, data-correctness, defi, backfill, reconciliation]
-related: [manifest_divergence_2026_05_20_summary.md]
+related: [/plans/audit/results/archive/manifest_divergence_2026_05_20_summary.md]
 created: 2026-05-21
-audited_scope: All 765 DIVERGENT_EMPTY cells in plans/audit/results/manifest_divergence_2026_05_20.parquet (AAVE_V3-OPTIMISM + COMPOUND_V3-BASE DeFi lending data_types) — per-cell triage into label-flip / phase_11_rebackfill / operator-scope buckets
+audited_scope:
+  All 765 DIVERGENT_EMPTY cells in plans/audit/results/manifest_divergence_2026_05_20.parquet (AAVE_V3-OPTIMISM +
+  COMPOUND_V3-BASE DeFi lending data_types) — per-cell triage into label-flip / phase_11_rebackfill / operator-scope
+  buckets
 date: 2026-05-21
 auditor: slot-5
 parent_epic: infrastructure_master

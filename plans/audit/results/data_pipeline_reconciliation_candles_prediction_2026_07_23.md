@@ -168,9 +168,9 @@ authoritative signal is the histogram in §3, which is unambiguous and fully cle
 ## 5. Suggested register-patch (informational — not applied)
 
 No new non-canonical PREDICTION candle location was found. Nothing to add to
-`codex/02-data/non-canonical-path-inventory.md` from this verification (per this session's instruction, that file is not
-edited directly here — 3 sibling agents are running the equivalent P8 procedure for the other 3 migrated asset_groups
-against the same shared file concurrently).
+`/codex/02-data/non-canonical-path-inventory.md` from this verification (per this session's instruction, that file is
+not edited directly here — 3 sibling agents are running the equivalent P8 procedure for the other 3 migrated
+asset_groups against the same shared file concurrently).
 
 ## Reproducibility
 

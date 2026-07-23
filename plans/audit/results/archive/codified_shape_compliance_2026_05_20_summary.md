@@ -1,17 +1,31 @@
 ---
 doc_type: audit-result
 title: A1 — Codified-shape compliance summary
-summary: A1 codified-shape compliance scan across 8142 files / 25 repos — 2593 violations in 1274 files over 10 checks; biggest gaps are uac_import_surface (995, cursor-rule-only) and typed_empty_reason (81, runtime-only) with no CI enforcement; resolve_bucket_name (759) and classify_venue_error (302) already ratcheting.
+summary:
+  A1 codified-shape compliance scan across 8142 files / 25 repos — 2593 violations in 1274 files over 10 checks; biggest
+  gaps are uac_import_surface (995, cursor-rule-only) and typed_empty_reason (81, runtime-only) with no CI enforcement;
+  resolve_bucket_name (759) and classify_venue_error (302) already ratcheting.
 status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [audit, quality-gates, ssot-audit, uac, canonicalisation, scripts]
-related: [mega_audit_phase_a_issues_human_readable_2026_05_20.md]
+related: [/plans/audit/results/archive/mega_audit_phase_a_issues_human_readable_2026_05_20.md]
 created: 2026-05-20
-audited_scope: 8142 Python files across 25 service repos, 10 codified-shape checks (has_log_upload_trap, manifest_v8, record_emission, typed_empty_reason, classify_venue_error, resolve_bucket_name, lifecycle_class, no_hardcoded_venue_urls/universe, uac_import_surface); regex-heuristic, no AST
+audited_scope:
+  8142 Python files across 25 service repos, 10 codified-shape checks (has_log_upload_trap, manifest_v8,
+  record_emission, typed_empty_reason, classify_venue_error, resolve_bucket_name, lifecycle_class,
+  no_hardcoded_venue_urls/universe, uac_import_surface); regex-heuristic, no AST
 date: 2026-05-20
 auditor: semver
 parent_epic: infrastructure_master

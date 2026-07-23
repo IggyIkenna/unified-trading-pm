@@ -2,8 +2,8 @@
 doc_type: audit-result
 title: Global Ledger Audit — execution-service
 summary: >-
-  Emission-side audit mapping what execution-service actually emits (log_event financial events, ManifestWriter
-  records, direct GCS parquet/JSON, PubSub) vs the target InstructionLedger LedgerRow schema. P0 gaps: no
+  Emission-side audit mapping what execution-service actually emits (log_event financial events, ManifestWriter records,
+  direct GCS parquet/JSON, PubSub) vs the target InstructionLedger LedgerRow schema. P0 gaps: no
   _resolve_policy_output_data_type/_publish_emission_check usage (all GCS writes bypass emission semantics),
   ManifestWriter failures silently swallowed in bare except, client_id absent from all financial log_event payloads,
   build_attribution_rows() PnLAttributionRow objects never persisted.
@@ -20,8 +20,9 @@ related:
   - plans/audit/results/global_ledger_audit_mtds_2026_05_23.md
   - plans/audit/results/global_ledger_audit_instruments_service_2026_05_23.md
 created: 2026-05-23
-audited_scope: execution-service emission-side audit (log_event / ManifestWriter / direct-GCS / PubSub write paths vs LedgerRow)
-date: '2026-05-23'
+audited_scope:
+  execution-service emission-side audit (log_event / ManifestWriter / direct-GCS / PubSub write paths vs LedgerRow)
+date: "2026-05-23"
 auditor: slot-7
 parent_epic: strategy_master
 severity: P0
@@ -118,7 +119,7 @@ patterns searched workspace-wide.
    - Hard raises `CrossClientTransferForbiddenError` when `intent.client_id != self._client_id`.
    - Defence-in-depth second check: calls `assert_client_allowed(intent.client_id)` which raises `CrossClientEventError`
      if the process's `CLIENT_ID` env var mismatches.
-   - This is the canonical raise site documented in `codex/04-architecture/client-funds-isolation.md`.
+   - This is the canonical raise site documented in `/codex/04-architecture/client-funds-isolation.md`.
 
 2. **`isolation_policy.assert_client_allowed()`** (`isolation_policy.py:79`):
    - Process-level guard: raises `CrossClientEventError` on any cross-client event bus message.

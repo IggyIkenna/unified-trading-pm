@@ -14,7 +14,7 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [audit, defi, acquisition, batch-live, mtds, data-correctness, features]
-related: [../instructions/defi_master_audit_instructions.md, cefi_master_audit_2026_06_03.md]
+related: [../instructions/defi_master_audit_instructions.md, /plans/audit/results/cefi_master_audit_2026_06_03.md]
 created: 2026-06-03
 audited_scope:
   acquisition-mechanics + batch/live wiring + downstream propagation (CODE-VERIFIED) across instruments-service → MTDS →

@@ -13,10 +13,17 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [pipeline-mode, manifest, migration, backfill, data-correctness, single-walk, audit]
-related: [plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md, codex/02-data/pipeline-mode-partition.md, codex/02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-05-28
-audited_scope: pipeline_mode column presence across prod market-data-tick + instruments-store + features-delta-one buckets (49.4M rows, PASS/NEEDS_BACKFILL/NO_INDEX/NO_COLUMN classification) — pre-backfill state, _index only
-date: '2026-05-28'
+audited_scope:
+  pipeline_mode column presence across prod market-data-tick + instruments-store + features-delta-one buckets (49.4M
+  rows, PASS/NEEDS_BACKFILL/NO_INDEX/NO_COLUMN classification) — pre-backfill state, _index only
+date: "2026-05-28"
 auditor: claude + operator
 parent_epic: infrastructure_master
 severity: P1
@@ -29,10 +36,9 @@ epic: mtds_mdps_master
 
 # pipeline_mode backfill verification — pre-backfill state (2026-05-28)
 
-**Verification date**: 2026-05-28  
-**Verifier**: Worker Slot 10 (sub-a-ikenna)  
-**Plan**: `pipeline_mode_implementation_2026_05_28.md` Phase 3.3  
-**Status**: PRE-BACKFILL — backfill (Phase 3.2) NOT YET RUN on prd buckets
+**Verification date**: 2026-05-28 **Verifier**: Worker Slot 10 (sub-a-ikenna) **Plan**:
+`pipeline_mode_implementation_2026_05_28.md` Phase 3.3 **Status**: PRE-BACKFILL — backfill (Phase 3.2) NOT YET RUN on
+prd buckets
 
 GCS project: `central-element-323112`
 

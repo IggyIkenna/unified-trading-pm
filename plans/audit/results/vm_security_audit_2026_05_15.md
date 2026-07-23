@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [infrastructure, audit, scripts, verification]
 related:
   [
-    ../../../codex/05-infrastructure/vm-launcher-runbook.md,
-    ../../../codex/05-infrastructure/launcher-script-ssot.md,
-    ../../../codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
   ]
 created: 2026-05-15
 authoritative_for: [VM launcher shellcheck security audit]
@@ -137,5 +137,5 @@ These are in comments only. No fix needed; accepted as shellcheck parser limitat
 ## References
 
 - `deployment-service/scripts/vm/` (all launch-\*.sh)
-- `codex/05-infrastructure/launcher-script-ssot.md`
-- `codex/05-infrastructure/vm-tarball-deployment.md`
+- `/codex/05-infrastructure/launcher-script-ssot.md`
+- `/codex/05-infrastructure/vm-tarball-deployment.md`
