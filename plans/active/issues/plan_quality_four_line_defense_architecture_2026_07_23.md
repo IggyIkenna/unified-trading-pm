@@ -111,21 +111,66 @@ layers, each catching what the previous layer misses, each backing up the one be
 - No codex doc can silently drift from what plans claim it says for more than 24h (line 4, paired with line 3).
 - All 4 lines report clearly enough that a human never has to manually remember to run any of them.
 
+## Key clarification (2026-07-23): line 2 vs line 3 catch different defect classes, by design
+
+Findings A/D/E/F/G (first-line truncation, bare section-shorthand, ambiguous verbs, delete-tagging inconsistency,
+missing definition-of-done) are **content-judgment defects** — there is no deterministic script that can grep for "does
+line 1 contain the complete instruction," since that requires understanding what the instruction actually means. Do NOT
+try to add these to `run_hygiene_sweep.sh` (line 2) — that line is for mechanically-checkable structure (frontmatter,
+todo format, line caps, `depends_on` cycles), and belongs there because it IS deterministic. Findings A/D/E/F/G are
+correctly line 3's job (`/plan-reconcile`, LLM-based) — `plan-reconcile/SKILL.md` now has an explicit "AO-dispatch-
+readiness hunters" pass (added 2026-07-23) checking every open todo against `task_template.md` §3's rules for exactly
+these 5 classes, closing the loop between line 1 (author-time prevention) and line 3 (catch what slipped through)
+without inventing a second spec. Finding C (stale checkboxes) was already Phase 2's job, unchanged.
+
 ## Todos
 
-- [ ] [DOC] P1. Audit `task_template.md` against the 2026-07-23 adversarial-review findings (line-1-truncation,
-      ordering-as-`sequential`/`depends_on`, stale-checkbox discipline, section-shorthand-spelled-out,
-      unambiguous-instruction phrasing, delete-risk tagging, definition-of-done) — tighten/add rules so an author
-      following the template correctly wouldn't have produced those defects in the first place.
-- [ ] [SCRIPT] P1. Wire the full `run_hygiene_sweep.sh` (not just `--precommit`) into `quality-gates.sh` for
-      `unified-trading-pm` — decide hard-fail vs advisory split, matching the sweep's own hard/soft check split.
-- [ ] [INFRA] P0. **Research first**: inspect `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` (found
-      but never opened this session) — it may already be a scheduled `/plan-reconcile`-style agent; confirm whether it's
-      live, what it currently does, and whether it can be extended to this spec rather than building new.
-- [ ] [INFRA] P1. Wire `/plan-reconcile` (extended if needed to explicitly cover plan↔codex content alignment) into a
-      24h-cadence background AO agent — reporting success/failure per
-      `codex/04-architecture/agent-orchestrator-alerting.md`'s actionable-only convention, and routing genuine
-      operator-decision-needed findings through AO's dashboard Q&A mechanism, not a chat message.
+- [x] [DOC] P1. ✅ **DONE 2026-07-23** — `task_template.md` §3 now has explicit rules for findings D (no bare cross-doc
+      §-shorthand), E (literal-action verbs, ban "absorb"/"incorporate"), F (delete-risk tagging consistency), G (stated
+      definition-of-done), and C (check-before-adding a stale-checkbox pre-write habit); A and B were already
+      well-covered (line-1-truncation §3, `sequential:`/`depends_on` ordering §4) — verified by re-reading both before
+      editing, not assumed. `pm@<commit-pending>`.
+- [ ] [SCRIPT] P1. **Operator ruling 2026-07-23: hard-fail on EVERY check (not the hard/soft split), gated on a
+      prerequisite** — wire the full `run_hygiene_sweep.sh` into `quality-gates.sh` for `unified-trading-pm` with ALL
+      checks (including the currently-"soft" ones: line caps, estimate sanity, superseded-in-active, codex refs,
+      parent-epic alignment, CLAUDE↔SUB_AGENT parity) blocking the commit, matching the sweep's `--ci` exit-1 behavior
+      but extended past just the 7 currently-hard checks. **Prerequisite, NOT done here**: the sweep scans the WHOLE
+      `plans/active/` corpus, not just a commit's touched files — measured 2026-07-23, 30 pre-existing plans already
+      violate `check_line_caps.sh`'s own internal hard threshold (23 non-umbrella >1000L, 7 umbrella >2000L, e.g.
+      `sports_manifest_canonicalisation_2026_06_01.md` at 4733L; full list via
+      `bash scripts/plan-hygiene/check_line_caps.sh`), plus 19 more in the 500-1000L soft range — a blanket flip today
+      would immediately block every future plan-touching commit workspace-wide on debt nobody just created. **Operator
+      chose to fix all 30 first, then flip** (not the ratchet-baseline alternative, and not scoping the gate to
+      touched-files-only) — this prerequisite is its own separate body of work (each of the 7 umbrella plans has 100+
+      todos and needs a real split, not a trim) and should be tracked as its own plan before this todo can ship. All 6
+      other currently-soft checks are already at 0 corpus-wide violations (verified 2026-07-23,
+      `run_hygiene_sweep.sh --ci --no-regen`) and can flip to hard-fail immediately, independent of the line-caps
+      prerequisite.
+- [x] [INFRA] P0. ✅ **Research DONE 2026-07-23 — line 3 is MOSTLY ALREADY BUILT; extend, do not rebuild.** Found:
+      `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` (+ its rollout-committed twin
+      `.github/workflows/plan-health-agent.yml`) is a GHA workflow (daily cron `0 2 * * *` + PR gate) whose own header
+      says its Haiku-based drift-detection step is a placeholder — the REAL migration already shipped:
+      `agent-orchestrator/server/plan_health.py`'s `dispatch(mode="reconcile")` spawns `agents/plan_reconciler.md`
+      (opus/max/thinking-on), fired by a genuine **systemd timer**
+      (`agent-orchestrator/scripts/install-plan-reconciler-timer.sh` → `plan-reconciler.timer`,
+      `OnCalendar=*-*-* 01:00:00 UTC`) hitting `POST /api/plan-health/dispatch`, watched by a dedicated
+      `plan_reconciler_liveness_canary.py` that pages if the timer goes inactive or no successful run lands in >26h.
+      **This IS the 24h background `/plan-reconcile`-class agent line 3 asked for — it already runs daily.** The one
+      real gap: `plan_health.py::record_result()` routes `doc_drift` (the operator-decision-needed half) to a plain
+      Slack message (`slack_notify.notify_plan_health_findings`, deduped by a `_drift_key` seen-set) rather than AO's
+      structured dashboard BLOCKED-question surface (`notify_slot_blocked`, which renders question+options+
+      recommendation and gets an explicit ✅-close bookend) — `contradictions` findings already route silently to a
+      `reconciler_candidate` feed correctly (no page, consumed by the next reconcile run), matching the actionable-only
+      convention. AO has no separate generic cron/`CronCreate` registry — recurring work is done via per-purpose systemd
+      timers hitting dedicated dispatch endpoints, supervised by the daemon-thread `LoopSupervisor`
+      (`server/loop_supervisor.py`); that's the pattern to extend, not a new scheduler.
+- [ ] [INFRA] P1. **Narrowed scope post-research**: route `plan_health.py::record_result()`'s `doc_drift` findings
+      through the AO dashboard's `notify_slot_blocked` BLOCKED-question surface (question/options/recommendation shape +
+      the `notify_slot_blocked_answered` ✅-close bookend) instead of/alongside the current Slack-only
+      `notify_plan_health_findings` path — this is the only piece of line 3 not already live. Confirm whether
+      `agents/plan_reconciler.md`'s prompt already covers everything the `/plan-reconcile` skill file checks, or needs
+      extending to match it 1:1 (the skill and the agent prompt currently exist as two separate texts — reconcile them
+      or point one at the other).
 - [ ] [INFRA] P2. Wire `/docs-reconcile` onto the same 24h cadence as line 3, and clarify in both skills' own
       descriptions where the plan↔codex-content-alignment boundary sits between them (avoid either silently dropping it,
       or both duplicating it).
