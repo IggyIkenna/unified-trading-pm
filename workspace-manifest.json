@@ -760,7 +760,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 90.71,
         "warn_file_count": 9,
         "qg_red_reason": null,
         "large_file_count": 8
@@ -821,7 +821,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 88.47,
+        "coverage_pct": null,
         "warn_file_count": 8,
         "qg_red_reason": null,
         "large_file_count": 3
@@ -1011,7 +1011,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 85.52,
+        "coverage_pct": null,
         "warn_file_count": 9,
         "qg_red_reason": null,
         "large_file_count": 3
@@ -1212,7 +1212,7 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
+        "coverage_pct": 96.33,
         "warn_file_count": 30,
         "qg_red_reason": null,
         "large_file_count": 27
@@ -1264,8 +1264,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": null,
         "warn_file_count": 21,
-        "coverage_pct": 88.39,
         "large_file_count": 6,
         "qg_red_reason": null
       }
