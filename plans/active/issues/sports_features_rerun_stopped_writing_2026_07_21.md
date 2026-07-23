@@ -10,17 +10,23 @@ summary: >-
   corpus (78,344 derived_features objects). 27,421 pre-fix (fabricated) cells remain in 2017-2020 (21,286 in 2018
   alone), plus 2,821 in 2021-2026. These are NOT honest-absence and must be REGENERATED, not purged — the Track F
   fabricated-object purge is BLOCKED until the re-run actually works.
-status: open
+status: superseded
 nature: issue
 asset_group: [sports]
 stage: [data]
 repos: [features-service, deployment-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, data-correctness, features, season-context, fabrication, ml-readiness, async-discipline]
-related: [sports_derived_features_fabricated_corpus_scope_2026_07_20.md, ../sports_consolidated_closeout_2026_07_19.md]
+related:
+  [
+    sports_derived_features_fabricated_corpus_scope_2026_07_20.md,
+    ../sports_consolidated_closeout_2026_07_19.md,
+    ../sports_master_closeout_2026_07_21.md,
+  ]
 created: "2026-07-21"
 source: Track F pre-purge safety census (2026-07-21)
-resolved_by:
+resolved_by: deployment-service@78a0aa4 (2020-06 pre-floor wipe, 2026-07-21)
+superseded_by: ../sports_master_closeout_2026_07_21.md
 locked_by:
 parent_epic: sports_master
 assigned_vm: NA
@@ -110,3 +116,33 @@ The remediation is NOT "relaunch the re-run" — a relaunch fails identically. I
 
 This is a **foundation-completion-gate** issue (derived_features depend on fixture results/standings/xG); it freezes the
 Track F purge AND the "ML-ready" claim for sports 2018-2020 until the upstream layer is confirmed/backfilled.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: SUPERSEDED.** This doc's own "ROOT CAUSE (2026-07-21)" section (above) correctly anticipated the actual
+resolution — it explicitly asked "does the 2018-2020 upstream data legitimately exist? If not, this is honest-absence
+and the fabricated objects should be DELETED, not regenerated" — and that is exactly what happened, one day later, via a
+much bigger ruling this doc did not yet know about.
+
+- **`sports_master_closeout_2026_07_21.md`** (created the same day, still current 2 days later) established the
+  **2020-06-06 sports data floor**: odds tick data has zero day-partitions before 2020-06-06, so ALL pre-floor sports
+  data (fixtures, features, everything) is fabrication-by-construction and was ruled **WIPED, not backfilled**.
+  Executed: `deployment-service@78a0aa4` deleted 212,519 pre-floor objects from `features-sports-prd` (2017-01-01 →
+  2020-06-05) + 437,124 from `instruments-store-sports-prd`, verified (spot-checked 0 remaining pre-floor days,
+  post-floor days intact). The plan explicitly states this "**Resolves the pre-floor portion of
+  `sports_features_rerun_stopped_writing_2026_07_21`**" (line ~111 of the closeout plan).
+- **This changes the doc's own recommended disposition for the bulk of what it measured.** Of the 27,421 pre-fix cells
+  this doc counted in 2017-2020, all of 2017 (0 cells — already clean), all of 2018 (21,286) and 2019 (3,965), and the
+  2020-06-05-and-earlier slice of 2020's 2,170 are now **pre-floor and deleted**, not "must be regenerated" as this
+  doc's summary originally concluded. The doc's title/summary framing ("must be REGENERATED, not purged") is therefore
+  now WRONG for that slice — a later, bigger ruling changed the correct disposition from regenerate to delete, which is
+  a supersession, not a confirmation.
+- **What genuinely remains open** (not resolved by the floor wipe, and NOT tracked by this doc anymore): the post-floor
+  residue — 2020-06-06-onward 2020 cells + the 2,821 cells in 2021-2026 this doc also measured — plus the underlying
+  write-abort-behavior decision (`AvailableAtStampingError` raising on all-NaT rather than recording honest absence).
+  The closeout plan tracks this explicitly and separately: _"(2,821 POST-floor fabricated objects + writer-defect fixes
+  remain — §2-F, not part of the pre-floor wipe.)"_ — i.e. real residual work exists, it is just no longer this doc's
+  scope/shape. Flagging this clearly rather than silently declaring the whole doc "done": the Track F purge is still not
+  fully clear, only its much-larger pre-floor portion is.
+- No contradiction found with `sports_derived_features_fabricated_corpus_scope_2026_07_20.md` — same relationship (both
+  superseded/narrowed by the same floor ruling, per the closeout plan's own cross-reference).
