@@ -106,6 +106,37 @@ class TestMain:
         result = MOD.main()
         assert result == 0
 
+    def test_plan_with_repo_root_relative_leading_slash_link(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # "/codex/..." is this repo's PM-repo-root-relative convention, not filesystem-absolute
+        # (unified-trading-pm@<pending>, fixing 15 real BROKEN false-positives in plans/active/*.md).
+        plans_dir = tmp_path / "plans" / "active"
+        plans_dir.mkdir(parents=True)
+        codex_dir = tmp_path / "codex" / "04-architecture"
+        codex_dir.mkdir(parents=True)
+        (codex_dir / "custody-providers.md").write_text("Custody doc\n")
+        plan = plans_dir / "test.md"
+        plan.write_text("See [custody](/codex/04-architecture/custody-providers.md) for details.\n")
+        monkeypatch.setattr(
+            "sys.argv",
+            ["validate_plan_links.py", "--plans-dir", str(plans_dir), "--workspace-root", str(tmp_path)],
+        )
+        result = MOD.main()
+        assert result == 0
+
+    def test_plan_with_broken_repo_root_relative_link(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        plans_dir = tmp_path / "plans" / "active"
+        plans_dir.mkdir(parents=True)
+        plan = plans_dir / "test.md"
+        plan.write_text("See [missing](/codex/nonexistent.md) for details.\n")
+        monkeypatch.setattr(
+            "sys.argv",
+            ["validate_plan_links.py", "--plans-dir", str(plans_dir), "--workspace-root", str(tmp_path)],
+        )
+        result = MOD.main()
+        assert result == 1
+
     def test_plan_with_archive_fallback(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         plans_dir = tmp_path / "plans" / "active"
         plans_dir.mkdir(parents=True)
