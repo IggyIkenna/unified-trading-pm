@@ -2310,3 +2310,69 @@ before concluding it's a real blocker.
 - **PA-2021 palladium backfill**: confirmed still `RUNNING` (`tradfi-bf-cme-ohlcv-1m-pa-2021-20260722-160825`, launched
   08:08Z), serial console shows steady ~60s-cadence `gsutil` heartbeat activity — alive, not stalled. Not yet confirmed
   complete.
+
+### 2026-07-23 continuation — Phase D gate: two real checker bugs found + fixed, chain-manifest recovery fully applied
+
+- **Register-phase `--apply` run for real** (script shipped `mtds@c4cc819b1`). Crashed on the first real attempt:
+  `ManifestWriter.add() with bundled data_type='options_chain' is banned; use record_captured_from_counts()` —
+  contradicted the earlier design research (an Explore sub-agent had concluded this ban could never fire for tradfi).
+  Verified nothing partially wrote (no new per-VM shard from the failed run — `ManifestWriter` buffers until `.flush()`,
+  never reached). Fixed: `apply_register()` branches on `data_type in BUNDLED_DATA_TYPES` →
+  `record_captured_from_counts()` (mirrors `rebuild_tradfi_manifest.py::_emit_bundled_shard_row`'s placeholder pattern)
+  vs plain `add()`; also fixed `pipeline_mode`/`source` to derive fresh via `_pipeline_mode()`/`source_string_for()`
+  instead of trusting the raw candidate row's stale values. Shipped `mtds@c8ace21df`. Smoke-tested both write paths on 4
+  real sample rows before the full run, then **re-ran the full apply against the already-confirmed 1,545-key TSV**
+  (skipped re-paying the ~40min GCS existence-check pass — the confirmed set hadn't gone stale in ~15 min):
+  **1,545/1,545 rows written, 0 skipped.** Verified via the per-VM shard directly, then re-verified in the CONSOLIDATED
+  index post-merge — the plan's own original AUD 2023-06-19/2023-06-21 sample-evidence rows now read
+  `capture_status=captured` live. Retire-phase dry-run: **50,520 raw rows now confirmed retirable** (spot-checked —
+  genuine per-contract symbols like `ESH1`/`ESZ3`, matching expectations exactly). `--apply` for retire deliberately NOT
+  run — needs operator review first (single in-place-CAS REPLACE dropping 50,520 rows from the live production
+  manifest).
+- **Phase D MVP-cells check (`data-pipeline-check-mtds --asset-group tradfi --day 2026-07-13`) — TWO real, distinct
+  checker bugs found and fixed**, neither caused by anything in this closeout's own migration work (both are
+  cross-cutting `pipeline_e2e_check`/orchestrator bugs, exposed by the terminal gate, not created by it):
+  1. **Freshness pre-flight read the wrong tier.** `market_tick_data_service/engine/orchestrator/__init__.py`'s
+     `_run_preflight_availability_check` was reading `_manifest_bucket`, which under `--test-run` re-homes to the
+     `-test-` tier (`get_tick_data_bucket(..., test_aware=True)`) — but the `-test-` bucket has **no scheduled
+     consolidator**, so its consolidated `_index/availability_index.parquet` is permanently stale for anything written
+     by a per-VM-shard force leg, and the skip-leg's freshness check always found nothing, never emitted its skip
+     signal, and silently re-fetched. Root-caused via the VM's own `run.log` (zero "Pre-flight:" lines at all — the
+     function's early-return guard, `if not venue_data_types or not _captured_for_venue`, fired silently) plus direct
+     manifest queries proving the data WAS genuinely captured in PROD (FX/ohlcv_24h/2026-07-22, 11 real rows) while
+     invisible via the -test--tier read. `get_tick_data_bucket`'s own docstring already documented the INTENDED design
+     ("freshness pre-check ... unchanged" under `test_aware=False`) — the bug was a shared-variable mixup, not a design
+     gap. Fixed: introduced `_preflight_read_bucket` (test_aware=False, always PROD), decoupled from `_manifest_bucket`
+     (still test-tier for the actual write path). File was already at 897/900 lines — trimmed the fix's comments twice
+     to land at exactly 900 and clear the file-size ratchet. Shipped `mtds@40694074d9`.
+  2. **Skip-leg vacuously failed on an honest-empty force leg.** `scripts/pipeline_e2e_check.py::_run_skip_leg`
+     unconditionally overwrote the underlying leg's status with `failed` whenever
+     `not skip_signal_found or not fingerprint_unchanged` — but for a shard/day with genuinely NO data to capture (force
+     leg already proved this, `honest_empty=True`, e.g. `EXPECTED_SOURCE_DELIVERY_LAG`), there is nothing for a skip
+     decision to prove: no prior object to fingerprint (both None → `fingerprint_unchanged` False by the `is not None`
+     check), no freshness signal to find (that signal only fires when something IS already captured). Fixed:
+     `_run_skip_leg` now short-circuits to a `passed` verdict (skip_proof=`not_applicable`) when the underlying result
+     is already an honest-empty pass, before running the skip-signal/fingerprint logic at all. Shipped
+     `mtds@9737d020fe`.
+  - **Both fixes independently verified working**: `TRADFI:FX:ohlcv_24h`'s skip leg — the one cell with real captured
+    data throughout — flipped from `failed | skip_signal_not_found_in_run_log` (1st run) to `passed | genuine` (2nd and
+    3rd runs, both after the respective fix shipped + tarball refreshed).
+  - **A 3rd re-run (after both fixes) hit heavy SPOT preemption noise** (`vm_not_success:vm_self_deleted_no_exit_status`
+    across NASDAQ/NYSE/CME) — checked via `gcloud compute operations list`: confirmed genuine
+    `compute.instances.preempted` events (~55s after boot, before any log could be written), not a code regression. This
+    is expected, accepted behavior for SPOT backfill VMs (real tradeoff for ~60-91% cost savings) — not something either
+    fix controls, and not worth chasing further given the two TARGETED bugs are already independently proven fixed via
+    the FX cell.
+  - **Still-open, pre-existing, separately-tracked findings** (unrelated to any fix here, don't re-investigate without
+    new evidence): CME's `NAT-GAS-MNG` force-fetch failure is the documented "migration-boundary" case
+    (`data-pipeline-check-mtds` skill's own text) — the sampler picks the now-canonical underlying name, but Databento's
+    adapter needs the raw exchange code (`NG`); CBOE's `ohlcv_24h` correctly `skipped/no_captured_data_for_cell` (2,117
+    manifest rows, 100% `empty_confirmed` — a real, pre-existing data-source gap, `--require-captured` working as
+    designed, not a checker bug).
+  - **Also fixed in-flight to unblock shipping**: `tests/unit/test_pipeline_e2e_prediction_canonical.py`'s SPORTS rule11
+    shard-count baseline (88→96) — same recurring "stale baseline" class as prior CEFI (200→208)/DEFI (2403→2646)
+    re-pins, verified present on a clean unmodified HEAD (not caused by anything here), blocking the whole-program
+    quality gate for an unrelated ship. Bundled into the honest-empty skip-leg fix's commit.
+  - `- [ ] [DATA] P1. Run the FULL (non-`--mvp-only`) Phase D tradfi shard check + `data-pipeline-check-is --asset-group
+    tradfi --day
+    2026-07-13` to complete the terminal gate — the MVP-cells subset is now proven fixed for the 2 real bugs found; the remaining gaps (CME sampling, CBOE no-data) are pre-existing and understood, not blocking.`
