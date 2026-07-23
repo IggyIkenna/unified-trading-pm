@@ -758,7 +758,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 9,
@@ -879,7 +879,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "ruff",
         "warn_file_count": 38,
@@ -1351,7 +1351,7 @@
         "large_file_count": 0,
         "coverage_pct": 80.61
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
