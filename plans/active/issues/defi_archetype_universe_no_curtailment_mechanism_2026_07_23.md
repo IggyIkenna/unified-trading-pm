@@ -196,12 +196,10 @@ run SEQUENTIALLY, not in parallel:
 - [x] [BACKEND] P1. Phase 0 (this session, prerequisite): `CARRY_STAKED_BASIS`'s STAKING_REWARD leg wired to real
       `lst_yields` index-ratio — `strategy-service@e93902d8`. New `CanonicalLstYieldsIndexProvider` is the reusable
       building block Phase 1 below reuses directly.
-- [ ] [BACKEND] P1. **Phase 1 — CARRY_STAKED_BASIS_DATED** (IN FLIGHT as of this addendum — dispatched to a background
-      build agent, not yet confirmed shipped). Reuses `CanonicalLstYieldsIndexProvider` for the STAKING leg; adds a new
-      dated-futures short-leg tick loader (Deribit ETH quarterly `instrument_type=FUTURE` — confirmed via
-      `unified-api-contracts`'s `CeFiMvpRule` that `FUTURE` is genuinely MVP for Deribit with real
-      `trades`/`book_snapshot_5` capture, NOT the same thing as the explicitly-non-MVP `futures_chain` bundled-chain
-      data_type — agent was instructed to verify real GCS-captured data exists before wiring, hold if not).
+- [ ] [BACKEND] P1. **Phase 1 — CARRY_STAKED_BASIS_DATED — BLOCKED 2026-07-23, not on data, on a deeper pre-existing
+      catalog/engine config-shape mismatch** (build agent held per its own STOP instruction; see addendum below for the
+      full finding + evidence — do not re-dispatch until the config-shape question is resolved, or the build agent will
+      hit the identical `ValueError` at `register_instance()` before it ever reaches the tick loader).
 - [ ] [BACKEND] P1. **Phase 2 (= E3) — CARRY_RECURSIVE_STAKED + CARRY_RECURSIVE_BORROW_LENDING_ONLY +
       CARRY_BASIS_PERP_INV**. All three share the same new building block: an Aave `borrow_index` sample-to-sample
       accrual leg (mirrors the already-built `index_ratio_accrual()` primitive, just fed the borrow index instead of the
@@ -234,3 +232,92 @@ run SEQUENTIALLY, not in parallel:
 **Lesson recorded**: an audit that maps only the PRODUCTION side of a question ("what does the catalog declare") can
 miss a real gap that only shows up by diffing against the EXPLORATORY/backtest side ("what did we already prove out that
 never got folded in"). Check both sides before answering "is X supported" with a flat no.
+
+---
+
+## BLOCKED addendum 2026-07-23 — Phase 1 (CARRY_STAKED_BASIS_DATED) build agent findings
+
+Dispatched to wire `_load_staked_basis_dated_ticks()` in `strategy-service`'s `paper_run_handler.py` (mirroring the
+already-shipped `CARRY_STAKED_BASIS` STAKING-leg pattern, `strategy-service@e93902d8`). Held before writing any code —
+here is what was verified and why.
+
+**Data precondition (the thing the agent was asked to confirm) — CONFIRMED REAL, not the blocker.** Read
+`unified_api_contracts.canonical.crosscutting._mvp_scope_rules.CeFiMvpRule` (~line 380-500): `FUTURE` is a genuinely MVP
+CeFi `instrument_type` for DERIBIT (base-membership + perp-gate), flat
+`data_types = {trades, book_snapshot_5, derivative_ticker, funding_rate}` — the SAME per-instrument set as
+SPOT_PAIR/PERPETUAL, distinct from the explicitly non-MVP `futures_chain` bundled-chain data_type. Confirmed empirically
+against the real manifest + real GCS objects (`market-data-tick-cefi-prd-central-element-323112`, read via
+`unified_trading_library.read_availability_index` + `get_storage_client().list_blobs`,
+GCP_PROJECT_ID=central-element-323112):
+
+- Real per-contract quarterly ETH futures parquets exist under
+  `raw_tick_data/by_date/day={D}/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=future/ data_type={trades,book_snapshot_5}/`
+  — e.g. `ETH-26JUN20.parquet` / `ETH-27MAR20.parquet` (2020-01-05 legacy naming) through
+  `DERIBIT:FUTURE:ETH-USD@INV-20260925.parquet` / `DERIBIT:FUTURE:ETH-USDC@LIN-20260925.parquet` (2026-07-15 current
+  wire naming) — genuine per-expiry files, both inverse (USD) and linear (USDC) margin, quarterly + monthly expiries,
+  NOT a proxy from the perpetual.
+- Manifest `capture_status='captured'` rows for
+  `(venue=DERIBIT, instrument_type=FUTURE, data_type=trades, instrument_id='ETH')` (a per-underlying rollup row the
+  writer emits alongside the per-contract files, not one row per contract) span 503 dates 2020-01-01 → 2026-06-27
+  (`book_snapshot_5` rollup rows run through 2026-07-20); real, substantial coverage, not a sparse token presence.
+
+**The actual blocker — CarryStakedBasisEngine cannot even be CONSTRUCTED with `build_carry_staked_basis_dated()`'s own
+catalog config.** `factory.py:69` registers `StrategyArchetype.CARRY_STAKED_BASIS_DATED` to the SAME
+`CarryStakedBasisEngine` class as the plain archetype (`staked_basis.py:596-601`, `ALLOWED_ARCHETYPES` includes both).
+That engine's `REQUIRED_PARAMS` (`staked_basis.py:602-611`) — cross-confirmed by the machine-readable
+`PARAM_SCHEMA_REGISTRY["CARRY_STAKED_BASIS_DATED"]` SSOT (`param_schema.py:159-186`, explicit comment "Same engine
+(CarryStakedBasisEngine) — shares the schema") AND by two independent test fixtures
+(`tests/integration/test_phase8_archetype_factory_smoke.py:72-78`,
+`tests/unit/engine/strategies/v2/ test_equity_rescaling.py:79-86`) — is
+`{staking_protocol, native_asset, lst_asset, perp_venue, perp_instrument, spot_venue}`. Both test fixtures pass
+`perp_venue="DERIBIT"`/`"deribit"` + a literal dated-symbol-shaped `perp_instrument` (`"ETH-31MAR25"` /
+`"ETH-QUARTERLY"`) — i.e. the engine treats the dated variant as _structurally identical_ to the plain perpetual
+variant, with the ONLY difference being what string is passed in `perp_instrument`.
+
+`catalog_staked_basis.py:389-429`'s real `build_carry_staked_basis_dated()` emits none of that: its `initial_config` is
+`{lst_protocol, lst_asset, native_asset, dated_venue, dated_expiry, hold_policy, roll_on_dte}` — no `staking_protocol`
+(renamed `lst_protocol`), no `perp_venue`/`perp_instrument`/`spot_venue` at all. Reproduced empirically
+(`strategy-service/.venv`, both live catalog slots):
+
+```
+CARRY_STAKED_BASIS_DATED@lido-deribit-eth-q1-usdc-v1-prod
+{'lst_protocol': 'lido', 'lst_asset': 'stETH', 'native_asset': 'ETH', 'dated_venue': 'deribit',
+ 'dated_expiry': 'q1', 'hold_policy': 'HOLD_UNTIL_FLIP', 'roll_on_dte': '10'}
+RAISED: ValueError CarryStakedBasisEngine missing required params:
+  ['perp_instrument', 'perp_venue', 'spot_venue', 'staking_protocol']
+```
+
+`ArchetypeEngineFactory.build(...)` is called synchronously inside `V2EngineOrchestrator.register_instance`
+(`orchestrator.py:156`), itself called synchronously inside `GroupBRunner.register_instance` — i.e. this `ValueError`
+fires immediately at registration, in ANY environment (paper replay, live promotion, the allocator's own preflight),
+before a single tick is ever built. **This is not "unwired for paper-replay" — `CARRY_STAKED_BASIS_DATED` as currently
+cataloged is unrunnable everywhere, including live**, a latent landmine independent of this build task.
+
+**Second, compounding gap found while tracing the consumer** (per the task's own instruction to trace `staked_basis.py`
+"enough to understand how it distinguishes the plain vs `_DATED` variant"): it doesn't.
+`grep -n "DATED\|dated_expiry\| dated_venue\|roll_on_dte\|HOLD_UNTIL_FLIP" staked_basis.py` returns exactly one hit —
+the `ALLOWED_ARCHETYPES` tuple. There is no roll-forward logic anywhere in the engine: `_extract_config` reads
+`perp_instrument` once, as a static per-tick config string (not a tick feature), and `on_tick` never re-resolves it.
+Even a config-key rename fix (map `lst_protocol`→`staking_protocol`, add a literal `spot_venue`) would leave the engine
+holding ONE fixed dated-contract symbol for the strategy instance's entire life — no mechanism consumes
+`roll_on_dte`/`hold_policy` to roll to the next quarter as the held contract approaches expiry, which is the entire
+economic point of a "dated" (vs perpetual) basis trade. `dated_expiry: "q1"/"q2"` in the catalog is also not itself
+resolvable to a concrete, real contract symbol without a decision on which calendar year/quarter it means and how it
+advances over time.
+
+**Why this is reported here rather than fixed in place**: fixing the config-key mismatch is mechanical, but fixing it
+usefully requires an actual product/design decision this agent is not positioned to make unilaterally — (a) how
+`dated_expiry` maps to a real, current `perp_instrument` symbol day-by-day (the manifest confirms real symbols exist in
+both legacy `ETH-27MAR20`-style and current `DERIBIT:FUTURE:ETH-USD@INV-20260925`-style naming — a resolver needs to
+pick the right one per day), and (b) whether the roll-on-expiry logic belongs in the engine (new code, affects the live
+architecture too) or is deferred as an explicit known-limitation for a first cut (e.g. hold a single contract to
+expiry/HOLD_UNTIL_FLIP literally, never roll, and accept the position naturally closes out or requires manual re-catalog
+at the next quarter). Per the workspace's async-wait/blocked discipline ("a held, unwired, well-documented state is
+better than a plausible-but-wrong wiring"), this was held rather than guessed.
+
+**Recommendation**: before Phase 1 is re-dispatched, decide (1) the `dated_expiry`→`perp_instrument` resolution rule,
+(2) whether roll logic ships now or is explicitly deferred, then fix `build_carry_staked_basis_dated()`'s config keys to
+match `PARAM_SCHEMA_REGISTRY`/`REQUIRED_PARAMS` in the SAME change as the tick-loader build (fixing the catalog alone,
+with no tick loader, would make the engine constructible but still produce zero paper runs — the archetype would just
+move from "crashes at registration" to "no ticks, honest-skip", i.e. exactly Phase 1's original scope, once the config
+shape is right).
