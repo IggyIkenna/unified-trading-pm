@@ -44,7 +44,7 @@ created: 2026-07-15
 parent_epic: defi_master
 source:
   [data_engineering slot-5, 2026-07-15, discovered while re-running mvp_backfill_defi_onchain_v10-002's G2 gate check]
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor

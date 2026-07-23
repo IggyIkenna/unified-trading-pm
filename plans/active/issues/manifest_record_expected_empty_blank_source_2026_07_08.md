@@ -27,7 +27,7 @@ created: 2026-07-08
 parent_epic: sports_master
 priority: P0
 source: [plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md]
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent

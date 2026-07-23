@@ -36,7 +36,7 @@ resolved_by:
 execution_scope: local-only
 model_tier: sonnet-doable
 drift_direction: advance-code
-assigned_vm: planning
+assigned_vm: NA
 depends_on: []
 ---
 

@@ -38,7 +38,7 @@ last_updated:
   substantive [2026-07-12 correction, finding 115] and [2026-07-12 correction, finding 344] annotations never reflected
   in this field)"
 parent_epic: instruments_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
@@ -262,12 +262,14 @@ resolved_by:
       prediction / Yahoo-index pre-genesis / DeFi chain-genesis lanes (see
       `instruments-service/scripts/enumerate_expected_universe.py:428/522/558/669/725/1055`); the residual gap is the
       venue-launch/coverage-start-date INPUT for the credential-gated tradfi venues (Glassnode-class), which cannot be
-      captured or scaffold-anchored without the credentials landing. (4) Credential state: **Glassnode Pro (~$999/yr)
+      captured or scaffold-anchored without the credentials landing. (4) Credential state: **Glassnode Pro
+      (~$999/yr)
       subscription NOT YET APPROVED** — the credential ask is filed at
       `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md#L236` ("operator approves **Glassnode Pro
-      (~$999/yr)** credential ask") gating Phase 6 breadth expansion. (5) Cross-reference marker's purpose is fulfilled:
-      filed + tracked in owning plan (Step 4 P1 open) + Plan-5 -008 gate already `[x] ✅` "quantified + filed". No new
-      code shipped here — this scan's contract is **"file findings; seed in the owning plan, don't seed blind here"**
+      (~$999/yr)**
+      credential ask") gating Phase 6 breadth expansion. (5) Cross-reference marker's purpose is fulfilled: filed +
+      tracked in owning plan (Step 4 P1 open) + Plan-5 -008 gate already `[x] ✅` "quantified + filed". No new code
+      shipped here — this scan's contract is **"file findings; seed in the owning plan, don't seed blind here"**
       (issue-doc line 76 + § Recommended-decision line 170-173); the seeding execution stays owned by
       `data_completion_to_100_all_ag_2026_06_21.md` Step 4 P1 and un-blocks when Glassnode-class credentials land. —
       evidence: `data_completion_to_100_all_ag_2026_06_21.md#L3283` (owning P1 open, BLOCKED-CREDENTIALS),

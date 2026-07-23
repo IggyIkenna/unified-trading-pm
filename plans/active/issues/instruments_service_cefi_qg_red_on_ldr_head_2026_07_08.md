@@ -21,7 +21,7 @@ created: 2026-07-08
 parent_epic: infrastructure_master
 priority: P0
 source: slot-7 data_engineering, discovered while shipping understat_local_backfill_completion_2026_07_06.md task -001
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 audited_scope: data-correctness

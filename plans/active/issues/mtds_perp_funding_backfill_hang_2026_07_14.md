@@ -29,7 +29,7 @@ related:
     plans/active/mtds_retry_safe_default_audit_2026_07_14.md,
   ]
 created: 2026-07-14
-assigned_vm: planning
+assigned_vm: NA
 source: [mvp_backfill_defi_onchain_v10-002]
 parent_epic: defi_master
 priority: P1

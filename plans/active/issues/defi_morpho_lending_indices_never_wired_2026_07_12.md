@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-07-12
 parent_epic: defi_master
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 source: [mvp_backfill_defi_onchain_v10_2026_06_27.md G2 verification run, slot-3 data_engineering]
 priority: P1

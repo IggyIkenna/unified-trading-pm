@@ -28,7 +28,7 @@ related:
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P2
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [unified_trading_system_ui_codex_violations_far_exceed_estimate-001]

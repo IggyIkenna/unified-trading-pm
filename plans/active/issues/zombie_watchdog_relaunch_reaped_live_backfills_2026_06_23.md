@@ -25,7 +25,7 @@ source:
     scripts/vm/launch-vm-zombie-watchdog.sh,
     scripts/vm/vm_zombie_watchdog.py,
   ]
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

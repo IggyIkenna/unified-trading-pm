@@ -24,7 +24,7 @@ related:
 created: "2026-07-21"
 parent_epic: sports_master
 priority: P3
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [pm_qg_plan_discipline_and_frontmatter_regression-004]

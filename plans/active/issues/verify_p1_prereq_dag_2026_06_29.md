@@ -20,7 +20,7 @@ created: 2026-06-29
 parent_epic: plan_hygiene_master
 priority: P2
 source: [plans/archive/2026_07/honest_coverage_smoke_harness_2026_06_28.md, BLK-d378494f]
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
