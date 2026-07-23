@@ -129,7 +129,7 @@ publishes combo strategies; IBKR/Databento publish spread contracts. These need 
 
 ### Phase 6 — Codex + PM
 
-- [ ] [AGENT] P1. Update `codex/02-data/availability-manifest-and-data-status.md`: document combo shard key,
+- [ ] [AGENT] P1. Update `/codex/02-data/availability-manifest-and-data-status.md`: document combo shard key,
       Hyperliquid/Aster options exclusion, removed venues (OddsJam/PredictIt/Betdaq/Smarkets).
 - [ ] [SCRIPT] P1. Quickmerge PM.
 

@@ -24,7 +24,7 @@ tags: [uac, ssot, data-type, instrument-type, combinator, cefi, defi, tradfi, ho
 related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
-    honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
   ]
 created: 2026-07-07
 parent_epic: instruments_master
@@ -179,8 +179,8 @@ just belongs on a different layer than instrument_type does, and conflating the 
 - [ ] [CODE] P2. ~~Fix `_L5_VENUES` (finding 4) to read from `VENUE_DATA_TYPE_CAPABILITIES`~~ **← `_L5_VENUES` part
       RESOLVED-BY-DELETION (2026-07-18):** it was added by `market-tick-data-service@0908bda7` (order_flow_imbalance L2
       feature) and removed entirely by `market-tick-data-service@a4fb3d13`, which retired that feature (zero consumers /
-      zero prod rows / duplicated MDPS). `grep -rn _L5_VENUES market_tick_data_service/` = 0 hits. **STILL OPEN (onchain,
-      not cefi):** audit `_SOURCE_COVERAGE_START` (`onchain_perp_batch_handler.py`, byte-copy of
+      zero prod rows / duplicated MDPS). `grep -rn _L5_VENUES market_tick_data_service/` = 0 hits. **STILL OPEN
+      (onchain, not cefi):** audit `_SOURCE_COVERAGE_START` (`onchain_perp_batch_handler.py`, byte-copy of
       `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]`) and `_PROTOCOL_TO_DATA_TYPE` (`solana_defi_handler.py`, the
       `"kamino"`/`"kamino_lending"` split mismatch) for the same read-from-UAC fix. (repo: market-tick-data-service)
 - [ ] [CODE] P2. Add the missing `book_snapshot`/`market_metadata`/`fills` declarations to

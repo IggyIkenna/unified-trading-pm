@@ -21,7 +21,11 @@ stage: [strategy, meta]
 repos: [deployment-api, unified-trading-system-ui, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [gcs, strategy-store, split-brain, bucket-mismatch, stale-reads, ui]
-related: [gcs_bucket_estate_cleanup_2026_07_10.md, terraform_bucket_estate_drift_resurrection_2026_07_13.md]
+related:
+  [
+    /plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md,
+    /plans/archive/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md,
+  ]
 created: "2026-07-13"
 parent_epic: infrastructure_master
 priority: P1
@@ -61,7 +65,7 @@ resolved_by:
      `strategy-store-cefi-central-element-323112` to the unified flat `strategy-store-central-element-323112` (content
      verified present via `gcloud storage ls` before the flip); comments claiming "regenerated daily" corrected to
      reference this issue doc. `rg "strategy-store-cefi"` in unified-trading-system-ui now returns zero hits in live app
-     code (a stale mirrored copy of `codex/04-architecture/data-flow-map.md` under `context/codex/` still shows the old
+     code (a stale mirrored copy of `/codex/04-architecture/data-flow-map.md` under `context/codex/` still shows the old
      per-AG names — that mirror's SSOT is this PM repo's `codex/`, not in scope for a uts-ui-only session; update it
      when this doc's codex-alignment pass runs).
    - deployment-api defaults + `unified-api-contracts/scripts/enumerate_envelope.py` repoint **still open** (not this

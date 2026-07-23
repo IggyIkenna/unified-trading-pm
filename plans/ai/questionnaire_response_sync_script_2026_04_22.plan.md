@@ -78,7 +78,7 @@ on drift instead of shipping silently inconsistent UI + API.
 
 - [ ] [AGENT] P0. Add `sync-questionnaire-response-to-ui.sh --check` as a pre-base-ui hook in
       `unified-trading-system-ui/scripts/quality-gates.sh`. UI QG fails with actionable error if drift exists.
-- [ ] [AGENT] P0. Document the hook in `codex/06-coding-standards/schema-sync-scripts.md` (new doc alongside G1.8
+- [ ] [AGENT] P0. Document the hook in `/codex/06-coding-standards/schema-sync-scripts.md` (new doc alongside G1.8
       archetype-capability hook).
 
 ### Phase C — Initial verify
@@ -91,7 +91,7 @@ on drift instead of shipping silently inconsistent UI + API.
 
 - `unified-trading-pm/scripts/propagation/sync-questionnaire-response-to-ui.sh` — NEW
 - `unified-trading-system-ui/scripts/quality-gates.sh` — MODIFY (add check hook)
-- `codex/06-coding-standards/schema-sync-scripts.md` — NEW (alongside G1.8 pattern)
+- `/codex/06-coding-standards/schema-sync-scripts.md` — NEW (alongside G1.8 pattern)
 
 ## Execution DAG
 

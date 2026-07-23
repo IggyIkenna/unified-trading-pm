@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-service, features-service, market-data-processing-service, market-tick-data-service, system-integration-tests, unified-trading-library]
+repos:
+  [
+    deployment-service,
+    features-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    system-integration-tests,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -125,7 +133,7 @@ in incrementally.
       tests + 16 existing). Full QG sweep skipped this session (touched 3 files in 2 functions; no public API surface
       breakage, opt-in default-off behavior). Full `scripts/quality-gates.sh` can run on next QG-sweep cycle.
 - [x] [UTL] P2. Codex SSOT update: added "Read path fail-fast on stale-fallback (2026-05-28 opt-in)" subsection to
-      `codex/02-data/availability-manifest-and-data-status.md` with the 2-layer table (shell preflight + Python
+      `/codex/02-data/availability-manifest-and-data-status.md` with the 2-layer table (shell preflight + Python
       fail-fast) and SHAs (`7add531` + `cb1f4b5f`).
 
 ## Consumer audit (read_availability_index callers — workspace-wide)
@@ -192,11 +200,11 @@ shipped is retained as the read-side enforcement of that contract):
       freshness and fails fast with "consolidator down for bucket X, last heartbeat T + remediation" BEFORE a job trusts
       the index. Replaces each caller spinning its own shell preflight (`deployment-service@7add531` becomes a thin
       wrapper over this). Composes with the per-group consolidation-health audit checks added 2026-06-01.
-- [x] ✅ [DOC] P2. SHIPPED (`codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health" + cross-link
-      in `codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast"). Codex SSOT: document the
+- [x] ✅ [DOC] P2. SHIPPED (`/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health" + cross-link
+      in `/codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast"). Codex SSOT: document the
       liveness contract (heartbeat-every-cycle + watchdog + loud-fail-default + preflight gate) in
-      `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health" and cross-link from
-      `codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast".
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health" and cross-link from
+      `/codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast".
 
 ## Success criteria
 
@@ -213,7 +221,7 @@ shipped is retained as the read-side enforcement of that contract):
 
 ## Codex SSOT updates
 
-- `codex/02-data/availability-manifest-and-data-status.md` — append a "Read path fail-fast" subsection naming the env
+- `/codex/02-data/availability-manifest-and-data-status.md` — append a "Read path fail-fast" subsection naming the env
   var + exception + when to enable.
 
 ## Rollout

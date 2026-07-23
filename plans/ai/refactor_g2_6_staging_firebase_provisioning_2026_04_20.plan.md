@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.6
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.6
   - plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md (folded)
   - plans/active/five_space_ia_execution_child_plan_2026_04_17.md ticket #12 (folded)
   - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
@@ -70,16 +70,16 @@ wired through unified-trading-system-ui (which now hosts the former user-managem
 - **Downstream Wave G2-β:** G2.2 (API keys — needs real Firebase user accounts), G2.7 (demo provisioning)
 - **Folded plans:** `deployment_topology_and_client_isolation_2026_04_17.plan.md` §3 (Firebase section),
   `five_space_ia_execution_child_plan_2026_04_17.md` ticket #12 (staging Firebase)
-- **Codex:** `codex/05-infrastructure/runtime-tiers-and-deployment.md`, `codex/14-playbooks/authentication/`
+- **Codex:** `/codex/05-infrastructure/runtime-tiers-and-deployment.md`, `codex/14-playbooks/authentication/`
 - **Deployment-service:** will receive Firestore security rules in a follow-up commit (not this wave's scope)
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.6
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.6
 2. `plans/active/deployment_topology_and_client_isolation_2026_04_17.plan.md` — full
 3. `plans/active/five_space_ia_execution_child_plan_2026_04_17.md` — ticket #12 section
 4. `codex/14-playbooks/authentication/` — all auth playbook docs
-5. `codex/05-infrastructure/runtime-tiers-and-deployment.md`
+5. `/codex/05-infrastructure/runtime-tiers-and-deployment.md`
 6. `unified-trading-system-ui/lib/admin/firebase.ts` + `lib/auth/firebase-config.ts` + `lib/auth/firebase-provider.ts` —
    current prod-only bootstrap (post-fold SSOT)
 7. `unified-trading-system-ui/lib/firebase.ts` (or equivalent config)
@@ -226,8 +226,7 @@ provider-agnostic. Smoke-tested across 6 personas (Desmond + Patrick paired togg
 demo-signals-client, demo-im-reports-only).
 
 SSOT cross-ref:
-[`../../codex/08-workflows/environment-mode-philosophy.md`](../../codex/08-workflows/environment-mode-philosophy.md)
-§Axis 2.
+[`/codex/08-workflows/environment-mode-philosophy.md`](/codex/08-workflows/environment-mode-philosophy.md) §Axis 2.
 
 ## Status update 2026-05-01 — Audit-on-merge gate executed (PRE-Phase-B-E baseline)
 

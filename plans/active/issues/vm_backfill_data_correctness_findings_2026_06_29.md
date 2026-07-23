@@ -15,9 +15,9 @@ tags: [backfill, data-quality, footystats, aster, fx, curve, bybit, lending, hon
 related:
   [
     market-tick-data-service/issues/DEFI-ASTER-LOG-REVIEW.md,
-    codex/02-data/data-pipeline-correctness-hard-rule.md,
-    codex/02-data/honest-absence-downstream-handling.md,
-    codex/09-strategy/mvp-universe-per-asset-group.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/09-strategy/mvp-universe-per-asset-group.md,
   ]
 created: 2026-06-29
 parent_epic: infrastructure_master
@@ -46,7 +46,7 @@ work-product check (run.log content, not just heartbeat/CPU) surfaced that sever
 heartbeating but producing invalid or empty data**. The supervising orchestrator agent only checks liveness, so these
 passed unnoticed.
 
-Per `codex/02-data/data-pipeline-correctness-hard-rule.md`, these freeze downstream feature/backtest work for the
+Per `/codex/02-data/data-pipeline-correctness-hard-rule.md`, these freeze downstream feature/backtest work for the
 affected streams (foundation-completion-gate). Evidence = per-VM `run.log` under
 `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`, sampled 2026-06-29 ~11:38 UTC.
 

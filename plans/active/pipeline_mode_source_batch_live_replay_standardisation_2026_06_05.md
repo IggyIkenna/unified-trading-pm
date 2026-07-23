@@ -733,7 +733,7 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
 
   Cycle note: `modes_for` lazy-imports the static `CAPABILITY_DECLARATIONS` (registry↔crosscutting would cycle at module
   level). **No downstream consumer of `could_exist` yet** (it is brand-new M3) → no per-data_type-assumption breakage.
-  Codex aligned (target→LANDED): `codex/02-data/pipeline-mode-partition.md` +
+  Codex aligned (target→LANDED): `/codex/02-data/pipeline-mode-partition.md` +
   `pipeline-mode-and-batch-live-reconciliation.md`. UAC QG green (`--no-fix`); `Quickmerge: agent` trailer; landed on
   LDR, ancestor-verified; Tier-C drain promotes LDR→staging ≤30min, v2-gated. Shipped via a throwaway worktree off
   `origin/live-defi-rollout` because the slot PM clone carried a live coordinator session's uncommitted plan WIP (3
@@ -879,13 +879,13 @@ WAVE D: GATE-0 SIT (system-integration-tests) — legs 1-2 early skip-marked; fi
       stall fleet-wide.
 
       Fix: in the SIT-readiness precondition, when a repo is FAILING but has NO quality-gates-v2 run for its current
-                                  LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror
-                                  `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml` +
-                                  the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).
-                                  Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not
-                                  `pipeline_mode` — belongs to `cicd_retire_staging_branch_2026_06_27`
-                                  / cicd-hardening; tracked here only because it surfaced during GATE-0. Migrate to the cicd plan on next cicd
-                                  touch.
+                                                                                                                                                  LDR HEAD, re-dispatch v2 on its LDR HEAD (refresh) instead of hard-blocking (mirror
+                                                                                                                                                  `ldr-to-staging-promote.yml`s tick-10 self-heal). Repo: unified-trading-pm (`.github/workflows/sit-gate.yml` +
+                                                                                                                                                  the precondition script that prints "not all pending repos SIT-ready"). Provenance: GATE-0 tick-11 (the FA jam).
+                                                                                                                                                  Parent: this plan / cicd hardening. **SCOPE NOTE (consolidation 2026-06-30)**: this is CICD-infra scope, not
+                                                                                                                                                  `pipeline_mode` — belongs to `cicd_retire_staging_branch_2026_06_27`
+                                                                                                                                                  / cicd-hardening; tracked here only because it surfaced during GATE-0. Migrate to the cicd plan on next cicd
+                                                                                                                                                  touch.
 
 - **2026-06-17 (tick 12) — BLRS fix reached LDR+staging but NOT main; root cause = bug-#11 stale `staging_commits`
   pointer (systemic).** Operator Q: "did it get to main?" Measured answer: NO — fix on LDR✅ staging✅ main✗

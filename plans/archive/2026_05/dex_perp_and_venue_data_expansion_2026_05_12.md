@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-12'
+created: "2026-05-12"
 ---
 
 > **ARCHIVED 2026-05-21** — 100% complete (34 done items, 0 open). All 6 phases shipped: UAC registry + MTDS adapters +
@@ -240,7 +248,7 @@ feature available to downstream strategy-service consumers.
 ### 4A: Archetype doc update (PARALLEL with 4B)
 
 - [x] [DOC] P1. **Update `carry-staked-basis.md` archetype doc.** ✅ **VERIFIED-DONE 2026-05-16 (slot-3)**: doc already
-      contains the requested content (`codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` lines
+      contains the requested content (`/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` lines
       115-118): DRIFT (JitoSOL 10% haircut, mSOL 10% haircut) + DERIBIT (stETH 7.5% haircut) + BYBIT UTA
       (stETH+METH+USDe) + OKX (wstETH "**pending live API verification, not yet confirmed**") all present in LST-margin
       venue table. Binance correctly absent. Effective-slot-count footer (line 125) cross-refs ~7 slots post-Stream A
@@ -255,12 +263,12 @@ feature available to downstream strategy-service consumers.
       endpoint / timestamp report; `--json` for machine-readable.
 
       ```yaml
-      execution:
-        owner: operator tab (one-shot)
-        cadence: one-shot
-        verifier: script exits 0, prints confirmed/rejected/needs-auth per venue
-        last_executed: NEVER
-      ```
+                                                                                                                      execution:
+                                                                                                                        owner: operator tab (one-shot)
+                                                                                                                        cadence: one-shot
+                                                                                                                        verifier: script exits 0, prints confirmed/rejected/needs-auth per venue
+                                                                                                                        last_executed: NEVER
+                                                                                                                      ```
 
 ### 4C: Graph Studio / Uniswap subgraph research (PARALLEL with 4A/4B)
 

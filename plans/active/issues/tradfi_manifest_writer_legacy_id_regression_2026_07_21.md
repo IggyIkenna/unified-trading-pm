@@ -57,7 +57,7 @@ VMs, part of this session's MVP backfill drive).
 `NASDAQ:EQUITY:AAPL-USD.parquet`, GCS creation time `2026-07-21T00:55Z` (written by today's active backfill). So **the
 same writer, same capture event, produces a canonical file path but a non-canonical manifest row** — two code paths for
 one event are out of sync, violating the shard-atom-identity invariant (path / manifest / content must agree —
-`codex/02-data/availability-manifest-and-data-status.md`).
+`/codex/02-data/availability-manifest-and-data-status.md`).
 
 ## Why this matters more than a normal migration gap
 

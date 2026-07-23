@@ -26,7 +26,7 @@ tags: [sports, dependency-order, dead-code, api-football, fixtures, data-correct
 related:
   [
     ../sports_data_sources_canonical_completion_2026_07_13.md,
-    api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md,
+    /plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md,
   ]
 created: 2026-07-15
 parent_epic: infrastructure_master

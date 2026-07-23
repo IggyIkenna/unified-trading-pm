@@ -48,7 +48,7 @@ Fixing sports cutover **T6.10** (the broken `fast-t1-recon` job) surfaced this. 
    the job module comment as _"Sports odds, Prediction, TradFi"_.
 3. Baking `--asset-group SPORTS PREDICTION TRADFI` (execution `…-lx64t`) then failed with:
    `ValueError: --source databento|massive is REQUIRED for a TradFi OHLCV download (no SOURCE_PRIORITY[0] default — the stamp must reflect the ACTUAL fetcher's vendor)`.
-   SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+   SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md`.
 4. `--source` is a **single per-invocation vendor value**. Any value chosen for the TradFi leg would MIS-STAMP the
    sports/prediction legs sharing the invocation. ⇒ **TradFi cannot share this job.** T6.10 was fixed by dropping
    TradFi: `--asset-group SPORTS PREDICTION` (execution `…-vs2bd` succeededCount=1). `deployment-service@cf49de42`.

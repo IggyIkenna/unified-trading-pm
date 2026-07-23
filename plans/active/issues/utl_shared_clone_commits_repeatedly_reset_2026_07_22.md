@@ -24,9 +24,9 @@ scope: [engineer, admin]
 tags: [git-safety, data-loss, shared-clone, multi-agent-safety, reset, reflog, slot-cron-ff-pull]
 related:
   [
-    ../../codex/05-infrastructure/per-tab-worktrees.md,
-    ../../codex/08-workflows/ci-cd-flow.md,
-    data_pipeline_reconciliation_skill_2026_07_20.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
   ]
 created: 2026-07-22
 last_updated: 2026-07-22

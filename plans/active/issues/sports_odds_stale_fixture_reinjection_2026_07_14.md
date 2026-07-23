@@ -34,7 +34,7 @@ related:
   [
     plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/sports_features_readiness_for_predictions_2026_06_20.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-14
 parent_epic: sports_master

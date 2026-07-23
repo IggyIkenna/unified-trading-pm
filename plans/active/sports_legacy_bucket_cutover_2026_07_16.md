@@ -24,8 +24,8 @@ scope: [engineer, admin]
 tags: [migration, bucket-canonicalisation, cutover, gcs, terraform, manifest, sports, destructive]
 related:
   [
-    sports_manifest_canonicalisation_2026_06_01.md,
-    sports_data_sources_canonical_completion_2026_07_13.md,
+    /plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md,
     ../epics/sports_master.md,
   ]
 created: 2026-07-16
@@ -68,20 +68,20 @@ everything so sports is in canonical buckets and paths."_
 
 ## Codex SSOTs (read before executing the phase that cites them)
 
-| SSOT                                                           | Governs                                                          |
-| -------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `codex/02-data/sports-gcs-path-ssot.md`                        | Canonical sports path shape; `candidate_parquet_paths()`         |
-| `codex/02-data/pipeline-mode-partition.md`                     | `{mode}_{source}` segment placement; readers PREFIX-MATCH        |
-| `codex/02-data/availability-manifest-and-data-status.md`       | 4-state `capture_status`; per-VM shards; consolidator contract   |
-| `codex/02-data/honest-absence-downstream-handling.md`          | Phantom vs real absence; never fake `record_captured`            |
-| `codex/02-data/data-pipeline-correctness-hard-rule.md`         | Audit issues fixed in FULL; RED freezes layer N+1                |
-| `codex/02-data/bucket-naming-and-config.md`                    | `resolve_bucket_name()` is the only name producer                |
-| `codex/02-data/sports-data-source-coverage-matrix.md`          | `ODDS` writer is footystats only — no api_football odds path     |
-| `codex/05-infrastructure/gcs-object-operations.md`             | UTL `gcs_copy_object`/`gcs_delete_object` — never `gsutil`       |
-| `codex/05-infrastructure/manifest-consolidator-ssot.md`        | Consolidator is Cloud Run; loud-fails on stale index             |
-| `codex/05-infrastructure/vm-launcher-runbook.md`               | Registered launchers; `VM_PREFIX_TO_BUCKET`; pre-migration drain |
-| `codex/05-infrastructure/deployment-service-gcp-tofu-state.md` | Terraform state ops; `state rm` vs `destroy`                     |
-| `codex/06-coding-standards/script-homes.md`                    | One-off lifecycle markers; delete-after-prod-run                 |
+| SSOT                                                            | Governs                                                          |
+| --------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `/codex/02-data/sports-gcs-path-ssot.md`                        | Canonical sports path shape; `candidate_parquet_paths()`         |
+| `/codex/02-data/pipeline-mode-partition.md`                     | `{mode}_{source}` segment placement; readers PREFIX-MATCH        |
+| `/codex/02-data/availability-manifest-and-data-status.md`       | 4-state `capture_status`; per-VM shards; consolidator contract   |
+| `/codex/02-data/honest-absence-downstream-handling.md`          | Phantom vs real absence; never fake `record_captured`            |
+| `/codex/02-data/data-pipeline-correctness-hard-rule.md`         | Audit issues fixed in FULL; RED freezes layer N+1                |
+| `/codex/02-data/bucket-naming-and-config.md`                    | `resolve_bucket_name()` is the only name producer                |
+| `/codex/02-data/sports-data-source-coverage-matrix.md`          | `ODDS` writer is footystats only — no api_football odds path     |
+| `/codex/05-infrastructure/gcs-object-operations.md`             | UTL `gcs_copy_object`/`gcs_delete_object` — never `gsutil`       |
+| `/codex/05-infrastructure/manifest-consolidator-ssot.md`        | Consolidator is Cloud Run; loud-fails on stale index             |
+| `/codex/05-infrastructure/vm-launcher-runbook.md`               | Registered launchers; `VM_PREFIX_TO_BUCKET`; pre-migration drain |
+| `/codex/05-infrastructure/deployment-service-gcp-tofu-state.md` | Terraform state ops; `state rm` vs `destroy`                     |
+| `/codex/06-coding-standards/script-homes.md`                    | One-off lifecycle markers; delete-after-prod-run                 |
 
 ---
 
@@ -547,7 +547,7 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       rows**; the real payload is 17 populated columns, all covered by v2 fixtures ALONE. The only v1-only fields are
       pure derivations of canonical fields (logo_url embeds `af_league_id`/`af_home_id`; `slugify(af_home_name)`
       reproduces `team_id` 31/31; `season` '2017-18' renders int `2017`). Delete via UTL `gcs_delete_object` per
-      `codex/05-infrastructure/gcs-object-operations.md`, never `gsutil`. _Gate_:
+      `/codex/05-infrastructure/gcs-object-operations.md`, never `gsutil`. _Gate_:
       `gcloud storage ls gs://instruments-store-sports-central-element-323112/sports_reference_v1_archive/**` → "matched
       no objects"; canonical unchanged (no `sports_reference_v1_archive/` prefix ever appears in `-prd-`). _ABORT_: any
       object's fixture set fails re-verification against canonical → STOP; it was not superseded. **Confirm OR-3
@@ -575,7 +575,7 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       path equality: (1) delete the canonical-only `/pipeline_mode=<x>/` segment, (2) normalise legacy
       `instrument_availability/by-date/day-<D>/` → hive `by_date/day=<D>`. Derive from the UAC SSOT
       `unified_api_contracts/canonical/domain/sports/gcs_paths.py::candidate_parquet_paths()` per
-      `codex/02-data/sports-gcs-path-ssot.md`. **Two traps already found and corrected — do not re-introduce**: (a)
+      `/codex/02-data/sports-gcs-path-ssot.md`. **Two traps already found and corrected — do not re-introduce**: (a)
       `fetched_at_hour=` is a SNAPSHOT dimension, not identity — exact-key matching called 124,267 objects unique;
       latest-wins semantics collapsed 106,758 to superseded (**naive answer was 7× too high**); (b) crc32c-differs ≠
       content-differs (parquet bytes are non-deterministic) and **byte size is NOT a safe row-count proxy** (n=400 test:
@@ -812,7 +812,7 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       index, 0 in any shard). Emit one shard `VM_NAME=sports-legacy-cutover-20260716` with
       `MANIFEST_PER_VM_SHARDS=true`, `record_captured(source=…)` for every moved cell (`source=` is crosscutting and
       REQUIRED), correct source-aware `pipeline_mode`. **Never fake `record_captured` for a cell with no backing
-      object** (`codex/02-data/honest-absence-downstream-handling.md`). _Gate_: shard exists; after the Phase-6
+      object** (`/codex/02-data/honest-absence-downstream-handling.md`). _Gate_: shard exists; after the Phase-6
       consolidator restart it merges and the index gains exactly the moved-cell count. _ABORT_: any row would be written
       with `source=''` or a phantom `instrument_count=0` → STOP; that is the pattern that created the 468 phantom
       residual.
@@ -967,7 +967,7 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       decision #6 on 2026-06-27 (UAC@c75101be, completed @57bcc7c5): _footystats pre-match ODDS = IS reference data,
       stays in IS_; codex agrees (_"keep both in their current homes. NO migration"_). The purge predicate's `source`
       filter is what separates the two (R-10). _Original mechanism_: confirm before purging — (a) **codex**
-      `codex/02-data/sports-data-source-coverage-matrix.md:273-274` _"api_football `/odds` is NOT used by
+      `/codex/02-data/sports-data-source-coverage-matrix.md:273-274` _"api_football `/odds` is NOT used by
       instruments-service … there is no api_football odds path"_; `:312` _"data_type=ODDS writer is footystats
       `get_fixture_odds_snapshot()` only"_. (b) **code** (grep-then-READ): `api_football.py:649-655` `get_odds()`
       docstring _"API Football does not provide odds data."_; `footystats.py:322-328` _"FootyStats does not provide odds
@@ -1482,7 +1482,7 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       `…-cefi-t1-recon`, `…-fast-t1-recon` and the 11 `…-mtds-collect-*` DeFi jobs — nothing source-scoped for TradFi.
       `fast-t1-recon` was the only job nominally covering TradFi and it has **never** succeeded, so TradFi T+1 needs its
       own `--source=databento` (CFE/CME-1s) and/or `--source=massive` (equities/CME-1m) job(s). SSOT:
-      `codex/02-data/tradfi-databento-sourcing-ssot.md`. _Original mechanism_: the job's baked args are
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md`. _Original mechanism_: the job's baked args are
       `[--operation download --mode batch]` with **no `--asset-group`**, and the resolver has no flat fallback → every
       execution dies with `ValueError: asset_group is required for tick-data bucket resolution` and collects 0 results
       (`failedCount=1` on 07-16 06:09Z / 02:55Z / 02:50Z; reproduced exactly by a local `--dry-run`). Its scheduler
@@ -1492,9 +1492,9 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       (it fails closed, writes nothing, touches no legacy bucket — T4.5 proved this), so it is a correctness/noise bug,
       not a data risk. _Gate_: the daily execution exits 0, or the job is gone. _ABORT_: none.
 - [ ] [REVIEW] P1. **T6.7 — Post-phase codex audit (HARD RULE).** _Mechanism_: update
-      `codex/02-data/sports-gcs-path-ssot.md` (legacy shape is now GONE — no reader should special-case it),
-      `codex/02-data/bucket-naming-and-config.md` (the last no-env Group-A twin is retired),
-      `codex/05-infrastructure/manifest-consolidator-ssot.md` (legacy consolidator entries permanently removed);
+      `/codex/02-data/sports-gcs-path-ssot.md` (legacy shape is now GONE — no reader should special-case it),
+      `/codex/02-data/bucket-naming-and-config.md` (the last no-env Group-A twin is retired),
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` (legacy consolidator entries permanently removed);
       SUPERSEDED-banner anything the cutover invalidated. _Gate_: every codex path named here is either updated or
       explicitly confirmed unaffected. _ABORT_: none (review-blocking if skipped).
 - [ ] [INFRA] P2. **T6.8 — Retire the one-offs + the dead knob + the false-progress tick.** _Mechanism_: per each file's
@@ -1774,7 +1774,7 @@ unaffected — it has its own completed disposition.)
 >   days — **22 are exactly the gap days above**. Two methods, one answer.
 > - **🔴 NEW BIG FINDING — the migrated population is MIS-STAMPED and INVISIBLE to MDPS.** All **16,969** are
 >   `venue=ODDS_API` + `data_type=odds` yet **100% stamped `pipeline_mode=batch_footystats`** — **zero are footystats
->   data** (violates `{mode}_{source}`, `codex/02-data/pipeline-mode-partition.md`). `reprocess_sports_odds.py` lists
+>   data** (violates `{mode}_{source}`, `/codex/02-data/pipeline-mode-partition.md`). `reprocess_sports_odds.py` lists
 >   only `batch_odds_api`/`live_odds_api` and excludes `_migrated_`, so it reads the **de-duplicated** half (5,626 rows
 >   on 2022-04-16) and never the **full-horizon** half (79,773 rows). **That — not a truncated canonical, and not a
 >   missing legacy recovery — is why the features recompute starves and why `--force` deletes horizons.** The blocked
@@ -2627,7 +2627,7 @@ Completeness PROVEN, not assumed: both legacy buckets reproduce the audited grou
 pre-freeze); market-data-tick 491,576 == 491,576 (delta +0).
 
 _Snapshot (`~/tmp-cutover/snapshot.py`, UTL `gcs_copy_object` server-side per
-`codex/05-infrastructure/gcs-object-operations.md`, never gsutil)_: TS `20260716-080453`. **19 control-plane backups, 0
+`/codex/05-infrastructure/gcs-object-operations.md`, never gsutil)_: TS `20260716-080453`. **19 control-plane backups, 0
 failures, every backup crc32c-verified == source** (re-read proof). Per bucket:
 
 - `instruments-store-sports` (legacy): `_index/availability_index.parquet` (38,763,246 B, crc +4T7mg==),

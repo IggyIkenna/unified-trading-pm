@@ -59,13 +59,13 @@ tags:
   ]
 related:
   [
-    tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md,
-    tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md,
+    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/archive/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md,
+    /plans/archive/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md,
     ../../archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
     ../../archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
     ../data_pipeline_alerts_batch_remediation_2026_07_15.md,
-    ../../../codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: 2026-07-23
 parent_epic: tradfi_master
@@ -178,8 +178,8 @@ A 2026-07-07 snapshot (`tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_
 / 81,220). The population has shrunk only modestly (**-1.3%** ohlcv_1s, **-11.3%** ohlcv_1m) — some cells are being
 resolved (via real backfill retries or CF-11 further narrowing), but the large majority remains outstanding. This is the
 genuine, currently-open, MVP-scoped data completeness gap (CME/NASDAQ/NYSE ohlcv_1s/1m are the Databento-first,
-actively-relied-on TradFi OHLCV backbone per `codex/02-data/tradfi-databento-sourcing-ssot.md`) — not stale residue, and
-not a classification bug. **Filed P1 per this investigation's own instructions: a real gap in core trading data.**
+actively-relied-on TradFi OHLCV backbone per `/codex/02-data/tradfi-databento-sourcing-ssot.md`) — not stale residue,
+and not a classification bug. **Filed P1 per this investigation's own instructions: a real gap in core trading data.**
 
 ## Finding 2 — `ohlcv_15m`: 100% dead CBOE residue, already diagnosed, deliberately deferred (not new)
 

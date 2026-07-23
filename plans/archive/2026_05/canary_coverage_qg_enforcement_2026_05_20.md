@@ -9,8 +9,13 @@ stage: [meta]
 repos: [e2e-testing, execution-service, features-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [defunct_uac_provider_dirs_cleanup_2026_05_20.md, kalshi_api_migration_to_elections_subdomain_2026_05_20.md, mega_audit_and_plan_beefup_progression_2026_05_20.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/archive/2026_05/defunct_uac_provider_dirs_cleanup_2026_05_20.md,
+    /plans/archive/2026_05/kalshi_api_migration_to_elections_subdomain_2026_05_20.md,
+    /plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md,
+  ]
+created: "2026-05-20"
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P0
@@ -18,12 +23,40 @@ target_slot: multi-slot-fanout
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
-deadline_change_reason: 'Operator pulled deadline 2026-05-20 from June-4 to May-23: 140 prod blind spots are inside live-DeFi cutover gate per Data Pipeline Correctness HARD RULE. Heavy slot fan-out required (~7 cal AI-days into 3 cal days = ~2.3x parallelism).'
-slot_allocation: ['slot 1 main (Phase 1: assertions + 3 QG STEPs + canary CI wire-in)', 'slot 2 (Phase 3 DeFi cassettes: Aave/Compound/Spark/Euler/Venus/Curve cluster ~6 protocols)', 'slot 3 (Phase 3 DeFi cassettes: LST cluster Lido/RocketPool/cbETH/JitoSOL/mSOL/Jito/Marinade/Sanctum ~8 protocols)', 'slot 4 (Phase 3 DeFi cassettes: yield/restaking cluster Ethena/Puffer/EtherFi/Pendle/Morpho/Beefy/Yearn/Convex/Karak/Solayer/Solblaze/Cambrian/Symbiotic/Idle/Picasso/Sky ~16 protocols)', 'slot 5 (Phase 3 DEX cassettes: Uniswap/Curve/Balancer/Sushi/PancakeSwap/Phoenix/Orca/Raydium/Drift/Lifinity ~10 venues)', 'slot 6 (Phase 3 CeFi blind + Sports/Execution cassettes: kraken-spot/futures/pacifica/extended + sportsbook scrapers + Copper/Tenderly/Socket/CCTP ~25 cassettes)', slot 7 (Phase 4 WS recorder + 19 WS cassettes via MTDS scripts/record_ws_cassettes.py), slot 8 (Phase 5 orphan decisions + validate_schemas.py WS-handling + Phase 2 STEP wiring)]
-operator_directive: Headline gap from the orphan-check audit should ALL be fixed — no deferrals (per Data Pipeline Correctness HARD RULE).
-no_deferral_scope: ['Every cassette that has zero production consumer: either wire it to a consumer or delete it (no orphans)', 'Every production HTTP/WS host: must have a cassette + entry in capability declarations (no blind spots)', 'Every venue with both batch + live adapters: must have BOTH a batch cassette and a WS cassette', 'Every QG STEP wiring change: must be in scripts/quality-gates.sh (not informational tests)']
+deadline_change_reason:
+  "Operator pulled deadline 2026-05-20 from June-4 to May-23: 140 prod blind spots are inside live-DeFi cutover gate per
+  Data Pipeline Correctness HARD RULE. Heavy slot fan-out required (~7 cal AI-days into 3 cal days = ~2.3x parallelism)."
+slot_allocation:
+  [
+    "slot 1 main (Phase 1: assertions + 3 QG STEPs + canary CI wire-in)",
+    "slot 2 (Phase 3 DeFi cassettes: Aave/Compound/Spark/Euler/Venus/Curve cluster ~6 protocols)",
+    "slot 3 (Phase 3 DeFi cassettes: LST cluster Lido/RocketPool/cbETH/JitoSOL/mSOL/Jito/Marinade/Sanctum ~8 protocols)",
+    "slot 4 (Phase 3 DeFi cassettes: yield/restaking cluster
+    Ethena/Puffer/EtherFi/Pendle/Morpho/Beefy/Yearn/Convex/Karak/Solayer/Solblaze/Cambrian/Symbiotic/Idle/Picasso/Sky
+    ~16 protocols)",
+    "slot 5 (Phase 3 DEX cassettes: Uniswap/Curve/Balancer/Sushi/PancakeSwap/Phoenix/Orca/Raydium/Drift/Lifinity ~10
+    venues)",
+    "slot 6 (Phase 3 CeFi blind + Sports/Execution cassettes: kraken-spot/futures/pacifica/extended + sportsbook
+    scrapers + Copper/Tenderly/Socket/CCTP ~25 cassettes)",
+    slot 7 (Phase 4 WS recorder + 19 WS cassettes via MTDS scripts/record_ws_cassettes.py),
+    slot 8 (Phase 5 orphan decisions + validate_schemas.py WS-handling + Phase 2 STEP wiring),
+  ]
+operator_directive:
+  Headline gap from the orphan-check audit should ALL be fixed — no deferrals (per Data Pipeline Correctness HARD RULE).
+no_deferral_scope:
+  [
+    "Every cassette that has zero production consumer: either wire it to a consumer or delete it (no orphans)",
+    "Every production HTTP/WS host: must have a cassette + entry in capability declarations (no blind spots)",
+    "Every venue with both batch + live adapters: must have BOTH a batch cassette and a WS cassette",
+    "Every QG STEP wiring change: must be in scripts/quality-gates.sh (not informational tests)",
+  ]
 parent_epic: data_correctness
-codex_ssots: [codex/06-coding-standards/quality-gates.md, codex/02-data/contracts-scope-and-layout.md, codex/02-data/data-pipeline-correctness-hard-rule.md]
+codex_ssots:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/02-data/contracts-scope-and-layout.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+  ]
 ---
 
 ## Operator directive (2026-05-20)

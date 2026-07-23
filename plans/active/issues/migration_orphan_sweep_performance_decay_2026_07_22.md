@@ -21,9 +21,9 @@ scope: [engineer]
 tags: [orphan-sweep, performance, algorithmic-complexity, gcs, vm, migration-orphan-sweep, stall]
 related:
   [
-    estate_orphan_assessment_2026_07_21.md,
-    ../../codex/02-data/orphan-object-detection.md,
-    ../../codex/02-data/reconciliation-census-and-compute-tiers.md,
+    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
+    /codex/02-data/orphan-object-detection.md,
+    /codex/02-data/reconciliation-census-and-compute-tiers.md,
   ]
 created: 2026-07-22
 last_updated: 2026-07-22

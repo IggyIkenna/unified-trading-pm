@@ -28,9 +28,9 @@ related:
     plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
     plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
     plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/honest-coverage-model.md,
-    sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-14
@@ -124,7 +124,7 @@ that data exists independently of this catalog; it just isn't rolled up into cat
 Building a correct fixture/team/player-grain catalog is not a small patch — per the builder's own reasoning, it requires
 the sports MANIFEST to also track presence at fixture/team/player grain (not just league grain) before a fixture-grain
 "could-exist" catalogue can be seeded without inflating `expected_unattempted`. That is itself a manifest-schema-level
-change with cross-cutting implications for `codex/02-data/availability-manifest-and-data-status.md` and the
+change with cross-cutting implications for `/codex/02-data/availability-manifest-and-data-status.md` and the
 honest-coverage denominator math, not a same-file fix.
 
 ## Todos
@@ -159,14 +159,14 @@ honest-coverage denominator math, not a same-file fix.
       (FIXTURE-GRAIN WANTED; league-grain is NOT the permanent scope). Not executed — kept for the record, do not
       revive.**
 - [ ] [REVIEW] P3. Post-decision codex alignment check: if the manifest/catalog grain changes,
-      `codex/02-data/availability-manifest-and-data-status.md` and `codex/02-data/honest-coverage-model.md` need a
+      `/codex/02-data/availability-manifest-and-data-status.md` and `/codex/02-data/honest-coverage-model.md` need a
       corresponding update (this is the HARD RULE "post-phase codex audit" — do not skip it if this plan's scope changes
       those contracts).
 
 ## Codex SSOTs
 
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, honest-coverage denominator.
-- `codex/02-data/honest-coverage-model.md` — two-layer / two-view / instrument-gates-download model this plan's
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, honest-coverage denominator.
+- `/codex/02-data/honest-coverage-model.md` — two-layer / two-view / instrument-gates-download model this plan's
   fixture-grain option would need to fit into, not bypass.
 
 ## Progress Log

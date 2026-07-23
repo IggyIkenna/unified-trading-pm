@@ -24,7 +24,7 @@ stage: [strategy]
 repos: [unified-trading-system-ui, unified-api-contracts, unified-trading-pm]
 scope: [engineer]
 tags: [archetype, capability-registry, ui-sync, typescript, rename, cross-repo-drift, coverage-ts]
-related: [archetype_venue_universe_cefi_vs_registry_no_cefi_cells_2026_06_30.md]
+related: [/plans/archive/issues/archetype_venue_universe_cefi_vs_registry_no_cefi_cells_2026_06_30.md]
 created: 2026-07-10
 parent_epic: strategy_master
 priority: P2

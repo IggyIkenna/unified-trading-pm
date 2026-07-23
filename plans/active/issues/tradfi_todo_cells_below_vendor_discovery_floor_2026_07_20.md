@@ -102,11 +102,11 @@ counts in the denominator as expected-absent rather than as outstanding work.
 
 ## Constraint on the fix
 
-Per `codex/02-data/availability-manifest-and-data-status.md`, `expected_unattempted` is **materialised by the WRITER and
-never re-derived** by readers. So the fix is a writer-side materialisation pass plus the enumerator learning the floor —
-NOT a filter bolted onto the aggregator or the UI. A reader-side "just hide pre-floor cells" patch would violate the
-shard-atom-identical-across-writer/manifest/status/gate/UI rule and would drift the moment another consumer reads the
-manifest directly.
+Per `/codex/02-data/availability-manifest-and-data-status.md`, `expected_unattempted` is **materialised by the WRITER
+and never re-derived** by readers. So the fix is a writer-side materialisation pass plus the enumerator learning the
+floor — NOT a filter bolted onto the aggregator or the UI. A reader-side "just hide pre-floor cells" patch would violate
+the shard-atom-identical-across-writer/manifest/status/gate/UI rule and would drift the moment another consumer reads
+the manifest directly.
 
 The floor must be read from UAC at runtime, never hardcoded per-venue — the launcher clamp already had to supersede
 exactly such ad-hoc per-wrapper hardcodes.
@@ -130,8 +130,8 @@ exactly such ad-hoc per-wrapper hardcodes.
 
 ## Codex SSOTs
 
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`; `expected_unattempted` is
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`; `expected_unattempted` is
   materialised by the WRITER, never re-derived.
-- `codex/02-data/honest-coverage-model.md` — the two-layer coverage denominator this reclass corrects.
-- `codex/02-data/tradfi-databento-sourcing-ssot.md` — § "Per-venue genesis / discovery-start floors".
-- `codex/05-infrastructure/vm-launcher-runbook.md` — the launcher-side clamp this makes the denominator agree with.
+- `/codex/02-data/honest-coverage-model.md` — the two-layer coverage denominator this reclass corrects.
+- `/codex/02-data/tradfi-databento-sourcing-ssot.md` — § "Per-venue genesis / discovery-start floors".
+- `/codex/05-infrastructure/vm-launcher-runbook.md` — the launcher-side clamp this makes the denominator agree with.

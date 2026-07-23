@@ -70,7 +70,7 @@ orchestrator collision risk and keep Stage 2's doc-only scope intact where possi
 3. All 10 files in `codex/14-playbooks/_ssot-rules/`
 4. Stage 2 outputs already shipped: `experience/`, `shared-core/`, `commercial-model/`, `demo-ops/`,
    `implementation-mapping/`
-5. `codex/09-strategy/architecture-v2/category-instrument-coverage.md` +
+5. `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` +
    `cross-cutting/strategy-availability-and-locking.md`
 6. `unified-trading-system-ui/lib/auth/personas.ts` (current persona fixtures)
 7. `unified-trading-system-ui/lib/architecture-v2/availability.ts` (current catalogue state model)
@@ -133,9 +133,10 @@ orchestrator drift.
       on CME, VOL_TRADING_OPTIONS × NSE options India (delta-trading mode), ML_DIRECTIONAL_EVENT_SETTLED × specific
       sports fixtures. Note BTC FoF is external (not in catalogue).
 - [ ] [AGENT] P0. Create `commercial-model/im-profit-share-structures.md` — all IM mechanics: standard 30-35%
-      perf-share, platform-fee choice (A: +5% perf | B: $500/mo flat) at mandate signing, CME co-invest asymmetric (70%
-      profits / 10% losses), India Options 30-35% with $100k onboarding, mean-rev migration path, BTC FoF wrapper
-      (external, non-system).
+      perf-share, platform-fee choice (A: +5% perf | B:
+      $500/mo flat) at mandate signing, CME co-invest asymmetric (70%
+      profits / 10% losses), India Options 30-35% with $100k
+      onboarding, mean-rev migration path, BTC FoF wrapper (external, non-system).
 - [ ] [AGENT] P1. Create `commercial-model/signal-leasing.md` — pricing model placeholder; document monthly-licence vs
       per-signal vs rev-share options; mark pending user answer.
 - [ ] [AGENT] P0. Create `commercial-model/revenue-projection-2026-monthly.md` (codex-private internal) — the monthly
@@ -205,12 +206,12 @@ persona/entitlement additions if needed.
 
 ## Phase 4 — Architecture-v2 strategy docs sync (doc-only)
 
-- [ ] [AGENT] P0. Update `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — add a "Current Odum
+- [ ] [AGENT] P0. Update `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` — add a "Current Odum
       Allocation" column or inline annotation on each cell indicating lock_state (IM_RESERVED / PUBLIC). Match the Stage
       2 allocation-lock-matrix exactly.
-- [ ] [AGENT] P0. Update `codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md` — add a
+- [ ] [AGENT] P0. Update `/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md` — add a
       "Current Lock State Snapshot" section dated 2026-04-20 with the same concrete cell list, cross-linked to
-      `codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`.
+      `/codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`.
 - [ ] [AGENT] P0. **Phase 4 success gate**: codex strategy docs and playbook SSOT agree on which cells are IM_RESERVED;
       single snapshot date; no divergent wording.
 
@@ -222,8 +223,10 @@ component changes.
 ### 5A. Plan presentation (path-to-100M)
 
 - [ ] [AGENT] P0. Update `plan-presentation/data.ts` slide 3 (trajectory) — refresh end-2026 / end-2027 / end-2028 AUM +
-      deal-pipeline descriptors to reconcile against the concrete strategy × client mix (Elysium $200-230k upsold, BTC
-      ML 10 clients, CME co-invest $5M Year-1 target, India Options, Desmond, signal leasing).
+      deal-pipeline descriptors to reconcile against the concrete strategy × client mix (Elysium
+      $200-230k upsold, BTC
+      ML 10 clients, CME co-invest $5M Year-1 target, India Options, Desmond, signal
+      leasing).
 - [ ] [AGENT] P0. Update slide 4 (timeline-matrix `periods` + `strategies`) — replace generic "Options / volatility"
       with distinct rows for India Options (delta trading) and CME S&P ML directional; keep the Q3/Q4 2026 → Q2 2027
       timeline consistent with our deal calendar.
@@ -250,9 +253,9 @@ component changes.
 - [ ] [AGENT] P0. Grep for orphaned or broken doc links: `grep -r "(\.\.\?/\([a-z-]*\))\]" codex/14-playbooks/` — every
       outbound link must resolve.
 - [ ] [AGENT] P0. Verify the allocation-lock-matrix snapshot is cited consistently across:
-      `codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`,
-      `codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`,
-      `codex/09-strategy/architecture-v2/category-instrument-coverage.md`,
+      `/codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`,
+      `/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`,
+      `/codex/09-strategy/architecture-v2/category-instrument-coverage.md`,
       `unified-trading-system-ui/lib/architecture-v2/availability.ts`.
 - [ ] [AGENT] P0. Verify CME asymmetric co-invest structure (70% profits / 10% losses) is consistent across:
       `commercial-model/im-profit-share-structures.md`, `commercial-model/pricing-building-blocks.md`,
@@ -276,7 +279,7 @@ component changes.
 - [ ] [AGENT] P0. Update memory under
       `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/` with a
       project entry summarising the final 2026 run-plan + path-to-$100M deck alignment.
-- [ ] [AGENT] P1. Add follow-up items to `codex/14-playbooks/roadmap/next-waves.md` or equivalent: finance numbers
+- [ ] [AGENT] P1. Add follow-up items to `/codex/14-playbooks/roadmap/next-waves.md` or equivalent: finance numbers
       populate (Odum finance owns), Stage 3B runtime enforcement of lock_state, signal-leasing pricing confirmation, CME
       skin-scaling confirmation, bridge-capital raise.
 
@@ -284,28 +287,28 @@ component changes.
 
 ### New (8)
 
-- `codex/14-playbooks/shared-core/dart-pricing-axes.md`
-- `codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`
-- `codex/14-playbooks/commercial-model/im-profit-share-structures.md`
-- `codex/14-playbooks/commercial-model/signal-leasing.md`
-- `codex/14-playbooks/commercial-model/revenue-projection-2026-monthly.md` (codex-private)
-- `codex/14-playbooks/commercial-model/runway-and-capital-plan.md` (codex-private)
+- `/codex/14-playbooks/shared-core/dart-pricing-axes.md`
+- `/codex/14-playbooks/shared-core/strategy-allocation-lock-matrix.md`
+- `/codex/14-playbooks/commercial-model/im-profit-share-structures.md`
+- `/codex/14-playbooks/commercial-model/signal-leasing.md`
+- `/codex/14-playbooks/commercial-model/revenue-projection-2026-monthly.md` (codex-private)
+- `/codex/14-playbooks/commercial-model/runway-and-capital-plan.md` (codex-private)
 
 ### Updated — docs
 
-- `codex/14-playbooks/commercial-model/pricing-building-blocks.md`
-- `codex/14-playbooks/commercial-model/dart-entry-points.md`
-- `codex/14-playbooks/commercial-model/im-vs-reg-reporting-logic.md`
-- `codex/14-playbooks/commercial-model/exclusivity-and-noncompete.md`
-- `codex/14-playbooks/shared-core/strategy-origin-vs-stack-depth.md`
-- `codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
-- `codex/14-playbooks/shared-core/venue-chain-instrument-scope.md`
-- `codex/14-playbooks/experience/im-decision-journey.md`
-- `codex/14-playbooks/experience/dart-briefing.md`
-- `codex/14-playbooks/experience/dart-demo.md`
-- `codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
-- `codex/09-strategy/architecture-v2/category-instrument-coverage.md`
-- `codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`
+- `/codex/14-playbooks/commercial-model/pricing-building-blocks.md`
+- `/codex/14-playbooks/commercial-model/dart-entry-points.md`
+- `/codex/14-playbooks/commercial-model/im-vs-reg-reporting-logic.md`
+- `/codex/14-playbooks/commercial-model/exclusivity-and-noncompete.md`
+- `/codex/14-playbooks/shared-core/strategy-origin-vs-stack-depth.md`
+- `/codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
+- `/codex/14-playbooks/shared-core/venue-chain-instrument-scope.md`
+- `/codex/14-playbooks/experience/im-decision-journey.md`
+- `/codex/14-playbooks/experience/dart-briefing.md`
+- `/codex/14-playbooks/experience/dart-demo.md`
+- `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
+- `/codex/09-strategy/architecture-v2/category-instrument-coverage.md`
+- `/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`
 
 ### Updated — UI data (minor scope-extend beyond Stage 2 doc-only)
 

@@ -34,7 +34,7 @@ stage: [meta]
 repos: [unified-api-contracts, market-tick-data-service]
 scope: [engineer, admin]
 tags: [sports, shard-enumeration, expected-universe, honest-coverage, data-completeness, manifest, cartesian-blowup]
-related: [aster_capture_broken_coverage_and_completeness_2026_07_20.md]
+related: [/plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md]
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -216,7 +216,7 @@ as missing (invisible gaps).
   ONLY `data_type=odds` (5, 5 and 2 objects respectively) and ZERO `data_type=ODDS` directories, while the manifest
   carries BOTH spellings for those same days (2020-07-21: 6 uppercase + 5 lowercase). So uppercase ODDS is a
   MANIFEST-ONLY PHANTOM with no backing objects; lowercase matches disk. This inverts the practical conclusion:
-  codex/02-data/sports-data-types-catalog.md:32-41 K0-DECISION(b) 2026-07-18 declares UPPER canonical for sports, which
+  /codex/02-data/sports-data-types-catalog.md:32-41 K0-DECISION(b) 2026-07-18 declares UPPER canonical for sports, which
   contradicts the physical estate. The phantom rows should be dropped, not the lowercase ones -- and the K0 decision
   needs operator re-confirmation before any normalizer is re-pointed.
 - REFUTED -- 'written_at differs by ~41 microseconds (ODDS 2026-04-13T02:10:21.383459 vs odds ...383500), proving the
@@ -557,7 +557,7 @@ full writeup)
    the exact failure mode `features-service/scripts/sports/purge_stale_daylevel_failed_rows_2026_07_14.py` hit on its
    first `--apply`.
 3. **Deletion is the wrong instrument for a classification bug** that a two-entry frozenset (3.1) fixes reversibly.
-4. **Prod-bucket deletes are a human-only hard stop** (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md`).
+4. **Prod-bucket deletes are a human-only hard stop** (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`).
 
 Plus: the root cause survives any purge — before Part 1 ships, the enumerator regenerates the rows on the next run.
 
@@ -584,7 +584,7 @@ Both clauses are load-bearing and empirically verified:
 - **The UNION** — computing `LIVE_PAIRS` from the consolidated index alone misclassifies `('ODDS_API','')` as dead and
   would wrongly purge 340 rows that have captured data in `_index/per_vm/_legacy_seed.parquet`.
 - **The `error_reason` filter** — it withholds the 175,246 dead-pair `SOURCE_RETURNED_ZERO` rows, which assert a proven
-  probe under the PROOF-OF-HONEST-ABSENCE hard rule (`codex/02-data/availability-manifest-and-data-status.md:564-581`).
+  probe under the PROOF-OF-HONEST-ABSENCE hard rule (`/codex/02-data/availability-manifest-and-data-status.md:564-581`).
   If that proof is bogus the correct action is `reprobe_new_empty_confirmed.py` → `attempted_failed`, **never** erasing
   the evidence.
 
@@ -647,7 +647,7 @@ K0-DECISION(b), so this is blocked on the operator ruling in 4.3.
 
 ### 3.5 The 1,337 suffixed `odds_horizon_bucket_{15m,1h,4h,1d}` rows
 
-Confirmed DEAD cohort (0 captured, ever) per `codex/02-data/sports-data-types-catalog.md:39-40`, and carrying a genuine
+Confirmed DEAD cohort (0 captured, ever) per `/codex/02-data/sports-data-types-catalog.md:39-40`, and carrying a genuine
 **axis shift**: `instrument_type` holds bookmaker names (`paddypower` 346, `pinnacle` 278, …) while `venue` holds
 `FOOTBALL` — a sport, violating `_sports_prediction_contracts.py:15-16` which requires `venue` = the bookmaker. 0/1337
 rows have `venue == instrument_type`, proving a shift not a duplication. **Action:** low priority, tiny blast radius.
@@ -667,7 +667,7 @@ Present these together; they are coupled.
 - `instruments-service/scripts/measure_honest_coverage.py:600-602` (what `coverage.json` → `HonestCoverageCard.tsx`
   shows): `reachable = captured + attempted_failed + expected_unattempted`, `coverage = captured/reachable` →
   **excludes** `empty_confirmed` entirely.
-- `codex/02-data/honest-coverage-model.md:219-226` sides with the second.
+- `/codex/02-data/honest-coverage-model.md:219-226` sides with the second.
 
 They disagree by ~10pp on sports today and move in opposite directions under every remediation option. **This is a
 cross-repo SSOT contradiction and a data-correctness finding independent of everything else in this plan.** Per the
@@ -676,7 +676,7 @@ row is touched.
 
 **✅ DECIDED (2026-07-22, interactive session)**: adopt the **EXCLUDE-`empty_confirmed`** formula — the
 `instruments-service/scripts/measure_honest_coverage.py` logic, which already matches
-`codex/02-data/honest-coverage-model.md:219-226` — as the **ONE global formula** for `compute_honest_coverage()`. This
+`/codex/02-data/honest-coverage-model.md:219-226` — as the **ONE global formula** for `compute_honest_coverage()`. This
 is **NOT sports-scoped**: it changes UAC's `compute_honest_coverage()` for **every asset group**, not just sports, and
 it moves every asset group's dashboard coverage percentage. **This is a SEPARATE, bigger piece of work** — it needs its
 own careful cross-asset-group impact-measurement pass before it ships. Do **not** touch `_honest_coverage_logic.py`
@@ -724,7 +724,7 @@ same-day measurement. That bucket's `blob.updated` timestamp landed literally se
 evidence an unrelated concurrent process was actively rewriting/consolidating the DEFI manifest index at that exact
 moment, not a real 99.98% data loss. The "legacy" fallback bucket this script also checks
 (`market-data-tick-defi-central-element-323112`) is a confirmed-404, already-migrated-away bucket per
-`codex/05-infrastructure/bucket-isolation-model.md` §11.3 — unrelated, pre-existing, and expected. Both readings give
+`/codex/05-infrastructure/bucket-isolation-model.md` §11.3 — unrelated, pre-existing, and expected. Both readings give
 the SAME ship conclusion (DEFI's delta is negligible either way), so this doesn't change the decision; the true current
 DEFI row count should be re-checked independently of this ship if anyone needs a live number.
 
@@ -769,7 +769,7 @@ and neither ever completed.
 **✅ DECIDED (2026-07-22, interactive session)**: **REVERSE K0-DECISION(b).** Lowercase `odds` is canonical, not
 uppercase `ODDS` — GCS physically holds only lowercase `odds` directories on every sampled day (2020-07-21, 2023-05-10,
 2026-04-14; zero uppercase `ODDS` objects on any of them), so the uppercase manifest rows are a phantom, not the
-lowercase ones. `codex/02-data/sports-data-types-catalog.md` is updated accordingly (2026-07-22): the canonical forms
+lowercase ones. `/codex/02-data/sports-data-types-catalog.md` is updated accordingly (2026-07-22): the canonical forms
 are now `odds`, `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`, `odds_horizon_bucket`, `markets`, `outcomes`,
 `settlements` (lower-case), reversing the 2026-07-19 K0-DECISION(b) banner. The two shipped normalizers now point in the
 CORRECT direction (UPPER→lower) — re-point/complete them rather than reversing them. 3.4's phantom-uppercase-`ODDS`
@@ -920,9 +920,9 @@ Do not spend engineering time on any of these.
 6. **[operator gate 4.2 / 4.3 / 4.4]**
 7. **3.1** (if option A) → **3.3** → **2.4** → **3.4 / 3.5**.
 
-`Codex SSOTs` this plan is written against: `codex/02-data/availability-manifest-and-data-status.md`,
+`Codex SSOTs` this plan is written against: `/codex/02-data/availability-manifest-and-data-status.md`,
 `…/honest-coverage-model.md`, `…/gcs-and-manifest-delete-safety-protocol.md`, `…/sports-data-types-catalog.md`,
-`…/sports-gcs-path-ssot.md`, `codex/04-architecture/shard-level-failure-isolation.md`.
+`…/sports-gcs-path-ssot.md`, `/codex/04-architecture/shard-level-failure-isolation.md`.
 
 ---
 
@@ -953,7 +953,7 @@ without them regardless of how fast (1)-(2) resolve.
 - [x] [DECISION] P0. ✅ **RULED 2026-07-22 (operator, chat, this session) — Human-only.** Who triggers the actual
       sports-manifest prod-bucket write (3.2 purge, and possibly 3.4): the operator (or another human) runs the write
       script by hand after review; no agent executes `--apply` autonomously. Confirms
-      `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s existing hard stop applies here with no
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`'s existing hard stop applies here with no
       agent-with-signoff carve-out — 4.2's "combined A+B" decision is now reconciled against it.
 - [x] [DECISION] P0. ✅ **RE-RULED 2026-07-22 (operator, chat, this session, superseding the same-day earlier answer) —
       1,066,231.** Which population scopes 3.1/3.2's predicate. The operator's first answer to this question was
@@ -1020,7 +1020,7 @@ without them regardless of how fast (1)-(2) resolve.
       deletes** — Google's own docs state soft-delete "preserves objects and buckets that get deleted or overwritten."
       Object Versioning is separately OFF (`gsutil versioning get` → `Suspended`) but isn't needed for this. Restore is
       `gcloud storage restore     gs://BUCKET/OBJECT[#GENERATION]` (generation optional — defaults to latest). This
-      workspace's own `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` never mentions soft-delete/versioning
+      workspace's own `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` never mentions soft-delete/versioning
       at all and does NOT mandate an explicit backup step — its safety model is proof-before-delete (5-part
       verification) + human-only hard stops, not backup-then-restore. **However**, soft-delete would NOT have helped the
       actual precedent incident this section warns about
@@ -1051,14 +1051,14 @@ without them regardless of how fast (1)-(2) resolve.
 
 **2026-07-22** — Operator made 3 scope decisions on Part 4 in a live interactive chat session (recorded here, not
 previously written to any doc): **4.1** — adopt the EXCLUDE-`empty_confirmed` formula (instruments-service's
-`measure_honest_coverage.py`, matching `codex/02-data/honest-coverage-model.md`) as the ONE global
+`measure_honest_coverage.py`, matching `/codex/02-data/honest-coverage-model.md`) as the ONE global
 `compute_honest_coverage()` formula for **every** asset group; this is a SEPARATE, larger piece of work **out of scope
 for this workflow phase**, needing its own cross-asset-group impact-measurement pass before it ships —
 ` _honest_coverage_logic.py` is untouched by this run. **4.2** — BOTH option A (reclassification via the new
 `OUT_OF_COVERAGE_WINDOW_REASONS` codes) AND option B (physical purge) combined: reclassify the dead-pair rows with the
 new reason codes, then also physically purge that same set, rather than either/or. **4.3** — REVERSE K0-DECISION(b):
 lowercase `odds` is canonical, not uppercase `ODDS`, per the physical-estate evidence (zero uppercase `ODDS` objects on
-any of the 3 sampled days). `codex/02-data/sports-data-types-catalog.md` updated same-day to record the reversal
+any of the 3 sampled days). `/codex/02-data/sports-data-types-catalog.md` updated same-day to record the reversal
 (banner + Instrument Type Mapping + all 8 worked examples' `instrument_type` corrected from the non-existent-in-prod
 `sports_market` to `odds`, + the `trades` data_type documented for the first time). **4.4** remains OPEN and unstarted —
 re-verified 2026-07-22 by direct code read that Phase 6d has NOT landed
@@ -1158,7 +1158,7 @@ Spot-checked the pieces most likely to have moved:
   only sports-manifest writes in that window are `mtds@e9d9dec0` (a different, already-tracked wrong-source wipe,
   1,266,874 rows) and `mtds@f9f012cb` (a different, already-tracked phantom `soccer_*` league_id prune). Part 3 remains
   genuinely un-executed, matching the doc's own "Not done (scoping closed, executable pending the human trigger)" state
-  — the human-only prod-bucket-write gate (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) has not been
+  — the human-only prod-bucket-write gate (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) has not been
   exercised for this population.
 - **The open `- [ ]` todos** (restate 3.3's SQL predicate, confirm execution order, confirm 3.4's procedure weight, the
   cross-object-CAS mechanism question, the missing safety tooling) — no evidence any of these were picked up since the

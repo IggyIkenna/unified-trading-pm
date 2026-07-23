@@ -88,8 +88,8 @@ confirm no billing leak.
 4. Reference triage JSONL at `gs://central-element-323112-phantom-triage/triage_tradfi_20260628_020526.jsonl`.
 
 Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` +
-`codex/05-infrastructure/manifest-consolidator-ssot.md` + `codex/02-data/availability-manifest-and-data-status.md` +
-`codex/02-data/tradfi-databento-sourcing-ssot.md` (billing lockdown).
+`/codex/05-infrastructure/manifest-consolidator-ssot.md` + `/codex/02-data/availability-manifest-and-data-status.md` +
+`/codex/02-data/tradfi-databento-sourcing-ssot.md` (billing lockdown).
 
 ## Todos
 

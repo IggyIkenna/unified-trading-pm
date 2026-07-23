@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-19'
+created: "2026-05-19"
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
@@ -138,7 +146,7 @@ Phase 0 (✅ DONE)
       output. 3792 passed, 2 pre-existing unrelated failures. — `unified-trading-library@8d66204`
 - [x] ✅ **P1. Per-service docstring rule**: every service's `/api/data-status` endpoint MUST call this helper, not
       re-implement the manifest read. — PM@b0b1d9915; codex doc at
-      `codex/06-coding-standards/data-status-endpoint-contract.md`; QG STEP 5.90 wired in base-service.sh.
+      `/codex/06-coding-standards/data-status-endpoint-contract.md`; QG STEP 5.90 wired in base-service.sh.
 
 ### Phase 2 — instruments-service migration
 
@@ -203,15 +211,16 @@ Phase 0 (✅ DONE)
 
 ### Phase 7 — Codex docs
 
-- [x] **P0. ✅ Update** `codex/02-data/availability-manifest-and-data-status.md` § "Coverage formula" — stale 4-field
+- [x] **P0. ✅ Update** `/codex/02-data/availability-manifest-and-data-status.md` § "Coverage formula" — stale 4-field
       formula replaced with canonical 5-field `CaptureStatusCounts` + `compute_honest_coverage()` reference + UTL
       helpers pointer. — `PM@d8cc6a4b`
 - [x] **P0. ✅ Add SUPERSEDED banner** to the 3 in-flight plans' inline formula sections:
       `writegate_honest_coverage_endtoend_2026_05_06.md` (prose numerator omits empty_confirmed),
       `data_status_drilldown_shard_atom_alignment_2026_05_07.md` (numerator=captured only),
       `expected_unattempted_propagation_chain_2026_05_12.md` (counting role unspecified). — `PM@d8cc6a4b`
-- [x] **P1. ✅ Update** `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" — callout block added:
-      EXPECTED*\*/non-EXPECTED*\* split required when computing coverage; do NOT roll your own formula. — `PM@d8cc6a4b`
+- [x] **P1. ✅ Update** `/codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" — callout block
+      added: EXPECTED*\*/non-EXPECTED*\* split required when computing coverage; do NOT roll your own formula. —
+      `PM@d8cc6a4b`
 
 ### Phase 8 — verify on real fleet
 
@@ -222,36 +231,36 @@ Phase 0 (✅ DONE)
 
       **Summary per service × asset_group** (manifest row totals + coverage range):
 
-      | service | asset_group | data_types | manifest_rows | min_cov% | max_cov% | cells_w_failed |
-      |---------|-------------|-----------|---------------|---------|---------|----------------|
-      | IS | cefi | 1 | 17,999 | 100% | 100% | 0 |
-      | IS | defi | 1 | 85,326 | 100% | 100% | 0 |
-      | IS | prediction | 16 | 795 | 0% | 100% | 0 |
-      | IS | sports | 25 | 2,619,839 | 0% | 100% | 15 |
-      | IS | tradfi | 1 | 9,265 | 100% | 100% | 0 |
-      | MTDS | cefi | 15 | 2,703,990 | **0%** | 100% | 14 |
-      | MTDS | defi | 24 | 1,862,668 | 96.96% | 100% | 20 |
-      | MTDS | prediction | 3 | 16,822 | 99.51% | 100% | 1 |
-      | MTDS | sports | 25 | 2,619,839 | 0% | 100% | 15 |
-      | MTDS | tradfi | 7 | 321,456 | 86.67% | 100% | 3 |
+                                                                                                                      | service | asset_group | data_types | manifest_rows | min_cov% | max_cov% | cells_w_failed |
+                                                                                                                      |---------|-------------|-----------|---------------|---------|---------|----------------|
+                                                                                                                      | IS | cefi | 1 | 17,999 | 100% | 100% | 0 |
+                                                                                                                      | IS | defi | 1 | 85,326 | 100% | 100% | 0 |
+                                                                                                                      | IS | prediction | 16 | 795 | 0% | 100% | 0 |
+                                                                                                                      | IS | sports | 25 | 2,619,839 | 0% | 100% | 15 |
+                                                                                                                      | IS | tradfi | 1 | 9,265 | 100% | 100% | 0 |
+                                                                                                                      | MTDS | cefi | 15 | 2,703,990 | **0%** | 100% | 14 |
+                                                                                                                      | MTDS | defi | 24 | 1,862,668 | 96.96% | 100% | 20 |
+                                                                                                                      | MTDS | prediction | 3 | 16,822 | 99.51% | 100% | 1 |
+                                                                                                                      | MTDS | sports | 25 | 2,619,839 | 0% | 100% | 15 |
+                                                                                                                      | MTDS | tradfi | 7 | 321,456 | 86.67% | 100% | 3 |
 
-      **Critical findings (attempted_failed > 0)**:
-      - MTDS cefi `book_snapshot_5`: 483,966 failed → **40.1%** coverage ← needs backfill
-      - MTDS cefi `trades`: 437,154 failed → **64.3%** ← needs backfill
-      - MTDS cefi `derivative_ticker`: 196,843 failed → **46.0%** ← needs backfill
-      - MTDS cefi `futures_chain`: 92,459 failed → **12.4%** ← needs backfill
-      - MTDS cefi `perp_funding`: 729 failed, 0 captured → **0%** ← critical
-      - MTDS cefi `options_chain`: 62,655 failed → **4.7%** ← needs backfill
-      - Sports data_types (FIXTURE_STATS/EVENTS/LINEUPS/INJURIES): 17K-19K failed each → 90-93%
+                                                                                                                      **Critical findings (attempted_failed > 0)**:
+                                                                                                                      - MTDS cefi `book_snapshot_5`: 483,966 failed → **40.1%** coverage ← needs backfill
+                                                                                                                      - MTDS cefi `trades`: 437,154 failed → **64.3%** ← needs backfill
+                                                                                                                      - MTDS cefi `derivative_ticker`: 196,843 failed → **46.0%** ← needs backfill
+                                                                                                                      - MTDS cefi `futures_chain`: 92,459 failed → **12.4%** ← needs backfill
+                                                                                                                      - MTDS cefi `perp_funding`: 729 failed, 0 captured → **0%** ← critical
+                                                                                                                      - MTDS cefi `options_chain`: 62,655 failed → **4.7%** ← needs backfill
+                                                                                                                      - Sports data_types (FIXTURE_STATS/EVENTS/LINEUPS/INJURIES): 17K-19K failed each → 90-93%
 
-      **Suspicious (100% with 0 eu_pending_fetch)**: IS cefi/defi/tradfi buckets have no `data_type` column (pure
-      reference catalog rows, not time-series manifest); their 100% is valid. IS prediction data_types (14 cells) are
-      reference catalog (no time-series coverage). DeFi MTDS cells at 100% (`dex_pool_state`, `dex_pool_swaps`,
-      `rate_indices`, `utilization`) are fully backfilled — no issue.
+                                                                                                                      **Suspicious (100% with 0 eu_pending_fetch)**: IS cefi/defi/tradfi buckets have no `data_type` column (pure
+                                                                                                                      reference catalog rows, not time-series manifest); their 100% is valid. IS prediction data_types (14 cells) are
+                                                                                                                      reference catalog (no time-series coverage). DeFi MTDS cells at 100% (`dex_pool_state`, `dex_pool_swaps`,
+                                                                                                                      `rate_indices`, `utilization`) are fully backfilled — no issue.
 
-      **eu_pending_fetch > 0 (DeFi only)**: `dex_swaps` 252, `dex_pools` 234, `staking_yields` 234, `oracle_prices` 126
-      → Tier-3 sentinel propagation not yet complete for these data_types; addressed by
-      `expected_unattempted_validation_pending_phase3_2026_05_19.md`.
+                                                                                                                      **eu_pending_fetch > 0 (DeFi only)**: `dex_swaps` 252, `dex_pools` 234, `staking_yields` 234, `oracle_prices` 126
+                                                                                                                      → Tier-3 sentinel propagation not yet complete for these data_types; addressed by
+                                                                                                                      `expected_unattempted_validation_pending_phase3_2026_05_19.md`.
 
 - [x] ✅ **P0. Master plan update**: add "Path to 99% coverage" row (item 28) to master plan Group D with the
       continuous-verification path = `honest-coverage-ratchet.sh` daily run + this plan's Phase 8 sweep result. NOTE:
@@ -285,9 +294,9 @@ Every consumer of legacy coverage math:
 
 Touched in Phase 7:
 
-- `codex/02-data/availability-manifest-and-data-status.md`
-- `codex/02-data/honest-absence-downstream-handling.md`
-- `codex/06-coding-standards/manifest-skip-semantics.md` (NEW — codifies no-force skip rule)
+- `/codex/02-data/availability-manifest-and-data-status.md`
+- `/codex/02-data/honest-absence-downstream-handling.md`
+- `/codex/06-coding-standards/manifest-skip-semantics.md` (NEW — codifies no-force skip rule)
 
 ## Temporary states + their canonical follow-up plans
 

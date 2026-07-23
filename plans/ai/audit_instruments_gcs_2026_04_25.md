@@ -5,7 +5,7 @@ what is wired, and what needs to change.
 
 ---
 
-## 1. The 5 buckets (SSOT: `codex/02-data/per-category-bucket-layouts.md`)
+## 1. The 5 buckets (SSOT: `/codex/02-data/per-category-bucket-layouts.md`)
 
 | Category   | GCS bucket (prod)                           | Path layout                                                                       |
 | ---------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
@@ -234,7 +234,7 @@ data via a dedicated API route.
 
 ## Cross-references
 
-- Bucket layout SSOT: `codex/02-data/per-category-bucket-layouts.md`
+- Bucket layout SSOT: `/codex/02-data/per-category-bucket-layouts.md`
 - `CanonicalInstrument`: `unified-api-contracts/unified_api_contracts/canonical/domain/reference/__init__.py:59`
 - `InstrumentType` enum: `unified-api-contracts/unified_api_contracts/_instrument_enums.py:17`
 - Backend instrument routes: `unified-trading-api/unified_trading_api/routes/instruments.py`

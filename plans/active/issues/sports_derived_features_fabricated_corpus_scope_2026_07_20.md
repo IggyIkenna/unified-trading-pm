@@ -100,7 +100,7 @@ are _mostly_ clean, not clean.
 1. **Extend the re-run to 2017+2018** — the largest fabricated block, never in scope.
 2. **Purge, don't just overwrite.** After the re-runs, every `derived_features` parquet still carrying a pre-fix
    creation timestamp is fabricated by measurement and must be DELETED. Honest absence beats a fabricated
-   `competition_phase` (`codex/02-data/honest-absence-downstream-handling.md`) — a day that legitimately produces no
+   `competition_phase` (`/codex/02-data/honest-absence-downstream-handling.md`) — a day that legitimately produces no
    output should have no object, not a stale invented one.
    - The bucket has GCS soft-delete enabled (7-day window), so the purge is recoverable; snapshot the delete list
      regardless.
@@ -111,7 +111,7 @@ are _mostly_ clean, not clean.
 
 `competition_phase` and `matchday` feed season-context features. A constant `'late'` across an entire season is not a
 weak feature, it is an actively wrong one, and it is currently present in 100% of pre-fix rows — including the whole of
-2017 and 2018. Per `codex/02-data/data-pipeline-correctness-hard-rule.md` this freezes downstream ML work on sports
+2017 and 2018. Per `/codex/02-data/data-pipeline-correctness-hard-rule.md` this freezes downstream ML work on sports
 until the corpus is clean.
 
 Evidence: `scratchpad/corpus_walk.sh`, `scratchpad/fab_rate.py`, `scratchpad/check_2019_fab.py` (2026-07-20).

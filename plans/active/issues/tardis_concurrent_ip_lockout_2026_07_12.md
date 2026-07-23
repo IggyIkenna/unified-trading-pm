@@ -37,11 +37,11 @@ tags:
   ]
 related:
   [
-    mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    cefi_tardis_historical_blocked_credentials_2026_06_21.md,
-    cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
-    ../../../codex/02-data/tradfi-databento-sourcing-ssot.md,
-    ../../../codex/05-infrastructure/spot-vms-for-backfill.md,
+    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    /plans/archive/issues/cefi_tardis_historical_blocked_credentials_2026_06_21.md,
+    /plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]
 created: 2026-07-12
 parent_epic: cefi_master

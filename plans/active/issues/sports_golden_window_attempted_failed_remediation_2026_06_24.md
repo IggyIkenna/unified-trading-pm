@@ -135,8 +135,8 @@ footystats + 62 odds_api; 29,701 captured) — **misplaced**; IS `PREDICTIONS` =
       missed when the two above were cancelled on 2026-07-14 (found by the 2026-07-15 ODDS-ownership audit,
       `sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md` §C). Executing it
       would write the REVERSED (wrong) rule into codex, contradicting the canonical SSOT
-      `codex/02-data/sports-data-types-catalog.md:48-52` ("`data_type=ODDS` in instruments-service is the FootyStats
-      pre-match snapshot … legitimately coexist") + `codex/02-data/sports-data-source-coverage-matrix.md` §4. Rule as
+      `/codex/02-data/sports-data-types-catalog.md:48-52` ("`data_type=ODDS` in instruments-service is the FootyStats
+      pre-match snapshot … legitimately coexist") + `/codex/02-data/sports-data-source-coverage-matrix.md` §4. Rule as
       actually ruled: RAW bookmaker TICK odds = odds-api (MTDS); footystats' _predictive_ `ODDS` **+** `PREDICTIONS` =
       IS reference. (was:
       `- [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in `tradfi-databento-sourcing-ssot`-style sports SSOT + `instruments-foundation-and-catalogue-completeness.md` (sports universe = fixtures + reference + enrichment + footystats PREDICTIONS; NOT odds).`)

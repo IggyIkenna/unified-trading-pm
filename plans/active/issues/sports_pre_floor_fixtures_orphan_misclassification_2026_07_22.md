@@ -23,9 +23,9 @@ tags:
   [sports, orphan, pre-launch-floor, data-floor, registry-gap, fixtures-schedule, fixtures-outcomes, honest-coverage]
 related:
   [
-    estate_orphan_assessment_2026_07_21.md,
-    ../../codex/02-data/sports-2020-06-data-floor.md,
-    ../../codex/02-data/orphan-object-detection.md,
+    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/orphan-object-detection.md,
   ]
 created: 2026-07-22
 last_updated: 2026-07-22

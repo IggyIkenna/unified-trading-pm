@@ -18,7 +18,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [plan-hygiene, contradiction-audit, reconciliation, operator-decisions, stale-drift]
-related: [plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md]
+related: [/plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md]
 created: 2026-07-11
 parent_epic: plan_hygiene_master
 assigned_vm: NA
@@ -323,7 +323,7 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
   RETIRED tab-branch model as current fact.”
   - why: orphan_rootm (status open, last_updated 2026-06-27) instructs a future worker to rebase orphaned work onto 'a
     current tab/<vm>/<N> slot branch' — but the tab-branch model was RETIRED workspace-wide since 2026-06-08
-    (codex/05-infrastructure/per-tab-worktrees.md: 'tab/<op>/N tab-branch model RETIRED'); a sibling 2026-07-
+    (/codex/05-infrastructure/per-tab-worktrees.md: 'tab/<op>/N tab-branch model RETIRED'); a sibling 2026-07-
 - **DECISION NEEDED**: options TBD (P1/P2 drafting wave — next tick)
 
 #### [P1] active/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md ↔ epics/orchestrator_master.md
@@ -1105,7 +1105,7 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 
 - finding ids: 357
 - **SPOT vs on-demand policy for forward/daily-poll VMs** —
-  `active/infra_capture_and_devops_leftovers_2026_07_06.md:64`: “`codex/05-infrastructure/spot-vms-for-backfill.md` —
+  `active/infra_capture_and_devops_leftovers_2026_07_06.md:64`: “`/codex/05-infrastructure/spot-vms-for-backfill.md` —
   SPOT default for backfill; live/forward stay on-demand.” vs
   `active/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md:53-56`: “**SPOT VMs (HARD)** — the
   sports-scheduler daemon VM launches **spot/preemptible** (the cloud can reclaim + kill it at any moment) per
@@ -1185,10 +1185,10 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 - finding ids: 346
 - **empty-output shard classification: 3-category vs 4-category decision tree (which codex doc is authoritative)** —
   `active/issues/empty_output_category_count_ssot_contradiction_2026_07_03.md:44`:
-  “codex/04-architecture/shard-level-failure-isolation.md — claims
+  “/codex/04-architecture/shard-level-failure-isolation.md — claims
   `authoritative_for: [... three-category empty-output decision tree]`; body documents 3” vs
   `active/issues/empty_output_category_count_ssot_contradiction_2026_07_03.md:46`:
-  “codex/06-coding-standards/validation-and-errors.md — the newer merged write-side SSOT; documents a **four-category**
+  “/codex/06-coding-standards/validation-and-errors.md — the newer merged write-side SSOT; documents a **four-category**
   decision (adds path D: zero-activ”
   - why: This filed issue (status: open, unresolved, priority P2) documents that two live codex SSOTs disagree on the
     category count for the same per-shard empty-output classification decision (3 vs 4, the zero-activity-bar path D),
@@ -1734,9 +1734,8 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 - **Completion status of the 8th C6 reader-bucket-env bug fix** —
   `active/data_pipeline_hardening_self_monitoring_2026_06_22.md:303-304`: “[~] [CODE] P1. **Fix the 8 C6
   reader-bucket-env bugs** the parity check found — **7 of 8 SHIPPED on origin/LDR** ... **8th site —
-  `live/websocket_runn”  vs  `active/data_pipeline_hardening_self_monitoring_2026_06_22.md:1216-1223`: “**FOLLOW-UP (C6
-  / DP-ENV-001, non-prediction) — SHIPPED ON LDR (verified 2026-06-22 resume-run)\*\*:
-  `websocket_runner._read_is_parquet_sync` now resolv”
+  `live/websocket_runn”  vs  `active/data_pipeline_hardening_self_monitoring_2026_06_22.md:1216-1223`: “**FOLLOW-UP (C6 / DP-ENV-001, non-prediction) — SHIPPED ON LDR (verified 2026-06-22 resume-run)\*\*: `websocket_runner._read_is_parquet_sync`
+  now resolv”
   - why: The todo checkbox is left in partial state `[~]` claiming 1 of 8 sites remains deferred, while a later entry in
     the same document confirms all 8 sites (including the exact deferred one) are shipped and verified on LDR with 'No
     further action.' The stale `[~]` marker could cause a worker to re-attempt already-completed
@@ -2472,11 +2471,11 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 - finding ids: 220
 - **Dangling codex SSOT path cited as authoritative by three docs, explicitly declared non-existent by a fourth** —
   `active/ao_dispatch_correctness_regen_reconcile_2026_07_07.md:265`:
-  “`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch + regen + ingestion contract.” vs
+  “`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch + regen + ingestion contract.” vs
   `active/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md:458-461`:
-  “`codex/04-architecture/agent-orchestrator-overview.md` — worker lifecycle + loops (update for the new boot mechanism;
-  PATH CORRECTED 2026-07-10 — the ”
-  - why: `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` is listed as a live, to-be-read SSOT in
+  “`/codex/04-architecture/agent-orchestrator-overview.md` — worker lifecycle + loops (update for the new boot
+  mechanism; PATH CORRECTED 2026-07-10 — the ”
+  - why: `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` is listed as a live, to-be-read SSOT in
     the 07-07 plan (L265) and the 07-09 plan (L153), and as a related doc in the ao_fleet_stall issue (L26). The 07-10
     plan, auditing the same cluster one to three days later, explicitly states this exact path is
 
@@ -2485,8 +2484,8 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 - finding ids: 351
 - **Codex SSOT path for the AO slot/worker model: cited as a live doc vs declared non-existent** —
   `active/ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md:153-154`:
-  “`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` +
-  `codex/04-architecture/agent-orchestrator-overview.md` — slot/worker lifecycl” vs
+  “`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` +
+  `/codex/04-architecture/agent-orchestrator-overview.md` — slot/worker lifecycl” vs
   `active/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md:354-356`:
   “...local-slot-host-symmetric-worker-model.md — liveness triggers + the slot/worker model (replaces the non-existent
   `single-vm-architecture.md` cite)”
@@ -2498,9 +2497,9 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 #### [P2] active/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md ↔ active/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md
 
 - finding ids: 225
-- **Existence of codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md** —
+- **Existence of /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md** —
   `active/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md:26`: “related: [...,
-  ../../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]” vs
+  /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]” vs
   `active/ao_worker_lifecycle_audit_and_corrections_2026_07_10.md:457-461`: “PATH CORRECTED 2026-07-10 — the plan
   previously cited a non-existent `12-agent-workflow/` location ... replaces the non-existent `single-vm-architectu”
   - why: ao_fleet_stall (status open, P0, unrevised since 2026-07-07) still lists this exact path as a live related-doc
@@ -3325,7 +3324,7 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
     schema as v8, while manifest_master — the schema's actual epic owner — states v9 has been live workspace-wide since
     2026-05-30, three weeks before infra_master's last edit. The two active docs disagree on a loa
 - **manifest schema version currently live (v8 vs v9)** — `epics/infrastructure_master.md:644`:
-  “codex/02-data/availability-manifest-and-data-status.md ... 'Manifest schema v8 + 4-state `capture_status` +
+  “/codex/02-data/availability-manifest-and-data-status.md ... 'Manifest schema v8 + 4-state `capture_status` +
   per-asset-group bucket layout'” vs `epics/manifest_master.md:55`: “**Owns**: manifest schema (**v9 current** —
   `MANIFEST_SCHEMA_VERSION = 9` live 2026-05-30, UTL@`c7bfa427`...”
   - why: Both are active L1/L4 epics. infrastructure_master.md's 'Codex SSOTs' table (last_updated 2026-06-19, three
@@ -3435,7 +3434,7 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
   `plans/epics/infrastructure_master.md:645`: “`plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` |
   Bucket naming SSOT (`resolve_bucket_name()` only; never inline `gs://` f-str” vs
   `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md:427-428`: “UAC is now named the canonical
-  SSOT in `cursor-configs/CLAUDE.md` § Bucket-name SSOT + `codex/02-data/bucket-naming-and-config.md`
+  SSOT in `cursor-configs/CLAUDE.md` § Bucket-name SSOT + `/codex/02-data/bucket-naming-and-config.md`
   (deployment-service”
   - why: infrastructure_master's own 'Codex SSOTs' table (a list of docs that supposedly still 'own' live conventions)
     lists an ARCHIVED plan as the thing that 'Owns' the bucket-naming SSOT, with no pointer to the actual current SSOT
@@ -3456,9 +3455,9 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 - finding ids: 352
 - **Doc's own '## Codex SSOTs' header list left uncorrected against its own later self-correction** —
   `active/ao_dispatch_correctness_regen_reconcile_2026_07_07.md:265`:
-  “`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch + regen + ingestion contract.” vs
+  “`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch + regen + ingestion contract.” vs
   `active/ao_dispatch_correctness_regen_reconcile_2026_07_07.md:709-711`: “real doc is
-  `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
+  `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
   `12-agent-workflow/...single-vm-architecture.md` in t”
   - why: This still-active plan's Progress Log entry explicitly flags its own Codex-SSOTs section's citation as stale
     and names the real replacement doc, but the '## Codex SSOTs' header block itself (line 265) was never edited to drop
@@ -3536,7 +3535,7 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
   `active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md:66`: “Rewrite all four referrers
   `architecture-v2/cross-cutting/pnl-attribution.md` → `architecture-v2/cross-cutting/pnl-attribution.md`.” vs
   `active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md:43`: “The actual doc lives at
-  **`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`** (64 KB, the canonical PnL-attribution SSOT)”
+  **`/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`** (64 KB, the canonical PnL-attribution SSOT)”
   - why: The doc's own recommended-decision line instructs rewriting a path into the identical path (X → X), and the
     sentence introducing the 'correct' target repeats the exact same path string used earlier as 'does not exist'. The
     described stale path was almost certainly `operational/pnl-attribution.md` but an edit pass appea
@@ -3668,47 +3667,47 @@ is wrong; recommend updating git-commit SKILL.md to `docs(plans):` (matches the 
 Recorded verbatim from the chat Q&A session; each ruling is binding for the reconciliation edits below. Execution status
 tracked in the Progress Log.
 
-| Finding(s)      | Ruling                                                                      | Execution                                                                                                                                |
-| --------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| 228 (+27)       | Tardis billing IS LIFTED (unlimited access confirmed)                       | close cefi_tardis_historical_blocked_credentials as resolved; correct blocked framings; 775.9k-cell backfill dispatchable                |
-| 66              | instrument_type canonical casing = UPPERCASE                                | corrective todo: fix BYBIT-SPOT mapping + relabel script to SPOT_PAIR BEFORE the -003 relabel runs                                       |
-| 144             | Sports gate breach: RATIFY + VERIFY                                         | verify launched VMs wrote v9-canonical; if clean record waiver in both docs; if not escalate                                             |
-| 171             | M-C2 DOWNGRADE stands (latent, not active bug)                              | fix mtds_plan_reconciliation Progress Log reversal                                                                                       |
-| 246/247         | VERIFY P1d first                                                            | check P1d features status; then set P1e gate verdict accordingly                                                                         |
-| 286/292         | LOGIC FREEZE LIFTED ENTIRELY                                                | strategy_master freeze removed (lifted 2026-07-12 per operator); post green UNFREEZE ping; F27 + frozen fixes dispatchable               |
-| 376             | Fireblocks OUT of June-1 scope                                              | fix defi_master custody section; close Fireblocks todo as descoped-per-POD                                                               |
-| 128             | TradFi G4: MANIFEST SPOT-CHECK decides                                      | run tradfi raw-tick v9 coverage check; correct losing banner; split RESUME-runbook sub-part                                              |
-| 149             | cefi F2: VERIFY CODE + collapse losing passage                              | read \_rollup_bundle_grain in instruments-service HEAD                                                                                   |
-| 367             | G12 recon-freeze subscriber -> P0                                           | move to execution_master P0 must-complete section                                                                                        |
-| 87              | Narrow 'can never red' claim + bump off P3                                  | pm_scripts_typecheck_debt edit incl. zero-warning-policy caveat                                                                          |
-| 46              | Phase-D gate checkbox REOPENED                                              | revert to [ ] + dependent real-data re-run todo                                                                                          |
-| 254             | Sports-scheduler: VERIFY live write-target first                            | read-only check on running scheduler; docs follow reality; legacy-writes => escalate                                                     |
-| 113             | EULER_V2: VERIFY code first                                                 | read defi_venues.py + capture path; reconcile both docs to ground truth                                                                  |
-| 15/365/17       | Correct headline; scope epsilon=0 PROVEN to paper<->batch                   | Phase 2 stays open                                                                                                                       |
-| 95              | G1: FINISH G1.2 FIRST, then stamp                                           | dispatched to separate operator-run agent (prompt delivered in chat)                                                                     |
-| 30              | DELETE Deribit per-strike artifacts + ensure chain-level capture grain      | snapshot-first purge todo + grain regression check                                                                                       |
-| 77              | REMOVE aster/hyperliquid book/liq SOURCE_PRIORITY registration              | UAC corrective todo                                                                                                                      |
-| 305             | Massive Phase-4b DOWNGRADE to P2 + annotate                                 | databento-primary SSOT cited                                                                                                             |
-| 353             | Env-split WINS                                                              | bucket_name_ssot repointed at bucket_env_split_rollout as authority                                                                      |
-| 339             | REGENERATE epic registry (true count 23)                                    | rebuild README table + orchestrator count + regeneration-script todo                                                                     |
-| 216/323         | REGENERATE orchestrator census                                              | run/replicate the census script                                                                                                          |
-| 175/142/146     | ENFORCE 2 survivors                                                         | fold-in/archive mapping authored as HUMAN plan for operator approval; sports_manifest stays mtds_mdps child, sports_master wording fixed |
-| 10010           | CODIFY /autonomous model-tier carve-out                                     | codex model-tier-selection.md + CLAUDE.md one-liner (authorized codex edit)                                                              |
-| 357             | DOCUMENT sports-scheduler SPOT carve-out                                    | codex spot-vms-for-backfill.md (authorized codex edit)                                                                                   |
-| 341             | FORMALISE '/' as Betfair native convention                                  | checklist P2 closes by-design                                                                                                            |
-| 78              | MAKE SIT BLOCKING                                                           | P1 todo: wire SIT-green as required check on promote PR; claim restored only after                                                       |
-| 224             | VERIFY AO deploy path on the VM first                                       | then correct todo/notes to reality                                                                                                       |
-| 218             | FLIP the 3 evidenced prevention todos                                       | issue stays open on remaining 3                                                                                                          |
-| 366             | FULL RE-AUDIT of global_ledger epic                                         | authored as HUMAN plan (assigned_vm: NA)                                                                                                 |
-| 83              | ADD --dry-run cross-ref to watchdog relaunch item                           |                                                                                                                                          |
-| 74              | RETIRE harsh_pc framing (frontmatter NA correct)                            |                                                                                                                                          |
-| 134/132         | parent_epic = manifest_master; fix body line                                |                                                                                                                                          |
-| D               | FIX git-commit SKILL.md to docs(plans):                                     | cursor-configs edit                                                                                                                      |
-| codex-gap       | CREATE codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md | + SUPERSEDED-banner the stale multi-vm doc (authorized)                                                                                  |
-| schema          | ADD 'paused' epic status                                                    | schema doc + validator; then flip escalation epic to paused                                                                              |
-| 50 reclassified | APPLY ALL 50 evidence-resolved autofixes                                    | fixer wave, refusal contract applies                                                                                                     |
-| B-queue         | PROCEED P1->P2->P3 original auto-fix waves (163 remaining pairs)            |                                                                                                                                          |
-| new plans       | BOTH new work items = HUMAN plans (assigned_vm: NA)                         | global-ledger re-audit + MTDS fold-in mapping                                                                                            |
+| Finding(s)      | Ruling                                                                       | Execution                                                                                                                                |
+| --------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 228 (+27)       | Tardis billing IS LIFTED (unlimited access confirmed)                        | close cefi_tardis_historical_blocked_credentials as resolved; correct blocked framings; 775.9k-cell backfill dispatchable                |
+| 66              | instrument_type canonical casing = UPPERCASE                                 | corrective todo: fix BYBIT-SPOT mapping + relabel script to SPOT_PAIR BEFORE the -003 relabel runs                                       |
+| 144             | Sports gate breach: RATIFY + VERIFY                                          | verify launched VMs wrote v9-canonical; if clean record waiver in both docs; if not escalate                                             |
+| 171             | M-C2 DOWNGRADE stands (latent, not active bug)                               | fix mtds_plan_reconciliation Progress Log reversal                                                                                       |
+| 246/247         | VERIFY P1d first                                                             | check P1d features status; then set P1e gate verdict accordingly                                                                         |
+| 286/292         | LOGIC FREEZE LIFTED ENTIRELY                                                 | strategy_master freeze removed (lifted 2026-07-12 per operator); post green UNFREEZE ping; F27 + frozen fixes dispatchable               |
+| 376             | Fireblocks OUT of June-1 scope                                               | fix defi_master custody section; close Fireblocks todo as descoped-per-POD                                                               |
+| 128             | TradFi G4: MANIFEST SPOT-CHECK decides                                       | run tradfi raw-tick v9 coverage check; correct losing banner; split RESUME-runbook sub-part                                              |
+| 149             | cefi F2: VERIFY CODE + collapse losing passage                               | read \_rollup_bundle_grain in instruments-service HEAD                                                                                   |
+| 367             | G12 recon-freeze subscriber -> P0                                            | move to execution_master P0 must-complete section                                                                                        |
+| 87              | Narrow 'can never red' claim + bump off P3                                   | pm_scripts_typecheck_debt edit incl. zero-warning-policy caveat                                                                          |
+| 46              | Phase-D gate checkbox REOPENED                                               | revert to [ ] + dependent real-data re-run todo                                                                                          |
+| 254             | Sports-scheduler: VERIFY live write-target first                             | read-only check on running scheduler; docs follow reality; legacy-writes => escalate                                                     |
+| 113             | EULER_V2: VERIFY code first                                                  | read defi_venues.py + capture path; reconcile both docs to ground truth                                                                  |
+| 15/365/17       | Correct headline; scope epsilon=0 PROVEN to paper<->batch                    | Phase 2 stays open                                                                                                                       |
+| 95              | G1: FINISH G1.2 FIRST, then stamp                                            | dispatched to separate operator-run agent (prompt delivered in chat)                                                                     |
+| 30              | DELETE Deribit per-strike artifacts + ensure chain-level capture grain       | snapshot-first purge todo + grain regression check                                                                                       |
+| 77              | REMOVE aster/hyperliquid book/liq SOURCE_PRIORITY registration               | UAC corrective todo                                                                                                                      |
+| 305             | Massive Phase-4b DOWNGRADE to P2 + annotate                                  | databento-primary SSOT cited                                                                                                             |
+| 353             | Env-split WINS                                                               | bucket_name_ssot repointed at bucket_env_split_rollout as authority                                                                      |
+| 339             | REGENERATE epic registry (true count 23)                                     | rebuild README table + orchestrator count + regeneration-script todo                                                                     |
+| 216/323         | REGENERATE orchestrator census                                               | run/replicate the census script                                                                                                          |
+| 175/142/146     | ENFORCE 2 survivors                                                          | fold-in/archive mapping authored as HUMAN plan for operator approval; sports_manifest stays mtds_mdps child, sports_master wording fixed |
+| 10010           | CODIFY /autonomous model-tier carve-out                                      | codex model-tier-selection.md + CLAUDE.md one-liner (authorized codex edit)                                                              |
+| 357             | DOCUMENT sports-scheduler SPOT carve-out                                     | codex spot-vms-for-backfill.md (authorized codex edit)                                                                                   |
+| 341             | FORMALISE '/' as Betfair native convention                                   | checklist P2 closes by-design                                                                                                            |
+| 78              | MAKE SIT BLOCKING                                                            | P1 todo: wire SIT-green as required check on promote PR; claim restored only after                                                       |
+| 224             | VERIFY AO deploy path on the VM first                                        | then correct todo/notes to reality                                                                                                       |
+| 218             | FLIP the 3 evidenced prevention todos                                        | issue stays open on remaining 3                                                                                                          |
+| 366             | FULL RE-AUDIT of global_ledger epic                                          | authored as HUMAN plan (assigned_vm: NA)                                                                                                 |
+| 83              | ADD --dry-run cross-ref to watchdog relaunch item                            |                                                                                                                                          |
+| 74              | RETIRE harsh_pc framing (frontmatter NA correct)                             |                                                                                                                                          |
+| 134/132         | parent_epic = manifest_master; fix body line                                 |                                                                                                                                          |
+| D               | FIX git-commit SKILL.md to docs(plans):                                      | cursor-configs edit                                                                                                                      |
+| codex-gap       | CREATE /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md | + SUPERSEDED-banner the stale multi-vm doc (authorized)                                                                                  |
+| schema          | ADD 'paused' epic status                                                     | schema doc + validator; then flip escalation epic to paused                                                                              |
+| 50 reclassified | APPLY ALL 50 evidence-resolved autofixes                                     | fixer wave, refusal contract applies                                                                                                     |
+| B-queue         | PROCEED P1->P2->P3 original auto-fix waves (163 remaining pairs)             |                                                                                                                                          |
+| new plans       | BOTH new work items = HUMAN plans (assigned_vm: NA)                          | global-ledger re-audit + MTDS fold-in mapping                                                                                            |
 
 ## Progress Log (append-only)
 

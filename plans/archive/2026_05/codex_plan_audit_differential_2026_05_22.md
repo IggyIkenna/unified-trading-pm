@@ -75,14 +75,14 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
 
 ### Group A — L0 Asset-Group Epics
 
-- [x] [READ+FIX] P0. `defi_master.md` ↔ `codex/04-architecture/defi-execution-overview.md` + archetypes/ — **DONE
+- [x] [READ+FIX] P0. `defi_master.md` ↔ `/codex/04-architecture/defi-execution-overview.md` + archetypes/ — **DONE
       2026-05-22**: custody state delta box (CLOUD_KMS_ENCRYPTED shipped, Copper/CEFFU June-1) added; 30 DeFi error
       codes confirmed current.
-- [x] [READ+FIX] P0. `cefi_master.md` ↔ `codex/04-architecture/batch-live-architecture.md` + CeFi venue patterns —
+- [x] [READ+FIX] P0. `cefi_master.md` ↔ `/codex/04-architecture/batch-live-architecture.md` + CeFi venue patterns —
       **DONE 2026-05-22**: §11 table rows for tradfi-batch-live + prediction-batch-live updated to PLACEHOLDER SHIPPED.
-- [x] [READ+FIX] P1. `tradfi_master.md` ↔ `codex/02-data/per-asset-group-bucket-layouts.md` + tick data docs — **DONE
+- [x] [READ+FIX] P1. `tradfi_master.md` ↔ `/codex/02-data/per-asset-group-bucket-layouts.md` + tick data docs — **DONE
       2026-05-22**: TradFi tick data restoration delta box added; Kalshi row in contracts-scope-and-layout.md.
-- [x] [READ+FIX] P1. `sports_master.md` ↔ `codex/01-domain/sports-instruments.md` + sports GCS paths — **DONE
+- [x] [READ+FIX] P1. `sports_master.md` ↔ `/codex/01-domain/sports-instruments.md` + sports GCS paths — **DONE
       2026-05-22**: DELTA box added (active venues = ODDS_API/PINNACLE/BETFAIR only; scrapers DEFERRED-INDEFINITELY
       2026-05-12).
 - [x] [READ+FIX] P1. `predictions_master.md` ↔ codex predictions coverage — **DONE 2026-05-22**:
@@ -90,11 +90,11 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
 
 ### Group B — L1 Pipeline Epics
 
-- [x] [READ+FIX] P0. `mtds_mdps_master.md` ↔ `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — verify
+- [x] [READ+FIX] P0. `mtds_mdps_master.md` ↔ `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — verify
       Phase -2..14 sequencing — **DONE 2026-05-22**: added `## Current state + pipeline migration context` delta box +
       mtds_mdps_master pointer in Related docs. `CODEX-MISSING` finding: pipeline coordination (Phases -2 to 14) had no
       codex home → addressed.
-- [x] [READ+FIX] P0. `manifest_master.md` ↔ `codex/02-data/availability-manifest-and-data-status.md` — v5+ 4-state
+- [x] [READ+FIX] P0. `manifest_master.md` ↔ `/codex/02-data/availability-manifest-and-data-status.md` — v5+ 4-state
       capture*status, 17 EXPECTED*\* reasons, cluster validation, available_at — **DONE 2026-05-22**:
       `manifest-migration-coordination.md` had two `SUPERSEDED-FORWARD-LINK` findings (referenced
       `manifest_migration_SUPERSEDED_2026_05_21` in both frontmatter + cross-refs section → updated to
@@ -125,13 +125,13 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
 - [x] [READ+FIX] P1. `global_ledger_pnl_attribution_master.md` ↔ codex global-ledger section — **DONE 2026-05-22**:
       `CODEX-STALE P0` — 14-line stub expanded to full architecture doc (4 SSOT ledgers, 4 derived ledgers, event
       taxonomy, writer/reader service map, VM prefix table, delta box).
-- [x] [READ+FIX] P1. `trading_agent_master.md` ↔ `codex/04-architecture/trading-agent-service-directive-pipeline.md` —
+- [x] [READ+FIX] P1. `trading_agent_master.md` ↔ `/codex/04-architecture/trading-agent-service-directive-pipeline.md` —
       **DONE 2026-05-22**: PARTIALLY SUPERSEDED banner confirmed correct; Phase 2A already fixed 3 SUPERSEDED forward
       links.
 - [x] [READ+FIX] P1. `client_isolation_and_governance_master.md` ↔
-      `codex/04-architecture/per-client-isolation-architecture.md` + `client-funds-isolation.md` — **DONE 2026-05-22**:
+      `/codex/04-architecture/per-client-isolation-architecture.md` + `client-funds-isolation.md` — **DONE 2026-05-22**:
       per-client-isolation SSOT pointer added to epic; both codex docs confirmed clean.
-- [x] [READ+FIX] P1. `dart_and_promote_master.md` ↔ `codex/04-architecture/promote-workflow-architecture.md` — **DONE
+- [x] [READ+FIX] P1. `dart_and_promote_master.md` ↔ `/codex/04-architecture/promote-workflow-architecture.md` — **DONE
       2026-05-22**: ORPHAN-EPIC-REF in dart-manual-trade-spec.md line 23 fixed (cross_cutting_may_23 →
       dart_and_promote_master); Phase 7 status updated to Shipped.
 
@@ -142,7 +142,7 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
       `## Cross-references`). All 6 referenced docs verified: vm-tarball-deployment.md (lifecycle_class + T+10min +
       Pattern A/B ✓), manifest-consolidator-ssot.md (Cloud Run runtime ✓), gcs-object-operations.md ✓,
       launcher-script-ssot.md ✓, availability-manifest-and-data-status.md ✓, bucket_name_ssot plan ✓.
-- [x] [READ+FIX] P1. `batch_live_symmetry_master.md` ↔ `codex/04-architecture/batch-live-architecture.md` — **DONE
+- [x] [READ+FIX] P1. `batch_live_symmetry_master.md` ↔ `/codex/04-architecture/batch-live-architecture.md` — **DONE
       2026-05-22**: DELTA box + Codex SSOTs table already present from earlier audit pass. batch-live-architecture.md is
       comprehensive (§1-§14) with DELTA boxes for 2026-05-22. Per-asset-group docs: cefi ✓ shipped; tradfi + prediction
       stubs noted; sports inline §7 (no separate file). No changes needed.
@@ -153,11 +153,11 @@ See full baseline: `plans/audit/results/codex_plan_diff_scan_2026_05_22.md`
       present. All 6 referenced docs verified: live-deployment-monitoring.md ✓, alerting.md ✓,
       kill-switch-circuit-breaker.md ✓, pagerduty-escalation-policy.md ✓ (codex/15-runbooks/alerting/),
       manifest-consolidator-ssot.md ✓, data-pipeline-correctness-hard-rule.md ✓. No changes needed.
-- [x] [READ+FIX] P2. `orchestrator_master.md` ↔ `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` — **DONE
+- [x] [READ+FIX] P2. `orchestrator_master.md` ↔ `/codex/12-agent-workflow/orchestrator-multi-vm-topology.md` — **DONE
       2026-05-22**: Both frontmatter `codex_ssots:` and body Codex SSOTs table present. All 3 referenced docs verified:
       orchestrator-multi-vm-topology.md ✓ (comprehensive: VM shapes, dashboard, persistence),
       orchestrator-safety-mechanisms.md ✓, claude-cli-multi-account-headless-auth.md ✓. No changes needed.
-- [x] [READ+FIX] P2. `plan_hygiene_master.md` ↔ `codex/11-project-management/plan-hygiene.md` — **DONE 2026-05-22**:
+- [x] [READ+FIX] P2. `plan_hygiene_master.md` ↔ `/codex/11-project-management/plan-hygiene.md` — **DONE 2026-05-22**:
       Added `tier: L5` + `last_updated: 2026-05-22` to epic frontmatter. Added formal `## Codex SSOTs` table to epic
       body. Fixed `plan-hygiene.md` codex doc: added `assigned_vm` + `tier` to "Required epic frontmatter fields" list
       (was missing vs CLAUDE.md "required `assigned_vm` + `tier` + `priority` frontmatter").
@@ -240,8 +240,8 @@ Standard delta box:
 ```
 
 - [x] [EDIT] P0. Apply delta boxes to all P0 CODEX-STALE codex docs ✅ PM@77f0ef404 — delta boxes added to
-      `codex/02-data/availability-manifest-and-data-status.md` (top-level v8 migration state + v8 CeFi reshaping note)
-      and `codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy + per-service consumer-class table).
+      `/codex/02-data/availability-manifest-and-data-status.md` (top-level v8 migration state + v8 CeFi reshaping note)
+      and `/codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy + per-service consumer-class table).
       Remaining P0 CODEX-STALE docs tracked under Phase 1+2 above (Group A-D epic checks, Sub-phase 2A LDR-locked
       plans).
 - [x] [EDIT] P0. Fix SUPERSEDED banners pointing to SUPERSEDED epics (update forward link to current live epic) ✅
@@ -286,7 +286,7 @@ Standard delta box:
 
 ## This Plan's Own Codex Impact
 
-- [x] [WRITE] `codex/11-project-management/codex-audit-playbook.md` — **DONE 2026-05-22** PM@08ebf39f5: stub written
+- [x] [WRITE] `/codex/11-project-management/codex-audit-playbook.md` — **DONE 2026-05-22** PM@08ebf39f5: stub written
       with taxonomy, phase sequence, parallelization map, SSOT placement decision tree, recurring cadence triggers.
 
 ---
@@ -326,7 +326,7 @@ _Operator: "do everything all of it now." Scope: all 277 remaining stale-marker 
 2. ✅ Every active plan with "Codex SSOT" section classified DONE / PARTIAL+delta-box / DEFERRED+named-plan
 3. ✅ Every live L0-L2 epic has at least one owned codex SSOT pointer
 4. ✅ `plans/audit/results/codex_plan_diff_scan_2026_05_22.md` with before/after counts published
-5. ✅ `codex/11-project-management/codex-audit-playbook.md` stub written
+5. ✅ `/codex/11-project-management/codex-audit-playbook.md` stub written
 6. ✅ All 277 stale-marker docs annotated (Phase 5 P2 sweep) — `post-May-23` count = 0 workspace-wide
 
 ## Deferred work — migrated to:

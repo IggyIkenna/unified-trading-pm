@@ -22,8 +22,8 @@ repos: [unified-trading-pm, unified-trading-library, deployment-api, strategy-se
 scope: [engineer, admin]
 tags: [ci-cd, quickmerge, quality-gates, sentinel, test-isolation, environment, gate-bypass]
 related:
-  - staging_workflow_shutdown_2026_07_23.md
-  - github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/active/issues/staging_workflow_shutdown_2026_07_23.md
+  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
 created: 2026-07-23
 priority: P1
 parent_epic: infrastructure_master

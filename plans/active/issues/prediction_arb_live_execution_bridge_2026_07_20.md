@@ -26,7 +26,7 @@ stage: [strategy]
 repos: [execution-service, strategy-service, features-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [prediction-arb, cross-venue, betfair, execution-bridge, atomic-instruction, football-arb, live-blocker]
-related: [prediction_consolidated_closeout_2026_07_18.md]
+related: [/plans/active/prediction_consolidated_closeout_2026_07_18.md]
 created: 2026-07-20
 parent_epic: predictions_master
 assigned_vm: NA

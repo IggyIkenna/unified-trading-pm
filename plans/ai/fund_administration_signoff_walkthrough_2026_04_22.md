@@ -35,7 +35,7 @@ locked_since: 2026-04-22
 - Read aloud: "Today confirms the IM Pooled subscription / redemption rail. Crypto-only first pass. POD is the
   administrator. Clients see one portal, one flow, NAV-strike-driven settlement. TradFi Pooled needs a separate
   administrator (SS&C / Citco / Apex — TBD) and is out of today's scope."
-- Screen-share: open `codex/14-playbooks/shared-core/fund-administration-and-custody.md` §Decision table.
+- Screen-share: open `/codex/14-playbooks/shared-core/fund-administration-and-custody.md` §Decision table.
 - Confirm custody model per path matches what sales is saying in briefings.
 
 ### 2. UI walkthrough — mock mode — 10 min
@@ -158,5 +158,5 @@ Checklist:
 ## Reference
 
 - `plans/active/fund_administration_service_and_pooled_subscription_redemption_2026_04_20.md` — parent plan
-- `codex/14-playbooks/shared-core/fund-administration-and-custody.md` — custody SSOT
-- `codex/14-playbooks/shared-core/treasury-and-subaccount-model.md` — subscription / redemption mechanic
+- `/codex/14-playbooks/shared-core/fund-administration-and-custody.md` — custody SSOT
+- `/codex/14-playbooks/shared-core/treasury-and-subaccount-model.md` — subscription / redemption mechanic

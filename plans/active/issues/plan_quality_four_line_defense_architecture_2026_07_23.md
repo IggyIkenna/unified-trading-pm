@@ -84,8 +84,8 @@ layers, each catching what the previous layer misses, each backing up the one be
    **Todo**: wire `/plan-reconcile` into a scheduled background AO agent (cron-style, every 24h — see the `schedule`
    skill / `CronCreate` tool) that runs the skill's own audit → adversarially-verify → auto-fix-mechanical →
    batch-operator-Q&A flow, reports success/failure to the operator (Slack or the AO alerts channel, per
-   `codex/04-architecture/agent-orchestrator-alerting.md`'s actionable-only convention — a clean run is a digest item, a
-   genuine operator-decision-needed batch is an actionable page), and asks operator questions IN AO (the dashboard Q&A
+   `/codex/04-architecture/agent-orchestrator-alerting.md`'s actionable-only convention — a clean run is a digest item,
+   a genuine operator-decision-needed batch is an actionable page), and asks operator questions IN AO (the dashboard Q&A
    mechanism, not a chat message) when a finding needs an authority call rather than a mechanical fix. **Open question
    for the operator**: which AO mechanism should own the schedule — a literal cron
    (`CronCreate`/`scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` already exists as a candidate home,
@@ -180,7 +180,7 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
 
 ## Codex SSOTs
 
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
-`codex/04-architecture/agent-orchestrator-alerting.md`, `codex/11-project-management/doc-frontmatter-schema.md`. No
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
+`/codex/04-architecture/agent-orchestrator-alerting.md`, `/codex/11-project-management/doc-frontmatter-schema.md`. No
 existing codex SSOT names this 4-line architecture itself — once lines 2-4 are actually wired, add one (likely under
 `codex/11-project-management/` or `codex/12-agent-workflow/`).

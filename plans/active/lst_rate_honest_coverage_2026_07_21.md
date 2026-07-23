@@ -28,9 +28,9 @@ scope: [engineer, admin]
 tags: [lst, exchange-rate, oracle, dex, honest-coverage, pnl-correctness, defi, data-pipeline]
 related:
   [
-    lst_exchange_rate_data_availability_2026_07_21.md,
-    pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-    onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
+    /plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-21"
@@ -53,7 +53,7 @@ superseded_by:
 
 # LST rate honest coverage — plan of record
 
-**Codex SSOT:** `codex/02-data/lst-exchange-rate-surfaces.md` (the four surfaces, canonical homes, honest-coverage
+**Codex SSOT:** `/codex/02-data/lst-exchange-rate-surfaces.md` (the four surfaces, canonical homes, honest-coverage
 contract). **Audit:** `plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`.
 
 **Sequencing invariant (denominator-first):** register a verified feed/venue in the catalogue + expected registries so

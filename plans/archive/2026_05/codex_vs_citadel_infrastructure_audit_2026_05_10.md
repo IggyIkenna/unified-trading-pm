@@ -9,8 +9,8 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md]
-created: '2026-05-21'
+related: [/plans/active/master_to_live_defi_2026_05_23.md]
+created: "2026-05-21"
 parent_epic: infrastructure_master
 priority: P1
 estimate_class: research
@@ -34,7 +34,7 @@ locked_since: 2026-05-10
 disposition per doc). Immediate items shipped inline; pre-cutover items shipped; post-cutover items filed as sub-plans.
 All phases complete as of 2026-05-12.
 
-Codex SSOTs: `codex/04-architecture/` · `codex/06-coding-standards/quality-gates.md` · `codex/02-data/`
+Codex SSOTs: `codex/04-architecture/` · `/codex/06-coding-standards/quality-gates.md` · `codex/02-data/`
 
 ---
 

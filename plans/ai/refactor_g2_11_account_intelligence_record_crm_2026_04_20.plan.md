@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.11
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.11
   - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
     2026-04-20)
 # Wave G2-α — parallel with G2-α peers 2.1, 2.6, 2.8, 2.9. G2/G3 border — defer if bandwidth tight.
@@ -45,15 +45,15 @@ Priority P1 (not P0) because the CRM is nice-to-have; G1.10 questionnaire alread
 - **Wave G2-α peers:** G2.1, G2.6, G2.8, G2.9
 - **Wave G2-β inputs:** G2.7 demo-provisioning (appends to `demo_history`)
 - **G1 inputs:** G1.10 questionnaire (seeds record on submission)
-- **Codex:** `codex/14-playbooks/demo-ops/account-intelligence-record.md`,
-  `codex/14-playbooks/_ssot-rules/09-internal-commercial-oneliners.md`
+- **Codex:** `/codex/14-playbooks/demo-ops/account-intelligence-record.md`,
+  `/codex/14-playbooks/_ssot-rules/09-internal-commercial-oneliners.md`
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.11
-2. `codex/14-playbooks/demo-ops/account-intelligence-record.md`
-3. `codex/14-playbooks/_ssot-rules/09-internal-commercial-oneliners.md`
-4. `codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md` — §Enforcement #5
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.11
+2. `/codex/14-playbooks/demo-ops/account-intelligence-record.md`
+3. `/codex/14-playbooks/_ssot-rules/09-internal-commercial-oneliners.md`
+4. `/codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md` — §Enforcement #5
 5. `unified-trading-system-ui/app/(ops)/admin/questionnaires/page.tsx` — G1.10 admin playback pattern
 6. `unified-trading-system-ui/lib/admin/firebase.ts`
 
@@ -168,7 +168,7 @@ git -C deployment-service checkout live-defi-rollout && git -C deployment-servic
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
 ls unified-trading-system-ui/lib/admin/firebase.ts
 ls unified-trading-system-ui/app/\(ops\)/admin/questionnaires/page.tsx  # G1.10 pattern post-fold
-ls codex/14-playbooks/demo-ops/account-intelligence-record.md
+ls /codex/14-playbooks/demo-ops/account-intelligence-record.md
 ```
 
 All must exist. STOP if any missing.

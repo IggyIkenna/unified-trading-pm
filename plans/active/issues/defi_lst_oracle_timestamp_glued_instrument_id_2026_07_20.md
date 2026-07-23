@@ -278,3 +278,25 @@ dry-run-by-default script already exists
 (`market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py`); once this rebuild sweep
 confirms 0 glued ids, the plan is to run that script's dry-run and hand the verified `--apply` command to the operator
 rather than execute it from any agent context.
+
+## Update 2026-07-24 — the 34 rows are GCS-fixed; the index count structurally can't reach 0 via rebuild alone
+
+Ran the full 6-way parallel manifest rebuild through completion (all chunks rc=0, full 2020-01-01..2026-07-22 coverage),
+then re-checked the consolidated index for glued ids: **still 34, same exact `instrument_id`s** as before the reshard
+fix (e.g. `kamino_lending_SOLANA_20260528_134927`).
+
+**This is NOT a failed fix — direct GCS verification proves the object-level fix is correct.** Listed the KAMINO
+`day=2026-05-28` `lending_indices` directory directly: zero glued-timestamp-named files, only clean UUID-named
+per-instrument twins (Kamino's canonical `...:LENDING:<uuid>` fallback form) plus exactly one `_migrated_` marker —
+consistent with the reshard tool's own reported outcome (34 retired, 242 twins written, 0 errors).
+
+**Root cause of the persisting count**: the consolidated `_index/availability_index.parquet` is append/UPSERT-only — a
+`rebuild_defi_manifest` re-scan adds/refreshes rows for objects it currently finds, but never removes a row for a path
+that no longer exists. These 34 rows entered the index during an earlier rebuild pass (before the reshard fix ran) and,
+once written, persist regardless of how many further rebuilds run afterward. Structurally the same "phantom row" class
+as `defi_consolidated_closeout_2026_07_18.md`'s separately-tracked "purge 1.79M dup + ~219.5K phantom rows" todo, not a
+distinct problem needing its own fix.
+
+**Conclusion**: the write-path/historical-backlog fix for these 34 rows is DONE and verified at the GCS level. The
+manifest index will only show 0 for this regex once the phantom-row purge runs (it folds these 34 in with the rest) —
+that purge is the correct next step, not another rebuild cycle.

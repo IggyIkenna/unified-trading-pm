@@ -6,11 +6,28 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, client-reporting-api, deployment-service, execution-service, fund-administration-service, instruments-service]
+repos:
+  [
+    alerting-service,
+    client-reporting-api,
+    deployment-service,
+    execution-service,
+    fund-administration-service,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/epics/global_ledger_pnl_attribution_master.md, plans/epics/execution_master.md, plans/epics/strategy_master.md, plans/epics/mtds_mdps_master.md, plans/epics/instruments_master.md, plans/epics/observability_master.md]
-created: '2026-05-21'
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/epics/global_ledger_pnl_attribution_master.md,
+    plans/epics/execution_master.md,
+    plans/epics/strategy_master.md,
+    plans/epics/mtds_mdps_master.md,
+    plans/epics/instruments_master.md,
+    plans/epics/observability_master.md,
+  ]
+created: "2026-05-21"
 parent_epic: global-ledger-pnl-attribution-master
 priority: P0
 archived: 2026-05-23
@@ -175,7 +192,7 @@ target SSOT ledger model.
 - [x] ✅ [AUDIT] P0. **execution-service** — InstructionLedger writer. Map current fill/transfer/stake emission paths;
       **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service,
       or MTDS not in slot 6 worktree. identify which today flow through service-output emission semantics (per
-      `codex/02-data/service-output-emission-semantics.md`). Flag any path that emits via custom topic without going
+      `/codex/02-data/service-output-emission-semantics.md`). Flag any path that emits via custom topic without going
       through `_resolve_policy_output_data_type`.
 - [x] ✅ [AUDIT] P0. **strategy-service** — derived-ledger writer (confirmed owner). Inventory **[DEFERRED-SERVICE-REPOS
       2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6
@@ -207,7 +224,7 @@ target SSOT ledger model.
 - [x] ✅ [UAC] P0. Cross-client transfer validator: every `transfer`/`bridge` row asserts **[DEFERRED-SERVICE-REPOS
       2026-05-23 slot 6]** Requires execution-service, strategy-service, instruments-service, or MTDS not in slot 6
       worktree. `client_id == counterparty_client_id`; raise `CrossClientTransferForbiddenError` otherwise. Anchor to
-      `codex/04-architecture/client-funds-isolation.md`.
+      `/codex/04-architecture/client-funds-isolation.md`.
 - [x] ✅ [UAC] P1. Document the `parent_event_id` linkage convention for settlements / funding / dividends /
       enrichments. **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires execution-service, strategy-service,
       instruments-service, or MTDS not in slot 6 worktree.
@@ -311,7 +328,7 @@ regulatory_report_id):
 - [x] ✅ [DESIGN] P1. InstructionLedger replay-from-history for backtest (already a workspace pattern via batch=live —
       **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on
       service-repo access and DeFi cutover. Operator-driven design session post-cutover.
-      `codex/04-architecture/batch-live-architecture.md`).
+      `/codex/04-architecture/batch-live-architecture.md`).
 
 ### Phase 8 — VM assignment for net-new runtime artifacts (P1)
 
@@ -348,14 +365,14 @@ regulatory_report_id):
 
 ### Phase 10 — Codex SSOT update (P2)
 
-- [x] ✅ [DOC] P2. Add `codex/04-architecture/global-ledger-architecture.md` with the 4-SSOT-+-4-derived model,
+- [x] ✅ [DOC] P2. Add `/codex/04-architecture/global-ledger-architecture.md` with the 4-SSOT-+-4-derived model,
       universal **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture.
       Gated on service-repo access and DeFi cutover. Operator-driven design session post-cutover. PnL recipe, synthesis
       recipe table, ownership table.
-- [x] ✅ [DOC] P2. Add `codex/02-data/ledger-event-taxonomy.md` with the `EventOrigin` / `EventType` / `AssetClass` /
+- [x] ✅ [DOC] P2. Add `/codex/02-data/ledger-event-taxonomy.md` with the `EventOrigin` / `EventType` / `AssetClass` /
       **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on
       service-repo access and DeFi cutover. Operator-driven design session post-cutover. `Direction` enum SSOT.
-- [x] ✅ [DOC] P2. Update `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` with the
+- [x] ✅ [DOC] P2. Update `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` with the
       **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Discovery/design/doc items for global ledger architecture. Gated on
       service-repo access and DeFi cutover. Operator-driven design session post-cutover. "carry-as-theta-family"
       attribution framing.
@@ -386,7 +403,7 @@ This plan is **operationally complete** (per `Plans Run To Actual Completion` HA
 - **Late-arriving-data event-sourced bias**: prefer Option A (append-only enrichment rows) unless query complexity is
   shown to materially block downstream consumers — Citadel-style is event-sourced.
 - **Cross-client funds isolation**: every transfer/bridge row writer MUST hit the UAC validator. Workspace HARD RULE per
-  `codex/04-architecture/client-funds-isolation.md`.
+  `/codex/04-architecture/client-funds-isolation.md`.
 
 ## Deferred work / out-of-scope for this discovery plan
 
@@ -401,6 +418,6 @@ This plan is **operationally complete** (per `Plans Run To Actual Completion` HA
 
 - **Operator [ack] pending (Phase 3/5/6)**: Late-arriving-data handling (Phase 3), greeks home location (Phase 5),
   TreasuryLedger split decision (Phase 6). All require operator decision before migration sub-plan can start.
-- **Codex SSOT docs (Phase 10, DEFERRED-POST-CUTOVER)**: `codex/04-architecture/global-ledger-architecture.md` +
-  `codex/02-data/ledger-event-taxonomy.md` + `pnl-attribution.md` update + CLAUDE.md pointer. All gated on service-repo
+- **Codex SSOT docs (Phase 10, DEFERRED-POST-CUTOVER)**: `/codex/04-architecture/global-ledger-architecture.md` +
+  `/codex/02-data/ledger-event-taxonomy.md` + `pnl-attribution.md` update + CLAUDE.md pointer. All gated on service-repo
   access and operator-driven design post-cutover.

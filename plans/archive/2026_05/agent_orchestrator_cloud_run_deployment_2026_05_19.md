@@ -9,8 +9,13 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]
 tags: []
-related: [agent_orchestrator_dual_deployment_2026_05_19.md, agent_orchestrator_workers_on_vms_2026_05_19.md, master_to_live_defi_2026_05_23.md]
-created: '2026-05-19'
+related:
+  [
+    /plans/archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md,
+    agent_orchestrator_workers_on_vms_2026_05_19.md,
+    /plans/active/master_to_live_defi_2026_05_23.md,
+  ]
+created: "2026-05-19"
 parent_epic: orchestrator_master
 priority: P0
 estimate_class: infra
@@ -35,7 +40,7 @@ rule applies to GCS data only). Dashboard SPA served from Firebase Hosting at `a
 Phases 0-4/6 complete; Phase 5 (prod cutover + Harsh laptop decommission) gated on `agent_orchestrator_workers_on_vms`
 plan reaching D3 (workers must move to VMs before laptop nginx can shut down).
 
-Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md` · `codex/08-workflows/local-dev.md`
+Codex SSOTs: `/codex/04-architecture/agent-orchestrator-overview.md` · `/codex/08-workflows/local-dev.md`
 
 ---
 
@@ -82,8 +87,8 @@ Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md` · `codex/08
 
 ## Phase 6 — Codex SSOT
 
-- [x] ✅ [AGENT] P6. New `codex/04-architecture/agent-orchestrator-overview.md`; updated
-      `codex/08-workflows/local-dev.md` (port 8026); CLAUDE.md "Key repo map" updated; README + OPERATIONS.md updated.
+- [x] ✅ [AGENT] P6. New `/codex/04-architecture/agent-orchestrator-overview.md`; updated
+      `/codex/08-workflows/local-dev.md` (port 8026); CLAUDE.md "Key repo map" updated; README + OPERATIONS.md updated.
       (PM@`1277a0cb`, agent-orchestrator@`ac8c36e`)
 
 ## Deferred work — migrated to:

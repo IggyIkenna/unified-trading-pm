@@ -95,7 +95,7 @@ empirical-expected-set + NaN-fill is the honest fix for that gap.
       row floor (→ len(EXPECTED_BOOKMAKER_MARKET_SETS[tier]) once item 1 ships)
 
 > **Already shipped (downstream consumer guidance) — flipped in the epic, NOT re-opened here**: features-sports
-> arbitrage/odds-movement NaN-row handling + the `codex/02-data/honest-absence-downstream-handling.md` § "ODDS NaN-fill
+> arbitrage/odds-movement NaN-row handling + the `/codex/02-data/honest-absence-downstream-handling.md` § "ODDS NaN-fill
 > semantics" doc were COMPLETED 2026-05-23 (sports_master epic body). This plan covers only the open writer-side
 > enumeration + cluster-validation half above.
 

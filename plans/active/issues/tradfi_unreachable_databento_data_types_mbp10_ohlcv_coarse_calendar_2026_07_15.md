@@ -55,14 +55,14 @@ tags:
   ]
 related:
   [
-    krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md,
-    tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md,
-    tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md,
-    tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
-    macro_micro_econ_data_capture_audit_2026_06_05.md,
-    dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
-    ../../../codex/02-data/tradfi-databento-sourcing-ssot.md,
-    ../../../codex/02-data/honest-coverage-model.md,
+    /plans/archive/issues/krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md,
+    /plans/archive/issues/tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md,
+    /plans/archive/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md,
+    /plans/archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
+    /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
+    /plans/archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-15
 parent_epic: tradfi_master
@@ -90,7 +90,7 @@ last_updated: 2026-07-16
 
 ## What I found (read-only code trace, no changes made)
 
-Triaging the alert batch's TRADFI 100%-failed cells against `codex/02-data/tradfi-databento-sourcing-ssot.md` (cited
+Triaging the alert batch's TRADFI 100%-failed cells against `/codex/02-data/tradfi-databento-sourcing-ssot.md` (cited
 authoritative for TradFi sourcing gotchas) plus a direct code read across
 `market-tick-data-service`/`unified-api-contracts`/`instruments-service`/`features-service`. All three mechanisms below
 were verified via grep + read, not assumed.
@@ -128,7 +128,7 @@ were verified via grep + read, not assumed.
 
 ### (2) `ohlcv_15m` / `ohlcv_24h` — aggregated-downstream by design, still reaches the download layer
 
-- `codex/02-data/tradfi-databento-sourcing-ssot.md` (§ "Non-Databento sources are UNTOUCHED by these guards"): "Note:
+- `/codex/02-data/tradfi-databento-sourcing-ssot.md` (§ "Non-Databento sources are UNTOUCHED by these guards"): "Note:
   Databento doesn't even serve a 15m schema — `ohlcv-15m` would only raise if someone wrongly routed it through the
   Databento fetch path, which nothing does" — and the OHLCV policy section: "We fetch both `ohlcv-1s` and `ohlcv-1m` ...
   and aggregate the coarser bars (15m / 1h / 24h) downstream."
@@ -386,8 +386,8 @@ against a live manifest query in this pass (would require the P3 VERIFY trace be
 Per `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s operator decision #2 ("this is very likely NOT greenfield
 design work... UAC/instruments-service/MTDS already has infrastructure for per-venue source-capability constraints and
 this 'might need completion' rather than a new design — AUDIT FIRST"), this section is that audit. Read (not grepped)
-`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`, `codex/02-data/tradfi-databento-sourcing-ssot.md`,
-`codex/02-data/honest-coverage-model.md`, and the relevant UAC/instruments-service/MTDS/market-data-processing-service
+`/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`, `/codex/02-data/tradfi-databento-sourcing-ssot.md`,
+`/codex/02-data/honest-coverage-model.md`, and the relevant UAC/instruments-service/MTDS/market-data-processing-service
 source directly.
 
 **Verdict: the operator's prior was substantially correct.** The per-venue source-capability/granularity distinction he
@@ -430,7 +430,7 @@ fixture for historical `(tradfi, ohlcv_15m, CBOE)` rows (`test_schema_spec_compl
 documents already-captured historical data shape, unrelated to forward expected-coverage.
 
 **(B) NOT SHIPPED — genuinely missing, recommend as scoped follow-up.** "Aggregate the coarser bars downstream" is
-asserted in **three separate places** — `codex/02-data/tradfi-databento-sourcing-ssot.md`, the `umi_tick_provider.py`
+asserted in **three separate places** — `/codex/02-data/tradfi-databento-sourcing-ssot.md`, the `umi_tick_provider.py`
 CBOE comment, and `market-data-processing-service`'s `TradfiOhlcv15mAdapter` docstring
 (`app/adapters/tradfi/ohlcv_passthrough.py:397`: "VX futures aggregated from Databento ohlcv-1m") — **but no such
 aggregator exists anywhere in the codebase.** Verified by reading `TradfiOhlcvPassthroughAdapter` in full: it is a bare

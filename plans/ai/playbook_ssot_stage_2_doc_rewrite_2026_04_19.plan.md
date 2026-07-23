@@ -65,16 +65,16 @@ placeholders (`TBD — Odum finance to populate`); structure is locked, numbers 
 **Stage 1 outputs (primary source):**
 
 1. `codex/14-playbooks/_ssot-rules/*.md` — all 9 rule files
-2. `codex/14-playbooks/experience/im-decision-journey.md` — the reference pattern
-3. `codex/14-playbooks/experience/TEMPLATE.md`
+2. `/codex/14-playbooks/experience/im-decision-journey.md` — the reference pattern
+3. `/codex/14-playbooks/experience/TEMPLATE.md`
 
 **Impl-layer docs (to reference, not duplicate):** 4. `codex/14-playbooks/playbooks/*.md` — all 9 current playbooks
 (impl layer) 5. `codex/14-customer-journeys/playbook-concepts/*.md` — 10 files 6.
 `codex/14-playbooks/authentication/*.md`, `environments/*.md`
 
-**Taxonomy sources:** 7. `codex/09-strategy/architecture-v2/README.md` 8.
-`codex/09-strategy/architecture-v2/category-instrument-coverage.md` 9.
-`codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` 10. `codex/02-venues/` 11. `unified-api-contracts/` — browse
+**Taxonomy sources:** 7. `/codex/09-strategy/architecture-v2/README.md` 8.
+`/codex/09-strategy/architecture-v2/category-instrument-coverage.md` 9.
+`/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` 10. `codex/02-venues/` 11. `unified-api-contracts/` — browse
 registry dirs; don't modify
 
 **Project rules:** 12. `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` 13.
@@ -127,11 +127,11 @@ Files that Stage 2 creates AND Stage 3 consumes. Every file MUST cite `_ssot-rul
       live infra — identical metric-generation components; (c) trading terminal = live/batch toggle over same component
       tree; (d) strategy catalogue rows carry phase tags (research/paper/live), no UI fork per phase; (e) paper trading
       same look+feel as live. Map which UI routes/components implement which claim, with pointers to the current code
-      locations. Cites `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` + rule 03 itself. Explicitly state: **phase
+      locations. Cites `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` + rule 03 itself. Explicitly state: **phase
       (research/paper/live) is orthogonal to maturity** — a LIVE_ALLOCATED strategy can still be viewed in research
       phase when a researcher re-runs it over historical data.
 - [ ] [AGENT] P0. `shared-core/org-fund-client-entity-model.md` — the org → fund(Pooled/SMA) → clients → API-keys
-      hierarchy. Transcludes from `codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md` +
+      hierarchy. Transcludes from `/codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md` +
       `sma-vs-pooled.md` but re-framed for experience layer.
 - [ ] [AGENT] P0. `shared-core/shared-reporting-core.md` — the client-reporting surface that pb3a and pb3b share.
       Content from `cross-cutting/client-reporting.md` rewritten experience-layer style.
@@ -213,7 +213,7 @@ How restriction profiles are configured, and how sales context flows into provis
 
 ### Phase 2.6 — Mark existing impl-layer docs
 
-- [ ] [AGENT] P0. `codex/14-playbooks/playbooks/README.md` — already created in Stage 1; verify it marks the dir as
+- [ ] [AGENT] P0. `/codex/14-playbooks/playbooks/README.md` — already created in Stage 1; verify it marks the dir as
       `[IMPL LAYER]` and points to `../experience/` for narrative.
 - [ ] [AGENT] P1. Add a one-line
       `> **Layer:** Implementation. Narrative lives in [codex/14-playbooks/experience/](../../codex/14-playbooks/experience/).`
@@ -223,7 +223,7 @@ How restriction profiles are configured, and how sales context flows into provis
 
 ### Phase 2.7 — Update top-level SSOT indices
 
-- [ ] [AGENT] P0. `codex/14-playbooks/README.md` — expand `## Layered structure` section from Stage 1; add sub-dir
+- [ ] [AGENT] P0. `/codex/14-playbooks/README.md` — expand `## Layered structure` section from Stage 1; add sub-dir
       entries for `shared-core/`, `commercial-model/`, `demo-ops/`, `implementation-mapping/`.
 - [ ] [AGENT] P0. `codex/00-SSOT-INDEX.md` — update `14-playbooks` row with new sub-dirs.
 
@@ -254,12 +254,12 @@ How restriction profiles are configured, and how sales context flows into provis
 
 **Modified:**
 
-- `codex/14-playbooks/README.md`
+- `/codex/14-playbooks/README.md`
 - `codex/00-SSOT-INDEX.md`
 - `codex/14-playbooks/playbooks/*.md` (9 files get 1-line layer headers)
-- `codex/14-customer-journeys/playbook-concepts/README.md` (new)
-- `codex/14-playbooks/authentication/README.md` (edit header)
-- `codex/14-playbooks/environments/README.md` (edit header)
+- `/codex/14-customer-journeys/playbook-concepts/README.md` (new)
+- `/codex/14-playbooks/authentication/README.md` (edit header)
+- `/codex/14-playbooks/environments/README.md` (edit header)
 
 ## Execution DAG
 
@@ -301,7 +301,7 @@ reads Stage 2's `commercial-model/pricing-building-blocks.md` (structure only; n
 rules (Stage 3B) and derivation engine (Stage 3C).
 
 Stage 3's presentation (Stage 3D) references the experience playbooks; Stage 3E's refactor plan supersedes
-`codex/14-playbooks/roadmap/next-waves.md` (which can then be marked deprecated).
+`/codex/14-playbooks/roadmap/next-waves.md` (which can then be marked deprecated).
 
 ---
 
@@ -323,7 +323,7 @@ cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git fetch origin
 git log origin/live-defi-rollout --oneline -20 | grep "Stage 1"
 ls codex/14-playbooks/_ssot-rules/
-ls codex/14-playbooks/experience/im-decision-journey.md
+ls /codex/14-playbooks/experience/im-decision-journey.md
 ```
 
 All 3 commands must succeed. If not, STOP and report blocker.
@@ -346,10 +346,10 @@ Execute every checkbox in Phases 2.1 through 2.8 of this plan:
 1. This plan file
 2. `plans/active/playbook_ssot_stage_1_rules_2026_04_19.plan.md` (for context)
 3. All 9 files in `codex/14-playbooks/_ssot-rules/`
-4. `codex/14-playbooks/experience/im-decision-journey.md` (the pattern you replicate)
-5. `codex/14-playbooks/experience/TEMPLATE.md`
+4. `/codex/14-playbooks/experience/im-decision-journey.md` (the pattern you replicate)
+5. `/codex/14-playbooks/experience/TEMPLATE.md`
 6. The 9 impl-layer playbooks in `codex/14-playbooks/playbooks/` (to link to, not duplicate)
-7. `codex/09-strategy/architecture-v2/README.md` + `category-instrument-coverage.md`
+7. `/codex/09-strategy/architecture-v2/README.md` + `category-instrument-coverage.md`
 8. `codex/02-venues/` top-level
 9. Existing active plans (for cross-linking): user_management_merge, share_class_architecture, deployment_topology,
    defi_demo_e2e, platform_strategy_families
@@ -367,7 +367,7 @@ Create ~35 new markdown files across:
 
 Modify:
 
-- `codex/14-playbooks/README.md`, `codex/00-SSOT-INDEX.md`
+- `/codex/14-playbooks/README.md`, `codex/00-SSOT-INDEX.md`
 - One-line layer headers in 9 impl playbooks + cross-cutting/authentication/environments READMEs
 
 Content sources for each file are listed in Phases 2.1–2.5. Each file must follow rule 01 grammar (experience/) or open

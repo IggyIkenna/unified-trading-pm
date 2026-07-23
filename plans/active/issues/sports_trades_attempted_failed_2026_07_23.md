@@ -54,13 +54,13 @@ tags:
   ]
 related:
   [
-    sports_trades_venue_fetch_failed_2026_07_15.md,
+    /plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md,
     ../sports_master_closeout_2026_07_21.md,
     ../sports_consolidated_closeout_2026_07_19.md,
     ../data_pipeline_alerts_batch_remediation_2026_07_15.md,
     ../../archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
-    ../../../codex/02-data/sports-2020-06-data-floor.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-23
 parent_epic: sports_master

@@ -21,7 +21,7 @@ related:
     plans/active/issues/manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md,
     plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
     plans/audit/results/available_at_fill_rate_audit_2026_07_13.py,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-13
 last_updated: 2026-07-14
@@ -291,9 +291,9 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Codex SSOTs
 
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest schema, capture_status states, `available_at`
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest schema, capture_status states, `available_at`
   semantics.
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator cron pause/resume + staleness threshold.
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator cron pause/resume + staleness threshold.
 
 ## Progress Log
 

@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.3
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.3
   - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
   - refactor_g2_9_uac_remaining_gaps_2026_04_20.plan.md (gap #5 consumer)
 # Wave G2-γ — parallel with G2.4, G2.5. Gates on G1.6 + selective G2.9 gaps. Independent of G2-α/β.
@@ -42,20 +42,20 @@ data-availability metadata.
 
 - **Upstream:** G1.6 derivation engine, G2.9 gap #5 (EventCalendarSourceCapability)
 - **Wave G2-γ peers (parallel):** G2.4 ML Model Catalogue, G2.5 Execution Algo Catalogue
-- **Codex:** `codex/02-data/availability-manifest-and-data-status.md` — SSOT doc that the catalogue will deep-link to
+- **Codex:** `/codex/02-data/availability-manifest-and-data-status.md` — SSOT doc that the catalogue will deep-link to
 - **Precedent:** Strategy Catalogue under `unified-trading-system-ui/app/services/strategy-catalogue/` (Phase 10
   shipped)
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.3
-2. `codex/02-data/availability-manifest-and-data-status.md`
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.3
+2. `/codex/02-data/availability-manifest-and-data-status.md`
 3. `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`
-4. `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — master matrix precedent
+4. `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` — master matrix precedent
 5. `unified-trading-system-ui/app/services/strategy-catalogue/` — all routes + components
 6. `unified-trading-system-ui/components/architecture-v2/` — chip primitives
 7. `unified-trading-system-ui/app/services/data/` — 13 current routes
-8. `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gap #5
+8. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gap #5
 
 ## Out of scope
 
@@ -94,7 +94,7 @@ identically (mirror Strategy Catalogue's pattern).
 ### Phase C — Chip primitive reuse
 
 - [ ] [AGENT] P0. Reuse `<StatusChip>`, `<VenueChip>`, `<InstrumentChip>` from `components/architecture-v2/`.
-- [ ] [AGENT] P0. Codex deep-link button → `codex/02-data/availability-manifest-and-data-status.md`.
+- [ ] [AGENT] P0. Codex deep-link button → `/codex/02-data/availability-manifest-and-data-status.md`.
 
 ### Phase D — Retirement of legacy routes
 

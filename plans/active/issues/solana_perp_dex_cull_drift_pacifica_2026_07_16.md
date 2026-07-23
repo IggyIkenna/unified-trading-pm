@@ -156,7 +156,7 @@ directly (not just green-trusted): `_derive_structure(BYBIT config) → LST_AS_M
 `_derive_structure(DRIFT config) → None` — confirming the fixed tests now genuinely reach and exercise the rule under
 test.
 
-**Codex updated**: `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` (SUPERSEDED banner + stale
+**Codex updated**: `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` (SUPERSEDED banner + stale
 venue_universe/matrix references), `carry-staked-basis-dated.md` (SUPERSEDED banner, dated slot removed),
 `../families/carry-and-yield.md` (active slot_labels list), `../category-instrument-coverage.md` (Solana coverage rows
 marked REMOVED). `mvp-universe-per-asset-group.md` had no DRIFT references (checked, clean).

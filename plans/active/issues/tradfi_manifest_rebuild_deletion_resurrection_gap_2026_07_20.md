@@ -22,8 +22,8 @@ related:
   [
     massive_purge_blocked_databento_l1_entitlement_2026_07_20,
     reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-20
 priority: P0
@@ -218,4 +218,4 @@ the object-walk rebuild.
 - [x] [DOCS] P1. ✅ The deletion-resurrection gap is intended behaviour; dropping rows requires surgical removal under a
       paused consolidator (force-rebuild is insufficient) — the `_legacy_seed` merge-exclusion
       (`manifest_consolidator.py:783,873-875`) makes a surgical drop durable. Documented here + in the codex SSOT §
-      "Surgical row removal". (codex/05-infrastructure/manifest-consolidator-ssot.md)
+      "Surgical row removal". (/codex/05-infrastructure/manifest-consolidator-ssot.md)

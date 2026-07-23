@@ -7,8 +7,8 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.9
-  - codex/09-strategy/architecture-v2/uac-registry-gaps.md
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.9
+  - /codex/09-strategy/architecture-v2/uac-registry-gaps.md
   - UAC commit `e6f7c6d` (2026-04-21) — V2 suffix dropped; canonical is `ArchetypeCapability` (not
     `ArchetypeCapabilityV2`)
 # Wave G2-α — parallel with G2-α peers 2.1, 2.6, 2.8, 2.11. Some sub-gaps consumed by G2-γ (2.3, 2.4, 2.5).
@@ -20,7 +20,7 @@ depends_on:
 ## Context
 
 Stage 3E §2.9 ships UAC gaps #2 through #11 from the tracker at
-[`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md). Gap #1 (`ArchetypeCapability` —
+[`uac-registry-gaps.md`](/codex/09-strategy/architecture-v2/uac-registry-gaps.md). Gap #1 (`ArchetypeCapability` —
 originally shipped as `ArchetypeCapabilityV2` in G1.8; V2 suffix dropped via UAC `e6f7c6d` on 2026-04-21) shipped in
 G1.8; gap #12 (`StrategyAvailabilityRegistry`) shipped in Phase 10.5. The remaining 10 declarations are additive + each
 is a self-contained sub-wave with its own consumers.
@@ -55,15 +55,15 @@ independently parallelisable by downstream agents; a single umbrella plan keeps 
 - **Wave G2-α peers (parallel):** G2.1, G2.6, G2.8, G2.11
 - **Downstream Wave G2-γ:** G2.3 (Data Catalogue), G2.4 (ML Model Catalogue), G2.5 (Execution Algo Catalogue) — each
   consumes specific gaps
-- **Gap tracker:** `codex/09-strategy/architecture-v2/uac-registry-gaps.md`
+- **Gap tracker:** `/codex/09-strategy/architecture-v2/uac-registry-gaps.md`
 - **G1 precedent:** G1.8 `ArchetypeCapability` (gap #1, originally shipped as `ArchetypeCapabilityV2` and renamed
   2026-04-21) established the pattern
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.9
-2. `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — all 10 open gaps
-3. `codex/09-strategy/architecture-v2/README.md` — 8 families × 18 archetypes × 7 axes
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.9
+2. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — all 10 open gaps
+3. `/codex/09-strategy/architecture-v2/README.md` — 8 families × 18 archetypes × 7 axes
 4. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py` (G1.8 precedent)
 5. `unified-api-contracts/unified_api_contracts/registry/capability_declarations/` — per-venue pattern
 6. For each gap: the gap-tracker section + consumer-service directory (varies per gap):
@@ -154,7 +154,7 @@ independently parallelisable by downstream agents; a single umbrella plan keeps 
 
 - [ ] [SCRIPT] P0. UAC QG green.
 - [ ] [SCRIPT] P0. Each affected consumer-service QG green.
-- [ ] [AGENT] P0. Update `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — mark gaps #2–#11 as SHIPPED with
+- [ ] [AGENT] P0. Update `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — mark gaps #2–#11 as SHIPPED with
       commit SHAs.
 
 ## Critical files to be modified
@@ -162,7 +162,7 @@ independently parallelisable by downstream agents; a single umbrella plan keeps 
 - 10 new `unified_api_contracts/internal/architecture_v2/<gap_name>.py` files (one per gap)
 - 10 new `unified-api-contracts/tests/internal/unit/test_<gap_name>.py` files
 - Per-gap consumer updates across ~6 services (see read-set mapping)
-- `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — state flip on all 10 gaps
+- `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — state flip on all 10 gaps
 
 ## Execution DAG
 
@@ -222,7 +222,7 @@ cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C unified-api-contracts checkout live-defi-rollout && git -C unified-api-contracts pull
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py  # G1.8 precedent
-ls codex/09-strategy/architecture-v2/uac-registry-gaps.md
+ls /codex/09-strategy/architecture-v2/uac-registry-gaps.md
 # Per-gap consumer service verification — do during execution, not upfront
 ```
 

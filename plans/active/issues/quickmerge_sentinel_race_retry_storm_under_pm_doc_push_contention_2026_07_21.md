@@ -87,7 +87,7 @@ persists.
 
 # Codex SSOTs
 
-- `codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / STAGE 0.4 behind-remote auto-reconcile /
+- `/codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / STAGE 0.4 behind-remote auto-reconcile /
   sentinel-race handling).
 
 # Partial progress (2026-07-22)

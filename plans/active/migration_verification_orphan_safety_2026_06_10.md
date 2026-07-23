@@ -51,9 +51,9 @@ source:
     }
 codex_ssots:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/pipeline-mode-partition.md,
-    codex/02-data/bar-boundary-candle-edge-convention.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/bar-boundary-candle-edge-convention.md,
     plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
   ]
 drift_direction: advance-code
@@ -199,7 +199,7 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
 
 - [x] ✅ [VERIFY] P0. Candle-edge standing check VERIFIED LIVE — the right-edge (`t_close`) convention is codified +
       QG-enforced + per-source documented. — codex@live-defi-rollout (verify 2026-06-16).
-      `codex/02-data/bar-boundary-candle-edge-convention.md` is the SSOT (closed bar stamped on its RIGHT/close edge;
+      `/codex/02-data/bar-boundary-candle-edge-convention.md` is the SSOT (closed bar stamped on its RIGHT/close edge;
       half-open `[t_open, t_close)`). **One normalization point**: the MDPS processed-candle store (data-state verified
       right-edge correct 2026-06-08) + MTDS ingestion conversion (`databento_adapter._convert_ohlcv_open_edge_to_close`,
       stamps the row-level `bar_edge="close"` marker). **Per external source × timeframe edge label documented + handled
@@ -665,7 +665,7 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
   exact 3 layers `possible_manifest` composes, no divergent re-derivation), and alive+no-manifest cells yield
   `expected_unattempted`; per-AG unit tests + the v1→v2 superset integration test cover it. Flipped V1. **V4 (CF-19
   candle-edge standing check) GREEN** — the right-edge (`t_close`) convention is codified
-  (`codex/02-data/bar-boundary-candle-edge-convention.md`) + QG-enforced as a STANDING check (not a one-off): STEP 5.92
+  (`/codex/02-data/bar-boundary-candle-edge-convention.md`) + QG-enforced as a STANDING check (not a one-off): STEP 5.92
   `check_bar_edge_open_ingestion.py` wired in both `base-service.sh` (~3153) + `base-library.sh` (~1154), STEP 5.74
   truncation ban, runtime `assert_close_edge`, and the independent-reference/batch==live cross-source equivalence
   fixture in MTDS + MDPS + features-service; single normalization point = MDPS processed-candle store; per-source edge
@@ -791,7 +791,7 @@ B   MVP Phase 2-3 + config_version + execution-config compatibility pre-flight (
       orphaned-trigger version. Regen via `rollout-workflow-templates.sh --template semver-agent` + commit per-repo +
       reach each repo's `main` (the trigger fires from the default branch). Restores staging→main promotion +
       version-bump/deploy dispatch that was DEAD fleet-wide since the LDR-trunk decoupling dropped `push:[staging]`
-      quality-gates-v2. Verify it fires on a staging push. SSOT: `codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
+      quality-gates-v2. Verify it fires on a staging push. SSOT: `/codex/08-workflows/ci-cd-flow.md` § "LDR-trunk
       decoupling". — strategy-service@e884205a: spot-checked 11 fleet repos, both push:[staging] trigger + github.sha
       fallback present.
 - [ ] [INFRA] P2. **Rollup Cloud Run Job image lags the API deploy** — `uts-prod-data-status-rollup` (the data-status

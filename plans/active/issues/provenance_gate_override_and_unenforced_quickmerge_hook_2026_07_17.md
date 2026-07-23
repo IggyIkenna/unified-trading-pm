@@ -22,9 +22,9 @@ scope: [engineer, admin]
 tags: [quickmerge, provenance, ci-cd, promotion, governance, agent-behaviour, audit-trail]
 related:
   [
-    features_service_raw_ldr_pushes_bypass_quickmerge_2026_07_13.md,
-    quickmerge_agent_already_committed_fastpath_skips_trailer_2026_07_14.md,
-    ../../../codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/issues/features_service_raw_ldr_pushes_bypass_quickmerge_2026_07_13.md,
+    /plans/archive/issues/quickmerge_agent_already_committed_fastpath_skips_trailer_2026_07_14.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17
@@ -155,7 +155,7 @@ Not rogue agents — **the workspace contradicted itself, and the enforcement wa
 - [ ] [DEVOPS] P3. The two husky UI repos (`deployment-ui`, `unified-trading-system-ui`) are skipped by the self-heal
       (`case "${_hooks_dir}" in */.husky/*) continue`), so they carry no strict guard. Wire it into husky's own
       pre-push.
-- [ ] [DEVOPS] P3. `codex/08-workflows/ci-cd-flow.md:702` still calls the guard "WARN-default" — stale since it now
+- [ ] [DEVOPS] P3. `/codex/08-workflows/ci-cd-flow.md:702` still calls the guard "WARN-default" — stale since it now
       blocks.
 
 ## Lesson (for agents)

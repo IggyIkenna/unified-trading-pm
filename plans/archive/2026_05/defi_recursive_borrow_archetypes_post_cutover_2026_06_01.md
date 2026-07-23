@@ -9,12 +9,19 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md, plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, plans/active/defi_master.md, plans/active/defi_catalogue_chain_primitives_2026_05_10.md]
+related:
+  [
+    plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md,
+    plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md,
+    plans/active/defi_master.md,
+    plans/active/defi_catalogue_chain_primitives_2026_05_10.md,
+  ]
 created: 2026-05-14
 archived: 2026-05-23
 last_updated: 2026-05-23
 descope_reversed: 2026-05-13
-descope_reversal_reason: 'Operator direction 2026-05-13 evening: recursive_borrow Phases 4-13 PULLED BACK into May-23 scope (parent plan
+descope_reversal_reason: "Operator direction 2026-05-13 evening: recursive_borrow Phases 4-13 PULLED BACK into May-23
+  scope (parent plan
 
   defi_recursive_borrow_archetypes_2026_05_10.md status reverted from partial-shipped-descoped → active).
 
@@ -26,13 +33,13 @@ descope_reversal_reason: 'Operator direction 2026-05-13 evening: recursive_borro
 
   READY-TO-GO-LIVE (live trading toggle OFF, code + tests + backtests + paper-trade testnet smoke verified).
 
-  '
+  "
 target_deadline: 2026-06-15 (post-cutover scope-expansion only)
 migrated_from: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md (REVERSED for Phases 4-13)
 estimate_class: brand-new
 estimate_baseline_ai_days: 24
 estimate_calibrated_ai_days: 24
-estimate_calibration_note: 'Sum of per-phase estimates from original plan: Phase 2-remaining ~1 + Phase 4 Solidity ~3 +
+estimate_calibration_note: "Sum of per-phase estimates from original plan: Phase 2-remaining ~1 + Phase 4 Solidity ~3 +
 
   Phase 5 orchestrator ~4 + Phase 6 HL LIVE ~3 + Phase 7 PerpHedgeSizer ~2 + Phase 8 HealthFactor ~2 +
 
@@ -40,7 +47,7 @@ estimate_calibration_note: 'Sum of per-phase estimates from original plan: Phase
 
   Class=brand-new (1.0×) — novel Solidity + execution-service code implementing well-defined spec.
 
-  '
+  "
 parent_epic: strategy_master
 assigned_vm: vm-trading-core
 priority: P2
@@ -435,29 +442,29 @@ catalogue Phase 3 completion status before starting.
 Note: `carry-recursive-borrow-lending-only.md`, `carry-recursive-borrow-perp-hedged.md`, `carry-recursive-staked.md`
 patches, and `strategy-summary.md` patches are ALREADY SHIPPED (see original plan DONE blocks). Remaining:
 
-- [x] ✅ [codex] **P0**. Patch `codex/04-architecture/flash-loan-receiver.md` — NEW `## Extended receiver` section
+- [x] ✅ [codex] **P0**. Patch `/codex/04-architecture/flash-loan-receiver.md` — NEW `## Extended receiver` section
       (action-encoder Option A; deployed addresses per chain; modes table row). Runs alongside Phase 4. **MIGRATED
       FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 10 P0 gate #4. — PM@a411c240 (2026-05-17 slot-5);
       verified 2026-05-18 slot 3.
-- [x] ✅ [codex] **P0**. Patch `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` — Family 1 lender
+- [x] ✅ [codex] **P0**. Patch `/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` — Family 1 lender
       admission section + Family 2 perp pairing section + SwapRouter02 per-chain disambiguation caveat. **MIGRATED
       FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 10 P0 gate #5. — PM@ec344724 (2026-05-15); verified
       2026-05-18 slot 3.
-- [x] [codex] **P0**. NEW `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md` (gates on Phase 9 P&L
+- [x] [codex] **P0**. NEW `/codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md` (gates on Phase 9 P&L
       curves — per-month attribution table per variant). **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 10 P0 gate #6. **BLOCKED-DATA** — gates on Phase 9
       matching-engine DeFi cost model (execution-service). **[DEFERRED-POST-CUTOVER]** 2026-05-19 slot 2: BLOCKED-DATA
       acknowledged; gated on Phase 9 cost-model which is itself post-cutover. Will be authored after Phase 9 P&L curves
       are available.
-- [x] ✅ [codex] **P0**. NEW `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md`
+- [x] ✅ [codex] **P0**. NEW `/codex/16-strategy-playbooks/defi/recursive-borrow-backtest-scenarios-2026-05.md`
       (14-scenario taxonomy; per-cell verdict matrix; harness shape; SSOT alignment caveats). Gates on Phase 12 design
       (DESIGN SHIPPED in original plan). **MIGRATED FROM:** `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 10 P0
       gate #7. — PM@c5a25181 (2026-05-15); verified 2026-05-18 slot 3.
-- [x] ✅ [codex] **P0**. Patch `codex/04-architecture/batch-live-architecture.md` — NEW
+- [x] ✅ [codex] **P0**. Patch `/codex/04-architecture/batch-live-architecture.md` — NEW
       `### Archetype-grain batch=live status` sub-section with concentration-risk note. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 10 P0 gate #9. — PM@ec344724 (2026-05-15); verified
       2026-05-18 slot 3.
-- [x] ✅ [codex] **P1**. NEW `codex/04-architecture/cefi-perp-leg-bybit.md` — Bybit perp topology; Feb-2025 hack
+- [x] ✅ [codex] **P1**. NEW `/codex/04-architecture/cefi-perp-leg-bybit.md` — Bybit perp topology; Feb-2025 hack
       addendum; funding cadence diff vs HL; Family 2 perp topology. **MIGRATED FROM:**
       `defi_recursive_borrow_archetypes_2026_05_10.md` Phase 10 P1 gate #10. — PM@ec344724 (2026-05-15); verified
       2026-05-18 slot 3.

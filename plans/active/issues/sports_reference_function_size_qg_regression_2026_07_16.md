@@ -31,7 +31,7 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer]
 tags: [code-quality, function-size, qg-ratchet, sports, quality-gates, sentinel-skip]
-related: [codex_violations_ratchet_to_five_2026_06_10.md]
+related: [/plans/active/codex_violations_ratchet_to_five_2026_06_10.md]
 created: 2026-07-16
 last_updated: 2026-07-16
 parent_epic: instruments_master

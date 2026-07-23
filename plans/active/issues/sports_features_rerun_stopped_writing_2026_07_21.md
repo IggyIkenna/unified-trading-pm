@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [sports, data-correctness, features, season-context, fabrication, ml-readiness, async-discipline]
 related:
   [
-    sports_derived_features_fabricated_corpus_scope_2026_07_20.md,
+    /plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md,
     ../sports_consolidated_closeout_2026_07_19.md,
     ../sports_master_closeout_2026_07_21.md,
   ]

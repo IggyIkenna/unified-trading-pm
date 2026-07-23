@@ -121,7 +121,7 @@ source:
 >
 > - **16,969** canonical `_migrated_` objects across **1,815** days are **100% `venue=ODDS_API` + `data_type=odds`** yet
 >   **100% stamped `pipeline_mode=batch_footystats`** — **zero are footystats data** (an SSOT violation of
->   `{mode}_{source}`, `codex/02-data/pipeline-mode-partition.md`).
+>   `{mode}_{source}`, `/codex/02-data/pipeline-mode-partition.md`).
 > - **30/30** sampled legacy G1 objects are **row-identical and tick-key-identical** to their canonical migrated twin (0
 >   legacy-only, 0 canon-only keys; `source == ODDS_API` both sides). Canonical migrated (1,815 days) is a **SUPERSET**
 >   of legacy G1 (386 days).

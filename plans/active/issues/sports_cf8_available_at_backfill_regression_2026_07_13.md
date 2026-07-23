@@ -24,8 +24,8 @@ tags: [data-correctness, cf-8, available-at, regression, manifest-consolidator, 
 related:
   [
     plans/active/sports_manifest_canonicalisation_2026_06_01.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-13
 parent_epic: mtds_mdps_master

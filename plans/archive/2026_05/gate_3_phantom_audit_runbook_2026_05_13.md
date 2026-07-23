@@ -10,7 +10,7 @@ repos: [deployment-service, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-13'
+created: "2026-05-13"
 ---
 
 > **ARCHIVED 2026-05-21** — Gate 3 FIRED 2026-05-17; 0 phantoms all 5 asset_groups; operator decision ACCEPT. TradFi
@@ -317,7 +317,7 @@ would upgrade if `--apply-flips` were passed:
 ## References
 
 - **5-gate DAG**: `work_split_2026_05_12_ikenna.md` line 494–502.
-- **Manifest schema + phantom audit**: `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit".
+- **Manifest schema + phantom audit**: `/codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit".
 - **Execution ownership**: `plans/active/issues/runbook_execution_governance_gaps_2026_05_08.md` (runbook-ownership
   SSOT).
 - **Master plan Gate 3 status**: `master_to_live_defi_2026_05_23.md` § "Gate status" (update row with runbook-execution

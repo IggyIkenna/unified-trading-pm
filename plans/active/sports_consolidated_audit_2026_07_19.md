@@ -23,10 +23,10 @@ scope: [engineer]
 tags: [audit, sports, canonical, honest-coverage, data-completion, ml-readiness, data-correctness]
 related:
   [
-    sports_features_layer_findings_sweep_2026_07_18.md,
-    sports_consolidated_closeout_2026_07_19.md,
-    defi_consolidated_closeout_2026_07_18.md,
-    data_completion_defi_2026_07_15.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/data_completion_defi_2026_07_15.md,
   ]
 created: "2026-07-19"
 last_updated: "2026-07-19"

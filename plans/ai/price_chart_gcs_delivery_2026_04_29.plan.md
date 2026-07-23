@@ -9,10 +9,10 @@ benchmark_post: reports/price_chart_gcs_benchmark_2026_04_29_post.md
 audience: backend engineers, frontend engineers
 parent_reference: market_data_delivery_architecture_2026_04_27.md
 codex_refs:
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/data-status-drilldown.md
-  - codex/02-data/subscription-model.md
-  - codex/02-data/per-category-bucket-layouts.md
+  - /codex/02-data/availability-manifest-and-data-status.md
+  - /codex/02-data/data-status-drilldown.md
+  - /codex/02-data/subscription-model.md
+  - /codex/02-data/per-category-bucket-layouts.md
 ---
 
 # Price Chart — Historical Data from GCS to UI
@@ -52,7 +52,7 @@ time on empty-day round-trips.
 
 ### 1. Read path = UTL `MarketCandleDataDomainClient`, not raw GCS, not BQ
 
-`codex/02-data/subscription-model.md` §"MarketCandleDataDomainClient":
+`/codex/02-data/subscription-model.md` §"MarketCandleDataDomainClient":
 
 > "Services don't hardcode GCS paths. Instead, they declare upstream dependencies… Domain clients wrap
 > `StandardizedDomainCloudService`, providing domain-specific query methods over a generic cloud I/O layer."
@@ -67,12 +67,12 @@ The current `unified_trading_api/services/batch_candles.py` (`BatchCandleReader`
 
 ### 2. Manifest first, GCS second
 
-`codex/02-data/availability-manifest-and-data-status.md` §"What Is the Availability Manifest?":
+`/codex/02-data/availability-manifest-and-data-status.md` §"What Is the Availability Manifest?":
 
 > "Every GCS data bucket has an `_index/availability_index.parquet` file. This parquet file is the index of what data
 > exists in that bucket… The deployment-api reads it via `read_availability_index()`."
 
-Existing precedent: `codex/02-data/data-status-drilldown.md` documents `/api/data-status/shard-detail` doing exactly
+Existing precedent: `/codex/02-data/data-status-drilldown.md` documents `/api/data-status/shard-detail` doing exactly
 this — read the manifest, resolve a single GCS object path, return data + signed URL. We reuse the same pattern for the
 chart route.
 
@@ -83,7 +83,7 @@ scroll-back. Per-symbol pruning is blocked on an MDPS writer-side fix (see §"Ou
 
 ### 3. Pruning — phased by data scale (codex industry-standard pattern)
 
-`codex/02-data/partitioning.md` §"The Cost Optimization" sets the end-state explicitly: hive paths exist so **BigQuery
+`/codex/02-data/partitioning.md` §"The Cost Optimization" sets the end-state explicitly: hive paths exist so **BigQuery
 external tables can index GCS partitions without reading the parquet bytes**. That's the industry-standard pattern at
 scale and it's already part of the codebase's design — just not yet wired for `processed_candles/`.
 
@@ -546,7 +546,7 @@ After A + B + (E baseline) land:
 - `unified-trading-pm/reports/price_chart_gcs_benchmark_2026_04_29.md`: Unit E baseline results.
 - `unified-trading-pm/reports/price_chart_gcs_benchmark_2026_04_29_post.md`: post-Unit-A re-run for diff against
   baseline.
-- `codex/02-data/per-category-bucket-layouts.md`: confirm the file matches reality — it does, per the listing I did
+- `/codex/02-data/per-category-bucket-layouts.md`: confirm the file matches reality — it does, per the listing I did
   2026-04-29. No edit needed unless drift surfaces.
 - Follow-up plan stub `unified-trading-pm/plans/ai/watchlist_from_instruments_2026_04_30.plan.md` — empty skeleton
   noting we'll source the watchlist from instruments-service once the chart path is live.
@@ -557,7 +557,7 @@ After A + B + (E baseline) land:
 
 These don't block this plan but limit how far it can optimize. Each needs a separate plan / separate owner.
 
-1. **MDPS manifest writer underfilling.** Per `codex/02-data/availability-manifest-and-data-status.md` §"Per-Service
+1. **MDPS manifest writer underfilling.** Per `/codex/02-data/availability-manifest-and-data-status.md` §"Per-Service
    Shard Dimension Matrix · Layer 2.5", MDPS rows should populate `(venue, data_type, instrument_type, timeframe)`. They
    currently only populate `(date, data_type, timeframe)` — `venue` and `instrument_id` empty. This blocks per-symbol
    pruning. Fix lives in `market-data-processing-service` ManifestWriter call sites.

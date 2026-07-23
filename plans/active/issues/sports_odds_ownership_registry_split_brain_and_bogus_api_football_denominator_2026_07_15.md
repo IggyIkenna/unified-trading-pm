@@ -100,7 +100,7 @@ last_updated: 2026-07-15
 
 | Claim                                          | Verdict       | SSOT                                                                                                                                                     |
 | ---------------------------------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Odds are MTDS-owned **unless** footystats odds | **CONFIRMED** | `codex/02-data/sports-data-types-catalog.md:48-52`; `codex/02-data/sports-data-source-coverage-matrix.md` §4; operator reversal 2026-06-27 (below)       |
+| Odds are MTDS-owned **unless** footystats odds | **CONFIRMED** | `/codex/02-data/sports-data-types-catalog.md:48-52`; `/codex/02-data/sports-data-source-coverage-matrix.md` §4; operator reversal 2026-06-27 (below)     |
 | `PLAYER_VALUES` is transfermarkt               | **CONFIRMED** | UAC `canonical/domain/sports/league_data.py:189`; `canonical/crosscutting/_source_priority_data.py:59` → `('sports','PLAYER_VALUES'): ['transfermarkt']` |
 
 Operator ruling, `plans/archive/2026_07/sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md:92-97` —
@@ -187,7 +187,7 @@ rows are stamped with anything unexpected the writer starts raising `MissingSour
 > **not** a live name, and the features-service column is a **misread**. features-service uses
 > `FIXTURE_PLAYER_STATS_COLUMNS` / `FixturePlayerStatsRecord` / `fixture_player_stats` as **column-set + record + export
 > names** (matching the GCS `entity=fixture_player_stats` folder, which is CORRECT per
-> `codex/02-data/sports-gcs-path-ssot.md:103`); it never calls `has_source_priority` / `get_availability_semantic` /
+> `/codex/02-data/sports-gcs-path-ssot.md:103`); it never calls `has_source_priority` / `get_availability_semantic` /
 > `is_valid_manifest_source` **at all** — zero registry coupling, so nothing there breaks. The deployment-service +
 > codex hits were data_type enumerations carrying the phantom name (doc drift, now aligned). `FIXTURE_PLAYER_STATS`
 > existed ONLY in the two UAC crosscutting registries and their tests.
@@ -207,7 +207,7 @@ rows are stamped with anything unexpected the writer starts raising `MissingSour
       the af-backfill launcher takes (`launch-api-football-backfill-vm.sh:55 --entity … | PLAYER_STATS`), and the name
       **219,508 live rows carry vs ZERO for `FIXTURE_PLAYER_STATS`** (IS sports `_index` read 2026-07-15T18:32Z: 192,538
       `empty_confirmed` + 24,992 `captured` + 1,232 `expected_unattempted` + 658 blank-source + 88 `attempted_failed`,
-      all `source=api_football`, 94 leagues). Decisive disambiguation: `codex/02-data/sports-gcs-path-ssot.md:103`
+      all `source=api_football`, 94 leagues). Decisive disambiguation: `/codex/02-data/sports-gcs-path-ssot.md:103`
       already documented `data_type=PLAYER_STATS` ↔ `entity=fixture_player_stats` in its "non-obvious `entity=` folder
       names" table — the registry simply took the wrong column. **Fix direction chose itself: ZERO manifest rows
       rewritten** (the canonical name is the one already at scale; the phantom had no rows to migrate). Registered
@@ -250,14 +250,14 @@ Measured on the live IS sports index, `data_type='ODDS'` grouped by `(source, ca
 
 > "**api_football `/odds` is NOT used by instruments-service.** The footystats_odds adapter has `get_odds()` defined as
 > a deprecated stub that logs 'use get_fixture_odds_snapshot() instead' — there is no api_football odds path." —
-> `codex/02-data/sports-data-source-coverage-matrix.md` §4
+> `/codex/02-data/sports-data-source-coverage-matrix.md` §4
 
 The league counts are the tell: footystats ODDS spans **46** leagues (matching the codex footystats denominator of 46);
 the api_football ODDS rows span **94** — the api_football league universe cross-producted against a data_type
 api_football does not serve.
 
 **They are actively re-seeded.** `w_max = 2026-07-15T01:31:01Z` on the 82,509 `expected_unattempted` rows — the 01:30
-UTC `expected_universe_v2_scheduler` cron (`codex/02-data/availability-manifest-and-data-status.md` § "Materialisation
+UTC `expected_universe_v2_scheduler` cron (`/codex/02-data/availability-manifest-and-data-status.md` § "Materialisation
 WIRED + recurring"). This is not a frozen historical artifact; it regenerates nightly. **[CONFIRMED 2026-07-15 — and
 root-caused; the mechanism is NOT what this section assumed. See B-ROOT-CAUSE below: the seed is minted by
 `_derive_pm_source_transport`'s CF-3 fallback resolving the sports asset_group default, because §A's registry hole made

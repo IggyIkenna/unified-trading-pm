@@ -12,7 +12,7 @@ stage: [data, backtest]
 repos: [unified-api-contracts, market-tick-data-service, strategy-service]
 scope: [engineer]
 tags: [strategy, v2-engine, vol-trading, backtest, deribit]
-related: [v2_engine_venue_buildout_2026_06_15.md]
+related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md]
 created: 2026-07-13
 parent_epic: strategy_master
 assigned_vm: NA
@@ -65,7 +65,7 @@ what's missing.
   `unified-api-contracts/unified_api_contracts/registry/data_type_capability.py` (do not invent a different name —
   `volatility_index` is the name already used in `endpoints.py`); any captured/written parquet MUST carry the
   `pipeline_mode = {mode}_{source}[_{transport}]` hive-partition key (e.g. `batch_deribit`) LEFT of `asset_group=`, per
-  `codex/02-data/pipeline-mode-partition.md`; every bucket lookup goes through
+  `/codex/02-data/pipeline-mode-partition.md`; every bucket lookup goes through
   `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)` — **never** an inline `gs://` path or
   a hardcoded bucket string.
 

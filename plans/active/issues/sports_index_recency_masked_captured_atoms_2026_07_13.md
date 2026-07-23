@@ -34,7 +34,7 @@ scope: [engineer]
 tags: [manifest, honest-coverage, oscillation, dedup, sports]
 related:
   - plans/active/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md
-  - codex/02-data/availability-manifest-and-data-status.md
+  - /codex/02-data/availability-manifest-and-data-status.md
 created: 2026-07-13
 parent_epic: sports_master
 priority: P1

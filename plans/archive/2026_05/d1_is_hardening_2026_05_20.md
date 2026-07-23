@@ -9,8 +9,12 @@ stage: [meta]
 repos: [execution-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [d4_mtds_adapters_preflight_2026_05_20.md, live_pipeline_mtds_mdps_features_2026_05_08.md]
-created: '2026-05-21'
+related:
+  [
+    /plans/archive/2026_05/d4_mtds_adapters_preflight_2026_05_20.md,
+    /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+  ]
+created: "2026-05-21"
 parent_epic: instruments_master
 priority: P0
 estimate_class: refactor
@@ -25,7 +29,7 @@ locked_since: 2026-05-20
 Ordering step 1 in the Phase-E execution chain. Gates D4 (MTDS preflight). Source audits: C0 (IS→MTDS), C1
 (IS→features), C2 (IS→strategy), C3 (IS→execution). ALL phases complete as of 2026-05-21.
 
-Codex SSOTs: `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
+Codex SSOTs: `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ---
 

@@ -113,5 +113,5 @@ Open questions for the owner:
 ## Composes with
 
 - Parent validation: `plans/active/test_fleet_image_builds_from_current_code_2026_06_17.md` (findings log).
-- Tier/import architecture (no service↔service imports): `codex/04-architecture/tier-and-import-architecture.md`.
+- Tier/import architecture (no service↔service imports): `/codex/04-architecture/tier-and-import-architecture.md`.
 - Canonical service cloudbuild template + STEP 5.22: `unified-trading-pm/scripts/...` / service `cloudbuild.yaml`.

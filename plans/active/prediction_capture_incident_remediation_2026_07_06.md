@@ -74,14 +74,14 @@ drift_direction: advance-code
 
 ## Codex SSOTs (read before touching the relevant workstream; post-phase audit updates them)
 
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — the consolidator that string-typed the canonical index
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — the consolidator that string-typed the canonical index
   (Workstream A dtype-at-source fix).
-- `codex/02-data/availability-manifest-and-data-status.md` — ManifestRow schema (`instrument_count` is `int`); the
+- `/codex/02-data/availability-manifest-and-data-status.md` — ManifestRow schema (`instrument_count` is `int`); the
   write-side coercion contract.
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` +
-  `codex/04-architecture/shard-level-failure-isolation.md` — reference-data adapter + per-shard-isolation contract
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` +
+  `/codex/04-architecture/shard-level-failure-isolation.md` — reference-data adapter + per-shard-isolation contract
   (Workstream B adapter rewrite; the shard-isolation catch that swallowed the crash without `exc_info`).
-- `codex/06-coding-standards/config-reloader-pattern.md` — typed config for the `KALSHI_PERP_ENV` host resolver.
+- `/codex/06-coding-standards/config-reloader-pattern.md` — typed config for the `KALSHI_PERP_ENV` host resolver.
 - Kalshi/Polymarket perps margin API: **no codex doc yet** — the issue doc is the reference until Phase 2/3 stub one.
 
 ## Scope — two workstreams from one incident

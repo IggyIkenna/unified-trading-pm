@@ -9,8 +9,13 @@ stage: [meta]
 repos: [e2e-testing, execution-service, instruments-service, market-tick-data-service, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
-related: [predictions_master.md, api_keys_wallets_accounts_readiness_2026_05_10.md, defunct_uac_provider_dirs_cleanup_2026_05_20.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/epics/predictions_master.md,
+    /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
+    /plans/archive/2026_05/defunct_uac_provider_dirs_cleanup_2026_05_20.md,
+  ]
+created: "2026-05-20"
 parent_epic: predictions_master
 assigned_vm: vm-prediction
 priority: P1
@@ -28,7 +33,7 @@ because Kalshi is `BLOCKED-CREDENTIALS` (api_keys_wallets_accounts_readiness 5.B
 Kalshi call 401s. Must fix before May-23 since `arbitrage_price_dispersion` × prediction archetype depends on
 Kalshi-vs-Polymarket spread detection.
 
-Codex SSOTs: `codex/02-data/contracts-scope-and-layout.md`
+Codex SSOTs: `/codex/02-data/contracts-scope-and-layout.md`
 
 ---
 

@@ -23,7 +23,7 @@ tags: [quality-gates, eslint, ui, codex-compliance, ssot-drift, no-explicit-any,
 related:
   [
     plans/active/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md,
-    codex/06-coding-standards/ui-testing-layers.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
@@ -180,4 +180,4 @@ This is a cross-repo SSOT-wiring gap, not something to unilaterally fix mid-way 
 
 ## Codex SSOTs
 
-`codex/06-coding-standards/ui-testing-layers.md`, `codex/06-coding-standards/quality-gates.md`.
+`/codex/06-coding-standards/ui-testing-layers.md`, `/codex/06-coding-standards/quality-gates.md`.

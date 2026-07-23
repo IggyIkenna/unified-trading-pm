@@ -9,8 +9,14 @@ stage: [meta]
 repos: [features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [writegate_honest_coverage_endtoend_2026_05_06.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, live_pipeline_mtds_mdps_features_2026_05_08.md, available_at_schema_lift_post_cutover_2026_05_19.md]
-created: '2026-05-08'
+related:
+  [
+    /plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
+    /plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    /plans/archive/2026_05/available_at_schema_lift_post_cutover_2026_05_19.md,
+  ]
+created: "2026-05-08"
 parent_epic: batch_live_symmetry_master
 priority: P0
 estimate_class: design
@@ -27,8 +33,8 @@ Phase 1 (per-adapter stamping): cefi, tradfi, predictions, sports, features-onch
 tracked to defi_master. Phases 2-7 done. Phases 8-9 deferred to `available_at_schema_lift_post_cutover_2026_05_19.md`.
 Phase 10 honest-empty safeguard shipped.
 
-Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md` ·
-`codex/04-architecture/batch-live-architecture.md`
+Codex SSOTs: `/codex/02-data/availability-manifest-and-data-status.md` ·
+`/codex/04-architecture/batch-live-architecture.md`
 
 ---
 

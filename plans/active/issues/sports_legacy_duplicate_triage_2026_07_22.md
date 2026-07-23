@@ -7,7 +7,7 @@ title:
 summary:
   'Read-only 5-part-proof triage of the 34,385 `B_legacy_duplicate` rows flagged by `migration_orphan_sweep_sports.py
   --bucket reference` (estate_orphan_assessment_2026_07-21 todo 2), against
-  `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. The population splits into two path shapes —
+  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. The population splits into two path shapes —
   `sports_reference/fixtures/day={D}/[league={L}/]fixtures.parquet` (flat, non-`by_date`, 32,835 rows) and
   `sports_reference_v2/by_date/...` (the 2026-04-28 v1→v2 migration staging tree, 1,550 rows) — and each splits again on
   the ratified 2020-06-06 sports data floor (day &lt; 2020-06-06 = "every sports source" per operator ruling
@@ -52,11 +52,11 @@ tags:
   ]
 related:
   [
-    estate_orphan_assessment_2026_07_21.md,
-    sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md,
-    ../../codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    ../../codex/02-data/sports-2020-06-data-floor.md,
-    ../../codex/02-data/sports-gcs-path-ssot.md,
+    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
+    /plans/active/issues/sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/sports-2020-06-data-floor.md,
+    /codex/02-data/sports-gcs-path-ssot.md,
     ../sports_master_closeout_2026_07_21.md,
     ../migration_verification_orphan_safety_2026_06_10.md,
   ]
@@ -85,7 +85,7 @@ depends_on: []
 > **Read-only investigation. No GCS object, manifest row, or code was deleted, moved, or modified in producing this
 > report.** Two small audit-trail parquets were written under `_index/audit/` (the same durable-report convention the
 > sweep itself uses) — see § Artifacts. Any delete disposition below is a SUGGESTION per
-> `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — **prod-bucket deletes are a human-only hard stop** and
+> `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — **prod-bucket deletes are a human-only hard stop** and
 > none are executed here.
 
 ## 0. Headline
@@ -114,7 +114,7 @@ row for this `(date, data_type)` cell, with a `(venue, league, timeframe)` patte
 either side)?_ **It never touches GCS.** A `True` here proves "the manifest believes this cell was captured somewhere" —
 it does **not** prove a canonical-shaped object physically exists, nor that its content matches the flagged legacy
 object. This is precisely the "legacy-COPIED-not-MOVED" trap the delete-safety protocol's Part 5 exists to catch
-(`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5): _"the manifest `_index` is CELL-KEYED and
+(`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §1 Part 5): _"the manifest `_index` is CELL-KEYED and
 path-agnostic — it does not by itself tell you whether a cell's data sits at a canonical path."_ This triage exists to
 close that exact gap for sports.
 
@@ -255,7 +255,7 @@ follow-up.
 
 ## 5. Cross-cutting finding: 0% pipeline_mode= coverage across the whole checked population
 
-`codex/02-data/sports-gcs-path-ssot.md` states live sports_reference paths carry a `pipeline_mode=` segment
+`/codex/02-data/sports-gcs-path-ssot.md` states live sports_reference paths carry a `pipeline_mode=` segment
 post-migration (`…/entity={E}/…` under a `pipeline_mode={mode}` hive level), and
 `delete_legacy_sports_objects_ 2026_06_24.py`'s docstring describes `migrate_sports_canonical_v9.py --apply` as having
 "inserted `pipeline_mode=` into every object path." An exhaustive check across **all 3,396 distinct (day, entity)

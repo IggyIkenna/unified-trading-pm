@@ -110,7 +110,7 @@ rg 'doc_type=plan .*assigned_vm=vm-defi'   DOC_INDEX.generated.md   # defi plans
 
 ## Codex SSOT updates
 
-- `codex/11-project-management/doc-frontmatter-schema.md` — the L0 layer of the L0–L4 architecture is now implemented
+- `/codex/11-project-management/doc-frontmatter-schema.md` — the L0 layer of the L0–L4 architecture is now implemented
   (the schema doc already describes it; no change needed beyond this pointer).
 
 ## Progress Log

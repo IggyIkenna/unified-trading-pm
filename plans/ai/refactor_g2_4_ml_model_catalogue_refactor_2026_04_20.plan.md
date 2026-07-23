@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.4
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.4
   - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
   - refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md
   - refactor_g2_9_uac_remaining_gaps_2026_04_20.plan.md (gaps #6, #11 consumers)
@@ -52,19 +52,19 @@ Absorbs G1.5 stubbed ML routes. Consumes UAC gap #6 (IvSurfaceFidelity) for opti
 - **Upstream:** G1.6 derivation engine, G1.8 ArchetypeCapability (pattern), G2.9 gap #6 + gap #11
 - **Wave G2-γ peers (parallel):** G2.3, G2.5
 - **Absorbed:** G1.5 ML Catalogue broken-hrefs cleanup — its 5 stub routes become the canonical detail pages
-- **Codex:** `codex/09-strategy/architecture-v2/README.md`, `codex/09-strategy/architecture-v2/cross-cutting/`
+- **Codex:** `/codex/09-strategy/architecture-v2/README.md`, `codex/09-strategy/architecture-v2/cross-cutting/`
 - **Strategy Catalogue precedent:** `unified-trading-system-ui/app/services/strategy-catalogue/`
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.4
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.4
 2. `refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md` — absorbed scope
 3. `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`
 4. `refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md` — pattern to replicate
 5. `unified-trading-system-ui/app/services/strategy-catalogue/` — all routes + components
 6. `unified-trading-system-ui/app/services/research/ml/` — 9 existing routes + 5 G1.5 stubs
 7. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py` (G1.8 precedent)
-8. `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gaps #6, #11
+8. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gaps #6, #11
 
 ## Out of scope
 

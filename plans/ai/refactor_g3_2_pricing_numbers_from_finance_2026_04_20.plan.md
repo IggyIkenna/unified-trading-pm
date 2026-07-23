@@ -6,7 +6,7 @@ owner: finance + agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.2
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.2
 # Wave G3-α — independent, parallel with G3.3/3.4/3.5/3.6. Gates G3.1 pricing-engine service.
 ---
 
@@ -15,7 +15,7 @@ depends_on:
 ## Context
 
 Stage 3E §3.2 populates the internal-cost + Tier A + Tier B numeric columns in
-`codex/14-playbooks/commercial-model/pricing-building-blocks.md`. Stage 2 already locked the 13-row × 3-column
+`/codex/14-playbooks/commercial-model/pricing-building-blocks.md`. Stage 2 already locked the 13-row × 3-column
 structure + sales anchor ranges. The numeric cells that sit inside sit only in Odum finance dashboards and leadership
 decks today.
 
@@ -35,14 +35,14 @@ owns the doc structure, validation tooling, and leak-prevention guardrails. Quar
 
 - **Upstream:** Stage 2 commercial-model numeric locks
 - **Downstream Wave G3-β:** G3.1 pricing-engine service (consumes populated numbers)
-- **Codex:** `codex/14-playbooks/commercial-model/pricing-building-blocks.md`,
-  `codex/14-playbooks/_ssot-rules/08-internal-cost-leakage.md`
+- **Codex:** `/codex/14-playbooks/commercial-model/pricing-building-blocks.md`,
+  `/codex/14-playbooks/_ssot-rules/08-internal-cost-leakage.md`
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.2
-2. `codex/14-playbooks/commercial-model/pricing-building-blocks.md` — current 13-row × 3-col structure
-3. `codex/14-playbooks/_ssot-rules/08-internal-cost-leakage.md` — leakage rules
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.2
+2. `/codex/14-playbooks/commercial-model/pricing-building-blocks.md` — current 13-row × 3-col structure
+3. `/codex/14-playbooks/_ssot-rules/08-internal-cost-leakage.md` — leakage rules
 4. Odum finance Google Sheet (off-codex; operator provides link when executing)
 
 ## Out of scope
@@ -69,7 +69,7 @@ owns the doc structure, validation tooling, and leak-prevention guardrails. Quar
 - [x] [AGENT] P0. Rule 08 enforcement: `scripts/validation/check_cost_leakage.py` scans 46 external-audience surfaces
       (UI `app/(public)/**`, `marketing-static/`, `codex/14-playbooks/briefings/`, `codex/14-playbooks/cross-cutting/`)
       for 13 internal-cost patterns (block-by-block numbers + prose markers). Shipped 2026-04-20.
-- [ ] [AGENT] P0. Codex doc `codex/14-playbooks/commercial-model/_pricing-building-blocks-workflow.md` — describes the
+- [ ] [AGENT] P0. Codex doc `/codex/14-playbooks/commercial-model/_pricing-building-blocks-workflow.md` — describes the
       quarterly cadence + finance hand-off.
 
 ### Phase C — Initial population (agent-led draft; finance owns quarterly refresh)
@@ -90,8 +90,8 @@ owns the doc structure, validation tooling, and leak-prevention guardrails. Quar
 
 ## Critical files to be modified
 
-- `codex/14-playbooks/commercial-model/pricing-building-blocks.md` — MODIFY (populate cells)
-- `codex/14-playbooks/commercial-model/_pricing-building-blocks-workflow.md` — NEW (process doc)
+- `/codex/14-playbooks/commercial-model/pricing-building-blocks.md` — MODIFY (populate cells)
+- `/codex/14-playbooks/commercial-model/_pricing-building-blocks-workflow.md` — NEW (process doc)
 - `scripts/validation/check_pricing_building_blocks.py` — NEW
 - `scripts/validation/check_cost_leakage.py` — NEW (or extend existing leak-guard)
 - `.github/workflows/check-pricing-cost-leak.yml` — NEW (CI hook)
@@ -147,8 +147,8 @@ Research. Wave G3-α; primarily organisational + validation tooling. Phase C is 
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git checkout live-defi-rollout && git pull
-ls codex/14-playbooks/commercial-model/pricing-building-blocks.md
-ls codex/14-playbooks/_ssot-rules/08-internal-cost-leakage.md
+ls /codex/14-playbooks/commercial-model/pricing-building-blocks.md
+ls /codex/14-playbooks/_ssot-rules/08-internal-cost-leakage.md
 ```
 
 All must exist. STOP if missing.

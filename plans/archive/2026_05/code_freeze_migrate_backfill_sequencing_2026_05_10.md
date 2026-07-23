@@ -16,11 +16,14 @@ last_updated: 2026-05-23
 estimate_class: infra
 estimate_baseline_ai_days: 202.5
 estimate_calibrated_ai_days: 162.0
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~145-260). Class inferred from filename (infra, multiplier 0.8×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~145-260).
+  Class inferred from filename (infra, multiplier 0.8×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 parent_epic: defi_master
 assigned_vm: vm-defi
 priority: P0
@@ -366,7 +369,7 @@ technical enforcer; this section is the operator-readable checklist.
       their owning plan's later phases per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE; NONE supersede shipped
       SSOT**. Net: existing docs are current, missing docs are not pre-freeze deliverables. 1.D = 18 ✅ / 0 🟡 / 9 ❌;
       1.E = 7 ✅ / 1 🟡 / 0 ❌; 1.F = 11 ✅ / 0 🟡 / 3 ❌. **Outstanding (non-blocking)**: 1 stamp-lag finding on
-      `codex/02-data/defi-data-type-taxonomy.md` (Last-updated 2026-05-10 vs UAC@`d02cce2` 2026-05-12 lending-rate enum
+      `/codex/02-data/defi-data-type-taxonomy.md` (Last-updated 2026-05-10 vs UAC@`d02cce2` 2026-05-12 lending-rate enum
       extension; CONTENT current — hygiene only); slot 6 / slot 8 follow-up to audit remaining 11 Phase 1.A/1.B/1.C
       plans for completeness (out of slot 3 day-3 scope).
 
@@ -626,7 +629,8 @@ one-walk migration so manifest only rewrites once.
       `setup-defi-buckets.sh:28` (default `ap-northeast-1`) are already there; ratification is zero-cost. Yaml entries
       audited for region consistency: **GCP all `asia-northeast1` (Tokyo); AWS all `ap-northeast-1` (Tokyo)** —
       within-cloud syncing (Phase 0h) is
-      $0; cross-cloud rsync (`aws_migration_defi_first` Phase 5) is same-metro Tokyo (~1ms RTT, ~$0.01-0.02/GB egress vs ~$0.09/GB trans-Pacific = ~5× cheaper). Bucket provisioning (GAP-2.4.B) creates buckets in canonical region; reject any `--location=<other-region>`. **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}` per operator ratification. bucket_name_ssot plan Phase 0i. See [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](../archive/issues/aws_region_decision_brief_2026_05_11.md)     for full trade-off analysis. — deployment-service/configs/bucket_config.yaml:14 `region:
+      $0; cross-cloud rsync (`aws_migration_defi_first` Phase 5) is same-metro Tokyo (~1ms RTT, ~$0.01-0.02/GB egress vs
+      ~$0.09/GB trans-Pacific = ~5× cheaper). Bucket provisioning (GAP-2.4.B) creates buckets in canonical region; reject any `--location=<other-region>`. **PM stub yaml** `configs/cloud-providers.yaml:59` updated `${AWS_REGION:-us-east-1}`→`${AWS_REGION:-ap-northeast-1}` per operator ratification. bucket_name_ssot plan Phase 0i. See [`plans/active/issues/aws_region_decision_brief_2026_05_11.md`](../archive/issues/aws_region_decision_brief_2026_05_11.md)     for full trade-off analysis. — deployment-service/configs/bucket_config.yaml:14 `region:
       ap-northeast-1`confirmed; bucket_name_ssot Phase 0i`[x]` (audit-backfilled 2026-05-19)
 - [x] ✅ [SCRIPT] P0. **GAP-2.4.G (NEW per operator extension (b+) 2026-05-11)** — Yaml extends env tier to ALL
       `${DEPLOYMENT_ENV}`-MISSING bucket kinds (`instruments-store-{ag}-{env}-{pid}`,
@@ -648,7 +652,7 @@ one-walk migration so manifest only rewrites once.
       script. Workspace QG step (companion to STEP 5.69) AST-walks launcher scripts for non-helper bucket references.
       bucket_name_ssot plan Phase 0f. **Phase 1 code-complete scope**.
 - [x] [AGENT] P0. **GAP-2.4.I (NEW per operator extension (b+) 2026-05-11)** — Verify deployment UI env-tier already
-      shipped. ✅ VERIFIED: per `codex/05-infrastructure/deployment-ui-architecture.md` § "Environment tier" — UI env
+      shipped. ✅ VERIFIED: per `/codex/05-infrastructure/deployment-ui-architecture.md` § "Environment tier" — UI env
       tier resolved from `window.location.hostname` (each env has own domain → own deployment-api Cloud Run → own GCS
       bucket scope → own service account). Cross-env data leakage impossible. No additional UI work; Phase 0c
       provisioning lands env-tiered buckets the per-env deployment-api consumes. bucket_name_ssot plan Phase 0g (already
@@ -915,7 +919,8 @@ canary uncovers a drift-verify edge case, only minutes of operator time are lost
 4-VM `n2-standard-16` fleet runs ~12 Gbps; safe to run 4 parallel rsync streams against different buckets. Cross-zone
 (asia-northeast1-a vs -c) traffic is free within region.
 
-**Cost estimate**: rsync VMs at ~$0.40/hr × 8 VMs × 20h cutover window = ~$64. Egress within asia-northeast1 = $0 (same
+**Cost estimate**: rsync VMs at ~$0.40/hr × 8 VMs × 20h cutover window = ~$64. Egress within asia-northeast1 =
+$0 (same
 region). Total cutover-VM cost ~$64-100.
 
 **Recommended VM launcher**: NEW `deployment-service/scripts/vm/launch-bucket-rsync-vm.sh` (gap-2.6.A; not yet shipped)
@@ -994,11 +999,11 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
       watchdog). Registration half ✅; rename half blocked-on Phase 2.6 physical migration.
 - [x] ✅ [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave gating
       protocol above + operator-runnable GO/NO-GO checklist per wave. Shipped at `unified-trading-pm@<pending>`:
-      `codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md` — full 7-wave protocol (T-1h → T+27h) with
+      `/codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md` — full 7-wave protocol (T-1h → T+27h) with
       per-wave operator-runnable pre-checks + action steps + GO/NO-GO criteria + rollback decision tree + post-cutover
       Step 2.6.5 archive flow + plan-flip closeout. Compliant with Runbook Execution-Owner SSOT (passes
       `check_runbook_execution_owner.py`). Bundled foreign-runbook hygiene fix for
-      `codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md` (`runbook_metadata:` → `execution:` key
+      `/codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md` (`runbook_metadata:` → `execution:` key
       rename — same 4-field SSOT). **Owner**: this plan body authorized; slot 3 Day-3/4 if time permits.
 - [x] ✅ [SCRIPT] P0. **Phase 2.6 Step 5 prep** — `deployment-service/scripts/archive-flat-buckets.sh` created —
       deployment-service@9f158d5. Accepts `--env` / `--cloud` / `--retention-days` / `--dry-run`. Sets 30-day Delete
@@ -1034,8 +1039,8 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
 ### Phase 2 freeze gate (✅ to flip Phase 3 startable)
 
 > **Cross-reference**:
-> [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md)
-> § "Hard sequencing constraint" shows the 2026-05-15→2026-05-19 data-pipeline checkpoint timeline that this freeze gate
+> [`/codex/08-workflows/cutover-window-dependency-order.md`](/codex/08-workflows/cutover-window-dependency-order.md) §
+> "Hard sequencing constraint" shows the 2026-05-15→2026-05-19 data-pipeline checkpoint timeline that this freeze gate
 > starts. Master plan Group F items 17/18/20/21 — their sequencing is owned by that doc.
 
 - [x] ✅ **Manifest schema is v8** workspace-wide; every row populated; reader fallback for v5/v6/v7 deleted; ZERO drift
@@ -1065,7 +1070,7 @@ final-state schema + final-state on-disk layout. The umbrella enforcer is `maste
 > **Orchestrator sequencing guidance**: the per-stage ordering (instruments → MTDS → MDPS → features → ML/strategy
 > backtest) + the parallel code-and-tests track that MUST run concurrently (does NOT pause for backfill drain) is
 > specified in
-> [`codex/08-workflows/cutover-window-dependency-order.md`](../../codex/08-workflows/cutover-window-dependency-order.md).
+> [`/codex/08-workflows/cutover-window-dependency-order.md`](/codex/08-workflows/cutover-window-dependency-order.md).
 > Read that doc before scheduling Phase 3 VMs — it identifies which Phase 3 sub-steps are on the serial track vs the
 > parallel track and maps each to master plan Group F items 17/18/20/21.
 
@@ -1222,12 +1227,12 @@ CLAUDE.md. Per the hard rule, every Phase boundary in this plan triggers a codex
       duplicate.
 - [x] ✅ [DOC] P0. After Phase 2 freeze gate fires: update **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated on
       Phase 1/2/3 freeze gate firing (operator-driven). Doc/metadata task to run after gate completes.
-      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
       "v8 schema" section to be the canonical post-migration shape; remove v5/v6/v7 fallback documentation. Update
-      [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md)
+      [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
       reason taxonomy section to closed-set state. Update
-      [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) with
-      Phase 3 backfill VM relaunch sequencing. Add new codex stub `codex/02-data/cross-asset-rescan-protocol.md` (also
+      [`/codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) with
+      Phase 3 backfill VM relaunch sequencing. Add new codex stub `/codex/02-data/cross-asset-rescan-protocol.md` (also
       listed in the rescan plan's Codex SSOT updates).
 - [x] ✅ [DOC] P0. After Phase 3 freeze gate fires: master plan **[DEFERRED-POST-FREEZE-GATE 2026-05-23 slot 6]** Gated
       on Phase 1/2/3 freeze gate firing (operator-driven). Doc/metadata task to run after gate completes.
@@ -1372,7 +1377,7 @@ running-status note + EOD deferral-audit, not a flip. Re-runs across days 2-4.
   `OutputWriterService` not instantiated on any live path). **All follow-ups ✅ DONE 2026-05-11 PM**: (a)
   `scripts/quality_gates/test_check_banned_placeholder_methods.py` — 28 tests mirroring `test_check_removed_symbols.py`
   (incl. the regression guard that `_handle_empty_tick_data` stays OUT of `BANNED_METHOD_NAMES`); ruff-clean + 28 passed
-  (`PM@c497cab7`). (b) `codex/06-coding-standards/quality-gates.md` — STEP 5.67 added to the QG-STEP cross-reference
+  (`PM@c497cab7`). (b) `/codex/06-coding-standards/quality-gates.md` — STEP 5.67 added to the QG-STEP cross-reference
   table + a dedicated `## STEP 5.67` section (how-it-works / no-add-a-new-entry-fix-it-instead / maintenance /
   composes-with) per the Post-Plan-Phase Codex Audit HARD RULE (`PM@<this-commit>`). (c) ✅ baseline shrink 8→2
   (`PM@d75415fd`). Slot-6 STEP-5.67 work fully closed; residual baseline-2 clears when writegate Phase 2.A cosmetically
@@ -1465,7 +1470,7 @@ wrap-up signal). Per-shippable-unit pushes throughout, so Ikenna's side has the 
    still `MANIFEST_SCHEMA_VERSION = 7` while the v8 emission columns are present; codex
    `availability-manifest-and-data-status.md:261` prose says "=8" but its snippet (:265) says "=7" → doc inconsistency
    (nothing branches on `==8`, no breakage; ikenna-slot-6 to decide bump-code vs soften-prose); (b) the Phase-3 boundary
-   entry for `codex/02-data/cross-asset-rescan-protocol.md` was missing from the plan's "Codex SSOT updates" section —
+   entry for `/codex/02-data/cross-asset-rescan-protocol.md` was missing from the plan's "Codex SSOT updates" section —
    added it, flagged ❌ NOT YET SHIPPED post-Phase-3-ship, owner ikenna-slot-6. `service-output-emission-semantics.md`
    re-confirmed v8-current. Revised codex-doc count 58→61 present / 35→32 pending.
 4. **QG-validated slot-5's Phase 4** `market-data-processing-service@0068b2f` (LiveStreamAggregator) —
@@ -1611,7 +1616,7 @@ readiness + cross-plan coordination" scope. Audit the 4 Phase 1.E plans (`defi_c
     features_repo_consolidation:931 / live_pipeline_mtds_mdps_features:938).
   - ✅ 3 missing banners ADDED this commit:
     - `deployment_ui_lifecycle_tabs_2026_05_08.md` — BE-AWARE banner clarifying env-tier UI surface already shipped
-      pre-2026-05-11 per `codex/05-infrastructure/deployment-ui-architecture.md`; no additional UI work for (b+)
+      pre-2026-05-11 per `/codex/05-infrastructure/deployment-ui-architecture.md`; no additional UI work for (b+)
       data-plane provisioning.
     - `simulation_scenarios_topology_price_shocks_2026_05_09.md` — BE-AWARE banner citing the anti-sequencing audit row
       (Phase 2.2 single-walk discipline risk if sim harness writes synthetic parquets into real buckets); required
@@ -1689,7 +1694,7 @@ with commit-SHA evidence.
 | **Phase 4.FEATURES**                                    | 🟢 UNBLOCKED — sweep not yet started                 | features_repo_consolidation Phase 7 ✅ SHIPPED unblocks gate. Owner: slot 2 (consistent with prior `ikenna-v8-mw-*` sub-agent pattern) OR fold into Phase 4.MTDS unblock once operator triage lands. ~6-12h fan-out across 6 feature-family adapters.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | **Phase 4.GREP-VERIFY** (workspace AST-walk QG STEP)    | ✅ **SHIPPED 2026-05-12 by slot 8 at PM@`4159b7ae`** | `unified-trading-pm/scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py` (291 lines, 5-method closed set including `record_empty_for_shard`) + `test_*.py` (11 tests pass) + seeded `pipeline_mode_explicit_baseline.yaml` (112 entries: MTDS 97 + UTL 9 + features-service 6) + wired into `scripts/quality-gates-base/base-service.sh` STEP 5.70. Whitelist marker: `# QG-allow: pipeline-mode-not-applicable`. STEP 5.70 starts WARN-only; HARD-FAILs on any new occurrence; shrinks to 0 as Phase 4.MTDS sweep (slot 3) + 4.FEATURES + 4.DEFAULT-REMOVAL land. **Slot 3 collision finding 2026-05-12**: local parallel version was 70% identical (different whitelist marker phrasing + 27 vs 11 tests + bare-Name-callee handling + `**kwargs` forwarding tolerance); per CLAUDE.md "Two teammates × multiple parallel agents" rule, slot 8's pushed version wins; slot 3's local stash dropped.                                                   |
 | **Phase 4.DEFAULT-REMOVAL**                             | ❌ blocked-after-MTDS+FEATURES+GREP-VERIFY           | Consolidated scope per Phase 2 P2 resolution (PM@`6efbfced`): (a) remove 4 `None` defaults from 5 `record_*` methods + (b) bump `MANIFEST_SCHEMA_VERSION` 7→8 at `manifest_writer.py:131` + (c) reconcile codex prose at `availability-manifest-and-data-status.md:258-262+265`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| **Phase 0.B** (measure-honest-coverage.py PRE-baseline) | ❌ TODO                                              | Baseline doc `codex/02-data/honest_coverage_baseline_2026_05.md` EXISTS as DRAFT (schema-only; all data cells TBD). Runner script `measure-honest-coverage.py` does NOT exist anywhere in workspace. Plan body marks as `[HUMAN] P0`. **Operator-runnable on same-region GCE VM**; gates Phase 12 ratchet POST-baseline comparison. Not a strict freeze-gate blocker but ties into deferred Phase 12 work — recommend operator-decision Day 2-3 on whether to (a) defer post-cutover (acceptable per plan body) or (b) author + run the script this cycle (slot 4 or 8 carry-forward).                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Phase 0.B** (measure-honest-coverage.py PRE-baseline) | ❌ TODO                                              | Baseline doc `/codex/02-data/honest_coverage_baseline_2026_05.md` EXISTS as DRAFT (schema-only; all data cells TBD). Runner script `measure-honest-coverage.py` does NOT exist anywhere in workspace. Plan body marks as `[HUMAN] P0`. **Operator-runnable on same-region GCE VM**; gates Phase 12 ratchet POST-baseline comparison. Not a strict freeze-gate blocker but ties into deferred Phase 12 work — recommend operator-decision Day 2-3 on whether to (a) defer post-cutover (acceptable per plan body) or (b) author + run the script this cycle (slot 4 or 8 carry-forward).                                                                                                                                                                                                                                                                                                                                                                                   |
 | **LookaheadBiasError strict-mode at features-\***       | ✅ **DONE** (freeze-gate item 5 closed)              | 8/8 families shipped: sports + onchain prior; delta_one / volatility / calendar / commodity / cross_instrument / multi_timeframe at `features-service@a0011d17` 2026-05-13.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | **Carry-forward — TradFi 4.3% phantom audit triage**    | ❌ NOT YET OPENED — does NOT block freeze            | Diagnosed 2026-05-11 (`defi-phantom-recon-tradfi-20260511-194845`); 3976 phantom (~4.3%, ABOVE bar). Routed to `tradfi_master.md` § "Port phantom-audit" P0 todo. NO named owner in 2026-05-12 work-split. Dry-run only (manifest unmodified). Per-cluster real-vs-false-positive triage = POST-CUTOVER scope. **Sub-finding**: workspace-level `venue=UNKNOWN`/blank-venue cluster (~2150 cross-asset) needs adapter-side guard. Escalation: slot 1 / work-split rebalance to name TradFi-domain owner post-cutover.                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
@@ -1853,7 +1858,7 @@ RESOLVED 2026-05-12 with operator decisions Q1=(α) + Q2=(A) at PM@`4c573302`.
       **[DEFERRED-POST-CUTOVER 2026-05-23 slot 6]** Gated on Phase 3 freeze gate or DeFi cutover completing.
       Post-cutover operator action required. scope; slot 6 day-1 audit covered the breadth but didn't depth-audit
       per-cluster).
-- [x] ✅ [SCRIPT] P2. Stamp-lag fix: `codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 →
+- [x] ✅ [SCRIPT] P2. Stamp-lag fix: `/codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 →
       2026-05-12 + acknowledge UAC@`d02cce2` in changelog. Hygiene only. **NATURALLY RESOLVED 2026-05-15 (slot-8
       audit)**: doc frontmatter already shows `last_reviewed: 2026-05-15` + body "Last updated 2026-05-15
       (solana_lst_native_staking_adapters_2026_05_14 Phase 5 — added native_staking_rates family + SOLANA-NATIVE-SOLANA

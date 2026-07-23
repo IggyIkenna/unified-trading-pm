@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.5
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.5
   - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
   - refactor_g2_9_uac_remaining_gaps_2026_04_20.plan.md (gaps #7 + #10 hard deps)
 # Wave G2-γ — parallel with G2.3, G2.4. Gates on G2.9 gaps #7 + #10.
@@ -46,13 +46,13 @@ promotion-ledger UI. Requires UAC gaps #7 (MultiLegOrderCapability) + #10 (Cross
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.5
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.5
 2. `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`
 3. `refactor_g2_9_uac_remaining_gaps_2026_04_20.plan.md` — gaps #7 + #10 sections
 4. `unified-trading-system-ui/app/services/execution/` — 7 current routes
 5. `unified-trading-system-ui/app/services/strategy-catalogue/` — pattern + `candidates`/`handoff` absorption target
 6. `execution-service/algo_library/` — source of truth for algo definitions
-7. `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gaps #7, #10
+7. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gaps #7, #10
 
 ## Out of scope
 

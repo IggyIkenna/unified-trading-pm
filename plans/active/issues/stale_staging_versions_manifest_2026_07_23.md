@@ -22,7 +22,7 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci-cd, quickmerge, workspace-manifest, staging, versions, dependency-gate]
 related:
-  - github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
   - ../cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 created: 2026-07-23
 priority: P2

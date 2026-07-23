@@ -6,21 +6,39 @@ status: complete
 nature: record
 asset_group: [defi]
 stage: [meta]
-repos: [deployment-service, execution-service, features-service, instruments-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/defi_master.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_simulation_realism_2026_05_10.md, plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md]
+related:
+  [
+    plans/active/defi_master.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/defi_simulation_realism_2026_05_10.md,
+    plans/active/cross_asset_group_catalogue_audit_2026_05_10.md,
+    plans/active/writegate_honest_coverage_endtoend_2026_05_06.md,
+  ]
 created: 2026-05-10
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 estimate_class: design
 estimate_baseline_ai_days: 342.5
 estimate_calibrated_ai_days: 205.5
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~30-45, ~30-45, ~25-40, + 4 more). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~30-45,
+  ~30-45, ~25-40, + 4 more). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 parent_epic: defi_master
 priority: P0
 ---
@@ -326,7 +344,7 @@ MTDS / execution-service) compile against. UAC QG green. No service code referen
 
 **Codex SSOT update (Phase 1 boundary)** — per Post-Plan-Phase Codex Audit HARD RULE:
 
-- [x] [AGENT] P0. **1J — Update `codex/02-data/defi-venue-protocol-catalogue.md`** with all 26 protocols added in Phase
+- [x] [AGENT] P0. **1J — Update `/codex/02-data/defi-venue-protocol-catalogue.md`** with all 26 protocols added in Phase
       1A. Per-protocol: chain coverage, data_types declared, instruments-service catalog status (Phase 2), MTDS capture
       status (Phase 3), execution connector status (Phase 4), testnet readiness, GCS bucket path, backfill plan
       reference. **✅ SHIPPED 2026-05-12 by slot 2 (ikenna-defi-catalogue-tab)** at PM@`f54dd90c`. Codex doc already
@@ -355,7 +373,7 @@ Owner: harsh + parallel agents per protocol.
 > protocol family; Harsh starts implementation Day 2 morning".**
 >
 > **Base shard atom for ALL DeFi protocols** (per
-> [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) line 69 +
+> [`/codex/02-data/per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md) line 69 +
 > `unified_api_contracts/canonical/domain/defi/gcs_paths.py`):
 > `(date, asset_group=defi, chain, venue, instrument_type, data_type)`. Path:
 > `raw_tick_data/by_date/day={date}/asset_group=defi/chain={chain}/venue={v}/instrument_type={it}/data_type={dt}/ticks.parquet`.
@@ -389,7 +407,7 @@ Owner: harsh + parallel agents per protocol.
 >   enforces statically; UTL `record_captured` guard raises at runtime).
 >
 > **Shard-granularity SSOT compliance** (per
-> [`codex/04-architecture/shard-level-failure-isolation.md`](../../codex/04-architecture/shard-level-failure-isolation.md)
+> [`/codex/04-architecture/shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md)
 >
 > - `plans/epics/infrastructure_master.md`): shard atom MUST be identical across (a) writer atomicity, (b) manifest row
 >   key, (c) data-status display, (d) downstream pre-flight gate, (e) deployment-UI drilldown. Per the matrix above, the
@@ -397,7 +415,7 @@ Owner: harsh + parallel agents per protocol.
 >   matrix; deployment-UI drilldowns roll up to this same granularity.
 >
 > **Codex SSOT update** (Phase 2 boundary, per HARD RULE Post-Plan-Phase Codex Audit) — slot 2 extends
-> [`codex/02-data/defi-venue-protocol-catalogue.md`](../../codex/02-data/defi-venue-protocol-catalogue.md) with a
+> [`/codex/02-data/defi-venue-protocol-catalogue.md`](/codex/02-data/defi-venue-protocol-catalogue.md) with a
 > "Per-protocol shard-atom matrix" subsection (Phase 1J refresh) — **✅ SHIPPED 2026-05-12 Day-2 by slot 2
 > (ikenna-defi-catalogue-tab)** at PM@`a11e0256` (IN-1 fix) + follow-up commit (this matrix). 8-row matrix mirrors
 > plan-body lines 380-388 verbatim into codex SSOT with rationale block.
@@ -600,7 +618,7 @@ Per-protocol todo template (instantiated 27 times):
 
 **Codex SSOT update (Phase 2 boundary)**:
 
-- [x] [AGENT] P0. **2J — Update `codex/02-data/instrument-pipeline-defi.md`** with the 27 new protocol adapters +
+- [x] [AGENT] P0. **2J — Update `/codex/02-data/instrument-pipeline-defi.md`** with the 27 new protocol adapters +
       cluster validation rules per protocol. (PM@`291f81d7` — adapter count 25→50, full categorized adapter list)
 
 **Full-execution criterion**:
@@ -750,17 +768,17 @@ Owner: harsh + parallel agents per protocol.
 >       6@`2a76a2a`); reconciler covers the residual `SOURCE_RETURNED_ZERO` pre-launch nits + any future phantom drift.
 >
 >       **Operational dry-run RESULT 2026-05-16 ~20:21Z (post-fix)**: real-data audit of
->       `gs://lending-indices-{pid}/_index/availability_index.parquet` reports:
->       - Total captured rows audited: **64,827** (includes both kebab + snake data_type rows)
->       - Real captures (parquet found): **64,476** (99.5%)
->       - Phantom captures: **351** (0.54%) — all classified `SOURCE_RETURNED_ZERO`
->       - Phantom distribution by venue: AAVE_V3 216 / COMPOUND_V3 108 / SPARK 27
->       - Phantom distribution by chain: ETHEREUM 81 / ARBITRUM 54 / BASE 54 / OPTIMISM 54 / others 27 each
->       - Sample phantoms: 2026-04-15 across multiple AAVE_V3 chains — recent backfill misses, not legacy phantoms
->       Manifest is operationally clean; 351 phantoms are operator-decision: run `--apply-flips --confirm` to flip to
->       `empty_confirmed/SOURCE_RETURNED_ZERO` (recommended once consolidator race resolved per
->       `plans/active/issues/vocab_drift_canonicalisation_didnt_stick_2026_05_16.md`). Log archived at
->       `/tmp/lending_indices_phantom_dryrun_v2_20260516.log`.
+>                                                                                                                       `gs://lending-indices-{pid}/_index/availability_index.parquet` reports:
+>                                                                                                                       - Total captured rows audited: **64,827** (includes both kebab + snake data_type rows)
+>                                                                                                                       - Real captures (parquet found): **64,476** (99.5%)
+>                                                                                                                       - Phantom captures: **351** (0.54%) — all classified `SOURCE_RETURNED_ZERO`
+>                                                                                                                       - Phantom distribution by venue: AAVE_V3 216 / COMPOUND_V3 108 / SPARK 27
+>                                                                                                                       - Phantom distribution by chain: ETHEREUM 81 / ARBITRUM 54 / BASE 54 / OPTIMISM 54 / others 27 each
+>                                                                                                                       - Sample phantoms: 2026-04-15 across multiple AAVE_V3 chains — recent backfill misses, not legacy phantoms
+>                                                                                                                       Manifest is operationally clean; 351 phantoms are operator-decision: run `--apply-flips --confirm` to flip to
+>                                                                                                                       `empty_confirmed/SOURCE_RETURNED_ZERO` (recommended once consolidator race resolved per
+>                                                                                                                       `plans/active/issues/vocab_drift_canonicalisation_didnt_stick_2026_05_16.md`). Log archived at
+>                                                                                                                       `/tmp/lending_indices_phantom_dryrun_v2_20260516.log`.
 
 Success criterion: per protocol, an MTDS adapter at
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/<protocol>_adapter.py` (or
@@ -813,9 +831,9 @@ Per-protocol todos (expanded from template):
 
 **Codex SSOT updates (Phase 3 boundary)**:
 
-- [x] [AGENT] P0. **3J — Update `codex/02-data/defi-data-type-taxonomy.md`** (NEW) with full per-venue data-type matrix.
-      (PM@`291f81d7` — vault/restaking/LST coverage updated with adapter-shipped status)
-- [x] [AGENT] P0. **3K — Update `codex/02-data/availability-manifest-and-data-status.md`** with new bundled data_types
+- [x] [AGENT] P0. **3J — Update `/codex/02-data/defi-data-type-taxonomy.md`** (NEW) with full per-venue data-type
+      matrix. (PM@`291f81d7` — vault/restaking/LST coverage updated with adapter-shipped status)
+- [x] [AGENT] P0. **3K — Update `/codex/02-data/availability-manifest-and-data-status.md`** with new bundled data_types
       from Phase 1A. ✅ **SHIPPED 2026-05-16 by slot 2** at `unified-trading-pm@<TBD>`. 3 targeted updates: (1) Layer 2
       MTDS DEFI row: 26 protocols enumerated + 14 chains + per-instance vs bundled data_type breakdown; (2) Layer 2.5
       MDPS DEFI row: corrected to actual 5 adapters (book_snapshot_5/dex_swaps/fx_rates/market_state/ liquidity) with
@@ -863,9 +881,9 @@ Per-connector todo template:
 
 **Codex SSOT update (Phase 4 boundary)**:
 
-- [x] [AGENT] P0. **4J — Update `codex/04-architecture/interface-credential-convention.md`** with new connectors'
+- [x] [AGENT] P0. **4J — Update `/codex/04-architecture/interface-credential-convention.md`** with new connectors'
       credential shapes. (PM@`3d1d5a39` — added Phase 4 credential shape section; all 13 follow existing pattern)
-- [x] [AGENT] P0. **4K — Update `codex/04-architecture/defi-execution-overview.md`** with connector inventory.
+- [x] [AGENT] P0. **4K — Update `/codex/04-architecture/defi-execution-overview.md`** with connector inventory.
       (PM@`3d1d5a39` — added Phase 4 connector inventory tables by family: LST/LRT, restaking, yield, Solana)
 
 **Full-execution criterion**:
@@ -904,8 +922,8 @@ Owner: ikenna for design + harsh for implementation.
       providers per chain in scope (Alchemy + QuickNode + Ankr + Helius for Solana + project-specific public RPC). Add
       `RpcProviderFallback` class that auto-fails-over on connection-drop / 429 / 5xx within configurable retry budget.
       **DESIGN-SHIPPED 2026-05-13 (Day 3) by slot 2 — IMPLEMENTATION HANDED TO HARSH SLOT 2.** Design SSOT lives in
-      [`codex/05-infrastructure/chain-rpc-mev-tenderly.md`](../../codex/05-infrastructure/chain-rpc-mev-tenderly.md) §
-      "RPC provider redundancy" (lines 36-63). **🟢 IMPLEMENTATION SHIPPED 2026-05-15 by slot 2 sub-agent fan-out** at
+      [`/codex/05-infrastructure/chain-rpc-mev-tenderly.md`](/codex/05-infrastructure/chain-rpc-mev-tenderly.md) § "RPC
+      provider redundancy" (lines 36-63). **🟢 IMPLEMENTATION SHIPPED 2026-05-15 by slot 2 sub-agent fan-out** at
       execution-service@`d1feadeb`. 11-chain `chain_config.yaml` shipped (ETHEREUM / ARBITRUM / BASE / OPTIMISM /
       POLYGON / AVALANCHE / BSC / LINEA / SCROLL / ZKSYNC / SOLANA — primary + fallbacks + auto-failover-on-5xx-or-429 +
       retry_budget=3). `RpcProviderFallback` class shipped at
@@ -922,45 +940,34 @@ Owner: ikenna for design + harsh for implementation.
       `execution-service/execution_service/providers/tenderly.py` with `simulate_bundle()` method using Tenderly's
       `/api/v1/account/{slug}/project/{slug}/simulate-bundle` endpoint. Wire pre-flight gating in execution-service
       handlers: every live order goes through bundle-sim, BLOCK on revert, advisory-log on slippage>threshold. Default
-      per-archetype daily Tenderly budget = $50/day per archetype (operator-set ceiling); 1 sim per live order. Budget
+      per-archetype daily Tenderly budget =
+      $50/day per archetype (operator-set ceiling); 1 sim per live order. Budget
       exhaustion downgrades to advisory-only. **✅ IMPLEMENTATION SHIPPED 2026-05-12 by slot 2 —
       execution-service@2abbc1f7** — `simulate_bundle(transactions, chain_id) -> BundleSimResult` + `TenderlyTx` /
       `BundleSimResult` dataclasses + `gate_or_advise()` pre-flight helper landed in
-      `execution_service/providers/tenderly.py`; `TenderlyBudgetTracker` with GCS-backed daily state (`$50/day` ceiling)
-      landed in `execution_service/providers/tenderly_budget.py`; `BlockOnSimulationRevert` in
-      `execution_service/providers/_tenderly_errors.py`; 6 unit tests in
-      `tests/unit/providers/test_tenderly_bundle_sim.py` covering request shape / clean sim / revert / high-slippage
-      advisory / budget exhaustion / block-on-revert. **REMAINING — wire `gate_or_advise()` call into every live DeFi
-      `execute()` path** (defi_execution/protocols/) is a separate slice tracked under Harsh's continuation queue.
-      Design SSOT lives in
-      [`codex/05-infrastructure/chain-rpc-mev-tenderly.md`](../../codex/05-infrastructure/chain-rpc-mev-tenderly.md) §
-      "Tenderly setup" (lines 91-126) — pre-existing codex content from Phase 5D specifies the API key flow (Secret
-      Manager `tenderly_api_key`), bundle-sim endpoint shape, and per-archetype $50/day budget policy. **Harsh
-      implementation scope** (~1.5 calibrated AI-days): - Extend
-      `execution-service/execution_service/providers/tenderly.py` (verify exists; if not, create) with
-      `simulate_bundle(transactions: list[TenderlyTx], chain_id: int) -> BundleSimResult` calling Tenderly's
-      `POST /api/v1/account/{slug}/project/{slug}/simulate-bundle` endpoint. `BundleSimResult` dataclass:
-      `revert:       bool` + `revert_reason: str | None` + `expected_slippage_bps: int` + `gas_used: int`. - Wire
-      pre-flight gating in defi_execution/protocols/ — every `execute()` method on a live (non-paper-trade) order:
-      `bundle_sim = tenderly.simulate_bundle(...)` → if `bundle_sim.revert` raise `BlockOnSimulationRevert(...)`; if
-      `bundle_sim.expected_slippage_bps > threshold` log advisory event. - Per-archetype daily Tenderly budget tracked
-      in `unified-cloud-interface/secret_budget_tracker.py` (NEW or extend existing rate-limit primitive). Budget
-      exhaustion → degrade to `advisory-only` mode (logs but doesn't block). - Tests:
-      `pytest execution-service/tests/unit/providers/test_tenderly_bundle_sim.py` — mock Tenderly responses for (a)
-      clean simulate; (b) revert → assert BlockOnSimulationRevert raised; (c) high-slippage → assert advisory event
-      emitted; (d) budget exhaustion → assert downgrade behaviour.
-- [x] [AGENT] P0. **5D — Codex SSOT** at `codex/05-infrastructure/chain-rpc-mev-tenderly.md` (NEW) with full per-chain
+      `execution_service/providers/tenderly.py`; `TenderlyBudgetTracker` with GCS-backed daily state (`$50/day`ceiling)     landed in`execution_service/providers/tenderly_budget.py`; `BlockOnSimulationRevert`in    `execution_service/providers/_tenderly_errors.py`; 6 unit tests in     `tests/unit/providers/test_tenderly_bundle_sim.py`covering request shape / clean sim / revert / high-slippage     advisory / budget exhaustion / block-on-revert. **REMAINING — wire`gate_or_advise()`call into every live DeFi    `execute()` path** (defi_execution/protocols/) is a separate slice tracked under Harsh's continuation queue.     Design SSOT lives in     [`/codex/05-infrastructure/chain-rpc-mev-tenderly.md`](/codex/05-infrastructure/chain-rpc-mev-tenderly.md) §     "Tenderly setup" (lines 91-126) — pre-existing codex content from Phase 5D specifies the API key flow (Secret     Manager `tenderly_api_key`), bundle-sim endpoint shape, and per-archetype $50/day budget policy. **Harsh     implementation scope** (~1.5 calibrated AI-days): - Extend     `execution-service/execution_service/providers/tenderly.py`(verify exists; if not, create) with    `simulate_bundle(transactions:
+      list[TenderlyTx], chain_id: int) -> BundleSimResult`calling Tenderly's    `POST
+      /api/v1/account/{slug}/project/{slug}/simulate-bundle`endpoint.`BundleSimResult`dataclass:    `revert:
+      bool`+`revert_reason: str | None`+`expected_slippage_bps: int`+`gas_used:
+      int`. - Wire     pre-flight gating in defi_execution/protocols/ — every `execute()`method on a live (non-paper-trade) order:    `bundle_sim
+      =
+      tenderly.simulate_bundle(...)`→ if`bundle_sim.revert`raise`BlockOnSimulationRevert(...)`; if     `bundle_sim.expected_slippage_bps >
+      threshold`log advisory event. - Per-archetype daily Tenderly budget tracked     in`unified-cloud-interface/secret_budget_tracker.py`(NEW or extend existing rate-limit primitive). Budget     exhaustion → degrade to`advisory-only`mode (logs but doesn't block). - Tests:    `pytest
+      execution-service/tests/unit/providers/test_tenderly_bundle_sim.py` — mock Tenderly responses for (a) clean
+      simulate; (b) revert → assert BlockOnSimulationRevert raised; (c) high-slippage → assert advisory event emitted;
+      (d) budget exhaustion → assert downgrade behaviour.
+- [x] [AGENT] P0. **5D — Codex SSOT** at `/codex/05-infrastructure/chain-rpc-mev-tenderly.md` (NEW) with full per-chain
       table: RPC primary + fallback, MEV-protected RPC, gas oracle source, Tenderly account/project, historical capture
       bucket. **✅ SHIPPED — already exists at
-      [`codex/05-infrastructure/chain-rpc-mev-tenderly.md`](../../codex/05-infrastructure/chain-rpc-mev-tenderly.md)
-      (204 lines).** Audit 2026-05-13 by slot 2 confirms doc covers: per-chain matrix (11 chains in May-23 scope +
-      StarkNet); RPC provider redundancy spec with `chain_config.yaml` template; MEV protection per chain (5
-      MevSubmissionMode endpoint registry rows + per-chain MEV story); Tenderly setup (account / project / budget /
-      bundle-sim API gating); Gas oracles per chain; Oracle prices per chain; Cross-references; Update protocol.
-      **JITO_BUNDLE row** in MEV registry (line 77) correctly marked as Phase 5A buildout. **MINOR DELTA Day 3**: slot 2
-      should add a note line that JITO_BUNDLE enum + `_DEFAULT_POLICIES` policy shipped Phase 1D 2026-05-12 so the
-      Status column for that row flips to ◐ (enum + policy ✅, provider class pending Harsh implementation). Deferred to
-      a separate codex-doc-touch commit to keep this checkbox flip clean.
+      [`/codex/05-infrastructure/chain-rpc-mev-tenderly.md`](/codex/05-infrastructure/chain-rpc-mev-tenderly.md) (204
+      lines).** Audit 2026-05-13 by slot 2 confirms doc covers: per-chain matrix (11 chains in May-23 scope + StarkNet);
+      RPC provider redundancy spec with `chain_config.yaml` template; MEV protection per chain (5 MevSubmissionMode
+      endpoint registry rows + per-chain MEV story); Tenderly setup (account / project / budget / bundle-sim API
+      gating); Gas oracles per chain; Oracle prices per chain; Cross-references; Update protocol. **JITO_BUNDLE row** in
+      MEV registry (line 77) correctly marked as Phase 5A buildout. **MINOR DELTA Day 3**: slot 2 should add a note line
+      that JITO_BUNDLE enum + `_DEFAULT_POLICIES` policy shipped Phase 1D 2026-05-12 so the Status column for that row
+      flips to ◐ (enum + policy ✅, provider class pending Harsh implementation). Deferred to a separate codex-doc-touch
+      commit to keep this checkbox flip clean.
 
 **Full-execution criterion**:
 
@@ -1023,7 +1030,7 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
 
 **Codex SSOT updates (Phase 6 boundary)**:
 
-- [x] ✅ [AGENT] P0. **6J — Update `codex/02-data/availability-manifest-and-data-status.md`** with the new protocol
+- [x] ✅ [AGENT] P0. **6J — Update `/codex/02-data/availability-manifest-and-data-status.md`** with the new protocol
       capture coverage + manifest health % per asset_group post-backfill. — PM@48e635d40: "Phase 6 DeFi backfill capture
       coverage" table added (lending ETH/multi-chain ✅, LST-Solana BLOCKED-OPERATOR, vaults/DEX 6E OPEN, phantom
       clean). 6C/6D in-flight; table refreshes once those VMs complete.
@@ -1040,32 +1047,32 @@ concurrency principle" (read-once + per-date freshness check + write-time CAS).
 Per "Post-Plan-Phase Codex Audit HARD RULE" — every major phase boundary triggers codex update in same logical unit as
 code commit. End-of-plan check: every codex doc reflects shipped state.
 
-- [x] [AGENT] P0. **7A — `codex/02-data/defi-venue-protocol-catalogue.md`** (NEW; Phase 1J). Final lock at Phase 8. ✅
+- [x] [AGENT] P0. **7A — `/codex/02-data/defi-venue-protocol-catalogue.md`** (NEW; Phase 1J). Final lock at Phase 8. ✅
       Slot 2 Day 1 (PM@`f54dd90c`) + Day 2 mirror (PM@`15709c4b`) — doc covers 26 protocols + per-protocol shard-atom
       matrix.
-- [x] [AGENT] P0. **7B — `codex/02-data/defi-data-type-taxonomy.md`** (NEW; Phase 3J). ✅ **VERIFIED-DONE 2026-05-16 by
+- [x] [AGENT] P0. **7B — `/codex/02-data/defi-data-type-taxonomy.md`** (NEW; Phase 3J). ✅ **VERIFIED-DONE 2026-05-16 by
       slot 2** — already shipped via Phase 3J at PM@`291f81d7` (line 798 above): "vault/restaking/LST coverage updated
       with adapter-shipped status". Doc exists at 284 lines covering full per-venue data-type matrix; matches the 13
       Phase 3 MTDS adapters (mtds@`3e82cc5`/`80ee665`). Final-lock-at-Phase-8 step is a no-op since the content already
       reflects shipped state.
-- [x] [AGENT] P0. **7C — `codex/05-infrastructure/chain-rpc-mev-tenderly.md`** (NEW; Phase 5D). Final lock at Phase 8.
+- [x] [AGENT] P0. **7C — `/codex/05-infrastructure/chain-rpc-mev-tenderly.md`** (NEW; Phase 5D). Final lock at Phase 8.
       ✅ Pre-existed at 204 lines + slot 2 Day 3 JITO_BUNDLE status update (PM@`8ce85bbc`).
-- [x] [AGENT] P0. **7D — `codex/02-data/instrument-pipeline-defi.md`** (UPDATE; Phase 2J). ✅ **VERIFIED-DONE 2026-05-16
-      by slot 2** — already shipped via Phase 2J at PM@`291f81d7` (line 610 above): adapter count 25→50, full
+- [x] [AGENT] P0. **7D — `/codex/02-data/instrument-pipeline-defi.md`** (UPDATE; Phase 2J). ✅ **VERIFIED-DONE
+      2026-05-16 by slot 2** — already shipped via Phase 2J at PM@`291f81d7` (line 610 above): adapter count 25→50, full
       categorized adapter list. Doc line 20 confirms: "Adapters (under reference_data/adapters/defi/ as of 2026-05-14 —
       refreshed per Phase 2J audit)". 267 lines documenting the 13 Phase 2 instruments-service adapters shipped at
       instruments-service@`a490033`+`be12b56`+`57a4f1f`+`38192e7`+`b563afb`.
-- [x] ✅ [AGENT] P0. **7E — `codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J). ✅ Phase
-      3K portion SHIPPED PM@`aab47b12` (Layer 2 MTDS DEFI row + Layer 2.5 MDPS DEFI row + "Phase 1A DeFi bundled
+- [x] ✅ [AGENT] P0. **7E — `/codex/02-data/availability-manifest-and-data-status.md`** (UPDATE; Phase 3K + 6J). ✅
+      Phase 3K portion SHIPPED PM@`aab47b12` (Layer 2 MTDS DEFI row + Layer 2.5 MDPS DEFI row + "Phase 1A DeFi bundled
       data_types" sub-section). Phase 6J portion shipped PM@`48e635d40` (per-protocol backfill coverage table added
       2026-05-19 by slot 8): lending ETH/multi-chain ✅, LST-Solana BLOCKED-OPERATOR, vaults/DEX 6E OPEN, phantom clean.
       Table will auto-refresh once 6C/6E VMs complete.
-- [x] [AGENT] P0. **7F — `codex/04-architecture/interface-credential-convention.md`** (UPDATE; Phase 4J). ✅
+- [x] [AGENT] P0. **7F — `/codex/04-architecture/interface-credential-convention.md`** (UPDATE; Phase 4J). ✅
       **VERIFIED-DONE 2026-05-16 by slot 2** — doc lines 56 + 118 confirm `connector.connect(config={...})` shape
       documented for all 13 Phase 4 connectors shipped at execution-service@`b9078ee9`. GAP-11 Live DeFi Wallet Key
       Lifetime extension landed 2026-05-15 (per-request Secret Manager fetch, no in-memory caching beyond
       `connect()`scope). Anti-patterns section enumerates instance-attribute private-key storage as HARD violation.
-- [x] [AGENT] P0. **7G — `codex/04-architecture/defi-execution-overview.md`** (UPDATE; Phase 4K). ✅ **VERIFIED-DONE
+- [x] [AGENT] P0. **7G — `/codex/04-architecture/defi-execution-overview.md`** (UPDATE; Phase 4K). ✅ **VERIFIED-DONE
       2026-05-16 by slot 2** — doc line 111 confirms: "All Phase 4 connectors follow the same
       `connector.connect(config={...})` credential injection shape as the Phase 1–3 [connectors]". Key Files table
       covers all 13 Phase 4 protocol connectors + cost models + matching engine surfaces. Backtest replay status
@@ -1100,45 +1107,45 @@ code commit. End-of-plan check: every codex doc reflects shipped state.
       unified_trading_library import ManifestFreshnessCache
 
       # In handler.run():
-      cache = ManifestFreshnessCache(bucket=<bucket-for-this-handler>, ttl_seconds=60)
-      cache.bulk_load()  # warm at startup
+                                                                                                                      cache = ManifestFreshnessCache(bucket=<bucket-for-this-handler>, ttl_seconds=60)
+                                                                                                                      cache.bulk_load()  # warm at startup
 
-      for shard in expected_shards:
-          if cache.is_now_captured(shard.row_key):
-              continue  # concurrent worker (or prior chunk) beat us
-          result = expensive_remote_fetch(shard)
-          writer.record_captured(shard.row_key, ...)
-      ```
-      Per-handler bucket mapping (read from existing handler source — each handler writes to its own canonical
-      bucket; reuse that constant):
-      - `lending_indices_handler.py` → `lending-indices-{pid}`
-      - `gas_fee_handler.py` → `gas-fees-{pid}`
-      - `lst_rates_handler.py` → `lst-rates-{pid}`
-      - `dex_swaps_handler.py` + `dex_pools_handler.py` → `dex-swaps-{pid}` + `dex-pools-{pid}`
-      - `liquidations_handler.py` + `liquidation_events_handler.py` → `liquidations-{pid}`
-      - `perp_funding_handler.py` → `perp-funding-{pid}` (asset_group=cefi)
-      - `solana_lst_archival.py` → `solana-defi-{pid}`
-      **Tests** (per handler): mock `ManifestFreshnessCache` to return `True` for a known row_key and assert
-      `expensive_remote_fetch` is NOT called for that shard. Add unit test class `TestFreshnessSkip` in each
-      handler's existing test file. **Closes** `defi_master.md` DONE-2026-05-12 handover-block (b) +
-      unlocks clean full-history re-run (block-c). **Why P1 not P0**: not 2026-05-23-blocking — the catch-up VM
-      already closed the operational gap for Priority #5; the wire-in is the durable fix preventing future
-      re-download waste on multi-worker concurrent backfills.
-      **🟢 IMPLEMENTATION SHIPPED 2026-05-15 by slot 2 via 3 parallel sub-agents fan-out** — all 9 handlers wired:
-      - MTDS@`6146913` (sub-agent A): `lending_indices_handler` + `gas_fee_handler` + `lst_rates_handler`. 622
-        insertions across 6 files. Per-handler wire-in: lending (303-310 instantiate + 317-343 skip), gas (175-184
-        EVM + 252-272 Solana + 295-315 BTC), lst (287-330 per-sentinel partial-skip). 9 tests passing.
-      - MTDS@`63ae34d` (sub-agent B): `dex_swaps_handler` + `dex_pools_handler` + `liquidations_handler`. BUNDLED
-        row_key per Phase 2 shard-atom design (per-(chain, protocol, data_type, day)). 9 tests passing,
-        `tests/unit/cli/handlers/` dir created.
-      - MTDS@`9802f48` (sub-agent C): `liquidation_events_handler` + `perp_funding_handler` + `solana_lst_archival`
-        (note: solana_lst_archival is a helper module not a handler — wired via optional `freshness_cache` param
-        with `None` default for backwards compat). perp_funding asset_group=cefi per FLAG 1 RESOLVED 2026-05-10.
-        9 tests passing.
-      **Total**: 9 handlers / 27 unit tests / `MANIFEST_FRESHNESS_SKIP` events emit per skip for observability.
-      **Closes**: `defi_master.md` DONE-2026-05-12 handover-block item (b) FULLY. Item (c) clean
-      full-history re-run after (b) lands is now unblocked — Harsh slot 2 can launch the clean backfill VM
-      knowing concurrent workers will skip captured shards rather than re-downloading.
+                                                                                                                      for shard in expected_shards:
+                                                                                                                          if cache.is_now_captured(shard.row_key):
+                                                                                                                              continue  # concurrent worker (or prior chunk) beat us
+                                                                                                                          result = expensive_remote_fetch(shard)
+                                                                                                                          writer.record_captured(shard.row_key, ...)
+                                                                                                                      ```
+                                                                                                                      Per-handler bucket mapping (read from existing handler source — each handler writes to its own canonical
+                                                                                                                      bucket; reuse that constant):
+                                                                                                                      - `lending_indices_handler.py` → `lending-indices-{pid}`
+                                                                                                                      - `gas_fee_handler.py` → `gas-fees-{pid}`
+                                                                                                                      - `lst_rates_handler.py` → `lst-rates-{pid}`
+                                                                                                                      - `dex_swaps_handler.py` + `dex_pools_handler.py` → `dex-swaps-{pid}` + `dex-pools-{pid}`
+                                                                                                                      - `liquidations_handler.py` + `liquidation_events_handler.py` → `liquidations-{pid}`
+                                                                                                                      - `perp_funding_handler.py` → `perp-funding-{pid}` (asset_group=cefi)
+                                                                                                                      - `solana_lst_archival.py` → `solana-defi-{pid}`
+                                                                                                                      **Tests** (per handler): mock `ManifestFreshnessCache` to return `True` for a known row_key and assert
+                                                                                                                      `expensive_remote_fetch` is NOT called for that shard. Add unit test class `TestFreshnessSkip` in each
+                                                                                                                      handler's existing test file. **Closes** `defi_master.md` DONE-2026-05-12 handover-block (b) +
+                                                                                                                      unlocks clean full-history re-run (block-c). **Why P1 not P0**: not 2026-05-23-blocking — the catch-up VM
+                                                                                                                      already closed the operational gap for Priority #5; the wire-in is the durable fix preventing future
+                                                                                                                      re-download waste on multi-worker concurrent backfills.
+                                                                                                                      **🟢 IMPLEMENTATION SHIPPED 2026-05-15 by slot 2 via 3 parallel sub-agents fan-out** — all 9 handlers wired:
+                                                                                                                      - MTDS@`6146913` (sub-agent A): `lending_indices_handler` + `gas_fee_handler` + `lst_rates_handler`. 622
+                                                                                                                        insertions across 6 files. Per-handler wire-in: lending (303-310 instantiate + 317-343 skip), gas (175-184
+                                                                                                                        EVM + 252-272 Solana + 295-315 BTC), lst (287-330 per-sentinel partial-skip). 9 tests passing.
+                                                                                                                      - MTDS@`63ae34d` (sub-agent B): `dex_swaps_handler` + `dex_pools_handler` + `liquidations_handler`. BUNDLED
+                                                                                                                        row_key per Phase 2 shard-atom design (per-(chain, protocol, data_type, day)). 9 tests passing,
+                                                                                                                        `tests/unit/cli/handlers/` dir created.
+                                                                                                                      - MTDS@`9802f48` (sub-agent C): `liquidation_events_handler` + `perp_funding_handler` + `solana_lst_archival`
+                                                                                                                        (note: solana_lst_archival is a helper module not a handler — wired via optional `freshness_cache` param
+                                                                                                                        with `None` default for backwards compat). perp_funding asset_group=cefi per FLAG 1 RESOLVED 2026-05-10.
+                                                                                                                        9 tests passing.
+                                                                                                                      **Total**: 9 handlers / 27 unit tests / `MANIFEST_FRESHNESS_SKIP` events emit per skip for observability.
+                                                                                                                      **Closes**: `defi_master.md` DONE-2026-05-12 handover-block item (b) FULLY. Item (c) clean
+                                                                                                                      full-history re-run after (b) lands is now unblocked — Harsh slot 2 can launch the clean backfill VM
+                                                                                                                      knowing concurrent workers will skip captured shards rather than re-downloading.
 
 ## Phase 8 — Paper-trade smoke + 7-day live-trade proof (depends on Phase 6; ~7-10 AI-days)
 

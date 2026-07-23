@@ -9,7 +9,12 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md, plans/active/master_to_live_defi_2026_05_23.md, plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md]
+related:
+  [
+    plans/questions/backfill_manifest_schema_freeze_gate_2026_05_08.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/epics/manifest_migration_SUPERSEDED_2026_05_21.md,
+  ]
 created: 2026-05-09
 epic: epic-infra
 archived: 2026-05-23
@@ -17,27 +22,38 @@ last_updated: 2026-05-23
 priority: P0
 parent: master_to_live_defi_2026_05_23
 parent_epic: manifest_master
-completion_gates: {code: C5, deployment: D3, business: F17+F18+G23}
+completion_gates: { code: C5, deployment: D3, business: F17+F18+G23 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: features-service, code: C0, deployment: none, business: none}
-- {repo: deployment-api, code: C0, deployment: none, business: none}
-- {repo: deployment-service, code: C0, deployment: none, business: none}
-- {repo: e2e-testing, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
-depends_on: [manifest-v7-schema-migration-design-2026-05-08, gcs-migration-bundle-pipeline-mode-2026-05-08, manifest-cross-asset-rescan-design-2026-05-08, writegate-honest-coverage-endtoend-2026-05-06, live-pipeline-mtds-mdps-features-2026-05-08, features-repo-consolidation-2026-05-08]
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: market-data-processing-service, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: features-service, code: C0, deployment: none, business: none }
+  - { repo: deployment-api, code: C0, deployment: none, business: none }
+  - { repo: deployment-service, code: C0, deployment: none, business: none }
+  - { repo: e2e-testing, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
+depends_on:
+  [
+    manifest-v7-schema-migration-design-2026-05-08,
+    gcs-migration-bundle-pipeline-mode-2026-05-08,
+    manifest-cross-asset-rescan-design-2026-05-08,
+    writegate-honest-coverage-endtoend-2026-05-06,
+    live-pipeline-mtds-mdps-features-2026-05-08,
+    features-repo-consolidation-2026-05-08,
+  ]
 estimate_class: design
 estimate_baseline_ai_days: 3.5
 estimate_calibrated_ai_days: 2.1
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-4). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-4). Class
+  inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 assigned_vm: vm-defi
 ---
 
@@ -103,13 +119,13 @@ hard-stop violation per the maximalist directive.
 
 ### Codex SSOTs touched (Post-Plan-Phase Codex Audit HARD RULE)
 
-- **UPDATE** `codex/02-data/availability-manifest-and-data-status.md` — add v8 section + 4-state emission enum + reader
+- **UPDATE** `/codex/02-data/availability-manifest-and-data-status.md` — add v8 section + 4-state emission enum + reader
   migration window.
-- **NEW** `codex/04-architecture/service-emission-policy.md` — full expansion of the slice-a stub; describe 4-state
+- **NEW** `/codex/04-architecture/service-emission-policy.md` — full expansion of the slice-a stub; describe 4-state
   lifecycle + hook insertion points + consumer behaviour.
 - **UPDATE** `codex/00-SSOT-INDEX.md` — register the new emission-policy doc.
-- **CROSS-LINK** `codex/02-data/pipeline-mode-partition.md` — point at v8 design.
-- **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — register the rescan launcher prefix.
+- **CROSS-LINK** `/codex/02-data/pipeline-mode-partition.md` — point at v8 design.
+- **UPDATE** `/codex/05-infrastructure/launcher-script-ssot.md` — register the rescan launcher prefix.
 
 ### UAC enums frozen for the window (A3 audit complete 2026-05-09 — FREEZE-CLEAN)
 
@@ -202,7 +218,7 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       Phase 7 launch.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 0.B — Run `measure-honest-coverage.py` on production manifests for
       writegate Phase 5: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13) PRE-baseline. Output:
-      per-data_type coverage % cells in `codex/02-data/honest_coverage_baseline_2026_05.md`. Gates Phase 12 ratchet
+      per-data_type coverage % cells in `/codex/02-data/honest_coverage_baseline_2026_05.md`. Gates Phase 12 ratchet
       POST-baseline comparison. **[BLOCKED-OPERATOR 2026-05-23 slot 6]** GCS access required to run
       measure-honest-coverage.py. No evidence this was run in this slot. Phase 12.C POST-baseline comparison gated on
       this. Operator must run manually.
@@ -274,7 +290,7 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       2026-05-11).** **RESOLVED 2026-05-12 (option b) — `ikenna-v8-manifestwriter-tab` (slot 2) @PM@`6efbfced`:** chose
       option (b) per Phase-2 done-definition's own framing ("back-compat with v7 rows... bumps to 8 at end of Phase 4").
       Codex doc
-      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
       lines 258-262 + 265 reconciled: prose now says "`MANIFEST_SCHEMA_VERSION = 7` (transitional; bumps to 8 at end of
       Phase 4.DEFAULT-REMOVAL)" matching the embedded code snippet at line 265. The "Schema v8 (current; ratified)"
       header is preserved because the column-shape contract IS final + ratified — only the version-constant lags one
@@ -283,9 +299,9 @@ QG gates between every phase boundary. No phase starts until the prior phase's Q
       manifest*writer.py constant value of `7` was correct all along. `manifest_writer.py:131` is still
       `MANIFEST_SCHEMA_VERSION = 7` while the v8 emission columns (`service_emission_state` /
       `last_emission_decision_at` / `expected_window_completeness_fraction`) ARE present in the `AvailabilityRecord`
-      dataclass + the 5 `record**` method sigs (Phase 2.A @UTL@`0adea1c6`). That looks *intentional* per the Phase-2
+      dataclass + the 5 `record**` method sigs (Phase 2.A @UTL@`0adea1c6`). That looks _intentional_ per the Phase-2
       done-definition ("back-compat with v7 rows" — v7-labeled rows carry nullable v8 columns until Phase 4 makes the
-      kwargs required, THEN bump to 8) — but the codex doc `codex/02-data/availability-manifest-and-data-status.md`
+      kwargs required, THEN bump to 8) — but the codex doc `/codex/02-data/availability-manifest-and-data-status.md`
       overstates it: line 261 prose says "`MANIFEST_SCHEMA_VERSION = 8` ... in `manifest_writer.py`" while the embedded
       code snippet (line 265) correctly says `MANIFEST_SCHEMA_VERSION = 7` — internal inconsistency in the doc +
       doc-prose-vs-code drift. Nothing branches on `schema_version == 8` (grepped
@@ -451,9 +467,9 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       5.69: `--workspace-root <ws> --scope <repo> --source-dir <pkg>`; baselined occurrences → `log_warn` exit-clean,
       NEW occurrence → `log_fail` + `V++`; checker-absent → skip clean). Every service repo sources `base-service.sh` so
       the ratchet is workspace-wide on next push. Codex doc
-      [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) documents STEP
-      5.70 (table row + full How-it-works / Adding-a-new-occurrence / Composes-with sections) + backfills the missing
-      STEP 5.69 table row. **TODO Phase 4.GREP-VERIFY P2** [optional, low-pri]: `base-library.sh` does NOT carry STEP
+      [`/codex/06-coding-standards/quality-gates.md`](/codex/06-coding-standards/quality-gates.md) documents STEP 5.70
+      (table row + full How-it-works / Adding-a-new-occurrence / Composes-with sections) + backfills the missing STEP
+      5.69 table row. **TODO Phase 4.GREP-VERIFY P2** [optional, low-pri]: `base-library.sh` does NOT carry STEP
       5.65/5.67/5.69 either (library repos skip the workspace AST-walk ratchets by current precedent) — UTL's 11
       baselined `record_*` callsites are cleared by Phase 4.DEFAULT-REMOVAL regardless + caught by any workspace-wide
       sweep, so per-library enforcement is optional follow-up, not a gap. **NICE-TO-HAVE**: also add STEP 5.70
@@ -651,7 +667,7 @@ paste `SUB_AGENT_MANDATORY_RULES.md` at the top of each Task prompt.
       tolerance.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [HUMAN] P0. Phase 12.C — writegate Phase 5 ratchet POST-baseline measurement;
       `measure-honest-coverage.py` re-runs: batch BLOCKED/IN-FLIGHT/DEFERRED annotations for Phases 0+8-13) against
-      post-backfill manifest. Lock ratchet in `codex/02-data/honest_coverage_baseline_2026_05.md` with ±0.5pp
+      post-backfill manifest. Lock ratchet in `/codex/02-data/honest_coverage_baseline_2026_05.md` with ±0.5pp
       tolerance + monthly cadence + 99% floor. **[BLOCKED-OPERATOR 2026-05-23 slot 6]** Requires GCS access + Phase 0.B
       PRE-baseline (BLOCKED-OPERATOR) + Phase 10.A completion. Operator must run measure-honest-coverage.py
       post-backfill.
@@ -723,22 +739,22 @@ not silently defer.
 
 Each phase boundary triggers the codex audit per CLAUDE.md "Post-Plan-Phase Codex Audit HARD RULE":
 
-- Phase 1 boundary → UPDATE `codex/04-architecture/service-emission-policy.md` with the 4-state enum + read protocol.
+- Phase 1 boundary → UPDATE `/codex/04-architecture/service-emission-policy.md` with the 4-state enum + read protocol.
   **✅ SHIPPED — `service-emission-policy.md` LANDED (134 L, stub-appropriate)** (verified slot-6 codex-audit
   2026-05-11).
-- Phase 2 boundary → UPDATE `codex/02-data/availability-manifest-and-data-status.md` with v8 columns + reader migration
+- Phase 2 boundary → UPDATE `/codex/02-data/availability-manifest-and-data-status.md` with v8 columns + reader migration
   window. **Mostly done; ⚠ doc drift** — the v8 columns + reader-migration window are in the doc, but line 261 prose
   says "`MANIFEST_SCHEMA_VERSION = 8` ... in `manifest_writer.py`" while `manifest_writer.py:131` is still `= 7` (the
   embedded code snippet at :265 correctly says `= 7`). See the Phase 2 follow-up todo above. (slot-6 codex-audit
   2026-05-11.)
-- Phase 3 boundary → CREATE `codex/02-data/cross-asset-rescan-protocol.md` stub documenting the cross-asset rescan
+- Phase 3 boundary → CREATE `/codex/02-data/cross-asset-rescan-protocol.md` stub documenting the cross-asset rescan
   workflow (launcher VM + per-VM shard isolation + `VM_APPLY_FLIPS` gate + class-C triage JSONL →
   `gs://{pid}-rescan-triage/`). **✅ SHIPPED 2026-05-19** — `unified-trading-pm@3e91c85e` (slot 7 WORKSTEP-S10;
   Post-Plan-Phase Codex Audit HARD RULE gap from Phase-3 ship 2026-05-11 retroactively closed).
-- Phase 4 boundary → UPDATE `codex/06-coding-standards/quality-gates.md` with the new workspace-wide grep verification
+- Phase 4 boundary → UPDATE `/codex/06-coding-standards/quality-gates.md` with the new workspace-wide grep verification
   step.
-- Phase 7 boundary → UPDATE `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit" with bundled-walk
-  recipe + 5-drift-axis closed-set fixed.
+- Phase 7 boundary → UPDATE `/codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit" with
+  bundled-walk recipe + 5-drift-axis closed-set fixed.
 - Phase 13 boundary → UPDATE `codex/00-SSOT-INDEX.md` registering all v8-related codex docs; CLAUDE.md "Master Plan"
   updated with v8-shipped state.
 

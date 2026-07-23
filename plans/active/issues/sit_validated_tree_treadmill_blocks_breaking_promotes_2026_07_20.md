@@ -19,7 +19,11 @@ stage: [meta]
 repos: [unified-trading-pm, system-integration-tests, agent-orchestrator]
 scope: [engineer, admin]
 tags: [ci-cd, sit, promotion, ldr-main, race-condition, quality-gates]
-related: [uac_value_only_config_change_breaks_utl_untested_2026_07_20.md, cicd_mvp_ldr_to_main_pipeline_2026_06_30.md]
+related:
+  [
+    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
+    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+  ]
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA

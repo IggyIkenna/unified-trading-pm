@@ -83,7 +83,7 @@ There is **no reaper** — `deployments_registry.py` has no `reap_stale` / `reco
 
 ### Additional micro-bug in Plan 8 output
 
-`codex/05-infrastructure/vm-tarball-deployment.md:74` says "Firestore-backed `/api/vm-deployments` registration" — the
+`/codex/05-infrastructure/vm-tarball-deployment.md:74` says "Firestore-backed `/api/vm-deployments` registration" — the
 registry is actually **GCS-backed** (per `deployment-service/deployment_service/deployments_registry.py:7..11`). This
 mis-attribution misleads any future toucher.
 
@@ -109,9 +109,9 @@ mis-attribution misleads any future toucher.
 | deployment-api          | `tests/unit/test_vm_deployments_reap.py` (NEW)       | +80     | Mock-mode passthrough + real-mode mocked registry                                         |
 | deployment-service      | `scripts/vm/vm-exec-with-gcs-tee.sh`                 | ±15     | Gate self-delete on "daemon final_upload returned 0" breadcrumb                           |
 | unified-trading-library | `unified_trading_library/lifecycle/daemon.py`        | +3      | Write breadcrumb on `complete()` success — new `complete_breadcrumb` param                |
-| unified-trading-pm      | `codex/05-infrastructure/vm-tarball-deployment.md`   | ±5      | Fix "Firestore-backed" → "GCS-backed" at line 74                                          |
-| unified-trading-pm      | `codex/05-infrastructure/vm-tarball-deployment.md`   | +30     | NEW § "Registry Layout SSOT" — exact GCS paths + topic names + reaper invocation          |
-| unified-trading-pm      | `codex/05-infrastructure/vm-tarball-deployment.md`   | +15     | NEW § "Registry Reconciliation" — reaper cadence + operator runbook                       |
+| unified-trading-pm      | `/codex/05-infrastructure/vm-tarball-deployment.md`  | ±5      | Fix "Firestore-backed" → "GCS-backed" at line 74                                          |
+| unified-trading-pm      | `/codex/05-infrastructure/vm-tarball-deployment.md`  | +30     | NEW § "Registry Layout SSOT" — exact GCS paths + topic names + reaper invocation          |
+| unified-trading-pm      | `/codex/05-infrastructure/vm-tarball-deployment.md`  | +15     | NEW § "Registry Reconciliation" — reaper cadence + operator runbook                       |
 | deployment-service      | `.github/workflows/reap-vm-registry.yml` (NEW)       | +40     | Scheduled GHA: daily `curl -XPOST <deployment-api>/api/vm-deployments/reap?dry_run=false` |
 
 ### Not in blast radius
@@ -194,7 +194,7 @@ Phase 5 (QG + acceptance)
 
 ### Phase 4: Operational rollout [PARALLEL within phase]
 
-- [ ] [AGENT] P2. Fix `codex/05-infrastructure/vm-tarball-deployment.md:74` — replace "Firestore-backed" with
+- [ ] [AGENT] P2. Fix `/codex/05-infrastructure/vm-tarball-deployment.md:74` — replace "Firestore-backed" with
       "GCS-backed (`gs://deployment-scripts-central-element-323112/deployments/{active,archive}/`)".
 - [ ] [AGENT] P2. Add new § "Registry Layout SSOT" section in `vm-tarball-deployment.md` after the existing
       "Observability & Lifecycle" section. Must cover: (a) exact GCS layout

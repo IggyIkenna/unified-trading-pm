@@ -33,9 +33,9 @@ scope: [engineer, admin]
 tags: [silent-failure, data-correctness, pnl-correctness, false-green, buckets, audit]
 related:
   [
-    silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
-    features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
-    pipeline_smoke_sweep_findings_2026_07_20.md,
+    /plans/active/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
+    /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
+    /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master

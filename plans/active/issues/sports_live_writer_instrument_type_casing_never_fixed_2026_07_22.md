@@ -5,7 +5,7 @@ title: >-
   live-measured proof it blocks today's gated delete + a manifest_finalize.py:347 hazard K1's own text doesn't name
 summary: >-
   NOT a new finding — this axis is ALREADY TRACKED as K1 in sports_consolidated_closeout_2026_07_19.md (Track C) and
-  documented in codex/02-data/canonical-cutover-register.md § 6 ("K1 — LIVE writer emits UPPER: NOT SHIPPED"). Filed
+  documented in /codex/02-data/canonical-cutover-register.md § 6 ("K1 — LIVE writer emits UPPER: NOT SHIPPED"). Filed
   initially as if new (process miss: should have grepped the plan corpus first); corrected same-session. What this doc
   adds on top of K1: (1) live-measured proof, from the 2026-07-22 P0 chain session, that this gap makes the just-shipped
   league_id-relocation's planned gated delete a leaky bucket (new non-canonical objects keep landing daily); (2) a THIRD
@@ -38,10 +38,10 @@ tags:
 related:
   [
     ../sports_consolidated_closeout_2026_07_19.md,
-    sports_league_id_namespace_migration_2026_07_20.md,
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
     ../sports_master_closeout_2026_07_21.md,
-    ../../../codex/02-data/canonical-cutover-register.md,
-    ../../../codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-22
 last_updated: 2026-07-22
@@ -112,7 +112,7 @@ emits 'ODDS' (uppercase)" (dated 2026-05-20) — the live writer directly contra
 The 2026-07-22 league_id relocation (`sports_master_closeout_2026_07_21.md`) COPIED ~275K historical objects from
 non-canonical to canonical paths/casing and manifest-swapped the bookkeeping rows. The plan's next step is a **separate,
 later, gated delete** of the old non-canonical objects (human-only per
-`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3 hard stop #1 — any prod-bucket delete). But:
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3 hard stop #1 — any prod-bucket delete). But:
 
 - The relocation executor is a **pure GCS-object copy** (confirmed via grep: zero `ManifestWriter`/`record_captured`
   calls in it) — it never touched the live writer.
@@ -127,7 +127,7 @@ later, gated delete** of the old non-canonical objects (human-only per
 ## ⚠️ CORRECTION 2026-07-22 (same session, found while running `/data-pipeline-reconciliation sports`) — this is NOT a new finding, it duplicates an already-tracked P0 todo, and this doc's ORIGINAL fix spec below was DANGEROUS as written
 
 This exact axis is **already tracked** as **K1** in `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C,
-line ~148), which `codex/02-data/canonical-cutover-register.md` § 6 also documents
+line ~148), which `/codex/02-data/canonical-cutover-register.md` § 6 also documents
 (`K1 — LIVE writer emits UPPER: NOT SHIPPED`). K1's own text names the same `venue_fetch.py:871-900` function. **This
 doc should have been found by grepping the plan corpus BEFORE filing** — the initial version below over-claimed
 "discovered 2026-07-22" when it was already known; treat this doc as a **supplement to K1** (the

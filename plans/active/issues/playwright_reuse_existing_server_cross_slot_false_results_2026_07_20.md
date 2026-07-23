@@ -76,7 +76,7 @@ late-arriving slot can only ever attach to the incumbent.
 - It is intermittent and ordering-dependent — it reproduces only when another slot happens to hold the port, which is
   exactly the profile that gets written off as "flaky" and re-run until green.
 
-This directly undercuts the `pw:L2 ✓` gate in `codex/06-coding-standards/ui-testing-layers.md`: a cited passing
+This directly undercuts the `pw:L2 ✓` gate in `/codex/06-coding-standards/ui-testing-layers.md`: a cited passing
 regression spec is only evidence if it ran against the citing slot's code.
 
 ## Recommended fix

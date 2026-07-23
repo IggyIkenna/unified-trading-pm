@@ -6,27 +6,43 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, deployment-service, e2e-testing, execution-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-service,
+    e2e-testing,
+    execution-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [incident_gateway_and_state_machine_2026_05_23.md, agent_recovery_controller_layer0_deterministic_2026_05_23.md, reconciliation_age_tracking_and_escalation_2026_05_23.md, drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md, connectivity_dependency_buffer_policy_2026_05_23.md]
-created: '2026-05-23'
+related:
+  [
+    incident_gateway_and_state_machine_2026_05_23.md,
+    /plans/archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md,
+    reconciliation_age_tracking_and_escalation_2026_05_23.md,
+    drawdown_liquidation_policy_and_strategy_risk_config_2026_05_23.md,
+    /plans/archive/2026_05/connectivity_dependency_buffer_policy_2026_05_23.md,
+  ]
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 14
 estimate_calibrated_ai_days: 8.4
-estimate_calibration_note: 'Design class — 22 procedure-oriented runbooks + evidence store schema + cross-linking discipline. Baseline 14 = ~0.6
+estimate_calibration_note: "Design class — 22 procedure-oriented runbooks + evidence store schema + cross-linking
+  discipline. Baseline 14 = ~0.6
 
   cal-day per runbook × 22 + 1 cal-day store. × 0.6 design = 8.4 cal-days.
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on: [incident_gateway_and_state_machine_2026_05_23, agent_recovery_controller_layer0_deterministic_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F']
+gates: ["master_to_live_defi_2026_05_23:Group-F"]
 ---
 
 # 22 Incident Runbooks + Evidence Store
@@ -96,51 +112,51 @@ kill-switch) + rollback
 - common false-positives + escalation criteria + success criteria + post-incident actions.
 
 * [x] ✅ [SCRIPT] P0.5. **RB-INC-001 SEV0 Incident Handling**: ack + check current risk + identify scope + confirm safe
-      mode + escalate + close. — codex/15-runbooks/incidents/rb_inc_001.md
+      mode + escalate + close. — /codex/15-runbooks/incidents/rb_inc_001.md
 * [x] ✅ [SCRIPT] P0.6. **RB-INC-002 SEV1 Investigation Handling**: review agent report + confirm protected mode +
-      decide continue/pause/disable/close + document. — codex/15-runbooks/incidents/rb_inc_002.md
+      decide continue/pause/disable/close + document. — /codex/15-runbooks/incidents/rb_inc_002.md
 * [x] ✅ [SCRIPT] P0.7. **RB-INC-003 Audit Acknowledgement Handling**: what counts as ack + what must be reviewed + sign
-      off + escalate insufficient report. — codex/15-runbooks/incidents/rb_inc_003.md
+      off + escalate insufficient report. — /codex/15-runbooks/incidents/rb_inc_003.md
 * [x] ✅ [SCRIPT] P0.8. **RB-RECON-001 Position Reconciliation Lag**: check venue + check ledger + check fills/orders +
-      identify oldest + apply buffer + safe-mode-vs-continue. — codex/15-runbooks/incidents/rb_recon_001.md
+      identify oldest + apply buffer + safe-mode-vs-continue. — /codex/15-runbooks/incidents/rb_recon_001.md
 * [x] ✅ [SCRIPT] P0.9. **RB-RECON-002 Open Order Uncertainty**: pull open orders + attempt cancel + confirm + handle
-      unknown + escalate if cancel unproven. — codex/15-runbooks/incidents/rb_recon_002.md
+      unknown + escalate if cancel unproven. — /codex/15-runbooks/incidents/rb_recon_002.md
 * [x] ✅ [SCRIPT] P0.10. **RB-RECON-003 Balance/Collateral Mismatch**: pull balances + check transfers/funding/fees/
       borrow + check movements + check collateral/margin + escalate unexplained. —
-      codex/15-runbooks/incidents/rb_recon_003.md
+      /codex/15-runbooks/incidents/rb_recon_003.md
 * [x] ✅ [SCRIPT] P0.11. **RB-RISK-001 Strategy Drawdown Investigation**: determine threshold + compare to model +
       attribute PnL + check exposure/execution/slippage/fees/funding/data-quality + recommend. —
-      codex/15-runbooks/incidents/rb_risk_001.md
+      /codex/15-runbooks/incidents/rb_risk_001.md
 * [x] ✅ [SCRIPT] P0.12. **RB-RISK-002 Liquidation Event**: confirm details + remaining risk + freeze/reduce + report +
-      escalate. — codex/15-runbooks/incidents/rb_risk_002.md
+      escalate. — /codex/15-runbooks/incidents/rb_risk_002.md
 * [x] ✅ [SCRIPT] P0.13. **RB-RISK-003 Liquidation Risk / Margin Danger**: check margin ratio + liquidation distance +
-      collateral + reduce/close + SEV0 escalate. — codex/15-runbooks/incidents/rb_risk_003.md
+      collateral + reduce/close + SEV0 escalate. — /codex/15-runbooks/incidents/rb_risk_003.md
 * [x] ✅ [SCRIPT] P0.14. **RB-RISK-004 Strategy Safe Mode**: define per-strategy + pause new + cancel-or-retain orders +
-      confirm positions/hedges + human-resume-requirements. — codex/15-runbooks/incidents/rb_risk_004.md
+      confirm positions/hedges + human-resume-requirements. — /codex/15-runbooks/incidents/rb_risk_004.md
 * [x] ✅ [SCRIPT] P0.15. **RB-CONN-001 Exchange WebSocket Degradation**: disconnect duration + backup feed +
-      order-book-freshness + pause-decision. — codex/15-runbooks/incidents/rb_conn_001.md
+      order-book-freshness + pause-decision. — /codex/15-runbooks/incidents/rb_conn_001.md
 * [x] ✅ [SCRIPT] P0.16. **RB-CONN-002 Exchange REST API Failure**: order placement/cancel + rate limits + auth +
-      escalate if cancel unconfirmable. — codex/15-runbooks/incidents/rb_conn_002.md
+      escalate if cancel unconfirmable. — /codex/15-runbooks/incidents/rb_conn_002.md
 * [x] ✅ [SCRIPT] P0.17. **RB-CONN-003 Internal Messaging Lag**: check PubSub/Kafka/Redis lag + check consumers + check
-      DLQ + failover/scale. — codex/15-runbooks/incidents/rb_conn_003.md
+      DLQ + failover/scale. — /codex/15-runbooks/incidents/rb_conn_003.md
 * [x] ✅ [SCRIPT] P0.18. **RB-CONN-004 Database/Storage Degradation**: ledger writes + read-only mode +
-      replay/recovery + can-continue-trading. — codex/15-runbooks/incidents/rb_conn_004.md
+      replay/recovery + can-continue-trading. — /codex/15-runbooks/incidents/rb_conn_004.md
 * [x] ✅ [SCRIPT] P0.19. **RB-CONN-005 Alert Provider Failure**: confirm provider status + trigger fallback + Twilio
-      voice + create audit incident. — codex/15-runbooks/incidents/rb_conn_005.md
+      voice + create audit incident. — /codex/15-runbooks/incidents/rb_conn_005.md
 * [x] ✅ [SCRIPT] P0.20. **RB-DEPLOY-001 Production Rollback**: identify version + roll back image + verify health +
-      verify trading state + audit report. — codex/15-runbooks/incidents/rb_deploy_001.md
+      verify trading state + audit report. — /codex/15-runbooks/incidents/rb_deploy_001.md
 * [x] ✅ [SCRIPT] P0.21. **RB-INFRA-001 OOM Recovery**: capture memory profile + restart/resize + check repeated OOM +
-      verify recon + audit report. — codex/15-runbooks/incidents/rb_infra_001.md
+      verify recon + audit report. — /codex/15-runbooks/incidents/rb_infra_001.md
 * [x] ✅ [SCRIPT] P0.22. **RB-INFRA-002 Machine/Node Failure**: cordon + move workload + verify service + verify risk. —
-      codex/15-runbooks/incidents/rb_infra_002.md
+      /codex/15-runbooks/incidents/rb_infra_002.md
 * [x] ✅ [SCRIPT] P0.23. **RB-INFRA-003 Secret/Config Failure**: verify config registry + verify secret access + prevent
-      unsafe default + escalate if production-config-unknown. — codex/15-runbooks/incidents/rb_infra_003.md
+      unsafe default + escalate if production-config-unknown. — /codex/15-runbooks/incidents/rb_infra_003.md
 * [x] ✅ [SCRIPT] P0.24. **RB-ALERT-001 Dedicated On-Call Phone Setup**: carrier + apps + DND bypass + charger/UPS +
-      test schedule. — codex/15-runbooks/incidents/rb_alert_001.md
+      test schedule. — /codex/15-runbooks/incidents/rb_alert_001.md
 * [x] ✅ [SCRIPT] P0.25. **RB-ALERT-002 Physical Siren/GSM Alarm Setup**: trigger path + SIM + power backup + test. —
-      codex/15-runbooks/incidents/rb_alert_002.md
+      /codex/15-runbooks/incidents/rb_alert_002.md
 * [x] ✅ [SCRIPT] P0.26. **RB-ALERT-003 Satellite / No-Signal Fallback**: when used + who carries + test + limitations.
-      — codex/15-runbooks/incidents/rb_alert_003.md
+      — /codex/15-runbooks/incidents/rb_alert_003.md
 
 ### Phase 4 — Runbook governance (0.5 cal-day)
 
@@ -188,9 +204,10 @@ kill-switch) + rollback
 
 ## Codex SSOT updates
 
-- NEW: `codex/15-runbooks/incidents/README.md` — 22 runbooks index.
+- NEW: `/codex/15-runbooks/incidents/README.md` — 22 runbooks index.
 - NEW: 22 individual runbooks.
-- UPDATE: existing `codex/15-runbooks/alerting/README.md` — point to incidents/ section for procedure-oriented runbooks.
+- UPDATE: existing `/codex/15-runbooks/alerting/README.md` — point to incidents/ section for procedure-oriented
+  runbooks.
 
 ## Tier-1-4 implementation log (2026-05-23)
 
@@ -272,7 +289,7 @@ kill-switch) + rollback
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

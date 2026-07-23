@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.5
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.5
 # Wave G3-α — independent, parallel with G3.2/3.3/3.4/3.6. Addresses stale-plan-vs-shipped-code institutional failure mode.
 ---
 
@@ -48,12 +48,12 @@ Target: a `playbook-consistency-agent` (part of the `plan-health-agent` family) 
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.5
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.5
 2. `unified-trading-pm/scripts/agents/` — existing agent infrastructure
 3. `codex/14-playbooks/_ssot-rules/` — all 12 rules (consistency targets)
 4. `codex/14-playbooks/experience/` — playbooks (structural grammar targets)
-5. `codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
-6. `codex/14-playbooks/_ssot-rules/01-briefing-structure-grammar.md` — 9-section grammar
+5. `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
+6. `/codex/14-playbooks/_ssot-rules/01-briefing-structure-grammar.md` — 9-section grammar
 
 ## Out of scope
 
@@ -92,7 +92,7 @@ Target: a `playbook-consistency-agent` (part of the `plan-health-agent` family) 
 
 ### Phase E — QG + documentation
 
-- [ ] [AGENT] P0. Codex doc `codex/14-playbooks/_ssot-rules/_consistency-agent-guide.md` — describes the agent, how to
+- [ ] [AGENT] P0. Codex doc `/codex/14-playbooks/_ssot-rules/_consistency-agent-guide.md` — describes the agent, how to
       add a check, how to interpret reports.
 - [ ] [SCRIPT] P0. `cd unified-trading-pm && bash scripts/quality-gates.sh`
 
@@ -103,7 +103,7 @@ Target: a `playbook-consistency-agent` (part of the `plan-health-agent` family) 
 - `unified-trading-pm/scripts/agents/tests/test_playbook_consistency_agent.py` — NEW
 - `unified-trading-pm/.github/workflows/playbook-consistency-agent.yml` — NEW
 - `codex/14-playbooks/_ssot-rules/_consistency-checks.yaml` — NEW
-- `codex/14-playbooks/_ssot-rules/_consistency-agent-guide.md` — NEW
+- `/codex/14-playbooks/_ssot-rules/_consistency-agent-guide.md` — NEW
 
 ## Execution DAG
 

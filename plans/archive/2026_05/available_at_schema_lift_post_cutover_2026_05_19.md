@@ -11,8 +11,8 @@ stage: [meta]
 repos: [features-service]
 scope: [engineer, admin]
 tags: [available-at, lookahead-bias, schema-invariant, features-service, quality-gates, batch-live-symmetry]
-related: [available_at_lookahead_bias_completion_2026_05_08.md]
-created: '2026-05-19'
+related: [/plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md]
+created: "2026-05-19"
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P1
@@ -32,7 +32,7 @@ pydantic validator). Eliminates the silent-wrong-rule class of lookahead bias bu
 enforcement items deferred from the completion plan Phase 8 (P2, gated on features_repo_consolidation Phase 5.c + Tab 12
 wiring).
 
-Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md` · `codex/06-coding-standards/quality-gates.md`
+Codex SSOTs: `/codex/02-data/availability-manifest-and-data-status.md` · `/codex/06-coding-standards/quality-gates.md`
 
 ---
 
@@ -63,7 +63,7 @@ Gate: `features_repo_consolidation_2026_05_08` Phase 5.c ships + Tab 12 wiring c
 
 ## Codex SSOT updates (at completion)
 
-- Update `codex/02-data/availability-manifest-and-data-status.md` — `available_at` rule section.
+- Update `/codex/02-data/availability-manifest-and-data-status.md` — `available_at` rule section.
 - Update CLAUDE.md `available_at` stamping rules to point to UAC `AvailabilityRule`.
 - Archive `unified_trading_library/availability_stamping.py` docstring SSOT reference.
 

@@ -117,7 +117,7 @@ pattern already used for comparable pre-existing-debt classes elsewhere in the s
       where the empty-string default is a deliberate, safe choice (the pattern already used by ~15 sites in
       `bybit.py`/`thegraph_base_client.py`), (b) rewrite genuinely-unsafe ones to a fail-fast pattern (raise / `None`
       sentinel) where an empty string silently masks a real missing-field bug, or (c) add a baseline-ratchet file for
-      this specific check (matching `codex/06-coding-standards/quality-gates.md`'s existing DTZ/TID251/fallback-import
+      this specific check (matching `/codex/06-coding-standards/quality-gates.md`'s existing DTZ/TID251/fallback-import
       precedent) so pre-existing debt doesn't block unrelated pushes while still preventing NEW violations. Needs a real
       per-callsite audit (338 sites) to know which of (a)/(b) applies where — not safe to blanket-apply either without
       reading each one.

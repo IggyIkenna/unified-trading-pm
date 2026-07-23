@@ -18,7 +18,7 @@ related:
     plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
     plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-07
 last_updated: 2026-07-07

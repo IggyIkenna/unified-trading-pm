@@ -9,8 +9,12 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: []
-related: [agent_orchestrator_cloud_run_deployment_2026_05_19.md, master_to_live_defi_2026_05_23.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md,
+    /plans/active/master_to_live_defi_2026_05_23.md,
+  ]
+created: "2026-05-20"
 parent_epic: orchestrator_master
 priority: P0
 archived_at: 2026-05-21
@@ -31,7 +35,7 @@ locked_since: 2026-05-20
 Port alignment, CORS, LEDGER.md deprecation for the orchestrator-service → agent-orchestrator rename. Ensures all
 workspace configs consistently use port 8026 and the new `agent-orchestrator.odum-research.com` domain.
 
-Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
+Codex SSOTs: `/codex/04-architecture/agent-orchestrator-overview.md`
 
 ---
 

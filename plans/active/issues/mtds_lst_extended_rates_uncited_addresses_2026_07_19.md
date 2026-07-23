@@ -29,7 +29,7 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [quality-gates, citation, defi, data-correctness, lst-rates, ci-cd]
-related: [defi_consolidated_closeout_2026_07_18.md]
+related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-19
 parent_epic: defi_master
 severity: P2
@@ -56,7 +56,7 @@ Dispatched as CICD escalation `agt-e7639b` for `market-tick-data-service#632` (L
    `lending_indices_handler.py` still minted `LENDING` canonical ids. Swapped to `InstrumentType.A_TOKEN` (the reserve's
    canonical representative id) — a deliberately conservative fix that preserves the existing 1-record-per-market shard
    atom the honest-coverage EU-reconciliation depends on (NOT the full A_TOKEN+DEBT_TOKEN per-leg split
-   `codex/02-data/cross-asset-canonical-target-ssot.md:160` targets long-term, which would double cardinality and needs
+   `/codex/02-data/cross-asset-canonical-target-ssot.md:160` targets long-term, which would double cardinality and needs
    IS-side EU-seed coordination). Also needed one additive UAC schema-contract entry `(defi, a_token, liquidations)` —
    another agent (slot-4) had already shipped the identical fix concurrently; discarded my duplicate.
 

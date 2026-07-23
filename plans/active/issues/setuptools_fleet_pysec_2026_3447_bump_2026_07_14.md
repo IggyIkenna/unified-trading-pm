@@ -21,7 +21,10 @@ repos: [e2e-testing, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [setuptools, pip-audit, PYSEC-2026-3447, dependency, security, quality-gates, fleet-wide, ci-blocker]
 related:
-  [sports_phantom_audits_reference_not_marketdata_2026_07_14.md, ../../../codex/06-coding-standards/quality-gates.md]
+  [
+    /plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 created: 2026-07-14
 parent_epic: observability_master
 priority: P2

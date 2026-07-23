@@ -6,11 +6,20 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+repos:
+  [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md, live_pipeline_mtds_mdps_features_2026_05_08.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md, manifest_schema_final_gate_2026_05_09.md, available_at_lookahead_bias_completion_2026_05_08.md, alerting_service_live_rules_2026_05_07.md]
-created: '2026-05-10'
+related:
+  [
+    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    /plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    /plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md,
+    /plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
+    /plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md,
+  ]
+created: "2026-05-10"
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P0
@@ -143,30 +152,30 @@ banners.
 
 ### Todos
 
-- [x] [AGENT] P0. **NEW** `codex/04-architecture/cefi-batch-live.md` — per-asset-group narrative for cefi (matcher
+- [x] [AGENT] P0. **NEW** `/codex/04-architecture/cefi-batch-live.md` — per-asset-group narrative for cefi (matcher
       pattern + shard atomicity + venue list per pre-audit § 1 Tab 1). Cross-link to `batch-live-architecture.md` § 5.
       (PM@6153d9ea — 144-line doc: 7 CeFi venues, L2Matcher, shard atom + empty rules, DeFi hedge-leg integration)
-- [x] [AGENT] P0. **NEW** `codex/06-coding-standards/mode-axis-discipline.md` — cartesian product table for
+- [x] [AGENT] P0. **NEW** `/codex/06-coding-standards/mode-axis-discipline.md` — cartesian product table for
       `RuntimeMode` × `OperationalMode` × `BatchExecutionMode` × `MaturityPhase`. Anti-pattern list (no LIVE*/BATCH*
       prefix in event names · no UI redeclarations · no mode-conditional outside seam). Cite pre-audit § 1. (PM@6153d9ea
       — 245-line doc: 4 axes, valid-combo table, 6 anti-patterns, QG STEP L1-L7 status)
-- [x] [AGENT] P0. **UPDATE** `codex/04-architecture/batch-live-architecture.md` — add (a) cross-asset-group meta section
-      pointing to cefi-batch-live.md / tradfi-batch-live.md (post-cutover) / prediction-batch-live.md (post-cutover);
-      (b) UI mode-context guidance (ExecutionModeContext canonical at
+- [x] [AGENT] P0. **UPDATE** `/codex/04-architecture/batch-live-architecture.md` — add (a) cross-asset-group meta
+      section pointing to cefi-batch-live.md / tradfi-batch-live.md (post-cutover) / prediction-batch-live.md
+      (post-cutover); (b) UI mode-context guidance (ExecutionModeContext canonical at
       `unified-trading-system-ui/lib/execution-mode-context.tsx:19-43`); (c) consolidated anti-patterns from CLAUDE.md +
       pipeline-mode-partition.md + replay-subsystem.md. (PM@9df278ef)
-- [x] [AGENT] P0. **UPDATE** `codex/06-coding-standards/quality-gates.md` — STEP entries for L1 (data_type
+- [x] [AGENT] P0. **UPDATE** `/codex/06-coding-standards/quality-gates.md` — STEP entries for L1 (data_type
       mode-agnosticism) · L2 (no mode-conditional outside seam) · L3 (RuntimeMode declared once) · L7
       (`assert_available_at_present` enforcement). Defer L4/L5/L6 entries to post-cutover. (PM@HEAD)
-- [x] [AGENT] P1. **UPDATE** `codex/05-infrastructure/replay-subsystem.md` — implementation status (UTL
+- [x] [AGENT] P1. **UPDATE** `/codex/05-infrastructure/replay-subsystem.md` — implementation status (UTL
       `streaming/replay.py:61-200+` shipped) + REPLAY_BACKSTOP_REACHED wiring (Phase 7 deployment + alerting hook
       pending). (PM@HEAD)
-- [x] [AGENT] P1. **UPDATE** `codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler
+- [x] [AGENT] P1. **UPDATE** `/codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler
       timeline (post-cutover gating); ModeHandler lift status post-Tab-4. (PM@HEAD)
-- [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/tradfi-batch-live.md` — placeholder section. DONE
+- [x] [AGENT] P2. **NEW (post-cutover)** `/codex/04-architecture/tradfi-batch-live.md` — placeholder section. DONE
       2026-05-16 (slot 7): placeholder shipped with §1-§6 (venues, matcher, shard atom, batch=live integration,
       cross-refs, successor pointer to tradfi_master.md). Cross-link from cefi-batch-live.md remains symmetric.
-- [x] [AGENT] P2. **NEW (post-cutover)** `codex/04-architecture/prediction-batch-live.md` — placeholder section. DONE
+- [x] [AGENT] P2. **NEW (post-cutover)** `/codex/04-architecture/prediction-batch-live.md` — placeholder section. DONE
       2026-05-16 (slot 7): placeholder shipped with §1-§6 covering Polymarket + Kalshi venues, canonical_question_group
       axis cross-link, prediction-specific empty reasons (EXPECTED_MARKET_RESOLVED / EXPECTED_PRE_MARKET_GENESIS /
       SOURCE_RETURNED_ZERO), successor pointer to predictions_master.md.
@@ -233,26 +242,26 @@ BatchExecutionMode enum extraction · J1 helper signature lock · L7 sweep verif
       fix-list handed to MDPS / UTL owners. Pre-audit Manifest 2. (sweep complete 2026-05-14 — see fix-list below)
 
       **L7 FIX-LIST (Tab 5/MDPS owner action required)**:
-      Pre-audit named files (`storage_dispatch_worker.py`, `output_writer_service.py`, `orchestration_writer.py`) do
-      NOT exist in LDR MDPS worktree — pre-audit was derived from main workspace. Actual violations found by
-      sweeping `.tabs/5/market-tick-data-service/`:
-      25+ `to_parquet` callsites across defi handlers — NONE stamp `available_at` on df before serialization. No
-      `record_captured(df=...)` flow yet (handlers use `record_captured(row_count=N)` form, bypassing internal
-      `assert_available_at_present`). Files: `token_transfers_handler.py:183` · `governance_events_handler.py:120`
-      · `liquidation_events_handler.py:187` · `vault_share_price_handler.py:268,470` · `mev_events_handler.py:120`
-      · `eigenlayer_rewards_handler.py:305` · `dex_pools_handler.py:554` · `perp_funding_handler.py:405,545,703`
-      · `solana_defi_handler.py:68` · `gas_fee_handler.py:545,622,707,839,914` · `oracle_prices_handler.py:618`
-      · `lending_indices_handler.py:565` · `bridge_events_handler.py:138` · `dex_swaps_handler.py:561`
-      · `position_data_handler.py:120,170` · `flash_loan_events_handler.py:137` · `data_manifest_handler.py:531`
-      · `lst_rates_handler.py:443,517` · `liquidations_handler.py:478` · `evm_defi_handler.py:475,546`
-      Full v8 `record_captured(df=...)` migration tracked in `_defi_manifest.py:148-149` comment.
-      **Tab 5 action**: include these handlers in L7 migration batch.
+                                                                                                                      Pre-audit named files (`storage_dispatch_worker.py`, `output_writer_service.py`, `orchestration_writer.py`) do
+                                                                                                                      NOT exist in LDR MDPS worktree — pre-audit was derived from main workspace. Actual violations found by
+                                                                                                                      sweeping `.tabs/5/market-tick-data-service/`:
+                                                                                                                      25+ `to_parquet` callsites across defi handlers — NONE stamp `available_at` on df before serialization. No
+                                                                                                                      `record_captured(df=...)` flow yet (handlers use `record_captured(row_count=N)` form, bypassing internal
+                                                                                                                      `assert_available_at_present`). Files: `token_transfers_handler.py:183` · `governance_events_handler.py:120`
+                                                                                                                      · `liquidation_events_handler.py:187` · `vault_share_price_handler.py:268,470` · `mev_events_handler.py:120`
+                                                                                                                      · `eigenlayer_rewards_handler.py:305` · `dex_pools_handler.py:554` · `perp_funding_handler.py:405,545,703`
+                                                                                                                      · `solana_defi_handler.py:68` · `gas_fee_handler.py:545,622,707,839,914` · `oracle_prices_handler.py:618`
+                                                                                                                      · `lending_indices_handler.py:565` · `bridge_events_handler.py:138` · `dex_swaps_handler.py:561`
+                                                                                                                      · `position_data_handler.py:120,170` · `flash_loan_events_handler.py:137` · `data_manifest_handler.py:531`
+                                                                                                                      · `lst_rates_handler.py:443,517` · `liquidations_handler.py:478` · `evm_defi_handler.py:475,546`
+                                                                                                                      Full v8 `record_captured(df=...)` migration tracked in `_defi_manifest.py:148-149` comment.
+                                                                                                                      **Tab 5 action**: include these handlers in L7 migration batch.
 
-      **UTL audit (AUDIT-NEEDED — UTL owner decision)**:
-      `domain/standardized_service.py:100` (`_serialize_upload_item`) + `:299` (`upload_to_gcs`) — generic
-      serialization helpers converting DataFrame to parquet bytes for GCS upload. NOT directly a manifest write
-      path. Whether callers stamp `available_at` before passing df is caller-dependent. UTL owner should audit
-      callers and confirm whether assert is needed at this layer.
+                                                                                                                      **UTL audit (AUDIT-NEEDED — UTL owner decision)**:
+                                                                                                                      `domain/standardized_service.py:100` (`_serialize_upload_item`) + `:299` (`upload_to_gcs`) — generic
+                                                                                                                      serialization helpers converting DataFrame to parquet bytes for GCS upload. NOT directly a manifest write
+                                                                                                                      path. Whether callers stamp `available_at` before passing df is caller-dependent. UTL owner should audit
+                                                                                                                      callers and confirm whether assert is needed at this layer.
 
 - [x] [SCRIPT] P1. **J1 phase→mode helper signature** (DEFER — defaults #2 says J1 wiring post-cutover; ship signature
       contract only as design stub at `unified_api_contracts/internal/domain/strategy_service/lifecycle.py`). Helper
@@ -391,7 +400,7 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
       `features_service/calendar/cli/handlers/batch_handler.py`. — features-service (confirmed 2026-05-18 backfill)
 - [x] ✅ [SCRIPT] P0. Per family: `bash scripts/quality-gates.sh` + `git push origin live-defi-rollout`. —
       features-service@519625f7 — QG EXIT 0 / ALL QUALITY GATES PASSED (broad-except BE_EXCLUDE_GLOBS + noqa fixes)
-- [x] ✅ [SCRIPT] P1. Update `codex/04-architecture/features-service-architecture.md` § per-family table — flip 4
+- [x] ✅ [SCRIPT] P1. Update `/codex/04-architecture/features-service-architecture.md` § per-family table — flip 4
       families from `bare-class` to `ModeHandler` (Tab 1 should batch this update OR Tab 4 closes it inline). —
       PM@7b4f9869 — all 8 families on UTL ModeHandler; "Tab 4 pending" section replaced with "COMPLETE 2026-05-19"
 - [x] ✅ [SCRIPT] P1. Hard-delete 4 bare-class entry-points after ModeHandler lift in prod (compat-path removal).
@@ -549,7 +558,7 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
       import fixed in stage0_manifest_reason_check. + blr@b50234d STEP 5.63 regression fix 2026-05-19 QG ✅ 464s.
 - [x] ✅ [DOC] P0. **Threshold-calibration analysis doc** — pre-soak pass/fail criteria, 95p+2× margin derivation, 7-day
       soak calibration procedure, decision authority table. — PM@257bb3fb8;
-      `codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`.
+      `/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`.
 - [x] ✅ [AGENT] P0. **Paper-mode smoke** — run reconciler against shipped 2-yr backtest (per Tab 8 step 1) +
       carry_paper VM (per Tab 8 step 4); calibrate threshold values vs observed delta distribution using pre-soak
       criteria from `batch-live-reconciliation-threshold-calibration.md`. **BLOCKED-OPERATOR 2026-05-20**: needs Tab 8
