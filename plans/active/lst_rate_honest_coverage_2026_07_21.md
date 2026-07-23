@@ -850,3 +850,9 @@ tarball once; always check the launcher's own freshness warning output, and if s
   idempotent resume is the correct, intended design). Relaunched again: same command
   (`--start 2023-01-01 --end 2026-07-22`), all 4 tarballs confirmed fresh, RUNNING. Manifest was at 69,425 entries
   before this second death; the freshness-skip logic should again pick up from there.
+
+- **2026-07-23 02:59 UTC (dex-swaps re-check — healthy after second resume)** — `mtds-dex-swaps-backfill` RUNNING, RSS
+  stable ~1036-1062MiB, heartbeats fresh. This VM instance's own per-VM manifest-shard counter reset to a fresh count
+  (1,688) as expected — that's this instance's own contribution tally, not a cumulative total across restarts; the
+  underlying already-captured swap parquet files + the real coverage manifest persist independent of VM restarts, so
+  this is not data loss. No further action needed.
